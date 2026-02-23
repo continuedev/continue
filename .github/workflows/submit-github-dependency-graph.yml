@@ -1,0 +1,27 @@
+name: Submit Gradle Dependency Graph For Dependabot
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: write
+
+jobs:
+  dependency-submission:
+    runs-on: ubuntu-latest
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v6
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: 17
+      - name: Generate and submit dependency graph
+        uses: gradle/actions/dependency-submission@v5
+        with:
+          # The gradle project is not in the root of the repository.
+          build-root-directory: extensions/intellij

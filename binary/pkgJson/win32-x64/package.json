@@ -1,0 +1,30 @@
+{
+  "name": "continue-binary",
+  "version": "1.0.0",
+  "description": "",
+  "bin": "../../out/index.js",
+  "pkg": {
+    "scripts": [
+      "node_modules/axios/**/*"
+    ],
+    "assets": [
+      "../../../core/node_modules/sqlite3/**/*",
+      "../../out/tree-sitter.wasm",
+      "../../out/tree-sitter-wasms/*",
+      "../../tree-sitter/**/*",
+      "../../node_modules/win-ca/lib/crypt32-ia32.node",
+      "../../node_modules/win-ca/lib/crypt32-x64.node",
+      "../../node_modules/win-ca/lib/roots.exe",
+      "../../out/llamaTokenizer.mjs",
+      "../../out/llamaTokenizerWorkerPool.mjs",
+      "../../out/tiktokenWorkerPool.mjs",
+      "../../out/package.json"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ],
+    "outputPath": "bin"
+  },
+  "author": "",
+  "license": "Apache-2.0"
+}

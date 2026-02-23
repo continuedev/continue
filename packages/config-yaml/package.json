@@ -1,0 +1,44 @@
+{
+  "name": "@continuedev/config-yaml",
+  "version": "1.23.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "browser": "./dist/browser.js",
+      "node": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "config-yaml": "./dist/cli.js"
+  },
+  "scripts": {
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "build": "tsc",
+    "generate-schema": "tsc && node dist/scripts/generateJsonSchema.js"
+  },
+  "author": "Continue Dev, Inc.",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@continuedev/config-types": "^1.0.14",
+    "yaml": "^2.8.2",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.0.0",
+    "cross-env": "^7.0.3",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.3",
+    "ts-node": "^10.9.2",
+    "zod-to-json-schema": "^3.24.5",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^9.2.6",
+    "@semantic-release/npm": "^10.0.6",
+    "semantic-release": "^21.1.2"
+  }
+}

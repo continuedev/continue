@@ -1,0 +1,61 @@
+{
+  "name": "binary",
+  "version": "1.0.0",
+  "author": "Continue Dev, Inc",
+  "description": "",
+  "main": "out/index.js",
+  "bin": "out/index.js",
+  "pkg": {
+    "scripts": [
+      "node_modules/axios/**/*"
+    ],
+    "assets": [
+      "../core/node_modules/sqlite3/**/*",
+      "node_modules/@lancedb/**/*",
+      "out/tree-sitter.wasm",
+      "out/tree-sitter-wasms/*"
+    ],
+    "targets": [
+      "node18-darwin-arm64"
+    ],
+    "outputPath": "bin"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "node build.js",
+    "rebuild": "node build.js --esbuild-only",
+    "build:darwin-x64": "node build.js --os darwin-x64"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@biomejs/biome": "1.6.4",
+    "@types/follow-redirects": "^1.14.4",
+    "@types/jest": "^29.5.12",
+    "@types/uuid": "^9.0.8",
+    "@vercel/ncc": "^0.38.1",
+    "cross-env": "^7.0.3",
+    "esbuild": "0.19.11",
+    "jest": "^29.7.0",
+    "pkg": "^5.8.1",
+    "rimraf": "^5.0.7",
+    "ts-jest": "^29.1.4",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.1.2",
+    "adm-zip": "^0.5.16",
+    "commander": "^12.0.0",
+    "core": "file:../core",
+    "follow-redirects": "^1.15.5",
+    "mac-ca": "^2.0.3",
+    "ncp": "^2.0.0",
+    "node-fetch": "^3.3.2",
+    "posthog-node": "^3.6.3",
+    "system-ca": "^1.0.2",
+    "tar": "^7.5.1",
+    "undici": "^7.16.0",
+    "uuid": "^9.0.1",
+    "vectordb": "0.4.20",
+    "win-ca": "^3.5.1"
+  }
+}

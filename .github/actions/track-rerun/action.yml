@@ -1,0 +1,19 @@
+name: Track Workflow Rerun
+description: Track when GitHub Actions workflows are rerun (attempt > 1)
+
+runs:
+  using: composite
+  steps:
+    # Eventually we can start logging this to monitor codebase health (e.g. to Slack, PostHog, etc.)
+    - name: Track workflow rerun
+      if: github.run_attempt > 1
+      shell: bash
+      run: |
+        echo "🔄 Workflow rerun detected - Attempt #${{ github.run_attempt }}"
+        echo "📊 Workflow: ${{ github.workflow }}"
+        echo "🔀 PR: ${{ github.event.pull_request.number || 'N/A' }}"
+        echo "📝 Commit: ${{ github.sha }}"
+        echo "👤 Actor: ${{ github.actor }}"
+        echo "⏰ Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo ""
+        echo "::notice title=Workflow Rerun Detected::This is attempt #${{ github.run_attempt }} of workflow '${{ github.workflow }}'"

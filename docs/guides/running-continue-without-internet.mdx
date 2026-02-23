@@ -1,0 +1,9 @@
+---
+title: "How to Run Continue Without Internet"
+description: "Learn how to set up Continue for air-gapped or offline environments using local models, including steps to disable telemetry and configure local model providers"
+---
+
+1. Download the latest .vsix file from the [GitHub Releases page](https://github.com/continuedev/continue/releases) and [install it to VS Code](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix).
+2. Turn off "Allow Anonymous Telemetry" in the user settings. This will stop Continue from attempting requests to PostHog for [anonymous telemetry](https://docs.continue.dev/reference/telemetry).
+3. In your `config.yaml` file (or through the Continue UI), set the default model to a local model. You can find available local model options [here](https://docs.continue.dev/reference/model-providers/ollama).
+4. Restart VS Code to ensure that the changes to `config.yaml` take effect.

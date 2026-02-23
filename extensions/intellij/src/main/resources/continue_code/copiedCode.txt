@@ -1,0 +1,14 @@
+  private fun CoroutineScope.dispatchCustomEvent(
+        type: String,
+        data: Map<String, Any>,
+        webView: JBCefBrowser
+    ) {
+        launch(CoroutineExceptionHandler { _, exception ->
+            println("Failed to dispatch custom event: ${exception.message}")
+        }) {
+            val gson = Gson()
+            val jsonData = gson.toJson(data)
+            val jsCode = buildJavaScript(type, jsonData)
+            webView.executeJavaScriptAsync(jsCode)
+        }
+    }

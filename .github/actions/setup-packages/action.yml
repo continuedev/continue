@@ -1,0 +1,23 @@
+name: "Setup Packages"
+description: "Cache and build packages with npm caching"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: ".nvmrc"
+    - uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-cache-packages-${{ hashFiles('packages/*/package-lock.json') }}
+
+    - uses: actions/cache@v4
+      with:
+        path: |
+          packages/*/node_modules
+        key: ${{ runner.os }}-packages-node-modules-${{ hashFiles('packages/*/package-lock.json') }}
+
+    - name: Build packages
+      shell: bash
+      run: node ./scripts/build-packages.js

@@ -1,0 +1,51 @@
+name: PR Build And Upload VSIX
+
+# Builds and uploads VSIX artifacts for the `oneper` script across Linux, Windows, and macOS ARM platforms
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-upload-vsix:
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        include:
+          - platform: linux
+            arch: x64
+            runner: ubuntu-latest
+          - platform: win32
+            arch: x64
+            runner: windows-latest
+          - platform: darwin
+            arch: arm64
+            runner: macos-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Build VS Code extension
+        uses: ./.github/actions/build-vscode-extension
+        with:
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+          npm_config_arch: ${{ matrix.arch }}
+          pre-release: false
+          commit-sha: ${{ github.sha }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: vscode-extension-build-${{ matrix.platform }}-${{ matrix.arch }}
+          path: extensions/vscode/build
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.arch }}-vsix
+          path: "extensions/vscode/*.vsix"

@@ -1,0 +1,19 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Start Core Dev Server" type="NodeJSConfigurationType" path-to-js-file="out/index.js" working-dir="$PROJECT_DIR$/binary">
+    <envs>
+      <env name="CONTINUE_DEVELOPMENT" value="true" />
+      <env name="CONTINUE_GLOBAL_DIR" value="$PROJECT_DIR$/extensions/.continue-debug" />
+    </envs>
+    <method v="2">
+      <option name="NpmBeforeRunTask" enabled="true">
+        <package-json value="$PROJECT_DIR$/binary/package.json" />
+        <command value="run" />
+        <scripts>
+          <script value="rebuild" />
+        </scripts>
+        <node-interpreter value="project" />
+        <envs />
+      </option>
+    </method>
+  </configuration>
+</component>

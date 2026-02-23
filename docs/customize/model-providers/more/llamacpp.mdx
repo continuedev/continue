@@ -1,0 +1,39 @@
+---
+title: "Llama.cpp"
+---
+
+<Info>
+  Get started with [Llama.cpp](https://github.com/ggml-org/llama.cpp?tab=readme-ov-file#quick-start)
+</Info>
+
+## Configuration
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: <MODEL_NAME>
+        provider: llama.cpp
+        model: <MODEL_ID>
+        apiBase: http://localhost:8080
+    ```
+    </Tab>
+    <Tab title="JSON (Deprecated)">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "<MODEL_NAME>",
+          "provider": "llama.cpp",
+          "model": "<MODEL_ID>"
+          "apiBase": "http://localhost:8080"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>

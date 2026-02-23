@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Continue (CE)" type="CompoundRunConfigurationType">
+    <toRun name="Run Extension (use TCP)" type="GradleRunConfiguration" />
+    <toRun name="Prompt Logs" type="ShConfigurationType" />
+    <toRun name="Start Core Dev Server (CE)" type="ShConfigurationType" />
+    <toRun name="Start GUI Dev Server" type="ShConfigurationType" />
+    <method v="2" />
+  </configuration>
+</component>

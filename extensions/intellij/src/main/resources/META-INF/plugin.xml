@@ -1,0 +1,200 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>com.github.continuedev.continueintellijextension</id>
+    <name>Continue</name>
+    <vendor url="https://www.continue.dev/">continue-dev</vendor>
+    <change-notes>
+        <![CDATA[View the latest release notes on <a href="https://github.com/continuedev/continue/releases">GitHub</a>]]></change-notes>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.plugins.terminal</depends>
+
+    <!-- See here for why this is optional:  https://github.com/continuedev/continue/issues/2775#issuecomment-2535620877-->
+    <depends optional="true" config-file="continueintellijextension-withJSON.xml">
+        com.intellij.modules.json
+    </depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Continue" anchor="right" icon="com.github.continuedev.continueintellijextension.Icons.Continue"
+                    factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
+        <projectService id="ContinuePluginService"
+                        serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinuePluginService"/>
+        <projectService
+                id="DiffStreamService"
+                serviceImplementation="com.github.continuedev.continueintellijextension.editor.DiffStreamService"/>
+
+        <projectService serviceInterface="com.github.continuedev.continueintellijextension.autocomplete.CompletionService"
+                        serviceImplementation="com.github.continuedev.continueintellijextension.autocomplete.ContinueCompletionService"/>
+        <projectService
+                serviceInterface="com.github.continuedev.continueintellijextension.nextEdit.NextEditService"
+                serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.ContinueNextEditService"/>
+
+        <projectService
+                serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.NextEditWindowManager"/>
+
+        <projectService
+                serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.NextEditJumpManager"/>
+
+        <inline.completion.provider id="Continue" implementation="com.github.continuedev.continueintellijextension.autocomplete.ContinueInlineCompletionProvider"/>
+        
+        <notificationGroup id="Continue"
+                           displayType="BALLOON"/>
+        <actionPromoter order="last"
+                        implementation="com.github.continuedev.continueintellijextension.actions.ContinueActionPromote"/>
+        <postStartupActivity
+                implementation="com.github.continuedev.continueintellijextension.activities.ContinuePluginStartupActivity"/>
+        <postStartupActivity implementation="com.github.continuedev.continueintellijextension.proxy.ProxyPoolingActivity"/>
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
+                id="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
+                displayName="Continue"/>
+        <applicationService
+                serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings"/>
+    </extensions>
+
+    <actions>
+        <action class="com.github.continuedev.continueintellijextension.editor.InlineEditAction"
+                id="continue.inlineEdit"
+                description="Inline Edit"
+                text="Inline Edit">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl I"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta I"/>
+            <override-text place="GoToAction" text="Continue: Edit Code"/>
+        </action>
+
+        <action id="continue.acceptDiff"
+                class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
+                text="Accept Diff" description="Accept Diff">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="shift ctrl ENTER"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="shift meta ENTER"/>
+            <override-text place="GoToAction" text="Continue: Accept Diff"/>
+        </action>
+
+        <action id="continue.restartProcess"
+                class="com.github.continuedev.continueintellijextension.actions.RestartContinueProcess"
+                text="Restart Process"
+                description="Restart Process">
+            <override-text place="GoToAction" text="Continue: Restart Process"/>
+        </action>
+
+        <action id="continue.rejectDiff"
+                class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
+                text="Reject Diff" description="Reject Diff">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="shift ctrl BACK_SPACE"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="shift meta BACK_SPACE"/>
+            <override-text place="GoToAction" text="Continue: Reject Diff"/>
+        </action>
+
+        <action id="continue.acceptVerticalDiffBlock"
+                class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
+                text="Accept Diff" description="Accept Vertical Diff Block">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="alt shift Y"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="alt shift Y"/>
+            <override-text place="GoToAction" text="Continue: Accept Vertical Diff Block"/>
+        </action>
+
+        <action id="continue.rejectVerticalDiffBlock"
+                class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
+                text="Reject Diff" description="Reject Vertical Diff Block">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="alt shift N"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="alt shift N"/>
+            <override-text place="GoToAction" text="Continue: Reject Vertical Diff Block"/>
+        </action>
+
+        <action id="continue.addLicenseKey"
+                class="com.github.continuedev.continueintellijextension.license.AddLicenseKey"
+                text="Enter Enterprise License Key"
+                description="Enter Enterprise License Key">
+            <override-text place="GoToAction" text="Continue: Enter Enterprise License Key"/>
+        </action>
+
+        <action id="continue.focusContinueInputWithoutClear"
+                class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithoutClearAction"
+                text="Add selected code to context"
+                description="Focus Continue Input With Edit">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl shift J"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta shift J"/>
+            <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context"/>
+        </action>
+
+        <action id="continue.newContinueSession"
+                icon="AllIcons.General.Add"
+                class="com.github.continuedev.continueintellijextension.actions.NewContinueSessionAction"
+                text="New Session"
+                description="New Session">
+
+            <override-text place="GoToAction" text="New Session"/>
+        </action>
+
+        <action id="continue.viewHistory"
+                icon="AllIcons.Vcs.History"
+                class="com.github.continuedev.continueintellijextension.actions.ViewHistoryAction"
+                text="View History"
+                description="View History">
+            <override-text place="GoToAction" text="View History"/>
+        </action>
+
+        <action id="continue.openConfigPage"
+                class="com.github.continuedev.continueintellijextension.actions.OpenConfigAction"
+                icon="AllIcons.General.GearPlain"
+                text="Settings"
+                description="Settings">
+            <override-text place="GoToAction" text="Settings"/>
+        </action>
+
+        <action id="continue.reloadPage"
+                class="com.github.continuedev.continueintellijextension.actions.ReloadBrowserAction"
+                icon="AllIcons.Actions.Refresh"
+                text="Reload Continue Browser"
+                description="Reload Continue Browser">
+            <override-text place="GoToAction" text="Reload Continue Browser"/>
+        </action>
+
+        <action id="continue.openLogs"
+                class="com.github.continuedev.continueintellijextension.actions.OpenLogsAction"
+                icon="AllIcons.General.ShowInfos"
+                text="Open Logs"
+                description="Open Continue Logs">
+            <override-text place="GoToAction" text="Open Continue Logs"/>
+        </action>
+
+        <group id="ContinueSidebarActionsGroup">
+            <reference ref="continue.newContinueSession"/>
+            <reference ref="continue.viewHistory"/>
+            <reference ref="continue.openConfigPage"/>
+            <reference ref="continue.reloadPage" />
+        </group>
+
+        <action id="continue.focusContinueInput"
+                class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputAction"
+                text="Add selected code to context"
+                description="Focus Continue Input">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl J"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta J"/>
+            <add-to-group group-id="EditorPopupMenu"/>
+            <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context and Clear Chat"/>
+        </action>
+        <group id="ContinueProjectViewPopUpMenuGroup" popup="true" text="Continue" icon="/icons/continue.svg">
+            <action id="com.github.continuedev.continueintellijextension.actions.AddToChatAction"
+                    class="com.github.continuedev.continueintellijextension.actions.AddToChatAction"
+                    text="Add to Chat">
+            </action>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </group>
+    </actions>
+</idea-plugin>

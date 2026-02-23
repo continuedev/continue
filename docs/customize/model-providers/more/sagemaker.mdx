@@ -1,0 +1,61 @@
+---
+title: "Amazon SageMaker"
+description: "Configure Amazon SageMaker with Continue to use deployed LLM endpoints for both chat and embedding models, supporting LMI and HuggingFace TEI deployments with AWS credentials"
+---
+
+SageMaker can be used for both chat and embedding models. Chat models are supported for endpoints deployed with [LMI](https://docs.djl.ai/docs/serving/serving/docs/lmi/index.html), and embedding models are supported for endpoints deployed with [HuggingFace TEI](https://huggingface.co/blog/sagemaker-huggingface-embedding)
+
+Here is an example Sagemaker configuration setup:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: deepseek-6.7b-instruct
+      provider: sagemaker
+      model: lmi-model-deepseek-coder-xxxxxxx
+      region: us-west-2
+      roles:
+        - chat
+    - name: mxbai-embed
+      provider: sagemaker
+      model: mxbai-embed-large-v1-endpoint
+      roles:
+        - embed
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "deepseek-6.7b-instruct",
+        "provider": "sagemaker",
+        "model": "lmi-model-deepseek-coder-xxxxxxx",
+        "region": "us-west-2"
+      }
+    ],
+    "embeddingsProvider": {
+      "provider": "sagemaker",
+      "model": "mxbai-embed-large-v1-endpoint"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+The value in model should be the SageMaker endpoint name you deployed.
+
+Authentication will be through temporary or long-term credentials in
+~/.aws/credentials under a profile called "sagemaker".
+
+```title="~/.aws/credentials
+[sagemaker]
+aws_access_key_id = abcdefg
+aws_secret_access_key = hijklmno
+aws_session_token = pqrstuvwxyz # Optional: means short term creds.
+```

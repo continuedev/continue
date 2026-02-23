@@ -1,0 +1,91 @@
+---
+title: "Cloudflare"
+description: "Configure Cloudflare Workers AI with Continue to access various models for chat and autocomplete, including Llama 3 8B and DeepSeek Coder through Cloudflare's serverless AI platform"
+---
+
+Cloudflare Workers AI can be used for both chat and tab autocompletion in Continue. Here is an example of Cloudflare Workers AI configuration:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Llama 3 8B
+      provider: cloudflare
+      apiKey: <YOUR_CLOUDFARE_API_KEY>
+      model: "@cf/meta/llama-3-8b-instruct"
+      contextLength: 2400
+      defaultCompletionOptions:
+        maxTokens: 500
+      roles:
+        - chat
+      env:
+        accountId: YOUR CLOUDFLARE ACCOUNT ID 
+    - name: DeepSeek Coder 6.7b Instruct
+      provider: cloudflare
+      apiKey: <YOUR_CLOUDFARE_API_KEY>
+      model: "@hf/thebloke/deepseek-coder-6.7b-instruct-awq"
+      contextLength: 2400
+      defaultCompletionOptions:
+        maxTokens: 500
+      roles:
+        - chat
+      env:
+        accountId: YOUR CLOUDFLARE ACCOUNT ID
+    - name: DeepSeek 7b
+      provider: cloudflare
+      apiKey: <YOUR_CLOUDFARE_API_KEY>
+      model: "@hf/thebloke/deepseek-coder-6.7b-base-awq"
+      roles:
+        - autocomplete
+      env:
+        accountId: YOUR CLOUDFLARE ACCOUNT ID
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Llama 3 8B",
+        "provider": "cloudflare",
+        "accountId": "YOUR CLOUDFLARE ACCOUNT ID",
+        "apiKey": "YOUR CLOUDFLARE API KEY",
+        "contextLength": 2400,
+        "completionOptions": {
+          "maxTokens": 500
+        },
+        "model": "@cf/meta/llama-3-8b-instruct"
+      },
+      {
+        "title": "DeepSeek Coder 6.7b Instruct",
+        "provider": "cloudflare",
+        "accountId": "YOUR CLOUDFLARE ACCOUNT ID",
+        "apiKey": "YOUR CLOUDFLARE API KEY",
+        "contextLength": 2400,
+        "completionOptions": {
+          "maxTokens": 500
+        },
+        "model": "@hf/thebloke/deepseek-coder-6.7b-instruct-awq"
+      }
+    ],
+    "tabAutocompleteModel": {
+      "title": "DeepSeek 7b",
+      "provider": "cloudflare",
+      "accountId": "YOUR CLOUDFLARE ACCOUNT ID",
+      "apiKey": "YOUR CLOUDFLARE API KEY",
+      "model": "@hf/thebloke/deepseek-coder-6.7b-base-awq"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+Visit the [Cloudflare dashboard](https://dash.cloudflare.com/) to [create an API key](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/).
+
+Review [available models](https://developers.cloudflare.com/workers-ai/models/) on Workers AI
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Cloudflare.ts)

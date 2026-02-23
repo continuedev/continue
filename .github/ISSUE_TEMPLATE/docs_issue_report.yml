@@ -1,0 +1,60 @@
+---
+name: 📖 Documentation Issue Report
+description: Report issues related to the documentation
+labels: [area:docs]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thank you for helping us improve our documentation!
+        We appreciate your feedback. Before submitting, please check if a similar issue already exists.
+
+        ### Quick Contribution Tips:
+        - Click "Edit this page" at the bottom of any page on [docs.continue.dev](https://docs.continue.dev) to contribute directly.
+        - For local development, see [CONTRIBUTING.md](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md#-updating--improving-documentation).
+
+  - type: dropdown
+    id: doc-issue-category
+    attributes:
+      label: Issue Category
+      description: Select the category that best describes your issue.
+      options:
+        - Undocumented feature or missing documentation
+        - Incorrect or outdated information
+        - Suggestion for existing article
+        - Broken or dead link
+        - Documentation organization issue
+        - Other (please describe in the details section)
+    validations:
+      required: true
+
+  - type: input
+    id: page-url
+    attributes:
+      label: Affected Documentation Page URL
+      description: Provide the URL of the specific page where you encountered the issue.
+      placeholder: "https://docs.continue.dev/path/to/page"
+    validations:
+      required: false
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Issue Description
+      description: Please describe the issue in detail. Include specifics about missing information, outdated content, or improvements needed.
+      placeholder: |
+        Examples:
+        - Missing section on [topic]
+        - Incorrect information about [subject]
+        - Outdated example code for [feature]
+        - Suggestion to improve [section] by [details]
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-content
+    attributes:
+      label: Expected Content
+      description: If applicable, provide the content you believe should be added or updated.
+      placeholder: "Suggested details or changes for the documentation..."

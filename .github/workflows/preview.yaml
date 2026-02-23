@@ -1,0 +1,214 @@
+name: Publish Pre-release Extension
+
+on:
+  release:
+    types: [prereleased]
+
+  workflow_dispatch:
+    inputs:
+      publish_build:
+        description: "Whether or not to publish the built extension to the VS Code marketplace"
+        required: true
+        default: "false"
+
+jobs:
+  check_release_name:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - id: check
+        working-directory: .
+        run: |
+          if [[ "${{ github.event.release.tag_name }}" == v1.3.*-vscode ]]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    needs: check_release_name
+    if: needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            npm_config_arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: arm64
+            npm_config_arch: arm
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            npm_config_arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: arm64
+            npm_config_arch: arm64
+          - os: ubuntu-latest
+            platform: linux
+            arch: armhf
+            npm_config_arch: arm
+          - os: ubuntu-latest
+            platform: alpine
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+            npm_config_arch: arm64
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: ./.github/actions/build-vscode-extension
+        with:
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+          npm_config_arch: ${{ matrix.npm_config_arch }}
+          pre-release: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.arch }}-vsix
+          path: "extensions/vscode/*.vsix"
+
+  release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      # Download the .vsix artifacts
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: "*-vsix"
+          path: vsix-artifacts
+          merge-multiple: true
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            vsix-artifacts/*.vsix
+          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          repository: continuedev/continue
+          prerelease: true
+
+  publish:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # 0. Setup git
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Pull latest changes from release
+        run: git fetch origin ${{ github.ref }} && git checkout ${{ github.ref }}
+
+      # 1. Download the artifacts
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: "*-vsix"
+          path: vsix-artifacts
+          merge-multiple: true
+
+      # 2. Publish the extension to VS Code Marketplace
+      - name: Publish to VS Code Marketplace
+        run: |
+          cd extensions/vscode
+          npx @vscode/vsce publish --pre-release --packagePath ../../vsix-artifacts/*.vsix
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
+
+      # 3. Publish the extension to Open VSX Registry
+      - name: Publish (Open VSX Registry)
+        continue-on-error: true
+        run: |
+          cd extensions/vscode
+          npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../vsix-artifacts/*.vsix
+
+      # 4. Create PR with version bump
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Create PR branch
+        run: |
+          BRANCH_NAME="chore/bump-vscode-version-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b $BRANCH_NAME
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+      - name: Bump version in package.json
+        run: |
+          cd extensions/vscode
+          npm version patch --no-git-tag-version
+          VERSION=$(node -p "require('./package.json').version")
+          echo "NEW_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          commit-message: "chore: bump vscode extension version to ${{ env.NEW_VERSION }}"
+          title: "chore: bump vscode extension version to ${{ env.NEW_VERSION }}"
+          body: |
+            Automated PR to bump the VS Code extension version after successful pre-release publication.
+
+            - Bumped version in extensions/vscode/package.json to ${{ env.NEW_VERSION }}
+          branch: ${{ env.BRANCH_NAME }}
+          base: main
+          delete-branch: true
+
+      # 5. Update version in package.json
+      # - name: Update version in package.json
+      #   run: |
+      #     cd extensions/vscode
+      #     npm version patch
+      # - name: Commit changes
+      #   run: |
+      #     git config --local user.email "action@github.com"
+      #     git config --local user.name "GitHub Action"
+      #     git commit -am "💚 Update package.json version [skip ci]"
+
+      # - name: Push changes
+      #   uses: ad-m/github-push-action@master
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     branch: ${{ github.ref }}

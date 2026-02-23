@@ -1,0 +1,79 @@
+---
+title: "How to Configure Vertex AI with Continue"
+slug: ../vertexai
+sidebarTitle: "Vertex AI"
+---
+
+<Info>
+  Enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com)
+  and set up [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc)
+</Info>
+
+## Configuration
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: <MODEL_NAME>
+        provider: vertexai
+        model: <MODEL_ID>
+        env:
+          projectId: <PROJECT_ID>
+          region: us-east5
+    ```
+    </Tab>
+    <Tab title="JSON (Deprecated)">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "<MODEL_NAME>",
+          "provider": "vertexai",
+          "model": "<MODEL_ID>",
+          "projectId": "[PROJECT_ID]",
+          "region": "us-east5"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## How to Enable Vertex AI Express Mode
+
+You can use Vertex AI in [express mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview) by only providing an API Key. Only some Gemini models are supported in express mode for now.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: <MODEL_NAME>
+        provider: vertexai
+        model: <MODEL_ID>
+        apiKey: <YOUR_GOOGLE_CLOUD_API_KEY>
+    ```
+    </Tab>
+    <Tab title="JSON (Deprecated)">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "<MODEL_NAME>",
+          "provider": "vertexai",
+          "model": "<MODEL_ID>",
+          "apiKey": "<YOUR_GOOGLE_CLOUD_API_KEY>",
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>

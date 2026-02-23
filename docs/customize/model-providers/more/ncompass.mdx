@@ -1,0 +1,34 @@
+---
+title: "NCompass"
+description: "Configure NCompass Technologies with Continue to access their fast inference engine for open-source models like Google's Gemma 3 Coder"
+---
+
+The nCompass Technologies API exposes an extremely fast inference engine for open-source language models. You can sign up [here](https://app.ncompass.tech/api-settings), copy your API key on the initial welcome screen, and then hit the play button on any model from the [nCompass Models list](https://ncompass.tech/models). Change `~/.continue/config.json` to look like this:
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="Package or config.yaml"
+   models:
+     - name: Ncompass Gemma 3 Coder
+       provider: ncompass
+       model: google/gemma-3-27b-it
+       apiKey: <YOUR_NCOMPASS_API_KEY>
+   ```
+   </Tab>
+   <Tab title="JSON">
+	```json title="config.json"
+	{
+      "models": [
+        {
+          "title": "Ncompass Gemma 3 Coder",
+          "provider": "ncompass",
+          "model": "google/gemma-3-27b-it",
+          "apiKey": "<YOUR_NCOMPASS_API_KEY>"
+        }
+      ]
+	}
+    ```
+   </Tab>
+</Tabs>
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/NCompass.ts)

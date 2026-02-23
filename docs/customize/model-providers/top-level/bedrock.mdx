@@ -1,0 +1,176 @@
+---
+title: "How to Configure Amazon Bedrock with Continue"
+slug: ../bedrock
+sidebarTitle: "Amazon Bedrock"
+---
+
+<Tip>
+  **Discover Amazon Bedrock models [here](https://continue.dev/amazon)**
+</Tip>
+
+<Info>
+  Get started with [Amazon Bedrock](https://aws.amazon.com/bedrock/)
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <MODEL_NAME>
+      provider: bedrock
+      model: <MODEL_ID>
+      env:
+        region: us-east-1
+        profile: bedrock
+      roles:
+        - chat
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "bedrock",
+        "model": "<MODEL_ID>",
+        "region": "us-east-1",
+        "profile": "bedrock"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+<Info>
+  **Check out a more advanced configuration [here](https://continue.dev/amazon/us-anthropic-claude-sonnet-4-20250514-v1?view=config)**
+</Info>
+
+## How to Enable Prompt Caching with Amazon Bedrock
+
+Bedrock allows Claude models to cache tool payloads, system messages, and chat
+messages between requests. Enable this behavior by adding
+`promptCaching: true` under `defaultCompletionOptions` in your model
+configuration.
+
+```yaml title="config.yaml"
+name: My Config
+version: 0.0.1
+schema: v1
+
+models:
+  - name: <MODEL_NAME>
+    provider: bedrock
+    model: <MODEL_ID>
+    defaultCompletionOptions:
+      promptCaching: true
+```
+
+Prompt caching is not supported in JSON configuration files, so use the YAML syntax above to enable it.
+
+## How to Set Up Authentication for Amazon Bedrock
+
+Authentication will be through temporary or long-term credentials in
+`~/.aws/credentials` under a configured profile (e.g. "bedrock").
+
+```title="~/.aws/credentials
+[bedrock]
+aws_access_key_id = abcdefg
+aws_secret_access_key = hijklmno
+aws_session_token = pqrstuvwxyz # Optional: means short term creds.
+```
+
+You can also use an AWS `accessKeyId` and `secretAccessKey` for authentication instead of a local credentials profile.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <MODEL_NAME>
+      provider: bedrock
+      model: <MODEL_ID>
+      env:
+        region: us-east-1
+        accessKeyId: ${{ secrets.AWS_ACCESS_KEY_ID }} # can also enter key inline here for local configs
+        secretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # can also enter key inline here for local configs
+      roles:
+        - chat
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "bedrock",
+        "model": "<MODEL_ID>",
+        "region": "us-east-1",
+        "accessKeyId": "<YOUR_ACCESS_KEY_ID>",
+        "secretAccessKey": "<YOUR_SECRET_ACCESS_KEY>" 
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## How to Configure Custom Imported Models with Amazon Bedrock
+
+To setup Bedrock using custom imported models, add the following to your config file:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <MODEL_NAME>
+      provider: bedrockimport
+      model: <MODEL_ID>
+      env:
+        region: us-west-2
+        profile: bedrock
+        modelArn: arn:aws:bedrock:us-west-2:XXXXX:imported-model/XXXXXX
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "bedrockimport",
+        "model": "<MODEL_ID>",
+        "modelArn": "arn:aws:bedrock:us-west-2:XXXXX:imported-model/XXXXXX", 
+        "region": "us-west-2",
+        "profile": "bedrock"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+Authentication will be through temporary or long-term credentials in
+~/.aws/credentials under a configured profile (e.g. "bedrock").
+
+```title="~/.aws/credentials
+[bedrock]
+aws_access_key_id = abcdefg
+aws_secret_access_key = hijklmno
+aws_session_token = pqrstuvwxyz # Optional: means short term creds.
+```

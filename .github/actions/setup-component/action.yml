@@ -1,0 +1,57 @@
+name: 'Setup Component'
+description: 'Cache and install dependencies for a specific component'
+inputs:
+  component:
+    description: 'Component name (core, gui, vscode, binary)'
+    required: true
+  include-packages:
+    description: 'Whether to include packages cache (default: true)'
+    required: false
+    default: 'true'
+  include-root:
+    description: 'Whether to include root cache (default: false)'
+    required: false  
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: ".nvmrc"
+    - uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-cache-${{ inputs.component }}-${{ hashFiles(inputs.component == 'vscode' && 'extensions/vscode/package-lock.json' || format('{0}/package-lock.json', inputs.component)) }}
+
+    - uses: actions/cache@v4
+      if: inputs.include-packages == 'true'
+      with:
+        path: |
+          packages/*/node_modules
+        key: ${{ runner.os }}-packages-node-modules-${{ hashFiles('packages/*/package-lock.json') }}
+
+    - uses: actions/cache@v4
+      if: inputs.include-root == 'true'
+      id: root-cache
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+    - name: Install root dependencies
+      if: inputs.include-root == 'true' && steps.root-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: npm ci
+
+    - uses: actions/cache@v4
+      id: component-cache
+      with:
+        path: ${{ inputs.component == 'vscode' && 'extensions/vscode/node_modules' || format('{0}/node_modules', inputs.component) }}
+        key: ${{ runner.os }}-${{ inputs.component }}-node-modules-${{ hashFiles(inputs.component == 'vscode' && 'extensions/vscode/package-lock.json' || format('{0}/package-lock.json', inputs.component)) }}
+
+    - name: Install component dependencies
+      if: steps.component-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cd ${{ inputs.component == 'vscode' && 'extensions/vscode' || inputs.component }}
+        npm ci

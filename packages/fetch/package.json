@@ -1,0 +1,31 @@
+{
+  "name": "@continuedev/fetch",
+  "version": "1.1.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc"
+  },
+  "author": "Nate Sesti and Ty Dunn",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@continuedev/config-types": "^1.0.14",
+    "follow-redirects": "^1.15.6",
+    "http-proxy-agent": "^7.0.2",
+    "https-proxy-agent": "^7.0.5",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/follow-redirects": "^1.14.4",
+    "typescript": "^5.0.0",
+    "vitest": "^3.2.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^9.2.6",
+    "@semantic-release/npm": "^10.0.6",
+    "semantic-release": "^21.1.2"
+  }
+}

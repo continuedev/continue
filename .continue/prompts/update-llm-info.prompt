@@ -1,0 +1,79 @@
+name: Update LLM Info
+description: Updates Gemini blocks with latest information
+version: 2
+---
+I need you to update this repo with the latest information about large language models from certain providers.
+The information is stored in the `packages/llm-info` directory, which operates as its own npm package.
+Information is stored in a simple JSON format, with one file of models per "provider" (e.g. gemini, ollama, openai, etc).
+For example, Gemini model information is stored in `packages/llm-info/src/providers/gemini.ts`.
+
+To make these updates for a given provider, perform the following steps one at a time:
+
+1. VIEW CURRENT INFORMATION
+
+To view the current llm info, read the file (e.g. `packages/llm-info/src/providers/gemini.ts`) using the read_file tool.
+If you do not see a tool for reading files, let me know.
+
+For reference, here is the LLMInfo interface used to store the information:
+
+```typescript
+export interface LlmInfo {
+  model: string; // the model name used to distinguish the model at the API layer, e.g. "gemini-2.5-pro-preview-05-06"
+  displayName?: string; // A fitting display name, e.g. "Gemini 2.5 Pro Preview"
+  description?: string; // A short description of the model, as similar as possible to descriptions found on the provider's website
+  contextLength?: number; // The size of the context window in tokens, often called "max input tokens" or "context length"
+  maxCompletionTokens?: number; // The maximum number of tokens the model can output
+  regex?: RegExp; // A regex expression to uniquely match the model name if it had some slight modifications/upgrades, e.g. /gemini-2\.5-pro-preview/i
+  mediaTypes?: MediaType[]; // Input/output types supported by the model, e.g. [MediaType.Text, MediaType.Image]
+}
+
+export enum MediaType {
+  Text = "text",
+  Image = "image",
+  Audio = "audio",
+  Video = "video",
+}
+
+export const AllMediaTypes = [
+  MediaType.Text,
+  MediaType.Image,
+  MediaType.Audio,
+  MediaType.Video,
+];
+```
+
+2. EXTRACT NEW INFORMATION
+
+Fetch information from the internet using the search web and read url tools.
+If you do not see either of these tools, stop and let me know.
+
+Retrieve the following sites per these providers, and consider these notes on how to extract the information:
+- "gemini": https://ai.google.dev/gemini-api/docs/models - maxCompletionTokens is called "Output token limit", contextLength is called "Input token limit"
+// TODO: add info for openai, ollama, etc
+
+For any other providers, search the web for "latest [provider] models" and find the most relevant model information using your best judgement.
+Generally, ignore models that do not support text output. These models will be used in a coding agent client that only supports text/image input and text/output, so extraneous capabilities can be ignored.
+Sometimes, "Experimental", "Preview", or similar versions of models are available. The latest-date version of each should have its own information maintained.
+
+3. UPDATE THE INFORMATION
+
+Use the edit file tool to submit updates to the relevant provider file (e.g. `packages/llm-info/src/providers/gemini.ts`).
+Let me know if you do not see a tool for editing files.
+
+Generally, avoid making changes to existing information, as it is probably up to date.
+Primarily, focus on adding new models or adding missing information to existing models.
+NEVER delete any existing models, but let me know if you think one should be removed.
+Stop to ask me if you are unsure about any changes, and let me know if there are updates that seem nuanced, complex, or extremely notable.
+Provide a summary of changes after the fact.
+
+4. ASK IF I WANT TO PUBLISH TO NPM
+After you are done updating everything, remind me that I need to publish the changes to npm.
+
+// TODO too sensitive for now
+// If yes, update `packages/llm-info/package.json` with the new version number and then
+// - use the terminal tool to commit the changes
+// - use the terminal tool to publish changes to npm
+// If you do not see a tool for running terminal commands, let me know.
+
+// User input
+Please update LLM Info for the following providers. If "all", update all providers mentioned above:

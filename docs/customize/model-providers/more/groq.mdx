@@ -1,0 +1,40 @@
+---
+title: "How to Configure Groq with Continue"
+sidebarTitle: "Groq"
+---
+
+<Info>
+  Get your API key from the [Groq Console](https://console.groq.com/docs/models)
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <MODEL_NAME>
+      provider: groq
+      model: <MODEL_ID>
+      apiKey: <YOUR_GROQ_API_KEY>"
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "groq",
+        "model": "<MODEL_ID>",
+        "apiKey": "<YOUR_GROQ_API_KEY>"",
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

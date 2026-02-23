@@ -1,0 +1,6 @@
+media
+**/*.tmLanguage
+models/**/*
+builtin-themes/
+**/textmate-syntaxes/
+**/*.scm

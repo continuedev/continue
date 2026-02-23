@@ -1,0 +1,189 @@
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+
+  add(number) {
+    this.result += number;
+    return this;
+  }
+
+  subtract(number) {
+    this.result -= number;
+    return this;
+  }
+
+  multiply(number) {
+    this.result *= number;
+    return this;
+  }
+
+  divide(number) {
+    if (number === 0) {
+      throw new Error("Cannot divide by zero");
+    }
+    this.result /= number;
+    return this;
+  }
+
+  getResult() {
+    return this.result;
+  }
+
+  reset() {
+    this.result = 0;
+    return this;
+  }
+}
+
+---
+
+/**
+ * Calculator class for performing basic arithmetic operations.
+ */
+class Calculator {
+  /**
+   * Creates a new Calculator instance.
+   * Initializes the result to 0.
+   */
+  constructor() {
+    this.result = 0;
+  }
+
+  /**
+   * Adds a number to the current result.
+   * @param {number} number - The number to add.
+   * @returns {Calculator} The Calculator instance for method chaining.
+   */
+  add(number) {
+    this.result += number;
+    return this;
+  }
+
+  /**
+   * Subtracts a number from the current result.
+   * @param {number} number - The number to subtract.
+   * @returns {Calculator} The Calculator instance for method chaining.
+   */
+  subtract(number) {
+    this.result -= number;
+    return this;
+  }
+
+  /**
+   * Multiplies the current result by a number.
+   * @param {number} number - The number to multiply by.
+   * @returns {Calculator} The Calculator instance for method chaining.
+   */
+  multiply(number) {
+    this.result *= number;
+    return this;
+  }
+
+  /**
+   * Divides the current result by a number.
+   * @param {number} number - The number to divide by.
+   * @returns {Calculator} The Calculator instance for method chaining.
+   * @throws {Error} If attempting to divide by zero.
+   */
+  divide(number) {
+    if (number === 0) {
+      throw new Error("Cannot divide by zero");
+    }
+    this.result /= number;
+    return this;
+  }
+
+  /**
+   * Returns the current result.
+   * @returns {number} The current result.
+   */
+  getResult() {
+    return this.result;
+  }
+
+  /**
+   * Resets the calculator's result to 0.
+   * @returns {Calculator} The Calculator instance for method chaining.
+   */
+  reset() {
+    this.result = 0;
+    return this;
+  }
+}
+
+---
+
++ /**
++  * Calculator class for performing basic arithmetic operations.
++  */
+class Calculator {
++   /**
++    * Creates a new Calculator instance.
++    * Initializes the result to 0.
++    */
+  constructor() {
+    this.result = 0;
+  }
+
++   /**
++    * Adds a number to the current result.
++    * @param {number} number - The number to add.
++    * @returns {Calculator} The Calculator instance for method chaining.
++    */
+  add(number) {
+    this.result += number;
+    return this;
+  }
+
++   /**
++    * Subtracts a number from the current result.
++    * @param {number} number - The number to subtract.
++    * @returns {Calculator} The Calculator instance for method chaining.
++    */
+  subtract(number) {
+    this.result -= number;
+    return this;
+  }
+
++   /**
++    * Multiplies the current result by a number.
++    * @param {number} number - The number to multiply by.
++    * @returns {Calculator} The Calculator instance for method chaining.
++    */
+  multiply(number) {
+    this.result *= number;
+    return this;
+  }
+
++   /**
++    * Divides the current result by a number.
++    * @param {number} number - The number to divide by.
++    * @returns {Calculator} The Calculator instance for method chaining.
++    * @throws {Error} If attempting to divide by zero.
++    */
+  divide(number) {
+    if (number === 0) {
+      throw new Error("Cannot divide by zero");
+    }
+    this.result /= number;
+    return this;
+  }
+
++   /**
++    * Returns the current result.
++    * @returns {number} The current result.
++    */
+  getResult() {
+    return this.result;
+  }
+
++   /**
++    * Resets the calculator's result to 0.
++    * @returns {Calculator} The Calculator instance for method chaining.
++    */
+  reset() {
+    this.result = 0;
+    return this;
+  }
+}

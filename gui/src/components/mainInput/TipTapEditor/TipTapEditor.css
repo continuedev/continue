@@ -1,0 +1,45 @@
+.mention {
+  background-color: var(--vscode-badge-background, #bfe2b6);
+  color: var(--vscode-badge-foreground, --vscode-foreground, #000);
+  border-radius: 3px;
+  font-size: 0.9em;
+  padding: 0.05em 0.15em;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.command-suggestion {
+  background-color: var(--vscode-badge-background, #bfe2b6);
+  color: var(--vscode-badge-foreground, --vscode-foreground, #000);
+  border-radius: 3px;
+  font-size: 0.9em;
+  padding: 0.05em 0.15em;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  color: #646464; /* lightGray */
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.gap-cursor {
+  border-top: 1px solid white;
+}
+
+.tiptap img {
+  height: auto;
+  max-width: 96%;
+  border: 1px solid transparent;
+}
+
+.tiptap img.ProseMirror-selectednode {
+  border: 1px solid var(--vscode-badge-background, #bfe2b6);
+}
+
+.tiptap img.selected-image {
+  outline: 3px solid var(--vscode-badge-background, #bfe2b6);
+}

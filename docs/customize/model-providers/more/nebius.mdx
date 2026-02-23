@@ -1,0 +1,75 @@
+---
+title: "Nebius"
+description: "Configure Nebius AI Studio with Continue to access their language model offerings, including DeepSeek R1 for chat and BAAI embeddings models"
+---
+
+You can get an API key from the [Nebius AI Studio API keys page](https://studio.nebius.ai/settings/api-keys)
+
+## Available Models
+
+Available models can be found on the [Nebius AI Studio models page](https://studio.nebius.ai/models/text2text)
+
+## Chat Model
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: DeepSeek R1
+      provider: nebius
+      model: deepseek-ai/DeepSeek-R1
+      apiKey: <YOUR_NEBIUS_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "DeepSeek R1",
+        "provider": "nebius",
+        "model": "deepseek-ai/DeepSeek-R1",
+        "apiKey": "<YOUR_NEBIUS_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Embeddings Model
+
+Available models can be found on the [Nebius AI Studio embeddings page](https://studio.nebius.ai/models/embedding)
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: BAAI Embedder
+      provider: nebius
+      model: BAAI/bge-en-icl
+      apiKey: <YOUR_NEBIUS_API_KEY>
+      roles:
+        - embed
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "nebius",
+      "model": "BAAI/bge-en-icl",
+      "apiKey": "<YOUR_NEBIUS_API_KEY>"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>

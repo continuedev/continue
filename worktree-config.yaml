@@ -1,0 +1,24 @@
+# Worktree Copy Configuration
+# Edit this file to customize what gets copied when creating new worktrees
+#
+# Supports glob patterns:
+#   - packages/*/node_modules  (matches all package node_modules)
+#   - **/.next                  (matches .next in any subdirectory)
+#   - services/**/*.env         (matches all .env files in services)
+
+# Large directories - copied using Copy-on-Write (fast, space-efficient)
+cowCopyTargets:
+  - node_modules
+  - app/node_modules
+  - core/node_modules
+  - core/dist
+  - extensions/*/node_modules # Glob: all services
+  - packages/*/node_modules # Glob: all packages
+  - packages/*/dist # Glob: all package dist builds
+  - packages/*/out # Glob: all package out builds
+
+# Small files - copied with regular cp (fast for individual files)
+regularCopyTargets:
+  - .env
+  - core/.env
+

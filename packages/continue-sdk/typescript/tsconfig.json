@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "strict": true,
+    "outDir": "dist",
+    "declaration": true,
+    "skipLibCheck": true,
+    "isolatedModules": true
+  },
+  "include": ["src", "api"],
+  "exclude": ["node_modules", "dist"]
+}

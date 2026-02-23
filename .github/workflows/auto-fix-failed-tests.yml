@@ -1,0 +1,170 @@
+name: Auto Fix Failed Tests
+
+on:
+  workflow_run:
+    workflows: ["PR Checks", "CLI PR Checks"]
+    types:
+      - completed
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: read
+
+jobs:
+  fix-failed-tests:
+    # Only run if the workflow failed
+    # DISABLED: Remove 'false && ' on the next line to enable auto-fixing
+    if: false && github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get workflow run details
+        id: workflow-details
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const workflowRun = context.payload.workflow_run;
+            const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: workflowRun.id
+            });
+
+            // Find all failed jobs since we're only monitoring specific test workflows
+            const failedJobs = jobs.jobs.filter(job => job.conclusion === 'failure');
+
+            if (failedJobs.length === 0) {
+              core.info('No failed jobs found');
+              return null;
+            }
+
+            core.setOutput('has_failed_tests', 'true');
+            core.setOutput('workflow_name', workflowRun.name);
+            core.setOutput('workflow_run_id', workflowRun.id);
+            core.setOutput('head_branch', workflowRun.head_branch);
+            core.setOutput('head_sha', workflowRun.head_sha);
+            core.setOutput('failed_jobs', JSON.stringify(failedJobs.map(j => j.name)));
+
+            return failedJobs;
+
+      - name: Get job logs for failed tests
+        if: steps.workflow-details.outputs.has_failed_tests == 'true'
+        id: get-logs
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const workflowRunId = ${{ github.event.workflow_run.id }};
+            const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: workflowRunId
+            });
+
+            let errorLogs = '';
+
+            for (const job of jobs.jobs) {
+              if (job.conclusion === 'failure') {
+                try {
+                  const { data: logData } = await github.rest.actions.downloadJobLogsForWorkflowRun({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    job_id: job.id
+                  });
+                  
+                  errorLogs += `\n\n=== Job: ${job.name} ===\n`;
+                  errorLogs += logData;
+                } catch (error) {
+                  core.warning(`Could not fetch logs for job ${job.name}: ${error.message}`);
+                }
+              }
+            }
+
+            // Store logs in environment file for next step
+            const fs = require('fs');
+            fs.writeFileSync('/tmp/test_failure_logs.txt', errorLogs);
+
+            core.setOutput('has_logs', errorLogs.length > 0 ? 'true' : 'false');
+
+      - name: Checkout repository
+        if: steps.workflow-details.outputs.has_failed_tests == 'true'
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          ref: ${{ steps.workflow-details.outputs.head_sha }}
+
+      - name: Setup Node.js
+        if: steps.workflow-details.outputs.has_failed_tests == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Install Continue CLI globally
+        if: steps.workflow-details.outputs.has_failed_tests == 'true'
+        run: npm i -g @continuedev/cli
+
+      - name: Start remote session to fix failed tests
+        if: steps.workflow-details.outputs.has_failed_tests == 'true'
+        id: remote-session
+        env:
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+        run: |
+          # Create a detailed prompt for fixing the failed tests
+          cat > /tmp/fix_tests_prompt.txt << 'PROMPT_EOF'
+          🔧 **Auto Test Fix Request**
+
+          The following tests failed in workflow "${{ steps.workflow-details.outputs.workflow_name }}" (Run ID: ${{ steps.workflow-details.outputs.workflow_run_id }}):
+
+          **Failed Jobs:** ${{ steps.workflow-details.outputs.failed_jobs }}
+          **Branch:** ${{ steps.workflow-details.outputs.head_branch }}
+          **Commit:** ${{ steps.workflow-details.outputs.head_sha }}
+
+          **Your Task:**
+          1. Analyze the test failure logs and error messages
+          2. Identify the root cause of the test failures
+          3. Fix the failing tests by updating the test code or the underlying implementation
+          4. Ensure all tests pass after your changes
+          5. Commit your fixes with a descriptive message
+
+          **Test Failure Context:**
+          Please examine the repository structure, run the failing tests locally to understand the errors, and implement appropriate fixes.
+
+          Focus on:
+          - Understanding what the tests are trying to validate
+          - Identifying why they're failing (code changes, environment issues, test logic errors)
+          - Making minimal, targeted fixes that address the root cause
+          - Ensuring the fixes don't break other functionality
+
+          Please start by examining the failing tests and their error messages, then proceed with the necessary fixes.
+          PROMPT_EOF
+
+          echo "Starting Continue CLI remote session for test fixes..."
+          echo "Prompt content:"
+          cat /tmp/fix_tests_prompt.txt
+
+          # Start remote session and capture JSON output
+          SESSION_OUTPUT=$(cat /tmp/fix_tests_prompt.txt | cn remote -s --branch ${{ steps.workflow-details.outputs.head_branch }})
+          echo "Raw session output: $SESSION_OUTPUT"
+
+          # Extract URL from JSON output
+          SESSION_URL=$(echo "$SESSION_OUTPUT" | jq -r '.url // empty')
+
+          if [ -z "$SESSION_URL" ] || [ "$SESSION_URL" = "null" ]; then
+            echo "Failed to extract session URL from output: $SESSION_OUTPUT"
+            exit 1
+          fi
+
+          echo "session_url=$SESSION_URL" >> $GITHUB_OUTPUT
+          echo "✅ Started remote session: $SESSION_URL"
+
+      - name: Log session details
+        if: steps.workflow-details.outputs.has_failed_tests == 'true'
+        run: |
+          echo "✅ Successfully started auto-fix session for failed tests"
+          echo "Workflow: ${{ steps.workflow-details.outputs.workflow_name }}"
+          echo "Run ID: ${{ steps.workflow-details.outputs.workflow_run_id }}"
+          echo "Branch: ${{ steps.workflow-details.outputs.head_branch }}"
+          echo "Session URL: ${{ steps.remote-session.outputs.session_url }}"
+          echo "Failed jobs: ${{ steps.workflow-details.outputs.failed_jobs }}"

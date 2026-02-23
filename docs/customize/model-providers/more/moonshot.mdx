@@ -1,0 +1,104 @@
+---
+title: "Moonshot AI"
+description: "Configure Moonshot AI's language models with Continue, including Kimi K2, Kimi K2.5, and Moonshot v1 models with competitive pricing"
+---
+
+[Moonshot AI](https://platform.moonshot.cn/) provides high-quality large language model services with competitive pricing and excellent performance, including the Kimi series of models.
+
+## Configuration
+
+To use Moonshot AI models, you need to:
+
+1. Get an API key from [Moonshot AI Platform](https://platform.moonshot.cn/)
+2. Add the following configuration:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Kimi K2
+      provider: moonshot
+      model: kimi-k2
+      apiKey: <YOUR_MOONSHOT_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Kimi K2",
+        "provider": "moonshot",
+        "model": "kimi-k2",
+        "apiKey": "<YOUR_MOONSHOT_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+Moonshot AI currently provides the following models:
+
+- `kimi-k2`: Kimi K2, a powerful MoE model with 128K context window
+- `kimi-k2.5`: Kimi K2.5, the latest generation with enhanced reasoning and 128K context window
+- `moonshot-v1-8k`: Base model with 8K context window
+- `moonshot-v1-32k`: Base model with 32K context window
+- `moonshot-v1-128k`: Base model with 128K context window
+
+## Configuration Options
+
+| Option    | Description       | Default                       |
+| --------- | ----------------- | ----------------------------- |
+| `apiKey`  | Moonshot API key  | Required                      |
+| `apiBase` | API base URL      | `https://api.moonshot.cn/v1/` |
+| `model`   | Model name to use | `moonshot-v1-8k`              |
+
+## Example
+
+Here's a complete configuration example:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Kimi K2
+      provider: moonshot
+      model: kimi-k2
+      apiKey: <YOUR_MOONSHOT_API_KEY>
+      defaultCompletionOptions:
+        temperature: 0.7
+        topP: 0.95
+        maxTokens: 2048
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Kimi K2",
+        "provider": "moonshot",
+        "model": "kimi-k2",
+        "apiKey": "<YOUR_MOONSHOT_API_KEY>",
+        "completionOptions": {
+          "temperature": 0.7,
+          "topP": 0.95,
+          "maxTokens": 2048
+        }
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

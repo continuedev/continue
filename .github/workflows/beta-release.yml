@@ -1,0 +1,117 @@
+name: Beta Release
+
+on:
+  schedule:
+    # Run every day at 9am UTC
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+    # Allow manual triggering
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  beta-release:
+    name: Beta Release
+    runs-on: ubuntu-latest
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+          always-auth: true
+
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
+
+      - name: Setup core component
+        uses: ./.github/actions/setup-component
+        with:
+          component: core
+          include-root: true
+
+      - name: Build core
+        run: |
+          cd core
+          npm run build
+
+      - name: Install CLI dependencies
+        working-directory: extensions/cli
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Get current version
+        id: get_version
+        working-directory: extensions/cli
+        run: |
+          # Get the latest version from package.json or npm registry
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          if [[ "$CURRENT_VERSION" == "0.0.0-dev" ]]; then
+            # If it's dev version, get latest from npm registry
+            LATEST_VERSION=$(npm view @continuedev/cli version --silent 2>/dev/null || echo "0.0.0")
+            echo "Using latest npm version: $LATEST_VERSION"
+            CURRENT_VERSION=$LATEST_VERSION
+          fi
+
+          # Create beta version with current date
+          DATE_SUFFIX=$(date -u +%Y%m%d)
+          BETA_VERSION="${CURRENT_VERSION}-beta.${DATE_SUFFIX}"
+
+          # Check if this version already exists on npm
+          if npm view @continuedev/cli@$BETA_VERSION version --silent >/dev/null 2>&1; then
+            echo "Version $BETA_VERSION already exists, adding timestamp"
+            # Add hour and minute to make it unique
+            TIMESTAMP_SUFFIX=$(date -u +%Y%m%d.%H%M)
+            BETA_VERSION="${CURRENT_VERSION}-beta.${TIMESTAMP_SUFFIX}"
+            echo "Using timestamped version: $BETA_VERSION"
+          fi
+
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "beta_version=$BETA_VERSION" >> $GITHUB_OUTPUT
+          echo "date_suffix=$DATE_SUFFIX" >> $GITHUB_OUTPUT
+
+      - name: Update package.json for beta
+        working-directory: extensions/cli
+        run: |
+          # Update version in package.json
+          npm version ${{ steps.get_version.outputs.beta_version }} --no-git-tag-version
+
+      - name: Build
+        working-directory: extensions/cli
+        run: npm run build
+
+      - name: Publish beta to npm
+        working-directory: extensions/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm publish --tag beta
+          echo "Published beta version: ${{ steps.get_version.outputs.beta_version }}"
+
+      - name: Create beta release on GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+        run: |
+          # Create a git tag for the beta
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag "v${{ steps.get_version.outputs.beta_version }}"
+          git push origin "v${{ steps.get_version.outputs.beta_version }}"
+
+          # Create GitHub release
+          gh release create "v${{ steps.get_version.outputs.beta_version }}" \
+            --title "CLI Beta Release v${{ steps.get_version.outputs.beta_version }}" \
+            --notes "Daily beta release for testing. This version will be promoted to stable after 7 days if no critical issues are found." \
+            --prerelease

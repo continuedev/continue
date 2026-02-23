@@ -1,0 +1,65 @@
+---
+title: "Customization Overview"
+description: "Learn how to customize Continue with model providers, rules, prompts, and tools"
+---
+
+Continue can be deeply customized to fit your specific development workflow and preferences. This guide covers the main ways you can customize Continue to enhance your coding experience.
+
+## Change Your Model Provider
+
+Continue allows you to choose your favorite or even add multiple model providers. This allows you to use different models for different tasks, or to try another model if you're not happy with the results from your current model. Continue supports all of the popular model providers, including OpenAI, Anthropic, Microsoft/Azure, Mistral, and more. You can even self host your own model provider if you'd like.
+
+[Learn more about model providers →](/customize/model-providers/overview)
+
+## Select Different Models for Specific Tasks
+
+Different Continue features can use different models. We call these _model roles_. For example, you can use a different model for Chat mode than you do for Autocomplete.
+
+[Learn more about model roles →](/customize/model-roles)
+
+## Create Custom Prompts
+
+Create custom slash commands and prompt templates to streamline your workflow.
+
+[Learn more about prompts →](/customize/prompts)
+
+## Configure Rules
+
+Set up rules to guide AI responses and ensure consistent behavior across your codebase.
+
+[Learn more about rules →](/customize/rules)
+
+## Call External Tools and Functions
+
+Give your agent the power of tools using [Agent mode in the extensions](/ide-extensions/agent/quick-start) or add custom tools to your agent using [MCP Servers](/customize/mcp-tools).
+
+[Learn more about MCP tools →](/customize/mcp-tools)
+
+
+## Deep Dives
+
+Detailed technical explanations of Continue's internal workings and advanced configuration options.
+
+[Read Deep Dives →](/customize/deep-dives/configuration)
+
+## Reference
+
+Complete configuration reference and API documentation.
+
+[View Reference →](/reference)
+
+
+---
+
+Whatever you choose, you'll probably start by editing your configuration.
+
+## Edit Your Configuration
+
+You can easily access your configuration from the Continue Chat sidebar. Open the sidebar by pressing `cmd/ctrl` + `L` (VS Code) or `cmd/ctrl` + `J` (JetBrains) and click the Agent selector above the main chat input. Then, you can hover over an agent and click the `new window` (hub agents) or `gear` (local agents) icon.
+
+![configure](/images/customize/images/configure-continue-a5c8c79f3304c08353f3fc727aa5da7e.png)
+
+## Manage Your Configuration
+
+- See [Editing Hub Configurations](/mission-control/configs/edit-a-config) for more details on managing your hub configuration
+- See the [Config Deep Dive](/reference) for more details on local configurations

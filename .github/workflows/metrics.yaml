@@ -1,0 +1,77 @@
+name: Monthly issue metrics
+on:
+  workflow_dispatch:
+  schedule:
+    # Runs every Monday at 9:00 AM PST (17:00 UTC)
+    - cron: "0 17 * * 1"
+
+  push:
+    branches:
+      - nate/metrics-action
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: issue metrics
+    runs-on: ubuntu-latest
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
+    permissions:
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Get dates for last month
+        shell: bash
+        run: |
+          # Calculate the first day of the previous month
+          first_day=$(date -d "last month" +%Y-%m-01)
+
+          # Calculate the last day of the previous month
+          last_day=$(date -d "$first_day +1 month -1 day" +%Y-%m-%d)
+
+          #Set an environment variable with the date range
+          echo "$first_day..$last_day"
+          echo "last_month=$first_day..$last_day" >> "$GITHUB_ENV"
+
+      - name: Run issue-metrics tool
+        uses: github/issue-metrics@v3
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SEARCH_QUERY: 'repo:continuedev/continue created:${{ env.last_month }} -reason:"not planned"'
+
+      - name: Read metrics file content
+        id: read-metrics
+        run: |
+          content=$(cat ./issue_metrics.md)
+          # This prepares the content in a way that can be used in GitHub Actions
+          content="${content//'%'/'%25'}"
+          content="${content//$'\n'/'%0A'}"
+          # content="${content//$'\r'/'%0D'}"
+          echo "metrics_content=$content" >> "$GITHUB_OUTPUT"
+
+      - name: Post a message in a channel
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          webhook: ${{ secrets.ISSUE_PR_METRICS_SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "Issue / PR Metrics Report"
+            blocks:
+                - type: "header"
+                  text:
+                    type: "plain_text"
+                    text: "Monthly Issue Metrics Report"
+                    emoji: true
+                - type: "section"
+                  text:
+                    type: "mrkdwn"
+                    text: |
+                      ${{ steps.read-metrics.outputs.metrics_content }}
+
+      - name: Upload metrics report as artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: issue-metrics-report
+          path: ./issue_metrics.md

@@ -1,0 +1,178 @@
+name: Publish Extension
+
+on:
+  release:
+    types: [released]
+
+  workflow_dispatch:
+    inputs:
+      publish_build:
+        description: "Whether or not to publish the built extension to the VS Code marketplace"
+        required: true
+        default: "false"
+
+jobs:
+  check_release_name:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - id: check
+        working-directory: .
+        run: |
+          if [[ "${{ github.event.release.tag_name }}" == v1.2.*-vscode ]]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
+
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # This ensures all tags are fetched
+
+      - name: Checkout tag
+        run: git checkout ${GITHUB_REF#refs/tags/}
+
+      - name: Make sure version isn't odd
+        run: |
+          cd extensions/vscode
+          node scripts/versionCheck.js
+
+  build:
+    needs: [check_release_name, check-version]
+    if: needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            npm_config_arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: arm64
+            npm_config_arch: arm
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            npm_config_arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: arm64
+            npm_config_arch: arm64
+          - os: ubuntu-latest
+            platform: linux
+            arch: armhf
+            npm_config_arch: arm
+          - os: ubuntu-latest
+            platform: alpine
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+            npm_config_arch: arm64
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: ./.github/actions/build-vscode-extension
+        with:
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+          npm_config_arch: ${{ matrix.npm_config_arch }}
+          pre-release: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.arch }}-vsix
+          path: "extensions/vscode/*.vsix"
+
+  release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      # Download the .vsix artifacts
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: "*-vsix"
+          path: vsix-artifacts
+          merge-multiple: true
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            vsix-artifacts/*.vsix
+          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          repository: continuedev/continue
+
+  publish:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true'
+    permissions:
+      contents: write
+    steps:
+      # 0. Setup git
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Pull latest changes from release
+        run: git fetch origin ${{ github.ref }} && git checkout ${{ github.ref }}
+
+      # 1. Download the artifacts
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: "*-vsix"
+          path: vsix-artifacts
+          merge-multiple: true
+
+      # 2. Publish the extension to VS Code Marketplace
+      - name: Publish to VS Code Marketplace
+        run: |
+          cd extensions/vscode
+          npx @vscode/vsce publish --packagePath ../../vsix-artifacts/*.vsix
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
+
+      # 3. Publish the extension to Open VSX Registry
+      - name: Publish (Open VSX Registry)
+        continue-on-error: true
+        run: |
+          cd extensions/vscode
+          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../vsix-artifacts/*.vsix

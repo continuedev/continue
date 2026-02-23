@@ -1,0 +1,95 @@
+---
+title: "SiliconFlow"
+description: "Configure SiliconFlow with Continue to access their AI model platform, featuring Qwen's Coder models for chat and autocomplete, along with various embedding and reranking models"
+---
+
+<Info>
+  You can get an API key from the [Silicon
+  Cloud](https://cloud.siliconflow.cn/account/ak).
+</Info>
+
+## Chat Model
+
+We recommend configuring **Qwen/Qwen2.5-Coder-32B-Instruct** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Qwen
+        provider: siliconflow
+        model: Qwen/Qwen2.5-Coder-32B-Instruct
+        apiKey: <YOUR_SILICONFLOW_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Qwen",
+          "provider": "siliconflow",
+          "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
+          "apiKey": "<YOUR_SILICONFLOW_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+We recommend configuring **Qwen/Qwen2.5-Coder-7B-Instruct** as your autocomplete model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Qwen
+        provider: siliconflow
+        model: Qwen/Qwen2.5-Coder-32B-Instruct
+        apiKey: <YOUR_SILICONFLOW_API_KEY>
+        roles: 
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Qwen",
+          "provider": "siliconflow",
+          "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
+          "apiKey": "<YOUR_SILICONFLOW_API_KEY>"
+        }
+      ]
+      "tabAutocompleteModel": {
+        "title": "Qwen",
+        "provider": "siliconflow",
+        "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+        "apiKey": "<YOUR_SILICONFLOW_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Embeddings Model
+
+SiliconFlow provide some embeddings models. [Click here](https://siliconflow.cn/models) to see a list of embeddings models.
+
+## Reranking Model
+
+SiliconFlow provide some reranking models. [Click here](https://siliconflow.cn/models) to see a list of reranking models.

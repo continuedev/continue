@@ -1,0 +1,372 @@
+---
+title: "Building a Continuous AI Workflow with PostHog and GitHub"
+description: "Build an automated system that continuously monitors PostHog analytics, analyzes user behavior with AI, and creates GitHub issues automatically using PostHog MCP."
+sidebarTitle: "PostHog Analytics with Continue CLI"
+---
+
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
+<Card title="What You'll Build" icon="robot">
+  A fully automated workflow that uses Continue CLI with the PostHog MCP to fetch analytics data, analyze user experience issues with AI, and automatically create GitHub
+  issues with the GitHub CLI.
+</Card>
+
+<Info>
+  The new [PostHog Mission Control Integration](/mission-control/integrations/posthog) enables **[Continuous AI](/guides/continuous-ai)** for product analytics - where AI agents autonomously analyze user behavior, identify optimization opportunities, and create data-driven development tasks. This cookbook focuses on CLI-based workflows, but you can also deploy autonomous agents through Mission Control.
+
+  **Get Started:** Use this cookbook to understand PostHog analytics fundamentals, then [enable Mission Control](/mission-control/integrations/posthog) to deploy autonomous analytics-driven agents across your organization.
+</Info>
+
+## What You'll Learn
+
+This cookbook teaches you to:
+
+- Use [PostHog MCP](https://posthog.com/docs/model-context-protocol) to query [analytics](https://posthog.com/docs/web-analytics), [errors](https://posthog.com/docs/error-tracking), and [feature flags](https://posthog.com/docs/feature-flags)
+- Analyze user behavior patterns with AI
+- Automatically create GitHub issues using GitHub CLI
+- Set up continuous monitoring with GitHub Actions
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- GitHub repository where you want to create issues
+- [PostHog account](https://posthog.com) with [session recordings enabled](https://posthog.com/docs/session-replay/installation) and data collecting
+- Node.js 18+ installed locally
+- [Continue CLI](https://docs.continue.dev/guides/cli) with **active credits** (required for API usage)
+- [GitHub CLI](https://cli.github.com/) installed (`gh` command)
+
+<Steps>
+  <Step title="Install Continue CLI">
+    <CLIInstall />
+  </Step>
+  
+  <Step title="Set up Continue CLI Account & API Key">
+        1. Visit [Continue Organizations](https://continue.dev/settings/organizations)
+        2. Sign up or log in to your Continue account
+        3. Navigate to your organization settings
+        4. Click **"API Keys"** and then **"+ New API Key"** 
+        5. Copy the API key immediately (you won't see it again!)
+        6. Login to the CLI: `cn login`
+  </Step>
+
+  <Step title="Add Required Secrets to Continue CLI">
+    Continue CLI will securely store your API keys as secrets that can be referenced in prompts.
+  </Step>
+</Steps>
+
+<Tip>
+  Continue CLI handles the complex API interactions - you just need to provide
+  the right prompts!
+</Tip>
+
+## Step 1: Set Up Your Credentials
+
+First, you'll need to gather your PostHog and GitHub API credentials and add them as secrets in Continue CLI.
+
+<Tabs>
+  <Tab title="PostHog API Credentials">
+    You'll need a **Personal API Key** (not a Project API key) to access session recordings:
+
+    1. Go to [Personal API Keys](https://app.posthog.com/settings/user-api-keys) in PostHog
+    2. Click **+ Create a personal API Key**
+    3. Name it "Continue CLI Session Analysis"
+    4. Select these scopes:
+       - `session_recording:read` - **Required** for accessing session data
+       - `feature_flag:read` - **Required** for feature flag auditing
+       - `insight:read`
+       - `query:read`
+       - `session_recording_playlist:read`
+    5. Copy the key immediately (you won't see it again!)
+    6. Note your **Project ID** from your PostHog project settings
+    7. Note your PostHog host URL (e.g., `https://us.posthog.com` or your custom domain)
+    8. You'll also need your POSTHOG_AUTH_HEADER value, which is simply `Bearer YOUR_API_KEY`
+
+      <Info>
+  **Continue Secrets**: The `POSTHOG_AUTH_HEADER` secret should be stored in
+  Continue's secure secrets storage. This keeps your API key safe and the MCP
+  automatically connects to your default PostHog project.
+</Info>
+
+  </Tab>
+  <Tab title="Set Up GitHub CLI Authentication">
+   GitHub CLI handles authentication automatically - no manual PAT needed:
+
+    1. Install GitHub CLI if not already installed
+    2. Run `gh auth login` and follow the prompts
+    3. Choose authentication method (browser or token)
+    4. Grant necessary permissions when prompted (`issues:write` is **required** for creating issues)
+
+  </Tab>
+<Tab title= "Configure API Access in Continue CLI">
+ 
+<Tip>
+See the [secret types documentation](/mission-control/secrets/secret-types) for adding secrets
+</Tip>
+
+You only need to configure the PostHog MCP credential - it automatically handles project selection. To add environment variables to your Continue Mission Control account:
+
+1.  Go to the [Continue Mission Control](https://continue.dev)
+2.  Sign in to your account
+3.  Navigate to your user settings
+4.  Look for the "Secrets" section
+5.  Add your Personal API Key from PostHog (phx_...) as POSTHOG_AUTH_HEADER secret with format: Bearer YOUR_API_KEY
+
+</Tab>
+</Tabs>
+
+## PostHog GitHub Continuous AI Workflow Options
+
+<Card title="🚀 Fastest Path to Success" icon="zap">
+  Skip the manual setup and use our pre-built PostHog GitHub agent that includes
+  optimized prompts, rules, and the PostHog MCP for more consistent results.
+</Card>
+
+<Info>
+  **How PostHog MCP Works**: 
+  - Your API key is tied to your PostHog account and
+  organization 
+  - It automatically uses your default project (no project ID
+  needed) 
+  - If you have multiple projects, use `switch-project` to
+  change 
+  - The MCP connects via `https://mcp.posthog.com/sse` using your account context.
+
+</Info>
+
+<Tabs>
+  <Tab title="⚡ Quick Start (Recommended)">
+    **Perfect for:** Immediate results with optimized prompts and built-in debugging
+
+    <Steps>
+      <Step title="Add the Pre-Built Agent">
+        Visit the [PostHog Continuous AI Agent](https://continue.dev/continuedev/posthog-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
+        
+        ```bash
+        cn --agent continuedev/posthog-continuous-ai-agent
+        ```
+
+        This agent includes:
+        - **Optimized prompts** for PostHog analysis and GitHub issue creation
+        - **Built-in rules** for consistent formatting and error handling
+        - **PostHog MCP** for more reliable API interactions
+      </Step>
+
+      <Step title="Run the Analysis">
+        From your project directory, run:
+        ```bash
+        cn "Give me my PostHog Session data and create GitHub issues based on the problems."
+        ```
+
+        That's it! The agent handles everything automatically.
+      </Step>
+    </Steps>
+
+    <Info>
+      **Why Use the Agent?** Results are more consistent and debugging is easier thanks to the PostHog MCP integration and pre-tested prompts.
+    </Info>
+
+  </Tab>
+
+  <Tab title="🛠️ Manual Setup">
+  <Steps>
+    <Step title="Add PostHog MCP to Continue CLI">
+      First, install the [PostHog MCP](https://continue.dev/posthog/http-mcp) to the Continue CLI by
+      1. Adding it to a Hub Config by clicking "Use MCP Server" and selecting a Config
+      2. Adding it to your [Local Config](/reference#mcpservers)
+    </Step>
+    <Step title="Add PostHog + GitHub Analysis Rules">
+      Visit [PostHog GitHub Continuous AI Rules](https://continue.dev/bekah-hawrot-weigel/posthog-github-continuous-ai-rules) and click "Use Rule" to add it to your Config.
+      
+      You could also
+      1. Pass `--rule bekah-hawrot-weigel/posthog-github-continuous-ai-rules` to `cn` OR
+      2. Copy the rules to your local `.continue/rules` folder. See the [Rules Guide](/customize/deep-dives/rules#how-to-create-rules).
+    </Step>
+    <Step title="Create Your Custom Prompts">
+      Use this prompt with Continue CLI to analyze PostHog data and create GitHub issues:
+
+      ```bash
+
+       # In cn TUI mode:
+      "Create GitHub issues from the PostHog analysis using gh CLI:
+      - For each issue, run: gh issue create --title '🔍 UX Issue: [title]' --body '[details]'
+      - Add labels: --label 'bug,user-experience,automated'
+      - Set priority labels (high/medium/low)
+      - Include session data and technical details in the body
+      Execute the commands and confirm each issue was created with URL."
+      ```
+    </Step>
+</Steps>
+
+  </Tab>
+</Tabs>
+<Info>
+
+  **Why GitHub CLI over GitHub MCP**: While GitHub MCP is available, it can be
+  token-expensive to run. The `gh` CLI is more efficient, requires no API tokens
+  (authenticated via `gh auth login`), and provides a cleaner command-line
+  experience. GitHub MCP remains an option if you prefer full MCP integration.
+</Info>
+
+<Accordion title="Agent Requirements">
+    To use the pre-built agent, you need either: 
+      - **Continue CLI Pro Plan** with
+      the models add-on, OR 
+      - **Your own API keys** added to Continue Mission Control secrets
+      The agent will automatically detect and use your
+      configuration.
+
+</Accordion>
+
+---
+
+<Warning>
+**Repository Labels Required**: Make sure your GitHub repository has these labels:
+- `bug`, `enhancement`, `technical-debt`
+- `high-priority`, `medium-priority`, `low-priority`
+- `user-experience`, `automated`, `feature-flag`, `cleanup`
+
+Create missing labels in your repo at: **Settings → Labels → New label**
+
+</Warning>
+
+<Info>
+    **What Continue CLI Does:** 
+    - Parses your analysis results automatically 
+    - Makes authenticated GitHub API calls using your stored token 
+    - Creates properly formatted issues with appropriate labels 
+    - Checks for duplicate issues to avoid spam 
+    - Provides confirmation with issue URLs
+
+</Info>
+
+
+## What You've Built
+
+After completing this guide, you have a complete **Continuous AI system** that:
+
+- **Monitors user experience** - Automatically fetches and analyzes PostHog session data
+
+- **Identifies problems intelligently** - Uses AI to spot patterns and technical issues
+
+- **Creates actionable tasks** - Generates GitHub issues with specific recommendations
+
+- **Runs autonomously** - Operates daily without manual intervention using GitHub Actions
+
+- **Scales with your team** - Handles growing amounts of session data automatically
+
+<Card title="Continuous AI" icon="rocket">
+  Your system now operates at **[Level 2 Continuous
+  AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** -
+  AI handles routine analysis tasks with human oversight through GitHub issue
+  review and prioritization.
+</Card>
+
+## Security Best Practices
+
+<Warning>
+
+    **Protect Your API Keys:**
+    - Store all credentials as GitHub Secrets, never in
+    code
+    - Use Continue CLI's secure secret storage
+    - Limit token scopes to minimum required permissions
+    - Rotate API keys regularly (every 90 days recommended)
+    - Monitor token usage for unusual activity
+
+</Warning>
+
+## Example Use Cases
+
+Here are practical examples of what you can build with PostHog MCP and Continue CLI:
+
+### Session Recording Analysis (Current Implementation)
+
+The main workflow above focuses on analyzing session recordings to identify UX issues and create GitHub issues automatically.
+
+### Feature Flag Audit and Cleanup
+
+<Card title="🏁 Feature Flag Management" icon="flag">
+  Automatically audit your feature flags to identify unused, outdated, or problematic flags that need attention.
+</Card>
+
+**What this workflow does:**
+- Fetches all feature flags from your PostHog project
+- Analyzes flag usage, rollout status, and configuration
+- Identifies flags that may be candidates for removal or updates
+- Creates GitHub issues for flag cleanup tasks
+
+**Example Continue CLI prompts:**
+
+```bash
+# Get all feature flags and analyze them
+cn "Use PostHog MCP to fetch all feature flags with feature-flag-get-all. Then analyze each flag to identify: 1) Flags that are 100% rolled out and could be removed, 2) Flags that haven't been updated in 90+ days, 3) Flags with complex targeting that might need simplification, 4) Experimental flags that should be cleaned up."
+
+# Create cleanup issues for identified flags
+cn "For each problematic feature flag identified, create a GitHub issue using gh CLI:
+- Title: '🏁 Feature Flag Cleanup: [flag_name]'
+- Include flag details: rollout percentage, last modified date, targeting rules
+- Add labels: 'technical-debt', 'feature-flag', 'cleanup'
+- Set priority based on risk level (high for 100% rollouts, medium for stale flags)
+- Include specific recommendations for each flag"
+
+# Audit flag performance impact
+cn "Cross-reference feature flags with PostHog performance metrics to identify flags that may be impacting user experience or site performance. Create performance-focused GitHub issues for flags showing negative impact."
+```
+
+**Required PostHog MCP Tools:**
+- `feature-flag-get-all` - Retrieve all feature flags
+- `feature-flag-get-definition` - Get detailed flag configuration
+- `query-run` - Run analytics queries to check flag usage
+- `insights-get-all` - Get insights related to flag performance
+
+**Sample Output:**
+This workflow creates GitHub issues like:
+- "🏁 Feature Flag Cleanup: dark-mode-toggle" (100% rollout, safe to remove)
+- "🏁 Feature Flag Review: experimental-checkout" (unused for 120 days)
+- "🏁 Feature Flag Simplify: complex-user-targeting" (overly complex rules)
+
+### Advanced Prompts
+
+Consider enhancing your workflow with these advanced Continue CLI prompts:
+
+<CardGroup cols={2}>
+  <Card title="Performance Analysis" icon="chart-line">
+    "Analyze [PostHog performance
+    metrics](https://posthog.com/docs/web-analytics) alongside session
+    recordings to identify slow page loads affecting user experience"
+  </Card>
+  <Card title="Error Correlation" icon="bug">
+    "Cross-reference JavaScript console errors with user actions to identify the
+    root cause of UX issues"
+  </Card>
+  <Card title="Feature Flag Performance Impact" icon="flag">
+    "Use PostHog MCP to correlate feature flag rollouts with performance metrics and user behavior changes to identify flags causing issues"
+  </Card>
+  <Card title="Custom Slack Alerts" icon="slack">
+    "Create Slack alerts when critical UX issues are detected in PostHog
+    sessions or when feature flags need attention"
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+- Consider [GitHub MCP](https://continue.dev/github/github-mcp) as an alternative (note: can be token-expensive)
+- Configure [Slack MCP](https://continue.dev/slack/slack-mcp) for alerts
+- Set up [PostHog performance monitoring](https://posthog.com/docs/web-analytics)
+- Join the [GitHub Discussions](https://github.com/continuedev/continue/discussions) for support
+
+## Resources
+
+- [PostHog API Documentation](https://posthog.com/docs/api)
+- [PostHog MCP Documentation](https://posthog.com/docs/model-context-protocol)
+- [PostHog Session Replay](https://posthog.com/docs/session-replay)
+- [PostHog Feature Flags](https://posthog.com/docs/feature-flags)
+- [PostHog Error Tracking](https://posthog.com/docs/error-tracking)
+- [GitHub CLI Documentation](https://cli.github.com/)
+- [GitHub MCP on Continue Mission Control](https://continue.dev/github/github-mcp) (alternative option)
+- [Continue CLI Guide](https://docs.continue.dev/guides/cli)
+- [Continuous AI Best Practices](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)

@@ -1,0 +1,51 @@
+name: Run Continue Agent
+
+on:
+  workflow_call:
+    inputs:
+      prompt:
+        description: "Additional prompting to send to the Continue agent"
+        required: false
+        type: string
+        default: ""
+      agent:
+        description: "The agent to use (e.g., continuedev/github-pr-agent)"
+        required: true
+        type: string
+        default: "continuedev/github-pr-agent"
+      branch_name:
+        description: "The base branch name to work from"
+        required: false
+        type: string
+        default: "main"
+    secrets:
+      CONTINUE_API_KEY:
+        required: true
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call agents endpoint
+        env:
+          PROMPT: ${{ inputs.prompt }}
+          AGENT: ${{ inputs.agent }}
+          BRANCH_NAME: ${{ inputs.branch_name }}
+          REPO_URL: https://github.com/${{ github.repository }}
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+        run: |
+          # Use jq to properly construct JSON with safe escaping
+          json_body=$(jq -n \
+            --arg prompt "$PROMPT" \
+            --arg agent "$AGENT" \
+            --arg branchName "$BRANCH_NAME" \
+            --arg repoUrl "$REPO_URL" \
+            '{prompt: $prompt, agent: $agent, branchName: $branchName, repoUrl: $repoUrl}')
+
+          response=$(curl -f -X POST https://api.continue.dev/agents \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $CONTINUE_API_KEY" \
+            -d "$json_body")
+          id=$(echo $response | jq -r '.id')
+          echo "https://continue.dev/hub?type=agents/$id"

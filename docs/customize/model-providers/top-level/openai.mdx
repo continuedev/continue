@@ -1,0 +1,133 @@
+---
+title: "How to Configure OpenAI Models with Continue"
+slug: ../openai
+sidebarTitle: "OpenAI"
+---
+
+<Tip>
+  **Discover OpenAI models [here](https://continue.dev/openai)**
+</Tip>
+
+<Info>
+  Get an API key from the [OpenAI Console](https://platform.openai.com/account/api-keys)
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <MODEL_NAME>
+      provider: openai
+      model: <MODEL_ID>
+      apiKey: <YOUR_OPENAI_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "openai",
+        "model": "<MODEL_ID>",
+        "apiKey": "<YOUR_OPENAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+<Info>
+  **Check out a more advanced configuration [here](https://continue.dev/openai/gpt-5?view=config)**
+</Info>
+
+## OpenAI API compatible providers
+
+OpenAI API compatible providers include
+
+- [KoboldCpp](https://github.com/lostruins/koboldcpp)
+- [text-gen-webui](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#setup--installation)
+- [FastChat](https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md)
+- [LocalAI](https://localai.io/basics/getting_started/)
+- [llama-cpp-python](https://github.com/abetlen/llama-cpp-python#web-server)
+- [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples)
+- [vLLM](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html)
+- [BerriAI/litellm](https://github.com/BerriAI/litellm)
+- [Tetrate Agent Router Service](https://router.tetrate.ai)
+
+If you are using an OpenAI API compatible providers, you can change the `apiBase` like this:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <OPENAI_API_COMPATIBLE_PROVIDER_MODEL>
+      provider: openai
+      model: <MODEL_NAME>
+      apiBase: http://localhost:8000/v1
+      apiKey: <YOUR_CUSTOM_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<OPENAI_API_COMPATIBLE_PROVIDER_MODEL>",
+        "provider": "openai",
+        "model": "<MODEL_NAME>",
+        "apiKey": "<YOUR_CUSTOM_API_KEY>",
+        "apiBase": "http://localhost:8000/v1"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+### How to Force Legacy Completions Endpoint Usage
+
+To force usage of `completions` instead of `chat/completions` endpoint you can set:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <OPENAI_API_COMPATIBLE_PROVIDER_MODEL>
+      provider: openai
+      model: <MODEL_NAME>>
+      apiBase: http://localhost:8000/v1
+      useLegacyCompletionsEndpoint: true
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<OPENAI_API_COMPATIBLE_PROVIDER_MODEL>",
+        "provider": "openai",
+        "model": "<MODEL_NAME>",
+        "apiBase": "http://localhost:8000/v1",
+        "useLegacyCompletionsEndpoint": true
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

@@ -1,0 +1,21 @@
+{
+  "name": "@continuedev/config-types",
+  "version": "1.0.14",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo 'No tests to run'",
+    "build": "tsc"
+  },
+  "author": "Nate Sesti and Ty Dunn",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "typescript": "^5.5.2"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  }
+}

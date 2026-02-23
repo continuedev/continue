@@ -1,0 +1,344 @@
+name: Similar Issue Search & Discussion Suggestion
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  analyze:
+    # Disabling for now due to bugs
+    if: false
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout deja-view
+        uses: actions/checkout@v6
+        with:
+          repository: "bdougie/deja-view"
+          # Option 1: Pin to specific commit (most secure)
+          ref: "45e7696" # Pin to specific commit for stability
+
+          # Option 2: Use a tag (recommended after creating releases)
+          # ref: 'v1.0.0'
+
+          # Option 3: Use main branch (least secure, gets latest changes)
+          # ref: 'main'
+
+          path: deja-view
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          cd deja-view
+          pip install -r requirements.txt
+
+      - name: Index repository if needed
+        env:
+          CHROMA_API_KEY: ${{ secrets.CHROMA_CLOUD_API_KEY }}
+          CHROMA_TENANT: ${{ secrets.CHROMA_TENANT }}
+          CHROMA_DATABASE: ${{ secrets.CHROMA_DATABASE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd deja-view
+
+          # Index the repository (this will update existing index)
+          python cli.py index "${{ github.repository }}" --max-issues 200 || true
+
+      - name: Search for similar issues
+        id: search
+        env:
+          CHROMA_API_KEY: ${{ secrets.CHROMA_CLOUD_API_KEY }}
+          CHROMA_TENANT: ${{ secrets.CHROMA_TENANT }}
+          CHROMA_DATABASE: ${{ secrets.CHROMA_DATABASE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd deja-view
+
+          # Determine if this is an issue or PR
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            ISSUE_URL="https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
+            THRESHOLD="0.85"
+            TOP_K="5"
+          else
+            ISSUE_URL="https://github.com/${{ github.repository }}/issues/${{ github.event.issue.number }}"
+            THRESHOLD="0.7"
+            TOP_K="5"
+          fi
+
+          # Create a Python script to search and format as JSON
+          cat << 'PYTHON_SCRIPT' > search_similar.py
+          import sys
+          import json
+          import os
+          from github_similarity_service import SimilarityService
+
+          issue_url = sys.argv[1]
+          threshold = float(sys.argv[2])
+          top_k = int(sys.argv[3])
+
+          # Parse issue number from URL
+          issue_number = int(issue_url.split('/')[-1])
+          repo_parts = issue_url.split('/')
+          owner = repo_parts[3]
+          repo = repo_parts[4]
+
+          service = SimilarityService()
+
+          # Find similar issues
+          similar = service.find_similar_issues(
+              owner=owner,
+              repo=repo,
+              issue_number=issue_number,
+              top_k=top_k,
+              min_similarity=threshold
+          )
+
+          # Format as JSON
+          print(json.dumps(similar))
+          PYTHON_SCRIPT
+
+          # Search for similar issues
+          SIMILAR_ISSUES=$(python search_similar.py "$ISSUE_URL" "$THRESHOLD" "$TOP_K")
+
+          # Save to output
+          echo "similar_issues<<EOF" >> $GITHUB_OUTPUT
+          echo "$SIMILAR_ISSUES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Check if any similar issues found
+          if [ "$(echo "$SIMILAR_ISSUES" | jq '. | length')" -gt 0 ]; then
+            echo "has_similar=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_similar=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if issue should be a discussion
+        id: discussion_check
+        if: github.event_name == 'issues'
+        env:
+          CHROMA_API_KEY: ${{ secrets.CHROMA_CLOUD_API_KEY }}
+          CHROMA_TENANT: ${{ secrets.CHROMA_TENANT }}
+          CHROMA_DATABASE: ${{ secrets.CHROMA_DATABASE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd deja-view
+
+          # Create a Python script to analyze the issue
+          cat << 'PYTHON_SCRIPT' > check_discussion.py
+          import os
+          import json
+          import re
+          from github_similarity_service import SimilarityService
+
+          # Get issue details from environment
+          issue_title = os.environ.get('ISSUE_TITLE', '')
+          issue_body = os.environ.get('ISSUE_BODY', '')
+          issue_labels = json.loads(os.environ.get('ISSUE_LABELS', '[]'))
+
+          # Mock Issue object for analysis
+          class MockIssue:
+              def __init__(self):
+                  self.title = issue_title
+                  self.body = issue_body
+                  self.labels = issue_labels
+                  self.state = 'open'
+                  self.number = int(os.environ.get('ISSUE_NUMBER', 0))
+                  self.created_at = ''
+                  self.updated_at = ''
+                  self.url = ''
+
+          service = SimilarityService()
+          issue = MockIssue()
+
+          score, reasons = service._calculate_discussion_score(issue)
+
+          result = {
+              'score': score,
+              'reasons': reasons,
+              'should_be_discussion': score >= 0.5,
+              'confidence': 'high' if score >= 0.7 else 'medium' if score >= 0.5 else 'low'
+          }
+
+          print(json.dumps(result))
+          PYTHON_SCRIPT
+
+          # Run the analysis
+          DISCUSSION_ANALYSIS=$(ISSUE_TITLE="${{ github.event.issue.title }}" \
+            ISSUE_BODY='${{ github.event.issue.body }}' \
+            ISSUE_LABELS='${{ toJson(github.event.issue.labels.*.name) }}' \
+            ISSUE_NUMBER="${{ github.event.issue.number }}" \
+            python check_discussion.py)
+
+          echo "analysis<<EOF" >> $GITHUB_OUTPUT
+          echo "$DISCUSSION_ANALYSIS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Extract whether it should be a discussion
+          SHOULD_BE_DISCUSSION=$(echo "$DISCUSSION_ANALYSIS" | jq -r '.should_be_discussion')
+          echo "should_be_discussion=$SHOULD_BE_DISCUSSION" >> $GITHUB_OUTPUT
+
+          # Extract confidence level
+          CONFIDENCE=$(echo "$DISCUSSION_ANALYSIS" | jq -r '.confidence')
+          echo "confidence=$CONFIDENCE" >> $GITHUB_OUTPUT
+
+      - name: Comment with analysis
+        uses: actions/github-script@v8
+        with:
+          script: |
+            let comment = '';
+            const hasSimilar = '${{ steps.search.outputs.has_similar }}' === 'true';
+            const isPR = '${{ github.event_name }}' === 'pull_request';
+            const shouldBeDiscussion = !isPR && '${{ steps.discussion_check.outputs.should_be_discussion }}' === 'true';
+
+            // Add similar issues section if found
+            if (hasSimilar) {
+              const similarIssues = JSON.parse(`${{ steps.search.outputs.similar_issues }}`);
+              
+              if (isPR) {
+                // Filter only open issues for PRs
+                const openIssues = similarIssues.filter(issue => issue.state === 'open');
+                
+                if (openIssues.length > 0) {
+                  // Simple table format for PRs
+                  comment += '## 📋 Related Open Issues\n\n';
+                  comment += 'These open issues appear to be related to this PR (≥85% similarity):\n\n';
+                  comment += '| # | Title | Similarity |\n';
+                  comment += '|---|-------|------------|\n';
+                  
+                  openIssues.forEach(issue => {
+                    const similarity = (issue.similarity * 100).toFixed(0);
+                    const title = issue.title.length > 50 ? issue.title.substring(0, 47) + '...' : issue.title;
+                    comment += `| [#${issue.number}](${issue.url}) | ${title} | ${similarity}% |\n`;
+                  });
+                  
+                  comment += '\n';
+                  comment += '_Consider closing related issues if this PR addresses them._\n';
+                } else {
+                  // Don't add any comment if no open issues found
+                  return;
+                }
+              } else {
+                // Original format for issues
+                comment += '## 🔍 Similar Issues Found\n\n';
+                comment += 'I found some existing issues that might be related:\n\n';
+                
+                similarIssues.forEach((issue, index) => {
+                  const similarity = (issue.similarity * 100).toFixed(1);
+                  const state = issue.state === 'open' ? '🟢' : '🔴';
+                  
+                  comment += `${index + 1}. ${state} [#${issue.number}: ${issue.title}](${issue.url}) (${similarity}% similar)\n`;
+                  
+                  if (issue.summary) {
+                    comment += `   > ${issue.summary.substring(0, 150)}${issue.summary.length > 150 ? '...' : ''}\n`;
+                  }
+                  comment += '\n';
+                });
+                
+                comment += '\n';
+              }
+            }
+
+            // Add discussion suggestion if applicable
+            if (shouldBeDiscussion) {
+              const analysis = JSON.parse(`${{ steps.discussion_check.outputs.analysis }}`);
+              const confidence = '${{ steps.discussion_check.outputs.confidence }}';
+              
+              if (hasSimilar) {
+                comment += '---\n\n';
+              }
+              
+              comment += '## 💬 Discussion Suggestion\n\n';
+              
+              const confidenceEmoji = {
+                'high': '🟢',
+                'medium': '🟡',
+                'low': '🔴'
+              };
+              
+              comment += `This issue might be better suited as a **GitHub Discussion** ${confidenceEmoji[confidence] || ''}\n\n`;
+              comment += `**Confidence**: ${confidence.charAt(0).toUpperCase() + confidence.slice(1)} (${(analysis.score * 100).toFixed(0)}%)\n\n`;
+              
+              if (analysis.reasons && analysis.reasons.length > 0) {
+                comment += '**Reasons**:\n';
+                analysis.reasons.forEach(reason => {
+                  comment += `- ${reason}\n`;
+                });
+                comment += '\n';
+              }
+              
+              comment += 'GitHub Discussions are great for:\n';
+              comment += '- Questions and help requests\n';
+              comment += '- Feature requests and ideas\n';
+              comment += '- General feedback and brainstorming\n';
+              comment += '- Community conversations\n\n';
+              
+              comment += '_Consider converting this to a discussion if it\'s not a bug report or actionable task._\n';
+            }
+
+            // Only comment if we have something to say
+            if (comment) {
+              comment += '\n---\n';
+              comment += '_This analysis was automatically generated by [deja-view](https://github.com/bdougie/deja-view)._';
+              
+              if ('${{ github.event_name }}' === 'pull_request') {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.pull_request.number,
+                  body: comment
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: comment
+                });
+              }
+            }
+
+      - name: Add labels
+        if: github.event_name == 'issues'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const labels = [];
+
+            // Check for duplicate
+            if ('${{ steps.search.outputs.has_similar }}' === 'true') {
+              const similarIssues = JSON.parse(`${{ steps.search.outputs.similar_issues }}`);
+              const hasDuplicate = similarIssues.some(issue => issue.similarity > 0.9);
+              
+              if (hasDuplicate) {
+                labels.push('potential-duplicate');
+              }
+            }
+
+            // Check for discussion suggestion
+            if ('${{ steps.discussion_check.outputs.should_be_discussion }}' === 'true') {
+              const confidence = '${{ steps.discussion_check.outputs.confidence }}';
+              
+              if (confidence === 'high') {
+                labels.push('should-be-discussion');
+              } else if (confidence === 'medium') {
+                labels.push('discussion');
+              }
+            }
+
+            // Add labels if any
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: labels
+              });
+            }

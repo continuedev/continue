@@ -1,0 +1,413 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "tsc:watch",
+      "type": "npm",
+      "script": "tsc:watch",
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "group": "dev-watchers",
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "vscode-extension:build",
+      "dependsOn": [
+        "tsc:watch",
+        "vscode-extension:continue-ui:build",
+        "vscode-extension:esbuild",
+        "vscode-extension:esbuild-notify",
+        "gui:dev"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "vscode-extension:esbuild-notify",
+      "dependsOn": ["vscode-extension:esbuild"],
+      "type": "npm",
+      "script": "esbuild-notify",
+      "path": "extensions/vscode",
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "silent",
+        "revealProblems": "onProblem",
+        "close": true,
+        "clear": true
+      }
+    },
+    {
+      "label": "vscode-extension:esbuild",
+      "dependsOn": ["vscode-extension:continue-ui:build"],
+      "type": "npm",
+      "script": "esbuild-watch",
+      "path": "extensions/vscode",
+      "isBackground": true,
+      "presentation": {
+        "group": "dev-watchers",
+        "panel": "dedicated",
+        "reveal": "silent"
+      },
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": "> (.*?):([0-9]+):([0-9]+): (warning|error): (.+)$",
+              "file": 1,
+              "line": 2,
+              "column": 3,
+              "severity": 4,
+              "message": 5
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ">",
+            "endsPattern": "VS Code Extension esbuild complete"
+          }
+        }
+      ]
+    },
+    {
+      "label": "vscode-extension:package",
+      "dependsOn": ["vscode-extension:esbuild"],
+      "type": "npm",
+      "script": "package",
+      "path": "extensions/vscode",
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "always"
+      },
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": "> (.*?):([0-9]+):([0-9]+): (warning|error): (.+)$",
+              "file": 1,
+              "line": 2,
+              "column": 3,
+              "severity": 4,
+              "message": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "vscode-extension:continue-ui:build",
+      "type": "shell",
+      "command": "node",
+      "args": ["scripts/prepackage.js"],
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "silent",
+        "revealProblems": "onProblem",
+        "close": true,
+        "clear": true
+      },
+      "options": {
+        "env": {
+          "SKIP_INSTALLS": "true"
+        },
+        "cwd": "${workspaceFolder}/extensions/vscode"
+      }
+    },
+    {
+      "label": "install-all-dependencies",
+      "type": "shell",
+      "windows": { "command": "./scripts/install-dependencies.ps1" },
+      "command": "./scripts/install-dependencies.sh",
+      "problemMatcher": [],
+      "presentation": {
+        "group": "maintenance",
+        "panel": "shared",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "gui:dev",
+      "type": "shell",
+      "command": "npm",
+      "options": {
+        "cwd": "${workspaceFolder}/gui"
+      },
+      "args": ["run", "dev"],
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "presentation": {
+        "group": "dev-watchers",
+        "panel": "dedicated",
+        "reveal": "always",
+        "focus": false,
+        "showReuseMessage": false
+      },
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "."
+          }
+        }
+      ]
+    },
+    {
+      "label": "binary:esbuild",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "esbuild"],
+      "problemMatcher": [],
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "always"
+      },
+      "options": {
+        "cwd": "binary"
+      }
+    },
+    {
+      "label": "docs:start",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "start", "--", "--no-open"],
+      "problemMatcher": [],
+      "presentation": {
+        "group": "docs",
+        "panel": "dedicated",
+        "reveal": "always"
+      },
+      "options": {
+        "cwd": "docs"
+      }
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "node",
+      "args": ["${workspaceFolder}/scripts/uninstall.js"],
+      "problemMatcher": [],
+      "presentation": {
+        "group": "maintenance",
+        "panel": "shared",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "refresh-dependencies:core",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}/core"
+      },
+      "presentation": {
+        "group": "maintenance",
+        "panel": "shared",
+        "reveal": "silent",
+        "close": true
+      }
+    },
+    {
+      "label": "refresh-dependencies:vscode",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/vscode"
+      },
+      "presentation": {
+        "group": "maintenance",
+        "panel": "shared",
+        "reveal": "silent",
+        "close": true
+      }
+    },
+    {
+      "label": "refresh-dependencies:gui",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}/gui"
+      },
+      "presentation": {
+        "group": "maintenance",
+        "panel": "shared",
+        "reveal": "silent",
+        "close": true
+      }
+    },
+    {
+      "label": "refresh-dependencies:all",
+      "dependsOn": [
+        "refresh-dependencies:core",
+        "refresh-dependencies:gui",
+        "refresh-dependencies:vscode"
+      ],
+      "type": "shell",
+      "problemMatcher": [],
+      "presentation": {
+        "group": "maintenance",
+        "panel": "shared",
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "continue-packages:build",
+      "type": "shell",
+      "command": "node ./scripts/build-packages.js",
+      "problemMatcher": [],
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "always",
+        "close": true,
+        "revealProblems": "onProblem"
+      }
+    },
+    {
+      "label": "vscode-extension:build-with-packages",
+      "dependsOn": ["continue-packages:build", "vscode-extension:build"],
+      "type": "shell",
+      "command": "echo",
+      "args": ["Build with packages completed"],
+      "problemMatcher": [],
+      "dependsOrder": "sequence",
+      "runOptions": {
+        "instanceLimit": 1,
+        "reevaluateOnRerun": true
+      },
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "silent",
+        "close": true,
+        "focus": false
+      }
+    },
+    {
+      "label": "cli:build",
+      "type": "npm",
+      "script": "build",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$tsc"],
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/cli"
+      }
+    },
+    {
+      "label": "cli:build-no-minify",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build:bundle", "--", "--no-minify"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false,
+        "close": true
+      },
+      "problemMatcher": ["$tsc"],
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/cli"
+      }
+    },
+    {
+      "label": "cli:test",
+      "type": "npm",
+      "script": "test",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/cli"
+      }
+    },
+    {
+      "label": "watch-logs",
+      "type": "shell",
+      "command": "npm run watch:logs",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*$",
+          "endsPattern": "^.*$"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/cli"
+      }
+    },
+    {
+      "label": "cli:build-and-watch-logs",
+      "dependsOn": ["cli:build-no-minify", "watch-logs"],
+      "dependsOrder": "sequence",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Build and watch logs completed"],
+      "presentation": {
+        "group": "build-tasks",
+        "panel": "shared",
+        "reveal": "silent",
+        "close": true,
+        "focus": false
+      }
+    }
+  ]
+}

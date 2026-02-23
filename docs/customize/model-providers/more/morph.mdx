@@ -1,0 +1,128 @@
+---
+title: "Morph"
+description: "Configure Morph with Continue to access their optimized models for code application, embeddings, and reranking, designed for fast and accurate integration of AI-generated code changes"
+---
+
+Morph provides a fast apply model that helps you quickly and accurately apply code changes from chat suggestions to your files. It's optimized for speed and precision when integrating generated code into your existing codebase. You can sign up for Morph's generous free tier [here](https://morphllm.com/dashboard). Then, update your configuration file as follows:
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="config.yaml"
+   name: My Config
+   version: 0.0.1
+   schema: v1
+
+   models:
+     - uses: morphllm/morph-v0
+       with:
+         MORPH_API_KEY: ${{ secrets.MORPH_API_KEY }}
+```
+or
+```yaml title="config.yaml"
+     name: My Config
+     version: 0.0.1
+     schema: v1
+
+     - name: Morph Fast Apply
+       provider: openai
+       model: morph-v2
+       apiKey: <YOUR_MORPH_API_KEY>
+       apiBase: https://api.morphllm.com/v1/
+       roles:
+         - apply
+       promptTemplates:
+         apply: "<code>{{{ original_code }}}</code>\n<update>{{{ new_code }}}</update>"
+   ```
+   </Tab>
+   <Tab title="JSON">
+   ```json title="config.json"
+   {
+     "models": [
+       {
+         "title": "Morph Fast Apply",
+         "provider": "openai",
+         "model": "morph-v2",
+         "apiKey": "<YOUR_MORPH_API_KEY>",
+         "apiBase": "https://api.morphllm.com/v1/",
+         "roles": ["apply"],
+         "promptTemplates": {
+           "apply": "<code>{{{ original_code }}}</code>\n<update>{{{ new_code }}}</update>"
+         }
+       }
+     ]
+   }
+   ```
+   </Tab>
+</Tabs>
+
+## Embeddings Model
+
+We recommend configuring **morph-embedding-v2** as your embeddings model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Morph Embeddings
+      provider: openai
+      model: morph-embedding-v2
+      apiKey: <YOUR_MORPH_API_KEY>
+      apiBase: https://api.morphllm.com/v1/
+      roles:
+        - embed
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "openai",
+      "model": "morph-embedding-v2",
+      "apiKey": "<YOUR_MORPH_API_KEY>",
+      "apiBase": "https://api.morphllm.com/v1/"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Reranking Model
+
+We recommend configuring **morph-rerank-v2** as your reranking model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Morph Reranker
+      provider: cohere
+      model: morph-rerank-v2
+      apiKey: <YOUR_MORPH_API_KEY>
+      apiBase: https://api.morphllm.com/v1/
+      roles:
+        - rerank
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "reranker": {
+      "name": "cohere",
+      "params": {
+        "model": "morph-rerank-v2",
+        "apiKey": "<YOUR_MORPH_API_KEY>",
+        "apiBase": "https://api.morphllm.com/v1/"
+      }
+    }
+  }
+  ```
+  </Tab>
+</Tabs>

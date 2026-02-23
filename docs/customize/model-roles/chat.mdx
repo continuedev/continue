@@ -1,0 +1,282 @@
+---
+title: Chat Role
+description: Chat model role
+keywords: [chat, model, role]
+sidebar_position: 1
+---
+
+import { ModelRecommendations } from '/snippets/ModelRecommendations.jsx'
+
+
+A "chat model" is an LLM that is trained to respond in a conversational format. Because they should be able to answer general questions and generate complex code, the best chat models are typically large, often 405B+ parameters.
+
+In Continue, these models are used for normal [Chat](../../ide-extensions/chat/quick-start). The selected chat model will also be used for [Edit](../../ide-extensions/edit/quick-start) and [Apply](./apply.mdx) if no `edit` or `apply` models are specified, respectively.
+
+## Recommended Chat models
+
+<ModelRecommendations role="chat_edit" />
+## Best overall experience
+
+For the best overall Chat experience, you will want to use a 400B+ parameter model or one of the frontier models.
+
+### Claude Opus 4.6 and Claude Sonnet 4 from Anthropic
+
+Our current top recommendations are Claude Opus 4.6 and Claude Sonnet 4 from [Anthropic](../model-providers/top-level/anthropic).
+
+<Tabs>
+  <Tab title="Hub">
+  View the [Claude Opus 4.6 model block](https://continue.dev/anthropic/claude-opus-4-6) or [Claude Sonnet 4 model block](https://continue.dev/anthropic/claude-4-sonnet) on the hub.
+  </Tab>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Claude Opus 4.6
+      provider: anthropic
+      model: claude-opus-4-6
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+  ```
+  </Tab>
+</Tabs>
+
+### Gemma from Google DeepMind
+
+If you prefer to use an open-weight model, then the Gemma family of Models from Google DeepMind is a good choice. You will need to decide if you use it through a SaaS model provider, e.g. [Together](../model-providers/more/together), or self-host it, e.g. [Ollama](../model-providers/top-level/ollama).
+
+<Tabs>
+  <Tab title="Hub">
+    <Tabs>
+        <Tab title="Ollama">
+        Add the [Ollama Gemma 3 27B block](https://continue.dev/ollama/gemma3-27b) from the hub
+        </Tab>
+        <Tab title="Together">
+        Add the [Together Gemma 2 27B Instruct block](https://continue.dev/togetherai/gemma-2-instruct-27b) from the hub
+        </Tab>
+    </Tabs>
+  </Tab>
+  <Tab title="YAML">
+    <Tabs>
+        <Tab title="Ollama">
+        ```yaml title="config.yaml"
+        name: My Config
+        version: 0.0.1
+        schema: v1
+
+        models:
+          - name: "Gemma 3 27B"
+            provider: "ollama"
+            model: "gemma3:27b"
+        ```
+        </Tab>
+        <Tab title="Together">
+        ```yaml title="config.yaml"
+        name: My Config
+        version: 0.0.1
+        schema: v1
+
+        models:
+          - name: "Gemma 3 27B"
+            provider: "together"
+            model: "google/gemma-2-27b-it"
+            apiKey: <YOUR_TOGETHER_API_KEY>
+        ```
+        </Tab>
+    </Tabs>
+  </Tab>
+</Tabs>
+
+### GPT-5.1 from OpenAI
+
+If you prefer to use a model from [OpenAI](../model-providers/top-level/openai), then we recommend GPT-5.1.
+
+<Tabs>
+    <Tab title="Hub">
+    Add the [OpenAI GPT-5.1 block](https://continue.dev/openai/gpt-5.1) from the hub
+    </Tab>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: GPT-5.1
+      provider: openai
+      model: gpt-5.1
+      apiKey: <YOUR_OPENAI_API_KEY>
+  ```
+  </Tab>
+</Tabs>
+
+### Grok-4 from xAI
+
+If you prefer to use a model from [xAI](../model-providers/more/xAI), then we recommend Grok-4.
+
+<Tabs>
+    <Tab title="Hub">
+    Add the [xAI Grok-4.1 block](https://continue.dev/xai/grok-4-1-fast-non-reasoning) from the hub
+    </Tab>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Grok-4.1
+      provider: xAI
+      model: grok-4-1-fast-non-reasoning
+      apiKey: <YOUR_XAI_API_KEY>
+  ```
+  </Tab>
+</Tabs>
+
+### Gemini 3 Pro from Google
+
+If you prefer to use a model from [Google](../model-providers/top-level/gemini), then we recommend Gemini 3 Pro.
+
+<Tabs>
+    <Tab title="Hub">
+    Add the [Gemini 3 Pro block](https://continue.dev/google/gemini-3-pro-preview) from the hub
+    </Tab>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Gemini 3 Pro
+      provider: gemini
+      model: gemini-3-pro-preview
+      apiKey: <YOUR_GEMINI_API_KEY>
+  ```
+  </Tab>
+</Tabs>
+
+## Local, Offline Experience
+
+For the best local, offline Chat experience, you will want to use a model that is large but fast enough on your machine.
+
+### Llama 3.1 8B
+
+If your local machine can run an 8B parameter model, then we recommend running Llama 3.1 8B on your machine (e.g. using [Ollama](../model-providers/top-level/ollama) or [LM Studio](../model-providers/top-level/lmstudio)).
+
+<Tabs>
+  <Tab title="Hub">
+    <Tabs>
+        <Tab title="Ollama">
+    Add the [Ollama Llama 3.1 8b block](https://continue.dev/ollama/llama3.1-8b) from the hub
+    </Tab>
+    {/* HUB_TODO nonexistent block */}
+    {/* <Tab title="LM Studio">
+    Add the [LM Studio Llama 3.1 8b block](https://continue.dev/explore/models) from the hub
+    </Tab> */}
+    </Tabs>
+  </Tab>
+  <Tab title="YAML">
+    <Tabs>
+      <Tab title="Ollama">
+      ```yaml title="config.yaml"
+      name: My Config
+      version: 0.0.1
+      schema: v1
+
+      models:
+        - name: Llama 3.1 8B
+          provider: ollama
+          model: llama3.1:8b
+      ```
+      </Tab>
+      <Tab title="LM Studio">
+      ```yaml title="config.yaml"
+      name: My Config
+      version: 0.0.1
+      schema: v1
+
+      models:
+        - name: Llama 3.1 8B
+          provider: lmstudio
+          model: llama3.1:8b
+      ```
+      </Tab>
+      <Tab title="Msty">
+      ```yaml title="config.yaml"
+      name: My Config
+      version: 0.0.1
+      schema: v1
+
+      models:
+        - name: Llama 3.1 8B
+          provider: msty
+          model: llama3.1:8b
+      ```
+      </Tab>
+    </Tabs>
+  </Tab>
+</Tabs>
+
+### DeepSeek Coder 2 16B
+
+If your local machine can run a 16B parameter model, then we recommend running DeepSeek Coder 2 16B (e.g. using [Ollama](../model-providers/top-level/ollama) or [LM Studio](../model-providers/top-level/lmstudio)).
+
+<Tabs>
+  {/* HUB_TODO nonexistent blocks */}
+  {/* <Tab title="Hub">
+    <Tabs>
+    <Tab title="Ollama">
+    Add the [Ollama Deepseek Coder 2 16B block](https://continue.dev/explore/models) from the hub
+    </Tab>
+    <Tab title="LM Studio">
+    Add the [LM Studio Deepseek Coder 2 16B block](https://continue.dev/explore/models) from the hub
+    </Tab>
+    </Tabs>
+  </Tab> */}
+  <Tab title="YAML">
+    <Tabs>
+        <Tab title="Ollama">
+        ```yaml title="config.yaml"
+        name: My Config
+        version: 0.0.1
+        schema: v1
+
+        models:
+          - name: DeepSeek Coder 2 16B
+            provider: ollama
+            model: deepseek-coder-v2:16b
+        ```
+        </Tab>
+        <Tab title="LM Studio">
+        ```yaml title="config.yaml"
+        name: My Config
+        version: 0.0.1
+        schema: v1
+
+        models:
+          - name: DeepSeek Coder 2 16B
+            provider: lmstudio
+            model: deepseek-coder-v2:16b
+        ```
+        </Tab>
+        <Tab title="Msty">
+        ```yaml title="config.yaml"
+        name: My Config
+        version: 0.0.1
+        schema: v1
+
+        models:
+          - name: DeepSeek Coder 2 16B
+            provider: msty
+            model: deepseek-coder-v2:16b
+        ```
+        </Tab>
+    </Tabs>
+  </Tab>
+</Tabs>
+
+## Other experiences
+
+There are many more models and providers you can use with Chat beyond those mentioned above. Read more [here](../model-roles/chat.mdx)

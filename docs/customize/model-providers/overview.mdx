@@ -1,0 +1,89 @@
+---
+title: "Model Providers Overview"
+description: "Continue supports a wide range of AI model providers to power different features like chat, code editing, autocompletion, and embeddings. This overview helps you navigate through the available options and find the right provider for your needs."
+---
+
+## Popular Model Providers
+
+These are the most commonly used model providers that offer a wide range of capabilities:
+
+| Provider                                                       | Description                                                                     | Capabilities                                |
+| :------------------------------------------------------------- | :------------------------------------------------------------------------------ | :------------------------------------------ |
+| [Anthropic](/customize/model-providers/top-level/anthropic)    | Providers of Claude models, known for long context windows and strong reasoning | Chat, Edit, Apply, Embeddings               |
+| [OpenAI](/customize/model-providers/top-level/openai)          | Creators of GPT models with strong coding capabilities                          | Chat, Edit, Apply, Embeddings               |
+| [Azure](/customize/model-providers/top-level/azure)            | Microsoft's cloud platform offering OpenAI models                               | Chat, Edit, Apply, Embeddings               |
+| [Amazon Bedrock](/customize/model-providers/top-level/bedrock) | AWS service offering access to various foundation models                        | Chat, Edit, Apply, Embeddings               |
+| [Ollama](/customize/model-providers/top-level/ollama)          | Run open-source models locally with a simple interface                          | Chat, Edit, Apply, Embeddings, Autocomplete |
+| [Google Gemini](/customize/model-providers/top-level/gemini)   | Google's multimodal AI models                                                   | Chat, Edit, Apply, Embeddings               |
+| [DeepSeek](/customize/model-providers/more/deepseek)           | Specialized code models with strong performance                                 | Chat, Edit, Apply                           |
+| [Mistral](/customize/model-providers/more/mistral)             | High-performance open models with commercial offerings                          | Chat, Edit, Apply, Embeddings               |
+| [xAI](/customize/model-providers/more/xAI)                     | Grok models from xAI                                                            | Chat, Edit, Apply                           |
+| [Vertex AI](/customize/model-providers/top-level/vertexai)     | Google Cloud's machine learning platform                                        | Chat, Edit, Apply, Embeddings               |
+| [Inception](/customize/model-providers/top-level/inception)    | On-premises open-source model runners                                           | Chat, Edit, Apply                           |
+| [HuggingFace](/customize/model-providers/top-level/huggingfaceinference) | Platform for open source models with inference providers and endpoints           | Chat, Edit, Apply, Embeddings               |
+
+## Additional Model Providers
+
+Beyond the top-level providers, Continue supports many other options:
+
+### Hosted Services
+
+| Provider                                                               | Description                                                |
+| :--------------------------------------------------------------------- | :--------------------------------------------------------- |
+| [Groq](/customize/model-providers/more/groq)                           | Ultra-fast inference for various open models               |
+| [Together AI](/customize/model-providers/more/together)                | Platform for running a variety of open models              |
+| [DeepInfra](/customize/model-providers/more/deepinfra)                 | Hosting for various open source models                     |
+| [OpenRouter](/customize/model-providers/top-level/openrouter)          | Gateway to multiple model providers                        |
+| [Tetrate Agent Router Service](/customize/model-providers/top-level/tetrate_agent_router_service) | Gateway with intelligent routing across multiple model providers |
+| [Cohere](/customize/model-providers/more/cohere)                       | Models specialized for semantic search and text generation |
+| [NVIDIA](/customize/model-providers/more/nvidia)                       | GPU-accelerated model hosting                              |
+| [Cloudflare](/customize/model-providers/more/cloudflare)               | Edge-based AI inference services                           |
+
+### Local Model Options
+
+| Provider                                                 | Description                                   |
+| :------------------------------------------------------- | :-------------------------------------------- |
+| [LM Studio](/customize/model-providers/top-level/lmstudio) | Desktop app for running models locally        |
+| [llama.cpp](/customize/model-providers/more/llamacpp)    | Optimized C++ implementation for running LLMs |
+| [LlamaStack](/customize/model-providers/more/llamastack) | Stack for running Llama models locally        |
+| [llamafile](/customize/model-providers/more/llamafile)   | Self-contained executable model files         |
+
+### Enterprise Solutions
+
+| Provider                                               | Description                           |
+| :----------------------------------------------------- | :------------------------------------ |
+| [SambaNova](/customize/model-providers/more/SambaNova) | Enterprise AI platform                |
+| [Watson x](/customize/model-providers/more/watsonx)    | IBM's enterprise AI platform          |
+| [Sagemaker](/customize/model-providers/more/sagemaker) | AWS machine learning platform         |
+| [Nebius](/customize/model-providers/more/nebius)       | Cloud-based machine learning platform |
+
+## How to Choose a Model Provider
+
+When selecting a model provider, consider:
+
+1. **Hosting preference**: Do you need local models for offline use or privacy, or are you comfortable with cloud services?
+2. **Performance requirements**: Different providers offer varying levels of speed, quality, and context length.
+3. **Specific capabilities**: Some models excel at code generation, others at embeddings or reasoning tasks.
+4. **Pricing**: Costs vary significantly between providers, from free local options to premium cloud services.
+5. **API key requirements**: Most cloud providers require API keys that you'll need to configure.
+
+## Configuration Format
+
+You can add models to your `config.yaml` file like this:
+
+```yaml
+models:
+  - name: Claude 4 Sonnet
+    provider: anthropic # Choose provider from the lists above
+    model: claude-sonnet-4-20250514 # Specific model name
+    apiKey: ${{ secrets.OPENAI_API_KEY }}
+    roles:
+      - chat
+      - edit
+      - apply
+```
+For more detailed configuration, visit the specific provider pages linked above.
+
+## Change Your Model Provider
+
+Continue allows you to choose your favorite or even add multiple model providers. This allows you to use different models for different tasks, or to try another model if you’re not happy with the results from your current model. Continue supports all of the popular model providers, including OpenAI, Anthropic, Microsoft/Azure, Mistral, and more. You can even self host your own model provider if you’d like. [Learn more about model providers](./top-level/openai).

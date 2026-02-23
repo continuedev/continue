@@ -1,0 +1,39 @@
+---
+title: "NVIDIA"
+---
+
+<Info>
+  Get an API key from the [NVIDIA](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog)
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <MODEL_NAME>
+      provider: nvidia
+      model: <MODEL_ID>
+      apiKey: <YOUR_NVIDIA_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "nvidia",
+        "model": "<MODEL_ID>",
+        "apiKey": "<YOUR_NVIDIA_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

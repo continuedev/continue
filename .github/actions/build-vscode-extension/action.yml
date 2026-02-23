@@ -1,0 +1,170 @@
+name: 'Build VS Code Extension'
+description: 'Build VS Code extension for a specific platform'
+inputs:
+  platform:
+    description: 'Target platform (win32, linux, alpine, darwin)'
+    required: true
+  arch:
+    description: 'Target architecture (x64, arm64, armhf)'
+    required: true
+  npm_config_arch:
+    description: 'npm config arch (x64, arm64, arm)'
+    required: true
+  pre-release:
+    description: 'Whether to build as pre-release'
+    required: false
+    default: 'false'
+  commit-sha:
+    description: 'Commit SHA for version modification (optional, uses first 7 chars)'
+    required: false
+    default: ''
+  github-token:
+    description: 'GitHub token for downloading ripgrep'
+    required: true
+outputs:
+  target:
+    description: 'The target string used for the build'
+    value: ${{ steps.set-target.outputs.target }}
+  vsix-path:
+    description: 'Path to the generated VSIX file'
+    value: 'extensions/vscode/*.vsix'
+  build-path:
+    description: 'Path to the build artifacts'
+    value: 'extensions/vscode/build'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: ".nvmrc"
+        
+    - name: Set target variable
+      id: set-target
+      shell: bash
+      run: echo "target=${{ inputs.platform }}-${{ inputs.arch }}" >> $GITHUB_OUTPUT
+    
+    - name: Cache npm
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-cache-build-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Cache extension node_modules
+      uses: actions/cache@v4
+      with:
+        path: extensions/vscode/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+    - name: Cache core node_modules
+      uses: actions/cache@v4
+      with:
+        path: core/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
+
+    - name: Cache gui node_modules
+      uses: actions/cache@v4
+      with:
+        path: gui/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
+
+    - name: Cache packages node_modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          packages/*/node_modules
+        key: ${{ runner.os }}-packages-node-modules-${{ hashFiles('packages/*/package-lock.json') }}
+
+    - name: Build packages
+      shell: bash
+      run: node ./scripts/build-packages.js
+
+    - name: Install extension dependencies
+      shell: bash
+      run: |
+        cd extensions/vscode
+        npm ci
+      env:
+        # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+
+    - name: Install gui dependencies
+      shell: bash
+      run: |
+        cd gui
+        npm ci
+
+    - name: Install core dependencies
+      shell: bash
+      run: |
+        cd core
+        npm ci
+        npm i vectordb
+
+    - name: Build GUI
+      shell: bash
+      run: |
+        cd gui
+        npm run build --max-old-space-size=4096
+      env:
+        NODE_OPTIONS: "--max-old-space-size=4096"
+
+    - name: Prepackage the extension
+      shell: bash
+      env:
+        CONTINUE_VSCODE_TARGET: ${{ steps.set-target.outputs.target }}
+      run: |
+        cd extensions/vscode
+        export CONTINUE_VSCODE_TARGET="${{ steps.set-target.outputs.target }}"
+        npm run prepackage -- --target ${{ steps.set-target.outputs.target }}
+
+    - name: Re-install esbuild
+      shell: bash
+      run: |
+        cd extensions/vscode
+        npm install -f esbuild
+
+    - name: Modify package.json version with commit SHA
+      if: inputs.commit-sha != ''
+      shell: bash
+      run: |
+        cd extensions/vscode
+        # Get current version from package.json
+        CURRENT_VERSION=$(node -p "require('./package.json').version")
+
+        # Create new version with short commit SHA (first 7 chars)
+        COMMIT_SHORT="${{ inputs.commit-sha }}"
+        NEW_VERSION="${CURRENT_VERSION}-${COMMIT_SHORT:0:7}"
+
+        echo "📝 Updating package.json version from $CURRENT_VERSION to $NEW_VERSION"
+
+        # Update version in package.json
+        sed -i.bak "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" package.json
+
+        # Remove backup file
+        rm -f package.json.bak
+
+        # Verify the change
+        echo "✅ New version: $(node -p "require('./package.json').version")"
+
+    - name: Package extension (build artifacts)
+      shell: bash
+      env:
+        CONTINUE_VSCODE_TARGET: ${{ steps.set-target.outputs.target }}
+      run: |
+        cd extensions/vscode
+        export CONTINUE_VSCODE_TARGET="${{ steps.set-target.outputs.target }}"
+        npm run package -- --target ${{ steps.set-target.outputs.target }}
+
+    - name: Package extension (.vsix files)
+      shell: bash
+      env:
+        CONTINUE_VSCODE_TARGET: ${{ steps.set-target.outputs.target }}
+      run: |
+        cd extensions/vscode
+        export CONTINUE_VSCODE_TARGET="${{ steps.set-target.outputs.target }}"
+        if [ "${{ inputs.pre-release }}" = "true" ]; then
+          npx vsce package --pre-release --no-dependencies --target ${{ steps.set-target.outputs.target }}
+        else
+          npx vsce package --no-dependencies --target ${{ steps.set-target.outputs.target }}
+        fi

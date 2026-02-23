@@ -1,0 +1,612 @@
+# GitHub Actions Workflow created for handling the release process based on the draft release prepared with the Build workflow.
+# Running the publishPlugin task requires all following secrets to be provided: PUBLISH_TOKEN, PRIVATE_KEY, PRIVATE_KEY_PASSWORD, CERTIFICATE_CHAIN.
+# See https://plugins.jetbrains.com/docs/intellij/plugin-signing.html for more information.
+
+name: JetBrains Release
+
+on:
+  release:
+    types: [prereleased]
+  workflow_dispatch:
+    inputs:
+      build_only:
+        description: "If true, only build the extension for the given channels, don't publish"
+        required: true
+        default: "true"
+      eap_channel:
+        description: "If true, build/publish the extension to the EAP channel"
+        required: true
+        default: "true"
+      stable_channel:
+        description: "If true, build/publish the extension to the Stable channel"
+        required: true
+        default: "true"
+
+defaults:
+  run:
+    working-directory: extensions/intellij
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check_release_name:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - id: check
+        working-directory: .
+        run: |
+          if [[ "${{ github.event.release.tag_name }}" == v1.0.*-jetbrains ]]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
+
+  # bump-version:
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - check_release_name
+  #   if: github.event_name != 'workflow_dispatch' || github.event.inputs.eap_channel == 'true' || github.event.inputs.stable_channel == 'true'
+  #   permissions:
+  #     contents: write
+  #     pull-requests: write
+  #   steps:
+  #     # 0. Setup git
+  #     - name: Checkout
+  #       uses: actions/checkout@v6
+
+  #     - name: Set up Git
+  #       run: |
+  #         git config --local user.email "action@github.com"
+  #         git config --local user.name "GitHub Action"
+
+  #     - name: Create PR branch
+  #       run: |
+  #         BRANCH_NAME="chore/bump-jetbrains-version-$(date +%Y%m%d-%H%M%S)"
+  #         git checkout -b $BRANCH_NAME
+  #         echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+  #     - name: Bump version in gradle.properties
+  #       run: |
+  #         awk '/pluginVersion=/{split($0,a,"="); split(a[2],b,"."); b[3]+=1; printf "%s=%s.%s.%s\n",a[1],b[1],b[2],b[3];next}1' gradle.properties > tmp && mv tmp gradle.properties
+  #         rm -rf tmp
+  #         NEW_VERSION=$(grep 'pluginVersion=' gradle.properties | cut -d'=' -f2)
+  #         echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+  #     - name: Create Pull Request
+  #       uses: peter-evans/create-pull-request@v7
+  #       with:
+  #         token: ${{ secrets.CI_GITHUB_TOKEN }}
+  #         commit-message: "chore: bump jetbrains extension version to ${{ env.NEW_VERSION }}"
+  #         title: "chore: bump jetbrains extension version to ${{ env.NEW_VERSION }}"
+  #         body: |
+  #           Automated PR to bump the JetBrains extension version after successful pre-release publication.
+
+  #           - Bumped version in extensions/intellij/gradle.properties to ${{ env.NEW_VERSION }}
+  #         branch: ${{ env.BRANCH_NAME }}
+  #         base: main
+  #         delete-branch: true
+
+  # Prepare and publish the plugin to JetBrains Marketplace repository
+  build:
+    needs: check_release_name
+    if: needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
+    name: Build Plugin
+    runs-on: macos-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # Check out current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Import Apple certificate
+        uses: apple-actions/import-codesign-certs@v6
+        with:
+          keychain: ${{ github.run_id }}
+          keychain-password: ${{ github.run_id }}
+          p12-file-base64: ${{ secrets.APPLE_CERT_DATA }}
+          p12-password: ${{ secrets.APPLE_CERT_PASSWORD }}
+
+      # Validate wrapper
+      - name: Gradle Wrapper Validation
+        uses: gradle/actions/wrapper-validation@v5
+
+      # # Set up Java environment for the next steps
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+
+      # # Setup Gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-home-cache-cleanup: true
+
+      # Set environment variables
+      - name: Export Properties
+        id: properties
+        shell: bash
+        run: |
+          PROPERTIES="$(./gradlew properties --console=plain -q)"
+          VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
+          # CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
+          CHANGELOG=""
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "pluginVerifierHomeDir=~/.pluginVerifier" >> $GITHUB_OUTPUT
+
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          ./gradlew printProductsReleases # prepare list of IDEs for Plugin Verifier
+
+      # # Setup Node.js
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Cache core node_modules
+        uses: actions/cache@v5
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
+
+      - name: Cache binary node_modules
+        uses: actions/cache@v5
+        with:
+          path: binary/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
+
+      - name: Cache gui node_modules
+        uses: actions/cache@v5
+        with:
+          path: gui/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
+
+      - name: Build packages (Unix)
+        run: cd ../.. && node ./scripts/build-packages.js
+
+      # npm install core
+      - name: Install core node_modules
+        run: |
+          cd ../../core
+          npm ci
+
+      # npm install gui
+      - name: Install gui node_modules and build
+        run: |
+          cd ../../gui
+          npm ci
+          npm run build
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
+
+      # Run prepackage.js script
+      - name: Run prepackage script
+        run: |
+          cd ../../extensions/vscode
+          npm ci
+          npm run prepackage
+        env:
+          # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
+      # npm install binary
+      - name: Install binary node_modules
+        run: |
+          cd ../../binary
+          npm ci
+
+      # Build binaries
+      - name: Build the binaries
+        run: |
+          cd ../../binary
+          npm run build
+
+      # - name: Code sign darwin binaries
+      #   run: |
+      #     echo "Signing executable with keychain: ${{ github.run_id }}"
+      #     codesign --sign - ../../binary/bin/darwin-x64/continue-binary
+      #     codesign --sign - ../../binary/bin/darwin-arm64/continue-binary
+
+      # - name: Sign darwin-arm64 binary
+      #   uses: lando/code-sign-action@v2
+      #   with:
+      #     file: ./binary/bin/darwin-arm64/continue-binary
+      #     certificate-data: ${{ secrets.APPLE_CERT_DATA }}
+      #     certificate-password: ${{ secrets.APPLE_CERT_PASSWORD }}
+      #     apple-notary-user: ${{ secrets.APPLE_NOTARY_USER }}
+      #     apple-notary-password: ${{ secrets.APPLE_NOTARY_PASSWORD }}
+      #     apple-notary-tool: altool
+      #     apple-team-id: 43XFLY66ZD
+      #     apple-product-id: dev.continue.continue-binary
+      #     options: --options runtime --entitlements entitlements.xml
+
+      # Build the plugin if not publishing
+      - name: Build EAP Plugin (no publish)
+        if: github.event_name != 'release' && github.event.inputs.eap_channel == 'true' && github.event.inputs.build_only == 'true'
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+          RELEASE_CHANNEL: eap
+        run: ./gradlew buildPlugin --info --stacktrace
+
+      - name: Build Stable Plugin (no publish)
+        if: github.event_name != 'release' && github.event.inputs.stable_channel == 'true' && github.event.inputs.build_only == 'true'
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+          RELEASE_CHANNEL: default
+        run: ./gradlew buildPlugin --info --stacktrace
+
+      # Publish the plugin to JetBrains Marketplace
+      - name: Publish EAP Plugin
+        if: github.event_name == 'release' || (github.event.inputs.eap_channel == 'true' && github.event.inputs.build_only != 'true')
+        continue-on-error: true
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+          RELEASE_CHANNEL: eap
+        run: ./gradlew publishPlugin --info --stacktrace
+
+      - name: Publish Stable Plugin
+        if: github.event_name == 'release' || (github.event.inputs.stable_channel == 'true' && github.event.inputs.build_only != 'true')
+        continue-on-error: true
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+          RELEASE_CHANNEL: default
+        run: ./gradlew publishPlugin --info --stacktrace
+
+      # Prepare plugin archive content for creating artifact
+      - name: Prepare Plugin Artifact
+        id: artifact
+        shell: bash
+        run: |
+          cd ../../extensions/intellij/build/distributions
+          echo "Contents of distributions folder:"
+          ls
+          echo "---"
+          FILENAME=`ls continue-intellij-extension-*.zip`
+          echo "Filename=${FILENAME}"
+          unzip "$FILENAME" -d content
+
+          echo "filename=${FILENAME%.????}" >> $GITHUB_OUTPUT
+
+      # Store already-built plugin as an artifact for downloading
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ steps.artifact.outputs.filename }}
+          path: ./extensions/intellij/build/distributions/content/*/*
+
+      # Upload binaries as artifacts
+      - name: Upload artifact (darwin-arm64)
+        uses: actions/upload-artifact@v6
+        with:
+          name: continue-binary-darwin-arm64
+          path: ./binary/bin/darwin-arm64/
+
+      - name: Upload artifact (darwin-x64)
+        uses: actions/upload-artifact@v6
+        with:
+          name: continue-binary-darwin-x64
+          path: ./binary/bin/darwin-x64/
+
+      - name: Upload artifact (win32-x64)
+        uses: actions/upload-artifact@v6
+        with:
+          name: continue-binary-win32-x64
+          path: ./binary/bin/win32-x64/
+
+      - name: Upload artifact (win32-arm64)
+        uses: actions/upload-artifact@v6
+        with:
+          name: continue-binary-win32-arm64
+          path: ./binary/bin/win32-arm64/
+
+      - name: Upload artifact (linux-arm64)
+        uses: actions/upload-artifact@v6
+        with:
+          name: continue-binary-linux-arm64
+          path: ./binary/bin/linux-arm64/
+
+      - name: Upload artifact (linux-x64)
+        uses: actions/upload-artifact@v6
+        with:
+          name: continue-binary-linux-x64
+          path: ./binary/bin/linux-x64/
+
+  test-binaries:
+    needs: build
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            npm_config_arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            npm_config_arch: x64
+          # arm64 not actually supported by GitHub
+          # - os: ubuntu-latest
+          #   platform: linux
+          #   arch: arm64
+          #   npm_config_arch: arm64
+          - os: macos-12
+            platform: darwin
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+            npm_config_arch: arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      # 1. Check-out repository
+      - name: Check-out repository
+        uses: actions/checkout@v6
+
+      # 2. Install npm dependencies
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Cache core node_modules
+        uses: actions/cache@v5
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
+
+      - name: Cache binary node_modules
+        uses: actions/cache@v5
+        with:
+          path: binary/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
+
+      - name: Install Core Dependencies
+        run: |
+          cd ../../core
+          npm ci
+
+      - name: Install Binary Dependencies
+        run: |
+          cd ../../binary
+          npm ci
+
+      # Download the binary artifact
+      - name: Download binary artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: continue-binary-${{ matrix.platform }}-${{ matrix.arch }}
+          path: ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/
+
+      # Set execute permissions for the binary (non-Windows)
+      - name: Set execute permissions
+        run: |
+          cd ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}
+          chmod +x continue-binary
+          chmod +x build/Release/node_sqlite3.node
+          chmod +x index.node
+        if: ${{ matrix.platform }} != 'win32'
+
+      # Run tests for binary
+      - name: Run binary tests
+        run: |
+          cd ../../binary
+          npm run test
+
+      - name: Upload logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: core-logs-${{ matrix.platform }}-${{ matrix.arch }}
+          path: ~/.continue/logs/core.log
+
+  # Run tests and upload a code coverage report
+  test:
+    name: Test
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      # Check out current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v6
+
+      # Set up Java environment for the next steps
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+
+      # Setup Gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-home-cache-cleanup: true
+
+      # Run tests
+      - name: Run Tests
+        run: ./gradlew check
+
+      # Collect Tests Result of failed tests
+      - name: Collect Tests Result
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: tests-result
+          path: ${{ github.workspace }}/extensions/intellij/build/reports/tests
+
+  # Run Qodana inspections and provide report
+  inspectCode:
+    if: false
+    name: Inspect code
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
+    steps:
+      # Free GitHub Actions Environment Disk Space
+      - name: Maximize Build Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          large-packages: false
+
+      # Check out current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v6
+
+      # Set up Java environment for the next steps
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+
+      # Run Qodana inspections
+      - name: Qodana - Code Inspection
+        uses: JetBrains/qodana-action@v2025.3.1
+        with:
+          cache-default-branch-only: true
+
+  # Run plugin structure verification along with IntelliJ Plugin Verifier
+  verify:
+    if: false
+    name: Verify plugin
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      # Free GitHub Actions Environment Disk Space
+      - name: Maximize Build Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          large-packages: false
+
+      # Check out current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v6
+
+      # Set up Java environment for the next steps
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+
+      # Setup Gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-home-cache-cleanup: true
+
+      # Cache Plugin Verifier IDEs
+      - name: Setup Plugin Verifier IDEs Cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ needs.build.outputs.pluginVerifierHomeDir }}/ides
+          key: plugin-verifier-${{ hashFiles('build/printProductsReleases.txt') }}
+
+      # Run Verify Plugin task and IntelliJ Plugin Verifier tool
+      - name: Run Plugin Verification tasks
+        run: ./gradlew runPluginVerifier -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }}
+
+      # Collect Plugin Verifier Result
+      - name: Collect Plugin Verifier Result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: pluginVerifier-result
+          path: ${{ github.workspace }}/build/reports/pluginVerifier
+
+  upload-release:
+    if: false
+    name: Upload Release
+    needs:
+      - build
+      - test-binaries
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      # # Update Unreleased section with the current release note
+      # - name: Patch Changelog
+      #   if: ${{ steps.properties.outputs.changelog != '' }}
+      #   env:
+      #     CHANGELOG: ${{ steps.properties.outputs.changelog }}
+      #   run: |
+      #     ./gradlew patchChangelog --release-note="$CHANGELOG"
+
+      - name: Download the plugin
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ steps.artifact.outputs.filename }}
+          path: ./build/distributions/
+
+      # Upload artifact as a release asset
+      # - name: Upload Release Asset
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
+
+      # Publish the plugin to JetBrains Marketplace
+      - name: Publish Plugin
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+        run: ./gradlew publishPlugin
+
+      # Create a pull request
+      - name: Create Pull Request
+        if: ${{ steps.properties.outputs.changelog != '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          BRANCH="changelog-update-$VERSION"
+          LABEL="release changelog"
+
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+
+          git checkout -b $BRANCH
+          git commit -am "Changelog update - $VERSION"
+          git push --set-upstream origin $BRANCH
+
+          gh label create "$LABEL" \
+            --description "Pull requests with release changelog update" \
+            --force \
+            || true
+
+          gh pr create \
+            --title "Changelog update - \`$VERSION\`" \
+            --body "Current pull request contains patched \`CHANGELOG.md\` file for the \`$VERSION\` version." \
+            --label "$LABEL" \
+            --head $BRANCH

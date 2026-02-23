@@ -1,0 +1,121 @@
+name: Label Merged PRs
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  label-pr:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      
+      - name: Check if author is in tier list
+        id: check-author
+        run: |
+          USERS=(
+            "TyDunn"
+            "jpoly1219"
+            "bdougie"
+            "uinstinct"
+            "sestinj"
+            "tingwai"
+            "tomasz-stefaniak"
+            "RomneyDa"
+            "Patrick-Erichsen"
+          )
+          
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          SHOULD_LABEL="false"
+          
+          for user in "${USERS[@]}"; do
+            if [[ "$PR_AUTHOR" == "$user" ]]; then
+              SHOULD_LABEL="true"
+              break
+            fi
+          done
+          
+          echo "should_label=$SHOULD_LABEL" >> $GITHUB_OUTPUT
+      
+      - name: Determine and apply tier label
+        if: steps.check-author.outputs.should_label == 'true'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            // Check if PR already has a tier label
+            const existingLabels = pr.labels.map(l => l.name);
+            if (existingLabels.some(label => label.match(/^tier [1-3]$/))) {
+              console.log('PR already has a tier label, skipping');
+              return;
+            }
+            
+            // Function to extract conventional commit prefix
+            function getConventionalPrefix(title) {
+              const match = title.match(/^([a-z]+)(\s|$|:)/);
+              return match ? match[1] : '';
+            }
+            
+            // Function to determine tier
+            function determineTier(pr) {
+              const additions = pr.additions;
+              const deletions = pr.deletions;
+              const changedFiles = pr.changed_files;
+              const title = pr.title;
+              const body = pr.body || '';
+              
+              const prefix = getConventionalPrefix(title);
+              
+              // If no conventional commit prefix, skip
+              if (!prefix) {
+                console.log('No conventional commit format, skipping');
+                return null;
+              }
+              
+              // Tier 4 (unlabeled): fix, test, docs, style, refactor, perf, build, ci, revert, improve
+              const tier4Prefixes = ['fix', 'test', 'docs', 'style', 'refactor', 'perf', 'build', 'ci', 'revert', 'chore', 'improve'];
+              if (tier4Prefixes.includes(prefix)) {
+                console.log('Tier 4 prefix detected, will remain unlabeled');
+                return null;
+              }
+              
+              const totalChanges = additions + deletions;
+              
+              // Tier 1: Major features (1000+ lines changed, or 20+ files, or feat with large scope)
+              if (totalChanges > 1000 || changedFiles > 20 || 
+                  (prefix === 'feat' && totalChanges > 800) ||
+                  title.match(/(major|milestone|launch)/)) {
+                return 'tier 1';
+              }
+              
+              // Tier 2: Important features (500+ lines changed, or 10+ files, or standard feat)
+              if (totalChanges > 500 || changedFiles > 10 || prefix === 'feat') {
+                return 'tier 2';
+              }
+              
+              // Tier 3: Smaller improvements
+              return 'tier 3';
+            }
+            
+            const tier = determineTier(pr);
+            
+            if (tier) {
+              console.log(`Assigning ${tier} label to PR #${pr.number}`);
+              console.log(`Title: ${pr.title}`);
+              console.log(`Changes: +${pr.additions} -${pr.deletions} (${pr.changed_files} files)`);
+              
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: [tier]
+              });
+              
+              console.log(`✓ Label '${tier}' added successfully`);
+            }

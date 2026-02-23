@@ -1,0 +1,215 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "compounds": [],
+  "configurations": [
+    {
+      "name": "Launch extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/extensions/vscode",
+      "args": [
+        // Pass a directory to manually test in
+        "${workspaceFolder}/manual-testing-sandbox",
+        "${workspaceFolder}/manual-testing-sandbox/test.js",
+        "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
+      ],
+      "pauseForSourceMap": false,
+      "outFiles": ["${workspaceFolder}/extensions/vscode/out/extension.js"],
+      "preLaunchTask": "vscode-extension:build-with-packages",
+      "env": {
+        // "CONTROL_PLANE_ENV": "local",
+        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.continue-debug"
+        // "staging" for the preview deployment	        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.continue-debug"
+        // "local" for entirely local development of control plane/proxy
+      }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Core Binary",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/binary/out/index.js",
+      "outFiles": ["${workspaceFolder}/binary/out/**/*.js"],
+      "sourceMaps": true,
+      "smartStep": true,
+      "internalConsoleOptions": "openOnSessionStart",
+      "cwd": "${workspaceFolder}/binary",
+      "env": {
+        // "CONTROL_PLANE_ENV": "test",
+        "CONTINUE_DEVELOPMENT": "true",
+        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.continue-debug"
+      }
+    },
+    {
+      "name": "Debug Jest Tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/core/node_modules/.bin/jest",
+        "${fileBasenameNoExtension}",
+        "--runInBand",
+        "--config",
+        "${workspaceRoot}/core/jest.config.js"
+      ],
+
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "chrome",
+      "request": "attach",
+      "name": "Vite",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/gui/src",
+      "sourceMapPathOverrides": {
+        "webpack:///./src/*": "${webRoot}/*"
+      },
+      "port": 9222,
+      // "runtimeArgs": ["--remote-debugging-port=9222"],
+      "sourceMaps": true
+      // "preLaunchTask": "gui:dev"
+    },
+    {
+      "name": "[Core] Jest Test Debugger, Current Open File",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/core/node_modules/jest/bin/jest.js",
+        "--runInBand",
+        "--config",
+        "${workspaceRoot}/core/jest.config.js",
+        "${relativeFile}"
+      ],
+      "cwd": "${workspaceRoot}/core",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "NODE_OPTIONS": "--experimental-vm-modules",
+        "CI": "true",
+        "DEBUG": "jest"
+      }
+    },
+    {
+      "name": "[openai-adapters] Jest Test Debugger, Current Open File",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/packages/openai-adapters/node_modules/jest/bin/jest.js",
+        "--runInBand",
+        "--config",
+        "${workspaceRoot}/packages/openai-adapters/jest.config.mjs",
+        "${relativeFile}"
+      ],
+      "cwd": "${workspaceRoot}/packages/openai-adapters",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "NODE_OPTIONS": "--experimental-vm-modules"
+      }
+    },
+    {
+      "name": "[config-yaml] Jest Test Debugger, Current Open File",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/packages/config-yaml/node_modules/jest/bin/jest.js",
+        "--runInBand",
+        "--config",
+        "${workspaceRoot}/packages/config-yaml/jest.config.mjs",
+        "${relativeFile}"
+      ],
+      "cwd": "${workspaceRoot}/packages/config-yaml",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "NODE_OPTIONS": "--experimental-vm-modules"
+      }
+    },
+    {
+      "name": "Debug CLI",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/extensions/cli/dist/cn.js",
+      "args": [],
+      "runtimeArgs": ["--enable-source-maps"],
+      "env": {
+        "NODE_ENV": "development",
+        "USE_VERCEL_AI_SDK_ANTHROPIC": "true"
+        // "CONTINUE_API_BASE": "http://localhost:3001/",
+        // "WORKOS_CLIENT_ID": "client_01J0FW6XCPMJMQ3CG51RB4HBZQ",
+        // "HUB_URL": "http://localhost:3000"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/extensions/cli/dist/**/*.js"],
+      "sourceMapPathOverrides": {
+        "../src/*": "${workspaceFolder}/extensions/cli/src/*",
+        "../../core/*": "${workspaceFolder}/core/*"
+      },
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "preLaunchTask": "cli:build-and-watch-logs",
+      "cwd": "${workspaceFolder}/manual-testing-sandbox"
+    },
+    {
+      "name": "Debug CLI - AWS Bedrock",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/extensions/cli/dist/cn.js",
+      "args": [],
+      "runtimeArgs": ["--enable-source-maps"],
+      "env": {
+        "NODE_ENV": "development",
+        "CONTINUE_USE_BEDROCK": "1"
+        // "CONTINUE_API_BASE": "http://localhost:3001/",
+        // "WORKOS_CLIENT_ID": "client_01J0FW6XCPMJMQ3CG51RB4HBZQ",
+        // "HUB_URL": "http://localhost:3000"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/extensions/cli/dist/**/*.js"],
+      "sourceMapPathOverrides": {
+        "../src/*": "${workspaceFolder}/extensions/cli/src/*",
+        "../../core/*": "${workspaceFolder}/core/*"
+      },
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "preLaunchTask": "cli:build-and-watch-logs",
+      "cwd": "${workspaceFolder}/manual-testing-sandbox"
+    },
+    {
+      "name": "Debug CLI Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/extensions/cli/node_modules/.bin/vitest",
+      "args": ["--run", "--no-cache"],
+      "env": {
+        "NODE_ENV": "test"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "cwd": "${workspaceFolder}/extensions/cli"
+    }
+  ]
+}

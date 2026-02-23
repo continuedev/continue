@@ -1,0 +1,517 @@
+openapi: 3.0.0
+info:
+  title: Continue Hub IDE API
+  description: |
+    API for Continue IDE to fetch assistants and other related information.
+    These endpoints are primarily used by the Continue IDE extensions for VS Code and JetBrains.
+  version: 1.0.0
+  contact:
+    name: Continue Dev Team
+    url: https://continue.dev
+servers:
+  - url: https://api.continue.dev
+    description: Production server
+  - url: http://localhost:3001
+    description: Local development server
+paths:
+  /ide/list-assistants:
+    get:
+      summary: List assistants for IDE
+      description: |
+        Returns a complete list of assistants available to the user, with their full configurations,
+        icons, and other metadata needed by the IDE to display and use them.
+
+        This endpoint performs a full refresh of the list of assistants, including unrolling
+        configurations and resolving secrets.
+      operationId: listAssistants
+      parameters:
+        - name: alwaysUseProxy
+          in: query
+          description: Whether to always use the Continue-managed proxy for model requests
+          required: false
+          schema:
+            type: string
+            enum: ["true", "false"]
+        - name: organizationId
+          in: query
+          description: ID of the organization to scope assistants to. If not provided, personal assistants are returned.
+          required: false
+          schema:
+            type: string
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved assistants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - configResult
+                    - ownerSlug
+                    - packageSlug
+                  properties:
+                    configResult:
+                      type: object
+                      required:
+                        - config
+                        - configLoadInterrupted
+                      properties:
+                        config:
+                          type: object
+                          description: The unrolled assistant configuration
+                          nullable: true
+                        configLoadInterrupted:
+                          type: boolean
+                          description: Whether the configuration loading was interrupted
+                        errors:
+                          type: array
+                          items:
+                            type: string
+                          nullable: true
+                          description: Any errors that occurred during configuration loading
+                    ownerSlug:
+                      type: string
+                      description: Slug of the user or organization that owns the assistant
+                    packageSlug:
+                      type: string
+                      description: Slug of the assistant package
+                    iconUrl:
+                      type: string
+                      nullable: true
+                      description: Pre-signed URL for the assistant's icon
+                    onPremProxyUrl:
+                      type: string
+                      nullable: true
+                      description: URL of the on-premises proxy if the organization uses one
+                    useOnPremProxy:
+                      type: boolean
+                      nullable: true
+                      description: Whether the organization uses an on-premises proxy
+                    rawYaml:
+                      type: string
+                      description: Raw YAML configuration of the assistant
+        "401":
+          description: Unauthorized - Authentication failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Unauthorized"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User not found"
+  
+  /ide/get-assistant/{ownerSlug}/{packageSlug}:
+    get:
+      summary: Get a specific assistant by slug
+      description: |
+        Returns a single assistant configuration by its owner and package slug.
+        This endpoint is useful when you need to retrieve or refresh a specific assistant
+        without fetching the entire list.
+      operationId: getAssistant
+      parameters:
+        - name: ownerSlug
+          in: path
+          description: Slug of the user or organization that owns the assistant
+          required: true
+          schema:
+            type: string
+        - name: packageSlug
+          in: path
+          description: Slug of the assistant package
+          required: true
+          schema:
+            type: string
+        - name: alwaysUseProxy
+          in: query
+          description: Whether to always use the Continue-managed proxy for model requests
+          required: false
+          schema:
+            type: string
+            enum: ["true", "false"]
+        - name: organizationId
+          in: query
+          description: ID of the organization to scope assistants to. If not provided, personal assistants are returned.
+          required: false
+          schema:
+            type: string
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved assistant
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+                required:
+                  - configResult
+                  - ownerSlug
+                  - packageSlug
+                properties:
+                  configResult:
+                    type: object
+                    required:
+                      - config
+                      - configLoadInterrupted
+                    properties:
+                      config:
+                        type: object
+                        description: The unrolled assistant configuration
+                        nullable: true
+                      configLoadInterrupted:
+                        type: boolean
+                        description: Whether the configuration loading was interrupted
+                      errors:
+                        type: array
+                        items:
+                          type: string
+                        nullable: true
+                        description: Any errors that occurred during configuration loading
+                  ownerSlug:
+                    type: string
+                    description: Slug of the user or organization that owns the assistant
+                  packageSlug:
+                    type: string
+                    description: Slug of the assistant package
+                  iconUrl:
+                    type: string
+                    nullable: true
+                    description: Pre-signed URL for the assistant's icon
+                  onPremProxyUrl:
+                    type: string
+                    nullable: true
+                    description: URL of the on-premises proxy if the organization uses one
+                  useOnPremProxy:
+                    type: boolean
+                    nullable: true
+                    description: Whether the organization uses an on-premises proxy
+                  rawYaml:
+                    type: string
+                    description: Raw YAML configuration of the assistant
+        "401":
+          description: Unauthorized - Authentication failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Unauthorized"
+        "403":
+          description: Forbidden - Assistant not allowed in organization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "This assistant is not allowed in this organization"
+        "404":
+          description: User or assistant not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Assistant not found"
+
+  /ide/free-trial-status:
+    get:
+      summary: Get free trial status for user
+      description: |
+        Returns the current free trial status for the authenticated user, including
+        usage counts and limits for chat and autocomplete features.
+      operationId: getFreeTrialStatus
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved free trial status
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - optedInToFreeTrial
+                  - chatLimit
+                  - autocompleteLimit
+                properties:
+                  optedInToFreeTrial:
+                    type: boolean
+                    description: Whether the user has opted into the free trial
+                  chatCount:
+                    type: number
+                    nullable: true
+                    description: Current number of chat messages used
+                  autocompleteCount:
+                    type: number
+                    nullable: true
+                    description: Current number of autocomplete requests used
+                  chatLimit:
+                    type: number
+                    description: Maximum number of chat messages allowed in free trial
+                  autocompleteLimit:
+                    type: number
+                    description: Maximum number of autocomplete requests allowed in free trial
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User not found"
+
+  /ide/get-models-add-on-checkout-url:
+    get:
+      summary: Get Stripe checkout URL for models add-on
+      description: |
+        Creates a Stripe checkout session for the models add-on subscription
+        and returns the checkout URL.
+      operationId: getModelsAddOnCheckoutUrl
+      parameters:
+        - name: profile_id
+          in: query
+          description: Profile ID to include in the callback URL
+          required: false
+          schema:
+            type: string
+        - name: vscode_uri_scheme
+          in: query
+          description: VS Code URI scheme to include in the callback URL
+          required: false
+          schema:
+            type: string
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: Successfully created checkout session
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - url
+                properties:
+                  url:
+                    type: string
+                    description: Stripe checkout session URL
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User not found"
+        "500":
+          description: Failed to create checkout session
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Failed to create checkout session"
+
+  /ide/policy:
+    get:
+      summary: Get organization policy
+      description: |
+        Returns the policy configuration for the first organization
+        that the user belongs to which has a policy configured.
+      operationId: getPolicy
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved policy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  policy:
+                    type: object
+                    nullable: true
+                    description: Organization policy configuration
+                  orgSlug:
+                    type: string
+                    nullable: true
+                    description: Slug of the organization that has the policy
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User not found"
+
+  /ide/sync-secrets:
+    post:
+      summary: Synchronize secrets for user
+      description: |
+        Resolves and synchronizes secrets for the authenticated user based on
+        the provided Fully Qualified Secret Names (FQSNs).
+      operationId: syncSecrets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fqsns
+              properties:
+                fqsns:
+                  type: array
+                  items:
+                    type: object
+                  description: Array of Fully Qualified Secret Names to resolve
+                orgScopeId:
+                  type: string
+                  nullable: true
+                  description: Organization ID to scope secret resolution to
+                orgScopeSlug:
+                  type: string
+                  nullable: true
+                  description: Organization slug to scope secret resolution to
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: Successfully resolved secrets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  nullable: true
+                  description: Resolved secret result or undefined if not found
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User not found"
+
+  /ide/list-assistant-full-slugs:
+    get:
+      summary: List assistant full slugs (currently returns 429)
+      description: |
+        This endpoint is temporarily disabled and returns a 429 status code
+        to prevent constant refreshes of the full assistant list until a
+        fixed client version can be deployed.
+      operationId: listAssistantFullSlugs
+      security:
+        - apiKeyAuth: []
+      responses:
+        "429":
+          description: Too many requests - endpoint temporarily disabled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Too many requests"
+
+  /ide/list-organizations:
+    get:
+      summary: List organizations for user
+      description: |
+        Returns a list of organizations that the authenticated user belongs to,
+        including organization metadata and pre-signed icon URLs.
+      operationId: listOrganizations
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved organizations
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - organizations
+                properties:
+                  organizations:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - name
+                        - slug
+                      properties:
+                        id:
+                          type: string
+                          description: Organization ID
+                        name:
+                          type: string
+                          description: Organization name
+                        iconUrl:
+                          type: string
+                          nullable: true
+                          description: Pre-signed URL for the organization's icon
+                        slug:
+                          type: string
+                          description: Organization slug
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User not found"
+
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: http
+      scheme: bearer
+      description: |
+        API Key Authentication
+
+        API keys must be prefixed with "con_" and provided in the Authorization header.
+        Example: `Authorization: Bearer con_your_api_key_here`
+
+        API keys can be generated in the Continue Hub web interface under account settings.

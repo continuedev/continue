@@ -1,0 +1,48 @@
+---
+title: "Together AI"
+sidebarTitle: "Together AI"
+---
+
+<Tip>
+  **Discover Together AI models [here](https://continue.dev/togetherai)**
+</Tip>
+
+<Info>
+  Get an API key from the [Together AI](https://api.together.ai)
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <MODEL_NAME>
+      provider: together
+      model: <MODEL_ID>
+      apiKey: <YOUR_TOGETHER_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "together",
+        "model": "<MODEL_ID>",
+        "apiKey": "<YOUR_TOGETHER_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+<Info>
+  **Check out a more advanced configuration [here](https://continue.dev/togetherai/qwen3-coder-480b-a35b-instruct-fp8?view=config)**
+</Info>
