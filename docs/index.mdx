@@ -16,9 +16,7 @@ Linters catch syntax. Tests verify behavior. But nobody's checking whether that 
 
 ## How it works
 
-Each check is a markdown file in your repo, version-controlled, reviewable, owned by your team. You define what to look for. The AI enforces it on every PR. Results show up as GitHub status checks: green if the code looks good, red with a suggested fix if not.
-
-Consistency over breadth: checks only enforce what you asked for, and never miss it.
+You define checks as markdown files in `.continue/checks/`, version-controlled and reviewable alongside your code. You specify what to look for. The AI enforces it on every PR. Results show up as GitHub status checks: green if the code looks good, red with a suggested fix if not.
 
 ```markdown .continue/checks/security-review.md
 ---
