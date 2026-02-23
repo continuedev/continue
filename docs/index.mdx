@@ -2,7 +2,11 @@
 title: "What is Continue?"
 ---
 
-Continue runs AI checks on every pull request. Each check is a markdown file in your repo that shows up as a GitHub status check — green if the code looks good, red with a suggested fix if not.
+Your tests pass. But standards slip.
+
+Linters catch syntax. Tests verify behavior. But nobody's checking whether that migration is safe, the API docs got updated, or the auth flow follows your team's conventions. Reviewers repeat the same feedback on every PR, and things still slip through.
+
+**Continue runs source-controlled AI checks on every pull request.** Standards as checks, enforced by AI, decided by humans.
 
 <video autoPlay muted loop playsInline className="rounded-xl" src="https://continue.dev/videos/demo.mp4" />
 
@@ -12,7 +16,9 @@ Continue runs AI checks on every pull request. Each check is a markdown file in 
 
 ## How it works
 
-You define checks as markdown files in `.continue/checks/`. Each file has a name, a description, and a prompt that tells the AI what to look for.
+Each check is a markdown file in your repo, version-controlled, reviewable, owned by your team. You define what to look for. The AI enforces it on every PR. Results show up as GitHub status checks: green if the code looks good, red with a suggested fix if not.
+
+Consistency over breadth: checks only enforce what you asked for, and never miss it.
 
 ```markdown .continue/checks/security-review.md
 ---

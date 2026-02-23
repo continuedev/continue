@@ -34,7 +34,7 @@ The migration safety check is flagging additive-only migrations as failures. Upd
 
 ## Run checks automatically
 
-You can add `/check` to your `AGENTS.md` so your coding agent runs checks automatically as part of its workflow — for example, after creating a PR:
+You can add `/check` to your `AGENTS.md` so your coding agent runs checks automatically as part of its workflow. For example, after creating a PR:
 
 ```markdown AGENTS.md
 After creating or updating a pull request, run /check and fix any failures before requesting review.
@@ -42,6 +42,6 @@ After creating or updating a pull request, run /check and fix any failures befor
 
 ## Why local?
 
-Running checks locally uses your existing coding agent and credits (Claude Max, API key, etc.). There's nothing extra to install or configure — if your agent can read your repo, it can run your checks.
+Running checks locally uses your existing coding agent and credits (Claude Max, API key, etc.). There's nothing extra to install or configure. If your agent can read your repo, it can run your checks.
 
 For running checks automatically on every PR in CI, see [Run Checks in CI](/checks/running-in-ci).
