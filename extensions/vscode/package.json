@@ -381,6 +381,12 @@
         "category": "Continue",
         "title": "Open in new window",
         "group": "Continue"
+      },
+      {
+        "command": "continue.focusModelSelect",
+        "category": "Continue",
+        "title": "Select Model",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -499,6 +505,30 @@
         "command": "continue.rejectJump",
         "key": "escape",
         "when": "editorTextFocus && continue.jumpDecorationVisible"
+      },
+      {
+        "command": "continue.focusModelSelect",
+        "mac": "cmd+alt+m",
+        "win": "ctrl+alt+m",
+        "linux": "ctrl+alt+m"
+      },
+      {
+        "command": "continue.viewHistory",
+        "mac": "cmd+alt+h",
+        "win": "ctrl+alt+h",
+        "linux": "ctrl+alt+h"
+      },
+      {
+        "command": "continue.selectFilesAsContext",
+        "mac": "cmd+alt+a",
+        "win": "ctrl+alt+a",
+        "linux": "ctrl+alt+a"
+      },
+      {
+        "command": "continue.newSession",
+        "mac": "cmd+alt+n",
+        "win": "ctrl+alt+n",
+        "linux": "ctrl+alt+n"
       }
     ],
     "submenus": [

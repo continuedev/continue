@@ -9,10 +9,15 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
 import { AddModelForm } from "../../forms/AddModelForm";
+import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks/updateSelectedModelByRole";
-import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
+import {
+  getAltKeyLabel,
+  getMetaKeyLabel,
+  isMetaEquivalentKeyPressed,
+} from "../../util";
 import { CONFIG_ROUTES } from "../../util/navigation";
 import {
   Button,
@@ -129,6 +134,13 @@ function ModelSelect() {
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
   const { selectedProfile } = useAuth();
   const tinyFont = useFontSize(-4);
+
+  useWebviewListener("openModelSelect", async () => {
+    if (buttonRef.current) {
+      buttonRef.current.click();
+      buttonRef.current.focus();
+    }
+  });
 
   let selectedModel = null;
   let allModels = null;
@@ -250,6 +262,7 @@ function ModelSelect() {
           data-testid="model-select-button"
           ref={buttonRef}
           className="text-description h-[18px] gap-1 border-none"
+          title={`Select Model (${getMetaKeyLabel()} + ${getAltKeyLabel()} + M)`}
         >
           <span className="line-clamp-1 break-all hover:brightness-110">
             {modelSelectTitle(selectedModel) || "Select model"}
