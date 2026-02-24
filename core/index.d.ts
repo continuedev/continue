@@ -872,6 +872,8 @@ export interface IDE {
 
   runCommand(command: string, options?: TerminalOptions): Promise<void>;
 
+  runCommandWithOutput(command: string, cwd?: string): Promise<string>;
+
   saveFile(fileUri: string): Promise<void>;
 
   readFile(fileUri: string): Promise<string>;

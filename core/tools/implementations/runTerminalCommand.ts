@@ -453,16 +453,32 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
     }
   }
 
-  // For remote environments, just run the command
-  // Note: waitForCompletion is not supported in remote environments yet
-  await extras.ide.runCommand(command);
+  // For remote environments, use shell integration for output capture
+  const workspaceDirs = await extras.ide.getWorkspaceDirs();
+  const cwd = workspaceDirs.length > 0 ? workspaceDirs[0] : undefined;
+
+  if (extras.onPartialOutput) {
+    extras.onPartialOutput({
+      toolCallId,
+      contextItems: [
+        {
+          name: "Terminal",
+          description: "Terminal command output",
+          content: "",
+          status: "Running command on remote...",
+        },
+      ],
+    });
+  }
+
+  const output = await extras.ide.runCommandWithOutput(command, cwd);
+
   return [
     {
       name: "Terminal",
       description: "Terminal command output",
-      content:
-        "Terminal output not available. This is only available in local development environments and not in SSH environments for example.",
-      status: "Command failed",
+      content: output || "Command completed (no output captured)",
+      status: "Command completed",
     },
   ];
 };

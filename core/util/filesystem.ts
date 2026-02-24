@@ -232,6 +232,10 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
+  runCommandWithOutput(command: string, cwd?: string): Promise<string> {
+    return Promise.resolve("");
+  }
+
   saveFile(fileUri: string): Promise<void> {
     return Promise.resolve();
   }
