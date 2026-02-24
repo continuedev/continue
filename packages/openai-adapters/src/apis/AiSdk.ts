@@ -1,5 +1,6 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createXai } from "@ai-sdk/xai";
 import {
   ChatCompletion,
   ChatCompletionChunk,
@@ -30,6 +31,7 @@ type AiSdkProviderCreator = (options: {
 const PROVIDER_MAP: Record<string, AiSdkProviderCreator> = {
   openai: createOpenAI,
   anthropic: createAnthropic,
+  xai: createXai,
   openrouter: (options) =>
     createOpenAI({
       ...options,
