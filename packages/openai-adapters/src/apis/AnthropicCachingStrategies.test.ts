@@ -210,6 +210,123 @@ describe("AnthropicCachingStrategies", () => {
       expect(result.messages).toEqual(body.messages);
     });
 
+    it("should add cache_control to last two user messages for turn-level caching", () => {
+      const body: MessageCreateParams = {
+        system: [{ type: "text", text: "system message" }],
+        tools: [makeTool("tool1")],
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: "first user message" }],
+          },
+          {
+            role: "assistant",
+            content: [{ type: "text", text: "assistant reply" }],
+          },
+          {
+            role: "user",
+            content: [{ type: "text", text: "second user message" }],
+          },
+          {
+            role: "assistant",
+            content: [{ type: "text", text: "another assistant reply" }],
+          },
+          {
+            role: "user",
+            content: [{ type: "text", text: "third user message" }],
+          },
+        ],
+        ...body_params,
+      };
+
+      const result = CACHING_STRATEGIES.systemAndTools(body);
+
+      // System and tools should still be cached
+      expect(result.system).toEqual([
+        {
+          type: "text",
+          text: "system message",
+          cache_control: { type: "ephemeral" },
+        },
+      ]);
+      expect(result.tools).toEqual([
+        {
+          name: "tool1",
+          input_schema: { type: "object" },
+          cache_control: { type: "ephemeral" },
+        },
+      ]);
+
+      // Last two user messages should have cache_control
+      // First user message (index 0) should NOT have cache_control
+      expect(result.messages[0]).toEqual({
+        role: "user",
+        content: [{ type: "text", text: "first user message" }],
+      });
+
+      // Second user message (index 2) should have cache_control (second-to-last user msg)
+      expect(result.messages[2]).toEqual({
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "second user message",
+            cache_control: { type: "ephemeral" },
+          },
+        ],
+      });
+
+      // Third user message (index 4) should have cache_control (last user msg)
+      expect(result.messages[4]).toEqual({
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "third user message",
+            cache_control: { type: "ephemeral" },
+          },
+        ],
+      });
+    });
+
+    it("should not add cache_control to string content user messages", () => {
+      const body: MessageCreateParams = {
+        system: [{ type: "text", text: "system message" }],
+        messages: [
+          { role: "user", content: "string content message" },
+          {
+            role: "assistant",
+            content: [{ type: "text", text: "reply" }],
+          },
+          {
+            role: "user",
+            content: [{ type: "text", text: "array content message" }],
+          },
+        ],
+        ...body_params,
+      };
+
+      const result = CACHING_STRATEGIES.systemAndTools(body);
+
+      // String content user message is skipped by addCacheControlToLastTwoUserMessages
+      expect(result.messages[0]).toEqual({
+        role: "user",
+        content: "string content message",
+      });
+
+      // Array content user message gets cache_control
+      expect(result.messages[2]).toEqual({
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "array content message",
+            cache_control: { type: "ephemeral" },
+          },
+        ],
+      });
+    });
+
     it("should add only 4 cache controls in total to both system and tools", () => {
       const body: MessageCreateParams = {
         system: [

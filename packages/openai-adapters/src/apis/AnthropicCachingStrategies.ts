@@ -1,5 +1,7 @@
 import { MessageCreateParams } from "@anthropic-ai/sdk/resources";
 
+import { addCacheControlToLastTwoUserMessages } from "./AnthropicUtils.js";
+
 const MAX_CACHING_MESSAGES = 4;
 
 // Caching strategy type - transforms a clean Anthropic body by adding cache_control
@@ -66,6 +68,10 @@ const systemAndToolsStrategy: CachingStrategy = (body) => {
       return tool;
     });
   }
+
+  // Cache last two user messages for turn-level caching
+  // This operates independently of MAX_CACHING_MESSAGES and mutates in-place
+  addCacheControlToLastTwoUserMessages(result.messages);
 
   return result;
 };

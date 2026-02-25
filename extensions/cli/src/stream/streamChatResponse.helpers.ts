@@ -377,6 +377,28 @@ export function recordStreamTelemetry(options: {
     });
   } catch {}
 
+  // Report prompt cache metrics to PostHog
+  if (fullUsage?.prompt_tokens_details) {
+    const cacheReadTokens =
+      fullUsage.prompt_tokens_details.cache_read_tokens ?? 0;
+    const cacheWriteTokens =
+      fullUsage.prompt_tokens_details.cache_write_tokens ?? 0;
+    const totalPromptTokens = fullUsage.prompt_tokens ?? 0;
+    const cacheHitRate =
+      totalPromptTokens > 0 ? cacheReadTokens / totalPromptTokens : 0;
+
+    try {
+      posthogService.capture("prompt_cache_metrics", {
+        model: model.model,
+        cache_read_tokens: cacheReadTokens,
+        cache_write_tokens: cacheWriteTokens,
+        total_prompt_tokens: totalPromptTokens,
+        cache_hit_rate: cacheHitRate,
+        tool_count: tools?.length ?? 0,
+      });
+    } catch {}
+  }
+
   return cost;
 }
 
