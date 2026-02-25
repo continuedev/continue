@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
@@ -6,7 +6,7 @@ export default defineConfig({
     globals: true,
     testTimeout: 10000,
     include: ["src/**/*.test.{ts,tsx}", "src/**/*.vitest.{ts,tsx}"],
-    exclude: ["src/**/*.live.test.{ts,tsx}", "node_modules"],
+    exclude: [...configDefaults.exclude, "src/**/*.live.test.{ts,tsx}"],
   },
   resolve: {
     alias: {
