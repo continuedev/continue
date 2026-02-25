@@ -23,7 +23,7 @@
     "@google/genai": "^1.30.0",
     "ai": "^4.0.33",
     "dotenv": "^16.5.0",
-    "google-auth-library": "^10.4.1",
+    "google-auth-library": "^10.6.1",
     "json-schema": "^0.4.0",
     "node-fetch": "^3.3.2",
     "openai": "^5.23.2",
