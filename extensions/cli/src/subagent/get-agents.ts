@@ -49,8 +49,11 @@ export function generateSubagentToolDescription(
     )
     .join("\n");
 
-  // todo: refine this prompt later
-  return `Launch a specialized subagent to handle a specific task.
+  return `Launch an autonomous specialized subagent to handle a specific task.
+
+You have the independence to make decisions within you scope. You should focus on the specific task given by the main agent.
+
+Remember: You are part of a larger system. Your specialized focus helps the main agent handle multiple concerns efficiently.
 
 Here are the available subagents:
 ${agentList}
