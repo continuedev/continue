@@ -864,7 +864,7 @@ describe.skipIf(!API_KEY)(
           expect(rate).toBeGreaterThan(0.5);
 
           console.log("Scenario 2 Turn 2:", {
-            cache_read: usage.prompt_tokens_details?.cache_read_tokens,
+            cache_read: (usage.prompt_tokens_details as any)?.cache_read_tokens,
             hit_rate: rate.toFixed(3),
           });
         },
@@ -1112,7 +1112,7 @@ describe.skipIf(!API_KEY)(
           expect(rate).toBeGreaterThan(0.5);
 
           console.log("Scenario 4 Turn 2:", {
-            cache_read: usage.prompt_tokens_details?.cache_read_tokens,
+            cache_read: (usage.prompt_tokens_details as any)?.cache_read_tokens,
             hit_rate: rate.toFixed(3),
           });
         },
@@ -1353,9 +1353,9 @@ describe.skipIf(!API_KEY)(
         const rate2 = cacheHitRate(usage2);
 
         // Step 2 should have a cache hit from step 1's prefix
-        expect(usage2.prompt_tokens_details?.cache_read_tokens).toBeGreaterThan(
-          0,
-        );
+        expect(
+          (usage2.prompt_tokens_details as any)?.cache_read_tokens,
+        ).toBeGreaterThan(0);
 
         // Step 3: another follow-up (builds further on the cache)
         const messages3: any[] = [
@@ -1380,9 +1380,9 @@ describe.skipIf(!API_KEY)(
         const usage3 = resp3.usage!;
         const rate3 = cacheHitRate(usage3);
 
-        expect(usage3.prompt_tokens_details?.cache_read_tokens).toBeGreaterThan(
-          0,
-        );
+        expect(
+          (usage3.prompt_tokens_details as any)?.cache_read_tokens,
+        ).toBeGreaterThan(0);
         expect(rate3).toBeGreaterThan(0.4);
 
         console.log("Scenario 7:", {
