@@ -139,6 +139,9 @@
   "engine": {
     "node": ">=18"
   },
+  "overrides": {
+    "minimatch@<10": "9.0.6"
+  },
   "optionalDependencies": {
     "@img/sharp-darwin-arm64": "^0.33.5",
     "@img/sharp-darwin-x64": "^0.33.5",
