@@ -69,8 +69,15 @@ const systemAndToolsStrategy: CachingStrategy = (body) => {
     });
   }
 
-  // Cache last two user messages for turn-level caching
-  // This operates independently of MAX_CACHING_MESSAGES and mutates in-place
+  // Cache last two user messages for turn-level caching.
+  // Uses the remaining 2 breakpoints (system=1, last tool=1, 2 user messages=2, total=4).
+  // Clone messages to avoid mutating the original input.
+  result.messages = result.messages.map((msg) => ({
+    ...msg,
+    content: Array.isArray(msg.content)
+      ? msg.content.map((block) => ({ ...block }))
+      : msg.content,
+  }));
   addCacheControlToLastTwoUserMessages(result.messages);
 
   return result;

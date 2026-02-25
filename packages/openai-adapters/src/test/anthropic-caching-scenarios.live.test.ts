@@ -903,49 +903,58 @@ describe.skipIf(!API_KEY)(
 
         for (let i = 0; i < exchanges.length; i++) {
           const isAssistant = i % 2 === 0;
+
+          if (isAssistant) {
+            // For the first assistant turn (i=0), push the pre-written response.
+            // For subsequent assistant turns, skip — we already pushed the real
+            // API response after the previous user turn.
+            if (i === 0) {
+              messages.push({
+                role: "assistant",
+                content: exchanges[i],
+              });
+            }
+            continue;
+          }
+
+          // Push user message
           messages.push({
-            role: isAssistant ? "assistant" : "user",
+            role: "user",
             content: exchanges[i],
           });
 
-          // Only make API calls on user turns (odd indices)
-          if (!isAssistant) {
-            const response = await api.chatCompletionNonStream(
-              {
-                model: MODEL,
-                messages: [...messages],
-                tools: TOOLS,
-                max_tokens: 256,
-              },
-              signal,
-            );
+          const response = await api.chatCompletionNonStream(
+            {
+              model: MODEL,
+              messages: [...messages],
+              tools: TOOLS,
+              max_tokens: 256,
+            },
+            signal,
+          );
 
-            const usage = response.usage!;
-            const rate = cacheHitRate(usage);
-            const details = usage.prompt_tokens_details as any;
+          const usage = response.usage!;
+          const rate = cacheHitRate(usage);
+          const details = usage.prompt_tokens_details as any;
 
-            console.log(`Scenario 3 turn ${Math.ceil((i + 1) / 2)}:`, {
-              cache_read: details?.cache_read_tokens,
-              cache_write: details?.cache_write_tokens,
-              hit_rate: rate.toFixed(3),
-              total: totalInputTokens(usage),
-            });
+          console.log(`Scenario 3 turn ${Math.ceil((i + 1) / 2)}:`, {
+            cache_read: details?.cache_read_tokens,
+            cache_write: details?.cache_write_tokens,
+            hit_rate: rate.toFixed(3),
+            total: totalInputTokens(usage),
+          });
 
-            // After the first user turn creates cache, subsequent turns should read
-            if (i > 1) {
-              expect(details?.cache_read_tokens).toBeGreaterThan(0);
-              lastRate = rate;
-            }
-
-            // Use actual response as next assistant message
-            messages.push({
-              role: "assistant",
-              content:
-                response.choices[0].message.content ??
-                exchanges[i + 1] ??
-                "Done.",
-            });
+          // After the first user turn creates cache, subsequent turns should read
+          if (i > 1) {
+            expect(details?.cache_read_tokens).toBeGreaterThan(0);
+            lastRate = rate;
           }
+
+          // Use actual response as next assistant message
+          messages.push({
+            role: "assistant",
+            content: response.choices[0].message.content ?? "Done.",
+          });
         }
 
         // Final turn should have high hit rate

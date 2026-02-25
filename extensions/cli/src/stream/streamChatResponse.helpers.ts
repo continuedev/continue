@@ -388,7 +388,7 @@ export function recordStreamTelemetry(options: {
       totalPromptTokens > 0 ? cacheReadTokens / totalPromptTokens : 0;
 
     try {
-      posthogService.capture("prompt_cache_metrics", {
+      void posthogService.capture("prompt_cache_metrics", {
         model: model.model,
         cache_read_tokens: cacheReadTokens,
         cache_write_tokens: cacheWriteTokens,

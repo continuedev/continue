@@ -327,6 +327,29 @@ describe("AnthropicCachingStrategies", () => {
       });
     });
 
+    it("should not mutate the original input body", () => {
+      const body: MessageCreateParams = {
+        system: [{ type: "text", text: "system message" }],
+        tools: [makeTool("tool1")],
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: "user message" }],
+          },
+        ],
+        ...body_params,
+      };
+
+      // Deep-check original content block before strategy
+      const originalContentBlock = (body.messages[0].content as any[])[0];
+      expect(originalContentBlock.cache_control).toBeUndefined();
+
+      CACHING_STRATEGIES.systemAndTools(body);
+
+      // Original content block should still NOT have cache_control
+      expect(originalContentBlock.cache_control).toBeUndefined();
+    });
+
     it("should add only 4 cache controls in total to both system and tools", () => {
       const body: MessageCreateParams = {
         system: [
