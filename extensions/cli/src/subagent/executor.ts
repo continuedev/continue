@@ -8,6 +8,8 @@ import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { escapeEvents } from "../util/cli.js";
 import { logger } from "../util/logger.js";
 
+let isInsideSubagent = false;
+
 /**
  * Options for executing a subagent
  */
@@ -57,12 +59,22 @@ async function buildAgentSystemMessage(
 export async function executeSubAgent(
   options: SubAgentExecutionOptions,
 ): Promise<SubAgentResult> {
+  if (isInsideSubagent) {
+    return {
+      success: false,
+      response: "",
+      error: "Nested subagent invocation is not allowed",
+    };
+  }
+
   const { agent: subAgent, prompt, abortController, onOutputUpdate } = options;
 
   const mainAgentPermissionsState =
     await serviceContainer.get<ToolPermissionServiceState>(
       SERVICE_NAMES.TOOL_PERMISSIONS,
     );
+
+  isInsideSubagent = true;
 
   try {
     logger.debug("Starting subagent execution", {
@@ -167,6 +179,8 @@ export async function executeSubAgent(
           ? lastMessage.message.content
           : "";
 
+      logger.debug("debug1 subagent chathistory", { chatHistory });
+
       logger.debug("Subagent execution completed", {
         agent: model?.name,
         responseLength: response.length,
@@ -208,5 +222,7 @@ export async function executeSubAgent(
       response: "",
       error: error.message,
     };
+  } finally {
+    isInsideSubagent = false;
   }
 }
