@@ -179,8 +179,6 @@ export async function executeSubAgent(
           ? lastMessage.message.content
           : "";
 
-      logger.debug("debug1 subagent chathistory", { chatHistory });
-
       logger.debug("Subagent execution completed", {
         agent: model?.name,
         responseLength: response.length,

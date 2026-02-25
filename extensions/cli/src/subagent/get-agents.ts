@@ -1,24 +1,48 @@
+import { createLlmApi } from "../config.js";
 import { ModelService } from "../services/ModelService.js";
 import type { ModelServiceState } from "../services/types.js";
 
-/**
- * Get an agent by name
- */
+import {
+  BUILT_IN_SUBAGENTS,
+  createBuiltInSubagentModel,
+  isLocalAnthropicModel,
+} from "./builtInSubagents.js";
+
+function getAllSubagentModels(modelState: ModelServiceState) {
+  const configSubagents = ModelService.getSubagentModels(modelState);
+
+  if (!isLocalAnthropicModel(modelState.model)) {
+    return configSubagents;
+  }
+
+  const builtInSubagents = BUILT_IN_SUBAGENTS.map((subagent) => {
+    const subagentModel = createBuiltInSubagentModel(
+      subagent,
+      modelState.model!,
+    );
+    return {
+      llmApi: createLlmApi(subagentModel, modelState.authConfig),
+      model: subagentModel,
+      assistant: modelState.assistant,
+      authConfig: modelState.authConfig,
+    };
+  });
+
+  return [...configSubagents, ...builtInSubagents];
+}
+
 export function getSubagent(modelState: ModelServiceState, name: string) {
   return (
-    ModelService.getSubagentModels(modelState).find(
+    getAllSubagentModels(modelState).find(
       (model) => model.model.name === name,
     ) ?? null
   );
 }
 
-/**
- * Generate dynamic tool description listing available agents
- */
 export function generateSubagentToolDescription(
   modelState: ModelServiceState,
 ): string {
-  const agentList = ModelService.getSubagentModels(modelState)
+  const agentList = getAllSubagentModels(modelState)
     .map(
       (subagentModel) =>
         `  - ${subagentModel.model.name}: ${subagentModel.model.chatOptions?.baseSystemMessage}`,
@@ -34,7 +58,5 @@ ${agentList}
 }
 
 export function getAgentNames(modelState: ModelServiceState): string[] {
-  return ModelService.getSubagentModels(modelState).map(
-    (model) => model.model.name,
-  );
+  return getAllSubagentModels(modelState).map((model) => model.model.name);
 }
