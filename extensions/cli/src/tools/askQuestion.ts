@@ -5,8 +5,9 @@ import { Tool } from "./types.js";
 export const askQuestionTool: Tool = {
   name: "AskQuestion",
   displayName: "Ask Question",
-  description:
-    "Ask the user a clarifying question to gather requirements, preferences, or implementation details before proceeding. Use this when you need user input to make a decision.",
+  description: `Ask the user a clarifying question to gather requirements, preferences, or implementation details before proceeding.
+**You should use this tool whenever you want to clarify your assumption or need answers to build your plan.**
+`,
   parameters: {
     type: "object",
     required: ["question"],
