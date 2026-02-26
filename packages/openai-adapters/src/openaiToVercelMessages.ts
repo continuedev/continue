@@ -14,7 +14,7 @@ export interface VercelCoreMessage {
  *
  * Key differences:
  * - OpenAI tool calls: { role: "assistant", tool_calls: [{ id, function: { name, arguments } }] }
- * - Vercel tool calls: { role: "assistant", content: [{ type: "tool-call", toolCallId, toolName, args }] }
+ * - Vercel tool calls: { role: "assistant", content: [{ type: "tool-call", toolCallId, toolName, input }] }
  * - OpenAI tool results: { role: "tool", tool_call_id: "...", content: "string" }
  * - Vercel tool results: { role: "tool", content: [{ type: "tool-result", toolCallId: "...", toolName: "...", result: any }] }
  *
@@ -73,17 +73,17 @@ export function convertOpenAIMessagesToVercel(
 
           for (const tc of msg.tool_calls) {
             if (tc.type === "function") {
-              let args: unknown;
+              let input: unknown;
               try {
-                args = JSON.parse(tc.function.arguments);
+                input = JSON.parse(tc.function.arguments);
               } catch {
-                args = tc.function.arguments;
+                input = tc.function.arguments;
               }
               contentParts.push({
                 type: "tool-call",
                 toolCallId: tc.id,
                 toolName: tc.function.name,
-                args,
+                input,
               });
             }
           }
@@ -110,7 +110,13 @@ export function convertOpenAIMessagesToVercel(
               type: "tool-result",
               toolCallId: msg.tool_call_id,
               toolName,
-              result: msg.content,
+              output: {
+                type: "text",
+                value:
+                  typeof msg.content === "string"
+                    ? msg.content
+                    : JSON.stringify(msg.content),
+              },
             },
           ],
         });
