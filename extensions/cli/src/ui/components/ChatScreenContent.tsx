@@ -57,7 +57,6 @@ export const ChatScreenContent: React.FC<ChatScreenContentProps> = ({
       <QuizPrompt
         question={activeQuizQuestion.question.question}
         options={activeQuizQuestion.question.options}
-        allowCustomAnswer={activeQuizQuestion.question.allowCustomAnswer}
         defaultAnswer={activeQuizQuestion.question.defaultAnswer}
         requestId={activeQuizQuestion.requestId}
         onAnswer={handleQuizAnswer}

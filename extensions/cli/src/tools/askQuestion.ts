@@ -6,11 +6,13 @@ export const askQuestionTool: Tool = {
   name: "AskQuestion",
   displayName: "Ask Question",
   description: `Ask the user a clarifying question to gather requirements, preferences, or implementation details before proceeding.
-**You should use this tool whenever you want to clarify your assumption or need answers to build your plan.**
+Guidelines:
+- You should use this tool **whenever you want to clarify your assumption or need answers to build your plan**.
+- DO NOT supply "other" or "none of the above" or similar as an option. User can always provide a free-form answer when needed.
 `,
   parameters: {
     type: "object",
-    required: ["question"],
+    required: ["question", "options"],
     properties: {
       question: {
         type: "string",
@@ -19,15 +21,10 @@ export const askQuestionTool: Tool = {
       options: {
         type: "array",
         description:
-          "Optional list of choices. If provided, user selects one. If omitted, user types a free-form answer.",
+          "The list of choices. Leave as empty array if user should provide a free-form answer.",
         items: {
           type: "string",
         },
-      },
-      allowCustomAnswer: {
-        type: "boolean",
-        description:
-          "If true and options are provided, user can also type a custom answer instead of selecting from options",
       },
       defaultAnswer: {
         type: "string",
@@ -41,15 +38,13 @@ export const askQuestionTool: Tool = {
   run: async (args: {
     question: string;
     options?: string[];
-    allowCustomAnswer?: boolean;
     defaultAnswer?: string;
   }): Promise<string> => {
-    const { question, options, allowCustomAnswer, defaultAnswer } = args;
+    const { question, options, defaultAnswer } = args;
 
     const answer = await quizService.askQuestion({
       question,
       options,
-      allowCustomAnswer,
       defaultAnswer,
     });
 

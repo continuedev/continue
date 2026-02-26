@@ -6,7 +6,6 @@ import { defaultBoxStyles } from "../styles.js";
 interface QuizPromptProps {
   question: string;
   options?: string[];
-  allowCustomAnswer?: boolean;
   defaultAnswer?: string;
   requestId: string;
   onAnswer: (
@@ -20,7 +19,6 @@ interface QuizPromptProps {
 export const QuizPrompt: React.FC<QuizPromptProps> = ({
   question,
   options: rawOptions,
-  allowCustomAnswer = false,
   defaultAnswer,
   requestId,
   onAnswer,
@@ -54,12 +52,7 @@ export const QuizPrompt: React.FC<QuizPromptProps> = ({
         return;
       }
 
-      if (
-        hasOptions &&
-        allowCustomAnswer &&
-        key.upArrow &&
-        customInput === ""
-      ) {
+      if (hasOptions && key.upArrow && customInput === "") {
         // exit out of typing a custom answer
         setIsCustomMode(false);
         setSelectedIndex(options.length - 1);
@@ -89,7 +82,7 @@ export const QuizPrompt: React.FC<QuizPromptProps> = ({
       );
     } else if (key.downArrow) {
       if (hasOptions) {
-        if (selectedIndex === options.length - 1 && allowCustomAnswer) {
+        if (selectedIndex === options.length - 1) {
           setIsCustomMode(true);
           setSelectedIndex(0);
         } else {
@@ -100,14 +93,7 @@ export const QuizPrompt: React.FC<QuizPromptProps> = ({
       }
     }
 
-    if (
-      allowCustomAnswer &&
-      input &&
-      !key.ctrl &&
-      !key.meta &&
-      !key.upArrow &&
-      !key.downArrow
-    ) {
+    if (input && !key.ctrl && !key.meta && !key.upArrow && !key.downArrow) {
       setIsCustomMode(true);
       setCustomInput(input);
     }
@@ -139,13 +125,11 @@ export const QuizPrompt: React.FC<QuizPromptProps> = ({
               </Box>
             );
           })}
-          {allowCustomAnswer && (
-            <Box>
-              <Text color="gray" dimColor>
-                {"  "}(or start typing for custom answer)
-              </Text>
-            </Box>
-          )}
+          <Box>
+            <Text color="gray" dimColor>
+              {"  "}(or start typing for custom answer)
+            </Text>
+          </Box>
         </Box>
       )}
 

@@ -1,7 +1,6 @@
 export interface QuizQuestion {
   question: string;
   options?: string[];
-  allowCustomAnswer?: boolean;
   defaultAnswer?: string;
 }
 
