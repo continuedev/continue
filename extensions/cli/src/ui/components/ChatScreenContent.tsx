@@ -1,19 +1,25 @@
 import type { AssistantConfig } from "@continuedev/sdk";
 import React from "react";
 
-import type { ActivePermissionRequest } from "../hooks/useChat.types.js";
+import type {
+  ActivePermissionRequest,
+  ActiveQuizQuestion,
+} from "../hooks/useChat.types.js";
 import { UserInput } from "../UserInput.js";
 
+import { QuizPrompt } from "./QuizPrompt.js";
 import { ToolPermissionSelector } from "./ToolPermissionSelector.js";
 
 interface ChatScreenContentProps {
   activePermissionRequest: ActivePermissionRequest | null;
+  activeQuizQuestion: ActiveQuizQuestion | null;
   handleToolPermissionResponse: (
     requestId: string,
     approved: boolean,
     createPolicy?: boolean,
     stopStream?: boolean,
   ) => void;
+  handleQuizAnswer: (requestId: string, answer: string) => void;
   handleUserMessage: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
   isCompacting: boolean;
@@ -30,7 +36,9 @@ interface ChatScreenContentProps {
 
 export const ChatScreenContent: React.FC<ChatScreenContentProps> = ({
   activePermissionRequest,
+  activeQuizQuestion,
   handleToolPermissionResponse,
+  handleQuizAnswer,
   handleUserMessage,
   isWaitingForResponse,
   isCompacting,
@@ -44,6 +52,19 @@ export const ChatScreenContent: React.FC<ChatScreenContentProps> = ({
   onImageInClipboardChange,
   onShowEditSelector,
 }) => {
+  if (activeQuizQuestion) {
+    return (
+      <QuizPrompt
+        question={activeQuizQuestion.question.question}
+        options={activeQuizQuestion.question.options}
+        allowCustomAnswer={activeQuizQuestion.question.allowCustomAnswer}
+        defaultAnswer={activeQuizQuestion.question.defaultAnswer}
+        requestId={activeQuizQuestion.requestId}
+        onAnswer={handleQuizAnswer}
+      />
+    );
+  }
+
   if (activePermissionRequest) {
     return (
       <ToolPermissionSelector
