@@ -16,7 +16,6 @@ export interface SubAgentExecutionOptions {
   prompt: string;
   parentSessionId: string;
   abortController: AbortController;
-  onOutputUpdate?: (output: string) => void;
 }
 
 export interface SubAgentResult {
@@ -82,12 +81,7 @@ export class SubAgentService extends BaseService<SubAgentServiceState> {
       };
     }
 
-    const {
-      agent: subAgent,
-      prompt,
-      abortController,
-      onOutputUpdate,
-    } = options;
+    const { agent: subAgent, prompt, abortController } = options;
 
     const mainAgentPermissionsState =
       await serviceContainer.get<ToolPermissionServiceState>(
@@ -180,7 +174,6 @@ export class SubAgentService extends BaseService<SubAgentServiceState> {
       try {
         let accumulatedOutput = "";
 
-        // Execute the chat stream with child session
         await streamChatResponse(
           chatHistory,
           model,
@@ -189,15 +182,20 @@ export class SubAgentService extends BaseService<SubAgentServiceState> {
           {
             onContent: (content: string) => {
               accumulatedOutput += content;
-              onOutputUpdate?.(accumulatedOutput);
+              this.emit("subagentContent", {
+                agentName: model?.name,
+                content: accumulatedOutput,
+              });
             },
             onToolResult: (result: string) => {
-              // todo: skip tool outputs - show tool names and params
               accumulatedOutput += `\n\n${result}`;
-              onOutputUpdate?.(accumulatedOutput);
+              this.emit("subagentContent", {
+                agentName: model?.name,
+                content: accumulatedOutput,
+              });
             },
           },
-          false, // Not compacting
+          false,
         );
 
         // The last message (mostly) contains the important output to be submitted back to the main agent
