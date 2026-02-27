@@ -1,4 +1,4 @@
-import { quizService } from "../quiz/index.js";
+import { quizService } from "../services/QuizService.js";
 
 import { Tool } from "./types.js";
 

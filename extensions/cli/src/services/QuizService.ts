@@ -1,13 +1,39 @@
 import { EventEmitter } from "events";
 
-import {
-  PendingQuestion,
-  QuestionAnsweredEvent,
-  QuestionRequestedEvent,
-  QuizQuestion,
-  QuizServiceState,
-} from "./types.js";
+/**Types */
+export interface QuizQuestion {
+  question: string;
+  options?: string[];
+  defaultAnswer?: string;
+}
 
+export interface PendingQuestion extends QuizQuestion {
+  requestId: string;
+  timestamp: number;
+}
+
+export interface QuizAnswer {
+  requestId: string;
+  answer: string;
+  isCustomAnswer: boolean;
+}
+
+export interface QuizServiceState {
+  pendingQuestion: PendingQuestion | null;
+}
+
+export interface QuestionRequestedEvent {
+  requestId: string;
+  question: QuizQuestion;
+}
+
+export interface QuestionAnsweredEvent {
+  requestId: string;
+  answer: string;
+  isCustomAnswer: boolean;
+}
+
+/**Quiz service */
 export class QuizService extends EventEmitter {
   private pendingRequests = new Map<
     string,

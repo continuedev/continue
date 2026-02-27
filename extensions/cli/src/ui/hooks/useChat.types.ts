@@ -2,7 +2,7 @@ import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { Session } from "core/index.js";
 
-import { QuestionRequestedEvent } from "../../quiz/types.js";
+import { QuestionRequestedEvent } from "../../services/QuizService.js";
 import { ToolCallPreview } from "../../tools/types.js";
 
 export interface UseChatProps {

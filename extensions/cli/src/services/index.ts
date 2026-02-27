@@ -1,6 +1,5 @@
 import { loadAuthConfig } from "../auth/workos.js";
 import { initializeWithOnboarding } from "../onboarding.js";
-import { quizService } from "../quiz/index.js";
 import {
   setBetaSubagentToolEnabled,
   setBetaUploadArtifactToolEnabled,
@@ -18,6 +17,7 @@ import { FileIndexService } from "./FileIndexService.js";
 import { GitAiIntegrationService } from "./GitAiIntegrationService.js";
 import { MCPService } from "./MCPService.js";
 import { ModelService } from "./ModelService.js";
+import { quizService } from "./QuizService.js";
 import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import { StorageSyncService } from "./StorageSyncService.js";
