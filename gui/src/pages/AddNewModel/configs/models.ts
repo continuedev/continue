@@ -565,8 +565,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   avianDeepseekV32: {
     title: "DeepSeek V3.2",
-    description:
-      "DeepSeek V3.2 with 164K context, available through Avian",
+    description: "DeepSeek V3.2 with 164K context, available through Avian",
     refUrl: "https://avian.io",
     params: {
       title: "DeepSeek V3.2",
@@ -593,8 +592,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   avianGlm5: {
     title: "GLM-5",
-    description:
-      "Z.ai's GLM-5 with 131K context, available through Avian",
+    description: "Z.ai's GLM-5 with 131K context, available through Avian",
     refUrl: "https://avian.io",
     params: {
       title: "GLM-5",
@@ -607,8 +605,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   avianMinimaxM25: {
     title: "MiniMax M2.5",
-    description:
-      "MiniMax M2.5 with 1M context window, available through Avian",
+    description: "MiniMax M2.5 with 1M context window, available through Avian",
     refUrl: "https://avian.io",
     params: {
       title: "MiniMax M2.5",
