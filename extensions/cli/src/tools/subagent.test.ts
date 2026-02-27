@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { services } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import { subAgentService } from "../services/SubAgentService.js";
 import { getAgentNames, getSubagent } from "../subagent/get-agents.js";
@@ -109,14 +108,6 @@ describe("subagentTool", () => {
 
     expect(options.prompt).toBe("Subagent prompt");
     expect(options.parentSessionId).toBe("parent-session-id");
-    expect(typeof options.onOutputUpdate).toBe("function");
-
-    options.onOutputUpdate?.("partial-output");
-    expect(vi.mocked(services.chatHistory.addToolResult)).toHaveBeenCalledWith(
-      "tool-call-id",
-      "partial-output",
-      "calling",
-    );
 
     expect(result).toBe(
       "subagent-output\n<task_metadata>\nstatus: completed\n</task_metadata>",

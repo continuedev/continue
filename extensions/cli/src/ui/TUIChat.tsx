@@ -28,6 +28,7 @@ import { BottomStatusBar } from "./components/BottomStatusBar.js";
 import { ResourceDebugBar } from "./components/ResourceDebugBar.js";
 import { ScreenContent } from "./components/ScreenContent.js";
 import { StaticChatContent } from "./components/StaticChatContent.js";
+import { SubAgentOutput } from "./components/SubAgentOutput.js";
 import { useNavigation } from "./context/NavigationContext.js";
 import { useChat } from "./hooks/useChat.js";
 import { useContextPercentage } from "./hooks/useContextPercentage.js";
@@ -410,6 +411,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
           showSpinner={true}
           loadingColor="grey"
         />
+
+        {/* Subagent Output */}
+        <SubAgentOutput />
 
         {/* Temporary status message */}
         {statusMessage && (

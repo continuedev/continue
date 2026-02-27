@@ -77,25 +77,11 @@ export const subagentTool = async (): Promise<Tool> => {
         throw new Error("No active session found");
       }
 
-      // Execute subagent with output streaming
       const result = await subAgentService.executeSubAgent({
         agent,
         prompt,
         parentSessionId,
         abortController: new AbortController(),
-        onOutputUpdate: context?.toolCallId
-          ? (output: string) => {
-              try {
-                chatHistoryService.addToolResult(
-                  context.toolCallId,
-                  output,
-                  "calling",
-                );
-              } catch {
-                // Ignore errors during streaming updates
-              }
-            }
-          : undefined,
       });
 
       logger.debug("subagent result", { result });
