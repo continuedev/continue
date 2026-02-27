@@ -44,7 +44,7 @@
   },
   "homepage": "https://continue.dev",
   "dependencies": {
-    "@sentry/profiling-node": "^9.47.1",
+    "@sentry/profiling-node": "^10.40.0",
     "fdir": "^6.4.2",
     "find-up": "^8.0.0",
     "fzf": "^0.5.2",
@@ -68,7 +68,7 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.3",
     "@semantic-release/npm": "^12.0.2",
-    "@sentry/node": "^9.43.0",
+    "@sentry/node": "^10.40.0",
     "@testing-library/react": "^16.3.0",
     "@types/date-fns": "^2.5.3",
     "@types/diff": "^7.0.2",
@@ -114,7 +114,7 @@
     "jsdom": "^26.1.0",
     "jszip": "^3.10.1",
     "lowlight": "^3.3.0",
-    "minimatch": "^10.0.3",
+    "minimatch": "^10.2.3",
     "nock": "^14.0.5",
     "node-fetch": "^3.3.2",
     "node-machine-id": "^1.1.12",
@@ -138,6 +138,9 @@
   },
   "engine": {
     "node": ">=18"
+  },
+  "overrides": {
+    "minimatch": "^10.2.3"
   },
   "optionalDependencies": {
     "@img/sharp-darwin-arm64": "^0.33.5",
