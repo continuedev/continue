@@ -2,13 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { services } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
-import { executeSubAgent } from "../subagent/executor.js";
+import { subAgentService } from "../services/SubAgentService.js";
 import { getAgentNames, getSubagent } from "../subagent/get-agents.js";
 
 import { subagentTool } from "./subagent.js";
 
 vi.mock("../subagent/get-agents.js");
-vi.mock("../subagent/executor.js");
+vi.mock("../services/SubAgentService.js", () => ({
+  subAgentService: {
+    executeSubAgent: vi.fn(),
+  },
+}));
 vi.mock("../services/ServiceContainer.js", () => ({
   serviceContainer: {
     get: vi.fn(),
@@ -85,7 +89,7 @@ describe("subagentTool", () => {
     vi.mocked(getSubagent).mockReturnValue({
       model: { name: "test-model" },
     } as any);
-    vi.mocked(executeSubAgent).mockResolvedValue({
+    vi.mocked(subAgentService.executeSubAgent).mockResolvedValue({
       success: true,
       response: "subagent-output",
     } as any);
@@ -100,8 +104,8 @@ describe("subagentTool", () => {
       { toolCallId: "tool-call-id", parallelToolCallCount: 1 },
     );
 
-    expect(vi.mocked(executeSubAgent)).toHaveBeenCalledTimes(1);
-    const [options] = vi.mocked(executeSubAgent).mock.calls[0];
+    expect(vi.mocked(subAgentService.executeSubAgent)).toHaveBeenCalledTimes(1);
+    const [options] = vi.mocked(subAgentService.executeSubAgent).mock.calls[0];
 
     expect(options.prompt).toBe("Subagent prompt");
     expect(options.parentSessionId).toBe("parent-session-id");

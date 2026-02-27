@@ -1,7 +1,7 @@
 import { services } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
+import { subAgentService } from "../services/SubAgentService.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
-import { executeSubAgent } from "../subagent/executor.js";
 import {
   generateSubagentToolDescription,
   getSubagent,
@@ -78,7 +78,7 @@ export const subagentTool = async (): Promise<Tool> => {
       }
 
       // Execute subagent with output streaming
-      const result = await executeSubAgent({
+      const result = await subAgentService.executeSubAgent({
         agent,
         prompt,
         parentSessionId,
