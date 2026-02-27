@@ -172,8 +172,6 @@ export class SubAgentService extends BaseService<SubAgentServiceState> {
       escapeEvents.on("user-escape", escapeHandler);
 
       try {
-        let accumulatedOutput = "";
-
         await streamChatResponse(
           chatHistory,
           model,
@@ -181,17 +179,17 @@ export class SubAgentService extends BaseService<SubAgentServiceState> {
           abortController,
           {
             onContent: (content: string) => {
-              accumulatedOutput += content;
               this.emit("subagentContent", {
                 agentName: model?.name,
-                content: accumulatedOutput,
+                content,
+                type: "content",
               });
             },
             onToolResult: (result: string) => {
-              accumulatedOutput += `\n\n${result}`;
               this.emit("subagentContent", {
                 agentName: model?.name,
-                content: accumulatedOutput,
+                content: result,
+                type: "toolResult",
               });
             },
           },

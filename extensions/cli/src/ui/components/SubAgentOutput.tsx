@@ -5,45 +5,43 @@ import { subAgentService } from "../../services/SubAgentService.js";
 import { LoadingAnimation } from "../LoadingAnimation.js";
 import { MarkdownRenderer } from "../MarkdownRenderer.js";
 
-interface SubAgentState {
-  agentName: string | undefined;
-  content: string;
-  isRunning: boolean;
-  prompt?: string;
-}
-
 export const SubAgentOutput: React.FC = () => {
-  const [state, setState] = useState<SubAgentState>({
-    agentName: undefined,
-    content: "",
-    isRunning: false,
-  });
+  const [agentName, setAgentName] = useState<string | undefined>(undefined);
+  const [contentLines, setContentLines] = useState<string[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
-    const onStarted = (data: { agentName: string; prompt: string }) => {
-      setState({
-        agentName: data.agentName,
-        content: "",
-        isRunning: true,
-        prompt: data.prompt,
+    const onStarted = (data: { agentName: string }) => {
+      setAgentName(data.agentName);
+      setContentLines([]);
+      setIsRunning(true);
+    };
+
+    const onContent = (data: {
+      agentName: string;
+      content: string;
+      type: "content" | "toolResult";
+    }) => {
+      setAgentName(data.agentName);
+      setContentLines((prev) => {
+        const newLines = data.content.split("\n");
+        if (data.type === "toolResult") {
+          return [...prev, "", ...newLines];
+        }
+        if (prev.length === 0) {
+          return newLines;
+        }
+        const lastLine = prev[prev.length - 1];
+        return [
+          ...prev.slice(0, -1),
+          lastLine + newLines[0],
+          ...newLines.slice(1),
+        ];
       });
     };
 
-    const onContent = (data: { agentName: string; content: string }) => {
-      setState((prev) => ({
-        ...prev,
-        agentName: data.agentName,
-        content: data.content,
-      }));
-    };
-
-    const onCompleted = () => {
-      setState((prev) => ({ ...prev, isRunning: false }));
-    };
-
-    const onFailed = () => {
-      setState((prev) => ({ ...prev, isRunning: false }));
-    };
+    const onCompleted = () => setIsRunning(false);
+    const onFailed = () => setIsRunning(false);
 
     subAgentService.on("subagentStarted", onStarted);
     subAgentService.on("subagentContent", onContent);
@@ -58,18 +56,19 @@ export const SubAgentOutput: React.FC = () => {
     };
   }, []);
 
-  if (!state.isRunning) {
+  if (!isRunning) {
     return null;
   }
 
   const MAX_OUTPUT_LINES = 15;
-  const lines = state.content.split("\n");
   const displayContent =
-    lines.length > MAX_OUTPUT_LINES
-      ? lines.slice(-MAX_OUTPUT_LINES).join("\n")
-      : state.content;
+    contentLines.length > MAX_OUTPUT_LINES
+      ? contentLines.slice(-MAX_OUTPUT_LINES).join("\n")
+      : contentLines.join("\n");
   const hiddenLines =
-    lines.length > MAX_OUTPUT_LINES ? lines.length - MAX_OUTPUT_LINES : 0;
+    contentLines.length > MAX_OUTPUT_LINES
+      ? contentLines.length - MAX_OUTPUT_LINES
+      : 0;
 
   return (
     <Box flexDirection="column" paddingX={1} paddingY={1}>
@@ -77,10 +76,10 @@ export const SubAgentOutput: React.FC = () => {
         <LoadingAnimation color="cyan" visible={true} />
         <Text color="cyan" bold>
           {" "}
-          Subagent: {state.agentName || "unknown"}
+          Subagent: {agentName || "unknown"}
         </Text>
       </Box>
-      {state.content && (
+      {contentLines.length > 0 && (
         <Box flexDirection="column" paddingLeft={2}>
           {hiddenLines > 0 && <Text color="dim">... +{hiddenLines} lines</Text>}
           <MarkdownRenderer content={displayContent.trimEnd()} />
