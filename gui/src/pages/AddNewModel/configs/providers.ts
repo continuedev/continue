@@ -286,6 +286,32 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     ],
     apiKeyUrl: "https://z.ai/manage-apikey/apikey-list",
   },
+  avian: {
+    title: "Avian",
+    provider: "avian",
+    description: "Access top AI models at low cost through Avian's API",
+    longDescription:
+      "Avian provides an OpenAI-compatible API with access to leading AI models including DeepSeek V3.2, Kimi K2.5, GLM-5, and MiniMax M2.5. Get your API key from the [Avian dashboard](https://avian.io).",
+    icon: "avian.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    packages: [
+      models.avianDeepseekV32,
+      models.avianKimiK25,
+      models.avianGlm5,
+      models.avianMinimaxM25,
+    ],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Avian API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    apiKeyUrl: "https://avian.io",
+  },
   "function-network": {
     title: "Function Network",
     provider: "function-network",
