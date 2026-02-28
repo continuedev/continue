@@ -10,6 +10,7 @@ import { DiffViewer } from "../DiffViewer.js";
 import { EditMessageSelector } from "../EditMessageSelector.js";
 import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 import type { ActivePermissionRequest } from "../hooks/useChat.types.js";
+import { JobsSelector } from "../JobsSelector.js";
 import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
@@ -154,6 +155,11 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
         onExit={closeCurrentScreen}
       />
     );
+  }
+
+  // Jobs selector
+  if (isScreenActive("jobs")) {
+    return <JobsSelector onCancel={closeCurrentScreen} />;
   }
 
   // Free trial transition UI

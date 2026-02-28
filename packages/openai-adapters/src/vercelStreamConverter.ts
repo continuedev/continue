@@ -6,58 +6,63 @@ import type { ChatCompletionChunk } from "openai/resources/index";
 import { chatChunk, chatChunkFromDelta, usageChatChunk } from "./util.js";
 
 export type VercelStreamPart =
-  | { type: "text-delta"; textDelta: string }
-  | { type: "reasoning"; textDelta: string }
-  | { type: "reasoning-signature"; signature: string }
-  | { type: "redacted-reasoning"; data: string }
-  | { type: "source"; source: any }
-  | { type: "file"; name: string; content: string }
+  | { type: "text-start"; id: string }
+  | { type: "text-delta"; id: string; text: string }
+  | { type: "text-end"; id: string }
+  | { type: "reasoning-start"; id: string }
+  | { type: "reasoning-delta"; id: string; text: string }
+  | { type: "reasoning-end"; id: string }
+  | ({ type: "source"; source?: any } & Record<string, any>)
+  | { type: "file"; file: any }
   | {
       type: "tool-call";
       toolCallId: string;
       toolName: string;
-      args: Record<string, unknown>;
+      input: Record<string, unknown>;
     }
   | {
-      type: "tool-call-streaming-start";
-      toolCallId: string;
+      type: "tool-input-start";
+      id: string;
       toolName: string;
     }
   | {
-      type: "tool-call-delta";
-      toolCallId: string;
-      toolName: string;
-      argsTextDelta: string;
+      type: "tool-input-delta";
+      id: string;
+      delta: string;
+    }
+  | {
+      type: "tool-input-end";
+      id: string;
     }
   | { type: "tool-result"; toolCallId: string; result: unknown }
   | {
-      type: "step-start";
-      messageId: string;
-      request: any;
-      warnings: any[];
+      type: "start-step";
     }
   | {
-      type: "step-finish";
-      messageId: string;
-      request: any;
+      type: "finish-step";
       response: any;
       usage: {
-        promptTokens: number;
-        completionTokens: number;
-        totalTokens: number;
+        inputTokens: number;
+        outputTokens: number;
+        totalTokens?: number;
       };
       finishReason: string;
+    }
+  | {
+      type: "start";
     }
   | {
       type: "finish";
       finishReason: string;
-      usage: {
-        promptTokens: number;
-        completionTokens: number;
-        totalTokens: number;
+      totalUsage: {
+        inputTokens: number;
+        outputTokens: number;
+        totalTokens?: number;
       };
     }
-  | { type: "error"; error: unknown };
+  | { type: "abort"; reason?: string }
+  | { type: "error"; error: unknown }
+  | { type: "raw"; rawValue: unknown };
 
 export interface VercelStreamConverterOptions {
   model: string;
@@ -76,14 +81,13 @@ export function convertVercelStreamPart(
   switch (part.type) {
     case "text-delta":
       return chatChunk({
-        content: part.textDelta,
+        content: part.text,
         model,
       });
 
-    case "reasoning":
-      // For o1 models, reasoning is also treated as text content
+    case "reasoning-delta":
       return chatChunk({
-        content: part.textDelta,
+        content: part.text,
         model,
       });
 
@@ -97,7 +101,7 @@ export function convertVercelStreamPart(
               type: "function" as const,
               function: {
                 name: part.toolName,
-                arguments: JSON.stringify(part.args),
+                arguments: JSON.stringify(part.input),
               },
             },
           ],
@@ -105,14 +109,14 @@ export function convertVercelStreamPart(
         model,
       });
 
-    case "tool-call-delta":
+    case "tool-input-delta":
       return chatChunkFromDelta({
         delta: {
           tool_calls: [
             {
               index: 0,
               function: {
-                arguments: part.argsTextDelta,
+                arguments: part.delta,
               },
             },
           ],
@@ -121,42 +125,44 @@ export function convertVercelStreamPart(
       });
 
     case "finish":
-      // Emit usage from finish event if available
-      // The finish event DOES contain the final usage in most cases
-      if (part.usage) {
-        const promptTokens =
-          typeof part.usage.promptTokens === "number"
-            ? part.usage.promptTokens
+      if (part.totalUsage) {
+        const inputTokens =
+          typeof part.totalUsage.inputTokens === "number"
+            ? part.totalUsage.inputTokens
             : 0;
-        const completionTokens =
-          typeof part.usage.completionTokens === "number"
-            ? part.usage.completionTokens
+        const outputTokens =
+          typeof part.totalUsage.outputTokens === "number"
+            ? part.totalUsage.outputTokens
             : 0;
         const totalTokens =
-          typeof part.usage.totalTokens === "number"
-            ? part.usage.totalTokens
-            : promptTokens + completionTokens;
+          typeof part.totalUsage.totalTokens === "number"
+            ? part.totalUsage.totalTokens
+            : inputTokens + outputTokens;
 
-        // Check for Anthropic-specific cache token details
-        const promptTokensDetails =
-          (part.usage as any).promptTokensDetails?.cachedTokens !== undefined
+        const inputTokenDetails =
+          (part.totalUsage as any).inputTokenDetails?.cacheReadTokens !==
+          undefined
             ? {
                 cached_tokens:
-                  (part.usage as any).promptTokensDetails.cachedTokens ?? 0,
+                  (part.totalUsage as any).inputTokenDetails.cacheReadTokens ??
+                  0,
                 cache_read_tokens:
-                  (part.usage as any).promptTokensDetails.cachedTokens ?? 0,
-                cache_write_tokens: 0,
+                  (part.totalUsage as any).inputTokenDetails.cacheReadTokens ??
+                  0,
+                cache_write_tokens:
+                  (part.totalUsage as any).inputTokenDetails.cacheWriteTokens ??
+                  0,
               }
             : undefined;
 
         return usageChatChunk({
           model,
           usage: {
-            prompt_tokens: promptTokens,
-            completion_tokens: completionTokens,
+            prompt_tokens: inputTokens,
+            completion_tokens: outputTokens,
             total_tokens: totalTokens,
-            ...(promptTokensDetails
-              ? { prompt_tokens_details: promptTokensDetails as any }
+            ...(inputTokenDetails
+              ? { prompt_tokens_details: inputTokenDetails as any }
               : {}),
           },
         });
@@ -164,22 +170,25 @@ export function convertVercelStreamPart(
       return null;
 
     case "error":
-      // Errors should be thrown, not converted to chunks
       throw part.error;
 
-    // Events that don't map to OpenAI chunks - return null to skip
-    case "reasoning-signature":
-    case "redacted-reasoning":
+    case "text-start":
+    case "text-end":
+    case "reasoning-start":
+    case "reasoning-end":
     case "source":
     case "file":
-    case "tool-call-streaming-start":
+    case "tool-input-start":
+    case "tool-input-end":
     case "tool-result":
-    case "step-start":
-    case "step-finish":
+    case "start-step":
+    case "finish-step":
+    case "start":
+    case "abort":
+    case "raw":
       return null;
 
     default:
-      // Exhaustiveness check
       const _exhaustive: never = part;
       return null;
   }

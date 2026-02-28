@@ -169,6 +169,10 @@ function handleTitle(args: string[]) {
   }
 }
 
+function handleJobs() {
+  return { openJobsSelector: true };
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
@@ -203,6 +207,7 @@ const commandHandlers: Record<string, CommandHandler> = {
   update: () => {
     return { openUpdateSelector: true };
   },
+  jobs: handleJobs,
 };
 
 export async function handleSlashCommands(

@@ -1,4 +1,5 @@
 import type { PermissionMode } from "../../permissions/types.js";
+import { backgroundSignalManager } from "../../util/backgroundSignalManager.js";
 import {
   checkClipboardForImage,
   getClipboardImage,
@@ -82,6 +83,12 @@ export function handleControlKeys(options: ControlKeysOptions): boolean {
   // Handle Ctrl+L to refresh screen (clear terminal artifacts)
   if (key.ctrl && input === "l") {
     process.stdout.write("\x1b[2J\x1b[H");
+    return true;
+  }
+
+  // Handle Ctrl+B to send current tool execution to background
+  if (key.ctrl && input === "b") {
+    backgroundSignalManager.signalBackground();
     return true;
   }
 
