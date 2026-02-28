@@ -40,6 +40,7 @@ import {
   CachingStrategyName,
 } from "./AnthropicCachingStrategies.js";
 import {
+  addCacheControlToLastTwoUserMessages,
   getAnthropicHeaders,
   getAnthropicMediaTypeFromDataUrl,
   openAiToolChoiceToAnthropicToolChoice,
@@ -73,7 +74,12 @@ export class AnthropicApi implements BaseLlmApi {
     // Step 2: Apply caching strategy
     const cachingStrategy =
       CACHING_STRATEGIES[this.config.cachingStrategy ?? "systemAndTools"];
-    return cachingStrategy(cleanBody);
+    const result = cachingStrategy(cleanBody);
+
+    // Step 3: Cache last two user messages for conversation turn caching
+    addCacheControlToLastTwoUserMessages(result.messages);
+
+    return result;
   }
 
   private maxTokensForModel(model: string): number {
