@@ -1,31 +1,10 @@
 // Helper functions extracted from streamChatResponse.ts to reduce file size
 /* eslint-disable max-lines */
 
-interface ChatCompletionToolMessageParam {
-  role: "tool";
-  content: string;
-  tool_call_id: string;
-}
-
-type ToolStatus =
-  | "generating"
-  | "generated"
-  | "calling"
-  | "done"
-  | "errored"
-  | "canceled";
-
-interface Usage {
-  promptTokens: number;
-  completionTokens: number;
-  promptTokensDetails?: {
-    cachedTokens?: number;
-    cacheWriteTokens?: number;
-  };
-}
-
+import type { ToolStatus, Usage } from "core/index.js";
 import { calculateRequestCost } from "core/llm/utils/calculateRequestCost.js";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
+import { ChatCompletionToolMessageParam } from "openai/resources/chat/completions.mjs";
 
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 
@@ -273,9 +252,6 @@ function detectProvider(modelName: string): string {
   if (normalized.includes("claude") || normalized.includes("anthropic")) {
     return "anthropic";
   }
-  if (normalized.includes("deepseek")) {
-    return "deepseek";
-  }
   // Default to anthropic for backward compatibility
   return "anthropic";
 }
@@ -454,11 +430,13 @@ export async function preprocessStreamedToolCalls(
       // Notify the UI about the tool start, even though it failed
       callbacks?.onToolStart?.(toolCall.name, toolCall.arguments);
 
-      const err = error as any;
       const errorReason =
-        err instanceof ContinueError ? err.reason : ContinueErrorReason.Unknown;
+        error instanceof ContinueError
+          ? error.reason
+          : ContinueErrorReason.Unknown;
 
-      const errorMessage = err instanceof Error ? err.message : String(err);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
 
       logger.error("Invalid tool call", {
         name: toolCall.name,

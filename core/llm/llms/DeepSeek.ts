@@ -1,6 +1,7 @@
+import { ChatCompletionCreateParams } from "openai/resources/index";
+
 import {
   ChatMessage,
-  CompletionOptions,
   LLMFullCompletionOptions,
   LLMOptions,
   MessageOption,
@@ -8,158 +9,84 @@ import {
 } from "../../index.js";
 import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
-
-import { ChatCompletionCreateParams } from "openai/resources/index";
 import OpenAI from "./OpenAI.js";
 
+/**
+ * DeepSeek LLM provider implementation.
+ *
+ * This provider extends the OpenAI adapter and adds DeepSeek-specific handling:
+ * - Supports thinking tool chains by pairing lone thinking messages with assistant messages
+ * - Converts model names (e.g., deepseek-fim-beta to deepseek-chat)
+ * - Modifies stream_options to request usage statistics when streaming
+ * - Provides FIM support for beta endpoint (autocomplete) and chat completion
+ */
 class DeepSeek extends OpenAI {
+  /**
+   * DeepSeek supports the `reasoning_content` field for reasoning models.
+   * This enables the model to output reasoning text separate from the final answer.
+   */
   protected supportsReasoningContentField = true;
   static providerName = "deepseek";
 
-  private _supportsFim: boolean = false;
-
   static defaultOptions: Partial<LLMOptions> = {
     promptTemplates: {
-      edit: osModelsEditPrompt,
+      edit: osModelsEditPrompt, // Use OpenAI‑style edit prompt (DeepSeek is OpenAI‑compatible)
     },
-    useLegacyCompletionsEndpoint: false,
+    useLegacyCompletionsEndpoint: false, // DeepSeek does not support the legacy /completions endpoint
   };
 
-  // Uses the OpenAI adapter for all operations
+  /**
+   * Which request types should be handled by the OpenAI‑compatible adapter.
+   * The adapter (DeepSeekApi) implements the actual API communication.
+   */
   protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [
-    "chat",
-    "streamChat",
-    "streamFim",
-    "list",
+    "chat", // Non‑streaming chat completions
+    "streamChat", // Streaming chat completions
+    "streamFim", // Streaming fill‑in‑middle (beta endpoint)
+    "list", // Listing available models
   ];
 
   constructor(options: LLMOptions) {
+    // No special initialization needed; the parent OpenAI class handles everything.
     super(options);
-
-    // Extract supportsFim from options (could be boolean or string "true")
-    const supportsFimOption = (options as any).supportsFim;
-    this._supportsFim =
-      supportsFimOption === true || supportsFimOption === "true";
   }
 
-  supportsFim(): boolean {
-    // Check if this is the FIM Beta model by checking the model name or API base
-    return (
-      this.model === "deepseek-fim-beta" ||
-      (this.model === "deepseek-chat" && this.apiBase?.includes("/beta")) ||
-      false
-    );
-  }
-
-  // DeepSeek supports both Chat and Completion Endpoints
-  supportsCompletions(): boolean {
-    return false; // TODO: implement with converter or fim
-  }
-
-  supportsPrefill(): boolean {
-    return true;
-  }
-
-  supportsList(): boolean {
-    return true;
-  }
-
-  // Override streamChat to handle DeepSeek-specific thinking mode
+  /**
+   * Stream chat completions with DeepSeek‑specific adaptations:
+   * 1. Pair lone thinking messages with an assistant message (DeepSeek requirement)
+   * 2. Convert model names (e.g., deepseek‑fim‑beta → deepseek‑chat)
+   * 3. Delegate to the parent OpenAI streamChat, which uses the DeepSeekApi adapter.
+   */
   async *streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
     messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog> {
-    console.log(
-      " ==== core DS streamChat raw ==== ",
-      messages
-        .map((m) => {
-          let str =
-            m.role +
-            ": " +
-            (typeof m.content === "string"
-              ? m.content.slice(0, 10)
-              : JSON.stringify(m.content).slice(0, 10));
-          if (m.role === "assistant" && (m as any).toolCalls) {
-            const toolCallIds = (m as any).toolCalls
-              .map((tc: any) => tc.id)
-              .join(",");
-            str += ` [toolcalls: ${toolCallIds}]`;
-          } else if (m.role === "tool") {
-            str += ` [toolCallId: ${(m as any).toolCallId}]`;
-          }
-          return str;
-        })
-        .join("\n"),
-    );
-
-    // Convert model name if needed
-    const modifiedOptions = this._convertCompletionOptionsModelName(options);
-    // Transform messages for DeepSeek API
     const transformedMessages = this._pairLoneThinkingMessages(messages);
-    // Delegate to parent implementation
-    const generator = super.streamChat(
+    return yield* super.streamChat(
       transformedMessages,
       signal,
-      modifiedOptions,
+      {
+        ...options,
+        model: this._convertModelName(options.model || this.model),
+      },
       messageOptions,
     );
-    let result: PromptLog | undefined;
-
-    try {
-      while (true) {
-        const { value, done } = await generator.next();
-        if (done) {
-          result = value as PromptLog;
-          break;
-        }
-        yield value as ChatMessage;
-        console.log(
-          " ==== core DS streamChat yielded ==== ",
-          value as ChatMessage,
-        );
-      }
-    } finally {
-      // Ensure generator is cleaned up
-      generator.return?.(undefined as any);
-    }
-    // Return the result from parent
-    return result!;
   }
 
-  async *streamFim(
-    prefix: string,
-    suffix: string,
-    signal: AbortSignal,
-    options: LLMFullCompletionOptions = {},
-  ): AsyncGenerator<string, PromptLog> {
-    // Convert model name if needed before passing to parent
-    const modifiedOptions = this._convertCompletionOptionsModelName(options);
-    // Delegate to parent implementation
-    const generator = super.streamFim(prefix, suffix, signal, modifiedOptions);
-    let result: PromptLog | undefined;
-
-    console.warn(" ==== core stream FIM ====,", prefix, suffix);
-
-    try {
-      while (true) {
-        const { value, done } = await generator.next();
-        if (done) {
-          result = value as PromptLog;
-          break;
-        }
-        yield value as string;
-      }
-    } finally {
-      // Ensure generator is cleaned up
-      generator.return?.(undefined as any);
-    }
-    // Return the result from parent
-    return result!;
-  }
-
-  // Transform messages to be compatible with DeepSeek API
+  /**
+   * Ensures DeepSeek thinking tool chain validity.
+   *
+   * DeepSeek expects that every thinking message is immediately followed by an assistant message.
+   * This method inserts an empty assistant message after any thinking message that is not already
+   * followed by one. This preserves the correct message structure for the API.
+   *
+   * Example:
+   *   [thinking, user] → [thinking, assistant, user]
+   *   [thinking, assistant] → unchanged
+   *   [thinking, tool] → [thinking, assistant, tool]
+   */
   private _pairLoneThinkingMessages(messages: ChatMessage[]): ChatMessage[] {
     const result: ChatMessage[] = [];
 
@@ -167,23 +94,31 @@ class DeepSeek extends OpenAI {
       const msg = messages[i];
       result.push(msg);
 
-      // if thinking msg has no assistant msg following, insert empty assistant message
+      // If this is a thinking message, check the next message.
       if (msg.role === "thinking") {
         const nextMsg = messages[i + 1];
+        // Insert an empty assistant message only if the next message is not already an assistant.
         if (!nextMsg || nextMsg.role !== "assistant") {
           result.push({
             role: "assistant",
             content: "",
           });
-          console.warn(
-            `Inserted empty assistant message after thinking message at index ${i} to satisfy DeepSeek format.`,
-          );
         }
       }
     }
     return result;
   }
 
+  /**
+   * Converts internal model names to the actual model names expected by the DeepSeek API.
+   *
+   * The artificial model name "deepseek‑fim‑beta" is used in the configuration to signal
+   * that the FIM (fill‑in‑middle) beta endpoint should be used. The actual API still uses
+   * "deepseek‑chat" as the model name, but the endpoint path differs (/beta/chat/completions).
+   *
+   * @param model The model name from the configuration
+   * @returns The model name to send to the API
+   */
   protected _convertModelName(model: string): string {
     if (model === "deepseek-fim-beta") {
       return "deepseek-chat";
@@ -191,31 +126,72 @@ class DeepSeek extends OpenAI {
     return model;
   }
 
-  private _convertCompletionOptionsModelName(
-    options: CompletionOptions | LLMFullCompletionOptions,
-  ): CompletionOptions {
-    return {
+  /**
+   * Stream fill‑in‑middle (FIM) completions using DeepSeek's beta endpoint.
+   * The model name is converted (deepseek‑fim‑beta → deepseek‑chat) before delegation.
+   */
+  async *streamFim(
+    prefix: string,
+    suffix: string,
+    signal: AbortSignal,
+    options: LLMFullCompletionOptions = {},
+  ): AsyncGenerator<string, PromptLog> {
+    return yield* super.streamFim(prefix, suffix, signal, {
       ...options,
       model: this._convertModelName(options.model || this.model),
-    };
+    });
   }
 
-  protected _convertArgs(
-    options: CompletionOptions,
-    messages: ChatMessage[],
-  ): any {
-    const convertedOptions = this._convertCompletionOptionsModelName(options);
-    return super._convertArgs(convertedOptions, messages);
-  }
-
+  /**
+   * Adds stream_options to request usage statistics in streaming responses.
+   * This ensures that token usage is reported at the end of the stream.
+   */
   protected modifyChatBody(
     body: ChatCompletionCreateParams,
   ): ChatCompletionCreateParams {
-    // Add stream_options to include usage statistics for DeepSeek API
     if (body.stream) {
-      (body as any).stream_options = { include_usage: true };
+      const bodyWithStreamOptions = body as ChatCompletionCreateParams & {
+        stream_options?: { include_usage: boolean };
+      };
+      bodyWithStreamOptions.stream_options = { include_usage: true };
     }
     return super.modifyChatBody(body);
+  }
+
+  /**
+   * Determines whether FIM (fill‑in‑middle) is supported.
+   * FIM is supported if:
+   * - The model is explicitly "deepseek‑fim‑beta" (the artificial FIM model), or
+   * - The model is "deepseek‑chat" AND the API base URL contains "/beta" (beta endpoint).
+   */
+  supportsFim(): boolean {
+    return (
+      this.model === "deepseek-fim-beta" ||
+      (this.model === "deepseek-chat" && !!this.apiBase?.includes("/beta"))
+    );
+  }
+
+  /**
+   * DeepSeek does not support the legacy /completions endpoint (text‑only completions).
+   * All completions must go through the chat or FIM endpoints.
+   */
+  supportsCompletions(): boolean {
+    return false; // possible with converter to fim
+  }
+
+  /**
+   * DeepSeek supports prefill (prefix completion) via the beta chat completions endpoint.
+   * When the last message is from the assistant, the API treats it as a prefix completion.
+   */
+  supportsPrefill(): boolean {
+    return true;
+  }
+
+  /**
+   * DeepSeek provides a /models endpoint to list available models.
+   */
+  supportsList(): boolean {
+    return true;
   }
 }
 

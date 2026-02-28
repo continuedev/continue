@@ -17,12 +17,13 @@ import type {
 } from "openai/resources/responses/responses.js";
 import { z } from "zod";
 import { OpenAIConfigSchema } from "../types.js";
+import { customFetch } from "../util.js";
 import {
-  customFetch,
-  chatChunk,
-  usageChatChunk,
-  chatChunkFromDelta,
-} from "../util.js";
+  BaseLlmApi,
+  CreateRerankResponse,
+  FimCreateParamsStreaming,
+  RerankCreateParams,
+} from "./base.js";
 import {
   createResponsesStreamState,
   fromResponsesChunk,
@@ -30,12 +31,6 @@ import {
   responseToChatCompletion,
   toResponsesParams,
 } from "./openaiResponses.js";
-import {
-  BaseLlmApi,
-  CreateRerankResponse,
-  FimCreateParamsStreaming,
-  RerankCreateParams,
-} from "./base.js";
 
 export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
@@ -389,6 +384,9 @@ export class OpenAIApi implements BaseLlmApi {
     for await (const chunk of streamSse(resp as any)) {
       if (chunk.choices && chunk.choices.length > 0) {
         yield chunk;
+        if (chunk.choices[0].finish_reason) {
+          return;
+        }
       }
     }
   }

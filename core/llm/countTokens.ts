@@ -471,13 +471,13 @@ function compileChatMessages({
 
   const contextLength = knownContextLength ?? DEFAULT_PRUNING_LENGTH;
   const countingSafetyBuffer = getTokenCountingBufferSafety(contextLength);
-  const minOutputTokens = Math.min(MIN_RESPONSE_TOKENS, maxTokens);
+  const outputTokensToReserve = maxTokens;
 
   let inputTokensAvailable = contextLength;
 
   // Leave space for output/safety
   inputTokensAvailable -= countingSafetyBuffer;
-  inputTokensAvailable -= minOutputTokens;
+  inputTokensAvailable -= outputTokensToReserve;
 
   // Non-negotiable messages
   inputTokensAvailable -= toolTokens;
@@ -488,7 +488,7 @@ function compileChatMessages({
   if (knownContextLength !== undefined && inputTokensAvailable < 0) {
     throw new Error(
       `Not enough context available to include the system message, last user message, and tools.
-        There must be at least ${minOutputTokens} tokens remaining for output.
+        There must be at least ${maxTokens} tokens remaining for output.
         Request had the following token counts:
         - contextLength: ${knownContextLength}
         - counting safety buffer: ${countingSafetyBuffer}
@@ -531,8 +531,7 @@ function compileChatMessages({
 
   const inputTokens =
     currentTotal + systemMsgTokens + toolTokens + lastMessagesTokens;
-  const availableTokens =
-    contextLength - countingSafetyBuffer - minOutputTokens;
+  const availableTokens = contextLength - countingSafetyBuffer - maxTokens;
   const contextPercentage = inputTokens / availableTokens;
   return {
     compiledChatMessages: reassembled,

@@ -172,7 +172,7 @@ export function validateAndFilterTools(
     return result;
   });
 }
-
+1;
 /**
  * Validates and processes stop sequences
  */
@@ -191,8 +191,6 @@ export function validateStopSequences(
 
   return stop;
 }
-
-// FIM-specific validation functions
 
 /**
  * Type guard to check if input is a token array (number[] or number[][])
@@ -272,26 +270,19 @@ export function validateToolChoice(
   return undefined;
 }
 
-/**
- * Extended chat completion parameters for DeepSeek-specific features
- * Extends the standard OpenAI ChatCompletionCreateParams with DeepSeek-specific options
- */
+// Extends the standard OpenAI ChatCompletionCreateParams with DeepSeek-specific options
 export interface ChatCompletionCreateParamsNonStreamingExt
   extends ChatCompletionCreateParamsNonStreaming {
   thinking?: { type: "enabled" | "disabled" } | null;
 }
 
-/**
- * Extended streaming chat completion parameters for DeepSeek-specific features
- */
+// Extended streaming chat completion parameters for DeepSeek-specific features
 export interface ChatCompletionCreateParamsStreamingExt
   extends ChatCompletionCreateParamsStreaming {
   thinking?: { type: "enabled" | "disabled" } | null;
 }
 
-/**
- * Union type for both streaming and non-streaming extended parameters
- */
+// Union type for both streaming and non-streaming extended parameters
 export type ChatCompletionCreateParamsExt =
   | ChatCompletionCreateParamsNonStreamingExt
   | ChatCompletionCreateParamsStreamingExt;
@@ -362,9 +353,11 @@ export function convertToFimDeepSeekRequestBody(
   const coreBody = convertToBaseDeepSeekRequestBody(body, warnings);
   const validatedPrompt = validateFimPrompt(body.prompt, warnings);
 
+  const model = validateFIMModel(body.model, warnings);
+
   return {
     ...coreBody,
-    model: body.model,
+    model,
     prompt: validatedPrompt,
     ...(body.suffix !== undefined ? { suffix: body.suffix } : {}),
     ...(body.logprobs !== undefined ? { logprobs: body.logprobs } : {}),
@@ -432,10 +425,9 @@ export function validateAndPrepareMessages(
           // Reasoning field exists (could be empty string) - preserve it
           prepared.reasoning_content = reasoningContent;
         } else {
+          // in reasoning mode, every assistant msg in current chain must have reasoning
           prepared.reasoning_content = "";
         }
-        // If no reasoning field and no tool calls, don't add reasoning_content
-        // (this could be a final answer without tool calls)
       }
 
       result.push(prepared);
@@ -449,6 +441,11 @@ export function validateAndPrepareMessages(
   return result.reverse();
 }
 
+/**
+ * Converts a single OpenAI message to DeepSeek format.
+ * Filters invalid roles, handles developer→system conversion, and preserves tool calls.
+ * Returns undefined if role is invalid.
+ */
 export function prepareMessage(
   msg: OpenAICompatibleMessage,
   index: number,
@@ -491,13 +488,22 @@ export function isReasoningEnabled(
   );
 }
 
+/** Extracts reasoning content from a message, checking both possible field names. */
 function getReasoning(msg: OpenAICompatibleMessage): string | undefined {
-  // Return reasoning_content if defined (even empty string), otherwise reasoning
-  if (msg.reasoning_content !== undefined) {
-    return msg.reasoning_content;
+  return msg.reasoning_content ?? msg.reasoning;
+}
+
+/**
+ * Validates FIM model name, defaulting to 'deepseek-chat'.
+ * Warns if a different model is requested, as only deepseek-chat supports FIM.
+ */
+function validateFIMModel(
+  model: string | undefined,
+  warnings: string[] = [],
+): string {
+  const modelName = "deepseek-chat";
+  if (model && model !== modelName) {
+    warnings.push("FIM models other than deepseek-chat are not supported");
   }
-  if (msg.reasoning !== undefined) {
-    return msg.reasoning;
-  }
-  return undefined;
+  return model || modelName;
 }

@@ -28,21 +28,10 @@ export async function* interceptSystemToolCalls(
 ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
   let buffer = "";
   let parseState: ToolCallParseState | undefined;
-  let pendingDeltas: any[] = [];
 
   while (true) {
     const result = await messageGenerator.next();
     if (result.done) {
-      // Yield any pending complete tool calls
-      if (pendingDeltas.length > 0) {
-        yield [
-          {
-            role: "assistant",
-            content: "",
-            toolCalls: pendingDeltas,
-          },
-        ];
-      }
       // Case: non-standard tool termination causes hanging args
       if (parseState && !parseState.done && parseState.processedArgNames.size) {
         yield [
@@ -57,10 +46,7 @@ export async function* interceptSystemToolCalls(
       return result.value;
     } else {
       for await (const message of result.value) {
-        if (
-          abortController.signal.aborted ||
-          (parseState?.done && pendingDeltas.length === 0)
-        ) {
+        if (abortController.signal.aborted || parseState?.done) {
           break;
         }
         // Skip non-assistant messages or messages with native tool calls
@@ -102,22 +88,15 @@ export async function* interceptSystemToolCalls(
               parseState,
             );
             if (delta) {
-              pendingDeltas.push(delta);
-            }
-          } else {
-            // Yield accumulated deltas when tool call is complete
-            if (parseState?.done && pendingDeltas.length > 0) {
               yield [
                 {
                   ...message,
                   content: "",
-                  toolCalls: pendingDeltas,
+                  toolCalls: [delta],
                 },
               ];
-              pendingDeltas = [];
-              parseState = undefined;
             }
-
+          } else {
             // Prevent content after tool calls for now
             if (parseState) {
               continue;

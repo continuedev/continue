@@ -220,8 +220,6 @@ export function toChatBody(
     prediction: options.prediction,
     tool_choice: options.toolChoice,
   };
-  console.log(" ==== DeepSeek toChatBody ====", messages);
-  console.log(" ==== DeepSeek toChatBody ====", params.messages);
 
   if (options.tools?.length) {
     params.tools = options.tools
