@@ -367,6 +367,11 @@ export function recordStreamTelemetry(options: {
   });
 
   // Mirror core metrics to PostHog for product analytics
+  const cacheReadTokens =
+    fullUsage?.prompt_tokens_details?.cache_read_tokens ?? 0;
+  const cacheWriteTokens =
+    fullUsage?.prompt_tokens_details?.cache_write_tokens ?? 0;
+
   try {
     posthogService.capture("apiRequest", {
       model: model.model,
@@ -374,7 +379,21 @@ export function recordStreamTelemetry(options: {
       inputTokens: actualInputTokens,
       outputTokens: actualOutputTokens,
       costUsd: cost,
+      cacheReadTokens,
+      cacheWriteTokens,
     });
+
+    // Emit prompt_cache_metrics for the Prompt Cache Performance dashboard
+    if (actualInputTokens > 0) {
+      posthogService.capture("prompt_cache_metrics", {
+        model: model.model,
+        cache_read_tokens: cacheReadTokens,
+        cache_write_tokens: cacheWriteTokens,
+        total_prompt_tokens: actualInputTokens,
+        cache_hit_rate: cacheReadTokens / actualInputTokens,
+        tool_count: tools?.length ?? 0,
+      });
+    }
   } catch {}
 
   return cost;
