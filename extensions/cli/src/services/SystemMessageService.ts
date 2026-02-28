@@ -1,5 +1,8 @@
 import { PermissionMode } from "../permissions/types.js";
-import { constructSystemMessage } from "../systemMessage.js";
+import {
+  constructSystemMessage,
+  SystemMessageBlock,
+} from "../systemMessage.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
@@ -46,7 +49,9 @@ export class SystemMessageService extends BaseService<SystemMessageServiceState>
   /**
    * Get a fresh system message with current mode and configuration
    */
-  public async getSystemMessage(currentMode: PermissionMode): Promise<string> {
+  public async getSystemMessage(
+    currentMode: PermissionMode,
+  ): Promise<SystemMessageBlock[]> {
     const { additionalRules, format, headless } = this.currentState;
 
     const systemMessage = await constructSystemMessage(
@@ -58,7 +63,7 @@ export class SystemMessageService extends BaseService<SystemMessageServiceState>
 
     logger.debug("Generated fresh system message", {
       mode: currentMode,
-      messageLength: systemMessage.length,
+      blockCount: systemMessage.length,
     });
 
     return systemMessage;

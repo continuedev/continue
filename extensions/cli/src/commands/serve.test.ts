@@ -43,7 +43,13 @@ describe("serve command", () => {
     }));
 
     vi.mock("../systemMessage.js", () => ({
-      constructSystemMessage: vi.fn(() => Promise.resolve("System message")),
+      constructSystemMessage: vi.fn(() =>
+        Promise.resolve([{ type: "text", text: "System message" }]),
+      ),
+      flattenSystemMessage: vi.fn(
+        (blocks: Array<{ text: string }>) =>
+          blocks.map((b) => b.text).join("\n\n"),
+      ),
     }));
 
     vi.mock("../telemetry/telemetryService.js", () => ({

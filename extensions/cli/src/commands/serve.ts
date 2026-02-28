@@ -29,7 +29,10 @@ import {
   loadOrCreateSessionById,
 } from "../session.js";
 import { messageQueue } from "../stream/messageQueue.js";
-import { constructSystemMessage } from "../systemMessage.js";
+import {
+  constructSystemMessage,
+  flattenSystemMessage,
+} from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { reportFailureTool } from "../tools/reportFailure.js";
 import { gracefulExit, updateAgentMetadata } from "../util/exit.js";
@@ -153,7 +156,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   }
 
   // Initialize session with system message
-  const systemMessage = await constructSystemMessage(
+  const systemMessageBlocks = await constructSystemMessage(
     permissionsState.currentMode,
     options.rule,
     undefined,
@@ -161,9 +164,12 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   );
 
   const initialHistory: ChatHistoryItem[] = [];
-  if (systemMessage) {
+  if (systemMessageBlocks.length > 0) {
     initialHistory.push({
-      message: { role: "system" as const, content: systemMessage },
+      message: {
+        role: "system" as const,
+        content: flattenSystemMessage(systemMessageBlocks),
+      },
       contextItems: [],
     });
   }

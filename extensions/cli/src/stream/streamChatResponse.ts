@@ -10,6 +10,10 @@ import type {
 
 import { pruneLastMessage } from "../compaction.js";
 import { services } from "../services/index.js";
+import {
+  flattenSystemMessage,
+  SystemMessageBlock,
+} from "../systemMessage.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { applyChatCompletionToolOverrides } from "../tools/applyToolOverrides.js";
@@ -190,7 +194,7 @@ interface ProcessStreamingResponseOptions {
   callbacks?: StreamCallbacks;
   isHeadless?: boolean;
   tools?: ChatCompletionTool[];
-  systemMessage: string;
+  systemMessage: SystemMessageBlock[];
 }
 
 // Process a single streaming response and return whether we need to continue
@@ -216,6 +220,9 @@ export async function processStreamingResponse(
 
   let chatHistory = options.chatHistory;
 
+  // Flatten system message blocks to a string for token counting
+  const systemMessageString = flattenSystemMessage(systemMessage);
+
   // Safety buffer to account for tokenization estimation errors
   const SAFETY_BUFFER = 100;
 
@@ -224,7 +231,7 @@ export async function processStreamingResponse(
     chatHistory,
     model,
     safetyBuffer: SAFETY_BUFFER,
-    systemMessage,
+    systemMessage: systemMessageString,
     tools,
   });
 
@@ -241,7 +248,7 @@ export async function processStreamingResponse(
       chatHistory,
       model,
       safetyBuffer: SAFETY_BUFFER,
-      systemMessage,
+      systemMessage: systemMessageString,
       tools,
     });
   }
@@ -250,7 +257,7 @@ export async function processStreamingResponse(
     throw new Error(`Context length validation failed: ${validation.error}`);
   }
 
-  // Create OpenAI format history with validated system message
+  // Create OpenAI format history with system message blocks for optimal caching
   const openaiChatHistory = convertFromUnifiedHistoryWithSystemMessage(
     chatHistory,
     systemMessage,

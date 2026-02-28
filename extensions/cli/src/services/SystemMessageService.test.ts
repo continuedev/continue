@@ -70,7 +70,10 @@ describe("SystemMessageService", () => {
         headless: true,
       };
 
-      constructSystemMessageMock.mockResolvedValue("Test system message");
+      const mockBlocks = [
+        { type: "text", text: "Test system message" },
+      ];
+      constructSystemMessageMock.mockResolvedValue(mockBlocks);
 
       await service.initialize(config);
       const message = await service.getSystemMessage("normal");
@@ -81,7 +84,7 @@ describe("SystemMessageService", () => {
         "json",
         true,
       );
-      expect(message).toBe("Test system message");
+      expect(message).toEqual(mockBlocks);
     });
   });
 
@@ -96,7 +99,9 @@ describe("SystemMessageService", () => {
         format: "json",
       });
 
-      constructSystemMessageMock.mockResolvedValue("Updated message");
+      constructSystemMessageMock.mockResolvedValue([
+        { type: "text", text: "Updated message" },
+      ]);
       await service.getSystemMessage("normal");
 
       expect(constructSystemMessageMock).toHaveBeenCalledWith(
@@ -117,7 +122,9 @@ describe("SystemMessageService", () => {
         additionalRules: ["rule2", "rule3"],
       });
 
-      constructSystemMessageMock.mockResolvedValue("Updated message");
+      constructSystemMessageMock.mockResolvedValue([
+        { type: "text", text: "Updated message" },
+      ]);
       await service.getSystemMessage("normal");
 
       expect(constructSystemMessageMock).toHaveBeenCalledWith(

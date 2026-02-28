@@ -4,6 +4,10 @@ import type { ChatHistoryItem } from "core/index.js";
 import type { ChatCompletionTool } from "openai/resources/chat/completions.mjs";
 
 import { services } from "../services/index.js";
+import {
+  flattenSystemMessage,
+  SystemMessageBlock,
+} from "../systemMessage.js";
 import { ToolCall } from "../tools/index.js";
 import { logger } from "../util/logger.js";
 import { validateContextLength } from "../util/tokenizer.js";
@@ -17,7 +21,7 @@ export interface CompactionHelperOptions {
   isCompacting: boolean;
   isHeadless: boolean;
   callbacks?: StreamCallbacks;
-  systemMessage: string;
+  systemMessage: SystemMessageBlock[];
   tools?: ChatCompletionTool[];
 }
 
@@ -42,6 +46,8 @@ export async function handlePreApiCompaction(
     return { chatHistory, wasCompacted: false };
   }
 
+  const systemMessageString = flattenSystemMessage(systemMessage);
+
   const { wasCompacted, chatHistory: preCompactHistory } =
     await handleAutoCompaction(chatHistory, model, llmApi, {
       isHeadless,
@@ -49,7 +55,7 @@ export async function handlePreApiCompaction(
         onSystemMessage: callbacks?.onSystemMessage,
         onContent: callbacks?.onContent,
       },
-      systemMessage,
+      systemMessage: systemMessageString,
       tools,
     });
 
@@ -84,6 +90,8 @@ export async function handlePostToolValidation(
     return { chatHistory, wasCompacted: false };
   }
 
+  const systemMessageString = flattenSystemMessage(systemMessage);
+
   // Get updated history after tool execution
   const chatHistorySvc = services.chatHistory;
   if (
@@ -98,7 +106,7 @@ export async function handlePostToolValidation(
     chatHistory,
     model,
     safetyBuffer: SAFETY_BUFFER,
-    systemMessage,
+    systemMessage: systemMessageString,
     tools,
   });
 
@@ -117,7 +125,7 @@ export async function handlePostToolValidation(
           onSystemMessage: callbacks?.onSystemMessage,
           onContent: callbacks?.onContent,
         },
-        systemMessage,
+        systemMessage: systemMessageString,
         tools,
       });
 
@@ -136,7 +144,7 @@ export async function handlePostToolValidation(
         chatHistory,
         model,
         safetyBuffer: SAFETY_BUFFER,
-        systemMessage,
+        systemMessage: systemMessageString,
         tools,
       });
 
@@ -185,6 +193,8 @@ export async function handleNormalAutoCompaction(
     return { chatHistory, wasCompacted: false };
   }
 
+  const systemMessageString = flattenSystemMessage(systemMessage);
+
   const chatHistorySvc = services.chatHistory;
   if (
     typeof chatHistorySvc?.isReady === "function" &&
@@ -200,7 +210,7 @@ export async function handleNormalAutoCompaction(
         onSystemMessage: callbacks?.onSystemMessage,
         onContent: callbacks?.onContent,
       },
-      systemMessage,
+      systemMessage: systemMessageString,
       tools,
     });
 
