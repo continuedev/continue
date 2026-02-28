@@ -1,0 +1,59 @@
+---
+title: "Brainiall"
+description: "Configure Brainiall with Continue to access 100+ AI models including Claude, DeepSeek, Llama, Mistral, and more through a single OpenAI-compatible endpoint"
+---
+
+Brainiall is an AI API gateway providing access to 100+ models including Claude, DeepSeek, Llama, Mistral, Nova, and more through a single OpenAI-compatible endpoint powered by AWS Bedrock.
+
+You can get an API key at [app.brainiall.com](https://app.brainiall.com)
+
+## Available Models
+
+| Model | Context | Input $/M | Output $/M |
+| ----- | ------- | --------- | ---------- |
+| claude-opus-4-6 | 200K | $5.00 | $25.00 |
+| claude-sonnet-4-6 | 200K | $3.00 | $15.00 |
+| claude-haiku-4-5 | 200K | $1.00 | $5.00 |
+| deepseek-r1 | 128K | $1.35 | $5.40 |
+| deepseek-v3 | 128K | $0.27 | $1.10 |
+| llama-3.3-70b | 128K | $0.72 | $0.72 |
+| llama-4-scout | 512K | $0.17 | $0.17 |
+| nova-pro | 300K | $0.80 | $3.20 |
+| mistral-large-3 | 128K | $2.00 | $6.00 |
+| qwen3-80b | 128K | $0.50 | $0.50 |
+| minimax-m2 | 1M | $1.00 | $5.00 |
+| kimi-k2.5 | 128K | $0.60 | $2.40 |
+
+[View all models](https://app.brainiall.com/docs-page)
+
+## Chat Model
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Claude Sonnet 4.6
+      provider: brainiall
+      model: claude-sonnet-4-6
+      apiKey: <YOUR_BRAINIALL_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude Sonnet 4.6",
+        "provider": "brainiall",
+        "model": "claude-sonnet-4-6",
+        "apiKey": "<YOUR_BRAINIALL_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

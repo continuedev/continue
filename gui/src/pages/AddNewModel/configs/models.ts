@@ -3225,4 +3225,94 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "mimo.png",
     isOpenSource: false,
   },
+
+  // Brainiall models
+  brainiallClaudeOpus46: {
+    title: "Claude Opus 4.6",
+    description:
+      "Anthropic's most capable model with 200K context, available via Brainiall gateway.",
+    refUrl: "https://app.brainiall.com",
+    params: {
+      title: "Claude Opus 4.6",
+      model: "claude-opus-4-6",
+      contextLength: 200_000,
+      apiKey: "",
+    },
+    providerOptions: ["brainiall"],
+    icon: "brainiall.png",
+    isOpenSource: false,
+  },
+  brainiallClaudeSonnet46: {
+    title: "Claude Sonnet 4.6",
+    description:
+      "Anthropic's balanced model with strong coding and reasoning at lower cost.",
+    refUrl: "https://app.brainiall.com",
+    params: {
+      title: "Claude Sonnet 4.6",
+      model: "claude-sonnet-4-6",
+      contextLength: 200_000,
+      apiKey: "",
+    },
+    providerOptions: ["brainiall"],
+    icon: "brainiall.png",
+    isOpenSource: false,
+  },
+  brainiallClaudeHaiku45: {
+    title: "Claude Haiku 4.5",
+    description: "Fast and affordable Claude model for lightweight tasks.",
+    refUrl: "https://app.brainiall.com",
+    params: {
+      title: "Claude Haiku 4.5",
+      model: "claude-haiku-4-5",
+      contextLength: 200_000,
+      apiKey: "",
+    },
+    providerOptions: ["brainiall"],
+    icon: "brainiall.png",
+    isOpenSource: false,
+  },
+  brainiallDeepseekR1: {
+    title: "DeepSeek R1",
+    description:
+      "DeepSeek's reasoning model with chain-of-thought capabilities.",
+    refUrl: "https://app.brainiall.com",
+    params: {
+      title: "DeepSeek R1",
+      model: "deepseek-r1",
+      contextLength: 128_000,
+      apiKey: "",
+    },
+    providerOptions: ["brainiall"],
+    icon: "brainiall.png",
+    isOpenSource: true,
+  },
+  brainiallDeepseekV3: {
+    title: "DeepSeek V3",
+    description: "DeepSeek's general-purpose model, fast and cost-effective.",
+    refUrl: "https://app.brainiall.com",
+    params: {
+      title: "DeepSeek V3",
+      model: "deepseek-v3",
+      contextLength: 128_000,
+      apiKey: "",
+    },
+    providerOptions: ["brainiall"],
+    icon: "brainiall.png",
+    isOpenSource: true,
+  },
+  brainiallLlama33_70b: {
+    title: "Llama 3.3 70B",
+    description:
+      "Meta's Llama 3.3 70B instruction-tuned model with strong general capabilities.",
+    refUrl: "https://app.brainiall.com",
+    params: {
+      title: "Llama 3.3 70B",
+      model: "llama-3.3-70b",
+      contextLength: 128_000,
+      apiKey: "",
+    },
+    providerOptions: ["brainiall"],
+    icon: "brainiall.png",
+    isOpenSource: true,
+  },
 };
