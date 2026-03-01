@@ -247,6 +247,7 @@ export async function constructSystemMessage(
   for (const rule of markdownRules) {
     if (!existingRulesSet.has(rule.rule)) {
       processedRules.push(rule.rule);
+      existingRulesSet.add(rule.rule);
     }
   }
 
