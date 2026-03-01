@@ -24,6 +24,7 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  id-token: write  # Required for OIDC
 
 jobs:
   stable-release:
@@ -67,8 +68,6 @@ jobs:
         if: ${{ (inputs.release_type || 'promote-beta') == 'promote-beta' }}
         id: find_beta
         working-directory: extensions/cli
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           if [[ -n "${{ inputs.beta_version }}" ]]; then
             # Manual input provided
@@ -117,8 +116,6 @@ jobs:
       - name: Download and verify beta package
         if: ${{ (inputs.release_type || 'promote-beta') == 'promote-beta' }}
         working-directory: extensions/cli
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           # Download the specific beta version
           npm pack @continuedev/cli@${{ steps.find_beta.outputs.beta_version }}
@@ -189,8 +186,6 @@ jobs:
 
       - name: Publish stable to npm
         working-directory: extensions/cli
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           npm publish --tag latest
           echo "Published stable version: ${{ steps.final_version.outputs.stable_version }}"
