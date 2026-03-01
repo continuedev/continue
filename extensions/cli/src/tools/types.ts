@@ -62,6 +62,7 @@ export interface ToolCall {
   arguments: any;
   argumentsStr: string;
   startNotified: boolean;
+  extra_content?: Record<string, unknown>;
 }
 
 export interface PreprocessedToolCall extends ToolCall {
