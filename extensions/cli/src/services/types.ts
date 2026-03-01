@@ -131,6 +131,11 @@ export interface ArtifactUploadServiceState {
 }
 
 export type {
+  PendingExecution,
+  SubAgentServiceState,
+} from "./SubAgentService.js";
+
+export type {
   BackgroundJob,
   BackgroundJobStatus,
 } from "./BackgroundJobService.js";
@@ -158,6 +163,7 @@ export const SERVICE_NAMES = {
   ARTIFACT_UPLOAD: "artifactUpload",
   GIT_AI_INTEGRATION: "gitAiIntegration",
   BACKGROUND_JOBS: "backgroundJobs",
+  SUBAGENT: "subagent",
 } as const;
 
 /**
