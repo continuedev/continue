@@ -30,7 +30,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
+          registry-url: "https://registry.npmjs.org"
 
       - name: Update npm for OIDC trusted publishing
         run: npm install -g npm@latest
@@ -67,6 +68,8 @@ jobs:
 
       - name: Publish to npm
         working-directory: extensions/cli
+        env:
+          NODE_AUTH_TOKEN: ""
         run: |
           npm publish --tag latest --provenance
           echo "Published version: ${{ inputs.stable_version }}"
