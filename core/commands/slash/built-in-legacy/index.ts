@@ -6,6 +6,7 @@ import {
 import GenerateTerminalCommand from "./cmd";
 import CommitMessageCommand from "./commit";
 import DraftIssueCommand from "./draftIssue";
+import GuideSlashCommand from "./guide";
 import HttpSlashCommand from "./http";
 import OnboardSlashCommand from "./onboard";
 import ReviewMessageCommand from "./review";
@@ -19,6 +20,7 @@ const LegacyBuiltInSlashCommands: SlashCommand[] = [
   CommitMessageCommand,
   ReviewMessageCommand,
   OnboardSlashCommand,
+  GuideSlashCommand,
 ];
 
 export function getLegacyBuiltInSlashCommandFromDescription(
