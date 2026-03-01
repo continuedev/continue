@@ -694,6 +694,10 @@ class VsCodeIde implements IDE {
         "pauseCodebaseIndexOnStart",
         false,
       ),
+      showTokenUsage: settings.get<"never" | "history" | "session" | "turn">(
+        "showTokenUsage",
+        "never",
+      ),
     };
     return ideSettings;
   }

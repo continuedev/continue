@@ -6,6 +6,7 @@ import { renderChatMessage } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import { selectSelectedProfile } from "../slices/profilesSlice";
+import { summarizeSessionUsage } from "../../util/usage";
 import {
   deleteSessionMetadata,
   newSession,
@@ -291,6 +292,17 @@ export const saveCurrentSession = createAsyncThunk<
       title = NEW_SESSION_TITLE;
     }
 
+    const sessionUsageTotals = summarizeSessionUsage(session.history);
+    const usage =
+      sessionUsageTotals.turnsWithUsage > 0
+        ? {
+            promptTokens: sessionUsageTotals.promptTokens,
+            completionTokens: sessionUsageTotals.completionTokens,
+            totalTokens: sessionUsageTotals.totalTokens,
+            totalCost: 0,
+          }
+        : undefined;
+
     const updatedSession: Session = {
       sessionId: session.id,
       title,
@@ -298,6 +310,7 @@ export const saveCurrentSession = createAsyncThunk<
       history: session.history,
       mode: session.mode,
       chatModelTitle: selectedChatModel?.title ?? null,
+      ...(usage ? { usage } : {}),
     };
 
     const result = await dispatch(updateSession(updatedSession));

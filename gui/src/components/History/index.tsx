@@ -14,6 +14,7 @@ import Shortcut from "../gui/Shortcut";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useTokenUsageSetting } from "../../hooks/useTokenUsageSetting";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   newSession,
@@ -25,6 +26,7 @@ import { getFontSize, getPlatform } from "../../util";
 import { ROUTES } from "../../util/navigation";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 import { Button } from "../ui";
+import { formatTokenBreakdown } from "../../util/usage";
 import { HistoryTableRow } from "./HistoryTableRow";
 import { groupSessionsByDate, parseDate } from "./util";
 
@@ -33,6 +35,7 @@ export function History() {
   const navigate = useNavigate();
   const searchInputRef = React.useRef<HTMLInputElement>(null);
   const ideMessenger = useContext(IdeMessengerContext);
+  const tokenUsageDisplayMode = useTokenUsageSetting();
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -194,17 +197,26 @@ export function History() {
             {sessionGroups.map((group, groupIndex) => (
               <Fragment key={group.label}>
                 <tr
-                  className={`user-select-none sticky mb-3 ml-2 flex h-6 justify-start text-left text-base font-bold opacity-75 ${
+                  className={`user-select-none sticky mb-2 ml-2 flex justify-start text-left text-base font-bold opacity-75 ${
                     groupIndex === 0 ? "mt-2" : "mt-8"
                   }`}
                 >
-                  <td colSpan={3}>{group.label}</td>
+                  <td colSpan={3} className="flex w-full flex-col items-start">
+                    <span>{group.label}</span>
+                    {tokenUsageDisplayMode !== "never" &&
+                      group.usageTotals.totalTokens > 0 && (
+                        <span className="text-description-muted mt-0.5 text-xs font-normal leading-4">
+                          {formatTokenBreakdown(group.usageTotals)}
+                        </span>
+                      )}
+                  </td>
                 </tr>
                 {group.sessions.map((session, sessionIndex) => (
                   <HistoryTableRow
                     key={session.sessionId}
                     sessionMetadata={session}
                     index={sessionIndex}
+                    showTokenUsage={tokenUsageDisplayMode !== "never"}
                   />
                 ))}
               </Fragment>

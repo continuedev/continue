@@ -9,3 +9,20 @@ There are a number of different ways to customize Chat:
 
 - Add [rules](/customize/rules) to give the model persistent instructions through the system prompt
 - Create [prompts](/customize/prompts) to kickoff workflows with instructions you repeat often
+
+## Token Usage Display
+
+You can control where token usage is shown in the UI with the VS Code setting:
+
+```json
+"continue.showTokenUsage": "never" | "history" | "session" | "turn"
+```
+
+- `never`: Hide token usage in Chat and History.
+- `history`: Show token usage in History only.
+- `session`: Show token usage in History and in the current session summary.
+- `turn`: Show token usage in History, session summary, and each assistant turn.
+
+Usage is always tracked and persisted in local session files.
+
+The **Usage** page in Settings -> Help shows local analytics totals from the local usage database, so totals there can differ from visible chat history totals.

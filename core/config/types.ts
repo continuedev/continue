@@ -248,6 +248,7 @@ declare global {
     title: string;
     dateCreated: string;
     workspaceDirectory: string;
+    usage?: Usage;
   }
   
   export interface RangeInFile {
@@ -323,11 +324,23 @@ declare global {
     role: "user";
     content: MessageContent;
   }
+
+  export interface Usage {
+    completionTokens: number;
+    promptTokens: number;
+    totalTokens?: number;
+    provider?: string;
+    model?: string;
+    source?: "provider" | "estimated";
+    ts?: string;
+    raw?: Record<string, unknown>;
+  }
   
   export interface AssistantChatMessage {
     role: "assistant";
     content: MessageContent;
     toolCalls?: ToolCallDelta[];
+    usage?: Usage;
   }
   
   export interface SystemChatMessage {
@@ -387,6 +400,7 @@ declare global {
     completionOptions: CompletionOptions;
     prompt: string;
     completion: string;
+    usage?: Usage;
   }
   
   type MessageModes = "chat" | "edit";
@@ -651,6 +665,7 @@ declare global {
     remoteConfigSyncPeriod: number;
     userToken: string;
     pauseCodebaseIndexOnStart: boolean;
+    showTokenUsage?: "never" | "history" | "session" | "turn";
   }
   
   export interface IDE {
