@@ -1,0 +1,63 @@
+---
+title: ModelsLab
+slug: ../modelslab
+---
+
+<Tip>
+  **Access ModelsLab's uncensored chat models via an OpenAI-compatible API**
+</Tip>
+
+<Info>
+  You can get an API key from [modelslab.com/account/api-key](https://modelslab.com/account/api-key).
+</Info>
+
+## Available Models
+
+| Model | Description |
+|-------|-------------|
+| `meta-llama/Meta-Llama-3-8B-Instruct` | Llama 3 8B instruction-tuned |
+| `meta-llama/Meta-Llama-3-70B-Instruct` | Llama 3 70B instruction-tuned |
+| `mistralai/Mistral-7B-Instruct-v0.2` | Mistral 7B instruction-tuned |
+
+Use the model fetcher or consult [docs.modelslab.com](https://docs.modelslab.com) for the full list of available chat models.
+
+## Configuration
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="config.yaml"
+   name: My Config
+   version: 0.0.1
+   models:
+     - name: ModelsLab Llama 3 8B
+       provider: modelslab
+       model: meta-llama/Meta-Llama-3-8B-Instruct
+       apiKey: YOUR_API_KEY
+   ```
+   </Tab>
+   <Tab title="JSON">
+   ```json title="config.json"
+   {
+     "models": [
+       {
+         "title": "ModelsLab Llama 3 8B",
+         "provider": "modelslab",
+         "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+         "apiKey": "YOUR_API_KEY"
+       }
+     ]
+   }
+   ```
+   </Tab>
+</Tabs>
+
+## Authentication
+
+ModelsLab uses Bearer token authentication. Set your API key via the `apiKey` field in your config.
+
+## Additional Options
+
+| Option | Description |
+|--------|-------------|
+| `apiBase` | API base URL (default: `https://modelslab.com/api/uncensored-chat/v1/`) |
+| `apiKey` | Your ModelsLab API key |
