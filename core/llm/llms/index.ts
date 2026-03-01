@@ -44,6 +44,7 @@ import Msty from "./Msty";
 import NCompass from "./NCompass";
 import Nebius from "./Nebius";
 import Nous from "./Nous";
+import ModelsLab from "./ModelsLab";
 import Novita from "./Novita";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
@@ -116,6 +117,7 @@ export const LLMClasses = [
   Asksage,
   Nebius,
   Nous,
+  ModelsLab,
   Venice,
   VertexAI,
   xAI,

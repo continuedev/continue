@@ -2946,4 +2946,21 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "mimo.png",
     isOpenSource: false,
   },
+
+  modelsLabLlama3_8b: {
+    title: "ModelsLab Llama 3 8B",
+    description: "Meta Llama 3 8B instruction-tuned via ModelsLab API",
+    params: {
+      model: "meta-llama/Meta-Llama-3-8B-Instruct",
+      contextLength: 8192,
+    },
+  },
+  modelsLabLlama3_70b: {
+    title: "ModelsLab Llama 3 70B",
+    description: "Meta Llama 3 70B instruction-tuned via ModelsLab API",
+    params: {
+      model: "meta-llama/Meta-Llama-3-70B-Instruct",
+      contextLength: 8192,
+    },
+  },
 };
