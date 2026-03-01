@@ -11,6 +11,7 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  id-token: write  # Required for npm OIDC trusted publishing
 
 jobs:
   beta-release:
@@ -29,8 +30,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 20
-          registry-url: "https://registry.npmjs.org"
-          always-auth: true
 
       - name: Setup packages
         uses: ./.github/actions/setup-packages
@@ -46,11 +45,12 @@ jobs:
           cd core
           npm run build
 
+      - name: Update npm for OIDC trusted publishing
+        run: npm install -g npm@latest
+
       - name: Install CLI dependencies
         working-directory: extensions/cli
         run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Get current version
         id: get_version
@@ -94,10 +94,8 @@ jobs:
 
       - name: Publish beta to npm
         working-directory: extensions/cli
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          npm publish --tag beta
+          npm publish --tag beta --provenance
           echo "Published beta version: ${{ steps.get_version.outputs.beta_version }}"
 
       - name: Create beta release on GitHub
