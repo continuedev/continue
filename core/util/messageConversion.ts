@@ -351,13 +351,16 @@ export function convertFromUnifiedHistory(
 }
 
 /**
- * Convert ChatHistoryItem array to ChatCompletionMessageParam array with injected system message
+ * Convert ChatHistoryItem array to ChatCompletionMessageParam array with injected system message.
+ * Supports both a plain string and an array of content blocks for the system message.
+ * When an array is provided, it is passed as the system message content directly,
+ * which allows Anthropic's prompt caching to cache each block independently.
  * @param historyItems - The chat history items
- * @param systemMessage - The system message to inject at the beginning
+ * @param systemMessage - The system message (string or array of {type:"text", text:string} blocks)
  */
 export function convertFromUnifiedHistoryWithSystemMessage(
   historyItems: ChatHistoryItem[],
-  systemMessage: string,
+  systemMessage: string | Array<{ type: "text"; text: string }>,
 ): ChatCompletionMessageParam[] {
   const messages: ChatCompletionMessageParam[] = [];
 
@@ -365,7 +368,7 @@ export function convertFromUnifiedHistoryWithSystemMessage(
   messages.push({
     role: "system",
     content: systemMessage,
-  });
+  } as ChatCompletionMessageParam);
 
   // Convert the rest of the history
   const convertedMessages = convertFromUnifiedHistory(historyItems);
