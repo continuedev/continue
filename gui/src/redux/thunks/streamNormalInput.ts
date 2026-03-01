@@ -26,6 +26,7 @@ import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTo
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
 import posthog from "posthog-js";
+import parseTodosFromText from "../../util/parseTodosFromText";
 import {
   selectCurrentToolCalls,
   selectPendingToolCalls,
@@ -209,6 +210,23 @@ export const streamNormalInput = createAsyncThunk<
         }
 
         dispatch(streamUpdate(next.value));
+
+        if (next.value && next.value.length > 0) {
+          for (const message of next.value) {
+            if (
+              message.role === "assistant" &&
+              typeof message.content === "string"
+            ) {
+              const parsed = parseTodosFromText(message.content);
+              if (parsed) {
+                try {
+                  extra.ideMessenger.post("chatResponseWithTodos", parsed);
+                } catch {}
+              }
+            }
+          }
+        }
+
         next = await gen.next();
       }
 

@@ -52,6 +52,7 @@ describe("sessionSlice streamUpdate", () => {
   const createInitialState = () => ({
     lastSessionId: undefined,
     allSessionMetadata: [],
+    todos: null,
     history: [
       {
         message: {

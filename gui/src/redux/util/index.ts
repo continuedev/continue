@@ -99,6 +99,17 @@ export function findChatHistoryItemByToolCallId(
   );
 }
 
+export function findAssistantChatHistoryItemByToolCallId(
+  chatHistory: RootState["session"]["history"],
+  toolCallId: string,
+): ChatHistoryItemWithMessageId | undefined {
+  return chatHistory.findLast(
+    (item) =>
+      item.message.role === "assistant" &&
+      item.toolCallStates?.some((state) => state.toolCallId === toolCallId),
+  );
+}
+
 export function logToolUsage(
   toolCallState: ToolCallState,
   accepted: boolean,

@@ -541,6 +541,7 @@ export interface ChatHistoryItem {
   reasoning?: Reasoning;
   appliedRules?: RuleMetadata[];
   conversationSummary?: string;
+  todos?: Todos;
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
@@ -929,6 +930,8 @@ export interface IDE {
   getSignatureHelp(location: Location): Promise<SignatureHelp | null>; // TODO: add to jetbrains
   getReferences(location: Location): Promise<RangeInFile[]>;
   getDocumentSymbols(textDocumentIdentifier: string): Promise<DocumentSymbol[]>;
+
+  getTodos(): Promise<Todos>;
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void;
@@ -2020,4 +2023,33 @@ export interface DocumentSymbol {
   range: Range;
   selectionRange: Range;
   children?: DocumentSymbol[];
+}
+
+// custom todos
+
+export interface TodoItem {
+  id?: number;
+  text: string;
+  order: number;
+  completed?: boolean;
+}
+
+export interface TodoFileAction {
+  type: "file";
+  patterns: string[];
+  reason: string;
+}
+
+export interface TodoUrlAction {
+  type: "url";
+  url: string;
+  reason: string;
+}
+
+export type TodoAction = TodoFileAction | TodoUrlAction;
+
+export interface Todos {
+  summary: string;
+  todos: TodoItem[];
+  actions: TodoAction[];
 }

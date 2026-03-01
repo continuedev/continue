@@ -21,6 +21,7 @@ import {
   RuleMetadata,
   Session,
   ThinkingChatMessage,
+  Todos,
   Tool,
   ToolCallDelta,
   ToolCallState,
@@ -37,10 +38,15 @@ import { findLastIndex } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 import { type InlineErrorMessageType } from "../../components/mainInput/InlineErrorMessage";
 import { toolCallCtxItemToCtxItemWithId } from "../../pages/gui/ToolCallDiv/utils";
+import { parseTodosFromText } from "../../util/parseTodosFromText";
 import { addToolCallDeltaToState, isEditTool } from "../../util/toolCallState";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
-import { findChatHistoryItemByToolCallId, findToolCallById } from "../util";
+import {
+  findAssistantChatHistoryItemByToolCallId,
+  findChatHistoryItemByToolCallId,
+  findToolCallById,
+} from "../util";
 
 /**
  * Helper function to filter out duplicate edit/search-replace tool calls.
@@ -201,11 +207,23 @@ export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
   message: ChatMessage & { id: string };
 };
 
+function parseTodosFromContextItems(contextItems: ContextItem[]): Todos | null {
+  for (const contextItem of contextItems) {
+    const parsed = parseTodosFromText(contextItem.content);
+    if (parsed) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
 type SessionState = {
   lastSessionId?: string;
   isSessionMetadataLoading: boolean;
   allSessionMetadata: (BaseSessionMetadata | RemoteSessionMetadata)[];
   history: ChatHistoryItemWithMessageId[];
+  todos: Todos | null;
   isStreaming: boolean;
   title: string;
   id: string;
@@ -230,6 +248,7 @@ export const INITIAL_SESSION_STATE: SessionState = {
   isSessionMetadataLoading: false,
   allSessionMetadata: [],
   history: [],
+  todos: null,
   isStreaming: false,
   title: NEW_SESSION_TITLE,
   id: uuidv4(),
@@ -445,13 +464,25 @@ export const sessionSlice = createSlice({
       state.contextPercentage = undefined;
     },
     deleteCompaction: (state, action: PayloadAction<number>) => {
-      // Removes the conversation summary from the specified message
+      // Removes compaction metadata (summary and todos) from the specified message
       const historyItem = state.history[action.payload];
-      if (historyItem?.conversationSummary) {
+      if (historyItem?.conversationSummary || historyItem?.todos) {
         state.history[action.payload] = {
           ...historyItem,
           conversationSummary: undefined,
+          todos: undefined,
         };
+      }
+    },
+    toggleTodo: (
+      state,
+      action: PayloadAction<{ historyIndex: number; todoIndex: number }>,
+    ) => {
+      const { historyIndex, todoIndex } = action.payload;
+      const historyItem = state.history[historyIndex];
+      if (historyItem?.todos?.todos?.[todoIndex] !== undefined) {
+        historyItem.todos.todos[todoIndex].completed =
+          !historyItem.todos.todos[todoIndex].completed;
       }
     },
     updateHistoryItemAtIndex: (
@@ -681,6 +712,17 @@ export const sessionSlice = createSlice({
               message.reasoning_details,
             );
           }
+
+          // todos
+          if (
+            message.role === "assistant" &&
+            typeof message.content === "string"
+          ) {
+            const parsed = parseTodosFromText(message.content);
+            if (parsed && parsed.todos.length > 0) {
+              state.todos = parsed;
+            }
+          }
         }
       }
     },
@@ -863,6 +905,7 @@ export const sessionSlice = createSlice({
         mcpUiState?: McpUiState;
       }>,
     ) => {
+      console.log("Hello: ", action.payload);
       // Update tool call state and corresponding tool output message
       const toolCallState = findToolCallById(
         state.history,
@@ -871,6 +914,20 @@ export const sessionSlice = createSlice({
       if (toolCallState) {
         toolCallState.output = action.payload.contextItems;
         toolCallState.mcpUiState = action.payload.mcpUiState;
+
+        if (toolCallState.toolCall.function.name === "todos") {
+          const parsedTodos = parseTodosFromContextItems(
+            action.payload.contextItems,
+          );
+          const assistantItem = findAssistantChatHistoryItemByToolCallId(
+            state.history,
+            action.payload.toolCallId,
+          );
+
+          if (assistantItem) {
+            assistantItem.todos = parsedTodos ?? undefined;
+          }
+        }
       }
       const toolItem = findChatHistoryItemByToolCallId(
         state.history,
@@ -1069,6 +1126,7 @@ export const {
   setMainEditorContentTrigger,
   deleteMessage,
   deleteCompaction,
+  toggleTodo,
   setIsGatheringContext,
   resetNextCodeBlockToApplyIndex,
   updateApplyState,

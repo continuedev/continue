@@ -13,6 +13,7 @@ import type {
   SignatureHelp,
   TerminalOptions,
   Thread,
+  Todos,
 } from "../";
 import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
 
@@ -66,6 +67,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getTags: [string, IndexTag[]];
   readSecrets: [{ keys: string[] }, Record<string, string>];
   writeSecrets: [{ secrets: Record<string, string> }, void];
+  getTodos: [undefined, Todos];
   // end methods from IDE type
 
   getIdeSettings: [undefined, IdeSettings];

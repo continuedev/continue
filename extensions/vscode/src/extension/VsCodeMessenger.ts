@@ -738,6 +738,9 @@ export class VsCodeMessenger {
       const { dir } = msg.data;
       return ide.getBranch(dir);
     });
+    this.onWebviewOrCore("getTodos", async () => {
+      return ide.getTodos();
+    });
     this.onWebviewOrCore("getOpenFiles", async (msg) => {
       return ide.getOpenFiles();
     });
@@ -831,6 +834,11 @@ export class VsCodeMessenger {
 
     this.onWebviewOrCore("reportError", async (msg) => {
       await handleLLMError(msg.data);
+    });
+
+    this.onWebview("chatResponseWithTodos", async (data) => {
+      console.log("Received chat response with todos:", data);
+      // await ide.showTodoList(msg.data.items as Todos[]);
     });
   }
 }

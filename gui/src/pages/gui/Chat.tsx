@@ -23,6 +23,7 @@ import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/Thinkin
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { useOnboardingCard } from "../../components/OnboardingCard";
 import StepContainer from "../../components/StepContainer";
+import TodoList from "../../components/StepContainer/TodoList";
 import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
@@ -388,6 +389,9 @@ export function Chat() {
                 historyIndex={index}
               />
             )}
+
+            {/* TodoList always renders last */}
+            <TodoList item={item} index={index} />
           </>
         );
       }

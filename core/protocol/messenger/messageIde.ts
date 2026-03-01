@@ -227,4 +227,8 @@ export class MessageIde implements IDE {
   async getBranch(dir: string): Promise<string> {
     return this.request("getBranch", { dir });
   }
+
+  async getTodos() {
+    return await this.request("getTodos", undefined);
+  }
 }
