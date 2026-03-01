@@ -7,6 +7,7 @@ import { AnthropicApi } from "./Anthropic.js";
 describe("AnthropicApi", () => {
   describe("_convertBody applies cache_control to last two user messages", () => {
     const api = new AnthropicApi({
+      provider: "anthropic",
       apiKey: "test-key",
       cachingStrategy: "systemAndTools",
     });
@@ -35,7 +36,7 @@ describe("AnthropicApi", () => {
         const textPart = lastUserMsg.content.find(
           (p: any) => p.type === "text",
         );
-        expect(textPart?.cache_control).toEqual({ type: "ephemeral" });
+        expect((textPart as any)?.cache_control).toEqual({ type: "ephemeral" });
       }
 
       // The second-to-last user message (index 2 = "Second user message") should also have cache_control
@@ -46,7 +47,7 @@ describe("AnthropicApi", () => {
         const textPart = secondLastUserMsg.content.find(
           (p: any) => p.type === "text",
         );
-        expect(textPart?.cache_control).toEqual({ type: "ephemeral" });
+        expect((textPart as any)?.cache_control).toEqual({ type: "ephemeral" });
       }
 
       // The first user message (index 0 = "First user message") should NOT have cache_control
@@ -57,7 +58,7 @@ describe("AnthropicApi", () => {
         const textPart = firstUserMsg.content.find(
           (p: any) => p.type === "text",
         );
-        expect(textPart?.cache_control).toBeUndefined();
+        expect((textPart as any)?.cache_control).toBeUndefined();
       }
     });
 
@@ -78,12 +79,13 @@ describe("AnthropicApi", () => {
       expect(Array.isArray(userMsg.content)).toBe(true);
       if (Array.isArray(userMsg.content)) {
         const textPart = userMsg.content.find((p: any) => p.type === "text");
-        expect(textPart?.cache_control).toEqual({ type: "ephemeral" });
+        expect((textPart as any)?.cache_control).toEqual({ type: "ephemeral" });
       }
     });
 
     it("still caches user messages even when caching strategy is none", () => {
       const body = new AnthropicApi({
+        provider: "anthropic",
         apiKey: "test-key",
         cachingStrategy: "none",
       })._convertToCleanAnthropicBody({
@@ -105,7 +107,7 @@ describe("AnthropicApi", () => {
         const textPart = lastUserMsg.content.find(
           (p: any) => p.type === "text",
         );
-        expect(textPart?.cache_control).toEqual({ type: "ephemeral" });
+        expect((textPart as any)?.cache_control).toEqual({ type: "ephemeral" });
       }
     });
   });
