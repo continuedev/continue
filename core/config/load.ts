@@ -651,6 +651,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     envSecretLocations: llm.envSecretLocations,
     sourceFile: llm.sourceFile,
     isFromAutoDetect: llm.isFromAutoDetect,
+    toolOverrides: llm.toolOverrides,
   };
 }
 
