@@ -164,15 +164,15 @@ export async function handleAutoCompaction(
     // Get system message to calculate its token count for compaction pruning
     // Use provided message if available, otherwise fetch it (for backward compatibility)
     let resolvedSystemMessage: string;
-    if (providedSystemMessage !== undefined) {
-      resolvedSystemMessage = providedSystemMessage;
-    } else {
+    if (providedSystemMessage === undefined) {
       const { services } = await import("../services/index.js");
       const { flattenSystemMessage } = await import("../systemMessage.js");
       const blocks = await services.systemMessage.getSystemMessage(
         services.toolPermissions.getState().currentMode,
       );
       resolvedSystemMessage = flattenSystemMessage(blocks);
+    } else {
+      resolvedSystemMessage = providedSystemMessage;
     }
 
     const { countChatHistoryItemTokens } = await import("../util/tokenizer.js");
