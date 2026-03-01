@@ -2,6 +2,7 @@ import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { Session } from "core/index.js";
 
+import { QuestionRequestedEvent } from "../../services/QuizService.js";
 import { ToolCallPreview } from "../../tools/types.js";
 
 export interface UseChatProps {
@@ -41,6 +42,8 @@ export interface ActivePermissionRequest {
   toolCallPreview?: ToolCallPreview[];
   hasDynamicEvaluation?: boolean;
 }
+
+export type ActiveQuizQuestion = QuestionRequestedEvent;
 
 export interface RemoteServerState {
   session: Session;

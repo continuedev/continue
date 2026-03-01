@@ -184,6 +184,7 @@ function useChatHandlers(
   };
 }
 
+// eslint-disable-next-line complexity
 const TUIChat: React.FC<TUIChatProps> = ({
   remoteUrl,
   configPath,
@@ -261,6 +262,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     compactionStartTime,
     inputMode,
     activePermissionRequest,
+    activeQuizQuestion,
     wasInterrupted,
     queuedMessages,
     handleUserMessage,
@@ -269,6 +271,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     resetChatHistory,
     handleEditMessage,
     handleToolPermissionResponse,
+    handleQuizAnswer,
   } = useChat({
     assistant: services.config?.config || undefined,
     model: services.model?.model || undefined,
@@ -332,7 +335,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // Determine if input should be disabled
   // Allow input even when services are loading, but disable for UI overlays
   const isInputDisabled =
-    navState.currentScreen !== "chat" || !!activePermissionRequest;
+    navState.currentScreen !== "chat" ||
+    !!activePermissionRequest ||
+    !!activeQuizQuestion;
 
   // Check if verbose mode is enabled for resource debugging
   const isVerboseMode = useMemo(() => process.argv.includes("--verbose"), []);
@@ -430,7 +435,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
           handleReload={handleReload}
           closeCurrentScreen={closeCurrentScreen}
           activePermissionRequest={activePermissionRequest}
+          activeQuizQuestion={activeQuizQuestion}
           handleToolPermissionResponse={handleToolPermissionResponse}
+          handleQuizAnswer={handleQuizAnswer}
           handleUserMessage={handleUserMessage}
           isWaitingForResponse={isWaitingForResponse}
           isCompacting={isCompacting}
