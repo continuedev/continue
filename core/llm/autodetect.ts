@@ -233,6 +233,7 @@ function modelSupportsReasoning(
 const PARALLEL_PROVIDERS: string[] = [
   "anthropic",
   "bedrock",
+  "brainiall",
   "cohere",
   "sagemaker",
   "deepinfra",
