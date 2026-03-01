@@ -1,4 +1,3 @@
-import { RunResult } from "sqlite3";
 import { v4 as uuidv4 } from "uuid";
 
 import { isSupportedLanceDbCpuTargetForLinux } from "../config/util";
@@ -86,7 +85,7 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   private async createSqliteCacheTable(db: DatabaseConnection) {
-    await db.exec(`CREATE TABLE IF NOT EXISTS lance_db_cache (
+    db.exec(`CREATE TABLE IF NOT EXISTS lance_db_cache (
         uuid TEXT PRIMARY KEY,
         cacheKey TEXT NOT NULL,
         path TEXT NOT NULL,
@@ -102,14 +101,16 @@ export class LanceDbIndex implements CodebaseIndex {
         "lancedb_sqlite_artifact_id_column",
         async () => {
           try {
-            const pragma = await db.all("PRAGMA table_info(lance_db_cache)");
+            const pragma = db
+              .prepare("PRAGMA table_info(lance_db_cache)")
+              .all() as any[];
 
             const hasArtifactIdCol = pragma.some(
               (pragma) => pragma.name === "artifact_id",
             );
 
             if (!hasArtifactIdCol) {
-              await db.exec(
+              db.exec(
                 "ALTER TABLE lance_db_cache ADD COLUMN artifact_id TEXT NOT NULL DEFAULT 'UNDEFINED'",
               );
             }
@@ -304,12 +305,11 @@ export class LanceDbIndex implements CodebaseIndex {
     let accumulatedProgress = 0;
 
     for (const { path, cacheKey } of results.addTag) {
-      const stmt = await sqliteDb.prepare(
-        "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND artifact_id = ?",
-        cacheKey,
-        this.artifactId,
-      );
-      const cachedItems = await stmt.all();
+      const cachedItems = sqliteDb
+        .prepare(
+          "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND artifact_id = ?",
+        )
+        .all(cacheKey, this.artifactId) as any[];
 
       const lanceRows: LanceDbRow[] = [];
       for (const item of cachedItems) {
@@ -379,12 +379,11 @@ export class LanceDbIndex implements CodebaseIndex {
     await markComplete(results.removeTag, IndexResultType.RemoveTag);
 
     for (const { path, cacheKey } of results.del) {
-      await sqliteDb.run(
-        "DELETE FROM lance_db_cache WHERE cacheKey = ? AND path = ? AND artifact_id = ?",
-        cacheKey,
-        path,
-        this.artifactId,
-      );
+      sqliteDb
+        .prepare(
+          "DELETE FROM lance_db_cache WHERE cacheKey = ? AND path = ? AND artifact_id = ?",
+        )
+        .run(cacheKey, path, this.artifactId);
       accumulatedProgress += 1 / results.del.length / 3;
       yield {
         progress: accumulatedProgress,
@@ -475,11 +474,13 @@ export class LanceDbIndex implements CodebaseIndex {
       .slice(0, n);
 
     const sqliteDb = await SqliteDb.get();
-    const data = await sqliteDb.all(
-      `SELECT * FROM lance_db_cache WHERE uuid in (${allResults
-        .map((r) => `'${r.uuid}'`)
-        .join(",")})`,
-    );
+    const data = sqliteDb
+      .prepare(
+        `SELECT * FROM lance_db_cache WHERE uuid in (${allResults
+          .map((r) => `'${r.uuid}'`)
+          .join(",")})`,
+      )
+      .all() as any[];
 
     return data.map((d) => {
       return {
@@ -497,54 +498,26 @@ export class LanceDbIndex implements CodebaseIndex {
     db: DatabaseConnection,
     rows: LanceDbRow[],
   ): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      db.db.serialize(() => {
-        db.db.exec("BEGIN", (err: Error | null) => {
-          if (err) {
-            reject(new Error("error creating transaction", { cause: err }));
-          }
-        });
+    const sql =
+      "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    const stmt = db.prepare(sql);
 
-        const sql =
-          "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        rows.map((r) => {
-          db.db.run(
-            sql,
-            [
-              r.uuid,
-              r.cachekey,
-              r.path,
-              this.artifactId,
-              JSON.stringify(r.vector),
-              r.startLine,
-              r.endLine,
-              r.contents,
-            ],
-            (result: RunResult, err: Error) => {
-              if (err) {
-                reject(
-                  new Error("error inserting into lance_db_cache table", {
-                    cause: err,
-                  }),
-                );
-              }
-            },
-          );
-        });
-        db.db.exec("COMMIT", (err: Error | null) => {
-          if (err) {
-            reject(
-              new Error(
-                "error while committing insert into lance_db_rows transaction",
-                { cause: err },
-              ),
-            );
-          } else {
-            resolve();
-          }
-        });
-      });
+    const insertAll = db.transaction(() => {
+      for (const r of rows) {
+        stmt.run(
+          r.uuid,
+          r.cachekey,
+          r.path,
+          this.artifactId,
+          JSON.stringify(r.vector),
+          r.startLine,
+          r.endLine,
+          r.contents,
+        );
+      }
     });
+
+    insertAll();
   }
 
   private formatListPlurality(word: string, length: number): string {
