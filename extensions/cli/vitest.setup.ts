@@ -50,10 +50,16 @@ vi.mock("open", () => ({
 
 // Mock constructSystemMessage to avoid service container issues in tests
 vi.mock("./src/systemMessage.js", () => ({
-  constructSystemMessage: vi
+  constructSystemMessage: vi.fn().mockResolvedValue([
+    {
+      type: "text",
+      text: "You are an agent in the Continue CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.",
+    },
+  ]),
+  flattenSystemMessage: vi
     .fn()
-    .mockResolvedValue(
-      "You are an agent in the Continue CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.",
+    .mockImplementation((blocks: Array<{ type: string; text: string }>) =>
+      blocks.map((b) => b.text).join("\n\n"),
     ),
 }));
 

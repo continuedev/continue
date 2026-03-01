@@ -52,7 +52,9 @@ vi.mock("../util/logger.js", () => ({
 vi.mock("../services/index.js", () => ({
   services: {
     systemMessage: {
-      getSystemMessage: vi.fn(() => Promise.resolve("System message")),
+      getSystemMessage: vi.fn(() =>
+        Promise.resolve([{ type: "text", text: "System message" }]),
+      ),
     },
     toolPermissions: {
       getState: vi.fn(() => ({ currentMode: "enabled" })),

@@ -2,14 +2,20 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
-import pkg from "ignore-walk";
-import { Minimatch } from "minimatch";
-
 import { processRule } from "./hubLoader.js";
 import { PermissionMode } from "./permissions/types.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
 import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
-const { WalkerSync } = pkg;
+
+/**
+ * A content block within the system message.
+ * Split into separate blocks so that static content can be cached
+ * independently from dynamic content by Anthropic's prompt caching.
+ */
+export interface SystemMessageBlock {
+  type: "text";
+  text: string;
+}
 
 /**
  * Check if current directory is a git repository
@@ -20,39 +26,6 @@ function isGitRepo(): boolean {
     return true;
   } catch {
     return false;
-  }
-}
-
-/**
- * Get basic directory structure
- */
-function getDirectoryStructure(): string {
-  try {
-    const walker = new WalkerSync({
-      path: process.cwd(),
-      includeEmpty: false,
-      follow: false,
-      ignoreFiles: [".gitignore", ".continueignore", ".customignore"],
-    });
-
-    (walker.ignoreRules as any)[".customignore"] = [
-      new Minimatch(".git/*", {
-        matchBase: true,
-        dot: true,
-        flipNegate: true,
-        nocase: true,
-      }),
-    ];
-
-    const files = walker.start().result as string[];
-
-    const filteredFiles = files
-      .slice(0, 500)
-      .map((file: string) => `./${file}`);
-
-    return filteredFiles.join("\n") || "No structure available";
-  } catch {
-    return "Directory structure not available";
   }
 }
 
@@ -74,30 +47,6 @@ function getGitStatus(): string {
   }
 }
 
-const baseSystemMessage = `You are an agent in the Continue CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.
-
-Notes:
-1. IMPORTANT: You should be concise, direct, and to the point, since your responses will be displayed on a command line interface.
-2. When relevant, share file names and code snippets relevant to the query
-Here is useful information about the environment you are running in:
-<env>
-Working directory: ${process.cwd()}
-Is directory a git repo: ${isGitRepo()}
-Platform: ${process.platform}
-Today's date: ${new Date().toISOString().split("T")[0]}
-</env>
-
-As you answer the user's questions, you can use the following context:
-
-<context name="directoryStructure">Below is a snapshot of this project's file structure at the start of the conversation. This snapshot will NOT update during the conversation. It skips over .gitignore patterns.
-
-${getDirectoryStructure()}
-</context>
-<context name="gitStatus">This is the git status at the start of the conversation. Note that this status is a snapshot in time, and will not update during the conversation.
-
-${getGitStatus()}
-</context>`;
-
 async function getConfigYamlRules(): Promise<string[]> {
   const configState = await serviceContainer.get<ConfigServiceState>(
     SERVICE_NAMES.CONFIG,
@@ -116,21 +65,81 @@ async function getConfigYamlRules(): Promise<string[]> {
 }
 
 /**
- * Load and construct a comprehensive system message with base message and rules section
+ * Flatten system message blocks into a single string.
+ * Useful for contexts that need a plain string (e.g. token counting, subagent prompts).
+ */
+export function flattenSystemMessage(blocks: SystemMessageBlock[]): string {
+  return blocks.map((b) => b.text).join("\n\n");
+}
+
+/**
+ * Load and construct a comprehensive system message as an array of content blocks.
+ *
+ * The blocks are ordered so that static content comes first (cacheable across
+ * all users/projects), semi-static content (user rules, same within a session)
+ * comes next, and dynamic content (environment info that changes per session)
+ * comes last. This maximizes Anthropic prompt cache hit rates because the
+ * static prefix remains identical across requests.
+ *
+ * @param mode - Current permission mode
  * @param additionalRules - Additional rules from --rule flags
  * @param format - Output format for headless mode
  * @param headless - Whether running in headless mode
- * @param mode - Current permission mode
- * @returns The comprehensive system message with base message and rules section
+ * @returns Array of system message content blocks
  */
 export async function constructSystemMessage(
   mode: PermissionMode,
   additionalRules?: string[],
   format?: "json",
   headless?: boolean,
-): Promise<string> {
-  const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md", "CODEX.md"];
+): Promise<SystemMessageBlock[]> {
+  // --- Block 1: Static core identity and behavior instructions ---
+  // This content is identical for ALL users and ALL projects, maximizing cache hits.
+  let staticBlock = `You are an agent in the Continue CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.
 
+Notes:
+1. IMPORTANT: You should be concise, direct, and to the point, since your responses will be displayed on a command line interface.
+2. When relevant, share file names and code snippets relevant to the query`;
+
+  // Add mode-specific instructions to static block (these depend only on the mode,
+  // not on the environment, so they cache well within a mode)
+  if (mode === "plan") {
+    staticBlock +=
+      '\n<context name="planMode">You are operating in _Plan Mode_, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files. Ask the user to switch to agent mode if they want to make changes. For example, it is not acceptable to use the Bash tool to write to files.</context>';
+  } else {
+    // Check if commit signature is disabled via environment variable
+    if (!process.env.CONTINUE_CLI_DISABLE_COMMIT_SIGNATURE) {
+      staticBlock += `\n<context name="commitSignature">When creating commits using any CLI or tool, include the following in the commit message:
+Generated with [Continue](https://continue.dev)
+
+Co-Authored-By: Continue <noreply@continue.dev>
+</context>`;
+    }
+  }
+
+  // In headless mode, add instructions to be concise and only provide final answers
+  if (headless) {
+    staticBlock += `
+
+IMPORTANT: You are running in headless mode. Provide ONLY your final answer to the user's question. Do not include explanations, reasoning, or additional commentary unless specifically requested. Be direct and concise.`;
+  }
+
+  // Add JSON formatting instructions if format is json
+  if (format === "json") {
+    staticBlock += `
+
+IMPORTANT: You are operating in JSON output mode. Your final response MUST be valid JSON that can be parsed by JSON.parse(). The JSON should contain properties relevant to answer the user's question. You don't need to include any general "response" or "answer" field. Do not include any text before or after the JSON - the entire response must be parseable JSON.
+
+Example response format:
+{
+  "property": "value"
+}`;
+  }
+
+  const blocks: SystemMessageBlock[] = [{ type: "text", text: staticBlock }];
+
+  // --- Block 2: Semi-static user rules (same within a session, differs per project) ---
+  const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md", "CODEX.md"];
   let agentContent = "";
 
   try {
@@ -165,59 +174,40 @@ export async function constructSystemMessage(
   const configYamlRules = await getConfigYamlRules();
   processedRules.push(...configYamlRules);
 
-  // Construct the comprehensive system message
-  let systemMessage = baseSystemMessage;
-
-  // Add plan mode specific instructions if in plan mode
-  if (mode === "plan") {
-    systemMessage +=
-      '\n<context name="planMode">You are operating in _Plan Mode_, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files. Ask the user to switch to agent mode if they want to make changes. For example, it is not acceptable to use the Bash tool to write to files.</context>\n';
-  } else {
-    // Check if commit signature is disabled via environment variable
-    if (!process.env.CONTINUE_CLI_DISABLE_COMMIT_SIGNATURE) {
-      systemMessage += `\n<context name="commitSignature">When creating commits using any CLI or tool, include the following in the commit message:
-Generated with [Continue](https://continue.dev)
-
-Co-Authored-By: Continue <noreply@continue.dev>
-</context>\n`;
-    }
-  }
-
-  // In headless mode, add instructions to be concise and only provide final answers
-  if (headless) {
-    systemMessage += `
-
-IMPORTANT: You are running in headless mode. Provide ONLY your final answer to the user's question. Do not include explanations, reasoning, or additional commentary unless specifically requested. Be direct and concise.`;
-  }
-
-  // Add JSON formatting instructions if format is json
-  if (format === "json") {
-    systemMessage += `
-
-IMPORTANT: You are operating in JSON output mode. Your final response MUST be valid JSON that can be parsed by JSON.parse(). The JSON should contain properties relevant to answer the user's question. You don't need to include any general "response" or "answer" field. Do not include any text before or after the JSON - the entire response must be parseable JSON.
-
-Example response format:
-{
-  "property": "value"
-}`;
-  }
-
-  // Add rules section if we have any rules or agent content
   if (agentContent || processedRules.length > 0) {
-    systemMessage += '\n\n<context name="userRules">';
+    let rulesText = '<context name="userRules">';
 
     if (agentContent) {
-      systemMessage += `\n${agentContent}`;
+      rulesText += `\n${agentContent}`;
     }
 
-    // Add processed rules from --rule flags
     if (processedRules.length > 0) {
       const separator = agentContent ? "\n\n" : "\n";
-      systemMessage += `${separator}${processedRules.join("\n\n")}`;
+      rulesText += `${separator}${processedRules.join("\n\n")}`;
     }
 
-    systemMessage += "\n</context>";
+    rulesText += "\n</context>";
+
+    blocks.push({ type: "text", text: rulesText });
   }
 
-  return systemMessage;
+  // --- Block 3: Dynamic environment info (changes per session/directory) ---
+  const dynamicBlock = `Here is useful information about the environment you are running in:
+<env>
+Working directory: ${process.cwd()}
+Is directory a git repo: ${isGitRepo()}
+Platform: ${process.platform}
+Today's date: ${new Date().toISOString().split("T")[0]}
+</env>
+
+As you answer the user's questions, you can use the following context:
+
+<context name="gitStatus">This is the git status at the start of the conversation. Note that this status is a snapshot in time, and will not update during the conversation.
+
+${getGitStatus()}
+</context>`;
+
+  blocks.push({ type: "text", text: dynamicBlock });
+
+  return blocks;
 }

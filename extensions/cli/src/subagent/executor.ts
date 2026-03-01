@@ -5,6 +5,7 @@ import { serviceContainer } from "../services/ServiceContainer.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
+import { flattenSystemMessage, SystemMessageBlock } from "../systemMessage.js";
 import { escapeEvents } from "../util/cli.js";
 import { logger } from "../util/logger.js";
 
@@ -29,18 +30,20 @@ export interface SubAgentResult {
 }
 
 /**
- * Build system message for the agent
+ * Build system message for the agent as a flat string.
+ * Subagents receive a single combined string (they don't benefit from block-level caching).
  */
 async function buildAgentSystemMessage(
   agent: ModelServiceState,
   services: any,
 ): Promise<string> {
-  const baseMessage = services.systemMessage
+  const baseBlocks: SystemMessageBlock[] = services.systemMessage
     ? await services.systemMessage.getSystemMessage(
         services.toolPermissions.getState().currentMode,
       )
-    : "";
+    : [];
 
+  const baseMessage = flattenSystemMessage(baseBlocks);
   const agentPrompt = agent.model?.chatOptions?.baseSystemMessage || "";
 
   // Combine base system message with agent-specific prompt
@@ -54,7 +57,6 @@ async function buildAgentSystemMessage(
 /**
  * Execute a subagent in a child session
  */
-// eslint-disable-next-line complexity
 export async function executeSubAgent(
   options: SubAgentExecutionOptions,
 ): Promise<SubAgentResult> {
@@ -101,9 +103,11 @@ export async function executeSubAgent(
         ? chatHistorySvc.isReady
         : undefined;
 
-    // Override system message for this execution
+    // Override system message for this execution (wrap in block format)
     if (services.systemMessage) {
-      services.systemMessage.getSystemMessage = async () => systemMessage;
+      services.systemMessage.getSystemMessage = async () => [
+        { type: "text" as const, text: systemMessage },
+      ];
     }
 
     // Temporarily disable ChatHistoryService to prevent it from interfering with child session

@@ -152,7 +152,7 @@ describe("processStreamingResponse - content preservation", () => {
       model: mockModel,
       llmApi: mockLlmApi,
       abortController: mockAbortController,
-      systemMessage: "You are a helpful assistant.",
+      systemMessage: [{ type: "text", text: "You are a helpful assistant." }],
     });
 
     expect(result.content).toBe("I'll read the README file for you.");
@@ -173,7 +173,7 @@ describe("processStreamingResponse - content preservation", () => {
       model: mockModel,
       llmApi: mockLlmApi,
       abortController: mockAbortController,
-      systemMessage: "You are a helpful assistant.",
+      systemMessage: [{ type: "text", text: "You are a helpful assistant." }],
     });
 
     expect(result.content).toBe("Let me search for that. ");
@@ -222,7 +222,7 @@ describe("processStreamingResponse - content preservation", () => {
       model: mockModel,
       llmApi: mockLlmApi,
       abortController: mockAbortController,
-      systemMessage: "You are a helpful assistant.",
+      systemMessage: [{ type: "text", text: "You are a helpful assistant." }],
     });
 
     expect(result.content).toBe("I'll read the README file for you.");
@@ -246,7 +246,7 @@ describe("processStreamingResponse - content preservation", () => {
       model: mockModel,
       llmApi: mockLlmApi,
       abortController: mockAbortController,
-      systemMessage: "You are a helpful assistant.",
+      systemMessage: [{ type: "text", text: "You are a helpful assistant." }],
     });
 
     expect(result.content).toBe("Hello world!");
@@ -371,7 +371,7 @@ describe("processStreamingResponse - content preservation", () => {
       model: mockModel,
       llmApi: mockLlmApi,
       abortController: mockAbortController,
-      systemMessage: "You are a helpful assistant.",
+      systemMessage: [{ type: "text", text: "You are a helpful assistant." }],
     });
 
     expect(responsesStream).toHaveBeenCalledTimes(1);
@@ -410,7 +410,7 @@ describe("processStreamingResponse - content preservation", () => {
       model: mockModel,
       llmApi: mockLlmApi,
       abortController: mockAbortController,
-      systemMessage: "You are a helpful assistant.",
+      systemMessage: [{ type: "text", text: "You are a helpful assistant." }],
     });
 
     // Content is captured correctly
@@ -461,7 +461,7 @@ describe("processStreamingResponse - content preservation", () => {
       model: mockModel,
       llmApi: mockLlmApi,
       abortController: mockAbortController,
-      systemMessage: "You are a helpful assistant.",
+      systemMessage: [{ type: "text", text: "You are a helpful assistant." }],
     });
 
     // Fixed: Both issues are resolved
@@ -510,7 +510,7 @@ describe("processStreamingResponse - content preservation", () => {
         model: mockModel,
         llmApi: mockLlmApi,
         abortController: mockAbortController,
-        systemMessage: "You are a helpful assistant.",
+        systemMessage: [{ type: "text", text: "You are a helpful assistant." }],
       });
     } catch (error) {
       caughtError = error;
@@ -524,7 +524,7 @@ describe("processStreamingResponse - content preservation", () => {
       model: mockModel,
       llmApi: mockLlmApi,
       abortController: mockAbortController,
-      systemMessage: "You are a helpful assistant.",
+      systemMessage: [{ type: "text", text: "You are a helpful assistant." }],
     });
 
     expect(result.content).toBe("Hello world!");
