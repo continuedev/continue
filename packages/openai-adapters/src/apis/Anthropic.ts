@@ -77,7 +77,10 @@ export class AnthropicApi implements BaseLlmApi {
     const result = cachingStrategy(cleanBody);
 
     // Step 3: Cache last two user messages for conversation turn caching
-    addCacheControlToLastTwoUserMessages(result.messages);
+    // Skip when caching is disabled
+    if ((this.config.cachingStrategy ?? "systemAndTools") !== "none") {
+      addCacheControlToLastTwoUserMessages(result.messages);
+    }
 
     return result;
   }

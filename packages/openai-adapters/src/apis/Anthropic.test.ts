@@ -83,12 +83,14 @@ describe("AnthropicApi", () => {
       }
     });
 
-    it("still caches user messages even when caching strategy is none", () => {
-      const body = new AnthropicApi({
+    it("does not cache user messages when caching strategy is none", () => {
+      const api = new AnthropicApi({
         provider: "anthropic",
         apiKey: "test-key",
         cachingStrategy: "none",
-      })._convertToCleanAnthropicBody({
+      });
+
+      const result = (api as any)._convertBody({
         model: "claude-sonnet-4-20250514",
         messages: [
           { role: "user", content: "Hello" },
@@ -97,17 +99,14 @@ describe("AnthropicApi", () => {
         ],
       });
 
-      const result = CACHING_STRATEGIES["none"](body);
-      addCacheControlToLastTwoUserMessages(result.messages);
-
-      // User message caching is applied regardless of strategy
+      // No cache_control should be added when strategy is "none"
       const lastUserMsg = result.messages[2];
       expect(lastUserMsg.role).toBe("user");
       if (Array.isArray(lastUserMsg.content)) {
         const textPart = lastUserMsg.content.find(
           (p: any) => p.type === "text",
         );
-        expect((textPart as any)?.cache_control).toEqual({ type: "ephemeral" });
+        expect((textPart as any)?.cache_control).toBeUndefined();
       }
     });
   });
