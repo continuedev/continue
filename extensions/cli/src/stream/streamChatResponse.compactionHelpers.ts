@@ -4,10 +4,7 @@ import type { ChatHistoryItem } from "core/index.js";
 import type { ChatCompletionTool } from "openai/resources/chat/completions.mjs";
 
 import { services } from "../services/index.js";
-import {
-  flattenSystemMessage,
-  SystemMessageBlock,
-} from "../systemMessage.js";
+import { flattenSystemMessage, SystemMessageBlock } from "../systemMessage.js";
 import { ToolCall } from "../tools/index.js";
 import { logger } from "../util/logger.js";
 import { validateContextLength } from "../util/tokenizer.js";

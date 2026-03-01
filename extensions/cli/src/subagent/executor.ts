@@ -5,10 +5,7 @@ import { serviceContainer } from "../services/ServiceContainer.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
-import {
-  flattenSystemMessage,
-  SystemMessageBlock,
-} from "../systemMessage.js";
+import { flattenSystemMessage, SystemMessageBlock } from "../systemMessage.js";
 import { escapeEvents } from "../util/cli.js";
 import { logger } from "../util/logger.js";
 
@@ -109,8 +106,9 @@ export async function executeSubAgent(
 
     // Override system message for this execution (wrap in block format)
     if (services.systemMessage) {
-      services.systemMessage.getSystemMessage = async () =>
-        [{ type: "text" as const, text: systemMessage }];
+      services.systemMessage.getSystemMessage = async () => [
+        { type: "text" as const, text: systemMessage },
+      ];
     }
 
     // Temporarily disable ChatHistoryService to prevent it from interfering with child session

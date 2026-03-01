@@ -70,9 +70,7 @@ describe("SystemMessageService", () => {
         headless: true,
       };
 
-      const mockBlocks = [
-        { type: "text", text: "Test system message" },
-      ];
+      const mockBlocks = [{ type: "text", text: "Test system message" }];
       constructSystemMessageMock.mockResolvedValue(mockBlocks);
 
       await service.initialize(config);

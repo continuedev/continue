@@ -164,7 +164,7 @@ export async function handleAutoCompaction(
     // Get system message to calculate its token count for compaction pruning
     // Use provided message if available, otherwise fetch it (for backward compatibility)
     let resolvedSystemMessage: string;
-    if (providedSystemMessage) {
+    if (providedSystemMessage !== undefined) {
       resolvedSystemMessage = providedSystemMessage;
     } else {
       const { services } = await import("../services/index.js");

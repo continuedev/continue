@@ -46,9 +46,8 @@ describe("serve command", () => {
       constructSystemMessage: vi.fn(() =>
         Promise.resolve([{ type: "text", text: "System message" }]),
       ),
-      flattenSystemMessage: vi.fn(
-        (blocks: Array<{ text: string }>) =>
-          blocks.map((b) => b.text).join("\n\n"),
+      flattenSystemMessage: vi.fn((blocks: Array<{ text: string }>) =>
+        blocks.map((b) => b.text).join("\n\n"),
       ),
     }));
 

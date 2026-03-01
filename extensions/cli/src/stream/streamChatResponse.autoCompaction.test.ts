@@ -54,9 +54,8 @@ vi.mock("../services/index.js", () => ({
 }));
 
 vi.mock("../systemMessage.js", () => ({
-  flattenSystemMessage: vi.fn(
-    (blocks: Array<{ text: string }>) =>
-      blocks.map((b) => b.text).join("\n\n"),
+  flattenSystemMessage: vi.fn((blocks: Array<{ text: string }>) =>
+    blocks.map((b) => b.text).join("\n\n"),
   ),
 }));
 

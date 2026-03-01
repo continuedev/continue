@@ -25,9 +25,8 @@ vi.mock("../services/index.js", () => ({
 
 // Mock systemMessage module for flattenSystemMessage
 vi.mock("../systemMessage.js", () => ({
-  flattenSystemMessage: vi.fn(
-    (blocks: Array<{ text: string }>) =>
-      blocks.map((b) => b.text).join("\n\n"),
+  flattenSystemMessage: vi.fn((blocks: Array<{ text: string }>) =>
+    blocks.map((b) => b.text).join("\n\n"),
   ),
   SystemMessageBlock: {},
 }));
@@ -81,7 +80,9 @@ describe("streamChatResponse system message validation", () => {
     } as ModelConfig;
 
     // Mock system message as blocks
-    const systemMessage = [{ type: "text" as const, text: "System instructions" }];
+    const systemMessage = [
+      { type: "text" as const, text: "System instructions" },
+    ];
 
     // Small chat history
     const chatHistory: ChatHistoryItem[] = [
@@ -179,9 +180,7 @@ describe("streamChatResponse system message validation", () => {
 
     // System message + history that's exactly at limit without buffer
     // but fails with buffer
-    const systemMessage = [
-      { type: "text" as const, text: "x".repeat(800) },
-    ]; // ~200 tokens
+    const systemMessage = [{ type: "text" as const, text: "x".repeat(800) }]; // ~200 tokens
 
     const chatHistory: ChatHistoryItem[] = [
       {
