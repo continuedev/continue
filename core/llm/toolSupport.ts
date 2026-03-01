@@ -363,6 +363,15 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       const lower = model.toLowerCase();
       return lower.startsWith("glm-4") || lower.startsWith("glm-5");
     },
+    avian: (model) => {
+      const lower = model.toLowerCase();
+      return (
+        lower.includes("deepseek") ||
+        lower.includes("glm") ||
+        lower.includes("kimi") ||
+        lower.includes("minimax")
+      );
+    },
     moonshot: (model) => {
       // support moonshot models
       // https://platform.moonshot.ai/docs/pricing/chat#concepts
