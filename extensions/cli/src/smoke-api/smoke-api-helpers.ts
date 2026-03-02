@@ -48,9 +48,9 @@ export async function cleanupSmokeContext(
   }
 }
 
-// Override via SMOKE_MODEL env var. Falls back to claude-3-5-haiku which is
-// widely available, cheap, and has better rate limits than the legacy model.
-const SMOKE_MODEL = process.env.SMOKE_MODEL || "claude-3-5-haiku-20241022";
+// Override via SMOKE_MODEL env var. Falls back to claude-3-haiku which is
+// widely available and cheap.
+const SMOKE_MODEL = process.env.SMOKE_MODEL || "claude-3-haiku-20240307";
 
 /**
  * Writes a YAML config that points at the real Anthropic API.
