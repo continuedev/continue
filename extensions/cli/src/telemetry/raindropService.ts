@@ -16,9 +16,6 @@ export async function initialize(): Promise<void> {
   }
 
   try {
-    // Route OpenAI/Anthropic through AI SDK path
-    process.env.CONTINUE_USE_AI_SDK = "true";
-
     const { createRaindropAISDK } = await import("@raindrop-ai/ai-sdk");
     const ai = await import("ai");
     const { setAiModuleOverride } = await import(
@@ -36,6 +33,9 @@ export async function initialize(): Promise<void> {
 
     // Merge wrapped functions over the original ai module
     setAiModuleOverride({ ...ai, ...wrapped });
+
+    // Only route through AI SDK path after successful init
+    process.env.CONTINUE_USE_AI_SDK = "true";
 
     logger.debug("Raindrop observability initialized");
   } catch (err) {
