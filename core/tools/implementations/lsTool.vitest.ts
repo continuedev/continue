@@ -36,6 +36,19 @@ test("resolveLsToolDirPath preserves forward slashes", () => {
   expect(resolveLsToolDirPath("path/to/dir")).toBe("path/to/dir");
 });
 
+test("resolveLsToolDirPath preserves hidden directory paths", () => {
+  expect(resolveLsToolDirPath(".continue/rules")).toBe(".continue/rules");
+});
+
+test("resolveLsToolDirPath preserves hidden directory name only", () => {
+  expect(resolveLsToolDirPath(".git")).toBe(".git");
+});
+
+test("resolveLsToolDirPath preserves parent directory references", () => {
+  expect(resolveLsToolDirPath("..")).toBe("..");
+  expect(resolveLsToolDirPath("../foo")).toBe("../foo");
+});
+
 test("lsToolImpl truncates output when entries exceed MAX_LS_TOOL_LINES", async () => {
   // Generate more than MAX_LS_TOOL_LINES entries (which is 200)
   const mockEntries = Array.from({ length: 250 }, (_, i) => `file${i}.txt`);
