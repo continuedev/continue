@@ -172,10 +172,17 @@ export function processChunkContent(
 ): string {
   const updatedResponse = aiResponse + content;
 
+  // Strip leading whitespace from the very first content of a response
+  // to avoid displaying blank lines before the assistant's message
+  let displayContent = content;
+  if (!aiResponse && displayContent) {
+    displayContent = displayContent.trimStart();
+  }
+
   if (callbacks?.onContent) {
-    callbacks.onContent(content);
+    callbacks.onContent(displayContent);
   } else if (!isHeadless) {
-    process.stdout.write(content);
+    process.stdout.write(displayContent);
   }
 
   return updatedResponse;

@@ -90,7 +90,9 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
               <Text color="white">{hideBullet ? " " : "●"}</Text>
               <Text> </Text>
               <MarkdownRenderer
-                content={formatMessageContentForDisplay(message.content)}
+                content={formatMessageContentForDisplay(
+                  message.content,
+                ).trimStart()}
               />
             </Box>
           )}
@@ -201,7 +203,9 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
         <Text color="white">{hideBullet ? " " : "●"}</Text>
         <Text> </Text>
         <MarkdownRenderer
-          content={formatMessageContentForDisplay(message.content)}
+          content={formatMessageContentForDisplay(
+            message.content,
+          ).trimStart()}
         />
         {isStreaming && <Text color="dim">▋</Text>}
       </Box>
