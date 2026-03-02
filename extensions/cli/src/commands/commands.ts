@@ -1,5 +1,7 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 
+import { loadMarkdownSkills, type Skill } from "../util/loadMarkdownSkills.js";
+
 // Export command functions
 export { chat } from "./chat.js";
 export { login } from "./login.js";
@@ -106,6 +108,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     description: "List background jobs",
     category: "system",
   },
+  {
+    name: "skills",
+    description: "Browse and select available skills",
+    category: "system",
+  },
 ];
 
 // Remote mode specific commands
@@ -130,10 +137,10 @@ export const REMOTE_MODE_SLASH_COMMANDS: SlashCommand[] = [
 /**
  * Get all available slash commands including system commands and assistant prompts
  */
-export function getAllSlashCommands(
+export async function getAllSlashCommands(
   assistant: AssistantConfig,
   options: { isRemoteMode?: boolean } = {},
-): SlashCommand[] {
+): Promise<SlashCommand[]> {
   const { isRemoteMode = false } = options;
 
   // In remote mode, only show the exit command
@@ -155,7 +162,10 @@ export function getAllSlashCommands(
   // Get invokable rule commands
   const invokableRuleCommands = getInvokableRuleSlashCommands(assistant);
 
-  return [...systemCommands, ...assistantCommands, ...invokableRuleCommands];
+  // Get skill commands
+  const skillCommands = await getSkillSlashCommands();
+
+  return [...systemCommands, ...assistantCommands, ...invokableRuleCommands, ...skillCommands];
 }
 
 /**
@@ -201,4 +211,33 @@ export function getInvokableRuleSlashCommands(
         category: "assistant" as const,
       };
     });
+}
+
+/**
+ * Get skill commands that can be invoked as slash commands
+ */
+export async function getSkillSlashCommands(): Promise<SlashCommand[]> {
+  try {
+    const { skills } = await loadMarkdownSkills();
+    return skills.map((skill) => ({
+      name: skill.name,
+      description: skill.description,
+      category: "assistant" as const,
+    }));
+  } catch (error) {
+    // If skills can't be loaded, return empty array
+    return [];
+  }
+}
+
+/**
+ * Get available skills
+ */
+export async function getAvailableSkills(): Promise<Skill[]> {
+  try {
+    const { skills } = await loadMarkdownSkills();
+    return skills;
+  } catch (error) {
+    return [];
+  }
 }

@@ -42,7 +42,13 @@ vi.mock("./telemetry/posthogService.js", () => ({
 
 // Mock commands
 vi.mock("./commands/commands.js", () => ({
-  getAllSlashCommands: vi.fn(() => []),
+  getAllSlashCommands: vi.fn(async () => []),
+  getAvailableSkills: vi.fn(async () => []),
+}));
+
+// Mock loadMarkdownSkills
+vi.mock("./util/loadMarkdownSkills.js", () => ({
+  loadMarkdownSkills: vi.fn().mockResolvedValue({ skills: [], errors: [] }),
 }));
 
 // Mock logger to avoid file system operations

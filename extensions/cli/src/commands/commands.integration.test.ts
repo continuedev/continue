@@ -1,7 +1,12 @@
 import type { AssistantConfig } from "@continuedev/sdk";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { getAllSlashCommands } from "./commands.js";
+
+// Mock loadMarkdownSkills so tests don't depend on filesystem
+vi.mock("../util/loadMarkdownSkills.js", () => ({
+  loadMarkdownSkills: vi.fn().mockResolvedValue({ skills: [], errors: [] }),
+}));
 
 describe("Slash Commands Integration", () => {
   const mockAssistant: AssistantConfig = {
@@ -17,8 +22,8 @@ describe("Slash Commands Integration", () => {
   };
 
   describe("System Commands Registration", () => {
-    it("should include all system commands in the commands list", () => {
-      const commands = getAllSlashCommands(mockAssistant);
+    it("should include all system commands in the commands list", async () => {
+      const commands = await getAllSlashCommands(mockAssistant);
       const commandNames = commands.map((cmd) => cmd.name);
 
       // Check that system commands are present (mode commands have been removed)
@@ -33,15 +38,15 @@ describe("Slash Commands Integration", () => {
       expect(commandNames).toContain("config");
     });
 
-    it("should include assistant prompt commands", () => {
-      const commands = getAllSlashCommands(mockAssistant);
+    it("should include assistant prompt commands", async () => {
+      const commands = await getAllSlashCommands(mockAssistant);
       const commandNames = commands.map((cmd) => cmd.name);
 
       expect(commandNames).toContain("test-prompt");
     });
 
-    it("should categorize system commands correctly", () => {
-      const commands = getAllSlashCommands(mockAssistant);
+    it("should categorize system commands correctly", async () => {
+      const commands = await getAllSlashCommands(mockAssistant);
       const systemCommands = commands.filter((cmd) =>
         [
           "help",
@@ -60,8 +65,8 @@ describe("Slash Commands Integration", () => {
       });
     });
 
-    it("should categorize assistant commands correctly", () => {
-      const commands = getAllSlashCommands(mockAssistant);
+    it("should categorize assistant commands correctly", async () => {
+      const commands = await getAllSlashCommands(mockAssistant);
       const assistantCommands = commands.filter(
         (cmd) => cmd.name === "test-prompt",
       );
@@ -71,8 +76,8 @@ describe("Slash Commands Integration", () => {
       });
     });
 
-    it("should only show remote mode commands in remote mode", () => {
-      const commands = getAllSlashCommands(mockAssistant, {
+    it("should only show remote mode commands in remote mode", async () => {
+      const commands = await getAllSlashCommands(mockAssistant, {
         isRemoteMode: true,
       });
       const commandNames = commands.map((cmd) => cmd.name);

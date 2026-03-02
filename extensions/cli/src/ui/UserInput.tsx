@@ -2,9 +2,9 @@
 
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { getAllSlashCommands } from "../commands/commands.js";
+import { getAllSlashCommands, type SlashCommand } from "../commands/commands.js";
 import { useServices } from "../hooks/useService.js";
 import type { PermissionMode } from "../permissions/types.js";
 import type { FileIndexServiceState } from "../services/FileIndexService.js";
@@ -180,20 +180,24 @@ const UserInput: React.FC<UserInputProps> = ({
     fileIndex: FileIndexServiceState;
   }>(["fileIndex"]);
 
-  const getSlashCommands = () => {
+  // Cache slash commands (loaded asynchronously, includes skills)
+  const slashCommandsRef = useRef<SlashCommand[]>([
+    { name: "help", description: "Show help message", category: "system" },
+    { name: "clear", description: "Clear the chat history", category: "system" },
+    { name: "exit", description: "Exit the chat", category: "system" },
+  ]);
+
+  useEffect(() => {
     if (assistant || isRemoteMode) {
-      return getAllSlashCommands(assistant || ({} as AssistantConfig), {
+      getAllSlashCommands(assistant || ({} as AssistantConfig), {
         isRemoteMode,
+      }).then((commands) => {
+        slashCommandsRef.current = commands;
       });
     }
+  }, [assistant?.prompts, assistant?.rules, isRemoteMode]);
 
-    // Fallback - basic commands without assistant
-    return [
-      { name: "help", description: "Show help message" },
-      { name: "clear", description: "Clear the chat history" },
-      { name: "exit", description: "Exit the chat" },
-    ];
-  };
+  const getSlashCommands = () => slashCommandsRef.current;
 
   // Cycle through permission modes
   const cycleModes = async () => {

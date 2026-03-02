@@ -1,8 +1,8 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text } from "ink";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { getAllSlashCommands } from "../commands/commands.js";
+import { getAllSlashCommands, type SlashCommand } from "../commands/commands.js";
 
 const MAX_DESCRIPTION_LENGTH = 80;
 
@@ -29,20 +29,19 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   selectedIndex,
   isRemoteMode = false,
 }) => {
-  // Memoize the slash commands to prevent excessive re-renders
-  const allCommands = useMemo(() => {
-    if (assistant || isRemoteMode) {
-      return getAllSlashCommands(assistant || ({} as AssistantConfig), {
-        isRemoteMode,
-      });
-    }
+  const [allCommands, setAllCommands] = useState<SlashCommand[]>([
+    { name: "help", description: "Show help message", category: "system" },
+    { name: "clear", description: "Clear the chat history", category: "system" },
+    { name: "exit", description: "Exit the chat", category: "system" },
+  ]);
 
-    // Fallback - basic commands without assistant
-    return [
-      { name: "help", description: "Show help message" },
-      { name: "clear", description: "Clear the chat history" },
-      { name: "exit", description: "Exit the chat" },
-    ];
+  // Load slash commands asynchronously (includes skills)
+  useEffect(() => {
+    if (assistant || isRemoteMode) {
+      getAllSlashCommands(assistant || ({} as AssistantConfig), {
+        isRemoteMode,
+      }).then(setAllCommands);
+    }
   }, [isRemoteMode, assistant?.prompts, assistant?.rules]);
 
   // Filter commands based on the current filter
