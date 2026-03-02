@@ -31,7 +31,7 @@ export const SUBAGENT_PARALLEL_TOOL_META: Tool = {
   name: "SubagentParallel",
   displayName: "Subagent Parallel",
   description:
-    "Invoke multiple subagents in parallel and wait for all to complete.",
+    "Invoke multiple subagents in parallel to carry out independent tasks.",
   readonly: false,
   isBuiltIn: true,
   parameters: {

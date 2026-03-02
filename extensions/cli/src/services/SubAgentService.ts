@@ -84,6 +84,7 @@ export class SubAgentService extends BaseService<SubAgentServiceState> {
     this.setState({ activeExecutions });
 
     this.emit("subagentStarted", {
+      executionId,
       agentName: subAgent.model?.name,
       prompt,
     });
@@ -162,6 +163,7 @@ export class SubAgentService extends BaseService<SubAgentServiceState> {
               {
                 onContent: (content: string) => {
                   this.emit("subagentContent", {
+                    executionId,
                     agentName: model?.name,
                     content,
                     type: "content",
@@ -169,6 +171,7 @@ export class SubAgentService extends BaseService<SubAgentServiceState> {
                 },
                 onToolResult: (result: string) => {
                   this.emit("subagentContent", {
+                    executionId,
                     agentName: model?.name,
                     content: result,
                     type: "toolResult",
@@ -195,6 +198,7 @@ export class SubAgentService extends BaseService<SubAgentServiceState> {
         });
 
         this.emit("subagentCompleted", {
+          executionId,
           agentName: model?.name,
           success: true,
         });
@@ -215,6 +219,7 @@ export class SubAgentService extends BaseService<SubAgentServiceState> {
       });
 
       this.emit("subagentFailed", {
+        executionId,
         agentName: subAgent.model?.name,
         error: error.message,
       });
