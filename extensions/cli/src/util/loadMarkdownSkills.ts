@@ -11,6 +11,7 @@ import { env } from "../env.js";
 export interface Skill {
   name: string;
   description: string;
+  whenToUse?: string;
   path: string;
   content: string;
   files: string[];
@@ -24,6 +25,7 @@ export interface LoadSkillsResult {
 const skillFrontmatterSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
+  when_to_use: z.string().min(1).optional(),
 });
 
 const SKILLS_DIR = "skills";
@@ -122,7 +124,9 @@ export async function loadMarkdownSkills(): Promise<LoadSkillsResult> {
           );
 
           skills.push({
-            ...validatedFrontmatter,
+            name: validatedFrontmatter.name,
+            description: validatedFrontmatter.description,
+            whenToUse: validatedFrontmatter.when_to_use,
             content: markdown,
             path: getRelativePath(cwd, skillFilePath),
             files: filesInSkillsDirectory,

@@ -13,6 +13,7 @@ import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 const skillFrontmatterSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
+  when_to_use: z.string().min(1).optional(),
 });
 
 const SKILLS_DIR = "skills";
@@ -87,7 +88,9 @@ export async function loadMarkdownSkills(ide: IDE) {
         const foundRelativeUri = findUriInDirs(fileUri, workspaceDirs);
 
         skills.push({
-          ...validatedFrontmatter,
+          name: validatedFrontmatter.name,
+          description: validatedFrontmatter.description,
+          whenToUse: validatedFrontmatter.when_to_use,
           content: markdown,
           path: foundRelativeUri.foundInDir
             ? foundRelativeUri.relativePathOrBasename

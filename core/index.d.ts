@@ -1938,6 +1938,7 @@ export interface RuleWithSource extends RuleMetadata {
 export interface Skill {
   name: string;
   description: string;
+  whenToUse?: string;
   path: string;
   content: string;
   files: string[];
