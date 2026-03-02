@@ -1,4 +1,4 @@
-import { quizService } from "../services/QuizService.js";
+import { QUIZ_DECLINED, quizService } from "../services/QuizService.js";
 
 import { Tool } from "./types.js";
 
@@ -47,6 +47,10 @@ Guidelines:
       options,
       defaultAnswer,
     });
+
+    if (answer === QUIZ_DECLINED) {
+      return "The user declined to answer your question.";
+    }
 
     if (options && options.length > 0) {
       const selectedIndex = options.indexOf(answer);

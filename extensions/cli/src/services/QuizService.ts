@@ -1,5 +1,8 @@
 import { EventEmitter } from "events";
 
+/** Sentinel value returned when the user presses Escape to decline answering */
+export const QUIZ_DECLINED = "__QUIZ_DECLINED__";
+
 /**Types */
 export interface QuizQuestion {
   question: string;

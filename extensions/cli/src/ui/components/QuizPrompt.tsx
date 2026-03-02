@@ -1,6 +1,7 @@
 import { Box, Text, useInput } from "ink";
 import React, { useState } from "react";
 
+import { QUIZ_DECLINED } from "../../services/QuizService.js";
 import { defaultBoxStyles } from "../styles.js";
 
 interface QuizPromptProps {
@@ -35,6 +36,13 @@ export const QuizPrompt: React.FC<QuizPromptProps> = ({
 
   useInput((input, key) => {
     if (submitted) return;
+
+    // Escape dismisses the question
+    if (key.escape) {
+      setSubmitted(true);
+      onAnswer(requestId, QUIZ_DECLINED, false);
+      return;
+    }
 
     if (isCustomMode) {
       // submit the typed answer
@@ -153,8 +161,8 @@ export const QuizPrompt: React.FC<QuizPromptProps> = ({
       <Box marginTop={1}>
         <Text color="gray" dimColor>
           {hasOptions && !isCustomMode
-            ? "↑/↓ navigate, Enter select"
-            : "Type answer, Enter submit"}
+            ? "↑/↓ navigate, Enter select, Esc dismiss"
+            : "Type answer, Enter submit, Esc dismiss"}
         </Text>
       </Box>
     </Box>
