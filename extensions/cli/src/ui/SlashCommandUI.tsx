@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { getAllSlashCommands, type SlashCommand } from "../commands/commands.js";
 
 const MAX_DESCRIPTION_LENGTH = 80;
+const MAX_VISIBLE_COMMANDS = 12;
 
 const truncateDescription = (description: string): string => {
   if (description.length <= MAX_DESCRIPTION_LENGTH) {
@@ -65,15 +66,31 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
     );
   }
 
+  // Calculate the visible window of commands, scrolling to keep selection visible
+  const totalCommands = filteredCommands.length;
+  const needsScrolling = totalCommands > MAX_VISIBLE_COMMANDS;
+
+  let startIndex = 0;
+  if (needsScrolling) {
+    // Keep the selected item roughly centered in the visible window
+    const halfWindow = Math.floor(MAX_VISIBLE_COMMANDS / 2);
+    startIndex = Math.max(0, selectedIndex - halfWindow);
+    startIndex = Math.min(startIndex, totalCommands - MAX_VISIBLE_COMMANDS);
+  }
+  const endIndex = startIndex + (needsScrolling ? MAX_VISIBLE_COMMANDS : totalCommands);
+  const visibleCommands = filteredCommands.slice(startIndex, endIndex);
+
+  // Find the longest command name across ALL filtered commands for consistent alignment
+  const maxCommandLength = Math.max(
+    ...filteredCommands.map((cmd) => cmd.name.length),
+  );
+
   return (
     <Box paddingX={1} marginX={1} marginBottom={1} flexDirection="column">
-      {filteredCommands.map((command, index) => {
-        const isSelected = index === selectedIndex;
+      {visibleCommands.map((command, visibleIndex) => {
+        const actualIndex = startIndex + visibleIndex;
+        const isSelected = actualIndex === selectedIndex;
 
-        // Find the longest command name to vertically align command descriptions
-        const maxCommandLength = Math.max(
-          ...filteredCommands.map((cmd) => cmd.name.length),
-        );
         const paddedCommandName = `/${command.name}`.padEnd(
           maxCommandLength + 1,
         );

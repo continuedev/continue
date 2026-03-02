@@ -3,10 +3,16 @@ import * as fs from "fs";
 import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
+import {
+  detectImageFormat,
+  formatFileSize,
+  isImageFile,
+  processImageWithSharp,
+} from "../util/image.js";
 import { parseEnvNumber } from "../util/truncateOutput.js";
 
 import { formatToolArgument } from "./formatters.js";
-import { Tool, ToolRunContext } from "./types.js";
+import { type MultipartToolResult, type ToolResult, Tool, ToolRunContext } from "./types.js";
 
 // Output truncation defaults
 const DEFAULT_READ_FILE_MAX_CHARS = 100000; // ~25k tokens
@@ -26,16 +32,64 @@ function getReadFileMaxLines(): number {
   );
 }
 
+// Maximum image file size (10MB)
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
 // Track files that have been read in the current session
 export const readFilesSet = new Set<string>();
 export function markFileAsRead(filePath: string) {
   readFilesSet.add(filePath);
 }
 
+/**
+ * Read an image file and return a multipart tool result with both
+ * a text description and the base64-encoded image data.
+ */
+async function readImageFile(
+  realPath: string,
+  displayPath: string,
+): Promise<MultipartToolResult> {
+  const imageBuffer = fs.readFileSync(realPath);
+
+  if (imageBuffer.length > MAX_IMAGE_SIZE) {
+    throw new ContinueError(
+      ContinueErrorReason.FileTooLarge,
+      `Image file is too large: ${displayPath} (${formatFileSize(imageBuffer.length)}). ` +
+        `Maximum allowed: ${formatFileSize(MAX_IMAGE_SIZE)}.`,
+    );
+  }
+
+  // Process with Sharp if available (resize to fit model context)
+  const { buffer: processedBuffer, isJpeg } =
+    await processImageWithSharp(imageBuffer);
+
+  const mimeType = isJpeg
+    ? "image/jpeg"
+    : detectImageFormat(processedBuffer);
+
+  const base64Data = processedBuffer.toString("base64");
+
+  return {
+    type: "multipart",
+    parts: [
+      {
+        type: "text",
+        text: `Image file: ${displayPath} (${formatFileSize(imageBuffer.length)}, ${mimeType})`,
+      },
+      {
+        type: "image",
+        data: base64Data,
+        mimeType,
+      },
+    ],
+  };
+}
+
 export const readFileTool: Tool = {
   name: "Read",
   displayName: "Read",
-  description: "Read the contents of a file at the specified path",
+  description:
+    "Read the contents of a file at the specified path. Supports text files and images (png, jpg, gif, webp).",
   parameters: {
     type: "object",
     required: ["filepath"],
@@ -67,7 +121,7 @@ export const readFileTool: Tool = {
   run: async (
     args: { filepath: string },
     context?: ToolRunContext,
-  ): Promise<string> => {
+  ): Promise<ToolResult> => {
     try {
       let { filepath } = args;
       if (filepath.startsWith("./")) {
@@ -81,6 +135,12 @@ export const readFileTool: Tool = {
         );
       }
       const realPath = fs.realpathSync(filepath);
+
+      // Handle image files
+      if (isImageFile(filepath)) {
+        return readImageFile(realPath, filepath);
+      }
+
       const content = fs.readFileSync(realPath, "utf-8");
 
       // Divide limits by parallel tool call count to avoid context overflow

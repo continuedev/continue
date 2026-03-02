@@ -2,6 +2,11 @@ import {
   isRunningInWsl,
   runTerminalCommandTool,
 } from "./runTerminalCommand.js";
+import { extractTextFromToolResult } from "./types.js";
+
+/** Helper to run a tool and extract the text result */
+const run = async (args: Record<string, unknown>) =>
+  extractTextFromToolResult(await runTerminalCommandTool.run(args));
 
 describe("runTerminalCommandTool", () => {
   const isWindows = process.platform === "win32";
@@ -21,7 +26,7 @@ describe("runTerminalCommandTool", () => {
         expectedOutput = "hello world";
       }
 
-      const result = await runTerminalCommandTool.run({ command });
+      const result = await run({ command });
       expect(result.trim()).toBe(expectedOutput);
     });
 
@@ -34,7 +39,7 @@ describe("runTerminalCommandTool", () => {
         command = "pwd";
       }
 
-      const result = await runTerminalCommandTool.run({ command });
+      const result = await run({ command });
 
       if (isWindows) {
         // Windows paths like C:\path\to\dir
@@ -54,7 +59,7 @@ describe("runTerminalCommandTool", () => {
         command = "ls";
       }
 
-      const result = await runTerminalCommandTool.run({ command });
+      const result = await run({ command });
       // Should return some directory content (not empty)
       expect(result.length).toBeGreaterThan(0);
     });
@@ -62,7 +67,7 @@ describe("runTerminalCommandTool", () => {
     it("should handle command that produces version info", async () => {
       // Node.js should be available on all platforms in CI
       const command = "node --version";
-      const result = await runTerminalCommandTool.run({ command });
+      const result = await run({ command });
 
       // Should contain version number (starts with v)
       expect(result.trim()).toMatch(/^v\d+\.\d+\.\d+/);
@@ -82,27 +87,21 @@ describe("runTerminalCommandTool", () => {
   describe("platform-specific features", () => {
     if (isWindows) {
       it("should work with Windows commands", async () => {
-        const result = await runTerminalCommandTool.run({
-          command: "Write-Output $env:OS",
-        });
+        const result = await run({ command: "Write-Output $env:OS" });
         expect(result.trim()).toBe("Windows_NT");
       });
     }
 
     if (isMac) {
       it("should work with macOS commands", async () => {
-        const result = await runTerminalCommandTool.run({
-          command: "uname -s",
-        });
+        const result = await run({ command: "uname -s" });
         expect(result.trim()).toBe("Darwin");
       });
     }
 
     if (isLinux) {
       it("should work with Linux commands", async () => {
-        const result = await runTerminalCommandTool.run({
-          command: "uname -s",
-        });
+        const result = await run({ command: "uname -s" });
         expect(result.trim()).toBe("Linux");
       });
     }
