@@ -74,6 +74,18 @@ This is a CLI tool for Continue Dev that provides an interactive AI-assisted dev
 - JSX support for React components
 - Relative import paths require explicit file extensions, e.g. 'from "./test.js"' instead of 'from "./test"'
 
+### Local Testing
+
+To test the CLI locally after making changes:
+
+1. **Build**: `npm run build` from `extensions/cli/`
+2. **Link** (one-time): `npm link` from `extensions/cli/` — this symlinks the global `cn` command to `dist/cn.js`
+3. **Use**: Run `cn` anywhere to test your local build
+
+After the initial link, you only need to re-run `npm run build` — the symlink stays active and always points to the latest build output.
+
+When you're done working on a feature, always build and link so the user can immediately test the changes by running `cn`.
+
 ### Important rules
 
 - Whenever you create / update a test, you should run the test to be certain that it passes
