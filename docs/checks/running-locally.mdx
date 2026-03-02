@@ -2,7 +2,7 @@
 title: "Run Checks Locally"
 ---
 
-Run checks locally before pushing to CI with the `check` CLI. It discovers your check files, runs them in parallel, and reports results with caching and live progress.
+Run checks locally before pushing to CI with the `check` CLI.
 
 ## Install
 
@@ -10,19 +10,19 @@ Run checks locally before pushing to CI with the `check` CLI. It discovers your 
 curl -fsSL https://raw.githubusercontent.com/continuedev/check-cli/main/install.sh | sh
 ```
 
-Requires `claude` and `git` on your PATH. The installer downloads the right binary for your OS and architecture.
+Requires `claude` and `git` on your PATH.
 
 ## Scan your codebase
 
-Before running a check continuously on incremental diffs, see what it finds across the whole repo:
+Before running a check on incremental diffs, see what it finds across the whole repo:
 
 ```bash
 check scan security-review
 ```
 
-`check scan` audits the full codebase against a single check. Pass a check name (or a substring — it fuzzy-matches). With no argument, it shows an interactive picker.
+Pass a check name (or a substring — it fuzzy-matches). With no argument, it shows an interactive picker.
 
-On failure, the CLI writes findings to `/tmp/check-scan-results.txt` and prints a command to address them:
+On failure, the CLI prints a command to address the findings:
 
 ```bash
 claude "$(cat /tmp/check-scan-results.txt) address this feedback"
@@ -34,44 +34,14 @@ claude "$(cat /tmp/check-scan-results.txt) address this feedback"
 check
 ```
 
-This discovers every check in `.continue/checks/` and `.agents/checks/`, runs each one against your current diff, and reports results. Checks run in parallel and results are cached — re-running after a no-op edit is instant.
-
-To check an implementation plan instead of a diff:
-
-```bash
-check run --plan ./plan.md
-```
-
-Skip the cache with `--no-cache`.
-
-## List checks
-
-```bash
-check list
-```
-
-Shows every discovered check, its description, and whether it's skipped (e.g. CI-only checks with `local: false`). Useful when you're not sure what's available.
-
-## Output formats
-
-In a terminal, `check` renders a live progress table with color. When piped or scripted, it outputs JSON automatically.
-
-Force JSON output with `--json`:
-
-```bash
-check run --json
-check list --json --fields name,description
-check scan --json security-review
-```
-
-JSON results include `name`, `verdict`, `suggestions`, `duration`, and `cached` for each check.
+This discovers every check in `.continue/checks/` and `.agents/checks/`, runs each one against your current diff, and reports results.
 
 ## Iterate on a check
 
-The local workflow is: edit the check file, run it, read the output, refine.
+Edit the check file, run it, read the output, refine:
 
 ```bash
-# Run a full-repo scan to see what the check catches
+# Scan the full repo to see what the check catches
 check scan migration-safety
 
 # Edit the check to reduce false positives, then re-scan
@@ -88,9 +58,5 @@ Add `check` to your `AGENTS.md` so your coding agent runs checks as part of its 
 ```markdown AGENTS.md
 After creating or updating a pull request, run `check` and fix any failures before requesting review.
 ```
-
-## Why local?
-
-Running checks locally gives you fast iteration on check definitions and catches issues before they reach CI. The CLI uses `claude -p` under the hood, so it works with your existing Claude credentials.
 
 For running checks automatically on every PR in CI, see [Run Checks in CI](/checks/running-in-ci).
