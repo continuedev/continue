@@ -8,9 +8,6 @@ import { defaultBoxStyles } from "../styles.js";
 
 import { ToolPreview } from "./ToolPreview.js";
 
-// show dangerous commmand warning only once per CLI process
-let hasShownDangerousCommandWarning = false;
-
 interface PermissionOption {
   id: string;
   name: string;
@@ -25,7 +22,6 @@ interface ToolPermissionSelectorProps {
   toolArgs: any;
   requestId: string;
   toolCallPreview?: ToolCallPreview[];
-  hasDynamicEvaluation?: boolean;
   onResponse: (
     requestId: string,
     approved: boolean,
@@ -59,17 +55,10 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
   toolArgs,
   requestId,
   toolCallPreview,
-  hasDynamicEvaluation = false,
   onResponse,
 }) => {
   const permissionOptions = getPermissionOptions();
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [initialHasShownDangerousCommand] = useState(
-    hasShownDangerousCommandWarning,
-  );
-  hasShownDangerousCommandWarning = false;
-  const showDynamicWarning =
-    hasDynamicEvaluation && !initialHasShownDangerousCommand;
 
   useInput((input, key) => {
     if (key.return) {
@@ -134,14 +123,12 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
 
       <Box marginTop={1} flexDirection="column">
         <Text color="dim">Would you like to continue?</Text>
-        {showDynamicWarning && (
-          <Box marginTop={1}>
-            <Text color="yellow" dimColor>
-              Note: Dangerous commands will be blocked regardless of your
-              preference.
-            </Text>
-          </Box>
-        )}
+        <Box marginTop={1}>
+          <Text color="dim">
+            Tip: Press Shift+Tab to switch to Auto mode (never asks for
+            permissions)
+          </Text>
+        </Box>
         {permissionOptions.map((option, index) => {
           const isSelected = index === selectedIndex;
           let shortcut = "";
