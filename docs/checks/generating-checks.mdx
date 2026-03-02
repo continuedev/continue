@@ -60,10 +60,11 @@ Write a check that flags PRs where public API or configuration changes aren't re
 
 ## Iterate locally
 
-Write the check (or have your agent write it), run it against a real PR branch, read the output, refine. Run `/checks` in your coding agent to test:
+Write the check (or have your agent write it), run it against a real PR branch, read the output, refine:
 
-```
-/checks .continue/checks/migration-safety.md
+```bash
+check scan migration-safety    # audit the full codebase
+check                          # run against your current diff
 ```
 
 See [Run Checks Locally](/checks/running-locally) for the full local testing workflow.
