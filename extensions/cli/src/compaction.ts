@@ -150,9 +150,20 @@ export async function compactChatHistory(
       conversationSummary: compactionContent,
     };
 
+    // Add a user "continue" message so the history doesn't end with an
+    // assistant message.  Some providers (e.g. Anthropic) reject requests
+    // whose conversation ends with an assistant turn ("assistant prefill").
+    const continuationMessage: ChatHistoryItem = {
+      message: {
+        role: "user" as const,
+        content: "continue",
+      },
+      contextItems: [],
+    };
+
     const compactedHistory: ChatHistoryItem[] = systemMessage
-      ? [systemMessage, compactionMessage]
-      : [compactionMessage];
+      ? [systemMessage, compactionMessage, continuationMessage]
+      : [compactionMessage, continuationMessage];
 
     return {
       compactedHistory,
