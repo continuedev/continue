@@ -36,19 +36,10 @@ check
 
 This discovers every check in `.continue/checks/` and `.agents/checks/`, runs each one against your current diff, and reports results.
 
-## Iterate on a check
-
-Edit the check file, run it, read the output, refine:
+To run a single check:
 
 ```bash
-# Scan the full repo to see what the check catches
-check scan migration-safety
-
-# Edit the check to reduce false positives, then re-scan
-check scan migration-safety
-
-# Once it looks right, run it against your current diff
-check
+check run security-review
 ```
 
 ## Run checks automatically
