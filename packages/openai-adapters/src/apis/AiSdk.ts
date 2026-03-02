@@ -47,7 +47,7 @@ export function setAiModuleOverride(mod: any) {
   aiModuleOverride = mod;
 }
 
-async function getAiModule() {
+async function getAiModule(): Promise<typeof import("ai")> {
   return aiModuleOverride ?? (await import("ai"));
 }
 
