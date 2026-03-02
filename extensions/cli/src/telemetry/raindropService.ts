@@ -1,6 +1,13 @@
+import { createHash } from "crypto";
+
 import { logger } from "../util/logger.js";
 
 let raindropClient: any = null;
+
+function getAnonymousUserId(): string {
+  const raw = process.env.USER ?? process.env.USERNAME ?? "unknown";
+  return createHash("sha256").update(raw).digest("hex").slice(0, 16);
+}
 
 export async function initialize(): Promise<void> {
   const writeKey = process.env.RAINDROP_WRITE_KEY;
@@ -22,7 +29,7 @@ export async function initialize(): Promise<void> {
 
     const wrapped = raindropClient.wrap(ai, {
       context: {
-        userId: process.env.USER ?? "unknown",
+        userId: getAnonymousUserId(),
         eventName: "cli-completion",
       },
     });
