@@ -12,7 +12,8 @@ export function getDefaultToolPolicies(
     { tool: "Edit", permission: "ask" },
     { tool: "MultiEdit", permission: "ask" },
     { tool: "Write", permission: "ask" },
-
+    { tool: "CheckBackgroundJob", permission: "allow" },
+    { tool: "AskQuestion", permission: "allow" },
     { tool: "Checklist", permission: "allow" },
     { tool: "Diff", permission: "allow" },
     { tool: "Exit", permission: "allow" }, // Exit tool is generally safe (headless mode only)
@@ -45,7 +46,8 @@ export const PLAN_MODE_POLICIES: ToolPermissionPolicy[] = [
 
   // TODO address bash read only concerns, maybe make permissions more granular
   { tool: "Bash", permission: "allow" },
-
+  { tool: "CheckBackgroundJob", permission: "allow" },
+  { tool: "AskQuestion", permission: "allow" },
   { tool: "Checklist", permission: "allow" },
   { tool: "Diff", permission: "allow" },
   { tool: "Exit", permission: "allow" },

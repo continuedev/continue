@@ -14,6 +14,7 @@ import { FileIndexService } from "./FileIndexService.js";
 import { GitAiIntegrationService } from "./GitAiIntegrationService.js";
 import { MCPService } from "./MCPService.js";
 import { ModelService } from "./ModelService.js";
+import { quizService } from "./QuizService.js";
 import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import { StorageSyncService } from "./StorageSyncService.js";
@@ -319,6 +320,12 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
     [], // No dependencies
   );
 
+  serviceContainer.register(
+    SERVICE_NAMES.QUIZ,
+    () => quizService.initialize(),
+    [], // No dependencies
+  );
+
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();
@@ -383,6 +390,7 @@ export const services = {
   artifactUpload: artifactUploadService,
   gitAiIntegration: gitAiIntegrationService,
   backgroundJobs: backgroundJobService,
+  quiz: quizService,
 } as const;
 
 export type ServicesType = typeof services;

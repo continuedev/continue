@@ -23,5 +23,8 @@
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
     "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@ai-sdk/deepseek": "^2.0.20"
   }
 }
