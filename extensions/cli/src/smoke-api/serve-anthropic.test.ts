@@ -7,7 +7,8 @@ import {
   writeAnthropicConfig,
   spawnServe,
   waitForPattern,
-  pollUntilIdle,
+  sendMessageAndWait,
+  getLastAssistantContent,
   shutdownServe,
   type SmokeTestContext,
 } from "./smoke-api-helpers.js";
@@ -45,37 +46,14 @@ describe.skipIf(!ANTHROPIC_API_KEY)(
       // Wait for the server to start
       await waitForPattern(proc, "Server started", 30000);
 
-      // Send a message
-      const msgRes = await fetch(`${baseUrl}/message`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: "Reply with exactly the word 'hello' and nothing else.",
-        }),
-      });
-      expect(msgRes.ok).toBe(true);
-
-      // Poll until the agent finishes processing
-      const state = await pollUntilIdle(baseUrl, 60000);
-
-      // State shape: { session: { history: ChatHistoryItem[] }, ... }
-      // Each ChatHistoryItem has { message: { role, content }, ... }
-      const history: any[] = state.session?.history ?? [];
-      const assistantItems = history.filter(
-        (item: any) => item.message?.role === "assistant",
+      // Send a message (retries with backoff on rate-limit errors)
+      const state = await sendMessageAndWait(
+        baseUrl,
+        "Reply with exactly the word 'hello' and nothing else.",
       );
-      expect(assistantItems.length).toBeGreaterThan(0);
 
-      const lastMsg = assistantItems[assistantItems.length - 1].message;
-      const content =
-        typeof lastMsg.content === "string"
-          ? lastMsg.content
-          : lastMsg.content
-              ?.filter((p: any) => p.type === "text")
-              .map((p: any) => p.text)
-              .join("");
-
-      expect(content?.toLowerCase()).toContain("hello");
+      const content = getLastAssistantContent(state);
+      expect(content).toContain("hello");
 
       // Graceful exit
       const exitRes = await fetch(`${baseUrl}/exit`, { method: "POST" });

@@ -4,7 +4,7 @@ import {
   createSmokeContext,
   cleanupSmokeContext,
   writeAnthropicConfig,
-  runHeadless,
+  runHeadlessWithRetry,
   type SmokeTestContext,
 } from "./smoke-api-helpers.js";
 
@@ -25,7 +25,7 @@ describe.skipIf(!ANTHROPIC_API_KEY)(
     });
 
     it("should complete a round-trip and return a response", async () => {
-      const result = await runHeadless(ctx, [
+      const result = await runHeadlessWithRetry(ctx, [
         "-p",
         "--config",
         ctx.configPath,

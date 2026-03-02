@@ -8,7 +8,7 @@ import {
   createSmokeContext,
   cleanupSmokeContext,
   writeAnthropicConfig,
-  runHeadless,
+  runHeadlessWithRetry,
   type SmokeTestContext,
 } from "./smoke-api-helpers.js";
 
@@ -62,7 +62,7 @@ describe.skipIf(!ANTHROPIC_API_KEY)(
 After all tools complete, say exactly "ALL_TOOLS_DONE" as your final message.`;
 
     it("should exercise 10 built-in tools and complete successfully", async () => {
-      const result = await runHeadless(
+      const result = await runHeadlessWithRetry(
         ctx,
         ["-p", "--auto", "--config", ctx.configPath, PROMPT],
         { timeout: 120000 },
