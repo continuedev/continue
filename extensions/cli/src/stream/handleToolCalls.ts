@@ -4,6 +4,7 @@ import { createHistoryItem } from "core/util/messageConversion.js";
 
 import { checkToolPermission } from "src/permissions/permissionChecker.js";
 
+import { executionContext } from "../services/ExecutionContext.js";
 import {
   SERVICE_NAMES,
   serviceContainer,
@@ -199,10 +200,12 @@ export async function handleToolCalls(
 export async function getRequestTools(isHeadless: boolean) {
   const availableTools = await getAllAvailableTools(isHeadless);
 
+  const ctx = executionContext.getStore();
   const permissionsState =
-    await serviceContainer.get<ToolPermissionServiceState>(
+    ctx?.permissions ??
+    (await serviceContainer.get<ToolPermissionServiceState>(
       SERVICE_NAMES.TOOL_PERMISSIONS,
-    );
+    ));
 
   const allowedTools: Tool[] = [];
   for (const tool of availableTools) {

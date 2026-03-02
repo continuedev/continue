@@ -11,6 +11,7 @@ import { ToolPermissionServiceState } from "src/services/ToolPermissionService.j
 import { checkToolPermission } from "../permissions/permissionChecker.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import { ToolCallRequest, ToolPermissions } from "../permissions/types.js";
+import { executionContext } from "../services/ExecutionContext.js";
 import {
   SERVICE_NAMES,
   serviceContainer,
@@ -562,10 +563,12 @@ export async function executeStreamedToolCalls(
       callbacks?.onToolStart?.(call.name, call.arguments);
 
       // Check tool permissions using helper
+      const ctx = executionContext.getStore();
       const permissionState =
-        await serviceContainer.get<ToolPermissionServiceState>(
+        ctx?.permissions ??
+        (await serviceContainer.get<ToolPermissionServiceState>(
           SERVICE_NAMES.TOOL_PERMISSIONS,
-        );
+        ));
       const permissionResult = await checkToolPermissionApproval(
         permissionState.permissions,
         call,

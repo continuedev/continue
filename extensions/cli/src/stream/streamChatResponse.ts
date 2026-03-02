@@ -9,6 +9,7 @@ import type {
 } from "openai/resources.mjs";
 
 import { pruneLastMessage } from "../compaction.js";
+import { executionContext } from "../services/ExecutionContext.js";
 import { services } from "../services/index.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
@@ -455,10 +456,13 @@ export async function streamChatResponse(
     chatHistory = refreshChatHistoryFromService(chatHistory, isCompacting);
     logger.debug("Starting conversation iteration");
 
-    // Get system message once per iteration (can change based on tool permissions mode)
-    const systemMessage = await services.systemMessage.getSystemMessage(
-      services.toolPermissions.getState().currentMode,
-    );
+    // Get system message from context if running in subagent, else use global service
+    const ctx = executionContext.getStore();
+    const systemMessage =
+      ctx?.systemMessage ??
+      (await services.systemMessage.getSystemMessage(
+        services.toolPermissions.getState().currentMode,
+      ));
 
     // Recompute tools on each iteration to handle mode changes during streaming
     const rawTools = await getRequestTools(isHeadless);
