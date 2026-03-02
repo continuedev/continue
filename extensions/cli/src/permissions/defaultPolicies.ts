@@ -51,6 +51,7 @@ export const PLAN_MODE_POLICIES: ToolPermissionPolicy[] = [
   { tool: "Checklist", permission: "allow" },
   { tool: "Diff", permission: "allow" },
   { tool: "Exit", permission: "allow" },
+  { tool: "ExitPlanMode", permission: "allow" },
   { tool: "Fetch", permission: "allow" },
   { tool: "List", permission: "allow" },
   { tool: "Read", permission: "allow" },

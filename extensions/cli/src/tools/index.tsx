@@ -18,6 +18,8 @@ import type {
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
 
+import { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
+
 import { ALL_BUILT_IN_TOOLS } from "./allBuiltIns.js";
 import { askQuestionTool } from "./askQuestion.js";
 import { checkBackgroundJobTool } from "./checkBackgroundJob.js";
@@ -30,6 +32,7 @@ import { readFileTool } from "./readFile.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
+import { exitPlanModeTool } from "./planMode.js";
 import { skillsTool } from "./skills.js";
 import { subagentTool } from "./subagent.js";
 import {
@@ -41,14 +44,16 @@ import {
   type ToolCall,
   type ToolParametersSchema,
   type ToolRunContext,
+  type ToolResult,
   ParameterSchema,
   PreprocessedToolCall,
+  extractTextFromToolResult,
 } from "./types.js";
 import { uploadArtifactTool } from "./uploadArtifact.js";
 import { writeChecklistTool } from "./writeChecklist.js";
 import { writeFileTool } from "./writeFile.js";
 
-export type { Tool, ToolCall, ToolParametersSchema };
+export type { Tool, ToolCall, ToolParametersSchema, ToolResult };
 
 /**
  * Extract the agent ID from the --id command line flag
@@ -135,6 +140,14 @@ export async function getAllAvailableTools(
 
   tools.push(await skillsTool());
 
+  // Add ExitPlanMode tool when in plan mode
+  const toolPermState = await serviceContainer.get<ToolPermissionServiceState>(
+    SERVICE_NAMES.TOOL_PERMISSIONS,
+  );
+  if (toolPermState.currentMode === "plan") {
+    tools.push(exitPlanModeTool);
+  }
+
   const mcpState = await serviceContainer.get<MCPServiceState>(
     SERVICE_NAMES.MCP,
   );
@@ -212,10 +225,14 @@ export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
   };
 }
 
-export async function executeToolCall(
+/**
+ * Execute a tool call and return the raw ToolResult (may be multipart).
+ * Used by the AI SDK adapter to preserve image content.
+ */
+export async function executeToolCallRaw(
   toolCall: PreprocessedToolCall,
   options: { parallelToolCallCount: number } = { parallelToolCallCount: 1 },
-): Promise<string> {
+): Promise<ToolResult> {
   const startTime = Date.now();
 
   try {
@@ -244,6 +261,8 @@ export async function executeToolCall(
     // Track edits if Git AI is enabled (no-op if not enabled)
     await services.gitAiIntegration.trackToolUse(toolCall, "PostToolUse");
 
+    const resultText = extractTextFromToolResult(result);
+
     telemetryService.logToolResult({
       toolName: toolCall.name,
       success: true,
@@ -258,7 +277,7 @@ export async function executeToolCall(
 
     logger.debug("Tool execution completed", {
       toolName: toolCall.name,
-      resultLength: result?.length || 0,
+      resultLength: resultText?.length || 0,
     });
 
     return result;
@@ -287,6 +306,18 @@ export async function executeToolCall(
 
     throw error;
   }
+}
+
+/**
+ * Execute a tool call and return a string result.
+ * Multipart results are flattened to text only (legacy OpenAI pipeline).
+ */
+export async function executeToolCall(
+  toolCall: PreprocessedToolCall,
+  options: { parallelToolCallCount: number } = { parallelToolCallCount: 1 },
+): Promise<string> {
+  const result = await executeToolCallRaw(toolCall, options);
+  return extractTextFromToolResult(result);
 }
 
 // Only checks top-level required

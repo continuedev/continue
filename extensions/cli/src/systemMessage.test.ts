@@ -19,7 +19,7 @@ vi.mock("./hubLoader.js", () => ({
     .mockImplementation((spec: string) => Promise.resolve(spec)),
 }));
 
-const PLAN_MODE_STRING = "You are operating in _Plan Mode_";
+const PLAN_MODE_STRING = "You are operating in **Plan Mode**";
 
 describe("constructSystemMessage", () => {
   it("should return base system message with rules when additionalRules is provided", async () => {
@@ -181,12 +181,11 @@ Rule 3: Third rule`;
     expect(result).toContain("You are an agent in the Continue CLI");
     expect(result).toContain(PLAN_MODE_STRING);
     expect(result).toContain(
-      "which means that your goal is to help the user investigate their ideas",
+      "investigate the codebase and develop a concrete plan",
     );
-    expect(result).toContain("develop a plan before taking action");
     expect(result).toContain("read-only tools");
     expect(result).toContain(
-      "should not attempt to circumvent them to write / delete / create files",
+      "do NOT have access to write tools",
     );
   });
 
@@ -201,7 +200,7 @@ Rule 3: Third rule`;
     expect(result).toContain("You are an agent in the Continue CLI");
     expect(result).not.toContain(PLAN_MODE_STRING);
     expect(result).not.toContain(
-      "which means that your goal is to help the user investigate their ideas",
+      "investigate the codebase and develop a concrete plan",
     );
   });
 
@@ -211,7 +210,7 @@ Rule 3: Third rule`;
     expect(result).toContain("You are an agent in the Continue CLI");
     expect(result).not.toContain(PLAN_MODE_STRING);
     expect(result).not.toContain(
-      "which means that your goal is to help the user investigate their ideas",
+      "investigate the codebase and develop a concrete plan",
     );
   });
 
@@ -225,7 +224,8 @@ Rule 3: Third rule`;
 
     expect(result).toContain(PLAN_MODE_STRING);
     expect(result).toContain("read-only tools");
-    expect(result).toContain("write / delete / create files");
+    expect(result).toContain("ExitPlanMode");
+    expect(result).toContain("Checklist");
   });
 
   it("should combine plan mode with headless mode instructions", async () => {
@@ -239,7 +239,7 @@ Rule 3: Third rule`;
     expect(result).toContain("IMPORTANT: You are running in headless mode");
     expect(result).toContain(PLAN_MODE_STRING);
     expect(result).toContain(
-      "which means that your goal is to help the user investigate their ideas",
+      "investigate the codebase and develop a concrete plan",
     );
   });
 
@@ -256,7 +256,7 @@ Rule 3: Third rule`;
     );
     expect(result).toContain(PLAN_MODE_STRING);
     expect(result).toContain(
-      "which means that your goal is to help the user investigate their ideas",
+      "investigate the codebase and develop a concrete plan",
     );
   });
 });

@@ -129,8 +129,28 @@ export async function constructSystemMessage(
 
   // Add plan mode specific instructions if in plan mode
   if (mode === "plan") {
-    systemMessage +=
-      '\n<context name="planMode">You are operating in _Plan Mode_, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files. Ask the user to switch to agent mode if they want to make changes. For example, it is not acceptable to use the Bash tool to write to files.</context>\n';
+    systemMessage += `
+<context name="planMode">You are operating in **Plan Mode**. Your goal is to investigate the codebase and develop a concrete plan before taking any action.
+
+## Plan Mode Workflow
+
+Follow these steps in order:
+
+1. **Investigate**: Use read-only tools (Read, List, Search, Bash, Fetch) to understand the codebase, requirements, and constraints. You do NOT have access to write tools (Write, Edit, MultiEdit) in plan mode.
+
+2. **Create a plan**: Once you understand the problem, use the **Checklist** tool to write a structured plan with specific, actionable steps. Each checklist item should be a concrete task (e.g., "Create src/utils/parser.ts with parseConfig function" not "Update the code").
+
+3. **Get approval**: Call the **ExitPlanMode** tool to present your plan for user approval. Include a brief summary of what the plan accomplishes.
+
+## Important Rules
+
+- Do NOT attempt to write files or circumvent read-only restrictions (e.g., using Bash to write files).
+- Do NOT ask the user to manually switch modes. Use the ExitPlanMode tool when your plan is ready.
+- Always create a Checklist BEFORE calling ExitPlanMode.
+- If the user gives feedback after ExitPlanMode is rejected, revise your plan and try again.
+- After exiting plan mode, use the Checklist tool to mark items as completed as you implement each step.
+</context>
+`;
   } else {
     // Check if commit signature is disabled via environment variable
     if (!process.env.CONTINUE_CLI_DISABLE_COMMIT_SIGNATURE) {
