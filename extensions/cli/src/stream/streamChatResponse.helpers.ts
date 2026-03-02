@@ -366,19 +366,40 @@ export function recordStreamTelemetry(options: {
     costUsd: cost,
   });
 
-  // Mirror core metrics to PostHog for product analytics
+  reportToPostHog({
+    model: model.model,
+    totalDuration,
+    actualInputTokens,
+    actualOutputTokens,
+    cost,
+    fullUsage,
+    toolCount: tools?.length ?? 0,
+  });
+
+  return cost;
+}
+
+function reportToPostHog(opts: {
+  model: string;
+  totalDuration: number;
+  actualInputTokens: number;
+  actualOutputTokens: number;
+  cost: number;
+  fullUsage?: any;
+  toolCount: number;
+}): void {
   const cacheReadTokens =
-    fullUsage?.prompt_tokens_details?.cache_read_tokens ?? 0;
+    opts.fullUsage?.prompt_tokens_details?.cache_read_tokens ?? 0;
   const cacheWriteTokens =
-    fullUsage?.prompt_tokens_details?.cache_write_tokens ?? 0;
+    opts.fullUsage?.prompt_tokens_details?.cache_write_tokens ?? 0;
 
   try {
     posthogService.capture("apiRequest", {
-      model: model.model,
-      durationMs: totalDuration,
-      inputTokens: actualInputTokens,
-      outputTokens: actualOutputTokens,
-      costUsd: cost,
+      model: opts.model,
+      durationMs: opts.totalDuration,
+      inputTokens: opts.actualInputTokens,
+      outputTokens: opts.actualOutputTokens,
+      costUsd: opts.cost,
       cacheReadTokens,
       cacheWriteTokens,
     });
@@ -388,24 +409,22 @@ export function recordStreamTelemetry(options: {
     // tokens (prompt_tokens) + cache reads + cache writes. Anthropic's
     // `input_tokens` field only counts non-cached tokens, so using it alone as
     // the denominator produces ratios >> 1 when caching works well.
-    if (fullUsage?.prompt_tokens_details) {
+    if (opts.fullUsage?.prompt_tokens_details) {
       const totalPromptTokens =
-        (fullUsage.prompt_tokens ?? 0) + cacheReadTokens + cacheWriteTokens;
+        (opts.fullUsage.prompt_tokens ?? 0) + cacheReadTokens + cacheWriteTokens;
       const cacheHitRate =
         totalPromptTokens > 0 ? cacheReadTokens / totalPromptTokens : 0;
 
       posthogService.capture("prompt_cache_metrics", {
-        model: model.model,
+        model: opts.model,
         cache_read_tokens: cacheReadTokens,
         cache_write_tokens: cacheWriteTokens,
         total_prompt_tokens: totalPromptTokens,
         cache_hit_rate: cacheHitRate,
-        tool_count: tools?.length ?? 0,
+        tool_count: opts.toolCount,
       });
     }
   } catch {}
-
-  return cost;
 }
 
 /**
