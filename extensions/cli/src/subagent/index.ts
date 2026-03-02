@@ -26,3 +26,24 @@ export const SUBAGENT_TOOL_META: Tool = {
   },
   run: async () => "",
 };
+
+export const SUBAGENT_PARALLEL_TOOL_META: Tool = {
+  name: "SubagentParallel",
+  displayName: "Subagent Parallel",
+  description:
+    "Invoke multiple subagents in parallel and wait for all to complete.",
+  readonly: false,
+  isBuiltIn: true,
+  parameters: {
+    type: "object",
+    required: ["tasks"],
+    properties: {
+      tasks: {
+        type: "array",
+        description:
+          "Array of tasks to execute in parallel. Each task specifies a subagent and its prompt.",
+      },
+    },
+  },
+  run: async () => "",
+};
