@@ -12,7 +12,9 @@ describe("updateAnthropicModelInYaml", () => {
       expect(result).toContain("name: Local Config");
       expect(result).toContain("version: 1.0.0");
       expect(result).toContain("schema: v1");
+      expect(result).toContain("uses: anthropic/claude-opus-4-6");
       expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
+      expect(result).toContain("uses: anthropic/claude-haiku-4-6");
       expect(result).toContain("ANTHROPIC_API_KEY: sk-ant-test123456789");
     });
 
@@ -21,7 +23,9 @@ describe("updateAnthropicModelInYaml", () => {
       const result = updateAnthropicModelInYaml(invalidYaml, testApiKey);
 
       expect(result).toContain("name: Local Config");
+      expect(result).toContain("uses: anthropic/claude-opus-4-6");
       expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
+      expect(result).toContain("uses: anthropic/claude-haiku-4-6");
       expect(result).toContain("ANTHROPIC_API_KEY: sk-ant-test123456789");
     });
   });
@@ -44,7 +48,9 @@ models:
       expect(result).toContain("# My Continue config");
       expect(result).toContain("# List of available models");
       expect(result).toContain("uses: openai/gpt-4");
+      expect(result).toContain("uses: anthropic/claude-opus-4-6");
       expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
+      expect(result).toContain("uses: anthropic/claude-haiku-4-6");
       expect(result).toContain("ANTHROPIC_API_KEY: sk-ant-test123456789");
     });
 
@@ -64,7 +70,9 @@ models:
 
       expect(result).toContain("# My Continue config");
       expect(result).toContain("# List of available models");
+      expect(result).toContain("uses: anthropic/claude-opus-4-6");
       expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
+      expect(result).toContain("uses: anthropic/claude-haiku-4-6");
       expect(result).toContain("ANTHROPIC_API_KEY: sk-ant-test123456789");
       expect(result).not.toContain("old-key");
     });
@@ -84,7 +92,9 @@ models:
       const result = updateAnthropicModelInYaml(existingConfig, testApiKey);
 
       expect(result).toContain("uses: openai/gpt-4");
+      expect(result).toContain("uses: anthropic/claude-opus-4-6");
       expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
+      expect(result).toContain("uses: anthropic/claude-haiku-4-6");
       expect(result).toContain("ANTHROPIC_API_KEY: sk-ant-test123456789");
       expect(result).toContain("OPENAI_API_KEY: TEST-openai-test");
     });
@@ -104,17 +114,21 @@ models:
 
       const result = updateAnthropicModelInYaml(existingConfig, testApiKey);
 
+      expect(result).toContain("uses: anthropic/claude-opus-4-6");
       expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
+      expect(result).toContain("uses: anthropic/claude-haiku-4-6");
       expect(result).toContain("uses: openai/gpt-4");
       expect(result).toContain("ANTHROPIC_API_KEY: sk-ant-test123456789");
       expect(result).toContain("OPENAI_API_KEY: TEST-openai-test");
       expect(result).not.toContain("old-anthropic-key");
 
-      // Should only have one anthropic model
-      const anthropicMatches = result.match(
-        /uses: anthropic\/claude-sonnet-4-6/g,
-      );
-      expect(anthropicMatches).toHaveLength(1);
+      // Should have all three anthropic models, one of each
+      const opusMatches = result.match(/uses: anthropic\/claude-opus-4-6/g);
+      const sonnetMatches = result.match(/uses: anthropic\/claude-sonnet-4-6/g);
+      const haikuMatches = result.match(/uses: anthropic\/claude-haiku-4-6/g);
+      expect(opusMatches).toHaveLength(1);
+      expect(sonnetMatches).toHaveLength(1);
+      expect(haikuMatches).toHaveLength(1);
     });
 
     it("should handle config with no models array", () => {
@@ -130,7 +144,9 @@ schema: v1
 
       expect(result).toContain("name: Local Config");
       expect(result).toContain("models:");
+      expect(result).toContain("uses: anthropic/claude-opus-4-6");
       expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
+      expect(result).toContain("uses: anthropic/claude-haiku-4-6");
       expect(result).toContain("ANTHROPIC_API_KEY: sk-ant-test123456789");
     });
 
@@ -147,7 +163,9 @@ models: []
       );
 
       expect(result).toContain("name: Local Config");
+      expect(result).toContain("uses: anthropic/claude-opus-4-6");
       expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
+      expect(result).toContain("uses: anthropic/claude-haiku-4-6");
       expect(result).toContain("ANTHROPIC_API_KEY: sk-ant-test123456789");
     });
   });
@@ -189,7 +207,9 @@ models: "not an array"
 
       const result = updateAnthropicModelInYaml(malformedConfig, testApiKey);
 
+      expect(result).toContain("uses: anthropic/claude-opus-4-6");
       expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
+      expect(result).toContain("uses: anthropic/claude-haiku-4-6");
       expect(result).toContain("ANTHROPIC_API_KEY: sk-ant-test123456789");
     });
 
@@ -203,6 +223,9 @@ models: "not an array"
       differentKeys.forEach((key) => {
         const result = updateAnthropicModelInYaml("", key);
         expect(result).toContain(`ANTHROPIC_API_KEY: ${key}`);
+        expect(result).toContain("uses: anthropic/claude-opus-4-6");
+        expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
+        expect(result).toContain("uses: anthropic/claude-haiku-4-6");
       });
     });
   });
