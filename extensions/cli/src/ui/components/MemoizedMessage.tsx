@@ -162,19 +162,25 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
     // Handle regular messages
     const isStreaming = isAssistant && !message.content && !toolCallStates;
 
+    if (isUser) {
+      return (
+        <Box key={index} marginBottom={1}>
+          <Text backgroundColor="white" color="black">
+            {" "}
+            {formatMessageContentForDisplay(message.content)}
+            {" "}
+          </Text>
+        </Box>
+      );
+    }
+
     return (
       <Box key={index} marginBottom={1}>
-        <Text color={isUser ? "blue" : "white"}>{hideBullet ? " " : "●"}</Text>
+        <Text color="white">{hideBullet ? " " : "●"}</Text>
         <Text> </Text>
-        {isUser ? (
-          <Text color="dim">
-            {formatMessageContentForDisplay(message.content)}
-          </Text>
-        ) : (
-          <MarkdownRenderer
-            content={formatMessageContentForDisplay(message.content)}
-          />
-        )}
+        <MarkdownRenderer
+          content={formatMessageContentForDisplay(message.content)}
+        />
         {isStreaming && <Text color="dim">▋</Text>}
       </Box>
     );
