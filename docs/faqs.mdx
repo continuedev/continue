@@ -40,6 +40,114 @@ You may also set `requestOptions.caBundlePath` to an array of paths to multiple 
 
 **_Windows VS Code Users_**: Installing the [win-ca](https://marketplace.visualstudio.com/items?itemName=ukoloff.win-ca) extension should also correct this issue.
 
+### Common SSL Certificate Errors
+
+If you're encountering SSL/TLS certificate errors when connecting to HTTPS endpoints (especially self-hosted or enterprise endpoints), this section provides solutions for the most common error messages.
+
+#### "Unable to verify the first certificate"
+
+This error occurs when the SSL certificate chain is incomplete or when connecting to endpoints with self-signed certificates.
+
+**Solution**: Configure the certificate bundle path in your model configuration:
+
+<Tabs>
+  <Tab title="YAML">
+    ```yaml
+    models:
+      - name: My Model
+        provider: ollama
+        model: my-model
+        apiBase: https://my-secure-endpoint.com/v1
+        requestOptions:
+          caBundlePath: /path/to/certificate.pem
+    ```
+  </Tab>
+  <Tab title="JSON">
+    ```json
+    {
+      "models": [
+        {
+          "name": "My Model",
+          "provider": "ollama",
+          "model": "my-model",
+          "apiBase": "https://my-secure-endpoint.com/v1",
+          "requestOptions": {
+            "caBundlePath": "/path/to/certificate.pem"
+          }
+        }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+#### "Self signed certificate in certificate chain"
+
+This error appears when your endpoint uses a self-signed certificate or a certificate signed by an internal CA.
+
+**Solution**: Export the certificate and configure it:
+
+1. **Export the certificate** from your browser or server
+2. **Convert to PEM format** if needed (see conversion commands below)
+3. **Configure the path** in your Continue config as shown above
+
+#### "Certificate verify failed" / "CERT_UNTRUSTED"
+
+These errors indicate the certificate cannot be verified against known certificate authorities.
+
+**Solution**: Same as above - configure `caBundlePath` with your certificate file.
+
+#### Debugging SSL Issues
+
+Use these commands to diagnose certificate problems:
+
+```bash
+# Test the endpoint with curl
+curl -v https://your-endpoint.com/v1
+
+# View certificate details
+openssl s_client -connect your-endpoint.com:443 -showcerts
+
+# Export certificate to PEM file
+openssl s_client -connect your-endpoint.com:443 -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM > certificate.pem
+```
+
+#### Converting Certificate Formats
+
+If your certificate is in a different format:
+
+```bash
+# Convert DER to PEM
+openssl x509 -inform DER -in certificate.der -out certificate.pem
+
+# Convert PKCS#12 to PEM
+openssl pkcs12 -in certificate.p12 -out certificate.pem -nodes
+```
+
+#### Enterprise/Self-Hosted Endpoint Examples
+
+**NVIDIA NIM endpoints**:
+```yaml
+models:
+  - name: NVIDIA NIM
+    provider: nvidia
+    model: meta/llama3-70b-instruct
+    apiBase: https://your-nim-endpoint.example.com/v1
+    requestOptions:
+      caBundlePath: /path/to/corporate-ca.pem
+```
+
+**Self-hosted Ollama with HTTPS**:
+```yaml
+models:
+  - name: Secure Ollama
+    provider: ollama
+    model: llama3:latest
+    apiBase: https://ollama.internal.company.com:11434
+    requestOptions:
+      caBundlePath: /path/to/internal-ca.pem
+```
+
 ### VS Code Proxy Settings
 
 If you are using VS Code and require requests to be made through a proxy, you are likely already set up through VS Code's [Proxy Server Support](https://code.visualstudio.com/docs/setup/network#_proxy-server-support). To double-check that this is enabled, use `cmd/ctrl` + `,` to open settings and search for "Proxy Support". Unless it is set to "off", then VS Code is responsible for making the request to the proxy.
