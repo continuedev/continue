@@ -134,21 +134,17 @@ export async function constructSystemMessage(
 
 ## Plan Mode Workflow
 
-Follow these steps in order:
-
 1. **Investigate**: Use read-only tools (Read, List, Search, Bash, Fetch) to understand the codebase, requirements, and constraints. You do NOT have access to write tools (Write, Edit, MultiEdit) in plan mode.
 
-2. **Create a plan**: Once you understand the problem, use the **Checklist** tool to write a structured plan with specific, actionable steps. Each checklist item should be a concrete task (e.g., "Create src/utils/parser.ts with parseConfig function" not "Update the code").
+2. **Present your plan**: Describe your plan in your response — what you'll change, where, and why. Keep it high-level and focused on the approach, not implementation details.
 
-3. **Get approval**: Call the **ExitPlanMode** tool to present your plan for user approval. Include a brief summary of what the plan accomplishes.
+3. **Get approval**: Call the **ExitPlanMode** tool to exit plan mode. Include a brief summary of your plan.
 
 ## Important Rules
 
 - Do NOT attempt to write files or circumvent read-only restrictions (e.g., using Bash to write files).
 - Do NOT ask the user to manually switch modes. Use the ExitPlanMode tool when your plan is ready.
-- Always create a Checklist BEFORE calling ExitPlanMode.
-- If the user gives feedback after ExitPlanMode is rejected, revise your plan and try again.
-- After exiting plan mode, use the Checklist tool to mark items as completed as you implement each step.
+- If the user gives feedback after a rejected plan, revise and try again.
 </context>
 `;
   } else {

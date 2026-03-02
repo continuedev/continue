@@ -77,13 +77,12 @@ describe("exitPlanModeTool", () => {
       expect(result).toContain("Migrate database schema to v2");
     });
 
-    it("should instruct the agent to track progress with Checklist", async () => {
+    it("should instruct the agent to proceed with implementation", async () => {
       const result = await exitPlanModeTool.run({
         summary: "Refactor module",
       });
 
-      expect(result).toContain("Checklist");
-      expect(result).toContain("mark items as completed");
+      expect(result).toContain("Proceed with implementing the plan");
     });
   });
 });

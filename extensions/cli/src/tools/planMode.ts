@@ -4,27 +4,23 @@ import { logger } from "../util/logger.js";
 import type { Tool } from "./types.js";
 
 /**
- * ExitPlanMode tool - prompts the user to approve the plan and exit plan mode.
+ * ExitPlanMode tool - exits plan mode so the agent can begin implementation.
  *
  * When the agent is in plan mode, it should:
  * 1. Investigate with read-only tools
- * 2. Write a plan using the Checklist tool
- * 3. Call ExitPlanMode to present the plan for user approval
+ * 2. Present a plan in its response text
+ * 3. Call ExitPlanMode to switch to agent mode
  *
- * On approval, the tool switches to normal mode so the agent can execute the plan.
- * On rejection, the agent stays in plan mode and can revise the plan.
+ * The tool switches to normal mode so the agent can execute.
  */
 export const exitPlanModeTool: Tool = {
   name: "ExitPlanMode",
   displayName: "Exit Plan Mode",
-  description: `Prompts the user to approve your plan and exit plan mode so you can begin implementation.
+  description: `Exit plan mode and switch to agent mode so you can begin implementation.
 
-Before calling this tool, you MUST have already created a plan using the Checklist tool. The user will review your checklist plan and decide whether to approve it.
+Call this after you have presented your plan to the user in your response. Once called, you will gain access to write tools (Write, Edit, MultiEdit) to execute your plan.
 
-- If approved: you will exit plan mode and gain access to write tools (Write, Edit, MultiEdit) to execute the plan.
-- If rejected: you remain in plan mode. Revise your plan based on user feedback and try again.
-
-Only call this tool when you have a complete plan ready for review.`,
+Only call this tool when you have explained your plan and are ready to start implementing.`,
   readonly: true,
   isBuiltIn: true,
   parameters: {
@@ -71,7 +67,7 @@ Only call this tool when you have a complete plan ready for review.`,
       "",
       `Plan summary: ${summary}`,
       "",
-      "Proceed with implementing the plan. Use the Checklist tool to mark items as completed as you go.",
+      "Proceed with implementing the plan.",
     ].join("\n");
   },
 };

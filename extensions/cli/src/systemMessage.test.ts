@@ -225,7 +225,6 @@ Rule 3: Third rule`;
     expect(result).toContain(PLAN_MODE_STRING);
     expect(result).toContain("read-only tools");
     expect(result).toContain("ExitPlanMode");
-    expect(result).toContain("Checklist");
   });
 
   it("should combine plan mode with headless mode instructions", async () => {
