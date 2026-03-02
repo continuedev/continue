@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from "node:async_hooks";
+
 import type { ChatHistoryItem } from "core";
 
 import { streamChatResponse } from "../stream/streamChatResponse.js";
@@ -5,35 +7,9 @@ import { escapeEvents } from "../util/cli.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
-import { executionContext } from "./ExecutionContext.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import type { ToolPermissionServiceState } from "./ToolPermissionService.js";
 import { type ModelServiceState, SERVICE_NAMES } from "./types.js";
-
-/** Types */
-
-export interface SubAgentExecutionOptions {
-  agent: ModelServiceState;
-  prompt: string;
-  parentSessionId: string;
-  abortController: AbortController;
-}
-
-export interface SubAgentResult {
-  success: boolean;
-  response: string;
-  error?: string;
-}
-
-export interface PendingExecution {
-  executionId: string;
-  agentName: string;
-  startTime: number;
-}
-
-export interface SubAgentServiceState {
-  activeExecutions: Map<string, PendingExecution>;
-}
 
 /** Service */
 
@@ -55,7 +31,7 @@ export class SubAgentService extends BaseService<SubAgentServiceState> {
   }
 
   isInsideSubagent(): boolean {
-    return executionContext.getStore() !== undefined;
+    return subAgentExecutionContext.getStore() !== undefined;
   }
 
   private async buildAgentSystemMessage(
@@ -171,7 +147,7 @@ export class SubAgentService extends BaseService<SubAgentServiceState> {
       escapeEvents.on("user-escape", escapeHandler);
 
       try {
-        const result = await executionContext.run(
+        const result = await subAgentExecutionContext.run(
           {
             executionId,
             systemMessage,
@@ -257,3 +233,40 @@ export class SubAgentService extends BaseService<SubAgentServiceState> {
 }
 
 export const subAgentService = new SubAgentService();
+
+// Subagent execution context
+
+interface ExecutionContext {
+  executionId: string;
+  systemMessage: string;
+  permissions: ToolPermissionServiceState;
+}
+
+/* Scopes system messages and tool permissions per subagent execution for enabling parallel execution*/
+export const subAgentExecutionContext =
+  new AsyncLocalStorage<ExecutionContext>();
+
+// Types
+
+export interface SubAgentExecutionOptions {
+  agent: ModelServiceState;
+  prompt: string;
+  parentSessionId: string;
+  abortController: AbortController;
+}
+
+export interface SubAgentResult {
+  success: boolean;
+  response: string;
+  error?: string;
+}
+
+export interface PendingExecution {
+  executionId: string;
+  agentName: string;
+  startTime: number;
+}
+
+export interface SubAgentServiceState {
+  activeExecutions: Map<string, PendingExecution>;
+}

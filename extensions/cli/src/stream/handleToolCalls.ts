@@ -4,12 +4,12 @@ import { createHistoryItem } from "core/util/messageConversion.js";
 
 import { checkToolPermission } from "src/permissions/permissionChecker.js";
 
-import { executionContext } from "../services/ExecutionContext.js";
 import {
   SERVICE_NAMES,
   serviceContainer,
   services,
 } from "../services/index.js";
+import { subAgentExecutionContext } from "../services/SubAgentService.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import {
   convertToolToChatCompletionTool,
@@ -200,7 +200,7 @@ export async function handleToolCalls(
 export async function getRequestTools(isHeadless: boolean) {
   const availableTools = await getAllAvailableTools(isHeadless);
 
-  const ctx = executionContext.getStore();
+  const ctx = subAgentExecutionContext.getStore();
   const permissionsState =
     ctx?.permissions ??
     (await serviceContainer.get<ToolPermissionServiceState>(

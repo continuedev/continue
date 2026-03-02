@@ -9,8 +9,8 @@ import type {
 } from "openai/resources.mjs";
 
 import { pruneLastMessage } from "../compaction.js";
-import { executionContext } from "../services/ExecutionContext.js";
 import { services } from "../services/index.js";
+import { subAgentExecutionContext } from "../services/SubAgentService.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { applyChatCompletionToolOverrides } from "../tools/applyToolOverrides.js";
@@ -457,7 +457,7 @@ export async function streamChatResponse(
     logger.debug("Starting conversation iteration");
 
     // Get system message from context if running in subagent, else use global service
-    const ctx = executionContext.getStore();
+    const ctx = subAgentExecutionContext.getStore();
     const systemMessage =
       ctx?.systemMessage ??
       (await services.systemMessage.getSystemMessage(
