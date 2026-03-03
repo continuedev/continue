@@ -1,7 +1,6 @@
 import fs from "fs";
 import os from "os";
 
-import { ModelConfig } from "@continuedev/config-yaml";
 import {
   ContinueConfig,
   ExperimentalModelRoles,
@@ -70,7 +69,20 @@ export function addModel(
         config.models = [];
       }
 
-      const desc: ModelConfig = {
+      // Determine default roles based on provider/model
+      let defaultRoles: string[] | undefined;
+      if (model.provider === "deepseek") {
+        if (model.model === "deepseek-fim-beta") {
+          defaultRoles = ["chat", "autocomplete", "edit", "apply", "summarize", "subagent"];
+        } else if (model.model === "deepseek-reasoner" || model.model === "deepseek-chat") {
+          defaultRoles = ["chat", "edit", "apply", "summarize", "subagent"];
+        }
+      } else if (["openai", "anthropic", "google"].includes(model.provider)) {
+        // Standard roles for major API providers
+        defaultRoles = ["chat", "edit", "apply", "summarize", "subagent"];
+      }
+      
+      const desc: any = {
         name: model.title,
         provider: model.provider,
         model: model.model,
@@ -78,7 +90,17 @@ export function addModel(
         apiBase: model.apiBase,
         maxStopWords: model.maxStopWords,
         defaultCompletionOptions: model.completionOptions,
+        // Use provided roles or default roles
+        roles: (model as any).roles || defaultRoles,
       };
+      
+      // Add optional properties if they exist
+      if ((model as any).capabilities) desc.capabilities = (model as any).capabilities;
+      if (model.contextLength) desc.contextLength = model.contextLength;
+      if (model.template) desc.template = model.template;
+      if (model.requestOptions) desc.requestOptions = model.requestOptions;
+      if (model.cacheBehavior) desc.cacheBehavior = model.cacheBehavior;
+      if ((model as any).defaultCompletionOptions) desc.defaultCompletionOptions = (model as any).defaultCompletionOptions;
       config.models.push(desc);
       return config;
     },

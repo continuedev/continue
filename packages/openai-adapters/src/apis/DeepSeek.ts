@@ -133,7 +133,11 @@ export class DeepSeekApi extends OpenAIApi {
     body: ChatCompletionCreateParamsExt,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
+console.log(" ==== DeepSeek chatcompletionNonStream ", body );    
+
     const { endpoint, deepSeekBody } = this.prepareChatCompletionRequest(body);
+console.log(" ==== DeepSeek chatcompletionNonStream ", deepSeekBody );    
+
     // Execute the API request
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
@@ -198,6 +202,7 @@ export class DeepSeekApi extends OpenAIApi {
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const { endpoint, deepSeekBody } = this.prepareChatCompletionRequest(body);
+console.log(" ==== DeepSeek chatcompletionStream ", deepSeekBody );    
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify({

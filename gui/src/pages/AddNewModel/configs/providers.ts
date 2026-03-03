@@ -591,7 +591,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
 - 128k context length
 - **DeepSeek Chat**: Standard model with 8k max output token limit, supports tools
 - **DeepSeek Reasoner**: Reasoning mode with 64k max output token limit, supports tools  
-- **DeepSeek FIM (Beta)**: Fill-in-the-Middle, no tools support`,
+- **DeepSeek FIM (Beta)**: Fill-in-the-Middle for autocompletion without native tool support`,
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     collectInputFor: [
       {

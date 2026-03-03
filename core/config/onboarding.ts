@@ -83,47 +83,55 @@ export function setupProviderConfig(
 
   switch (provider) {
     case "openai":
-      newModels = OPENAI_MODEL_CONFIG.slugs.map((slug) => ({
-        uses: slug,
-        with: {
-          [OPENAI_MODEL_CONFIG.apiKeyInputName]: apiKey,
-        },
-      }));
+      newModels = OPENAI_MODEL_CONFIG.slugs.map((slug) => {
+        const modelName = slug.split('/')[1];
+        return {
+          name: modelName,
+          provider: "openai",
+          model: modelName,
+          apiKey: apiKey,
+          roles: ["chat", "edit", "apply", "summarize", "subagent"],
+        };
+      });
       break;
     case "anthropic":
-      newModels = ANTHROPIC_MODEL_CONFIG.slugs.map((slug) => ({
-        uses: slug,
-        with: {
-          [ANTHROPIC_MODEL_CONFIG.apiKeyInputName]: apiKey,
-        },
-      }));
+      newModels = ANTHROPIC_MODEL_CONFIG.slugs.map((slug) => {
+        const modelName = slug.split('/')[1];
+        return {
+          name: modelName,
+          provider: "anthropic",
+          model: modelName,
+          apiKey: apiKey,
+          roles: ["chat", "edit", "apply", "summarize", "subagent"],
+        };
+      });
       break;
     case "gemini":
-      newModels = GEMINI_MODEL_CONFIG.slugs.map((slug) => ({
-        uses: slug,
-        with: {
-          [GEMINI_MODEL_CONFIG.apiKeyInputName]: apiKey,
-        },
-      }));
+      newModels = GEMINI_MODEL_CONFIG.slugs.map((slug) => {
+        const modelName = slug.split('/')[1];
+        return {
+          name: modelName,
+          provider: "google",
+          model: modelName,
+          apiKey: apiKey,
+          roles: ["chat", "edit", "apply", "summarize", "subagent"],
+        };
+      });
       break;
     case "deepseek":
       newModels = DEEPSEEK_MODEL_CONFIG.slugs.map((slug) => {
+        const modelName = slug.split('/')[1];
         const modelObj: any = {
-          uses: slug,
-          with: {
-            [DEEPSEEK_MODEL_CONFIG.apiKeyInputName]: apiKey,
-          },
+          name: modelName === "deepseek-reasoner" ? "DeepSeek Reasoner" :
+                modelName === "deepseek-chat" ? "DeepSeek Chat" :
+                modelName === "deepseek-fim-beta" ? "DeepSeek FIM Beta" : modelName,
+          provider: "deepseek",
+          model: modelName,
+          apiKey: apiKey,
+          apiBase: modelName === "deepseek-fim-beta" ? "https://api.deepseek.com/beta" : "https://api.deepseek.com/",
         };
-        // Add overrides based on model slug
+        // Add roles and other properties based on model slug
         if (slug === "deepseek/deepseek-fim-beta") {
-          modelObj.override = {
-            apiBase: "https://api.deepseek.com/beta",
-            defaultCompletionOptions: {
-              contextLength: 131072,
-              maxTokens: 8192,
-            },
-            capabilities: [], // FIM Beta doesn't support tools
-          };
           modelObj.roles = [
             "chat",
             "autocomplete",
@@ -132,27 +140,26 @@ export function setupProviderConfig(
             "summarize",
             "subagent",
           ];
-        } else if (slug === "deepseek/deepseek-chat") {
-          modelObj.override = {
-            apiBase: "https://api.deepseek.com/",
-            defaultCompletionOptions: {
-              contextLength: 131072,
-              maxTokens: 8192,
-            },
-            capabilities: ["tool_use"],
+          modelObj.defaultCompletionOptions = {
+            contextLength: 131072,
+            maxTokens: 8192,
           };
+          modelObj.capabilities = []; // FIM Beta doesn't support tools
+        } else if (slug === "deepseek/deepseek-chat") {
           modelObj.roles = ["chat", "edit", "apply", "summarize", "subagent"];
+          modelObj.defaultCompletionOptions = {
+            contextLength: 131072,
+            maxTokens: 8192,
+          };
+          modelObj.capabilities = ["tool_use"];
         } else {
           // deepseek/deepseek-reasoner
-          modelObj.override = {
-            apiBase: "https://api.deepseek.com/",
-            defaultCompletionOptions: {
-              contextLength: 131072,
-              maxTokens: 65535,
-            },
-            capabilities: ["tool_use"],
-          };
           modelObj.roles = ["chat", "edit", "apply", "summarize", "subagent"];
+          modelObj.defaultCompletionOptions = {
+            contextLength: 131072,
+            maxTokens: 65535,
+          };
+          modelObj.capabilities = ["tool_use"];
         }
         return modelObj;
       });

@@ -26,6 +26,16 @@ export const BaseConfig = z.object({
 export const BasePlusConfig = BaseConfig.extend({
   apiBase: z.string().optional(),
   apiKey: z.string().optional(),
+  roles: z.array(z.enum([
+    "chat",
+    "autocomplete", 
+    "embed",
+    "rerank",
+    "edit",
+    "apply",
+    "summarize",
+    "subagent",
+  ])).optional(),
 });
 
 // OpenAI and compatible

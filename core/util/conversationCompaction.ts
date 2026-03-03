@@ -1,6 +1,6 @@
-import { ChatHistoryItem, ILLM, ToolResultChatMessage } from "..";
-import { HistoryManager } from "./history";
-import { stripImages } from "./messageContent";
+import { ChatHistoryItem, ILLM, ToolResultChatMessage } from "../index.js";
+import { HistoryManager } from "./history.js";
+import { stripImages } from "./messageContent.js";
 
 export interface CompactionParams {
   sessionId: string;

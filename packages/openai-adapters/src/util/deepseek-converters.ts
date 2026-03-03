@@ -459,7 +459,7 @@ export function prepareMessage(
   const role = msg.role === "developer" ? "system" : msg.role;
 
   if (!validDeepSeekRoles.includes(role as any)) {
-    warnings.push(`Invalid message role: ${msg.role} at index ${index}`);
+    warnings.push(`Invalid message role: ${msg.role} at index ${index}. (removed from request)`);
     return undefined;
   }
 

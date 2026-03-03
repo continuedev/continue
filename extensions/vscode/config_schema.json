@@ -304,6 +304,15 @@
           "description": "The base URL of the LLM API.",
           "type": "string"
         },
+        "roles": {
+          "title": "Roles",
+          "description": "An array specifying the roles this model can fulfill, such as chat, autocomplete, embed, rerank, edit, apply, summarize, subagent.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["chat", "autocomplete", "embed", "rerank", "edit", "apply", "summarize", "subagent"]
+          }
+        },
         "region": {
           "title": "Region",
           "description": "The region where the model is hosted",
