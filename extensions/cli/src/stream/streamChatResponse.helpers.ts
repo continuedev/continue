@@ -383,31 +383,18 @@ export function recordStreamTelemetry(options: {
       cacheWriteTokens,
     });
 
-    // Emit prompt_cache_metrics for the Prompt Cache Performance dashboard
-    if (actualInputTokens > 0) {
+    // Emit prompt_cache_metrics for the Prompt Cache Performance dashboard.
+    // total_prompt_tokens must include ALL input token types: non-cached input
+    // tokens (prompt_tokens) + cache reads + cache writes. Anthropic's
+    // `input_tokens` field only counts non-cached tokens, so using it alone as
+    // the denominator produces ratios >> 1 when caching works well.
+    if (fullUsage?.prompt_tokens_details) {
+      const totalPromptTokens =
+        (fullUsage.prompt_tokens ?? 0) + cacheReadTokens + cacheWriteTokens;
+      const cacheHitRate =
+        totalPromptTokens > 0 ? cacheReadTokens / totalPromptTokens : 0;
+
       posthogService.capture("prompt_cache_metrics", {
-        model: model.model,
-        cache_read_tokens: cacheReadTokens,
-        cache_write_tokens: cacheWriteTokens,
-        total_prompt_tokens: actualInputTokens,
-        cache_hit_rate: cacheReadTokens / actualInputTokens,
-        tool_count: tools?.length ?? 0,
-      });
-    }
-  } catch {}
-
-  // Report prompt cache metrics to PostHog
-  if (fullUsage?.prompt_tokens_details) {
-    const cacheReadTokens =
-      fullUsage.prompt_tokens_details.cache_read_tokens ?? 0;
-    const cacheWriteTokens =
-      fullUsage.prompt_tokens_details.cache_write_tokens ?? 0;
-    const totalPromptTokens = fullUsage.prompt_tokens ?? 0;
-    const cacheHitRate =
-      totalPromptTokens > 0 ? cacheReadTokens / totalPromptTokens : 0;
-
-    try {
-      void posthogService.capture("prompt_cache_metrics", {
         model: model.model,
         cache_read_tokens: cacheReadTokens,
         cache_write_tokens: cacheWriteTokens,
@@ -415,8 +402,8 @@ export function recordStreamTelemetry(options: {
         cache_hit_rate: cacheHitRate,
         tool_count: tools?.length ?? 0,
       });
-    } catch {}
-  }
+    }
+  } catch {}
 
   return cost;
 }
