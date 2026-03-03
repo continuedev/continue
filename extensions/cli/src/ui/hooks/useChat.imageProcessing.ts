@@ -1,13 +1,16 @@
 import { logger } from "../../util/logger.js";
 
 /**
- * Dynamically import Sharp without using eval
+ * Dynamically import Sharp module for image processing.
+ * Uses standard dynamic import which is safe and supported by modern bundlers.
  */
 async function loadSharp(): Promise<any> {
   try {
-    // Use Function constructor to avoid bundler issues with dynamic imports
-    const importSharp = new Function('return import("sharp")');
-    const sharpModule = await importSharp().catch(() => null);
+    // Use standard dynamic import - bundlers like esbuild/webpack handle this correctly
+    // when configured with external modules or dynamic import support
+    const sharpModule = await import(/* webpackIgnore: true */ "sharp").catch(
+      () => null,
+    );
     return sharpModule ? sharpModule.default || sharpModule : null;
   } catch {
     return null;
