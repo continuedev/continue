@@ -60,7 +60,6 @@ class DeepSeek extends OpenAI {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ): Promise<{ role: "assistant"; content: string }> {
-console.log(" ==== DS streamCHAT ====", messages, options.model, this.model );
     const transformedMessages = this._pairLoneThinkingMessages(messages);
     const completionOptions = { ...this.completionOptions, ...(options as any).completionOptions };
     const body = this.modifyChatBody({
@@ -75,7 +74,6 @@ console.log(" ==== DS streamCHAT ====", messages, options.model, this.model );
       return { role: "assistant", content: "" };
     }
     const content = response.choices?.[0]?.message?.content || "";
-    console.log(" ==== DS CHAT ====", content);
     return { role: "assistant", content };
   }
 
@@ -92,7 +90,6 @@ console.log(" ==== DS streamCHAT ====", messages, options.model, this.model );
     messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog> {
     const transformedMessages = this._pairLoneThinkingMessages(messages);
-console.log(" ==== DS streamCHAT ====", messages, options.model, this.model );
     return yield* super.streamChat(
       transformedMessages,
       signal,
@@ -165,7 +162,6 @@ console.log(" ==== DS streamCHAT ====", messages, options.model, this.model );
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<string, PromptLog> {
-console.log(" ==== DS fim ====", options.model, this.model );
 
     return yield* super.streamFim(prefix, suffix, signal, {
       ...options,
@@ -215,7 +211,7 @@ console.log(" ==== DS fim ====", options.model, this.model );
    * When the last message is from the assistant, the API treats it as a prefix completion.
    */
   supportsPrefill(): boolean {
-    return false;
+    return true;
   }
 
   /**
