@@ -27,7 +27,7 @@ export function sanitizeMessageForTTS(message: string): string {
     .replace(/`/g, "") // Remove backticks (command substitution)
     .replace(/\$/g, "") // Remove dollar signs (variable expansion)
     .replace(/\\/g, "") // Remove backslashes (escape sequences)
-    .replace(/[&|;()<>{}\[\]!#*?~^]/g, "") // Remove shell metacharacters
+    .replace(/[&|;()<>{}\[\]!#*?~^%]/g, "") // Remove shell metacharacters (includes % for cmd.exe variable expansion)
     .replace(/\x00/g, "") // Remove null bytes
     .replace(/\n/g, " ") // Replace newlines with spaces
     .replace(/\r/g, " "); // Replace carriage returns with spaces
