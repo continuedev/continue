@@ -2,46 +2,46 @@
 title: "Run Checks Locally"
 ---
 
-Run your checks locally before pushing to CI using the `/check` command in your coding agent (Claude Code, Cursor, or any agent that supports skills).
+The `check` CLI discovers check files in your repo, runs them in parallel, and shows results with live progress. Iterate on checks locally before rolling out to your team in CI, with no extra setup beyond your existing Claude credentials. You can run it yourself or add it to `AGENTS.md` so your coding agent runs checks automatically.
+
+If you don't have any checks yet, run `check init` to generate checks based on your codebase and review history, or see [Write Your First Check](/checks/quickstart).
 
 ## Install
 
-Install the [`check`](https://github.com/continuedev/skills?tab=readme-ov-file#check) skill:
+```bash
+curl -fsSL https://continue.dev/check/install.sh | sh
+```
+
+## Check your entire codebase
+
+Before running a check on incremental diffs, see what it finds across the whole repo:
 
 ```bash
-npx skills add continuedev/skills --skill check
+check scan security-review
 ```
 
-## Run checks
+Pass a check name, or run it with no argument to pick interactively.
 
-Type `/check` in your coding agent. It discovers every check file in `.continue/checks/`, runs each one as a subagent against your current branch, and reports the results. To run a single check, pass the file path: `/check .continue/checks/security-review.md`.
+## Run checks on your current changes
 
+```bash
+check
 ```
-/check
-```
 
-![Terminal output showing checks being discovered and launched](/images/checks-local-running.png)
+This discovers every check in `.continue/checks/` and `.agents/checks/`, runs each one against your current diff, and reports results.
 
-![Check results summary showing pass, fail, and warning status for each check](/images/checks-local-results.png)
+To run a single check:
 
-## Iterate on a check
-
-The local feedback loop is: edit the check file, run `/check`, read the output, refine. Because checks run inside your coding agent, you can ask it to fix issues in the same session:
-
-```
-The migration safety check is flagging additive-only migrations as failures. Update the check to only flag destructive operations.
+```bash
+check security-review
 ```
 
 ## Run checks automatically
 
-You can add `/check` to your `AGENTS.md` so your coding agent runs checks automatically as part of its workflow — for example, after creating a PR:
+Add `check` to your `AGENTS.md` so your coding agent runs checks as part of its workflow:
 
 ```markdown AGENTS.md
-After creating or updating a pull request, run /check and fix any failures before requesting review.
+After creating or updating a pull request, run `check` and fix any failures before requesting review.
 ```
 
-## Why local?
-
-Running checks locally uses your existing coding agent and credits (Claude Max, API key, etc.). There's nothing extra to install or configure — if your agent can read your repo, it can run your checks.
-
-For running checks automatically on every PR in CI, see [Run Checks in CI](/checks/running-in-ci).
+To run checks automatically on every PR in CI, see [Run Checks in CI](/checks/running-in-ci).
