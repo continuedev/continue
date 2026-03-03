@@ -266,6 +266,7 @@ function calculateFallbackCost(
 }
 
 // Helper function to record telemetry
+// eslint-disable-next-line complexity -- Pre-existing complexity; refactoring deferred
 export function recordStreamTelemetry(options: {
   requestStartTime: number;
   responseEndTime: number;
