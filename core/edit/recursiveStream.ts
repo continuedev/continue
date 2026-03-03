@@ -39,7 +39,7 @@ export async function* recursiveStream(
   const injectApplyToken = type === "apply" && shouldInjectApplyToken(llm);
   if (typeof prompt === "string") {
     const finalPrompt = injectApplyToken ? prompt + APPLY_UNIQUE_TOKEN : prompt;
-
+console.warn(" ==== DeepSeek streamcomplete recursive");
     const generator = llm.streamComplete(finalPrompt, abortController.signal, {
       raw: true,
       prediction: undefined,
@@ -76,6 +76,7 @@ export async function* recursiveStream(
     const promptMessages = injectApplyToken
       ? appendTokenToLastMessage(prompt, APPLY_UNIQUE_TOKEN)
       : prompt;
+console.warn(" ==== DeepSeek streamchat recursive");
 
     const generator = llm.streamChat(promptMessages, abortController.signal, {
       raw: true,
@@ -84,9 +85,11 @@ export async function* recursiveStream(
     });
 
     for await (const chunk of generator) {
-      yield chunk;
-      const rendered = renderChatMessage(chunk);
-      buffer += rendered;
+      if ( chunk.role === "assistant") {
+        yield chunk;
+        const rendered = renderChatMessage(chunk);
+        buffer += rendered;
+      }
       totalTokens += countTokens(chunk.content);
 
       if (totalTokens >= safeTokens) {

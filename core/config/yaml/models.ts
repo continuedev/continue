@@ -2,9 +2,11 @@ import {
   mergeConfigYamlRequestOptions,
   ModelConfig,
 } from "@continuedev/config-yaml";
+import { findLlmInfo } from "@continuedev/llm-info";
 
 import { ContinueConfig, ILLMLogger, LLMOptions } from "../..";
 import { BaseLLM } from "../../llm";
+import { DEFAULT_CONTEXT_LENGTH } from "../../llm/constants";
 import { LLMClasses } from "../../llm/llms";
 
 const AUTODETECT = "AUTODETECT";
@@ -49,24 +51,32 @@ async function modelConfigToBaseLLM({
     config.requestOptions,
   );
 
+  const llmInfo = findLlmInfo(model.model, model.provider);
+  const contextLength = model.defaultCompletionOptions?.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
+  const maxCompletionTokens = llmInfo?.maxCompletionTokens;
+  const defaultMaxTokens = maxCompletionTokens
+    ? Math.min(maxCompletionTokens, contextLength / 4)
+    : undefined;
+
   let options: LLMOptions = {
     ...rest,
-    contextLength: model.defaultCompletionOptions?.contextLength,
+    contextLength: contextLength,
     completionOptions: {
       ...(model.defaultCompletionOptions ?? {}),
       model: model.model,
       maxTokens:
         model.defaultCompletionOptions?.maxTokens ??
-        cls.defaultOptions?.completionOptions?.maxTokens,
+        cls.defaultOptions?.completionOptions?.maxTokens ??
+        defaultMaxTokens,
     },
     logger: llmLogger,
     uniqueId,
     title: model.name,
     template: model.promptTemplates?.chat,
     promptTemplates: model.promptTemplates,
-    baseAgentSystemMessage: model.chatOptions?.baseAgentSystemMessage,
-    basePlanSystemMessage: model.chatOptions?.basePlanSystemMessage,
-    baseChatSystemMessage: model.chatOptions?.baseSystemMessage,
+    baseAgentSystemMessage: model.chatOptions?.baseAgentSystemMessage ?? cls.defaultOptions?.baseAgentSystemMessage,
+    basePlanSystemMessage: model.chatOptions?.basePlanSystemMessage ?? cls.defaultOptions?.basePlanSystemMessage,
+    baseChatSystemMessage: model.chatOptions?.baseSystemMessage ?? cls.defaultOptions?.baseChatSystemMessage,
     toolOverrides: model.chatOptions?.toolOverrides
       ? Object.entries(model.chatOptions.toolOverrides).map(([name, o]) => ({
           name,

@@ -33,6 +33,7 @@ class DeepSeek extends OpenAI {
       edit: osModelsEditPrompt, // Use OpenAI‑style edit prompt (DeepSeek is OpenAI‑compatible)
     },
     useLegacyCompletionsEndpoint: false, // DeepSeek does not support the legacy /completions endpoint
+    baseChatSystemMessage: "You are a loving AI assistant with advanced reasoning capabilities provided by DeepSeek.",
   };
 
   /**
@@ -52,6 +53,33 @@ class DeepSeek extends OpenAI {
   }
 
   /**
+   * Override chat() to use non-streaming chat completion and return only the content.
+   */
+  async chat(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: LLMFullCompletionOptions = {},
+  ): Promise<{ role: "assistant"; content: string }> {
+console.log(" ==== DS streamCHAT ====", messages, options.model, this.model );
+    const transformedMessages = this._pairLoneThinkingMessages(messages);
+    const completionOptions = { ...this.completionOptions, ...(options as any).completionOptions };
+    const body = this.modifyChatBody({
+      ...completionOptions,
+      messages: transformedMessages,
+      model: this._convertModelName(completionOptions.model),
+      stream: false,
+    } as ChatCompletionCreateParams);
+
+    const response = await this.openaiAdapter?.chatCompletionNonStream(body as any, signal);
+    if (!response) {
+      return { role: "assistant", content: "" };
+    }
+    const content = response.choices?.[0]?.message?.content || "";
+    console.log(" ==== DS CHAT ====", content);
+    return { role: "assistant", content };
+  }
+
+  /**
    * Stream chat completions with DeepSeek‑specific adaptations:
    * 1. Pair lone thinking messages with an assistant message (DeepSeek requirement)
    * 2. Convert model names (e.g., deepseek‑fim‑beta → deepseek‑chat)
@@ -64,6 +92,7 @@ class DeepSeek extends OpenAI {
     messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog> {
     const transformedMessages = this._pairLoneThinkingMessages(messages);
+console.log(" ==== DS streamCHAT ====", messages, options.model, this.model );
     return yield* super.streamChat(
       transformedMessages,
       signal,
@@ -136,6 +165,8 @@ class DeepSeek extends OpenAI {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<string, PromptLog> {
+console.log(" ==== DS fim ====", options.model, this.model );
+
     return yield* super.streamFim(prefix, suffix, signal, {
       ...options,
       model: this._convertModelName(options.model || this.model),
@@ -184,7 +215,7 @@ class DeepSeek extends OpenAI {
    * When the last message is from the assistant, the API treats it as a prefix completion.
    */
   supportsPrefill(): boolean {
-    return true;
+    return false;
   }
 
   /**

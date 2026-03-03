@@ -14,7 +14,7 @@ export const DeepSeek: ModelProvider = {
       displayName: "DeepSeek FIM Beta",
       contextLength: 131072,
       maxCompletionTokens: 8192,
-      recommendedFor: ["chat"],
+      recommendedFor: ["autocomplete"],
     },
     {
       model: "deepseek-reasoner",

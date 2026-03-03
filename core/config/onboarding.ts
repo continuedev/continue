@@ -122,16 +122,16 @@ export function setupProviderConfig(
               contextLength: 131072,
               maxTokens: 8192,
             },
-            roles: [
-              "chat",
-              "autocomplete",
-              "edit",
-              "apply",
-              "summarize",
-              "subagent",
-            ],
             capabilities: [], // FIM Beta doesn't support tools
           };
+          modelObj.roles = [
+            "chat",
+            "autocomplete",
+            "edit",
+            "apply",
+            "summarize",
+            "subagent",
+          ];
         } else if (slug === "deepseek/deepseek-chat") {
           modelObj.override = {
             apiBase: "https://api.deepseek.com/",
@@ -139,20 +139,20 @@ export function setupProviderConfig(
               contextLength: 131072,
               maxTokens: 8192,
             },
-            roles: ["chat", "edit", "apply", "summarize", "subagent"],
             capabilities: ["tool_use"],
           };
+          modelObj.roles = ["chat", "edit", "apply", "summarize", "subagent"];
         } else {
           // deepseek/deepseek-reasoner
           modelObj.override = {
             apiBase: "https://api.deepseek.com/",
             defaultCompletionOptions: {
               contextLength: 131072,
-              maxTokens: 65536,
+              maxTokens: 65535,
             },
-            roles: ["chat", "edit", "apply", "summarize", "subagent"],
             capabilities: ["tool_use"],
           };
+          modelObj.roles = ["chat", "edit", "apply", "summarize", "subagent"];
         }
         return modelObj;
       });

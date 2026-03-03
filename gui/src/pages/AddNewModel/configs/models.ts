@@ -390,7 +390,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "DeepSeek Chat",
       model: "deepseek-chat",
       contextLength: 131072,
-      maxTokens: 8192, // Standard limit for non-reasoning mode
+      maxTokens: 8192,
       apiBase: "https://api.deepseek.com/",
     },
     icon: "deepseek.png",
@@ -400,7 +400,7 @@ export const models: { [key: string]: ModelPackage } = {
   deepseekReasoner: {
     title: "DeepSeek Reasoner",
     description:
-      "DeepSeek's reasoning model with 64k token limit for complex thinking tasks.",
+      "DeepSeek's reasoning model with 64k max_token limit for complex thinking tasks.",
     params: {
       title: "DeepSeek Reasoner",
       model: "deepseek-reasoner",
@@ -415,7 +415,7 @@ export const models: { [key: string]: ModelPackage } = {
   deepseekFimBeta: {
     title: "DeepSeek FIM (Beta)",
     description:
-      "DeepSeek's Fill-in-the-Middle model with Prefix Completion Beta feature.",
+      "DeepSeek's Fill-in-the-Middle model beta feature",
     params: {
       title: "DeepSeek FIM Beta",
       model: "deepseek-fim-beta",

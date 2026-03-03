@@ -111,7 +111,7 @@ export async function* streamDiffLines(
     (type === "apply"
       ? constructApplyPrompt(oldLines.join("\n"), options.newCode, llm)
       : constructEditPrompt(prefix, highlighted, suffix, llm, input, language));
-
+console.warn(" ==== DeepSeek streamDiffLines",llm.baseChatSystemMessage)
   // Rules can be included with edit prompt
   // If any rules are present this will result in using chat instead of legacy completion
   const systemMessage =
