@@ -74,9 +74,9 @@ export function useService<T>(serviceName: string): ServiceResult<T> & {
     };
   }, [serviceName, container]);
 
-  const reload = async (): Promise<void> => {
+  const reload = useCallback(async (): Promise<void> => {
     await container.reload(serviceName);
-  };
+  }, [container, serviceName]);
 
   return {
     ...result,
@@ -97,6 +97,9 @@ export function useServices<T extends Record<string, any>>(
 } {
   const container = useServiceContainer();
 
+  // Memoize serviceNames to avoid unnecessary recalculations
+  const serviceNamesKey = serviceNames.join(",");
+
   const getServiceStates = useCallback(() => {
     const services: Partial<T> = {};
     let hasLoading = false;
@@ -114,7 +117,6 @@ export function useServices<T extends Record<string, any>>(
         container.load(serviceName as string).catch(() => {});
       } else if (result.state === "ready" && result.value !== null) {
         services[serviceName] = result.value as T[keyof T];
-      } else {
       }
     }
 
@@ -123,7 +125,8 @@ export function useServices<T extends Record<string, any>>(
       hasError,
       services,
     };
-  }, [serviceNames, container]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serviceNamesKey, container]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -162,7 +165,7 @@ export function useServices<T extends Record<string, any>>(
     return () => {
       listeners.forEach((cleanup) => cleanup());
     };
-  }, [serviceNames.join(","), container, getServiceStates]);
+  }, [serviceNamesKey, container, getServiceStates]);
 
   const allReady = serviceNames.every((name) =>
     container.isReady(name as string),
