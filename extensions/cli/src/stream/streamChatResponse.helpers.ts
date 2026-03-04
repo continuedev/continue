@@ -411,7 +411,9 @@ function reportToPostHog(opts: {
     // the denominator produces ratios >> 1 when caching works well.
     if (opts.fullUsage?.prompt_tokens_details) {
       const totalPromptTokens =
-        (opts.fullUsage.prompt_tokens ?? 0) + cacheReadTokens + cacheWriteTokens;
+        (opts.fullUsage.prompt_tokens ?? 0) +
+        cacheReadTokens +
+        cacheWriteTokens;
       const cacheHitRate =
         totalPromptTokens > 0 ? cacheReadTokens / totalPromptTokens : 0;
 
