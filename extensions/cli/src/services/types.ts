@@ -159,6 +159,7 @@ export const SERVICE_NAMES = {
   GIT_AI_INTEGRATION: "gitAiIntegration",
   BACKGROUND_JOBS: "backgroundJobs",
   QUIZ: "quiz",
+  HOOKS: "hooks",
 } as const;
 
 /**
