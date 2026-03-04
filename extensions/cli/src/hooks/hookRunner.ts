@@ -95,6 +95,9 @@ function executeCommandHook(
 
     // Send JSON input on stdin
     if (child.stdin) {
+      child.stdin.on("error", () => {
+        // Ignore EPIPE — child may have exited before we finished writing
+      });
       child.stdin.write(JSON.stringify(input));
       child.stdin.end();
     }
