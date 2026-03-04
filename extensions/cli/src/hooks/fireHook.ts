@@ -8,7 +8,6 @@
 
 import { services } from "../services/index.js";
 import { getCurrentSession } from "../session.js";
-import { logger } from "../util/logger.js";
 
 import type {
   HookEventResult,

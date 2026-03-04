@@ -19,6 +19,8 @@ import { execFile } from "child_process";
 
 import { logger } from "../util/logger.js";
 
+import { getMatchingHookGroups } from "./hookConfig.js";
+import { MATCHER_FIELD_MAP, NO_MATCHER_EVENTS } from "./types.js";
 import type {
   CommandHookHandler,
   HookEventName,
@@ -27,11 +29,8 @@ import type {
   HookHandler,
   HookInput,
   HookOutput,
-  HookSpecificOutput,
   HttpHookHandler,
 } from "./types.js";
-import { MATCHER_FIELD_MAP, NO_MATCHER_EVENTS } from "./types.js";
-import { getMatchingHookGroups } from "./hookConfig.js";
 import type { HooksConfig } from "./types.js";
 
 const DEFAULT_COMMAND_TIMEOUT_SECONDS = 600;

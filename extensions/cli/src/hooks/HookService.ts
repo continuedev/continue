@@ -8,7 +8,7 @@
 import { BaseService } from "../services/BaseService.js";
 import { logger } from "../util/logger.js";
 
-import { loadHooksConfig, type LoadedHooksConfig } from "./hookConfig.js";
+import { loadHooksConfig } from "./hookConfig.js";
 import { runHooks } from "./hookRunner.js";
 import type { HookEventResult, HookInput, HooksConfig } from "./types.js";
 

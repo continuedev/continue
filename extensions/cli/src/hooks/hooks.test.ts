@@ -7,12 +7,12 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getMatchingHookGroups, loadHooksConfig } from "./hookConfig.js";
 import { runHooks } from "./hookRunner.js";
 import type {
-  HookEventResult,
   HookMatcherGroup,
   HooksConfig,
   PreToolUseInput,
@@ -151,10 +151,10 @@ describe("hookConfig", () => {
     });
 
     afterEach(() => {
-      if (originalContinueGlobalDir !== undefined) {
-        process.env.CONTINUE_GLOBAL_DIR = originalContinueGlobalDir;
-      } else {
+      if (originalContinueGlobalDir === undefined) {
         delete process.env.CONTINUE_GLOBAL_DIR;
+      } else {
+        process.env.CONTINUE_GLOBAL_DIR = originalContinueGlobalDir;
       }
       fs.rmSync(tmpDir, { recursive: true, force: true });
     });

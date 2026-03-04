@@ -1,4 +1,5 @@
 import { loadAuthConfig } from "../auth/workos.js";
+import { HookService } from "../hooks/HookService.js";
 import { initializeWithOnboarding } from "../onboarding.js";
 import {
   setBetaSubagentToolEnabled,
@@ -6,7 +7,6 @@ import {
 } from "../tools/toolsConfig.js";
 import { logger } from "../util/logger.js";
 
-import { HookService } from "../hooks/HookService.js";
 import { AgentFileService } from "./AgentFileService.js";
 import { ApiClientService } from "./ApiClientService.js";
 import { ArtifactUploadService } from "./ArtifactUploadService.js";
