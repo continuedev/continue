@@ -91,17 +91,19 @@ export function convertVercelStreamPart(
         model,
       });
 
-    case "tool-call":
+    case "tool-input-start":
+      // Emit the initial chunk with id and function name, matching OpenAI's
+      // streaming format where the first tool call chunk carries the id/name.
       return chatChunkFromDelta({
         delta: {
           tool_calls: [
             {
               index: 0,
-              id: part.toolCallId,
+              id: part.id,
               type: "function" as const,
               function: {
                 name: part.toolName,
-                arguments: JSON.stringify(part.input),
+                arguments: "",
               },
             },
           ],
@@ -123,6 +125,12 @@ export function convertVercelStreamPart(
         },
         model,
       });
+
+    case "tool-call":
+      // tool-call is emitted after tool-input-start/delta/end have already
+      // streamed the complete tool call. Emitting it again would duplicate
+      // the arguments. Skip it since streaming events already handled it.
+      return null;
 
     case "finish":
       if (part.totalUsage) {
@@ -178,7 +186,6 @@ export function convertVercelStreamPart(
     case "reasoning-end":
     case "source":
     case "file":
-    case "tool-input-start":
     case "tool-input-end":
     case "tool-result":
     case "start-step":
