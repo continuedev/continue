@@ -125,7 +125,7 @@ export function useServices<T extends Record<string, any>>(
       hasError,
       services,
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [serviceNamesKey, container]);
 
   const [loading, setLoading] = useState(true);
