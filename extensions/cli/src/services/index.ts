@@ -332,6 +332,10 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
     [], // No dependencies
   );
 
+  // Initialize Raindrop observability before services create LLM API instances
+  const raindropService = await import("../telemetry/raindropService.js");
+  await raindropService.initialize();
+
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();

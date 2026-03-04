@@ -213,6 +213,13 @@ export async function gracefulExit(code: number = 0): Promise<void> {
   }
 
   try {
+    const raindropService = await import("../telemetry/raindropService.js");
+    await raindropService.shutdown();
+  } catch (err) {
+    logger.debug("Raindrop shutdown error (ignored)", err as any);
+  }
+
+  try {
     // Flush Sentry (best effort)
     await sentryService.flush();
   } catch (err) {

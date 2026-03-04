@@ -141,6 +141,44 @@ export async function runHeadless(
 }
 
 /**
+ * Runs headless with retry + exponential backoff for rate-limit errors.
+ * If stdout/stderr indicates a rate limit, waits and retries.
+ */
+export async function runHeadlessWithRetry(
+  ctx: SmokeTestContext,
+  args: string[],
+  opts: {
+    timeout?: number;
+    env?: Record<string, string>;
+    maxRetries?: number;
+  } = {},
+): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+  const { maxRetries = 3, ...runOpts } = opts;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const result = await runHeadless(ctx, args, runOpts);
+
+    const combined = (result.stdout + result.stderr).toLowerCase();
+    const isRateLimited =
+      combined.includes("rate_limit") ||
+      combined.includes("overloaded") ||
+      combined.includes("529") ||
+      combined.includes("too many requests");
+
+    if (!isRateLimited || attempt === maxRetries) {
+      return result;
+    }
+
+    // Wait with exponential backoff: 10s, 20s, 40s
+    const delay = Math.min(10000 * 2 ** attempt, 60000);
+    await new Promise((r) => setTimeout(r, delay));
+  }
+
+  // Unreachable, but TypeScript needs it
+  throw new Error("runHeadlessWithRetry: unexpected code path");
+}
+
+/**
  * Spawns `cn serve` as a background subprocess and returns it along with
  * a helper to wait for the server to be ready.
  */
@@ -250,6 +288,91 @@ export async function pollUntilIdle(
   }
 
   throw new Error(`pollUntilIdle timed out after ${timeout}ms`);
+}
+
+/**
+ * Extracts the last assistant message content as a lowercase string from state.
+ */
+export function getLastAssistantContent(state: any): string {
+  const history: any[] = state.session?.history ?? [];
+  const assistantItems = history.filter(
+    (item: any) => item.message?.role === "assistant",
+  );
+  if (assistantItems.length === 0) {
+    return "";
+  }
+  const lastMsg = assistantItems[assistantItems.length - 1].message;
+  const content =
+    typeof lastMsg.content === "string"
+      ? lastMsg.content
+      : lastMsg.content
+          ?.filter((p: any) => p.type === "text")
+          .map((p: any) => p.text)
+          .join("");
+  return content?.toLowerCase() ?? "";
+}
+
+/**
+ * Returns true if the state contains evidence of a rate-limit or overloaded
+ * error from the provider (in any message, not just the last one).
+ */
+function hasRateLimitError(state: any): boolean {
+  const history: any[] = state.session?.history ?? [];
+  return history.some((item: any) => {
+    const c = item.message?.content;
+    const text =
+      typeof c === "string"
+        ? c
+        : Array.isArray(c)
+          ? c
+              .filter((p: any) => p.type === "text")
+              .map((p: any) => p.text)
+              .join("")
+          : "";
+    return (
+      text.includes("rate_limit") ||
+      text.includes("overloaded") ||
+      text.includes("529") ||
+      text.includes("Too many requests")
+    );
+  });
+}
+
+/**
+ * Sends a message to a serve instance, polls until idle, and returns the state.
+ * If the response indicates a rate-limit error, retries with exponential
+ * backoff (up to maxRetries times).
+ */
+export async function sendMessageAndWait(
+  baseUrl: string,
+  message: string,
+  opts: { maxRetries?: number; pollTimeout?: number } = {},
+): Promise<any> {
+  const { maxRetries = 3, pollTimeout = 60000 } = opts;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const msgRes = await fetch(`${baseUrl}/message`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    });
+
+    if (!msgRes.ok) {
+      throw new Error(
+        `POST /message failed: ${msgRes.status} ${msgRes.statusText}`,
+      );
+    }
+
+    const state = await pollUntilIdle(baseUrl, pollTimeout);
+
+    if (!hasRateLimitError(state) || attempt === maxRetries) {
+      return state;
+    }
+
+    // Wait with exponential backoff: 10s, 20s, 40s
+    const delay = Math.min(10000 * 2 ** attempt, 60000);
+    await new Promise((r) => setTimeout(r, delay));
+  }
 }
 
 /**

@@ -41,6 +41,16 @@ const PROVIDER_MAP: Record<string, AiSdkProviderCreator> = {
     }),
 };
 
+let aiModuleOverride: any = null;
+
+export function setAiModuleOverride(mod: any) {
+  aiModuleOverride = mod;
+}
+
+async function getAiModule(): Promise<typeof import("ai")> {
+  return aiModuleOverride ?? (await import("ai"));
+}
+
 export class AiSdkApi implements BaseLlmApi {
   private provider?: (modelId: string) => any;
   private config: AiSdkConfig;
@@ -97,7 +107,7 @@ export class AiSdkApi implements BaseLlmApi {
   ): Promise<ChatCompletion> {
     this.initializeProvider();
 
-    const { generateText } = await import("ai");
+    const { generateText } = await getAiModule();
     const { convertOpenAIMessagesToVercel } = await import(
       "../openaiToVercelMessages.js"
     );
@@ -182,7 +192,7 @@ export class AiSdkApi implements BaseLlmApi {
   ): AsyncGenerator<ChatCompletionChunk> {
     this.initializeProvider();
 
-    const { streamText } = await import("ai");
+    const { streamText } = await getAiModule();
     const { convertOpenAIMessagesToVercel } = await import(
       "../openaiToVercelMessages.js"
     );
@@ -258,7 +268,7 @@ export class AiSdkApi implements BaseLlmApi {
   async embed(body: EmbeddingCreateParams): Promise<CreateEmbeddingResponse> {
     this.initializeProvider();
 
-    const { embed: aiEmbed, embedMany } = await import("ai");
+    const { embed: aiEmbed, embedMany } = await getAiModule();
 
     const modelId = typeof body.model === "string" ? body.model : body.model;
     const model = this.provider!(modelId);

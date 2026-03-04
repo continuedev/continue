@@ -45,6 +45,8 @@
   },
   "homepage": "https://continue.dev",
   "dependencies": {
+    "@raindrop-ai/ai-sdk": "^0.0.15",
+    "ai": "^6.0.86",
     "@sentry/profiling-node": "^9.47.1",
     "fdir": "^6.4.2",
     "find-up": "^8.0.0",
