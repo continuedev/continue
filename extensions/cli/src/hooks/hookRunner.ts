@@ -1,20 +1,3 @@
-/**
- * Hook execution engine.
- *
- * Executes hook handlers (shell commands, HTTP endpoints) and parses their output.
- * Follows Claude Code's exact semantics:
- *
- * Exit codes (command hooks):
- *   0  → proceed. stdout added to context for UserPromptSubmit/SessionStart
- *   2  → block the action. stderr becomes feedback to Claude
- *   *  → proceed (non-blocking error). stderr logged but not shown to Claude
- *
- * JSON output (stdout):
- *   Optional structured output with hookSpecificOutput for fine-grained control.
- *
- * All matching hooks run in parallel and identical commands are deduplicated.
- */
-
 import { execFile } from "child_process";
 
 import { logger } from "../util/logger.js";
@@ -36,10 +19,6 @@ import type { HooksConfig } from "./types.js";
 const DEFAULT_COMMAND_TIMEOUT_SECONDS = 600;
 const DEFAULT_HTTP_TIMEOUT_SECONDS = 30;
 
-// ---------------------------------------------------------------------------
-// JSON parsing helpers
-// ---------------------------------------------------------------------------
-
 function tryParseJson(str: string): HookOutput | null {
   const trimmed = str.trim();
   if (!trimmed || !trimmed.startsWith("{")) return null;
@@ -49,10 +28,6 @@ function tryParseJson(str: string): HookOutput | null {
     return null;
   }
 }
-
-// ---------------------------------------------------------------------------
-// Command hook execution
-// ---------------------------------------------------------------------------
 
 function executeCommandHook(
   handler: CommandHookHandler,
@@ -118,11 +93,9 @@ function executeCommandHook(
       let blockReason: string | undefined;
 
       if (exitCode === 2) {
-        // Exit code 2 = block
         blocked = true;
         blockReason = stderr.trim() || "Blocked by hook";
       } else if (output?.decision === "block") {
-        // JSON decision = block
         blocked = true;
         blockReason = output.reason || stderr.trim() || "Blocked by hook";
       }
@@ -149,10 +122,6 @@ function executeCommandHook(
     });
   });
 }
-
-// ---------------------------------------------------------------------------
-// HTTP hook execution
-// ---------------------------------------------------------------------------
 
 function interpolateEnvVars(value: string, allowedVars: string[]): string {
   return value.replace(/\$\{(\w+)\}|\$(\w+)/g, (_, braced, bare) => {
@@ -238,10 +207,6 @@ async function executeHttpHook(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Single handler execution dispatch
-// ---------------------------------------------------------------------------
-
 async function executeHandler(
   handler: HookHandler,
   input: HookInput,
@@ -277,10 +242,6 @@ async function executeHandler(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Deduplication
-// ---------------------------------------------------------------------------
-
 function getHandlerDedupeKey(handler: HookHandler): string {
   switch (handler.type) {
     case "command":
@@ -296,14 +257,6 @@ function getHandlerDedupeKey(handler: HookHandler): string {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Main entry point: run all matching hooks for an event
-// ---------------------------------------------------------------------------
-
-/**
- * Get the matcher value from a hook input based on the event type.
- * Returns undefined for events that don't support matchers.
- */
 function getMatcherValue(input: HookInput): string | undefined {
   const eventName = input.hook_event_name as HookEventName;
 
@@ -317,15 +270,6 @@ function getMatcherValue(input: HookInput): string | undefined {
   return (input as any)[field] as string | undefined;
 }
 
-/**
- * Run all matching hooks for an event. All matching hooks run in parallel,
- * and identical handlers are deduplicated.
- *
- * @param config - The merged hooks config
- * @param input - The hook event input
- * @param cwd - Working directory for command execution
- * @returns Aggregated result from all hooks
- */
 export async function runHooks(
   config: HooksConfig,
   input: HookInput,
@@ -386,9 +330,6 @@ export async function runHooks(
   return aggregateResults(results, eventName);
 }
 
-/**
- * Aggregate individual hook execution results into a single event result.
- */
 function aggregateResults(
   results: HookExecutionResult[],
   eventName: string,
