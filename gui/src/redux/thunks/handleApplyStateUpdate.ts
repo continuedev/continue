@@ -10,6 +10,7 @@ import { updateEditStateApplyState } from "../slices/editState";
 import {
   acceptToolCall,
   errorToolCall,
+  setToolGenerated,
   updateApplyState,
   updateToolCallOutput,
 } from "../slices/sessionSlice";
@@ -49,16 +50,22 @@ export const handleApplyStateUpdate = createAsyncThunk<
           applyState.toolCallId,
         );
 
-        if (
-          applyState.status === "done" &&
-          toolCallState?.toolCall.function.name &&
-          getState().ui.toolSettings[toolCallState.toolCall.function.name] ===
-            "allowedWithoutPermission"
-        ) {
-          extra.ideMessenger.post("acceptDiff", {
-            streamId: applyState.streamId,
-            filepath: applyState.filepath,
-          });
+        if (applyState.status === "done") {
+          // diff is ready for user accept/reject - set status back to "generated"
+          dispatch(
+            setToolGenerated({ toolCallId: applyState.toolCallId, tools: [] }),
+          );
+
+          if (
+            toolCallState?.toolCall.function.name &&
+            getState().ui.toolSettings[toolCallState.toolCall.function.name] ===
+              "allowedWithoutPermission"
+          ) {
+            extra.ideMessenger.post("acceptDiff", {
+              streamId: applyState.streamId,
+              filepath: applyState.filepath,
+            });
+          }
         }
 
         if (applyState.status === "closed") {
