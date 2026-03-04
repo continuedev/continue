@@ -381,6 +381,13 @@
         "category": "Continue",
         "title": "Open in new window",
         "group": "Continue"
+      },
+      {
+        "command": "continue.generateCommitMessage",
+        "category": "Continue",
+        "title": "Generate Commit Message",
+        "icon": "$(sparkle)",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -529,6 +536,16 @@
         },
         {
           "command": "continue.openInNewWindow"
+        },
+        {
+          "command": "continue.generateCommitMessage"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "continue.generateCommitMessage",
+          "group": "navigation",
+          "when": "scmProvider == git"
         }
       ],
       "editor/context": [

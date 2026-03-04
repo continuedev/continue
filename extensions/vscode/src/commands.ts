@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as fs from "node:fs";
+import * as path from "node:path";
 
 import { ContextMenuConfig, ILLM, ModelInstaller } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
@@ -36,8 +37,12 @@ import {
 } from "./autocomplete/statusBar";
 import { ContinueConsoleWebviewViewProvider } from "./ContinueConsoleWebviewViewProvider";
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
+import { collectCommitMessageChanges } from "./commitMessage/collectCommitMessageChanges";
+import { CommitMessageGenerator } from "./commitMessage/CommitMessageGenerator";
+import { resolveGitExecutable } from "./commitMessage/gitCliService";
 import { processDiff } from "./diff/processDiff";
 import { VerticalDiffManager } from "./diff/vertical/manager";
+import type { GitExtension, Repository } from "./otherExtensions/git";
 import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import {
@@ -52,10 +57,25 @@ import { VsCodeIde } from "./VsCodeIde";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
+type TabInputWithViewType = { viewType?: unknown };
+
+function getTabInputViewType(input: vscode.Tab["input"]): string | undefined {
+  if (typeof input !== "object" || input === null) {
+    return undefined;
+  }
+
+  if (!("viewType" in input)) {
+    return undefined;
+  }
+
+  const { viewType } = input as TabInputWithViewType;
+  return typeof viewType === "string" ? viewType : undefined;
+}
+
 function getFullScreenTab() {
   const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
   return tabs.find((tab) =>
-    (tab.input as any)?.viewType?.endsWith("continue.continueGUIView"),
+    getTabInputViewType(tab.input)?.endsWith("continue.continueGUIView"),
   );
 }
 
@@ -180,6 +200,49 @@ const getCommandsMap: (
       rulesToInclude: config.rules,
       isApply: false,
     });
+  }
+
+  const commitMessageGenerator = new CommitMessageGenerator();
+
+  function toComparablePath(fsPath: string): string {
+    const normalizedPath = path.normalize(fsPath);
+    return process.platform === "win32"
+      ? normalizedPath.toLowerCase()
+      : normalizedPath;
+  }
+
+  function isFileInRepository(
+    fileUri: vscode.Uri,
+    repository: Repository,
+  ): boolean {
+    const relativePath = path.relative(
+      toComparablePath(repository.rootUri.fsPath),
+      toComparablePath(fileUri.fsPath),
+    );
+
+    return (
+      relativePath === "" ||
+      (!relativePath.startsWith("..") && !path.isAbsolute(relativePath))
+    );
+  }
+
+  function determineTargetRepository(
+    repositories: Repository[],
+  ): Repository | undefined {
+    if (repositories.length === 0) {
+      return undefined;
+    }
+
+    const activeFileUri = vscode.window.activeTextEditor?.document.uri;
+    if (!activeFileUri || activeFileUri.scheme !== "file") {
+      return repositories[0];
+    }
+
+    return (
+      repositories.find((repository) =>
+        isFileInRepository(activeFileUri, repository),
+      ) ?? repositories[0]
+    );
   }
 
   return {
@@ -388,6 +451,145 @@ const getCommandsMap: (
       streamInlineEdit(
         "fixGrammar",
         "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
+      );
+    },
+    "continue.generateCommitMessage": async (
+      firstSelection?: unknown,
+      allSelections?: unknown,
+    ) => {
+      captureCommandTelemetry("generateCommitMessage");
+
+      const gitExtension =
+        vscode.extensions.getExtension<GitExtension>("vscode.git");
+      if (!gitExtension) {
+        void vscode.window.showWarningMessage("Git extension is not available");
+        return;
+      }
+
+      if (!gitExtension.isActive) {
+        await gitExtension.activate();
+      }
+
+      let repositories: Repository[];
+      let gitExecutable: string;
+      try {
+        repositories = gitExtension.exports.getAPI(1).repositories;
+        gitExecutable = resolveGitExecutable(gitExtension);
+      } catch {
+        void vscode.window.showWarningMessage("Git extension is not available");
+        return;
+      }
+
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.SourceControl,
+          title: "Generating commit message",
+          cancellable: false,
+        },
+        async (progress) => {
+          let lastPercentage = 0;
+          const report = (percentage: number, message: string) => {
+            const increment = Math.max(0, percentage - lastPercentage);
+            lastPercentage = percentage;
+            progress.report({ increment, message });
+          };
+
+          try {
+            report(5, "Initializing");
+
+            const toUri = (value: unknown): vscode.Uri | undefined => {
+              if (value instanceof vscode.Uri) {
+                return value;
+              }
+
+              if (typeof value !== "object" || value === null) {
+                return undefined;
+              }
+
+              const record = value as Record<string, unknown>;
+              const resourceUri = record["resourceUri"];
+              return resourceUri instanceof vscode.Uri
+                ? resourceUri
+                : undefined;
+            };
+
+            const rawSelections: unknown[] = [];
+            if (firstSelection !== undefined) {
+              rawSelections.push(firstSelection);
+            }
+
+            if (Array.isArray(allSelections)) {
+              rawSelections.push(...allSelections);
+            } else if (allSelections !== undefined) {
+              rawSelections.push(allSelections);
+            }
+
+            const selectedUris = rawSelections
+              .map((candidate) => toUri(candidate))
+              .filter((uri): uri is vscode.Uri => Boolean(uri))
+              .filter((uri) => uri.fsPath.length > 0);
+
+            const selectedRepo =
+              selectedUris.length > 0
+                ? repositories.find((candidateRepository) =>
+                    selectedUris.some((uri) =>
+                      isFileInRepository(uri, candidateRepository),
+                    ),
+                  )
+                : undefined;
+
+            report(15, "Selecting repository");
+            const repository =
+              selectedRepo ?? determineTargetRepository(repositories);
+
+            if (!repository) {
+              void vscode.window.showWarningMessage(
+                "No Git repository found in the current workspace",
+              );
+              return;
+            }
+
+            report(40, "Collecting git changes");
+            const collectedChanges = collectCommitMessageChanges({
+              gitExecutable,
+              cwd: repository.rootUri.fsPath,
+            });
+
+            if (collectedChanges.changes.length === 0) {
+              void vscode.window.showErrorMessage("No changes found");
+              return;
+            }
+
+            if (collectedChanges.mode === "unstaged") {
+              void vscode.window.showInformationMessage(
+                "Generating commit message from unstaged changes",
+              );
+            }
+
+            report(70, "Generating commit message");
+            const commitMessage =
+              await commitMessageGenerator.generateCommitMessage(
+                configHandler,
+                {
+                  mode: collectedChanges.mode,
+                  diffs: collectedChanges.diffs,
+                  changes: collectedChanges.changes,
+                  branch: collectedChanges.branch,
+                  recentCommits: collectedChanges.recentCommits,
+                  selectedFilesCount: collectedChanges.selectedFilesCount,
+                },
+              );
+            repository.inputBox.value = commitMessage;
+
+            report(100, "Done");
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+            void vscode.window.showErrorMessage(
+              `Failed to generate commit message: ${errorMessage}`,
+            );
+          }
+        },
       );
     },
     "continue.clearConsole": async () => {
