@@ -1294,4 +1294,28 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://portal.nousresearch.com",
   },
+  modelslab: {
+    title: "ModelsLab",
+    provider: "modelslab",
+    refPage: "modelslab",
+    description:
+      "ModelsLab provides uncensored chat models via an OpenAI-compatible API.",
+    longDescription:
+      "ModelsLab is a developer-first AI API platform for text-to-image, video, voice, and uncensored chat generation. Access Llama, Mistral, and other open-source models via an OpenAI-compatible endpoint. Get an API key at [modelslab.com/account/api-key](https://modelslab.com/account/api-key).",
+    icon: "modelslab.png",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    params: {
+      apiBase: "https://modelslab.com/api/uncensored-chat/v1/",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your ModelsLab API key",
+        required: true,
+      },
+    ],
+    models: [models.modelsLabLlama3_8b, models.modelsLabLlama3_70b],
+  },
 };
