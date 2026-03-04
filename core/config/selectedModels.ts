@@ -25,6 +25,7 @@ export function rectifySelectedModelsFromGlobalContext(
     "autocomplete",
     "apply",
     "edit",
+    "commitMessage",
     "embed",
     "rerank",
     "chat",

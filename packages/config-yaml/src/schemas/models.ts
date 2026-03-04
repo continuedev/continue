@@ -28,6 +28,7 @@ export const modelRolesSchema = z.enum([
   "edit",
   "apply",
   "summarize",
+  "commitMessage",
   "subagent",
 ]);
 export type ModelRole = z.infer<typeof modelRolesSchema>;
@@ -171,6 +172,7 @@ const promptTemplatesSchema = z.object({
   chat: templateSchema.optional(),
   edit: z.string().optional(),
   autocomplete: z.string().optional(),
+  commitMessage: z.string().optional(),
 });
 export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
 
