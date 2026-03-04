@@ -85,18 +85,25 @@ function executeCommandHook(
     let stdout = "";
     let stderr = "";
 
-    child.stdout?.on("data", (data: Buffer | string) => {
-      stdout += data.toString();
+    child.stdout?.setEncoding("utf8");
+    child.stdout?.on("data", (data: string) => {
+      stdout += data;
     });
 
-    child.stderr?.on("data", (data: Buffer | string) => {
-      stderr += data.toString();
+    child.stderr?.setEncoding("utf8");
+    child.stderr?.on("data", (data: string) => {
+      stderr += data;
     });
 
     // Send JSON input on stdin
     if (child.stdin) {
-      child.stdin.on("error", () => {
-        // Ignore EPIPE — child may have exited before we finished writing
+      child.stdin.on("error", (error: NodeJS.ErrnoException) => {
+        if (error.code !== "EPIPE") {
+          logger.warn(
+            `Failed writing hook input to stdin: ${handler.command}`,
+            error,
+          );
+        }
       });
       child.stdin.write(JSON.stringify(input));
       child.stdin.end();
@@ -148,7 +155,8 @@ function executeCommandHook(
 // ---------------------------------------------------------------------------
 
 function interpolateEnvVars(value: string, allowedVars: string[]): string {
-  return value.replace(/\$\{?(\w+)\}?/g, (_, varName) => {
+  return value.replace(/\$\{(\w+)\}|\$(\w+)/g, (_, braced, bare) => {
+    const varName = braced ?? bare;
     if (allowedVars.includes(varName)) {
       return process.env[varName] ?? "";
     }
