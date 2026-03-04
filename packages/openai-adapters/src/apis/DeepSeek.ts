@@ -1,7 +1,9 @@
 import { streamSse } from "@continuedev/fetch";
 import {
   ChatCompletion,
+  ChatCompletionAssistantMessageParam,
   ChatCompletionChunk,
+  ChatCompletionToolMessageParam,
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
   Model,
@@ -24,6 +26,7 @@ import {
   convertToFimDeepSeekRequestBody,
   isReasoningEnabled,
 } from "../util/deepseek-converters.js";
+import type { ChatDeepSeekRequestBody } from "../util/deepseek-types.js";
 
 export const DEEPSEEK_API_BASE = "https://api.deepseek.com/";
 // Default configuration values
@@ -54,7 +57,7 @@ export class DeepSeekApi extends OpenAIApi {
     throw new Error(`DeepSeek API error (${resp.status}): ${errorText}`);
   }
 
-  // checks for signs of native tools in the request
+  // checks for signs of native tools in the conversation
   private hasToolsInConversation(body: ChatCompletionCreateParamsExt): boolean {
     if (body.tools && body.tools.length > 0) {
       return true;
@@ -65,18 +68,20 @@ export class DeepSeekApi extends OpenAIApi {
     }
     // Check if any message contains tool_calls or tool_call_id
     for (const message of body.messages ?? []) {
-      const msg = message as any;
-
-      if (
-        message.role === "assistant" &&
-        Array.isArray(msg.tool_calls) &&
-        msg.tool_calls.length > 0
-      ) {
-        return true;
+      if (message.role === "assistant") {
+        const assistantMsg = message as ChatCompletionAssistantMessageParam;
+        if (
+          Array.isArray(assistantMsg.tool_calls) &&
+          assistantMsg.tool_calls.length > 0
+        ) {
+          return true;
+        }
       }
-
-      if (message.role === "tool" && typeof msg.tool_call_id === "string") {
-        return true;
+      if (message.role === "tool") {
+        const toolMsg = message as ChatCompletionToolMessageParam;
+        if (typeof toolMsg.tool_call_id === "string") {
+          return true;
+        }
       }
     }
 
@@ -89,11 +94,11 @@ export class DeepSeekApi extends OpenAIApi {
    */
   private prepareChatCompletionRequest(body: ChatCompletionCreateParamsExt): {
     endpoint: URL;
-    deepSeekBody: any;
+    deepSeekBody: ChatDeepSeekRequestBody;
   } {
     const warnings: string[] = [];
 
-    const lastMessage = body.messages.at(-1);
+    const lastMessage = body.messages.length > 0 ? body.messages[body.messages.length - 1] : undefined;
     const hasTools = this.hasToolsInConversation(body);
 
     // Prefix completion requires:
@@ -133,10 +138,8 @@ export class DeepSeekApi extends OpenAIApi {
     body: ChatCompletionCreateParamsExt,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
-console.log(" ==== DeepSeek chatcompletionNonStream ", body );    
-
     const { endpoint, deepSeekBody } = this.prepareChatCompletionRequest(body);
-console.log(" ==== DeepSeek chatcompletionNonStream ", deepSeekBody );    
+
 
     // Execute the API request
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
@@ -202,7 +205,6 @@ console.log(" ==== DeepSeek chatcompletionNonStream ", deepSeekBody );
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const { endpoint, deepSeekBody } = this.prepareChatCompletionRequest(body);
-console.log(" ==== DeepSeek chatcompletionStream ", deepSeekBody );    
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify({
@@ -228,7 +230,7 @@ console.log(" ==== DeepSeek chatcompletionStream ", deepSeekBody );
     let hasContent = false;
     let hasToolCalls = false;
 
-    for await (const chunk of streamSse(resp as any)) {
+    for await (const chunk of streamSse(resp)) {
       if (chunk.choices?.[0]?.delta?.reasoning_content) {
         reasoningBuffer += chunk.choices[0].delta.reasoning_content;
       }
@@ -251,7 +253,7 @@ console.log(" ==== DeepSeek chatcompletionStream ", deepSeekBody );
         // Do not forward provider finish_reason early; emit it as a final chunk below.
         const sanitized: ChatCompletionChunk = {
           ...chunk,
-          choices: chunk.choices?.map((c: any) => ({
+          choices: chunk.choices?.map((c: ChatCompletionChunk.Choice) => ({
             ...c,
             finish_reason: null,
           })),
@@ -280,7 +282,7 @@ console.log(" ==== DeepSeek chatcompletionStream ", deepSeekBody );
             delta: { content: reasoningBuffer },
             finish_reason: null,
           },
-        ] as any,
+        ] as ChatCompletionChunk.Choice[],
       };
       yield repairChunk;
     }
@@ -308,7 +310,7 @@ console.log(" ==== DeepSeek chatcompletionStream ", deepSeekBody );
 
   // Performs a streaming Fill-in-Middle (FIM) completion request (Beta API)
   async *fimStream(
-    body: FimCreateParamsStreaming & { messages?: Array<any> },
+    body: FimCreateParamsStreaming & { messages?: Array<unknown> },
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const warnings: string[] = [];
@@ -317,14 +319,6 @@ console.log(" ==== DeepSeek chatcompletionStream ", deepSeekBody );
 
     // Log any warnings about unsupported features
     this._processWarnings(warnings);
-    signal?.addEventListener("abort", () => {
-      console.log(
-        "Signal aborted at",
-        new Date().toISOString(),
-        "reason:",
-        signal.reason,
-      );
-    });
     // Execute the streaming API request
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
@@ -341,7 +335,7 @@ console.log(" ==== DeepSeek chatcompletionStream ", deepSeekBody );
       await this._throwDeepSeekError(resp);
     }
     // Process the streaming response
-    for await (const chunk of streamSse(resp as any)) {
+    for await (const chunk of streamSse(resp)) {
       if (chunk.choices && chunk.choices.length > 0) {
         yield chatChunk({
           content: chunk.choices[0].text || "",

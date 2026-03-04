@@ -2,6 +2,7 @@ import {
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
   ChatCompletionMessageParam,
+  ChatCompletionMessageToolCall,
   ChatCompletionTool,
   ChatCompletionToolChoiceOption,
 } from "openai/resources/index";
@@ -38,7 +39,7 @@ export type OpenAICompatibleMessage = ChatCompletionMessageParam & {
   reasoning?: string;
   reasoning_content?: string;
   prefix?: boolean;
-  tool_calls?: any[];
+  tool_calls?: ChatCompletionMessageToolCall[];
   tool_call_id?: string;
   name?: string;
 };
@@ -79,19 +80,26 @@ export function validateAndFilterContent(
  * Validates the response format parameter
  */
 export function validateResponseFormat(
-  responseFormat: any,
+  responseFormat: unknown,
   warnings: string[] = [],
 ): DeepSeekResponseFormat | undefined {
-  if (!responseFormat?.type) return undefined;
-
-  if (!["text", "json_object"].includes(responseFormat.type)) {
+  // Check if responseFormat is an object with a type property
+  if (
+    !responseFormat ||
+    typeof responseFormat !== 'object' ||
+    !('type' in responseFormat) ||
+    typeof (responseFormat as any).type !== 'string'
+  ) {
+    return undefined;
+  }
+  const type = (responseFormat as any).type;
+  if (!["text", "json_object"].includes(type)) {
     warnings.push(
-      `Invalid response_format.type: ${responseFormat.type}. Must be 'text' or 'json_object'.`,
+      `Invalid response_format.type: ${type}. Must be 'text' or 'json_object'.`,
     );
     return undefined;
   }
-
-  return responseFormat as DeepSeekResponseFormat;
+  return { type: type as "text" | "json_object" };
 }
 
 /**
@@ -150,29 +158,25 @@ export function validateAndFilterTools(
     filteredTools = filteredTools.slice(0, 128);
   }
 
-  // Transform tools to DeepSeek format (strict must be boolean | undefined, not null)
   return filteredTools.map((tool) => {
-    const funcTool = tool as any; // ChatCompletionFunctionTool
+    // ChatCompletionTool's function property is of type FunctionDefinition
+    // We need to handle the strict field which may be present as a DeepSeek extension
+    const func = tool.function;
+    // Access strict via type assertion since it's not part of standard FunctionDefinition
+    const strict = (func as any).strict;
     const result: DeepSeekTool = {
       type: "function",
       function: {
-        name: funcTool.function.name,
-        ...(funcTool.function.description && {
-          description: funcTool.function.description,
-        }),
-        ...(funcTool.function.parameters && {
-          parameters: funcTool.function.parameters,
-        }),
-        ...(funcTool.function.strict !== null &&
-          funcTool.function.strict !== undefined && {
-            strict: funcTool.function.strict,
-          }),
+        name: func.name,
+        ...(func.description && { description: func.description }),
+        ...(func.parameters && { parameters: func.parameters }),
+        // DeepSeek API expects strict to be boolean | undefined, not null
+        ...(strict !== null && strict !== undefined && { strict }),
       },
     };
     return result;
   });
 }
-1;
 /**
  * Validates and processes stop sequences
  */
@@ -337,7 +341,8 @@ export function convertToChatPrefixDeepSeekRequestBody(
   const chatBody = convertToChatDeepSeekRequestBody(body, warnings);
 
   if (chatBody.messages[chatBody.messages.length - 1].role === "assistant") {
-    chatBody.messages[chatBody.messages.length - 1].prefix = true; // it's save to force prefix to true
+    // Force prefix to true for assistant messages in prefix completion mode
+    chatBody.messages[chatBody.messages.length - 1].prefix = true;
   }
 
   return chatBody;
@@ -404,7 +409,7 @@ export function validateAndPrepareMessages(
   const result: DeepSeekMessage[] = [];
   let firstUserMsgPassed = false;
 
-  // Process messages in reverse to preserve reasoning content
+  // Process messages in reverse to preserve reasoning content for current conversation turn
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
     const prepared = prepareMessage(msg, i, warnings);
@@ -414,7 +419,9 @@ export function validateAndPrepareMessages(
         firstUserMsgPassed = true;
       }
 
-      // Copy reasoning content if reasoning mode and after last user message (= here first reversed)
+      // !!!!! DEEPSEEK test ist falsch, die logik hier ist korrekt !!!!!!!
+      // korrigiere den test, nicht den converter!
+      // Copy reasoning content if reasoning mode and after last user/system message boundary
       if (
         isReasoningMode &&
         !firstUserMsgPassed &&
@@ -425,7 +432,7 @@ export function validateAndPrepareMessages(
           // Reasoning field exists (could be empty string) - preserve it
           prepared.reasoning_content = reasoningContent;
         } else {
-          // in reasoning mode, every assistant msg in current chain must have reasoning
+          // In reasoning mode, every assistant message in current turn must have reasoning_content
           prepared.reasoning_content = "";
         }
       }
@@ -453,12 +460,12 @@ export function prepareMessage(
 ): DeepSeekMessage | undefined {
   if (!msg) return undefined;
 
-  // const OpenAIRoles = ['developer', 'system', 'user', 'assistant', 'tool'];
+  // DeepSeek supports: system, user, assistant, tool (developer is converted to system)
   const validDeepSeekRoles = ["system", "user", "assistant", "tool"];
 
   const role = msg.role === "developer" ? "system" : msg.role;
 
-  if (!validDeepSeekRoles.includes(role as any)) {
+  if (!validDeepSeekRoles.includes(role as DeepSeekMessage['role'])) {
     warnings.push(`Invalid message role: ${msg.role} at index ${index}. (removed from request)`);
     return undefined;
   }
@@ -483,6 +490,7 @@ export function prepareMessage(
 export function isReasoningEnabled(
   body: ChatCompletionCreateParamsExt,
 ): boolean {
+  // Reasoning is enabled for deepseek-reasoner model or when explicitly set
   return (
     body.thinking?.type === "enabled" || body.model === "deepseek-reasoner"
   );

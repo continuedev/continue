@@ -70,12 +70,13 @@ describe("DeepSeek Converters", () => {
         "I need to summarize the weather",
       );
 
-      // Assistant before last user message (first assistant) should keep its reasoning_content
+      // Assistant before last user message (first assistant) should NOT have reasoning_content
+      // because it's before the last user message boundary
       const firstAssistant = result.find(
         (msg: DeepSeekMessage) =>
           msg.role === "assistant" && msg.content === "Hi",
       );
-      expect(firstAssistant?.reasoning_content).toBe("I should greet back");
+      expect(firstAssistant?.reasoning_content).toBeUndefined();
 
       expect(warnings).toEqual([]);
     });
@@ -113,22 +114,14 @@ describe("DeepSeek Converters", () => {
 
       const result = validateAndPrepareMessages(messages, warnings, true);
 
-      // Both assistants with tool calls should have reasoning_content (empty string)
-      const assistantsWithToolCalls = result.filter(
-        (msg: DeepSeekMessage) =>
-          msg.role === "assistant" && msg.tool_calls?.length,
+      // All assistant messages after last user message should have reasoning_content (empty string)
+      const allAssistants = result.filter(
+        (msg: DeepSeekMessage) => msg.role === "assistant",
       );
-      expect(assistantsWithToolCalls).toHaveLength(2);
-      assistantsWithToolCalls.forEach((assistant: DeepSeekMessage) => {
+      expect(allAssistants).toHaveLength(3);
+      allAssistants.forEach((assistant: DeepSeekMessage) => {
         expect(assistant.reasoning_content).toBe("");
       });
-
-      // Final assistant without tool calls should NOT have reasoning_content added
-      const finalAssistant = result.find(
-        (msg: DeepSeekMessage) =>
-          msg.role === "assistant" && msg.content === "Here is the result",
-      );
-      expect(finalAssistant?.reasoning_content).toBeUndefined();
 
       expect(warnings).toEqual([]);
     });
@@ -240,7 +233,7 @@ describe("DeepSeek Converters", () => {
         "user",
         "assistant",
       ]);
-      expect(warnings).toContain("Invalid message role: invalid at index 1");
+      expect(warnings).toContain("Invalid message role: invalid at index 1. (removed from request)");
     });
   });
 

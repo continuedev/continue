@@ -207,7 +207,7 @@ class DeepSeek extends OpenAI {
    * All completions must go through the chat or FIM endpoints.
    */
   supportsCompletions(): boolean {
-    return false; // possible with converter to fim
+    return false; // FIM could be used as workaround
   }
 
   /**
