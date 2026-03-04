@@ -1,9 +1,6 @@
 import { loadAuthConfig } from "../auth/workos.js";
 import { initializeWithOnboarding } from "../onboarding.js";
-import {
-  setBetaSubagentToolEnabled,
-  setBetaUploadArtifactToolEnabled,
-} from "../tools/toolsConfig.js";
+import { setBetaUploadArtifactToolEnabled } from "../tools/toolsConfig.js";
 import { logger } from "../util/logger.js";
 
 import { AgentFileService } from "./AgentFileService.js";
@@ -21,6 +18,7 @@ import { quizService } from "./QuizService.js";
 import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import { StorageSyncService } from "./StorageSyncService.js";
+import { subAgentService } from "./SubAgentService.js";
 import { SystemMessageService } from "./SystemMessageService.js";
 import {
   InitializeToolServiceOverrides,
@@ -66,9 +64,6 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   // Configure beta tools based on command options
   if (commandOptions.betaUploadArtifactTool) {
     setBetaUploadArtifactToolEnabled(true);
-  }
-  if (commandOptions.betaSubagentTool) {
-    setBetaSubagentToolEnabled(true);
   }
   // Handle onboarding for TUI mode (headless: false) unless explicitly skipped
   if (!initOptions.headless && !initOptions.skipOnboarding) {
@@ -332,6 +327,12 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
     [], // No dependencies
   );
 
+  serviceContainer.register(
+    SERVICE_NAMES.SUBAGENT,
+    () => subAgentService.initialize(),
+    [], // No dependencies
+  );
+
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();
@@ -397,6 +398,7 @@ export const services = {
   gitAiIntegration: gitAiIntegrationService,
   backgroundJobs: backgroundJobService,
   quiz: quizService,
+  subAgent: subAgentService,
 } as const;
 
 export type ServicesType = typeof services;

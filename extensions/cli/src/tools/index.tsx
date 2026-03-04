@@ -31,11 +31,8 @@ import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
 import { skillsTool } from "./skills.js";
-import { subagentTool } from "./subagent.js";
-import {
-  isBetaSubagentToolEnabled,
-  isBetaUploadArtifactToolEnabled,
-} from "./toolsConfig.js";
+import { subagentParallelTool, subagentTool } from "./subagent.js";
+import { isBetaUploadArtifactToolEnabled } from "./toolsConfig.js";
 import {
   type Tool,
   type ToolCall,
@@ -129,9 +126,8 @@ export async function getAllAvailableTools(
     tools.push(exitTool);
   }
 
-  if (isBetaSubagentToolEnabled()) {
-    tools.push(await subagentTool());
-  }
+  tools.push(await subagentTool());
+  tools.push(await subagentParallelTool());
 
   tools.push(await skillsTool());
 

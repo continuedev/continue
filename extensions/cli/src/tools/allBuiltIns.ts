@@ -1,4 +1,7 @@
-import { SUBAGENT_TOOL_META } from "../subagent/index.js";
+import {
+  SUBAGENT_PARALLEL_TOOL_META,
+  SUBAGENT_TOOL_META,
+} from "../subagent/index.js";
 
 import { askQuestionTool } from "./askQuestion.js";
 import { editTool } from "./edit.js";
@@ -31,6 +34,7 @@ export const ALL_BUILT_IN_TOOLS = [
   searchCodeTool,
   statusTool,
   SUBAGENT_TOOL_META,
+  SUBAGENT_PARALLEL_TOOL_META,
   SKILLS_TOOL_META,
   uploadArtifactTool,
   viewDiffTool,

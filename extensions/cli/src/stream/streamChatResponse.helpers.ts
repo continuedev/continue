@@ -16,6 +16,7 @@ import {
   serviceContainer,
   services,
 } from "../services/index.js";
+import { subAgentExecutionContext } from "../services/SubAgentService.js";
 import { trackSessionUsage } from "../session.js";
 import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
@@ -549,10 +550,12 @@ export async function executeStreamedToolCalls(
       callbacks?.onToolStart?.(call.name, call.arguments);
 
       // Check tool permissions using helper
+      const ctx = subAgentExecutionContext.getStore();
       const permissionState =
-        await serviceContainer.get<ToolPermissionServiceState>(
+        ctx?.permissions ??
+        (await serviceContainer.get<ToolPermissionServiceState>(
           SERVICE_NAMES.TOOL_PERMISSIONS,
-        );
+        ));
       const permissionResult = await checkToolPermissionApproval(
         permissionState.permissions,
         call,
