@@ -285,7 +285,11 @@ describe("hookConfig", () => {
 // hookRunner tests
 // ---------------------------------------------------------------------------
 
-describe("hookRunner", () => {
+// hookRunner tests spawn /bin/sh subprocesses — skip on Windows where cmd.exe
+// has incompatible shell syntax (redirections, single-quote echo, sleep, etc.)
+const describeUnix = process.platform === "win32" ? describe.skip : describe;
+
+describeUnix("hookRunner", () => {
   describe("runHooks - command execution", () => {
     it("executes a simple command hook and returns stdout", async () => {
       const config: HooksConfig = {
