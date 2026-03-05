@@ -691,7 +691,9 @@ declare global {
     getExternalUri?(uri: string): Promise<string>;
   
     runCommand(command: string): Promise<void>;
-  
+
+    runCommandWithOutput(command: string, cwd?: string): Promise<string>;
+
     saveFile(filepath: string): Promise<void>;
   
     readFile(filepath: string): Promise<string>;

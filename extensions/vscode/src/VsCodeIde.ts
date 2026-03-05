@@ -355,6 +355,92 @@ class VsCodeIde implements IDE {
     terminal.sendText(command, false);
   }
 
+  async runCommandWithOutput(command: string, cwd?: string): Promise<string> {
+    const terminal = vscode.window.createTerminal({
+      name: "Continue",
+      cwd: cwd ? vscode.Uri.parse(cwd) : undefined,
+    });
+
+    const shellIntegration = await this.waitForShellIntegration(
+      terminal,
+      10000,
+    );
+
+    if (!shellIntegration) {
+      terminal.show();
+      terminal.sendText(command, true);
+      return "";
+    }
+
+    try {
+      const execution = shellIntegration.executeCommand(command);
+      let output = "";
+
+      for await (const chunk of execution.read()) {
+        output += chunk;
+      }
+
+      const exitCode = await execution.exitCode;
+      if (exitCode !== undefined && exitCode !== 0) {
+        output += `\n[Exit code: ${exitCode}]`;
+      }
+
+      // Strip VS Code shell integration OSC sequences (]633;...) but preserve
+      // ANSI color/formatting codes (e.g. \033[31m) which are part of command output
+      output = output.replace(/\x1b\]633;[^\x07]*\x07/g, "");
+      // Also strip OSC sequences that lost their escape byte during read()
+      output = output.replace(/\]633;[^\n]*/g, "");
+      output = output.trim();
+
+      terminal.dispose();
+      return output;
+    } catch (error) {
+      console.error(
+        "[Continue] shellIntegration.executeCommand failed:",
+        error,
+      );
+      terminal.dispose();
+      return "";
+    }
+  }
+
+  private async waitForShellIntegration(
+    terminal: vscode.Terminal,
+    timeoutMs: number,
+  ): Promise<any> {
+    if ((terminal as any).shellIntegration) {
+      return (terminal as any).shellIntegration;
+    }
+
+    if (!(vscode.window as any).onDidChangeTerminalShellIntegration) {
+      return undefined;
+    }
+
+    return new Promise<any>((resolve) => {
+      const timeout = setTimeout(() => {
+        disposable.dispose();
+        resolve(undefined);
+      }, timeoutMs);
+
+      const disposable = (
+        vscode.window as any
+      ).onDidChangeTerminalShellIntegration((e: any) => {
+        if (e.terminal === terminal) {
+          clearTimeout(timeout);
+          disposable.dispose();
+          resolve(e.shellIntegration);
+        }
+      });
+
+      // Race condition guard
+      if ((terminal as any).shellIntegration) {
+        clearTimeout(timeout);
+        disposable.dispose();
+        resolve((terminal as any).shellIntegration);
+      }
+    });
+  }
+
   async saveFile(fileUri: string): Promise<void> {
     await this.ideUtils.saveFile(vscode.Uri.parse(fileUri));
   }
