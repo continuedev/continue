@@ -55,6 +55,7 @@ describe("Anthropic Adapter Tests", () => {
               role: "user",
               content: [
                 {
+                  cache_control: { type: "ephemeral" },
                   type: "text",
                   text: "hello",
                 },
@@ -119,6 +120,7 @@ describe("Anthropic Adapter Tests", () => {
               role: "user",
               content: [
                 {
+                  cache_control: { type: "ephemeral" },
                   type: "text",
                   text: "hello",
                 },
@@ -184,6 +186,7 @@ describe("Anthropic Adapter Tests", () => {
               role: "user",
               content: [
                 {
+                  cache_control: { type: "ephemeral" },
                   type: "text",
                   text: "hello",
                 },

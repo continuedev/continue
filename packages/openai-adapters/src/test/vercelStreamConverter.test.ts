@@ -37,7 +37,7 @@ describe("convertVercelStreamPart", () => {
     expect(result?.choices[0].delta.content).toBe("Let me think...");
   });
 
-  test("converts tool-call to chat chunk", () => {
+  test("returns null for tool-call (handled by tool-input-start/delta)", () => {
     const part: VercelStreamPart = {
       type: "tool-call",
       toolCallId: "call_abc123",
@@ -47,17 +47,7 @@ describe("convertVercelStreamPart", () => {
 
     const result = convertVercelStreamPart(part, options);
 
-    expect(result).not.toBeNull();
-    expect(result?.choices[0].delta.tool_calls).toHaveLength(1);
-    expect(result?.choices[0].delta.tool_calls?.[0]).toEqual({
-      index: 0,
-      id: "call_abc123",
-      type: "function",
-      function: {
-        name: "readFile",
-        arguments: JSON.stringify({ filepath: "/path/to/file" }),
-      },
-    });
+    expect(result).toBeNull();
   });
 
   test("converts tool-input-delta to chat chunk", () => {
@@ -170,7 +160,7 @@ describe("convertVercelStreamPart", () => {
     expect(result).toBeNull();
   });
 
-  test("returns null for tool-input-start", () => {
+  test("converts tool-input-start to initial tool call chunk with id and name", () => {
     const part: VercelStreamPart = {
       type: "tool-input-start",
       id: "call_abc123",
@@ -179,7 +169,17 @@ describe("convertVercelStreamPart", () => {
 
     const result = convertVercelStreamPart(part, options);
 
-    expect(result).toBeNull();
+    expect(result).not.toBeNull();
+    expect(result?.choices[0].delta.tool_calls).toHaveLength(1);
+    expect(result?.choices[0].delta.tool_calls?.[0]).toEqual({
+      index: 0,
+      id: "call_abc123",
+      type: "function",
+      function: {
+        name: "readFile",
+        arguments: "",
+      },
+    });
   });
 });
 
@@ -191,6 +191,9 @@ describe("convertVercelStream", () => {
       { type: "start-step" },
       { type: "text-delta", id: "text-1", text: "Hello " },
       { type: "text-delta", id: "text-1", text: "world" },
+      { type: "tool-input-start", id: "call_1", toolName: "test" },
+      { type: "tool-input-delta", id: "call_1", delta: '{"arg":"value"}' },
+      { type: "tool-input-end", id: "call_1" },
       {
         type: "tool-call",
         toolCallId: "call_1",
@@ -221,16 +224,20 @@ describe("convertVercelStream", () => {
       chunks.push(chunk);
     }
 
-    // Should only get chunks for: text-delta (2), tool-call (1), finish (1) = 4 chunks
-    // start-step and finish-step are filtered out
-    expect(chunks).toHaveLength(4);
+    // Should get chunks for: text-delta (2), tool-input-start (1), tool-input-delta (1), finish (1) = 5
+    // start-step, tool-input-end, tool-call, and finish-step are filtered out
+    expect(chunks).toHaveLength(5);
 
     expect(chunks[0].choices[0].delta.content).toBe("Hello ");
     expect(chunks[1].choices[0].delta.content).toBe("world");
+    expect(chunks[2].choices[0].delta.tool_calls?.[0].id).toBe("call_1");
     expect(chunks[2].choices[0].delta.tool_calls?.[0].function?.name).toBe(
       "test",
     );
-    expect(chunks[3].usage).toBeDefined();
+    expect(chunks[3].choices[0].delta.tool_calls?.[0].function?.arguments).toBe(
+      '{"arg":"value"}',
+    );
+    expect(chunks[4].usage).toBeDefined();
   });
 
   test("throws error when stream contains error event", async () => {
@@ -262,11 +269,6 @@ describe("convertVercelStream", () => {
       { type: "start-step" },
       { type: "source", source: {} },
       { type: "file", file: { name: "test.txt", content: "content" } },
-      {
-        type: "tool-input-start",
-        id: "call_1",
-        toolName: "test",
-      },
       { type: "tool-result", toolCallId: "call_1", result: {} },
     ];
 

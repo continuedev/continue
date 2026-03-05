@@ -40,6 +40,7 @@ import {
 } from "./useChat.stream.helpers.js";
 import {
   ActivePermissionRequest,
+  ActiveQuizQuestion,
   AttachedFile,
   UseChatProps,
 } from "./useChat.types.js";
@@ -168,6 +169,8 @@ export function useChat({
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [activePermissionRequest, setActivePermissionRequest] =
     useState<ActivePermissionRequest | null>(null);
+  const [activeQuizQuestion, setActiveQuizQuestion] =
+    useState<ActiveQuizQuestion | null>(null);
   const [compactionIndex, setCompactionIndex] = useState<number | null>(() => {
     // When resuming or forking, check for compaction markers in the loaded history
     if ((resume || fork) && currentSession.history.length > 0) {
@@ -192,6 +195,27 @@ export function useChat({
 
     return () => {
       messageQueue.off("messageQueued", onMessageQueued);
+    };
+  }, []);
+
+  // Set up quiz service listeners
+  useEffect(() => {
+    const quizSvc = services.quiz;
+
+    const onQuestionRequested = (pending: ActiveQuizQuestion) => {
+      setActiveQuizQuestion(pending);
+    };
+
+    const onQuestionAnswered = () => {
+      setActiveQuizQuestion(null);
+    };
+
+    quizSvc.on("questionRequested", onQuestionRequested);
+    quizSvc.on("questionAnswered", onQuestionAnswered);
+
+    return () => {
+      quizSvc.off("questionRequested", onQuestionRequested);
+      quizSvc.off("questionAnswered", onQuestionAnswered);
     };
   }, []);
 
@@ -829,6 +853,11 @@ export function useChat({
     }
   };
 
+  const handleQuizAnswer = (requestId: string, answer: string) => {
+    setActiveQuizQuestion(null);
+    services.quiz.answerQuestion(requestId, answer);
+  };
+
   return {
     chatHistory,
     setChatHistory: setChatHistory,
@@ -839,6 +868,7 @@ export function useChat({
     inputMode,
     attachedFiles,
     activePermissionRequest,
+    activeQuizQuestion,
     wasInterrupted,
     queuedMessages,
     handleUserMessage,
@@ -847,5 +877,6 @@ export function useChat({
     resetChatHistory,
     handleEditMessage,
     handleToolPermissionResponse,
+    handleQuizAnswer,
   };
 }

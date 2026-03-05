@@ -50,6 +50,20 @@ This is a CLI tool for Continue Dev that provides an interactive AI-assisted dev
 
 6. **MCP Integration** (`src/mcp.ts`): Model Context Protocol service for extended tool capabilities
 
+7. **Hooks System** (`src/hooks/`): Event interception system for extending CLI behavior
+   - `HookService.ts`: Service container integration, loads config and fires events
+   - `hookConfig.ts`: Loads hooks from settings files, merges configs from multiple sources
+   - `hookRunner.ts`: Executes hook handlers (command, HTTP) with exit code semantics
+   - `fireHook.ts`: Convenience functions for firing events from integration points
+   - `types.ts`: Claude Code-compatible type definitions for hook inputs/outputs
+   - **Config locations** (lowest to highest precedence):
+     - `~/.claude/settings.json`, `~/.continue/settings.json` (user-global)
+     - `.claude/settings.json`, `.continue/settings.json` (project)
+     - `.claude/settings.local.json`, `.continue/settings.local.json` (project-local)
+   - **Exit code semantics**: 0 = proceed, 2 = block (stderr becomes feedback), other = non-blocking error
+   - **JSON output**: Optional structured output with `hookSpecificOutput` for fine-grained control
+   - **Hook types**: `command` (shell), `http` (POST request), `prompt`/`agent` (not yet implemented)
+
 ### Key Features
 
 - **Streaming Responses**: Real-time AI response streaming (`streamChatResponse.ts`)

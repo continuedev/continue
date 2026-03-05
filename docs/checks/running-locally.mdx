@@ -12,17 +12,15 @@ Install the [`check`](https://github.com/continuedev/skills?tab=readme-ov-file#c
 npx skills add continuedev/skills --skill check
 ```
 
+If you don't have any checks yet, see [Write Your First Check](/checks/quickstart).
+
 ## Run checks
 
-Type `/check` in your coding agent. It discovers every check file in `.continue/checks/`, runs each one as a subagent against your current branch, and reports the results. To run a single check, pass the file path: `/check .continue/checks/security-review.md`.
+Type `/check` in your coding agent. It discovers every check file in `.continue/checks/`, runs each one as a sub-agent against your current branch, and reports the results.
 
 ```
 /check
 ```
-
-![Terminal output showing checks being discovered and launched](/images/checks-local-running.png)
-
-![Check results summary showing pass, fail, and warning status for each check](/images/checks-local-results.png)
 
 ## Iterate on a check
 
@@ -34,7 +32,7 @@ The migration safety check is flagging additive-only migrations as failures. Upd
 
 ## Run checks automatically
 
-You can add `/check` to your `AGENTS.md` so your coding agent runs checks automatically as part of its workflow — for example, after creating a PR:
+Add `/check` to your `AGENTS.md` so your coding agent runs checks as part of its workflow:
 
 ```markdown AGENTS.md
 After creating or updating a pull request, run /check and fix any failures before requesting review.
@@ -44,4 +42,4 @@ After creating or updating a pull request, run /check and fix any failures befor
 
 Running checks locally uses your existing coding agent and credits (Claude Max, API key, etc.). There's nothing extra to install or configure — if your agent can read your repo, it can run your checks.
 
-For running checks automatically on every PR in CI, see [Run Checks in CI](/checks/running-in-ci).
+To run checks automatically on every PR in CI, see [Run Checks in CI](/checks/running-in-ci).

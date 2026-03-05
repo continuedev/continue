@@ -6,6 +6,7 @@
  * When adding a new built-in tool, update both this list and ALL_BUILT_IN_TOOLS in allBuiltIns.ts.
  */
 export const BUILT_IN_TOOL_NAMES = [
+  "AskQuestion",
   "Edit",
   "Exit",
   "Fetch",

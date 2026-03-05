@@ -14,6 +14,7 @@
     "test:ui": "vitest --ui",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:smoke": "node smoke-test.mjs",
+    "test:smoke-api": "vitest run --config vitest.smoke-api.config.ts",
     "build:tsc": "tsc -p tsconfig.build.json",
     "build:local-deps": "cd ../../packages/config-types && npm i && npm run build && cd ../fetch && npm i && npm run build && cd ../llm-info && npm i && npm run build && cd ../terminal-security && npm i && npm run build && cd ../config-yaml && npm i && npm run build && cd ../openai-adapters && npm i && npm run build && cd ../../core && npm i && npm run build && cd ../extensions/cli && npm i",
     "build:validate": "node validate-aliases.mjs",
