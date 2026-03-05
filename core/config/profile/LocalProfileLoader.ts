@@ -58,7 +58,7 @@ export default class LocalProfileLoader implements IProfileLoader {
         if (fs.existsSync(configPath)) {
           const content = fs.readFileSync(configPath, "utf-8");
           const parsed = parseConfigYaml(content);
-          this.description.title = parsed.name;
+          this.description.title = parsed.name ?? "Local Config";
         }
       } catch (e) {
         // Keep "Local Config" as fallback

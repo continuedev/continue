@@ -239,9 +239,7 @@ describe("applyToolOverrides", () => {
     ];
     const result = applyToolOverrides(tools, overrides);
 
-    expect(result.tools[0].function.description).toBe(
-      "Custom MCP description",
-    );
+    expect(result.tools[0].function.description).toBe("Custom MCP description");
     // Should remain undefined — don't promote a dynamic tool to predefined
     expect(result.tools[0].systemMessageDescription).toBeUndefined();
   });

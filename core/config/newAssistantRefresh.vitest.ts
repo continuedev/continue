@@ -73,9 +73,7 @@ describe("isContinueAgentConfigFile", () => {
 
   it("should not match non-YAML files in agents directory", () => {
     expect(
-      isContinueAgentConfigFile(
-        "file:///workspace/.continue/agents/readme.md",
-      ),
+      isContinueAgentConfigFile("file:///workspace/.continue/agents/readme.md"),
     ).toBe(false);
     expect(
       isContinueAgentConfigFile(
@@ -96,8 +94,8 @@ describe("isContinueAgentConfigFile", () => {
   });
 
   it("should not match non-.continue YAML files", () => {
-    expect(
-      isContinueAgentConfigFile("file:///workspace/src/config.yaml"),
-    ).toBe(false);
+    expect(isContinueAgentConfigFile("file:///workspace/src/config.yaml")).toBe(
+      false,
+    );
   });
 });

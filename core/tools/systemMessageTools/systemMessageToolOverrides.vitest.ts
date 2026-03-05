@@ -31,15 +31,20 @@ function makeLlmStub(toolOverrides?: ToolOverride[]): ILLM {
 
 /** Minimal IDE stub — finalToBrowserConfig only calls ide.getIdeSettings(). */
 const mockIde = {
-  getIdeSettings: () =>
-    Promise.resolve({ continueTestEnvironment: "none" }),
+  getIdeSettings: () => Promise.resolve({ continueTestEnvironment: "none" }),
 } as any;
 
 /** Build a minimal ContinueConfig with the given chat model. */
 function makeConfig(chatModel: ILLM): ContinueConfig {
   const roles: ModelRole[] = [
-    "chat", "edit", "apply", "embed",
-    "autocomplete", "rerank", "summarize", "subagent",
+    "chat",
+    "edit",
+    "apply",
+    "embed",
+    "autocomplete",
+    "rerank",
+    "summarize",
+    "subagent",
   ];
   const modelsByRole = Object.fromEntries(
     roles.map((r) => [r, r === "chat" ? [chatModel] : []]),
