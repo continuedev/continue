@@ -193,6 +193,54 @@ describe("generateToolsSystemMessage", () => {
     expect(hasDynamicToolsSection).toBe(true);
   });
 
+  it("should not duplicate predefined tools in dynamic section when both types present", () => {
+    const tools: Tool[] = [
+      {
+        function: {
+          name: "builtin_tool",
+          description: "A built-in tool",
+          parameters: {
+            type: "object",
+            properties: {},
+            required: [],
+          },
+        },
+        systemMessageDescription: {
+          prefix: "Use this built-in tool",
+        },
+        ...SHARED_TOOL_FIELDS,
+      },
+      {
+        function: {
+          name: "mcp_tool",
+          description: "An MCP tool",
+          parameters: {
+            type: "object",
+            properties: {
+              query: {
+                type: "string",
+                description: "Search query",
+              },
+            },
+            required: ["query"],
+          },
+        },
+        ...SHARED_TOOL_FIELDS,
+      },
+    ];
+
+    const result = generateToolsSystemMessage(tools, framework);
+
+    // builtin_tool should appear once via predefined section (systemMessageDescription)
+    // mcp_tool should appear once via dynamic section (toolToSystemToolDefinition)
+    // Bug: without fix, builtin_tool appears TWICE — once in each section
+    const builtinOccurrences = result.split("TOOL_NAME: builtin_tool").length - 1;
+    const mcpOccurrences = result.split("TOOL_NAME: mcp_tool").length - 1;
+
+    expect(builtinOccurrences).toBe(1);
+    expect(mcpOccurrences).toBe(1);
+  });
+
   it("includes example tool definition and call", () => {
     const tools: Tool[] = [
       {
