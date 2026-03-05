@@ -265,11 +265,35 @@ export function getCompleteStateSnapshot(
 }
 
 /**
+ * Check if a session has meaningful content for saving
+ */
+function hasSessionContent(session: Session): boolean {
+  if (!session.history || session.history.length === 0) {
+    return false;
+  }
+
+  const nonSystemMessages = session.history.filter(
+    (item) => item.message.role !== "system",
+  );
+
+  return nonSystemMessages.length > 0;
+}
+
+/**
  * Save the current session to file
  */
 export function saveSession(): void {
   try {
-    const session = SessionManager.getInstance().getCurrentSession();
+    const manager = SessionManager.getInstance();
+    if (!manager.hasSession()) {
+      return;
+    }
+
+    const session = manager.getCurrentSession();
+    if (!hasSessionContent(session)) {
+      return;
+    }
+
     const sessionToSave = getSessionPersistenceSnapshot(session);
     historyManager.save(sessionToSave);
   } catch (error) {
