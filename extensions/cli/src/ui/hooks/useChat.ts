@@ -515,7 +515,10 @@ export function useChat({
 
     // Track telemetry and fire UserPromptSubmit hook
     const { blocked } = await trackUserMessage(message, model);
-    if (blocked) return;
+    if (blocked) {
+      telemetryService.stopActiveTime();
+      return;
+    }
 
     // In remote mode, send message to server instead of processing locally
     if (isRemoteMode && remoteUrl) {

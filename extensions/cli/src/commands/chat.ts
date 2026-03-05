@@ -367,11 +367,12 @@ async function processMessage(
   telemetryService.logUserPrompt(userInput.length, userInput);
   const promptHookResult = await fireUserPromptSubmit(userInput);
   if (promptHookResult.blocked) {
-    if (!isHeadless) {
-      logger.warn(
-        promptHookResult.blockReason ??
-          "Prompt blocked by UserPromptSubmit hook",
-      );
+    const reason =
+      promptHookResult.blockReason ?? "Prompt blocked by UserPromptSubmit hook";
+    if (isHeadless) {
+      safeStderr(JSON.stringify({ status: "error", message: reason }) + "\n");
+    } else {
+      logger.warn(reason);
     }
     return;
   }
@@ -472,8 +473,9 @@ async function runHeadlessMode(
   );
   const { llmApi, model } = modelState;
 
-  // Fire SessionStart hook after services are initialized
-  fireSessionStart("startup", model?.name);
+  // Fire SessionStart hook after services are initialized (await in headless
+  // to ensure hooks complete before a potential early process exit)
+  await fireSessionStart("startup", model?.name);
 
   if (!model) {
     throw new Error("No models were found.");
