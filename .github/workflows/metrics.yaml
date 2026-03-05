@@ -71,7 +71,7 @@ jobs:
                       ${{ steps.read-metrics.outputs.metrics_content }}
 
       - name: Upload metrics report as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: issue-metrics-report
           path: ./issue_metrics.md
