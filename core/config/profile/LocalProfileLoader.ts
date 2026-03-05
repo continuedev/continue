@@ -1,4 +1,5 @@
 import { ConfigResult, parseConfigYaml } from "@continuedev/config-yaml";
+import fs from "fs";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, ILLMLogger } from "../../index.js";
@@ -40,15 +41,27 @@ export default class LocalProfileLoader implements IProfileLoader {
       rawYaml: undefined,
     };
     this.description = description;
-    if (overrideAssistantFile?.content) {
+
+    const yamlContent = this.getProfileYamlContent();
+    if (yamlContent) {
       try {
-        const parsedAssistant = parseConfigYaml(
-          overrideAssistantFile?.content ?? "",
-        );
-        this.description.title = parsedAssistant.name;
+        const parsedAssistant = parseConfigYaml(yamlContent);
+        this.description.title = parsedAssistant.name ?? this.description.title;
       } catch (e) {
         console.error("Failed to parse config file: ", e);
       }
+    }
+  }
+
+  private getProfileYamlContent(): string | undefined {
+    if (this.overrideAssistantFile?.content) {
+      return this.overrideAssistantFile.content;
+    }
+
+    try {
+      return fs.readFileSync(getPrimaryConfigFilePath(), "utf8");
+    } catch {
+      return undefined;
     }
   }
   description: ProfileDescription;
