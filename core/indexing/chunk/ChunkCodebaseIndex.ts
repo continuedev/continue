@@ -1,7 +1,5 @@
 import * as path from "path";
 
-import { RunResult } from "sqlite3";
-
 import { IContinueServerClient } from "../../continueServer/interface.js";
 import { Chunk, IndexTag, IndexingProgressUpdate } from "../../index.js";
 import { DatabaseConnection, SqliteDb } from "../refreshIndex.js";
@@ -78,14 +76,13 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     // Add tag
     for (const item of results.addTag) {
       try {
-        await db.run(
+        db.prepare(
           `
           INSERT INTO chunk_tags (chunkId, tag)
           SELECT id, ? FROM chunks
           WHERE cacheKey = ?
         `,
-          [tagString, item.cacheKey],
-        );
+        ).run(tagString, item.cacheKey);
       } catch (e: any) {
         if (!e.message.includes("UNIQUE constraint")) {
           // Throw any errors other than duplicate tag
@@ -105,7 +102,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     // Remove tag
     for (const item of results.removeTag) {
-      await db.run(
+      db.prepare(
         `
         DELETE FROM chunk_tags
         WHERE tag = ?
@@ -114,8 +111,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
             WHERE cacheKey = ? AND path = ?
           )
       `,
-        [tagString, item.cacheKey, item.path],
-      );
+      ).run(tagString, item.cacheKey, item.path);
       await markComplete([item], IndexResultType.RemoveTag);
       accumulatedProgress += 1 / results.removeTag.length / 4;
       yield {
@@ -127,18 +123,17 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     // Delete
     for (const item of results.del) {
-      const chunkToDelete = await db.get(
-        "SELECT id FROM chunks WHERE cacheKey = ?",
-        [item.cacheKey],
-      );
+      const chunkToDelete = db
+        .prepare("SELECT id FROM chunks WHERE cacheKey = ?")
+        .get(item.cacheKey) as any;
 
       if (chunkToDelete) {
-        await db.run("DELETE FROM chunks WHERE id = ?", [chunkToDelete.id]);
+        db.prepare("DELETE FROM chunks WHERE id = ?").run(chunkToDelete.id);
 
         // Delete from chunk_tags
-        await db.run("DELETE FROM chunk_tags WHERE chunkId = ?", [
+        db.prepare("DELETE FROM chunk_tags WHERE chunkId = ?").run(
           chunkToDelete.id,
-        ]);
+        );
       } else {
         console.debug("Chunk to delete wasn't found in the table: ", item.path);
       }
@@ -154,7 +149,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   }
 
   private async createTables(db: DatabaseConnection) {
-    await db.exec(`CREATE TABLE IF NOT EXISTS chunks (
+    db.exec(`CREATE TABLE IF NOT EXISTS chunks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       cacheKey TEXT NOT NULL,
       path TEXT NOT NULL,
@@ -164,7 +159,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       content TEXT NOT NULL
     )`);
 
-    await db.exec(`CREATE TABLE IF NOT EXISTS chunk_tags (
+    db.exec(`CREATE TABLE IF NOT EXISTS chunk_tags (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         tag TEXT NOT NULL,
         chunkId INTEGER NOT NULL,
@@ -203,57 +198,27 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     tagString: string,
     chunks: Chunk[],
   ) {
-    await new Promise<void>((resolve, reject) => {
-      db.db.serialize(() => {
-        db.db.exec("BEGIN", (err: Error | null) => {
-          if (err) {
-            reject(new Error("error creating transaction", { cause: err }));
-          }
-        });
-        const chunksSQL =
-          "INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)";
-        chunks.map((c) => {
-          db.db.run(
-            chunksSQL,
-            [c.digest, c.filepath, c.index, c.startLine, c.endLine, c.content],
-            (result: RunResult, err: Error) => {
-              if (err) {
-                reject(
-                  new Error("error inserting into chunks table", {
-                    cause: err,
-                  }),
-                );
-              }
-            },
-          );
-          const chunkTagsSQL =
-            "INSERT INTO chunk_tags (chunkId, tag) VALUES (last_insert_rowid(), ?)";
-          db.db.run(
-            chunkTagsSQL,
-            [tagString],
-            (result: RunResult, err: Error) => {
-              if (err) {
-                reject(
-                  new Error("error inserting into chunk_tags table", {
-                    cause: err,
-                  }),
-                );
-              }
-            },
-          );
-        });
-        db.db.exec("COMMIT", (err: Error | null) => {
-          if (err) {
-            reject(
-              new Error("error while committing insert chunks transaction", {
-                cause: err,
-              }),
-            );
-          } else {
-            resolve();
-          }
-        });
-      });
+    const chunksStmt = db.prepare(
+      "INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)",
+    );
+    const chunkTagsStmt = db.prepare(
+      "INSERT INTO chunk_tags (chunkId, tag) VALUES (last_insert_rowid(), ?)",
+    );
+
+    const insertAll = db.transaction(() => {
+      for (const c of chunks) {
+        chunksStmt.run(
+          c.digest,
+          c.filepath,
+          c.index,
+          c.startLine,
+          c.endLine,
+          c.content,
+        );
+        chunkTagsStmt.run(tagString);
+      }
     });
+
+    insertAll();
   }
 }

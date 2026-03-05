@@ -28,13 +28,13 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   pathWeightMultiplier = 10.0;
 
   private async _createTables(db: DatabaseConnection) {
-    await db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(
+    db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(
         path,
         content,
         tokenize = 'trigram'
     )`);
 
-    await db.exec(`CREATE TABLE IF NOT EXISTS fts_metadata (
+    db.exec(`CREATE TABLE IF NOT EXISTS fts_metadata (
         id INTEGER PRIMARY KEY,
         path TEXT NOT NULL,
         cacheKey TEXT NOT NULL,
@@ -56,25 +56,22 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     for (let i = 0; i < results.compute.length; i++) {
       const item = results.compute[i];
       // Insert chunks
-      const chunks = await db.all(
-        "SELECT * FROM chunks WHERE path = ? AND cacheKey = ?",
-        [item.path, item.cacheKey],
-      );
+      const chunks = db
+        .prepare("SELECT * FROM chunks WHERE path = ? AND cacheKey = ?")
+        .all(item.path, item.cacheKey) as any[];
 
       for (const chunk of chunks) {
-        const { lastID } = await db.run(
-          "INSERT INTO fts (path, content) VALUES (?, ?)",
-          [item.path, chunk.content],
-        );
-        await db.run(
+        const result = db
+          .prepare("INSERT INTO fts (path, content) VALUES (?, ?)")
+          .run(item.path, chunk.content);
+        db.prepare(
           `INSERT INTO fts_metadata (id, path, cacheKey, chunkId)
            VALUES (?, ?, ?, ?)
            ON CONFLICT(id) DO UPDATE SET
            path = excluded.path,
            cacheKey = excluded.cacheKey,
            chunkId = excluded.chunkId`,
-          [lastID, item.path, item.cacheKey, chunk.id],
-        );
+        ).run(result.lastInsertRowid, item.path, item.cacheKey, chunk.id);
       }
 
       yield {
@@ -97,18 +94,16 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
 
     // Delete
     for (const item of results.del) {
-      await db.run(
+      db.prepare(
         `
         DELETE FROM fts WHERE rowid IN (
           SELECT id FROM fts_metadata WHERE path = ? AND cacheKey = ?
         )
       `,
-        [item.path, item.cacheKey],
-      );
-      await db.run("DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?", [
-        item.path,
-        item.cacheKey,
-      ]);
+      ).run(item.path, item.cacheKey);
+      db.prepare(
+        "DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?",
+      ).run(item.path, item.cacheKey);
       await markComplete([item], IndexResultType.Delete);
     }
   }
@@ -119,17 +114,18 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     const query = this.buildRetrieveQuery(config);
     const parameters = this.getRetrieveQueryParameters(config);
 
-    let results = await db.all(query, parameters);
+    let results = db.prepare(query).all(...parameters) as any[];
 
     results = results.filter(
       (result) =>
         result.rank <= (config.bm25Threshold ?? RETRIEVAL_PARAMS.bm25Threshold),
     );
 
-    const chunks = await db.all(
-      `SELECT * FROM chunks WHERE id IN (${results.map(() => "?").join(",")})`,
-      results.map((result) => result.chunkId),
-    );
+    const chunks = db
+      .prepare(
+        `SELECT * FROM chunks WHERE id IN (${results.map(() => "?").join(",")})`,
+      )
+      .all(...results.map((result) => result.chunkId)) as any[];
 
     return chunks.map((chunk) => ({
       filepath: chunk.path,
