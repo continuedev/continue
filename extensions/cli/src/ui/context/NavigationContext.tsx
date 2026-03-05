@@ -22,7 +22,7 @@ export type NavigationScreen =
   | "update" // Update selector
   | "edit" // Edit message selector
   | "jobs" // Background Jobs selector
-  | "session"; // Session selector
+  | "export"; // Export session selector
 
 interface NavigationState {
   currentScreen: NavigationScreen;

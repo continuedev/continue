@@ -287,6 +287,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowUpdateSelector: () => navigateTo("update"),
     onShowSessionSelector: () => navigateTo("session"),
     onShowJobsSelector: () => navigateTo("jobs"),
+    onShowExportSelector: () => navigateTo("export"),
     onReload: handleReload,
     onClear: handleClear,
     onRefreshStatic: () => setStaticRefreshTrigger((prev) => prev + 1),
@@ -330,6 +331,71 @@ const TUIChat: React.FC<TUIChatProps> = ({
       );
     },
     [closeCurrentScreen, setChatHistory, setShowIntroMessage],
+  );
+
+  // Export session handler
+  const handleExportSession = useCallback(
+    async (sessionId: string) => {
+      try {
+        const { loadSessionById } = await import("../session.js");
+        const fs = await import("fs");
+        const path = await import("path");
+
+        const session = loadSessionById(sessionId);
+        if (!session) {
+          setChatHistory((prev) => [
+            ...prev,
+            {
+              message: {
+                role: "system",
+                content: `Failed to export: Session ${sessionId} not found`,
+              },
+              contextItems: [],
+            },
+          ]);
+          closeCurrentScreen();
+          return;
+        }
+
+        const exportPayload = {
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          session,
+        };
+
+        const defaultPath = path.join(
+          process.cwd(),
+          `continue-session-${session.sessionId}.json`,
+        );
+        const jsonOutput = JSON.stringify(exportPayload, null, 2);
+        fs.writeFileSync(defaultPath, jsonOutput, "utf-8");
+
+        setChatHistory((prev) => [
+          ...prev,
+          {
+            message: {
+              role: "system",
+              content: `Session exported to ${defaultPath}`,
+            },
+            contextItems: [],
+          },
+        ]);
+        closeCurrentScreen();
+      } catch (error: any) {
+        setChatHistory((prev) => [
+          ...prev,
+          {
+            message: {
+              role: "system",
+              content: `Failed to export session: ${error.message}`,
+            },
+            contextItems: [],
+          },
+        ]);
+        closeCurrentScreen();
+      }
+    },
+    [closeCurrentScreen, setChatHistory],
   );
 
   // Determine if input should be disabled
@@ -432,6 +498,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           handleConfigSelect={handleConfigSelect}
           handleModelSelect={handleModelSelect}
           handleSessionSelect={handleSessionSelect}
+          handleExportSession={handleExportSession}
           handleReload={handleReload}
           closeCurrentScreen={closeCurrentScreen}
           activePermissionRequest={activePermissionRequest}
