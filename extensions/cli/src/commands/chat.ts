@@ -364,7 +364,16 @@ async function processMessage(
 
   // Track user prompt
   telemetryService.logUserPrompt(userInput.length, userInput);
-  fireUserPromptSubmit(userInput);
+  const promptHookResult = await fireUserPromptSubmit(userInput);
+  if (promptHookResult.blocked) {
+    if (!isHeadless) {
+      logger.warn(
+        promptHookResult.blockReason ??
+          "Prompt blocked by UserPromptSubmit hook",
+      );
+    }
+    return;
+  }
 
   // Check if auto-compacting is needed BEFORE adding user message
   // The handleAutoCompaction function decides whether compaction is actually needed
@@ -461,6 +470,9 @@ async function runHeadlessMode(
     SERVICE_NAMES.MODEL,
   );
   const { llmApi, model } = modelState;
+
+  // Fire SessionStart hook after services are initialized
+  fireSessionStart("startup", model?.name);
 
   if (!model) {
     throw new Error("No models were found.");
@@ -564,7 +576,6 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     // Record session start
     telemetryService.recordSessionStart();
     await posthogService.capture("sessionStart", {});
-    fireSessionStart("startup");
 
     // Start active time tracking
     telemetryService.startActiveTime();
@@ -588,6 +599,9 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         headless: false,
         toolPermissionOverrides: permissionOverrides,
       });
+
+      // Fire SessionStart hook after services are initialized
+      fireSessionStart("startup");
 
       const agentFileState = await serviceContainer.get<AgentFileServiceState>(
         SERVICE_NAMES.AGENT_FILE,

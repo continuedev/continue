@@ -231,14 +231,18 @@ export async function formatMessageWithFiles(
 /**
  * Track telemetry for user message
  */
-export function trackUserMessage(message: string, model?: any): void {
+export async function trackUserMessage(
+  message: string,
+  model?: any,
+): Promise<{ blocked: boolean }> {
   telemetryService.startActiveTime();
   telemetryService.logUserPrompt(message.length, message);
-  fireUserPromptSubmit(message);
+  const hookResult = await fireUserPromptSubmit(message);
   posthogService.capture("chat", {
     model: model?.name,
     provider: model?.provider,
   });
+  return { blocked: hookResult.blocked };
 }
 
 interface HandleSpecialCommandsOptions {
