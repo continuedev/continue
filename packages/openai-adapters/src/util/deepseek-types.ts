@@ -164,7 +164,7 @@ export interface BaseDeepSeekResponseBody {
   created: number;
   model: string;
   object: string; // static string for each response type
-  system_fingerprint?: string; // Required – Optional only for FIM stream chunks (official docs)
+  system_fingerprint?: string; // Required - Optional only for FIM stream chunks (official docs)
 }
 
 /**

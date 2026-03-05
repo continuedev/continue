@@ -162,7 +162,7 @@ export class DeepSeekApi extends OpenAIApi {
 
     // Repair logic for non‑streaming responses: if the API returned reasoning_content
     // but no regular content (and reasoning is enabled), copy reasoning_content into content.
-    // This mirrors the repair done in the streaming method.
+    // This mirrors the repair done in the streaming method and may be removed with future DeepSeek API changes.
     if (
       isReasoningEnabled(body) &&
       responseData.choices &&
@@ -189,9 +189,8 @@ export class DeepSeekApi extends OpenAIApi {
           typeof reasoningContent === "string" &&
           reasoningContent.trim() !== ""
         ) {
-          // Copy reasoning_content into content to ensure the result is usable
+          // Copy reasoning_content into content to ensure the result is usable next turn
           message.content = reasoningContent;
-          // Note: we keep reasoning_content in the response as well
         }
       }
     }
@@ -218,11 +217,11 @@ export class DeepSeekApi extends OpenAIApi {
       await this._throwDeepSeekError(resp);
     }
 
-    /*  Rare streaming edge case workarounds:
-     *  - If the stream ends with a finish_reason (not "tool_calls") and
-     *    no content or tool_calls were ever sent, but reasoning_content was received,
-     *    inject a final chunk containing the reasoning as content to rescue results of turn
-     *  (remove when no longer needed)
+    /*  Very rare edge case workarounds:
+     *  - If the stream ends with a finish_reason "stop" 
+     *    and no content or tool_calls were ever sent, but reasoning_content was received,
+     *    → inject a final chunk containing the reasoning as content to rescue results for next turn
+     *  (remove when fixed with future model updates and no longer needed)
      */
 
     let reasoningBuffer = "";
@@ -269,6 +268,7 @@ export class DeepSeekApi extends OpenAIApi {
       !hasContent &&
       !hasToolCalls &&
       reasoningBuffer &&
+      finishReason == "stop" &&
       isReasoningEnabled(body)
     ) {
       const repairChunk: ChatCompletionChunk = {

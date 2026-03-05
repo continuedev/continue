@@ -423,8 +423,6 @@ export function validateAndPrepareMessages(
         firstUserMsgPassed = true;
       }
 
-      // !!!!! DEEPSEEK test ist falsch, die logik hier ist korrekt !!!!!!!
-      // korrigiere den test, nicht den converter!
       // Copy reasoning content if reasoning mode and after last user/system message boundary
       if (
         isReasoningMode &&
@@ -454,7 +452,7 @@ export function validateAndPrepareMessages(
 
 /**
  * Converts a single OpenAI message to DeepSeek format.
- * Filters invalid roles, handles developer→system conversion, and preserves tool calls.
+ * Filters invalid roles, handles developer->system conversion, and preserves tool calls.
  * Returns undefined if role is invalid.
  */
 export function prepareMessage(
