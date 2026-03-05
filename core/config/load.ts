@@ -511,6 +511,7 @@ async function intermediateToFinalConfig({
       edit: models,
       apply: models,
       summarize: models,
+      commitMessage: [],
       autocomplete: [...tabAutocompleteModels],
       embed: newEmbedder ? [newEmbedder] : [],
       rerank: newReranker ? [newReranker] : [],
@@ -520,6 +521,7 @@ async function intermediateToFinalConfig({
       chat: null, // Not implemented (uses GUI defaultModel)
       edit: null,
       apply: null,
+      commitMessage: null,
       embed: newEmbedder ?? null,
       autocomplete: null,
       rerank: newReranker ?? null,

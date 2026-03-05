@@ -201,6 +201,7 @@ export async function configYamlToContinueConfig(options: {
       chat: [],
       edit: [],
       apply: [],
+      commitMessage: [],
       embed: [],
       autocomplete: [],
       rerank: [],
@@ -211,6 +212,7 @@ export async function configYamlToContinueConfig(options: {
       chat: null,
       edit: null, // not currently used
       apply: null,
+      commitMessage: null,
       embed: null,
       autocomplete: null,
       rerank: null,
@@ -335,6 +337,10 @@ export async function configYamlToContinueConfig(options: {
 
       if (model.roles?.includes("edit")) {
         continueConfig.modelsByRole.edit.push(...llms);
+      }
+
+      if (model.roles?.includes("commitMessage")) {
+        continueConfig.modelsByRole.commitMessage.push(...llms);
       }
 
       if (model.roles?.includes("autocomplete")) {
