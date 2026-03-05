@@ -40,7 +40,7 @@ object UriUtils {
     }
 
     private fun normalizeAndEncodeFilePath(rawPath: String): String {
-        val decodedPath = URLDecoder.decode(rawPath, StandardCharsets.UTF_8)
+        val decodedPath = URLDecoder.decode(rawPath.replace("+", "%2B"), StandardCharsets.UTF_8)
         return if (decodedPath.startsWith("/")) decodedPath else "/$decodedPath"
     }
 
