@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import chalk from "chalk";
