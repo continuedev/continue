@@ -71,7 +71,7 @@ To use a tool, respond with a tool code block (\`\`\`tool) using the syntax show
   systemMessageSuffix = `If it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool descriptions
 Then send the \`\`\`tool codeblock (YOU call the tool, not the user). Always start the codeblock on a new line.
 Do not perform actions with/for hypothetical files. Ask the user or use tools to deduce which files are relevant.
-You can only call ONE tool at at time. The tool codeblock should be the last thing you say; stop your response after the tool codeblock.`;
+You may call multiple tools if needed. Put each call in its own tool codeblock and continue with normal text whenever helpful.`;
 
   exampleDynamicToolDefinition = `
 \`\`\`tool_definition
