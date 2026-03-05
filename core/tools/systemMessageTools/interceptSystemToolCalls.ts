@@ -28,6 +28,7 @@ export async function* interceptSystemToolCalls(
 ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
   let buffer = "";
   let parseState: ToolCallParseState | undefined;
+  let sawNonWhitespaceAssistantText = false;
 
   while (true) {
     const result = await messageGenerator.next();
@@ -71,7 +72,9 @@ export async function* interceptSystemToolCalls(
           buffer += chunk;
           if (!parseState) {
             const { isInPartialStart, isInToolCall, modifiedBuffer } =
-              detectToolCallStart(buffer, systemToolFramework);
+              detectToolCallStart(buffer, systemToolFramework, {
+                allowNonCodeblockStarts: !sawNonWhitespaceAssistantText,
+              });
 
             if (isInPartialStart) {
               continue;
@@ -100,6 +103,10 @@ export async function* interceptSystemToolCalls(
             // Prevent content after tool calls for now
             if (parseState) {
               continue;
+            }
+
+            if (buffer.trim().length > 0) {
+              sawNonWhitespaceAssistantText = true;
             }
 
             // Yield normal assistant message

@@ -179,9 +179,8 @@ describe("interceptSystemToolCalls", () => {
     ).toBe("}");
   });
 
-  it("processes tool_name without codeblock format", async () => {
+  it("processes tool_name without codeblock format at response start", async () => {
     const messages: ChatMessage[][] = [
-      [{ role: "assistant", content: "I'll help you with that.\n" }],
       [{ role: "assistant", content: "TOOL_NAME: test_tool\n" }],
       [{ role: "assistant", content: "BEGIN_ARG: arg1\n" }],
       [{ role: "assistant", content: "value1\n" }],
@@ -194,30 +193,8 @@ describe("interceptSystemToolCalls", () => {
       framework,
     );
 
-    // First chunk should be normal text
-    let result = await generator.next();
-    expect(result.value).toEqual([
-      {
-        role: "assistant",
-        content: [{ type: "text", text: "I'll help you with that." }],
-      },
-    ]);
-
-    result = await generator.next();
-    expect(result.value).toEqual([
-      {
-        role: "assistant",
-        content: [
-          {
-            type: "text",
-            text: "\n",
-          },
-        ],
-      },
-    ]);
-
     // The system should detect the tool_name format and convert it
-    result = await generator.next();
+    let result = await generator.next();
     expect(
       (result.value as AssistantChatMessage[])[0].toolCalls?.[0].function?.name,
     ).toBe("test_tool");
@@ -240,6 +217,79 @@ describe("interceptSystemToolCalls", () => {
       (result.value as AssistantChatMessage[])[0].toolCalls?.[0].function
         ?.arguments,
     ).toBe("}");
+  });
+
+  it("still detects canonical ```tool blocks after assistant text", async () => {
+    const messages: ChatMessage[][] = [
+      [{ role: "assistant", content: "Let me check that for you.\n" }],
+      [{ role: "assistant", content: "```tool\n" }],
+      [{ role: "assistant", content: "TOOL_NAME: test_tool\n" }],
+    ];
+
+    const generator = interceptSystemToolCalls(
+      createAsyncGenerator(messages),
+      abortController,
+      framework,
+    );
+
+    await generator.next();
+    await generator.next();
+    const result = await generator.next();
+
+    expect(
+      (result.value as AssistantChatMessage[])[0].toolCalls?.[0].function?.name,
+    ).toBe("test_tool");
+  });
+
+  it("does not treat quoted TOOL_NAME lines as real tool calls", async () => {
+    const messages: ChatMessage[][] = [
+      [
+        {
+          role: "assistant",
+          content:
+            "Use this format when you call a tool:\nTOOL_NAME: read_file\nBEGIN_ARG: path\nREADME.md\nEND_ARG",
+        },
+      ],
+    ];
+
+    const generator = interceptSystemToolCalls(
+      createAsyncGenerator(messages),
+      abortController,
+      framework,
+    );
+
+    const chunks: ChatMessage[][] = [];
+    while (true) {
+      const result = await generator.next();
+      if (result.done) {
+        break;
+      }
+      if (result.value) {
+        chunks.push(result.value as ChatMessage[]);
+      }
+    }
+
+    expect(
+      chunks.flatMap((group) => group).every((message) => !message.toolCalls),
+    ).toBe(true);
+
+    const text = chunks
+      .flatMap((group) => group)
+      .flatMap((message) => {
+        if (typeof message.content === "string") {
+          return [message.content];
+        }
+        if (Array.isArray(message.content)) {
+          return message.content
+            .filter((part) => part.type === "text")
+            .map((part) => part.text);
+        }
+        return [];
+      })
+      .join("");
+
+    expect(text).toContain("TOOL_NAME: read_file");
+    expect(text).toContain("BEGIN_ARG: path");
   });
 
   it("ignores content after a tool call", async () => {

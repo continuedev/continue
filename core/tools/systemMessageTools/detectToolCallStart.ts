@@ -3,8 +3,22 @@ import { SystemMessageToolsFramework } from "./types";
 export function detectToolCallStart(
   buffer: string,
   toolCallFramework: SystemMessageToolsFramework,
+  options?: {
+    /**
+     * When false, only the canonical ```tool start is accepted.
+     */
+    allowNonCodeblockStarts?: boolean;
+  },
 ) {
-  const starts = toolCallFramework.acceptedToolCallStarts;
+  const allowNonCodeblockStarts = options?.allowNonCodeblockStarts ?? true;
+  const canonicalStart =
+    toolCallFramework.acceptedToolCallStarts.find(
+      ([start, replacement]) => start === replacement,
+    ) ?? toolCallFramework.acceptedToolCallStarts[0];
+
+  const starts = allowNonCodeblockStarts
+    ? toolCallFramework.acceptedToolCallStarts
+    : [canonicalStart];
   let modifiedBuffer = buffer;
   let isInToolCall = false;
   let isInPartialStart = false;
