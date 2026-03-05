@@ -1,11 +1,10 @@
 import type { ChatHistoryItem } from "core/index.js";
 
+import { fireSessionEnd } from "../hooks/fireHook.js";
 import { sentryService } from "../sentry.js";
 import { backgroundJobService } from "../services/BackgroundJobService.js";
 import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
-
-import { fireSessionEnd } from "../hooks/fireHook.js";
 
 import { hadUnhandledError } from "./errorState.js";
 import { getGitDiffSnapshot } from "./git.js";

@@ -6,6 +6,7 @@ import { ChatDescriber } from "core/util/chatDescriber.js";
 
 import { compactChatHistory, findCompactionIndex } from "../compaction.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
+import { fireSessionStart, fireUserPromptSubmit } from "../hooks/fireHook.js";
 import { safeStderr, safeStdout } from "../init.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
@@ -36,7 +37,6 @@ import {
   countChatHistoryTokens,
 } from "../util/tokenizer.js";
 
-import { fireSessionStart, fireUserPromptSubmit } from "../hooks/fireHook.js";
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 
 /**
