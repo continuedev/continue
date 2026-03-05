@@ -271,11 +271,8 @@ describe("runTerminalCommandImpl", () => {
 
     // In remote environments, it should use the IDE's runCommand
     expect(mockRunCommand).toHaveBeenCalledWith("echo 'test'");
-    // Match the actual output message
-    expect(result[0].content).toContain("Terminal output not available");
-    expect(result[0].content).toContain("SSH environments");
-    // Verify status field indicates command failed in remote environments
-    expect(result[0].status).toBe("Command failed");
+    expect(result[0].content).toContain("Command executed in remote terminal");
+    expect(result[0].status).toBe("Command executed");
   });
 
   it("should handle errors when executing invalid commands", async () => {
@@ -608,7 +605,7 @@ describe("runTerminalCommandImpl", () => {
     });
 
     describe("remote environment handling", () => {
-      it("should use ide.runCommand for non-enabled remote environments", async () => {
+      it("should use ide.runCommand for remote environments", async () => {
         const extras = createMockExtras({
           remoteName: "some-unsupported-remote",
         });
@@ -619,7 +616,9 @@ describe("runTerminalCommandImpl", () => {
         );
 
         expect(mockRunCommand).toHaveBeenCalledWith("echo test");
-        expect(result[0].content).toContain("Terminal output not available");
+        expect(result[0].content).toContain(
+          "Command executed in remote terminal",
+        );
       });
 
       it("should handle local environment with file URIs", async () => {
@@ -633,50 +632,33 @@ describe("runTerminalCommandImpl", () => {
         ).resolves.toBeDefined();
       });
 
-      it("should handle WSL environment", async () => {
-        mockGetWorkspaceDirs.mockResolvedValue(["file:///home/user/workspace"]);
+      it("should use ide.runCommand for WSL environment", async () => {
+        // WSL is a remote — commands should execute in WSL, not on the host
+        const extras = createMockExtras({ remoteName: "wsl" });
 
-        await expect(
-          runTerminalCommandImpl(
-            { command: "echo test", waitForCompletion: false },
-            createMockExtras({ remoteName: "wsl" }),
-          ),
-        ).resolves.toBeDefined();
+        const result = await runTerminalCommandImpl(
+          { command: "echo test" },
+          extras,
+        );
+
+        expect(mockRunCommand).toHaveBeenCalledWith("echo test");
+        expect(result[0].content).toContain(
+          "Command executed in remote terminal",
+        );
       });
 
-      it("should use ide.runCommand when Windows host connects to WSL", async () => {
-        // When extension runs on Windows but connects to WSL, we can't spawn
-        // shells directly - must use ide.runCommand instead
-        const originalPlatform = process.platform;
-        Object.defineProperty(process, "platform", { value: "win32" });
+      it("should use ide.runCommand for dev-container environment", async () => {
+        const extras = createMockExtras({ remoteName: "dev-container" });
 
-        try {
-          const extras = createMockExtras({ remoteName: "wsl" });
+        const result = await runTerminalCommandImpl(
+          { command: "echo test" },
+          extras,
+        );
 
-          const result = await runTerminalCommandImpl(
-            { command: "echo test" },
-            extras,
-          );
-
-          // Should fall back to ide.runCommand, not try to spawn powershell.exe
-          expect(mockRunCommand).toHaveBeenCalledWith("echo test");
-          expect(result[0].content).toContain("Terminal output not available");
-        } finally {
-          Object.defineProperty(process, "platform", {
-            value: originalPlatform,
-          });
-        }
-      });
-
-      it("should handle dev-container environment", async () => {
-        mockGetWorkspaceDirs.mockResolvedValue(["file:///workspace"]);
-
-        await expect(
-          runTerminalCommandImpl(
-            { command: "echo test", waitForCompletion: false },
-            createMockExtras({ remoteName: "dev-container" }),
-          ),
-        ).resolves.toBeDefined();
+        expect(mockRunCommand).toHaveBeenCalledWith("echo test");
+        expect(result[0].content).toContain(
+          "Command executed in remote terminal",
+        );
       });
     });
 
