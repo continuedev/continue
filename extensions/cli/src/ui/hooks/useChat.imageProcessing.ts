@@ -1,13 +1,19 @@
 import { logger } from "../../util/logger.js";
 
 /**
- * Dynamically import Sharp without using eval
+ * Dynamically import Sharp module for image processing.
+ * Sharp is an optional dependency for image resizing/conversion.
+ * Uses a variable module name to prevent TypeScript from trying to resolve the module at compile time.
  */
 async function loadSharp(): Promise<any> {
   try {
-    // Use Function constructor to avoid bundler issues with dynamic imports
-    const importSharp = new Function('return import("sharp")');
-    const sharpModule = await importSharp().catch(() => null);
+    // Use a variable to store the module name to prevent TypeScript static analysis
+    // from trying to resolve the module (which would fail if sharp is not installed)
+    const moduleName = "sharp";
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const sharpModule = await import(
+      /* webpackIgnore: true */ moduleName
+    ).catch(() => null);
     return sharpModule ? sharpModule.default || sharpModule : null;
   } catch {
     return null;

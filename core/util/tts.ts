@@ -12,21 +12,33 @@ const ttsKillTimeout: number = 5000;
 
 /**
  * Cleans a message text to safely be used in 'exec' context on host.
+ * This function sanitizes input to prevent command injection attacks.
  *
  * Return modified message text.
  */
 export function sanitizeMessageForTTS(message: string): string {
   message = removeCodeBlocksAndTrim(message);
 
-  // Remove or replace problematic characters
+  // Remove or replace problematic characters that could enable command injection
+  // This includes shell metacharacters and escape sequences
   message = message
-    .replace(/"/g, "")
-    .replace(/`/g, "")
-    .replace(/\$/g, "")
-    .replace(/\\/g, "")
-    .replace(/[&|;()<>]/g, "");
+    .replace(/"/g, "") // Remove double quotes
+    .replace(/'/g, "") // Remove single quotes
+    .replace(/`/g, "") // Remove backticks (command substitution)
+    .replace(/\$/g, "") // Remove dollar signs (variable expansion)
+    .replace(/\\/g, "") // Remove backslashes (escape sequences)
+    .replace(/[&|;()<>{}\[\]!#*?~^%]/g, "") // Remove shell metacharacters (includes % for cmd.exe variable expansion)
+    .replace(/\x00/g, "") // Remove null bytes
+    .replace(/\n/g, " ") // Replace newlines with spaces
+    .replace(/\r/g, " "); // Replace carriage returns with spaces
 
   message = message.trim().replace(/\s+/g, " ");
+
+  // Limit message length to prevent potential DoS
+  const MAX_TTS_LENGTH = 5000;
+  if (message.length > MAX_TTS_LENGTH) {
+    message = message.substring(0, MAX_TTS_LENGTH);
+  }
 
   return message;
 }

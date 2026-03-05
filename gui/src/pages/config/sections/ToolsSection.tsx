@@ -1,4 +1,5 @@
 import { ConfigYaml, parseConfigYaml } from "@continuedev/config-yaml";
+import DOMPurify from "dompurify";
 import {
   ArrowPathIcon,
   ChevronDownIcon,
@@ -395,7 +396,7 @@ function MCPServerPreview({
             >
               <span
                 className="text-xs"
-                dangerouslySetInnerHTML={{ __html: info }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(info) }}
               />
             </Alert>
           ))}
