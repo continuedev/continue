@@ -34,7 +34,11 @@ describe("convertVercelStreamPart", () => {
     const result = convertVercelStreamPart(part, options);
 
     expect(result).not.toBeNull();
-    expect(result?.choices[0].delta.content).toBe("Let me think...");
+    expect(
+      (result?.choices[0].delta as typeof result.choices[0].delta & {
+        reasoning_content?: string;
+      }).reasoning_content,
+    ).toBe("Let me think...");
   });
 
   test("returns null for tool-call (handled by tool-input-start/delta)", () => {
