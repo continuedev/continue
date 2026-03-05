@@ -1,6 +1,7 @@
 import { SUBAGENT_TOOL_META } from "../subagent/index.js";
 
 import { askQuestionTool } from "./askQuestion.js";
+import { exitPlanModeTool } from "./planMode.js";
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
@@ -21,6 +22,7 @@ import { writeFileTool } from "./writeFile.js";
 export const ALL_BUILT_IN_TOOLS = [
   askQuestionTool,
   editTool,
+  exitPlanModeTool,
   exitTool,
   fetchTool,
   listFilesTool,

@@ -1,6 +1,5 @@
 import type { ChatHistoryItem, ToolCallState, ToolStatus } from "core/index.js";
 
-import { ALL_BUILT_IN_TOOLS } from "src/tools/allBuiltIns.js";
 import { logger } from "src/util/logger.js";
 
 import { services } from "../../services/index.js";
@@ -204,16 +203,11 @@ export function createStreamCallbacks(
       requestId: string,
       toolCallPreview?: any[],
     ) => {
-      // Check if this tool has dynamic evaluation
-      const tool = ALL_BUILT_IN_TOOLS.find((t: any) => t.name === toolName);
-      const hasDynamicEvaluation = !!tool?.evaluateToolCallPolicy;
-
       setActivePermissionRequest({
         toolName,
         toolArgs,
         requestId,
         toolCallPreview,
-        hasDynamicEvaluation,
       });
     },
 

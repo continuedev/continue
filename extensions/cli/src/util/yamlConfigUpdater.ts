@@ -15,7 +15,8 @@ export interface ConfigStructure {
 }
 
 /**
- * Updates or adds an Anthropic Claude model configuration in a YAML string while preserving comments and formatting.
+ * Updates or adds Anthropic Claude model configurations in a YAML string while preserving comments and formatting.
+ * Creates Opus, Sonnet, and Haiku models in that order for opinionated defaults.
  * This is a pure function that takes a YAML string and returns a modified YAML string.
  *
  * @param yamlContent - The original YAML content as a string (can be empty)
@@ -26,12 +27,27 @@ export function updateAnthropicModelInYaml(
   yamlContent: string,
   apiKey: string,
 ): string {
-  const newModel: ModelConfig = {
-    uses: "anthropic/claude-sonnet-4-6",
-    with: {
-      ANTHROPIC_API_KEY: apiKey,
+  // Create all three Claude models in preferred order: Opus, Sonnet, Haiku
+  const newModels: ModelConfig[] = [
+    {
+      uses: "anthropic/claude-opus-4-6",
+      with: {
+        ANTHROPIC_API_KEY: apiKey,
+      },
     },
-  };
+    {
+      uses: "anthropic/claude-sonnet-4-6",
+      with: {
+        ANTHROPIC_API_KEY: apiKey,
+      },
+    },
+    {
+      uses: "anthropic/claude-haiku-4-6",
+      with: {
+        ANTHROPIC_API_KEY: apiKey,
+      },
+    },
+  ];
 
   try {
     const doc = parseDocument(yamlContent);
@@ -42,7 +58,7 @@ export function updateAnthropicModelInYaml(
         name: "Local Config",
         version: "1.0.0",
         schema: "v1",
-        models: [newModel],
+        models: newModels,
       };
 
       const newDoc = parseDocument("");
@@ -60,13 +76,18 @@ export function updateAnthropicModelInYaml(
       config.models = [];
     }
 
-    // Filter out existing anthropic models
+    // Filter out existing anthropic Claude 4-6 models
+    const claudeModelPatterns = [
+      "anthropic/claude-opus-4-6",
+      "anthropic/claude-sonnet-4-6",
+      "anthropic/claude-haiku-4-6",
+    ];
     config.models = config.models.filter(
-      (model: any) => !model || model.uses !== "anthropic/claude-sonnet-4-6",
+      (model: any) => !model || !claudeModelPatterns.includes(model.uses),
     );
 
-    // Add the new anthropic model
-    config.models.push(newModel);
+    // Add the new anthropic models in preferred order
+    config.models.push(...newModels);
 
     // Update the models array while preserving comments and structure
     doc.set("models", config.models);
@@ -78,7 +99,7 @@ export function updateAnthropicModelInYaml(
       name: "Local Config",
       version: "1.0.0",
       schema: "v1",
-      models: [newModel],
+      models: newModels,
     };
 
     const doc = parseDocument("");

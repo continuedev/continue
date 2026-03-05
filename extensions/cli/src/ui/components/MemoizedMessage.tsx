@@ -90,7 +90,9 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
               <Text color="white">{hideBullet ? " " : "●"}</Text>
               <Text> </Text>
               <MarkdownRenderer
-                content={formatMessageContentForDisplay(message.content)}
+                content={formatMessageContentForDisplay(
+                  message.content,
+                ).trimStart()}
               />
             </Box>
           )}
@@ -162,19 +164,49 @@ export const MemoizedMessage = memo<MemoizedMessageProps>(
     // Handle regular messages
     const isStreaming = isAssistant && !message.content && !toolCallStates;
 
+    if (isUser) {
+      const text = formatMessageContentForDisplay(message.content);
+      const termWidth = process.stdout.columns || 80;
+      // 1 char padding on each side
+      const contentWidth = termWidth - 2;
+      // Word-wrap then pad each line to fill the terminal width
+      const wrappedLines: string[] = [];
+      for (const rawLine of text.split("\n")) {
+        if (rawLine.length <= contentWidth) {
+          wrappedLines.push(rawLine);
+        } else {
+          // Word-wrap: break at last space before contentWidth, or hard-break
+          let remaining = rawLine;
+          while (remaining.length > contentWidth) {
+            let breakAt = remaining.lastIndexOf(" ", contentWidth);
+            if (breakAt <= 0) breakAt = contentWidth;
+            wrappedLines.push(remaining.slice(0, breakAt));
+            remaining = remaining.slice(breakAt).trimStart();
+          }
+          if (remaining) wrappedLines.push(remaining);
+        }
+      }
+      const padded = wrappedLines
+        .map((line) => " " + line.padEnd(contentWidth))
+        .join("\n");
+      return (
+        <Box key={index} marginBottom={1}>
+          <Text backgroundColor="white" color="black" wrap="truncate">
+            {padded}
+          </Text>
+        </Box>
+      );
+    }
+
     return (
       <Box key={index} marginBottom={1}>
-        <Text color={isUser ? "blue" : "white"}>{hideBullet ? " " : "●"}</Text>
+        <Text color="white">{hideBullet ? " " : "●"}</Text>
         <Text> </Text>
-        {isUser ? (
-          <Text color="dim">
-            {formatMessageContentForDisplay(message.content)}
-          </Text>
-        ) : (
-          <MarkdownRenderer
-            content={formatMessageContentForDisplay(message.content)}
-          />
-        )}
+        <MarkdownRenderer
+          content={formatMessageContentForDisplay(
+            message.content,
+          ).trimStart()}
+        />
         {isStreaming && <Text color="dim">▋</Text>}
       </Box>
     );

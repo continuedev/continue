@@ -48,7 +48,7 @@ describe("skillsTool", () => {
       const tool = await skillsTool();
       const result = await tool.preprocess!({ skill_name: "test-skill" });
       expect(result.preview).toEqual([
-        { type: "text", content: "Reading skill: test-skill" },
+        { type: "text", content: "Loading skill: test-skill" },
       ]);
     });
   });
@@ -57,12 +57,12 @@ describe("skillsTool", () => {
     it("should return skill content when found", async () => {
       const tool = await skillsTool();
       const result = await tool.run({ skill_name: "test-skill" });
-      expect(result).toContain("<skill_name>test-skill</skill_name>");
+      expect(result).toContain('<skill name="test-skill">');
+      expect(result).toContain("# Skill: test-skill");
+      expect(result).toContain("Skill content here");
+      expect(result).toContain("</skill>");
       expect(result).toContain(
-        "<skill_description>A test skill</skill_description>",
-      );
-      expect(result).toContain(
-        "<skill_content>Skill content here</skill_content>",
+        "Follow the instructions in the loaded skill above.",
       );
     });
 
@@ -71,7 +71,11 @@ describe("skillsTool", () => {
       const result = await tool.run({ skill_name: "skill-with-files" });
       expect(result).toContain("<skill_files>");
       expect(result).toContain("/path/to/file1.ts");
-      expect(result).toContain("<other_instructions>");
+      expect(result).toContain("</skill_files>");
+      expect(result).toContain("Skill directory:");
+      expect(result).toContain(
+        "Use the read file tool to access these supporting files as needed.",
+      );
     });
 
     it("should throw ContinueError when skill not found", async () => {

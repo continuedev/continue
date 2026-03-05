@@ -40,7 +40,6 @@ export interface ActivePermissionRequest {
   toolArgs: any;
   requestId: string;
   toolCallPreview?: ToolCallPreview[];
-  hasDynamicEvaluation?: boolean;
 }
 
 export type ActiveQuizQuestion = QuestionRequestedEvent;

@@ -18,22 +18,41 @@ export const readSkillImpl: ToolImpl = async (args, extras) => {
     );
   }
 
-  let content = skill.content;
+  const contentParts = [
+    `<skill name="${skill.name}">`,
+    `# Skill: ${skill.name}`,
+    "",
+    skill.content.trim(),
+  ];
 
   if (skill.files.length > 0) {
-    content += `\n
-## Supporting files
-Skill directory:
-${skill.files.join("\n")}
-
-Use the read file tool to access these files as needed.`;
+    const skillDir = skill.path.substring(0, skill.path.lastIndexOf("/"));
+    contentParts.push("");
+    contentParts.push(`Skill directory: ${skillDir}`);
+    contentParts.push(
+      "Relative paths in this skill are relative to the skill directory above.",
+    );
+    contentParts.push("");
+    contentParts.push("<skill_files>");
+    contentParts.push(...skill.files);
+    contentParts.push("</skill_files>");
+    contentParts.push("");
+    contentParts.push(
+      "Use the read file tool to access these supporting files as needed.",
+    );
   }
+
+  contentParts.push("</skill>");
+  contentParts.push("");
+  contentParts.push(
+    "Follow the instructions in the loaded skill above. The skill is now active for this conversation.",
+  );
 
   return [
     {
       name: `Skill: ${skill.name}`,
       description: skill.description,
-      content,
+      content: contentParts.join("\n"),
       uri: {
         type: "file",
         value: skill.path,

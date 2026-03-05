@@ -1,4 +1,5 @@
 import { runTerminalCommandTool } from "src/tools/runTerminalCommand.js";
+import { extractTextFromToolResult } from "src/tools/types.js";
 import { getErrorString } from "src/util/error.js";
 
 import { services } from "../../services/index.js";
@@ -39,7 +40,8 @@ export const handleBashModeProcessing = async (
     .run({
       command: bashCommand,
     })
-    .then((result) => {
+    .then((rawResult) => {
+      const result = extractTextFromToolResult(rawResult);
       services.chatHistory.addToolResult(toolCallId, result, "done");
     })
     .catch((error) => {

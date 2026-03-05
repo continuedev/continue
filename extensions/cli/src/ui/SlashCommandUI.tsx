@@ -1,10 +1,11 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text } from "ink";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { getAllSlashCommands } from "../commands/commands.js";
+import { getAllSlashCommands, type SlashCommand } from "../commands/commands.js";
 
 const MAX_DESCRIPTION_LENGTH = 80;
+const MAX_VISIBLE_COMMANDS = 12;
 
 const truncateDescription = (description: string): string => {
   if (description.length <= MAX_DESCRIPTION_LENGTH) {
@@ -29,20 +30,19 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   selectedIndex,
   isRemoteMode = false,
 }) => {
-  // Memoize the slash commands to prevent excessive re-renders
-  const allCommands = useMemo(() => {
-    if (assistant || isRemoteMode) {
-      return getAllSlashCommands(assistant || ({} as AssistantConfig), {
-        isRemoteMode,
-      });
-    }
+  const [allCommands, setAllCommands] = useState<SlashCommand[]>([
+    { name: "help", description: "Show help message", category: "system" },
+    { name: "clear", description: "Clear the chat history", category: "system" },
+    { name: "exit", description: "Exit the chat", category: "system" },
+  ]);
 
-    // Fallback - basic commands without assistant
-    return [
-      { name: "help", description: "Show help message" },
-      { name: "clear", description: "Clear the chat history" },
-      { name: "exit", description: "Exit the chat" },
-    ];
+  // Load slash commands asynchronously (includes skills)
+  useEffect(() => {
+    if (assistant || isRemoteMode) {
+      getAllSlashCommands(assistant || ({} as AssistantConfig), {
+        isRemoteMode,
+      }).then(setAllCommands);
+    }
   }, [isRemoteMode, assistant?.prompts, assistant?.rules]);
 
   // Filter commands based on the current filter
@@ -66,15 +66,31 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
     );
   }
 
+  // Calculate the visible window of commands, scrolling to keep selection visible
+  const totalCommands = filteredCommands.length;
+  const needsScrolling = totalCommands > MAX_VISIBLE_COMMANDS;
+
+  let startIndex = 0;
+  if (needsScrolling) {
+    // Keep the selected item roughly centered in the visible window
+    const halfWindow = Math.floor(MAX_VISIBLE_COMMANDS / 2);
+    startIndex = Math.max(0, selectedIndex - halfWindow);
+    startIndex = Math.min(startIndex, totalCommands - MAX_VISIBLE_COMMANDS);
+  }
+  const endIndex = startIndex + (needsScrolling ? MAX_VISIBLE_COMMANDS : totalCommands);
+  const visibleCommands = filteredCommands.slice(startIndex, endIndex);
+
+  // Find the longest command name across ALL filtered commands for consistent alignment
+  const maxCommandLength = Math.max(
+    ...filteredCommands.map((cmd) => cmd.name.length),
+  );
+
   return (
     <Box paddingX={1} marginX={1} marginBottom={1} flexDirection="column">
-      {filteredCommands.map((command, index) => {
-        const isSelected = index === selectedIndex;
+      {visibleCommands.map((command, visibleIndex) => {
+        const actualIndex = startIndex + visibleIndex;
+        const isSelected = actualIndex === selectedIndex;
 
-        // Find the longest command name to vertically align command descriptions
-        const maxCommandLength = Math.max(
-          ...filteredCommands.map((cmd) => cmd.name.length),
-        );
         const paddedCommandName = `/${command.name}`.padEnd(
           maxCommandLength + 1,
         );

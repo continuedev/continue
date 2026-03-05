@@ -351,7 +351,7 @@ describe("compaction", () => {
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
-      expect(result.compactedHistory).toHaveLength(2);
+      expect(result.compactedHistory).toHaveLength(3);
       expect(result.compactedHistory[0]).toEqual({
         message: {
           role: "system",
@@ -366,6 +366,14 @@ describe("compaction", () => {
         },
         contextItems: [],
         conversationSummary: mockContent,
+      });
+      // Continuation message to avoid assistant-prefill errors
+      expect(result.compactedHistory[2]).toEqual({
+        message: {
+          role: "user",
+          content: "continue",
+        },
+        contextItems: [],
       });
       expect(result.compactionIndex).toBe(1);
       expect(result.compactionContent).toBe(mockContent);
@@ -440,7 +448,7 @@ describe("compaction", () => {
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
-      expect(result.compactedHistory).toHaveLength(2);
+      expect(result.compactedHistory).toHaveLength(3);
       expect(result.compactedHistory[0].message).toEqual({
         role: "system",
         content: "You are a helpful assistant",
@@ -448,6 +456,7 @@ describe("compaction", () => {
       expect(result.compactedHistory[1].message.content).toContain(
         "Summary of system setup",
       );
+      expect(result.compactedHistory[2].message.role).toBe("user");
     });
 
     it("should handle empty content from stream", async () => {
@@ -468,7 +477,10 @@ describe("compaction", () => {
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
       expect(result.compactionContent).toBe("");
+      // Index 0 is the compaction summary (no system message in this test)
       expect(result.compactedHistory[0].message.content).toBe("");
+      // Index 1 is the continuation message
+      expect(result.compactedHistory[1].message.role).toBe("user");
     });
 
     it("should correctly construct prompt for compaction", async () => {
@@ -522,7 +534,7 @@ describe("compaction", () => {
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
-      expect(result.compactedHistory).toHaveLength(2);
+      expect(result.compactedHistory).toHaveLength(3);
       expect(result.compactionContent).toBe(mockContent);
     });
 
@@ -555,7 +567,7 @@ describe("compaction", () => {
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
-      expect(result.compactedHistory).toHaveLength(2); // System + compaction
+      expect(result.compactedHistory).toHaveLength(3); // System + compaction + continue
       expect(result.compactionIndex).toBe(1);
     });
 
@@ -578,8 +590,9 @@ describe("compaction", () => {
 
       const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
-      expect(result.compactedHistory).toHaveLength(1); // Only compaction
+      expect(result.compactedHistory).toHaveLength(2); // compaction + continue
       expect(result.compactedHistory[0].message.role).toBe("assistant");
+      expect(result.compactedHistory[1].message.role).toBe("user");
       expect(result.compactionIndex).toBe(0);
     });
   });
@@ -697,8 +710,8 @@ describe("compaction", () => {
         const result = await compactChatHistory(history, mockModel, mockLlmApi);
 
         // Compacted history should be shorter than original
-        // (system + compaction) or just compaction
-        expect(result.compactedHistory.length).toBeLessThanOrEqual(2);
+        // (system + compaction + continue) or (compaction + continue)
+        expect(result.compactedHistory.length).toBeLessThanOrEqual(3);
         expect(result.compactedHistory.length).toBeLessThan(history.length);
       }
     });

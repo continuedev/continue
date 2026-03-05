@@ -6,7 +6,7 @@ import {
   isAuthenticatedConfig,
   loadAuthConfig,
 } from "./auth/workos.js";
-import { getAllSlashCommands } from "./commands/commands.js";
+import { getAllSlashCommands, getAvailableSkills } from "./commands/commands.js";
 import { handleInit } from "./commands/init.js";
 import { handleInfoSlashCommand } from "./infoScreen.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
@@ -14,6 +14,7 @@ import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
+import { loadMarkdownSkills } from "./util/loadMarkdownSkills.js";
 
 type CommandHandler = (
   args: string[],
@@ -173,6 +174,51 @@ function handleJobs() {
   return { openJobsSelector: true };
 }
 
+async function handleSkills(args: string[]) {
+  const { skills } = await loadMarkdownSkills();
+
+  if (skills.length === 0) {
+    return {
+      output: chalk.yellow(
+        "No skills found. Add skills to .continue/skills/, .claude/skills/, or ~/.continue/skills/",
+      ),
+    };
+  }
+
+  // If a skill name is provided as an argument, invoke it directly
+  if (args.length > 0 && args[0].trim()) {
+    const skillName = args[0].trim();
+    const skill = skills.find((s) => s.name === skillName);
+    if (skill) {
+      const newInput = skill.content + " " + args.slice(1).join(" ");
+      return { newInput: newInput.trim() };
+    }
+    return {
+      output: chalk.red(
+        `Skill "${skillName}" not found. Available skills: ${skills.map((s) => s.name).join(", ")}`,
+      ),
+    };
+  }
+
+  // List available skills
+  const skillList = skills
+    .map(
+      (skill) =>
+        `  ${chalk.cyan(skill.name)}  ${chalk.gray(skill.description)}`,
+    )
+    .join("\n");
+
+  return {
+    output: [
+      chalk.bold("Available Skills:"),
+      "",
+      skillList,
+      "",
+      chalk.gray("Use /skills <name> or /<skill-name> to invoke a skill"),
+    ].join("\n"),
+  };
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
@@ -208,6 +254,7 @@ const commandHandlers: Record<string, CommandHandler> = {
     return { openUpdateSelector: true };
   },
   jobs: handleJobs,
+  skills: handleSkills,
 };
 
 export async function handleSlashCommands(
@@ -254,8 +301,16 @@ export async function handleSlashCommands(
     return { newInput };
   }
 
+  // Check for skill commands
+  const skills = await getAvailableSkills();
+  const matchingSkill = skills.find((s) => s.name === command);
+  if (matchingSkill) {
+    const newInput = matchingSkill.content + " " + args.join(" ");
+    return { newInput: newInput.trim() };
+  }
+
   // Check if this command would match any available commands (same logic as UI)
-  const allCommands = getAllSlashCommands(assistant, {
+  const allCommands = await getAllSlashCommands(assistant, {
     isRemoteMode: options?.isRemoteMode,
   });
   const hasMatches = allCommands.some((cmd) =>

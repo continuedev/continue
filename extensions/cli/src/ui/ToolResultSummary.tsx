@@ -9,6 +9,7 @@ import { ColoredDiff } from "./ColoredDiff.js";
 import { ChecklistDisplay } from "./components/ChecklistDisplay.js";
 
 const MAX_BASH_OUTPUT_LINES = 4;
+const MAX_BASH_OUTPUT_LINE_CHARS = 200;
 
 interface ToolResultSummaryProps {
   toolName?: string;
@@ -76,8 +77,14 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
     const actualOutput = isStderr ? content.slice(7).trim() : content;
     const outputLines = actualOutput.split("\n");
 
+    const truncateLine = (line: string) =>
+      line.length > MAX_BASH_OUTPUT_LINE_CHARS
+        ? line.slice(0, MAX_BASH_OUTPUT_LINE_CHARS) + "..."
+        : line;
+
     if (outputLines.length <= MAX_BASH_OUTPUT_LINES) {
       // Show actual output for MAX_BASH_OUTPUT_LINES lines or fewer
+      const displayOutput = outputLines.map(truncateLine).join("\n");
       return (
         <Box flexDirection="column">
           <Box>
@@ -86,14 +93,17 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
           </Box>
           <Box paddingLeft={2}>
             <Text color={isStderr ? "red" : "white"}>
-              {actualOutput.trimEnd()}
+              {displayOutput.trimEnd()}
             </Text>
           </Box>
         </Box>
       );
     } else {
       // Show first MAX_BASH_OUTPUT_LINES lines with ellipsis for more lines
-      const firstLines = outputLines.slice(0, MAX_BASH_OUTPUT_LINES).join("\n");
+      const firstLines = outputLines
+        .slice(0, MAX_BASH_OUTPUT_LINES)
+        .map(truncateLine)
+        .join("\n");
       return (
         <Box flexDirection="column">
           <Box>
