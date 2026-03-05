@@ -12,7 +12,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { finalToBrowserConfig } from "../../config/load.js";
-import type { ContinueConfig, ILLM, ModelRole, ToolOverride } from "../..";
+import type { ContinueConfig, ILLM, ToolOverride } from "../..";
+import type { ModelRole } from "@continuedev/config-yaml";
 
 /**
  * Minimal LLM stub — only the fields llmToSerializedModelDescription reads.
