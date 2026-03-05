@@ -18,17 +18,13 @@ const ttsKillTimeout: number = 5000;
 export function sanitizeMessageForTTS(message: string): string {
   message = removeCodeBlocksAndTrim(message);
 
-  // Remove or replace problematic characters
-  message = message
-    .replace(/"/g, "")
-    .replace(/`/g, "")
-    .replace(/\$/g, "")
-    .replace(/\\/g, "")
-    .replace(/[&|;()<>]/g, "");
+  // Remove shell-dangerous characters to prevent command injection
+  // Pattern matches: quotes (", ', `), command substitution ($), escape (\),
+  // shell metacharacters (&|;()<>), and newlines
+  message = message.replace(/["'`$\\&|;()<>\r\n]/g, " ");
 
-  message = message.trim().replace(/\s+/g, " ");
-
-  return message;
+  // Normalize whitespace
+  return message.trim().replace(/\s+/g, " ");
 }
 
 export class TTS {
@@ -52,12 +48,8 @@ export class TTS {
         TTS.handle = exec(`say "${message}"`);
         break;
       case "win32":
-        // Replace single quotes on windows
         TTS.handle = exec(
-          `powershell -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('${message.replace(
-            /'/g,
-            "''",
-          )}')"`,
+          `powershell -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('${message}')"`,
         );
         break;
       case "linux":

@@ -6,6 +6,8 @@ import {
 // @ts-ignore
 import Panzoom from "@panzoom/panzoom";
 // @ts-ignore
+import DOMPurify from "dompurify";
+// @ts-ignore
 import mermaid from "mermaid";
 import { useEffect, useRef, useState } from "react";
 import { useDebouncedEffect } from "../find/useDebounce";
@@ -96,7 +98,11 @@ export default function MermaidDiagram({ code }: { code: string }) {
         try {
           await mermaid.parse(code);
           const renderedSVG = await mermaid.render(diagramId, code);
-          mermaidRenderContainerRef.current.innerHTML = renderedSVG.svg;
+          // Sanitize the SVG output to prevent XSS attacks
+          const sanitizedSVG = DOMPurify.sanitize(renderedSVG.svg, {
+            USE_PROFILES: { svg: true, svgFilters: true },
+          });
+          mermaidRenderContainerRef.current.innerHTML = sanitizedSVG;
           setError("");
           const panzoom = Panzoom(mermaidRenderContainerRef.current, {
             step: MINIMUM_ZOOM_STEP,
