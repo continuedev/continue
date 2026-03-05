@@ -9,7 +9,7 @@ Agents use the same markdown file format as checks. The difference: agents can b
 There are two ways to define agents:
 
 - **Local**: Place agent files in `.continue/agents/` in your repository. Version-controlled and shared with your team.
-- **Cloud**: Created and managed on [continue.dev/agents](https://continue.dev/agents). Web UI for configuration, no file to commit.
+- **Cloud**: Created and managed in Mission Control. Agents are at [continue.dev/agents](https://continue.dev/agents), checks (PR-triggered reviews) are at [continue.dev/checks](https://continue.dev/checks). Web UI for configuration, no file to commit.
 
 Both run on Continue's cloud infrastructure.
 
@@ -60,6 +60,7 @@ Version-controlled trigger configuration (defined in the agent file itself) is o
 | File location | `.continue/checks/` | `.continue/agents/` or continue.dev |
 | Trigger | Always on PR open | Configurable in [Mission Control](/mission-control/workflows) |
 | Purpose | Pass/fail review of PRs | Any automated task |
+| Mission Control page | [continue.dev/checks](https://continue.dev/checks) | [continue.dev/agents](https://continue.dev/agents) |
 
 ## Cloud agent gallery
 
