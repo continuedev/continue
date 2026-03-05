@@ -438,7 +438,7 @@ export function isRecommendedAgentModel(modelName: string): boolean {
   // AND behavior
   const recs: RegExp[][] = [
     [/o[134]/],
-    [/deepseek/, /r1|reasoner/],
+    [/deepseek/, /r1|reasoner|-chat/],
     [/gemini/, /2\.5/, /pro/],
     [/gemini/, /3-pro/],
     [/gpt/, /-5|5\.1|5\.2/],
