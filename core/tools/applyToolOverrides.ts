@@ -60,6 +60,11 @@ export function applyToolOverrides(
           override.systemMessageDescription.exampleArgs ??
           tool.systemMessageDescription?.exampleArgs,
       };
+    } else if (override.description && tool.systemMessageDescription) {
+      updatedTool.systemMessageDescription = {
+        ...tool.systemMessageDescription,
+        prefix: override.description,
+      };
     }
 
     toolsByName.set(override.name, updatedTool);

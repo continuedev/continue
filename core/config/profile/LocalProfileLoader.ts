@@ -1,3 +1,5 @@
+import fs from "fs";
+
 import { ConfigResult, parseConfigYaml } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
@@ -48,6 +50,18 @@ export default class LocalProfileLoader implements IProfileLoader {
         this.description.title = parsedAssistant.name;
       } catch (e) {
         console.error("Failed to parse config file: ", e);
+      }
+    } else if (!overrideAssistantFile) {
+      // Default profile: read name from primary config file
+      try {
+        const configPath = getPrimaryConfigFilePath();
+        if (fs.existsSync(configPath)) {
+          const content = fs.readFileSync(configPath, "utf-8");
+          const parsed = parseConfigYaml(content);
+          this.description.title = parsed.name;
+        }
+      } catch (e) {
+        // Keep "Local Config" as fallback
       }
     }
   }
