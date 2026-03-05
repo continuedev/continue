@@ -195,7 +195,7 @@ describe("SessionManager", () => {
   });
 
   describe("saveSession", () => {
-    it("should save the current session to file", () => {
+    it("should save the current session to file when it has content", () => {
       const session = getCurrentSession();
       session.title = "Test Session";
       session.history = [
@@ -214,6 +214,32 @@ describe("SessionManager", () => {
         expect.stringContaining("test-uuid-123.json"),
         expect.stringContaining("Test Session"),
       );
+    });
+
+    it("should not save empty sessions", () => {
+      const session = getCurrentSession();
+      session.history = [];
+
+      saveSession();
+
+      expect(mockFs.writeFileSync).not.toHaveBeenCalled();
+    });
+
+    it("should not save sessions with only system messages", () => {
+      const session = getCurrentSession();
+      session.history = [
+        {
+          message: {
+            role: "system",
+            content: "System message",
+          },
+          contextItems: [],
+        },
+      ];
+
+      saveSession();
+
+      expect(mockFs.writeFileSync).not.toHaveBeenCalled();
     });
 
     it("should filter out system messages except the first one", () => {

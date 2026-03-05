@@ -38,7 +38,7 @@ describe("ChatHistoryService", () => {
 
       expect(state.history).toEqual([]);
       expect(state.compactionIndex).toBeNull();
-      expect(state.sessionId).toBe("test-session-id");
+      expect(state.sessionId).toBe("");
       expect(state.isRemoteMode).toBe(false);
     });
 
