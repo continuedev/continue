@@ -54,6 +54,39 @@ export class OpenAIApi implements BaseLlmApi {
       (body as any).stream_options = { include_usage: true };
     }
 
+    // 1. Assistant messages with tool_calls must include 'reasoning_content' (even if empty) to avoid 400 errors.
+    const isOfficialDeepSeek =
+      this.apiBase?.includes("api.deepseek.com") ||
+      body.model.includes("deepseek-reasoner");
+
+    if (isOfficialDeepSeek) {
+      body.messages = body.messages.map((msg) => {
+        if (msg.role === "assistant") {
+          const assistantMsg = msg as any;
+
+          if (
+            assistantMsg.tool_calls?.length > 0 &&
+            !assistantMsg.reasoning_content
+          ) {
+            return {
+              ...assistantMsg,
+              reasoning_content: "",
+            };
+          }
+
+          return assistantMsg;
+        }
+        return msg;
+      });
+
+      if (body.max_tokens && body.model.includes("reasoner")) {
+        body.max_completion_tokens = body.max_tokens;
+        (body as any).max_tokens = undefined;
+      }
+
+      return body;
+    }
+
     // o-series models - only apply for official OpenAI API
     const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
     if (isOfficialOpenAIAPI) {
