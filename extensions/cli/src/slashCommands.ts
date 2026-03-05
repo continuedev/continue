@@ -1,5 +1,10 @@
+import fs from "fs";
+
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
+import type { Session } from "core/index.js";
+import historyManager from "core/util/history.js";
+import { v4 as uuidv4 } from "uuid";
 
 import {
   isAuthenticated,
@@ -173,6 +178,83 @@ function handleJobs() {
   return { openJobsSelector: true };
 }
 
+interface ExportedSession {
+  version: 1;
+  exportedAt: string;
+  session: Session;
+}
+
+function handleExport(_args: string[]): SlashCommandResult {
+  posthogService.capture("useSlashCommand", { name: "export" });
+
+  return {
+    exit: false,
+    openExportSelector: true,
+  };
+}
+
+function handleImport(args: string[]): SlashCommandResult {
+  posthogService.capture("useSlashCommand", { name: "import" });
+
+  const filePath = args[0];
+  if (!filePath) {
+    return {
+      exit: false,
+      output: chalk.yellow(
+        "Please provide a file path. Usage: /import <file-path>",
+      ),
+    };
+  }
+
+  if (!fs.existsSync(filePath)) {
+    return {
+      exit: false,
+      output: chalk.red(`File not found: ${filePath}`),
+    };
+  }
+
+  try {
+    const fileContent = fs.readFileSync(filePath, "utf-8");
+    const exportedData: ExportedSession = JSON.parse(fileContent);
+
+    let session = exportedData.session;
+
+    const existingSessions = historyManager.list({ limit: 1000 });
+    const sessionExists = existingSessions.some(
+      (s) => s.sessionId === session.sessionId,
+    );
+
+    if (sessionExists) {
+      const originalId = session.sessionId;
+      session = {
+        ...session,
+        sessionId: uuidv4(),
+      };
+      historyManager.save(session);
+      return {
+        exit: false,
+        output: chalk.green(
+          `Session imported with new ID: ${session.sessionId}\n` +
+            chalk.gray(`(original ID: ${originalId} already existed)`),
+        ),
+      };
+    }
+
+    historyManager.save(session);
+    return {
+      exit: false,
+      output: chalk.green(
+        `Session imported: ${session.sessionId} (${session.title})`,
+      ),
+    };
+  } catch (error: any) {
+    return {
+      exit: false,
+      output: chalk.red(`Failed to import session: ${error.message}`),
+    };
+  }
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
@@ -208,6 +290,8 @@ const commandHandlers: Record<string, CommandHandler> = {
     return { openUpdateSelector: true };
   },
   jobs: handleJobs,
+  export: handleExport,
+  import: handleImport,
 };
 
 export async function handleSlashCommands(

@@ -106,6 +106,16 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     description: "List background jobs",
     category: "system",
   },
+  {
+    name: "export",
+    description: "Export a session to JSON file",
+    category: "system",
+  },
+  {
+    name: "import",
+    description: "Import a session from JSON file",
+    category: "system",
+  },
 ];
 
 // Remote mode specific commands
