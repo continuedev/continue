@@ -111,13 +111,15 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
           }
         }
 
-        // Add "Create new assistant" option
-        options.push({
-          id: "create",
-          name: "Create new assistant",
-          type: "create",
-          displaySuffix: " (opens web)",
-        });
+        // Add "Create new assistant" option only when logged in
+        if (accessToken) {
+          options.push({
+            id: "create",
+            name: "Create new assistant",
+            type: "create",
+            displaySuffix: " (opens web)",
+          });
+        }
 
         // Determine current config by checking both auth config and service state
         const assistantSlug = getAssistantSlug(authConfig);
