@@ -5,6 +5,8 @@ import { backgroundJobService } from "../services/BackgroundJobService.js";
 import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
+import { fireSessionEnd } from "../hooks/fireHook.js";
+
 import { hadUnhandledError } from "./errorState.js";
 import { getGitDiffSnapshot } from "./git.js";
 import { logger } from "./logger.js";
@@ -194,6 +196,12 @@ function displaySessionUsage(): void {
 export async function gracefulExit(code: number = 0): Promise<void> {
   // Display session usage breakdown in verbose mode
   displaySessionUsage();
+
+  try {
+    await fireSessionEnd("other");
+  } catch (err) {
+    logger.debug("SessionEnd hook error (ignored)", err as any);
+  }
 
   try {
     const runningJobs = backgroundJobService.getRunningJobCount();

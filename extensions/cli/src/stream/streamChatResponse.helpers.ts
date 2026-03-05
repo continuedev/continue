@@ -8,6 +8,11 @@ import { ChatCompletionToolMessageParam } from "openai/resources/chat/completion
 
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 
+import {
+  firePostToolUse,
+  firePostToolUseFailure,
+  firePreToolUse,
+} from "../hooks/fireHook.js";
 import { checkToolPermission } from "../permissions/permissionChecker.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import { ToolCallRequest, ToolPermissions } from "../permissions/types.js";
@@ -561,6 +566,40 @@ export async function executeStreamedToolCalls(
       // Notify tool start before permission check to display in UI fallbacks
       callbacks?.onToolStart?.(call.name, call.arguments);
 
+      // Fire PreToolUse hook — if blocked, treat as policy denial
+      const preToolResult = await firePreToolUse(
+        call.name,
+        call.arguments,
+        call.id,
+      );
+      if (preToolResult.blocked) {
+        const blockedMessage =
+          preToolResult.blockReason ?? "Blocked by PreToolUse hook";
+        const blockedEntry: ToolResultWithStatus = {
+          role: "tool",
+          tool_call_id: call.id,
+          content: blockedMessage,
+          status: "canceled",
+        };
+        entriesByIndex.set(index, blockedEntry);
+        callbacks?.onToolResult?.(blockedMessage, call.name, "canceled");
+        try {
+          services.chatHistory.addToolResult(
+            call.id,
+            blockedMessage,
+            "canceled",
+          );
+        } catch {}
+        firePostToolUseFailure(
+          call.name,
+          call.arguments,
+          call.id,
+          blockedMessage,
+        );
+        hasRejection = true;
+        continue;
+      }
+
       // Check tool permissions using helper
       const permissionState =
         await serviceContainer.get<ToolPermissionServiceState>(
@@ -601,6 +640,12 @@ export async function executeStreamedToolCalls(
             "canceled",
           );
         } catch {}
+        firePostToolUseFailure(
+          call.name,
+          call.arguments,
+          call.id,
+          deniedMessage,
+        );
         hasRejection = true;
         // Remaining items will be auto-cancelled in subsequent iterations
         continue;
@@ -631,6 +676,7 @@ export async function executeStreamedToolCalls(
             };
             entriesByIndex.set(index, entry);
             callbacks?.onToolResult?.(toolResult, call.name, "done");
+            firePostToolUse(call.name, call.arguments, toolResult, call.id);
             // Immediate service update for UI feedback
             try {
               services.chatHistory.addToolResult(
@@ -654,6 +700,12 @@ export async function executeStreamedToolCalls(
               status: "errored",
             });
             callbacks?.onToolError?.(errorMessage, call.name);
+            firePostToolUseFailure(
+              call.name,
+              call.arguments,
+              call.id,
+              errorMessage,
+            );
             // Immediate service update for UI feedback
             try {
               services.chatHistory.addToolResult(

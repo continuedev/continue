@@ -36,6 +36,7 @@ import {
   countChatHistoryTokens,
 } from "../util/tokenizer.js";
 
+import { fireSessionStart, fireUserPromptSubmit } from "../hooks/fireHook.js";
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 
 /**
@@ -363,6 +364,7 @@ async function processMessage(
 
   // Track user prompt
   telemetryService.logUserPrompt(userInput.length, userInput);
+  fireUserPromptSubmit(userInput);
 
   // Check if auto-compacting is needed BEFORE adding user message
   // The handleAutoCompaction function decides whether compaction is actually needed
@@ -562,6 +564,7 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
     // Record session start
     telemetryService.recordSessionStart();
     await posthogService.capture("sessionStart", {});
+    fireSessionStart("startup");
 
     // Start active time tracking
     telemetryService.startActiveTime();

@@ -4,6 +4,7 @@ import type { ChatHistoryItem } from "core/index.js";
 import { getLastNPathParts } from "core/util/uri.js";
 import { v4 as uuidv4 } from "uuid";
 
+import { fireUserPromptSubmit } from "src/hooks/fireHook.js";
 import { logger } from "src/util/logger.js";
 
 import { DEFAULT_SESSION_TITLE } from "../../constants/session.js";
@@ -233,6 +234,7 @@ export async function formatMessageWithFiles(
 export function trackUserMessage(message: string, model?: any): void {
   telemetryService.startActiveTime();
   telemetryService.logUserPrompt(message.length, message);
+  fireUserPromptSubmit(message);
   posthogService.capture("chat", {
     model: model?.name,
     provider: model?.provider,
