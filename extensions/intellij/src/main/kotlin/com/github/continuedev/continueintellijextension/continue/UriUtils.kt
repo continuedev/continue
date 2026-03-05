@@ -2,6 +2,8 @@ package com.github.continuedev.continueintellijextension.`continue`
 
 import java.io.File
 import java.net.URI
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 /**
  * Utility class for URI operations
@@ -15,19 +17,31 @@ object UriUtils {
             // Remove query parameters if present
             val uriStr = uri.substringBefore("?")
 
-            // Handle Windows file paths with authority component
-            if (uriStr.startsWith("file://") && !uriStr.startsWith("file:///")) {
-                val path = uriStr.substringAfter("file://")
-                return URI("file:///$path")
+            if (uriStr.startsWith("file://")) {
+                val normalizedFileUri = normalizeWindowsFileUri(uriStr)
+                val encodedPath = normalizeAndEncodeFilePath(normalizedFileUri.substringAfter("file://"))
+                return URI("file", "", encodedPath, null)
             }
 
             // Standard URI handling for other cases
-            val uriWithoutQuery = URI(uriStr)
-            return uriWithoutQuery
+            return URI(uriStr)
         } catch (e: Exception) {
             println("Error parsing URI: $uri ${e.message}")
             throw Exception("Invalid URI: $uri ${e.message}")
         }
+    }
+
+    private fun normalizeWindowsFileUri(uri: String): String {
+        if (uri.startsWith("file://") && !uri.startsWith("file:///")) {
+            val path = uri.substringAfter("file://")
+            return "file:///$path"
+        }
+        return uri
+    }
+
+    private fun normalizeAndEncodeFilePath(rawPath: String): String {
+        val decodedPath = URLDecoder.decode(rawPath, StandardCharsets.UTF_8)
+        return if (decodedPath.startsWith("/")) decodedPath else "/$decodedPath"
     }
 
     /**

@@ -47,4 +47,22 @@ class UriUtilsTest : TestCase() {
         val file = UriUtils.uriToFile(uri)
         assertEquals(File("/wsl.localhost/Ubuntu/home/user/file.txt"), file)
     }
+
+    fun `test file path with square brackets`() {
+        val uri = "file:///path/to/[folder]/file.txt"
+        val file = UriUtils.uriToFile(uri)
+        assertEquals(File("/path/to/[folder]/file.txt"), file)
+    }
+
+    fun `test windows file URI with square brackets in path`() {
+        val uri = "file://C:/Users/test/project/[gamemode]/resource/file.lua"
+        val parsed = UriUtils.parseUri(uri)
+        assertEquals("file:///C:/Users/test/project/%5Bgamemode%5D/resource/file.lua", parsed.toString())
+    }
+
+    fun `test windows file URI with spaces in path`() {
+        val uri = "file://C:/Users/test/project name/resource/file.lua"
+        val parsed = UriUtils.parseUri(uri)
+        assertEquals("file:///C:/Users/test/project%20name/resource/file.lua", parsed.toString())
+    }
 }
