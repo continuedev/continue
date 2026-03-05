@@ -54,6 +54,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "msty",
   "anthropic",
   "bedrock",
+  "brainiall",
   "cohere",
   "sagemaker",
   "continue-proxy",
@@ -118,6 +119,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "msty",
   "anthropic",
   "bedrock",
+  "brainiall",
   "sagemaker",
   "continue-proxy",
   "openrouter",
@@ -231,6 +233,7 @@ function modelSupportsReasoning(
 const PARALLEL_PROVIDERS: string[] = [
   "anthropic",
   "bedrock",
+  "brainiall",
   "cohere",
   "sagemaker",
   "deepinfra",
