@@ -106,6 +106,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     description: "List background jobs",
     category: "system",
   },
+  {
+    name: "sessions",
+    description: "Show all chat sessions",
+    category: "system",
+  },
 ];
 
 // Remote mode specific commands
