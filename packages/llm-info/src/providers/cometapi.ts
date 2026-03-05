@@ -292,6 +292,24 @@ export const CometAPI: ModelProvider = {
         "DeepSeek reasoning model optimized for complex problem-solving tasks.",
       recommendedFor: ["chat"],
     },
+    {
+      model: "deepseek-chat",
+      displayName: "DeepSeek Chat",
+      contextLength: 128000,
+      maxCompletionTokens: 4096,
+      description:
+        "DeepSeek model specifically optimized for conversational interactions.",
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "deepseek-reasoner",
+      displayName: "DeepSeek Reasoner",
+      contextLength: 128000,
+      maxCompletionTokens: 4096,
+      description:
+        "DeepSeek model with enhanced reasoning capabilities for analytical tasks.",
+      recommendedFor: ["chat"],
+    },
 
     // Qwen Series
     {

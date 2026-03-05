@@ -38,7 +38,9 @@ const testCases: [any, string, boolean, string][] = [
   [FunctionNetwork, "any-model", false, "FunctionNetwork"],
   [OpenAI, "codestral", false, "OpenAI"],
   [Mistral, "codestral", true, "Mistral"],
-  [Deepseek, "deepseek-chat", true, "Deepseek"],
+  [Deepseek, "deepseek-fim-beta", true, "DeepSeek"],
+  [Deepseek, "deepseek-chat", false, "DeepSeek"],
+  [Deepseek, "deepseek-reasoner", false, "DeepSeek"],
 ];
 
 testCases.forEach(([LLMClass, model, expectedResult, description]) => {

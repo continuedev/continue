@@ -3,7 +3,6 @@ import { commonModelSlugs } from "./commonSlugs.js";
 import { dataSchema } from "./data/index.js";
 import { mcpServerSchema, partialMcpServerSchema } from "./mcp/index.js";
 import {
-  modelRolesSchema,
   modelSchema,
   partialModelSchema,
   requestOptionsSchema,
@@ -77,7 +76,6 @@ export const blockItemWrapperSchema = <T extends z.AnyZodObject>(
     uses: usesSchema,
     with: z.record(z.string()).optional(),
     override: schema.partial().optional(),
-    roles: modelRolesSchema.array().optional(),
   });
 
 export const blockOrSchema = <T extends z.AnyZodObject>(

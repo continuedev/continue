@@ -296,7 +296,6 @@ export {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
-  codestralTemplateMessages,
   deepseekTemplateMessages,
   gemmaTemplateMessage,
   graniteTemplateMessages,
@@ -310,4 +309,5 @@ export {
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
   zephyrTemplateMessages,
+  codestralTemplateMessages,
 };

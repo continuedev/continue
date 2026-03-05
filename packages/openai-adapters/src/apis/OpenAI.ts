@@ -210,9 +210,6 @@ export class OpenAIApi implements BaseLlmApi {
     for await (const chunk of streamSse(resp as any)) {
       if (chunk.choices && chunk.choices.length > 0) {
         yield chunk;
-        if (chunk.choices[0].finish_reason) {
-          return;
-        }
       }
     }
   }

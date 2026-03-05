@@ -405,7 +405,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "DeepSeek Reasoner",
       model: "deepseek-reasoner",
       contextLength: 131072,
-      maxTokens: 65536,
+      maxTokens: 32000,
       apiBase: "https://api.deepseek.com/",
     },
     icon: "deepseek.png",

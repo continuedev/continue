@@ -381,10 +381,14 @@ export function convertToBaseDeepSeekRequestBody(
   warnings: string[] = [],
 ): BaseDeepSeekRequestBody {
   const validatedStop = validateStopSequences(body.stop, warnings);
+  
+  // Handle max_completion_tokens (OpenAI o-series) -> max_tokens (DeepSeek)
+  // Prefer max_completion_tokens if provided, otherwise fall back to max_tokens
+  const maxTokens = (body as any).max_completion_tokens ?? body.max_tokens;
 
   return {
     model: body.model,
-    max_tokens: body.max_tokens,
+    max_tokens: maxTokens,
     temperature: body.temperature,
     top_p: body.top_p,
     frequency_penalty: body.frequency_penalty,

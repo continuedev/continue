@@ -24,12 +24,27 @@ const GEMINI_MODEL_CONFIG = {
 };
 
 const DEEPSEEK_MODEL_CONFIG = {
-  slugs: [
-    "deepseek/deepseek-chat",
-    "deepseek/deepseek-reasoner",
-    "deepseek/deepseek-fim-beta", // autocomplete not very useful with large delay, but configured with autocomplete role
-  ],
   apiKeyInputName: "DEEPSEEK_API_KEY",
+  models: [
+    {
+      slug: "deepseek/deepseek-chat",
+      model: "deepseek-chat",
+      name: "DeepSeek Chat",
+      contextLength: 131072,
+      maxTokens: 8192,
+      apiBase: "https://api.deepseek.com/",
+      roles: undefined,
+    },
+    {
+      slug: "deepseek/deepseek-reasoner",
+      model: "deepseek-reasoner",
+      name: "DeepSeek Reasoner",
+      contextLength: 131072,
+      maxTokens: 32000,
+      apiBase: "https://api.deepseek.com/",
+      roles: undefined,
+    },
+  ],
 };
 
 /**
@@ -83,85 +98,46 @@ export function setupProviderConfig(
 
   switch (provider) {
     case "openai":
-      newModels = OPENAI_MODEL_CONFIG.slugs.map((slug) => {
-        const modelName = slug.split('/')[1];
-        return {
-          name: modelName,
-          provider: "openai",
-          model: modelName,
-          apiKey: apiKey,
-          roles: ["chat", "edit", "apply", "summarize", "subagent"],
-        };
-      });
+      newModels = OPENAI_MODEL_CONFIG.slugs.map((slug) => ({
+        uses: slug,
+        with: {
+          [OPENAI_MODEL_CONFIG.apiKeyInputName]: apiKey,
+        },
+      }));
       break;
     case "anthropic":
-      newModels = ANTHROPIC_MODEL_CONFIG.slugs.map((slug) => {
-        const modelName = slug.split('/')[1];
-        return {
-          name: modelName,
-          provider: "anthropic",
-          model: modelName,
-          apiKey: apiKey,
-          roles: ["chat", "edit", "apply", "summarize", "subagent"],
-        };
-      });
+      newModels = ANTHROPIC_MODEL_CONFIG.slugs.map((slug) => ({
+        uses: slug,
+        with: {
+          [ANTHROPIC_MODEL_CONFIG.apiKeyInputName]: apiKey,
+        },
+      }));
       break;
     case "gemini":
-      newModels = GEMINI_MODEL_CONFIG.slugs.map((slug) => {
-        const modelName = slug.split('/')[1];
-        return {
-          name: modelName,
-          provider: "google",
-          model: modelName,
-          apiKey: apiKey,
-          roles: ["chat", "edit", "apply", "summarize", "subagent"],
-        };
-      });
+      newModels = GEMINI_MODEL_CONFIG.slugs.map((slug) => ({
+        uses: slug,
+        with: {
+          [GEMINI_MODEL_CONFIG.apiKeyInputName]: apiKey,
+        },
+      }));
       break;
     case "deepseek":
-      newModels = DEEPSEEK_MODEL_CONFIG.slugs.map((slug) => {
-        const modelName = slug.split('/')[1];
-        const modelObj: any = {
-          name: modelName === "deepseek-reasoner" ? "DeepSeek Reasoner" :
-                modelName === "deepseek-chat" ? "DeepSeek Chat" :
-                modelName === "deepseek-fim-beta" ? "DeepSeek FIM Beta" : modelName,
+      newModels = DEEPSEEK_MODEL_CONFIG.models.map((modelConfig) => {
+        const model: any = {
+          name: modelConfig.name,
           provider: "deepseek",
-          model: modelName,
-          apiKey: apiKey,
-          apiBase: modelName === "deepseek-fim-beta" ? "https://api.deepseek.com/beta" : "https://api.deepseek.com/",
+          model: modelConfig.model,
+          apiKey,
+          contextLength: modelConfig.contextLength,
+          defaultCompletionOptions: {
+            maxTokens: modelConfig.maxTokens,
+          },
+          roles: modelConfig.roles,
         };
-        // Add roles and other properties based on model slug
-        if (slug === "deepseek/deepseek-fim-beta") {
-          modelObj.roles = [
-            "chat",
-            "autocomplete",
-            "edit",
-            "apply",
-            "summarize",
-            "subagent",
-          ];
-          modelObj.defaultCompletionOptions = {
-            contextLength: 131072,
-            maxTokens: 8192,
-          };
-          modelObj.capabilities = []; // FIM Beta doesn't support tools
-        } else if (slug === "deepseek/deepseek-chat") {
-          modelObj.roles = ["chat", "edit", "apply", "summarize", "subagent"];
-          modelObj.defaultCompletionOptions = {
-            contextLength: 131072,
-            maxTokens: 8192,
-          };
-          modelObj.capabilities = ["tool_use"];
-        } else {
-          // deepseek/deepseek-reasoner
-          modelObj.roles = ["chat", "edit", "apply", "summarize", "subagent"];
-          modelObj.defaultCompletionOptions = {
-            contextLength: 131072,
-            maxTokens: 65535,
-          };
-          modelObj.capabilities = ["tool_use"];
+        if (modelConfig.apiBase) {
+          model.apiBase = modelConfig.apiBase;
         }
-        return modelObj;
+        return model;
       });
       break;
     default:
