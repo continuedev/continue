@@ -168,6 +168,82 @@ describe("applyToolOverrides", () => {
     expect(result.errors).toHaveLength(0);
   });
 
+  it("description override should also update systemMessageDescription.prefix", () => {
+    // Built-in tools have systemMessageDescription set. When a user overrides
+    // the description via the simple YAML field, the system message builder
+    // uses systemMessageDescription.prefix (not function.description).
+    // The description override must fall through to update the prefix.
+    const tools = [mockTool("read_file", "Original function description")];
+    tools[0].systemMessageDescription = {
+      prefix:
+        "To read a file with a known filepath, use the read_file tool. For example:",
+      exampleArgs: [["filepath", "path/to/file.txt"]],
+    };
+
+    const overrides: ToolOverride[] = [
+      { name: "read_file", description: "Custom description from YAML config" },
+    ];
+    const result = applyToolOverrides(tools, overrides);
+
+    // function.description should be updated (existing behavior)
+    expect(result.tools[0].function.description).toBe(
+      "Custom description from YAML config",
+    );
+
+    // FAILS NOW: systemMessageDescription.prefix is NOT updated by description override
+    // PASSES AFTER FIX: prefix falls through from description
+    expect(result.tools[0].systemMessageDescription?.prefix).toBe(
+      "Custom description from YAML config",
+    );
+
+    // exampleArgs should be preserved from the original tool
+    expect(result.tools[0].systemMessageDescription?.exampleArgs).toEqual([
+      ["filepath", "path/to/file.txt"],
+    ]);
+  });
+
+  it("explicit systemMessageDescription should take priority over description fall-through", () => {
+    const tools = [mockTool("read_file", "Original")];
+    tools[0].systemMessageDescription = {
+      prefix: "Original prefix",
+      exampleArgs: [["filepath", "/old/path"]],
+    };
+
+    const overrides: ToolOverride[] = [
+      {
+        name: "read_file",
+        description: "Simple description",
+        systemMessageDescription: {
+          prefix: "Explicit prefix wins",
+        },
+      },
+    ];
+    const result = applyToolOverrides(tools, overrides);
+
+    // Explicit systemMessageDescription.prefix should win over description
+    expect(result.tools[0].systemMessageDescription?.prefix).toBe(
+      "Explicit prefix wins",
+    );
+    // function.description still gets the simple override
+    expect(result.tools[0].function.description).toBe("Simple description");
+  });
+
+  it("description override should not add systemMessageDescription to tools that lack it", () => {
+    // MCP/dynamic tools don't have systemMessageDescription.
+    // A description override should NOT create one.
+    const tools = [mockTool("mcp_tool", "Original MCP description")];
+    // No systemMessageDescription set
+
+    const overrides: ToolOverride[] = [
+      { name: "mcp_tool", description: "Custom MCP description" },
+    ];
+    const result = applyToolOverrides(tools, overrides);
+
+    expect(result.tools[0].function.description).toBe("Custom MCP description");
+    // Should remain undefined — don't promote a dynamic tool to predefined
+    expect(result.tools[0].systemMessageDescription).toBeUndefined();
+  });
+
   it("should not mutate original tools array", () => {
     const tools = [mockTool("read_file", "Original")];
     const originalDescription = tools[0].function.description;

@@ -24,6 +24,7 @@ import { constructMessages } from "../util/constructMessages";
 import { modelSupportsNativeTools } from "core/llm/toolSupport";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
+import { applyToolOverrides } from "core/tools/applyToolOverrides";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
 import posthog from "posthog-js";
 import {
@@ -93,8 +94,11 @@ export const streamNormalInput = createAsyncThunk<
       throw new Error("No chat model selected");
     }
 
-    // Get tools and filter them based on the selected model
+    // Get tools and apply per-model overrides (disabled tools, custom descriptions)
     const activeTools = selectActiveTools(state);
+    const toolsWithOverrides = selectedChatModel?.toolOverrides
+      ? applyToolOverrides(activeTools, selectedChatModel.toolOverrides).tools
+      : activeTools;
 
     // Use the centralized selector to determine if system message tools should be used
     const useNativeTools = state.config.config.experimental
@@ -107,9 +111,9 @@ export const streamNormalInput = createAsyncThunk<
 
     // Construct completion options
     let completionOptions: LLMFullCompletionOptions = {};
-    if (useNativeTools && activeTools.length > 0) {
+    if (useNativeTools && toolsWithOverrides.length > 0) {
       completionOptions = {
-        tools: activeTools,
+        tools: toolsWithOverrides,
       };
     }
 
@@ -123,14 +127,14 @@ export const streamNormalInput = createAsyncThunk<
     const baseSystemMessage = getBaseSystemMessage(
       state.session.mode,
       selectedChatModel,
-      activeTools,
+      toolsWithOverrides,
     );
 
     const systemMessage = systemToolsFramework
       ? addSystemMessageToolsToSystemMessage(
           systemToolsFramework,
           baseSystemMessage,
-          activeTools,
+          toolsWithOverrides,
         )
       : baseSystemMessage;
 
@@ -193,7 +197,7 @@ export const streamNormalInput = createAsyncThunk<
         },
         streamAborter.signal,
       );
-      if (systemToolsFramework && activeTools.length > 0) {
+      if (systemToolsFramework && toolsWithOverrides.length > 0) {
         gen = interceptSystemToolCalls(
           gen,
           streamAborter,
@@ -226,8 +230,8 @@ export const streamNormalInput = createAsyncThunk<
               modelName: selectedChatModel.title,
               modelTitle: selectedChatModel.title,
               sessionId: state.session.id,
-              ...(!!activeTools.length && {
-                tools: activeTools.map((tool) => tool.function.name),
+              ...(!!toolsWithOverrides.length && {
+                tools: toolsWithOverrides.map((tool) => tool.function.name),
               }),
               ...(appliedRules.length > 0 && {
                 rules: appliedRules.map((rule) => ({
@@ -314,7 +318,7 @@ export const streamNormalInput = createAsyncThunk<
     const policies = await evaluateToolPolicies(
       dispatch,
       extra.ideMessenger,
-      activeTools,
+      toolsWithOverrides,
       generatedCalls3,
       toolPolicies,
     );
