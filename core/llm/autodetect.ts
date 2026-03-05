@@ -72,6 +72,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "docker",
   "nous",
   "zAI",
+  "avian",
   // TODO add these, change to inverted logic so only the ones that need templating are hardcoded
   // Asksage.ts
   // Azure.ts

@@ -1,4 +1,5 @@
 import { Anthropic } from "./providers/anthropic.js";
+import { Avian } from "./providers/avian.js";
 import { Azure } from "./providers/azure.js";
 import { Bedrock } from "./providers/bedrock.js";
 import { Cohere } from "./providers/cohere.js";
@@ -27,6 +28,7 @@ export const allModelProviders: ModelProvider[] = [
   CometAPI,
   xAI,
   zAI,
+  Avian,
 ];
 
 export const allLlms: LlmInfoWithProvider[] = allModelProviders.flatMap(

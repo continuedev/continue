@@ -563,6 +563,59 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["zAI"],
     isOpenSource: false,
   },
+  avianDeepseekV32: {
+    title: "DeepSeek V3.2",
+    description: "DeepSeek V3.2 with 164K context, available through Avian",
+    refUrl: "https://avian.io",
+    params: {
+      title: "DeepSeek V3.2",
+      model: "deepseek/deepseek-v3.2",
+      contextLength: 164_000,
+    },
+    icon: "avian.png",
+    providerOptions: ["avian"],
+    isOpenSource: false,
+  },
+  avianKimiK25: {
+    title: "Kimi K2.5",
+    description:
+      "Moonshot AI's Kimi K2.5 with 131K context, available through Avian",
+    refUrl: "https://avian.io",
+    params: {
+      title: "Kimi K2.5",
+      model: "moonshotai/kimi-k2.5",
+      contextLength: 131_000,
+    },
+    icon: "avian.png",
+    providerOptions: ["avian"],
+    isOpenSource: false,
+  },
+  avianGlm5: {
+    title: "GLM-5",
+    description: "Z.ai's GLM-5 with 131K context, available through Avian",
+    refUrl: "https://avian.io",
+    params: {
+      title: "GLM-5",
+      model: "z-ai/glm-5",
+      contextLength: 131_000,
+    },
+    icon: "avian.png",
+    providerOptions: ["avian"],
+    isOpenSource: false,
+  },
+  avianMinimaxM25: {
+    title: "MiniMax M2.5",
+    description: "MiniMax M2.5 with 1M context window, available through Avian",
+    refUrl: "https://avian.io",
+    params: {
+      title: "MiniMax M2.5",
+      model: "minimax/minimax-m2.5",
+      contextLength: 1_000_000,
+    },
+    icon: "avian.png",
+    providerOptions: ["avian"],
+    isOpenSource: false,
+  },
   mistralOs: {
     title: "Mistral",
     description:
