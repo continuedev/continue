@@ -18,13 +18,17 @@ const ttsKillTimeout: number = 5000;
 export function sanitizeMessageForTTS(message: string): string {
   message = removeCodeBlocksAndTrim(message);
 
-  // Remove or replace problematic characters
+  // Remove or replace problematic characters for shell command injection prevention
+  // This handles: double quotes, backticks, dollar signs, backslashes,
+  // shell metacharacters, single quotes (for PowerShell), and newlines/carriage returns
   message = message
     .replace(/"/g, "")
     .replace(/`/g, "")
     .replace(/\$/g, "")
     .replace(/\\/g, "")
-    .replace(/[&|;()<>]/g, "");
+    .replace(/[&|;()<>]/g, "")
+    .replace(/'/g, "") // Remove single quotes to prevent escaping in PowerShell
+    .replace(/[\r\n]/g, " "); // Replace newlines with spaces to prevent command injection
 
   message = message.trim().replace(/\s+/g, " ");
 
