@@ -86,8 +86,10 @@ export function convertVercelStreamPart(
       });
 
     case "reasoning-delta":
-      return chatChunk({
-        content: part.text,
+      return chatChunkFromDelta({
+        delta: {
+          reasoning_content: part.text,
+        } as any,
         model,
       });
 
