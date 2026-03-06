@@ -39,6 +39,7 @@ import { isOllamaInstalled } from "../util/ollamaHelper.js";
 import { TokensBatchingService } from "../util/TokensBatchingService.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 
+import { applyToolOverrides } from "../tools/applyToolOverrides.js";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -66,7 +67,6 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
-import { applyToolOverrides } from "../tools/applyToolOverrides.js";
 
 export class LLMError extends Error {
   constructor(
@@ -962,7 +962,10 @@ export abstract class BaseLLM implements ILLM {
   ) {
     let completion = "";
     for await (const message of this.streamChat(messages, signal, options)) {
-      completion += renderChatMessage(message);
+      // Only accumulate assistant messages, not thinking or other message types
+      if (message.role === "assistant") {
+        completion += renderChatMessage(message);
+      }
     }
     return { role: "assistant" as const, content: completion };
   }
