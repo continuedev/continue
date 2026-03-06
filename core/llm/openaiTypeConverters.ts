@@ -868,6 +868,18 @@ function convertThinkingMessageToReasoningItem(
   return reasoningItem;
 }
 
+function hasFollowingAssistantMessage(
+  messages: ChatMessage[],
+  startIndex: number,
+): boolean {
+  for (let i = startIndex + 1; i < messages.length; i++) {
+    const nextRole = messages[i]?.role;
+    if (nextRole === "thinking") continue;
+    return nextRole === "assistant";
+  }
+  return false;
+}
+
 export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
   const input: ResponseInput = [];
 
@@ -967,6 +979,10 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
         break;
       }
       case "thinking": {
+        if (!hasFollowingAssistantMessage(messages, i)) {
+          break;
+        }
+
         const reasoningItem = convertThinkingMessageToReasoningItem(
           msg as ThinkingChatMessage,
         );

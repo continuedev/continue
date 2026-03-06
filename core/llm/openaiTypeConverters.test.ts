@@ -22,6 +22,11 @@ type MessageItem = {
   content: unknown;
 };
 
+type ReasoningItem = {
+  type: "reasoning";
+  id: string;
+};
+
 // Helper functions for filtering results
 function getFunctionCalls(items: ResponseInputItem[]): FunctionCallItem[] {
   return items.filter(
@@ -45,6 +50,12 @@ function getMessagesByRole(
     const msg = item as { role?: string; type?: string };
     return msg.role === role && (!msg.type || msg.type === "message");
   }) as unknown as MessageItem[];
+}
+
+function getReasoningItems(items: ResponseInputItem[]): ReasoningItem[] {
+  return items.filter(
+    (item) => (item as { type?: string }).type === "reasoning",
+  ) as unknown as ReasoningItem[];
 }
 
 describe("openaiTypeConverters", () => {
@@ -494,6 +505,44 @@ describe("openaiTypeConverters", () => {
 
         const userMessages = getMessagesByRole(result, "user");
         expect(userMessages.length).toBe(2);
+      });
+
+      it("should skip trailing thinking messages without a following assistant item", () => {
+        const messages: ChatMessage[] = [
+          {
+            role: "thinking",
+            content: "",
+            reasoning_details: [{ type: "reasoning_id", id: "rs_trailing" }],
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        const reasoningItems = getReasoningItems(result);
+        expect(reasoningItems.length).toBe(0);
+      });
+
+      it("should preserve thinking messages when followed by assistant output", () => {
+        const messages: ChatMessage[] = [
+          {
+            role: "thinking",
+            content: "",
+            reasoning_details: [{ type: "reasoning_id", id: "rs_kept" }],
+          } as ChatMessage,
+          {
+            role: "assistant",
+            content: "Done.",
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        const reasoningItems = getReasoningItems(result);
+        const assistantMessages = getMessagesByRole(result, "assistant");
+
+        expect(reasoningItems.length).toBe(1);
+        expect(reasoningItems[0].id).toBe("rs_kept");
+        expect(assistantMessages.length).toBe(1);
       });
 
       it("should handle system message (converted to developer role)", () => {
