@@ -1,11 +1,10 @@
 import { parseDocument } from "yaml";
 
 export interface ModelConfig {
-  uses: string;
-  with: {
-    ANTHROPIC_API_KEY?: string;
-    OPENAI_API_KEY?: string;
-  };
+  name: string;
+  provider: string;
+  model: string;
+  apiKey: string;
 }
 
 export interface ConfigStructure {
@@ -28,10 +27,10 @@ export function updateAnthropicModelInYaml(
   apiKey: string,
 ): string {
   const newModel: ModelConfig = {
-    uses: "anthropic/claude-sonnet-4-6",
-    with: {
-      ANTHROPIC_API_KEY: apiKey,
-    },
+    name: "claude sonnet 4.6",
+    provider: "anthropic",
+    model: "claude-sonnet-4-6",
+    apiKey: apiKey,
   };
 
   try {
@@ -100,10 +99,10 @@ export function updateOpenAIModelInYaml(
   apiKey: string,
 ): string {
   const newModel: ModelConfig = {
-    uses: "openai/gpt-5.4",
-    with: {
-      OPENAI_API_KEY: apiKey,
-    },
+    name: "GPT 5.4",
+    provider: "openai",
+    model: "gpt-5.4",
+    apiKey: apiKey,
   };
 
   try {
