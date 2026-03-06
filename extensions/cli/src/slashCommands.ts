@@ -173,6 +173,11 @@ function handleJobs() {
   return { openJobsSelector: true };
 }
 
+function handleSessions() {
+  posthogService.capture("useSlashCommand", { name: "sessions" });
+  return { openSessionSelector: true };
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
@@ -208,6 +213,7 @@ const commandHandlers: Record<string, CommandHandler> = {
     return { openUpdateSelector: true };
   },
   jobs: handleJobs,
+  sessions: handleSessions,
 };
 
 export async function handleSlashCommands(
