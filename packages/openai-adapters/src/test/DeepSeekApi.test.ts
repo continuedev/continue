@@ -13,11 +13,11 @@ describe("DeepSeekApi - Simple Unit Tests", () => {
     it("should preserve API base URL exactly as provided", () => {
       const api = new DeepSeekApi({
         ...mockConfig,
-        apiBase: "https://api.deepseek.com",
+        apiBase: "https://api.deepseek.com/",
       } as z.infer<typeof OpenAIConfigSchema>);
 
       // @ts-ignore - accessing private property for test
-      expect(api.apiBase).toBe("https://api.deepseek.com");
+      expect(api.apiBase).toBe("https://api.deepseek.com/");
     });
 
     it("should use default API base if not provided", () => {

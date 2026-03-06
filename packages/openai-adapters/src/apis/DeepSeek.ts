@@ -52,7 +52,6 @@ export class DeepSeekApi extends OpenAIApi {
     if (!this.apiBase.endsWith("/")) {
       this.apiBase += "/";
     }
-
   }
 
   private async _throwDeepSeekError(resp: Response): Promise<never> {
