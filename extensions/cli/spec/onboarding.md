@@ -10,7 +10,6 @@ When a user first runs `cn` in interactive mode, they will be taken through "onb
 2. If the CONTINUE_USE_BEDROCK environment variable is set to "1", automatically use AWS Bedrock configuration and skip interactive prompts
 3. Present the user with available options:
 
-   - Log in with Continue: log them in, which will automatically create their assistant and then we can load the first assistant from the first org
    - Enter your Anthropic API key: let them enter the key, and then either create a ~/.continue/config.yaml with the following contents OR update the existing config.yaml to add the model
 
    ```yaml
@@ -19,10 +18,25 @@ When a user first runs `cn` in interactive mode, they will be taken through "onb
    schema: v1
 
    models:
-     - uses: anthropic/claude-4-sonnet
+     - uses: anthropic/claude-sonnet-4-6
        with:
          ANTHROPIC_API_KEY: <THEIR_ANTHROPIC_API_KEY>
    ```
+
+   - Enter your OpenAI API key: let them enter the key, and then either create a ~/.continue/config.yaml with the following contents OR update the existing config.yaml to add the model
+
+   ```yaml
+   name: Local Config
+   version: 1.0.0
+   schema: v1
+
+   models:
+     - uses: openai/gpt-4.1
+       with:
+         OPENAI_API_KEY: <THEIR_OPENAI_API_KEY>
+   ```
+
+   - Log in with Continue: log them in, which will automatically create their assistant and then we can load the first assistant from the first org
 
    When CONTINUE_USE_BEDROCK=1 is detected, it will use AWS Bedrock configuration. The user must have AWS credentials configured through the standard AWS credential chain (AWS CLI, environment variables, IAM roles, etc.).
 
