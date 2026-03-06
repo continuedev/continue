@@ -14,6 +14,7 @@ import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
+import { loadMarkdownSkills } from "./util/loadMarkdownSkills.js";
 
 type CommandHandler = (
   args: string[],
@@ -173,6 +174,32 @@ function handleJobs() {
   return { openJobsSelector: true };
 }
 
+async function handleSkills(): Promise<SlashCommandResult> {
+  const { skills } = await loadMarkdownSkills();
+
+  if (!skills.length) {
+    return {
+      exit: false,
+      output: chalk.yellow(
+        "No skills found. Add skills under .continue/skills or .claude/skills.",
+      ),
+    };
+  }
+
+  const header = chalk.bold("Available skills:");
+  const lines = skills.map(
+    (skill) =>
+      `${chalk.cyan(skill.name)} - ${skill.description} ${chalk.gray(
+        `(${skill.path})`,
+      )}`,
+  );
+
+  return {
+    exit: false,
+    output: [header, "", ...lines].join("\n"),
+  };
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
@@ -208,6 +235,7 @@ const commandHandlers: Record<string, CommandHandler> = {
     return { openUpdateSelector: true };
   },
   jobs: handleJobs,
+  skills: () => handleSkills(),
 };
 
 export async function handleSlashCommands(

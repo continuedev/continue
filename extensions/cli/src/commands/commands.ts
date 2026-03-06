@@ -106,6 +106,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     description: "List background jobs",
     category: "system",
   },
+  {
+    name: "skills",
+    description: "List all available skills",
+    category: "system",
+  },
 ];
 
 // Remote mode specific commands
