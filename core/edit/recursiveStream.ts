@@ -83,7 +83,7 @@ export async function* recursiveStream(
     });
 
     for await (const chunk of generator) {
-      if ( chunk.role === "assistant") {
+      if (chunk.role === "assistant") {
         yield chunk;
         const rendered = renderChatMessage(chunk);
         buffer += rendered;

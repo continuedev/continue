@@ -86,9 +86,9 @@ export function validateResponseFormat(
   // Check if responseFormat is an object with a type property
   if (
     !responseFormat ||
-    typeof responseFormat !== 'object' ||
-    !('type' in responseFormat) ||
-    typeof (responseFormat as any).type !== 'string'
+    typeof responseFormat !== "object" ||
+    !("type" in responseFormat) ||
+    typeof (responseFormat as any).type !== "string"
   ) {
     return undefined;
   }
@@ -381,7 +381,7 @@ export function convertToBaseDeepSeekRequestBody(
   warnings: string[] = [],
 ): BaseDeepSeekRequestBody {
   const validatedStop = validateStopSequences(body.stop, warnings);
-  
+
   // Handle max_completion_tokens (OpenAI o-series) -> max_tokens (DeepSeek)
   // Prefer max_completion_tokens if provided, otherwise fall back to max_tokens
   const maxTokens = (body as any).max_completion_tokens ?? body.max_tokens;
@@ -467,8 +467,10 @@ export function prepareMessage(
 
   const role = msg.role === "developer" ? "system" : msg.role;
 
-  if (!validDeepSeekRoles.includes(role as DeepSeekMessage['role'])) {
-    warnings.push(`Invalid message role: ${msg.role} at index ${index}. (removed from request)`);
+  if (!validDeepSeekRoles.includes(role as DeepSeekMessage["role"])) {
+    warnings.push(
+      `Invalid message role: ${msg.role} at index ${index}. (removed from request)`,
+    );
     return undefined;
   }
 

@@ -16,82 +16,8 @@ function getModelClass(
   return LLMClasses.find((llm) => llm.providerName === model.provider);
 }
 
-// function getContinueProxyModelName(
-//   ownerSlug: string,
-//   packageSlug: string,
-//   model: ModelConfig,
-// ): string {
-//   return `${ownerSlug}/${packageSlug}/${model.provider}/${model.model}`;
-// }
-
-async function modelConfigToBaseLLM({
-  model,
-  uniqueId,
-  llmLogger,
-  config,
-  isFromAutoDetect,
-}: {
-  model: ModelConfig;
-  uniqueId: string;
-  llmLogger: ILLMLogger;
-  config: ContinueConfig;
-  isFromAutoDetect?: boolean;
-}): Promise<BaseLLM | undefined> {
-  const cls = getModelClass(model);
-
-  if (!cls) {
-    return undefined;
-  }
-
-  const { capabilities, ...rest } = model;
-
-  const mergedRequestOptions = mergeConfigYamlRequestOptions(
-    rest.requestOptions,
-    config.requestOptions,
-  );
-
-  const llmInfo = findLlmInfo(model.model, model.provider);
-  const contextLength = model.defaultCompletionOptions?.contextLength ?? llmInfo?.contextLength;
-  const maxCompletionTokens = llmInfo?.maxCompletionTokens;
-  const defaultMaxTokens = maxCompletionTokens && contextLength
-    ? Math.min(maxCompletionTokens, contextLength / 4)
-    : undefined;
-
-  let options: LLMOptions = {
-    ...rest,
-    contextLength: contextLength,
-    completionOptions: {
-      ...(model.defaultCompletionOptions ?? {}),
-      model: model.model,
-      maxTokens:
-        model.defaultCompletionOptions?.maxTokens ??
-        cls.defaultOptions?.completionOptions?.maxTokens ??
-        defaultMaxTokens,
-    },
-    logger: llmLogger,
-    uniqueId,
-    title: model.name,
-    template: model.promptTemplates?.chat,
-    promptTemplates: model.promptTemplates,
-    baseAgentSystemMessage: model.chatOptions?.baseAgentSystemMessage ?? cls.defaultOptions?.baseAgentSystemMessage,
-    basePlanSystemMessage: model.chatOptions?.basePlanSystemMessage ?? cls.defaultOptions?.basePlanSystemMessage,
-    baseChatSystemMessage: model.chatOptions?.baseSystemMessage ?? cls.defaultOptions?.baseChatSystemMessage,
-    toolOverrides: model.chatOptions?.toolOverrides
-      ? Object.entries(model.chatOptions.toolOverrides).map(([name, o]) => ({
-          name,
-          ...o,
-        }))
-      : undefined,
-    capabilities: {
-      tools: model.capabilities?.includes("tool_use"),
-      uploadImage: model.capabilities?.includes("image_input"),
-      nextEdit: model.capabilities?.includes("next_edit"),
-    },
-    autocompleteOptions: model.autocompleteOptions,
-    isFromAutoDetect,
-    requestOptions: mergedRequestOptions,
-  };
-
+function applyCapabilities(options: LLMOptions, model: ModelConfig): void {
+  const { capabilities } = model;
   // Model capabilities - need to be undefined if not found
   // To fallback to our autodetection
   if (capabilities?.find((c) => c === "tool_use")) {
@@ -107,19 +33,21 @@ async function modelConfigToBaseLLM({
       uploadImage: true,
     };
   }
+}
 
+function applyEmbedOptions(options: LLMOptions, model: ModelConfig): void {
   if (model.embedOptions?.maxBatchSize) {
     options.maxEmbeddingBatchSize = model.embedOptions.maxBatchSize;
   }
   if (model.embedOptions?.maxChunkSize) {
     options.maxEmbeddingChunkSize = model.embedOptions.maxChunkSize;
   }
+}
 
-  // These are params that are at model config level in JSON
-  // But we decided to move to nested `env` in YAML
-  // Since types vary and we don't want to blindly spread env for now,
-  // Each one is handled individually here
-  const env = model.env ?? {};
+function applyEnvOptions(
+  options: LLMOptions,
+  env: Record<string, unknown>,
+): void {
   if (
     "useLegacyCompletionsEndpoint" in env &&
     typeof env.useLegacyCompletionsEndpoint === "boolean"
@@ -162,6 +90,100 @@ async function modelConfigToBaseLLM({
   if ("accountId" in env && typeof env.accountId === "string") {
     options.accountId = env.accountId;
   }
+}
+
+// function getContinueProxyModelName(
+//   ownerSlug: string,
+//   packageSlug: string,
+//   model: ModelConfig,
+// ): string {
+//   return `${ownerSlug}/${packageSlug}/${model.provider}/${model.model}`;
+// }
+
+async function modelConfigToBaseLLM({
+  model,
+  uniqueId,
+  llmLogger,
+  config,
+  isFromAutoDetect,
+}: {
+  model: ModelConfig;
+  uniqueId: string;
+  llmLogger: ILLMLogger;
+  config: ContinueConfig;
+  isFromAutoDetect?: boolean;
+}): Promise<BaseLLM | undefined> {
+  const cls = getModelClass(model);
+
+  if (!cls) {
+    return undefined;
+  }
+
+  const { capabilities, ...rest } = model;
+
+  const mergedRequestOptions = mergeConfigYamlRequestOptions(
+    rest.requestOptions,
+    config.requestOptions,
+  );
+
+  const llmInfo = findLlmInfo(model.model, model.provider);
+  const contextLength =
+    model.defaultCompletionOptions?.contextLength ?? llmInfo?.contextLength;
+  const maxCompletionTokens = llmInfo?.maxCompletionTokens;
+  const defaultMaxTokens =
+    maxCompletionTokens && contextLength
+      ? Math.min(maxCompletionTokens, contextLength / 4)
+      : undefined;
+
+  let options: LLMOptions = {
+    ...rest,
+    contextLength: contextLength,
+    completionOptions: {
+      ...(model.defaultCompletionOptions ?? {}),
+      model: model.model,
+      maxTokens:
+        model.defaultCompletionOptions?.maxTokens ??
+        cls.defaultOptions?.completionOptions?.maxTokens ??
+        defaultMaxTokens,
+    },
+    logger: llmLogger,
+    uniqueId,
+    title: model.name,
+    template: model.promptTemplates?.chat,
+    promptTemplates: model.promptTemplates,
+    baseAgentSystemMessage:
+      model.chatOptions?.baseAgentSystemMessage ??
+      cls.defaultOptions?.baseAgentSystemMessage,
+    basePlanSystemMessage:
+      model.chatOptions?.basePlanSystemMessage ??
+      cls.defaultOptions?.basePlanSystemMessage,
+    baseChatSystemMessage:
+      model.chatOptions?.baseSystemMessage ??
+      cls.defaultOptions?.baseChatSystemMessage,
+    toolOverrides: model.chatOptions?.toolOverrides
+      ? Object.entries(model.chatOptions.toolOverrides).map(([name, o]) => ({
+          name,
+          ...o,
+        }))
+      : undefined,
+    capabilities: {
+      tools: model.capabilities?.includes("tool_use"),
+      uploadImage: model.capabilities?.includes("image_input"),
+      nextEdit: model.capabilities?.includes("next_edit"),
+    },
+    autocompleteOptions: model.autocompleteOptions,
+    isFromAutoDetect,
+    requestOptions: mergedRequestOptions,
+  };
+
+  // Apply capabilities from model config
+  applyCapabilities(options, model);
+
+  applyEmbedOptions(options, model);
+
+  // Apply environment-specific options
+  const env = model.env ?? {};
+  applyEnvOptions(options, env);
 
   const llm = new cls(options);
   return llm;

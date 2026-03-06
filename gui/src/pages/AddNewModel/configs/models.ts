@@ -414,8 +414,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   deepseekFimBeta: {
     title: "DeepSeek FIM (Beta)",
-    description:
-      "DeepSeek's Fill-in-the-Middle model beta feature",
+    description: "DeepSeek's Fill-in-the-Middle model beta feature",
     params: {
       title: "DeepSeek FIM Beta",
       model: "deepseek-fim-beta",

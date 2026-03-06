@@ -204,8 +204,12 @@ describe("DeepSeek", () => {
     });
 
     it("should return other models unchanged", () => {
-      expect((deepSeek as any)._convertModelName("deepseek-chat")).toBe("deepseek-chat");
-      expect((deepSeek as any)._convertModelName("deepseek-reasoner")).toBe("deepseek-reasoner");
+      expect((deepSeek as any)._convertModelName("deepseek-chat")).toBe(
+        "deepseek-chat",
+      );
+      expect((deepSeek as any)._convertModelName("deepseek-reasoner")).toBe(
+        "deepseek-reasoner",
+      );
       expect((deepSeek as any)._convertModelName("gpt-4")).toBe("gpt-4");
     });
 
@@ -254,7 +258,9 @@ describe("DeepSeek", () => {
   describe("default options", () => {
     it("should have correct default configuration", () => {
       expect(DeepSeek.defaultOptions.useLegacyCompletionsEndpoint).toBe(false);
-      expect(DeepSeek.defaultOptions.baseChatSystemMessage).toContain("DeepSeek");
+      expect(DeepSeek.defaultOptions.baseChatSystemMessage).toContain(
+        "DeepSeek",
+      );
       expect(DeepSeek.defaultOptions.promptTemplates?.edit).toBeDefined();
     });
   });

@@ -32,8 +32,12 @@ describe("DeepSeek Unit Tests", () => {
     });
 
     it("should return other models unchanged", () => {
-      expect((deepSeek as any)._convertModelName("deepseek-chat")).toBe("deepseek-chat");
-      expect((deepSeek as any)._convertModelName("deepseek-reasoner")).toBe("deepseek-reasoner");
+      expect((deepSeek as any)._convertModelName("deepseek-chat")).toBe(
+        "deepseek-chat",
+      );
+      expect((deepSeek as any)._convertModelName("deepseek-reasoner")).toBe(
+        "deepseek-reasoner",
+      );
       expect((deepSeek as any)._convertModelName("gpt-4")).toBe("gpt-4");
     });
 
@@ -201,14 +205,22 @@ describe("DeepSeek Unit Tests", () => {
         {
           role: "assistant",
           content: "",
-          toolCalls: [{ id: "1", type: "function", function: { name: "tool1", arguments: "{}" } }],
+          toolCalls: [
+            {
+              id: "1",
+              type: "function",
+              function: { name: "tool1", arguments: "{}" },
+            },
+          ],
         },
         { role: "tool", content: "Result 1", toolCallId: "1" },
         { role: "thinking", content: "Second thinking" } as ThinkingChatMessage,
         { role: "assistant", content: "Final response" },
       ];
 
-      const result = (deepSeek as any)._pairLoneThinkingMessages(complexMessages);
+      const result = (deepSeek as any)._pairLoneThinkingMessages(
+        complexMessages,
+      );
 
       expect(result).toEqual([
         { role: "user", content: "Complex task" },
@@ -216,7 +228,13 @@ describe("DeepSeek Unit Tests", () => {
         {
           role: "assistant",
           content: "",
-          toolCalls: [{ id: "1", type: "function", function: { name: "tool1", arguments: "{}" } }],
+          toolCalls: [
+            {
+              id: "1",
+              type: "function",
+              function: { name: "tool1", arguments: "{}" },
+            },
+          ],
         },
         { role: "tool", content: "Result 1", toolCallId: "1" },
         { role: "thinking", content: "Second thinking" },
@@ -248,13 +266,19 @@ describe("DeepSeek Unit Tests", () => {
 
   describe("default options validation", () => {
     it("should have correct base chat system message", () => {
-      expect(DeepSeek.defaultOptions.baseChatSystemMessage).toContain("DeepSeek");
-      expect(DeepSeek.defaultOptions.baseChatSystemMessage).toContain("Continue");
+      expect(DeepSeek.defaultOptions.baseChatSystemMessage).toContain(
+        "DeepSeek",
+      );
+      expect(DeepSeek.defaultOptions.baseChatSystemMessage).toContain(
+        "Continue",
+      );
     });
 
     it("should have edit prompt template", () => {
       expect(DeepSeek.defaultOptions.promptTemplates?.edit).toBeDefined();
-      expect(typeof DeepSeek.defaultOptions.promptTemplates?.edit).toBe("function");
+      expect(typeof DeepSeek.defaultOptions.promptTemplates?.edit).toBe(
+        "function",
+      );
     });
   });
 });

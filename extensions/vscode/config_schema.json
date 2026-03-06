@@ -310,7 +310,16 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["chat", "autocomplete", "embed", "rerank", "edit", "apply", "summarize", "subagent"]
+            "enum": [
+              "chat",
+              "autocomplete",
+              "embed",
+              "rerank",
+              "edit",
+              "apply",
+              "summarize",
+              "subagent"
+            ]
           }
         },
         "region": {

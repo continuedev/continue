@@ -233,7 +233,9 @@ describe("DeepSeek Converters", () => {
         "user",
         "assistant",
       ]);
-      expect(warnings).toContain("Invalid message role: invalid at index 1. (removed from request)");
+      expect(warnings).toContain(
+        "Invalid message role: invalid at index 1. (removed from request)",
+      );
     });
   });
 

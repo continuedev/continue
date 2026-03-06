@@ -18,7 +18,10 @@ describe.skip("DeepSeek Tools and Thinking Integration Tests", () => {
     it("should handle thinking followed by tool call", async () => {
       const messages: ChatMessage[] = [
         { role: "user", content: "Get the weather" },
-        { role: "thinking", content: "I need to call the weather API" } as ThinkingChatMessage,
+        {
+          role: "thinking",
+          content: "I need to call the weather API",
+        } as ThinkingChatMessage,
       ];
 
       const tools = [
@@ -71,7 +74,10 @@ describe.skip("DeepSeek Tools and Thinking Integration Tests", () => {
     it("should handle thinking -> assistant -> tool -> thinking -> assistant pattern", async () => {
       const messages: ChatMessage[] = [
         { role: "user", content: "Calculate something" },
-        { role: "thinking", content: "I need to use the calculator" } as ThinkingChatMessage,
+        {
+          role: "thinking",
+          content: "I need to use the calculator",
+        } as ThinkingChatMessage,
         {
           role: "assistant",
           content: "",
@@ -79,7 +85,10 @@ describe.skip("DeepSeek Tools and Thinking Integration Tests", () => {
             {
               id: "1",
               type: "function",
-              function: { name: "calculate", arguments: '{"expression": "2+2"}' },
+              function: {
+                name: "calculate",
+                arguments: '{"expression": "2+2"}',
+              },
             },
           ],
         },
@@ -112,7 +121,10 @@ describe.skip("DeepSeek Tools and Thinking Integration Tests", () => {
                   {
                     id: "1",
                     type: "function",
-                    function: { name: "calculate", arguments: '{"expression": "2+2"}' },
+                    function: {
+                      name: "calculate",
+                      arguments: '{"expression": "2+2"}',
+                    },
                   },
                 ],
               },
@@ -134,7 +146,10 @@ describe.skip("DeepSeek Tools and Thinking Integration Tests", () => {
     it("should not insert assistant message when thinking is already followed by assistant", async () => {
       const messages: ChatMessage[] = [
         { role: "user", content: "Hello" },
-        { role: "thinking", content: "I should respond" } as ThinkingChatMessage,
+        {
+          role: "thinking",
+          content: "I should respond",
+        } as ThinkingChatMessage,
         { role: "assistant", content: "Hello there!" },
       ];
 
@@ -172,7 +187,10 @@ describe.skip("DeepSeek Tools and Thinking Integration Tests", () => {
     it("should handle complex multi-tool scenarios with thinking", async () => {
       const messages: ChatMessage[] = [
         { role: "user", content: "Get weather and time" },
-        { role: "thinking", content: "I need to call both weather and time APIs" } as ThinkingChatMessage,
+        {
+          role: "thinking",
+          content: "I need to call both weather and time APIs",
+        } as ThinkingChatMessage,
       ];
 
       const tools = [
@@ -210,7 +228,10 @@ describe.skip("DeepSeek Tools and Thinking Integration Tests", () => {
             model: "deepseek-reasoner",
             messages: [
               { role: "user", content: "Get weather and time" },
-              { role: "thinking", content: "I need to call both weather and time APIs" },
+              {
+                role: "thinking",
+                content: "I need to call both weather and time APIs",
+              },
               { role: "assistant", content: "" }, // Auto-inserted
             ],
             stream: true,
@@ -258,9 +279,7 @@ describe.skip("DeepSeek Tools and Thinking Integration Tests", () => {
             max_tokens: 2048,
           },
         },
-        mockStream: [
-          'data: {"choices":[{"delta":{"content":"Hello!"}}]}\n\n',
-        ],
+        mockStream: ['data: {"choices":[{"delta":{"content":"Hello!"}}]}\n\n'],
       });
     });
 
@@ -268,7 +287,10 @@ describe.skip("DeepSeek Tools and Thinking Integration Tests", () => {
       const messages: ChatMessage[] = [
         { role: "system", content: "You are a helpful assistant" },
         { role: "user", content: "Use the calculator" },
-        { role: "thinking", content: "I need to calculate something" } as ThinkingChatMessage,
+        {
+          role: "thinking",
+          content: "I need to calculate something",
+        } as ThinkingChatMessage,
       ];
 
       const tools = [
@@ -323,7 +345,13 @@ describe.skip("DeepSeek Tools and Thinking Integration Tests", () => {
         {
           role: "assistant",
           content: "",
-          toolCalls: [{ id: "1", type: "function", function: { name: "tool1", arguments: "{}" } }],
+          toolCalls: [
+            {
+              id: "1",
+              type: "function",
+              function: { name: "tool1", arguments: "{}" },
+            },
+          ],
         },
         { role: "tool", content: "Result 1", toolCallId: "1" },
         { role: "thinking", content: "Second thinking" } as ThinkingChatMessage,
@@ -331,7 +359,9 @@ describe.skip("DeepSeek Tools and Thinking Integration Tests", () => {
       ];
 
       const mockFetch = jest.fn();
-      const result = (deepSeek as any)._pairLoneThinkingMessages(complexMessages);
+      const result = (deepSeek as any)._pairLoneThinkingMessages(
+        complexMessages,
+      );
 
       expect(result).toEqual([
         { role: "user", content: "Complex task" },
@@ -339,7 +369,13 @@ describe.skip("DeepSeek Tools and Thinking Integration Tests", () => {
         {
           role: "assistant",
           content: "",
-          toolCalls: [{ id: "1", type: "function", function: { name: "tool1", arguments: "{}" } }],
+          toolCalls: [
+            {
+              id: "1",
+              type: "function",
+              function: { name: "tool1", arguments: "{}" },
+            },
+          ],
         },
         { role: "tool", content: "Result 1", toolCallId: "1" },
         { role: "thinking", content: "Second thinking" },

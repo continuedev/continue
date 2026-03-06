@@ -14,7 +14,7 @@ describe.skip("DeepSeek Integration Tests", () => {
     });
 
     const abortController = new AbortController();
-    
+
     // Mock fetch that rejects when aborted
     const mockFetch = jest.fn<() => Promise<Response>>();
     mockFetch.mockImplementation(() => {
@@ -28,10 +28,12 @@ describe.skip("DeepSeek Integration Tests", () => {
     abortController.abort();
 
     await expect(
-      (deepSeek as any).streamChat(
-        [{ role: "user", content: "Hello" }],
-        abortController.signal,
-      ).next()
+      (deepSeek as any)
+        .streamChat(
+          [{ role: "user", content: "Hello" }],
+          abortController.signal,
+        )
+        .next(),
     ).rejects.toThrow("Aborted");
   });
 
@@ -47,7 +49,7 @@ describe.skip("DeepSeek Integration Tests", () => {
       new Response(JSON.stringify({ error: { message: "Invalid API key" } }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
-      })
+      }),
     );
 
     (deepSeek as any).fetch = mockFetch;

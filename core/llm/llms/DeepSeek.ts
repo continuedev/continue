@@ -33,7 +33,7 @@ class DeepSeek extends OpenAI {
       edit: osModelsEditPrompt, // Use OpenAI‑style edit prompt (DeepSeek is OpenAI‑compatible)
     },
     useLegacyCompletionsEndpoint: false, // DeepSeek does not support the legacy /completions endpoint
-    baseChatSystemMessage: 
+    baseChatSystemMessage:
       "You are DeepSeek running in the Continue environment. Focus on writing clean, well-structured code with concise, meaningful comments.",
   };
 
@@ -62,18 +62,27 @@ class DeepSeek extends OpenAI {
     options: LLMFullCompletionOptions = {},
   ): Promise<{ role: "assistant"; content: string }> {
     const transformedMessages = this._pairLoneThinkingMessages(messages);
-    const completionOptions = { ...this.completionOptions, ...(options as any).completionOptions };
-    
+    const completionOptions = {
+      ...this.completionOptions,
+      ...(options as any).completionOptions,
+    };
+
     // Convert ChatMessage to OpenAI format first
-    const openaiMessages = toChatBody(transformedMessages, completionOptions).messages;
-    
+    const openaiMessages = toChatBody(
+      transformedMessages,
+      completionOptions,
+    ).messages;
+
     const body = this.modifyChatBody({
       ...completionOptions,
       messages: openaiMessages,
       model: this._convertModelName(completionOptions.model),
       stream: false,
     } as ChatCompletionCreateParams);
-    const response = await this.openaiAdapter?.chatCompletionNonStream(body as any, signal);
+    const response = await this.openaiAdapter?.chatCompletionNonStream(
+      body as any,
+      signal,
+    );
     if (!response) {
       return { role: "assistant", content: "" };
     }
@@ -166,7 +175,6 @@ class DeepSeek extends OpenAI {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<string, PromptLog> {
-
     return yield* super.streamFim(prefix, suffix, signal, {
       ...options,
       model: this._convertModelName(options.model || this.model),
