@@ -97,7 +97,10 @@ export class DeepSeekApi extends OpenAIApi {
   } {
     const warnings: string[] = [];
 
-    const lastMessage = body.messages.length > 0 ? body.messages[body.messages.length - 1] : undefined;
+    const lastMessage =
+      body.messages.length > 0
+        ? body.messages[body.messages.length - 1]
+        : undefined;
     const hasTools = this.hasToolsInConversation(body);
 
     // Prefix completion requires:
@@ -138,7 +141,6 @@ export class DeepSeekApi extends OpenAIApi {
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
     const { endpoint, deepSeekBody } = this.prepareChatCompletionRequest(body);
-
 
     // Execute the API request
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
@@ -217,7 +219,7 @@ export class DeepSeekApi extends OpenAIApi {
     }
 
     /*  Very rare edge case workarounds:
-     *  - If the stream ends with a finish_reason "stop" 
+     *  - If the stream ends with a finish_reason "stop"
      *    and no content or tool_calls were ever sent, but reasoning_content was received,
      *    → inject a final chunk containing the reasoning as content to rescue results for next turn
      *  (remove when fixed with future model updates and no longer needed)

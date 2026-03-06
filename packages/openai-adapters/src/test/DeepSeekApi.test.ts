@@ -15,7 +15,7 @@ describe("DeepSeekApi - Simple Unit Tests", () => {
         ...mockConfig,
         apiBase: "https://api.deepseek.com",
       } as z.infer<typeof OpenAIConfigSchema>);
-      
+
       // @ts-ignore - accessing private property for test
       expect(api.apiBase).toBe("https://api.deepseek.com");
     });
@@ -24,7 +24,7 @@ describe("DeepSeekApi - Simple Unit Tests", () => {
       const api = new DeepSeekApi({
         apiKey: "test-key",
       } as z.infer<typeof OpenAIConfigSchema>);
-      
+
       // @ts-ignore
       expect(api.apiBase).toBe("https://api.deepseek.com/");
     });
@@ -32,7 +32,9 @@ describe("DeepSeekApi - Simple Unit Tests", () => {
 
   describe("hasToolsInConversation", () => {
     it("should detect tools in body.tools", () => {
-      const api = new DeepSeekApi(mockConfig as z.infer<typeof OpenAIConfigSchema>);
+      const api = new DeepSeekApi(
+        mockConfig as z.infer<typeof OpenAIConfigSchema>,
+      );
       const body: any = {
         model: "deepseek-chat",
         messages: [{ role: "user", content: "Hi" }],
@@ -45,7 +47,9 @@ describe("DeepSeekApi - Simple Unit Tests", () => {
     });
 
     it("should detect tool_choice", () => {
-      const api = new DeepSeekApi(mockConfig as z.infer<typeof OpenAIConfigSchema>);
+      const api = new DeepSeekApi(
+        mockConfig as z.infer<typeof OpenAIConfigSchema>,
+      );
       const body: any = {
         model: "deepseek-chat",
         messages: [{ role: "user", content: "Hi" }],
@@ -58,15 +62,23 @@ describe("DeepSeekApi - Simple Unit Tests", () => {
     });
 
     it("should detect tool_calls in assistant messages", () => {
-      const api = new DeepSeekApi(mockConfig as z.infer<typeof OpenAIConfigSchema>);
+      const api = new DeepSeekApi(
+        mockConfig as z.infer<typeof OpenAIConfigSchema>,
+      );
       const body: any = {
         model: "deepseek-chat",
         messages: [
           { role: "user", content: "Hi" },
-          { 
-            role: "assistant", 
+          {
+            role: "assistant",
             content: "",
-            tool_calls: [{ id: "1", type: "function", function: { name: "test", arguments: "{}" } }]
+            tool_calls: [
+              {
+                id: "1",
+                type: "function",
+                function: { name: "test", arguments: "{}" },
+              },
+            ],
           },
         ],
       };
@@ -77,7 +89,9 @@ describe("DeepSeekApi - Simple Unit Tests", () => {
     });
 
     it("should return false for no tools", () => {
-      const api = new DeepSeekApi(mockConfig as z.infer<typeof OpenAIConfigSchema>);
+      const api = new DeepSeekApi(
+        mockConfig as z.infer<typeof OpenAIConfigSchema>,
+      );
       const body: any = {
         model: "deepseek-chat",
         messages: [{ role: "user", content: "Hi" }],
@@ -91,7 +105,9 @@ describe("DeepSeekApi - Simple Unit Tests", () => {
 
   describe("prepareChatCompletionRequest logic", () => {
     it("should use prefix completion for assistant last message without tools", () => {
-      const api = new DeepSeekApi(mockConfig as z.infer<typeof OpenAIConfigSchema>);
+      const api = new DeepSeekApi(
+        mockConfig as z.infer<typeof OpenAIConfigSchema>,
+      );
       const body: any = {
         model: "deepseek-chat",
         messages: [
@@ -106,7 +122,9 @@ describe("DeepSeekApi - Simple Unit Tests", () => {
     });
 
     it("should use regular chat completion with tools", () => {
-      const api = new DeepSeekApi(mockConfig as z.infer<typeof OpenAIConfigSchema>);
+      const api = new DeepSeekApi(
+        mockConfig as z.infer<typeof OpenAIConfigSchema>,
+      );
       const body: any = {
         model: "deepseek-chat",
         messages: [
@@ -125,15 +143,18 @@ describe("DeepSeekApi - Simple Unit Tests", () => {
 
   describe("error handling", () => {
     it("_throwDeepSeekError should format error message", async () => {
-      const api = new DeepSeekApi(mockConfig as z.infer<typeof OpenAIConfigSchema>);
+      const api = new DeepSeekApi(
+        mockConfig as z.infer<typeof OpenAIConfigSchema>,
+      );
       const mockResponse = {
         status: 429,
         text: async () => "Rate limit exceeded",
       } as Response;
 
       // @ts-ignore - accessing private method
-      await expect(api._throwDeepSeekError(mockResponse))
-        .rejects.toThrow("DeepSeek API error (429): Rate limit exceeded");
+      await expect(api._throwDeepSeekError(mockResponse)).rejects.toThrow(
+        "DeepSeek API error (429): Rate limit exceeded",
+      );
     });
   });
 });
