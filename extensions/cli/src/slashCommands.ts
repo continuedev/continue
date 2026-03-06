@@ -13,6 +13,7 @@ import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
+import { buildImportSkillPrompt } from "./tools/skills.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
 import {
   getSkillSlashCommandName,
@@ -203,6 +204,23 @@ async function handleSkills(): Promise<SlashCommandResult> {
   };
 }
 
+async function handleImportSkill(args: string[]): Promise<SlashCommandResult> {
+  const query = args.join(" ").trim();
+
+  if (!query) {
+    return {
+      exit: false,
+      output: chalk.yellow(
+        "Please provide a skill URL or name. Usage: /import-skill <url-or-name>",
+      ),
+    };
+  }
+
+  return {
+    newInput: buildImportSkillPrompt(query),
+  };
+}
+
 const commandHandlers: Record<string, CommandHandler> = {
   help: handleHelp,
   clear: () => {
@@ -239,6 +257,7 @@ const commandHandlers: Record<string, CommandHandler> = {
   },
   jobs: handleJobs,
   skills: () => handleSkills(),
+  "import-skill": (args) => handleImportSkill(args),
 };
 
 export async function handleSlashCommands(

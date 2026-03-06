@@ -116,6 +116,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     description: "List all available skills",
     category: "system",
   },
+  {
+    name: "import-skill",
+    description: "Import a skill from a URL or name into ~/.continue/skills",
+    category: "system",
+  },
 ];
 
 // Remote mode specific commands
