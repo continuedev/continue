@@ -260,8 +260,8 @@ describe("interceptSystemToolCalls", () => {
     );
 
     let result;
-    // Process through all the tool call parts
-    for (let i = 0; i < 6; i++) {
+    // Process through all the tool call parts (name, arg prefix, arg value, close)
+    for (let i = 0; i < 4; i++) {
       result = await generator.next();
     }
 

@@ -28,6 +28,7 @@ export async function* interceptSystemToolCalls(
 ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
   let buffer = "";
   let parseState: ToolCallParseState | undefined;
+  let skipNextNewline = false;
 
   while (true) {
     const result = await messageGenerator.next();
@@ -68,6 +69,15 @@ export async function* interceptSystemToolCalls(
           .flat();
 
         for (const chunk of chunks) {
+          // Skip the trailing newline after a completed tool call codeblock
+          // (```\n splits into ["```", "\n"] — the ``` closes the tool call
+          // and the \n should not be emitted as text content)
+          if (skipNextNewline) {
+            skipNextNewline = false;
+            if (chunk === "\n") {
+              continue;
+            }
+          }
           buffer += chunk;
           if (!parseState) {
             const { isInPartialStart, isInToolCall, modifiedBuffer } =
@@ -101,6 +111,7 @@ export async function* interceptSystemToolCalls(
             // call) can be handled.
             if (parseState.done) {
               parseState = undefined;
+              skipNextNewline = true;
             }
           } else {
             // Yield normal assistant message
