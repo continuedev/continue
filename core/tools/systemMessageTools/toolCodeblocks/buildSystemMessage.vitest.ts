@@ -27,6 +27,7 @@ describe("createSystemMessageExampleCall", () => {
     expect(result).includes("Use this tool to test things");
     expect(result).includes("```tool");
     expect(result).includes("\ntest_tool\n");
+    expect(result).not.toContain("TOOL_NAME:");
     expect(result).includes("```");
   });
 
@@ -43,6 +44,7 @@ describe("createSystemMessageExampleCall", () => {
     expect(result).includes("Use this tool to test things");
     expect(result).includes("```tool");
     expect(result).includes("\ntest_tool\n");
+    expect(result).not.toContain("TOOL_NAME:");
     expect(result).includes("BEGIN_ARG: arg1");
     expect(result).includes("value1");
     expect(result).includes("END_ARG");
@@ -96,6 +98,7 @@ describe("generateToolsSystemMessage", () => {
     // Check structure rather than exact text
     expect(result).includes(TOOL_INSTRUCTIONS_TAG);
     expect(result).includes(customDescription);
+    expect(result).not.toContain("TOOL_NAME:");
     expect(result).includes(closeTag(TOOL_INSTRUCTIONS_TAG));
 
     // Check for general section about available tools without requiring exact wording

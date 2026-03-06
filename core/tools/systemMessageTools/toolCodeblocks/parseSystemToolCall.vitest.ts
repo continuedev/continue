@@ -25,6 +25,22 @@ describe("handleToolCallBuffer", () => {
     expect(state.currentLineIndex).toBe(2);
   });
 
+  it("handles the ```tool\\nTOOL_NAME: <tool_name> format", () => {
+    handleToolCallBuffer("```tool\nTOOL_NAME: my_name", state);
+    expect(state.currentLineIndex).toBe(1);
+
+    const result = handleToolCallBuffer("\n", state);
+    expect(result).toEqual({
+      type: "function",
+      function: {
+        name: "my_name",
+        arguments: "",
+      },
+      id: expect.any(String),
+    });
+    expect(state.currentLineIndex).toBe(2);
+  });
+
   it("handles the tool name line", () => {
     // Line 0 (```tool) is skipped internally
     state.currentLineIndex = 1;
@@ -79,6 +95,13 @@ describe("handleToolCallBuffer", () => {
       },
       id: expect.any(String),
     });
+  });
+
+  it("rejects tagged tool name lines with empty values", () => {
+    state.currentLineIndex = 1;
+    handleToolCallBuffer("TOOL_NAME:", state);
+
+    expect(() => handleToolCallBuffer("\n", state)).toThrow("Invalid tool name");
   });
 
   it("begins an argument correctly", () => {
