@@ -41,6 +41,7 @@
     "@types/win-ca": "^3.5.4",
     "@typescript-eslint/eslint-plugin": "^8.40.0",
     "@typescript-eslint/parser": "^8.40.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "cross-env": "^7.0.3",
     "esbuild": "0.17.19",
     "eslint": "^8",
