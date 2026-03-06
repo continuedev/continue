@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import chalk from "chalk";
@@ -6,6 +7,7 @@ import { ChatDescriber } from "core/util/chatDescriber.js";
 
 import { compactChatHistory, findCompactionIndex } from "../compaction.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
+import { fireSessionStart, fireUserPromptSubmit } from "../hooks/fireHook.js";
 import { safeStderr, safeStdout } from "../init.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
@@ -363,6 +365,17 @@ async function processMessage(
 
   // Track user prompt
   telemetryService.logUserPrompt(userInput.length, userInput);
+  const promptHookResult = await fireUserPromptSubmit(userInput);
+  if (promptHookResult.blocked) {
+    const reason =
+      promptHookResult.blockReason ?? "Prompt blocked by UserPromptSubmit hook";
+    if (isHeadless) {
+      safeStderr(JSON.stringify({ status: "error", message: reason }) + "\n");
+    } else {
+      logger.warn(reason);
+    }
+    return;
+  }
 
   // Check if auto-compacting is needed BEFORE adding user message
   // The handleAutoCompaction function decides whether compaction is actually needed
@@ -459,6 +472,10 @@ async function runHeadlessMode(
     SERVICE_NAMES.MODEL,
   );
   const { llmApi, model } = modelState;
+
+  // Fire SessionStart hook after services are initialized (await in headless
+  // to ensure hooks complete before a potential early process exit)
+  await fireSessionStart("startup", model?.name);
 
   if (!model) {
     throw new Error("No models were found.");
@@ -585,6 +602,9 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
         headless: false,
         toolPermissionOverrides: permissionOverrides,
       });
+
+      // Fire SessionStart hook after services are initialized
+      fireSessionStart("startup");
 
       const agentFileState = await serviceContainer.get<AgentFileServiceState>(
         SERVICE_NAMES.AGENT_FILE,

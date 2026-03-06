@@ -1,5 +1,6 @@
 import type { ChatHistoryItem } from "core/index.js";
 
+import { fireSessionEnd } from "../hooks/fireHook.js";
 import { sentryService } from "../sentry.js";
 import { backgroundJobService } from "../services/BackgroundJobService.js";
 import { getSessionUsage } from "../session.js";
@@ -194,6 +195,12 @@ function displaySessionUsage(): void {
 export async function gracefulExit(code: number = 0): Promise<void> {
   // Display session usage breakdown in verbose mode
   displaySessionUsage();
+
+  try {
+    await fireSessionEnd("other");
+  } catch (err) {
+    logger.debug("SessionEnd hook error (ignored)", err as any);
+  }
 
   try {
     const runningJobs = backgroundJobService.getRunningJobCount();
