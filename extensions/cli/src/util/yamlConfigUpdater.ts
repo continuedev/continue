@@ -100,7 +100,7 @@ export function updateOpenAIModelInYaml(
   apiKey: string,
 ): string {
   const newModel: ModelConfig = {
-    uses: "openai/gpt-5.3",
+    uses: "openai/gpt-5.4",
     with: {
       OPENAI_API_KEY: apiKey,
     },
@@ -131,7 +131,7 @@ export function updateOpenAIModelInYaml(
     }
 
     config.models = config.models.filter(
-      (model: any) => !model || model.uses !== "openai/gpt-5.3",
+      (model: any) => !model || model.uses !== "openai/gpt-5.4",
     );
 
     config.models.push(newModel);

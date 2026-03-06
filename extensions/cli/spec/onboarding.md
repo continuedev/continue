@@ -31,12 +31,10 @@ When a user first runs `cn` in interactive mode, they will be taken through "onb
    schema: v1
 
    models:
-     - uses: openai/gpt-4.1
+     - uses: openai/gpt-5.4
        with:
          OPENAI_API_KEY: <THEIR_OPENAI_API_KEY>
    ```
-
-   - Log in with Continue: log them in, which will automatically create their assistant and then we can load the first assistant from the first org
 
    When CONTINUE_USE_BEDROCK=1 is detected, it will use AWS Bedrock configuration. The user must have AWS credentials configured through the standard AWS credential chain (AWS CLI, environment variables, IAM roles, etc.).
 

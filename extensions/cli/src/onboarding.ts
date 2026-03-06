@@ -4,7 +4,7 @@ import * as path from "path";
 import chalk from "chalk";
 import { setConfigFilePermissions } from "core/util/paths.js";
 
-import { AuthConfig, login } from "./auth/workos.js";
+import { AuthConfig } from "./auth/workos.js";
 import { getApiClient } from "./config.js";
 import { loadConfiguration } from "./configLoader.js";
 import { env } from "./env.js";
@@ -109,17 +109,16 @@ export async function runOnboardingFlow(
     return false;
   }
 
-  // Step 4: Present user with three options
+  // Step 4: Present user with two options
   console.log(chalk.yellow("How do you want to get started?"));
   console.log(chalk.white("1. 🔑 Enter your Anthropic API key"));
   console.log(chalk.white("2. 🔑 Enter your OpenAI API key"));
-  console.log(chalk.white("3. ⏩ Log in with Continue"));
 
   const choice = await questionWithChoices(
     chalk.yellow("\nEnter choice (1): "),
-    ["1", "2", "3", ""],
+    ["1", "2", ""],
     "1",
-    chalk.dim("Please enter 1, 2, or 3"),
+    chalk.dim("Please enter 1 or 2"),
   );
 
   if (choice === "1" || choice === "") {
@@ -150,11 +149,8 @@ export async function runOnboardingFlow(
     );
 
     return true;
-  } else if (choice === "3") {
-    await login();
-    return true;
   } else {
-    throw new Error(`Invalid choice. Please select "1", "2", or "3"`);
+    throw new Error(`Invalid choice. Please select "1" or "2"`);
   }
 }
 
