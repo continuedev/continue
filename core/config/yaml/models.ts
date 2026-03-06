@@ -6,7 +6,6 @@ import { findLlmInfo } from "@continuedev/llm-info";
 
 import { ContinueConfig, ILLMLogger, LLMOptions } from "../..";
 import { BaseLLM } from "../../llm";
-import { DEFAULT_CONTEXT_LENGTH } from "../../llm/constants";
 import { LLMClasses } from "../../llm/llms";
 
 const AUTODETECT = "AUTODETECT";
@@ -52,9 +51,9 @@ async function modelConfigToBaseLLM({
   );
 
   const llmInfo = findLlmInfo(model.model, model.provider);
-  const contextLength = model.defaultCompletionOptions?.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
+  const contextLength = model.defaultCompletionOptions?.contextLength ?? llmInfo?.contextLength;
   const maxCompletionTokens = llmInfo?.maxCompletionTokens;
-  const defaultMaxTokens = maxCompletionTokens
+  const defaultMaxTokens = maxCompletionTokens && contextLength
     ? Math.min(maxCompletionTokens, contextLength / 4)
     : undefined;
 
