@@ -10,6 +10,7 @@ import {
   LLMOptions,
   ModelInstaller,
   ThinkingChatMessage,
+  Usage,
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { getRemoteModelInfo } from "../../util/ollamaHelper.js";
@@ -450,6 +451,61 @@ class Ollama extends BaseLLM implements ModelInstaller {
     });
     let isThinking: boolean = false;
 
+    function extractUsage(res: OllamaChatResponse): Usage | undefined {
+      if ("error" in res || "type" in res) {
+        return undefined;
+      }
+
+      if (!res.done) {
+        return undefined;
+      }
+
+      if (
+        typeof res.prompt_eval_count !== "number" &&
+        typeof res.eval_count !== "number"
+      ) {
+        return undefined;
+      }
+
+      const promptTokens = res.prompt_eval_count ?? 0;
+      const completionTokens = res.eval_count ?? 0;
+      return {
+        promptTokens,
+        completionTokens,
+        totalTokens: promptTokens + completionTokens,
+        source: "provider",
+        ts: new Date().toISOString(),
+        raw: {
+          ollama_prompt_eval_count: res.prompt_eval_count,
+          ollama_eval_count: res.eval_count,
+          ollama_done_reason: res.done_reason,
+        },
+      };
+    }
+
+    function attachUsage(
+      messages: ChatMessage[],
+      usage: Usage | undefined,
+    ): ChatMessage[] {
+      if (!usage) {
+        return messages;
+      }
+
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].role === "assistant") {
+          (messages[i] as ChatMessage & { usage?: Usage }).usage = usage;
+          return messages;
+        }
+      }
+
+      messages.push({
+        role: "assistant",
+        content: "",
+        usage,
+      });
+      return messages;
+    }
+
     function convertChatMessage(res: OllamaChatResponse): ChatMessage[] {
       if ("error" in res) {
         throw new Error(res.error);
@@ -484,7 +540,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
             role: "assistant",
             content: content,
           };
-          return [chatMessage];
+          return attachUsage([chatMessage], extractUsage(res));
         }
         return [];
       }
@@ -504,7 +560,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
 
         if (thinkingMessage && !content) {
           // When Streaming you can't have both thinking and content
-          return [thinkingMessage];
+          return attachUsage([thinkingMessage], extractUsage(res));
         }
         // Either not thinking, or not streaming
         const chatMessage: ChatMessage = { role: "assistant", content };
@@ -523,11 +579,14 @@ class Ollama extends BaseLLM implements ModelInstaller {
         }
 
         // Return both thinking and chat messages if applicable
-        return thinkingMessage ? [thinkingMessage, chatMessage] : [chatMessage];
+        return attachUsage(
+          thinkingMessage ? [thinkingMessage, chatMessage] : [chatMessage],
+          extractUsage(res),
+        );
       }
 
       // Fallback for all other roles
-      return [{ role, content }];
+      return attachUsage([{ role, content }], extractUsage(res));
     }
 
     if (chatOptions.stream === false) {

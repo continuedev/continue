@@ -1,4 +1,8 @@
-import { toResponsesInput } from "./openaiTypeConverters";
+import {
+  fromChatCompletionChunk,
+  fromChatResponse,
+  toResponsesInput,
+} from "./openaiTypeConverters";
 import { ChatMessage } from "..";
 import type { ResponseInputItem } from "openai/resources/responses/responses.mjs";
 
@@ -48,6 +52,59 @@ function getMessagesByRole(
 }
 
 describe("openaiTypeConverters", () => {
+  describe("usage extraction", () => {
+    it("extracts usage from non-stream responses", () => {
+      const messages = fromChatResponse({
+        choices: [
+          {
+            message: {
+              role: "assistant",
+              content: "hello",
+            },
+          },
+        ],
+        usage: {
+          prompt_tokens: 123,
+          completion_tokens: 45,
+          total_tokens: 168,
+        },
+      } as any);
+
+      expect(messages).toHaveLength(1);
+      expect(messages[0].role).toBe("assistant");
+      if (messages[0].role === "assistant") {
+        expect(messages[0].usage).toMatchObject({
+          promptTokens: 123,
+          completionTokens: 45,
+          totalTokens: 168,
+          source: "provider",
+        });
+      }
+    });
+
+    it("extracts usage-only stream chunks", () => {
+      const message = fromChatCompletionChunk({
+        choices: [],
+        usage: {
+          prompt_tokens: 30,
+          completion_tokens: 10,
+          total_tokens: 40,
+        },
+      } as any);
+
+      expect(message).toBeDefined();
+      expect(message?.role).toBe("assistant");
+      if (message?.role === "assistant") {
+        expect(message.content).toBe("");
+        expect(message.usage).toMatchObject({
+          promptTokens: 30,
+          completionTokens: 10,
+          totalTokens: 40,
+        });
+      }
+    });
+  });
+
   describe("toResponsesInput", () => {
     describe("tool calls handling - OpenAI Responses API", () => {
       it("should emit function_call items when fc_ ID is in metadata", () => {

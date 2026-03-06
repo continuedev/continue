@@ -20,13 +20,19 @@ const Tr = styled.tr`
   }
 
   overflow-wrap: anywhere;
-
   border: 1px solid ${lightGray};
 `;
 
 const Td = styled.td`
   padding: 0.5rem;
   border: 1px solid ${lightGray};
+`;
+
+const Note = styled.div`
+  margin: 0.5rem 0.5rem 0.75rem;
+  color: ${lightGray};
+  font-size: 12px;
+  line-height: 1.4;
 `;
 
 function generateTable(data: unknown[][]) {
@@ -47,17 +53,21 @@ function Stats() {
 
   useEffect(() => {
     ideMessenger.request("stats/getTokensPerDay", undefined).then((result) => {
-      result.status === "success" && setDays(result.content);
+      if (result.status === "success") {
+        setDays(result.content);
+      }
     });
-  }, []);
+  }, [ideMessenger]);
 
   useEffect(() => {
     ideMessenger
       .request("stats/getTokensPerModel", undefined)
       .then((result) => {
-        result.status === "success" && setModels(result.content);
+        if (result.status === "success") {
+          setModels(result.content);
+        }
       });
-  }, []);
+  }, [ideMessenger]);
 
   return (
     <div
@@ -65,14 +75,19 @@ function Stats() {
         backgroundColor: vscBackground,
       }}
     >
-      <PageHeader title="More" onTitleClick={() => navigate(-1)} showBorder />
+      <PageHeader title="Usage" onTitleClick={() => navigate(-1)} showBorder />
 
       <div className="p-2">
+        <Note>
+          Local analytics totals are stored separately from chat history and can
+          differ from visible session totals.
+        </Note>
+
         <div className="flex items-center gap-2">
-          <h2 className="ml-2">Tokens per Day</h2>
+          <h2 className="ml-2">Tokens Per Day</h2>
           <CopyIconButton
             text={generateTable(
-              ([["Day", "Generated Tokens", "Prompt Tokens"]] as any).concat(
+              ([["Day", "Output Tokens", "Input Tokens"]] as any).concat(
                 days.map((day) => [
                   day.day,
                   day.generatedTokens,
@@ -86,13 +101,13 @@ function Stats() {
           <thead>
             <Tr>
               <Th>Day</Th>
-              <Th>Generated Tokens</Th>
-              <Th>Prompt Tokens</Th>
+              <Th>Output Tokens</Th>
+              <Th>Input Tokens</Th>
             </Tr>
           </thead>
           <tbody>
             {days.map((day) => (
-              <Tr key={day.day} className="">
+              <Tr key={day.day}>
                 <Td>{day.day}</Td>
                 <Td>{day.generatedTokens.toLocaleString()}</Td>
                 <Td>{day.promptTokens.toLocaleString()}</Td>
@@ -102,10 +117,10 @@ function Stats() {
         </table>
 
         <div className="flex items-center gap-2">
-          <h2 className="ml-2">Tokens per Model</h2>
+          <h2 className="ml-2">Tokens Per Model</h2>
           <CopyIconButton
             text={generateTable(
-              ([["Model", "Generated Tokens", "Prompt Tokens"]] as any).concat(
+              ([["Model", "Output Tokens", "Input Tokens"]] as any).concat(
                 models.map((model) => [
                   model.model,
                   model.generatedTokens.toLocaleString(),
@@ -119,13 +134,13 @@ function Stats() {
           <thead>
             <Tr>
               <Th>Model</Th>
-              <Th>Generated Tokens</Th>
-              <Th>Prompt Tokens</Th>
+              <Th>Output Tokens</Th>
+              <Th>Input Tokens</Th>
             </Tr>
           </thead>
           <tbody>
             {models.map((model) => (
-              <Tr key={model.model} className="">
+              <Tr key={model.model}>
                 <Td>{model.model}</Td>
                 <Td>{model.generatedTokens.toLocaleString()}</Td>
                 <Td>{model.promptTokens.toLocaleString()}</Td>

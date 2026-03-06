@@ -5,6 +5,7 @@ import type {
   BrowserSerializedContinueConfig,
   ContextItemWithId,
   ContextProviderName,
+  IdeSettings,
   IndexingProgressUpdate,
   IndexingStatus,
 } from "../index.js";
@@ -44,4 +45,5 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   sessionUpdate: [{ sessionInfo: ControlPlaneSessionInfo | undefined }, void];
   toolCallPartialOutput: [{ toolCallId: string; contextItems: any[] }, void];
   freeTrialExceeded: [undefined, void];
+  ideSettingsUpdate: [IdeSettings, void];
 };
