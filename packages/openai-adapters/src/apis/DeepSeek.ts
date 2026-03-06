@@ -314,7 +314,10 @@ export class DeepSeekApi extends OpenAIApi {
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const warnings: string[] = [];
-    const endpoint = new URL("completions", this.apiBase);
+    const endpoint = new URL(
+      this.apiBase.endsWith("/beta/") ? "completions" : "beta/completions",
+      this.apiBase,
+    );
     const deepSeekBody = convertToFimDeepSeekRequestBody(body, warnings);
 
     // Log any warnings about unsupported features
