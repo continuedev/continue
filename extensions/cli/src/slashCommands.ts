@@ -294,8 +294,7 @@ export async function handleSlashCommands(
 
     if (matchingSkill) {
       return {
-        exit: false,
-        output: matchingSkill.content,
+        newInput: `Load the skill using the **Skills** tool and then set the **skill_name** parameter to "${matchingSkill.name}".`,
       };
     }
   }
