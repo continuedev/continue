@@ -28,6 +28,7 @@ export async function* interceptSystemToolCalls(
 ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
   let buffer = "";
   let parseState: ToolCallParseState | undefined;
+  let sawAssistantNonWhitespaceText = false;
 
   while (true) {
     const result = await messageGenerator.next();
@@ -71,7 +72,10 @@ export async function* interceptSystemToolCalls(
           buffer += chunk;
           if (!parseState) {
             const { isInPartialStart, isInToolCall, modifiedBuffer } =
-              detectToolCallStart(buffer, systemToolFramework);
+              detectToolCallStart(buffer, systemToolFramework, {
+                // Only allow loose "TOOL_NAME:" starts at the beginning of assistant output.
+                allowAlternateStarts: !sawAssistantNonWhitespaceText,
+              });
 
             if (isInPartialStart) {
               continue;
@@ -109,6 +113,9 @@ export async function* interceptSystemToolCalls(
                 content: [{ type: "text", text: buffer }],
               },
             ];
+            if (/\S/.test(buffer)) {
+              sawAssistantNonWhitespaceText = true;
+            }
           }
           buffer = "";
         }

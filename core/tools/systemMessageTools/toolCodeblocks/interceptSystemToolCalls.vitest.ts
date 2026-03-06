@@ -179,9 +179,8 @@ describe("interceptSystemToolCalls", () => {
     ).toBe("}");
   });
 
-  it("processes tool_name without codeblock format", async () => {
+  it("processes tool_name without codeblock format at assistant output start", async () => {
     const messages: ChatMessage[][] = [
-      [{ role: "assistant", content: "I'll help you with that.\n" }],
       [{ role: "assistant", content: "TOOL_NAME: test_tool\n" }],
       [{ role: "assistant", content: "BEGIN_ARG: arg1\n" }],
       [{ role: "assistant", content: "value1\n" }],
@@ -194,30 +193,7 @@ describe("interceptSystemToolCalls", () => {
       framework,
     );
 
-    // First chunk should be normal text
     let result = await generator.next();
-    expect(result.value).toEqual([
-      {
-        role: "assistant",
-        content: [{ type: "text", text: "I'll help you with that." }],
-      },
-    ]);
-
-    result = await generator.next();
-    expect(result.value).toEqual([
-      {
-        role: "assistant",
-        content: [
-          {
-            type: "text",
-            text: "\n",
-          },
-        ],
-      },
-    ]);
-
-    // The system should detect the tool_name format and convert it
-    result = await generator.next();
     expect(
       (result.value as AssistantChatMessage[])[0].toolCalls?.[0].function?.name,
     ).toBe("test_tool");
@@ -240,6 +216,39 @@ describe("interceptSystemToolCalls", () => {
       (result.value as AssistantChatMessage[])[0].toolCalls?.[0].function
         ?.arguments,
     ).toBe("}");
+  });
+
+  it("does not intercept quoted tool syntax in explanatory text", async () => {
+    const messages: ChatMessage[][] = [
+      [{ role: "assistant", content: "Here is the syntax:\n" }],
+      [{ role: "assistant", content: "TOOL_NAME: read_file\n" }],
+      [{ role: "assistant", content: "BEGIN_ARG: filepath\n" }],
+      [{ role: "assistant", content: "path/to/the_file.txt\n" }],
+      [{ role: "assistant", content: "END_ARG\n" }],
+    ];
+
+    const generator = interceptSystemToolCalls(
+      createAsyncGenerator(messages),
+      abortController,
+      framework,
+    );
+
+    const outputChunks: string[] = [];
+    while (true) {
+      const result = await generator.next();
+      if (result.done || !result.value) {
+        break;
+      }
+
+      const chunkText = ((result.value as AssistantChatMessage[])[0]
+        .content as { type: "text"; text: string }[])[0].text;
+      outputChunks.push(chunkText);
+      expect((result.value as AssistantChatMessage[])[0].toolCalls).toBeFalsy();
+    }
+
+    expect(outputChunks.join("")).toBe(
+      "Here is the syntax:\nTOOL_NAME: read_file\nBEGIN_ARG: filepath\npath/to/the_file.txt\nEND_ARG\n",
+    );
   });
 
   it("ignores content after a tool call", async () => {
