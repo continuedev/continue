@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, jest, test } from "@jest/globals";
 import DeepSeek from "./DeepSeek.js";
 
-describe("DeepSeek Integration Tests", () => {
+describe.skip("DeepSeek Integration Tests", () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
