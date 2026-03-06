@@ -42,7 +42,10 @@ export function handleToolCallBuffer(
     // Tool name line - process once line 2 is reached
     case 1:
       if (isNewLine) {
-        const name = (line.split(/tool_?name:/i)[1] ?? "").trim();
+        const nameFromTag = line.match(/tool_?name:/i)
+          ? (line.split(/tool_?name:/i)[1] ?? "").trim()
+          : "";
+        const name = nameFromTag || line.trim();
         if (!name) {
           throw new Error("Invalid tool name");
         }

@@ -13,7 +13,7 @@ import {
     1. Skips non-assistant messages
     2. Intercepts text that looks like a tool call in a markdown code block format:
     ```tool
-    TOOL_NAME: example_tool
+    example_tool
     BEGIN_ARG: arg1
     value
     END_ARG

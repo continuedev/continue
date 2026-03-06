@@ -8,12 +8,12 @@ export class SystemMessageToolCodeblocksFramework
   // Poor models are really bad at following instructions, alternate starts allowed:
   acceptedToolCallStarts: [string, string][] = [
     ["```tool\n", "```tool\n"],
-    ["tool_name:", "```tool\nTOOL_NAME:"],
+    ["tool_name:", "```tool\n"],
   ];
 
   toolCallStateToSystemToolCall(state: ToolCallState): string {
     let parts = ["```tool"];
-    parts.push(`TOOL_NAME: ${state.toolCall.function.name}`);
+    parts.push(state.toolCall.function.name);
     try {
       for (const arg in state.parsedArgs) {
         parts.push(`BEGIN_ARG: ${arg}`);
@@ -31,7 +31,7 @@ export class SystemMessageToolCodeblocksFramework
   handleToolCallBuffer = handleToolCallBuffer;
 
   toolToSystemToolDefinition(tool: Tool): string {
-    let toolDefinition = `\`\`\`tool_definition\nTOOL_NAME: ${tool.function.name}\n`;
+    let toolDefinition = `\`\`\`tool_definition\n${tool.function.name}\n`;
 
     if (tool.function.description) {
       toolDefinition += `TOOL_DESCRIPTION:\n${tool.function.description}\n`;
@@ -75,7 +75,7 @@ You can only call ONE tool at at time. The tool codeblock should be the last thi
 
   exampleDynamicToolDefinition = `
 \`\`\`tool_definition
-TOOL_NAME: example_tool
+example_tool
 TOOL_ARG: arg_1 (string, required)
 Description of the first argument
 END_ARG
@@ -85,7 +85,7 @@ END_ARG
 
   exampleDynamicToolCall = `
 \`\`\`tool
-TOOL_NAME: example_tool
+example_tool
 BEGIN_ARG: arg_1
 The value
 of arg 1
@@ -101,7 +101,7 @@ END_ARG
     exampleArgs: Array<[string, string | number]> = [],
   ) {
     let callExample = `\`\`\`tool
-TOOL_NAME: ${toolName}`;
+${toolName}`;
 
     // Add each argument dynamically
     for (const [argName, argValue] of exampleArgs) {

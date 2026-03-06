@@ -111,7 +111,7 @@ describe("interceptSystemToolCalls", () => {
         },
       ],
       [{ role: "assistant", content: "```tool\n" }],
-      [{ role: "assistant", content: "TOOL_NAME: test_tool\n" }],
+      [{ role: "assistant", content: "test_tool\n" }],
       [{ role: "assistant", content: "BEGIN_ARG: arg1\n" }],
       [{ role: "assistant", content: "value1\n" }],
       [{ role: "assistant", content: "END_ARG\n" }],
@@ -182,7 +182,7 @@ describe("interceptSystemToolCalls", () => {
   it("processes tool_name without codeblock format", async () => {
     const messages: ChatMessage[][] = [
       [{ role: "assistant", content: "I'll help you with that.\n" }],
-      [{ role: "assistant", content: "TOOL_NAME: test_tool\n" }],
+      [{ role: "assistant", content: "tool_name: test_tool\n" }],
       [{ role: "assistant", content: "BEGIN_ARG: arg1\n" }],
       [{ role: "assistant", content: "value1\n" }],
       [{ role: "assistant", content: "END_ARG\n" }],
@@ -242,10 +242,42 @@ describe("interceptSystemToolCalls", () => {
     ).toBe("}");
   });
 
+  it("does not intercept quoted tool syntax in explanatory text", async () => {
+    const messages: ChatMessage[][] = [
+      [{ role: "assistant", content: "Here is the syntax:\n" }],
+      [{ role: "assistant", content: "read_file\n" }],
+      [{ role: "assistant", content: "BEGIN_ARG: filepath\n" }],
+      [{ role: "assistant", content: "path/to/the_file.txt\n" }],
+      [{ role: "assistant", content: "END_ARG\n" }],
+    ];
+
+    const generator = interceptSystemToolCalls(
+      createAsyncGenerator(messages),
+      abortController,
+      framework,
+    );
+
+    const outputChunks: string[] = [];
+    while (true) {
+      const result = await generator.next();
+      if (result.done || !result.value) {
+        break;
+      }
+
+      const chunkText = ((result.value as AssistantChatMessage[])[0]
+        .content as { type: "text"; text: string }[])[0].text;
+      outputChunks.push(chunkText);
+      expect((result.value as AssistantChatMessage[])[0].toolCalls).toBeFalsy();
+    }
+
+    expect(outputChunks.join("")).toBe(
+      "Here is the syntax:\nread_file\nBEGIN_ARG: filepath\npath/to/the_file.txt\nEND_ARG\n",
+    );
+  });
   it("ignores content after a tool call", async () => {
     const messages: ChatMessage[][] = [
       [{ role: "assistant", content: "```tool\n" }],
-      [{ role: "assistant", content: "TOOL_NAME: test_tool\n" }],
+      [{ role: "assistant", content: "test_tool\n" }],
       [{ role: "assistant", content: "BEGIN_ARG: arg1\n" }],
       [{ role: "assistant", content: "value1\n" }],
       [{ role: "assistant", content: "END_ARG\n" }],
@@ -273,7 +305,7 @@ describe("interceptSystemToolCalls", () => {
   it("stops processing when aborted", async () => {
     const messages: ChatMessage[][] = [
       [{ role: "assistant", content: "```tool\n" }],
-      [{ role: "assistant", content: "TOOL_NAME: test_tool\n" }],
+      [{ role: "assistant", content: "test_tool\n" }],
     ];
 
     const generator = interceptSystemToolCalls(
@@ -296,7 +328,7 @@ describe("interceptSystemToolCalls", () => {
   it("handles JSON parsing for argument values", async () => {
     const messages: ChatMessage[][] = [
       [{ role: "assistant", content: "```tool\n" }],
-      [{ role: "assistant", content: "TOOL_NAME: test_tool\n" }],
+      [{ role: "assistant", content: "test_tool\n" }],
       [{ role: "assistant", content: "BEGIN_ARG: number_arg\n" }],
       [{ role: "assistant", content: "123\n" }],
       [{ role: "assistant", content: "END_ARG\n" }],

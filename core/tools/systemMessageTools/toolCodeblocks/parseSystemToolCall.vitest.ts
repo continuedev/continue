@@ -9,8 +9,8 @@ describe("handleToolCallBuffer", () => {
     state = getInitialToolCallParseState();
   });
 
-  it("handles the ```tool\ntool_name the name", () => {
-    handleToolCallBuffer("```tool\ntool_name: my_name", state);
+  it("handles the ```tool\\n<tool_name> format", () => {
+    handleToolCallBuffer("```tool\nmy_name", state);
     expect(state.currentLineIndex).toBe(1);
 
     const result = handleToolCallBuffer("\n", state);
@@ -43,6 +43,24 @@ describe("handleToolCallBuffer", () => {
       id: expect.any(String),
     });
     expect(state.currentLineIndex).toBe(2);
+  });
+
+  it("handles tool name line without prefix", () => {
+    state.currentLineIndex = 1;
+
+    const result = handleToolCallBuffer("test_tool", state);
+    expect(result).toBeUndefined();
+
+    const newLineResult = handleToolCallBuffer("\n", state);
+
+    expect(newLineResult).toEqual({
+      type: "function",
+      function: {
+        name: "test_tool",
+        arguments: "",
+      },
+      id: expect.any(String),
+    });
   });
 
   it("handles case-insensitive tool name line", () => {
