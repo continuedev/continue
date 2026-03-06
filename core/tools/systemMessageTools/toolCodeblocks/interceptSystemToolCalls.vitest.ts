@@ -240,8 +240,12 @@ describe("interceptSystemToolCalls", () => {
         break;
       }
 
-      const chunkText = ((result.value as AssistantChatMessage[])[0]
-        .content as { type: "text"; text: string }[])[0].text;
+      const chunkText = (
+        (result.value as AssistantChatMessage[])[0].content as {
+          type: "text";
+          text: string;
+        }[]
+      )[0].text;
       outputChunks.push(chunkText);
       expect((result.value as AssistantChatMessage[])[0].toolCalls).toBeFalsy();
     }
