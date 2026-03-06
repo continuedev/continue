@@ -200,10 +200,6 @@ addCommonOptions(program)
   )
   .option("--resume", "Resume from last session")
   .option("--fork <sessionId>", "Fork from an existing session ID")
-  .option(
-    "--beta-subagent-tool",
-    "Enable beta Subagent tool for invoking subagents",
-  )
   .action(async (prompt, options) => {
     // Telemetry: record command invocation
     await posthogService.capture("cliCommand", { command: "cn" });
