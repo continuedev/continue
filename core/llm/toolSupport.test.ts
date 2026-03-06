@@ -440,8 +440,11 @@ describe("isRecommendedAgentModel", () => {
       expect(isRecommendedAgentModel("deepseek-reasoner")).toBe(true);
     });
 
-    it("should return false for non-reasoner DeepSeek models", () => {
-      expect(isRecommendedAgentModel("deepseek-chat")).toBe(false);
+    it("should return true for DeepSeek Chat models", () => {
+      expect(isRecommendedAgentModel("deepseek-chat")).toBe(true);
+    });
+
+    it("should return false for non-reasoner, non-chat DeepSeek models", () => {
       expect(isRecommendedAgentModel("deepseek-coder")).toBe(false);
     });
   });

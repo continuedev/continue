@@ -248,6 +248,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "vertexai",
   "function-network",
   "scaleway",
+  "deepseek",
 ];
 
 function llmCanGenerateInParallel(provider: string, model: string): boolean {
@@ -273,6 +274,9 @@ function isProviderHandlesTemplatingOrNoTemplateTypeRequired(
     modelName.includes("kimi") ||
     modelName.includes("mercury") ||
     modelName.includes("glm") ||
+    modelName.includes("deepseek-chat") ||
+    modelName.includes("deepseek-reasoner") ||
+    modelName.includes("deepseek-fim-beta") ||
     /^o\d/.test(modelName)
   );
 }
@@ -511,6 +515,10 @@ function autodetectPromptTemplates(
   } else if (templateType) {
     editTemplate = gptEditPrompt;
   } else if (model.includes("codestral")) {
+    editTemplate = osModelsEditPrompt;
+  } else if (
+    ["deepseek-chat", "deepseek-reasoner", "deepseek-fim-beta"].includes(model)
+  ) {
     editTemplate = osModelsEditPrompt;
   }
 

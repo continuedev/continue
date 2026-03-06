@@ -1,36 +1,36 @@
 import { createOpenAISubclassTests } from "./test-utils/openai-test-utils.js";
 
 // Import all OpenAI-compatible providers
-import OpenAI from "./OpenAI.js";
-import Groq from "./Groq.js";
-import Fireworks from "./Fireworks.js";
-import Together from "./Together.js";
-import Deepseek from "./Deepseek.js";
-import OpenRouter from "./OpenRouter.js";
-import xAI from "./xAI.js";
-import Mistral from "./Mistral.js";
-import Mimo from "./Mimo.js";
-import LMStudio from "./LMStudio.js";
+import Azure from "./Azure.js";
 import Cerebras from "./Cerebras.js";
 import DeepInfra from "./DeepInfra.js";
-import Nvidia from "./Nvidia.js";
-import SambaNova from "./SambaNova.js";
-import Scaleway from "./Scaleway.js";
-import Venice from "./Venice.js";
+import DeepSeek from "./DeepSeek.js";
+import Docker from "./Docker.js";
+import Fireworks from "./Fireworks.js";
+import Groq from "./Groq.js";
+import Inception from "./Inception.js";
+import Kindo from "./Kindo.js";
+import LMStudio from "./LMStudio.js";
+import Mimo from "./Mimo.js";
+import Mistral from "./Mistral.js";
 import Moonshot from "./Moonshot.js";
 import Novita from "./Novita.js";
+import Nvidia from "./Nvidia.js";
+import OpenAI from "./OpenAI.js";
+import OpenRouter from "./OpenRouter.js";
+import SambaNova from "./SambaNova.js";
+import Scaleway from "./Scaleway.js";
 import SiliconFlow from "./SiliconFlow.js";
-import Kindo from "./Kindo.js";
-import Azure from "./Azure.js";
-import Inception from "./Inception.js";
-import Docker from "./Docker.js";
-import Voyage from "./Voyage.js";
-import Vllm from "./Vllm.js";
 import TextGenWebUI from "./TextGenWebUI.js";
+import Together from "./Together.js";
+import Venice from "./Venice.js";
+import Vllm from "./Vllm.js";
+import Voyage from "./Voyage.js";
+import xAI from "./xAI.js";
 // import Relace from "./Relace.js"; // Skip - causing import issues
 import FunctionNetwork from "./FunctionNetwork.js";
-import NCompass from "./NCompass.js";
 import LlamaStack from "./LlamaStack.js";
+import NCompass from "./NCompass.js";
 import Nebius from "./Nebius.js";
 import OVHcloud from "./OVHcloud.js";
 
@@ -272,7 +272,7 @@ createOpenAISubclassTests(Together, {
   customStreamCompleteEndpoint: "completions",
 });
 
-createOpenAISubclassTests(Deepseek, {
+createOpenAISubclassTests(DeepSeek, {
   providerName: "deepseek",
   defaultApiBase: "https://api.deepseek.com/",
 });

@@ -62,6 +62,11 @@ export class VsCodeWebviewProtocol
         this.listeners.get(msg.messageType as keyof FromWebviewProtocol) || [];
       for (const handler of handlers) {
         try {
+          if (typeof handler !== "function") {
+            throw new Error(
+              `Invalid webview handler for messageType "${msg.messageType}" (expected function, got ${typeof handler})`,
+            );
+          }
           const response = await handler(msg);
           // For generator types e.g. llm/streamChat
           if (

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Usage } from "../..";
 
-import { calculateRequestCost, CostBreakdown } from "./calculateRequestCost";
+import { calculateRequestCost } from "./calculateRequestCost";
 
 interface TestCase {
   provider: string;
@@ -161,6 +161,61 @@ describe("calculateRequestCost", () => {
       completionTokens: 500,
       expectedCost: 0.00125,
       description: "GPT-3.5 Turbo",
+    },
+
+    // DeepSeek
+    {
+      provider: "deepseek",
+      model: "deepseek-chat",
+      promptTokens: 1000,
+      completionTokens: 500,
+      expectedCost: 0.00049,
+      description: "DeepSeek Chat basic usage (cache miss)",
+    },
+    {
+      provider: "deepseek",
+      model: "deepseek-reasoner",
+      promptTokens: 1000,
+      completionTokens: 500,
+      cachedTokens: 200,
+      cacheWriteTokens: 800,
+      expectedCost: 0.0004396,
+      description: "DeepSeek Reasoner with cache details",
+    },
+    {
+      provider: "deepseek",
+      model: "deepseek-chat",
+      promptTokens: 1000,
+      completionTokens: 500,
+      cachedTokens: 1000,
+      cacheWriteTokens: 0,
+      expectedCost: 0.000238,
+      description: "DeepSeek Chat all cache hit",
+    },
+    {
+      provider: "deepseek",
+      model: "deepseek-chat",
+      promptTokens: 0,
+      completionTokens: 1000,
+      expectedCost: 0.00042,
+      description: "DeepSeek Chat only output tokens",
+    },
+    {
+      provider: "deepseek",
+      model: "deepseek-chat",
+      promptTokens: 1000,
+      completionTokens: 0,
+      expectedCost: 0.00028,
+      description: "DeepSeek Chat only input tokens (cache miss)",
+    },
+    {
+      provider: "deepseek",
+      model: "deepseek-chat",
+      promptTokens: 1000,
+      completionTokens: 0,
+      cachedTokens: 1000,
+      expectedCost: 0.000028,
+      description: "DeepSeek Chat only input tokens (cache hit)",
     },
 
     // Edge cases

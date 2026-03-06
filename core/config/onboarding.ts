@@ -23,6 +23,30 @@ const GEMINI_MODEL_CONFIG = {
   apiKeyInputName: "GEMINI_API_KEY",
 };
 
+const DEEPSEEK_MODEL_CONFIG = {
+  apiKeyInputName: "DEEPSEEK_API_KEY",
+  models: [
+    {
+      slug: "deepseek/deepseek-chat",
+      model: "deepseek-chat",
+      name: "DeepSeek Chat",
+      contextLength: 131072,
+      maxTokens: 8192,
+      apiBase: "https://api.deepseek.com/",
+      roles: undefined,
+    },
+    {
+      slug: "deepseek/deepseek-reasoner",
+      model: "deepseek-reasoner",
+      name: "DeepSeek Reasoner",
+      contextLength: 131072,
+      maxTokens: 32000,
+      apiBase: "https://api.deepseek.com/",
+      roles: undefined,
+    },
+  ],
+};
+
 /**
  * We set the "best" chat + autocopmlete models by default
  * whenever a user doesn't have a config.json
@@ -96,6 +120,25 @@ export function setupProviderConfig(
           [GEMINI_MODEL_CONFIG.apiKeyInputName]: apiKey,
         },
       }));
+      break;
+    case "deepseek":
+      newModels = DEEPSEEK_MODEL_CONFIG.models.map((modelConfig) => {
+        const model: any = {
+          name: modelConfig.name,
+          provider: "deepseek",
+          model: modelConfig.model,
+          apiKey,
+          contextLength: modelConfig.contextLength,
+          defaultCompletionOptions: {
+            maxTokens: modelConfig.maxTokens,
+          },
+          roles: modelConfig.roles,
+        };
+        if (modelConfig.apiBase) {
+          model.apiBase = modelConfig.apiBase;
+        }
+        return model;
+      });
       break;
     default:
       throw new Error(`Unknown provider: ${provider}`);

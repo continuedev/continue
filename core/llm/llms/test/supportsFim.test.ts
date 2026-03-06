@@ -1,6 +1,6 @@
 import { jest } from "@jest/globals";
 import Anthropic from "../Anthropic.js";
-import Deepseek from "../Deepseek.js";
+import Deepseek from "../DeepSeek.js";
 import FunctionNetwork from "../FunctionNetwork.js";
 import Mistral from "../Mistral.js";
 import OpenAI from "../OpenAI.js";
@@ -38,7 +38,9 @@ const testCases: [any, string, boolean, string][] = [
   [FunctionNetwork, "any-model", false, "FunctionNetwork"],
   [OpenAI, "codestral", false, "OpenAI"],
   [Mistral, "codestral", true, "Mistral"],
-  [Deepseek, "deepseek-chat", true, "Deepseek"],
+  [Deepseek, "deepseek-fim-beta", true, "DeepSeek"],
+  [Deepseek, "deepseek-chat", false, "DeepSeek"],
+  [Deepseek, "deepseek-reasoner", false, "DeepSeek"],
 ];
 
 testCases.forEach(([LLMClass, model, expectedResult, description]) => {

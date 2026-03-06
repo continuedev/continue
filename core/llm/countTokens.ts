@@ -471,7 +471,13 @@ function compileChatMessages({
 
   const contextLength = knownContextLength ?? DEFAULT_PRUNING_LENGTH;
   const countingSafetyBuffer = getTokenCountingBufferSafety(contextLength);
-  const minOutputTokens = Math.min(MIN_RESPONSE_TOKENS, maxTokens);
+
+  // For DeepSeek models, we need to reserve the full maxTokens to prevent API overflow
+  // DeepSeek API rejects requests that exceed contextLength - maxToken
+  const isDeepSeekModel = modelName.toLowerCase().includes("deepseek-");
+  const minOutputTokens = isDeepSeekModel
+    ? maxTokens
+    : Math.min(MIN_RESPONSE_TOKENS, maxTokens);
 
   let inputTokensAvailable = contextLength;
 
