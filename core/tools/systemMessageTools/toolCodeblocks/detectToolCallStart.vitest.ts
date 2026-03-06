@@ -75,4 +75,15 @@ describe("detectToolCallStart", () => {
     expect(result.isInPartialStart).toBe(false);
     expect(result.modifiedBuffer).toBe(buffer);
   });
+
+  it("skips non-standard starts when alternate starts are disabled", () => {
+    const buffer = "TOOL_NAME: example_tool";
+    const result = detectToolCallStart(buffer, framework, {
+      allowAlternateStarts: false,
+    });
+
+    expect(result.isInToolCall).toBe(false);
+    expect(result.isInPartialStart).toBe(false);
+    expect(result.modifiedBuffer).toBe(buffer);
+  });
 });
