@@ -7,7 +7,7 @@ import {
   MessageOption,
   PromptLog,
 } from "../../index.js";
-import { LlmApiRequestType, toChatBody } from "../openaiTypeConverters.js";
+import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
 import OpenAI from "./OpenAI.js";
 
@@ -29,6 +29,7 @@ class DeepSeek extends OpenAI {
   static providerName = "deepseek";
 
   static defaultOptions: Partial<LLMOptions> = {
+    apiBase: "https://api.deepseek.com/",
     promptTemplates: {
       edit: osModelsEditPrompt, // Use OpenAI‑style edit prompt (DeepSeek is OpenAI‑compatible)
     },
@@ -51,43 +52,6 @@ class DeepSeek extends OpenAI {
   constructor(options: LLMOptions) {
     // No special initialization needed; the parent OpenAI class handles everything.
     super(options);
-  }
-
-  /**
-   * Override chat() to use non-streaming chat completion and return only the content.
-   */
-  async chat(
-    messages: ChatMessage[],
-    signal: AbortSignal,
-    options: LLMFullCompletionOptions = {},
-  ): Promise<{ role: "assistant"; content: string }> {
-    const transformedMessages = this._pairLoneThinkingMessages(messages);
-    const completionOptions = {
-      ...this.completionOptions,
-      ...(options as any).completionOptions,
-    };
-
-    // Convert ChatMessage to OpenAI format first
-    const openaiMessages = toChatBody(
-      transformedMessages,
-      completionOptions,
-    ).messages;
-
-    const body = this.modifyChatBody({
-      ...completionOptions,
-      messages: openaiMessages,
-      model: this._convertModelName(completionOptions.model),
-      stream: false,
-    } as ChatCompletionCreateParams);
-    const response = await this.openaiAdapter?.chatCompletionNonStream(
-      body as any,
-      signal,
-    );
-    if (!response) {
-      return { role: "assistant", content: "" };
-    }
-    const content = response.choices?.[0]?.message?.content || "";
-    return { role: "assistant", content };
   }
 
   /**
