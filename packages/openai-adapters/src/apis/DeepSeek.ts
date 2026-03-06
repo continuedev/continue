@@ -45,10 +45,9 @@ export class DeepSeekApi extends OpenAIApi {
 
   constructor(config: z.infer<typeof OpenAIConfigSchema>) {
     const apiBase = config.apiBase ?? DEEPSEEK_API_BASE;
-    const normalizedApiBase = apiBase.endsWith("/") ? apiBase : apiBase + "/";
     super({
       ...config,
-      apiBase: normalizedApiBase,
+      apiBase,
     });
   }
 
@@ -98,10 +97,7 @@ export class DeepSeekApi extends OpenAIApi {
   } {
     const warnings: string[] = [];
 
-    const lastMessage =
-      body.messages.length > 0
-        ? body.messages[body.messages.length - 1]
-        : undefined;
+    const lastMessage = body.messages.length > 0 ? body.messages[body.messages.length - 1] : undefined;
     const hasTools = this.hasToolsInConversation(body);
 
     // Prefix completion requires:
@@ -142,6 +138,7 @@ export class DeepSeekApi extends OpenAIApi {
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
     const { endpoint, deepSeekBody } = this.prepareChatCompletionRequest(body);
+
 
     // Execute the API request
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
@@ -220,7 +217,7 @@ export class DeepSeekApi extends OpenAIApi {
     }
 
     /*  Very rare edge case workarounds:
-     *  - If the stream ends with a finish_reason "stop"
+     *  - If the stream ends with a finish_reason "stop" 
      *    and no content or tool_calls were ever sent, but reasoning_content was received,
      *    → inject a final chunk containing the reasoning as content to rescue results for next turn
      *  (remove when fixed with future model updates and no longer needed)
@@ -316,10 +313,7 @@ export class DeepSeekApi extends OpenAIApi {
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const warnings: string[] = [];
-    const endpoint = new URL(
-      this.apiBase.endsWith("/beta/") ? "completions" : "beta/completions",
-      this.apiBase,
-    );
+    const endpoint = new URL("completions", this.apiBase);
     const deepSeekBody = convertToFimDeepSeekRequestBody(body, warnings);
 
     // Log any warnings about unsupported features
