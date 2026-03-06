@@ -4,16 +4,20 @@ import * as path from "path";
 import chalk from "chalk";
 import { setConfigFilePermissions } from "core/util/paths.js";
 
-import { AuthConfig, login } from "./auth/workos.js";
+import { AuthConfig } from "./auth/workos.js";
 import { getApiClient } from "./config.js";
 import { loadConfiguration } from "./configLoader.js";
 import { env } from "./env.js";
 import {
   getApiKeyValidationError,
   isValidAnthropicApiKey,
+  isValidOpenAIApiKey,
 } from "./util/apiKeyValidation.js";
 import { question, questionWithChoices } from "./util/prompt.js";
-import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
+import {
+  updateAnthropicModelInYaml,
+  updateOpenAIModelInYaml,
+} from "./util/yamlConfigUpdater.js";
 
 const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
@@ -32,7 +36,9 @@ export async function checkHasAcceptableModel(
   }
 }
 
-export async function createOrUpdateConfig(apiKey: string): Promise<void> {
+export async function createOrUpdateConfigAnthropic(
+  apiKey: string,
+): Promise<void> {
   const configDir = path.dirname(CONFIG_PATH);
 
   if (!fs.existsSync(configDir)) {
@@ -44,6 +50,24 @@ export async function createOrUpdateConfig(apiKey: string): Promise<void> {
     : "";
 
   const updatedContent = updateAnthropicModelInYaml(existingContent, apiKey);
+  fs.writeFileSync(CONFIG_PATH, updatedContent);
+  setConfigFilePermissions(CONFIG_PATH);
+}
+
+export async function createOrUpdateConfigOpenAI(
+  apiKey: string,
+): Promise<void> {
+  const configDir = path.dirname(CONFIG_PATH);
+
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+  }
+
+  const existingContent = fs.existsSync(CONFIG_PATH)
+    ? fs.readFileSync(CONFIG_PATH, "utf8")
+    : "";
+
+  const updatedContent = updateOpenAIModelInYaml(existingContent, apiKey);
   fs.writeFileSync(CONFIG_PATH, updatedContent);
   setConfigFilePermissions(CONFIG_PATH);
 }
@@ -76,7 +100,7 @@ export async function runOnboardingFlow(
     // In test/CI environment, check for ANTHROPIC_API_KEY first
     if (process.env.ANTHROPIC_API_KEY) {
       console.log(chalk.blue("✓ Using ANTHROPIC_API_KEY from environment"));
-      await createOrUpdateConfig(process.env.ANTHROPIC_API_KEY);
+      await createOrUpdateConfigAnthropic(process.env.ANTHROPIC_API_KEY);
       console.log(chalk.gray(`  Config saved to: ${CONFIG_PATH}`));
       return false;
     }
@@ -87,8 +111,8 @@ export async function runOnboardingFlow(
 
   // Step 4: Present user with two options
   console.log(chalk.yellow("How do you want to get started?"));
-  console.log(chalk.white("1. ⏩ Log in with Continue"));
-  console.log(chalk.white("2. 🔑 Enter your Anthropic API key"));
+  console.log(chalk.white("1. 🔑 Enter your Anthropic API key"));
+  console.log(chalk.white("2. 🔑 Enter your OpenAI API key"));
 
   const choice = await questionWithChoices(
     chalk.yellow("\nEnter choice (1): "),
@@ -98,18 +122,28 @@ export async function runOnboardingFlow(
   );
 
   if (choice === "1" || choice === "") {
-    await login();
-    return true;
-  } else if (choice === "2") {
     const apiKey = await question(
       chalk.white("\nEnter your Anthropic API key: "),
     );
 
     if (!isValidAnthropicApiKey(apiKey)) {
-      throw new Error(getApiKeyValidationError(apiKey));
+      throw new Error(getApiKeyValidationError(apiKey, "anthropic"));
     }
 
-    await createOrUpdateConfig(apiKey);
+    await createOrUpdateConfigAnthropic(apiKey);
+    console.log(
+      chalk.green(`✓ Config file updated successfully at ${CONFIG_PATH}`),
+    );
+
+    return true;
+  } else if (choice === "2") {
+    const apiKey = await question(chalk.white("\nEnter your OpenAI API key: "));
+
+    if (!isValidOpenAIApiKey(apiKey)) {
+      throw new Error(getApiKeyValidationError(apiKey, "openai"));
+    }
+
+    await createOrUpdateConfigOpenAI(apiKey);
     console.log(
       chalk.green(`✓ Config file updated successfully at ${CONFIG_PATH}`),
     );
