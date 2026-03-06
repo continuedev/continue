@@ -31,7 +31,7 @@ afterEach(() => {
 describe("LocalProfileLoader", () => {
   it("uses name from default local config.yaml for the profile title", async () => {
     const { loader, tempDir } = await createLoader(
-      "name: Custom Local Profile",
+      "name: Custom Local Profile\nversion: '1.0'",
     );
     expect(loader.description.title).toBe("Custom Local Profile");
     fs.rmSync(tempDir, { recursive: true, force: true });
