@@ -80,7 +80,7 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
   ): Promise<ChatHistoryState> {
     logger.debug("Initializing ChatHistoryService", {
       sessionId: session?.sessionId,
-      historyLength: session?.history.length,
+      historyLength: session?.history?.length,
       isRemoteMode,
     });
 
