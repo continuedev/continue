@@ -28,6 +28,7 @@ export async function* interceptSystemToolCalls(
 ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
   let buffer = "";
   let parseState: ToolCallParseState | undefined;
+  let skipNextNewline = false;
 
   while (true) {
     const result = await messageGenerator.next();
@@ -46,7 +47,7 @@ export async function* interceptSystemToolCalls(
       return result.value;
     } else {
       for await (const message of result.value) {
-        if (abortController.signal.aborted || parseState?.done) {
+        if (abortController.signal.aborted) {
           break;
         }
         // Skip non-assistant messages or messages with native tool calls
@@ -68,6 +69,15 @@ export async function* interceptSystemToolCalls(
           .flat();
 
         for (const chunk of chunks) {
+          // Skip the trailing newline after a completed tool call codeblock
+          // (```\n splits into ["```", "\n"] — the ``` closes the tool call
+          // and the \n should not be emitted as text content)
+          if (skipNextNewline) {
+            skipNextNewline = false;
+            if (chunk === "\n") {
+              continue;
+            }
+          }
           buffer += chunk;
           if (!parseState) {
             const { isInPartialStart, isInToolCall, modifiedBuffer } =
@@ -96,12 +106,14 @@ export async function* interceptSystemToolCalls(
                 },
               ];
             }
-          } else {
-            // Prevent content after tool calls for now
-            if (parseState) {
-              continue;
+            // Completed tool calls should not terminate parsing for subsequent
+            // chunks/messages; reset state so normal content (or another tool
+            // call) can be handled.
+            if (parseState.done) {
+              parseState = undefined;
+              skipNextNewline = true;
             }
-
+          } else {
             // Yield normal assistant message
             yield [
               {
