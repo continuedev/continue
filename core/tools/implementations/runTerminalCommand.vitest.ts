@@ -142,6 +142,27 @@ describe("runTerminalCommandImpl", () => {
     expect(result[0].status).toBe("Command completed");
   });
 
+  it("should fall back to an available shell when SHELL is invalid", async () => {
+    if (process.platform === "win32") {
+      return;
+    }
+
+    const originalShell = process.env.SHELL;
+    process.env.SHELL = "/definitely-not-a-real-shell";
+
+    try {
+      const result = await runTerminalCommandImpl(
+        { command: `node -e "console.log('fallback shell works')"` },
+        createMockExtras(),
+      );
+
+      expect(result[0].status).toBe("Command completed");
+      expect(result[0].content).toContain("fallback shell works");
+    } finally {
+      process.env.SHELL = originalShell;
+    }
+  });
+
   it("should stream output when onPartialOutput is provided", async () => {
     // This test uses Node to create a command that outputs data incrementally
     const command = `node -e "

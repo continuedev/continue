@@ -1,5 +1,6 @@
 import iconv from "iconv-lite";
 import childProcess from "node:child_process";
+import fs from "node:fs";
 import os from "node:os";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
 // Automatically decode the buffer according to the platform to avoid garbled Chinese
@@ -26,9 +27,25 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
       args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
     };
   } else {
-    // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
-    const userShell = process.env.SHELL || "/bin/bash";
-    return { shell: userShell, args: ["-l", "-c", command] };
+    // Unix/macOS: prefer configured shell, but gracefully fall back when unavailable
+    // (e.g. minimal dev containers without /bin/bash).
+    const configuredShell = process.env.SHELL;
+    const unixFallbacks = ["/bin/bash", "/bin/sh", "/bin/ash"];
+    const shellCandidates = configuredShell
+      ? [configuredShell, ...unixFallbacks]
+      : unixFallbacks;
+
+    const shell =
+      shellCandidates.find((candidate) => {
+        if (!candidate) return false;
+        if (!candidate.startsWith("/")) {
+          // Non-absolute shells are resolved by PATH at spawn time.
+          return true;
+        }
+        return fs.existsSync(candidate);
+      }) ?? "/bin/sh";
+
+    return { shell, args: ["-l", "-c", command] };
   }
 }
 
