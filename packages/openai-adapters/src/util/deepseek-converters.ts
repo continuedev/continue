@@ -324,7 +324,7 @@ export function convertToChatDeepSeekRequestBody(
       : {}),
     ...(responseFormat ? { response_format: responseFormat } : {}),
     ...(logprobs ? { logprobs: logprobs } : {}),
-    ...(top_logprobs ? { top_logprobs: top_logprobs } : {}),
+    ...(top_logprobs && logprobs ? { top_logprobs: top_logprobs } : {}),
     ...(body.stream_options?.include_usage
       ? { stream_options: { include_usage: true } }
       : {}),
