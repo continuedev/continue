@@ -55,8 +55,5 @@
   "conventionalCommits.promptBody": false,
   "conventionalCommits.promptFooter": false,
   "conventionalCommits.promptScopes": true,
-  "conventionalCommits.scopes": ["reg"],
-  "continue.telemetryEnabled": false,
-  "merge-conflict.autoNavigateNextConflict.enabled": true,
-  "telemetry.feedback.enabled": false
+  "conventionalCommits.scopes": ["reg"]
 }
