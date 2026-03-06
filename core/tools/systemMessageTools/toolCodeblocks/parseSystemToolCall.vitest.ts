@@ -101,7 +101,9 @@ describe("handleToolCallBuffer", () => {
     state.currentLineIndex = 1;
     handleToolCallBuffer("TOOL_NAME:", state);
 
-    expect(() => handleToolCallBuffer("\n", state)).toThrow("Invalid tool name");
+    expect(() => handleToolCallBuffer("\n", state)).toThrow(
+      "Invalid tool name",
+    );
   });
 
   it("begins an argument correctly", () => {
