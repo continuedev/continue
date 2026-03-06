@@ -14,7 +14,10 @@ import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
-import { loadMarkdownSkills } from "./util/loadMarkdownSkills.js";
+import {
+  getSkillSlashCommandName,
+  loadMarkdownSkills,
+} from "./util/loadMarkdownSkills.js";
 
 type CommandHandler = (
   args: string[],
@@ -282,8 +285,23 @@ export async function handleSlashCommands(
     return { newInput };
   }
 
+  const { skills } = await loadMarkdownSkills();
+  if (skills.length) {
+    const normalizedCommand = command.trim().toLowerCase();
+    const matchingSkill = skills.find(
+      (skill) => getSkillSlashCommandName(skill) === normalizedCommand,
+    );
+
+    if (matchingSkill) {
+      return {
+        exit: false,
+        output: matchingSkill.content,
+      };
+    }
+  }
+
   // Check if this command would match any available commands (same logic as UI)
-  const allCommands = getAllSlashCommands(assistant, {
+  const allCommands = await getAllSlashCommands(assistant, {
     isRemoteMode: options?.isRemoteMode,
   });
   const hasMatches = allCommands.some((cmd) =>

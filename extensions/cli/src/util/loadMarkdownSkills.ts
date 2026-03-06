@@ -144,3 +144,27 @@ export async function loadMarkdownSkills(): Promise<LoadSkillsResult> {
 
   return { skills, errors };
 }
+
+export function getSkillSlashCommandName(skill: Skill): string {
+  // Normalize skill name to lowercase and sanitize for use as command name
+  const base = skill.name.trim().toLowerCase();
+  const safe = base
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+/, "")
+    .replace(/-+$/, "");
+
+  if (safe) {
+    return `skill-${safe}`;
+  }
+
+  // Fallback to directory name if skill name is invalid
+  const dirName = path
+    .basename(path.dirname(skill.path))
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+/, "")
+    .replace(/-+$/, "");
+
+  const fallback = dirName || "skill";
+  return `skill-${fallback}`;
+}
