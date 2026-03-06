@@ -1,4 +1,5 @@
 import { ConfigResult, parseConfigYaml } from "@continuedev/config-yaml";
+import fs from "node:fs";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, ILLMLogger } from "../../index.js";
@@ -21,6 +22,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       | { path: string; content: string }
       | undefined,
   ) {
+    const defaultTitle = "Local Config";
     const description: ProfileDescription = {
       id: overrideAssistantFile?.path ?? LocalProfileLoader.ID,
       profileType: "local",
@@ -32,7 +34,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       iconUrl: "",
       title: overrideAssistantFile?.path
         ? getUriPathBasename(overrideAssistantFile.path)
-        : "Local Config",
+        : defaultTitle,
       errors: undefined,
       uri:
         overrideAssistantFile?.path ??
@@ -40,12 +42,21 @@ export default class LocalProfileLoader implements IProfileLoader {
       rawYaml: undefined,
     };
     this.description = description;
-    if (overrideAssistantFile?.content) {
+    let configContent = overrideAssistantFile?.content;
+    if (!configContent) {
       try {
-        const parsedAssistant = parseConfigYaml(
-          overrideAssistantFile?.content ?? "",
-        );
-        this.description.title = parsedAssistant.name;
+        configContent = fs.readFileSync(getPrimaryConfigFilePath(), "utf8");
+      } catch (e) {
+        console.error("Failed to read config file: ", e);
+      }
+    }
+    if (configContent) {
+      try {
+        const parsedAssistant = parseConfigYaml(configContent);
+        this.description.title =
+          parsedAssistant.name?.trim() ||
+          this.description.title ||
+          defaultTitle;
       } catch (e) {
         console.error("Failed to parse config file: ", e);
       }
