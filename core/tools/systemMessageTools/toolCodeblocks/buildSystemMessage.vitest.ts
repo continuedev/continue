@@ -26,7 +26,8 @@ describe("createSystemMessageExampleCall", () => {
     );
     expect(result).includes("Use this tool to test things");
     expect(result).includes("```tool");
-    expect(result).includes("TOOL_NAME: test_tool");
+    expect(result).includes("\ntest_tool\n");
+    expect(result).not.toContain("TOOL_NAME:");
     expect(result).includes("```");
   });
 
@@ -42,7 +43,8 @@ describe("createSystemMessageExampleCall", () => {
 
     expect(result).includes("Use this tool to test things");
     expect(result).includes("```tool");
-    expect(result).includes("TOOL_NAME: test_tool");
+    expect(result).includes("\ntest_tool\n");
+    expect(result).not.toContain("TOOL_NAME:");
     expect(result).includes("BEGIN_ARG: arg1");
     expect(result).includes("value1");
     expect(result).includes("END_ARG");
@@ -96,6 +98,7 @@ describe("generateToolsSystemMessage", () => {
     // Check structure rather than exact text
     expect(result).includes(TOOL_INSTRUCTIONS_TAG);
     expect(result).includes(customDescription);
+    expect(result).not.toContain("TOOL_NAME:");
     expect(result).includes(closeTag(TOOL_INSTRUCTIONS_TAG));
 
     // Check for general section about available tools without requiring exact wording
@@ -131,7 +134,7 @@ describe("generateToolsSystemMessage", () => {
     const result = generateToolsSystemMessage(tools, framework);
 
     // Check for key elements without requiring exact wording
-    expect(result).includes(`TOOL_NAME: ${toolName}`);
+    expect(result).includes(`\n${toolName}\n`);
     expect(result).includes("TOOL_DESCRIPTION:");
     expect(result).includes(toolDesc);
     expect(result).includes("TOOL_ARG: param1 (string, required)");
@@ -183,7 +186,7 @@ describe("generateToolsSystemMessage", () => {
 
     // Check for both types of tools
     expect(result).includes(customMsg);
-    expect(result).includes("TOOL_NAME: tool_without_description");
+    expect(result).includes("\ntool_without_description\n");
 
     // Verify structure without exact text matching
     const hasAvailableToolsSection = /tools are available to you/i.test(result);
@@ -213,7 +216,7 @@ describe("generateToolsSystemMessage", () => {
 
     // Check for example sections without exact text
     expect(result).includes("```tool_definition");
-    expect(result).includes("TOOL_NAME: example_tool");
+    expect(result).includes("\nexample_tool\n");
     expect(result).includes("```tool");
 
     // Check for example format structure
@@ -262,6 +265,6 @@ describe("addSystemMessageToolsToSystemMessage", () => {
 
     expect(result.startsWith(baseMessage)).toBe(true);
     expect(result).includes(TOOL_INSTRUCTIONS_TAG);
-    expect(result).includes(`TOOL_NAME: ${toolName}`);
+    expect(result).includes(`\n${toolName}\n`);
   });
 });

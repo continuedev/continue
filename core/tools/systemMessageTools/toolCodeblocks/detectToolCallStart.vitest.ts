@@ -5,7 +5,7 @@ import { detectToolCallStart } from "../detectToolCallStart";
 describe("detectToolCallStart", () => {
   let framework = new SystemMessageToolCodeblocksFramework();
   it("detects standard tool call start", () => {
-    const buffer = "```tool\nTOOL_NAME: example_tool";
+    const buffer = "```tool\nexample_tool";
     const result = detectToolCallStart(buffer, framework);
 
     expect(result.isInToolCall).toBe(true);
@@ -19,11 +19,11 @@ describe("detectToolCallStart", () => {
 
     expect(result.isInToolCall).toBe(true);
     expect(result.isInPartialStart).toBe(false);
-    expect(result.modifiedBuffer).toBe("```tool\nTOOL_NAME: example_tool");
+    expect(result.modifiedBuffer).toBe("```tool\n example_tool");
   });
 
   it("detects case-insensitive tool call start", () => {
-    const buffer = "```ToOl\nTOOL_NAME: example_tool";
+    const buffer = "```ToOl\nexample_tool";
     const result = detectToolCallStart(buffer, framework);
 
     expect(result.isInToolCall).toBe(true);
@@ -37,7 +37,7 @@ describe("detectToolCallStart", () => {
 
     expect(result.isInToolCall).toBe(true);
     expect(result.isInPartialStart).toBe(false);
-    expect(result.modifiedBuffer).toBe("```tool\nTOOL_NAME: example_tool");
+    expect(result.modifiedBuffer).toBe("```tool\n example_tool");
   });
 
   it("identifies partial tool call start", () => {
