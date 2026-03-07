@@ -43,7 +43,7 @@ export default class LocalProfileLoader implements IProfileLoader {
     };
     this.description = description;
     let configContent = overrideAssistantFile?.content;
-    if (!configContent) {
+    if (configContent === undefined) {
       try {
         configContent = fs.readFileSync(getPrimaryConfigFilePath(), "utf8");
       } catch (e) {
