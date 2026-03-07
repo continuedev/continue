@@ -1,0 +1,183 @@
+---
+title: "Hooks"
+---
+
+Continue CLI supports Claude Code-compatible hooks so you can run custom logic before and after key events (tool calls, prompts, session lifecycle, and more).
+
+Hooks are configured in settings JSON files and run automatically when matching events fire.
+
+## Where to configure hooks
+
+`cn` loads hooks from the same paths as Claude Code, then merges them:
+
+1. `~/.claude/settings.json`
+2. `~/.continue/settings.json`
+3. `.claude/settings.json`
+4. `.continue/settings.json`
+5. `.claude/settings.local.json`
+6. `.continue/settings.local.json`
+
+Later files have higher precedence, but hooks from all files run.
+
+## Basic shape
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'About to run Bash tool'"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Event types
+
+Continue currently supports the following event names:
+
+- `PreToolUse`
+- `PostToolUse`
+- `PostToolUseFailure`
+- `PermissionRequest`
+- `UserPromptSubmit`
+- `SessionStart`
+- `SessionEnd`
+- `Stop`
+- `Notification`
+- `SubagentStart`
+- `SubagentStop`
+- `PreCompact`
+- `ConfigChange`
+- `TeammateIdle`
+- `TaskCompleted`
+- `WorktreeCreate`
+- `WorktreeRemove`
+
+## Matcher behavior
+
+Each event can define one or more matcher groups:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(Read|Glob)$",
+        "hooks": [{ "type": "command", "command": "echo read path" }]
+      },
+      {
+        "matcher": "^Bash$",
+        "hooks": [{ "type": "command", "command": "echo shell tool" }]
+      }
+    ]
+  }
+}
+```
+
+- `matcher` is a JavaScript regex string.
+- `"*"`, `""`, or omitted matcher means “match all”.
+- Invalid regexes are ignored (with a warning in logs).
+- Some events do not use matchers and always fire when configured.
+
+## Hook handler types
+
+### Command hooks
+
+Run a shell command and pass hook input JSON to stdin.
+
+```json
+{
+  "type": "command",
+  "command": "node .continue/hooks/pre-tool.js",
+  "timeout": 120,
+  "statusMessage": "Checking tool policy"
+}
+```
+
+Optional fields:
+
+- `async`: if `true`, runs in the background (fire-and-forget)
+- `timeout`: seconds before cancellation (default 600 for command hooks)
+- `statusMessage`: custom spinner message
+
+### HTTP hooks
+
+Send hook input as a JSON POST request.
+
+```json
+{
+  "type": "http",
+  "url": "https://example.com/hooks/pretool",
+  "headers": {
+    "Authorization": "Bearer ${HOOKS_TOKEN}"
+  },
+  "allowedEnvVars": ["HOOKS_TOKEN"],
+  "timeout": 30
+}
+```
+
+Notes:
+
+- Hook input is sent as request body.
+- Non-2xx responses are treated as non-blocking hook errors.
+- `headers` support env interpolation only for names listed in `allowedEnvVars`.
+
+### Prompt and Agent handlers
+
+You can include `prompt` and `agent` handler types in config for schema compatibility, but Continue CLI currently skips them.
+
+## Exit code and blocking semantics
+
+For **command hooks**:
+
+- Exit code `0`: success, continue execution
+- Exit code `2`: block the action (`stderr` becomes block reason)
+- Any other non-zero code: treated as hook failure, does not block by itself
+
+For **JSON hook output** (command or http):
+
+- `{"decision":"block","reason":"..."}` blocks the action
+- `hookSpecificOutput` can provide event-specific controls (for example `permissionDecision` in `PreToolUse`)
+
+## Sync vs async
+
+- Sync hooks are awaited and run in parallel with other sync hooks.
+- Command hooks with `"async": true` are started and not awaited.
+- Async hooks are useful for telemetry or background notifications where you do not want to delay the main action.
+
+## Environment variables for command hooks
+
+Command hooks receive:
+
+- `CONTINUE_PROJECT_DIR`
+- `CLAUDE_PROJECT_DIR`
+
+Both are set to the current project directory so shared hook scripts work across `cn` and Claude Code.
+
+## Disable all hooks
+
+To disable hooks globally for a config file:
+
+```json
+{
+  "disableAllHooks": true
+}
+```
+
+If any loaded settings file sets `disableAllHooks`, hooks are disabled.
+
+## Example use cases
+
+- Block dangerous tool calls (for example deny `Bash` commands matching `rm -rf`)
+- Add context before each user prompt (`UserPromptSubmit`)
+- Forward tool telemetry to internal observability services via HTTP hooks
+- Trigger notifications on session lifecycle events
+- Enforce org policies on permission requests
