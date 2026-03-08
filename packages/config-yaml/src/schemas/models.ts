@@ -180,6 +180,8 @@ const baseModelFields = {
   apiKey: z.string().optional(),
   apiBase: z.string().optional(),
   maxStopWords: z.number().optional(),
+  region: z.string().optional(),
+  profile: z.string().optional(),
   roles: modelRolesSchema.array().optional(),
   capabilities: modelCapabilitySchema.array().optional(),
   defaultCompletionOptions: completionOptionsSchema.optional(),
