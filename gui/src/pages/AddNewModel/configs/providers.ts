@@ -1218,6 +1218,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://cloud.siliconflow.cn/account/ak",
   },
+  tensorix: {
+    title: "Tensorix",
+    provider: "tensorix",
+    description:
+      "Tensorix is an OpenAI-compatible API gateway with access to DeepSeek, Llama, Qwen, GLM, and more.",
+    longDescription:
+      "To get started with Tensorix, create an account and get an API key at [app.tensorix.ai](https://app.tensorix.ai).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Tensorix API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://app.tensorix.ai",
+  },
   venice: {
     title: "Venice",
     provider: "venice",
