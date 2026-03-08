@@ -227,7 +227,7 @@
             "kindo",
             "moonshot",
             "siliconflow",
-            "tensorix"
+            "tensorix",
             "function-network",
             "scaleway",
             "relace",
@@ -2869,7 +2869,7 @@
                 "watsonx",
                 "lmstudio",
                 "siliconflow",
-                "tensorix"
+                "tensorix",
                 "function-network",
                 "scaleway",
                 "ovhcloud"
