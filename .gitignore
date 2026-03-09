@@ -165,6 +165,7 @@ extensions/intellij/bin
 extensions/.continue-debug/
 
 *.vsix
+local-artifacts/
 
 # intellij module library files
 *.iml
