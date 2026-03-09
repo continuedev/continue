@@ -100,7 +100,7 @@ ${identifier}
 **Identifier can either be a URL or a skill name**
 
 - If it looks like a URL (for example, it starts with http:// or https://), open that URL and inspect its contents to find the code or files that define the skill. 
-- If the URL is a GitHub repository, look for the skills folder. There
+- If the URL is a GitHub repository, look for the skills folder. There can be multiple skills within subdirectories.
 - If it looks like a skill name, you should search for the most relevant open-source skill or repository that matches the skill identifier.
 - Ask questions to the user to clarify which skill they are referring to if there are multiple options in your findings.
 
