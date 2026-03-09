@@ -96,12 +96,7 @@ const FreeTrialStatus: React.FC<FreeTrialStatusProps> = ({
   }, [status, loading, onTransitionStateChange, model]);
 
   // Don't render anything while loading or if no status
-  if (
-    loading ||
-    !status ||
-    !status.optedInToFreeTrial ||
-    !shouldFetchStatus
-  ) {
+  if (loading || !status || !status.optedInToFreeTrial || !shouldFetchStatus) {
     return null;
   }
 

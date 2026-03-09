@@ -45,11 +45,13 @@ describe("FreeTrialStatus", () => {
     render(
       <FreeTrialStatus
         apiClient={{ getFreeTrialStatus } as any}
-        model={{
-          provider: "continue-proxy",
-          model: "test-model",
-          apiKeyLocation: "free_trial:test",
-        } as any}
+        model={
+          {
+            provider: "continue-proxy",
+            model: "test-model",
+            apiKeyLocation: "free_trial:test",
+          } as any
+        }
       />,
     );
 
