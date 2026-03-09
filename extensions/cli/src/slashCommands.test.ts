@@ -337,6 +337,23 @@ describe("slashCommands", () => {
       expect(result?.exit).toBe(false);
     });
 
+    it("should handle /rename as an alias for /title", async () => {
+      const { updateSessionTitle } = await import("./session.js");
+      (updateSessionTitle as any).mockReset();
+
+      const result = await handleSlashCommands(
+        "/rename My Renamed Session",
+        mockAssistant,
+      );
+
+      expect(updateSessionTitle).toHaveBeenCalledWith("My Renamed Session");
+      expect(result).toBeDefined();
+      expect(result?.output).toContain(
+        'Session title updated to: "My Renamed Session"',
+      );
+      expect(result?.exit).toBe(false);
+    });
+
     it("should handle custom assistant prompts", async () => {
       const assistantWithPrompts: AssistantUnrolled = {
         ...mockAssistant,
