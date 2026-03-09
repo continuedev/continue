@@ -2,6 +2,7 @@ import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { Session } from "core/index.js";
 
+import { QuestionRequestedEvent } from "../../services/QuizService.js";
 import { ToolCallPreview } from "../../tools/types.js";
 
 export interface UseChatProps {
@@ -18,6 +19,7 @@ export interface UseChatProps {
   onShowUpdateSelector: () => void;
   onShowModelSelector?: () => void;
   onShowSessionSelector?: () => void;
+  onShowJobsSelector?: () => void;
   onReload?: () => Promise<void>;
   onClear?: () => void;
   onRefreshStatic?: () => void;
@@ -41,6 +43,8 @@ export interface ActivePermissionRequest {
   hasDynamicEvaluation?: boolean;
 }
 
+export type ActiveQuizQuestion = QuestionRequestedEvent;
+
 export interface RemoteServerState {
   session: Session;
   isProcessing: boolean;
@@ -63,6 +67,7 @@ export interface SlashCommandResult {
   openMcpSelector?: boolean;
   openUpdateSelector?: boolean;
   openSessionSelector?: boolean;
+  openJobsSelector?: boolean;
   compact?: boolean;
   diffContent?: string;
 }

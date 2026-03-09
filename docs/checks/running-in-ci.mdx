@@ -1,0 +1,47 @@
+---
+title: "Run Checks in CI"
+---
+
+Continue watches your repository for pull requests, runs each check defined in `.continue/checks/`, and reports results as GitHub status checks. A green check means the code passed; a red check means the code failed, with a suggested fix.
+
+## Prerequisites
+
+- A [Continue](https://continue.dev) account
+- A GitHub repository with at least one check file in `.continue/checks/` (see [Write Your First Check](/checks/quickstart))
+
+## Connect GitHub
+
+1. Go to [continue.dev](https://continue.dev/) and sign in (or create an account).
+2. Navigate to the [GitHub integration page](https://continue.dev/integrations/github).
+3. Click **Connect GitHub** and authorize Continue.
+4. Select the repositories you want Continue to monitor.
+
+Once connected, Continue will start running checks on new pull requests in the selected repositories.
+
+## How checks are discovered
+
+Continue reads the `.continue/checks/` directory from your repository's default branch. Every `.md` file in that directory becomes a check that runs on every PR. No additional configuration is needed — commit a check file and it is active.
+
+## The PR workflow
+
+When a pull request is opened, reopened, or updated:
+
+1. Each check file runs independently against the PR diff.
+2. Results appear as GitHub status checks on the PR.
+3. If a check passes, it shows a green checkmark.
+4. If a check fails, it shows a red X with a suggested diff.
+5. Click the check details link in GitHub to see the full reasoning on continue.dev.
+
+![GitHub PR showing Continue checks with pass and fail status](/images/checks-pr-status.png)
+
+## Accept or reject suggestions
+
+When a check fails and suggests changes:
+
+1. Click the check's **Details** link on the PR in GitHub. This opens the result on continue.dev.
+2. Review the suggested diff.
+3. **Accept** to apply the changes as a commit to the PR branch.
+4. **Reject** to dismiss the suggestion. The check will re-run on the next push.
+
+![Continue check review page showing suggested diff with accept and reject options](/images/checks-accept-reject.png)
+

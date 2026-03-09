@@ -114,15 +114,16 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const ideInfo = await extras.ide.getIdeInfo();
   const toolCallId = extras.toolCallId || "";
 
-  // When extension host runs on Windows but connects to WSL, we can't spawn
-  // shells directly - the platform is "win32" but commands should run in Linux.
+  // When the extension host runs on Windows but connects to a remote workspace
+  // (WSL, Dev Container, SSH, etc.), we can't spawn shells directly — the
+  // platform is "win32" but commands should run in the remote's Linux/macOS.
   // Use ide.runCommand() instead to let VS Code handle the remote execution.
-  const isWindowsHostWithWslRemote =
-    process.platform === "win32" && ideInfo.remoteName === "wsl";
+  const isWindowsHostWithRemote =
+    process.platform === "win32" && !["", "local"].includes(ideInfo.remoteName);
 
   if (
     ENABLED_FOR_REMOTES.includes(ideInfo.remoteName) &&
-    !isWindowsHostWithWslRemote
+    !isWindowsHostWithRemote
   ) {
     // For streaming output
     if (extras.onPartialOutput) {

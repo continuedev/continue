@@ -1,0 +1,45 @@
+---
+title: "Run Checks Locally"
+---
+
+Run your checks locally before pushing to CI using the `/check` command in your coding agent (Claude Code, Cursor, or any agent that supports skills).
+
+## Install
+
+Install the [`check`](https://github.com/continuedev/skills?tab=readme-ov-file#check) skill:
+
+```bash
+npx skills add continuedev/skills --skill check
+```
+
+If you don't have any checks yet, see [Write Your First Check](/checks/quickstart).
+
+## Run checks
+
+Type `/check` in your coding agent. It discovers every check file in `.continue/checks/`, runs each one as a sub-agent against your current branch, and reports the results.
+
+```
+/check
+```
+
+## Iterate on a check
+
+The local feedback loop is: edit the check file, run `/check`, read the output, refine. Because checks run inside your coding agent, you can ask it to fix issues in the same session:
+
+```
+The migration safety check is flagging additive-only migrations as failures. Update the check to only flag destructive operations.
+```
+
+## Run checks automatically
+
+Add `/check` to your `AGENTS.md` so your coding agent runs checks as part of its workflow:
+
+```markdown AGENTS.md
+After creating or updating a pull request, run /check and fix any failures before requesting review.
+```
+
+## Why local?
+
+Running checks locally uses your existing coding agent and credits (Claude Max, API key, etc.). There's nothing extra to install or configure — if your agent can read your repo, it can run your checks.
+
+To run checks automatically on every PR in CI, see [Run Checks in CI](/checks/running-in-ci).

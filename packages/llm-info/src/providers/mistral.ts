@@ -60,6 +60,89 @@ export const Mistral: ModelProvider = {
       regex: /mistral-embed/i,
       recommendedFor: ["embed"],
     },
+    // devstral family
+    {
+      model: "devstral-small-2505",
+      displayName: "Devstral Small",
+      contextLength: 128000,
+      maxCompletionTokens: 128000,
+      description:
+        "A small code-focused model from Mistral AI, optimized for development tasks.",
+      regex: /devstral-small/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "devstral-medium-latest",
+      displayName: "Devstral Medium",
+      contextLength: 262144,
+      maxCompletionTokens: 262144,
+      description:
+        "A medium-sized code-focused model from Mistral AI with extended context.",
+      regex: /devstral-medium/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "devstral-2512",
+      displayName: "Devstral",
+      contextLength: 262144,
+      maxCompletionTokens: 262144,
+      description:
+        "The latest devstral model from Mistral AI for code generation.",
+      regex: /^devstral-2512$/i,
+      recommendedFor: ["chat"],
+    },
+    // magistral family
+    {
+      model: "magistral-medium-latest",
+      displayName: "Magistral Medium",
+      contextLength: 128000,
+      maxCompletionTokens: 16384,
+      description:
+        "Mistral's reasoning model for complex tasks requiring step-by-step thinking.",
+      regex: /magistral-medium/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "magistral-small",
+      displayName: "Magistral Small",
+      contextLength: 128000,
+      maxCompletionTokens: 128000,
+      description:
+        "A smaller reasoning model from Mistral AI for efficient step-by-step thinking.",
+      regex: /magistral-small/i,
+      recommendedFor: ["chat"],
+    },
+    // ministral family
+    {
+      model: "ministral-3b-latest",
+      displayName: "Ministral 3B",
+      contextLength: 128000,
+      maxCompletionTokens: 128000,
+      description:
+        "Mistral's tiny model for lightweight tasks and edge deployments.",
+      regex: /ministral-3b/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "ministral-8b-latest",
+      displayName: "Ministral 8B",
+      contextLength: 128000,
+      maxCompletionTokens: 128000,
+      description: "Mistral's small model balancing capability and efficiency.",
+      regex: /ministral-8b/i,
+      recommendedFor: ["chat"],
+    },
+    // mistral-nemo
+    {
+      model: "mistral-nemo",
+      displayName: "Mistral Nemo",
+      contextLength: 128000,
+      maxCompletionTokens: 128000,
+      description:
+        "An open-weight model from Mistral AI and NVIDIA with strong performance.",
+      regex: /mistral-nemo/i,
+      recommendedFor: ["chat"],
+    },
     {
       model: "codestral-mamba-latest",
       displayName: "Codestral Mamba",

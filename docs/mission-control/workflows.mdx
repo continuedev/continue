@@ -1,18 +1,18 @@
 ---
-title: "Workflows"
+title: "Cloud Agent Workflows"
 description: "Cloud agents that are triggered on a schedule or when events occur build automated AI workflows for your repositories."
 ---
 
 
 <Info>
 
-  What is a Workflow?
+  What is a Cloud Agent Workflow?
 
-  A Workflow automatically runs an Agent on a repository when:
+  Mission Control Cloud Agents automatically run on a repository when:
   - A schedule is reached (cron)
-  - An event occurs (webhook, e.g. GitHub PR)
+  - An event occurs (webhook, GitHub trigger)
 
-  Use Workflows for recurring or event-driven tasks like:
+  Use Cloud Agents for recurring or event-driven tasks like:
   - Daily vulnerability scans
   - Weekly changelog generation
   - Reacting to new pull requests or Sentry alerts
@@ -21,22 +21,22 @@ description: "Cloud agents that are triggered on a schedule or when events occur
 
 ---
 
-## Creating a Workflow
+## Creating a Cloud Agent Workflow
 
 <Steps>
 
   <Step title="Start from scratch or a template">
 
-    In Mission Control → Workflows, create a [new workflow](https://continue.dev/workflows/new).
+    In Mission Control, create a [new agent](https://continue.dev/agents/new).
 <AccordionGroup>
 
-  <Accordion title="Start with a Blank Workflow">
-    Create a workflow from scratch by clicking Create Workflow.  
+  <Accordion title="Start with a Blank Agent">
+    Create an agent from scratch by clicking Create Agent.  
     You'll choose the repository, agent, trigger type, and schedule or webhook.
   </Accordion>
 
-  <Accordion title="Use a Workflow Template">
-    Select any of the “Try these Workflows” cards such as:
+  <Accordion title="Use a Template">
+    Select any of the “Try these Agent” cards such as:
     - _Update agents.md_
     - _Draft Changelog Updates_
     - _Solve Snyk Vulnerabilities_
@@ -48,9 +48,9 @@ description: "Cloud agents that are triggered on a schedule or when events occur
 
   </Step>
 
-  <Step title="Name the Workflow">
+  <Step title="Name the Agent">
 
-    Give your Workflow a clear, descriptive name.
+    Give your Agent a clear, descriptive name, especially if your team will be managing multiple agents.
 
     Examples:
     - `Morning status check`
@@ -59,97 +59,47 @@ description: "Cloud agents that are triggered on a schedule or when events occur
 
   </Step>
 
-  <Step title="Select Repository & Agent">
+  <Step title="Select Repository & Type of Kickoff">
 
     Choose:
 
     - Repository – the codebase the Agent will run against  
-    - Agent – the configured Agent (model, rules, tools, prompt) that should perform the work
-
-    <Tip>
-      Need a new Agent? Create one in [Mission Control → Agents](https://continue.dev/agents/new), then return to this screen.
-    </Tip>
+    - Kickoff - whether or not the agent will run automatically on trigger or if it will be available for manual kickoff from the Mission Control UI. For example, you may want a docs agent to only run when manually kicked off on a PR, while a security agent should run automatically on a schedule.
 
   </Step>
 
   <Step title="Choose Trigger Type">
 
-    Pick how this Workflow should run:
+    Pick how this Cloud Agent Workflow should run:
 
     - Cron – run on a schedule (daily, weekly, hourly, custom)  
-    - Webhook – run when an external system sends a request (e.g. GitHub PR event)
+    - Webhook – run when an external system sends a request 
+    - GitHub Trigger – run when specific GitHub events occur (e.g. pull request opened, issue created)
 
   </Step>
 
-  <Step title="Configure the Trigger">
+  <Step title="Create the Agent Workflow">
 
-    <AccordionGroup>
-
-      <Accordion title="Cron Workflow">
-
-        For scheduled Workflows:
-
-        1. Select Cron as the trigger type  
-        2. Choose a schedule:
-           - Common presets (e.g. weekdays at 9 AM UTC)
-           - Hourly, Daily, Weekly, Monthly
-           - Or define a Custom expression  
-        3. (Optional) Add additional instructions for this Workflow run in the text area.
-
-        Example use cases:
-        - Run a morning status check on your repo every weekday  
-        - Refactor React components once per week  
-        - Generate a weekly changelog from recent commits  
-
-      </Accordion>
-
-      <Accordion title="Webhook Workflow">
-
-        For event-based Workflows:
-
-        1. Select Webhook as the trigger type  
-        2. (Optional) Set a Secret Header (e.g. `X-Webhook-Secret`)  
-        3. (Optional) Set a Secret Value (token your external system must send)  
-
-        You’ll receive a webhook URL to call from:
-        - GitHub Actions
-        - GitHub webhooks
-        - CI/CD pipelines
-        - Any external system that can send HTTP requests
-
-        Example use cases:
-        - Run an Agent whenever a pull request is opened  
-        - Kick off a workflow when Snyk or Sentry detects an issue  
-
-      </Accordion>
-
-    </AccordionGroup>
-
-  </Step>
-
-  <Step title="Create the Workflow">
-
-    Click Create Cron Workflow or Create Webhook Workflow, depending on your trigger type.
-
-    Your Workflow will now appear in the Workflows list and begin running based on its configured schedule or events.
+    Click Create Agent and now you'll be able to see, edit, and montitor it in your [Agents tab in Mission Control](https://continue.dev/agents).
 
   </Step>
 
 </Steps>
 
-## Monitoring Workflow Runs
+## Monitoring Cloud Agent Runs
 
-Workflow runs show up just like Tasks:
+Agent runs show up just like Tasks:
 
-- Each execution creates a Session  
-- Workflows appear in your Inbox  
-- You can open the detail view to see the summary, diff, and logs.
+- Each execution creates a Session where you can open the detail view to see the summary, diff, and logs.
+- Any PR generated by the agent appears in your Inbox for review
+- You can also see the agents work on PRs in the PR timeline and checks.
 
 <CardGroup>
-  <Card title="Create a Workflow Now" icon="workflow" href="https://continue.dev/workflows">
+  <Card title="Create an Agent Now" icon="robot" href="https://continue.dev/agents/new">
+    Set up your first Cloud Agent Workflow in minutes and start automating the work you don't want to do manually.
   </Card>
 
-  <Card title="Add an Integration" icon="workflow" href="/mission-control/integrations">
+  <Card title="Add an Integration" icon="dashboard" href="/mission-control/integrations">
     Connect GitHub, Slack, and Sentry for richer triggers and actions.
   </Card>
 

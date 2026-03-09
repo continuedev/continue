@@ -13,29 +13,23 @@
 
 <p></p>
 
-<div align="center">
+**[Source-controlled AI checks, enforceable in CI](https://docs.continue.dev)**
 
-**Ship faster with Continuous AI**
+> **Note:** The JetBrains plugin is now community-maintained. We strongly recommend using the [Continue CLI](https://docs.continue.dev/cli/quick-start) instead. It works in any environment, it's where our active development is happening, and it's a better experience than we can reliably provide through the plugin right now. Run `cn` in your terminal alongside your IDE and you get the same agent capabilities, the same model access, and the same configuration, without depending on a plugin framework we can't give the attention it deserves.
 
-**The future of coding isn't writing more code. It's delegating the boring parts, so you can build the interesting stuff**
-
-</div>
-
-Get started in [Mission Control](https://continue.dev/hub?type=agents), [CLI (Headless Mode)](https://docs.continue.dev/cli/quick-start#headless-mode), or [CLI (TUI mode)](https://docs.continue.dev/cli/quick-start#tui-mode)
-
-## Agent
+## JetBrains Agent
 
 [Agent](https://docs.continue.dev/features/agent/quick-start) to work on development tasks together with AI
 
-## Chat
+## JetBrains Chat
 
 [Chat](https://docs.continue.dev/features/chat/quick-start) to ask general questions and clarify code sections
 
-## Edit
+## JetBrains Edit
 
 [Edit](https://docs.continue.dev/features/edit/quick-start) to modify a code section without leaving your current file
 
-## Autocomplete
+## JetBrains Autocomplete
 
 [Autocomplete](https://docs.continue.dev/features/autocomplete/quick-start) to receive inline code suggestions as you type
 

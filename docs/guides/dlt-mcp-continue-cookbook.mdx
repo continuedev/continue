@@ -273,7 +273,7 @@ Navigate to **Repository Settings → Secrets and variables → Actions** and ad
 
 ### Create Workflow File
 
-This workflow automatically validates your dlt data pipelines on pull requests using the Continue CLI in [headless mode](/cli/overview#headless-mode%3A-production-automation). It inspects pipeline schemas, checks for errors, and posts a summary report as a PR comment. The workflow can also be triggered manually via `workflow_dispatch`.
+This workflow automatically validates your dlt data pipelines on pull requests using the Continue CLI in [headless mode](/cli/headless-mode). It inspects pipeline schemas, checks for errors, and posts a summary report as a PR comment. The workflow can also be triggered manually via `workflow_dispatch`.
 
 Create `.github/workflows/dlt-pipeline-validation.yml` in your repository:
 

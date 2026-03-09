@@ -55,6 +55,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("text-gen-webui"),
     z.literal("vllm"),
     z.literal("xAI"),
+    z.literal("zAI"),
     z.literal("scaleway"),
     z.literal("ncompass"),
     z.literal("relace"),
@@ -249,6 +250,13 @@ export const VertexAIConfigSchema = BasePlusConfig.extend({
 });
 export type VertexAIConfig = z.infer<typeof VertexAIConfigSchema>;
 
+export const AiSdkConfigSchema = BasePlusConfig.extend({
+  provider: z.literal("ai-sdk"),
+  model: z.string(),
+  providerOptions: z.record(z.unknown()).optional(),
+});
+export type AiSdkConfig = z.infer<typeof AiSdkConfigSchema>;
+
 // Discriminated union
 export const LLMConfigSchema = z.discriminatedUnion("provider", [
   OpenAIConfigSchema,
@@ -268,5 +276,6 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   ContinueProxyConfigSchema,
   CometAPIConfigSchema,
   AskSageConfigSchema,
+  AiSdkConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;

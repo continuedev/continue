@@ -71,6 +71,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "gemini",
   "docker",
   "nous",
+  "zAI",
   // TODO add these, change to inverted logic so only the ones that need templating are hardcoded
   // Asksage.ts
   // Azure.ts
@@ -128,6 +129,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "nebius",
   "ovhcloud",
   "watsonx",
+  "zAI",
 ];
 
 const MODEL_SUPPORTS_IMAGES: RegExp[] = [
@@ -209,6 +211,19 @@ function modelSupportsReasoning(
   if (model.model.includes("deepseek-r")) {
     return true;
   }
+  // o-series reasoning models
+  if (/^o[134]/.test(model.model)) {
+    return true;
+  }
+  if (model.model.includes("codex")) {
+    return true;
+  }
+  if (model.model.includes("magistral")) {
+    return true;
+  }
+  if (model.model.includes("grok-4")) {
+    return true;
+  }
 
   return false;
 }
@@ -257,6 +272,7 @@ function isProviderHandlesTemplatingOrNoTemplateTypeRequired(
     modelName.includes("moonshot") ||
     modelName.includes("kimi") ||
     modelName.includes("mercury") ||
+    modelName.includes("glm") ||
     /^o\d/.test(modelName)
   );
 }
