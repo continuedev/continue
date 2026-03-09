@@ -952,8 +952,20 @@ export function registerAllCommands(
       editDecorationManager,
     ),
   )) {
-    context.subscriptions.push(
-      vscode.commands.registerCommand(command, callback),
-    );
+    try {
+      context.subscriptions.push(
+        vscode.commands.registerCommand(command, callback),
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("already registered")) {
+        console.warn(
+          `Skipping duplicate Continue command registration: ${command}`,
+        );
+        continue;
+      }
+
+      throw error;
+    }
   }
 }

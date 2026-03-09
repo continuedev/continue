@@ -17,6 +17,7 @@ import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Lemonade from "./llm/llms/Lemonade";
+import LMStudio from "./llm/llms/LMStudio";
 import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
@@ -1395,6 +1396,9 @@ export class Core {
         if (msg.data.title === "Ollama") {
           const models = await new Ollama({ model: "" }).listModels();
           return models;
+        } else if (msg.data.title === "LM Studio") {
+          const models = await new LMStudio({ model: "" }).listModels();
+          return models;
         } else if (msg.data.title === "Lemonade") {
           const models = await new Lemonade({ model: "" }).listModels();
           return models;
@@ -1403,7 +1407,7 @@ export class Core {
         }
       }
     } catch (e) {
-      console.debug(`Error listing Ollama models: ${e}`);
+      console.debug(`Error listing models for ${msg.data.title}: ${e}`);
       return undefined;
     }
   }
@@ -1411,13 +1415,18 @@ export class Core {
   private async handleCompleteOnboarding(
     msg: Message<CompleteOnboardingPayload>,
   ) {
-    const { mode, provider, apiKey } = msg.data;
+    const { mode, provider, apiKey, localModelTitles } = msg.data;
 
     let editConfigYamlCallback: (config: ConfigYaml) => ConfigYaml;
 
     switch (mode) {
       case OnboardingModes.LOCAL:
-        editConfigYamlCallback = setupLocalConfig;
+        editConfigYamlCallback = (config: ConfigYaml) =>
+          setupLocalConfig(
+            config,
+            provider === "lmstudio" ? "lmstudio" : "ollama",
+            localModelTitles,
+          );
         break;
 
       case OnboardingModes.API_KEY:

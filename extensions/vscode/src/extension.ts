@@ -37,7 +37,15 @@ export function activate(context: vscode.ExtensionContext) {
       )
       .then((selection) => {
         if (selection === "View Logs") {
-          vscode.commands.executeCommand("continue.viewLogs");
+          vscode.commands.getCommands(true).then((commands) => {
+            if (commands.includes("continue.viewLogs")) {
+              return vscode.commands.executeCommand("continue.viewLogs");
+            }
+
+            return vscode.commands.executeCommand(
+              "workbench.action.toggleDevTools",
+            );
+          });
         } else if (selection === "Retry") {
           // Reload VS Code window
           vscode.commands.executeCommand("workbench.action.reloadWindow");

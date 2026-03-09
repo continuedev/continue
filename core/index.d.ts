@@ -1948,6 +1948,7 @@ export interface CompleteOnboardingPayload {
   mode: OnboardingModes;
   provider?: string;
   apiKey?: string;
+  localModelTitles?: string[];
 }
 
 export interface CompiledMessagesResult {

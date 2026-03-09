@@ -10,7 +10,11 @@ export function useSubmitOnboarding(mode: OnboardingModes, isDialog = false) {
   const ideMessenger = useContext(IdeMessengerContext);
   const { close: closeOnboardingCard } = useOnboardingCard();
 
-  function submitOnboarding(provider?: string, apiKey?: string) {
+  function submitOnboarding(
+    provider?: string,
+    apiKey?: string,
+    localModelTitles?: string[],
+  ) {
     const onboardingStatus = getLocalStorage("onboardingStatus");
 
     // Always close the onboarding card and update config.yaml
@@ -20,6 +24,7 @@ export function useSubmitOnboarding(mode: OnboardingModes, isDialog = false) {
       mode,
       provider,
       apiKey,
+      localModelTitles,
     });
 
     if (onboardingStatus === "Started") {

@@ -9,7 +9,19 @@ import { GlobalContext } from "core/util/GlobalContext";
 import { VsCodeContinueApi } from "./api";
 import setupInlineTips from "./InlineTipManager";
 
+async function isDuplicateHostActivation(): Promise<boolean> {
+  const registeredCommands = await vscode.commands.getCommands(true);
+  return registeredCommands.includes("continue.focusContinueInput");
+}
+
 export async function activateExtension(context: vscode.ExtensionContext) {
+  if (await isDuplicateHostActivation()) {
+    console.warn(
+      "Continue commands already exist; skipping duplicate extension-host activation.",
+    );
+    return {};
+  }
+
   const platformCheck = isUnsupportedPlatform();
   const globalContext = new GlobalContext();
   const hasShownUnsupportedPlatformWarning = globalContext.get(

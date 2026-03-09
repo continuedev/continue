@@ -5,7 +5,11 @@ import {
   Listbox,
 } from "@headlessui/react";
 import * as React from "react";
-import { defaultBorderRadius, vscCommandCenterInactiveBorder } from "..";
+import {
+  defaultBorderRadius,
+  vscCommandCenterInactiveBorder,
+  vscEditorBackground,
+} from "..";
 import { cn } from "../../util/cn";
 import { FontSizeModifier, useFontSize } from "./font";
 
@@ -21,7 +25,7 @@ const ListboxButton = React.forwardRef<HTMLButtonElement, ListboxButtonProps>(
         ref={ref}
         {...props}
         className={cn(
-          "bg-vsc-input-background text-vsc-foreground border-border m-0 flex flex-1 cursor-pointer flex-row items-center gap-1 border border-solid px-1 py-0.5 text-left transition-colors duration-200",
+          "m-0 flex flex-1 cursor-pointer flex-row items-center gap-1 border border-solid border-border bg-vsc-input-background px-1 py-0.5 text-left text-vsc-foreground transition-colors duration-200",
           props.className,
         )}
         style={{
@@ -46,13 +50,16 @@ const ListboxOptions = React.forwardRef<HTMLUListElement, ListboxOptionsProps>(
         anchor={"bottom start"}
         {...props}
         className={cn(
-          "bg-vsc-input-background flex w-max min-w-[160px] max-w-[400px] flex-col overflow-auto px-0 shadow-md",
+          "flex w-max min-w-[160px] max-w-[400px] flex-col overflow-auto bg-vsc-input-background px-0 shadow-md",
           props.className,
         )}
         style={{
           border: `1px solid ${vscCommandCenterInactiveBorder}`,
+          backgroundColor: vscEditorBackground,
           fontSize,
           borderRadius: defaultBorderRadius,
+          opacity: 1,
+          boxShadow: "0 12px 32px rgba(0, 0, 0, 0.35)",
           zIndex: 200000,
           ...props.style,
         }}
@@ -72,10 +79,10 @@ const ListboxOption = React.forwardRef<HTMLLIElement, ListboxOptionProps>(
         ref={ref}
         {...props}
         className={cn(
-          "text-foreground flex select-none flex-row items-center justify-between px-2 py-1",
+          "flex select-none flex-row items-center justify-between px-2 py-1 text-foreground",
           props.disabled
             ? "opacity-50"
-            : "background-transparent hover:bg-list-active hover:text-list-active-foreground cursor-pointer opacity-100",
+            : "background-transparent cursor-pointer opacity-100 hover:bg-list-active hover:text-list-active-foreground",
           props.className,
         )}
         style={{
