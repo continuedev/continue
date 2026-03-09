@@ -18,9 +18,10 @@ When a user first runs `cn` in interactive mode, they will be taken through "onb
    schema: v1
 
    models:
-     - uses: anthropic/claude-sonnet-4-6
-       with:
-         ANTHROPIC_API_KEY: <THEIR_ANTHROPIC_API_KEY>
+     - name: claude sonnet 4.6
+       provider: anthropic
+       model: claude-sonnet-4-6
+       apiKey: <THEIR_ANTHROPIC_API_KEY>
    ```
 
    - Enter your OpenAI API key: let them enter the key, and then either create a ~/.continue/config.yaml with the following contents OR update the existing config.yaml to add the model
@@ -31,9 +32,10 @@ When a user first runs `cn` in interactive mode, they will be taken through "onb
    schema: v1
 
    models:
-     - uses: openai/gpt-5.4
-       with:
-         OPENAI_API_KEY: <THEIR_OPENAI_API_KEY>
+     - name: GPT 5.4
+       provider: openai
+       model: gpt-5.4
+       apiKey: <THEIR_OPENAI_API_KEY>
    ```
 
    When CONTINUE_USE_BEDROCK=1 is detected, it will use AWS Bedrock configuration. The user must have AWS credentials configured through the standard AWS credential chain (AWS CLI, environment variables, IAM roles, etc.).

@@ -62,7 +62,11 @@ export function updateAnthropicModelInYaml(
 
     // Filter out existing anthropic models
     config.models = config.models.filter(
-      (model: any) => !model || model.uses !== "anthropic/claude-sonnet-4-6",
+      (model: any) =>
+        !model ||
+        !(
+          model.provider === "anthropic" && model.model === "claude-sonnet-4-6"
+        ),
     );
 
     config.models.push(newModel);
@@ -130,7 +134,8 @@ export function updateOpenAIModelInYaml(
     }
 
     config.models = config.models.filter(
-      (model: any) => !model || model.uses !== "openai/gpt-5.4",
+      (model: any) =>
+        !model || !(model.provider === "openai" && model.model === "gpt-5.4"),
     );
 
     config.models.push(newModel);
