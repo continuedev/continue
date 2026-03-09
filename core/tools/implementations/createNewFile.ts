@@ -1,6 +1,7 @@
 import { inferResolvedUriFromRelativePath } from "../../util/ideUtils";
 
 import { ToolImpl } from ".";
+import { throwIfFileIsSecurityConcern } from "../../indexing/ignore";
 import { getCleanUriPath, getUriPathBasename } from "../../util/uri";
 import { getStringArg } from "../parseArgs";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
@@ -14,6 +15,7 @@ export const createNewFileImpl: ToolImpl = async (args, extras) => {
     extras.ide,
   );
   if (resolvedFileUri) {
+    throwIfFileIsSecurityConcern(getCleanUriPath(resolvedFileUri));
     const exists = await extras.ide.fileExists(resolvedFileUri);
     if (exists) {
       throw new ContinueError(
