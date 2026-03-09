@@ -28,39 +28,50 @@ const FreeTrialStatus: React.FC<FreeTrialStatusProps> = ({
     null,
   );
   const [loading, setLoading] = useState(true);
-
-  const fetchStatus = async () => {
-    try {
-      if (!apiClient) {
-        setStatus(null);
-        setLoading(false);
-        return;
-      }
-
-      const response = await apiClient.getFreeTrialStatus();
-      setStatus(response);
-      setLoading(false);
-    } catch {
-      // Silently handle errors - component returns null if no status
-      setStatus(null);
-      setLoading(false);
-    }
-  };
+  const shouldFetchStatus = !!apiClient && isModelUsingFreeTrial(model);
 
   useEffect(() => {
-    // Initial fetch
-    fetchStatus();
-
-    // Don't poll in test environment
-    if (process.env.NODE_ENV === "test") {
+    if (!shouldFetchStatus) {
+      setStatus(null);
+      setLoading(false);
       return;
     }
 
-    // Poll every 5 seconds
+    let isMounted = true;
+
+    const fetchStatus = async () => {
+      try {
+        const response = await apiClient.getFreeTrialStatus();
+        if (!isMounted) {
+          return;
+        }
+        setStatus(response);
+        setLoading(false);
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+        setStatus(null);
+        setLoading(false);
+      }
+    };
+
+    setLoading(true);
+    void fetchStatus();
+
+    if (process.env.NODE_ENV === "test") {
+      return () => {
+        isMounted = false;
+      };
+    }
+
     const interval = setInterval(fetchStatus, 5000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [apiClient, shouldFetchStatus]);
 
   // Check if user has maxed out their free trial and notify parent
   useEffect(() => {
@@ -89,7 +100,7 @@ const FreeTrialStatus: React.FC<FreeTrialStatusProps> = ({
     loading ||
     !status ||
     !status.optedInToFreeTrial ||
-    !isModelUsingFreeTrial(model)
+    !shouldFetchStatus
   ) {
     return null;
   }
