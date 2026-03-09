@@ -46,17 +46,25 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   );
 
   useEffect(() => {
+    let stale = false;
+
     const loadCommands = async () => {
       if (assistant || isRemoteMode) {
         const commands = await getAllSlashCommands(
           assistant || ({} as AssistantConfig),
           { isRemoteMode },
         );
-        setAllCommands(commands);
+        if (!stale) {
+          setAllCommands(commands);
+        }
       }
     };
 
     void loadCommands();
+
+    return () => {
+      stale = true;
+    };
   }, [isRemoteMode, assistant?.prompts, assistant?.rules]);
 
   // Filter commands based on the current filter
