@@ -177,7 +177,7 @@ export function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
                     key={providerKey}
                     type="button"
                     onClick={() => setLocalProvider(providerKey)}
-                    className={`flex-1 cursor-pointer rounded border px-3 py-2 text-sm transition-colors ${isSelected ? "border-border-focus bg-input text-foreground" : "border-border bg-transparent text-description hover:bg-input"}`}
+                    className={`flex-1 cursor-pointer rounded border px-3 py-2 text-sm transition-colors ${isSelected ? "border-border-focus bg-input text-foreground" : "border-border text-description hover:bg-input bg-transparent"}`}
                   >
                     {providerTitle}
                   </button>
@@ -187,7 +187,7 @@ export function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
           </div>
 
           <div className="flex flex-col">
-            <p className="mb-0 text-base font-bold leading-tight text-foreground">
+            <p className="text-foreground mb-0 text-base font-bold leading-tight">
               {isOllamaProvider ? "Install Ollama" : "Install LM Studio"}
             </p>
             {isOllamaProvider ? (
@@ -207,7 +207,7 @@ export function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
                     {providerDownloadUrl}
                   </span>
                 </button>
-                <div className="rounded border border-border bg-input px-3 py-2 text-sm">
+                <div className="border-border bg-input rounded border px-3 py-2 text-sm">
                   {isProviderConnected ? (
                     <span>
                       Connected to LM Studio at{" "}
@@ -246,10 +246,10 @@ export function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
             </>
           ) : (
             <div className="mt-4 flex flex-col gap-2">
-              <p className="mb-0 text-base font-semibold text-foreground">
+              <p className="text-foreground mb-0 text-base font-semibold">
                 Available LM Studio models
               </p>
-              <div className="rounded border border-border bg-input px-3 py-2">
+              <div className="border-border bg-input rounded border px-3 py-2">
                 {availableLocalModels.length > 0 ? (
                   <div className="flex flex-col gap-1">
                     {availableLocalModels.slice(0, 4).map((modelName) => (
@@ -258,13 +258,13 @@ export function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
                       </code>
                     ))}
                     {availableLocalModels.length > 4 && (
-                      <span className="text-xs text-description-muted">
+                      <span className="text-description-muted text-xs">
                         +{availableLocalModels.length - 4} more
                       </span>
                     )}
                   </div>
                 ) : (
-                  <span className="text-sm text-description-muted">
+                  <span className="text-description-muted text-sm">
                     No models detected yet. Load a model in LM Studio and start
                     the local server.
                   </span>
@@ -283,7 +283,7 @@ export function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
             </Button>
             <div className="w-full text-center">
               <span
-                className="cursor-pointer text-description-muted underline"
+                className="text-description-muted cursor-pointer underline"
                 onClick={onClickSkip}
               >
                 Skip and configure manually

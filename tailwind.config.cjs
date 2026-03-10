@@ -1,1 +1,5 @@
-module.exports = require("./gui/tailwind.config.cjs");
+module.exports = {
+  content: [],
+  theme: {},
+  plugins: [],
+};

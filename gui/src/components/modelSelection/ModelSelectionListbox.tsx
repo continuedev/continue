@@ -101,7 +101,7 @@ function ModelSelectionListbox({
       }}
     >
       <div className="relative mb-2 mt-1">
-        <ListboxButton className="relative m-0 grid h-full w-full cursor-pointer grid-cols-[1fr_auto] items-center rounded-lg border border-solid border-border bg-background py-2 pl-3 pr-10 text-left text-foreground hover:bg-input focus:outline-none">
+        <ListboxButton className="border-border bg-background text-foreground hover:bg-input relative m-0 grid h-full w-full cursor-pointer grid-cols-[1fr_auto] items-center rounded-lg border border-solid py-2 pl-3 pr-10 text-left focus:outline-none">
           <span className="flex items-center">
             {window.vscMediaUrl && selectedProvider.icon && (
               <img
@@ -113,7 +113,7 @@ function ModelSelectionListbox({
           </span>
           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
             <ChevronUpDownIcon
-              className="h-5 w-5 text-description-muted"
+              className="text-description-muted h-5 w-5"
               aria-hidden="true"
             />
           </span>
@@ -125,17 +125,17 @@ function ModelSelectionListbox({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <ListboxOptions className="absolute left-0 top-full z-10 mt-1 flex h-fit w-3/5 flex-col overflow-y-auto rounded-default bg-editor p-0 focus:outline-none [&]:!max-h-[30vh]">
+          <ListboxOptions className="rounded-default bg-editor absolute left-0 top-full z-10 mt-1 flex h-fit w-3/5 flex-col overflow-y-auto p-0 focus:outline-none [&]:!max-h-[30vh]">
             {/* Search Box */}
-            <div className="sticky top-0 border-b border-border p-2">
-              <div className="flex items-center rounded border border-border bg-editor pl-2">
-                <MagnifyingGlassIcon className="h-4 w-4 text-description-muted" />
+            <div className="border-border sticky top-0 border-b p-2">
+              <div className="border-border bg-editor flex items-center rounded border pl-2">
+                <MagnifyingGlassIcon className="text-description-muted h-4 w-4" />
                 <input
                   type="text"
                   placeholder={searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full border-0 bg-editor px-2 py-1.5 text-foreground placeholder-description-muted outline-none"
+                  className="bg-editor text-foreground placeholder-description-muted w-full border-0 px-2 py-1.5 outline-none"
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
@@ -144,21 +144,21 @@ function ModelSelectionListbox({
             {/* Results */}
             <div className="flex-1 overflow-y-auto">
               {!hasResults ? (
-                <div className="px-3 py-4 text-center text-xs text-description-muted">
+                <div className="text-description-muted px-3 py-4 text-center text-xs">
                   No models found matching "{searchQuery}"
                 </div>
               ) : (
                 <>
                   {filteredTopOptions.length > 0 && (
                     <div className="py-1">
-                      <div className="px-3 py-1 text-xs font-medium uppercase tracking-wider text-description-muted">
+                      <div className="text-description-muted px-3 py-1 text-xs font-medium uppercase tracking-wider">
                         Popular
                       </div>
                       {filteredTopOptions.map((option, index) => (
                         <ListboxOption
                           key={index}
                           className={({ selected }: { selected: boolean }) =>
-                            ` ${selected ? "bg-list-active" : "bg-editor"} relative flex cursor-pointer select-none items-center justify-between gap-2 p-1.5 px-3 py-2 pr-4 hover:bg-list-active hover:text-list-active-foreground`
+                            ` ${selected ? "bg-list-active" : "bg-editor"} hover:bg-list-active hover:text-list-active-foreground relative flex cursor-pointer select-none items-center justify-between gap-2 p-1.5 px-3 py-2 pr-4`
                           }
                           value={option}
                         >
@@ -192,18 +192,18 @@ function ModelSelectionListbox({
                   )}
                   {filteredTopOptions.length > 0 &&
                     filteredOtherOptions.length > 0 && (
-                      <div className="my-1 h-px min-h-px bg-border" />
+                      <div className="bg-border my-1 h-px min-h-px" />
                     )}
                   {filteredOtherOptions.length > 0 && (
                     <div className="py-1">
-                      <div className="px-3 py-1 text-xs font-medium uppercase tracking-wider text-description-muted">
+                      <div className="text-description-muted px-3 py-1 text-xs font-medium uppercase tracking-wider">
                         Additional providers
                       </div>
                       {filteredOtherOptions.map((option, index) => (
                         <ListboxOption
                           key={index}
                           className={({ selected }: { selected: boolean }) =>
-                            ` ${selected ? "bg-list-active" : "bg-editor"} relative flex cursor-pointer select-none items-center justify-between gap-2 p-1.5 px-3 py-2 pr-4 hover:bg-list-active hover:text-list-active-foreground`
+                            ` ${selected ? "bg-list-active" : "bg-editor"} hover:bg-list-active hover:text-list-active-foreground relative flex cursor-pointer select-none items-center justify-between gap-2 p-1.5 px-3 py-2 pr-4`
                           }
                           value={option}
                         >
