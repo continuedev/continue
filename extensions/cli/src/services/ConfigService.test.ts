@@ -19,6 +19,9 @@ vi.mock("../configLoader.js", () => ({
 vi.mock("../util/logger.js");
 vi.mock("./ServiceContainer.js");
 vi.mock("@continuedev/config-yaml");
+vi.mock("src/systemMessage.js", () => ({
+  loadMarkdownRulesWithMetadata: vi.fn().mockReturnValue([]),
+}));
 
 const defaultModel = {
   provider: "anthropic",
