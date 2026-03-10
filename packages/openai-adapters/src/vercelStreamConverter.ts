@@ -86,11 +86,8 @@ export function convertVercelStreamPart(
       });
 
     case "reasoning-delta":
-      return chatChunkFromDelta({
-        delta: {
-          // `reasoning_content` is not yet typed in OpenAI's SDK types.
-          reasoning_content: part.text,
-        } as ChatCompletionChunk.Choice["delta"],
+      return chatChunk({
+        content: part.text,
         model,
       });
 

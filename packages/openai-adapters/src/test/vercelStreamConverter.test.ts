@@ -34,10 +34,7 @@ describe("convertVercelStreamPart", () => {
     const result = convertVercelStreamPart(part, options);
 
     expect(result).not.toBeNull();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((result?.choices[0].delta as any).reasoning_content).toBe(
-      "Let me think...",
-    );
+    expect(result?.choices[0].delta.content).toBe("Let me think...");
   });
 
   test("returns null for tool-call (handled by tool-input-start/delta)", () => {
