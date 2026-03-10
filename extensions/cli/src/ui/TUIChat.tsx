@@ -20,6 +20,7 @@ import {
   UpdateServiceState,
 } from "../services/types.js";
 import { getTotalSessionCost } from "../session.js";
+import { bashToolEvents } from "../util/cli.js";
 import { logger } from "../util/logger.js";
 
 import { ActionStatus } from "./components/ActionStatus.js";
@@ -183,6 +184,7 @@ function useChatHandlers(
   };
 }
 
+// eslint-disable-next-line complexity
 const TUIChat: React.FC<TUIChatProps> = ({
   remoteUrl,
   configPath,
@@ -260,6 +262,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     compactionStartTime,
     inputMode,
     activePermissionRequest,
+    activeQuizQuestion,
     wasInterrupted,
     queuedMessages,
     handleUserMessage,
@@ -268,6 +271,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     resetChatHistory,
     handleEditMessage,
     handleToolPermissionResponse,
+    handleQuizAnswer,
   } = useChat({
     assistant: services.config?.config || undefined,
     model: services.model?.model || undefined,
@@ -282,6 +286,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowMCPSelector: () => navigateTo("mcp"),
     onShowUpdateSelector: () => navigateTo("update"),
     onShowSessionSelector: () => navigateTo("session"),
+    onShowJobsSelector: () => navigateTo("jobs"),
     onReload: handleReload,
     onClear: handleClear,
     onRefreshStatic: () => setStaticRefreshTrigger((prev) => prev + 1),
@@ -330,7 +335,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
   // Determine if input should be disabled
   // Allow input even when services are loading, but disable for UI overlays
   const isInputDisabled =
-    navState.currentScreen !== "chat" || !!activePermissionRequest;
+    navState.currentScreen !== "chat" ||
+    !!activePermissionRequest ||
+    !!activeQuizQuestion;
 
   // Check if verbose mode is enabled for resource debugging
   const isVerboseMode = useMemo(() => process.argv.includes("--verbose"), []);
@@ -340,6 +347,22 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
   // Fetch organization name based on auth state
   const organizationName = useOrganizationName(services.auth?.organizationId);
+
+  // Track if a Bash tool is currently running via events
+  const [isBashToolRunning, setIsBashToolRunning] = useState(false);
+
+  useEffect(() => {
+    const handleStarted = () => setIsBashToolRunning(true);
+    const handleEnded = () => setIsBashToolRunning(false);
+
+    bashToolEvents.on("started", handleStarted);
+    bashToolEvents.on("ended", handleEnded);
+
+    return () => {
+      bashToolEvents.off("started", handleStarted);
+      bashToolEvents.off("ended", handleEnded);
+    };
+  }, []);
 
   return (
     <Box flexDirection="column" height="100%">
@@ -379,6 +402,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
           startTime={responseStartTime || 0}
           message=""
           showSpinner={true}
+          additionalHint={
+            isBashToolRunning ? "ctrl+b to background" : undefined
+          }
         />
 
         {/* Compaction Status */}
@@ -409,7 +435,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
           handleReload={handleReload}
           closeCurrentScreen={closeCurrentScreen}
           activePermissionRequest={activePermissionRequest}
+          activeQuizQuestion={activeQuizQuestion}
           handleToolPermissionResponse={handleToolPermissionResponse}
+          handleQuizAnswer={handleQuizAnswer}
           handleUserMessage={handleUserMessage}
           isWaitingForResponse={isWaitingForResponse}
           isCompacting={isCompacting}

@@ -11,6 +11,7 @@ interface ActionStatusProps {
   showSpinner?: boolean;
   color?: string;
   loadingColor?: string;
+  additionalHint?: string;
 }
 
 const ActionStatus: React.FC<ActionStatusProps> = ({
@@ -20,6 +21,7 @@ const ActionStatus: React.FC<ActionStatusProps> = ({
   showSpinner = false,
   color = "dim",
   loadingColor = "green",
+  additionalHint,
 }) => {
   if (!visible) return null;
 
@@ -29,7 +31,9 @@ const ActionStatus: React.FC<ActionStatusProps> = ({
       <Text color={color}>{message}</Text>
       <Text color="dim">(</Text>
       <Timer startTime={startTime} />
-      <Text color="dim">• esc to interrupt )</Text>
+      <Text color="dim">• esc to interrupt</Text>
+      {additionalHint && <Text color="dim">• {additionalHint}</Text>}
+      <Text color="dim">)</Text>
     </Box>
   );
 };

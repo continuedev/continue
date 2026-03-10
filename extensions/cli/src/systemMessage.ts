@@ -3,15 +3,12 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { parseMarkdownRule, RuleObject } from "@continuedev/config-yaml";
-import pkg from "ignore-walk";
-import { Minimatch } from "minimatch";
 
 import { env } from "./env.js";
 import { processRule } from "./hubLoader.js";
 import { PermissionMode } from "./permissions/types.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
 import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
-const { WalkerSync } = pkg;
 
 /**
  * Check if current directory is a git repository
@@ -22,39 +19,6 @@ function isGitRepo(): boolean {
     return true;
   } catch {
     return false;
-  }
-}
-
-/**
- * Get basic directory structure
- */
-function getDirectoryStructure(): string {
-  try {
-    const walker = new WalkerSync({
-      path: process.cwd(),
-      includeEmpty: false,
-      follow: false,
-      ignoreFiles: [".gitignore", ".continueignore", ".customignore"],
-    });
-
-    (walker.ignoreRules as any)[".customignore"] = [
-      new Minimatch(".git/*", {
-        matchBase: true,
-        dot: true,
-        flipNegate: true,
-        nocase: true,
-      }),
-    ];
-
-    const files = walker.start().result as string[];
-
-    const filteredFiles = files
-      .slice(0, 500)
-      .map((file: string) => `./${file}`);
-
-    return filteredFiles.join("\n") || "No structure available";
-  } catch {
-    return "Directory structure not available";
   }
 }
 
@@ -91,10 +55,6 @@ Today's date: ${new Date().toISOString().split("T")[0]}
 
 As you answer the user's questions, you can use the following context:
 
-<context name="directoryStructure">Below is a snapshot of this project's file structure at the start of the conversation. This snapshot will NOT update during the conversation. It skips over .gitignore patterns.
-
-${getDirectoryStructure()}
-</context>
 <context name="gitStatus">This is the git status at the start of the conversation. Note that this status is a snapshot in time, and will not update during the conversation.
 
 ${getGitStatus()}

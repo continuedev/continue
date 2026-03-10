@@ -27,7 +27,7 @@ export function updateAnthropicModelInYaml(
   apiKey: string,
 ): string {
   const newModel: ModelConfig = {
-    uses: "anthropic/claude-sonnet-4-5",
+    uses: "anthropic/claude-sonnet-4-6",
     with: {
       ANTHROPIC_API_KEY: apiKey,
     },
@@ -62,7 +62,7 @@ export function updateAnthropicModelInYaml(
 
     // Filter out existing anthropic models
     config.models = config.models.filter(
-      (model: any) => !model || model.uses !== "anthropic/claude-sonnet-4-5",
+      (model: any) => !model || model.uses !== "anthropic/claude-sonnet-4-6",
     );
 
     // Add the new anthropic model

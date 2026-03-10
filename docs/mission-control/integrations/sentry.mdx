@@ -1,87 +1,25 @@
 ---
-title: "Sentry Integration"
-description: "Connect Sentry to Mission Control so Cloud Agents can automatically respond to production errors, analyzing issues as they occur and proposing fixes before they escalate."
+title: "Sentry"
 ---
 
+The Sentry integration connects your error monitoring to Mission Control so agents can analyze production errors as they occur and open pull requests with fixes.
 
+[Connect Sentry in Mission Control →](https://continue.dev/integrations/sentry)
 
-<Card
-  title="Connect Sentry to enable Cloud Agents to:"
-  icon="shield-exclamation"
-  href="https://continue.dev/integrations/sentry"
->
-  - Analyze production errors as they occur
-  - Investigate stack traces and recent code changes
-  - Generate pull requests to resolve issues
-  - Create contextual GitHub issues
-  - Monitor error trends across releases
-</Card>
+## Access and permissions
 
+Connecting Sentry requires creating an [internal integration](https://sentry.io/settings/developer-settings/new-internal/) in your Sentry organization. You'll provide your organization slug and credentials during setup in Mission Control.
 
-## Official Workflow Templates for Sentry Cloud Agents in Continue
+Agents can access projects and issues you have permission to view. Approved permissions allow Continue to analyze error events, read issue details, and create pull requests or GitHub issues on your behalf.
 
-The following **official workflow template** is maintained by the Continue team and is available directly in the Mission Control Hub. This workflow is designed to work out of the box and represents the recommended way to automate Sentry-based remediation.
+You can revoke access at any time from Sentry or Mission Control.
 
-<CardGroup cols={2}>
-  <Card title="Auto-fix Sentry Issues" icon="shield-check">
-    Automatically analyze and fix production errors when Sentry detects new issues.
-  </Card>
-</CardGroup>
+## Automation examples
 
-<Tip>
-Official workflow templates may expand over time as new patterns are validated. You can view, enable, and configure this workflow in **Mission Control → Integrations → Sentry**.
-</Tip>
+### Auto-fix errors
 
-### Advanced Use Cases for Sentry Cloud Agents in Continue
+When Sentry detects a new issue, an agent analyzes the stack trace, investigates recent code changes, and opens a PR with a fix.
 
-<Accordion title="Advanced: Custom Sentry Workflow Ideas">
-These examples are not officially maintained by the Continue team, but illustrate what’s possible with custom workflows.
+### Triage by severity
 
-- Trigger investigations only for high-impact or high-frequency errors
-- Route specific error types to specialized Cloud Agents
-- Correlate Sentry issues with recent deploys or feature flags
-- Generate weekly error trend summaries for engineering teams
-- Combine Sentry signals with GitHub or analytics data
-</Accordion>
----
-## Access & Permissions
-
-When connecting Sentry, you’ll authorize Continue to receive error events and access issue data.
-
-- **Project and issue access**  
-  Cloud Agents can access Sentry projects and issues you have permission to view within your organization.
-
-- **Permissions**  
-  Approved permissions allow Continue to analyze error events, read issue details, and create pull requests or GitHub issues on your behalf.
-
-
-You can update or revoke access at any time from Sentry or the Mission Control Hub.
-
-<Info>
-  Connecting Sentry requires creating an **[internal integration](https://sentry.io/settings/developer-settings/new-internal/)** in your Sentry organization.  
-  
-  You’ll be asked for your organization slug and credentials that allow Continue to receive issue and event data via webhooks and API access.
-  
-  Full credential setup is handled in the Mission Control Hub.
-</Info>
----
-
-## Support & Resources
-
-<CardGroup cols={2}>
-  <Card
-    title="Sentry MCP Cookbook"
-    icon="book-open"
-    href="/guides/sentry-mcp-error-monitoring"
-  >
-    Practical examples for working with Sentry data using Continue agents.
-  </Card>
-
-  <Card
-    title="GitHub Integration"
-    icon="github"
-    href="/mission-control/integrations/github"
-  >
-    Combine Sentry and GitHub to automate error remediation.
-  </Card>
-</CardGroup>
+Configure an agent to only act on high-frequency or high-impact errors, routing different error types to specialized agents or creating GitHub issues for manual review.

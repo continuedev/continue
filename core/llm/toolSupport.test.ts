@@ -277,6 +277,68 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("lmstudio", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["lmstudio"];
+
+    it("should return true for supported models (same as ollama)", () => {
+      expect(supportsFn("llama3.1")).toBe(true);
+      expect(supportsFn("llama3.2-8b")).toBe(true);
+      expect(supportsFn("qwen2")).toBe(true);
+      expect(supportsFn("mixtral-8x7b")).toBe(true);
+      expect(supportsFn("mistral-7b")).toBe(true);
+    });
+
+    it("should return true for LM Studio hyphenated model IDs", () => {
+      // LM Studio uses hyphenated model identifiers like "Meta-Llama-3.1-8B-Instruct-GGUF"
+      expect(supportsFn("Meta-Llama-3.1-8B-Instruct-GGUF")).toBe(true);
+      expect(supportsFn("Meta-Llama-3.2-3B-Instruct")).toBe(true);
+      expect(supportsFn("Qwen2-7B-Instruct")).toBe(true);
+      expect(supportsFn("Mixtral-8x7B-Instruct-v0.1")).toBe(true);
+      expect(supportsFn("Mistral-7B-Instruct-v0.2")).toBe(true);
+      expect(supportsFn("llama-3.1-8b-instruct")).toBe(true);
+    });
+
+    it("should return false for explicitly unsupported models (same as ollama)", () => {
+      expect(supportsFn("vision")).toBe(false);
+      expect(supportsFn("math")).toBe(false);
+      expect(supportsFn("guard")).toBe(false);
+      expect(supportsFn("mistrallite")).toBe(false);
+      expect(supportsFn("mistral-openorca")).toBe(false);
+    });
+
+    it("should return false for mistral-openorca in all forms", () => {
+      // Hyphenated form (matches Ollama's exclusion directly)
+      expect(supportsFn("mistral-openorca")).toBe(false);
+      // Non-hyphenated form (must not bypass exclusion via "mistral" support match)
+      expect(supportsFn("MistralOpenOrca")).toBe(false);
+      // With suffix
+      expect(supportsFn("Mistral-OpenOrca-7B")).toBe(false);
+    });
+
+    it("should return false for hyphenated unsupported model names", () => {
+      expect(supportsFn("Llama-Vision-Free")).toBe(false);
+      expect(supportsFn("Math-Solver-7B")).toBe(false);
+      expect(supportsFn("Guard-Model")).toBe(false);
+    });
+
+    it("should return false for mistrallite in hyphenated forms", () => {
+      // Hyphenated form "mistral-lite" normalizes to "mistrallite" which must be excluded
+      expect(supportsFn("Mistral-Lite")).toBe(false);
+      expect(supportsFn("mistral-lite")).toBe(false);
+    });
+
+    it("should handle case insensitivity (same as ollama)", () => {
+      expect(supportsFn("LLAMA3.1")).toBe(true);
+      expect(supportsFn("MIXTRAL-8x7b")).toBe(true);
+      expect(supportsFn("VISION")).toBe(false);
+    });
+
+    it("should handle case insensitivity with hyphenated names", () => {
+      expect(supportsFn("META-LLAMA-3.1-8B-INSTRUCT")).toBe(true);
+      expect(supportsFn("Qwen2-7B-Instruct-GGUF")).toBe(true);
+    });
+  });
+
   describe("xAI", () => {
     const supportsFn = PROVIDER_TOOL_SUPPORT["xAI"];
 
@@ -339,6 +401,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(PROVIDER_TOOL_SUPPORT["gemini"]("")).toBe(false);
       expect(PROVIDER_TOOL_SUPPORT["bedrock"]("")).toBe(false);
       expect(PROVIDER_TOOL_SUPPORT["ollama"]("")).toBe(false);
+      expect(PROVIDER_TOOL_SUPPORT["lmstudio"]("")).toBe(false);
       expect(PROVIDER_TOOL_SUPPORT["novita"]("")).toBe(false);
     });
 

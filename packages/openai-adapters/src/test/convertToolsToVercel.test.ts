@@ -1,6 +1,6 @@
-import { describe, test, expect } from "vitest";
-import { convertToolsToVercelFormat } from "../convertToolsToVercel.js";
 import type { ChatCompletionCreateParams } from "openai/resources/index.js";
+import { describe, expect, test } from "vitest";
+import { convertToolsToVercelFormat } from "../convertToolsToVercel.js";
 
 describe("convertToolsToVercelFormat", () => {
   test("returns undefined for undefined tools", async () => {
@@ -42,9 +42,9 @@ describe("convertToolsToVercelFormat", () => {
       "description",
       "Read a file from disk",
     );
-    expect(result?.readFile).toHaveProperty("parameters");
+    expect(result?.readFile).toHaveProperty("inputSchema");
     // Check that parameters were wrapped with aiJsonSchema
-    expect(result?.readFile.parameters).toBeDefined();
+    expect(result?.readFile.inputSchema).toBeDefined();
   });
 
   test("converts multiple function tools", async () => {
@@ -181,9 +181,9 @@ describe("convertToolsToVercelFormat", () => {
     const result = await convertToolsToVercelFormat(tools);
 
     expect(result).toBeDefined();
-    expect(result?.complexTool.parameters).toBeDefined();
-    // The parameters should be wrapped but still contain the original schema structure
+    expect(result?.complexTool.inputSchema).toBeDefined();
+    // The inputSchema should be wrapped but still contain the original schema structure
     // We can't easily test the internal structure of aiJsonSchema, but we can verify it exists
-    expect(result?.complexTool.parameters).toBeTruthy();
+    expect(result?.complexTool.inputSchema).toBeTruthy();
   });
 });

@@ -19,33 +19,31 @@
 
 <div align="center">
 
-**Ship faster with Continuous AI**
-
-**Build and run custom agents across your IDE, terminal, and CI**
+**[Source-controlled AI checks, enforceable in CI](https://docs.continue.dev)**
 
 </div>
 
-## Agent
+## VS Code Agent
 
-[Agent](https://docs.continue.dev/features/agent/quick-start) to work on development tasks together with AI
+[Agent](https://docs.continue.dev/ide-extensions/agent/quick-start) to work on development tasks together with AI
 
 ![agent](docs/images/agent.gif)
 
-## Chat
+## VS Code Chat
 
-[Chat](https://docs.continue.dev/features/chat/quick-start) to ask general questions and clarify code sections
+[Chat](https://docs.continue.dev/ide-extensions/chat/quick-start) to ask general questions and clarify code sections
 
 ![chat](docs/images/chat.gif)
 
-## Edit
+## VS Code Edit
 
-[Edit](https://docs.continue.dev/features/edit/quick-start) to modify a code section without leaving your current file
+[Edit](https://docs.continue.dev/ide-extensions/edit/quick-start) to modify a code section without leaving your current file
 
 ![edit](docs/images/edit.gif)
 
-## Autocomplete
+## VS Code Autocomplete
 
-[Autocomplete](https://docs.continue.dev/features/autocomplete/quick-start) to receive inline code suggestions as you type
+[Autocomplete](https://docs.continue.dev/ide-extensions/autocomplete/quick-start) to receive inline code suggestions as you type
 
 ![autocomplete](docs/images/autocomplete.gif)
 

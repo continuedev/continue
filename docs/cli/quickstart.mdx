@@ -1,0 +1,88 @@
+---
+title: "Quickstart"
+---
+
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
+Continue CLI (`cn`) is a terminal-based coding agent. It can edit files, run commands, and work through multi-step tasks — the same agent that powers the Continue IDE extensions, running in your terminal.
+
+<Frame>
+  <img src="/images/cn-demo.gif" />
+</Frame>
+
+## Install
+
+<CLIInstall />
+
+Verify the installation:
+
+```bash
+cn --version
+```
+
+### Requirements
+
+- **Node.js 20+** — needed for the npm install path. The shell installer bundles its own runtime.
+- A [Continue](https://continue.dev) account, or an Anthropic API key.
+
+## First run
+
+```bash
+cd your-project
+cn
+```
+
+On first launch you'll be asked to log in with [Continue](https://continue.dev) or enter an Anthropic API key. After that, you're in a session and can start typing.
+
+## Authentication
+
+### Log in with Continue
+
+```bash
+cn login
+```
+
+This opens your browser to authenticate with [Continue](https://continue.dev). Once authenticated, `cn` can use your configured assistants, models, and MCP servers from the platform.
+
+### API key (headless / CI)
+
+For automation environments where there's no browser, set the `CONTINUE_API_KEY` environment variable:
+
+```bash
+export CONTINUE_API_KEY=your-key-here
+cn -p "your prompt"
+```
+
+Get an API key from [Continue → Settings → API Keys](https://continue.dev/settings/api-keys).
+
+### Local API key
+
+If you don't want to use Continue, you can use an Anthropic API key directly. On first launch, `cn` will prompt you to choose between logging in with Continue or entering an Anthropic API key.
+
+## Two modes
+
+**[TUI mode](/cli/tui-mode)** — run `cn` to start an interactive session. You type messages, reference files with `@`, approve tool calls, and iterate with the agent. This is the default.
+
+**[Headless mode](/cli/headless-mode)** — run `cn -p "your prompt"` for single-shot automation. The agent runs to completion and prints its response to stdout. Use this in scripts, CI/CD, and git hooks.
+
+## Common flags
+
+| Flag | Effect |
+|------|--------|
+| `-p "prompt"` | Headless mode — run prompt and exit |
+| `--config <path or slug>` | Use a specific config file or assistant |
+| `--resume` | Resume the most recent session |
+| `--auto` | Allow all tools without prompting |
+| `--readonly` | Plan mode — read-only tools only |
+| `--allow <tool>` | Allow a specific tool (repeatable) |
+| `--exclude <tool>` | Exclude a specific tool (repeatable) |
+| `--rule <rule>` | Add a rule — file path, hub slug, or string (repeatable) |
+| `--mcp <slug>` | Add an MCP server from the hub (repeatable) |
+| `--model <slug>` | Add a model from the hub (repeatable) |
+| `--agent <slug>` | Load an agent file from the hub |
+| `--verbose` | Enable verbose logging |
+
+Run `cn --help` for the full list.

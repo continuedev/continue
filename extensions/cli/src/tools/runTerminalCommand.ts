@@ -1,4 +1,4 @@
-import { spawn } from "child_process";
+import { ChildProcess, spawn } from "child_process";
 import fs from "fs";
 
 import {
@@ -6,11 +6,15 @@ import {
   type ToolPolicy,
 } from "@continuedev/terminal-security";
 
+import { backgroundJobService } from "../services/BackgroundJobService.js";
+import { services } from "../services/index.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   isGitCommitCommand,
   isPullRequestCommand,
 } from "../telemetry/utils.js";
+import { backgroundSignalManager } from "../util/backgroundSignalManager.js";
+import { emitBashToolEnded, emitBashToolStarted } from "../util/cli.js";
 import {
   parseEnvNumber,
   truncateOutputFromStart,
@@ -82,6 +86,35 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
   return { shell: userShell, args: ["-l", "-c", command] };
 }
 
+export function runCommandInBackground(command: string): {
+  success: boolean;
+  jobId?: string;
+  error?: string;
+} {
+  const job = backgroundJobService.createJob(command);
+  if (!job) {
+    return {
+      success: false,
+      error: "Cannot create background job: limit of 5 concurrent jobs reached",
+    };
+  }
+
+  const { shell, args } = getShellCommand(command);
+  const child = backgroundJobService.startJob(job.id, shell, args);
+
+  if (!child) {
+    return {
+      success: false,
+      error: `Failed to start background job ${job.id}`,
+    };
+  }
+
+  return {
+    success: true,
+    jobId: job.id,
+  };
+}
+
 export const runTerminalCommandTool: Tool = {
   name: "Bash",
   displayName: "Bash",
@@ -151,7 +184,9 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
     const maxChars = Math.floor(baseMaxChars / parallelCount);
     const maxLines = Math.floor(baseMaxLines / parallelCount);
 
-    return new Promise((resolve, reject) => {
+    emitBashToolStarted();
+
+    const terminalOutput: string = await new Promise((resolve, reject) => {
       // Use same shell logic as core implementation
       const { shell, args } = getShellCommand(command);
       const child = spawn(shell, args);
@@ -187,6 +222,47 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         return output;
       };
 
+      const moveToBackground = () => {
+        if (isResolved) return;
+        isResolved = true;
+
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        backgroundSignalManager.off("backgroundRequested", moveToBackground);
+
+        // Detach stdout/stderr listeners so they don't accumulate in local
+        // buffers or trigger chat history updates after the tool call resolves.
+        // BackgroundJobService.createJobWithProcess attaches its own listeners.
+        child.stdout.removeListener("data", onStdout);
+        child.stderr.removeListener("data", onStderr);
+
+        const job = backgroundJobService.createJobWithProcess(
+          command,
+          child as ChildProcess,
+          stdout,
+        );
+
+        if (job) {
+          const truncationResult = truncateOutputFromStart(stdout, {
+            maxChars,
+            maxLines,
+          });
+          const outputSoFar = truncationResult.wasTruncated
+            ? appendParallelLimitNote(truncationResult.output)
+            : truncationResult.output;
+          resolve(
+            `Command moved to background. Job ID: ${job.id}\nOutput so far:\n${outputSoFar}\nUse CheckBackgroundJob("${job.id}") to check status.`,
+          );
+        } else {
+          resolve(
+            `Failed to move to background (job limit reached). Command continues in foreground.\nOutput so far: ${stdout}`,
+          );
+        }
+      };
+
+      backgroundSignalManager.on("backgroundRequested", moveToBackground);
+
       const resetTimeout = () => {
         if (timeoutId) {
           clearTimeout(timeoutId);
@@ -209,18 +285,37 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         }, TIMEOUT_MS);
       };
 
+      const showCurrentOutput = () => {
+        if (!context?.toolCallId) return;
+        try {
+          const currentOutput = stdout + (stderr ? `\nStderr: ${stderr}` : "");
+          services.chatHistory.addToolResult(
+            context.toolCallId,
+            currentOutput,
+            "calling",
+          );
+        } catch {
+          // Ignore errors during streaming updates
+        }
+      };
+
       // Start the initial timeout
       resetTimeout();
 
-      child.stdout.on("data", (data) => {
+      const onStdout = (data: Buffer) => {
         stdout += data.toString();
         resetTimeout();
-      });
+        showCurrentOutput();
+      };
 
-      child.stderr.on("data", (data) => {
+      const onStderr = (data: Buffer) => {
         stderr += data.toString();
         resetTimeout();
-      });
+        showCurrentOutput();
+      };
+
+      child.stdout.on("data", onStdout);
+      child.stderr.on("data", onStderr);
 
       child.on("close", (code) => {
         if (isResolved) return;
@@ -229,6 +324,11 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
+
+        backgroundSignalManager.removeListener(
+          "backgroundRequested",
+          moveToBackground,
+        );
 
         // Only reject on non-zero exit code if there's also stderr
         if (code !== 0 && stderr) {
@@ -267,8 +367,13 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
+        backgroundSignalManager.off("backgroundRequested", moveToBackground);
         reject(`Error: ${error.message}`);
       });
     });
+
+    emitBashToolEnded();
+
+    return terminalOutput;
   },
 };

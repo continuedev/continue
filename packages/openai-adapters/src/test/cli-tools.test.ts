@@ -9,18 +9,10 @@ dotenv.config();
 
 if (process.env.OPENAI_API_KEY) {
   describe("CLI Tool Format Test", () => {
-    // Set feature flag
-    beforeAll(() => {
-      process.env.USE_VERCEL_AI_SDK_OPENAI = "true";
-    });
-
-    afterAll(() => {
-      delete process.env.USE_VERCEL_AI_SDK_OPENAI;
-    });
-
     test("should work with actual CLI tool format (after toChatBody conversion)", async () => {
       const api = getLlmApi({
-        provider: "openai",
+        provider: "ai-sdk",
+        model: "openai/gpt-4o-mini",
         apiKey: process.env.OPENAI_API_KEY!,
       });
 
@@ -52,7 +44,7 @@ if (process.env.OPENAI_API_KEY) {
       let response = "";
       for await (const chunk of api.chatCompletionStream(
         {
-          model: "gpt-4o-mini",
+          model: "openai/gpt-4o-mini",
           messages: [
             {
               role: "user",
@@ -75,17 +67,17 @@ if (process.env.OPENAI_API_KEY) {
 
     test("should work with empty tools array", async () => {
       const api = getLlmApi({
-        provider: "openai",
+        provider: "ai-sdk",
+        model: "openai/gpt-4o-mini",
         apiKey: process.env.OPENAI_API_KEY!,
       });
 
-      // Test with empty array (common case)
       const tools: any[] = [];
 
       let response = "";
       for await (const chunk of api.chatCompletionStream(
         {
-          model: "gpt-4o-mini",
+          model: "openai/gpt-4o-mini",
           messages: [
             {
               role: "user",
@@ -107,14 +99,15 @@ if (process.env.OPENAI_API_KEY) {
 
     test("should work with undefined tools", async () => {
       const api = getLlmApi({
-        provider: "openai",
+        provider: "ai-sdk",
+        model: "openai/gpt-4o-mini",
         apiKey: process.env.OPENAI_API_KEY!,
       });
 
       let response = "";
       for await (const chunk of api.chatCompletionStream(
         {
-          model: "gpt-4o-mini",
+          model: "openai/gpt-4o-mini",
           messages: [
             {
               role: "user",
