@@ -15,6 +15,28 @@ export const Gemini: ModelProvider = {
       recommendedFor: ["chat"],
     },
     {
+      model: "gemini-3-flash-preview",
+      displayName: "Gemini 3 Flash Preview",
+      description:
+        "Next-generation Flash model with strong reasoning and fast inference.",
+      contextLength: 1048576,
+      maxCompletionTokens: 65536,
+      mediaTypes: AllMediaTypes,
+      regex: /gemini-3-flash-preview/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "gemini-2.5-pro",
+      displayName: "Gemini 2.5 Pro",
+      description:
+        "Google's advanced model with strong reasoning, multimodal capabilities, and advanced coding skills",
+      contextLength: 1048576,
+      maxCompletionTokens: 65536,
+      mediaTypes: AllMediaTypes,
+      regex: /^gemini-2\.5-pro$/i,
+      recommendedFor: ["chat"],
+    },
+    {
       model: "gemini-2.5-pro-preview-05-06",
       displayName: "Gemini 2.5 Pro Preview",
       description:
@@ -25,7 +47,17 @@ export const Gemini: ModelProvider = {
       regex: /gemini-2\.5-pro-preview/i,
       recommendedFor: ["chat"],
     },
-
+    {
+      model: "gemini-2.5-flash",
+      displayName: "Gemini 2.5 Flash",
+      description:
+        "Fast, token-efficient multimodal model for complex tasks with 1M context window",
+      contextLength: 1048576,
+      maxCompletionTokens: 65536,
+      mediaTypes: AllMediaTypes,
+      regex: /^gemini-2\.5-flash$/i,
+      recommendedFor: ["chat"],
+    },
     {
       model: "gemini-2.5-flash-preview-05-20",
       displayName: "Gemini 2.5 Flash Preview",
@@ -35,6 +67,17 @@ export const Gemini: ModelProvider = {
       maxCompletionTokens: 65536,
       mediaTypes: AllMediaTypes,
       regex: /gemini-2\.5-flash-preview/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "gemini-2.5-flash-lite",
+      displayName: "Gemini 2.5 Flash Lite",
+      description:
+        "Lightweight, fast model optimized for low-latency tasks with 1M context window",
+      contextLength: 1048576,
+      maxCompletionTokens: 65536,
+      mediaTypes: AllMediaTypes,
+      regex: /gemini-2\.5-flash-lite/i,
       recommendedFor: ["chat"],
     },
     {

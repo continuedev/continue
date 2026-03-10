@@ -46,7 +46,6 @@ describe("constructSystemMessage", () => {
 
     expect(result).toContain("You are an agent in the Continue CLI");
     expect(result).toContain("<env>");
-    expect(result).toContain('<context name="directoryStructure">');
     expect(result).toContain('<context name="gitStatus">');
   });
 

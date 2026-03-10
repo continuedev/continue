@@ -98,6 +98,42 @@ describe("Retry Functionality", () => {
       expect(mockFn).toHaveBeenCalledTimes(2);
     });
 
+    it("should retry on embedded 429 in error message (Gemini/VertexAI)", async () => {
+      const error = new Error(
+        'Error from API: {"error":{"code":429,"message":"Resource exhausted"}}',
+      );
+      const mockFn = jest
+        .fn()
+        .mockRejectedValueOnce(error)
+        .mockResolvedValue("success");
+
+      const result = await retryAsync(mockFn, {
+        maxAttempts: 2,
+        baseDelay: 10,
+      });
+
+      expect(result).toBe("success");
+      expect(mockFn).toHaveBeenCalledTimes(2);
+    });
+
+    it("should retry on embedded 429 with space in error message", async () => {
+      const error = new Error(
+        'Error from API: {"error":{"code": 429,"message":"Rate limit exceeded"}}',
+      );
+      const mockFn = jest
+        .fn()
+        .mockRejectedValueOnce(error)
+        .mockResolvedValue("success");
+
+      const result = await retryAsync(mockFn, {
+        maxAttempts: 2,
+        baseDelay: 10,
+      });
+
+      expect(result).toBe("success");
+      expect(mockFn).toHaveBeenCalledTimes(2);
+    });
+
     it("should handle HTTP 5xx errors", async () => {
       const error = new Error("Internal Server Error");
       (error as any).status = 500;
