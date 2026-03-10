@@ -200,6 +200,7 @@ const commandHandlers: Record<string, CommandHandler> = {
   },
   fork: handleFork,
   title: handleTitle,
+  rename: handleTitle,
   init: (args, assistant) => {
     posthogService.capture("useSlashCommand", { name: "init" });
     return handleInit(args, assistant);
