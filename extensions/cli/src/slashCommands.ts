@@ -143,8 +143,6 @@ async function handleFork() {
 }
 
 function handleTitle(args: string[]) {
-  posthogService.capture("useSlashCommand", { name: "title" });
-
   const title = args.join(" ").trim();
   if (!title) {
     return {
@@ -174,7 +172,6 @@ function handleJobs() {
 }
 
 function handleSessions() {
-  posthogService.capture("useSlashCommand", { name: "sessions" });
   return { openSessionSelector: true };
 }
 
@@ -206,7 +203,6 @@ const commandHandlers: Record<string, CommandHandler> = {
   fork: handleFork,
   title: handleTitle,
   init: (args, assistant) => {
-    posthogService.capture("useSlashCommand", { name: "init" });
     return handleInit(args, assistant);
   },
   update: () => {
