@@ -72,7 +72,7 @@
     "@sentry/core": "^9.43.0",
     "@sentry/esbuild-plugin": "^4.0.2",
     "@sentry/node": "^9.43.0",
-    "@sentry/vite-plugin": "^4.0.2",
+    "@sentry/vite-plugin": "^5.0.0",
     "@xenova/transformers": "2.14.0",
     "adf-to-md": "^1.1.0",
     "async-mutex": "^0.5.0",
