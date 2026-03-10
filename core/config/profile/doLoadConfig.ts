@@ -114,7 +114,15 @@ export default async function doLoadConfig(options: {
   let errors: ConfigValidationError[] | undefined;
   let configLoadInterrupted = false;
 
-  if (overrideConfigYaml || fs.existsSync(configYamlPath)) {
+  const hasPreReadContent =
+    packageIdentifier.uriType === "file" &&
+    packageIdentifier.content !== undefined;
+
+  if (
+    overrideConfigYaml ||
+    hasPreReadContent ||
+    fs.existsSync(configYamlPath)
+  ) {
     const result = await loadContinueConfigFromYaml({
       ide,
       ideSettings,
