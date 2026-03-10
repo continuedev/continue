@@ -97,6 +97,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
+    name: "rename",
+    description: "Rename the current session",
+    category: "system",
+  },
+  {
     name: "exit",
     description: "Exit the chat",
     category: "system",
