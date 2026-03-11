@@ -1294,4 +1294,34 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://portal.nousresearch.com",
   },
+  brainiall: {
+    title: "Brainiall",
+    provider: "brainiall",
+    refPage: "brainiall",
+    description:
+      "Brainiall provides access to 33 AI models including Claude, DeepSeek, Llama, Qwen, Mistral, and more through a single OpenAI-compatible API.",
+    longDescription:
+      "Brainiall provides 33 AI models including Claude Opus/Sonnet/Haiku, DeepSeek, Llama, Qwen, Mistral, and more through a single OpenAI-compatible API. Get an API key at [app.brainiall.com](https://app.brainiall.com).",
+    icon: "brainiall.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Brainiall API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.brainiallClaudeOpus46,
+      models.brainiallClaudeSonnet46,
+      models.brainiallClaudeHaiku45,
+      models.brainiallDeepseekR1,
+      models.brainiallDeepseekV3,
+      models.brainiallLlama33_70b,
+    ],
+    apiKeyUrl: "https://app.brainiall.com",
+  },
 };
