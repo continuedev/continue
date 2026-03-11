@@ -103,15 +103,6 @@ describe("DeepSeek Unit Tests", () => {
       expect(fimDeepSeek.supportsFim()).toBe(true);
     });
 
-    it("should return true for deepseek-chat with beta API base", () => {
-      const betaDeepSeek = new DeepSeek({
-        model: "deepseek-chat",
-        apiBase: "https://api.deepseek.com/beta",
-        apiKey: "test-key",
-      });
-      expect(betaDeepSeek.supportsFim()).toBe(true);
-    });
-
     it("should return false for deepseek-chat without beta API", () => {
       expect(deepSeek.supportsFim()).toBe(false);
     });
@@ -122,15 +113,6 @@ describe("DeepSeek Unit Tests", () => {
         apiKey: "test-key",
       });
       expect(otherDeepSeek.supportsFim()).toBe(false);
-    });
-
-    it("should handle case-sensitive beta detection", () => {
-      const betaDeepSeek = new DeepSeek({
-        model: "deepseek-chat",
-        apiBase: "https://api.deepseek.com/BETA",
-        apiKey: "test-key",
-      });
-      expect(betaDeepSeek.supportsFim()).toBe(false); // Should be case-sensitive
     });
   });
 

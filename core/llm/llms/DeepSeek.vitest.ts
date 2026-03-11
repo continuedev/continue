@@ -174,16 +174,6 @@ describe("DeepSeek", () => {
       });
       expect(fimDeepSeek.supportsFim()).toBe(true);
     });
-
-    it("should support FIM for deepseek-chat with beta API base", () => {
-      const fimDeepSeek = new DeepSeek({
-        model: "deepseek-chat",
-        apiBase: "https://api.deepseek.com/beta",
-        apiKey: "test-key",
-      });
-      expect(fimDeepSeek.supportsFim()).toBe(true);
-    });
-
     it("should not support completions", () => {
       expect(deepSeek.supportsCompletions()).toBe(false);
     });

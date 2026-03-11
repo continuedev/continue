@@ -420,7 +420,7 @@ export const models: { [key: string]: ModelPackage } = {
       model: "deepseek-fim-beta",
       contextLength: 131072,
       maxTokens: 8192,
-      apiBase: "https://api.deepseek.com/beta",
+      apiBase: "https://api.deepseek.com/",
     },
     icon: "deepseek.png",
     providerOptions: ["deepseek"],

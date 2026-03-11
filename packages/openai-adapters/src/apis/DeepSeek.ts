@@ -120,7 +120,7 @@ export class DeepSeekApi extends OpenAIApi {
 
     const endpoint = new URL(
       isPrefixCompletion ? "beta/chat/completions" : "chat/completions",
-      this.apiBase.endsWith("/beta/") ? this.apiBase.slice(0, -5) : this.apiBase,
+      this.apiBase,
     );
 
     const deepSeekBody = isPrefixCompletion
@@ -318,10 +318,7 @@ export class DeepSeekApi extends OpenAIApi {
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const warnings: string[] = [];
-    const endpoint = new URL(
-      this.apiBase.endsWith("/beta/") ? "completions" : "beta/completions",
-      this.apiBase,
-    );
+    const endpoint = new URL("beta/completions", this.apiBase);
 
     const deepSeekBody = convertToFimDeepSeekRequestBody(body, warnings);
 

@@ -163,15 +163,10 @@ class DeepSeek extends OpenAI {
 
   /**
    * Determines whether FIM (fill‑in‑middle) is supported.
-   * FIM is supported if:
-   * - The model is explicitly "deepseek‑fim‑beta" (the artificial FIM model), or
-   * - The model is "deepseek‑chat" AND the API base URL contains "/beta" (beta endpoint).
+   * FIM is supported if the model is explicitly "deepseek‑fim‑beta" (the artificial FIM model)
    */
   supportsFim(): boolean {
-    return (
-      this.model === "deepseek-fim-beta" ||
-      (this.model === "deepseek-chat" && !!this.apiBase?.includes("/beta"))
-    );
+    return this.model === "deepseek-fim-beta";
   }
 
   /**
