@@ -1,18 +1,18 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 
 import {
-  ChatMessage,
-  CompiledMessagesResult,
-  MessageContent,
-  MessagePart,
-  Tool,
+    ChatMessage,
+    CompiledMessagesResult,
+    MessageContent,
+    MessagePart,
+    Tool,
 } from "../index.js";
 import { autodetectTemplateType } from "./autodetect.js";
 import {
-  addSpaceToAnyEmptyMessages,
-  chatMessageIsEmpty,
-  isUserOrToolMsg,
-  messageHasToolCallId,
+    addSpaceToAnyEmptyMessages,
+    chatMessageIsEmpty,
+    isUserOrToolMsg,
+    messageHasToolCallId,
 } from "./messages.js";
 
 import { renderChatMessage } from "../util/messageContent.js";
@@ -448,12 +448,21 @@ function compileChatMessages({
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
 
-  // Extract the tool sequence from the end of the message array
-  const toolSequence = extractToolSequence(msgsCopy);
+  // Check if this is a prefill scenario (last message is from assistant)
+  // In prefill scenarios, we don't need to extract tool sequence
+  const lastMsg = msgsCopy[msgsCopy.length - 1];
+  const isPrefillScenario = lastMsg && lastMsg.role === "assistant";
+  
+  let toolSequence: ChatMessage[] = [];
+  if (!isPrefillScenario) {
+    // Extract the tool sequence from the end of the message array
+    toolSequence = extractToolSequence(msgsCopy);
+  }
 
-  // Count tokens for all messages in the tool sequence
+  // Count tokens for all messages in the tool sequence or all messages in prefill scenario
   let lastMessagesTokens = 0;
-  for (const msg of toolSequence) {
+  const messagesToCount = isPrefillScenario ? msgsCopy : toolSequence;
+  for (const msg of messagesToCount) {
     lastMessagesTokens += countChatMessageTokens(modelName, msg);
   }
 
@@ -554,14 +563,15 @@ async function cleanupAsyncEncoders(): Promise<void> {
 }
 
 export {
-  cleanupAsyncEncoders,
-  compileChatMessages,
-  countTokens,
-  countTokensAsync,
-  extractToolSequence,
-  pruneLinesFromBottom,
-  pruneLinesFromTop,
-  pruneRawPromptFromTop,
-  pruneStringFromBottom,
-  pruneStringFromTop,
+    cleanupAsyncEncoders,
+    compileChatMessages,
+    countTokens,
+    countTokensAsync,
+    extractToolSequence,
+    pruneLinesFromBottom,
+    pruneLinesFromTop,
+    pruneRawPromptFromTop,
+    pruneStringFromBottom,
+    pruneStringFromTop
 };
+
