@@ -120,7 +120,7 @@ export class DeepSeekApi extends OpenAIApi {
 
     const endpoint = new URL(
       isPrefixCompletion ? "beta/chat/completions" : "chat/completions",
-      this.apiBase,
+      this.apiBase.endsWith("/beta/") ? this.apiBase.slice(0, -5) : this.apiBase,
     );
 
     const deepSeekBody = isPrefixCompletion
