@@ -449,7 +449,7 @@ function compileChatMessages({
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
 
   // Check if this is a prefill scenario (last message is from assistant)
-  // In prefill scenarios, we don't need to extract tool sequence
+  // In prefill scenarios, last assistant message should be treated as non-negotiable
   const lastMsg = msgsCopy[msgsCopy.length - 1];
   const isPrefillScenario = lastMsg && lastMsg.role === "assistant";
 
@@ -457,12 +457,14 @@ function compileChatMessages({
   if (!isPrefillScenario) {
     // Extract the tool sequence from the end of the message array
     toolSequence = extractToolSequence(msgsCopy);
+  } else {
+    // For prefill scenarios, just take the last assistant message as the "tool sequence"
+    toolSequence = [msgsCopy.pop()!];
   }
 
-  // Count tokens for all messages in the tool sequence or all messages in prefill scenario
+  // Count tokens for all messages in the tool sequence
   let lastMessagesTokens = 0;
-  const messagesToCount = isPrefillScenario ? msgsCopy : toolSequence;
-  for (const msg of messagesToCount) {
+  for (const msg of toolSequence) {
     lastMessagesTokens += countChatMessageTokens(modelName, msg);
   }
 

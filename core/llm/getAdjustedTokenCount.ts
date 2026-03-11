@@ -7,7 +7,7 @@
 const ANTHROPIC_TOKEN_MULTIPLIER = 1.23;
 const GEMINI_TOKEN_MULTIPLIER = 1.18;
 const MISTRAL_TOKEN_MULTIPLIER = 1.26;
-const DEEPSEEK_TOKEN_MULTIPLIER = 1.05;
+const DEEPSEEK_TOKEN_MULTIPLIER = 1.0;
 
 /**
  * Adjusts token count based on model-specific tokenizer differences.
