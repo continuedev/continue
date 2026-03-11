@@ -51,13 +51,24 @@ function appendReasoningFieldsIfSupported(
     includeReasoningContentField?: boolean;
   },
 ) {
-  if (!prevMessage || prevMessage.role !== "thinking") return;
-
   const includeReasoning = !!providerFlags?.includeReasoningField;
   const includeReasoningDetails = !!providerFlags?.includeReasoningDetailsField;
   const includeReasoningContent = !!providerFlags?.includeReasoningContentField;
   if (!includeReasoning && !includeReasoningDetails && !includeReasoningContent)
     return;
+
+  const hasThinkingContent = prevMessage && prevMessage.role === "thinking";
+
+  // DeepSeek Reasoner requires reasoning_content on every assistant message,
+  // even when no thinking message precedes it (e.g. resumed sessions).
+  // Default to empty string to avoid 400 "Missing reasoning_content field".
+  if (includeReasoningContent) {
+    msg.reasoning_content = hasThinkingContent
+      ? (prevMessage.content as string)
+      : "";
+  }
+
+  if (!hasThinkingContent) return;
 
   const reasoningDetailsValue =
     prevMessage.reasoning_details ||
@@ -87,9 +98,6 @@ function appendReasoningFieldsIfSupported(
   }
   if (includeReasoning) {
     msg.reasoning = prevMessage.content as string;
-  }
-  if (includeReasoningContent) {
-    msg.reasoning_content = prevMessage.content as string;
   }
 }
 
