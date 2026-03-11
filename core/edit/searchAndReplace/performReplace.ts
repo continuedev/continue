@@ -1,6 +1,67 @@
 import { EditOperation } from "../../tools/definitions/multiEdit";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
-import { findSearchMatches } from "./findSearchMatch";
+import { SearchMatchResult, findSearchMatches } from "./findSearchMatch";
+
+/**
+ * Get the leading whitespace of the first non-empty line in a string.
+ */
+function getLeadingIndent(text: string): string {
+  const lines = text.split("\n");
+  for (const line of lines) {
+    if (line.trim().length > 0) {
+      const match = line.match(/^(\s*)/);
+      return match ? match[1] : "";
+    }
+  }
+  return "";
+}
+
+/**
+ * When a fuzzy match strategy (trimmedMatch, whitespaceIgnoredMatch, etc.)
+ * finds a match, the indentation of the matched region in the file may
+ * differ from the indentation in the search string provided by the LLM.
+ * This function adjusts newString so its indentation is relative to the
+ * actual matched text in the file rather than the LLM-provided oldString.
+ */
+function adjustReplacementIndentation(
+  fileContent: string,
+  match: SearchMatchResult,
+  oldString: string,
+  newString: string,
+): string {
+  if (
+    match.strategyName === "exactMatch" ||
+    match.strategyName === "emptySearch"
+  ) {
+    return newString;
+  }
+
+  const matchedText = fileContent.substring(match.startIndex, match.endIndex);
+  const matchedIndent = getLeadingIndent(matchedText);
+  const oldIndent = getLeadingIndent(oldString);
+
+  if (matchedIndent === oldIndent) {
+    return newString;
+  }
+
+  const lines = newString.split("\n");
+  const adjusted = lines.map((line, index) => {
+    if (line.trim().length === 0) {
+      return line;
+    }
+    if (line.startsWith(oldIndent)) {
+      return matchedIndent + line.slice(oldIndent.length);
+    }
+    // For lines that don't start with the old indent (e.g. first line
+    // might have no indent if old_string was trimmed), apply the
+    // matched indent directly
+    if (index === 0 && oldIndent === "" && matchedIndent !== "") {
+      return matchedIndent + line;
+    }
+    return line;
+  });
+  return adjusted.join("\n");
+}
 
 export function executeFindAndReplace(
   fileContent: string,
@@ -23,9 +84,15 @@ export function executeFindAndReplace(
     let result = fileContent;
     for (let i = matches.length - 1; i >= 0; i--) {
       const match = matches[i];
+      const adjustedNew = adjustReplacementIndentation(
+        result,
+        match,
+        oldString,
+        newString,
+      );
       result =
         result.substring(0, match.startIndex) +
-        newString +
+        adjustedNew +
         result.substring(match.endIndex);
     }
     return result;
@@ -40,9 +107,15 @@ export function executeFindAndReplace(
 
     // Apply single replacement
     const match = matches[0];
+    const adjustedNew = adjustReplacementIndentation(
+      fileContent,
+      match,
+      oldString,
+      newString,
+    );
     return (
       fileContent.substring(0, match.startIndex) +
-      newString +
+      adjustedNew +
       fileContent.substring(match.endIndex)
     );
   }
