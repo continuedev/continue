@@ -579,6 +579,36 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://console.groq.com/keys",
   },
+  minimax: {
+    title: "MiniMax",
+    provider: "minimax",
+    description:
+      "MiniMax offers high-performance models with 200K+ context windows at competitive pricing.",
+    longDescription:
+      "To get started with MiniMax, obtain an API key from the [MiniMax Platform](https://platform.minimax.io).",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your MiniMax API key",
+        required: true,
+      },
+    ],
+    packages: [
+      models.minimaxM25,
+      models.minimaxM25Highspeed,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "MiniMax",
+        },
+      },
+    ],
+    apiKeyUrl: "https://platform.minimax.io",
+  },
   deepseek: {
     title: "DeepSeek",
     provider: "deepseek",

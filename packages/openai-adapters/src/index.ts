@@ -141,6 +141,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("http://localhost:8000/v1/", config);
     case "groq":
       return openAICompatible("https://api.groq.com/openai/v1/", config);
+    case "minimax":
+      return openAICompatible("https://api.minimax.io/v1/", config);
     case "sambanova":
       return openAICompatible("https://api.sambanova.ai/v1/", config);
     case "text-gen-webui":
