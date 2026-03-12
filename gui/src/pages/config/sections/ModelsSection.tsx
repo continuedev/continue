@@ -83,7 +83,7 @@ export function ModelsSection() {
             <span>
               Used in Chat, Plan, Agent mode (
               <a
-                href="https://docs.continue.dev/features/chat/quick-start"
+                href="https://docs.continue.dev/ide-extensions/chat/quick-start"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-inherit underline hover:brightness-125"
@@ -97,7 +97,7 @@ export function ModelsSection() {
           selectedModel={config.selectedModelByRole.chat ?? undefined}
           onSelect={(model) => handleRoleUpdate("chat", model)}
           onConfigure={handleConfigureModel}
-          setupURL="https://docs.continue.dev/chat/model-setup"
+          setupURL="https://docs.continue.dev/ide-extensions/chat/model-setup"
         />
 
         <Divider />
@@ -109,7 +109,7 @@ export function ModelsSection() {
             <span>
               Used in inline code completions as you type (
               <a
-                href="https://docs.continue.dev/features/autocomplete/quick-start"
+                href="https://docs.continue.dev/ide-extensions/autocomplete/quick-start"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-inherit underline hover:brightness-125"
@@ -123,7 +123,7 @@ export function ModelsSection() {
           selectedModel={config.selectedModelByRole.autocomplete ?? undefined}
           onSelect={(model) => handleRoleUpdate("autocomplete", model)}
           onConfigure={handleConfigureModel}
-          setupURL="https://docs.continue.dev/autocomplete/model-setup"
+          setupURL="https://docs.continue.dev/ide-extensions/autocomplete/model-setup"
         />
 
         {/* Jetbrains has a model selector inline */}
@@ -142,7 +142,7 @@ export function ModelsSection() {
                 <span>
                   Used to transform a selected section of code (
                   <a
-                    href="https://docs.continue.dev/features/edit/quick-start"
+                    href="https://docs.continue.dev/ide-extensions/edit/quick-start"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-inherit underline hover:brightness-125"
@@ -156,7 +156,7 @@ export function ModelsSection() {
               selectedModel={config.selectedModelByRole.edit ?? undefined}
               onSelect={(model) => handleRoleUpdate("edit", model)}
               onConfigure={handleConfigureModel}
-              setupURL="https://docs.continue.dev/edit/model-setup"
+              setupURL="https://docs.continue.dev/ide-extensions/edit/model-setup"
             />
           </>
         )}
