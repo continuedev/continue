@@ -1,0 +1,221 @@
+---
+title: "CLI Hooks"
+description: "Use Continue CLI hooks to intercept events, run shell or HTTP handlers, and enforce custom workflow rules."
+---
+
+Continue CLI hooks let you run custom handlers when key events happen during a `cn` session. You can use them to validate tool calls, add context, log activity, or block risky actions before they run.
+
+Hooks are compatible with Claude Code's settings format, so existing hook configurations can often be reused with Continue.
+
+## Where to configure hooks
+
+Continue loads hooks from these settings files, in precedence order:
+
+| Location | Scope |
+|----------|-------|
+| `~/.claude/settings.json` | User-global Claude-compatible config |
+| `~/.continue/settings.json` | User-global Continue config |
+| `.claude/settings.json` | Project config |
+| `.continue/settings.json` | Project config |
+| `.claude/settings.local.json` | Project-local config |
+| `.continue/settings.local.json` | Project-local config |
+
+When multiple files define hooks, Continue merges them and runs all matching handlers.
+
+Use `.continue/settings.local.json` when you want personal hooks that should stay out of Git.
+
+## Basic structure
+
+Add a `hooks` object to one of the settings files above:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .continue/hooks/check_bash.py",
+            "statusMessage": "Checking Bash command"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^Edit$",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://example.com/continue-hooks",
+            "headers": {
+              "Authorization": "Bearer ${CONTINUE_HOOK_TOKEN}"
+            },
+            "allowedEnvVars": ["CONTINUE_HOOK_TOKEN"]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Each event contains one or more matcher groups:
+
+- `matcher` is a regex string used to decide whether the group should run
+- `hooks` is the list of handlers to execute when the matcher matches
+
+An empty matcher, omitted matcher, or `"*"` matches everything.
+
+## Hook types
+
+| Type | What it does | Notes |
+|------|--------------|-------|
+| `command` | Runs a shell command and sends the event payload to stdin as JSON | Supports `async`, `timeout`, and `statusMessage` |
+| `http` | Sends the event payload to an HTTP endpoint with a `POST` request | Supports custom headers and env var interpolation |
+| `prompt` | Reserved for single-turn LLM hook handling | Not yet implemented |
+| `agent` | Reserved for multi-turn agent hook handling | Not yet implemented |
+
+## Event types
+
+These are the event names currently supported by the CLI hooks system:
+
+| Event | Matcher runs against |
+|-------|----------------------|
+| `PreToolUse` | `tool_name` |
+| `PostToolUse` | `tool_name` |
+| `PostToolUseFailure` | `tool_name` |
+| `PermissionRequest` | `tool_name` |
+| `UserPromptSubmit` | No matcher support |
+| `SessionStart` | `source` |
+| `SessionEnd` | `reason` |
+| `Stop` | No matcher support |
+| `Notification` | `notification_type` |
+| `SubagentStart` | `agent_type` |
+| `SubagentStop` | `agent_type` |
+| `PreCompact` | `trigger` |
+| `ConfigChange` | `source` |
+| `TeammateIdle` | No matcher support |
+| `TaskCompleted` | No matcher support |
+| `WorktreeCreate` | No matcher support |
+| `WorktreeRemove` | No matcher support |
+
+Hook handlers receive a JSON payload on stdin or in the HTTP request body. Every event includes common context such as:
+
+- `session_id`
+- `transcript_path`
+- `cwd`
+- `permission_mode`
+
+Tool-related events also include fields such as `tool_name`, `tool_input`, and `tool_use_id`.
+
+## Exit code and blocking behavior
+
+Command hooks use these exit code semantics:
+
+| Result | Behavior |
+|--------|----------|
+| `0` | Continue normally |
+| `2` | Block the action. `stderr` becomes the feedback shown to the user |
+| Any other non-zero code | Treated as a non-blocking hook failure |
+
+HTTP hooks behave a little differently:
+
+- A non-2xx response is treated as a non-blocking hook failure
+- Returning JSON with `"decision": "block"` blocks the action
+
+Hooks can also return structured JSON to influence behavior more precisely:
+
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "Destructive Bash commands require manual review"
+  }
+}
+```
+
+For `PreToolUse`, hooks can:
+
+- allow, deny, or ask for permission
+- attach `additionalContext`
+- provide `updatedInput`
+
+## Example: block dangerous Bash commands
+
+This example checks Bash tool calls before they run:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .continue/hooks/check_bash.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Example handler:
+
+```python
+import json
+import sys
+
+payload = json.load(sys.stdin)
+command = payload.get("tool_input", {}).get("command", "")
+
+if "rm -rf" in command:
+    print("Blocked dangerous command", file=sys.stderr)
+    raise SystemExit(2)
+```
+
+Because the script exits with code `2`, Continue blocks the tool call and shows the error message to the user.
+
+## Example: log tool activity to an HTTP endpoint
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "^Edit$",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://example.com/hooks/post-tool-use",
+            "headers": {
+              "Authorization": "Bearer ${CONTINUE_HOOK_TOKEN}"
+            },
+            "allowedEnvVars": ["CONTINUE_HOOK_TOKEN"]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+This is useful for audit logging, notifications, or custom workflow automation after a tool succeeds.
+
+## Disabling hooks
+
+To turn off hooks temporarily, set `disableAllHooks` in your settings file:
+
+```json
+{
+  "disableAllHooks": true
+}
+```
+
+Continue still loads the configured hooks, but it skips executing them while this flag is enabled.
