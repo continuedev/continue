@@ -80,7 +80,10 @@ An empty matcher, omitted matcher, or `"*"` matches everything.
 
 ## Event types
 
-These are the event names currently supported by the CLI hooks system:
+Continue accepts the Claude Code-compatible hook schema, but the CLI only
+emits a smaller set of events today.
+
+These are the event names currently emitted by the CLI hooks system:
 
 | Event | Matcher runs against |
 |-------|----------------------|
@@ -93,14 +96,13 @@ These are the event names currently supported by the CLI hooks system:
 | `SessionEnd` | `reason` |
 | `Stop` | No matcher support |
 | `Notification` | `notification_type` |
-| `SubagentStart` | `agent_type` |
-| `SubagentStop` | `agent_type` |
 | `PreCompact` | `trigger` |
-| `ConfigChange` | `source` |
-| `TeammateIdle` | No matcher support |
-| `TaskCompleted` | No matcher support |
-| `WorktreeCreate` | No matcher support |
-| `WorktreeRemove` | No matcher support |
+
+The hook schema also includes additional Claude-compatible event names such as
+`PermissionRequest`, `SubagentStart`, `SubagentStop`, `ConfigChange`,
+`TeammateIdle`, `TaskCompleted`, `WorktreeCreate`, and `WorktreeRemove`.
+Those names are reserved for future support, but the Continue CLI does not emit
+them yet, so configuring handlers for them will currently have no effect.
 
 Hook handlers receive a JSON payload on stdin or in the HTTP request body. Every event includes common context such as:
 
