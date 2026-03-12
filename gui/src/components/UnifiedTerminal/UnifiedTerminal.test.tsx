@@ -202,6 +202,12 @@ describe("UnifiedTerminalCommand", () => {
     expect(container.textContent).toMatch(/https:\/\/example\.com/);
     expect(container.textContent).toMatch(/www\.github\.com/);
     expect(container.textContent).toMatch(/http:\/\/192\.168\.137\.1:8081/);
+
+    // Verify rendered links have correct hrefs including port
+    const links = container.querySelectorAll("a");
+    const hrefs = Array.from(links).map((a) => a.getAttribute("href"));
+    expect(hrefs).toContainEqual("https://example.com");
+    expect(hrefs).toContainEqual(expect.stringContaining("192.168.137.1:8081"));
   });
 
   test("shows copy and run in terminal buttons when not running", async () => {
