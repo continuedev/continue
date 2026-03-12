@@ -75,3 +75,16 @@ Store sensitive values (API keys, tokens) in [Continue → Settings → Secrets]
 ```yaml
 ${{ secrets.MY_API_KEY }}
 ```
+
+## Advanced environment flags
+
+### `CONTINUE_USE_AI_SDK`
+
+Set `CONTINUE_USE_AI_SDK=1` to route `openai` and `anthropic` provider requests through Continue's Vercel AI SDK adapter instead of the default provider clients:
+
+```bash
+export CONTINUE_USE_AI_SDK=1
+cn
+```
+
+This is useful when you want to test the AI SDK-backed request path without changing your `config.yaml`. The flag only changes `openai` and `anthropic` providers; all other providers continue using their standard adapters.

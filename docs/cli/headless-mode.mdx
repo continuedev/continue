@@ -48,6 +48,12 @@ cn -p "Set up the project" --allow "*"
 
 See [tool permissions](/cli/tool-permissions) for the full policy system.
 
+Read-only helpers such as `CheckBackgroundJob` remain allowed by default, so the agent can safely inspect long-running work without additional approval.
+
+## Background jobs
+
+If a shell command is moved to the background, Continue returns a job id and the output collected so far. The agent can then call `CheckBackgroundJob("<job-id>")` to fetch the current status, exit code, and accumulated output while the job continues running.
+
 ## Authentication in CI
 
 Set `CONTINUE_API_KEY` instead of running `cn login`:
