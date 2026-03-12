@@ -53,15 +53,19 @@ describe("ModelsSection", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Setup Edit model" }));
 
-    expect(postSpy).toHaveBeenCalledWith(
+    expect(postSpy).toHaveBeenCalledTimes(3);
+    expect(postSpy).toHaveBeenNthCalledWith(
+      1,
       "openUrl",
       "https://docs.continue.dev/ide-extensions/chat/model-setup",
     );
-    expect(postSpy).toHaveBeenCalledWith(
+    expect(postSpy).toHaveBeenNthCalledWith(
+      2,
       "openUrl",
       "https://docs.continue.dev/ide-extensions/autocomplete/model-setup",
     );
-    expect(postSpy).toHaveBeenCalledWith(
+    expect(postSpy).toHaveBeenNthCalledWith(
+      3,
       "openUrl",
       "https://docs.continue.dev/ide-extensions/edit/model-setup",
     );
