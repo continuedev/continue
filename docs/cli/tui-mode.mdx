@@ -26,14 +26,26 @@ Type `/` to see available commands. Run `/help` for the full list.
 
 | Command | What it does |
 |---------|-------------|
+| `/help` | Show the help message and keyboard shortcuts |
+| `/clear` | Clear the chat history |
+| `/login` | Authenticate with your account |
+| `/logout` | Sign out of your current session |
+| `/update` | Update the Continue CLI |
+| `/whoami` | Check who you're currently logged in as |
+| `/info` | Show session information, including token usage and cost |
 | `/model` | Switch between configured chat models |
 | `/config` | Switch configuration or organization |
-| `/compact` | Summarize chat history to free up context |
-| `/fork` | Branch the conversation from the current point |
-| `/resume` | Pick up a previous session |
-| `/info` | Show token usage and cost for this session |
-| `/init` | Create an `AGENTS.md` file for the current project |
 | `/mcp` | Manage MCP server connections |
+| `/init` | Create an `AGENTS.md` file for the current project |
+| `/compact` | Summarize chat history into a compact form |
+| `/resume` | Resume a previous chat session |
+| `/fork` | Start a forked chat session from the current history |
+| `/title` | Set the title for the current session |
+| `/rename` | Rename the current session (alias for `/title`) |
+| `/exit` | Exit the chat |
+| `/jobs` | List background jobs |
+
+When you're connected to a remote environment, Continue also adds remote-only slash commands such as `/diff` and `/apply`.
 
 ## Resume previous sessions
 
