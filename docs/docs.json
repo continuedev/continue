@@ -68,6 +68,7 @@
               "cli/tui-mode",
               "cli/headless-mode",
               "cli/configuration",
+              "cli/hooks",
               "cli/tool-permissions"
             ]
           }
