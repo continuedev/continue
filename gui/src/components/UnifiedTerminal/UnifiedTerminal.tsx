@@ -175,8 +175,7 @@ function convertBundleIntoReact(
   }
 
   const content: React.ReactNode[] = [];
-  const linkRegex =
-    /(\s|^)(https?:\/\/(?:www\.|(?!www))[^\s.]+\.[^\s]{2,}|www\.[^\s]+\.[^\s]{2,})/g;
+  const linkRegex = /(\s|^)(https?:\/\/[^\s]+|www\.[^\s]+\.[^\s]{2,})/g;
 
   let index = 0;
   let match: RegExpExecArray | null;
