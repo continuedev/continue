@@ -17,6 +17,23 @@ function getLeadingIndent(text: string): string {
 }
 
 /**
+ * Get the indentation of the file line containing a given character position.
+ */
+function getLineIndentAtPosition(
+  fileContent: string,
+  position: number,
+): string {
+  const lineStart = fileContent.lastIndexOf("\n", position - 1) + 1;
+  const lineEnd = fileContent.indexOf("\n", lineStart);
+  const line = fileContent.substring(
+    lineStart,
+    lineEnd === -1 ? fileContent.length : lineEnd,
+  );
+  const match = line.match(/^(\s*)/);
+  return match ? match[1] : "";
+}
+
+/**
  * When a fuzzy match strategy (trimmedMatch, whitespaceIgnoredMatch, etc.)
  * finds a match, the indentation of the matched region in the file may
  * differ from the indentation in the search string provided by the LLM.
@@ -36,8 +53,7 @@ function adjustReplacementIndentation(
     return newString;
   }
 
-  const matchedText = fileContent.substring(match.startIndex, match.endIndex);
-  const matchedIndent = getLeadingIndent(matchedText);
+  const matchedIndent = getLineIndentAtPosition(fileContent, match.startIndex);
   const oldIndent = getLeadingIndent(oldString);
 
   if (matchedIndent === oldIndent) {
@@ -49,14 +65,17 @@ function adjustReplacementIndentation(
     if (line.trim().length === 0) {
       return line;
     }
+    if (index === 0) {
+      // First line: the file content before startIndex already provides
+      // indentation, so strip the old indent rather than adding new
+      if (oldIndent && line.startsWith(oldIndent)) {
+        return line.slice(oldIndent.length);
+      }
+      return line;
+    }
+    // Subsequent lines: replace oldIndent prefix with matchedIndent
     if (line.startsWith(oldIndent)) {
       return matchedIndent + line.slice(oldIndent.length);
-    }
-    // For lines that don't start with the old indent (e.g. first line
-    // might have no indent if old_string was trimmed), apply the
-    // matched indent directly
-    if (index === 0 && oldIndent === "" && matchedIndent !== "") {
-      return matchedIndent + line;
     }
     return line;
   });
