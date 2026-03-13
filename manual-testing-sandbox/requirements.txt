@@ -21,7 +21,7 @@ seaborn==0.11.2
 plotly==5.3.1
 
 # Natural Language Processing
-nltk==3.6.3
+nltk==3.9.3
 spacy==3.1.2
 
 # Deep Learning
@@ -55,3 +55,4 @@ aiohttp==3.7.4
 jupyter==1.0.0
 gunicorn==20.1.0
 psycopg2==2.9.1
+tornado>=6.5.5 # not directly required, pinned by Snyk to avoid a vulnerability
