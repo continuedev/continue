@@ -46,7 +46,7 @@ export async function* interceptSystemToolCalls(
       return result.value;
     } else {
       for await (const message of result.value) {
-        if (abortController.signal.aborted || parseState?.done) {
+        if (abortController.signal.aborted) {
           break;
         }
         // Skip non-assistant messages or messages with native tool calls
@@ -69,6 +69,10 @@ export async function* interceptSystemToolCalls(
 
         for (const chunk of chunks) {
           buffer += chunk;
+          if (parseState?.done) {
+            parseState = undefined;
+          }
+
           if (!parseState) {
             const { isInPartialStart, isInToolCall, modifiedBuffer } =
               detectToolCallStart(buffer, systemToolFramework);
@@ -82,7 +86,7 @@ export async function* interceptSystemToolCalls(
             }
           }
 
-          if (parseState && !parseState.done) {
+          if (parseState) {
             const delta = systemToolFramework.handleToolCallBuffer(
               buffer,
               parseState,
@@ -97,11 +101,6 @@ export async function* interceptSystemToolCalls(
               ];
             }
           } else {
-            // Prevent content after tool calls for now
-            if (parseState) {
-              continue;
-            }
-
             // Yield normal assistant message
             yield [
               {

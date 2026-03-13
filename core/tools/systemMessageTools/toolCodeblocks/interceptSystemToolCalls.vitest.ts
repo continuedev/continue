@@ -242,7 +242,7 @@ describe("interceptSystemToolCalls", () => {
     ).toBe("}");
   });
 
-  it("ignores content after a tool call", async () => {
+  it("preserves content after a tool call", async () => {
     const messages: ChatMessage[][] = [
       [{ role: "assistant", content: "```tool\n" }],
       [{ role: "assistant", content: "TOOL_NAME: test_tool\n" }],
@@ -250,7 +250,7 @@ describe("interceptSystemToolCalls", () => {
       [{ role: "assistant", content: "value1\n" }],
       [{ role: "assistant", content: "END_ARG\n" }],
       [{ role: "assistant", content: "```\n" }],
-      [{ role: "assistant", content: "This content should be ignored" }],
+      [{ role: "assistant", content: "This content should be preserved" }],
     ];
 
     const generator = interceptSystemToolCalls(
@@ -259,15 +259,88 @@ describe("interceptSystemToolCalls", () => {
       framework,
     );
 
-    let result;
-    // Process through all the tool call parts
+    // Process through tool call parts
     for (let i = 0; i < 6; i++) {
-      result = await generator.next();
+      await generator.next();
     }
 
-    // The content after the tool call should be ignored
+    // Newline after closing codeblock is now surfaced as text
+    let result = await generator.next();
+    expect(result.value).toEqual([
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "\n" }],
+      },
+    ]);
+
+    // Content after tool call is preserved
     result = await generator.next();
-    expect(result.value).toBeUndefined();
+    expect(result.value).toEqual([
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "This content should be preserved" }],
+      },
+    ]);
+  });
+
+  it("parses multiple tool calls in a single response stream", async () => {
+    const messages: ChatMessage[][] = [
+      [{ role: "assistant", content: "```tool\n" }],
+      [{ role: "assistant", content: "TOOL_NAME: first_tool\n" }],
+      [{ role: "assistant", content: "BEGIN_ARG: arg1\n" }],
+      [{ role: "assistant", content: "value1\n" }],
+      [{ role: "assistant", content: "END_ARG\n" }],
+      [{ role: "assistant", content: "```\n" }],
+      [{ role: "assistant", content: "Now running another tool.\n" }],
+      [{ role: "assistant", content: "```tool\n" }],
+      [{ role: "assistant", content: "TOOL_NAME: second_tool\n" }],
+      [{ role: "assistant", content: "BEGIN_ARG: arg2\n" }],
+      [{ role: "assistant", content: "value2\n" }],
+      [{ role: "assistant", content: "END_ARG\n" }],
+      [{ role: "assistant", content: "```" }],
+    ];
+
+    const generator = interceptSystemToolCalls(
+      createAsyncGenerator(messages),
+      abortController,
+      framework,
+    );
+
+    // First tool
+    await generator.next(); // first start token
+    const firstToolName = await generator.next();
+    expect(
+      (firstToolName.value as AssistantChatMessage[])[0].toolCalls?.[0]
+        .function?.name,
+    ).toBe("first_tool");
+
+    await generator.next(); // begin arg
+    await generator.next(); // arg value
+    await generator.next(); // end arg
+
+    const transitionText = await generator.next(); // newline after closing ```
+    expect(transitionText.value).toEqual([
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "\n" }],
+      },
+    ]);
+
+    const bridgeText = await generator.next();
+    expect(bridgeText.value).toEqual([
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "Now running another tool." }],
+      },
+    ]);
+
+    await generator.next(); // trailing newline from bridge text
+    await generator.next(); // second start token
+    const secondToolName = await generator.next();
+    expect(
+      (secondToolName.value as AssistantChatMessage[])[0].toolCalls?.[0]
+        .function?.name,
+    ).toBe("second_tool");
   });
 
   it("stops processing when aborted", async () => {
