@@ -8,7 +8,7 @@
  * - Plain objects with name "AbortError" (serialized errors)
  */
 export function isAbortError(error: unknown): boolean {
-  if (error == null) return false;
+  if (error === null || error === undefined) return false;
 
   // String-based "cancel" (used in Continue streaming path)
   if (error === "cancel") return true;
