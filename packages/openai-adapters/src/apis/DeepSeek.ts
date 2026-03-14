@@ -42,6 +42,7 @@ export const DEEPSEEK_API_BASE = "https://api.deepseek.com/";
 export class DeepSeekApi extends OpenAIApi {
   // Default configuration values
   private readonly WARN_ON_UNSUPPORTED_FEATURES = true;
+  private readonly useBetaEndpoints: boolean;
 
   constructor(config: z.infer<typeof OpenAIConfigSchema>) {
     const apiBase = config.apiBase ?? DEEPSEEK_API_BASE;
@@ -51,6 +52,25 @@ export class DeepSeekApi extends OpenAIApi {
     });
     if (!this.apiBase.endsWith("/")) {
       this.apiBase += "/";
+    }
+    // Determine if we should use beta endpoints (only for official DeepSeek API)
+    this.useBetaEndpoints = this.isOfficialDeepSeekApi(this.apiBase);
+  }
+
+  /**
+   * Checks if the given API base URL points to the official DeepSeek API.
+   * Normalizes the URL by stripping protocol, port, and trailing slash.
+   */
+  private isOfficialDeepSeekApi(apiBase: string): boolean {
+    try {
+      const url = new URL(apiBase);
+      // Remove port, protocol, and trailing slash
+      const hostname = url.hostname.toLowerCase();
+      // Check if hostname matches api.deepseek.com (allow subdomains? but official is exactly api.deepseek.com)
+      return hostname === "api.deepseek.com";
+    } catch {
+      // If URL parsing fails, assume it's not official
+      return false;
     }
   }
 
@@ -118,10 +138,12 @@ export class DeepSeekApi extends OpenAIApi {
       );
     }
 
-    const endpoint = new URL(
-      isPrefixCompletion ? "beta/chat/completions" : "chat/completions",
-      this.apiBase,
-    );
+    // Use beta endpoint for prefix completion only when using official DeepSeek API
+    const endpointPath =
+      isPrefixCompletion && this.useBetaEndpoints
+        ? "beta/chat/completions"
+        : "chat/completions";
+    const endpoint = new URL(endpointPath, this.apiBase);
 
     const deepSeekBody = isPrefixCompletion
       ? convertToChatPrefixDeepSeekRequestBody(body, warnings)
@@ -318,7 +340,11 @@ export class DeepSeekApi extends OpenAIApi {
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const warnings: string[] = [];
-    const endpoint = new URL("beta/completions", this.apiBase);
+    // Use beta endpoint for FIM only when using official DeepSeek API
+    const endpointPath = this.useBetaEndpoints
+      ? "beta/completions"
+      : "fim/completions";
+    const endpoint = new URL(endpointPath, this.apiBase);
 
     const deepSeekBody = convertToFimDeepSeekRequestBody(body, warnings);
 
