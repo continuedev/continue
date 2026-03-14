@@ -13,6 +13,7 @@ import { GeminiApi } from "./apis/Gemini.js";
 import { InceptionApi } from "./apis/Inception.js";
 import { JinaApi } from "./apis/Jina.js";
 import { LlamastackApi } from "./apis/LlamaStack.js";
+import { MiniMaxApi } from "./apis/MiniMax.js";
 import { MockApi } from "./apis/Mock.js";
 import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
@@ -142,7 +143,7 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "groq":
       return openAICompatible("https://api.groq.com/openai/v1/", config);
     case "minimax":
-      return openAICompatible("https://api.minimax.io/v1/", config);
+      return new MiniMaxApi(config);
     case "sambanova":
       return openAICompatible("https://api.sambanova.ai/v1/", config);
     case "text-gen-webui":
