@@ -72,6 +72,7 @@ export type MoonshotConfig = z.infer<typeof MoonshotConfigSchema>;
 
 export const DeepseekConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("deepseek"),
+  useBetaEndpoints: z.boolean().optional(),
 });
 export type DeepseekConfig = z.infer<typeof DeepseekConfigSchema>;
 
@@ -260,6 +261,7 @@ export type AiSdkConfig = z.infer<typeof AiSdkConfigSchema>;
 
 // Discriminated union
 export const LLMConfigSchema = z.discriminatedUnion("provider", [
+  DeepseekConfigSchema,
   OpenAIConfigSchema,
   BedrockConfigSchema,
   MoonshotConfigSchema,

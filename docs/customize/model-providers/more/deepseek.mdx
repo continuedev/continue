@@ -139,6 +139,60 @@ DeepSeek models support various capabilities that you should be aware of when co
 
 </Info>
 
+### Proxy and Custom Deployment Configuration
+
+Continue intelligently selects between DeepSeek's beta and standard API endpoints based on your API base URL:
+
+- **Official DeepSeek API** (`api.deepseek.com`): Uses beta endpoints (`beta/chat/completions`, `beta/completions`)
+- **Custom deployments & proxy providers**: Uses standard OpenAI-compatible endpoints (`chat/completions`, `fim/completions`)
+
+#### Manual Endpoint Selection
+
+If your proxy forwards requests to the official DeepSeek API but uses a different hostname, you can manually control endpoint selection:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: DeepSeek via Proxy
+      provider: deepseek
+      model: deepseek-chat
+      apiKey: <YOUR_DEEPSEEK_API_KEY>
+      apiBase: https://your-proxy.com/deepseek/  # Your proxy URL
+      useBetaEndpoints: true  # Manually enable beta endpoints
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "DeepSeek via Proxy",
+        "provider": "deepseek",
+        "model": "deepseek-chat",
+        "apiKey": "<YOUR_DEEPSEEK_API_KEY>",
+        "apiBase": "https://your-proxy.com/deepseek/",
+        "useBetaEndpoints": true
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+<Info>
+
+  **When to use `useBetaEndpoints: true`**:
+  - Your proxy is a simple forwarder to `api.deepseek.com` (e.g., Nginx reverse proxy)
+  - You want access to DeepSeek's beta features (prefix completion, FIM beta endpoint)
+  
+  **When to use `useBetaEndpoints: false`**:
+  - Your proxy uses standard OpenAI-compatible endpoints (most API aggregators)
+  - You're using local deployments (Ollama, vLLM, LM Studio)
+  - You experience 404 errors with beta endpoints
+
+</Info>
+
 ### Tool Calling Support
 
 DeepSeek models support native tool/function calling:

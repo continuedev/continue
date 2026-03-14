@@ -8,9 +8,8 @@ import {
   EmbeddingCreateParams,
   Model,
 } from "openai/resources/index";
-import { z } from "zod";
 
-import { OpenAIConfigSchema } from "../types.js";
+import { DeepseekConfig } from "../types.js";
 import { chatChunk, customFetch } from "../util.js";
 import { OpenAIApi } from "./OpenAI.js";
 import {
@@ -44,7 +43,7 @@ export class DeepSeekApi extends OpenAIApi {
   private readonly WARN_ON_UNSUPPORTED_FEATURES = true;
   private readonly useBetaEndpoints: boolean;
 
-  constructor(config: z.infer<typeof OpenAIConfigSchema>) {
+  constructor(config: DeepseekConfig) {
     const apiBase = config.apiBase ?? DEEPSEEK_API_BASE;
     super({
       ...config,
@@ -53,8 +52,10 @@ export class DeepSeekApi extends OpenAIApi {
     if (!this.apiBase.endsWith("/")) {
       this.apiBase += "/";
     }
-    // Determine if we should use beta endpoints (only for official DeepSeek API)
-    this.useBetaEndpoints = this.isOfficialDeepSeekApi(this.apiBase);
+    // Determine if we should use beta endpoints
+    // Priority: 1. Explicit config 2. Official API detection
+    this.useBetaEndpoints =
+      config.useBetaEndpoints ?? this.isOfficialDeepSeekApi(this.apiBase);
   }
 
   /**

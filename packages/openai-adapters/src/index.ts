@@ -21,7 +21,7 @@ import { RelaceApi } from "./apis/Relace.js";
 import { VertexAIApi } from "./apis/VertexAI.js";
 import { WatsonXApi } from "./apis/WatsonX.js";
 import { BaseLlmApi } from "./apis/base.js";
-import { LLMConfig, OpenAIConfigSchema } from "./types.js";
+import { DeepseekConfig, LLMConfig, OpenAIConfigSchema } from "./types.js";
 import { appendPathToUrlIfNotPresent } from "./util/appendPathToUrl.js";
 
 dotenv.config();
@@ -112,7 +112,7 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "jina":
       return new JinaApi(config);
     case "deepseek":
-      return new DeepSeekApi(config);
+      return new DeepSeekApi(config as DeepseekConfig);
     case "moonshot":
       return new MoonshotApi(config);
     case "relace":
