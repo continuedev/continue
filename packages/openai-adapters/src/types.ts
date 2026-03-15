@@ -60,7 +60,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("ncompass"),
     z.literal("relace"),
     z.literal("huggingface-inference-api"),
-    z.literal("deepseek"),
+    // deepseek has its own DeepseekConfigSchema
   ]),
 });
 export type OpenAIConfig = z.infer<typeof OpenAIConfigSchema>;
@@ -70,7 +70,7 @@ export const MoonshotConfigSchema = OpenAIConfigSchema.extend({
 });
 export type MoonshotConfig = z.infer<typeof MoonshotConfigSchema>;
 
-export const DeepseekConfigSchema = OpenAIConfigSchema.extend({
+export const DeepseekConfigSchema = BasePlusConfig.extend({
   provider: z.literal("deepseek"),
   useBetaEndpoints: z.boolean().optional(),
 });
@@ -259,9 +259,8 @@ export const AiSdkConfigSchema = BasePlusConfig.extend({
 });
 export type AiSdkConfig = z.infer<typeof AiSdkConfigSchema>;
 
-// Discriminated union
-export const LLMConfigSchema = z.discriminatedUnion("provider", [
-  DeepseekConfigSchema,
+// Discriminated union for all providers except deepseek (handled separately)
+const OtherLLMConfigSchema = z.discriminatedUnion("provider", [
   OpenAIConfigSchema,
   BedrockConfigSchema,
   MoonshotConfigSchema,
@@ -279,5 +278,11 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   CometAPIConfigSchema,
   AskSageConfigSchema,
   AiSdkConfigSchema,
+]);
+
+// Combined schema that includes DeepseekConfig separately
+export const LLMConfigSchema = z.union([
+  DeepseekConfigSchema,
+  OtherLLMConfigSchema,
 ]);
 export type LLMConfig = z.infer<typeof LLMConfigSchema>;
