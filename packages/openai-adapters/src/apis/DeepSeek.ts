@@ -344,7 +344,7 @@ export class DeepSeekApi extends OpenAIApi {
     // Use beta endpoint for FIM only when using official DeepSeek API
     const endpointPath = this.useBetaEndpoints
       ? "beta/completions"
-      : "fim/completions";
+      : "completions";
     const endpoint = new URL(endpointPath, this.apiBase);
 
     const deepSeekBody = convertToFimDeepSeekRequestBody(body, warnings);
