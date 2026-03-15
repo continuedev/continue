@@ -115,7 +115,7 @@ process as welcoming and straightforward as possible.
 
 #### Pre-requisites
 
-You should have Node.js version 20.19.0 (LTS) or higher installed. You can get it
+You should have Node.js version 20.20.1 (LTS) or higher installed. You can get it
 on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct
 version of Node.js for this project by running the following command in the root of the project:
 
