@@ -23,10 +23,11 @@ object UriUtils {
         // Remove query parameters if present
         val uriStr = uri.substringBefore("?")
 
-        // Handle Windows file paths with authority component
+        // Handle Windows file paths with authority component (e.g. file://C:/path/to/file)
+        // Use File.toURI() to properly percent-encode special characters like [ ] in paths
         if (uriStr.startsWith("file://") && !uriStr.startsWith("file:///")) {
             val path = uriStr.substringAfter("file://")
-            return URI("file:///$path")
+            return File(path).toURI()
         }
 
         return try {
