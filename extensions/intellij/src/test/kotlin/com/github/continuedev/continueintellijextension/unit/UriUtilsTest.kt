@@ -82,6 +82,11 @@ class UriUtilsTest : TestCase() {
         val uri = "file://C:/Users/user/projects/[gamemode]/file.lua"
         val parsed = UriUtils.parseUri(uri)
         assertEquals("file", parsed.scheme)
-        assertTrue(parsed.path.contains("gamemode"))
+        assertTrue("Brackets should be percent-encoded in URI path",
+            parsed.path.contains("%5B") && parsed.path.contains("%5D"))
+        assertTrue("Path should contain drive letter",
+            parsed.path.contains("C:") || parsed.path.contains("c:"))
+        assertTrue("Path should preserve full directory structure",
+            parsed.path.contains("Users/user/projects"))
     }
 }
