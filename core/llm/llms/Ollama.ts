@@ -313,6 +313,27 @@ class Ollama extends BaseLLM implements ModelInstaller {
     };
 
     ollamaMessage.content = renderChatMessage(message);
+
+    // Convert assistant tool calls to Ollama format, stripping unsupported
+    // fields like `index` (which causes errors on Gemma3 models).
+    if (
+      message.role === "assistant" &&
+      "toolCalls" in message &&
+      message.toolCalls?.length
+    ) {
+      ollamaMessage.tool_calls = message.toolCalls
+        .filter((tc) => tc.function?.name)
+        .map((tc) => ({
+          function: {
+            name: tc.function!.name!,
+            arguments:
+              typeof tc.function!.arguments === "string"
+                ? JSON.parse(tc.function!.arguments!)
+                : tc.function!.arguments ?? {},
+          },
+        }));
+    }
+
     if (Array.isArray(message.content)) {
       const images: string[] = [];
       message.content.forEach((part) => {
@@ -409,12 +430,50 @@ class Ollama extends BaseLLM implements ModelInstaller {
     }
   }
 
+  /**
+   * Reorder messages so that system messages never appear directly after tool
+   * messages. Some Ollama models (Mistral, Ministral) reject the sequence
+   * `tool → system` with "Unexpected role 'system' after role 'tool'".
+   * This moves such system messages to just before the preceding
+   * assistant+tool block.
+   */
+  private _reorderMessagesForToolCompat(
+    messages: OllamaChatMessage[],
+  ): OllamaChatMessage[] {
+    const result: OllamaChatMessage[] = [...messages];
+
+    for (let i = 1; i < result.length; i++) {
+      if (
+        result[i].role === "system" &&
+        result[i - 1].role === "tool"
+      ) {
+        // Find the start of the tool block (assistant tool_call + tool results)
+        let insertIdx = i - 1;
+        while (insertIdx > 0 && result[insertIdx - 1].role === "tool") {
+          insertIdx--;
+        }
+        // Also skip past the assistant message that triggered the tool calls
+        if (insertIdx > 0 && result[insertIdx - 1].role === "assistant") {
+          insertIdx--;
+        }
+
+        const [sysMsg] = result.splice(i, 1);
+        result.splice(insertIdx, 0, sysMsg);
+        // Don't increment i — re-check current position after splice
+      }
+    }
+
+    return result;
+  }
+
   protected async *_streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const ollamaMessages = messages.map(this._convertToOllamaMessage);
+    const ollamaMessages = this._reorderMessagesForToolCompat(
+      messages.map(this._convertToOllamaMessage),
+    );
     const chatOptions: OllamaChatOptions = {
       model: this._getModel(),
       messages: ollamaMessages,
