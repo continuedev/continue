@@ -2,11 +2,11 @@ jest.mock("@continuedev/fetch", () => ({
   streamResponse: jest.fn(),
 }));
 
-jest.mock("../../util/ollamaHelper.js", () => ({
+jest.mock("../../util/ollamaHelper", () => ({
   getRemoteModelInfo: jest.fn(),
 }));
 
-jest.mock("../../util/url.js", () => ({
+jest.mock("../../util/url", () => ({
   extractBase64FromDataUrl: jest.fn(),
 }));
 
@@ -149,9 +149,7 @@ describe("Ollama", () => {
         {
           role: "assistant" as const,
           content: "",
-          tool_calls: [
-            { function: { name: "get_weather", arguments: {} } },
-          ],
+          tool_calls: [{ function: { name: "get_weather", arguments: {} } }],
         },
         { role: "tool" as const, content: '{"temp": 20}' },
         { role: "system" as const, content: "Use metric units" },
@@ -171,9 +169,7 @@ describe("Ollama", () => {
       const sysIdx = result.findIndex(
         (m: any) => m.role === "system" && m.content === "Use metric units",
       );
-      const assistantIdx = result.findIndex(
-        (m: any) => m.role === "assistant",
-      );
+      const assistantIdx = result.findIndex((m: any) => m.role === "assistant");
       expect(sysIdx).toBeLessThan(assistantIdx);
     });
 
@@ -210,9 +206,7 @@ describe("Ollama", () => {
       const sysIdx = result.findIndex(
         (m: any) => m.content === "extra instructions",
       );
-      const assistantIdx = result.findIndex(
-        (m: any) => m.role === "assistant",
-      );
+      const assistantIdx = result.findIndex((m: any) => m.role === "assistant");
       expect(sysIdx).toBeLessThan(assistantIdx);
 
       // No system message should follow a tool message

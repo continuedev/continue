@@ -329,7 +329,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
             arguments:
               typeof tc.function!.arguments === "string"
                 ? JSON.parse(tc.function!.arguments!)
-                : tc.function!.arguments ?? {},
+                : (tc.function!.arguments ?? {}),
           },
         }));
     }
@@ -443,10 +443,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
     const result: OllamaChatMessage[] = [...messages];
 
     for (let i = 1; i < result.length; i++) {
-      if (
-        result[i].role === "system" &&
-        result[i - 1].role === "tool"
-      ) {
+      if (result[i].role === "system" && result[i - 1].role === "tool") {
         // Find the start of the tool block (assistant tool_call + tool results)
         let insertIdx = i - 1;
         while (insertIdx > 0 && result[insertIdx - 1].role === "tool") {
