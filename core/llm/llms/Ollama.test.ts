@@ -2,14 +2,6 @@ jest.mock("@continuedev/fetch", () => ({
   streamResponse: jest.fn(),
 }));
 
-jest.mock("../../util/ollamaHelper", () => ({
-  getRemoteModelInfo: jest.fn(),
-}));
-
-jest.mock("../../util/url", () => ({
-  extractBase64FromDataUrl: jest.fn(),
-}));
-
 import { ChatMessage } from "../../index.js";
 import Ollama from "./Ollama.js";
 
