@@ -79,7 +79,7 @@ export function getAnthropicHeaders(
   }
 
   const authHeaderName =
-    isAzure && apiBase?.includes("cognitiveservices.azure.com")
+    isAzure && apiBase?.toLowerCase().includes("cognitiveservices.azure.com")
       ? "api-key"
       : "x-api-key";
 
