@@ -1,4 +1,4 @@
-See https://github.com/continuedev/continue/issues/10901
+See https://github.com/continuedev/continue/pull/11587 and https://github.com/continuedev/continue/issues/10901
 
 ---
 
