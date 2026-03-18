@@ -260,10 +260,19 @@ describe("interceptSystemToolCalls", () => {
     );
 
     let result;
-    // Process through all the tool call parts
-    for (let i = 0; i < 6; i++) {
+    // Process through all the tool call deltas (name, arg prefix, arg value, closing brace)
+    for (let i = 0; i < 4; i++) {
       result = await generator.next();
     }
+
+    // The trailing newline from "```\n" is yielded as text after the tool call ends
+    result = await generator.next();
+    expect(result.value).toEqual([
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "\n" }],
+      },
+    ]);
 
     // The content after the tool call should be preserved
     result = await generator.next();
@@ -330,6 +339,15 @@ describe("interceptSystemToolCalls", () => {
       (result.value as AssistantChatMessage[])[0].toolCalls?.[0].function
         ?.arguments,
     ).toBe("}");
+
+    // The newline between the closing ``` and "After tool" is a separate chunk
+    result = await generator.next();
+    expect(result.value).toEqual([
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "\n" }],
+      },
+    ]);
 
     result = await generator.next();
     expect(result.value).toEqual([
