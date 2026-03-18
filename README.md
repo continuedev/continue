@@ -1,3 +1,7 @@
+See https://github.com/continuedev/continue/issues/10901
+
+---
+
 <div align="center"></div>
 
 <h1 align="center">Continue</h1>
