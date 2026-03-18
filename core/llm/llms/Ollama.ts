@@ -335,8 +335,9 @@ class Ollama extends BaseLLM implements ModelInstaller {
               args = {};
             }
           } else {
-            args =
-              (tc.function!.arguments as unknown as JSONSchema7Object) ?? {};
+            args = tc.function!.arguments
+              ? (tc.function!.arguments as unknown as JSONSchema7Object)
+              : {};
           }
           return {
             function: {
