@@ -2688,6 +2688,30 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["sambanova"],
     isOpenSource: true,
   },
+  minimaxM27: {
+    title: "MiniMax M2.7",
+    description:
+      "Latest flagship model with enhanced reasoning and coding capabilities. 204K context window.",
+    params: {
+      title: "MiniMax M2.7",
+      model: "MiniMax-M2.7",
+      contextLength: 204_800,
+    },
+    providerOptions: ["minimax"],
+    isOpenSource: false,
+  },
+  minimaxM27Highspeed: {
+    title: "MiniMax M2.7 Highspeed",
+    description:
+      "High-speed version of M2.7 for low-latency scenarios. 204K context window.",
+    params: {
+      title: "MiniMax M2.7 Highspeed",
+      model: "MiniMax-M2.7-highspeed",
+      contextLength: 204_800,
+    },
+    providerOptions: ["minimax"],
+    isOpenSource: false,
+  },
   minimaxM25: {
     title: "MiniMax M2.5",
     description:

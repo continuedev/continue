@@ -597,6 +597,8 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       },
     ],
     packages: [
+      models.minimaxM27,
+      models.minimaxM27Highspeed,
       models.minimaxM25,
       models.minimaxM25Highspeed,
       {

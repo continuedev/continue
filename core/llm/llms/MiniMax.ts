@@ -6,7 +6,7 @@ class MiniMax extends OpenAI {
   static providerName = "minimax";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.minimax.io/v1/",
-    model: "MiniMax-M2.5",
+    model: "MiniMax-M2.7",
     useLegacyCompletionsEndpoint: false,
   };
 
