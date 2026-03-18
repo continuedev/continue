@@ -323,15 +323,27 @@ class Ollama extends BaseLLM implements ModelInstaller {
     ) {
       ollamaMessage.tool_calls = message.toolCalls
         .filter((tc) => tc.function?.name)
-        .map((tc) => ({
-          function: {
-            name: tc.function!.name!,
-            arguments:
-              typeof tc.function!.arguments === "string"
-                ? JSON.parse(tc.function!.arguments!)
-                : (tc.function!.arguments ?? {}),
-          },
-        }));
+        .map((tc) => {
+          let args: JSONSchema7Object;
+          if (typeof tc.function!.arguments === "string") {
+            try {
+              args = JSON.parse(tc.function!.arguments!);
+            } catch (e) {
+              console.warn(
+                `Failed to parse tool call arguments for "${tc.function!.name}": ${e}`,
+              );
+              args = {};
+            }
+          } else {
+            args = (tc.function!.arguments as JSONSchema7Object) ?? {};
+          }
+          return {
+            function: {
+              name: tc.function!.name!,
+              arguments: args,
+            },
+          };
+        });
     }
 
     if (Array.isArray(message.content)) {
@@ -771,8 +783,12 @@ class Ollama extends BaseLLM implements ModelInstaller {
         const chunk = new TextDecoder().decode(value);
         const lines = chunk.split("\n").filter(Boolean);
         for (const line of lines) {
-          const data = JSON.parse(line);
-          progressReporter?.(data.status, data.completed, data.total);
+          try {
+            const data = JSON.parse(line);
+            progressReporter?.(data.status, data.completed, data.total);
+          } catch (e) {
+            console.warn(`Error parsing Ollama pull response: ${e}`);
+          }
         }
       }
     } finally {
