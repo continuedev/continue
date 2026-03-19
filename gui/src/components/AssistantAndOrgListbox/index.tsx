@@ -1,19 +1,14 @@
 import {
   ArrowPathIcon,
-  ArrowRightStartOnRectangleIcon,
   Cog6ToothIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import { isOnPremSession } from "core/control-plane/AuthTypes";
 import { useContext, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import {
-  selectCurrentOrg,
-  setSelectedProfile,
-} from "../../redux/slices/profilesSlice";
+import { setSelectedProfile } from "../../redux/slices/profilesSlice";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { cn } from "../../util/cn";
 import { CONFIG_ROUTES } from "../../util/navigation";
@@ -24,9 +19,7 @@ import {
   Transition,
   useFontSize,
 } from "../ui";
-import { Divider } from "../ui/Divider";
 import { AssistantOptions } from "./AssistantOptions";
-import { OrganizationOptions } from "./OrganizationOptions";
 import { SelectedAssistantButton } from "./SelectedAssistantButton";
 
 export interface AssistantAndOrgListboxProps {
@@ -39,21 +32,10 @@ export function AssistantAndOrgListbox({
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const listboxRef = useRef<HTMLDivElement>(null);
-  const currentOrg = useAppSelector(selectCurrentOrg);
   const ideMessenger = useContext(IdeMessengerContext);
-  const {
-    profiles,
-    selectedProfile,
-    session,
-    logout,
-    login,
-    organizations,
-    refreshProfiles,
-  } = useAuth();
+  const { profiles, selectedProfile, refreshProfiles } = useAuth();
   const configLoading = useAppSelector((store) => store.config.loading);
   const tinyFont = useFontSize(-4);
-  const shouldRenderOrgInfo =
-    session && organizations.length > 1 && !isOnPremSession(session);
 
   function close() {
     // Close the listbox by clicking outside or programmatically
@@ -62,41 +44,12 @@ export function AssistantAndOrgListbox({
   }
 
   function onNewAssistant() {
-    if (session) {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: "/new",
-        orgSlug: currentOrg?.slug,
-      });
-    } else {
-      void ideMessenger.request("config/newAssistantFile", undefined);
-    }
-    close();
-  }
-
-  function onNewOrganization() {
-    void ideMessenger.request("controlPlane/openUrl", {
-      path: "/organizations/new",
-    });
+    void ideMessenger.request("config/newAssistantFile", undefined);
     close();
   }
 
   function onConfigsConfig() {
     navigate(CONFIG_ROUTES.CONFIGS);
-    close();
-  }
-
-  function onOrganizationsConfig() {
-    navigate(CONFIG_ROUTES.ORGANIZATIONS);
-    close();
-  }
-
-  function onRulesConfig() {
-    navigate(CONFIG_ROUTES.RULES);
-    close();
-  }
-
-  function onToolsConfig() {
-    navigate(CONFIG_ROUTES.TOOLS);
     close();
   }
 
@@ -139,7 +92,7 @@ export function AssistantAndOrgListbox({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [currentOrg, selectedProfile]);
+  }, [selectedProfile]);
 
   return (
     <Listbox>
@@ -188,45 +141,6 @@ export function AssistantAndOrgListbox({
               onClose={close}
             />
 
-            {shouldRenderOrgInfo && (
-              <>
-                <Divider className="!mb-0.5 !mt-0" />
-                <div className="flex items-center justify-between px-1.5 py-1">
-                  <span className="text-description text-xs font-medium">
-                    Organizations
-                  </span>
-                  <div className="flex items-center gap-0.5">
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onNewOrganization();
-                      }}
-                      variant="ghost"
-                      size="sm"
-                      className="my-0 h-5 w-5 p-0"
-                    >
-                      <PlusIcon className="text-description h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOrganizationsConfig();
-                      }}
-                      variant="ghost"
-                      size="sm"
-                      className="my-0 h-5 w-5 p-0"
-                    >
-                      <Cog6ToothIcon className="text-description h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-
-                <OrganizationOptions onClose={close} />
-
-                <Divider className="!mb-0 mt-0.5" />
-              </>
-            )}
-
             {/* Settings Section */}
             {variant !== "sidebar" && (
               <div>
@@ -249,41 +163,6 @@ export function AssistantAndOrgListbox({
                     <span className="text-2xs">Reload</span>
                   </div>
                 </Button>
-                {session ? (
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      logout();
-                      close();
-                    }}
-                    variant="ghost"
-                    size="sm"
-                    className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
-                  >
-                    <div className="flex w-full items-center">
-                      <ArrowRightStartOnRectangleIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0" />
-                      <span className="text-2xs">Log out</span>
-                    </div>
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      login(false);
-                      close();
-                    }}
-                    variant="ghost"
-                    size="sm"
-                    className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
-                  >
-                    <div className="flex w-full items-center">
-                      <ArrowRightStartOnRectangleIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0 rotate-180" />
-                      <span className="text-2xs">Log in</span>
-                    </div>
-                  </Button>
-                )}
-
-                <Divider className="!mt-0" />
               </div>
             )}
 

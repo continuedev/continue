@@ -1,5 +1,5 @@
 import { LLMInteractionItem } from "core";
-import { EXTENSION_NAME } from "core/control-plane/env";
+import { EXTENSION_NAME } from "core/util/constants";
 import { LLMLogger } from "core/llm/logger";
 import * as vscode from "vscode";
 

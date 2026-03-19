@@ -2,18 +2,14 @@ import {
   SharedConfigSchema,
   modifyAnyConfigWithSharedConfig,
 } from "core/config/sharedConfig";
-import { HubSessionInfo } from "core/control-plane/AuthTypes";
-import { isContinueTeamMember } from "core/util/isContinueTeamMember";
 import { useContext, useEffect, useState } from "react";
 import { Card, Toggle, useFontSize } from "../../../components/ui";
-import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateConfig } from "../../../redux/slices/configSlice";
 import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
 import { setLocalStorage } from "../../../util/localStorage";
 import { ConfigHeader } from "../components/ConfigHeader";
-import { ContinueFeaturesMenu } from "../components/ContinueFeaturesMenu";
 import { UserSetting } from "../components/UserSetting";
 
 export function UserSettingsSection() {
@@ -24,7 +20,6 @@ export function UserSettingsSection() {
   const currentOrg = useAppSelector(selectCurrentOrg);
 
   const [showExperimental, setShowExperimental] = useState(false);
-  const { session } = useAuth();
 
   function handleUpdate(sharedConfig: SharedConfigSchema) {
     // Optimistic update
@@ -53,10 +48,6 @@ export function UserSettingsSection() {
   // Workspace prompts
   const promptPath = config.experimental?.promptPath || "";
 
-  const handleEnableStaticContextualizationToggle = (value: boolean) => {
-    handleUpdate({ enableStaticContextualization: value });
-  };
-
   // TODO defaults are in multiple places, should be consolidated and probably not explicit here
   const showSessionTabs = config.ui?.showSessionTabs ?? false;
   const continueAfterToolRejection =
@@ -74,9 +65,6 @@ export function UserSettingsSection() {
     config.experimental?.onlyUseSystemMessageTools ?? false;
   const codebaseToolCallingOnly =
     config.experimental?.codebaseToolCallingOnly ?? false;
-  const enableStaticContextualization =
-    config.experimental?.enableStaticContextualization ?? false;
-
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
 
   const useAutocompleteMultilineCompletions =
@@ -96,10 +84,6 @@ export function UserSettingsSection() {
         .filter((val) => !!val),
     });
   };
-
-  const hasContinueEmail = isContinueTeamMember(
-    (session as HubSessionInfo)?.account?.id,
-  );
 
   const disableTelemetryToggle =
     currentOrg?.policy?.allowAnonymousTelemetry === false;
@@ -321,17 +305,6 @@ export function UserSettingsSection() {
                       handleUpdate({ continueAfterToolRejection: value })
                     }
                   />
-
-                  {hasContinueEmail && (
-                    <ContinueFeaturesMenu
-                      enableStaticContextualization={
-                        enableStaticContextualization
-                      }
-                      handleEnableStaticContextualizationToggle={
-                        handleEnableStaticContextualizationToggle
-                      }
-                    />
-                  )}
                 </div>
               </Toggle>
             </Card>

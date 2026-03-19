@@ -72,17 +72,6 @@ vi.mock("../../util/GlobalContext", () => ({
     update() {}
   },
 }));
-vi.mock("../../control-plane/env", () => ({
-  getControlPlaneEnv: vi.fn().mockResolvedValue({
-    DEFAULT_CONTROL_PLANE_PROXY_URL: "https://proxy.example.com/",
-  }),
-  getControlPlaneEnvSync: vi.fn().mockReturnValue({
-    CONTROL_PLANE_URL: "https://api.example.com/",
-  }),
-}));
-vi.mock("../../control-plane/PolicySingleton", () => ({
-  PolicySingleton: { getInstance: () => ({ policy: null }) },
-}));
 vi.mock("../../promptFiles/initPrompt", () => ({
   initSlashCommand: { name: "init", description: "init" },
 }));
@@ -116,12 +105,6 @@ const mockIde = {
   isWorkspaceRemote: vi.fn().mockResolvedValue(true),
 } as any;
 
-const mockControlPlaneClient = {
-  getAccessToken: vi.fn().mockResolvedValue("token"),
-  isSignedIn: vi.fn().mockResolvedValue(false),
-  sessionInfoPromise: Promise.resolve(undefined),
-} as any;
-
 const mockLlmLogger = {} as any;
 
 describe("doLoadConfig pre-read content bypass", () => {
@@ -138,11 +121,11 @@ describe("doLoadConfig pre-read content bypass", () => {
 
     await doLoadConfig({
       ide: mockIde,
-      controlPlaneClient: mockControlPlaneClient,
+
       llmLogger: mockLlmLogger,
       profileId: "test-profile",
       overrideConfigYamlByPath: packageIdentifier.fileUri,
-      orgScopeId: null,
+
       packageIdentifier,
     });
 
@@ -162,11 +145,11 @@ describe("doLoadConfig pre-read content bypass", () => {
 
     await doLoadConfig({
       ide: mockIde,
-      controlPlaneClient: mockControlPlaneClient,
+
       llmLogger: mockLlmLogger,
       profileId: "test-profile",
       overrideConfigYamlByPath: packageIdentifier.fileUri,
-      orgScopeId: null,
+
       packageIdentifier,
     });
 

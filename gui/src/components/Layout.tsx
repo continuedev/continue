@@ -1,5 +1,5 @@
 import { OnboardingModes } from "core/protocol/core";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv } from ".";
@@ -25,7 +25,6 @@ import {
 } from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 
-
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
   position: relative;
@@ -40,7 +39,6 @@ const GridDiv = styled.div`
 `;
 
 const Layout = () => {
-  const [showStagingIndicator, setShowStagingIndicator] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -55,17 +53,6 @@ const Layout = () => {
   const isHome =
     location.pathname === ROUTES.HOME ||
     location.pathname === ROUTES.HOME_INDEX;
-
-  useEffect(() => {
-    (async () => {
-      const response = await ideMessenger.request(
-        "controlPlane/getEnvironment",
-        undefined,
-      );
-      response.status === "success" &&
-        setShowStagingIndicator(response.content.AUTH_TYPE.includes("staging"));
-    })();
-  }, []);
 
   useWebviewListener(
     "newSession",
@@ -236,44 +223,35 @@ const Layout = () => {
   return (
     <LocalStorageProvider>
       <AuthProvider>
-          <LayoutTopDiv>
-            {showStagingIndicator && (
-              <span
-                title="Staging environment"
-                className="absolute right-0 mx-1.5 h-1.5 w-1.5 rounded-full"
-                style={{
-                  backgroundColor: "var(--vscode-list-warningForeground)",
-                }}
-              />
-            )}
-            <OSRContextMenu />
-            <div
-              style={{
-                scrollbarGutter: "stable both-edges",
-                minHeight: "100%",
-                display: "grid",
-                gridTemplateRows: "1fr auto",
+        <LayoutTopDiv>
+          <OSRContextMenu />
+          <div
+            style={{
+              scrollbarGutter: "stable both-edges",
+              minHeight: "100%",
+              display: "grid",
+              gridTemplateRows: "1fr auto",
+            }}
+          >
+            <TextDialog
+              showDialog={showDialog}
+              onEnter={() => {
+                dispatch(setShowDialog(false));
               }}
-            >
-              <TextDialog
-                showDialog={showDialog}
-                onEnter={() => {
-                  dispatch(setShowDialog(false));
-                }}
-                onClose={() => {
-                  dispatch(setShowDialog(false));
-                }}
-                message={dialogMessage}
-              />
+              onClose={() => {
+                dispatch(setShowDialog(false));
+              }}
+              message={dialogMessage}
+            />
 
-              <GridDiv>
-                <Outlet />
-                {/* The fatal error for chat is shown below input */}
-                {!isHome && <FatalErrorIndicator />}
-              </GridDiv>
-            </div>
-            <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
-          </LayoutTopDiv>
+            <GridDiv>
+              <Outlet />
+              {/* The fatal error for chat is shown below input */}
+              {!isHome && <FatalErrorIndicator />}
+            </GridDiv>
+          </div>
+          <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
+        </LayoutTopDiv>
       </AuthProvider>
     </LocalStorageProvider>
   );

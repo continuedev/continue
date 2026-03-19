@@ -74,7 +74,7 @@ describe("usesFreeTrialApiKey", () => {
       slashCommands: [],
       tools: [],
       mcpServerStatuses: [],
-      usePlatform: false,
+
       rules: [],
     };
 
@@ -124,7 +124,7 @@ describe("usesFreeTrialApiKey", () => {
       slashCommands: [],
       tools: [],
       mcpServerStatuses: [],
-      usePlatform: false,
+
       rules: [],
     };
 
@@ -186,7 +186,7 @@ describe("usesFreeTrialApiKey", () => {
       slashCommands: [],
       tools: [],
       mcpServerStatuses: [],
-      usePlatform: false,
+
       rules: [],
     };
 
@@ -249,7 +249,7 @@ describe("usesFreeTrialApiKey", () => {
       slashCommands: [],
       tools: [],
       mcpServerStatuses: [],
-      usePlatform: false,
+
       rules: [],
     };
 
@@ -305,7 +305,7 @@ describe("usesFreeTrialApiKey", () => {
       slashCommands: [],
       tools: [],
       mcpServerStatuses: [],
-      usePlatform: false,
+
       rules: [],
     };
 
@@ -349,7 +349,7 @@ describe("usesFreeTrialApiKey", () => {
       slashCommands: [],
       tools: [],
       mcpServerStatuses: [],
-      usePlatform: false,
+
       rules: [],
     };
 

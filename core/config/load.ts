@@ -36,7 +36,6 @@ import { getLegacyBuiltInSlashCommandFromDescription } from "../commands/slash/b
 import { convertCustomCommandToSlashCommand } from "../commands/slash/customSlashCommand";
 import { slashCommandFromPromptFile } from "../commands/slash/promptFileSlashCommand";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
-import { useHub } from "../control-plane/env";
 import { BaseLLM } from "../llm";
 import { LLMClasses, llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
@@ -60,7 +59,6 @@ import { localPathToUri } from "../util/pathToUri";
 
 import { loadJsonMcpConfigs } from "../context/mcp/json/loadJsonMcpConfigs";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
-import { PolicySingleton } from "../control-plane/PolicySingleton";
 import { getBaseToolDefinitions, serializeTool } from "../tools";
 import { resolveRelativePathInDir } from "../util/ideUtils";
 import { getWorkspaceRcConfigs } from "./json/loadRcConfigs";
@@ -240,7 +238,6 @@ async function intermediateToFinalConfig({
   ideInfo,
   uniqueId,
   llmLogger,
-  workOsAccessToken,
   loadPromptFiles = true,
 }: {
   config: Config;
@@ -249,7 +246,6 @@ async function intermediateToFinalConfig({
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
-  workOsAccessToken: string | undefined;
   loadPromptFiles?: boolean;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   const errors: ConfigValidationError[] = [];
@@ -550,10 +546,7 @@ async function intermediateToFinalConfig({
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
 
-  const orgPolicy = PolicySingleton.getInstance().policy;
-  if (orgPolicy?.policy?.allowMcpServers === false) {
-    await mcpManager.shutdown();
-  } else {
+  {
     const mcpOptions: InternalMcpOptions[] = (
       config.experimental?.modelContextProtocolServers ?? []
     ).map((server, index) => ({
@@ -677,7 +670,6 @@ async function finalToBrowserConfig(
     tools: final.tools.map(serializeTool),
     mcpServerStatuses: final.mcpServerStatuses,
     tabAutocompleteOptions: final.tabAutocompleteOptions,
-    usePlatform: await useHub(ide.getIdeSettings()),
     modelsByRole: Object.fromEntries(
       Object.entries(final.modelsByRole).map(([k, v]) => [
         k,
@@ -828,7 +820,6 @@ async function loadContinueConfigFromJson(
   ideInfo: IdeInfo,
   uniqueId: string,
   llmLogger: ILLMLogger,
-  workOsAccessToken: string | undefined,
   overrideConfigJson: SerializedContinueConfig | undefined,
 ): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceRcConfigs(ide);
@@ -924,7 +915,6 @@ async function loadContinueConfigFromJson(
       ideInfo,
       uniqueId,
       llmLogger,
-      workOsAccessToken,
     });
   return {
     config: finalConfig,

@@ -408,8 +408,6 @@ export async function unrollPackageIdentifiersAsConfigYaml(
     },
     "name: Agent\nschema: v1\nversion: 0.0.1",
     new RegistryClient({
-      accessToken: accessToken ?? undefined,
-      apiBase: env.apiBase,
       rootPath: undefined, // TODO verify this doesn't cause issues with file blocks
     }),
     {
@@ -444,8 +442,6 @@ async function unrollAssistantWithConfig(
   const unrollResult = await unrollAssistant(
     packageIdentifier,
     new RegistryClient({
-      accessToken: accessToken ?? undefined,
-      apiBase: env.apiBase,
       rootPath:
         packageIdentifier.uriType === "file"
           ? dirname(packageIdentifier.fileUri)

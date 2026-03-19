@@ -299,16 +299,9 @@ function PromptsSubSection() {
   };
 
   const handleAddPrompt = () => {
-    if (isLocal) {
-      void ideMessenger.request("config/addLocalWorkspaceBlock", {
-        blockType: "prompts",
-      });
-    } else {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: "?type=prompts",
-        orgSlug: undefined,
-      });
-    }
+    void ideMessenger.request("config/addLocalWorkspaceBlock", {
+      blockType: "prompts",
+    });
   };
 
   const sortedCommands = useMemo(() => {
@@ -437,21 +430,14 @@ function RulesSubSection() {
 
   const handleAddRule = (mode?: string) => {
     const currentMode = mode || globalRulesMode;
-    if (isLocal) {
-      dispatch(setShowDialog(true));
-      dispatch(
-        setDialogMessage(
-          <AddRuleDialog
-            mode={currentMode === "global" ? "global" : "workspace"}
-          />,
-        ),
-      );
-    } else {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: "/hub?type=rules",
-        orgSlug: undefined,
-      });
-    }
+    dispatch(setShowDialog(true));
+    dispatch(
+      setDialogMessage(
+        <AddRuleDialog
+          mode={currentMode === "global" ? "global" : "workspace"}
+        />,
+      ),
+    );
   };
 
   const handleOptionClick = (value: string) => {

@@ -3,7 +3,7 @@ import path from "path";
 
 import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { EXTENSION_NAME, getControlPlaneEnv } from "core/control-plane/env";
+import { EXTENSION_NAME } from "core/util/constants";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/protocol/messenger";
@@ -30,12 +30,7 @@ import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { registerAllPromptFilesCompletionProviders } from "../lang-server/promptFileCompletions";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
-import { setupRemoteConfigSync } from "../stubs/activation";
 import { UriEventHandler } from "../stubs/uriHandler";
-import {
-  getControlPlaneSessionInfo,
-  WorkOsAuthProvider,
-} from "../stubs/WorkOsAuthProvider";
 import { Battery } from "../util/battery";
 import { FileSearch } from "../util/FileSearch";
 import { VsCodeIdeUtils } from "../util/ideUtils";
@@ -80,7 +75,6 @@ export class VsCodeExtension {
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
   private battery: Battery;
-  private workOsAuthProvider: WorkOsAuthProvider;
   private fileSearch: FileSearch;
   private uriHandler = new UriEventHandler();
   private completionProvider: ContinueCompletionProvider;
@@ -176,12 +170,6 @@ export class VsCodeExtension {
   }
 
   constructor(context: vscode.ExtensionContext) {
-    // Register auth provider
-    this.workOsAuthProvider = new WorkOsAuthProvider(context, this.uriHandler);
-
-    void this.workOsAuthProvider.refreshSessions();
-    context.subscriptions.push(this.workOsAuthProvider);
-
     this.editDecorationManager = new EditDecorationManager(context);
 
     let resolveWebviewProtocol: any = undefined;
@@ -285,7 +273,6 @@ export class VsCodeExtension {
       this.ide,
       verticalDiffManagerPromise,
       configHandlerPromise,
-      this.workOsAuthProvider,
       this.editDecorationManager,
       context,
       this,
@@ -303,12 +290,6 @@ export class VsCodeExtension {
       this.ide,
     );
     resolveVerticalDiffManager?.(this.verticalDiffManager);
-
-    void setupRemoteConfigSync(() =>
-      this.configHandler.reloadConfig.bind(this.configHandler)(
-        "Remote config sync",
-      ),
-    );
 
     void this.configHandler.loadConfig().then(async ({ config }) => {
       const shouldUseFullFileDiff = await getUsingFullFileDiff();
@@ -560,28 +541,8 @@ export class VsCodeExtension {
 
     // When GitHub sign-in status changes, reload config
     vscode.authentication.onDidChangeSessions(async (e) => {
-      const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      if (e.provider.id === env.AUTH_TYPE) {
-        void vscode.commands.executeCommand(
-          "setContext",
-          "continue.isSignedInToControlPlane",
-          true,
-        );
-
-        const sessionInfo = await getControlPlaneSessionInfo(true, false);
-        void this.core.invoke("didChangeControlPlaneSessionInfo", {
-          sessionInfo,
-        });
-      } else {
-        void vscode.commands.executeCommand(
-          "setContext",
-          "continue.isSignedInToControlPlane",
-          false,
-        );
-
-        if (e.provider.id === "github") {
-          this.configHandler.reloadConfig("Github sign-in status changed");
-        }
+      if (e.provider.id === "github") {
+        this.configHandler.reloadConfig("Github sign-in status changed");
       }
     });
 
