@@ -15,7 +15,6 @@ export class RecentlyVisitedRangesService {
     string,
     Array<AutocompleteCodeSnippet & { timestamp: number }>
   >;
-  // Default value, we override in initWithPostHog
   private numSurroundingLines = 20;
   private maxRecentFiles = 3;
   private maxSnippetsPerFile = 3;
@@ -29,22 +28,6 @@ export class RecentlyVisitedRangesService {
       max: this.maxRecentFiles,
     });
 
-    void this.initWithPostHog();
-  }
-
-  private async initWithPostHog() {
-    // TODO merge this and re-enable https://github.com/continuedev/continue/pull/8364
-    // const recentlyVisitedRangesNumSurroundingLines =
-    //   await Telemetry.getValueForFeatureFlag(
-    //     PosthogFeatureFlag.RecentlyVisitedRangesNumSurroundingLines,
-    //   );
-    // if (recentlyVisitedRangesNumSurroundingLines) {
-    //   this.isEnabled = true;
-    //   this.numSurroundingLines = recentlyVisitedRangesNumSurroundingLines;
-    // }
-    // vscode.window.onDidChangeTextEditorSelection(
-    //   this.cacheCurrentSelectionContext,
-    // );
   }
 
   private cacheCurrentSelectionContext = async (

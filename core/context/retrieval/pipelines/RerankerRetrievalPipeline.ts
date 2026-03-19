@@ -1,6 +1,6 @@
 import { Chunk } from "../../..";
 import { RETRIEVAL_PARAMS } from "../../../util/parameters";
-import { Telemetry } from "../../../util/posthog";
+
 import { findUriInDirs } from "../../../util/uri";
 import { requestFilesFromRepoMap } from "../repoMapRequest";
 import { deduplicateChunks } from "../util";
@@ -21,7 +21,6 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     try {
       ftsChunks = await this.retrieveFts(args, nRetrieve);
     } catch (error) {
-      await Telemetry.captureError("reranker_fts_retrieval", error);
       // console.error("Error retrieving FTS chunks:", error);
     }
 
@@ -31,7 +30,6 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
         ? await this.retrieveEmbeddings(input, nRetrieve)
         : [];
     } catch (error) {
-      await Telemetry.captureError("reranker_embeddings_retrieval", error);
       console.error("Error retrieving embeddings chunks:", error);
     }
 
@@ -40,7 +38,6 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       recentlyEditedFilesChunks =
         await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
     } catch (error) {
-      await Telemetry.captureError("reranker_recently_edited_retrieval", error);
       console.error("Error retrieving recently edited files chunks:", error);
     }
 
@@ -54,7 +51,6 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
         filterDirectory,
       );
     } catch (error) {
-      await Telemetry.captureError("reranker_repo_map_retrieval", error);
       console.error("Error retrieving repo map chunks:", error);
     }
 

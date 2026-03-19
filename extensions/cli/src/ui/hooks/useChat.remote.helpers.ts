@@ -1,7 +1,6 @@
 import type { ChatHistoryItem } from "core/index.js";
 
 import { services } from "../../services/index.js";
-import { posthogService } from "../../telemetry/posthogService.js";
 import { logger } from "../../util/logger.js";
 
 import { RemoteServerState } from "./useChat.types.js";
@@ -135,10 +134,6 @@ export async function handleRemoteExit(
   remoteUrl: string,
   exit: () => void,
 ): Promise<void> {
-  posthogService.capture("useSlashCommand", {
-    name: "exit",
-  });
-
   try {
     const response = await fetch(`${remoteUrl}/exit`, {
       method: "POST",

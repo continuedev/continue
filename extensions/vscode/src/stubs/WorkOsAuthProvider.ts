@@ -122,7 +122,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       );
       return decodedToken;
     } catch (e: any) {
-      // Capture JWT decoding failures to Sentry (could indicate token corruption)
       Logger.error(e, {
         context: "workOS_auth_jwt_decode",
         jwtLength: jwt.length,
@@ -170,7 +169,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       const value = JSON.parse(data) as ContinueAuthenticationSession[];
       return value;
     } catch (e: any) {
-      // Capture session decrypt and parsing errors to Sentry
       Logger.error(e, {
         context: "workOS_sessions_retrieval",
         errorMessage: e.message,
@@ -221,7 +219,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       this._isRefreshing = true;
       await this._refreshSessions();
     } catch (e) {
-      // Capture session refresh failures to Sentry
       Logger.error(e, {
         context: "workOS_auth_session_refresh",
         authType: controlPlaneEnv.AUTH_TYPE,
@@ -255,7 +252,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
           expiresInMs: newSession.expiresInMs,
         });
       } catch (e: any) {
-        // Capture individual session refresh failures to Sentry
         Logger.error(e, {
           context: "workOS_individual_session_refresh",
           sessionId: session.id,
@@ -291,7 +287,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     try {
       return await this._refreshSession(refreshToken);
     } catch (error: any) {
-      // Capture token refresh retry errors to Sentry
       Logger.error(error, {
         attempt,
         errorMessage: error.message,
@@ -417,7 +412,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
 
       return session;
     } catch (e) {
-      // Capture authentication failures to Sentry
       Logger.error(e, {
         context: "workOS_auth_session_creation",
         scopes: scopes.join(","),

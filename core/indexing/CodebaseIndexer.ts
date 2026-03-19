@@ -127,7 +127,6 @@ export class CodebaseIndexer {
     try {
       await fs.unlink(sqliteFilepath);
     } catch (error) {
-      // Capture indexer system failures to Sentry
       Logger.error(error, {
         filepath: sqliteFilepath,
       });
@@ -137,7 +136,6 @@ export class CodebaseIndexer {
     try {
       await fs.rm(lanceDbFolder, { recursive: true, force: true });
     } catch (error) {
-      // Capture indexer system failures to Sentry
       Logger.error(error, {
         folderPath: lanceDbFolder,
       });

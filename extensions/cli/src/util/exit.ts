@@ -1,6 +1,5 @@
 import type { ChatHistoryItem } from "core/index.js";
 
-import { sentryService } from "../sentry.js";
 import { backgroundJobService } from "../services/BackgroundJobService.js";
 import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
@@ -210,13 +209,6 @@ export async function gracefulExit(code: number = 0): Promise<void> {
     await telemetryService.shutdown();
   } catch (err) {
     logger.debug("Telemetry shutdown error (ignored)", err as any);
-  }
-
-  try {
-    // Flush Sentry (best effort)
-    await sentryService.flush();
-  } catch (err) {
-    logger.debug("Sentry flush error (ignored)", err as any);
   }
 
   // If we're trying to exit with success (0) but had unhandled errors,

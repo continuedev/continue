@@ -34,12 +34,6 @@ vi.mock("../telemetry/telemetryService.js", () => ({
   },
 }));
 
-vi.mock("../telemetry/posthogService.js", () => ({
-  posthogService: {
-    capture: vi.fn(),
-  },
-}));
-
 vi.mock("../util/logger.js", () => ({
   logger: {
     info: vi.fn(),

@@ -6,7 +6,6 @@ import chalk from "chalk";
 import winston from "winston";
 
 import { env } from "../env.js";
-import { sentryService } from "../sentry.js";
 
 const { combine, timestamp, printf, errors } = winston.format;
 
@@ -150,7 +149,6 @@ export const logger = {
   info: (message: string, meta?: any) => winstonLogger.info(message, meta),
   warn: (message: string, meta?: any) => {
     winstonLogger.warn(message, meta);
-    sentryService.captureMessage(message, "warning", meta);
   },
   error: (message: string, error?: Error | any, meta?: any) => {
     if (error instanceof Error) {
@@ -159,17 +157,10 @@ export const logger = {
         error: error.message,
         stack: error.stack,
       });
-      sentryService.captureException(error, { message, ...meta });
     } else if (error) {
       winstonLogger.error(message, { ...meta, error });
-      sentryService.captureMessage(
-        `${message}: ${String(error)}`,
-        "error",
-        meta,
-      );
     } else {
       winstonLogger.error(message, meta);
-      sentryService.captureMessage(message, "error", meta);
     }
 
     // In headless mode, also output to stderr

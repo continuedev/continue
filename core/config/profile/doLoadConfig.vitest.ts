@@ -61,12 +61,6 @@ vi.mock("../../tools/callTool", () => ({
 vi.mock("../../tools/mcpToolName", () => ({
   getMCPToolName: vi.fn(),
 }));
-vi.mock("../../util/posthog", () => ({
-  Telemetry: { setup: vi.fn() },
-}));
-vi.mock("../../util/sentry/SentryLogger", () => ({
-  SentryLogger: { setup: vi.fn() },
-}));
 vi.mock("../../util/tts", () => ({
   TTS: { setup: vi.fn() },
 }));
@@ -88,9 +82,6 @@ vi.mock("../../control-plane/env", () => ({
 }));
 vi.mock("../../control-plane/PolicySingleton", () => ({
   PolicySingleton: { getInstance: () => ({ policy: null }) },
-}));
-vi.mock("../../control-plane/TeamAnalytics", () => ({
-  TeamAnalytics: { setup: vi.fn(), shutdown: vi.fn() },
 }));
 vi.mock("../../promptFiles/initPrompt", () => ({
   initSlashCommand: { name: "init", description: "init" },
