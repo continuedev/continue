@@ -409,7 +409,7 @@ export function UnifiedTerminalCommand({
 
   // Create combined content for copying (command + output)
   const copyContent = useMemo(() => {
-    let content = `$ ${command}`;
+    let content = command;
     if (hasOutput) {
       content += `\n\n${output}`;
     }
@@ -458,7 +458,7 @@ export function UnifiedTerminalCommand({
             <pre className="bg-editor">
               <code>
                 {/* Command is always visible */}
-                <div className="text-terminal pb-2">$ {command}</div>
+                <div className="text-terminal pb-2">{command}</div>
 
                 {/* Running state with cursor */}
                 {isRunning && !hasOutput && (

@@ -49,7 +49,7 @@ describe("UnifiedTerminalCommand", () => {
     );
 
     // Should show the command
-    expect(screen.getByText(`$ ${MOCK_COMMAND}`)).toBeInTheDocument();
+    expect(screen.getByText(MOCK_COMMAND)).toBeInTheDocument();
 
     // Should show terminal header
     expect(screen.getByText("Terminal")).toBeInTheDocument();
@@ -69,7 +69,7 @@ describe("UnifiedTerminalCommand", () => {
     );
 
     // Should show the command and output
-    expect(screen.getByText(`$ ${MOCK_COMMAND}`)).toBeInTheDocument();
+    expect(screen.getByText(MOCK_COMMAND)).toBeInTheDocument();
 
     // Check that the output content exists in the container
     expect(container.textContent).toMatch(/Test 1 passed/);
@@ -308,7 +308,7 @@ describe("UnifiedTerminalCommand", () => {
     );
 
     // Should show command but no output section
-    expect(screen.getByText(`$ ${MOCK_COMMAND}`)).toBeInTheDocument();
+    expect(screen.getByText(MOCK_COMMAND)).toBeInTheDocument();
 
     // Should not show any output content
     const outputElements = container.querySelectorAll(
