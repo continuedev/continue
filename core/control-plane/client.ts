@@ -192,7 +192,6 @@ export class ControlPlaneClient {
       });
       return (await resp.json()) as any;
     } catch (e) {
-      // Capture control plane API failures to Sentry
       Logger.error(e, {
         context: "control_plane_list_assistants",
         organizationId,
@@ -268,7 +267,6 @@ export class ControlPlaneClient {
       const { fullSlugs } = (await resp.json()) as any;
       return fullSlugs;
     } catch (e) {
-      // Capture control plane API failures to Sentry
       Logger.error(e, {
         context: "control_plane_list_assistant_slugs",
         organizationId,
@@ -303,7 +301,6 @@ export class ControlPlaneClient {
       });
       return (await resp.json()) as CreditStatus;
     } catch (e) {
-      // Capture control plane API failures to Sentry
       Logger.error(e, {
         context: "control_plane_credit_status",
       });
@@ -341,7 +338,6 @@ export class ControlPlaneClient {
       );
       return (await resp.json()) as { url: string };
     } catch (e) {
-      // Capture control plane API failures to Sentry
       Logger.error(e, {
         context: "control_plane_models_checkout_url",
         vsCodeUriScheme,
