@@ -194,7 +194,6 @@ export type Reranker = z.infer<typeof rerankerSchema>;
 
 export const analyticsSchema = z.object({
   provider: z.enum([
-    "posthog",
     "amplitude",
     "segment",
     "logstash",

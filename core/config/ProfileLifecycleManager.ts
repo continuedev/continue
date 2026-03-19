@@ -99,7 +99,6 @@ export class ProfileLifecycleManager {
         try {
           result = await this.profileLoader.doLoadConfig();
         } catch (e) {
-          // Capture config loading system failures to Sentry
           Logger.error(e, {
             context: "profile_config_loading",
           });

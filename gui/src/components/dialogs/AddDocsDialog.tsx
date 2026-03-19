@@ -1,6 +1,5 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { IndexingStatus, SiteIndexingConfig } from "core";
-import { usePostHog } from "posthog-js/react";
 import { useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Input, SecondaryButton } from "..";
@@ -12,7 +11,6 @@ import { ToolTip } from "../gui/Tooltip";
 import DocsIndexingPeeks from "../../pages/config/sections/docs/DocsIndexingPeeks";
 
 function AddDocsDialog() {
-  const posthog = usePostHog();
   const dispatch = useDispatch();
 
   const titleRef = useRef<HTMLInputElement>(null);
@@ -62,8 +60,6 @@ function AddDocsDialog() {
     setTitle("");
     setStartUrl("");
     setFaviconUrl("");
-
-    posthog.capture("add_docs_gui", { url: startUrl });
 
     // Optimistic status update
     dispatch(

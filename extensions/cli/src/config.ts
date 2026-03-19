@@ -15,7 +15,7 @@ import {
   getOrganizationId,
 } from "./auth/workos.js";
 import { env } from "./env.js";
-import { posthogService } from "./telemetry/posthogService.js";
+import { getUniqueId } from "./util/uniqueId.js";
 import { getVersion } from "./version.js";
 
 /**
@@ -37,7 +37,7 @@ function mergeUserAgentIntoRequestOptions(
     headers: {
       ...requestOptions?.headers,
       "user-agent": getUserAgent(),
-      "x-continue-unique-id": posthogService.uniqueId,
+      "x-continue-unique-id": getUniqueId(),
     },
   };
 }

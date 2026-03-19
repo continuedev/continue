@@ -11,7 +11,6 @@ import { handleInit } from "./commands/init.js";
 import { handleInfoSlashCommand } from "./infoScreen.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { getCurrentSession, updateSessionTitle } from "./session.js";
-import { posthogService } from "./telemetry/posthogService.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
 
@@ -226,7 +225,6 @@ export async function handleSlashCommands(
   const [command, ...args] = input.slice(1).split(" ");
 
   telemetryService.recordSlashCommand(command);
-  posthogService.capture("useSlashCommand", { name: command });
 
   const handler = commandHandlers[command];
   if (handler) {

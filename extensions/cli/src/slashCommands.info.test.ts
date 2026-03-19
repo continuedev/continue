@@ -4,7 +4,6 @@ import * as workosModule from "./auth/workos.js";
 import { services } from "./services/index.js";
 import * as sessionModule from "./session.js";
 import { handleSlashCommands } from "./slashCommands.js";
-import { posthogService } from "./telemetry/posthogService.js";
 import * as versionModule from "./version.js";
 
 // Mock all dependencies
@@ -15,7 +14,6 @@ vi.mock("./version.js", () => ({
   compareVersions: vi.fn(() => "same"),
 }));
 vi.mock("./session.js");
-vi.mock("./telemetry/posthogService.js");
 
 vi.mock("./services/index.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./services/index.js")>();
@@ -42,9 +40,6 @@ describe("handleSlashCommands - /info", () => {
 
     // Mock process.cwd
     vi.spyOn(process, "cwd").mockReturnValue("/test/working/directory");
-
-    // Mock posthog
-    vi.mocked(posthogService.capture).mockReturnValue(Promise.resolve());
 
     // Mock version
     vi.mocked(versionModule.getVersion).mockReturnValue("1.2.3");

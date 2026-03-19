@@ -1,7 +1,5 @@
 import { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
 import { Message } from "core/protocol/messenger";
-import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
-import { Telemetry } from "core/util/posthog";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
@@ -134,16 +132,6 @@ export class VsCodeWebviewProtocol
                   this.request("setupLocalConfig", undefined);
                 }
               });
-          } else {
-            Telemetry.capture(
-              "webview_protocol_error",
-              {
-                messageType: msg.messageType,
-                errorMsg: message.split("\n\n")[0],
-                stack: extractMinimalStackTraceInfo(e.stack),
-              },
-              false,
-            );
           }
         }
       }

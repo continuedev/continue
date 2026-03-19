@@ -1,10 +1,8 @@
-import { usePostHog } from "posthog-js/react";
 import { Button, Input, SecondaryButton } from "..";
 import { useAppDispatch } from "../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 
 export default function FeedbackDialog() {
-  const posthog = usePostHog();
   const dispatch = useAppDispatch();
 
   return (
@@ -23,10 +21,6 @@ export default function FeedbackDialog() {
       <form
         onSubmit={(e: any) => {
           e.preventDefault();
-          posthog?.capture("user_interest_form", {
-            name: e.target.elements[0].value,
-            email: e.target.elements[1].value,
-          });
           dispatch(
             setDialogMessage(
               <div className="p-6 text-center">

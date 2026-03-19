@@ -4,7 +4,7 @@ import { ConfigHandler } from "../config/ConfigHandler";
 import { usesCreditsBasedApiKey } from "../config/usesFreeTrialApiKey";
 import { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import { IMessenger, Message } from "../protocol/messenger";
-import { Telemetry } from "../util/posthog";
+
 import { TTS } from "../util/tts";
 import { isOutOfStarterCredits } from "./utils/starterCredits";
 
@@ -135,15 +135,6 @@ export async function* llmStreamChat(
       if (config.experimental?.readResponseTTS && "completion" in next.value) {
         void TTS.read(next.value?.completion);
       }
-
-      void Telemetry.capture(
-        "chat",
-        {
-          model: model.model,
-          provider: model.providerName,
-        },
-        true,
-      );
 
       void checkForOutOfStarterCredits(configHandler, messenger);
 

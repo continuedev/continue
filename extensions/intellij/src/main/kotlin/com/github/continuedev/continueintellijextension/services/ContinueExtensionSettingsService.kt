@@ -2,7 +2,6 @@ package com.github.continuedev.continueintellijextension.services
 
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
 import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
-import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.google.gson.Gson
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
@@ -136,7 +135,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
                 }
             } catch (e: Exception) {
                 // Catch all exceptions including JsonSyntaxException
-                service<ContinueSentryService>().report(e, "Unexpected exception during remote config sync")
+
             }
         }
     }

@@ -6,7 +6,6 @@ import { CustomScrollbarDiv } from ".";
 import { AuthProvider } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { LocalStorageProvider } from "../context/LocalStorage";
-import TelemetryProviders from "../hooks/TelemetryProviders";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setCodeToEdit } from "../redux/slices/editState";
@@ -25,7 +24,7 @@ import {
   useOnboardingCard,
 } from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
-import PostHogPageView from "./PosthogPageView";
+
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -237,7 +236,6 @@ const Layout = () => {
   return (
     <LocalStorageProvider>
       <AuthProvider>
-        <TelemetryProviders>
           <LayoutTopDiv>
             {showStagingIndicator && (
               <span
@@ -269,7 +267,6 @@ const Layout = () => {
               />
 
               <GridDiv>
-                <PostHogPageView />
                 <Outlet />
                 {/* The fatal error for chat is shown below input */}
                 {!isHome && <FatalErrorIndicator />}
@@ -277,7 +274,6 @@ const Layout = () => {
             </div>
             <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
           </LayoutTopDiv>
-        </TelemetryProviders>
       </AuthProvider>
     </LocalStorageProvider>
   );

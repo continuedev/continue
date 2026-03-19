@@ -10,7 +10,6 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { useEditor } from "@tiptap/react";
 import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { usePostHog } from "posthog-js/react";
 import { useRef } from "react";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { useSubmenuContextProviders } from "../../../../context/SubmenuContextProviders";
@@ -83,8 +82,6 @@ export function createEditorConfig(options: {
   dispatch: AppDispatch;
 }) {
   const { props, ideMessenger, dispatch } = options;
-
-  const posthog = usePostHog();
 
   const { getSubmenuContextItems } = useSubmenuContextProviders();
   const defaultModel = useAppSelector(selectSelectedChatModel);
@@ -247,8 +244,6 @@ export function createEditorConfig(options: {
             },
 
             "Mod-Enter": () => {
-              posthog.capture("gui_use_active_file_enter");
-
               onEnter({
                 useCodebase: false,
                 noContext: !!useActiveFile,
@@ -257,8 +252,6 @@ export function createEditorConfig(options: {
               return true;
             },
             "Alt-Enter": () => {
-              posthog.capture("gui_use_active_file_enter");
-
               onEnter({
                 useCodebase: false,
                 noContext: !!useActiveFile,

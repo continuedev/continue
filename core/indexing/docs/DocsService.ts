@@ -25,7 +25,6 @@ import {
   getDocsSqlitePath,
   getLanceDbPath,
 } from "../../util/paths";
-import { Telemetry } from "../../util/posthog";
 
 import {
   ArticleWithChunks,
@@ -588,10 +587,6 @@ export default class DocsService {
         }
       }
 
-      void Telemetry.capture("docs_pages_crawled", {
-        count: processedPages,
-      });
-
       // Chunk pages based on which crawler was used
       const articles: ArticleWithChunks[] = [];
       const chunks: Chunk[] = [];
@@ -1006,7 +1001,6 @@ export default class DocsService {
           }
         } else {
           addedDocs.push(doc);
-          void Telemetry.capture("add_docs_config", { url: doc.startUrl });
         }
       }
 

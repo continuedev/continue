@@ -10,7 +10,6 @@ import type {
 
 import { pruneLastMessage } from "../compaction.js";
 import { services } from "../services/index.js";
-import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { applyChatCompletionToolOverrides } from "../tools/applyToolOverrides.js";
 import { ToolCall } from "../tools/index.js";
@@ -370,15 +369,6 @@ export async function processStreamingResponse(
       success: false,
       error: error.message || String(error),
     });
-
-    try {
-      posthogService.capture("apiRequest", {
-        model: model.model,
-        durationMs: errorDuration,
-        success: false,
-        error: error.message || String(error),
-      });
-    } catch {}
 
     if (error.name === "AbortError" || abortController?.signal.aborted) {
       logger.debug("Stream aborted by user");

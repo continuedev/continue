@@ -16,7 +16,6 @@ import {
   getConfigYamlPath,
   setConfigFilePermissions,
 } from "core/util/paths";
-import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 import * as YAML from "yaml";
 
@@ -57,18 +56,6 @@ function getFullScreenTab() {
   return tabs.find((tab) =>
     (tab.input as any)?.viewType?.endsWith("continue.continueGUIView"),
   );
-}
-
-type TelemetryCaptureParams = Parameters<typeof Telemetry.capture>;
-
-/**
- * Helper method to add the `isCommandEvent` to all telemetry captures
- */
-function captureCommandTelemetry(
-  commandName: TelemetryCaptureParams[0],
-  properties: TelemetryCaptureParams[1] = {},
-) {
-  Telemetry.capture(commandName, { isCommandEvent: true, ...properties });
 }
 
 function focusGUI() {
@@ -184,7 +171,6 @@ const getCommandsMap: (
 
   return {
     "continue.acceptDiff": async (newFileUri?: string, streamId?: string) => {
-      captureCommandTelemetry("acceptDiff");
       void processDiff(
         "accept",
         sidebar,
@@ -197,7 +183,6 @@ const getCommandsMap: (
     },
 
     "continue.rejectDiff": async (newFileUri?: string, streamId?: string) => {
-      captureCommandTelemetry("rejectDiff");
       void processDiff(
         "reject",
         sidebar,
@@ -209,36 +194,28 @@ const getCommandsMap: (
       );
     },
     "continue.acceptVerticalDiffBlock": (fileUri?: string, index?: number) => {
-      captureCommandTelemetry("acceptVerticalDiffBlock");
       verticalDiffManager.acceptRejectVerticalDiffBlock(true, fileUri, index);
     },
     "continue.rejectVerticalDiffBlock": (fileUri?: string, index?: number) => {
-      captureCommandTelemetry("rejectVerticalDiffBlock");
       verticalDiffManager.acceptRejectVerticalDiffBlock(false, fileUri, index);
     },
     "continue.quickFix": async (
       range: vscode.Range,
       diagnosticMessage: string,
     ) => {
-      captureCommandTelemetry("quickFix");
-
       const prompt = `Please explain the cause of this error and how to solve it: ${diagnosticMessage}`;
 
       addCodeToContextFromRange(range, sidebar.webviewProtocol, prompt);
 
       vscode.commands.executeCommand("continue.continueGUIView.focus");
     },
-    // Passthrough for telemetry purposes
     "continue.defaultQuickAction": async (args: QuickEditShowParams) => {
-      captureCommandTelemetry("defaultQuickAction");
       vscode.commands.executeCommand("continue.focusEdit", args);
     },
     "continue.customQuickActionSendToChat": async (
       prompt: string,
       range: vscode.Range,
     ) => {
-      captureCommandTelemetry("customQuickActionSendToChat");
-
       addCodeToContextFromRange(range, sidebar.webviewProtocol, prompt);
 
       vscode.commands.executeCommand("continue.continueGUIView.focus");
@@ -247,8 +224,6 @@ const getCommandsMap: (
       prompt: string,
       range: vscode.Range,
     ) => {
-      captureCommandTelemetry("customQuickActionStreamInlineEdit");
-
       streamInlineEdit("docstring", prompt, range);
     },
     "continue.codebaseForceReIndex": async () => {
@@ -341,50 +316,39 @@ const getCommandsMap: (
     // QuickEditShowParams are passed from CodeLens, temp fix
     // until we update to new params specific to Edit
     "continue.focusEdit": async (args?: QuickEditShowParams) => {
-      captureCommandTelemetry("focusEdit");
       focusGUI();
       sidebar.webviewProtocol?.request("focusEdit", undefined);
     },
     "continue.exitEditMode": async () => {
-      captureCommandTelemetry("exitEditMode");
       editDecorationManager.clear();
       void sidebar.webviewProtocol?.request("exitEditMode", undefined);
     },
     "continue.generateRule": async () => {
-      captureCommandTelemetry("generateRule");
       focusGUI();
       void sidebar.webviewProtocol?.request("generateRule", undefined);
     },
     "continue.writeCommentsForCode": async () => {
-      captureCommandTelemetry("writeCommentsForCode");
-
       streamInlineEdit(
         "comment",
         "Write comments for this code. Do not change anything about the code itself.",
       );
     },
     "continue.writeDocstringForCode": async () => {
-      captureCommandTelemetry("writeDocstringForCode");
-
       void streamInlineEdit(
         "docstring",
         "Write a docstring for this code. Do not change anything about the code itself.",
       );
     },
     "continue.fixCode": async () => {
-      captureCommandTelemetry("fixCode");
-
       streamInlineEdit(
         "fix",
         "Fix this code. If it is already 100% correct, simply rewrite the code.",
       );
     },
     "continue.optimizeCode": async () => {
-      captureCommandTelemetry("optimizeCode");
       streamInlineEdit("optimize", "Optimize this code");
     },
     "continue.fixGrammar": async () => {
-      captureCommandTelemetry("fixGrammar");
       streamInlineEdit(
         "fixGrammar",
         "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
@@ -394,12 +358,9 @@ const getCommandsMap: (
       consoleView.clearLog();
     },
     "continue.viewLogs": async () => {
-      captureCommandTelemetry("viewLogs");
       vscode.commands.executeCommand("workbench.action.toggleDevTools");
     },
     "continue.debugTerminal": async () => {
-      captureCommandTelemetry("debugTerminal");
-
       const terminalContents = await ide.getTerminalContents();
 
       vscode.commands.executeCommand("continue.continueGUIView.focus");
@@ -416,8 +377,6 @@ const getCommandsMap: (
 
     // Commands without keyboard shortcuts
     "continue.addModel": () => {
-      captureCommandTelemetry("addModel");
-
       vscode.commands.executeCommand("continue.continueGUIView.focus");
       sidebar.webviewProtocol?.request("addModel", undefined);
     },
@@ -535,8 +494,6 @@ const getCommandsMap: (
       nextEditLoggingService.reject(completionId);
     },
     "continue.toggleTabAutocompleteEnabled": () => {
-      captureCommandTelemetry("toggleTabAutocompleteEnabled");
-
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const enabled = config.get("enableTabAutocomplete");
       const pauseOnBattery = config.get<boolean>(
@@ -571,8 +528,6 @@ const getCommandsMap: (
       }
     },
     "continue.forceAutocomplete": async () => {
-      captureCommandTelemetry("forceAutocomplete");
-
       // 1. Explicitly hide any existing suggestion. This clears VS Code's cache for the current position.
       await vscode.commands.executeCommand("editor.action.inlineSuggest.hide");
 
@@ -583,8 +538,6 @@ const getCommandsMap: (
     },
 
     "continue.openTabAutocompleteConfigMenu": async () => {
-      captureCommandTelemetry("openTabAutocompleteConfigMenu");
-
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const quickPick = vscode.window.createQuickPick();
 
@@ -744,8 +697,6 @@ const getCommandsMap: (
         });
     },
     "continue.enterEnterpriseLicenseKey": async () => {
-      captureCommandTelemetry("enterEnterpriseLicenseKey");
-
       const licenseKey = await vscode.window.showInputBox({
         prompt: "Enter your enterprise license key",
         password: true,
@@ -780,8 +731,6 @@ const getCommandsMap: (
       }
     },
     "continue.toggleNextEditEnabled": async () => {
-      captureCommandTelemetry("toggleNextEditEnabled");
-
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const tabAutocompleteEnabled = config.get<boolean>(
         "enableTabAutocomplete",
@@ -823,8 +772,6 @@ const getCommandsMap: (
       vscode.commands.executeCommand("continue.newSession");
 
       // Full screen not open - open it
-      captureCommandTelemetry("openInNewWindow");
-
       // Create the full screen panel
       let panel = vscode.window.createWebviewPanel(
         "continue.continueGUIView",
@@ -872,8 +819,6 @@ const getCommandsMap: (
       vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     },
     "continue.forceNextEdit": async () => {
-      captureCommandTelemetry("forceNextEdit");
-
       // This is basically the same logic as forceAutocomplete.
       // I'm writing a new command KV pair here in case we diverge in features.
 

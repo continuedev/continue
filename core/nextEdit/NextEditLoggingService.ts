@@ -1,9 +1,7 @@
 import { COUNT_COMPLETION_REJECTED_AFTER } from "../util/parameters";
 
-import { fetchwithRequestOptions } from "@continuedev/fetch";
-import { getControlPlaneEnvSync } from "../control-plane/env";
 import { DataLogger } from "../data/log";
-import { Telemetry } from "../util/posthog";
+
 import { NextEditOutcome } from "./types";
 
 export class NextEditLoggingService {
@@ -217,39 +215,5 @@ export class NextEditLoggingService {
     });
 
     // const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
-    if (outcome.requestId && outcome.accepted !== undefined) {
-      void this.logAcceptReject(outcome.requestId, outcome.accepted);
-    }
-    void Telemetry.capture("nextEditOutcome", outcome, true);
-  }
-
-  private async logAcceptReject(
-    requestId: string,
-    accepted: boolean,
-  ): Promise<void> {
-    try {
-      if (!Telemetry.client) {
-        return;
-      }
-
-      const controlPlaneEnv = getControlPlaneEnvSync("production");
-      const resp = await fetchwithRequestOptions(
-        new URL("model-proxy/v1/feedback", controlPlaneEnv.CONTROL_PLANE_URL),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            requestId,
-            accepted,
-          }),
-        },
-      );
-      const text = await resp.text();
-      console.debug("Feedback: ", text);
-    } catch (error: any) {
-      console.debug(`Error capturing feedback: ${error.message}`);
-    }
   }
 }

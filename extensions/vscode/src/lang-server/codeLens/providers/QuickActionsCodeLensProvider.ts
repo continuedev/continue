@@ -1,5 +1,4 @@
 import { ContinueConfig, QuickActionConfig } from "core";
-import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
 import { QuickEditShowParams } from "../../../quickEdit/QuickEditQuickPick";
@@ -20,10 +19,6 @@ export function subscribeToVSCodeQuickActionsSettings(listener: Function) {
     const configKey = `${CONTINUE_WORKSPACE_KEY}.${ENABLE_QUICK_ACTIONS_KEY}`;
 
     if (e.affectsConfiguration(configKey)) {
-      Telemetry.capture("VSCode Quick Actions Settings Changed", {
-        enabled: quickActionsEnabledStatus(),
-      });
-
       listener();
     }
   });

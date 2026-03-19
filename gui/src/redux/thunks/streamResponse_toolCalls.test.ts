@@ -11,12 +11,6 @@ vi.mock("../util/getBaseSystemMessage", () => ({
 
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 
-vi.mock("posthog-js", () => ({
-  default: {
-    capture: vi.fn(),
-  },
-}));
-
 vi.mock("uuid", () => ({
   v4: vi.fn(() => "mock-uuid-123"),
 }));
@@ -35,7 +29,6 @@ import {
   grepSearchTool,
   runTerminalCommandTool,
 } from "core/tools/definitions";
-import posthog from "posthog-js";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { MockIdeMessenger } from "../../context/MockIdeMessenger";
 import { RootState } from "../store";
@@ -50,7 +43,6 @@ const terminalName = terminalTool.function.name;
 
 const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
 
-const mockPosthog = vi.mocked(posthog);
 const mockResolveEditorContent = vi.mocked(resolveEditorContent);
 
 const mockClaudeModel: ModelDescription = {
@@ -431,27 +423,6 @@ describe("streamResponseThunk - tool calls", () => {
     expect(compileCallsCount).toBeGreaterThanOrEqual(1);
 
     expect(result.type).toBe("chat/streamResponse/fulfilled");
-
-    // Verify telemetry events for auto-approved tool execution
-    // Use partial matching to allow additional fields (e.g. model) in payload
-    expect(mockPosthog.capture).toHaveBeenCalledWith(
-      "tool_call_decision",
-      expect.objectContaining({
-        decision: "auto_accept",
-        toolName: grepName,
-        toolCallId: "tool-call-1",
-      }),
-    );
-
-    expect(mockPosthog.capture).toHaveBeenCalledWith(
-      "tool_call_outcome",
-      expect.objectContaining({
-        succeeded: true,
-        toolName: grepName,
-        errorReason: undefined,
-        duration_ms: expect.any(Number),
-      }),
-    );
 
     // Verify final state after tool call execution
     const finalState = mockStoreWithToolSettings.getState() as RootState;
@@ -1767,27 +1738,6 @@ describe("streamResponseThunk - tool calls", () => {
         payload: undefined,
       },
     ]);
-
-    // Verify telemetry events for manual approval flow
-    // Use partial matching to allow additional fields (e.g. model) in payload
-    expect(mockPosthog.capture).toHaveBeenCalledWith(
-      "tool_call_decision",
-      expect.objectContaining({
-        decision: "accept",
-        toolName: grepName,
-        toolCallId: "tool-approval-flow-1",
-      }),
-    );
-
-    expect(mockPosthog.capture).toHaveBeenCalledWith(
-      "tool_call_outcome",
-      expect.objectContaining({
-        succeeded: true,
-        toolName: grepName,
-        errorReason: undefined,
-        duration_ms: expect.any(Number),
-      }),
-    );
 
     // Verify IDE messenger calls for tool execution
     expect(requestSpy).toHaveBeenCalledWith("tools/call", {

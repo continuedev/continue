@@ -1,12 +1,9 @@
 package com.github.continuedev.continueintellijextension.`continue`.process
 
-import com.github.continuedev.continueintellijextension.error.ContinuePostHogService
-import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.github.continuedev.continueintellijextension.proxy.ProxySettings
 import com.github.continuedev.continueintellijextension.utils.OS
 import com.github.continuedev.continueintellijextension.utils.getContinueBinaryPath
 import com.github.continuedev.continueintellijextension.utils.getOS
-import com.intellij.openapi.components.service
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -51,8 +48,7 @@ class ContinueBinaryProcess(
                 err = err.substring(doneIndex + delimiter.length)
             }
         }
-        service<ContinueSentryService>().reportMessage("Core process exited with output: $err")
-        service<ContinuePostHogService>().capture("jetbrains_core_exit", mapOf("error" to err))
+
     }
 
     private companion object {

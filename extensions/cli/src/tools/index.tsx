@@ -2,7 +2,6 @@
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { ChatCompletionTool } from "openai/resources.mjs";
 
-import { posthogService } from "src/telemetry/posthogService.js";
 import { isModelCapable } from "src/utils/modelCapability.js";
 
 import {
@@ -250,12 +249,6 @@ export async function executeToolCall(
       durationMs: duration,
       toolParameters: JSON.stringify(toolCall.arguments),
     });
-    void posthogService.capture("tool_call_outcome", {
-      succeeded: true,
-      toolName: toolCall.name,
-      duration_ms: duration,
-    });
-
     logger.debug("Tool execution completed", {
       toolName: toolCall.name,
       resultLength: result?.length || 0,
@@ -278,13 +271,6 @@ export async function executeToolCall(
       errorReason,
       toolParameters: JSON.stringify(toolCall.arguments),
     });
-    void posthogService.capture("tool_call_outcome", {
-      succeeded: false,
-      toolName: toolCall.name,
-      duration_ms: duration,
-      errorReason,
-    });
-
     throw error;
   }
 }

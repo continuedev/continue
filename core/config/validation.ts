@@ -1,7 +1,6 @@
 import { ConfigValidationError } from "@continuedev/config-yaml";
 
 import { ModelDescription, SerializedContinueConfig } from "../";
-import { Telemetry } from "../util/posthog";
 
 /**
  * Validates a SerializedContinueConfig object to ensure all properties are correctly formed.
@@ -158,14 +157,6 @@ export function validateConfig(config: SerializedContinueConfig) {
   });
 
   if (errors.length > 0) {
-    void Telemetry.capture(
-      "configValidationError",
-      {
-        errors,
-      },
-      true,
-    );
-
     return errors;
   }
 

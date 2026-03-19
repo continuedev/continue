@@ -1,6 +1,5 @@
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
-import { sentryService } from "../sentry.js";
 import {
   ApiRequestError,
   AuthenticationRequiredError,
@@ -57,18 +56,6 @@ export const reportFailureTool: Tool = {
         logger.error(errorMessage);
         throw new ContinueError(ContinueErrorReason.Unspecified, errorMessage);
       }
-
-      // Capture failure in Sentry with context
-      sentryService.captureException(
-        new Error(trimmedMessage),
-        {
-          agent_failure: {
-            agentId,
-            errorMessage: trimmedMessage,
-          },
-        },
-        "fatal",
-      );
 
       await post(`agents/${agentId}/status`, {
         status: "FAILED",

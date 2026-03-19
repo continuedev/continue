@@ -33,13 +33,6 @@ vi.mock("./auth/workos.js", () => ({
   loadAuthConfig: vi.fn(),
 }));
 
-// Mock telemetry
-vi.mock("./telemetry/posthogService.js", () => ({
-  posthogService: {
-    capture: vi.fn(),
-  },
-}));
-
 // Mock commands
 vi.mock("./commands/commands.js", () => ({
   getAllSlashCommands: vi.fn(() => []),
