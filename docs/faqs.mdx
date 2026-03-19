@@ -38,7 +38,15 @@ If you're seeing a `fetch failed` error and your network requires custom certifi
 
 You may also set `requestOptions.caBundlePath` to an array of paths to multiple certificates.
 
-**_Windows VS Code Users_**: Installing the [win-ca](https://marketplace.visualstudio.com/items?itemName=ukoloff.win-ca) extension should also correct this issue.
+**_Windows VS Code Users_**: Installing the [win-ca](https://marketplace.visualstudio.com/items?itemName=ukoloff.win-ca) extension may help Continue use the Windows certificate store, but `requestOptions.caBundlePath` is the most reliable fix.
+
+### Common SSL certificate errors
+
+If your logs include errors such as `unable to verify the first certificate`, `self signed certificate in certificate chain`, `certificate verify failed`, or `CERT_UNTRUSTED`, Continue was able to reach the endpoint but could not verify the TLS certificate chain it returned.
+
+In most cases, the fix is to export the root or intermediate CA certificate for that endpoint and set `requestOptions.caBundlePath` in your model configuration. If the server also requires mutual TLS, add `requestOptions.clientCertificate` as well.
+
+For step-by-step diagnosis with `curl` and `openssl`, see [Troubleshooting SSL certificate errors](/troubleshooting#ssl-certificate-errors).
 
 ### VS Code Proxy Settings
 
