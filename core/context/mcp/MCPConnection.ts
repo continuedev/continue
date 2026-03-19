@@ -1,5 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import * as URI from "uri-js";
 import { fileURLToPath } from "url";
 
 import {
@@ -446,6 +447,28 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
   }
 
   /**
+   * Converts a URI (file://, vscode-remote://, etc.) to a filesystem path.
+   * @param uri The URI to convert
+   * @returns The filesystem path
+   */
+  private uriToFsPath(uri: string): string {
+    // Handle file:// URIs using Node's built-in converter
+    if (uri.startsWith("file://")) {
+      return fileURLToPath(uri);
+    }
+
+    // For other URI schemes (vscode-remote://, etc.), extract the path portion
+    const parsed = URI.parse(uri);
+    if (parsed.scheme && parsed.path) {
+      // The path from URI.parse already includes the leading /
+      return parsed.path;
+    }
+
+    // If it's not a URI, return as-is
+    return uri;
+  }
+
+  /**
    * Resolves the current working directory of the current workspace.
    * @param cwd The cwd parameter provided by user.
    * @returns Current working directory (user-provided cwd or workspace root).
@@ -455,8 +478,9 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       return this.resolveWorkspaceCwd(undefined);
     }
 
-    if (cwd.startsWith("file://")) {
-      return fileURLToPath(cwd);
+    // Check if it's a URI (has a scheme like file://, vscode-remote://, etc.)
+    if (cwd.includes("://")) {
+      return this.uriToFsPath(cwd);
     }
 
     // Return cwd if cwd is an absolute path.
@@ -473,10 +497,8 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       const target = cwd ?? ".";
       const resolved = await resolveRelativePathInDir(target, IDE);
       if (resolved) {
-        if (resolved.startsWith("file://")) {
-          return fileURLToPath(resolved);
-        }
-        return resolved;
+        // resolved is a URI, convert to filesystem path
+        return this.uriToFsPath(resolved);
       }
       return resolved;
     }
@@ -559,24 +581,31 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       ...(options.env ?? {}),
     };
 
-    if (process.env.PATH !== undefined) {
-      // Set the initial PATH from process.env
-      env.PATH = process.env.PATH;
+    // Always try to set a proper PATH
+    const ideInfo = await this.extras?.ide?.getIdeInfo();
+    const isWindowsHostWithWslRemote =
+      process.platform === "win32" && ideInfo?.remoteName === "wsl";
 
-      // For non-Windows platforms or WSL remotes, try to get the PATH from user shell
-      const ideInfo = await this.extras?.ide?.getIdeInfo();
-      const isWindowsHostWithWslRemote =
-        process.platform === "win32" && ideInfo?.remoteName === "wsl";
-      if (process.platform !== "win32" || isWindowsHostWithWslRemote) {
-        try {
-          const shellEnvPath = await getEnvPathFromUserShell(
-            ideInfo?.remoteName,
+    // Set initial PATH - use process.env.PATH if available
+    if (process.env.PATH !== undefined) {
+      env.PATH = process.env.PATH;
+    }
+
+    // For non-Windows platforms or remote connections, get proper shell PATH
+    if (process.platform !== "win32" || isWindowsHostWithWslRemote) {
+      try {
+        const shellEnvPath = await getEnvPathFromUserShell(ideInfo?.remoteName);
+        // Always use shell path if available (it includes defaults as fallback)
+        if (shellEnvPath) {
+          env.PATH = shellEnvPath;
+        }
+      } catch (err) {
+        console.error("Error getting PATH from shell:", err);
+        // If we still don't have a PATH, this is a critical issue
+        if (!env.PATH) {
+          console.error(
+            "WARNING: No PATH set for MCP server. Command execution will likely fail.",
           );
-          if (shellEnvPath && shellEnvPath !== process.env.PATH) {
-            env.PATH = shellEnvPath;
-          }
-        } catch (err) {
-          console.error("Error getting PATH:", err);
         }
       }
     }
