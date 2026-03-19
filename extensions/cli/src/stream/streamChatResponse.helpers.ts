@@ -17,7 +17,6 @@ import {
   services,
 } from "../services/index.js";
 import { trackSessionUsage } from "../session.js";
-import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   executeToolCall,
@@ -366,45 +365,6 @@ export function recordStreamTelemetry(options: {
     costUsd: cost,
   });
 
-  // Mirror core metrics to PostHog for product analytics
-  const cacheReadTokens =
-    fullUsage?.prompt_tokens_details?.cache_read_tokens ?? 0;
-  const cacheWriteTokens =
-    fullUsage?.prompt_tokens_details?.cache_write_tokens ?? 0;
-
-  try {
-    posthogService.capture("apiRequest", {
-      model: model.model,
-      durationMs: totalDuration,
-      inputTokens: actualInputTokens,
-      outputTokens: actualOutputTokens,
-      costUsd: cost,
-      cacheReadTokens,
-      cacheWriteTokens,
-    });
-
-    // Emit prompt_cache_metrics for the Prompt Cache Performance dashboard.
-    // total_prompt_tokens must include ALL input token types: non-cached input
-    // tokens (prompt_tokens) + cache reads + cache writes. Anthropic's
-    // `input_tokens` field only counts non-cached tokens, so using it alone as
-    // the denominator produces ratios >> 1 when caching works well.
-    if (fullUsage?.prompt_tokens_details) {
-      const totalPromptTokens =
-        (fullUsage.prompt_tokens ?? 0) + cacheReadTokens + cacheWriteTokens;
-      const cacheHitRate =
-        totalPromptTokens > 0 ? cacheReadTokens / totalPromptTokens : 0;
-
-      posthogService.capture("prompt_cache_metrics", {
-        model: model.model,
-        cache_read_tokens: cacheReadTokens,
-        cache_write_tokens: cacheWriteTokens,
-        total_prompt_tokens: totalPromptTokens,
-        cache_hit_rate: cacheHitRate,
-        tool_count: tools?.length ?? 0,
-      });
-    }
-  } catch {}
-
   return cost;
 }
 
@@ -480,14 +440,6 @@ export async function preprocessStreamedToolCalls(
         errorReason,
         // modelName, TODO
       });
-      void posthogService.capture("tool_call_outcome", {
-        succeeded: false,
-        toolName: toolCall.name,
-        errorReason,
-        duration_ms: duration,
-        // model: options.modelName, TODO
-      });
-
       // Add error to chat history
       errorChatEntries.push({
         role: "tool",

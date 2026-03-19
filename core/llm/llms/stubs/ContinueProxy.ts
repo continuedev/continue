@@ -6,7 +6,7 @@ import {
 } from "@continuedev/config-yaml";
 
 import { ControlPlaneProxyInfo } from "../../../control-plane/analytics/IAnalyticsProvider.js";
-import { Telemetry } from "../../../util/posthog.js";
+import { IdeInfoService } from "../../../util/IdeInfoService.js";
 import OpenAI from "../OpenAI.js";
 
 import type { Chunk, LLMOptions } from "../../../index.js";
@@ -100,13 +100,13 @@ class ContinueProxy extends OpenAI {
 
   protected _getHeaders() {
     const headers: any = super._getHeaders();
-    headers["x-continue-unique-id"] = Telemetry.uniqueId;
+    headers["x-continue-unique-id"] = IdeInfoService.uniqueId;
     headers["user-agent"] = this._getUserAgent();
     return headers;
   }
 
   private _getUserAgent(): string {
-    const ideInfo = Telemetry.ideInfo;
+    const ideInfo = IdeInfoService.ideInfo;
     const extensionVersion = ideInfo?.extensionVersion ?? "unknown";
     const ideName = ideInfo?.name ?? "unknown";
     const ideType = ideInfo?.ideType ?? "unknown";

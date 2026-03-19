@@ -26,7 +26,7 @@ import { compactConversation } from "./util/conversationCompaction";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
-import { Telemetry } from "./util/posthog";
+
 import {
   isProcessBackgrounded,
   killTerminalProcess,
@@ -293,11 +293,6 @@ export class Core {
     // Note, VsCode's in-process messenger doesn't do anything with this
     // It will only show for jetbrains
     this.messenger.onError((message, err) => {
-      void Telemetry.capture("core_messenger_error", {
-        message: err.message,
-        stack: err.stack,
-      });
-
       // just to prevent duplicate error messages in jetbrains (same logic in webview protocol)
       if (
         ["llm/streamChat", "chatDescriber/describe"].includes(
@@ -1470,10 +1465,6 @@ export class Core {
     }
 
     try {
-      void Telemetry.capture("context_provider_get_context_items", {
-        name: provider.description.title,
-      });
-
       const items = await provider.getContextItems(query, {
         config,
         llm,
@@ -1488,14 +1479,6 @@ export class Core {
           fetchwithRequestOptions(url, init, config.requestOptions),
         isInAgentMode: msg.data.isInAgentMode,
       });
-
-      void Telemetry.capture(
-        "useContextProvider",
-        {
-          name: provider.description.title,
-        },
-        true,
-      );
 
       return items.map((item) => {
         const id: ContextItemId = {

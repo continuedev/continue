@@ -1,7 +1,5 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
-import com.github.continuedev.continueintellijextension.error.ContinuePostHogService
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
@@ -26,7 +24,6 @@ class CoreMessengerManager(
                 log.warn("Continue process terminated externally, retrying in $backoffIntervalSeconds seconds")
                 coreMessenger.restart()
             } catch (e: Exception) {
-                service<ContinuePostHogService>().capture("jetbrains_core_start_error", mapOf("error" to e))
             }
         }
     }

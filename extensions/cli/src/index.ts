@@ -19,9 +19,7 @@ import {
   validateFlags,
 } from "./flags/flagValidator.js";
 import { configureConsoleForHeadless, safeStderr } from "./init.js";
-import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
-import { posthogService } from "./telemetry/posthogService.js";
 import { post } from "./util/apiClient.js";
 import { markUnhandledError } from "./util/errorState.js";
 import { gracefulExit } from "./util/exit.js";
@@ -205,8 +203,6 @@ addCommonOptions(program)
     "Enable beta Subagent tool for invoking subagents",
   )
   .action(async (prompt, options) => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "cn" });
     // Handle piped input - detect it early and decide on mode
     let stdinInput = null;
 
@@ -311,8 +307,6 @@ program
   .command("login")
   .description("Authenticate with Continue")
   .action(async () => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "login" });
     await login();
   });
 
@@ -321,8 +315,6 @@ program
   .command("logout")
   .description("Log out from Continue")
   .action(async () => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "logout" });
     await logout();
   });
 
@@ -332,8 +324,6 @@ program
   .description("List recent chat sessions and select one to resume")
   .option("--json", "Output in JSON format")
   .action(async (options) => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "ls" });
     await listSessionsCommand({
       format: options.json ? "json" : undefined,
     });
@@ -370,11 +360,6 @@ addCommonOptions(
     "Specify the repository URL to use in the remote environment",
   )
   .action(async (prompt: string | undefined, options) => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", {
-      command: "remote",
-      flagS: options.start,
-    });
     await remote(prompt, options);
   });
 
@@ -397,8 +382,6 @@ program
     "Enable beta UploadArtifact tool for uploading screenshots, videos, and logs",
   )
   .action(async (prompt, options) => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "serve" });
     // Merge parent options with subcommand options
     const mergedOptions = mergeParentOptions(program, options);
 
@@ -416,8 +399,6 @@ program
   .description("Test remote TUI mode with a local server")
   .option("--url <url>", "Server URL (default: http://localhost:8000)")
   .action(async (prompt: string | undefined, options) => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "remote-test" });
     await remoteTest(prompt, options.url);
   });
 
@@ -426,7 +407,6 @@ program
   .command("checks [action] [pr-url]")
   .description("Show CI check statuses for a PR")
   .action(async (action: string | undefined, prUrl: string | undefined) => {
-    await posthogService.capture("cliCommand", { command: "checks" });
     await checks(action, prUrl);
   });
 
@@ -442,7 +422,6 @@ program
   .option("--review-agents <agents...>", "Specific review agents to run")
   .option("--verbose", "Enable verbose logging")
   .action(async (options) => {
-    await posthogService.capture("cliCommand", { command: "review" });
     await review(options);
   });
 
@@ -468,10 +447,7 @@ export async function runCli(): Promise<void> {
     program.parse();
   } catch (error) {
     console.error(error);
-    sentryService.captureException(
-      error instanceof Error ? error : new Error(String(error)),
-    );
-    process.exit(1);
+process.exit(1);
   }
 
   process.on("SIGTERM", async () => {

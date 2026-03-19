@@ -26,7 +26,6 @@ import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsP
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { PolicySingleton } from "../../control-plane/PolicySingleton";
-import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { initSlashCommand } from "../../promptFiles/initPrompt";
 import { getConfigDependentToolDefinitions } from "../../tools";
@@ -35,8 +34,7 @@ import { getMCPToolName } from "../../tools/mcpToolName";
 import { GlobalContext } from "../../util/GlobalContext";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
-import { Telemetry } from "../../util/posthog";
-import { SentryLogger } from "../../util/sentry/SentryLogger";
+import { IdeInfoService } from "../../util/IdeInfoService";
 import { TTS } from "../../util/tts";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
@@ -379,29 +377,10 @@ export default async function doLoadConfig(options: {
     newConfig.disableIndexing = true;
   }
 
-  // Setup telemetry only after (and if) we know it is enabled
-  await Telemetry.setup(
-    newConfig.allowAnonymousTelemetry ?? true,
-    await ide.getUniqueId(),
+  // Setup IdeInfoService
+  IdeInfoService.setup(
+    uniqueId,
     ideInfo,
-  );
-
-  // Setup Sentry logger with same telemetry settings
-  // TODO: Remove Continue team member check once Sentry is ready for all users
-  let userEmail: string | undefined;
-  try {
-    // Access the session info to get user email for Continue team member check
-    const sessionInfo = await (controlPlaneClient as any).sessionInfoPromise;
-    userEmail = sessionInfo?.account?.id;
-  } catch (error) {
-    // Ignore errors getting session info, will default to no Sentry
-  }
-
-  await SentryLogger.setup(
-    newConfig.allowAnonymousTelemetry ?? false,
-    await ide.getUniqueId(),
-    ideInfo,
-    userEmail,
   );
 
   // TODO: pass config to pre-load non-system TTS models
@@ -425,21 +404,6 @@ export default async function doLoadConfig(options: {
     controlPlaneProxyUrl,
     workOsAccessToken,
   };
-
-  if (newConfig.analytics) {
-    // FIXME before re-enabling TeamAnalytics.setup() populate workspaceId in
-    //   controlPlaneProxyInfo to prevent /proxy/analytics/undefined/capture calls
-    //   where undefined is :workspaceId
-    // await TeamAnalytics.setup(
-    //   newConfig.analytics,
-    //   uniqueId,
-    //   ideInfo.extensionVersion,
-    //   controlPlaneClient,
-    //   controlPlaneProxyInfo,
-    // );
-  } else {
-    await TeamAnalytics.shutdown();
-  }
 
   newConfig = await injectControlPlaneProxyInfo(
     newConfig,

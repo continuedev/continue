@@ -11,7 +11,6 @@ import { handleInit } from "./commands/init.js";
 import { handleInfoSlashCommand } from "./infoScreen.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { getCurrentSession, updateSessionTitle } from "./session.js";
-import { posthogService } from "./telemetry/posthogService.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
 
@@ -143,8 +142,6 @@ async function handleFork() {
 }
 
 function handleTitle(args: string[]) {
-  posthogService.capture("useSlashCommand", { name: "title" });
-
   const title = args.join(" ").trim();
   if (!title) {
     return {
@@ -171,6 +168,10 @@ function handleTitle(args: string[]) {
 
 function handleJobs() {
   return { openJobsSelector: true };
+}
+
+function handleSessions() {
+  return { openSessionSelector: true };
 }
 
 const commandHandlers: Record<string, CommandHandler> = {
@@ -202,13 +203,13 @@ const commandHandlers: Record<string, CommandHandler> = {
   title: handleTitle,
   rename: handleTitle,
   init: (args, assistant) => {
-    posthogService.capture("useSlashCommand", { name: "init" });
     return handleInit(args, assistant);
   },
   update: () => {
     return { openUpdateSelector: true };
   },
   jobs: handleJobs,
+  sessions: handleSessions,
 };
 
 export async function handleSlashCommands(
@@ -224,7 +225,6 @@ export async function handleSlashCommands(
   const [command, ...args] = input.slice(1).split(" ");
 
   telemetryService.recordSlashCommand(command);
-  posthogService.capture("useSlashCommand", { name: command });
 
   const handler = commandHandlers[command];
   if (handler) {

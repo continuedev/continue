@@ -3,7 +3,6 @@ import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
-import { posthogService } from "src/telemetry/posthogService.js";
 import { prependPrompt } from "src/util/promptProcessor.js";
 
 import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
@@ -75,8 +74,6 @@ export function shouldQueueInitialPrompt(
 
 // eslint-disable-next-line max-statements
 export async function serve(prompt?: string, options: ServeOptions = {}) {
-  await posthogService.capture("sessionStart", {});
-
   // Set agent ID for error reporting if provided
   setAgentId(options.id);
 
