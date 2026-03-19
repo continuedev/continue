@@ -57,7 +57,6 @@ export const modelDescriptionSchema = z.object({
     "cloudflare",
     "azure",
     "ovhcloud",
-    "continue-proxy",
     "nebius",
     "scaleway",
     "watsonx",
@@ -111,7 +110,6 @@ export const embeddingsProviderSchema = z.object({
     "cohere",
     "gemini",
     "ovhcloud",
-    "continue-proxy",
     "nebius",
     "scaleway",
     "watsonx",
@@ -187,7 +185,7 @@ export const contextProviderSchema = z.object({
 export type ContextProvider = z.infer<typeof contextProviderSchema>;
 
 export const rerankerSchema = z.object({
-  name: z.enum(["cohere", "voyage", "watsonx", "llm", "continue-proxy"]),
+  name: z.enum(["cohere", "voyage", "watsonx", "llm"]),
   params: z.record(z.any()).optional(),
 });
 export type Reranker = z.infer<typeof rerankerSchema>;
@@ -200,7 +198,6 @@ export const analyticsSchema = z.object({
     "mixpanel",
     "splunk",
     "datadog",
-    "continue-proxy",
   ]),
   url: z.string().optional(),
   clientKey: z.string().optional(),

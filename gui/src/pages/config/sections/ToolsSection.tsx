@@ -454,16 +454,9 @@ export function ToolsSection() {
   }, [servers, selectedProfile]);
 
   const handleAddMcpServer = () => {
-    if (isLocal) {
-      void ideMessenger.request("config/addLocalWorkspaceBlock", {
-        blockType: "mcpServers",
-      });
-    } else {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: "?type=mcpServers",
-        orgSlug: undefined,
-      });
-    }
+    void ideMessenger.request("config/addLocalWorkspaceBlock", {
+      blockType: "mcpServers",
+    });
   };
 
   const allToolsOff = useMemo(() => {

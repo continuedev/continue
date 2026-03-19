@@ -8,8 +8,6 @@ import {
   LoadSubmenuItemsArgs,
   RuleWithSource,
 } from "../..";
-import { getControlPlaneEnv } from "../../control-plane/env";
-
 class RulesContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "rules",
@@ -33,22 +31,11 @@ class RulesContextProvider extends BaseContextProvider {
     return rule.description ?? rule.name ?? "";
   }
 
-  private getUriFromRule(
-    rule: RuleWithSource,
-    appUrl: string,
-  ): ContextItemUri | undefined {
+  private getUriFromRule(rule: RuleWithSource): ContextItemUri | undefined {
     if (rule.sourceFile) {
       return {
         type: "file",
         value: rule.sourceFile,
-      };
-    }
-
-    if (rule.slug) {
-      let url = `${appUrl}${rule.slug}`;
-      return {
-        type: "url",
-        value: url,
       };
     }
 
@@ -66,13 +53,12 @@ class RulesContextProvider extends BaseContextProvider {
       return [];
     }
 
-    const env = await getControlPlaneEnv(extras.ide.getIdeSettings());
     return [
       {
         name: this.getNameFromRule(rule),
         content: rule.rule,
         description: this.getDescriptionFromRule(rule),
-        uri: this.getUriFromRule(rule, env.APP_URL),
+        uri: this.getUriFromRule(rule),
       },
     ];
   }

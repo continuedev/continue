@@ -195,37 +195,17 @@ const baseModelFields = {
   autocompleteOptions: autocompleteOptionsSchema.optional(),
 };
 
-export const modelSchema = z.union([
-  z.object({
-    ...baseModelFields,
-    provider: z.literal("continue-proxy"),
-    apiKeyLocation: z.string().optional(),
-    envSecretLocations: z.record(z.string(), z.string()).optional(),
-    orgScopeId: z.string().nullable(),
-    onPremProxyUrl: z.string().nullable(),
-  }),
-  z.object({
-    ...baseModelFields,
-    provider: z.string().refine((val) => val !== "continue-proxy"),
-    sourceFile: z.string().optional(),
-  }),
-]);
+export const modelSchema = z.object({
+  ...baseModelFields,
+  provider: z.string(),
+  sourceFile: z.string().optional(),
+});
 
-export const partialModelSchema = z.union([
-  z
-    .object({
-      ...baseModelFields,
-      provider: z.literal("continue-proxy"),
-      apiKeyLocation: z.string().optional(),
-      envSecretLocations: z.record(z.string(), z.string()).optional(),
-    })
-    .partial(),
-  z
-    .object({
-      ...baseModelFields,
-      provider: z.string().refine((val) => val !== "continue-proxy"),
-    })
-    .partial(),
-]);
+export const partialModelSchema = z
+  .object({
+    ...baseModelFields,
+    provider: z.string(),
+  })
+  .partial();
 
 export type ModelConfig = z.infer<typeof modelSchema>;

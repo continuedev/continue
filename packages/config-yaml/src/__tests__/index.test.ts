@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import {
-  decodeSecretLocation,
   FQSN,
   PackageIdentifier,
   packageIdentifierToShorthandSlug,
@@ -8,7 +7,6 @@ import {
   PlatformSecretStore,
   Registry,
   resolveFQSN,
-  resolveSecretLocationInProxy,
   SecretLocation,
   SecretResult,
   SecretStore,
@@ -115,9 +113,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
       },
     );
 
@@ -138,9 +134,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
       },
     );
 
@@ -178,41 +172,6 @@ describe("E2E Scenarios", () => {
     expect(config?.docs?.[0]?.rootUrl).toBe(
       "https://docs.python.org/release/3.13.1",
     );
-
-    // Test that proxy can correctly resolve secrets
-    const decodedAnthropicSecretLocation = decodeSecretLocation(
-      anthropicSecretLocation,
-    );
-    const decodedGeminiSecretLocation =
-      decodeSecretLocation(geminiSecretLocation);
-
-    // With environment
-    const antSecretValue = await resolveSecretLocationInProxy(
-      decodedAnthropicSecretLocation,
-      platformSecretStore,
-      environmentSecretStore,
-    );
-    expect(antSecretValue).toBe("sk-ant-env");
-    const geminiSecretValue = await resolveSecretLocationInProxy(
-      decodedGeminiSecretLocation,
-      platformSecretStore,
-      environmentSecretStore,
-    );
-    expect(geminiSecretValue).toBe("gemini-api-key-env");
-
-    // Without environment
-    const antSecretValue2 = await resolveSecretLocationInProxy(
-      decodedAnthropicSecretLocation,
-      platformSecretStore,
-      undefined,
-    );
-    expect(antSecretValue2).toBe("sk-ant");
-    const geminiSecretValue2 = await resolveSecretLocationInProxy(
-      decodedGeminiSecretLocation,
-      platformSecretStore,
-      undefined,
-    );
-    expect(geminiSecretValue2).toBe("gemini-api-key");
   });
 
   it("should correctly unroll assistant with injected blocks", async () => {
@@ -229,9 +188,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
         // Add injected blocks
         injectBlocks: [
           {
@@ -277,9 +234,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
         // Add injected blocks
         injectBlocks: [
           {
@@ -324,9 +279,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
         blocklistedBlocks: [
           {
             ownerSlug: "test-org",
@@ -362,9 +315,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
         allowlistedBlocks: [
           {
             ownerSlug: "test-org",
@@ -408,9 +359,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
         allowlistedBlocks: [
           {
             ownerSlug: "test-org",
@@ -448,9 +397,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
         blocklistedBlocks: [
           {
             ownerSlug: "test-org",

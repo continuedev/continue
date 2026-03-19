@@ -181,56 +181,6 @@ export function Chat() {
         stateSnapshot.config.config.selectedModelByRole;
       const currentMode = stateSnapshot.session.mode;
 
-      // Handle background mode specially
-      if (currentMode === "background" && !isCurrentlyInEdit) {
-        // Background mode triggers agent creation instead of chat
-        const currentOrg = selectCurrentOrg(stateSnapshot);
-        const organizationId =
-          currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
-
-        setIsCreatingAgent(true);
-
-        // Create agent and track loading state
-        void (async () => {
-          try {
-            // Resolve context items from editor content (same as normal chat)
-            const defaultContextProviders =
-              stateSnapshot.config.config.experimental?.defaultContext ?? [];
-
-            const { selectedContextItems, selectedCode, content } =
-              await resolveEditorContent({
-                editorState,
-                modifiers,
-                ideMessenger,
-                defaultContextProviders,
-                availableSlashCommands:
-                  stateSnapshot.config.config.slashCommands,
-                dispatch,
-                getState: () => reduxStore.getState(),
-              });
-
-            await ideMessenger.request("createBackgroundAgent", {
-              content,
-              contextItems: selectedContextItems,
-              selectedCode,
-              organizationId,
-            });
-
-            // Clear input only after successful API call
-            if (editorToClearOnSend) {
-              editorToClearOnSend.commands.clearContent();
-            }
-
-            setIsCreatingAgent(false);
-          } catch (error) {
-            console.error("Failed to create background agent:", error);
-            setIsCreatingAgent(false);
-          }
-        })();
-
-        return;
-      }
-
       // Cancel all pending tool calls
       latestPendingToolCalls.forEach((toolCallState) => {
         dispatch(

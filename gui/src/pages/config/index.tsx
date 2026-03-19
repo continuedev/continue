@@ -1,11 +1,8 @@
-import { isOnPremSession } from "core/control-plane/AuthTypes";
 import React from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { AssistantAndOrgListbox } from "../../components/AssistantAndOrgListbox";
 import Alert from "../../components/gui/Alert";
 import { Divider } from "../../components/ui/Divider";
 import { TabGroup } from "../../components/ui/TabGroup";
-import { useAuth } from "../../context/Auth";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { bottomTabSections, getAllTabs, topTabSections } from "./configTabs";
 import { CliInstallBanner } from "../../components/CliInstallBanner";
@@ -16,11 +13,8 @@ function ConfigPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "settings";
-  const { session, organizations } = useAuth();
 
   const allTabs = getAllTabs();
-  const shouldRenderOrgInfo =
-    session && organizations.length > 1 && !isOnPremSession(session);
 
   const handleTabClick = (tabId: string) => {
     if (tabId === "back") {
@@ -35,7 +29,7 @@ function ConfigPage() {
       {/* Vertical Sidebar - full height */}
       <div className="bg-vsc-background flex w-12 flex-shrink-0 flex-col border-0 md:w-40">
         <div className="border-r-border flex flex-1 flex-col overflow-y-auto border-b-0 border-l-0 border-r-2 border-t-0 border-solid p-2 text-xs">
-          {topTabSections.map((section, index) => (
+          {topTabSections.map((section) => (
             <React.Fragment key={section.id}>
               <TabGroup
                 tabs={section.tabs}
@@ -45,12 +39,6 @@ function ConfigPage() {
                 showBottomDivider={section.showBottomDivider}
                 className={section.className}
               />
-              {index === 0 && shouldRenderOrgInfo && (
-                <>
-                  <Divider />
-                  <AssistantAndOrgListbox variant="sidebar" />
-                </>
-              )}
             </React.Fragment>
           ))}
 

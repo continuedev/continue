@@ -4,7 +4,7 @@ import { ContextProviderName } from "../../";
 import ClipboardContextProvider from "./ClipboardContextProvider";
 import CodebaseContextProvider from "./CodebaseContextProvider";
 import CodeContextProvider from "./CodeContextProvider";
-import ContinueProxyContextProvider from "./ContinueProxyContextProvider";
+
 import CurrentFileContextProvider from "./CurrentFileContextProvider";
 import DatabaseContextProvider from "./DatabaseContextProvider";
 import DebugLocalsProvider from "./DebugLocalsProvider";
@@ -63,7 +63,6 @@ export const Providers: (typeof BaseContextProvider)[] = [
   CodeContextProvider,
   CurrentFileContextProvider,
   URLContextProvider,
-  ContinueProxyContextProvider,
   RepoMapContextProvider,
   DiscordContextProvider,
   GreptileContextProvider,

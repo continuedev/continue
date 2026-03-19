@@ -99,10 +99,6 @@ export abstract class BaseLLM implements ILLM {
     return (this.constructor as typeof BaseLLM).providerName;
   }
 
-  /**
-   * This exists because for the continue-proxy, sometimes we want to get the value of the underlying provider that is used on the server
-   * For example, the underlying provider should always be sent with dev data
-   */
   get underlyingProviderName(): string {
     return this.providerName;
   }
@@ -168,8 +164,6 @@ export abstract class BaseLLM implements ILLM {
   apiKeyLocation?: string;
   envSecretLocations?: Record<string, string>;
   apiBase?: string;
-  orgScopeId?: string | null;
-
   onPremProxyUrl?: string | null;
 
   cacheBehavior?: CacheBehavior;
@@ -222,11 +216,7 @@ export abstract class BaseLLM implements ILLM {
 
     this.model = options.model;
     // Use @continuedev/llm-info package to autodetect certain parameters
-    const modelSearchString =
-      this.providerName === "continue-proxy"
-        ? this.model?.split("/").pop() || this.model
-        : this.model;
-    const llmInfo = findLlmInfo(modelSearchString, this.underlyingProviderName);
+    const llmInfo = findLlmInfo(this.model, this.underlyingProviderName);
 
     const templateType =
       options.template ?? autodetectTemplateType(options.model);
@@ -272,7 +262,6 @@ export abstract class BaseLLM implements ILLM {
     // continueProperties
     this.apiKeyLocation = options.apiKeyLocation;
     this.envSecretLocations = options.envSecretLocations;
-    this.orgScopeId = options.orgScopeId;
     this.apiBase = options.apiBase;
 
     this.onPremProxyUrl = options.onPremProxyUrl;

@@ -69,9 +69,6 @@
     }
   ],
   "systemMessage": "TEST_SYS_MSG",
-  "analytics": {
-    "provider": "continue-proxy"
-  },
   "tabAutocompleteModel": {
     "title": "TEST LLM",
     "provider": "test",

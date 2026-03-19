@@ -41,25 +41,16 @@ export function ModelsSection() {
   const handleConfigureModel = useEditModel();
 
   function handleAddModel() {
-    const isLocal = selectedProfile?.profileType === "local";
-
-    if (isLocal) {
-      dispatch(setShowDialog(true));
-      dispatch(
-        setDialogMessage(
-          <AddModelForm
-            onDone={() => {
-              dispatch(setShowDialog(false));
-            }}
-          />,
-        ),
-      );
-    } else {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: "?type=models",
-        orgSlug: undefined,
-      });
-    }
+    dispatch(setShowDialog(true));
+    dispatch(
+      setDialogMessage(
+        <AddModelForm
+          onDone={() => {
+            dispatch(setShowDialog(false));
+          }}
+        />,
+      ),
+    );
   }
 
   return (

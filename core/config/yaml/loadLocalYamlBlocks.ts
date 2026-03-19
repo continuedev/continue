@@ -6,7 +6,6 @@ import {
   unrollAssistantFromContent,
 } from "@continuedev/config-yaml";
 import { IDE } from "../..";
-import { ControlPlaneClient } from "../../control-plane/client";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 
 // This is a certain approach to unrolling local YAML where it
@@ -16,8 +15,6 @@ export async function unrollLocalYamlBlocks(
   packageIdentifiers: PackageIdentifier[],
   ide: IDE,
   registryClient: RegistryClient,
-  orgScopeId: string | null,
-  controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<AssistantUnrolled>> {
   try {
     const unrollResult = await unrollAssistantFromContent(
@@ -29,13 +26,7 @@ export async function unrollLocalYamlBlocks(
       registryClient,
       {
         currentUserSlug: "",
-        onPremProxyUrl: null,
-        orgScopeId,
-        platformClient: new LocalPlatformClient(
-          orgScopeId,
-          controlPlaneClient,
-          ide,
-        ),
+        platformClient: new LocalPlatformClient(ide),
         renderSecrets: true,
         injectBlocks: packageIdentifiers,
       },

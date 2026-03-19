@@ -230,11 +230,6 @@ function ParallelListeners() {
     void dispatch(cancelStream());
   });
 
-  useWebviewListener("loadAgentSession", async (data) => {
-    dispatch(newSession(data.session));
-    dispatch(setMode("agent"));
-  });
-
   useWebviewListener("setTTSActive", async (status) => {
     dispatch(setTTSActive(status));
   });
