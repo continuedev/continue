@@ -45,7 +45,6 @@ import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
 import { useStore } from "react-redux";
-import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundModeView";
 import { CliInstallBanner } from "../../components/CliInstallBanner";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 
@@ -115,7 +114,6 @@ export function Chat() {
   );
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
-  const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -133,7 +131,6 @@ export function Chat() {
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
-  const mode = useAppSelector((state) => state.session.mode);
   const currentOrg = useAppSelector(selectCurrentOrg);
   const jetbrains = useMemo(() => {
     return isJetBrains();
@@ -235,7 +232,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [dispatch, ideMessenger, reduxStore, setIsCreatingAgent],
+    [dispatch, ideMessenger, reduxStore],
   );
 
   useWebviewListener(
@@ -452,12 +449,8 @@ export function Chat() {
           </div>
           <FatalErrorIndicator />
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
-          {mode === "background" ? (
-            <BackgroundModeView isCreatingAgent={isCreatingAgent} />
-          ) : (
-            history.length === 0 && (
-              <EmptyChatBody showOnboardingCard={onboardingCard.show} />
-            )
+          {history.length === 0 && (
+            <EmptyChatBody showOnboardingCard={onboardingCard.show} />
           )}
         </div>
       </div>
