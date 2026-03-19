@@ -20,7 +20,7 @@ The `build.mjs` script uses esbuild to:
 
 - Bundle all TypeScript/JavaScript code into a single ES module
 - Include local packages (`@continuedev/config-yaml`, `@continuedev/openai-adapters`) directly in the bundle
-- Keep problematic or native dependencies external (e.g., `@sentry/profiling-node`, `winston`, `express`)
+- Keep problematic or native dependencies external (e.g., `winston`, `express`)
 - Create a wrapper script (`dist/cn.js`) with the proper shebang for CLI execution
 
 ### Key Features

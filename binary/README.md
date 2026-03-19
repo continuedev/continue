@@ -16,7 +16,6 @@ The build process is otherwise defined entirely in `build.js`.
 
 ### List of dynamically imported modules
 
-- posthog-node
 - @octokit/rest
 - esbuild
 

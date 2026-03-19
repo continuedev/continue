@@ -152,7 +152,6 @@ process.on("unhandledRejection", (reason, promise) => {
     });
   }
 
-  // Note: Sentry capture is handled by logger.error() above
   // Don't exit the process immediately, but hasUnhandledError will cause non-zero exit later
 });
 
@@ -165,7 +164,6 @@ process.on("uncaughtException", (error) => {
   reportUnhandledErrorToApi(error).catch(() => {
     // Silently fail if API reporting errors - already logged in helper
   });
-  // Note: Sentry capture is handled by logger.error() above
   // Don't exit the process immediately, but hasUnhandledError will cause non-zero exit later
 });
 
@@ -447,7 +445,7 @@ export async function runCli(): Promise<void> {
     program.parse();
   } catch (error) {
     console.error(error);
-process.exit(1);
+    process.exit(1);
   }
 
   process.on("SIGTERM", async () => {
