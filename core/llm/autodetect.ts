@@ -73,6 +73,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "nous",
   "zAI",
   "tensorix",
+  "hatz",
   // TODO add these, change to inverted logic so only the ones that need templating are hardcoded
   // Asksage.ts
   // Azure.ts
@@ -132,6 +133,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "watsonx",
   "zAI",
   "tensorix",
+  "hatz",
 ];
 
 const MODEL_SUPPORTS_IMAGES: RegExp[] = [
@@ -531,5 +533,6 @@ export {
   llmCanGenerateInParallel,
   modelSupportsImages,
   modelSupportsNextEdit,
-  modelSupportsReasoning,
+  modelSupportsReasoning
 };
+

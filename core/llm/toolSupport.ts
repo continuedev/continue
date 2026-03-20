@@ -432,6 +432,23 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    hatz: (model) => {
+      // Hatz handles tools server-side via tools_to_use parameter.
+      // Most models accessed through Hatz support tool calling.
+      const lower = model.toLowerCase();
+      if (
+        lower.includes("gpt-4") ||
+        lower.includes("gpt-5") ||
+        lower.startsWith("o1") ||
+        lower.startsWith("o3") ||
+        lower.startsWith("o4") ||
+        lower.includes("claude") ||
+        lower.includes("gemini")
+      ) {
+        return true;
+      }
+      return false;
+    },
   };
 
 export function isRecommendedAgentModel(modelName: string): boolean {

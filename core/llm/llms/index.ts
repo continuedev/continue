@@ -26,18 +26,19 @@ import Flowise from "./Flowise";
 import FunctionNetwork from "./FunctionNetwork";
 import Gemini from "./Gemini";
 import Groq from "./Groq";
+import HatzAI from "./HatzAI";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTEIEmbeddingsProvider from "./HuggingFaceTEI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
 import Inception from "./Inception";
 import Kindo from "./Kindo";
+import Lemonade from "./Lemonade";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
 import LlamaStack from "./LlamaStack";
-import Lemonade from "./Lemonade";
 import LMStudio from "./LMStudio";
-import Mistral from "./Mistral";
 import Mimo from "./Mimo";
+import Mistral from "./Mistral";
 import MockLLM from "./Mock";
 import Moonshot from "./Moonshot";
 import Msty from "./Msty";
@@ -56,9 +57,9 @@ import SageMaker from "./SageMaker";
 import SambaNova from "./SambaNova";
 import Scaleway from "./Scaleway";
 import SiliconFlow from "./SiliconFlow";
-import Tensorix from "./Tensorix";
 import ContinueProxy from "./stubs/ContinueProxy";
 import TARS from "./TARS";
+import Tensorix from "./Tensorix";
 import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
@@ -130,6 +131,7 @@ export const LLMClasses = [
   LlamaStack,
   TARS,
   zAI,
+  HatzAI,
 ];
 
 export async function llmFromDescription(

@@ -199,6 +199,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return undefined;
     case "ai-sdk":
       return new AiSdkApi(config);
+    case "hatz":
+      return openAICompatible("https://ai.hatz.ai/v1/", config);
     default:
       return undefined;
   }
@@ -213,7 +215,7 @@ export {
   type Completion,
   type CompletionCreateParams,
   type CompletionCreateParamsNonStreaming,
-  type CompletionCreateParamsStreaming,
+  type CompletionCreateParamsStreaming
 } from "openai/resources/index";
 
 // export
@@ -226,15 +228,16 @@ export type {
   AskSageTool,
   AskSageToolCall,
   AskSageToolChoice,
-  LLMConfig,
+  LLMConfig
 } from "./types.js";
 
 export {
   addCacheControlToLastTwoUserMessages,
   getAnthropicErrorMessage,
   getAnthropicHeaders,
-  getAnthropicMediaTypeFromDataUrl,
+  getAnthropicMediaTypeFromDataUrl
 } from "./apis/AnthropicUtils.js";
 
 export { isResponsesModel } from "./apis/openaiResponses.js";
 export { extractBase64FromDataUrl, parseDataUrl } from "./util/url.js";
+
