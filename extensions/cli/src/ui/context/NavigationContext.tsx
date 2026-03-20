@@ -14,7 +14,6 @@ export type NavigationScreen =
   | "chat" // Normal chat interface
   | "config" // Config selector (includes organization switching)
   | "model" // Model selector
-  | "free-trial" // Free trial transition UI
   | "login" // Login prompt
   | "mcp" // MCP selector
   | "session" // Session selector

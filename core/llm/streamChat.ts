@@ -1,12 +1,10 @@
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { ChatMessage, IDE, PromptLog } from "..";
 import { ConfigHandler } from "../config/ConfigHandler";
-import { usesCreditsBasedApiKey } from "../config/usesFreeTrialApiKey";
 import { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import { IMessenger, Message } from "../protocol/messenger";
 
 import { TTS } from "../util/tts";
-import { isOutOfStarterCredits } from "./utils/starterCredits";
 
 export async function* llmStreamChat(
   configHandler: ConfigHandler,
@@ -136,8 +134,6 @@ export async function* llmStreamChat(
         void TTS.read(next.value?.completion);
       }
 
-      void checkForOutOfStarterCredits(configHandler, messenger);
-
       if (!next.done) {
         throw new Error("Will never happen");
       }
@@ -147,26 +143,5 @@ export async function* llmStreamChat(
   } catch (error) {
     // Moved error handling that was here to GUI, keeping try/catch for clean diff
     throw error;
-  }
-}
-
-async function checkForOutOfStarterCredits(
-  configHandler: ConfigHandler,
-  messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
-) {
-  try {
-    const { config } = await configHandler.getSerializedConfig();
-    const creditStatus =
-      await configHandler.controlPlaneClient.getCreditStatus();
-
-    if (
-      config &&
-      creditStatus &&
-      isOutOfStarterCredits(usesCreditsBasedApiKey(config), creditStatus)
-    ) {
-      void messenger.request("freeTrialExceeded", undefined);
-    }
-  } catch (error) {
-    console.error("Error checking free trial status:", error);
   }
 }

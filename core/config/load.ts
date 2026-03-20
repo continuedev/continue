@@ -346,12 +346,8 @@ async function intermediateToFinalConfig({
     "summarize",
   ]); // Default to chat role if not specified
 
-  // Free trial provider will be completely ignored
-  let warnAboutFreeTrial = false;
+  // Free trial provider is no longer supported — hard-drop any such models
   models = models.filter((model) => model.providerName !== "free-trial");
-  if (models.filter((m) => m.providerName === "free-trial").length) {
-    warnAboutFreeTrial = true;
-  }
 
   // Tab autocomplete model
   const tabAutocompleteModels: BaseLLM[] = [];
@@ -373,9 +369,7 @@ async function intermediateToFinalConfig({
             config.completionOptions,
           );
           if (llm) {
-            if (llm.providerName === "free-trial") {
-              warnAboutFreeTrial = true;
-            } else {
+            if (llm.providerName !== "free-trial") {
               tabAutocompleteModels.push(llm);
             }
           }
@@ -419,9 +413,6 @@ async function intermediateToFinalConfig({
       }
       const { provider, ...options } = embedConfig;
       if (provider === "transformers.js" || provider === "free-trial") {
-        if (provider === "free-trial") {
-          warnAboutFreeTrial = true;
-        }
         return new TransformersJsEmbeddingsProvider();
       } else {
         const cls = LLMClasses.find((c) => c.providerName === provider);
@@ -459,7 +450,6 @@ async function intermediateToFinalConfig({
     }
     const { name, params } = config.reranker as RerankerDescription;
     if (name === "free-trial") {
-      warnAboutFreeTrial = true;
       return null;
     }
     if (name === "llm") {
@@ -491,14 +481,6 @@ async function intermediateToFinalConfig({
     return null;
   }
   const newReranker = getRerankingILLM(config.reranker);
-
-  if (warnAboutFreeTrial) {
-    errors.push({
-      fatal: false,
-      message:
-        "Model provider 'free-trial' is no longer supported, will be ignored",
-    });
-  }
 
   const continueConfig: ContinueConfig = {
     ...config,

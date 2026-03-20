@@ -305,13 +305,13 @@ export async function configYamlToContinueConfig(options: {
   });
 
   // Models
-  let warnAboutFreeTrial = false;
   const defaultModelRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
   for (const model of config.models ?? []) {
     model.roles = model.roles ?? defaultModelRoles; // Default to all 4 chat-esque roles if not specified
 
+    // Free trial provider is no longer supported — hard-drop
     if (model.provider === "free-trial") {
-      warnAboutFreeTrial = true;
+      continue;
     }
     try {
       const llms = await llmsFromModelConfig({
@@ -384,14 +384,6 @@ export async function configYamlToContinueConfig(options: {
     continueConfig.modelsByRole.embed.push(
       new TransformersJsEmbeddingsProvider(),
     );
-  }
-
-  if (warnAboutFreeTrial) {
-    localErrors.push({
-      fatal: false,
-      message:
-        "Model provider 'free-trial' is no longer supported, will be ignored.",
-    });
   }
 
   const { providers, errors: contextErrors } = loadConfigContextProviders(

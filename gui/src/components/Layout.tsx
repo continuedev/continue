@@ -146,22 +146,6 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "freeTrialExceeded",
-    async () => {
-      dispatch(setShowDialog(true));
-      onboardingCard.setActiveTab(OnboardingModes.MODELS_ADD_ON);
-      dispatch(
-        setDialogMessage(
-          <div className="flex-1">
-            <OnboardingCard isDialog />
-          </div>,
-        ),
-      );
-    },
-    [],
-  );
-
-  useWebviewListener(
     "setupApiKey",
     async () => {
       onboardingCard.open(OnboardingModes.API_KEY);
