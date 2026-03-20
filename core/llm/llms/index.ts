@@ -56,6 +56,7 @@ import SageMaker from "./SageMaker";
 import SambaNova from "./SambaNova";
 import Scaleway from "./Scaleway";
 import SiliconFlow from "./SiliconFlow";
+import Tensorix from "./Tensorix";
 import ContinueProxy from "./stubs/ContinueProxy";
 import TARS from "./TARS";
 import TestLLM from "./Test";
@@ -121,6 +122,7 @@ export const LLMClasses = [
   VertexAI,
   xAI,
   SiliconFlow,
+  Tensorix,
   Scaleway,
   Relace,
   Inception,

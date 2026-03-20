@@ -27,7 +27,8 @@ const MOCK_ANSI_OUTPUT = `\u001b[32m✓\u001b[0m Test passed
 const MOCK_OUTPUT_WITH_LINKS = `Build successful!
 Visit https://example.com for more info
 Check www.github.com/user/repo
-Error logs at file:///tmp/error.log`;
+Error logs at file:///tmp/error.log
+Available on: http://192.168.137.1:8081`;
 
 // Mock the redux hooks
 const mockDispatch = vi.fn();
@@ -48,7 +49,7 @@ describe("UnifiedTerminalCommand", () => {
     );
 
     // Should show the command
-    expect(screen.getByText(`$ ${MOCK_COMMAND}`)).toBeInTheDocument();
+    expect(screen.getByText(MOCK_COMMAND)).toBeInTheDocument();
 
     // Should show terminal header
     expect(screen.getByText("Terminal")).toBeInTheDocument();
@@ -68,7 +69,7 @@ describe("UnifiedTerminalCommand", () => {
     );
 
     // Should show the command and output
-    expect(screen.getByText(`$ ${MOCK_COMMAND}`)).toBeInTheDocument();
+    expect(screen.getByText(MOCK_COMMAND)).toBeInTheDocument();
 
     // Check that the output content exists in the container
     expect(container.textContent).toMatch(/Test 1 passed/);
@@ -200,9 +201,13 @@ describe("UnifiedTerminalCommand", () => {
     // Should contain the link text in the output
     expect(container.textContent).toMatch(/https:\/\/example\.com/);
     expect(container.textContent).toMatch(/www\.github\.com/);
+    expect(container.textContent).toMatch(/http:\/\/192\.168\.137\.1:8081/);
 
-    // Note: Link detection might create actual <a> tags or just display the URLs
-    // The important thing is the URLs are visible in the output
+    // Verify rendered links have correct hrefs including port
+    const links = container.querySelectorAll("a");
+    const hrefs = Array.from(links).map((a) => a.getAttribute("href"));
+    expect(hrefs).toContainEqual("https://example.com");
+    expect(hrefs).toContainEqual(expect.stringContaining("192.168.137.1:8081"));
   });
 
   test("shows copy and run in terminal buttons when not running", async () => {
@@ -303,7 +308,7 @@ describe("UnifiedTerminalCommand", () => {
     );
 
     // Should show command but no output section
-    expect(screen.getByText(`$ ${MOCK_COMMAND}`)).toBeInTheDocument();
+    expect(screen.getByText(MOCK_COMMAND)).toBeInTheDocument();
 
     // Should not show any output content
     const outputElements = container.querySelectorAll(

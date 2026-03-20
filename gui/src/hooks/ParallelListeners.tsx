@@ -64,6 +64,9 @@ function ParallelListeners() {
       if (isInitial && hasDoneInitialConfigLoad.current) {
         return;
       }
+      if (configResult.configLoadInterrupted) {
+        return;
+      }
       hasDoneInitialConfigLoad.current = true;
       dispatch(setOrganizations(organizations));
       dispatch(setSelectedOrgId(selectedOrgId));
