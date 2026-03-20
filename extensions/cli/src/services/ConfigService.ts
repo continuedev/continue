@@ -7,6 +7,7 @@ import {
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 
 import { isStringRule } from "src/hubLoader.js";
+import { loadMarkdownRulesWithMetadata } from "src/systemMessage.js";
 import { getErrorString } from "src/util/error.js";
 
 import { AuthConfig, loadAuthConfig } from "../auth/workos.js";
@@ -274,6 +275,17 @@ export class ConfigService
 
     const loadedConfig = result.config;
     const merged = mergeUnrolledAssistants(loadedConfig, additional);
+
+    const markdownRules = loadMarkdownRulesWithMetadata();
+    if (markdownRules.length > 0) {
+      const existingRuleContents = new Set(
+        (merged.rules ?? []).map((r) => (typeof r === "string" ? r : r?.rule)),
+      );
+      const newRules = markdownRules.filter(
+        (r) => !existingRuleContents.has(r.rule),
+      );
+      merged.rules = [...(merged.rules ?? []), ...newRules];
+    }
 
     const withModel = await this.addDefaultChatModelIfNone(
       merged,
