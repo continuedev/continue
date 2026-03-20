@@ -378,10 +378,7 @@ export default async function doLoadConfig(options: {
   }
 
   // Setup IdeInfoService
-  IdeInfoService.setup(
-    uniqueId,
-    ideInfo,
-  );
+  IdeInfoService.setup(uniqueId, ideInfo);
 
   // TODO: pass config to pre-load non-system TTS models
   await TTS.setup();

@@ -121,6 +121,5 @@ export class AutocompleteLoggingService {
       numLines: restOfOutcome.numLines,
       profileType: restOfOutcome.profileType,
     };
-
   }
 }
