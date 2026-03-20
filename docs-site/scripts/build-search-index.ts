@@ -33,8 +33,14 @@ function getAllDocSlugs(nav: any[]): string[] {
 }
 
 function stripMdx(content: string): string {
-  return content
-    .replace(/<[^>]+>/g, "")
+  // Iteratively strip HTML tags to handle nested/malformed tags
+  let stripped = content;
+  let prev = "";
+  while (prev !== stripped) {
+    prev = stripped;
+    stripped = stripped.replace(/<[^>]+>/g, "");
+  }
+  return stripped
     .replace(/```[\s\S]*?```/g, "")
     .replace(/`[^`]+`/g, "")
     .replace(/!\[.*?\]\(.*?\)/g, "")
