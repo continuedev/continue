@@ -166,9 +166,12 @@ describe("NavigationContext", () => {
 
       it("closes from any screen back to chat", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
-        const screens: Array<
-          "config" | "model" | "login" | "mcp"
-        > = ["config", "model", "login", "mcp"];
+        const screens: Array<"config" | "model" | "login" | "mcp"> = [
+          "config",
+          "model",
+          "login",
+          "mcp",
+        ];
 
         screens.forEach((screen) => {
           act(() => {

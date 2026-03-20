@@ -6,7 +6,15 @@ import remarkGfm from "remark-gfm";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypePrismPlus from "rehype-prism-plus";
-import { loadMdxFile, getHeadings, getAllDocTitles, getAllDocSlugs, docsNav, resolveDocsRedirect, docsRedirects } from "@/lib/docs";
+import {
+  loadMdxFile,
+  getHeadings,
+  getAllDocTitles,
+  getAllDocSlugs,
+  docsNav,
+  resolveDocsRedirect,
+  docsRedirects,
+} from "@/lib/docs";
 import { getPageNavigation } from "@/config/docsNav";
 import { mdxComponents } from "@/components/docs/mdx";
 import { DocsShell } from "@/components/docs/DocsShell";
@@ -58,7 +66,9 @@ export default async function DocsPage({ params }: Props) {
   // Check redirect first
   const redirectTo = resolveDocsRedirect(slugPath);
   if (redirectTo) {
-    const target = redirectTo.startsWith("http") ? redirectTo : `/docs${redirectTo}`;
+    const target = redirectTo.startsWith("http")
+      ? redirectTo
+      : `/docs${redirectTo}`;
     return <ClientRedirect to={target} />;
   }
 
@@ -95,9 +105,14 @@ export default async function DocsPage({ params }: Props) {
   const { prev, next } = getPageNavigation(docsNav, currentSlug, titleMap);
 
   return (
-    <DocsShell currentSlug={currentSlug} headings={headings} titleMap={titleMap} docsNav={docsNav}>
+    <DocsShell
+      currentSlug={currentSlug}
+      headings={headings}
+      titleMap={titleMap}
+      docsNav={docsNav}
+    >
       {doc.frontmatter.title && (
-        <div className="flex items-start justify-between gap-4 mb-2">
+        <div className="mb-2 flex items-start justify-between gap-4">
           <h1 className="text-3xl font-light tracking-tight text-black/90 dark:text-white/90">
             {doc.frontmatter.title}
           </h1>
@@ -105,7 +120,7 @@ export default async function DocsPage({ params }: Props) {
         </div>
       )}
       {doc.frontmatter.description && (
-        <p className="text-lg text-black/50 dark:text-white/50 mb-8">
+        <p className="mb-8 text-lg text-black/50 dark:text-white/50">
           {doc.frontmatter.description.replace(/\*\*/g, "")}
         </p>
       )}

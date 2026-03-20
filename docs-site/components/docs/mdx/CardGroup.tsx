@@ -16,13 +16,10 @@ export function CardGroup({
     3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
     4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
   };
-  const colClass = colClasses[Math.min(cols, 4) as 1 | 2 | 3 | 4] || colClasses[2];
+  const colClass =
+    colClasses[Math.min(cols, 4) as 1 | 2 | 3 | 4] || colClasses[2];
 
-  return (
-    <div className={`my-6 grid gap-4 ${colClass}`}>
-      {children}
-    </div>
-  );
+  return <div className={`my-6 grid gap-4 ${colClass}`}>{children}</div>;
 }
 
 export function Card({
@@ -37,13 +34,19 @@ export function Card({
   children?: React.ReactNode;
 }) {
   const inner = (
-    <div className={`rounded-lg border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-white/5 p-5 h-full${href ? " transition-colors hover:border-black/[0.18] dark:hover:border-white/[0.18]" : ""}`}>
+    <div
+      className={`rounded-lg border border-black/[0.08] bg-white p-5 dark:border-white/[0.08] dark:bg-white/5 h-full${href ? "transition-colors hover:border-black/[0.18] dark:hover:border-white/[0.18]" : ""}`}
+    >
       {title && (
-        <h3 className="text-[15px] font-medium text-black/80 dark:text-white/80 mb-1 !mt-0">
+        <h3 className="!mt-0 mb-1 text-[15px] font-medium text-black/80 dark:text-white/80">
           {title}
         </h3>
       )}
-      {children && <div className="text-sm text-black/50 dark:text-white/50">{children}</div>}
+      {children && (
+        <div className="text-sm text-black/50 dark:text-white/50">
+          {children}
+        </div>
+      )}
     </div>
   );
 
@@ -58,7 +61,7 @@ export function Card({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="no-underline !text-inherit"
+          className="!text-inherit no-underline"
         >
           {inner}
         </a>
@@ -69,7 +72,7 @@ export function Card({
     const resolved = resolve(internalPath);
 
     return (
-      <Link href={resolved} className="no-underline !text-inherit">
+      <Link href={resolved} className="!text-inherit no-underline">
         {inner}
       </Link>
     );

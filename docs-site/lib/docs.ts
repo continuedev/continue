@@ -3,8 +3,7 @@ import path from "path";
 import matter from "gray-matter";
 import { type NavItem, type NavTab } from "@/config/docsNav";
 
-const DOCS_DIR =
-  process.env.DOCS_DIR || path.resolve(process.cwd(), "../docs");
+const DOCS_DIR = process.env.DOCS_DIR || path.resolve(process.cwd(), "../docs");
 
 export function getDocsDir() {
   return DOCS_DIR;
@@ -50,7 +49,7 @@ export function resolveDocsRedirect(slug: string[]): string | null {
   const key = slug.join("/");
   const dest = docsRedirects.get(key);
   if (!dest) return null;
-  
+
   // Handle external URLs
   if (dest.startsWith("https://") || dest.startsWith("http://")) {
     try {
@@ -66,7 +65,7 @@ export function resolveDocsRedirect(slug: string[]): string | null {
       return null;
     }
   }
-  
+
   // Internal redirects - ensure they start with /
   return dest.startsWith("/") ? dest : `/${dest}`;
 }
@@ -77,9 +76,7 @@ export interface DocFile {
   slug: string[];
 }
 
-export async function loadMdxFile(
-  slug: string[],
-): Promise<DocFile | null> {
+export async function loadMdxFile(slug: string[]): Promise<DocFile | null> {
   const slugPath = slug.join("/");
   const filePath = path.join(DOCS_DIR, slugPath + ".mdx");
 
@@ -103,7 +100,9 @@ export async function loadRawMdxFile(
   const filePath = path.join(DOCS_DIR, slugPath + ".mdx");
 
   // Prevent path traversal — ensure the resolved path stays inside DOCS_DIR.
-  const docsDirNormalized = DOCS_DIR.endsWith(path.sep) ? DOCS_DIR : DOCS_DIR + path.sep;
+  const docsDirNormalized = DOCS_DIR.endsWith(path.sep)
+    ? DOCS_DIR
+    : DOCS_DIR + path.sep;
   const isWithinDocsDir = (p: string) => p.startsWith(docsDirNormalized);
 
   if (isWithinDocsDir(filePath) && fs.existsSync(filePath)) {
@@ -163,19 +162,13 @@ function preprocessMdx(content: string, slug: string[]): string {
   // Replace <SnippetName /> with inlined content
   for (const [name, body] of Array.from(snippets.entries())) {
     const selfClosing = new RegExp(`<${name}\\s*/>`, "g");
-    const withChildren = new RegExp(
-      `<${name}\\s*>[\\s\\S]*?</${name}>`,
-      "g",
-    );
+    const withChildren = new RegExp(`<${name}\\s*>[\\s\\S]*?</${name}>`, "g");
     result = result.replace(selfClosing, body);
     result = result.replace(withChildren, body);
   }
 
   // Strip all remaining import statements (JSX snippets handled via components map)
-  result = result.replace(
-    /^import\s+.*from\s+['"].*['"];?\s*$/gm,
-    "",
-  );
+  result = result.replace(/^import\s+.*from\s+['"].*['"];?\s*$/gm, "");
 
   // Convert :::warning / :::info / :::tip admonitions to JSX components
   result = result.replace(
@@ -198,16 +191,10 @@ function preprocessMdx(content: string, slug: string[]): string {
   );
 
   // Rewrite image paths: /images/... → /images/docs/...
-  result = result.replace(
-    /src=["']\/images\//g,
-    'src="/images/docs/',
-  );
+  result = result.replace(/src=["']\/images\//g, 'src="/images/docs/');
 
   // Rewrite markdown image paths: ![alt](/images/...) → ![alt](/images/docs/...)
-  result = result.replace(
-    /\]\(\/images\//g,
-    "](/images/docs/",
-  );
+  result = result.replace(/\]\(\/images\//g, "](/images/docs/");
 
   // Rewrite relative image paths: ![alt](../images/...) → ![alt](/images/docs/...)
   // Resolve relative to the current file's directory

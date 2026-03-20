@@ -25,7 +25,6 @@ import {
 } from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 
-
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
   position: relative;
@@ -220,44 +219,44 @@ const Layout = () => {
   return (
     <LocalStorageProvider>
       <AuthProvider>
-          <LayoutTopDiv>
-            {showStagingIndicator && (
-              <span
-                title="Staging environment"
-                className="absolute right-0 mx-1.5 h-1.5 w-1.5 rounded-full"
-                style={{
-                  backgroundColor: "var(--vscode-list-warningForeground)",
-                }}
-              />
-            )}
-            <OSRContextMenu />
-            <div
+        <LayoutTopDiv>
+          {showStagingIndicator && (
+            <span
+              title="Staging environment"
+              className="absolute right-0 mx-1.5 h-1.5 w-1.5 rounded-full"
               style={{
-                scrollbarGutter: "stable both-edges",
-                minHeight: "100%",
-                display: "grid",
-                gridTemplateRows: "1fr auto",
+                backgroundColor: "var(--vscode-list-warningForeground)",
               }}
-            >
-              <TextDialog
-                showDialog={showDialog}
-                onEnter={() => {
-                  dispatch(setShowDialog(false));
-                }}
-                onClose={() => {
-                  dispatch(setShowDialog(false));
-                }}
-                message={dialogMessage}
-              />
+            />
+          )}
+          <OSRContextMenu />
+          <div
+            style={{
+              scrollbarGutter: "stable both-edges",
+              minHeight: "100%",
+              display: "grid",
+              gridTemplateRows: "1fr auto",
+            }}
+          >
+            <TextDialog
+              showDialog={showDialog}
+              onEnter={() => {
+                dispatch(setShowDialog(false));
+              }}
+              onClose={() => {
+                dispatch(setShowDialog(false));
+              }}
+              message={dialogMessage}
+            />
 
-              <GridDiv>
-                <Outlet />
-                {/* The fatal error for chat is shown below input */}
-                {!isHome && <FatalErrorIndicator />}
-              </GridDiv>
-            </div>
-            <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
-          </LayoutTopDiv>
+            <GridDiv>
+              <Outlet />
+              {/* The fatal error for chat is shown below input */}
+              {!isHome && <FatalErrorIndicator />}
+            </GridDiv>
+          </div>
+          <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
+        </LayoutTopDiv>
       </AuthProvider>
     </LocalStorageProvider>
   );

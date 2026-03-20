@@ -29,7 +29,7 @@ export function DocsTabs({ children }: { children: React.ReactNode }) {
           <TabsPrimitive.Trigger
             key={i}
             value={String(i)}
-            className="px-4 py-2 text-sm text-black/40 dark:text-white/40 data-[state=active]:text-black/80 dark:data-[state=active]:text-white/80 data-[state=active]:border-b-2 data-[state=active]:border-black/80 dark:data-[state=active]:border-white/80 transition-colors -mb-px"
+            className="-mb-px px-4 py-2 text-sm text-black/40 transition-colors data-[state=active]:border-b-2 data-[state=active]:border-black/80 data-[state=active]:text-black/80 dark:text-white/40 dark:data-[state=active]:border-white/80 dark:data-[state=active]:text-white/80"
           >
             {tab.title}
           </TabsPrimitive.Trigger>

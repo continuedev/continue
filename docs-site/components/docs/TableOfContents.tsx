@@ -29,8 +29,8 @@ export function TableOfContents({ headings }: { headings: Heading[] }) {
   if (headings.length === 0) return null;
 
   return (
-    <aside className="hidden xl:block w-56 flex-shrink-0 pt-8 pb-8 px-4 overflow-y-auto">
-      <h4 className="text-xs font-medium uppercase tracking-wider text-black/30 dark:text-white/30 mb-3">
+    <aside className="hidden w-56 flex-shrink-0 overflow-y-auto px-4 pb-8 pt-8 xl:block">
+      <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-black/30 dark:text-white/30">
         On this page
       </h4>
       <nav className="space-y-1">
@@ -38,16 +38,12 @@ export function TableOfContents({ headings }: { headings: Heading[] }) {
           <a
             key={heading.id}
             href={`#${heading.id}`}
-            className={`block text-[13px] transition-colors py-1 ${
-              heading.level === 3
-                ? "pl-3"
-                : heading.level === 4
-                  ? "pl-6"
-                  : ""
+            className={`block py-1 text-[13px] transition-colors ${
+              heading.level === 3 ? "pl-3" : heading.level === 4 ? "pl-6" : ""
             } ${
               activeId === heading.id
-                ? "text-black/80 dark:text-white/80 font-medium"
-                : "text-black/35 dark:text-white/35 hover:text-black/60 dark:hover:text-white/60"
+                ? "font-medium text-black/80 dark:text-white/80"
+                : "text-black/35 hover:text-black/60 dark:text-white/35 dark:hover:text-white/60"
             }`}
           >
             {heading.text}

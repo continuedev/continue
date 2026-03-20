@@ -66,13 +66,13 @@ function ThemeToggle() {
   useEffect(() => setMounted(true), []);
 
   if (!mounted) {
-    return <div className="w-8 h-8" />;
+    return <div className="h-8 w-8" />;
   }
 
   return (
     <button
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-      className="p-2 text-black/40 dark:text-white/40 hover:text-black/70 dark:hover:text-white/70 transition-colors"
+      className="p-2 text-black/40 transition-colors hover:text-black/70 dark:text-white/40 dark:hover:text-white/70"
       aria-label="Toggle theme"
     >
       {resolvedTheme === "dark" ? (
@@ -131,17 +131,17 @@ function SidebarGroup({
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between py-1.5 px-2.5 -mx-2.5 text-[13px] text-black/45 dark:text-white/45 hover:text-black/70 dark:hover:text-white/70"
+        className="-mx-2.5 flex w-full items-center justify-between px-2.5 py-1.5 text-[13px] text-black/45 hover:text-black/70 dark:text-white/45 dark:hover:text-white/70"
       >
         <span>{group.group}</span>
         <ChevronDown
-          className={`h-3.5 w-3.5 text-black/30 dark:text-white/30 transition-transform ${
+          className={`h-3.5 w-3.5 text-black/30 transition-transform dark:text-white/30 ${
             open ? "rotate-0" : "-rotate-90"
           }`}
         />
       </button>
       {open && (
-        <div className="ml-3 border-l border-black/[0.06] dark:border-white/[0.06] pl-3 space-y-0.5">
+        <div className="ml-3 space-y-0.5 border-l border-black/[0.06] pl-3 dark:border-white/[0.06]">
           {group.pages.map((item, i) => (
             <SidebarItem
               key={i}
@@ -176,10 +176,10 @@ function SidebarItem({
     return (
       <Link
         href={resolve(`/docs/${item}`)}
-        className={`block py-1.5 px-2.5 -mx-2.5 rounded text-[13px] transition-colors no-underline ${
+        className={`-mx-2.5 block rounded px-2.5 py-1.5 text-[13px] no-underline transition-colors ${
           isActive
-            ? "text-black/90 dark:text-white/90 font-medium bg-black/[0.04] dark:bg-white/[0.06]"
-            : "text-black/45 dark:text-white/45 hover:text-black/70 dark:hover:text-white/70"
+            ? "bg-black/[0.04] font-medium text-black/90 dark:bg-white/[0.06] dark:text-white/90"
+            : "text-black/45 hover:text-black/70 dark:text-white/45 dark:hover:text-white/70"
         }`}
       >
         {slugToLabel(item, titleMap)}
@@ -188,7 +188,13 @@ function SidebarItem({
   }
 
   return (
-    <SidebarGroup group={item} currentSlug={currentSlug} titleMap={titleMap} resolve={resolve} depth={depth} />
+    <SidebarGroup
+      group={item}
+      currentSlug={currentSlug}
+      titleMap={titleMap}
+      resolve={resolve}
+      depth={depth}
+    />
   );
 }
 
@@ -213,19 +219,20 @@ export function DocsShell({
   const [selectedTab, setSelectedTab] = useState(activeTab.tab);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const currentTab =
-    docsNav.find((t) => t.tab === selectedTab) ?? docsNav[0]!;
+  const currentTab = docsNav.find((t) => t.tab === selectedTab) ?? docsNav[0]!;
   const navLinks = NAV_LINKS;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       {/* ---- Header: nav + tabs ---- */}
-      <div className="flex-shrink-0 z-30 bg-white dark:bg-[#0a0a0a]">
+      <div className="z-30 flex-shrink-0 bg-white dark:bg-[#0a0a0a]">
         {/* Top nav bar */}
         <nav className="border-b border-black/[0.06] dark:border-white/[0.06]">
-          <div className="flex items-center max-w-[90rem] mx-auto">
+          <div className="mx-auto flex max-w-[90rem] items-center">
             {/* Logo — same width & padding as sidebar */}
-            <div className={`hidden lg:flex items-center ${SIDEBAR_W} flex-shrink-0 px-5 py-3`}>
+            <div
+              className={`hidden items-center lg:flex ${SIDEBAR_W} flex-shrink-0 px-5 py-3`}
+            >
               <Link href={resolveHref("/")} className="flex items-center">
                 <img
                   src="/images/continue-logo-light.png"
@@ -235,7 +242,7 @@ export function DocsShell({
               </Link>
             </div>
             {/* Mobile logo */}
-            <div className="lg:hidden flex items-center px-5 py-3">
+            <div className="flex items-center px-5 py-3 lg:hidden">
               <Link href={resolveHref("/")} className="flex items-center">
                 <img
                   src="/images/continue-logo-light.png"
@@ -245,18 +252,20 @@ export function DocsShell({
               </Link>
             </div>
             {/* Centered search */}
-            <div className="flex-1 flex items-center justify-center px-5 py-3">
+            <div className="flex flex-1 items-center justify-center px-5 py-3">
               <DocsSearch resolve={resolveHref} />
             </div>
             {/* Right nav */}
             <div className="flex items-center gap-6 px-5 py-3">
-              <div className="hidden md:flex items-center gap-6">
+              <div className="hidden items-center gap-6 md:flex">
                 {navLinks.map((link) => (
                   <Link
                     key={link.label}
                     href={link.href}
                     className={`${NAV_LINK_CLASSES} ${
-                      link.label === "Docs" ? "text-black/70 dark:text-white/70" : ""
+                      link.label === "Docs"
+                        ? "text-black/70 dark:text-white/70"
+                        : ""
                     }`}
                   >
                     {link.label}
@@ -269,20 +278,20 @@ export function DocsShell({
               <ThemeToggle />
               {/* Mobile menu button */}
               <button
-                className="md:hidden p-2 text-black/40 dark:text-white/40 hover:text-black/70 dark:hover:text-white/70 transition-colors"
+                className="p-2 text-black/40 transition-colors hover:text-black/70 md:hidden dark:text-white/40 dark:hover:text-white/70"
                 onClick={() => setMobileMenuOpen((prev) => !prev)}
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? (
-                  <X className="w-5 h-5" />
+                  <X className="h-5 w-5" />
                 ) : (
-                  <Menu className="w-5 h-5" />
+                  <Menu className="h-5 w-5" />
                 )}
               </button>
             </div>
           </div>
           {mobileMenuOpen && (
-            <div className="md:hidden flex flex-col gap-4 px-5 pt-4 pb-2">
+            <div className="flex flex-col gap-4 px-5 pb-2 pt-4 md:hidden">
               {navLinks.map((link) => (
                 <Link
                   key={link.label}
@@ -306,7 +315,7 @@ export function DocsShell({
 
         {/* Tab bar — aligned with sidebar */}
         <div className="border-b border-black/[0.06] dark:border-white/[0.06]">
-          <div className="max-w-[90rem] mx-auto px-5 flex gap-6">
+          <div className="mx-auto flex max-w-[90rem] gap-6 px-5">
             {docsNav.map((tab) => (
               <button
                 key={tab.tab}
@@ -314,12 +323,12 @@ export function DocsShell({
                 className={`relative py-2.5 text-sm font-medium transition-colors ${
                   selectedTab === tab.tab
                     ? "text-black/80 dark:text-white/80"
-                    : "text-black/35 dark:text-white/35 hover:text-black/60 dark:hover:text-white/60"
+                    : "text-black/35 hover:text-black/60 dark:text-white/35 dark:hover:text-white/60"
                 }`}
               >
                 {tab.tab}
                 {selectedTab === tab.tab && (
-                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-black/70 dark:bg-white/70 rounded-full" />
+                  <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-black/70 dark:bg-white/70" />
                 )}
               </button>
             ))}
@@ -328,18 +337,28 @@ export function DocsShell({
       </div>
 
       {/* ---- Content area ---- */}
-      <div className="flex-1 min-h-0 flex w-full max-w-[90rem] mx-auto">
+      <div className="mx-auto flex min-h-0 w-full max-w-[90rem] flex-1">
         {/* Desktop sidebar */}
-        <aside className={`hidden lg:block ${SIDEBAR_W} flex-shrink-0 border-r border-black/[0.06] dark:border-white/[0.06] overflow-y-auto pt-5 pb-8 px-5`}>
+        <aside
+          className={`hidden lg:block ${SIDEBAR_W} flex-shrink-0 overflow-y-auto border-r border-black/[0.06] px-5 pb-8 pt-5 dark:border-white/[0.06]`}
+        >
           <nav className="space-y-5">
             {currentTab.groups.map((group, i) => (
-              <SidebarGroup key={i} group={group} currentSlug={currentSlug} titleMap={titleMap} resolve={resolveHref} />
+              <SidebarGroup
+                key={i}
+                group={group}
+                currentSlug={currentSlug}
+                titleMap={titleMap}
+                resolve={resolveHref}
+              />
             ))}
           </nav>
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 overflow-y-auto px-8 pt-10 pb-8 lg:px-20">{children}</main>
+        <main className="min-w-0 flex-1 overflow-y-auto px-8 pb-8 pt-10 lg:px-20">
+          {children}
+        </main>
 
         {/* Table of contents */}
         <TableOfContents headings={headings} />
@@ -347,25 +366,21 @@ export function DocsShell({
 
       {/* ---- Mobile sidebar ---- */}
       <button
-        className="lg:hidden fixed bottom-4 left-4 z-50 p-3 bg-black/80 dark:bg-white/80 text-white dark:text-black rounded-full shadow-lg"
+        className="fixed bottom-4 left-4 z-50 rounded-full bg-black/80 p-3 text-white shadow-lg lg:hidden dark:bg-white/80 dark:text-black"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Toggle sidebar"
       >
-        {mobileOpen ? (
-          <X className="h-5 w-5" />
-        ) : (
-          <Menu className="h-5 w-5" />
-        )}
+        {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
 
       {mobileOpen && (
         <>
           <div
-            className="lg:hidden fixed inset-0 z-40 bg-black/20 dark:bg-black/50"
+            className="fixed inset-0 z-40 bg-black/20 lg:hidden dark:bg-black/50"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="lg:hidden fixed inset-y-0 left-0 z-40 w-72 bg-white dark:bg-[#0a0a0a] border-r border-black/[0.06] dark:border-white/[0.06] overflow-y-auto pt-4 pb-8 px-4 shadow-xl">
-            <div className="flex gap-4 mb-4 border-b border-black/[0.06] dark:border-white/[0.06] pb-2">
+          <aside className="fixed inset-y-0 left-0 z-40 w-72 overflow-y-auto border-r border-black/[0.06] bg-white px-4 pb-8 pt-4 shadow-xl lg:hidden dark:border-white/[0.06] dark:bg-[#0a0a0a]">
+            <div className="mb-4 flex gap-4 border-b border-black/[0.06] pb-2 dark:border-white/[0.06]">
               {docsNav.map((tab) => (
                 <button
                   key={tab.tab}
@@ -373,12 +388,12 @@ export function DocsShell({
                   className={`relative pb-2 text-sm font-medium transition-colors ${
                     selectedTab === tab.tab
                       ? "text-black/80 dark:text-white/80"
-                      : "text-black/35 dark:text-white/35 hover:text-black/60 dark:hover:text-white/60"
+                      : "text-black/35 hover:text-black/60 dark:text-white/35 dark:hover:text-white/60"
                   }`}
                 >
                   {tab.tab}
                   {selectedTab === tab.tab && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-black/70 dark:bg-white/70 rounded-full" />
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-black/70 dark:bg-white/70" />
                   )}
                 </button>
               ))}

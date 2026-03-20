@@ -7,7 +7,8 @@ import "./docs.css";
 
 export const metadata: Metadata = {
   title: "Continue Docs",
-  description: "Documentation for Continue — the open-source AI code assistant.",
+  description:
+    "Documentation for Continue — the open-source AI code assistant.",
 };
 
 export default function RootLayout({

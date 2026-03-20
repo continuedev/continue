@@ -97,8 +97,13 @@ async function main() {
   const data = save(db);
   const outDir = path.resolve(__dirname, "../public");
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-  fs.writeFileSync(path.join(outDir, "search-index.json"), JSON.stringify(data));
-  console.log(`Search index written to public/search-index.json (${slugs.length} docs)`);
+  fs.writeFileSync(
+    path.join(outDir, "search-index.json"),
+    JSON.stringify(data),
+  );
+  console.log(
+    `Search index written to public/search-index.json (${slugs.length} docs)`,
+  );
 }
 
 main().catch((err) => {

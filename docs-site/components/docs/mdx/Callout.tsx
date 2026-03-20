@@ -39,9 +39,9 @@ export function Callout({
 
   return (
     <div
-      className={`my-4 flex gap-3 border-l-4 ${config.borderColor} ${config.bgColor} p-4 rounded-r-md`}
+      className={`my-4 flex gap-3 border-l-4 ${config.borderColor} ${config.bgColor} rounded-r-md p-4`}
     >
-      <Icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${config.iconColor}`} />
+      <Icon className={`mt-0.5 h-5 w-5 flex-shrink-0 ${config.iconColor}`} />
       <div className="flex-1 text-sm [&>p:last-child]:mb-0">{children}</div>
     </div>
   );

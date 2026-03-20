@@ -8,7 +8,15 @@ import path from "path";
 const DOCS_DIR = path.resolve(__dirname, "../../docs");
 const OUT_DIR = path.resolve(__dirname, "../public/images/docs");
 
-const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".ico"]);
+const IMAGE_EXTENSIONS = new Set([
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".svg",
+  ".webp",
+  ".ico",
+]);
 
 function copyImagesRecursive(srcDir: string, destDir: string) {
   if (!fs.existsSync(srcDir)) return;

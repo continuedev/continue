@@ -60,7 +60,9 @@ export function DocsSearch({ resolve }: { resolve: (path: string) => string }) {
         // Get all docs for showing when query is empty
         const allResult = search(db, { term: "", limit: 100 });
         const toResults = (r: typeof allResult) =>
-          (r as Awaited<typeof allResult>).hits.map((hit: { document: unknown }) => hit.document as SearchResult);
+          (r as Awaited<typeof allResult>).hits.map(
+            (hit: { document: unknown }) => hit.document as SearchResult,
+          );
         setAllDocs(toResults(allResult));
       })
       .finally(() => setLoading(false));
@@ -78,7 +80,11 @@ export function DocsSearch({ resolve }: { resolve: (path: string) => string }) {
       tolerance: 1,
       boost: { title: 3, section: 1.5 },
     }) as Awaited<ReturnType<typeof search>>;
-    setResults(res.hits.map((hit: { document: unknown }) => hit.document as SearchResult));
+    setResults(
+      res.hits.map(
+        (hit: { document: unknown }) => hit.document as SearchResult,
+      ),
+    );
   }, [query]);
 
   const displayResults = query.trim() ? results : allDocs;
@@ -93,15 +99,19 @@ export function DocsSearch({ resolve }: { resolve: (path: string) => string }) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 w-full max-w-md h-9 rounded-lg border border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.04] px-3 text-[13px] text-black/40 dark:text-white/40 hover:border-black/20 dark:hover:border-white/20 transition-colors"
+        className="flex h-9 w-full max-w-md items-center gap-2 rounded-lg border border-black/10 bg-black/[0.02] px-3 text-[13px] text-black/40 transition-colors hover:border-black/20 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/40 dark:hover:border-white/20"
       >
         <Search className="h-4 w-4 flex-shrink-0" />
         <span className="flex-1 text-left">Search...</span>
-        <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-black/10 dark:border-white/10 bg-black/[0.03] dark:bg-white/[0.06] px-1.5 font-mono text-[10px] text-black/40 dark:text-white/40">
+        <kbd className="hidden h-5 items-center gap-0.5 rounded border border-black/10 bg-black/[0.03] px-1.5 font-mono text-[10px] text-black/40 sm:inline-flex dark:border-white/10 dark:bg-white/[0.06] dark:text-white/40">
           <span className="text-xs">&#8984;</span>K
         </kbd>
       </button>
-      <CommandDialog open={open} onOpenChange={setOpen} dialogClassName="top-[15%] translate-y-0 data-[state=closed]:slide-out-to-top-[10%] data-[state=open]:slide-in-from-top-[10%]">
+      <CommandDialog
+        open={open}
+        onOpenChange={setOpen}
+        dialogClassName="top-[15%] translate-y-0 data-[state=closed]:slide-out-to-top-[10%] data-[state=open]:slide-in-from-top-[10%]"
+      >
         <CommandInput
           placeholder="Search documentation..."
           value={query}
@@ -109,7 +119,7 @@ export function DocsSearch({ resolve }: { resolve: (path: string) => string }) {
         />
         <CommandList className="max-h-[400px]">
           {loading ? (
-            <div className="py-6 text-center text-sm text-muted-foreground">
+            <div className="text-muted-foreground py-6 text-center text-sm">
               Loading search index...
             </div>
           ) : (
@@ -125,7 +135,7 @@ export function DocsSearch({ resolve }: { resolve: (path: string) => string }) {
                     >
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium">{result.title}</span>
-                        <span className="text-xs text-muted-foreground line-clamp-1">
+                        <span className="text-muted-foreground line-clamp-1 text-xs">
                           {result.content.slice(0, 120)}
                         </span>
                       </div>

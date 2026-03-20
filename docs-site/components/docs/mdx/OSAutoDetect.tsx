@@ -13,9 +13,7 @@ export function OSAutoDetect() {
     if (isMac || isLinux) tabIndex = 0;
     else if (isWindows) tabIndex = 1;
 
-    const tabButtons = document.querySelectorAll(
-      '[role="tablist"] button',
-    );
+    const tabButtons = document.querySelectorAll('[role="tablist"] button');
     if (tabButtons[tabIndex]) {
       (tabButtons[tabIndex] as HTMLButtonElement).click();
     }
