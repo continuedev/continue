@@ -73,7 +73,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   handleConfigSelect,
   handleModelSelect,
   handleSessionSelect,
-  handleReload,
+  handleReload: _handleReload,
   closeCurrentScreen,
   activePermissionRequest,
   activeQuizQuestion,
