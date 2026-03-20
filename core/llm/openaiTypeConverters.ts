@@ -635,7 +635,7 @@ function handleResponsesFinal(
           reasoning_details: details,
           metadata: {
             reasoningId: item.id as string,
-            encrypted_content: item.encrypted_content as string | undefined,
+            encrypted_content: item.encrypted_content as string,
           },
         };
         result.push(thinking);
@@ -785,6 +785,28 @@ function toResponseInputContentList(
 }
 
 /**
+ * Ensures an ID has the correct prefix (e.g., "msg_", "fc_", "rs_").
+ * If the ID already has the prefix, it's returned as is.
+ * If it has a different prefix, that prefix is stripped before adding the new one.
+ */
+function ensurePrefix(
+  id: string | undefined,
+  prefix: string,
+): string | undefined {
+  if (!id) return undefined;
+  if (id.startsWith(prefix)) return id;
+  // Strip existing prefix if any (msg_ is 4 chars, fc_/rs_ are 3 chars)
+  let cleanId = id;
+  if (id.includes("_")) {
+    const underscoreIndex = id.indexOf("_");
+    if (underscoreIndex === 2 || underscoreIndex === 3) {
+      cleanId = id.substring(underscoreIndex + 1);
+    }
+  }
+  return prefix + cleanId;
+}
+
+/**
  * Emits function_call items for each tool call that has a corresponding fc_ ID.
  * Extracted to reduce cyclomatic complexity in toResponsesInput.
  */
@@ -793,25 +815,30 @@ function emitFunctionCallsFromToolCalls(
   respIds: string[],
   input: ResponseInput,
 ): void {
-  for (let i = 0; i < toolCalls.length; i++) {
+  for (let i = 0; i < Math.min(toolCalls.length, respIds.length); i++) {
     const tc = toolCalls[i];
-    const fcId = respIds[i];
+    const itemId = respIds[i];
 
-    if (!fcId) continue; // Skip if no fc_ ID for this tool call
+    if (itemId) {
+      const name = tc?.function?.name as string | undefined;
+      const args = tc?.function?.arguments as string | undefined;
+      // Extract call_id from tc or itemId
+      const call_id =
+        tc.id ||
+        (itemId.includes("_")
+          ? itemId.substring(itemId.indexOf("_") + 1)
+          : itemId);
 
-    const name = tc?.function?.name as string | undefined;
-    const args = tc?.function?.arguments as string | undefined;
-    const call_id = tc?.id as string | undefined;
-
-    if (name && call_id) {
-      const functionCallItem: ResponseFunctionToolCall = {
-        id: fcId,
-        type: "function_call",
-        name,
-        arguments: typeof args === "string" ? args : "{}",
-        call_id,
-      };
-      input.push(functionCallItem);
+      if (name) {
+        const functionCallItem: ResponseFunctionToolCall = {
+          id: ensurePrefix(itemId, "fc_")!,
+          type: "function_call",
+          name,
+          arguments: typeof args === "string" ? args : "{}",
+          call_id,
+        };
+        input.push(functionCallItem);
+      }
     }
   }
 }
@@ -822,11 +849,12 @@ function emitFunctionCallsFromToolCalls(
  */
 function convertThinkingMessageToReasoningItem(
   msg: ThinkingChatMessage,
+  idOverride?: string,
 ): ResponseReasoningItem | undefined {
   const details = msg.reasoning_details ?? [];
   if (!details.length) return undefined;
 
-  let id: string | undefined;
+  let id: string | undefined = idOverride;
   let summaryText = "";
   let encrypted: string | undefined;
   let reasoningText = "";
@@ -850,9 +878,10 @@ function convertThinkingMessageToReasoningItem(
   if (!id) return undefined;
 
   const reasoningItem: ResponseReasoningItem = {
-    id,
     type: "reasoning",
+    id: ensurePrefix(id, "rs_")!,
     summary: [],
+    content: [],
   } as ResponseReasoningItem;
 
   if (summaryText) {
@@ -874,6 +903,7 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
   const pushMessage = (
     role: "user" | "assistant" | "system" | "developer",
     content: string | ResponseInputMessageContentList,
+    id?: string,
   ) => {
     const normalizedRole: "user" | "assistant" | "system" | "developer" =
       role === "system" ? "developer" : role;
@@ -882,6 +912,9 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
       content,
       type: "message",
     };
+    if (id) {
+      (easyMsg as any).id = ensurePrefix(id, "msg_");
+    }
     input.push(easyMsg as ResponseInputItem);
   };
 
@@ -905,35 +938,65 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
         break;
       }
       case "assistant": {
-        const text = getTextFromMessageContent(msg.content);
+        let text = getTextFromMessageContent(msg.content);
 
         const respId = msg.metadata?.responsesOutputItemId as
           | string
           | undefined;
         const toolCalls = msg.toolCalls as ToolCallDelta[] | undefined;
-        // Get array of fc_ IDs for parallel tool calls, fallback to single respId
-        // NOTE: responsesOutputItemIds is accumulated in sessionSlice.ts during streaming.
-        // We rely on OpenAI streaming events arriving in order, so respIds[i] corresponds
-        // to toolCalls[i] by position. See: https://platform.openai.com/docs/guides/function-calling
+
         const respIds =
           (msg.metadata?.responsesOutputItemIds as string[] | undefined) ||
           (respId ? [respId] : []);
 
-        if (
-          Array.isArray(toolCalls) &&
-          toolCalls.length > 0 &&
-          respIds.length > 0
-        ) {
-          // Emit function_call for EACH tool call (supports parallel tool calls)
-          emitFunctionCallsFromToolCalls(toolCalls, respIds, input);
-          // Also emit text content if present alongside tool calls
-          if (text && text.trim()) {
-            pushMessage("assistant", text);
+        let currentRespIdIndex = 0;
+
+        // 1. Handle Thinking (Reasoning)
+        let thinkingText: string | undefined;
+        if (typeof msg.content !== "string" && Array.isArray(msg.content)) {
+          const thinkingPart = (msg.content as any[]).find(
+            (p) => p.type === "thinking",
+          );
+          if (thinkingPart) {
+            thinkingText = thinkingPart.text;
           }
+        }
+
+        if (thinkingText) {
+          const thinkingId = respIds[currentRespIdIndex++] || respId;
+          const reasoningItem = convertThinkingMessageToReasoningItem(
+            msg as any as ThinkingChatMessage,
+            thinkingId,
+          );
+          if (reasoningItem) {
+            input.push(reasoningItem);
+          }
+        }
+
+        if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+          // 2. Handle Assistant Text (Must precede tool calls if present)
+          if (text && text.trim()) {
+            // Only consume an ID if it's not explicitly an fc_ ID (which belongs to a tool call)
+            // or if we have multiple IDs available.
+            const nextId = respIds[currentRespIdIndex] || respId;
+            const isExplicitFcId = nextId?.startsWith("fc_");
+
+            if (!isExplicitFcId || respIds.length > toolCalls.length) {
+              const assistantTextId = respIds[currentRespIdIndex++] || respId;
+              pushMessage("assistant", text, assistantTextId);
+            } else {
+              pushMessage("assistant", text);
+            }
+          }
+
+          // 3. Handle Tool Calls
+          const remainingRespIds = respIds.slice(currentRespIdIndex);
+          emitFunctionCallsFromToolCalls(toolCalls, remainingRespIds, input);
         } else if (respId) {
-          // Emit full assistant output message item
+          // No tool calls, just normal assistant message
+          const msgId = respIds[currentRespIdIndex] || respId;
           const outputMessageItem: ResponseOutputMessage = {
-            id: respId,
+            id: ensurePrefix(msgId, "msg_")!,
             role: "assistant",
             type: "message",
             status: "completed",
@@ -942,18 +1005,19 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
                 type: "output_text",
                 text: text || "",
                 annotations: [],
-              } satisfies ResponseOutputText,
+              },
             ],
           };
-          input.push(outputMessageItem);
+          input.push(outputMessageItem as ResponseInputItem);
         } else {
-          // Fallback to EasyInput assistant message
+          // Fallback to EasyInput assistant message if no structured ID or tool calls
           pushMessage("assistant", text || "");
         }
         break;
       }
       case "tool": {
-        const call_id = msg.toolCallId;
+        let call_id = msg.toolCallId;
+
         const output =
           typeof msg.content === "string"
             ? msg.content
@@ -974,6 +1038,44 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
           input.push(reasoningItem as ResponseInputItem);
         }
         break;
+      }
+    }
+  }
+
+  // Final safety filter: remove any reasoning items that are not followed by a message or function_call.
+  // Responses API requires that a reasoning item must be followed by an assistant message item or a function_call item.
+  for (let i = 0; i < input.length; i++) {
+    const item = input[i];
+    if (item.type === "reasoning") {
+      const next = input[i + 1] as any;
+      const isAssistantMessage =
+        next?.type === "message" && next?.role === "assistant";
+      const isNextReasoning = next?.type === "reasoning";
+      const isFunctionCall = next?.type === "function_call";
+
+      if (!isAssistantMessage && !isNextReasoning && !isFunctionCall) {
+        if (next) {
+          // Responses API requires reasoning to be followed by an assistant message.
+          // If followed by something else (tool call, output, etc.), we insert a fully-formed assistant message first.
+          const randomId = Math.random().toString(36).slice(2, 11);
+          input.splice(i + 1, 0, {
+            id: `msg_${randomId}`,
+            type: "message",
+            role: "assistant",
+            status: "completed",
+            content: [
+              {
+                type: "output_text",
+                text: "",
+                annotations: [],
+              },
+            ],
+          } as any);
+        } else {
+          // Reasoning cannot be at the end of the input array.
+          input.splice(i, 1);
+          i--;
+        }
       }
     }
   }
