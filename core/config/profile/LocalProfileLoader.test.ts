@@ -1,19 +1,23 @@
-import { describe, expect, it, jest, afterEach } from "@jest/globals";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import fs from "fs";
 
-import * as configYaml from "@continuedev/config-yaml";
+const mockParseConfigYaml = jest.fn();
+
+jest.mock("@continuedev/config-yaml", () => ({
+  parseConfigYaml: mockParseConfigYaml,
+}));
+
 import LocalProfileLoader from "./LocalProfileLoader";
 
 describe("LocalProfileLoader", () => {
   afterEach(() => {
     jest.restoreAllMocks();
+    mockParseConfigYaml.mockReset();
   });
 
   it("uses name from default local config.yaml when available", () => {
     jest.spyOn(fs, "readFileSync").mockReturnValue("config content" as any);
-    jest
-      .spyOn(configYaml, "parseConfigYaml")
-      .mockReturnValue({ name: "My Custom Config" } as any);
+    mockParseConfigYaml.mockReturnValue({ name: "My Custom Config" } as any);
 
     const loader = new LocalProfileLoader({} as any, {} as any, {} as any);
 
@@ -32,7 +36,7 @@ describe("LocalProfileLoader", () => {
 
   it("keeps Local Config title when config has no name field", () => {
     jest.spyOn(fs, "readFileSync").mockReturnValue("config content" as any);
-    jest.spyOn(configYaml, "parseConfigYaml").mockReturnValue({} as any);
+    mockParseConfigYaml.mockReturnValue({} as any);
 
     const loader = new LocalProfileLoader({} as any, {} as any, {} as any);
 
@@ -41,9 +45,7 @@ describe("LocalProfileLoader", () => {
 
   it("prefers override assistant content name when override file is provided", () => {
     const readSpy = jest.spyOn(fs, "readFileSync");
-    jest
-      .spyOn(configYaml, "parseConfigYaml")
-      .mockReturnValue({ name: "Workspace Agent" } as any);
+    mockParseConfigYaml.mockReturnValue({ name: "Workspace Agent" } as any);
 
     const loader = new LocalProfileLoader(
       {} as any,
