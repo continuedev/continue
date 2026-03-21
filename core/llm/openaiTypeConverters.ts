@@ -36,6 +36,7 @@ import {
   ThinkingChatMessage,
   ToolCallDelta,
 } from "..";
+import { stripImages } from "../util/messageContent";
 
 function appendReasoningFieldsIfSupported(
   msg: ChatCompletionAssistantMessageParam & {
@@ -51,13 +52,24 @@ function appendReasoningFieldsIfSupported(
     includeReasoningContentField?: boolean;
   },
 ) {
-  if (!prevMessage || prevMessage.role !== "thinking") return;
-
   const includeReasoning = !!providerFlags?.includeReasoningField;
   const includeReasoningDetails = !!providerFlags?.includeReasoningDetailsField;
   const includeReasoningContent = !!providerFlags?.includeReasoningContentField;
   if (!includeReasoning && !includeReasoningDetails && !includeReasoningContent)
     return;
+
+  const hasThinkingContent = prevMessage && prevMessage.role === "thinking";
+
+  // DeepSeek Reasoner requires reasoning_content on every assistant message,
+  // even when no thinking message precedes it (e.g. resumed sessions).
+  // Default to empty string to avoid 400 "Missing reasoning_content field".
+  if (includeReasoningContent) {
+    msg.reasoning_content = hasThinkingContent
+      ? stripImages(prevMessage.content)
+      : "";
+  }
+
+  if (!hasThinkingContent) return;
 
   const reasoningDetailsValue =
     prevMessage.reasoning_details ||
@@ -86,10 +98,7 @@ function appendReasoningFieldsIfSupported(
     msg.reasoning_details = reasoningDetailsValue || [];
   }
   if (includeReasoning) {
-    msg.reasoning = prevMessage.content as string;
-  }
-  if (includeReasoningContent) {
-    msg.reasoning_content = prevMessage.content as string;
+    msg.reasoning = stripImages(prevMessage.content);
   }
 }
 
