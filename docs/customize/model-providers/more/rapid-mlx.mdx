@@ -1,0 +1,119 @@
+---
+title: "Rapid-MLX"
+---
+
+<Info>
+  Get started with [Rapid-MLX](https://github.com/raullenchai/Rapid-MLX)
+</Info>
+
+[Rapid-MLX](https://github.com/raullenchai/Rapid-MLX) is a high-performance OpenAI-compatible inference server optimized for Apple Silicon. It uses Apple's MLX framework for native Metal compute, delivering 2-4x faster inference than Ollama with full tool calling, reasoning separation, and prompt caching.
+
+## Setup
+
+Install Rapid-MLX:
+
+```bash
+# Homebrew
+brew install raullenchai/tap/rapid-mlx
+
+# Or one-line install
+curl -fsSL https://raw.githubusercontent.com/raullenchai/Rapid-MLX/main/install.sh | bash
+```
+
+Start serving a model:
+
+```bash
+rapid-mlx serve mlx-community/Qwen2.5-Coder-7B-Instruct-4bit
+```
+
+The server runs at `http://localhost:8000` by default.
+
+## Configuration
+
+Rapid-MLX works with Continue's OpenAI provider since it exposes a fully OpenAI-compatible API:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Rapid-MLX
+      provider: openai
+      model: default
+      apiBase: http://localhost:8000/v1
+      apiKey: not-needed
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Rapid-MLX",
+        "provider": "openai",
+        "model": "default",
+        "apiBase": "http://localhost:8000/v1",
+        "apiKey": "not-needed"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Tab Autocomplete
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  tabAutocompleteModels:
+    - name: Rapid-MLX Autocomplete
+      provider: openai
+      model: default
+      apiBase: http://localhost:8000/v1
+      apiKey: not-needed
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": {
+      "title": "Rapid-MLX Autocomplete",
+      "provider": "openai",
+      "model": "default",
+      "apiBase": "http://localhost:8000/v1",
+      "apiKey": "not-needed"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Embeddings
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  embeddingsProvider:
+    provider: openai
+    model: default
+    apiBase: http://localhost:8000/v1
+    apiKey: not-needed
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "openai",
+      "model": "default",
+      "apiBase": "http://localhost:8000/v1",
+      "apiKey": "not-needed"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
