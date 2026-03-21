@@ -67,6 +67,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "openrouter",
   "deepseek",
   "xAI",
+  "minimax",
   "groq",
   "gemini",
   "docker",
@@ -248,6 +249,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "vertexai",
   "function-network",
   "scaleway",
+  "minimax",
 ];
 
 function llmCanGenerateInParallel(provider: string, model: string): boolean {
