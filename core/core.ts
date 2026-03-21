@@ -491,9 +491,25 @@ export class Core {
         msg.data.role,
         msg.data.title,
       );
-      await this.configHandler.reloadConfig(
-        "Selected model update (config/updateSelectedModel message)",
-      );
+
+      // Update the selected model in-place without a full config reload.
+      // A full reload re-reads YAML, recreates all models, and can cause
+      // a race condition where the GUI temporarily has no chat model selected.
+      const updated = msg.data.title
+        ? await this.configHandler.updateSelectedModel(
+            msg.data.role,
+            msg.data.title,
+          )
+        : false;
+
+      if (!updated) {
+        // Fallback to full reload if in-place update fails
+        // (e.g., model not found in cached config)
+        await this.configHandler.reloadConfig(
+          "Selected model update (config/updateSelectedModel message)",
+        );
+      }
+
       return newSelectedModels;
     });
 
