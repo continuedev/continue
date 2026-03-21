@@ -43,7 +43,7 @@ export default class LocalProfileLoader implements IProfileLoader {
     this.description = description;
 
     const yamlContent = this.getProfileYamlContent();
-    if (yamlContent) {
+    if (yamlContent !== undefined) {
       try {
         const parsedAssistant = parseConfigYaml(yamlContent);
         this.description.title = parsedAssistant.name ?? this.description.title;
@@ -54,7 +54,7 @@ export default class LocalProfileLoader implements IProfileLoader {
   }
 
   private getProfileYamlContent(): string | undefined {
-    if (this.overrideAssistantFile?.content) {
+    if (this.overrideAssistantFile && "content" in this.overrideAssistantFile) {
       return this.overrideAssistantFile.content;
     }
 
@@ -77,6 +77,9 @@ export default class LocalProfileLoader implements IProfileLoader {
       packageIdentifier: {
         uriType: "file",
         fileUri: this.overrideAssistantFile?.path ?? getPrimaryConfigFilePath(),
+        // Pass pre-read content to bypass fs.readFileSync, which fails for
+        // vscode-remote:// URIs when Windows host connects to WSL (#10450)
+        content: this.overrideAssistantFile?.content,
       },
     });
 
