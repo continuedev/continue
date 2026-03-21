@@ -52,4 +52,21 @@ describe("LocalProfileLoader", () => {
     expect(loader.description.title).toBe("Workspace Agent");
     expect(readSpy).not.toHaveBeenCalled();
   });
+
+  it("does not fall back to the primary config when override content is empty", () => {
+    const readSpy = jest.spyOn(fs, "readFileSync");
+
+    const loader = new LocalProfileLoader(
+      {} as any,
+      {} as any,
+      {} as any,
+      {
+        path: "file:///tmp/empty.yaml",
+        content: "",
+      },
+    );
+
+    expect(loader.description.title).toBe("empty.yaml");
+    expect(readSpy).not.toHaveBeenCalled();
+  });
 });
