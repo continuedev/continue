@@ -2,7 +2,6 @@ import {
   ConfigResult,
   ConfigValidationError,
   FullSlug,
-  ModelRole,
   Policy,
 } from "@continuedev/config-yaml";
 
@@ -136,27 +135,6 @@ export class ProfileLifecycleManager {
     this.savedConfigResult = await this.pendingConfigPromise;
     this.pendingConfigPromise = undefined;
     return this.savedConfigResult;
-  }
-
-  /**
-   * Update the selected model for a role in the cached config without a full reload.
-   * Returns true if the model was found and updated, false otherwise.
-   */
-  updateSelectedModel(role: ModelRole, title: string): boolean {
-    if (!this.savedConfigResult?.config) {
-      return false;
-    }
-
-    const config = this.savedConfigResult.config;
-    const match = config.modelsByRole[role]?.find((m) => m.title === title);
-    if (!match) {
-      return false;
-    }
-
-    config.selectedModelByRole[role] = match;
-    // Clear browser serialized cache so it gets re-serialized with the update
-    this.savedBrowserConfigResult = undefined;
-    return true;
   }
 
   async getSerializedConfig(

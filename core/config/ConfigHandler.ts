@@ -1,8 +1,4 @@
-import {
-  ConfigResult,
-  ConfigValidationError,
-  ModelRole,
-} from "@continuedev/config-yaml";
+import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../control-plane/client.js";
 import {
@@ -502,29 +498,6 @@ export class ConfigHandler {
 
     this.currentProfile = profile;
     await this.reloadConfig("Selected profile changed");
-  }
-
-  /**
-   * Update the selected model for a role without doing a full config reload.
-   * This avoids the race condition where a full reload can temporarily
-   * leave selectedModelByRole.chat as null, causing "No chat model selected".
-   */
-  async updateSelectedModel(role: ModelRole, title: string): Promise<boolean> {
-    if (!this.currentProfile) {
-      return false;
-    }
-
-    const updated = this.currentProfile.updateSelectedModel(role, title);
-    if (!updated) {
-      return false;
-    }
-
-    // Notify listeners with the updated config (no full reload needed)
-    const result = await this.currentProfile.loadConfig(
-      this.additionalContextProviders,
-    );
-    this.notifyConfigListeners(result);
-    return true;
   }
 
   // Bottom level of cascade: refresh the current profile
