@@ -43,23 +43,23 @@ Later files have higher precedence, but hooks from all files run.
 
 Continue currently supports the following event names:
 
-- `PreToolUse`
-- `PostToolUse`
-- `PostToolUseFailure`
-- `PermissionRequest`
-- `UserPromptSubmit`
-- `SessionStart`
-- `SessionEnd`
-- `Stop`
-- `Notification`
-- `SubagentStart`
-- `SubagentStop`
-- `PreCompact`
-- `ConfigChange`
-- `TeammateIdle`
-- `TaskCompleted`
-- `WorktreeCreate`
-- `WorktreeRemove`
+- `PreToolUse` — runs before a tool call executes.
+- `PostToolUse` — runs after a tool call succeeds.
+- `PostToolUseFailure` — runs after a tool call fails.
+- `PermissionRequest` — runs when the agent requests approval for a gated action.
+- `UserPromptSubmit` — runs after the user submits a prompt.
+- `SessionStart` — runs when a session begins.
+- `SessionEnd` — runs when a session ends.
+- `Stop` — runs when the session is interrupted or stopped.
+- `Notification` — runs when the CLI emits a notification event.
+- `SubagentStart` — runs when a subagent starts.
+- `SubagentStop` — runs when a subagent stops.
+- `PreCompact` — runs before context compaction starts.
+- `ConfigChange` — runs after configuration changes are applied.
+- `TeammateIdle` — runs when the agent becomes idle while waiting for the teammate.
+- `TaskCompleted` — runs after the current task is completed.
+- `WorktreeCreate` — runs after a worktree is created.
+- `WorktreeRemove` — runs after a worktree is removed.
 
 ## Matcher behavior
 
@@ -149,9 +149,11 @@ For **JSON hook output** (command or http):
 
 ## Sync vs async
 
-- Sync hooks are awaited and run in parallel with other sync hooks.
+- Sync hooks are awaited before the CLI continues.
 - Command hooks with `"async": true` are started and not awaited.
+- Multiple sync hooks for the same event can run in parallel.
 - Async hooks are useful for telemetry or background notifications where you do not want to delay the main action.
+- `SessionStart` is mode-dependent: interactive startup does not wait on it, while headless startup can await it before the main task begins.
 
 ## Environment variables for command hooks
 
