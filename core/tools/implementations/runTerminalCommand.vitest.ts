@@ -159,7 +159,11 @@ describe("runTerminalCommandImpl", () => {
       expect(result[0].status).toBe("Command completed");
       expect(result[0].content).toContain("fallback shell works");
     } finally {
-      process.env.SHELL = originalShell;
+      if (originalShell === undefined) {
+        delete process.env.SHELL;
+      } else {
+        process.env.SHELL = originalShell;
+      }
     }
   });
 
