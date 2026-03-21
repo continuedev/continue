@@ -179,6 +179,7 @@
                       "customize/model-providers/more/moonshot",
                       "customize/model-providers/more/nous",
                       "customize/model-providers/more/nvidia",
+                      "customize/model-providers/more/rapid-mlx",
                       "customize/model-providers/more/tensorix",
                       "customize/model-providers/more/together",
                       "customize/model-providers/more/xAI",
@@ -249,7 +250,11 @@
             "group": "Help",
             "icon": "book-open",
             "expanded": false,
-            "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
+            "pages": [
+              "faqs",
+              "troubleshooting",
+              "CONTRIBUTING"
+            ]
           },
           {
             "group": "Continue Hub (deprecated)",
@@ -310,7 +315,7 @@
   "navbar": {
     "links": [
       {
-        "label": "🚀 Get Started",
+        "label": "\ud83d\ude80 Get Started",
         "href": "https://continue.dev/"
       }
     ],
@@ -328,7 +333,10 @@
     }
   },
   "contextual": {
-    "options": ["copy", "view"]
+    "options": [
+      "copy",
+      "view"
+    ]
   },
   "feedback": {
     "thumbsRating": true,
@@ -344,8 +352,12 @@
     }
   },
   "custom": {
-    "css": ["custom.css"],
-    "js": ["reo-tracking.js"]
+    "css": [
+      "custom.css"
+    ],
+    "js": [
+      "reo-tracking.js"
+    ]
   },
   "redirects": [
     {
@@ -1136,7 +1148,6 @@
       "source": "/guides/build-your-own-context-provider",
       "destination": "/customize/deep-dives/custom-providers"
     },
-
     {
       "source": "/customize/settings",
       "destination": "/customize/overview"
@@ -1153,7 +1164,6 @@
       "source": "/hub/blocks/bundles",
       "destination": "/hub/introduction"
     },
-
     {
       "source": "/customize/custom-providers#@greptile-context-provider",
       "destination": "/reference/deprecated-context-providers"
