@@ -36,6 +36,7 @@ import {
   ThinkingChatMessage,
   ToolCallDelta,
 } from "..";
+import { stripImages } from "../util/messageContent";
 
 function appendReasoningFieldsIfSupported(
   msg: ChatCompletionAssistantMessageParam & {
@@ -64,7 +65,7 @@ function appendReasoningFieldsIfSupported(
   // Default to empty string to avoid 400 "Missing reasoning_content field".
   if (includeReasoningContent) {
     msg.reasoning_content = hasThinkingContent
-      ? (prevMessage.content as string)
+      ? stripImages(prevMessage.content)
       : "";
   }
 
@@ -97,7 +98,7 @@ function appendReasoningFieldsIfSupported(
     msg.reasoning_details = reasoningDetailsValue || [];
   }
   if (includeReasoning) {
-    msg.reasoning = prevMessage.content as string;
+    msg.reasoning = stripImages(prevMessage.content);
   }
 }
 
