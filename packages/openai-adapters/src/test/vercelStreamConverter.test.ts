@@ -24,7 +24,7 @@ describe("convertVercelStreamPart", () => {
     expect(result?.choices[0].delta.content).toBe("Hello");
   });
 
-  test("converts reasoning-delta to chat chunk", () => {
+  test("converts reasoning-delta to reasoning_content delta", () => {
     const part: VercelStreamPart = {
       type: "reasoning-delta",
       id: "reasoning-1",
@@ -34,7 +34,10 @@ describe("convertVercelStreamPart", () => {
     const result = convertVercelStreamPart(part, options);
 
     expect(result).not.toBeNull();
-    expect(result?.choices[0].delta.content).toBe("Let me think...");
+    expect((result?.choices[0].delta as any).reasoning_content).toBe(
+      "Let me think...",
+    );
+    expect(result?.choices[0].delta.content).toBeUndefined();
   });
 
   test("returns null for tool-call (handled by tool-input-start/delta)", () => {
@@ -190,6 +193,7 @@ describe("convertVercelStream", () => {
     const parts: VercelStreamPart[] = [
       { type: "start-step" },
       { type: "text-delta", id: "text-1", text: "Hello " },
+      { type: "reasoning-delta", id: "reasoning-1", text: "internal chain" },
       { type: "text-delta", id: "text-1", text: "world" },
       { type: "tool-input-start", id: "call_1", toolName: "test" },
       { type: "tool-input-delta", id: "call_1", delta: '{"arg":"value"}' },
@@ -224,20 +228,25 @@ describe("convertVercelStream", () => {
       chunks.push(chunk);
     }
 
-    // Should get chunks for: text-delta (2), tool-input-start (1), tool-input-delta (1), finish (1) = 5
+    // Should get chunks for: text-delta (2), reasoning-delta (1), tool-input-start (1),
+    // tool-input-delta (1), finish (1) = 6
     // start-step, tool-input-end, tool-call, and finish-step are filtered out
-    expect(chunks).toHaveLength(5);
+    expect(chunks).toHaveLength(6);
 
     expect(chunks[0].choices[0].delta.content).toBe("Hello ");
-    expect(chunks[1].choices[0].delta.content).toBe("world");
-    expect(chunks[2].choices[0].delta.tool_calls?.[0].id).toBe("call_1");
-    expect(chunks[2].choices[0].delta.tool_calls?.[0].function?.name).toBe(
+    expect((chunks[1].choices[0].delta as any).reasoning_content).toBe(
+      "internal chain",
+    );
+    expect(chunks[1].choices[0].delta.content).toBeUndefined();
+    expect(chunks[2].choices[0].delta.content).toBe("world");
+    expect(chunks[3].choices[0].delta.tool_calls?.[0].id).toBe("call_1");
+    expect(chunks[3].choices[0].delta.tool_calls?.[0].function?.name).toBe(
       "test",
     );
-    expect(chunks[3].choices[0].delta.tool_calls?.[0].function?.arguments).toBe(
+    expect(chunks[4].choices[0].delta.tool_calls?.[0].function?.arguments).toBe(
       '{"arg":"value"}',
     );
-    expect(chunks[4].usage).toBeDefined();
+    expect(chunks[5].usage).toBeDefined();
   });
 
   test("throws error when stream contains error event", async () => {
