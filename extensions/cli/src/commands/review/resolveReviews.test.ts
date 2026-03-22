@@ -45,15 +45,12 @@ describe("resolveReviews local discovery", () => {
     vi.mocked(fs.existsSync).mockImplementation((p) => {
       return p === path.join("/test/repo", ".continue", "agents");
     });
-    vi.mocked(fs.readdirSync).mockImplementation((p) => {
+    vi.mocked(fs.readdirSync).mockImplementation(((p: fs.PathLike) => {
       if (p === path.join("/test/repo", ".continue", "agents")) {
-        return [
-          "security-review.md",
-          "style-check.md",
-        ] as unknown as fs.Dirent[];
+        return ["security-review.md", "style-check.md"];
       }
-      return [] as unknown as fs.Dirent[];
-    });
+      return [];
+    }) as typeof fs.readdirSync);
 
     const reviews = await resolveReviews();
     expect(reviews).toHaveLength(2);
@@ -66,12 +63,12 @@ describe("resolveReviews local discovery", () => {
     vi.mocked(fs.existsSync).mockImplementation((p) => {
       return p === path.join("/test/repo", ".continue", "checks");
     });
-    vi.mocked(fs.readdirSync).mockImplementation((p) => {
+    vi.mocked(fs.readdirSync).mockImplementation(((p: fs.PathLike) => {
       if (p === path.join("/test/repo", ".continue", "checks")) {
-        return ["anti-slop.md"] as unknown as fs.Dirent[];
+        return ["anti-slop.md"];
       }
-      return [] as unknown as fs.Dirent[];
-    });
+      return [];
+    }) as typeof fs.readdirSync);
 
     const reviews = await resolveReviews();
     expect(reviews).toHaveLength(1);
@@ -81,16 +78,16 @@ describe("resolveReviews local discovery", () => {
 
   it("discovers files from both directories without duplicates", async () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
-    vi.mocked(fs.readdirSync).mockImplementation((p) => {
+    vi.mocked(fs.readdirSync).mockImplementation(((p: fs.PathLike) => {
       const dir = String(p);
       if (dir.endsWith("agents")) {
-        return ["security-review.md", "shared.md"] as unknown as fs.Dirent[];
+        return ["security-review.md", "shared.md"];
       }
       if (dir.endsWith("checks")) {
-        return ["anti-slop.md", "shared.md"] as unknown as fs.Dirent[];
+        return ["anti-slop.md", "shared.md"];
       }
-      return [] as unknown as fs.Dirent[];
-    });
+      return [];
+    }) as typeof fs.readdirSync);
 
     const reviews = await resolveReviews();
     // agents/security-review.md, agents/shared.md, checks/anti-slop.md
