@@ -2,14 +2,13 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
-import pkg from "ignore-walk";
-import { Minimatch } from "minimatch";
+import { parseMarkdownRule, RuleObject } from "@continuedev/config-yaml";
 
+import { env } from "./env.js";
 import { processRule } from "./hubLoader.js";
 import { PermissionMode } from "./permissions/types.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
 import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
-const { WalkerSync } = pkg;
 
 /**
  * Check if current directory is a git repository
@@ -20,39 +19,6 @@ function isGitRepo(): boolean {
     return true;
   } catch {
     return false;
-  }
-}
-
-/**
- * Get basic directory structure
- */
-function getDirectoryStructure(): string {
-  try {
-    const walker = new WalkerSync({
-      path: process.cwd(),
-      includeEmpty: false,
-      follow: false,
-      ignoreFiles: [".gitignore", ".continueignore", ".customignore"],
-    });
-
-    (walker.ignoreRules as any)[".customignore"] = [
-      new Minimatch(".git/*", {
-        matchBase: true,
-        dot: true,
-        flipNegate: true,
-        nocase: true,
-      }),
-    ];
-
-    const files = walker.start().result as string[];
-
-    const filteredFiles = files
-      .slice(0, 500)
-      .map((file: string) => `./${file}`);
-
-    return filteredFiles.join("\n") || "No structure available";
-  } catch {
-    return "Directory structure not available";
   }
 }
 
@@ -89,10 +55,6 @@ Today's date: ${new Date().toISOString().split("T")[0]}
 
 As you answer the user's questions, you can use the following context:
 
-<context name="directoryStructure">Below is a snapshot of this project's file structure at the start of the conversation. This snapshot will NOT update during the conversation. It skips over .gitignore patterns.
-
-${getDirectoryStructure()}
-</context>
 <context name="gitStatus">This is the git status at the start of the conversation. Note that this status is a snapshot in time, and will not update during the conversation.
 
 ${getGitStatus()}
@@ -113,6 +75,79 @@ async function getConfigYamlRules(): Promise<string[]> {
   }
 
   return [];
+}
+
+function getRuleNameFromPath(filePath: string): string {
+  const segments = filePath.split(/[/\\]/);
+  const lastTwoParts = segments.slice(-2);
+  return lastTwoParts.filter(Boolean).join("/").replace(/\.md$/, "");
+}
+
+/**
+ * Scan .continue/rules/ directories for markdown rule files and return the rules with metadata that should be always-applied
+ */
+export function loadMarkdownRulesWithMetadata(): RuleObject[] {
+  const cwd = process.cwd();
+  const rulesDirs = [
+    path.join(cwd, ".continue", "rules"),
+    path.join(env.continueHome, "rules"),
+  ];
+
+  const rules: RuleObject[] = [];
+
+  for (const dir of rulesDirs) {
+    if (!fs.existsSync(dir)) continue;
+
+    let files: string[];
+    try {
+      files = fs.readdirSync(dir, { recursive: true }) as string[];
+    } catch {
+      continue;
+    }
+
+    for (const file of files) {
+      if (!String(file).endsWith(".md")) continue;
+
+      const filePath = path.join(dir, String(file));
+      try {
+        const stat = fs.statSync(filePath);
+        if (!stat.isFile()) continue;
+      } catch {
+        continue;
+      }
+
+      try {
+        const content = fs.readFileSync(filePath, "utf-8");
+        const { frontmatter, markdown } = parseMarkdownRule(content);
+
+        if (frontmatter.invokable) continue;
+
+        const isAlwaysApply =
+          frontmatter.alwaysApply === true ||
+          (frontmatter.alwaysApply === undefined &&
+            !frontmatter.globs &&
+            !frontmatter.regex);
+
+        if (isAlwaysApply && markdown.trim()) {
+          const ruleName =
+            frontmatter.name || getRuleNameFromPath(String(file));
+          rules.push({
+            name: ruleName,
+            rule: markdown,
+            description: frontmatter.description,
+            globs: frontmatter.globs,
+            regex: frontmatter.regex,
+            alwaysApply: true,
+            sourceFile: filePath,
+          });
+        }
+      } catch {
+        // Skip files that can't be read or parsed
+      }
+    }
+  }
+
+  return rules;
 }
 
 /**
@@ -164,6 +199,17 @@ export async function constructSystemMessage(
 
   const configYamlRules = await getConfigYamlRules();
   processedRules.push(...configYamlRules);
+
+  // Load markdown rules from .continue/rules/ directories
+  const markdownRules = loadMarkdownRulesWithMetadata();
+  // Deduplicate against already-loaded rules
+  const existingRulesSet = new Set(processedRules);
+  for (const rule of markdownRules) {
+    if (!existingRulesSet.has(rule.rule)) {
+      processedRules.push(rule.rule);
+      existingRulesSet.add(rule.rule);
+    }
+  }
 
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;

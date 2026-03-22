@@ -592,6 +592,7 @@ export class ConfigHandler {
   async getSerializedConfig(): Promise<
     ConfigResult<BrowserSerializedContinueConfig>
   > {
+    await this.isInitialized;
     if (!this.currentProfile) {
       return {
         config: undefined,

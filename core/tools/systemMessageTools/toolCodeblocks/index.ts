@@ -65,13 +65,20 @@ export class SystemMessageToolCodeblocksFramework
     return toolDefinition.trim();
   }
 
-  systemMessagePrefix = `You have access to several "tools" that you can use at any time to retrieve information and/or perform tasks for the User.
-To use a tool, respond with a tool code block (\`\`\`tool) using the syntax shown in the examples below:`;
+  systemMessagePrefix = `You have access to tools. To call a tool, you MUST respond with EXACTLY this format — a tool code block (\`\`\`tool) using the syntax shown below.
 
-  systemMessageSuffix = `If it seems like the User's request could be solved with one of the tools, choose the BEST one for the job based on the user's request and the tool descriptions
-Then send the \`\`\`tool codeblock (YOU call the tool, not the user). Always start the codeblock on a new line.
-Do not perform actions with/for hypothetical files. Ask the user or use tools to deduce which files are relevant.
-You can only call ONE tool at at time. The tool codeblock should be the last thing you say; stop your response after the tool codeblock.`;
+CRITICAL: Follow the exact syntax. Do not use XML tags, JSON objects, or any other format for tool calls.`;
+
+  systemMessageSuffix = `RULES FOR TOOL USE:
+1. To call a tool, output a \`\`\`tool code block using EXACTLY the format shown above.
+2. Always start the code block on a new line.
+3. You can only call ONE tool at a time.
+4. The \`\`\`tool code block MUST be the last thing in your response. Stop immediately after the closing \`\`\`.
+5. Do NOT wrap tool calls in XML tags like <tool_call> or <function=...>.
+6. Do NOT use JSON format for tool calls.
+7. Do NOT invent tools that are not listed above.
+8. If the user's request can be addressed with a listed tool, use it rather than guessing.
+9. Do not perform actions with hypothetical files. Use tools to find relevant files.`;
 
   exampleDynamicToolDefinition = `
 \`\`\`tool_definition

@@ -63,7 +63,35 @@ function isHuggingFaceOpenAICompatible(url: string): boolean {
   return openAIPatterns.some((pattern) => normalizedUrl.includes(pattern));
 }
 
+function createAiSdkApiForProvider(
+  config: LLMConfig & { model?: string },
+  provider: string,
+): AiSdkApi | undefined {
+  if (!config.model) {
+    return undefined;
+  }
+  return new AiSdkApi({
+    provider: "ai-sdk",
+    model: `${provider}/${config.model}`,
+    apiKey: config.apiKey,
+    apiBase: config.apiBase,
+    requestOptions: config.requestOptions,
+  });
+}
+
 export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
+  if (process.env.CONTINUE_USE_AI_SDK) {
+    if (["openai", "anthropic"].includes(config.provider)) {
+      const aiSdkApi = createAiSdkApiForProvider(
+        config as LLMConfig & { model?: string },
+        config.provider,
+      );
+      if (aiSdkApi) {
+        return aiSdkApi;
+      }
+    }
+  }
+
   switch (config.provider) {
     case "openai":
       return new OpenAIApi(config);
@@ -146,6 +174,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.studio.nebius.ai/v1/", config);
     case "function-network":
       return openAICompatible("https://api.function.network/v1/", config);
+    case "tensorix":
+      return openAICompatible("https://api.tensorix.ai/v1/", config);
     case "openrouter":
       return new OpenRouterApi(config);
     case "llama.cpp":

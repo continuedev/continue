@@ -58,6 +58,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("zAI"),
     z.literal("avian"),
     z.literal("scaleway"),
+    z.literal("tensorix"),
     z.literal("ncompass"),
     z.literal("relace"),
     z.literal("huggingface-inference-api"),

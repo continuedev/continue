@@ -40,7 +40,7 @@ export const generateToolsSystemMessage = (
       `\nAlso, these additional tool definitions show other tools you can call with the same syntax:`,
     );
 
-    for (const tool of tools) {
+    for (const tool of withDynamicMessage) {
       try {
         const definition = framework.toolToSystemToolDefinition(tool);
         instructions.push(`\n${definition}`);

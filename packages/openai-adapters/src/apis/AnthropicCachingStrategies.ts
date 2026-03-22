@@ -1,5 +1,7 @@
 import { MessageCreateParams } from "@anthropic-ai/sdk/resources";
 
+import { addCacheControlToLastTwoUserMessages } from "./AnthropicUtils.js";
+
 const MAX_CACHING_MESSAGES = 4;
 
 // Caching strategy type - transforms a clean Anthropic body by adding cache_control
@@ -66,6 +68,17 @@ const systemAndToolsStrategy: CachingStrategy = (body) => {
       return tool;
     });
   }
+
+  // Cache last two user messages for turn-level caching.
+  // Uses the remaining 2 breakpoints (system=1, last tool=1, 2 user messages=2, total=4).
+  // Clone messages to avoid mutating the original input.
+  result.messages = result.messages.map((msg) => ({
+    ...msg,
+    content: Array.isArray(msg.content)
+      ? msg.content.map((block) => ({ ...block }))
+      : msg.content,
+  }));
+  addCacheControlToLastTwoUserMessages(result.messages);
 
   return result;
 };

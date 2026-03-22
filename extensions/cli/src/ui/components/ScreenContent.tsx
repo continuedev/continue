@@ -9,7 +9,10 @@ import type { NavigationScreen } from "../context/NavigationContext.js";
 import { DiffViewer } from "../DiffViewer.js";
 import { EditMessageSelector } from "../EditMessageSelector.js";
 import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
-import type { ActivePermissionRequest } from "../hooks/useChat.types.js";
+import type {
+  ActivePermissionRequest,
+  ActiveQuizQuestion,
+} from "../hooks/useChat.types.js";
 import { JobsSelector } from "../JobsSelector.js";
 import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
@@ -31,12 +34,14 @@ interface ScreenContentProps {
   handleReload: () => Promise<void>;
   closeCurrentScreen: () => void;
   activePermissionRequest: ActivePermissionRequest | null;
+  activeQuizQuestion: ActiveQuizQuestion | null;
   handleToolPermissionResponse: (
     requestId: string,
     approved: boolean,
     createPolicy?: boolean,
     stopStream?: boolean,
   ) => void;
+  handleQuizAnswer: (requestId: string, answer: string) => void;
   handleUserMessage: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
   isCompacting: boolean;
@@ -72,7 +77,9 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   handleReload,
   closeCurrentScreen,
   activePermissionRequest,
+  activeQuizQuestion,
   handleToolPermissionResponse,
+  handleQuizAnswer,
   handleUserMessage,
   isWaitingForResponse,
   isCompacting,
@@ -198,7 +205,9 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
     return (
       <ChatScreenContent
         activePermissionRequest={activePermissionRequest}
+        activeQuizQuestion={activeQuizQuestion}
         handleToolPermissionResponse={handleToolPermissionResponse}
+        handleQuizAnswer={handleQuizAnswer}
         handleUserMessage={handleUserMessage}
         isWaitingForResponse={isWaitingForResponse}
         isCompacting={isCompacting}

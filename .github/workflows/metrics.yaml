@@ -52,7 +52,7 @@ jobs:
           echo "metrics_content=$content" >> "$GITHUB_OUTPUT"
 
       - name: Post a message in a channel
-        uses: slackapi/slack-github-action@v2.1.1
+        uses: slackapi/slack-github-action@v3.0.1
         with:
           webhook: ${{ secrets.ISSUE_PR_METRICS_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -71,7 +71,7 @@ jobs:
                       ${{ steps.read-metrics.outputs.metrics_content }}
 
       - name: Upload metrics report as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: issue-metrics-report
           path: ./issue_metrics.md
