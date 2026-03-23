@@ -1042,6 +1042,10 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
     }
   }
 
+  return applyReasoningSafetyFilter(input);
+}
+
+function applyReasoningSafetyFilter(input: ResponseInput): ResponseInput {
   // Final safety filter: remove any reasoning items that are not followed by a message or function_call.
   // Responses API requires that a reasoning item must be followed by an assistant message item or a function_call item.
   for (let i = 0; i < input.length; i++) {
