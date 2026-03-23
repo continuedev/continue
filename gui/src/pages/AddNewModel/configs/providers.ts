@@ -1282,6 +1282,43 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://api.router.tetrate.ai/",
   },
+  clawrouter: {
+    title: "ClawRouter",
+    provider: "clawrouter",
+    refPage: "clawrouter",
+    description:
+      "Open-source LLM router that automatically selects the cheapest capable model for each request",
+    longDescription: `[ClawRouter](https://github.com/BlockRunAI/ClawRouter) is an open-source LLM router that automatically selects the cheapest capable model for each request based on prompt complexity. It provides 78-96% cost savings on blended inference costs.
+
+To get started:
+1. Install ClawRouter: \`npx clawrouter\`
+2. The router runs locally at \`http://localhost:1337\`
+3. Select a model preset below
+
+ClawRouter uses a 15-dimension prompt complexity scoring system to route simple requests to cheap models (Haiku/Flash) and complex requests to capable ones (Opus/GPT-4o).`,
+    icon: "clawrouter.png",
+    tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
+    packages: [
+      models.clawrouterAuto,
+      models.clawrouterFree,
+      models.clawrouterEco,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "ClawRouter",
+        },
+      },
+    ],
+    collectInputFor: [
+      {
+        ...apiBaseInput,
+        defaultValue: "http://localhost:1337/v1/",
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    downloadUrl: "https://github.com/BlockRunAI/ClawRouter",
+  },
   nous: {
     title: "Nous Research",
     provider: "nous",

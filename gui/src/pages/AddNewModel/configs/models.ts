@@ -2688,6 +2688,48 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["sambanova"],
     isOpenSource: true,
   },
+
+  // ClawRouter Models
+  clawrouterAuto: {
+    title: "ClawRouter Auto",
+    description:
+      "Automatic model selection - routes to the cheapest capable model based on prompt complexity (78-96% cost savings)",
+    params: {
+      title: "ClawRouter Auto",
+      model: "blockrun/auto",
+      contextLength: 128_000,
+    },
+    icon: "clawrouter.png",
+    providerOptions: ["clawrouter"],
+    isOpenSource: true,
+  },
+  clawrouterFree: {
+    title: "ClawRouter Free",
+    description:
+      "Free tier model routing - automatically selects from available free models",
+    params: {
+      title: "ClawRouter Free",
+      model: "blockrun/free",
+      contextLength: 32_000,
+    },
+    icon: "clawrouter.png",
+    providerOptions: ["clawrouter"],
+    isOpenSource: true,
+  },
+  clawrouterEco: {
+    title: "ClawRouter Eco",
+    description:
+      "Economy tier model routing - balances cost and capability for everyday tasks",
+    params: {
+      title: "ClawRouter Eco",
+      model: "blockrun/eco",
+      contextLength: 64_000,
+    },
+    icon: "clawrouter.png",
+    providerOptions: ["clawrouter"],
+    isOpenSource: true,
+  },
+
   AUTODETECT: {
     title: "Autodetect",
     description:

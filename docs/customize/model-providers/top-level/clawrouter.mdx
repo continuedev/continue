@@ -1,0 +1,137 @@
+---
+title: "How to Configure ClawRouter with Continue"
+sidebarTitle: "ClawRouter"
+---
+
+<Info>
+  ClawRouter is an open-source LLM router that automatically selects the cheapest capable model for each request based on prompt complexity, providing 78-96% cost savings.
+</Info>
+
+## Installation
+
+ClawRouter runs locally and provides an OpenAI-compatible API:
+
+```bash
+npx clawrouter
+```
+
+This starts the router at `http://localhost:1337`.
+
+<Tip>
+  Learn more at the [ClawRouter GitHub repository](https://github.com/BlockRunAI/ClawRouter)
+</Tip>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: ClawRouter Auto
+      provider: clawrouter
+      model: blockrun/auto
+      apiBase: http://localhost:1337/v1/
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "ClawRouter Auto",
+        "provider": "clawrouter",
+        "model": "blockrun/auto",
+        "apiBase": "http://localhost:1337/v1/"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+ClawRouter provides several routing modes:
+
+| Model | Description |
+|-------|-------------|
+| `blockrun/auto` | Automatic model selection based on prompt complexity (recommended) |
+| `blockrun/free` | Routes to available free-tier models only |
+| `blockrun/eco` | Economy tier balancing cost and capability |
+
+## How It Works
+
+ClawRouter uses a 15-dimension prompt complexity scoring system to analyze each request:
+
+- **Simple requests** (greetings, basic Q&A) → routed to cheap models like Claude Haiku or Gemini Flash
+- **Complex requests** (code generation, analysis) → routed to capable models like Claude Opus or GPT-4o
+
+This automatic routing provides significant cost savings while maintaining quality for complex tasks.
+
+## Custom API Base
+
+If you're running ClawRouter on a different port or host:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: ClawRouter
+      provider: clawrouter
+      model: blockrun/auto
+      apiBase: http://your-server:8080/v1/
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "ClawRouter",
+        "provider": "clawrouter",
+        "model": "blockrun/auto",
+        "apiBase": "http://your-server:8080/v1/"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Using with API Keys
+
+If your ClawRouter instance is configured with upstream provider API keys, they are managed by ClawRouter itself. No additional API key configuration is needed in Continue.
+
+For self-hosted setups with custom authentication:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: ClawRouter
+      provider: clawrouter
+      model: blockrun/auto
+      apiBase: http://localhost:1337/v1/
+      apiKey: <YOUR_CLAWROUTER_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "ClawRouter",
+        "provider": "clawrouter",
+        "model": "blockrun/auto",
+        "apiBase": "http://localhost:1337/v1/",
+        "apiKey": "<YOUR_CLAWROUTER_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

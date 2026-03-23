@@ -51,6 +51,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("kindo"),
     z.literal("msty"),
     z.literal("openrouter"),
+    z.literal("clawrouter"),
     z.literal("sambanova"),
     z.literal("text-gen-webui"),
     z.literal("vllm"),
