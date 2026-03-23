@@ -1293,9 +1293,15 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
 To get started:
 1. Install ClawRouter: \`npx clawrouter\`
 2. The router runs locally at \`http://localhost:1337\`
-3. Select a model preset below
+3. A wallet is auto-generated on first run
+4. Select a model preset below
 
-ClawRouter uses a 15-dimension prompt complexity scoring system to route simple requests to cheap models (Haiku/Flash) and complex requests to capable ones (Opus/GPT-4o).`,
+**Payment Options:**
+- \`blockrun/free\` — No payment required (free-tier models)
+- \`blockrun/eco\` — Economy tier (fund wallet with USDC)
+- \`blockrun/auto\` — Full routing (fund wallet with USDC)
+
+Fund your wallet with USDC on Solana or Base. ClawRouter uses x402 micropayments for seamless pay-per-use.`,
     icon: "clawrouter.png",
     tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     packages: [

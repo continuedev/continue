@@ -238,6 +238,54 @@ For self-hosted setups with custom authentication:
   </Tab>
 </Tabs>
 
+## Wallet & Payment Setup
+
+ClawRouter supports crypto-native payments via the x402 protocol. On first run, ClawRouter automatically generates a wallet:
+
+```bash
+npx clawrouter
+# Wallet created: 5g3cB6...
+# Fund your wallet to access premium models
+```
+
+### Payment Options
+
+| Tier | Description | Payment Required |
+|------|-------------|------------------|
+| `blockrun/free` | Free-tier models only | No |
+| `blockrun/eco` | Economy models | Yes (low cost) |
+| `blockrun/auto` | Automatic routing | Yes (pay-per-use) |
+
+### Funding Your Wallet
+
+ClawRouter supports both Solana and EVM wallets:
+
+```bash
+# Check wallet balance
+clawrouter wallet
+
+# View wallet address
+clawrouter wallet address
+```
+
+Fund your wallet with USDC on Solana or Base for the lowest fees. ClawRouter uses the x402 Payment Required protocol for seamless micropayments.
+
+<Tip>
+  Start with `blockrun/free` tier to test without payment, then upgrade to `blockrun/auto` for full model access.
+</Tip>
+
+### Spend Controls
+
+Set daily/monthly spending limits:
+
+```bash
+# Set daily limit to $5
+clawrouter config set spendLimit.daily 5
+
+# Set monthly limit to $50  
+clawrouter config set spendLimit.monthly 50
+```
+
 ## Troubleshooting
 
 ### Connection Refused
