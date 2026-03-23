@@ -86,8 +86,8 @@ class HatzAI extends BaseLLM {
 
     // Build Hatz request body
     const hatzBody: any = {
-      messages,
-      model: body.model,
+      ...body, // Keep tools, tool_choice, etc.
+      messages, // Override with flattened messages
       stream: body.stream ?? false,
     };
 
