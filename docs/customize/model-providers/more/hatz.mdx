@@ -1,0 +1,49 @@
+---
+title: "Hatz.AI"
+description: "Configure Hatz.AI with Continue to access Claude, GPT, Gemini, and other leading models through a unified AI gateway"
+---
+
+[Hatz.AI](https://hatz.ai) is a unified AI gateway aimed at small and medium-sized businesses and IT MSPs. It provides pay-as-you-go access to over 50 models from Anthropic, OpenAI, Google, and more through a single API key.
+
+<Info>
+  You can get an API key from
+  [hatz.ai](https://www.hatz.ai/).
+</Info>
+
+## Chat Model
+
+We recommend configuring **anthropic.claude-opus-4-6** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Hatz Claude Opus
+        provider: hatz
+        model: anthropic.claude-opus-4-6
+        apiKey: <YOUR_HATZ_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Hatz Claude Opus",
+          "provider": "hatz",
+          "model": "anthropic.claude-opus-4-6",
+          "apiKey": "<YOUR_HATZ_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/HatzAI.ts)

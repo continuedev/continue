@@ -199,6 +199,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return undefined;
     case "ai-sdk":
       return new AiSdkApi(config);
+    case "hatz":
+      return openAICompatible("https://ai.hatz.ai/v1/", config);
     default:
       return undefined;
   }
