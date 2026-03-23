@@ -1,4 +1,5 @@
 import { LLMOptions } from "../../index.js";
+import { osModelsEditPrompt } from "../templates/edit.js";
 
 import OpenAI from "./OpenAI.js";
 
@@ -22,9 +23,17 @@ const CONTINUE_VERSION = process.env.npm_package_version || "unknown";
  */
 class ClawRouter extends OpenAI {
   static providerName = "clawrouter";
+
+  // ClawRouter can route to models that support reasoning fields
+  protected supportsReasoningField = true;
+  protected supportsReasoningDetailsField = true;
+
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://localhost:1337/v1/",
     model: "blockrun/auto",
+    promptTemplates: {
+      edit: osModelsEditPrompt,
+    },
     useLegacyCompletionsEndpoint: false,
   };
 
