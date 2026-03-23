@@ -22,6 +22,7 @@ export class AzureApi extends OpenAIApi {
       apiKey: azureConfig.apiKey,
       baseURL,
       fetch: customFetch(azureConfig.requestOptions),
+      timeout: azureConfig?.requestOptions?.timeout || undefined,
       defaultQuery,
     });
   }
