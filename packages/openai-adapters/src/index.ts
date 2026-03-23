@@ -215,7 +215,7 @@ export {
   type Completion,
   type CompletionCreateParams,
   type CompletionCreateParamsNonStreaming,
-  type CompletionCreateParamsStreaming
+  type CompletionCreateParamsStreaming,
 } from "openai/resources/index";
 
 // export
@@ -228,16 +228,15 @@ export type {
   AskSageTool,
   AskSageToolCall,
   AskSageToolChoice,
-  LLMConfig
+  LLMConfig,
 } from "./types.js";
 
 export {
   addCacheControlToLastTwoUserMessages,
   getAnthropicErrorMessage,
   getAnthropicHeaders,
-  getAnthropicMediaTypeFromDataUrl
+  getAnthropicMediaTypeFromDataUrl,
 } from "./apis/AnthropicUtils.js";
 
 export { isResponsesModel } from "./apis/openaiResponses.js";
 export { extractBase64FromDataUrl, parseDataUrl } from "./util/url.js";
-

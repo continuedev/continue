@@ -533,6 +533,5 @@ export {
   llmCanGenerateInParallel,
   modelSupportsImages,
   modelSupportsNextEdit,
-  modelSupportsReasoning
+  modelSupportsReasoning,
 };
-
