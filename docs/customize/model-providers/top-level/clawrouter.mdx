@@ -7,6 +7,10 @@ sidebarTitle: "ClawRouter"
   ClawRouter is an open-source LLM router that automatically selects the cheapest capable model for each request based on prompt complexity, providing 78-96% cost savings.
 </Info>
 
+<Tip>
+  Get started with [ClawRouter on GitHub](https://github.com/BlockRunAI/ClawRouter)
+</Tip>
+
 ## Installation
 
 ClawRouter runs locally and provides an OpenAI-compatible API:
@@ -17,9 +21,12 @@ npx clawrouter
 
 This starts the router at `http://localhost:1337`.
 
-<Tip>
-  Learn more at the [ClawRouter GitHub repository](https://github.com/BlockRunAI/ClawRouter)
-</Tip>
+You can also install it globally:
+
+```bash
+npm install -g clawrouter
+clawrouter
+```
 
 ## Configuration
 
@@ -57,20 +64,67 @@ This starts the router at `http://localhost:1337`.
 
 ClawRouter provides several routing modes:
 
-| Model | Description |
-|-------|-------------|
-| `blockrun/auto` | Automatic model selection based on prompt complexity (recommended) |
-| `blockrun/free` | Routes to available free-tier models only |
-| `blockrun/eco` | Economy tier balancing cost and capability |
+| Model | Description | Best For |
+|-------|-------------|----------|
+| `blockrun/auto` | Automatic model selection based on prompt complexity | General use (recommended) |
+| `blockrun/free` | Routes to available free-tier models only | Testing, low-cost experimentation |
+| `blockrun/eco` | Economy tier balancing cost and capability | Everyday coding tasks |
+
+You can also specify any model supported by your configured providers directly (e.g., `anthropic/claude-sonnet-4`, `openai/gpt-4o`).
 
 ## How It Works
 
 ClawRouter uses a 15-dimension prompt complexity scoring system to analyze each request:
 
-- **Simple requests** (greetings, basic Q&A) → routed to cheap models like Claude Haiku or Gemini Flash
-- **Complex requests** (code generation, analysis) → routed to capable models like Claude Opus or GPT-4o
+- **Simple requests** (greetings, basic Q&A, simple edits) → routed to cheap models like Claude Haiku or Gemini Flash
+- **Medium requests** (code explanations, refactoring) → routed to balanced models like Claude Sonnet or GPT-4o-mini
+- **Complex requests** (architecture design, complex debugging) → routed to capable models like Claude Opus or GPT-4o
 
 This automatic routing provides significant cost savings while maintaining quality for complex tasks.
+
+### Complexity Dimensions
+
+The router analyzes prompts across dimensions including:
+- Code complexity and language detection
+- Reasoning depth required
+- Context length and dependencies
+- Domain expertise needed
+- Output format requirements
+
+## Model Capabilities
+
+ClawRouter supports function calling and tool use through its underlying model providers. Capabilities are automatically inherited from the routed model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: ClawRouter Auto
+      provider: clawrouter
+      model: blockrun/auto
+      apiBase: http://localhost:1337/v1/
+      capabilities:
+        - tool_use
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "ClawRouter Auto",
+        "provider": "clawrouter",
+        "model": "blockrun/auto",
+        "apiBase": "http://localhost:1337/v1/",
+        "capabilities": {
+          "tools": true
+        }
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
 
 ## Custom API Base
 
@@ -102,9 +156,57 @@ If you're running ClawRouter on a different port or host:
   </Tab>
 </Tabs>
 
-## Using with API Keys
+## Using Multiple Roles
 
-If your ClawRouter instance is configured with upstream provider API keys, they are managed by ClawRouter itself. No additional API key configuration is needed in Continue.
+You can configure ClawRouter for different Continue roles:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: ClawRouter Auto
+      provider: clawrouter
+      model: blockrun/auto
+      apiBase: http://localhost:1337/v1/
+      roles:
+        - chat
+        - edit
+        - apply
+
+    - name: ClawRouter Eco
+      provider: clawrouter
+      model: blockrun/eco
+      apiBase: http://localhost:1337/v1/
+      roles:
+        - autocomplete
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "ClawRouter Auto",
+        "provider": "clawrouter",
+        "model": "blockrun/auto",
+        "apiBase": "http://localhost:1337/v1/",
+        "roles": ["chat", "edit", "apply"]
+      }
+    ],
+    "tabAutocompleteModel": {
+      "title": "ClawRouter Eco",
+      "provider": "clawrouter",
+      "model": "blockrun/eco",
+      "apiBase": "http://localhost:1337/v1/"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## API Keys
+
+ClawRouter manages upstream provider API keys internally. You configure them in ClawRouter, not in Continue.
 
 For self-hosted setups with custom authentication:
 
@@ -116,7 +218,7 @@ For self-hosted setups with custom authentication:
       provider: clawrouter
       model: blockrun/auto
       apiBase: http://localhost:1337/v1/
-      apiKey: <YOUR_CLAWROUTER_API_KEY>
+      apiKey: ${{ secrets.CLAWROUTER_API_KEY }}
   ```
   </Tab>
   <Tab title="JSON (Deprecated)">
@@ -135,3 +237,53 @@ For self-hosted setups with custom authentication:
   ```
   </Tab>
 </Tabs>
+
+## Troubleshooting
+
+### Connection Refused
+
+If you see connection errors, make sure ClawRouter is running:
+
+```bash
+# Check if ClawRouter is running
+curl http://localhost:1337/v1/models
+
+# Start ClawRouter if needed
+npx clawrouter
+```
+
+### Model Not Found
+
+If a specific model isn't available, check that ClawRouter has the required provider API keys configured. Run `clawrouter --help` for configuration options.
+
+### Slow Responses
+
+ClawRouter adds minimal latency (~10-50ms) for routing decisions. If responses are slow, the issue is likely with the upstream provider. Try a different model tier (`blockrun/eco` vs `blockrun/auto`).
+
+## Cost Monitoring
+
+ClawRouter provides cost tracking via response headers:
+
+- `x-clawrouter-cost` — Cost of the request
+- `x-clawrouter-model` — Model that handled the request
+- `x-clawrouter-complexity` — Computed complexity score
+
+You can view aggregated costs with:
+
+```bash
+curl http://localhost:1337/stats
+```
+
+## Comparison with OpenRouter
+
+| Feature | ClawRouter | OpenRouter |
+|---------|------------|------------|
+| Hosting | Self-hosted (local) | Cloud-hosted |
+| Automatic routing | ✅ Complexity-based | ❌ Manual selection |
+| Cost optimization | ✅ 78-96% savings | ❌ Pay per model |
+| Privacy | ✅ Data stays local | ⚠️ Data sent to cloud |
+| Setup | `npx clawrouter` | API key signup |
+
+<Note>
+  ClawRouter can be used alongside OpenRouter — route complex tasks through ClawRouter while using OpenRouter for specific model access.
+</Note>
