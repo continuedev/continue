@@ -1027,49 +1027,6 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "mistral.png",
     isOpenSource: true,
   },
-  gemini20Flash: {
-    title: "Gemini 2.0 Flash",
-    description:
-      "Google's powerful workhorse model with low latency and enhanced performance.",
-    params: {
-      title: "Gemini 2.0 Flash",
-      model: "gemini-2.0-flash",
-      contextLength: 1_000_000,
-      apiKey: "<API_KEY>",
-    },
-    icon: "gemini.png",
-    providerOptions: ["gemini"],
-    isOpenSource: false,
-  },
-  gemini20FlashLite: {
-    title: "Gemini 2.0 Flash Lite",
-    description:
-      "A more efficient version of Gemini 2.0 Flash optimized for faster responses and lower resource usage.",
-    params: {
-      title: "Gemini 2.0 Flash Lite",
-      model: "gemini-2.0-flash-lite",
-      contextLength: 1_048_576,
-      apiKey: "<API_KEY>",
-    },
-    icon: "gemini.png",
-    providerOptions: ["gemini"],
-    isOpenSource: false,
-  },
-  gemini20FlashImageGeneration: {
-    title: "Gemini 2.0 Flash Image Generation",
-    description:
-      "A version of Gemini 2.0 Flash optimized for image generation capabilities.",
-    params: {
-      title: "Gemini 2.0 Flash Image Generation",
-      model: "gemini-2.0-flash-exp-image-generation",
-      contextLength: 32_768,
-      apiKey: "<API_KEY>",
-    },
-    icon: "gemini.png",
-    providerOptions: ["gemini"],
-    isOpenSource: false,
-  },
-
   gemini25Pro: {
     title: "Gemini 2.5 Pro",
     description:
@@ -2002,20 +1959,6 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["askSage"],
     icon: "groq.png",
     isOpenSource: true,
-  },
-  asksagegemini20Flash: {
-    title: "Gemini 2.0 Flash*",
-    description:
-      "Google's powerful workhorse model with low latency and enhanced performance.",
-    params: {
-      title: "Gemini 2.0 Flash*",
-      model: "google-gemini-20-flash",
-      contextLength: 1_000_000,
-      apiKey: "",
-    },
-    icon: "gemini.png",
-    providerOptions: ["askSage"],
-    isOpenSource: false,
   },
   asksagegemini25Pro: {
     title: "Gemini 2.5 Pro*",
@@ -3107,20 +3050,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "gemini-2.5-flash-lite",
       contextLength: 8_000,
       title: "Gemini 2.5 Flash Lite",
-      apiKey: "",
-    },
-    providerOptions: ["cometapi"],
-    icon: "cometapi.png",
-    isOpenSource: false,
-  },
-  cometapiGemini20Flash: {
-    title: "Gemini 2.0 Flash",
-    description:
-      "Gemini 2.0 Flash via CometAPI - Google's powerful workhorse model with low latency.",
-    params: {
-      model: "gemini-2.0-flash",
-      contextLength: 32_000,
-      title: "Gemini 2.0 Flash",
       apiKey: "",
     },
     providerOptions: ["cometapi"],
