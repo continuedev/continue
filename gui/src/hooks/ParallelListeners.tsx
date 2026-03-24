@@ -8,8 +8,7 @@ import { setLastNonEditSessionEmpty } from "../redux/slices/editState";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
   initializeProfilePreferences,
-  setOrganizations,
-  setSelectedOrgId,
+  setProfiles,
   setSelectedProfile,
 } from "../redux/slices/profilesSlice";
 import {
@@ -55,18 +54,12 @@ function ParallelListeners() {
 
   const handleConfigUpdate = useCallback(
     async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
-      const {
-        result: configResult,
-        profileId,
-        organizations,
-        selectedOrgId,
-      } = result;
+      const { result: configResult, profileId, profiles } = result;
       if (isInitial && hasDoneInitialConfigLoad.current) {
         return;
       }
       hasDoneInitialConfigLoad.current = true;
-      dispatch(setOrganizations(organizations));
-      dispatch(setSelectedOrgId(selectedOrgId));
+      dispatch(setProfiles(profiles));
       dispatch(setSelectedProfile(profileId));
       dispatch(setConfigResult(configResult));
 
@@ -225,11 +218,6 @@ function ParallelListeners() {
 
   useWebviewListener("setInactive", async () => {
     void dispatch(cancelStream());
-  });
-
-  useWebviewListener("loadAgentSession", async (data) => {
-    dispatch(newSession(data.session));
-    dispatch(setMode("agent"));
   });
 
   useWebviewListener("setTTSActive", async (status) => {

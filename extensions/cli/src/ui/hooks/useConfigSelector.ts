@@ -78,12 +78,6 @@ export function useConfigSelector({
         messageType: "system" as const,
       });
 
-      // First, check if we need to switch organizations
-      const currentAuthState = services.auth.getState();
-      const currentOrgId = currentAuthState.authConfig
-        ? (currentAuthState.authConfig.organizationId ?? null)
-        : null;
-
       let targetConfigPath: string | undefined;
 
       if (config.type === "local") {
@@ -92,19 +86,7 @@ export function useConfigSelector({
         targetConfigPath = config.slug;
       }
 
-      // If we need to switch organizations, we'll handle both org + config switching
-      // using a different approach to avoid duplicate reloads
-      if (config.organizationId === currentOrgId) {
-        // Only config path is changing, no organization switch needed
-        await services.config.updateConfigPath(targetConfigPath);
-      } else {
-        // Switch organization first
-        await services.auth.switchOrganization(config.organizationId ?? null);
-
-        // Update config path THEN reload services once
-        // This avoids the double reload issue
-        await services.config.updateConfigPath(targetConfigPath);
-      }
+      await services.config.updateConfigPath(targetConfigPath);
 
       handleClear();
 

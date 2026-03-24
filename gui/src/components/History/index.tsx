@@ -1,5 +1,4 @@
 import { BaseSessionMetadata } from "core";
-import type { RemoteSessionMetadata } from "core/control-plane/client";
 import MiniSearch from "minisearch";
 import React, {
   Fragment,
@@ -67,10 +66,7 @@ export function History() {
 
   const platform = useMemo(() => getPlatform(), []);
 
-  const filteredAndSortedSessions: (
-    | BaseSessionMetadata
-    | RemoteSessionMetadata
-  )[] = useMemo(() => {
+  const filteredAndSortedSessions: BaseSessionMetadata[] = useMemo(() => {
     // 1. Exact phrase matching
     const exactResults = minisearch.search(searchTerm, {
       fuzzy: false,

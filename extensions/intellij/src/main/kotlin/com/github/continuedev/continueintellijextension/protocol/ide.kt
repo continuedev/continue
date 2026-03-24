@@ -3,8 +3,6 @@ package com.github.continuedev.continueintellijextension.protocol
 import com.github.continuedev.continueintellijextension.Range
 import com.github.continuedev.continueintellijextension.TerminalOptions
 
-data class GetControlPlaneSessionInfoParams(val silent: Boolean, val useOnboarding: Boolean)
-
 data class WriteFileParams(
     val path: String,
     val contents: String

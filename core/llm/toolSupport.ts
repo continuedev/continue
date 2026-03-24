@@ -1,23 +1,7 @@
-import { parseProxyModelName } from "@continuedev/config-yaml";
 import { ModelDescription } from "..";
 
 export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
   {
-    "continue-proxy": (model) => {
-      try {
-        const { provider, model: _model } = parseProxyModelName(model);
-        if (provider && _model && provider !== "continue-proxy") {
-          const fn = PROVIDER_TOOL_SUPPORT[provider];
-          if (fn) {
-            return fn(_model);
-          }
-        }
-      } catch (e) {}
-
-      return ["claude", "gpt-4", "o3", "gemini", "gemma"].some((part) =>
-        model.toLowerCase().startsWith(part),
-      );
-    },
     anthropic: (model) => {
       if (model.includes("claude-2") || model.includes("claude-instant")) {
         return false;

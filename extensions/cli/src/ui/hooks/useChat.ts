@@ -418,10 +418,7 @@ export function useChat({
       return message;
     }
 
-    const commandResult = await handleSlashCommands(message, assistant, {
-      remoteUrl,
-      isRemoteMode,
-    });
+    const commandResult = await handleSlashCommands(message, assistant);
 
     if (!commandResult) {
       return message;

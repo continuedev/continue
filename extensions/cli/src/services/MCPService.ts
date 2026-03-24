@@ -2,9 +2,6 @@ import { decodeFQSN, getTemplateVariables } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
-import { isAuthenticated, loadAuthConfig } from "src/auth/workos.js";
-
-import { get } from "../util/apiClient.js";
 import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
 
@@ -176,65 +173,8 @@ export class MCPService
       return await operation();
     }
 
-    try {
-      // Try the operation first
-      return await operation();
-    } catch (error: unknown) {
-      // If not a 401 error, rethrow
-      if (!isAuthError(error)) {
-        throw error;
-      }
-
-      // Check if user is signed in
-      const isAuthed = await isAuthenticated();
-      if (!isAuthed) {
-        throw error;
-      }
-
-      const authConfig = loadAuthConfig();
-
-      // Clear cached token since it's invalid
-      this.apiKeyCache.delete(serverName);
-
-      // Fetch OAuth token from backend
-      const organizationSlug = authConfig?.organizationId;
-
-      let token: string | null = null;
-      try {
-        const params = new URLSearchParams({
-          url: serverConfig.url,
-        });
-        if (organizationSlug) {
-          params.set("organizationSlug", organizationSlug);
-        }
-        if (serverConfig.sourceSlug) {
-          params.set("slug", serverConfig.sourceSlug);
-        }
-
-        const response = await get<{
-          configured: boolean;
-          hasCredentials: boolean;
-          accessToken?: string;
-          expiresAt?: string;
-          expired?: boolean;
-        }>(`/ide/mcp-auth?${params.toString()}`);
-
-        if (response.data.hasCredentials && response.data.accessToken) {
-          token = response.data.accessToken;
-          this.apiKeyCache.set(serverName, token);
-        }
-      } catch {
-        logger.debug("Failed to fetch mcp oauth credentials");
-      }
-
-      if (!token) {
-        throw error;
-      }
-
-      this.apiKeyCache.set(serverConfig.name, token);
-
-      return await operation();
-    }
+    // No auth/token refresh available - just execute the operation directly
+    return await operation();
   }
 
   /**

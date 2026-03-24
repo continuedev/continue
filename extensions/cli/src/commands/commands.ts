@@ -2,10 +2,7 @@ import { type AssistantConfig } from "@continuedev/sdk";
 
 // Export command functions
 export { chat } from "./chat.js";
-export { login } from "./login.js";
-export { logout } from "./logout.js";
 export { listSessionsCommand } from "./ls.js";
-export { remote } from "./remote.js";
 export { review } from "./review.js";
 export { serve } from "./serve.js";
 
@@ -32,23 +29,8 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
-    name: "login",
-    description: "Authenticate with your account",
-    category: "system",
-  },
-  {
-    name: "logout",
-    description: "Sign out of your current session",
-    category: "system",
-  },
-  {
     name: "update",
     description: "Update the Continue CLI",
-    category: "system",
-  },
-  {
-    name: "whoami",
-    description: "Check who you're currently logged in as",
     category: "system",
   },
   {
@@ -63,7 +45,7 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   },
   {
     name: "config",
-    description: "Switch configuration or organization",
+    description: "Switch configuration",
     category: "system",
   },
   {
@@ -113,39 +95,12 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   },
 ];
 
-// Remote mode specific commands
-export const REMOTE_MODE_SLASH_COMMANDS: SlashCommand[] = [
-  {
-    name: "exit",
-    description: "Exit the remote environment",
-    category: "system",
-  },
-  {
-    name: "diff",
-    description: "Show the current diff from the remote environment",
-    category: "system",
-  },
-  {
-    name: "apply",
-    description: "Apply the current diff to the local working tree",
-    category: "system",
-  },
-];
-
 /**
  * Get all available slash commands including system commands and assistant prompts
  */
 export function getAllSlashCommands(
   assistant: AssistantConfig,
-  options: { isRemoteMode?: boolean } = {},
 ): SlashCommand[] {
-  const { isRemoteMode = false } = options;
-
-  // In remote mode, only show the exit command
-  if (isRemoteMode) {
-    return REMOTE_MODE_SLASH_COMMANDS;
-  }
-
   // All system commands are available
   const systemCommands = SYSTEM_SLASH_COMMANDS;
 

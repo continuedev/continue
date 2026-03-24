@@ -43,5 +43,4 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
   uniqueId: string;
   timestamp: string;
   enabledStaticContextualization?: boolean;
-  profileType?: "local" | "platform" | "control-plane";
 }

@@ -648,20 +648,6 @@ export const models: { [key: string]: ModelPackage } = {
     ],
     isOpenSource: true,
   },
-  mixtralTrial: {
-    title: "Mixtral (Free Trial)",
-    description:
-      "Mixtral 8x7b is a mixture of experts model created by Mistral AI",
-    refUrl: "",
-    params: {
-      title: "Mixtral",
-      model: "mistral-8x7b",
-      contextLength: 4096,
-    },
-    icon: "mistral.png",
-    providerOptions: ["groq"],
-    isOpenSource: false,
-  },
   llama38bChat: {
     title: "Llama3 8b",
     description: "The latest Llama model from Meta, fine-tuned for chat",

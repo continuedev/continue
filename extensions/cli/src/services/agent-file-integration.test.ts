@@ -9,8 +9,6 @@ vi.mock("../hubLoader.js", () => ({
   loadPackageFromHub: vi.fn(),
   loadPackagesFromHub: vi.fn(),
   loadModelFromHub: vi.fn(),
-  mcpProcessor: {},
-  modelProcessor: {},
   processRule: vi.fn(),
   isStringRule: vi.fn(),
   agentFileProcessor: {
@@ -80,7 +78,7 @@ describe("Agent file Integration Tests", () => {
   let mockProcessRule: any;
   let mockCreateLlmApi: any;
   let mockGetLlmApi: any;
-  let mockModelProcessor: any;
+  // modelProcessor removed (Hub integration removed)
   let mockDecodePackageIdentifier: any;
   let mockLoadModelFromHub: any;
   let mockIsStringRule: any;
@@ -123,7 +121,7 @@ describe("Agent file Integration Tests", () => {
     mockLoadPackageFromHub = hubLoaderModule.loadPackageFromHub as any;
     mockLoadPackagesFromHub = hubLoaderModule.loadPackagesFromHub as any;
     mockProcessRule = hubLoaderModule.processRule as any;
-    mockModelProcessor = hubLoaderModule.modelProcessor;
+    // mockModelProcessor removed (Hub integration removed)
     mockLoadModelFromHub = hubLoaderModule.loadModelFromHub as any;
     mockIsStringRule = hubLoaderModule.isStringRule as any;
     mockCreateLlmApi = configModule.createLlmApi as any;

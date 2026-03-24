@@ -39,8 +39,7 @@ export const streamThunkWrapper = createAsyncThunk<
       // Get the selected model from the state for error analysis
       const state = getState();
       const selectedModel = selectSelectedChatModel(state);
-      const { message } =
-        analyzeError(e, selectedModel);
+      const { message } = analyzeError(e, selectedModel);
 
       const shouldRetry =
         isOverloadedErrorMessage(message) && attempt < OVERLOADED_RETRIES;

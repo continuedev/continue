@@ -4,7 +4,6 @@ import {
   AssistantUnrolled,
   ConfigResult,
   ConfigValidationError,
-  ModelRole,
   PackageIdentifier,
 } from "@continuedev/config-yaml";
 
@@ -20,13 +19,7 @@ import {
 import { stringifyMcpPrompt } from "../../commands/slash/mcpSlashCommand";
 import { convertRuleBlockToSlashCommand } from "../../commands/slash/ruleBlockSlashCommand";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
-import ContinueProxyContextProvider from "../../context/providers/ContinueProxyContextProvider";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
-import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
-import { ControlPlaneClient } from "../../control-plane/client.js";
-import { getControlPlaneEnv } from "../../control-plane/env.js";
-import { PolicySingleton } from "../../control-plane/PolicySingleton";
-import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { initSlashCommand } from "../../promptFiles/initPrompt";
 import { getConfigDependentToolDefinitions } from "../../tools";
 import { encodeMCPToolUri } from "../../tools/callTool";
@@ -70,32 +63,26 @@ async function loadRules(ide: IDE) {
 
 export default async function doLoadConfig(options: {
   ide: IDE;
-  controlPlaneClient: ControlPlaneClient;
   llmLogger: ILLMLogger;
   overrideConfigJson?: SerializedContinueConfig;
   overrideConfigYaml?: AssistantUnrolled;
   profileId: string;
   overrideConfigYamlByPath?: string;
-  orgScopeId: string | null;
   packageIdentifier: PackageIdentifier;
 }): Promise<ConfigResult<ContinueConfig>> {
   const {
     ide,
-    controlPlaneClient,
     llmLogger,
     overrideConfigJson,
     overrideConfigYaml,
     profileId,
     overrideConfigYamlByPath,
-    orgScopeId,
     packageIdentifier,
   } = options;
 
   const ideInfo = await ide.getIdeInfo();
   const uniqueId = await ide.getUniqueId();
   const ideSettings = await ide.getIdeSettings();
-  const workOsAccessToken = await controlPlaneClient.getAccessToken();
-  const isSignedIn = await controlPlaneClient.isSignedIn();
 
   // Migrations for old config files
   // Removes
@@ -128,10 +115,7 @@ export default async function doLoadConfig(options: {
       uniqueId,
       llmLogger,
       overrideConfigYaml,
-      controlPlaneClient,
-      orgScopeId,
       packageIdentifier,
-      workOsAccessToken,
     });
     newConfig = result.config;
     errors = result.errors;
@@ -143,7 +127,6 @@ export default async function doLoadConfig(options: {
       ideInfo,
       uniqueId,
       llmLogger,
-      workOsAccessToken,
       overrideConfigJson,
     );
     newConfig = result.config;
@@ -180,14 +163,6 @@ export default async function doLoadConfig(options: {
   }
 
   newConfig.slashCommands.push(initSlashCommand);
-
-  const proxyContextProvider = newConfig.contextProviders?.find(
-    (cp) => cp.description.title === "continue-proxy",
-  );
-  if (proxyContextProvider) {
-    (proxyContextProvider as ContinueProxyContextProvider).workOsAccessToken =
-      workOsAccessToken;
-  }
 
   // Show deprecation warnings for providers
   const globalContext = new GlobalContext();
@@ -311,7 +286,6 @@ export default async function doLoadConfig(options: {
       rules: newConfig.rules,
       enableExperimentalTools:
         newConfig.experimental?.enableExperimentalTools ?? false,
-      isSignedIn,
       isRemote: await ide.isWorkspaceRemote(),
       modelName: newConfig.selectedModelByRole.chat?.model,
       ide,
@@ -368,76 +342,11 @@ export default async function doLoadConfig(options: {
     }
   }
 
-  // Org policies
-  const policy = PolicySingleton.getInstance().policy?.policy;
-  if (policy?.allowAnonymousTelemetry === false) {
-    newConfig.allowAnonymousTelemetry = false;
-  }
-  if (policy?.allowCodebaseIndexing === false) {
-    newConfig.disableIndexing = true;
-  }
-
   // Setup IdeInfoService
-  IdeInfoService.setup(
-    uniqueId,
-    ideInfo,
-  );
+  IdeInfoService.setup(uniqueId, ideInfo);
 
   // TODO: pass config to pre-load non-system TTS models
   await TTS.setup();
 
-  // Set up control plane proxy if configured
-  const controlPlane = (newConfig as any).controlPlane;
-  const useOnPremProxy =
-    controlPlane?.useContinueForTeamsProxy === false && controlPlane?.proxyUrl;
-
-  const env = await getControlPlaneEnv(Promise.resolve(ideSettings));
-  let controlPlaneProxyUrl: string = useOnPremProxy
-    ? controlPlane?.proxyUrl
-    : env.DEFAULT_CONTROL_PLANE_PROXY_URL;
-
-  if (!controlPlaneProxyUrl.endsWith("/")) {
-    controlPlaneProxyUrl += "/";
-  }
-  const controlPlaneProxyInfo = {
-    profileId,
-    controlPlaneProxyUrl,
-    workOsAccessToken,
-  };
-
-  newConfig = await injectControlPlaneProxyInfo(
-    newConfig,
-    controlPlaneProxyInfo,
-  );
-
   return { config: newConfig, errors, configLoadInterrupted: false };
-}
-
-// Pass ControlPlaneProxyInfo to objects that need it
-async function injectControlPlaneProxyInfo(
-  config: ContinueConfig,
-  info: ControlPlaneProxyInfo,
-): Promise<ContinueConfig> {
-  Object.keys(config.modelsByRole).forEach((key) => {
-    config.modelsByRole[key as ModelRole].forEach((model) => {
-      if (model.providerName === "continue-proxy") {
-        (model as ContinueProxy).controlPlaneProxyInfo = info;
-      }
-    });
-  });
-
-  Object.keys(config.selectedModelByRole).forEach((key) => {
-    const model = config.selectedModelByRole[key as ModelRole];
-    if (model?.providerName === "continue-proxy") {
-      (model as ContinueProxy).controlPlaneProxyInfo = info;
-    }
-  });
-
-  config.modelsByRole.chat.forEach((model) => {
-    if (model.providerName === "continue-proxy") {
-      (model as ContinueProxy).controlPlaneProxyInfo = info;
-    }
-  });
-
-  return config;
 }

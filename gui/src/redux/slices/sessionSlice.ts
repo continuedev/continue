@@ -25,7 +25,6 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
-import type { RemoteSessionMetadata } from "core/control-plane/client";
 import { mergeReasoningDetails } from "core/llm/openaiTypeConverters";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
@@ -204,7 +203,7 @@ export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 type SessionState = {
   lastSessionId?: string;
   isSessionMetadataLoading: boolean;
-  allSessionMetadata: (BaseSessionMetadata | RemoteSessionMetadata)[];
+  allSessionMetadata: BaseSessionMetadata[];
   history: ChatHistoryItemWithMessageId[];
   isStreaming: boolean;
   title: string;
@@ -721,9 +720,7 @@ export const sessionSlice = createSlice({
     },
     setAllSessionMetadata: (
       state,
-      {
-        payload,
-      }: PayloadAction<(BaseSessionMetadata | RemoteSessionMetadata)[]>,
+      { payload }: PayloadAction<BaseSessionMetadata[]>,
     ) => {
       state.allSessionMetadata = payload;
     },

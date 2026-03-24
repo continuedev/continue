@@ -20,21 +20,17 @@ interface SlashCommandUIProps {
   assistant?: AssistantConfig;
   filter: string;
   selectedIndex: number;
-  isRemoteMode?: boolean;
 }
 
 const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   assistant,
   filter,
   selectedIndex,
-  isRemoteMode = false,
 }) => {
   // Memoize the slash commands to prevent excessive re-renders
   const allCommands = useMemo(() => {
-    if (assistant || isRemoteMode) {
-      return getAllSlashCommands(assistant || ({} as AssistantConfig), {
-        isRemoteMode,
-      });
+    if (assistant) {
+      return getAllSlashCommands(assistant);
     }
 
     // Fallback - basic commands without assistant
@@ -43,7 +39,7 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
       { name: "clear", description: "Clear the chat history" },
       { name: "exit", description: "Exit the chat" },
     ];
-  }, [isRemoteMode, assistant?.prompts, assistant?.rules]);
+  }, [assistant?.prompts, assistant?.rules]);
 
   // Filter commands based on the current filter
   const filteredCommands = allCommands
