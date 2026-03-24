@@ -75,6 +75,11 @@ export const DeepseekConfigSchema = OpenAIConfigSchema.extend({
 });
 export type DeepseekConfig = z.infer<typeof DeepseekConfigSchema>;
 
+export const MiniMaxConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("minimax"),
+});
+export type MiniMaxConfig = z.infer<typeof MiniMaxConfigSchema>;
+
 export const BedrockConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("bedrock"),
   // cacheBehavior: z.object({
@@ -264,6 +269,7 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   BedrockConfigSchema,
   MoonshotConfigSchema,
   DeepseekConfigSchema,
+  MiniMaxConfigSchema,
   CohereConfigSchema,
   AzureConfigSchema,
   GeminiConfigSchema,
