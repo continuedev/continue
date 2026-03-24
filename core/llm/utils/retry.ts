@@ -39,7 +39,7 @@ const DEFAULT_RETRY_OPTIONS: Required<RetryOptions> = {
  * - Specific AWS errors
  * - Timeout errors
  */
-export function defaultShouldRetry(error: any, attempt: number): boolean {
+function defaultShouldRetry(error: any, attempt: number): boolean {
   // Note: maxAttempts check is handled by the retry logic itself
   // This function only determines if the error type is retryable
 
@@ -134,7 +134,7 @@ function defaultOnRetry(error: any, attempt: number, delay: number): void {
 /**
  * Calculate delay with rate limit header awareness and exponential backoff fallback
  */
-export function calculateDelay(
+function calculateDelay(
   attempt: number,
   baseDelay: number,
   maxDelay: number,

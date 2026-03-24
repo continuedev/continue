@@ -99,12 +99,12 @@ export function AddModelForm({
     selectedProvider.provider === "anthropic";
 
   const apiKeyValue = formMethods.watch("apiKey");
-  const apiKeyError =
+  const apiKeyWarning =
     requiresSkPrefix &&
     apiKeyValue &&
     apiKeyValue.length > 0 &&
     !apiKeyValue.startsWith("sk-")
-      ? "API key must start with sk-"
+      ? "API key usually starts with sk-"
       : undefined;
 
   function onSubmit() {
@@ -244,14 +244,14 @@ export function AddModelForm({
                   </label>
                   <Input
                     id="apiKey"
-                    className={`w-full${apiKeyError ? " border-red-500" : ""}`}
+                    className={`w-full${apiKeyWarning ? " border-yellow-500" : ""}`}
                     type="password"
                     placeholder={`Enter your ${selectedProvider.title} API key`}
                     {...formMethods.register("apiKey")}
                   />
-                  {apiKeyError && (
-                    <span className="mt-1 block text-xs text-red-500">
-                      {apiKeyError}
+                  {apiKeyWarning && (
+                    <span className="mt-1 block text-xs text-yellow-500">
+                      {apiKeyWarning}
                     </span>
                   )}
                   <span className="text-description-muted mt-1 block text-xs">
@@ -303,7 +303,7 @@ export function AddModelForm({
           </div>
 
           <div className="mt-4 w-full">
-            <Button type="submit" className="w-full" disabled={isDisabled() || !!apiKeyError}>
+            <Button type="submit" className="w-full" disabled={isDisabled()}>
               Connect
             </Button>
 

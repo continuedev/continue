@@ -230,7 +230,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     icon: "openrouter.png",
     tags: [ModelProviderTags.RequiresApiKey],
     refPage: "openrouter",
-    apiKeyUrl: "https://openrouter.ai/workspaces/default/keys",
+    apiKeyUrl: "https://openrouter.ai/settings/keys",
     collectInputFor: [
       {
         inputType: "text",
