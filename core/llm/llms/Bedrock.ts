@@ -236,7 +236,7 @@ class Bedrock extends BaseLLM {
         }
       }
     } catch (error: unknown) {
-      // Clean up state and let the original error bubble up to the retry decorator
+      // Clean up state and let the original error bubble up for retry handling
       throw error;
     }
   }
