@@ -11,47 +11,6 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Checks",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "icon": "rocket-launch",
-            "pages": [
-              "index",
-              "checks/quickstart",
-              "checks/running-locally",
-              "checks/running-in-ci"
-            ]
-          },
-          {
-            "group": "Writing Checks",
-            "icon": "pencil",
-            "pages": [
-              "checks/generating-checks",
-              "checks/best-practices",
-              "checks/iterating",
-              "checks/reference"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "CLI",
-        "groups": [
-          {
-            "group": "CLI",
-            "icon": "terminal",
-            "pages": [
-              "cli/quickstart",
-              "cli/tui-mode",
-              "cli/headless-mode",
-              "cli/configuration",
-              "cli/tool-permissions"
-            ]
-          }
-        ]
-      },
-      {
         "tab": "IDE Extensions",
         "groups": [
           {
@@ -188,8 +147,7 @@
                   "customize/deep-dives/custom-providers",
                   "customize/deep-dives/model-capabilities"
                 ]
-              },
-              "customize/telemetry"
+              }
             ]
           },
           {
@@ -226,35 +184,33 @@
             "group": "Help",
             "icon": "book-open",
             "expanded": false,
-            "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
+            "pages": ["faqs", "troubleshooting"]
+          }
+        ]
+      },
+      {
+        "tab": "CLI",
+        "groups": [
+          {
+            "group": "CLI",
+            "icon": "terminal",
+            "pages": [
+              "cli/quickstart",
+              "cli/tui-mode",
+              "cli/headless-mode",
+              "cli/configuration",
+              "cli/tool-permissions"
+            ]
           }
         ]
       }
     ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "About Us",
-          "href": "https://continue.dev/about-us",
-          "icon": "book-open"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://continue.dev/blog",
-          "icon": "newspaper"
-        },
-        {
-          "anchor": "Changelog",
-          "href": "https://changelog.continue.dev/",
-          "icon": "bullhorn"
-        }
-      ]
-    }
+    "global": {}
   },
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg",
-    "href": "https://continue.dev"
+    "href": "https://docs.continue.dev"
   },
   "background": {
     "color": {
@@ -262,12 +218,6 @@
     }
   },
   "navbar": {
-    "links": [
-      {
-        "label": "🚀 Get Started",
-        "href": "https://continue.dev/"
-      }
-    ],
     "primary": {
       "type": "github",
       "href": "https://github.com/continuedev/continue"
@@ -1259,10 +1209,6 @@
     {
       "source": "/getting-started/quick-start",
       "destination": "/ide-extensions/quick-start"
-    },
-    {
-      "source": "/guides/run-agents-locally",
-      "destination": "/checks/running-locally"
     },
     {
       "source": "/overview",
