@@ -137,9 +137,8 @@ export function analyzeError(
 
   // 402 Insufficient Balance
   if (statusCode === 402 || errorText.includes("insufficient balance")) {
-    const consoleUrl = apiKeyUrl;
     const providerLabel = providerName || "your provider";
-    customErrorMessage = `This error happens when your ${providerLabel} account/API key is out of credits.${consoleUrl ? ` Visit ${providerLabel} to add credits.` : ""}`;
+    customErrorMessage = `Your ${providerLabel} account appears to be out of credits. Add more credits to your account to continue using this model.`;
   }
 
   return {
