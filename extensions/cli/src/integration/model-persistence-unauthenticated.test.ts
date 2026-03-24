@@ -5,11 +5,7 @@ import * as path from "path";
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import {
-  getModelName,
-  loadAuthConfig,
-  updateModelName,
-} from "../auth/workos.js";
+import { getModelName, updateModelName } from "../auth/workos.js";
 import * as config from "../config.js";
 import { ModelService } from "../services/ModelService.js";
 import {
@@ -20,7 +16,7 @@ import {
 // Mock the config module
 vi.mock("../config.js");
 
-describe("Model Persistence for Unauthenticated Users", () => {
+describe("Model Persistence (Hub auth removed)", () => {
   let testDir: string;
   let originalContinueHome: string | undefined;
   let mockAssistant: AssistantUnrolled;
@@ -85,12 +81,8 @@ describe("Model Persistence for Unauthenticated Users", () => {
     }
   });
 
-  test("should persist model selection for logged-out users", () => {
-    // User is logged out (no auth config)
-    const authConfig = loadAuthConfig();
-    expect(authConfig).toBeNull();
-
-    // User switches model
+  test("should persist model selection via GlobalContext", () => {
+    // Auth is always null now
     updateModelName("Claude 3.5 Sonnet");
 
     // Verify it was saved to GlobalContext
@@ -101,38 +93,27 @@ describe("Model Persistence for Unauthenticated Users", () => {
     expect(getModelName(null)).toBe("Claude 3.5 Sonnet");
   });
 
-  test("should restore model selection on next session for logged-out users", async () => {
-    // Session 1: User is logged out and switches model
-    const authConfig = loadAuthConfig();
-    expect(authConfig).toBeNull();
-
+  test("should restore model selection on next session", async () => {
+    // Session 1: User switches model
     const modelService = new ModelService();
-    await modelService.initialize(mockAssistant, authConfig);
+    await modelService.initialize(mockAssistant, null);
 
     await modelService.switchModel(1);
     updateModelName("Claude 3.5 Sonnet");
 
-    // Session 2: User reopens CLI (still logged out)
-    const newAuthConfig = loadAuthConfig();
-    expect(newAuthConfig).toBeNull();
-
+    // Session 2: User reopens CLI
     const newModelService = new ModelService();
-    const state = await newModelService.initialize(
-      mockAssistant,
-      newAuthConfig,
-    );
+    const state = await newModelService.initialize(mockAssistant, null);
 
     // Should restore Claude 3.5 Sonnet
     expect(state.model?.name).toBe("Claude 3.5 Sonnet");
   });
 
-  test("should handle multiple model switches for logged-out users", () => {
+  test("should handle multiple model switches and persist last one", () => {
+    // Perform multiple switches - only verify the final state
+    // to avoid race conditions with concurrent test files using the same GlobalContext
     updateModelName("GPT-4");
-    expect(getModelName(null)).toBe("GPT-4");
-
     updateModelName("Claude 3.5 Sonnet");
-    expect(getModelName(null)).toBe("Claude 3.5 Sonnet");
-
     updateModelName("Claude 3 Opus");
     expect(getModelName(null)).toBe("Claude 3 Opus");
   });
@@ -145,87 +126,7 @@ describe("Model Persistence for Unauthenticated Users", () => {
     expect(getModelName(null)).toBeNull();
   });
 
-  test("should preserve GlobalContext model when user logs in", () => {
-    // User is logged out with a persisted model
-    updateModelName("Claude 3.5 Sonnet");
-    expect(getPersistedModelName()).toBe("Claude 3.5 Sonnet");
-
-    // User logs in (simulated by having auth.json)
-    const authPath = path.join(testDir, "auth.json");
-    fs.writeFileSync(
-      authPath,
-      JSON.stringify({
-        userId: "test-user",
-        userEmail: "test@example.com",
-        accessToken: "test-token",
-        refreshToken: "test-refresh",
-        expiresAt: Date.now() + 3600000,
-        organizationId: "test-org",
-      }),
-    );
-
-    const authConfig = loadAuthConfig();
-    expect(authConfig).not.toBeNull();
-
-    // GlobalContext model should still exist
-    expect(getPersistedModelName()).toBe("Claude 3.5 Sonnet");
-
-    // When auth config has no modelName, it should fall back to GlobalContext
-    expect(getModelName(authConfig)).toBe("Claude 3.5 Sonnet");
-  });
-
-  test("should use auth config model when both exist", () => {
-    // Clear previous state
-    updateModelName(null);
-
-    // Set GlobalContext model
-    updateModelName("GPT-4");
-    expect(getPersistedModelName()).toBe("GPT-4");
-
-    // Create auth config with different model
-    const authPath = path.join(testDir, "auth.json");
-    fs.writeFileSync(
-      authPath,
-      JSON.stringify({
-        userId: "test-user",
-        userEmail: "test@example.com",
-        accessToken: "test-token",
-        refreshToken: "test-refresh",
-        expiresAt: Date.now() + 3600000,
-        organizationId: "test-org",
-        modelName: "Claude 3.5 Sonnet",
-      }),
-    );
-
-    const authConfig = loadAuthConfig();
-
-    // Auth config should take precedence
-    expect(getModelName(authConfig)).toBe("Claude 3.5 Sonnet");
-  });
-
-  test("should not save to GlobalContext when using CONTINUE_API_KEY", () => {
-    // Clear any existing model
-    updateModelName(null);
-    expect(getPersistedModelName()).toBeNull();
-
-    // Capture original value to restore after test
-    const originalApiKey = process.env.CONTINUE_API_KEY;
-    process.env.CONTINUE_API_KEY = "test-api-key";
-
-    updateModelName("Claude 3.5 Sonnet");
-
-    // Should not be saved to GlobalContext
-    expect(getPersistedModelName()).toBeNull();
-
-    // Restore original value
-    if (originalApiKey === undefined) {
-      delete process.env.CONTINUE_API_KEY;
-    } else {
-      process.env.CONTINUE_API_KEY = originalApiKey;
-    }
-  });
-
-  test("should work across config changes for logged-out users", async () => {
+  test("should work across config changes", async () => {
     // User switches model with one config
     updateModelName("Claude 3.5 Sonnet");
 

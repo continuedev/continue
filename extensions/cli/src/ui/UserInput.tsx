@@ -55,14 +55,12 @@ const SlashCommandsMaybe: React.FC<{
   filter,
   selectedIndex,
 }) => {
-  if (!show || !inputMode || hideNormalUI || !(isRemoteMode || assistant))
-    return null;
+  if (!show || !inputMode || hideNormalUI || !assistant) return null;
   return (
     <SlashCommandUI
       assistant={assistant}
       filter={filter}
       selectedIndex={selectedIndex}
-      isRemoteMode={isRemoteMode}
     />
   );
 };
@@ -181,10 +179,8 @@ const UserInput: React.FC<UserInputProps> = ({
   }>(["fileIndex"]);
 
   const getSlashCommands = () => {
-    if (assistant || isRemoteMode) {
-      return getAllSlashCommands(assistant || ({} as AssistantConfig), {
-        isRemoteMode,
-      });
+    if (assistant) {
+      return getAllSlashCommands(assistant);
     }
 
     // Fallback - basic commands without assistant

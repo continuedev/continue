@@ -2,19 +2,12 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
   ApiRequestError,
-  AuthenticationRequiredError,
   del,
   get,
   makeAuthenticatedRequest,
   post,
   put,
 } from "./apiClient.js";
-
-// Mock the dependencies
-vi.mock("../auth/workos.js", () => ({
-  loadAuthConfig: vi.fn(),
-  getAccessToken: vi.fn(),
-}));
 
 vi.mock("../env.js", () => ({
   env: {
@@ -35,21 +28,10 @@ vi.mock("./logger.js", () => ({
 global.fetch = vi.fn();
 
 describe("apiClient", () => {
-  let mockLoadAuthConfig: any;
-  let mockGetAccessToken: any;
   const mockFetch = vi.mocked(global.fetch);
 
   beforeEach(async () => {
     vi.clearAllMocks();
-
-    // Get mocked functions
-    const authModule = await import("../auth/workos.js");
-    mockLoadAuthConfig = vi.mocked(authModule.loadAuthConfig);
-    mockGetAccessToken = vi.mocked(authModule.getAccessToken);
-
-    // Setup default successful authentication
-    mockLoadAuthConfig.mockReturnValue({ some: "config" });
-    mockGetAccessToken.mockReturnValue("test-access-token");
   });
 
   afterEach(() => {
@@ -77,7 +59,6 @@ describe("apiClient", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: "Bearer test-access-token",
           },
           body: JSON.stringify({ key: "value" }),
         },
@@ -102,22 +83,6 @@ describe("apiClient", () => {
       const result = await makeAuthenticatedRequest("test-endpoint");
 
       expect(result.data).toBe("plain text response");
-    });
-
-    test("should throw AuthenticationRequiredError when no auth config", async () => {
-      mockLoadAuthConfig.mockReturnValue(null);
-
-      await expect(makeAuthenticatedRequest("test-endpoint")).rejects.toThrow(
-        AuthenticationRequiredError,
-      );
-    });
-
-    test("should throw AuthenticationRequiredError when no access token", async () => {
-      mockGetAccessToken.mockReturnValue(null);
-
-      await expect(makeAuthenticatedRequest("test-endpoint")).rejects.toThrow(
-        AuthenticationRequiredError,
-      );
     });
 
     test("should throw ApiRequestError on API error", async () => {
@@ -182,7 +147,6 @@ describe("apiClient", () => {
         expect.objectContaining({
           headers: {
             "Content-Type": "application/json",
-            Authorization: "Bearer test-access-token",
             "Custom-Header": "custom-value",
           },
         }),
@@ -245,16 +209,18 @@ describe("apiClient", () => {
   });
 
   describe("error classes", () => {
-    test("AuthenticationRequiredError should have correct properties", () => {
+    test("AuthenticationRequiredError should have correct properties", async () => {
+      const { AuthenticationRequiredError } = await import("./apiClient.js");
       const error = new AuthenticationRequiredError();
 
       expect(error.name).toBe("AuthenticationRequiredError");
       expect(error.message).toBe(
-        "Not authenticated. Please run 'cn login' first.",
+        "Not authenticated. Hub integration has been removed.",
       );
     });
 
-    test("AuthenticationRequiredError should accept custom message", () => {
+    test("AuthenticationRequiredError should accept custom message", async () => {
+      const { AuthenticationRequiredError } = await import("./apiClient.js");
       const customMessage = "Custom auth error";
       const error = new AuthenticationRequiredError(customMessage);
 
