@@ -39,6 +39,10 @@ import { renderChatMessage } from "../util/messageContent.js";
 import { isOllamaInstalled } from "../util/ollamaHelper.js";
 import { TokensBatchingService } from "../util/TokensBatchingService.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
+import {
+  calculateDelay,
+  defaultShouldRetry,
+} from "./utils/retry.js";
 
 import {
   autodetectPromptTemplates,
@@ -720,6 +724,53 @@ export abstract class BaseLLM implements ILLM {
     };
   }
 
+  private static readonly STREAM_RETRY_MAX_ATTEMPTS = 4;
+  private static readonly STREAM_RETRY_BASE_DELAY = 1000;
+  private static readonly STREAM_RETRY_MAX_DELAY = 30000;
+  private static readonly STREAM_RETRY_JITTER = 0.3;
+
+  /**
+   * Wraps an async iterable stream with retry logic using exponential backoff.
+   * Retries on transient errors (429, overloaded, malformed json, 5xx, etc.)
+   */
+  protected async *_retryableStream<T>(
+    createStream: () => AsyncIterable<T>,
+  ): AsyncGenerator<T> {
+    let lastError: any;
+    for (
+      let attempt = 1;
+      attempt <= BaseLLM.STREAM_RETRY_MAX_ATTEMPTS;
+      attempt++
+    ) {
+      try {
+        for await (const value of createStream()) {
+          yield value;
+        }
+        return;
+      } catch (error) {
+        lastError = error;
+        if (
+          !defaultShouldRetry(error, attempt) ||
+          attempt === BaseLLM.STREAM_RETRY_MAX_ATTEMPTS
+        ) {
+          throw error;
+        }
+        const delay = calculateDelay(
+          attempt,
+          BaseLLM.STREAM_RETRY_BASE_DELAY,
+          BaseLLM.STREAM_RETRY_MAX_DELAY,
+          BaseLLM.STREAM_RETRY_JITTER,
+          error,
+        );
+        console.warn(
+          `Stream retry attempt ${attempt} after ${delay}ms. Error: ${(error as any)?.message || error}`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+    throw lastError;
+  }
+
   async *streamComplete(
     _prompt: string,
     signal: AbortSignal,
@@ -770,12 +821,14 @@ export abstract class BaseLLM implements ILLM {
           yield completion;
         } else {
           // Stream true
-          for await (const chunk of this.openaiAdapter.completionStream(
-            {
-              ...toCompleteBody(prompt, completionOptions),
-              stream: true,
-            },
-            signal,
+          for await (const chunk of this._retryableStream(() =>
+            this.openaiAdapter!.completionStream(
+              {
+                ...toCompleteBody(prompt, completionOptions),
+                stream: true,
+              },
+              signal,
+            ),
           )) {
             if (!this.lastRequestId && typeof (chunk as any).id === "string") {
               this.lastRequestId = (chunk as any).id;
@@ -790,10 +843,8 @@ export abstract class BaseLLM implements ILLM {
           }
         }
       } else {
-        for await (const chunk of this._streamComplete(
-          prompt,
-          signal,
-          completionOptions,
+        for await (const chunk of this._retryableStream(() =>
+          this._streamComplete(prompt, signal, completionOptions),
         )) {
           completion += chunk;
           interaction?.logItem({
@@ -1194,10 +1245,8 @@ export abstract class BaseLLM implements ILLM {
 
     try {
       if (this.templateMessages) {
-        for await (const chunk of this._streamComplete(
-          prompt,
-          signal,
-          completionOptions,
+        for await (const chunk of this._retryableStream(() =>
+          this._streamComplete(prompt, signal, completionOptions),
         )) {
           completion.push(chunk);
           interaction?.logItem({
@@ -1233,22 +1282,23 @@ export abstract class BaseLLM implements ILLM {
           const canUseResponses = this.canUseOpenAIResponses(completionOptions);
           const useStream = completionOptions.stream !== false;
 
-          let iterable: AsyncIterable<ChatMessage>;
-          if (canUseResponses) {
-            iterable = useStream
-              ? this.responsesStream(messages, signal, completionOptions)
-              : this.responsesNonStream(messages, signal, completionOptions);
-          } else {
-            iterable = useStream
-              ? this.openAIAdapterStream(body, signal, (c) => {
-                  if (!citations) {
-                    citations = c;
-                  }
-                })
-              : this.openAIAdapterNonStream(body, signal);
-          }
+          const createIterable = () => {
+            if (canUseResponses) {
+              return useStream
+                ? this.responsesStream(messages, signal, completionOptions)
+                : this.responsesNonStream(messages, signal, completionOptions);
+            } else {
+              return useStream
+                ? this.openAIAdapterStream(body, signal, (c) => {
+                    if (!citations) {
+                      citations = c;
+                    }
+                  })
+                : this.openAIAdapterNonStream(body, signal);
+            }
+          };
 
-          for await (const chunk of iterable) {
+          for await (const chunk of this._retryableStream(createIterable)) {
             const result = this.processChatChunk(chunk, interaction);
             completion.push(...result.completion);
             thinking.push(...result.thinking);
@@ -1270,10 +1320,8 @@ export abstract class BaseLLM implements ILLM {
             }
           }
 
-          for await (const chunk of this._streamChat(
-            messages,
-            signal,
-            completionOptions,
+          for await (const chunk of this._retryableStream(() =>
+            this._streamChat(messages, signal, completionOptions),
           )) {
             const result = this.processChatChunk(chunk, interaction);
             completion.push(...result.completion);

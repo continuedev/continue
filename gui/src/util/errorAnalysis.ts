@@ -7,6 +7,8 @@ export interface ErrorAnalysis {
   modelTitle: string;
   providerName: string;
   apiKeyUrl?: string;
+  helpUrl?: string;
+  customErrorMessage?: string;
 }
 
 function parseErrorMessage(fullErrMsg: string): string {
@@ -97,6 +99,49 @@ export function analyzeError(
     }
   }
 
+  let helpUrl: string | undefined = undefined;
+  let customErrorMessage: string | undefined = undefined;
+
+  const lowerMessage = (message ?? "").toLowerCase();
+  const lowerParsedError = parsedError.toLowerCase();
+  const errorText = lowerMessage + " " + lowerParsedError;
+
+  // OpenAI organization verification error
+  if (
+    errorText.includes("openai") &&
+    errorText.includes(
+      "organization must be verified to generate reasoning summaries",
+    )
+  ) {
+    helpUrl =
+      "https://help.openai.com/en/articles/10910291-api-organization-verification";
+    customErrorMessage =
+      "Your OpenAI organization must be verified to use reasoning models. Visit the help page to learn how to verify your organization.";
+  }
+
+  // Invalid API key detection
+  if (
+    errorText.includes("incorrect api key provided") ||
+    errorText.includes("invalid api key") ||
+    errorText.includes("invalid x-api-key")
+  ) {
+    customErrorMessage =
+      "This error usually happens when the API key is actually invalid. Check your API key value or try a new one.";
+
+    // Check if the key contains "secrets." indicating failed secret templating
+    if (selectedModel?.apiKey && String(selectedModel.apiKey).includes("secrets.")) {
+      customErrorMessage =
+        "It looks like your secret template failed to resolve. You need to add an `apiKey` value directly to your config instead of using a secret reference.";
+    }
+  }
+
+  // 402 Insufficient Balance
+  if (statusCode === 402 || errorText.includes("insufficient balance")) {
+    const consoleUrl = apiKeyUrl;
+    const providerLabel = providerName || "your provider";
+    customErrorMessage = `This error happens when your ${providerLabel} account/API key is out of credits.${consoleUrl ? ` Visit ${providerLabel} to add credits.` : ""}`;
+  }
+
   return {
     parsedError,
     statusCode,
@@ -104,5 +149,7 @@ export function analyzeError(
     modelTitle,
     providerName,
     apiKeyUrl,
+    helpUrl,
+    customErrorMessage,
   };
 }

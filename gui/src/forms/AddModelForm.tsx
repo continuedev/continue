@@ -94,6 +94,19 @@ export function AddModelForm({
     setSelectedModel(selectedProvider.packages[0]);
   }, [selectedProvider]);
 
+  const requiresSkPrefix =
+    selectedProvider.provider === "openai" ||
+    selectedProvider.provider === "anthropic";
+
+  const apiKeyValue = formMethods.watch("apiKey");
+  const apiKeyError =
+    requiresSkPrefix &&
+    apiKeyValue &&
+    apiKeyValue.length > 0 &&
+    !apiKeyValue.startsWith("sk-")
+      ? "API key must start with sk-"
+      : undefined;
+
   function onSubmit() {
     const apiKey = formMethods.watch("apiKey");
     const hasValidApiKey = apiKey !== undefined && apiKey !== "";
@@ -231,11 +244,16 @@ export function AddModelForm({
                   </label>
                   <Input
                     id="apiKey"
-                    className="w-full"
+                    className={`w-full${apiKeyError ? " border-red-500" : ""}`}
                     type="password"
                     placeholder={`Enter your ${selectedProvider.title} API key`}
                     {...formMethods.register("apiKey")}
                   />
+                  {apiKeyError && (
+                    <span className="mt-1 block text-xs text-red-500">
+                      {apiKeyError}
+                    </span>
+                  )}
                   <span className="text-description-muted mt-1 block text-xs">
                     <a
                       className="cursor-pointer text-inherit underline hover:text-inherit hover:brightness-125"
@@ -285,7 +303,7 @@ export function AddModelForm({
           </div>
 
           <div className="mt-4 w-full">
-            <Button type="submit" className="w-full" disabled={isDisabled()}>
+            <Button type="submit" className="w-full" disabled={isDisabled() || !!apiKeyError}>
               Connect
             </Button>
 

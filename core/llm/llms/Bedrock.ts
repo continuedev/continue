@@ -25,7 +25,6 @@ import { parseDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { getSecureID } from "../utils/getSecureID.js";
-import { withLLMRetry } from "../utils/retry.js";
 
 interface ModelConfig {
   formatPayload: (text: string) => any;
@@ -82,7 +81,6 @@ class Bedrock extends BaseLLM {
     }
   }
 
-  @withLLMRetry()
   protected async *_streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,

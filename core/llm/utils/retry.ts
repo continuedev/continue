@@ -39,7 +39,7 @@ const DEFAULT_RETRY_OPTIONS: Required<RetryOptions> = {
  * - Specific AWS errors
  * - Timeout errors
  */
-function defaultShouldRetry(error: any, attempt: number): boolean {
+export function defaultShouldRetry(error: any, attempt: number): boolean {
   // Note: maxAttempts check is handled by the retry logic itself
   // This function only determines if the error type is retryable
 
@@ -104,6 +104,15 @@ function defaultShouldRetry(error: any, attempt: number): boolean {
     return true;
   }
 
+  // Overloaded / malformed stream errors (e.g. Anthropic 529, interrupted SSE)
+  const lowerMessage = (error.message ?? "").toLowerCase();
+  if (
+    lowerMessage.includes("overloaded") ||
+    lowerMessage.includes("malformed json")
+  ) {
+    return true;
+  }
+
   // Abort signal errors should not be retried
   if (isAbortError(error)) {
     return false;
@@ -125,7 +134,7 @@ function defaultOnRetry(error: any, attempt: number, delay: number): void {
 /**
  * Calculate delay with rate limit header awareness and exponential backoff fallback
  */
-function calculateDelay(
+export function calculateDelay(
   attempt: number,
   baseDelay: number,
   maxDelay: number,
