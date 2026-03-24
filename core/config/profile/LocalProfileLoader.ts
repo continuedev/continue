@@ -1,4 +1,4 @@
-import { ConfigResult, parseConfigYaml } from "@continuedev/config-yaml";
+import { ConfigResult } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, ILLMLogger } from "../../index.js";
@@ -13,6 +13,8 @@ import { IProfileLoader } from "./IProfileLoader.js";
 export default class LocalProfileLoader implements IProfileLoader {
   static ID = "local";
 
+  description: ProfileDescription;
+
   constructor(
     private ide: IDE,
     private controlPlaneClient: ControlPlaneClient,
@@ -21,7 +23,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       | { path: string; content: string }
       | undefined,
   ) {
-    const description: ProfileDescription = {
+    this.description = {
       id: overrideAssistantFile?.path ?? LocalProfileLoader.ID,
       profileType: "local",
       fullSlug: {
@@ -39,19 +41,7 @@ export default class LocalProfileLoader implements IProfileLoader {
         localPathToUri(getPrimaryConfigFilePath()),
       rawYaml: undefined,
     };
-    this.description = description;
-    if (overrideAssistantFile?.content) {
-      try {
-        const parsedAssistant = parseConfigYaml(
-          overrideAssistantFile?.content ?? "",
-        );
-        this.description.title = parsedAssistant.name;
-      } catch (e) {
-        console.error("Failed to parse config file: ", e);
-      }
-    }
   }
-  description: ProfileDescription;
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
     const result = await doLoadConfig({
@@ -71,6 +61,12 @@ export default class LocalProfileLoader implements IProfileLoader {
     });
 
     this.description.errors = result.errors;
+
+    // Use the config name from the loaded config (avoids duplicate file reads
+    // and works in environments like WSL where paths may differ)
+    if (result.configName) {
+      this.description.title = result.configName;
+    }
 
     return result;
   }
