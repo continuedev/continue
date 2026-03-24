@@ -27,7 +27,6 @@ export class RecentlyVisitedRangesService {
     >({
       max: this.maxRecentFiles,
     });
-
   }
 
   private cacheCurrentSelectionContext = async (
