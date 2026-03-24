@@ -9,24 +9,6 @@ import CLIInstall from '/snippets/cli-install.mdx'
 
 <OSAutoDetect />
 
-<Note>
-
-  **🚀 New: Snyk Mission Control Integration with Continuous AI**
-  
-  The new [Snyk Mission Control Integration](/mission-control/integrations/snyk) enables **[Continuous AI](/guides/continuous-ai)** - where AI agents autonomously detect, analyze, and fix vulnerabilities. When Snyk detects an issue, your agent automatically generates a fix, creates a PR, and validates the solution without manual intervention.
-  
-  **Mission Control Benefits:**
-  - **One-click OAuth** - No tokens, no configuration files, just connect and go
-  - **Centralized workflows** - Manage all security Tasks and automations from one dashboard
-  - **Webhook triggers** - Automatically respond to new vulnerabilities as they're discovered
-  - **Metrics & intervention rates** - Track how often agents successfully fix issues without human help
-  
-  This represents **[Level 2 Continuous AI](/guides/continuous-ai#the-continuous-ai-maturity-model)**: AI handles routine security work autonomously while developers focus on complex problems. As outlined in our [Continuous AI guide](/guides/continuous-ai#best-practices-for-sustainable-continuous-ai), this reduces intervention rates and accelerates secure development.
-  
-  **Get Started:** Use this cookbook to understand the fundamentals, then [enable Mission Control](/mission-control/integrations/snyk) to deploy autonomous security agents across your organization.
-
-</Note>
-
 <Card title="What You'll Build" icon="shield-halved">
   An automated security scanning system that uses Continue's AI agent with Snyk
   MCP to identify vulnerabilities in code, dependencies, infrastructure, and
@@ -49,8 +31,6 @@ import CLIInstall from '/snippets/cli-install.mdx'
 
 Before starting, ensure you have:
 
-- Continue account with **Hub access**
-- Read: [Understanding Configs — How to get started with Hub configs](/guides/understanding-configs#how-to-get-started-with-hub-configs)
 - Node.js 18+ installed locally
 - [Snyk account](https://snyk.io/) (free tier works)
 - A local project to scan for vulnerabilities
@@ -125,20 +105,15 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
   <Tab title="🛠️ Manual Setup">
 <Steps>
-  <Step title="Create a New Agent via the Continue Mission Control">
-    Go to the [Continue Mission Control](https://continue.dev) and [create a new agent](https://continue.dev/agents/new).
-    </Step>
+  <Step title="Add Snyk MCP to Continue CLI">
+    Add the Snyk MCP to your configuration:
 
-  <Step title="Connect Snyk MCP via Continue Mission Control">
-    Visit the [Snyk Continuous AI Agent](https://continue.dev/continuedev/snyk-continuous-ai-agent) and click **Install** to add it to the agent you created in the step above.
-
-    This will add Snyk MCP to your agent's available tools. The Mission Control listing automatically configures the MCP command:
     ```bash
     npx -y snyk@latest mcp -t stdio
     ```
 
     <Tip>
-      **Alternative installation methods:**
+      **Installation methods:**
       1. **Quick CLI install**: `cn --mcp snyk/snyk-mcp`
       2. **Manual configuration**: Add the MCP to your `~/.continue/config.json` under the `mcpServers` section
 
@@ -153,12 +128,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
   </Step>
 
   <Step title="Add Secure-at-Inception Rules">
-    Install the [Snyk Secure-at-Inception rules](https://continue.dev/snyk/secure-at-inception) from Mission Control to enable automatic security scanning.
-
-    **How to add rules to your agent:**
-    1. Visit the rules link above and click **Install**
-    2. The rules will be added to your agent configuration automatically
-    3. Rules apply globally to all your Continue sessions
+    Add security scanning rules to your configuration to enable automatic security scanning.
 
     These rules configure your agent to:
     - **Run [SAST](https://snyk.io/learn/application-security/sast/) scans** on newly generated or modified code
@@ -180,10 +150,10 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 </Tabs>
 
 <Accordion title="Agent Requirements">
-    To use the pre-built agent, you need either: 
-      - **Continue CLI Pro Plan** with the models add-on, OR 
-      - **Your own API keys** added to Continue Mission Control secrets (same as manual setup)
-      
+    To use the pre-built agent, you need either:
+      - **Continue CLI Pro Plan** with the models add-on, OR
+      - **Your own API keys** configured as environment variables
+
     The agent will automatically detect and use your configuration along with the pre-configured Snyk MCP for security scanning operations.
 
 </Accordion>
@@ -194,9 +164,6 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
 Now you can use natural language prompts to run comprehensive security scans. The Continue agent automatically calls the appropriate Snyk MCP tools.
 
-<Info>
-You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Continue Mission Control](https://continue.dev), click **Edit**, and add prompts under the **Prompts** section.
-</Info>
 
 <Info>
   **Where to run these workflows:**
@@ -614,9 +581,6 @@ jobs:
 
 Implement automated security policies using Continue's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
 
-<Note>
-  **Coming Soon**: These security guardrail prompts will be available as pre-configured rules on the Continue Mission Control for easy installation.
-</Note>
 
 <Card title="Pre-commit Scanning" icon="lock">
   ```bash
@@ -648,7 +612,7 @@ Implement automated security policies using Continue's rule system. See the [Rul
 </Card>
 
 <Tip>
-  Enable the **Secure-at-Inception** rules from Mission Control to automatically apply
+  Enable the **Secure-at-Inception** rules in your configuration to automatically apply
   these guardrails to all code generation and modifications.
 </Tip>
 
@@ -672,10 +636,11 @@ then rerun the same Snyk scan to confirm resolution."
 ### Connection Problems
 
 <Check>
-  **Verification Steps:** - Snyk MCP is installed via [Continue
-  Hub](https://continue.dev/snyk/snyk-mcp) - Secure-at-Inception rules are
-  [enabled](https://continue.dev/snyk/secure-at-inception) - Authentication
-  completed successfully - Project folder has been trusted
+  **Verification Steps:**
+  - Snyk MCP is installed and configured
+  - Secure-at-Inception rules are enabled
+  - Authentication completed successfully
+  - Project folder has been trusted
 </Check>
 
 ## What You've Built
@@ -708,8 +673,8 @@ After completing this guide, you have a complete **AI-powered security system** 
   <Card title="Snyk Documentation" icon="book" href="https://docs.snyk.io">
     Complete Snyk platform documentation
   </Card>
-  <Card title="Continue Mission Control" icon="plug" href="https://continue.dev">
-    Explore more MCP integrations and agents
+  <Card title="Continue Documentation" icon="book" href="https://docs.continue.dev">
+    Explore Continue documentation and guides
   </Card>
   <Card
     title="Security Best Practices"
