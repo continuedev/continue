@@ -67,4 +67,43 @@ describe("LocalProfileLoader", () => {
       }),
     );
   });
+
+  it("should update title from configName when available", async () => {
+    mockDoLoadConfig.mockResolvedValueOnce({
+      config: {},
+      errors: [],
+      configLoadInterrupted: false,
+      configName: "My Custom Config",
+    });
+
+    const loader = new LocalProfileLoader(
+      testIde,
+      controlPlaneClient,
+      llmLogger,
+    );
+
+    expect(loader.description.title).toBe("Local Config");
+
+    await loader.doLoadConfig();
+
+    expect(loader.description.title).toBe("My Custom Config");
+  });
+
+  it("should keep default title when configName is not set", async () => {
+    mockDoLoadConfig.mockResolvedValueOnce({
+      config: {},
+      errors: [],
+      configLoadInterrupted: false,
+    });
+
+    const loader = new LocalProfileLoader(
+      testIde,
+      controlPlaneClient,
+      llmLogger,
+    );
+
+    await loader.doLoadConfig();
+
+    expect(loader.description.title).toBe("Local Config");
+  });
 });
