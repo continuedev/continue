@@ -156,7 +156,12 @@ export default async function doLoadConfig(options: {
   }
 
   if (configLoadInterrupted || !newConfig) {
-    return { errors, config: newConfig, configLoadInterrupted: true, configName };
+    return {
+      errors,
+      config: newConfig,
+      configLoadInterrupted: true,
+      configName,
+    };
   }
 
   // TODO using config result but result with non-fatal errors is an antipattern?
@@ -448,7 +453,12 @@ export default async function doLoadConfig(options: {
     controlPlaneProxyInfo,
   );
 
-  return { config: newConfig, errors, configLoadInterrupted: false, configName };
+  return {
+    config: newConfig,
+    errors,
+    configLoadInterrupted: false,
+    configName,
+  };
 }
 
 // Pass ControlPlaneProxyInfo to objects that need it
