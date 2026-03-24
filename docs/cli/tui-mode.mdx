@@ -26,14 +26,26 @@ Type `/` to see available commands. Run `/help` for the full list.
 
 | Command | What it does |
 |---------|-------------|
+| `/help` | Show the help message and keyboard shortcuts |
+| `/clear` | Clear the chat history |
+| `/login` | Authenticate with your account |
+| `/logout` | Sign out of your current session |
+| `/update` | Update the Continue CLI |
+| `/whoami` | Check who you're currently logged in as |
+| `/info` | Show session information, including token usage and cost |
 | `/model` | Switch between configured chat models |
 | `/config` | Switch configuration or organization |
-| `/compact` | Summarize chat history to free up context |
-| `/fork` | Branch the conversation from the current point |
-| `/resume` | Pick up a previous session |
-| `/info` | Show token usage and cost for this session |
-| `/init` | Create an `AGENTS.md` file for the current project |
 | `/mcp` | Manage MCP server connections |
+| `/init` | Create an `AGENTS.md` file for the current project |
+| `/compact` | Summarize chat history into a compact form |
+| `/resume` | Resume a previous chat session |
+| `/fork` | Start a forked chat session from the current history |
+| `/title` | Set the title for the current session |
+| `/rename` | Rename the current session (alias for `/title`) |
+| `/exit` | Exit the chat |
+| `/jobs` | List background jobs |
+
+When you're connected to a remote environment, Continue also adds remote-only slash commands such as `/diff` and `/apply`.
 
 ## Resume previous sessions
 
@@ -49,6 +61,17 @@ cn --resume
 
 This restores the full conversation history, so the agent remembers prior context.
 
+## Interactive questions in TUI mode
+
+The agent can use the `AskQuestion` tool to gather clarifications before it continues. You will see a quiz-style prompt directly in the terminal.
+
+- Use <kbd>↑</kbd>/<kbd>↓</kbd> to highlight an option
+- Press <kbd>Enter</kbd> to submit the highlighted option
+- Start typing to send a custom answer (even when options are shown)
+- If a default answer is provided, pressing <kbd>Enter</kbd> on an empty input submits that default
+
+This is useful when the agent needs decisions like scope, preferences, or environment details before making edits.
+
 ## Tool Permissions
 
 Tools that can modify your system (file writes, terminal commands) prompt for approval before executing. You get three options:
@@ -57,4 +80,4 @@ Tools that can modify your system (file writes, terminal commands) prompt for ap
 - **Continue + don't ask again** — approve and save a policy rule to `~/.continue/permissions.yaml`
 - **No** — reject the call and give the agent new instructions
 
-Read-only tools (`Read`, `List`, `Search`, `Fetch`) run automatically. See [tool permissions](/cli/tool-permissions) for the full policy system.
+Read-only tools (`Read`, `List`, `Search`, `Fetch`, `Diff`, `AskQuestion`) run automatically. See [tool permissions](/cli/tool-permissions) for the full policy system.
