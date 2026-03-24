@@ -127,6 +127,73 @@ ClawRouter supports function calling and tool use through its underlying model p
   </Tab>
 </Tabs>
 
+## Switching Between Routing Profiles
+
+Add multiple ClawRouter profiles to your config and switch via Continue's model picker:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    # Default: automatic routing
+    - name: ClawRouter Auto
+      provider: clawrouter
+      model: blockrun/auto
+      apiBase: http://localhost:1337/v1/
+
+    # Maximum savings
+    - name: ClawRouter Eco  
+      provider: clawrouter
+      model: blockrun/eco
+      apiBase: http://localhost:1337/v1/
+
+    # Best quality
+    - name: ClawRouter Premium
+      provider: clawrouter
+      model: blockrun/premium
+      apiBase: http://localhost:1337/v1/
+
+    # Zero cost
+    - name: ClawRouter Free
+      provider: clawrouter
+      model: blockrun/free
+      apiBase: http://localhost:1337/v1/
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "ClawRouter Auto",
+        "provider": "clawrouter",
+        "model": "blockrun/auto",
+        "apiBase": "http://localhost:1337/v1/"
+      },
+      {
+        "title": "ClawRouter Eco",
+        "provider": "clawrouter",
+        "model": "blockrun/eco",
+        "apiBase": "http://localhost:1337/v1/"
+      },
+      {
+        "title": "ClawRouter Premium",
+        "provider": "clawrouter", 
+        "model": "blockrun/premium",
+        "apiBase": "http://localhost:1337/v1/"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+Use the **model picker dropdown** in Continue's chat panel to switch between profiles. Each profile routes to different model tiers based on cost vs. quality trade-offs.
+
+<Tip>
+  **Quick switch via CLI:** In the Continue chat, type `/model` followed by the profile name (e.g., `/model ClawRouter Eco`).
+</Tip>
+
 ## Custom API Base
 
 If you're running ClawRouter on a different port or host:
@@ -287,6 +354,39 @@ clawrouter config set spendLimit.daily 5
 clawrouter config set spendLimit.monthly 50
 ```
 
+## Error Handling
+
+ClawRouter handles common LLM errors automatically at the router level:
+
+### Automatic Error Recovery
+
+| Error | Continue's Default | ClawRouter's Handling |
+|-------|-------------------|----------------------|
+| **429 Rate Limit** | Retry same provider with backoff | Route to different provider entirely |
+| **402 Payment Required** | Fail immediately | x402 auto-payment from wallet |
+| **500+ Server Error** | Retry same provider | Fallback to next model in tier |
+| **Timeout** | Retry same provider | Route to faster model |
+
+### Response Headers
+
+ClawRouter adds diagnostic headers to every response:
+
+```
+x-clawrouter-model: anthropic/claude-sonnet-4.6
+x-clawrouter-tier: MEDIUM  
+x-clawrouter-cost: 0.0045
+x-clawrouter-fallback: false
+```
+
+When a fallback occurs:
+
+```
+x-clawrouter-model: openai/gpt-4o-mini
+x-clawrouter-fallback: true
+x-clawrouter-original-model: anthropic/claude-sonnet-4.6
+x-clawrouter-fallback-reason: 429_rate_limit
+```
+
 ## Troubleshooting
 
 ### Connection Refused
@@ -308,6 +408,23 @@ If a specific model isn't available, check that ClawRouter has the required prov
 ### Slow Responses
 
 ClawRouter adds minimal latency (~10-50ms) for routing decisions. If responses are slow, the issue is likely with the upstream provider. Try a different model tier (`blockrun/eco` vs `blockrun/auto`).
+
+### AI-Powered Diagnostics
+
+Run the doctor command for AI-analyzed troubleshooting:
+
+```bash
+# Basic diagnostics with Claude Sonnet (~$0.003)
+npx clawrouter doctor
+
+# Complex issues with Claude Opus (~$0.01)  
+npx clawrouter doctor opus
+
+# Ask a specific question
+npx clawrouter doctor "why are my requests failing?"
+```
+
+The doctor collects system info, wallet status, network connectivity, and sends to Claude for analysis.
 
 ## Cost Monitoring
 
