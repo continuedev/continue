@@ -254,6 +254,12 @@ export function McpAppRenderer({
         `[MCP App${params.logger ? ` - ${params.logger}` : ""}]`,
         params.data,
       );
+
+      // If the MCP app reports an error, hide the UI rather than
+      // showing broken/confusing content
+      if (params.level === "error" || params.level === "critical") {
+        setError(new Error(String(params.data)));
+      }
     };
 
     bridge.onupdatemodelcontext = async () => {
@@ -297,18 +303,28 @@ export function McpAppRenderer({
   useEffect(() => {
     const bridge = appBridgeRef.current;
     if (!bridge || !isInitialized || !toolInput) return;
-    bridge.sendToolInput({ arguments: toolInput });
+    try {
+      bridge.sendToolInput({ arguments: toolInput });
+    } catch (err) {
+      console.warn("[McpAppRenderer] Failed to send tool input:", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
   }, [isInitialized, toolInput]);
 
   useEffect(() => {
     const bridge = appBridgeRef.current;
     if (!bridge || !isInitialized || !toolResult) return;
-    bridge.sendToolResult({
-      content: toolResult.map((o) => ({
-        type: "text" as const,
-        text: o.content,
-      })),
-    });
+    try {
+      bridge.sendToolResult({
+        content: toolResult.map((o) => ({
+          type: "text" as const,
+          text: o.content,
+        })),
+      });
+    } catch (err) {
+      console.warn("[McpAppRenderer] Failed to send tool result:", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
   }, [isInitialized, toolResult]);
 
   if (!toolCallState.mcpUiState || !html) {
@@ -316,12 +332,7 @@ export function McpAppRenderer({
   }
 
   if (error) {
-    return (
-      <div className="rounded border border-red-500 bg-red-500/10 p-3 text-sm">
-        <p className="font-medium text-red-500">MCP UI Error</p>
-        <p className="text-red-400">{error.message}</p>
-      </div>
-    );
+    return null;
   }
 
   const cspMetaContent = buildCspMetaContent(csp);

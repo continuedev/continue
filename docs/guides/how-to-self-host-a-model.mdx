@@ -120,3 +120,5 @@ config.json
   ]
 }
 ```
+
+If your endpoint uses a private or corporate CA but does not require mutual TLS, configure `requestOptions.caBundlePath` instead. For common errors like `unable to verify the first certificate` or `CERT_UNTRUSTED`, see [Configure Certificates](/faqs#configure-certificates) and [SSL certificate errors](/troubleshooting#ssl-certificate-errors).

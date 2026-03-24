@@ -579,6 +579,38 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://console.groq.com/keys",
   },
+  minimax: {
+    title: "MiniMax",
+    provider: "minimax",
+    description:
+      "MiniMax offers high-performance models with 200K+ context windows at competitive pricing.",
+    longDescription:
+      "To get started with MiniMax, obtain an API key from the [MiniMax Platform](https://platform.minimax.io).",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your MiniMax API key",
+        required: true,
+      },
+    ],
+    packages: [
+      models.minimaxM27,
+      models.minimaxM27Highspeed,
+      models.minimaxM25,
+      models.minimaxM25Highspeed,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "MiniMax",
+        },
+      },
+    ],
+    apiKeyUrl: "https://platform.minimax.io",
+  },
   deepseek: {
     title: "DeepSeek",
     provider: "deepseek",
@@ -1217,6 +1249,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.Llama31Nemotron_70b,
     ],
     apiKeyUrl: "https://cloud.siliconflow.cn/account/ak",
+  },
+  tensorix: {
+    title: "Tensorix",
+    provider: "tensorix",
+    description:
+      "Tensorix is an OpenAI-compatible API gateway with access to DeepSeek, Llama, Qwen, GLM, and more.",
+    longDescription:
+      "To get started with Tensorix, create an account and get an API key at [app.tensorix.ai](https://app.tensorix.ai).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Tensorix API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://app.tensorix.ai",
   },
   venice: {
     title: "Venice",
