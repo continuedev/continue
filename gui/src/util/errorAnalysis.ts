@@ -129,9 +129,12 @@ export function analyzeError(
       "This error usually happens when the API key is actually invalid. Check your API key value or try a new one.";
 
     // Check if the key contains "secrets." indicating failed secret templating
-    if (selectedModel?.apiKey && String(selectedModel.apiKey).includes("secrets.")) {
+    if (
+      selectedModel?.apiKey &&
+      String(selectedModel.apiKey).includes("secrets.")
+    ) {
       customErrorMessage =
-        "It looks like your secret template failed to resolve. You need to add an `apiKey` value directly to your config instead of using a secret reference.";
+        "API key secret not found. Add the apiKey to your secrets or set it directly in your config.";
     }
   }
 

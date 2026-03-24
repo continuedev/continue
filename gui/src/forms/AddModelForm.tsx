@@ -244,13 +244,13 @@ export function AddModelForm({
                   </label>
                   <Input
                     id="apiKey"
-                    className={`w-full${apiKeyWarning ? " border-yellow-500" : ""}`}
+                    className={`w-full${apiKeyWarning ? "border-warning" : ""}`}
                     type="password"
                     placeholder={`Enter your ${selectedProvider.title} API key`}
                     {...formMethods.register("apiKey")}
                   />
                   {apiKeyWarning && (
-                    <span className="mt-1 block text-xs text-yellow-500">
+                    <span className="text-warning mt-1 block text-xs">
                       {apiKeyWarning}
                     </span>
                   )}

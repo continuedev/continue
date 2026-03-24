@@ -604,9 +604,7 @@ describe("errorAnalysis", () => {
         };
         const result = analyzeError(error, selectedModel);
 
-        expect(result.customErrorMessage).toContain(
-          "secret template failed to resolve",
-        );
+        expect(result.customErrorMessage).toContain("API key secret not found");
       });
 
       it("should detect 402 Insufficient Balance error", () => {

@@ -62,7 +62,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       onClick={() => ideMessenger.ide.openUrl(apiKeyUrl)}
     >
       <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
-      <span>View key</span>
+      <span>Check API key</span>
     </GhostButton>
   ) : null;
 
@@ -121,7 +121,9 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   );
 
   if (
-    parsedError.includes("You have no credits remaining on your Continue account") ||
+    parsedError.includes(
+      "You have no credits remaining on your Continue account",
+    ) ||
     parsedError.includes("You're out of credits!")
   ) {
     return <OutOfCreditsDialog />;
@@ -134,9 +136,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           There was an error handling the response from{" "}
           {selectedModel?.title || "the model"}.
         </p>
-        <p className="m-0 p-0">
-          Please try to submit your message again.
-        </p>
+        <p className="m-0 p-0">Please try to submit your message again.</p>
         <div className="mt-3">{resubmitButton}</div>
       </div>
     </div>
@@ -259,7 +259,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
               onClick={() => ideMessenger.ide.openUrl(apiKeyUrl)}
             >
               <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
-              <span>View key</span>
+              <span>Check API key</span>
             </GhostButton>
           )}
           {configButton}
