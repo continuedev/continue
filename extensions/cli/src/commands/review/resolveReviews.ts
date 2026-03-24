@@ -1,8 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { logger } from "../../util/logger.js";
-
 export interface ResolvedReview {
   /** Display name for the review */
   name: string;

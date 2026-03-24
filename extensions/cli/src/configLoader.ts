@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import * as path from "path";
 
 import {
@@ -18,13 +17,11 @@ import { uriToPath, uriToSlug } from "./auth/uriUtils.js";
 import type { AuthConfig } from "./auth/workos.js";
 import {
   getAccessToken,
-  getConfigUri,
   getOrganizationId,
   updateConfigUri,
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
 import { env } from "./env.js";
-import { logger } from "./util/logger.js";
 
 export interface ConfigLoadResult {
   config: AssistantUnrolled;
@@ -87,7 +84,7 @@ export async function loadConfiguration(
 function determineConfigSource(
   authConfig: AuthConfig,
   cliConfigPath: string | undefined,
-  isHeadless: boolean | undefined,
+  _isHeadless: boolean | undefined,
 ): ConfigSource {
   // Priority 1: CLI --config flag
   if (cliConfigPath) {

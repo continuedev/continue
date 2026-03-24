@@ -17,7 +17,6 @@ import {
 } from "../services/index.js";
 import {
   AgentFileServiceState,
-  AuthServiceState,
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";

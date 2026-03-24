@@ -50,7 +50,7 @@ const SlashCommandsMaybe: React.FC<{
   show,
   inputMode,
   hideNormalUI,
-  isRemoteMode,
+  isRemoteMode: _isRemoteMode,
   assistant,
   filter,
   selectedIndex,

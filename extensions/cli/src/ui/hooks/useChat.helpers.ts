@@ -226,7 +226,7 @@ export async function formatMessageWithFiles(
 /**
  * Track telemetry for user message
  */
-export function trackUserMessage(message: string, model?: any): void {
+export function trackUserMessage(message: string, _model?: any): void {
   telemetryService.startActiveTime();
   telemetryService.logUserPrompt(message.length, message);
 }

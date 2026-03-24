@@ -11,8 +11,6 @@ import {
   persistModelName,
 } from "../util/modelPersistence.js";
 
-import { pathToUri, slugToUri, uriToPath, uriToSlug } from "./uriUtils.js";
-
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------

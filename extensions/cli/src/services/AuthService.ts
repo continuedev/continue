@@ -1,4 +1,3 @@
-import { loadAuthConfig } from "../auth/workos.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";

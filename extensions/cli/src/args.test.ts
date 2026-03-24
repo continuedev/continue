@@ -1,5 +1,3 @@
-import { vi } from "vitest";
-
 import { processRule as processPromptOrRule } from "./hubLoader.js";
 
 describe("processPromptOrRule (rule processing)", () => {

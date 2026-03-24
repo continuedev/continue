@@ -25,7 +25,7 @@ function getUserAgent(): string {
 /**
  * Merges user-agent header into request options
  */
-function mergeUserAgentIntoRequestOptions(
+function _mergeUserAgentIntoRequestOptions(
   requestOptions: ModelConfig["requestOptions"],
 ): ModelConfig["requestOptions"] {
   return {
