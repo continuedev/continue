@@ -8,7 +8,7 @@ The **Tetrate Agent Router Service** provides a unified Gateway for accessing va
 This gateway acts as an intelligent router that can distribute requests across multiple model providers, offering enterprise-grade reliability and performance optimization.
 
 <Tip>
-Want to get started quickly? Sign up for the [Tetrate Agent Router Service](https://router.tetrate.ai/) to get an API key, then use [Tetrate on Continue Mission Control](https://continue.dev/tetrate) to get started fast.
+Want to get started quickly? Sign up for the [Tetrate Agent Router Service](https://router.tetrate.ai/) to get an API key, then follow the configuration examples below.
 </Tip>
 
 ## Setup
@@ -32,44 +32,14 @@ Go to the [API keys page](https://router.tetrate.ai/api-keys) to get your key
 </Steps>
 
 
-### Quickstart with Continue Mission Control
-
-Fastest way: use preconfigured models from Tetrate on Continue Mission Control
-
-<Steps>
-<Step title="Browse models">
-Open [Tetrate on Continue Mission Control](https://continue.dev/tetrate) and pick a model (e.g., [Claude Sonnet 4](https://continue.dev/tetrate/claude-sonnet-4))
-</Step>
-
-<Step title="Use or remix">
-Click "Use Model", or "Remix" to change the model ID if needed
-</Step>
-
-<Step title="Add your API key">
-Add your API key to Continue. See [adding secrets in Continue Mission Control](/mission-control/secrets/secret-types) and [managing local secrets in the FAQ](/faqs#managing-local-secrets-and-environment-variables)
-<Tip>
-Add it as a Continue Mission Control secret named `TETRATE_API_KEY` to reuse across projects.
-</Tip>
-</Step>
-</Steps>
-
-![Remix a model from Tetrate on Continue Mission Control](../assets/tetrate-remix.png)
-
-<Info>
-If a model is missing, remix a similar one and set the `model` field to the target ID.
-</Info>
-
 ### Configuration Methods
 
 <CardGroup cols={1}>
   <Card title="In Local Agent Configuration" icon="folder" vertical>
-    Use a Tetrate model block from the Hub or define it directly in your local agent configuration.
-  </Card>
-  <Card title="Continue Mission Control" icon="cloud" vertical>
-    Use a Tetrate model block from the Hub or define your own on the Hub.
+    Define models directly in your local agent configuration.
   </Card>
   <Card title="Using Local Model Blocks" icon="file-lines" vertical>
-    Create a local model block for reuse across agents without publishing it to the Hub.
+    Create a local model block for reuse across agents.
   </Card>
 </CardGroup>
 
@@ -83,7 +53,7 @@ If a model is missing, remix a similar one and set the `model` field to the targ
 
 **When to use**: Simple local setups (like using the VS Code extension) when you don't need shared or published blocks.
 
-Use a Tetrate model block from the Hub in your local agent configuration:
+Use a Tetrate model block in your local agent configuration:
 
 ```yaml title="~/.continue/config.yaml"
 name: Local Agent
@@ -130,49 +100,8 @@ context:
   - provider: codebase
 ```
 </Tab>
-<Tab title="Continue Mission Control">
-**When to use**: Share configurations across teams or contribute to the community.
-
-**The Model Block:**
-
-```yaml title="tetrate/claude-sonnet-4"
-name: Claude Sonnet 4
-version: 1.0.14
-schema: v1
-models:
-  - name: Claude Sonnet 4 - Tetrate
-    provider: tars
-    model: claude-4-sonnet-20250514
-    apiKey: ${{ inputs.TETRATE_API_KEY }}
-    roles:
-      - chat
-      - edit
-      - apply
-    capabilities:
-      - tool_use
-```
-View the model block `tetrate/claude-sonnet-4` on the [Continue Mission Control](https://continue.dev/tetrate/claude-sonnet-4).
-
-**Reference it in your Agent configuration:**
-
-```yaml title="my-agent"
-name: My Agent
-version: 1.0.0
-schema: v1
-models:
-  - uses: tetrate/claude-sonnet-4
-    with:
-      TETRATE_API_KEY: ${{ secrets.TETRATE_API_KEY }}
-context:
-  - uses: continuedev/diff-context
-  - uses: continuedev/terminal-context
-  - uses: continuedev/file-context
-```
-
-</Tab>
-
 <Tab title="Using Local Model Blocks">
-**When to use**: Reuse configurations across agents and keep them local or in GitHub (not on Continue Mission Control).
+**When to use**: Reuse configurations across agents and keep them local or in GitHub.
 
 **The Local Model Block:**
 <Info>
@@ -233,7 +162,7 @@ Learn more about [model blocks](/reference#models).
     Check your network or try a less-loaded model. Contact Tetrate support if issues persist.
   </Card>
   <Card title="Configuration not loading" icon="file-lines" vertical>
-    Validate YAML syntax and review error messages in Continue. If using Hub, ensure the block is published.
+    Validate YAML syntax and review error messages in Continue.
   </Card>
 </CardGroup>
 
