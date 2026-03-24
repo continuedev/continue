@@ -244,7 +244,9 @@ export function AddModelForm({
                   </label>
                   <Input
                     id="apiKey"
-                    className={`w-full${apiKeyWarning ? "border-warning" : ""}`}
+                    className={
+                      apiKeyWarning ? "border-warning w-full" : "w-full"
+                    }
                     type="password"
                     placeholder={`Enter your ${selectedProvider.title} API key`}
                     {...formMethods.register("apiKey")}
