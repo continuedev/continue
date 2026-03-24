@@ -31,6 +31,7 @@ interface ScreenContentProps {
   handleConfigSelect: (config: ConfigOption) => Promise<void>;
   handleModelSelect: (model: ModelOption) => Promise<void>;
   handleSessionSelect: (sessionId: string) => Promise<void>;
+  handleExportSession: (sessionId: string) => Promise<void>;
   handleReload: () => Promise<void>;
   closeCurrentScreen: () => void;
   activePermissionRequest: ActivePermissionRequest | null;
@@ -74,6 +75,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   handleConfigSelect,
   handleModelSelect,
   handleSessionSelect,
+  handleExportSession,
   handleReload,
   closeCurrentScreen,
   activePermissionRequest,
@@ -159,6 +161,16 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
     return (
       <SessionSelectorWithLoading
         onSelect={handleSessionSelect}
+        onExit={closeCurrentScreen}
+      />
+    );
+  }
+
+  // Export selector
+  if (isScreenActive("export")) {
+    return (
+      <SessionSelectorWithLoading
+        onSelect={handleExportSession}
         onExit={closeCurrentScreen}
       />
     );
