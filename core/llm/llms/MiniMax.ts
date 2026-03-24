@@ -10,10 +10,7 @@ class MiniMax extends OpenAI {
     useLegacyCompletionsEndpoint: false,
   };
 
-  protected _convertArgs(
-    options: CompletionOptions,
-    messages: ChatMessage[],
-  ) {
+  protected _convertArgs(options: CompletionOptions, messages: ChatMessage[]) {
     const finalOptions = super._convertArgs(options, messages);
 
     // MiniMax requires temperature in (0.0, 1.0] — zero is rejected

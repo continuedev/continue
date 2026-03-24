@@ -1,6 +1,4 @@
-import {
-  ChatCompletionCreateParams,
-} from "openai/resources/index";
+import { ChatCompletionCreateParams } from "openai/resources/index";
 import { MiniMaxConfig } from "../types.js";
 import { OpenAIApi } from "./OpenAI.js";
 

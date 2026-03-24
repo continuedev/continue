@@ -17,8 +17,7 @@ export const MiniMax: ModelProvider = {
       displayName: "MiniMax M2.7 Highspeed",
       contextLength: 204800,
       maxCompletionTokens: 192000,
-      description:
-        "High-speed version of M2.7 for low-latency scenarios.",
+      description: "High-speed version of M2.7 for low-latency scenarios.",
       regex: /MiniMax-M2\.7-highspeed/i,
       recommendedFor: ["chat"],
     },
