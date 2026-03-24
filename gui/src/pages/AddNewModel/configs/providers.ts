@@ -1308,6 +1308,7 @@ Fund your wallet with USDC on Solana or Base. ClawRouter uses x402 micropayments
       models.clawrouterAuto,
       models.clawrouterFree,
       models.clawrouterEco,
+      models.clawrouterPremium,
       {
         ...models.AUTODETECT,
         params: {

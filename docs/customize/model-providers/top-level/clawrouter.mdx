@@ -62,15 +62,16 @@ clawrouter
 
 ## Available Models
 
-ClawRouter provides several routing modes:
+ClawRouter provides four routing profiles:
 
-| Model | Description | Best For |
-|-------|-------------|----------|
-| `blockrun/auto` | Automatic model selection based on prompt complexity | General use (recommended) |
-| `blockrun/free` | Routes to available free-tier models only | Testing, low-cost experimentation |
-| `blockrun/eco` | Economy tier balancing cost and capability | Everyday coding tasks |
+| Model | Savings | Description | Best For |
+|-------|---------|-------------|----------|
+| `blockrun/auto` | 74-100% | Balanced routing based on prompt complexity | General use (recommended) |
+| `blockrun/eco` | 95-100% | Cheapest possible models | Maximum savings |
+| `blockrun/premium` | 0% | Best quality models (Opus, GPT-5.4 Pro) | Mission-critical tasks |
+| `blockrun/free` | 100% | Free-tier models only (nvidia/gpt-oss-120b) | Zero cost testing |
 
-You can also specify any model supported by your configured providers directly (e.g., `anthropic/claude-sonnet-4`, `openai/gpt-4o`).
+You can also specify any of the 44+ models directly (e.g., `anthropic/claude-sonnet-4.6`, `openai/gpt-5.4`, `xai/grok-4`).
 
 ## How It Works
 
@@ -322,6 +323,50 @@ You can view aggregated costs with:
 curl http://localhost:1337/stats
 ```
 
+## Dual-Chain Wallet Support
+
+ClawRouter supports payments on two chains from a single wallet:
+
+| Chain | Token | Best For |
+|-------|-------|----------|
+| **Base (EVM)** | USDC | Lower fees, Coinbase integration |
+| **Solana** | USDC | Fastest settlement |
+
+Switch chains via CLI:
+
+```bash
+# Switch to Solana payments
+clawrouter wallet solana
+
+# Switch to Base (EVM) payments  
+clawrouter wallet base
+
+# Check balances on both chains
+clawrouter wallet
+```
+
+Both wallets are derived from the same BIP-39 mnemonic generated on first run.
+
+## Model Exclusion
+
+Block specific models from routing:
+
+```bash
+# Block a model
+clawrouter exclude add nvidia/gpt-oss-120b
+
+# Aliases work
+clawrouter exclude add grok-4
+
+# Show exclusions
+clawrouter exclude
+
+# Remove exclusion
+clawrouter exclude remove grok-4
+```
+
+Useful when a model doesn't follow instructions well or you want to control costs.
+
 ## Comparison with OpenRouter
 
 | Feature | ClawRouter | OpenRouter |
@@ -330,7 +375,9 @@ curl http://localhost:1337/stats
 | Automatic routing | ✅ Complexity-based | ❌ Manual selection |
 | Cost optimization | ✅ 78-96% savings | ❌ Pay per model |
 | Privacy | ✅ Data stays local | ⚠️ Data sent to cloud |
-| Setup | `npx clawrouter` | API key signup |
+| Authentication | Wallet signature | API key |
+| Payment | USDC (Solana/Base) | Credit card |
+| Setup | `npx clawrouter` | Account signup |
 
 <Note>
   ClawRouter can be used alongside OpenRouter — route complex tasks through ClawRouter while using OpenRouter for specific model access.

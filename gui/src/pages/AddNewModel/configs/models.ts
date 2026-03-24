@@ -2729,6 +2729,19 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["clawrouter"],
     isOpenSource: true,
   },
+  clawrouterPremium: {
+    title: "ClawRouter Premium",
+    description:
+      "Premium tier - routes to best quality models (Claude Opus, GPT-5.4 Pro) for mission-critical tasks",
+    params: {
+      title: "ClawRouter Premium",
+      model: "blockrun/premium",
+      contextLength: 200_000,
+    },
+    icon: "clawrouter.png",
+    providerOptions: ["clawrouter"],
+    isOpenSource: true,
+  },
 
   AUTODETECT: {
     title: "Autodetect",
