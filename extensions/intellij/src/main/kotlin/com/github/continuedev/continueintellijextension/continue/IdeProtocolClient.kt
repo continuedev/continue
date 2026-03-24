@@ -3,7 +3,7 @@ package com.github.continuedev.continueintellijextension.`continue`
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.activities.showTutorial
-import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
+
 import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService.Companion.getBrowser
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
@@ -99,25 +99,10 @@ class IdeProtocolClient(
                     }
 
                     "getControlPlaneSessionInfo" -> {
-                        val params = gsonService.gson.fromJson(
-                            dataElement.toString(),
-                            GetControlPlaneSessionInfoParams::class.java
-                        )
-                        val authService = service<ContinueAuthService>()
-
-                        if (params.silent) {
-                            val sessionInfo = authService.loadControlPlaneSessionInfo()
-                            respond(sessionInfo)
-                        } else {
-                            authService.startAuthFlow(project, params.useOnboarding)
-                            respond(null)
-                        }
+                        respond(null)
                     }
 
                     "logoutOfControlPlane" -> {
-                        val authService = service<ContinueAuthService>()
-                        authService.signOut()
-
                         respond(null)
                     }
 

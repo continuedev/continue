@@ -1,11 +1,6 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
 
-import {
-  isAuthenticated,
-  isAuthenticatedConfig,
-  loadAuthConfig,
-} from "./auth/workos.js";
 import { getAllSlashCommands } from "./commands/commands.js";
 import { handleInit } from "./commands/init.js";
 import { handleInfoSlashCommand } from "./infoScreen.js";
@@ -53,66 +48,24 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
 }
 
 async function handleLogin() {
-  try {
-    const newAuthState = await services.auth.login();
-    await reloadService(SERVICE_NAMES.AUTH);
-
-    const userInfo =
-      newAuthState.authConfig && isAuthenticatedConfig(newAuthState.authConfig)
-        ? newAuthState.authConfig.userEmail || newAuthState.authConfig.userId
-        : "user";
-
-    console.info(chalk.green(`\nLogged in as ${userInfo}`));
-
-    return {
-      exit: false,
-      output: "Login successful! All services updated automatically.",
-    };
-  } catch (error: any) {
-    console.error(chalk.red(`\nLogin failed: ${error.message}`));
-    return {
-      exit: false,
-      output: `Login failed: ${error.message}`,
-    };
-  }
+  return {
+    exit: false,
+    output: "Login is not available. Hub authentication has been removed.",
+  };
 }
 
 async function handleLogout() {
-  try {
-    await services.auth.logout();
-    return {
-      exit: true,
-      output: "Logged out successfully",
-    };
-  } catch {
-    return {
-      exit: true,
-      output: "Logged out successfully",
-    };
-  }
+  return {
+    exit: false,
+    output: "Logout is not available. Hub authentication has been removed.",
+  };
 }
 
 async function handleWhoami() {
-  const authed = await isAuthenticated();
-  if (authed) {
-    const config = loadAuthConfig(); // TODO duplicate auth config loading
-    if (config && isAuthenticatedConfig(config)) {
-      return {
-        exit: false,
-        output: `Logged in as ${config.userEmail || config.userId}`,
-      };
-    } else {
-      return {
-        exit: false,
-        output: "Authenticated via environment variable",
-      };
-    }
-  } else {
-    return {
-      exit: false,
-      output: "Not logged in. Use /login to authenticate.",
-    };
-  }
+  return {
+    exit: false,
+    output: "Not logged in. Hub authentication has been removed.",
+  };
 }
 
 async function handleFork() {

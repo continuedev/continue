@@ -71,7 +71,6 @@ describe("E2E Scenarios", () => {
         case SecretType.Organization:
           return orgSecrets[secretLocation.secretName];
         case SecretType.ModelsAddOn:
-        case SecretType.FreeTrial:
           if (
             secretLocation.blockSlug.ownerSlug === "test-org" &&
             secretLocation.blockSlug.packageSlug === "claude35sonnet" &&

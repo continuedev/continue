@@ -21,7 +21,6 @@ export default class LocalProfileLoader implements IProfileLoader {
   ) {
     const description: ProfileDescription = {
       id: overrideAssistantFile?.path ?? LocalProfileLoader.ID,
-      profileType: "local",
       fullSlug: {
         ownerSlug: "",
         packageSlug: "",

@@ -40,37 +40,13 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   "docs/getIndexedPages": [],
   "history/save": undefined,
   "config/getSerializedProfileInfo": {
-    organizations: [
-      {
-        id: "personal",
-        profiles: [
-          {
-            title: "Local Agent",
-            id: "local",
-            errors: [],
-            profileType: "local",
-            uri: "",
-            iconUrl: "",
-            fullSlug: {
-              ownerSlug: "",
-              packageSlug: "",
-              versionSlug: "",
-            },
-          },
-        ],
-        slug: "",
-        selectedProfileId: "local",
-        name: "Personal",
-        iconUrl: "",
-      },
-    ],
     profileId: "local",
+    profiles: [],
     result: {
       config: undefined,
       errors: [],
       configLoadInterrupted: false,
     },
-    selectedOrgId: "personal",
   },
   "chatDescriber/describe": "Session summary",
   applyToFile: undefined,

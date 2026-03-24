@@ -7,7 +7,6 @@ import { Card, Toggle, useFontSize } from "../../../components/ui";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateConfig } from "../../../redux/slices/configSlice";
-import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
 import { setLocalStorage } from "../../../util/localStorage";
 import { ConfigHeader } from "../components/ConfigHeader";
 import { UserSetting } from "../components/UserSetting";
@@ -17,7 +16,6 @@ export function UserSettingsSection() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((state) => state.config.config);
-  const currentOrg = useAppSelector(selectCurrentOrg);
 
   const [showExperimental, setShowExperimental] = useState(false);
 
@@ -85,8 +83,7 @@ export function UserSettingsSection() {
     });
   };
 
-  const disableTelemetryToggle =
-    currentOrg?.policy?.allowAnonymousTelemetry === false;
+  const disableTelemetryToggle = false;
 
   return (
     <div>
@@ -144,25 +141,6 @@ export function UserSettingsSection() {
                   value={!displayRawMarkdown}
                   onChange={(value) =>
                     handleUpdate({ displayRawMarkdown: !value })
-                  }
-                />
-              </div>
-            </Card>
-          </div>
-
-          {/* Telemetry Settings */}
-          <div>
-            <ConfigHeader title="Telemetry" variant="sm" />
-            <Card>
-              <div className="flex flex-col gap-4">
-                <UserSetting
-                  type="toggle"
-                  title="Allow Anonymous Telemetry"
-                  description="Allows Continue to send anonymous telemetry."
-                  value={allowAnonymousTelemetry}
-                  disabled={disableTelemetryToggle}
-                  onChange={(value) =>
-                    handleUpdate({ allowAnonymousTelemetry: value })
                   }
                 />
               </div>

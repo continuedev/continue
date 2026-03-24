@@ -3,7 +3,7 @@ import React, { createContext, useCallback, useContext } from "react";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setConfigLoading } from "../redux/slices/configSlice";
 import {
-  selectCurrentOrg,
+  selectProfiles,
   selectSelectedProfile,
 } from "../redux/slices/profilesSlice";
 import { IdeMessengerContext } from "./IdeMessenger";
@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const ideMessenger = useContext(IdeMessengerContext);
 
   // Profiles
-  const currentOrg = useAppSelector(selectCurrentOrg);
+  const profiles = useAppSelector(selectProfiles);
   const selectedProfile = useAppSelector(selectSelectedProfile);
 
   const refreshProfiles = useCallback(
@@ -48,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     <AuthContext.Provider
       value={{
         selectedProfile,
-        profiles: currentOrg?.profiles ?? [],
+        profiles: profiles ?? [],
         refreshProfiles,
       }}
     >

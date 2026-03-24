@@ -354,11 +354,9 @@ export class VsCodeExtension {
     this.uriHandler.event((uri) => {
       const queryParams = new URLSearchParams(uri.query);
       let profileId = queryParams.get("profile_id");
-      let orgId = queryParams.get("org_id");
 
       this.core.invoke("config/refreshProfiles", {
         reason: "VS Code deep link",
-        selectOrgId: orgId === "null" ? undefined : (orgId ?? undefined),
         selectProfileId:
           profileId === "null" ? undefined : (profileId ?? undefined),
       });

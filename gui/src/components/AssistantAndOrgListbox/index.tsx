@@ -107,7 +107,7 @@ export function AssistantAndOrgListbox({
             style={{ zIndex: 200 }}
           >
             <div className="flex items-center justify-between px-1.5 py-1">
-              <span className="text-description text-xs font-medium">
+              <span className="text-description text-2xs font-medium">
                 Configs
               </span>
               <div className="flex items-center gap-0.5">
@@ -156,7 +156,7 @@ export function AssistantAndOrgListbox({
                   <div className="flex w-full items-center">
                     <ArrowPathIcon
                       className={cn(
-                        "ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0",
+                        "ml-1 mr-3 h-3.5 w-3.5 flex-shrink-0",
                         configLoading && "animate-spin-slow",
                       )}
                     />

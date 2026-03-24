@@ -139,7 +139,7 @@ async function createAndConnectRemoteEnvironment(
     printStartJson({
       status: "success",
       message: "Remote development environment created successfully",
-      url: `${env.appUrl}/agents/${result.id}`,
+      url: `https://continue.dev/agents/${result.id}`,
       containerUrl: result.url,
       containerPort: result.port,
       name: requestBody.name,

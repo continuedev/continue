@@ -31,7 +31,6 @@ import {
   selectDoneApplyStates,
   selectPendingToolCalls,
 } from "../../redux/selectors/selectToolCalls";
-import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
 import {
   cancelToolCall,
   ChatHistoryItemWithMessageId,
@@ -131,7 +130,6 @@ export function Chat() {
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
-  const currentOrg = useAppSelector(selectCurrentOrg);
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);

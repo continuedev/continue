@@ -1366,9 +1366,6 @@ export interface MCPPrompt {
   arguments?: MCPPromptArgs;
 }
 
-// Leaving here to ideate on
-// export type ContinueConfigSource = "local-yaml" | "local-json" | "hub-assistant" | "hub"
-
 // https://modelcontextprotocol.io/docs/concepts/resources#direct-resources
 export interface MCPResource {
   name: string;

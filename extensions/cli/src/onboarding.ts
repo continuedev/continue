@@ -4,7 +4,7 @@ import * as path from "path";
 import chalk from "chalk";
 import { setConfigFilePermissions } from "core/util/paths.js";
 
-import { AuthConfig, login } from "./auth/workos.js";
+import type { AuthConfig } from "./auth/workos.js";
 import { getApiClient } from "./config.js";
 import { loadConfiguration } from "./configLoader.js";
 import { env } from "./env.js";
@@ -12,7 +12,7 @@ import {
   getApiKeyValidationError,
   isValidAnthropicApiKey,
 } from "./util/apiKeyValidation.js";
-import { question, questionWithChoices } from "./util/prompt.js";
+import { question } from "./util/prompt.js";
 import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
 const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
@@ -85,39 +85,23 @@ export async function runOnboardingFlow(
     return false;
   }
 
-  // Step 4: Present user with two options
-  console.log(chalk.yellow("How do you want to get started?"));
-  console.log(chalk.white("1. ⏩ Log in with Continue"));
-  console.log(chalk.white("2. 🔑 Enter your Anthropic API key"));
+  // Step 4: Prompt for API key
+  console.log(chalk.yellow("To get started, enter your Anthropic API key."));
 
-  const choice = await questionWithChoices(
-    chalk.yellow("\nEnter choice (1): "),
-    ["1", "2", ""],
-    "1",
-    chalk.dim("Please enter 1 or 2"),
+  const apiKey = await question(
+    chalk.white("\nEnter your Anthropic API key: "),
   );
 
-  if (choice === "1" || choice === "") {
-    await login();
-    return true;
-  } else if (choice === "2") {
-    const apiKey = await question(
-      chalk.white("\nEnter your Anthropic API key: "),
-    );
-
-    if (!isValidAnthropicApiKey(apiKey)) {
-      throw new Error(getApiKeyValidationError(apiKey));
-    }
-
-    await createOrUpdateConfig(apiKey);
-    console.log(
-      chalk.green(`✓ Config file updated successfully at ${CONFIG_PATH}`),
-    );
-
-    return true;
-  } else {
-    throw new Error(`Invalid choice. Please select "1" or "2"`);
+  if (!isValidAnthropicApiKey(apiKey)) {
+    throw new Error(getApiKeyValidationError(apiKey));
   }
+
+  await createOrUpdateConfig(apiKey);
+  console.log(
+    chalk.green(`✓ Config file updated successfully at ${CONFIG_PATH}`),
+  );
+
+  return true;
 }
 
 export async function isFirstTime(): Promise<boolean> {
@@ -147,7 +131,7 @@ export async function initializeWithOnboarding(
       await loadConfiguration(
         authConfig,
         configPath,
-        getApiClient(authConfig?.accessToken),
+        getApiClient(undefined),
         [],
         false,
       );

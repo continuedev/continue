@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { setExitMessageCallback, shouldShowExitMessage } from "../../index.js";
 import type { PermissionMode } from "../../permissions/types.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
-import { FreeTrialStatus } from "../FreeTrialStatus.js";
 import { UpdateNotification } from "../UpdateNotification.js";
 
 import { ContextPercentageDisplay } from "./ContextPercentageDisplay.js";
@@ -87,24 +86,6 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
               Cost: ${totalCost.toFixed(4)}
             </Text>
           </React.Fragment>
-        )}
-      </Box>
-      <Box>
-        {!isRemoteMode && services.model?.model && (
-          <FreeTrialStatus
-            apiClient={services.apiClient?.apiClient || undefined}
-            model={services.model.model}
-            onTransitionStateChange={(shouldShow) => {
-              if (shouldShow && navState.currentScreen === "chat") {
-                navigateTo("free-trial");
-              } else if (
-                !shouldShow &&
-                navState.currentScreen === "free-trial"
-              ) {
-                closeCurrentScreen();
-              }
-            }}
-          />
         )}
       </Box>
       <Box marginRight={2} marginLeft={2}>

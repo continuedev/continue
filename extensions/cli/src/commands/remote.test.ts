@@ -55,8 +55,6 @@ describe("remote command", () => {
 
     mockEnv.env = {
       apiBase: "https://api.example.com",
-      workOsClientId: "test-client-id",
-      appUrl: "https://test.example.com",
       continueHome: "/tmp/test-continue-home",
     };
 

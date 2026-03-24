@@ -173,8 +173,7 @@ export class Core {
             result: serializedResult,
             profileId:
               this.configHandler.currentProfile?.profileDescription.id || null,
-            organizations: this.configHandler.getSerializedOrgs(),
-            selectedOrgId: this.configHandler.currentOrg?.id ?? null,
+            profiles: this.configHandler.profileDescriptions,
           });
 
           if (await this.codeBaseIndexer.wasAnyOneIndexAdded()) {
@@ -425,11 +424,9 @@ export class Core {
       const codebaseRulesCache = CodebaseRulesCache.getInstance();
       await codebaseRulesCache.refresh(this.ide);
 
-      const { selectOrgId, selectProfileId, reason } = msg.data ?? {};
+      const { selectProfileId, reason } = msg.data ?? {};
       await this.configHandler.refreshAll(reason);
-      if (selectOrgId) {
-        await this.configHandler.setSelectedOrgId(selectOrgId, selectProfileId);
-      } else if (selectProfileId) {
+      if (selectProfileId) {
         await this.configHandler.setSelectedProfileId(selectProfileId);
       }
     });
@@ -545,8 +542,7 @@ export class Core {
         result: await this.configHandler.getSerializedConfig(),
         profileId:
           this.configHandler.currentProfile?.profileDescription.id ?? null,
-        organizations: this.configHandler.getSerializedOrgs(),
-        selectedOrgId: this.configHandler.currentOrg?.id ?? null,
+        profiles: this.configHandler.profileDescriptions,
       };
     });
 
@@ -1027,15 +1023,6 @@ export class Core {
     on("didChangeSelectedProfile", async (msg) => {
       if (msg.data.id) {
         await this.configHandler.setSelectedProfileId(msg.data.id);
-      }
-    });
-
-    on("didChangeSelectedOrg", async (msg) => {
-      if (msg.data.id) {
-        await this.configHandler.setSelectedOrgId(
-          msg.data.id,
-          msg.data.profileId || undefined,
-        );
       }
     });
 

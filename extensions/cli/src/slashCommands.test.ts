@@ -8,7 +8,7 @@ import {
   type MockedFunction,
 } from "vitest";
 
-import { AuthenticatedConfig } from "./auth/workos-types.js";
+import { AuthenticatedConfig } from "./auth/workos.js";
 import type { AuthConfig } from "./auth/workos.js";
 import type { ConfigServiceState } from "./services/types.js";
 import { handleSlashCommands } from "./slashCommands.js";
@@ -52,7 +52,6 @@ vi.mock("./util/logger.js", () => ({
 vi.mock("./env.js", () => ({
   env: {
     continueHome: "/home/test/.continue",
-    appUrl: "https://continue.dev",
   },
 }));
 

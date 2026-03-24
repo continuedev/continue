@@ -112,27 +112,6 @@ export class VsCodeWebviewProtocol
               message = `The request failed with "${e.cause.name}": ${e.cause.message}. If you're having trouble setting up Continue, please see the troubleshooting guide for help.`;
             }
           }
-
-          if (message.includes("https://proxy-server")) {
-            message = message.split("\n").filter((l: string) => l !== "")[1];
-            try {
-              message = JSON.parse(message).message;
-            } catch {}
-            if (message.includes("exceeded")) {
-              message +=
-                " To keep using Continue, you can set up a local model or use your own API key.";
-            }
-
-            vscode.window
-              .showInformationMessage(message, "Add API Key", "Use Local Model")
-              .then((selection) => {
-                if (selection === "Add API Key") {
-                  this.request("setupApiKey", undefined);
-                } else if (selection === "Use Local Model") {
-                  this.request("setupLocalConfig", undefined);
-                }
-              });
-          }
         }
       }
     };

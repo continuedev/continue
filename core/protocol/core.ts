@@ -10,6 +10,7 @@ import {
   AutocompleteInput,
   RecentlyEditedRange,
 } from "../autocomplete/util/types";
+import { ProfileDescription } from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
@@ -44,7 +45,6 @@ import {
 import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types";
 import { GetLspDefinitionsFunction } from "../autocomplete/types";
 import { ConfigHandler } from "../config/ConfigHandler";
-import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
 import { NextEditOutcome } from "../nextEdit/types";
 import { ContinueErrorReason } from "../util/errors";
@@ -52,7 +52,6 @@ import { ContinueErrorReason } from "../util/errors";
 export enum OnboardingModes {
   API_KEY = "API Key",
   LOCAL = "Local",
-  MODELS_ADD_ON = "Models Add-On",
 }
 
 export interface ListHistoryOptions {
@@ -96,8 +95,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
-      organizations: SerializedOrgWithProfiles[];
-      selectedOrgId: string | null;
+      profiles: ProfileDescription[];
     },
   ];
   "config/deleteModel": [{ title: string }, void];
@@ -106,7 +104,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       | undefined
       | {
           reason?: string;
-          selectOrgId?: string;
           selectProfileId?: string;
         }
     ),

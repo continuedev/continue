@@ -13,10 +13,7 @@ export function useEditBlock() {
       ideMessenger.post("openFile", {
         path: sourceFile,
       });
-    } else if (
-      selectedProfile?.profileType === "local" &&
-      selectedProfile?.uri
-    ) {
+    } else if (selectedProfile?.uri) {
       ideMessenger.post("openFile", {
         path: selectedProfile.uri,
       });
