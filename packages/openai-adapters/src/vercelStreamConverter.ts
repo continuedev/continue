@@ -99,6 +99,41 @@ export function convertVercelStreamPart(
         model,
       });
 
+    case "tool-input-start":
+      // Emit the initial chunk with id and function name, matching OpenAI's
+      // streaming format where the first tool call chunk carries the id/name.
+      return chatChunkFromDelta({
+        delta: {
+          tool_calls: [
+            {
+              index: 0,
+              id: part.id,
+              type: "function" as const,
+              function: {
+                name: part.toolName,
+                arguments: "",
+              },
+            },
+          ],
+        },
+        model,
+      });
+
+    case "tool-input-delta":
+      return chatChunkFromDelta({
+        delta: {
+          tool_calls: [
+            {
+              index: 0,
+              function: {
+                arguments: part.delta,
+              },
+            },
+          ],
+        },
+        model,
+      });
+
     case "tool-call": {
       const thoughtSignature =
         part.providerMetadata?.google?.thoughtSignature ??
@@ -127,21 +162,6 @@ export function convertVercelStreamPart(
         model,
       });
     }
-
-    case "tool-input-delta":
-      return chatChunkFromDelta({
-        delta: {
-          tool_calls: [
-            {
-              index: 0,
-              function: {
-                arguments: part.delta,
-              },
-            },
-          ],
-        },
-        model,
-      });
 
     case "finish":
       if (part.totalUsage) {
@@ -197,7 +217,6 @@ export function convertVercelStreamPart(
     case "reasoning-end":
     case "source":
     case "file":
-    case "tool-input-start":
     case "tool-input-end":
     case "tool-result":
     case "start-step":

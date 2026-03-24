@@ -191,6 +191,11 @@ describe("generateToolsSystemMessage", () => {
 
     const hasDynamicToolsSection = /additional tool definitions/i.test(result);
     expect(hasDynamicToolsSection).toBe(true);
+
+    // Dynamic definitions should not duplicate tools that already have predefined messages.
+    expect(result.match(/TOOL_NAME: tool_with_description/g)?.length ?? 0).toBe(
+      1,
+    );
   });
 
   it("includes example tool definition and call", () => {

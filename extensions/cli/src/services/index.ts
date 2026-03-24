@@ -1,4 +1,5 @@
 import { loadAuthConfig } from "../auth/workos.js";
+import { HookService } from "../hooks/HookService.js";
 import { initializeWithOnboarding } from "../onboarding.js";
 import {
   setBetaSubagentToolEnabled,
@@ -53,6 +54,7 @@ const toolPermissionService = new ToolPermissionService();
 const systemMessageService = new SystemMessageService();
 const artifactUploadService = new ArtifactUploadService();
 const gitAiIntegrationService = new GitAiIntegrationService();
+const hookService = new HookService();
 
 /**
  * Initialize all services and register them with the service container
@@ -332,6 +334,12 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
     [], // No dependencies
   );
 
+  serviceContainer.register(
+    SERVICE_NAMES.HOOKS,
+    () => hookService.initialize(),
+    [], // No dependencies
+  );
+
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();
@@ -397,6 +405,7 @@ export const services = {
   gitAiIntegration: gitAiIntegrationService,
   backgroundJobs: backgroundJobService,
   quiz: quizService,
+  hooks: hookService,
 } as const;
 
 export type ServicesType = typeof services;
