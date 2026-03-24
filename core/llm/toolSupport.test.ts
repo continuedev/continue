@@ -393,6 +393,29 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("clawrouter", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["clawrouter"];
+
+    it("should return true for blockrun routing profiles", () => {
+      expect(supportsFn("blockrun/auto")).toBe(true);
+      expect(supportsFn("blockrun/eco")).toBe(true);
+      expect(supportsFn("blockrun/premium")).toBe(true);
+      expect(supportsFn("blockrun/free")).toBe(true);
+    });
+
+    it("should return true for tool-supporting models", () => {
+      expect(supportsFn("gpt-4o")).toBe(true);
+      expect(supportsFn("claude-3-sonnet")).toBe(true);
+      expect(supportsFn("gemini-pro")).toBe(true);
+      expect(supportsFn("anthropic/claude-opus-4.6")).toBe(true);
+    });
+
+    it("should return false for non-tool-supporting patterns", () => {
+      expect(supportsFn("random-model")).toBe(false);
+      expect(supportsFn("")).toBe(false);
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle empty model names", () => {
       expect(PROVIDER_TOOL_SUPPORT["continue-proxy"]("")).toBe(false);
