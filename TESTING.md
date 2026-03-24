@@ -27,4 +27,4 @@
 ## Low Priority
 
 - [x] **"Main Config" naming** — Fresh installs show "Main Config" as default profile name.
-- [ ] **IntelliJ startup** — IntelliJ plugin has pre-existing issues: `Unknown message type: configUpdate/subprocess`. Not a regression from this PR, needs separate fix.
+- [x] **IntelliJ startup** — Profiles load correctly after rebuilding core binary. _(Core binary must be rebuilt for IntelliJ to pick up changes.)_
