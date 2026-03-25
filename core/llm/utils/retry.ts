@@ -113,6 +113,17 @@ function defaultShouldRetry(error: any, attempt: number): boolean {
     return true;
   }
 
+  // Connection/stream errors (e.g. provider drops connection mid-stream)
+  const connectionPatterns = [
+    "premature close",
+    "premature end",
+    "connection reset",
+    "socket hang up",
+  ];
+  if (connectionPatterns.some((p) => lowerMessage.includes(p))) {
+    return true;
+  }
+
   // Abort signal errors should not be retried
   if (isAbortError(error)) {
     return false;

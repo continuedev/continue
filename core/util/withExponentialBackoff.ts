@@ -19,7 +19,11 @@ const withExponentialBackoff = async <T>(
         (error as APIError).response?.status === 429 ||
         /"code"\s*:\s*429/.test(error.message ?? "") ||
         lowerMessage.includes("overloaded") ||
-        lowerMessage.includes("malformed json")
+        lowerMessage.includes("malformed json") ||
+        lowerMessage.includes("premature close") ||
+        lowerMessage.includes("premature end") ||
+        lowerMessage.includes("connection reset") ||
+        lowerMessage.includes("socket hang up")
       ) {
         const retryAfter = (error as APIError).response?.headers.get(
           RETRY_AFTER_HEADER,
