@@ -189,6 +189,8 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   }
 
   if (statusCode === 401) {
+    const isMissingAuth =
+      parsedError.toLowerCase().includes("missing bearer or basic authentication");
     errorContent = (
       <div className="flex flex-col gap-2">
         {session && selectedProfile && !isLocalProfile(selectedProfile) && (
@@ -199,8 +201,25 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
             </SecondaryButton>
           </div>
         )}
-        <span>{`It's possible that your API key is invalid.`}</span>
+        <span>
+          {isMissingAuth
+            ? 'No API key was sent with the request. Add "apiKey" to your model config.'
+            : `It's possible that your API key is invalid.`}
+        </span>
         <div className="flex flex-row flex-wrap gap-2">
+          {isMissingAuth && (
+            <GhostButton
+              className="flex items-center"
+              onClick={() =>
+                ideMessenger.ide.openUrl(
+                  "https://docs.continue.dev/reference#models",
+                )
+              }
+            >
+              <ArrowTopRightOnSquareIcon className="mr-1.5 h-3.5 w-3.5" />
+              <span>View docs</span>
+            </GhostButton>
+          )}
           {checkKeysButton}
           {configButton}
         </div>
