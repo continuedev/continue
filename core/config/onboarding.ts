@@ -9,7 +9,7 @@ export const LOCAL_ONBOARDING_EMBEDDINGS_MODEL = "nomic-embed-text:latest";
 export const LOCAL_ONBOARDING_EMBEDDINGS_TITLE = "Nomic Embed";
 
 const ANTHROPIC_MODEL_CONFIG = {
-  slugs: ["anthropic/claude-3-7-sonnet", "anthropic/claude-4-sonnet"],
+  slugs: ["anthropic/claude-sonnet-4-6", "anthropic/claude-opus-4-6"],
   apiKeyInputName: "ANTHROPIC_API_KEY",
 };
 const OPENAI_MODEL_CONFIG = {
@@ -19,7 +19,7 @@ const OPENAI_MODEL_CONFIG = {
 
 // TODO: These need updating on the hub
 const GEMINI_MODEL_CONFIG = {
-  slugs: ["google/gemini-2.5-pro", "google/gemini-2.0-flash"],
+  slugs: ["google/gemini-2.5-pro", "google/gemini-2.5-flash"],
   apiKeyInputName: "GEMINI_API_KEY",
 };
 

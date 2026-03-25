@@ -122,7 +122,6 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       models.cometapiGemini25Pro,
       models.cometapiGemini25Flash,
       models.cometapiGemini25FlashLite,
-      models.cometapiGemini20Flash,
       // xAI Grok family
       models.cometapiGrok40709,
       models.cometapiGrok3,
@@ -1151,7 +1150,6 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.asksageclaude45sonnetgov,
       models.asksageclaude45opus,
       models.asksageclaude45haiku,
-      models.asksagegemini20Flash,
       models.asksagegemini25Pro,
       models.asksagegemini25flash,
       models.asksagegpt5,
