@@ -170,12 +170,6 @@ class Ollama extends BaseLLM implements ModelInstaller {
     this.explicitContextLength = options.contextLength !== undefined;
   }
 
-  /**
-   * Lazily fetches and caches model info from Ollama's /api/show endpoint.
-   * Called before actual model usage rather than in the constructor to avoid
-   * flooding the Ollama server with requests when many model instances are
-   * created (e.g. with AUTODETECT).
-   */
   private ensureModelInfo(): Promise<void> {
     if (this.modelInfoPromise) {
       return this.modelInfoPromise;
@@ -200,17 +194,22 @@ class Ollama extends BaseLLM implements ModelInstaller {
     })
       .then(async (response) => {
         if (response?.status !== 200) {
+          // console.warn(
+          //   "Error calling Ollama /api/show endpoint: ",
+          //   await response.text(),
+          // );
           return;
         }
         const body = await response.json();
         if (body.parameters) {
+          const params = [];
           for (const line of body.parameters.split("\n")) {
-            const parts = line.match(/^(\S+)\s+((?:".*")|\S+)$/);
+            let parts = line.match(/^(\S+)\s+((?:".*")|\S+)$/);
             if (!parts || parts.length < 2) {
               continue;
             }
-            const key = parts[1];
-            const value = parts[2];
+            let key = parts[1];
+            let value = parts[2];
             switch (key) {
               case "num_ctx":
                 if (!this.explicitContextLength) {
@@ -224,7 +223,9 @@ class Ollama extends BaseLLM implements ModelInstaller {
                 try {
                   this.completionOptions.stop.push(JSON.parse(value));
                 } catch (e) {
-                  // Silently ignore unparseable stop parameters
+                  console.warn(
+                    `Error parsing stop parameter value "{value}: ${e}`,
+                  );
                 }
                 break;
               default:
@@ -245,8 +246,8 @@ class Ollama extends BaseLLM implements ModelInstaller {
           this.templateSupportsTools = body.template.includes(".Tools");
         }
       })
-      .catch(() => {
-        // Model info is optional; silently continue without it
+      .catch((e) => {
+        // console.warn("Error calling the Ollama /api/show endpoint: ", e);
       });
 
     return this.modelInfoPromise;
@@ -726,11 +727,14 @@ class Ollama extends BaseLLM implements ModelInstaller {
         headers: headers,
       },
     );
-    if (!response.ok) {
-      return [];
-    }
     const data = await response.json();
-    return data.models.map((model: any) => model.name);
+    if (response.ok) {
+      return data.models.map((model: any) => model.name);
+    } else {
+      throw new Error(
+        "Failed to list Ollama models. Make sure Ollama is running.",
+      );
+    }
   }
 
   protected async _embed(chunks: string[]): Promise<number[][]> {
