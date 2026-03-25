@@ -705,6 +705,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/follow-redirects": "^1.14.4",
+    "@types/minimatch": "^5.1.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "16.x",
     "@types/node-fetch": "^2.6.12",
