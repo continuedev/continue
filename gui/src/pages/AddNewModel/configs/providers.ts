@@ -752,8 +752,9 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       },
     ],
     packages: [
-      models.gemini3ProPreview,
+      models.gemini31ProPreview,
       models.gemini3FlashPreview,
+      models.gemini31FlashLitePreview,
       models.gemini25Pro,
       models.gemini25Flash,
       models.gemini25FlashLite,

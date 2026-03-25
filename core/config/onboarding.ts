@@ -19,7 +19,7 @@ const OPENAI_MODEL_CONFIG = {
 
 // TODO: These need updating on the hub
 const GEMINI_MODEL_CONFIG = {
-  slugs: ["google/gemini-2.5-pro", "google/gemini-2.5-flash"],
+  slugs: ["google/gemini-3.1-pro-preview", "google/gemini-3-flash-preview"],
   apiKeyInputName: "GEMINI_API_KEY",
 };
 
