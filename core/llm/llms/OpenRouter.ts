@@ -18,29 +18,20 @@ class OpenRouter extends OpenAI {
     useLegacyCompletionsEndpoint: false,
   };
 
-  /**
-   * Detect if the model is an Anthropic/Claude model
-   */
   private isAnthropicModel(model?: string): boolean {
     if (!model) return false;
     const modelLower = model.toLowerCase();
     return modelLower.includes("claude");
   }
 
-  /**
-   * Detect if the model is a Google/Gemini model
-   */
   private isGeminiModel(model?: string): boolean {
     if (!model) return false;
     return model.toLowerCase().startsWith("google/");
   }
 
   /**
-   * For Gemini models via OpenRouter, add thought_signature fallback to
-   * assistant tool_calls that don't already have one. Gemini requires
-   * thought_signature on tool call parts, but OpenRouter's OpenAI-compatible
-   * API may not preserve them. The "skip_thought_signature_validator" fallback
-   * tells Gemini to skip validation for these calls.
+   * Add thought_signature fallback to Gemini tool calls that don't already
+   * have one, preventing 400 errors from missing thought_signature.
    * See: https://ai.google.dev/gemini-api/docs/thought-signatures
    */
   private addGeminiThoughtSignatures(
@@ -51,7 +42,6 @@ class OpenRouter extends OpenAI {
         return {
           ...message,
           tool_calls: message.tool_calls.map((toolCall: any, index: number) => {
-            // Only the first tool call in a group needs the thought_signature
             if (index !== 0) return toolCall;
             if (toolCall.extra_content?.google?.thought_signature) {
               return toolCall;
@@ -74,9 +64,6 @@ class OpenRouter extends OpenAI {
     return body;
   }
 
-  /**
-   * Add cache_control to message content for Anthropic models
-   */
   private addCacheControlToContent(content: any, addCaching: boolean): any {
     if (!addCaching) return content;
 
@@ -106,23 +93,15 @@ class OpenRouter extends OpenAI {
     return content;
   }
 
-  /**
-   * Override modifyChatBody to add Anthropic caching and Gemini
-   * thought_signature handling when appropriate.
-   */
   protected modifyChatBody(
     body: ChatCompletionCreateParams,
   ): ChatCompletionCreateParams {
-    // First apply parent modifications
     body = super.modifyChatBody(body);
 
-    // For Gemini models, add thought_signature fallback to tool calls
-    // to prevent 400 errors from missing thought_signature (fixes #8980)
     if (this.isGeminiModel(body.model)) {
       body = this.addGeminiThoughtSignatures(body);
     }
 
-    // Check if we should apply Anthropic caching
     if (
       !this.isAnthropicModel(body.model) ||
       (!this.cacheBehavior && !this.completionOptions.promptCaching)

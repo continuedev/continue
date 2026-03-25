@@ -388,8 +388,34 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     const supportsFn = PROVIDER_TOOL_SUPPORT["openrouter"];
 
     it("should return false for moonshotai/kimi-k2:free model", () => {
-      // This fixes issue #6619
       expect(supportsFn("moonshotai/kimi-k2:free")).toBe(false);
+    });
+
+    it("should return true for supported prefixes", () => {
+      expect(supportsFn("openai/gpt-4o")).toBe(true);
+      expect(supportsFn("anthropic/claude-sonnet-4")).toBe(true);
+      expect(supportsFn("google/gemini-2-flash")).toBe(true);
+      expect(supportsFn("google/gemini-3-pro-preview")).toBe(true);
+      expect(supportsFn("deepseek/deepseek-r1")).toBe(true);
+      expect(supportsFn("qwen/qwen3-coder-30b")).toBe(true);
+      expect(supportsFn("meta-llama/llama-4-scout")).toBe(true);
+    });
+
+    it("should strip :free/:extended/:beta suffixes before matching", () => {
+      expect(supportsFn("meta-llama/llama-3.2-3b-instruct:free")).toBe(true);
+      expect(supportsFn("deepseek/deepseek-r1:extended")).toBe(true);
+      expect(supportsFn("qwen/qwen3-coder:beta")).toBe(true);
+    });
+
+    it("should return false for unsupported models", () => {
+      expect(supportsFn("unknown/random-model")).toBe(false);
+      expect(supportsFn("some-provider/vision-model")).toBe(false);
+    });
+
+    it("should return false for excluded model patterns", () => {
+      expect(supportsFn("some/vision-model")).toBe(false);
+      expect(supportsFn("some/math-model")).toBe(false);
+      expect(supportsFn("some/guard-model")).toBe(false);
     });
   });
 

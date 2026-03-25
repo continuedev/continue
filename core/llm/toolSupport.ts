@@ -318,7 +318,6 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         return false;
       }
 
-      // Strip OpenRouter suffixes like :free, :extended, :beta before matching
       const baseModel = model.toLowerCase().replace(/:(free|extended|beta)$/, "");
 
       if (
