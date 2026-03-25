@@ -21,21 +21,6 @@ import {
 
 const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
 
-export async function checkHasAcceptableModel(
-  configPath: string,
-): Promise<boolean> {
-  try {
-    if (!fs.existsSync(configPath)) {
-      return false;
-    }
-
-    const content = fs.readFileSync(configPath, "utf8");
-    return content.includes("claude");
-  } catch {
-    return false;
-  }
-}
-
 export async function createOrUpdateConfigAnthropic(
   apiKey: string,
 ): Promise<void> {
