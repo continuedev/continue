@@ -19,7 +19,8 @@ export class BlockDuplicationDetector {
   }
 
   private isContextDuplicated(context: any): boolean {
-    return this.check(context.provider, "context");
+    const key = context.name ?? context.params?.title ?? context.provider;
+    return this.check(key, "context");
   }
 
   private isCommonBlockDuplicated(block: any, blockType: BlockType): boolean {
