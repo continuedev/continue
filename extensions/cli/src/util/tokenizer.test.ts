@@ -44,9 +44,7 @@ describe("tokenizer", () => {
         name: "test-model",
         model: "test",
         provider: "openai",
-        defaultCompletionOptions: {
-          contextLength: 8192,
-        },
+        contextLength: 8192,
       };
 
       expect(getModelContextLimit(model)).toBe(8192);
@@ -216,9 +214,7 @@ describe("tokenizer", () => {
         name: "test-model",
         model: "test",
         provider: "openai",
-        defaultCompletionOptions: {
-          contextLength: 1000,
-        },
+        contextLength: 1000,
       };
 
       expect(calculateContextUsagePercentage(800, model)).toBe(80);
@@ -235,8 +231,8 @@ describe("tokenizer", () => {
       name: "test-model",
       model: "test",
       provider: "openai",
+      contextLength,
       defaultCompletionOptions: {
-        contextLength,
         maxTokens,
       },
     });

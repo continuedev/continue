@@ -45,7 +45,6 @@ export const modelCapabilitySchema = z.union([
 export type ModelCapability = "tool_use" | "image_input" | "next_edit";
 
 export const completionOptionsSchema = z.object({
-  contextLength: z.number().optional(),
   maxTokens: z.number().optional(),
   temperature: z.number().optional(),
   topP: z.number().optional(),
@@ -179,6 +178,7 @@ const baseModelFields = {
   model: z.string(),
   apiKey: z.string().optional(),
   apiBase: z.string().optional(),
+  contextLength: z.number().optional(),
   maxStopWords: z.number().optional(),
   roles: modelRolesSchema.array().optional(),
   capabilities: modelCapabilitySchema.array().optional(),

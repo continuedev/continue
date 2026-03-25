@@ -17,9 +17,7 @@ export const DEFAULT_CONTEXT_LENGTH = 200_000;
  * @returns The context length limit in tokens
  */
 export function getModelContextLimit(model: ModelConfig): number {
-  return (
-    model.defaultCompletionOptions?.contextLength ?? DEFAULT_CONTEXT_LENGTH
-  );
+  return model.contextLength ?? DEFAULT_CONTEXT_LENGTH;
 }
 
 export function getModelMaxTokens(model: ModelConfig): number {

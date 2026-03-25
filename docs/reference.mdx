@@ -85,6 +85,8 @@ The `models` section defines the language models used in your configuration. Mod
 
   Continue automatically detects these capabilities for most models, but you can override this when using custom deployments or if autodetection isn't working correctly.
 
+- `contextLength`: Maximum context length of the model, typically in tokens.
+
 - `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 
 - `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are [`chat`](), [`edit`](/customize/model-roles/edit#prompt-templating), [`apply`](/customize/model-roles/apply#prompt-templating) and [`autocomplete`](/customize/model-roles/autocomplete#prompt-templating). The `chat` property must be a valid template name, such as `llama3` or `anthropic`.
@@ -102,7 +104,6 @@ The `models` section defines the language models used in your configuration. Mod
 
 - `defaultCompletionOptions`: Default completion options for model settings.
 
-  - `contextLength`: Maximum context length of the model, typically in tokens.
   - `maxTokens`: Maximum number of tokens to generate in a completion.
   - `temperature`: Controls the randomness of the completion. Values range from `0.0` (deterministic) to `1.0` (random).
   - `topP`: The cumulative probability for nucleus sampling.

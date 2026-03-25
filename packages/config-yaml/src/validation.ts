@@ -58,18 +58,14 @@ export function validateConfigYaml(
       }
     }
     // Max tokens not too close to context length
-    if (
-      model.defaultCompletionOptions?.contextLength &&
-      model.defaultCompletionOptions?.maxTokens
-    ) {
+    if (model.contextLength && model.defaultCompletionOptions?.maxTokens) {
       const difference =
-        model.defaultCompletionOptions?.contextLength -
-        model.defaultCompletionOptions?.maxTokens;
+        model.contextLength - model.defaultCompletionOptions.maxTokens;
 
       if (difference < 1000) {
         errors.push({
           fatal: false,
-          message: `Model "${model.name}" has a contextLength of ${model.defaultCompletionOptions?.contextLength} and a maxTokens of ${model.defaultCompletionOptions?.maxTokens}. This leaves only ${difference} tokens for input context and will likely result in your inputs being truncated.`,
+          message: `Model "${model.name}" has a contextLength of ${model.contextLength} and a maxTokens of ${model.defaultCompletionOptions.maxTokens}. This leaves only ${difference} tokens for input context and will likely result in your inputs being truncated.`,
         });
       }
     }
