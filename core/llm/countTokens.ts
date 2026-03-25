@@ -227,7 +227,7 @@ function countChatMessageTokens(
  */
 function extractToolSequence(messages: ChatMessage[]): ChatMessage[] {
   const lastMsg = messages.pop();
-  if (!lastMsg || !isUserOrToolMsg(lastMsg)) {
+  if (!lastMsg) {
     throw new Error("Error parsing chat history: no user/tool message found");
   }
 
@@ -261,6 +261,15 @@ function extractToolSequence(messages: ChatMessage[]): ChatMessage[] {
           );
         }
       }
+    }
+  } else if (lastMsg.role === "assistant" || lastMsg.role === "thinking") {
+    toolSequence.push(lastMsg);
+    while (
+      messages.length > 0 &&
+      (messages[messages.length - 1].role === "thinking" ||
+        messages[messages.length - 1].role === "assistant")
+    ) {
+      toolSequence.unshift(messages.pop()!);
     }
   } else {
     // Single user message
