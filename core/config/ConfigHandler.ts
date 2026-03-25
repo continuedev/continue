@@ -316,6 +316,7 @@ export class ConfigHandler {
   }
 
   async loadConfig(): Promise<ConfigResult<ContinueConfig>> {
+    await this.isInitialized;
     if (!this.currentProfile) {
       return {
         config: undefined,
@@ -323,7 +324,6 @@ export class ConfigHandler {
         configLoadInterrupted: true,
       };
     }
-    await this.isInitialized;
     const config = await this.currentProfile.loadConfig(
       this.additionalContextProviders,
     );

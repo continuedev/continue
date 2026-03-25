@@ -20,7 +20,8 @@ export type NavigationScreen =
   | "diff" // Full-screen diff overlay
   | "update" // Update selector
   | "edit" // Edit message selector
-  | "jobs"; // Background Jobs selector;
+  | "jobs" // Background Jobs selector
+  | "export"; // Export session selector
 
 interface NavigationState {
   currentScreen: NavigationScreen;

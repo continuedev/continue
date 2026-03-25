@@ -428,3 +428,27 @@ interface LogprobsResult {
 interface TopCandidates {
   candidates: Candidate[];
 }
+
+// Gemini requires strict user/model role alternation.
+export function mergeConsecutiveGeminiMessages(
+  contents: GeminiChatContent[],
+): GeminiChatContent[] {
+  if (contents.length === 0) {
+    return contents;
+  }
+
+  const merged: GeminiChatContent[] = [contents[0]];
+
+  for (let i = 1; i < contents.length; i++) {
+    const current = contents[i];
+    const previous = merged[merged.length - 1];
+
+    if (current.role === previous.role) {
+      previous.parts = [...previous.parts, ...current.parts];
+    } else {
+      merged.push(current);
+    }
+  }
+
+  return merged;
+}

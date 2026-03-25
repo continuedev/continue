@@ -240,6 +240,11 @@ export function processToolCallDelta(
       // JSON not complete yet, continue
     }
   }
+
+  // Capture extra_content
+  if (toolCallDelta.extra_content) {
+    toolCall.extra_content = toolCallDelta.extra_content;
+  }
 }
 
 // Helper function to detect provider from model name

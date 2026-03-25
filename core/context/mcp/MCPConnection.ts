@@ -1,5 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import { homedir } from "os";
 import { fileURLToPath } from "url";
 
 import {
@@ -475,6 +476,13 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       if (resolved) {
         if (resolved.startsWith("file://")) {
           return fileURLToPath(resolved);
+        }
+        // Remote URIs (e.g. vscode-remote://ssh-remote+host/path) cannot be
+        // used as a local cwd for child_process.spawn(). When the extension
+        // runs in the Local Extension Host on Windows while connected to a
+        // remote workspace, fall back to the user's home directory.
+        if (resolved.includes("://")) {
+          return homedir();
         }
         return resolved;
       }

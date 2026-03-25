@@ -12,7 +12,7 @@ export const commonModelSlugs = [
   "openai/gpt-4o",
   "togetherai/llama-4-scout-instruct-17bx16e",
   "anthropic/claude-haiku-4-5",
-  "google/gemini-2.0-flash",
+  "google/gemini-2.5-flash",
   "voyageai/rerank-2",
   "anthropic/claude-opus-4-1",
   "ollama/deepseek-r1",

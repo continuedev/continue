@@ -1,11 +1,7 @@
 import type { ChatHistoryItem, ToolStatus } from "core/index.js";
 import { createHistoryItem } from "core/util/messageConversion.js";
 
-import {
-  updateSessionHistory,
-  loadSessionById,
-  createSession,
-} from "../session.js";
+import { loadSessionById, updateSessionHistory } from "../session.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
@@ -76,23 +72,31 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
 
   /**
    * Initialize the service with optional session
+   * If no session is provided, we delay session creation until content is added
    */
   async doInitialize(
     session?: any,
     isRemoteMode = false,
   ): Promise<ChatHistoryState> {
-    const activeSession = session || createSession([]);
-
     logger.debug("Initializing ChatHistoryService", {
-      sessionId: activeSession.sessionId,
-      historyLength: activeSession.history.length,
+      sessionId: session?.sessionId,
+      historyLength: session?.history?.length,
       isRemoteMode,
     });
 
+    if (session) {
+      return {
+        history: session.history || [],
+        compactionIndex: this.findCompactionIndex(session.history || []),
+        sessionId: session.sessionId,
+        isRemoteMode,
+      };
+    }
+
     return {
-      history: activeSession.history || [],
-      compactionIndex: this.findCompactionIndex(activeSession.history || []),
-      sessionId: activeSession.sessionId,
+      history: [],
+      compactionIndex: null,
+      sessionId: "",
       isRemoteMode,
     };
   }

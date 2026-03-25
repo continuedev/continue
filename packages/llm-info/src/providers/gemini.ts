@@ -3,28 +3,52 @@ import { AllMediaTypes, ModelProvider } from "../types.js";
 // See https://ai.google.dev/gemini-api/docs/models
 export const Gemini: ModelProvider = {
   models: [
+    // Gemini 3.1 series
     {
-      model: "gemini-3-pro-preview",
-      displayName: "Gemini 3 Pro Preview",
+      model: "gemini-3.1-pro-preview",
+      displayName: "Gemini 3.1 Pro Preview",
       description:
-        "Google's flagship frontier model with high precision multimodal capabilities.",
+        "Google's most capable model with 2M context window and high precision multimodal capabilities.",
+      contextLength: 2097152,
+      maxCompletionTokens: 65536,
+      mediaTypes: AllMediaTypes,
+      regex: /gemini-3\.1-pro-preview/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "gemini-3.1-flash-lite-preview",
+      displayName: "Gemini 3.1 Flash Lite Preview",
+      description:
+        "Cost-efficient model optimized for high-volume tasks with fast inference.",
       contextLength: 1048576,
       maxCompletionTokens: 65536,
       mediaTypes: AllMediaTypes,
-      regex: /gemini-3-pro-preview/i,
+      regex: /gemini-3\.1-flash-lite-preview/i,
       recommendedFor: ["chat"],
     },
+    {
+      model: "gemini-3.1-flash-image-preview",
+      displayName: "Gemini 3.1 Flash Image Preview",
+      description: "Image generation model with improved visual quality.",
+      contextLength: 1048576,
+      maxCompletionTokens: 65536,
+      mediaTypes: AllMediaTypes,
+      regex: /gemini-3\.1-flash-image-preview/i,
+      recommendedFor: ["chat"],
+    },
+    // Gemini 3 series
     {
       model: "gemini-3-flash-preview",
       displayName: "Gemini 3 Flash Preview",
       description:
-        "Next-generation Flash model with strong reasoning and fast inference.",
+        "High-speed thinking model for agentic workflows, multi-turn chat, and coding.",
       contextLength: 1048576,
       maxCompletionTokens: 65536,
       mediaTypes: AllMediaTypes,
       regex: /gemini-3-flash-preview/i,
       recommendedFor: ["chat"],
     },
+    // Gemini 2.5 series (deprecating June 17, 2026)
     {
       model: "gemini-2.5-pro",
       displayName: "Gemini 2.5 Pro",
@@ -80,6 +104,7 @@ export const Gemini: ModelProvider = {
       regex: /gemini-2\.5-flash-lite/i,
       recommendedFor: ["chat"],
     },
+    // Gemini 2.0 series (deprecating June 1, 2026)
     {
       model: "gemini-2.0-flash", // stable gemini-2.0-flash-001
       displayName: "Gemini 2.0 Flash",
@@ -100,79 +125,6 @@ export const Gemini: ModelProvider = {
       mediaTypes: AllMediaTypes,
       regex: /^gemini-2\.0-flash-lite$/i,
       recommendedFor: ["chat"],
-    },
-    {
-      model: "gemini-2.0-flash-preview-image-generation",
-      displayName: "Gemini 2.0 Flash Image Generation Preview",
-      description:
-        "Model with image generation capabilities and improved visual quality",
-      contextLength: 32000,
-      maxCompletionTokens: 8192,
-      mediaTypes: AllMediaTypes,
-      regex: /gemini-2\.0-flash-preview-image-generation/i,
-      recommendedFor: ["chat"],
-    },
-    {
-      model: "gemini-2.0-flash-exp-image-generation",
-      displayName: "Gemini 2.0 Flash Image Generation Experimental",
-      description: "Experimental model with image generation capabilities",
-      contextLength: 32000,
-      maxCompletionTokens: 8192,
-      mediaTypes: AllMediaTypes,
-      regex: /gemini-2\.0-flash-exp-image-generation/i,
-      recommendedFor: ["chat"],
-    },
-    {
-      model: "gemini-2.0-flash-exp",
-      displayName: "Gemini 2.0 Flash Experimental",
-      description:
-        "Experimental version of Gemini 2.0 Flash with extended capabilities",
-      contextLength: 1048576,
-      maxCompletionTokens: 8192,
-      mediaTypes: AllMediaTypes,
-      regex: /^gemini-2\.0-flash-exp$/i,
-      recommendedFor: ["chat"],
-    },
-    {
-      model: "gemini-1.5-flash",
-      displayName: "Gemini 1.5 Flash",
-      description: "Fast multimodal model with 1M token context window",
-      contextLength: 1048576,
-      maxCompletionTokens: 8192,
-      mediaTypes: AllMediaTypes,
-      regex: /gemini-1\.5-flash/i,
-      recommendedFor: ["chat"],
-    },
-    {
-      model: "gemini-1.5-flash-8b",
-      displayName: "Gemini 1.5 Flash 8b",
-      description:
-        "Smaller version of Gemini 1.5 Flash optimized for efficiency",
-      contextLength: 1048576,
-      maxCompletionTokens: 8192,
-      mediaTypes: AllMediaTypes,
-      regex: /gemini-1\.5-flash-8b/i,
-      recommendedFor: ["chat"],
-    },
-    {
-      model: "gemini-1.5-pro",
-      displayName: "Gemini 1.5 Pro",
-      description:
-        "Mid-size multimodal model capable of handling extensive inputs and complex reasoning tasks",
-      contextLength: 2097152,
-      maxCompletionTokens: 8192,
-      mediaTypes: AllMediaTypes,
-      regex: /gemini-1\.5-pro/i,
-      recommendedFor: ["chat"],
-    },
-    {
-      model: "gemini-1.0-pro",
-      displayName: "Gemini 1.0 Pro",
-      description: "First generation Gemini pro model",
-      contextLength: 32768,
-      maxCompletionTokens: 8192,
-      mediaTypes: AllMediaTypes,
-      regex: /gemini-1\.0-pro/i,
     },
     // embed
     {

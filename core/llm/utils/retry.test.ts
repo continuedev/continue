@@ -173,6 +173,38 @@ describe("Retry Functionality", () => {
       expect(mockFn).toHaveBeenCalledTimes(2);
     });
 
+    it("should retry on overloaded error", async () => {
+      const error = new Error("The server is overloaded, please try again");
+      const mockFn = jest
+        .fn()
+        .mockRejectedValueOnce(error)
+        .mockResolvedValue("success");
+
+      const result = await retryAsync(mockFn, {
+        maxAttempts: 2,
+        baseDelay: 10,
+      });
+
+      expect(result).toBe("success");
+      expect(mockFn).toHaveBeenCalledTimes(2);
+    });
+
+    it("should retry on malformed json error", async () => {
+      const error = new Error("Malformed JSON received from Bedrock: ...");
+      const mockFn = jest
+        .fn()
+        .mockRejectedValueOnce(error)
+        .mockResolvedValue("success");
+
+      const result = await retryAsync(mockFn, {
+        maxAttempts: 2,
+        baseDelay: 10,
+      });
+
+      expect(result).toBe("success");
+      expect(mockFn).toHaveBeenCalledTimes(2);
+    });
+
     it("should not retry AbortError", async () => {
       const error = new Error("Aborted");
       error.name = "AbortError";

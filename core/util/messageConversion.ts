@@ -51,6 +51,7 @@ export function convertToUnifiedMessage(
             name: tc.function?.name || "",
             arguments: tc.function?.arguments || "",
           },
+          ...(tc.extra_content && { extra_content: tc.extra_content }),
         }));
       }
 
@@ -104,6 +105,7 @@ export function convertFromUnifiedMessage(
               name: tc.function?.name || "",
               arguments: tc.function?.arguments || "",
             },
+            ...(tc.extra_content && { extra_content: tc.extra_content }),
           }),
         );
       }
@@ -270,6 +272,7 @@ export function convertToUnifiedHistory(
               name: tc.function?.name || "",
               arguments: tc.function?.arguments || "",
             },
+            ...(tc.extra_content && { extra_content: tc.extra_content }),
           };
           pendingToolCalls.set(toolCall.id, toolCall);
 

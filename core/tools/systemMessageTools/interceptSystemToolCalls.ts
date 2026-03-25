@@ -46,7 +46,7 @@ export async function* interceptSystemToolCalls(
       return result.value;
     } else {
       for await (const message of result.value) {
-        if (abortController.signal.aborted || parseState?.done) {
+        if (abortController.signal.aborted) {
           break;
         }
         // Skip non-assistant messages or messages with native tool calls
@@ -96,12 +96,13 @@ export async function* interceptSystemToolCalls(
                 },
               ];
             }
-          } else {
-            // Prevent content after tool calls for now
-            if (parseState) {
-              continue;
+            // Completed tool calls should not terminate parsing for subsequent
+            // chunks/messages; reset state so normal content (or another tool
+            // call) can be handled.
+            if (parseState.done) {
+              parseState = undefined;
             }
-
+          } else {
             // Yield normal assistant message
             yield [
               {

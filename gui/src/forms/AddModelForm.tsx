@@ -90,6 +90,19 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
     setSelectedModel(selectedProvider.packages[0]);
   }, [selectedProvider]);
 
+  const requiresSkPrefix =
+    selectedProvider.provider === "openai" ||
+    selectedProvider.provider === "anthropic";
+
+  const apiKeyValue = formMethods.watch("apiKey");
+  const apiKeyWarning =
+    requiresSkPrefix &&
+    apiKeyValue &&
+    apiKeyValue.length > 0 &&
+    !apiKeyValue.startsWith("sk-")
+      ? "API key usually starts with sk-"
+      : undefined;
+
   function onSubmit() {
     const apiKey = formMethods.watch("apiKey");
     const hasValidApiKey = apiKey !== undefined && apiKey !== "";
@@ -227,11 +240,18 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                   </label>
                   <Input
                     id="apiKey"
-                    className="w-full"
+                    className={
+                      apiKeyWarning ? "border-warning w-full" : "w-full"
+                    }
                     type="password"
                     placeholder={`Enter your ${selectedProvider.title} API key`}
                     {...formMethods.register("apiKey")}
                   />
+                  {apiKeyWarning && (
+                    <span className="text-warning mt-1 block text-xs">
+                      {apiKeyWarning}
+                    </span>
+                  )}
                   <span className="text-description-muted mt-1 block text-xs">
                     <a
                       className="cursor-pointer text-inherit underline hover:text-inherit hover:brightness-125"

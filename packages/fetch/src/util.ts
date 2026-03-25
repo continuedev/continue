@@ -31,7 +31,7 @@ export function getProxy(
 
 export function getEnvNoProxyPatterns(): string[] {
   const envValue = process.env.NO_PROXY || process.env.no_proxy;
-  if (envValue) {
+  if (envValue && typeof envValue === "string") {
     return envValue
       .split(",")
       .map((item) => item.trim().toLowerCase())

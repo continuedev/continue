@@ -1,0 +1,55 @@
+---
+title: "How to Configure MiniMax with Continue"
+sidebarTitle: "MiniMax"
+---
+
+<Info>
+  Get your API key from the [MiniMax Platform](https://platform.minimax.io)
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: MiniMax M2.7
+      provider: minimax
+      model: MiniMax-M2.7
+      apiKey: <YOUR_MINIMAX_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "MiniMax M2.7",
+        "provider": "minimax",
+        "model": "MiniMax-M2.7",
+        "apiKey": "<YOUR_MINIMAX_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+| Model | Description |
+| :---- | :---------- |
+| `MiniMax-M2.7` | Latest flagship model with enhanced reasoning and coding. 204K context window. |
+| `MiniMax-M2.7-highspeed` | High-speed version of M2.7 for low-latency scenarios. 204K context window. |
+| `MiniMax-M2.5` | Peak performance with ultimate value. 204K context window. |
+| `MiniMax-M2.5-highspeed` | Same performance, faster and more agile. 204K context window. |
+
+## Notes
+
+- MiniMax uses an OpenAI-compatible API at `https://api.minimax.io/v1`
+- Set the `MINIMAX_API_KEY` environment variable or configure `apiKey` in your config
+- For users in China, set `apiBase` to `https://api.minimaxi.com/v1/`

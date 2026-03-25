@@ -17,8 +17,8 @@ describe("Slash Commands Integration", () => {
   };
 
   describe("System Commands Registration", () => {
-    it("should include all system commands in the commands list", () => {
-      const commands = getAllSlashCommands(mockAssistant);
+    it("should include all system commands in the commands list", async () => {
+      const commands = await getAllSlashCommands(mockAssistant);
       const commandNames = commands.map((cmd) => cmd.name);
 
       // Check that system commands are present (mode commands have been removed)
@@ -29,15 +29,15 @@ describe("Slash Commands Integration", () => {
       expect(commandNames).toContain("config");
     });
 
-    it("should include assistant prompt commands", () => {
-      const commands = getAllSlashCommands(mockAssistant);
+    it("should include assistant prompt commands", async () => {
+      const commands = await getAllSlashCommands(mockAssistant);
       const commandNames = commands.map((cmd) => cmd.name);
 
       expect(commandNames).toContain("test-prompt");
     });
 
-    it("should categorize system commands correctly", () => {
-      const commands = getAllSlashCommands(mockAssistant);
+    it("should categorize system commands correctly", async () => {
+      const commands = await getAllSlashCommands(mockAssistant);
       const systemCommands = commands.filter((cmd) =>
         ["help", "clear", "exit", "model", "config"].includes(cmd.name),
       );
@@ -47,8 +47,8 @@ describe("Slash Commands Integration", () => {
       });
     });
 
-    it("should categorize assistant commands correctly", () => {
-      const commands = getAllSlashCommands(mockAssistant);
+    it("should categorize assistant commands correctly", async () => {
+      const commands = await getAllSlashCommands(mockAssistant);
       const assistantCommands = commands.filter(
         (cmd) => cmd.name === "test-prompt",
       );
@@ -56,6 +56,19 @@ describe("Slash Commands Integration", () => {
       assistantCommands.forEach((cmd) => {
         expect(cmd.category).toBe("assistant");
       });
+    });
+
+    it("should only show remote mode commands in remote mode", async () => {
+      const commands = await getAllSlashCommands(mockAssistant, {
+        isRemoteMode: true,
+      });
+      const commandNames = commands.map((cmd) => cmd.name);
+
+      // In remote mode, only remote commands should be available
+      expect(commandNames).toContain("exit");
+      expect(commandNames).toContain("diff");
+      expect(commandNames).toContain("apply");
+      expect(commandNames).toHaveLength(3);
     });
   });
 });
