@@ -145,7 +145,7 @@ export class GeminiApi implements BaseLlmApi {
       }
     });
 
-    const contents: (GeminiChatContent | null)[] = oaiBody.messages
+    const contents = oaiBody.messages
       .map((msg) => {
         if (msg.role === "system" && !isV1API) {
           return null; // Don't include system message in contents
@@ -235,7 +235,7 @@ export class GeminiApi implements BaseLlmApi {
               : msg.content.map(this._oaiPartToGeminiPart),
         };
       })
-      .filter((c) => c !== null);
+      .filter((c) => c !== null) as GeminiChatContent[];
 
     const mergedContents = mergeConsecutiveGeminiMessages(contents);
 
