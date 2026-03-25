@@ -28,13 +28,6 @@ export class OpenRouterApi extends OpenAIApi {
     });
   }
 
-  protected override getHeaders(): Record<string, string> {
-    return {
-      ...super.getHeaders(),
-      ...OPENROUTER_HEADERS,
-    };
-  }
-
   private isAnthropicModel(model?: string): boolean {
     if (!model) {
       return false;
