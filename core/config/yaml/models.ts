@@ -9,6 +9,38 @@ import { LLMClasses } from "../../llm/llms";
 
 const AUTODETECT = "AUTODETECT";
 
+const ENV_STRING_KEYS = [
+  "apiType",
+  "apiVersion",
+  "deployment",
+  "deploymentId",
+  "projectId",
+  "region",
+  "profile",
+  "accessKeyId",
+  "secretAccessKey",
+  "modelArn",
+  "aiGatewaySlug",
+  "accountId",
+] as const;
+
+function applyEnvOptions(
+  options: LLMOptions,
+  env: Record<string, string | boolean | number>,
+): void {
+  if (
+    "useLegacyCompletionsEndpoint" in env &&
+    typeof env.useLegacyCompletionsEndpoint === "boolean"
+  ) {
+    options.useLegacyCompletionsEndpoint = env.useLegacyCompletionsEndpoint;
+  }
+  for (const key of ENV_STRING_KEYS) {
+    if (key in env && typeof env[key] === "string") {
+      (options as any)[key] = env[key];
+    }
+  }
+}
+
 function getModelClass(
   model: ModelConfig,
 ): (typeof LLMClasses)[number] | undefined {
@@ -49,9 +81,12 @@ async function modelConfigToBaseLLM({
     config.requestOptions,
   );
 
+  const contextLength =
+    model.contextLength ?? model.defaultCompletionOptions?.contextLength;
+
   let options: LLMOptions = {
     ...rest,
-    contextLength: model.defaultCompletionOptions?.contextLength,
+    contextLength,
     completionOptions: {
       ...(model.defaultCompletionOptions ?? {}),
       model: model.model,
@@ -85,14 +120,14 @@ async function modelConfigToBaseLLM({
 
   // Model capabilities - need to be undefined if not found
   // To fallback to our autodetection
-  if (capabilities?.find((c) => c === "tool_use")) {
+  if (capabilities?.includes("tool_use")) {
     options.capabilities = {
       ...options.capabilities,
       tools: true,
     };
   }
 
-  if (capabilities?.find((c) => c === "image_input")) {
+  if (capabilities?.includes("image_input")) {
     options.capabilities = {
       ...options.capabilities,
       uploadImage: true,
@@ -110,48 +145,8 @@ async function modelConfigToBaseLLM({
   // But we decided to move to nested `env` in YAML
   // Since types vary and we don't want to blindly spread env for now,
   // Each one is handled individually here
-  const env = model.env ?? {};
-  if (
-    "useLegacyCompletionsEndpoint" in env &&
-    typeof env.useLegacyCompletionsEndpoint === "boolean"
-  ) {
-    options.useLegacyCompletionsEndpoint = env.useLegacyCompletionsEndpoint;
-  }
-  if ("apiType" in env && typeof env.apiType === "string") {
-    options.apiType = env.apiType;
-  }
-  if ("apiVersion" in env && typeof env.apiVersion === "string") {
-    options.apiVersion = env.apiVersion;
-  }
-  if ("deployment" in env && typeof env.deployment === "string") {
-    options.deployment = env.deployment;
-  }
-  if ("deploymentId" in env && typeof env.deploymentId === "string") {
-    options.deploymentId = env.deploymentId;
-  }
-  if ("projectId" in env && typeof env.projectId === "string") {
-    options.projectId = env.projectId;
-  }
-  if ("region" in env && typeof env.region === "string") {
-    options.region = env.region;
-  }
-  if ("profile" in env && typeof env.profile === "string") {
-    options.profile = env.profile;
-  }
-  if ("accessKeyId" in env && typeof env.accessKeyId === "string") {
-    options.accessKeyId = env.accessKeyId;
-  }
-  if ("secretAccessKey" in env && typeof env.secretAccessKey === "string") {
-    options.secretAccessKey = env.secretAccessKey;
-  }
-  if ("modelArn" in env && typeof env.modelArn === "string") {
-    options.modelArn = env.modelArn;
-  }
-  if ("aiGatewaySlug" in env && typeof env.aiGatewaySlug === "string") {
-    options.aiGatewaySlug = env.aiGatewaySlug;
-  }
-  if ("accountId" in env && typeof env.accountId === "string") {
-    options.accountId = env.accountId;
+  if (model.env) {
+    applyEnvOptions(options, model.env);
   }
 
   const llm = new cls(options);

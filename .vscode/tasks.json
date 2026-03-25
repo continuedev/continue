@@ -120,7 +120,7 @@
       },
       "options": {
         "env": {
-          "SKIP_INSTALLS": "true"
+          // "SKIP_INSTALLS": "true" // Can set to true to speed up build scripts, but only after initial installs (otherwise issues with copying e.g. ripgrep, sqlite, etc)
         },
         "cwd": "${workspaceFolder}/extensions/vscode"
       }

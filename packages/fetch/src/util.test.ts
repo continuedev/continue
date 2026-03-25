@@ -212,3 +212,9 @@ test("shouldBypassProxy handles undefined options", () => {
   process.env.NO_PROXY = "example.org";
   expect(shouldBypassProxy("example.org", undefined)).toBe(true);
 });
+
+test("shouldBypassProxy handles non-string NO_PROXY value", () => {
+  // In some environments, env values may not be strings
+  (process.env as any).NO_PROXY = 1234;
+  expect(shouldBypassProxy("example.com", undefined)).toBe(false);
+});

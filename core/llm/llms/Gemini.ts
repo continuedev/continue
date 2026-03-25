@@ -22,6 +22,7 @@ import {
   GeminiGenerationConfig,
   GeminiToolFunctionDeclaration,
   convertContinueToolToGeminiFunction,
+  mergeConsecutiveGeminiMessages,
 } from "./gemini-types";
 
 interface GeminiToolCallDelta extends ToolCallDelta {
@@ -326,6 +327,8 @@ class Gemini extends BaseLLM {
           };
         }),
     };
+
+    body.contents = mergeConsecutiveGeminiMessages(body.contents);
     if (options) {
       body.generationConfig = this.convertArgs(options);
     }
