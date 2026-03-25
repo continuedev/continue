@@ -8,12 +8,31 @@ export interface OpenRouterConfig extends OpenAIConfig {
   cachingStrategy?: import("./AnthropicCachingStrategies.js").CachingStrategyName;
 }
 
+const OPENROUTER_HEADERS: Record<string, string> = {
+  "HTTP-Referer": "https://www.continue.dev/",
+  "X-Title": "Continue",
+};
+
 export class OpenRouterApi extends OpenAIApi {
   constructor(config: OpenRouterConfig) {
     super({
       ...config,
       apiBase: config.apiBase ?? "https://openrouter.ai/api/v1/",
+      requestOptions: {
+        ...config.requestOptions,
+        headers: {
+          ...OPENROUTER_HEADERS,
+          ...config.requestOptions?.headers,
+        },
+      },
     });
+  }
+
+  protected override getHeaders(): Record<string, string> {
+    return {
+      ...super.getHeaders(),
+      ...OPENROUTER_HEADERS,
+    };
   }
 
   private isAnthropicModel(model?: string): boolean {
