@@ -109,7 +109,7 @@ export function analyzeError(
   // OpenAI organization verification error (reasoning summaries or streaming)
   const isOpenAI =
     errorText.includes("openai") ||
-    providerName.toLowerCase().includes("openai");
+    (providerName ?? "").toLowerCase().includes("openai");
   if (
     isOpenAI &&
     (errorText.includes(
