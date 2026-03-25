@@ -106,17 +106,18 @@ export function analyzeError(
   const lowerParsedError = parsedError.toLowerCase();
   const errorText = lowerMessage + " " + lowerParsedError;
 
-  // OpenAI organization verification error
+  // OpenAI organization verification error (reasoning summaries or streaming)
   if (
     errorText.includes("openai") &&
-    errorText.includes(
+    (errorText.includes(
       "organization must be verified to generate reasoning summaries",
-    )
+    ) ||
+      errorText.includes("organization must be verified to stream"))
   ) {
     helpUrl =
       "https://help.openai.com/en/articles/10910291-api-organization-verification";
     customErrorMessage =
-      "Your OpenAI organization must be verified to use reasoning models. Visit the help page to learn how to verify your organization.";
+      'Your OpenAI organization must be verified for this feature. You can work around this by adding "useResponsesApi": false to your model config to use the /chat/completions endpoint instead, or visit the help page to verify your organization.';
   }
 
   // Invalid API key detection
