@@ -132,6 +132,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "ovhcloud",
   "watsonx",
   "zAI",
+  "avian",
   "tensorix",
 ];
 
@@ -251,6 +252,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "vertexai",
   "function-network",
   "scaleway",
+  "avian",
   "tensorix",
 ];
 
