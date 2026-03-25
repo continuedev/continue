@@ -781,6 +781,7 @@
   "overrides": {
     "vitest": {
       "@types/node": "^16.18.119"
-    }
+    },
+    "undici-types@~7.18.0": "7.18.1"
   }
 }
