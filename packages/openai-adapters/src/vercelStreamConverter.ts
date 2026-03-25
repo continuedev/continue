@@ -138,24 +138,18 @@ export function convertVercelStreamPart(
       const thoughtSignature =
         part.providerMetadata?.google?.thoughtSignature ??
         part.providerMetadata?.vertex?.thoughtSignature;
+      if (!thoughtSignature) {
+        return null;
+      }
+      // Emit only extra_content; args were already streamed via tool-input-delta.
       return chatChunkFromDelta({
         delta: {
           tool_calls: [
             {
               index: 0,
-              id: part.toolCallId,
-              type: "function" as const,
-              function: {
-                name: part.toolName,
-                arguments: JSON.stringify(part.input),
+              extra_content: {
+                google: { thought_signature: thoughtSignature },
               },
-              ...(thoughtSignature && {
-                extra_content: {
-                  google: {
-                    thought_signature: thoughtSignature,
-                  },
-                },
-              }),
             } as any,
           ],
         },

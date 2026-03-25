@@ -37,7 +37,7 @@ describe("convertVercelStreamPart", () => {
     expect(result?.choices[0].delta.content).toBe("Let me think...");
   });
 
-  test("converts tool-call to chat chunk with tool_calls", () => {
+  test("returns null for tool-call without thoughtSignature", () => {
     const part: VercelStreamPart = {
       type: "tool-call",
       toolCallId: "call_abc123",
@@ -45,21 +45,32 @@ describe("convertVercelStreamPart", () => {
       input: { filepath: "/path/to/file" },
     };
 
+    expect(convertVercelStreamPart(part, options)).toBeNull();
+  });
+
+  test("converts tool-call with thoughtSignature to extra_content chunk", () => {
+    const part: VercelStreamPart = {
+      type: "tool-call",
+      toolCallId: "call_abc123",
+      toolName: "readFile",
+      input: { filepath: "/path/to/file" },
+      providerMetadata: {
+        google: {
+          thoughtSignature: "sig123",
+        },
+      },
+    };
+
     const result = convertVercelStreamPart(part, options);
 
     expect(result).not.toBeNull();
     expect(result?.choices[0].delta.tool_calls).toHaveLength(1);
-    expect(result?.choices[0].delta.tool_calls?.[0]).toEqual(
-      expect.objectContaining({
-        index: 0,
-        id: "call_abc123",
-        type: "function",
-        function: {
-          name: "readFile",
-          arguments: '{"filepath":"/path/to/file"}',
-        },
-      }),
-    );
+    expect(result?.choices[0].delta.tool_calls?.[0]).toEqual({
+      index: 0,
+      extra_content: {
+        google: { thought_signature: "sig123" },
+      },
+    });
   });
 
   test("converts tool-input-delta to chat chunk", () => {
@@ -236,9 +247,9 @@ describe("convertVercelStream", () => {
       chunks.push(chunk);
     }
 
-    // Should get chunks for: text-delta (2), tool-input-start (1), tool-input-delta (1), tool-call (1), finish (1) = 6
-    // start-step, tool-input-end, and finish-step are filtered out
-    expect(chunks).toHaveLength(6);
+    // text-delta (2) + tool-input-start (1) + tool-input-delta (1) + finish (1) = 5
+    // start-step, tool-input-end, tool-call (no thoughtSignature), and finish-step are filtered out
+    expect(chunks).toHaveLength(5);
 
     expect(chunks[0].choices[0].delta.content).toBe("Hello ");
     expect(chunks[1].choices[0].delta.content).toBe("world");
@@ -249,8 +260,7 @@ describe("convertVercelStream", () => {
     expect(chunks[3].choices[0].delta.tool_calls?.[0].function?.arguments).toBe(
       '{"arg":"value"}',
     );
-    expect(chunks[4].choices[0].delta.tool_calls?.[0].id).toBe("call_1");
-    expect(chunks[5].usage).toBeDefined();
+    expect(chunks[4].usage).toBeDefined();
   });
 
   test("throws error when stream contains error event", async () => {
