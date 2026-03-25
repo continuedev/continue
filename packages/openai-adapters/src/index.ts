@@ -241,3 +241,4 @@ export {
 
 export { isResponsesModel } from "./apis/openaiResponses.js";
 export { extractBase64FromDataUrl, parseDataUrl } from "./util/url.js";
+export { mergeConsecutiveGeminiMessages } from "./util/gemini-types.js";

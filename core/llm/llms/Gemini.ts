@@ -1,4 +1,5 @@
 import { streamResponse } from "@continuedev/fetch";
+import { mergeConsecutiveGeminiMessages } from "@continuedev/openai-adapters";
 import { v4 as uuidv4 } from "uuid";
 import {
   AssistantChatMessage,
@@ -230,30 +231,6 @@ class Gemini extends BaseLLM {
     };
   }
 
-  // Gemini requires strict user/model role alternation.
-  private mergeConsecutiveGeminiMessages(
-    contents: GeminiChatContent[],
-  ): GeminiChatContent[] {
-    if (contents.length === 0) {
-      return contents;
-    }
-
-    const merged: GeminiChatContent[] = [contents[0]];
-
-    for (let i = 1; i < contents.length; i++) {
-      const current = contents[i];
-      const previous = merged[merged.length - 1];
-
-      if (current.role === previous.role) {
-        previous.parts = [...previous.parts, ...current.parts];
-      } else {
-        merged.push(current);
-      }
-    }
-
-    return merged;
-  }
-
   public prepareBody(
     messages: ChatMessage[],
     options: CompletionOptions,
@@ -351,7 +328,7 @@ class Gemini extends BaseLLM {
         }),
     };
 
-    body.contents = this.mergeConsecutiveGeminiMessages(body.contents);
+    body.contents = mergeConsecutiveGeminiMessages(body.contents);
     if (options) {
       body.generationConfig = this.convertArgs(options);
     }

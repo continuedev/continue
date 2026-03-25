@@ -32,6 +32,7 @@ import {
   GeminiChatContent,
   GeminiChatContentPart,
   GeminiToolFunctionDeclaration,
+  mergeConsecutiveGeminiMessages,
 } from "../util/gemini-types.js";
 import { safeParseArgs } from "../util/parseArgs.js";
 import {
@@ -109,30 +110,6 @@ export class GeminiApi implements BaseLlmApi {
           },
         };
     }
-  }
-
-  // Gemini requires strict user/model role alternation.
-  private _mergeConsecutiveMessages(
-    contents: GeminiChatContent[],
-  ): GeminiChatContent[] {
-    if (contents.length === 0) {
-      return contents;
-    }
-
-    const merged: GeminiChatContent[] = [contents[0]];
-
-    for (let i = 1; i < contents.length; i++) {
-      const current = contents[i];
-      const previous = merged[merged.length - 1];
-
-      if (current.role === previous.role) {
-        previous.parts = [...previous.parts, ...current.parts];
-      } else {
-        merged.push(current);
-      }
-    }
-
-    return merged;
   }
 
   public _convertBody(
@@ -260,7 +237,7 @@ export class GeminiApi implements BaseLlmApi {
       })
       .filter((c) => c !== null);
 
-    const mergedContents = this._mergeConsecutiveMessages(contents);
+    const mergedContents = mergeConsecutiveGeminiMessages(contents);
 
     const sysMsg = oaiBody.messages.find((msg) => msg.role === "system");
     const finalBody: any = {
