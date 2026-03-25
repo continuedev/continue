@@ -8,15 +8,6 @@ import { ThunkApiType } from "../store";
 import { cancelStream } from "./cancelStream";
 import { saveCurrentSession } from "./session";
 
-const OVERLOADED_RETRIES = 3;
-const OVERLOADED_DELAY_MS = 1000;
-
-function isOverloadedErrorMessage(message?: string | null): boolean {
-  if (!message) return false;
-  const lower = message.toLowerCase();
-  return lower.includes("overloaded") || lower.includes("malformed json");
-}
-
 export const streamThunkWrapper = createAsyncThunk<
   void,
   () => Promise<void>,

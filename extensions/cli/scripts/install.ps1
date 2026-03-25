@@ -20,7 +20,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'  # Faster downloads
 
-$script:RequiredNodeVersion = [version]"20.19.0"
+$script:RequiredNodeVersion = [version]"20.20.1"
 $script:PackageName = "@continuedev/cli"
 $script:CliCommand = "cn"
 $script:FnmInstalled = $false

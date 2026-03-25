@@ -8,7 +8,8 @@ description: "Comprehensive guide to resolving common issues with Continue, incl
 3. [Download an older version](#download-an-older-version)
 4. [Resolve keyboard shortcut issues](#keyboard-shortcuts-not-resolving)
 5. [MCP Server connection issues](#mcp-server-connection-issues)
-6. [Check FAQs for common issues](/faqs)
+6. [SSL certificate errors](#ssl-certificate-errors)
+7. [Check FAQs for common issues](/faqs)
 
 ## Check the logs
 
@@ -103,6 +104,65 @@ To find the full path to a command on your system:
 - For `uv`/`uvx`: run `which uv` or `which uvx`
 
 This issue typically affects macOS users with large development environments and is being tracked in [#7870](https://github.com/continuedev/continue/issues/7870) and [#6699](https://github.com/continuedev/continue/issues/6699).
+
+## SSL certificate errors
+
+If Continue can reach your model endpoint but cannot verify its TLS certificate chain, you may see `fetch failed` alongside errors such as:
+
+- `unable to verify the first certificate`
+- `self signed certificate in certificate chain`
+- `certificate verify failed`
+- `CERT_UNTRUSTED`
+
+This usually happens when you are connecting to a self-hosted model, enterprise proxy, or internal endpoint that uses a private CA or an incomplete certificate chain.
+
+### Quick fix: trust the CA bundle
+
+Add the root or intermediate certificate for that endpoint to your model's `requestOptions.caBundlePath`:
+
+```yaml
+models:
+  - name: Secure endpoint
+    provider: openai
+    model: gpt-4.1
+    apiBase: https://llm.example.com/v1
+    requestOptions:
+      caBundlePath: /path/to/ca-chain.pem
+```
+
+If your setup requires mutual TLS, configure `requestOptions.clientCertificate` too. The self-hosting guide includes an example in [How to Set Up Authentication](/guides/how-to-self-host-a-model#how-to-set-up-authentication).
+
+### Diagnose the certificate problem
+
+1. Reproduce the error in the Continue logs so you can confirm the exact hostname that failed.
+2. Test the endpoint directly with `curl`:
+
+   ```bash
+   curl -v https://llm.example.com/v1/models
+   ```
+
+3. Inspect the certificate chain with OpenSSL:
+
+   ```bash
+   openssl s_client -showcerts -connect llm.example.com:443 -servername llm.example.com </dev/null
+   ```
+
+4. Save the required root or intermediate certificate as a PEM file and point `requestOptions.caBundlePath` at it.
+5. Verify the fix with curl before retrying in Continue:
+
+   ```bash
+   curl --cacert /path/to/ca-chain.pem https://llm.example.com/v1/models
+   ```
+
+### Common setups
+
+For self-hosted or enterprise deployments, these options usually help:
+
+- Private CA or corporate proxy: set `requestOptions.caBundlePath`
+- Mutual TLS: set `requestOptions.clientCertificate`
+- Windows VS Code: if your certificates are managed through the Windows certificate store, the [win-ca extension](https://marketplace.visualstudio.com/items?itemName=ukoloff.win-ca) may help, but `requestOptions.caBundlePath` remains the most reliable option
+
+As a temporary debugging step, you can set `requestOptions.verifySsl: false` to confirm the failure is certificate-related. Do not leave this disabled in normal use.
 
 
 ## Still having trouble?

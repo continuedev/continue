@@ -5,12 +5,10 @@ import {
   Cog6ToothIcon,
   KeyIcon,
 } from "@heroicons/react/24/outline";
-import { DISCUSSIONS_LINK } from "core/util/constants";
 import { useContext, useMemo } from "react";
 import { GhostButton } from "../../components";
 import { useEditModel } from "../../components/mainInput/Lump/useEditBlock";
 import { useMainEditor } from "../../components/mainInput/TipTapEditor";
-import { GithubIcon } from "../../components/svg/GithubIcon";
 import ToggleDiv from "../../components/ToggleDiv";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -38,6 +36,8 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     modelTitle,
     providerName,
     apiKeyUrl,
+    helpUrl,
+    customErrorMessage,
   } = useMemo(() => analyzeError(error, selectedModel), [error, selectedModel]);
 
   const handleRefreshProfiles = () => {
@@ -58,7 +58,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       onClick={() => ideMessenger.ide.openUrl(apiKeyUrl)}
     >
       <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
-      <span>View key</span>
+      <span>Check API key</span>
     </GhostButton>
   ) : null;
 
@@ -123,10 +123,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           There was an error handling the response from{" "}
           {selectedModel?.title || "the model"}.
         </p>
-        <p className="m-0 p-0">
-          Please try to submit your message again, and if the error persists,
-          let us know by reporting the issue using the buttons below.
-        </p>
+        <p className="m-0 p-0">Please try to submit your message again.</p>
         <div className="mt-3">{resubmitButton}</div>
       </div>
     </div>
@@ -216,7 +213,36 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
             <code>{selectedModel.underlyingProviderName}</code>
           </span>
         ) : null}
-        {/* TODO: status page links for providers? */}
+      </div>
+    );
+  }
+
+  // Custom error message from error analysis (e.g. invalid API key, insufficient balance)
+  if (customErrorMessage) {
+    errorContent = (
+      <div className="flex flex-col gap-2">
+        <span>{customErrorMessage}</span>
+        <div className="flex flex-row flex-wrap justify-start gap-3 py-2">
+          {helpUrl && (
+            <GhostButton
+              className="flex items-center"
+              onClick={() => ideMessenger.ide.openUrl(helpUrl)}
+            >
+              <ArrowTopRightOnSquareIcon className="mr-1.5 h-3.5 w-3.5" />
+              <span>View help documentation</span>
+            </GhostButton>
+          )}
+          {apiKeyUrl && (
+            <GhostButton
+              className="flex items-center"
+              onClick={() => ideMessenger.ide.openUrl(apiKeyUrl)}
+            >
+              <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
+              <span>Check API key</span>
+            </GhostButton>
+          )}
+          {configButton}
+        </div>
       </div>
     );
   }

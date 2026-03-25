@@ -2,6 +2,10 @@ import iconv from "iconv-lite";
 import childProcess from "node:child_process";
 import os from "node:os";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
+
+// Default timeout for terminal commands (2 minutes)
+const DEFAULT_TOOL_TIMEOUT_MS = 120_000;
+
 // Automatically decode the buffer according to the platform to avoid garbled Chinese
 function getDecodedOutput(data: Buffer): string {
   if (process.platform === "win32") {
@@ -93,17 +97,14 @@ const getColorEnv = () => ({
   CLICOLOR_FORCE: "1",
 });
 
-const ENABLED_FOR_REMOTES = [
-  "",
-  "local",
-  "wsl",
-  "dev-container",
-  "devcontainer",
-  "ssh-remote",
-  "attached-container",
-  "codespaces",
-  "tunnel",
-];
+// Only spawn processes locally when there is no remote workspace.
+// With extensionKind: ["ui", "workspace"], the extension host almost always
+// runs on the local machine. childProcess.spawn() executes on the extension
+// host, so for any remote workspace it would run commands on the wrong machine
+// (or fail with ENOENT when the local shell doesn't match the remote OS).
+// All remote types delegate to ide.runCommand() which routes through VS Code's
+// integrated terminal and executes in the correct remote environment.
+const LOCAL_ONLY = ["", "local"];
 
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const command = getStringArg(args, "command");
@@ -114,17 +115,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const ideInfo = await extras.ide.getIdeInfo();
   const toolCallId = extras.toolCallId || "";
 
-  // When the extension host runs on Windows but connects to a remote workspace
-  // (WSL, Dev Container, SSH, etc.), we can't spawn shells directly — the
-  // platform is "win32" but commands should run in the remote's Linux/macOS.
-  // Use ide.runCommand() instead to let VS Code handle the remote execution.
-  const isWindowsHostWithRemote =
-    process.platform === "win32" && !["", "local"].includes(ideInfo.remoteName);
-
-  if (
-    ENABLED_FOR_REMOTES.includes(ideInfo.remoteName) &&
-    !isWindowsHostWithRemote
-  ) {
+  if (LOCAL_ONLY.includes(ideInfo.remoteName)) {
     // For streaming output
     if (extras.onPartialOutput) {
       try {
@@ -133,6 +124,8 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
         return new Promise((resolve, reject) => {
           let terminalOutput = "";
+          let timeoutId: ReturnType<typeof setTimeout> | undefined;
+          let sigkillTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
           if (!waitForCompletion) {
             const status = "Command is running in the background...";
@@ -166,6 +159,47 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               extras.onPartialOutput,
               terminalOutput,
             );
+          }
+
+          // Check if the child process is still running.
+          // `childProc.killed` only indicates that kill() was called,
+          // not that the process has actually exited.
+          const isRunning = () =>
+            childProc.exitCode === null && childProc.signalCode === null;
+
+          // Set up timeout for waitForCompletion mode
+          if (waitForCompletion) {
+            timeoutId = setTimeout(() => {
+              if (isRunning()) {
+                terminalOutput +=
+                  "\n[Timeout: process killed after 2 minutes]\n";
+
+                // Update UI with timeout message
+                if (extras.onPartialOutput) {
+                  extras.onPartialOutput({
+                    toolCallId,
+                    contextItems: [
+                      {
+                        name: "Terminal",
+                        description: "Terminal command output",
+                        content: terminalOutput,
+                        status: "Command timed out",
+                      },
+                    ],
+                  });
+                }
+
+                // Try graceful termination first
+                childProc.kill("SIGTERM");
+
+                // Force kill after 5 seconds if still running
+                sigkillTimeoutId = setTimeout(() => {
+                  if (isRunning()) {
+                    childProc.kill("SIGKILL");
+                  }
+                }, 5_000);
+              }
+            }, DEFAULT_TOOL_TIMEOUT_MS);
           }
 
           childProc.stdout?.on("data", (data) => {
@@ -240,6 +274,16 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
           }
 
           childProc.on("close", (code) => {
+            // Clear timeout on normal completion
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+            }
+
+            // Clear inner SIGKILL timeout if process exits before grace period
+            if (sigkillTimeoutId) {
+              clearTimeout(sigkillTimeoutId);
+            }
+
             // Clean up process tracking
             if (toolCallId) {
               if (isProcessBackgrounded(toolCallId)) {
@@ -296,6 +340,16 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
           });
 
           childProc.on("error", (error) => {
+            // Clear timeout on error
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+            }
+
+            // Clear SIGKILL timeout to prevent delayed kill after rejection
+            if (sigkillTimeoutId) {
+              clearTimeout(sigkillTimeoutId);
+            }
+
             // Clean up process tracking
             if (toolCallId) {
               if (isProcessBackgrounded(toolCallId)) {
@@ -325,6 +379,9 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
             getShellCommand(command);
           const output = await new Promise<{ stdout: string; stderr: string }>(
             (resolve, reject) => {
+              let timeoutId: ReturnType<typeof setTimeout> | undefined;
+              let sigkillTimeoutId: ReturnType<typeof setTimeout> | undefined;
+
               const childProc = childProcess.spawn(
                 nonStreamingShell,
                 nonStreamingArgs,
@@ -342,6 +399,29 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               let stdout = "";
               let stderr = "";
 
+              // Check if the child process is still running.
+              // `childProc.killed` only indicates that kill() was called,
+              // not that the process has actually exited.
+              const isRunning = () =>
+                childProc.exitCode === null && childProc.signalCode === null;
+
+              // Set up timeout
+              timeoutId = setTimeout(() => {
+                if (isRunning()) {
+                  stderr += "\n[Timeout: process killed after 2 minutes]\n";
+
+                  // Try graceful termination first
+                  childProc.kill("SIGTERM");
+
+                  // Force kill after 5 seconds if still running
+                  sigkillTimeoutId = setTimeout(() => {
+                    if (isRunning()) {
+                      childProc.kill("SIGKILL");
+                    }
+                  }, 5_000);
+                }
+              }, DEFAULT_TOOL_TIMEOUT_MS);
+
               childProc.stdout?.on("data", (data) => {
                 stdout += getDecodedOutput(data);
               });
@@ -351,6 +431,16 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               });
 
               childProc.on("close", (code) => {
+                // Clear outer timeout
+                if (timeoutId) {
+                  clearTimeout(timeoutId);
+                }
+
+                // Clear inner SIGKILL timeout if process exits before grace period
+                if (sigkillTimeoutId) {
+                  clearTimeout(sigkillTimeoutId);
+                }
+
                 // Clean up process tracking
                 if (toolCallId) {
                   removeRunningProcess(toolCallId);
@@ -369,6 +459,16 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               });
 
               childProc.on("error", (error) => {
+                // Clear timeout on error
+                if (timeoutId) {
+                  clearTimeout(timeoutId);
+                }
+
+                // Clear SIGKILL timeout to prevent delayed kill after rejection
+                if (sigkillTimeoutId) {
+                  clearTimeout(sigkillTimeoutId);
+                }
+
                 // Clean up process tracking
                 if (toolCallId) {
                   removeRunningProcess(toolCallId);
@@ -453,16 +553,17 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
     }
   }
 
-  // For remote environments, just run the command
-  // Note: waitForCompletion is not supported in remote environments yet
+  // For remote environments (SSH, WSL, Dev Container, Codespaces, etc.),
+  // delegate to VS Code's integrated terminal which handles remote execution.
+  // Note: output capture and waitForCompletion are not yet supported for remotes.
   await extras.ide.runCommand(command);
   return [
     {
       name: "Terminal",
       description: "Terminal command output",
       content:
-        "Terminal output not available. This is only available in local development environments and not in SSH environments for example.",
-      status: "Command failed",
+        "Command executed in remote terminal. Output capture is not yet available for remote environments.",
+      status: "Command executed",
     },
   ];
 };

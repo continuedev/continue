@@ -39,6 +39,7 @@ class LlamaCpp extends BaseLLM {
       method: "POST",
       headers,
       body: JSON.stringify({
+        model: this.model,
         prompt,
         stream: true,
         ...this._convertArgs(options, prompt),

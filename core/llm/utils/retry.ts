@@ -104,6 +104,15 @@ function defaultShouldRetry(error: any, attempt: number): boolean {
     return true;
   }
 
+  // Overloaded / malformed stream errors (e.g. Anthropic 529, interrupted SSE)
+  const lowerMessage = (error.message ?? "").toLowerCase();
+  if (
+    lowerMessage.includes("overloaded") ||
+    lowerMessage.includes("malformed json")
+  ) {
+    return true;
+  }
+
   // Abort signal errors should not be retried
   if (isAbortError(error)) {
     return false;

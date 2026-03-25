@@ -59,6 +59,7 @@ export const completionOptionsSchema = z.object({
   reasoningBudgetTokens: z.number().optional(),
   promptCaching: z.boolean().optional(),
   stream: z.boolean().optional(),
+  keepAlive: z.number().optional(),
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
 
@@ -179,6 +180,7 @@ const baseModelFields = {
   model: z.string(),
   apiKey: z.string().optional(),
   apiBase: z.string().optional(),
+  contextLength: z.number().optional(),
   maxStopWords: z.number().optional(),
   roles: modelRolesSchema.array().optional(),
   capabilities: modelCapabilitySchema.array().optional(),

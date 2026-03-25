@@ -93,14 +93,14 @@ describe("getAnthropicHeaders", () => {
       expect(headers["api-key"]).toBeUndefined();
     });
 
-    it("uses api-key for Azure AI Foundry endpoint", () => {
+    it("uses x-api-key for Azure AI Foundry endpoint", () => {
       const headers = getAnthropicHeaders(
         "azure-key",
         false,
         "https://my-resource.services.ai.azure.com/anthropic",
       );
-      expect(headers["api-key"]).toBe("azure-key");
-      expect(headers["x-api-key"]).toBeUndefined();
+      expect(headers["x-api-key"]).toBe("azure-key");
+      expect(headers["api-key"]).toBeUndefined();
     });
 
     it("uses api-key for Azure Cognitive Services endpoint", () => {

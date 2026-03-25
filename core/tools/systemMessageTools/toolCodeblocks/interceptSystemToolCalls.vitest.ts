@@ -242,7 +242,7 @@ describe("interceptSystemToolCalls", () => {
     ).toBe("}");
   });
 
-  it("ignores content after a tool call", async () => {
+  it("preserves content after a tool call", async () => {
     const messages: ChatMessage[][] = [
       [{ role: "assistant", content: "```tool\n" }],
       [{ role: "assistant", content: "TOOL_NAME: test_tool\n" }],
@@ -250,7 +250,7 @@ describe("interceptSystemToolCalls", () => {
       [{ role: "assistant", content: "value1\n" }],
       [{ role: "assistant", content: "END_ARG\n" }],
       [{ role: "assistant", content: "```\n" }],
-      [{ role: "assistant", content: "This content should be ignored" }],
+      [{ role: "assistant", content: "This content should be preserved" }],
     ];
 
     const generator = interceptSystemToolCalls(
@@ -260,14 +260,102 @@ describe("interceptSystemToolCalls", () => {
     );
 
     let result;
-    // Process through all the tool call parts
-    for (let i = 0; i < 6; i++) {
+    // Process through all the tool call deltas (name, arg prefix, arg value, closing brace)
+    for (let i = 0; i < 4; i++) {
       result = await generator.next();
     }
 
-    // The content after the tool call should be ignored
+    // The trailing newline from "```\n" is yielded as text after the tool call ends
     result = await generator.next();
-    expect(result.value).toBeUndefined();
+    expect(result.value).toEqual([
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "\n" }],
+      },
+    ]);
+
+    // The content after the tool call should be preserved
+    result = await generator.next();
+    expect(result.value).toEqual([
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "This content should be preserved" }],
+      },
+    ]);
+  });
+
+  it("parses a tool call that appears mid-message and preserves trailing content", async () => {
+    const messages: ChatMessage[][] = [
+      [
+        {
+          role: "assistant",
+          content:
+            "Before tool\n```tool\nTOOL_NAME: test_tool\nBEGIN_ARG: arg1\nvalue1\nEND_ARG\n```\nAfter tool",
+        },
+      ],
+    ];
+
+    const generator = interceptSystemToolCalls(
+      createAsyncGenerator(messages),
+      abortController,
+      framework,
+    );
+
+    let result = await generator.next();
+    expect(result.value).toEqual([
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "Before tool" }],
+      },
+    ]);
+
+    result = await generator.next();
+    expect(result.value).toEqual([
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "\n" }],
+      },
+    ]);
+
+    result = await generator.next();
+    expect(
+      (result.value as AssistantChatMessage[])[0].toolCalls?.[0].function?.name,
+    ).toBe("test_tool");
+
+    result = await generator.next();
+    expect(
+      (result.value as AssistantChatMessage[])[0].toolCalls?.[0].function
+        ?.arguments,
+    ).toContain('{"arg1":');
+
+    result = await generator.next();
+    expect(
+      (result.value as AssistantChatMessage[])[0].toolCalls?.[0].function
+        ?.arguments,
+    ).toBe('"value1"');
+
+    result = await generator.next();
+    expect(
+      (result.value as AssistantChatMessage[])[0].toolCalls?.[0].function
+        ?.arguments,
+    ).toBe("}");
+
+    // The newline between the closing ``` and "After tool" is a separate chunk
+    result = await generator.next();
+    expect(result.value).toEqual([
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "\n" }],
+      },
+    ]);
+
+    result = await generator.next();
+    expect(result.value).toEqual([
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "After tool" }],
+      },
+    ]);
   });
 
   it("stops processing when aborted", async () => {

@@ -32,6 +32,7 @@ import {
   GeminiChatContent,
   GeminiChatContentPart,
   GeminiToolFunctionDeclaration,
+  mergeConsecutiveGeminiMessages,
 } from "../util/gemini-types.js";
 import { safeParseArgs } from "../util/parseArgs.js";
 import {
@@ -144,7 +145,7 @@ export class GeminiApi implements BaseLlmApi {
       }
     });
 
-    const contents: (GeminiChatContent | null)[] = oaiBody.messages
+    const contents = oaiBody.messages
       .map((msg) => {
         if (msg.role === "system" && !isV1API) {
           return null; // Don't include system message in contents
@@ -234,12 +235,14 @@ export class GeminiApi implements BaseLlmApi {
               : msg.content.map(this._oaiPartToGeminiPart),
         };
       })
-      .filter((c) => c !== null);
+      .filter((c) => c !== null) as GeminiChatContent[];
+
+    const mergedContents = mergeConsecutiveGeminiMessages(contents);
 
     const sysMsg = oaiBody.messages.find((msg) => msg.role === "system");
     const finalBody: any = {
       generationConfig,
-      contents,
+      contents: mergedContents,
       // if there is a system message, reformat it for Gemini API
       ...(sysMsg &&
         !isV1API && {

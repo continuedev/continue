@@ -298,15 +298,51 @@ describe("extractToolSequence", () => {
     );
   });
 
-  test("extractToolSequence should throw error when last message is not user or tool", () => {
+  test("extractToolSequence should handle trailing assistant message", () => {
     const messages: ChatMessage[] = [
       createUserMessage("Hello"),
       createAssistantMessage("Hi there!"),
     ];
 
-    expect(() => extractToolSequence(messages)).toThrow(
-      "Error parsing chat history: no user/tool message found",
-    );
+    const sequence = extractToolSequence(messages);
+
+    expect(sequence).toHaveLength(1);
+    expect(sequence[0].role).toBe("assistant");
+    expect(messages).toHaveLength(1);
+    expect(messages[0].role).toBe("user");
+  });
+
+  test("extractToolSequence should handle trailing thinking message", () => {
+    const messages: ChatMessage[] = [
+      createUserMessage("Hello"),
+      {
+        role: "thinking",
+        content: "Let me think about this...",
+      } as ChatMessage,
+    ];
+
+    const sequence = extractToolSequence(messages);
+
+    expect(sequence).toHaveLength(1);
+    expect(sequence[0].role).toBe("thinking");
+    expect(messages).toHaveLength(1);
+    expect(messages[0].role).toBe("user");
+  });
+
+  test("extractToolSequence should collect full trailing thinking+assistant turn", () => {
+    const messages: ChatMessage[] = [
+      createUserMessage("Hello"),
+      { role: "thinking", content: "Let me think..." } as ChatMessage,
+      createAssistantMessage("Hi there!"),
+    ];
+
+    const sequence = extractToolSequence(messages);
+
+    expect(sequence).toHaveLength(2);
+    expect(sequence[0].role).toBe("thinking");
+    expect(sequence[1].role).toBe("assistant");
+    expect(messages).toHaveLength(1);
+    expect(messages[0].role).toBe("user");
   });
 
   test("extractToolSequence should throw error when messages array is empty", () => {

@@ -60,6 +60,7 @@ export function useChat({
   onShowMCPSelector,
   onShowSessionSelector,
   onShowJobsSelector,
+  onShowExportSelector,
   onClear,
   onRefreshStatic,
   isRemoteMode = false,
@@ -450,6 +451,7 @@ export function useChat({
       onShowSessionSelector,
       onShowJobsSelector,
       onShowUpdateSelector,
+      onShowExportSelector,
       onClear,
     });
 

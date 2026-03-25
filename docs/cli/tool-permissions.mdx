@@ -12,7 +12,7 @@ Every tool has one of three permission levels:
 
 ## Defaults
 
-Read-only tools (`Read`, `List`, `Search`, `Fetch`, `Diff`) default to `allow`. Write tools (`Edit`, `MultiEdit`, `Write`) and `Bash` default to `ask`. In [headless mode](/cli/headless-mode), `ask` tools are excluded since there's no one to approve them.
+Read-only tools (`Read`, `List`, `Search`, `Fetch`, `Diff`, `AskQuestion`, `Checklist`, `Status`, `CheckBackgroundJob`, `ReportFailure`, `UploadArtifact`) default to `allow`. `AskQuestion` is a built-in read-only tool that lets the agent pause and ask for clarification before continuing. Write tools (`Edit`, `MultiEdit`, `Write`) and `Bash` default to `ask`. In [headless mode](/cli/headless-mode), `ask` tools are excluded since there's no one to approve them.
 
 ## Overriding with flags
 

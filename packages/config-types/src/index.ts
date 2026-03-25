@@ -60,6 +60,7 @@ export const modelDescriptionSchema = z.object({
     "nebius",
     "scaleway",
     "watsonx",
+    "minimax",
   ]),
   model: z.string(),
   apiKey: z.string().optional(),
