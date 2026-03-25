@@ -230,15 +230,7 @@ class Gemini extends BaseLLM {
     };
   }
 
-  /**
-   * Merges consecutive messages with the same role to satisfy Gemini's
-   * strict role-alternation requirement. This fixes errors like:
-   * - "function call turn comes immediately after a user turn or after a function response turn"
-   * - "number of function response parts is equal to the number of function call parts"
-   *
-   * See: https://github.com/continuedev/continue/issues/11047
-   *      https://github.com/continuedev/continue/issues/9562
-   */
+  // Gemini requires strict user/model role alternation.
   private mergeConsecutiveGeminiMessages(
     contents: GeminiChatContent[],
   ): GeminiChatContent[] {
