@@ -523,12 +523,6 @@
         "mac": "cmd+alt+a",
         "win": "ctrl+alt+a",
         "linux": "ctrl+alt+a"
-      },
-      {
-        "command": "continue.newSession",
-        "mac": "cmd+alt+n",
-        "win": "ctrl+alt+n",
-        "linux": "ctrl+alt+n"
       }
     ],
     "submenus": [
