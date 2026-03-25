@@ -136,12 +136,22 @@ describe("Workspace directory filtering", () => {
     expect(sessions.length).toBe(0);
   });
 
-  test("Workspace filter works with limit and offset", () => {
+  test("Workspace filter works with limit", () => {
     const sessions = historyManager.list({
       workspaceDirectory: "/home/user/project-a",
       limit: 1,
     });
     expect(sessions.length).toBe(1);
+  });
+
+  test("Workspace filter works with limit and offset", () => {
+    const sessions = historyManager.list({
+      workspaceDirectory: "/home/user/project-a",
+      limit: 1,
+      offset: 1,
+    });
+    expect(sessions.length).toBe(1);
+    expect(sessions[0].sessionId).toBe("ws-a-1");
   });
 });
 
