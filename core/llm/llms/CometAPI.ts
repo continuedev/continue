@@ -211,7 +211,6 @@ class CometAPI extends OpenAI {
     "gemini-2.5-pro",
     "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
-    "gemini-2.0-flash",
 
     // Grok series
     "grok-4-0709",
