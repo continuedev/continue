@@ -64,7 +64,7 @@ function ParallelListeners() {
       if (isInitial && hasDoneInitialConfigLoad.current) {
         return;
       }
-      if (configResult.configLoadInterrupted) {
+      if (configResult.configLoadInterrupted || !configResult.config) {
         return;
       }
       hasDoneInitialConfigLoad.current = true;

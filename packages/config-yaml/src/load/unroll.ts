@@ -310,10 +310,12 @@ export async function unrollAssistantFromContent(
   });
 
   if (!options.renderSecrets) {
+    const parsed = parseAssistantUnrolled(templatedYaml);
     return {
-      config: parseAssistantUnrolled(templatedYaml),
+      config: parsed,
       errors: [],
       configLoadInterrupted: false,
+      configName: parsed?.name || undefined,
     };
   }
 
@@ -333,7 +335,12 @@ export async function unrollAssistantFromContent(
     options.onPremProxyUrl,
   );
 
-  return { config: renderedConfig, errors, configLoadInterrupted };
+  return {
+    config: renderedConfig,
+    errors,
+    configLoadInterrupted,
+    configName: renderedConfig?.name || undefined,
+  };
 }
 
 function isPackageAllowed(
@@ -678,6 +685,7 @@ export async function unrollBlocks(
     config: undefined,
     errors: undefined,
     configLoadInterrupted: false,
+    configName: unrolledAssistant.name || undefined,
   };
   configResult.config = unrolledAssistant;
   if (errors.length > 0) {

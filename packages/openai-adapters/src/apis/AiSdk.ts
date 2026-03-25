@@ -1,4 +1,5 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createXai } from "@ai-sdk/xai";
@@ -32,6 +33,7 @@ type AiSdkProviderCreator = (options: {
 const PROVIDER_MAP: Record<string, AiSdkProviderCreator> = {
   openai: createOpenAI,
   anthropic: createAnthropic,
+  google: createGoogleGenerativeAI,
   xai: createXai,
   deepseek: createDeepSeek,
   openrouter: (options) =>

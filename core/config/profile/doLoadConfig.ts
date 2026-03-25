@@ -113,6 +113,7 @@ export default async function doLoadConfig(options: {
   let newConfig: ContinueConfig | undefined;
   let errors: ConfigValidationError[] | undefined;
   let configLoadInterrupted = false;
+  let configName: string | undefined;
 
   const hasPreReadContent =
     packageIdentifier.uriType === "file" &&
@@ -138,6 +139,7 @@ export default async function doLoadConfig(options: {
     newConfig = result.config;
     errors = result.errors;
     configLoadInterrupted = result.configLoadInterrupted;
+    configName = result.configName;
   } else {
     const result = await loadContinueConfigFromJson(
       ide,
@@ -154,7 +156,12 @@ export default async function doLoadConfig(options: {
   }
 
   if (configLoadInterrupted || !newConfig) {
-    return { errors, config: newConfig, configLoadInterrupted: true };
+    return {
+      errors,
+      config: newConfig,
+      configLoadInterrupted: true,
+      configName,
+    };
   }
 
   // TODO using config result but result with non-fatal errors is an antipattern?
@@ -446,7 +453,12 @@ export default async function doLoadConfig(options: {
     controlPlaneProxyInfo,
   );
 
-  return { config: newConfig, errors, configLoadInterrupted: false };
+  return {
+    config: newConfig,
+    errors,
+    configLoadInterrupted: false,
+    configName,
+  };
 }
 
 // Pass ControlPlaneProxyInfo to objects that need it

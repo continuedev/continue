@@ -74,8 +74,21 @@ vi.mock("os", () => ({
 vi.mock("path", () => ({
   default: {
     join: vi.fn((...parts) => parts.join("/")),
+    isAbsolute: vi.fn((p: string) => p.startsWith("/")),
+    resolve: vi.fn((...parts) => parts.join("/")),
   },
   join: vi.fn((...parts) => parts.join("/")),
+  isAbsolute: vi.fn((p: string) => p.startsWith("/")),
+  resolve: vi.fn((...parts) => parts.join("/")),
+}));
+
+// Mock history manager to avoid file system operations
+vi.mock("core/util/history.js", () => ({
+  default: {
+    list: vi.fn(() => []),
+    load: vi.fn(() => ({ history: [] })),
+    save: vi.fn(),
+  },
 }));
 
 // Mock session functions

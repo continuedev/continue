@@ -155,6 +155,27 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         modelName = model;
       }
 
+      // Some Ollama cloud models don't support tools despite matching the
+      // family-name heuristic below (https://ollama.com/search?c=cloud)
+      if (modelName.toLowerCase().includes(":cloud")) {
+        if (
+          [
+            "cogito-2.1",
+            "deepseek-v3.2",
+            "gemini-3-flash-preview",
+            "glm-4.6",
+            "glm-4.7",
+            "glm-5",
+            "kimi-k2.5",
+            "minimax-m2",
+            "minimax-m2.5",
+            "minimax-m2.7",
+          ].some((part) => modelName.toLowerCase().startsWith(part))
+        ) {
+          return false;
+        }
+      }
+
       if (
         ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
           (part) => modelName.toLowerCase().includes(part),

@@ -4,7 +4,7 @@ set -euo pipefail
 # Continue CLI Installer - Unix (macOS, Linux, WSL, Git Bash)
 # curl -fsSL https://continue.dev/install.sh | bash
 
-REQUIRED_NODE_VERSION="20.19.0"
+REQUIRED_NODE_VERSION="20.20.1"
 PACKAGE_NAME="@continuedev/cli"
 CLI_COMMAND="cn"
 NETWORK_TIMEOUT=60

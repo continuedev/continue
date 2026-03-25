@@ -68,6 +68,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "clawrouter",
   "deepseek",
   "xAI",
+  "minimax",
   "groq",
   "gemini",
   "docker",
@@ -252,6 +253,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "vertexai",
   "function-network",
   "scaleway",
+  "minimax",
   "tensorix",
 ];
 
