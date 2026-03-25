@@ -19,6 +19,14 @@ export type VercelStreamPart =
       toolCallId: string;
       toolName: string;
       input: Record<string, unknown>;
+      providerMetadata?: {
+        google?: {
+          thoughtSignature?: string;
+        };
+        vertex?: {
+          thoughtSignature?: string;
+        };
+      };
     }
   | {
       type: "tool-input-start";
@@ -126,11 +134,34 @@ export function convertVercelStreamPart(
         model,
       });
 
-    case "tool-call":
-      // tool-call is emitted after tool-input-start/delta/end have already
-      // streamed the complete tool call. Emitting it again would duplicate
-      // the arguments. Skip it since streaming events already handled it.
-      return null;
+    case "tool-call": {
+      const thoughtSignature =
+        part.providerMetadata?.google?.thoughtSignature ??
+        part.providerMetadata?.vertex?.thoughtSignature;
+      return chatChunkFromDelta({
+        delta: {
+          tool_calls: [
+            {
+              index: 0,
+              id: part.toolCallId,
+              type: "function" as const,
+              function: {
+                name: part.toolName,
+                arguments: JSON.stringify(part.input),
+              },
+              ...(thoughtSignature && {
+                extra_content: {
+                  google: {
+                    thought_signature: thoughtSignature,
+                  },
+                },
+              }),
+            } as any,
+          ],
+        },
+        model,
+      });
+    }
 
     case "finish":
       if (part.totalUsage) {
