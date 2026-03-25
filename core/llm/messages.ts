@@ -4,25 +4,36 @@ export function messageHasToolCalls(msg: ChatMessage): boolean {
   return msg.role === "assistant" && !!msg.toolCalls;
 }
 
-export function messageIsEmpty(message: ChatMessage): boolean {
-  if (typeof message.content === "string") {
-    return message.content.trim() === "";
+function contentIsEmpty(content: ChatMessage["content"]): boolean {
+  if (typeof content === "string") {
+    return content.trim() === "";
   }
-  if (Array.isArray(message.content)) {
-    return message.content.every(
-      (item) => item.type === "text" && item.text?.trim() === "",
+  if (Array.isArray(content)) {
+    return content.every(
+      (item) => item.type === "text" && (!item.text || item.text.trim() === ""),
     );
   }
-  return false;
+  return !content;
 }
 
-// some providers don't support empty messages
-export function addSpaceToAnyEmptyMessages(
-  messages: ChatMessage[],
-): ChatMessage[] {
+export function messageIsEmpty(message: ChatMessage): boolean {
+  return contentIsEmpty(message.content);
+}
+
+/** Strip empty text parts from array content. */
+export function stripEmptyContentParts(messages: ChatMessage[]): ChatMessage[] {
   return messages.map((message) => {
-    if (messageIsEmpty(message)) {
-      message.content = " ";
+    if (Array.isArray(message.content)) {
+      message.content = message.content.filter(
+        (part) =>
+          part.type !== "text" ||
+          (part.text !== null &&
+            part.text !== undefined &&
+            part.text.trim() !== ""),
+      );
+      if (message.content.length === 0) {
+        message.content = "";
+      }
     }
     return message;
   });
@@ -57,15 +68,9 @@ export function chatMessageIsEmpty(message: ChatMessage): boolean {
   switch (message.role) {
     case "system":
     case "user":
-      return (
-        typeof message.content === "string" && message.content.trim() === ""
-      );
+      return contentIsEmpty(message.content);
     case "assistant":
-      return (
-        typeof message.content === "string" &&
-        message.content.trim() === "" &&
-        !message.toolCalls
-      );
+      return contentIsEmpty(message.content) && !message.toolCalls;
     case "thinking":
     case "tool":
       return false;

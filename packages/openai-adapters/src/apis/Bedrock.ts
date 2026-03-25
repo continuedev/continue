@@ -203,9 +203,15 @@ export class BedrockApi implements BaseLlmApi {
           const content = message.content;
           if (content) {
             if (typeof content === "string") {
-              currentBlocks.push({ text: content });
+              if (content.trim()) {
+                currentBlocks.push({ text: content });
+              }
             } else {
               content.forEach((part) => {
+                // Skip empty text parts
+                if (part.type === "text" && !part.text?.trim()) {
+                  return;
+                }
                 currentBlocks.push(this._oaiPartToBedrockPart(part));
               });
             }

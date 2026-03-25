@@ -9,7 +9,7 @@ import {
 } from "../index.js";
 import { autodetectTemplateType } from "./autodetect.js";
 import {
-  addSpaceToAnyEmptyMessages,
+  stripEmptyContentParts,
   chatMessageIsEmpty,
   isUserOrToolMsg,
   messageHasToolCallId,
@@ -446,7 +446,7 @@ function compileChatMessages({
   // Remove any empty messages or non-user/tool trailing messages
   msgsCopy = msgsCopy.filter((msg) => !chatMessageIsEmpty(msg));
 
-  msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
+  msgsCopy = stripEmptyContentParts(msgsCopy);
 
   // Extract the tool sequence from the end of the message array
   const toolSequence = extractToolSequence(msgsCopy);

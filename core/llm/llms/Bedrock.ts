@@ -538,11 +538,15 @@ class Bedrock extends BaseLLM {
   ): ContentBlock[] {
     const blocks: ContentBlock[] = [];
     if (typeof content === "string") {
-      blocks.push({ text: content });
+      if (content.trim()) {
+        blocks.push({ text: content });
+      }
     } else {
       for (const part of content) {
         if (part.type === "text") {
-          blocks.push({ text: part.text });
+          if (part.text?.trim()) {
+            blocks.push({ text: part.text });
+          }
         } else if (part.type === "imageUrl" && part.imageUrl) {
           const parsed = parseDataUrl(part.imageUrl.url);
           if (parsed) {

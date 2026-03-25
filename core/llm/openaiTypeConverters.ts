@@ -106,6 +106,18 @@ function appendReasoningFieldsIfSupported(
   }
 }
 
+function toAssistantContent(
+  content: ChatMessage["content"],
+): string | TextMessagePart[] {
+  if (typeof content === "string") {
+    return content || " "; // LM Studio (and other providers) don't accept empty content
+  }
+  const parts = content
+    .filter((p) => p.type === "text" && p.text?.trim())
+    .map((p) => p as TextMessagePart);
+  return parts.length > 0 ? parts : " ";
+}
+
 export function toChatMessage(
   message: ChatMessage,
   options: CompletionOptions,
@@ -145,12 +157,7 @@ export function toChatMessage(
       }[];
     } = {
       role: "assistant",
-      content:
-        typeof message.content === "string"
-          ? message.content || " " // LM Studio (and other providers) don't accept empty content
-          : message.content
-              .filter((part) => part.type === "text")
-              .map((part) => part as TextMessagePart),
+      content: toAssistantContent(message.content),
     };
 
     // Add tool calls if present
@@ -178,31 +185,45 @@ export function toChatMessage(
     if (typeof message.content === "string") {
       return {
         role: "user",
-        content: message.content ?? " ", // LM Studio (and other providers) don't accept empty content
+        content: message.content || " ",
       };
     }
 
     // If no multi-media is in the message, just send as text
     // for compatibility with OpenAI-"compatible" servers
     // that don't support multi-media format
+    const hasNonText = message.content.some((item) => item.type !== "text");
+    if (hasNonText) {
+      // Filter out empty text parts when there's non-text content (images)
+      const filteredContent = message.content
+        .filter(
+          (part) =>
+            part.type !== "text" || (part.text && part.text.trim() !== ""),
+        )
+        .map((part) => {
+          if (part.type === "imageUrl") {
+            return {
+              type: "image_url" as const,
+              image_url: {
+                url: part.imageUrl.url,
+                detail: "auto" as const,
+              },
+            };
+          }
+          return part;
+        });
+      return {
+        role: "user",
+        content: filteredContent,
+      };
+    }
+
     return {
       role: "user",
-      content: message.content.some((item) => item.type !== "text")
-        ? message.content.map((part) => {
-            if (part.type === "imageUrl") {
-              return {
-                type: "image_url" as const,
-                image_url: {
-                  url: part.imageUrl.url,
-                  detail: "auto" as const,
-                },
-              };
-            }
-            return part;
-          })
-        : message.content
-            .map((item) => (item as TextMessagePart).text)
-            .join("") || " ",
+      content:
+        message.content
+          .map((item) => (item as TextMessagePart).text)
+          .join("") || "...",
     };
   }
 }
