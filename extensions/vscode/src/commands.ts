@@ -885,7 +885,7 @@ const getCommandsMap: (
     },
     "continue.focusModelSelect": async () => {
       // 1. Ensure the sidebar is visible/focused
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
+      focusGUI();
 
       // 2. Send a message to the React app
       // "openModelSelect" is a custom message type we will define next
