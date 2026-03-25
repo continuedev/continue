@@ -51,6 +51,7 @@ export function createOpenAIClient({
     apiKey,
     baseURL: new URL("model-proxy/v1/", baseURL).toString(),
     timeout: 60_000,
+    maxRetries: 3,
     fetch: async (url, init) => {
       // Clone the init object to avoid modifying the original
       const modifiedInit = init ? { ...init } : {};
