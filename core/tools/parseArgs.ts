@@ -48,9 +48,8 @@ export function coerceArgsToSchema(
 
     if (
       propSchema.type === "string" &&
-      typeof value !== "string" &&
-      value !== null &&
-      value !== undefined
+      typeof value === "object" &&
+      value !== null
     ) {
       try {
         coerced[key] = JSON.stringify(value);

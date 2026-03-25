@@ -389,6 +389,20 @@ describe("coerceArgsToSchema", () => {
     expect(result.known).toBe("hello");
   });
 
+  it("should not coerce numbers or booleans to strings", () => {
+    const args = { content: 42, flag: true };
+    const schema = {
+      type: "object",
+      properties: {
+        content: { type: "string" },
+        flag: { type: "string" },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.content).toBe(42);
+    expect(result.flag).toBe(true);
+  });
+
   it("should not mutate the original args object", () => {
     const args = { content: { key: "value" } };
     const schema = {
