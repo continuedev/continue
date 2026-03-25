@@ -82,7 +82,7 @@ join the [GitHub Discussions](https://github.com/continuedev/continue/discussion
 
 ## AI Checks
 
-To learn more about the philosophy behind AI checks, the check file format, best practices, and example checks, see [continuedev/checks](https://github.com/continuedev/checks).
+AI checks are markdown files that define code quality standards — each one runs as a full AI agent on every PR, catching issues that linters and tests can't express. Follow the [continuedev/checks](https://github.com/continuedev/checks) README to set up your first check.
 
 ## License
 
