@@ -737,7 +737,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq", "nebius"],
+    providerOptions: ["nebius"],
     isOpenSource: false,
   },
   llama3170bNemotron: {
