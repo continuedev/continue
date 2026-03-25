@@ -162,12 +162,29 @@ class Ollama extends BaseLLM implements ModelInstaller {
 
   private fimSupported: boolean = false;
   private templateSupportsTools: boolean | undefined = undefined;
+  private modelInfoPromise: Promise<void> | undefined = undefined;
+  private explicitContextLength: boolean;
+
   constructor(options: LLMOptions) {
     super(options);
+    this.explicitContextLength = options.contextLength !== undefined;
+  }
 
-    if (options.model === "AUTODETECT") {
-      return;
+  /**
+   * Lazily fetches and caches model info from Ollama's /api/show endpoint.
+   * Called before actual model usage rather than in the constructor to avoid
+   * flooding the Ollama server with requests when many model instances are
+   * created (e.g. with AUTODETECT).
+   */
+  private ensureModelInfo(): Promise<void> {
+    if (this.modelInfoPromise) {
+      return this.modelInfoPromise;
     }
+
+    if (this.model === "AUTODETECT") {
+      return Promise.resolve();
+    }
+
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -176,33 +193,29 @@ class Ollama extends BaseLLM implements ModelInstaller {
       headers.Authorization = `Bearer ${this.apiKey}`;
     }
 
-    this.fetch(this.getEndpoint("api/show"), {
+    this.modelInfoPromise = this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
       headers: headers,
       body: JSON.stringify({ name: this._getModel() }),
     })
       .then(async (response) => {
         if (response?.status !== 200) {
-          // console.warn(
-          //   "Error calling Ollama /api/show endpoint: ",
-          //   await response.text(),
-          // );
           return;
         }
         const body = await response.json();
         if (body.parameters) {
-          const params = [];
           for (const line of body.parameters.split("\n")) {
-            let parts = line.match(/^(\S+)\s+((?:".*")|\S+)$/);
-            if (parts.length < 2) {
+            const parts = line.match(/^(\S+)\s+((?:".*")|\S+)$/);
+            if (!parts || parts.length < 2) {
               continue;
             }
-            let key = parts[1];
-            let value = parts[2];
+            const key = parts[1];
+            const value = parts[2];
             switch (key) {
               case "num_ctx":
-                this._contextLength =
-                  options.contextLength ?? Number.parseInt(value);
+                if (!this.explicitContextLength) {
+                  this._contextLength = Number.parseInt(value);
+                }
                 break;
               case "stop":
                 if (!this.completionOptions.stop) {
@@ -211,9 +224,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
                 try {
                   this.completionOptions.stop.push(JSON.parse(value));
                 } catch (e) {
-                  console.warn(
-                    `Error parsing stop parameter value "{value}: ${e}`,
-                  );
+                  // Silently ignore unparseable stop parameters
                 }
                 break;
               default:
@@ -234,9 +245,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
           this.templateSupportsTools = body.template.includes(".Tools");
         }
       })
-      .catch((e) => {
-        // console.warn("Error calling the Ollama /api/show endpoint: ", e);
+      .catch(() => {
+        // Model info is optional; silently continue without it
       });
+
+    return this.modelInfoPromise;
   }
 
   // Map of "continue model name" to Ollama actual model name
@@ -410,6 +423,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
+    await this.ensureModelInfo();
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -488,6 +502,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    await this.ensureModelInfo();
     const ollamaMessages = this._reorderMessagesForToolCompat(
       messages.map(this._convertToOllamaMessage),
     );
@@ -654,6 +669,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
+    await this.ensureModelInfo();
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -710,14 +726,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
         headers: headers,
       },
     );
-    const data = await response.json();
-    if (response.ok) {
-      return data.models.map((model: any) => model.name);
-    } else {
-      throw new Error(
-        "Failed to list Ollama models. Make sure Ollama is running.",
-      );
+    if (!response.ok) {
+      return [];
     }
+    const data = await response.json();
+    return data.models.map((model: any) => model.name);
   }
 
   protected async _embed(chunks: string[]): Promise<number[][]> {
