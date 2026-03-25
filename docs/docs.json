@@ -160,7 +160,6 @@
                       "customize/model-providers/top-level/lmstudio",
                       "customize/model-providers/top-level/ollama",
                       "customize/model-providers/top-level/openrouter",
-                      "customize/model-providers/top-level/clawrouter",
                       "customize/model-providers/top-level/openai",
                       "customize/model-providers/top-level/tetrate_agent_router_service",
                       "customize/model-providers/top-level/vertexai"
@@ -170,6 +169,7 @@
                     "group": "More Providers",
                     "pages": [
                       "customize/model-providers/more/asksage",
+                      "customize/model-providers/more/clawrouter",
                       "customize/model-providers/more/deepseek",
                       "customize/model-providers/more/deepinfra",
                       "customize/model-providers/more/groq",
