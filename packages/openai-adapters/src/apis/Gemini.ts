@@ -111,6 +111,38 @@ export class GeminiApi implements BaseLlmApi {
     }
   }
 
+  /**
+   * Merges consecutive messages with the same role to satisfy Gemini's
+   * strict role-alternation requirement. This fixes errors like:
+   * - "function call turn comes immediately after a user turn or after a function response turn"
+   * - "number of function response parts is equal to the number of function call parts"
+   *
+   * See: https://github.com/continuedev/continue/issues/11047
+   *      https://github.com/continuedev/continue/issues/9562
+   */
+  private _mergeConsecutiveMessages(
+    contents: GeminiChatContent[],
+  ): GeminiChatContent[] {
+    if (contents.length === 0) {
+      return contents;
+    }
+
+    const merged: GeminiChatContent[] = [contents[0]];
+
+    for (let i = 1; i < contents.length; i++) {
+      const current = contents[i];
+      const previous = merged[merged.length - 1];
+
+      if (current.role === previous.role) {
+        previous.parts = [...previous.parts, ...current.parts];
+      } else {
+        merged.push(current);
+      }
+    }
+
+    return merged;
+  }
+
   public _convertBody(
     oaiBody: ChatCompletionCreateParams,
     isV1API: boolean,
@@ -236,10 +268,12 @@ export class GeminiApi implements BaseLlmApi {
       })
       .filter((c) => c !== null);
 
+    const mergedContents = this._mergeConsecutiveMessages(contents);
+
     const sysMsg = oaiBody.messages.find((msg) => msg.role === "system");
     const finalBody: any = {
       generationConfig,
-      contents,
+      contents: mergedContents,
       // if there is a system message, reformat it for Gemini API
       ...(sysMsg &&
         !isV1API && {
