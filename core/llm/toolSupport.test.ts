@@ -452,9 +452,9 @@ describe("isRecommendedAgentModel", () => {
       expect(isRecommendedAgentModel("gemini-2.5-pro-preview")).toBe(true);
     });
 
-    it("should return true for Gemini 3 Pro models", () => {
-      expect(isRecommendedAgentModel("gemini-3-pro-preview")).toBe(true);
-      expect(isRecommendedAgentModel("gemini-3-pro")).toBe(true);
+    it("should return true for Gemini 3.1 Pro models", () => {
+      expect(isRecommendedAgentModel("gemini-3.1-pro-preview")).toBe(true);
+      expect(isRecommendedAgentModel("gemini-3-flash-preview")).toBe(true);
     });
 
     it("should return false for Gemini Flash models", () => {

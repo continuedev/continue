@@ -1041,14 +1041,14 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["gemini"],
     isOpenSource: false,
   },
-  gemini3ProPreview: {
-    title: "Gemini 3 Pro",
+  gemini31ProPreview: {
+    title: "Gemini 3.1 Pro",
     description:
-      "Google's latest Pro model with up to 64k output context. Best for complex tasks involving reasoning.",
+      "Google's most capable model with 2M context window. Best for complex tasks involving reasoning.",
     params: {
-      title: "Gemini 3 Pro",
-      model: "gemini-3-pro-preview",
-      contextLength: 1_048_576,
+      title: "Gemini 3.1 Pro",
+      model: "gemini-3.1-pro-preview",
+      contextLength: 2_097_152,
       apiKey: "<API_KEY>",
     },
     icon: "gemini.png",
@@ -2306,11 +2306,24 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
   gemini3FlashPreview: {
-    title: "Gemini 3 Flash Preview",
-    description: "Google's next-generation Flash model with strong reasoning.",
+    title: "Gemini 3 Flash",
+    description: "High-speed thinking model for agentic workflows and coding.",
     params: {
-      title: "Gemini 3 Flash Preview",
+      title: "Gemini 3 Flash",
       model: "gemini-3-flash-preview",
+      contextLength: 1_048_576,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
+  gemini31FlashLitePreview: {
+    title: "Gemini 3.1 Flash Lite",
+    description: "Cost-efficient model optimized for high-volume tasks.",
+    params: {
+      title: "Gemini 3.1 Flash Lite",
+      model: "gemini-3.1-flash-lite-preview",
       contextLength: 1_048_576,
       apiKey: "<API_KEY>",
     },

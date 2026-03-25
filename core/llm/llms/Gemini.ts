@@ -36,7 +36,7 @@ class Gemini extends BaseLLM {
   static providerName = "gemini";
 
   static defaultOptions: Partial<LLMOptions> = {
-    model: "gemini-pro",
+    model: "gemini-2.5-flash",
     apiBase: "https://generativelanguage.googleapis.com/v1beta/",
     maxStopWords: 5,
     maxEmbeddingBatchSize: 100,
