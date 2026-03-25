@@ -9,7 +9,7 @@ import React, { useEffect, useState } from "react";
 export function isModelUsingFreeTrial(model: ModelConfig): boolean {
   return (
     model.provider === "continue-proxy" &&
-    (model as any).apiKeyLocation.startsWith("free_trial:")
+    !!model.apiKeyLocation?.startsWith("free_trial:")
   );
 }
 
@@ -58,12 +58,6 @@ const FreeTrialStatus: React.FC<FreeTrialStatusProps> = ({
 
     setLoading(true);
     void fetchStatus();
-
-    if (process.env.NODE_ENV === "test") {
-      return () => {
-        isMounted = false;
-      };
-    }
 
     const interval = setInterval(fetchStatus, 5000);
 

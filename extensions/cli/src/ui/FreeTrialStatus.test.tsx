@@ -5,10 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { FreeTrialStatus } from "./FreeTrialStatus.js";
 
 describe("FreeTrialStatus", () => {
-  const originalNodeEnv = process.env.NODE_ENV;
-
   afterEach(() => {
-    process.env.NODE_ENV = originalNodeEnv;
     vi.useRealTimers();
     vi.clearAllMocks();
   });
@@ -35,7 +32,6 @@ describe("FreeTrialStatus", () => {
 
   it("fetches immediately and polls every five seconds for free-trial models", async () => {
     vi.useFakeTimers();
-    process.env.NODE_ENV = "development";
     const getFreeTrialStatus = vi.fn().mockResolvedValue({
       optedInToFreeTrial: true,
       chatCount: 1,
