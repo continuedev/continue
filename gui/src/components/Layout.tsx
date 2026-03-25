@@ -15,6 +15,7 @@ import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { ROUTES } from "../util/navigation";
 import { FatalErrorIndicator } from "./config/FatalErrorNotice";
+import { DeprecationBanner } from "./DeprecationBanner";
 import TextDialog from "./dialogs";
 import { GenerateRuleDialog } from "./GenerateRuleDialog";
 import { useMainEditor } from "./mainInput/TipTapEditor";
@@ -227,6 +228,8 @@ const Layout = () => {
               }}
               message={dialogMessage}
             />
+
+            <DeprecationBanner dismissable={isHome} />
 
             <GridDiv>
               <Outlet />
