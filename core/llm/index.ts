@@ -509,6 +509,18 @@ export abstract class BaseLLM implements ILLM {
               `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
             );
           }
+          // Surface the underlying cause of "TypeError: fetch failed" for better diagnostics
+          if (
+            e.name === "TypeError" &&
+            e.message === "fetch failed" &&
+            e.cause
+          ) {
+            const causeCode = e.cause.code ?? e.cause.name ?? "unknown";
+            const causeMsg = e.cause.message ?? "";
+            throw new Error(
+              `Network error (${causeCode}): ${causeMsg}. This may be caused by a timeout, proxy misconfiguration, or network connectivity issue. If you are using a proxy, verify it is working. For long-running requests, try a simpler prompt.`,
+            );
+          }
           if (
             e.code === "ECONNREFUSED" &&
             e.message.includes("http://127.0.0.1:11434")

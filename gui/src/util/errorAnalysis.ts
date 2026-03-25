@@ -144,6 +144,19 @@ export function analyzeError(
     customErrorMessage = `Your ${providerLabel} account appears to be out of credits. Add more credits to your account to continue using this model.`;
   }
 
+  // Network / fetch errors (common with Gemini due to Node.js undici timeouts)
+  if (
+    errorText.includes("typeerror: fetch failed") ||
+    errorText.includes("network error") ||
+    errorText.includes("etimedout") ||
+    errorText.includes("econnreset") ||
+    errorText.includes("und_err_connect_timeout") ||
+    errorText.includes("und_err_headers_timeout")
+  ) {
+    customErrorMessage =
+      "A network error occurred while connecting to the API. This is often caused by a connection timeout or network instability. If you are using a proxy, verify it is working correctly. For large prompts, try a shorter message. You may also retry the request.";
+  }
+
   return {
     parsedError,
     statusCode,

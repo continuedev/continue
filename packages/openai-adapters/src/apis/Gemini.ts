@@ -78,6 +78,12 @@ export class GeminiApi implements BaseLlmApi {
       () =>
         new GoogleGenAI({
           apiKey: this.config.apiKey,
+          httpOptions: {
+            // Default Node.js fetch (undici) has aggressive timeouts (~10s connect)
+            // that are too short for Gemini's longer-running requests.
+            // 5 minutes allows for complex prompts and reasoning models.
+            timeout: 5 * 60 * 1000,
+          },
         }),
     );
   }
@@ -394,25 +400,48 @@ export class GeminiApi implements BaseLlmApi {
     }
   }
 
-  /**generates stream from @google/genai sdk */
+  /**generates stream from @google/genai sdk, with retry for transient network errors */
   private async generateStream(
     genAI: GoogleGenAI,
     model: string,
     convertedBody: ReturnType<typeof this._convertBody>,
   ) {
-    // Use native fetch temporarily for stream operation to get proper ReadableStream
-    // The withNativeFetch wrapper restores native fetch, makes the call, then reverts
-    return withNativeFetch(() =>
-      genAI.models.generateContentStream({
-        model,
-        contents: convertedBody.contents,
-        config: {
-          systemInstruction: convertedBody.systemInstruction,
-          tools: convertedBody.tools,
-          ...convertedBody.generationConfig,
-        },
-      }),
-    );
+    const maxRetries = 3;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        // Use native fetch temporarily for stream operation to get proper ReadableStream
+        // The withNativeFetch wrapper restores native fetch, makes the call, then reverts
+        return await withNativeFetch(() =>
+          genAI.models.generateContentStream({
+            model,
+            contents: convertedBody.contents,
+            config: {
+              systemInstruction: convertedBody.systemInstruction,
+              tools: convertedBody.tools,
+              ...convertedBody.generationConfig,
+            },
+          }),
+        );
+      } catch (error: any) {
+        const isTransient =
+          (error?.name === "TypeError" && error?.message === "fetch failed") ||
+          error?.cause?.code === "ETIMEDOUT" ||
+          error?.cause?.code === "ECONNRESET" ||
+          error?.cause?.code === "UND_ERR_CONNECT_TIMEOUT" ||
+          error?.cause?.code === "UND_ERR_HEADERS_TIMEOUT";
+
+        if (isTransient && attempt < maxRetries - 1) {
+          const delay = Math.pow(2, attempt) * 1000;
+          console.log(
+            `Gemini fetch failed (${error?.cause?.code ?? error?.message}). Retrying in ${delay / 1000}s (attempt ${attempt + 1}/${maxRetries})`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw new Error("Unreachable");
   }
 
   async *chatCompletionStream(
