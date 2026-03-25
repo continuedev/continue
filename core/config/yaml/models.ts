@@ -49,10 +49,12 @@ async function modelConfigToBaseLLM({
     config.requestOptions,
   );
 
+  const contextLength =
+    model.contextLength ?? model.defaultCompletionOptions?.contextLength;
+
   let options: LLMOptions = {
     ...rest,
-    contextLength:
-      model.contextLength ?? model.defaultCompletionOptions?.contextLength,
+    contextLength,
     completionOptions: {
       ...(model.defaultCompletionOptions ?? {}),
       model: model.model,
@@ -86,14 +88,14 @@ async function modelConfigToBaseLLM({
 
   // Model capabilities - need to be undefined if not found
   // To fallback to our autodetection
-  if (capabilities?.find((c) => c === "tool_use")) {
+  if (capabilities?.includes("tool_use")) {
     options.capabilities = {
       ...options.capabilities,
       tools: true,
     };
   }
 
-  if (capabilities?.find((c) => c === "image_input")) {
+  if (capabilities?.includes("image_input")) {
     options.capabilities = {
       ...options.capabilities,
       uploadImage: true,
