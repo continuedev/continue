@@ -120,7 +120,7 @@ export function analyzeError(
     helpUrl =
       "https://help.openai.com/en/articles/10910291-api-organization-verification";
     customErrorMessage =
-      'Your OpenAI organization must be verified for this feature. To avoid this, add "useResponsesApi": false to your model config to use the /chat/completions endpoint instead, or verify your organization via the help page.';
+      "Your OpenAI organization must be verified for this feature. To avoid this, add `useResponsesApi: false` to your model config to use the /chat/completions endpoint instead, or verify your organization via the help page.";
   }
 
   // Invalid API key detection
