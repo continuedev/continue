@@ -28,9 +28,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
     azure: (model) => {
+      const lower = model.toLowerCase();
       if (
-        model.toLowerCase().startsWith("gpt-4") ||
-        model.toLowerCase().startsWith("o3")
+        lower.startsWith("gpt-4") ||
+        lower.startsWith("gpt-5") ||
+        lower.startsWith("gpt-4.1") ||
+        lower.startsWith("o1") ||
+        lower.startsWith("o3") ||
+        lower.startsWith("o4")
       )
         return true;
       return false;
@@ -210,6 +215,10 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "devstral",
           "exaone",
           "gpt-oss",
+          "glm-4",
+          "glm-5",
+          "deepseek",
+          "dolphin",
         ].some((part) => modelName.toLowerCase().includes(part))
       ) {
         return true;
@@ -270,7 +279,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     deepseek: (model) => {
       // https://api-docs.deepseek.com/quick_start/pricing
       // https://api-docs.deepseek.com/guides/function_calling
-      if (model === "deepseek-reasoner" || model === "deepseek-chat") {
+      const lower = model.toLowerCase();
+      if (
+        lower === "deepseek-reasoner" ||
+        lower === "deepseek-chat" ||
+        lower.startsWith("deepseek-coder")
+      ) {
         return true;
       }
 
@@ -343,6 +357,8 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "amazon/nova",
         "deepseek/deepseek-r1",
         "deepseek/deepseek-chat",
+        "deepseek/deepseek-v3",
+        "deepseek/deepseek-coder",
         "meta-llama/llama-4",
         "all-hands/openhands-lm-32b",
         "lgai-exaone/exaone",
