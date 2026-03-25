@@ -809,7 +809,6 @@ declare global {
     | "currentFile"
     | "greptile"
     | "outline"
-    | "continue-proxy"
     | "highlights"
     | "file"
     | "issue"

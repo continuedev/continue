@@ -60,12 +60,7 @@ const saveSubsetFilters = [
   ]),
   createFilter("indexing", []),
   createFilter("tabs", ["tabs"]),
-  createFilter("profiles", [
-    "preferencesByProfileId",
-    "selectedProfileId",
-    "selectedOrganizationId",
-    "organizations",
-  ]),
+  createFilter("profiles", ["preferencesByProfileId", "selectedProfileId"]),
 ];
 
 const migrations: MigrationManifest = {

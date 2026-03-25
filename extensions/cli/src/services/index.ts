@@ -1,4 +1,3 @@
-import { loadAuthConfig } from "../auth/workos.js";
 import { HookService } from "../hooks/HookService.js";
 import { initializeWithOnboarding } from "../onboarding.js";
 import {
@@ -74,8 +73,7 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   }
   // Handle onboarding for TUI mode (headless: false) unless explicitly skipped
   if (!initOptions.headless && !initOptions.skipOnboarding) {
-    const authConfig = loadAuthConfig();
-    await initializeWithOnboarding(authConfig, commandOptions.config);
+    await initializeWithOnboarding(null, commandOptions.config);
   }
 
   // Handle ANTHROPIC_API_KEY in headless mode when no config path is provided
@@ -201,17 +199,6 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
         serviceContainer.get<AgentFileServiceState>(SERVICE_NAMES.AGENT_FILE),
       ]);
 
-      // Ensure organization is selected if authenticated
-      let finalAuthState = authState;
-      if (authState.authConfig) {
-        finalAuthState = await authService.ensureOrganization(
-          initOptions.headless ?? false,
-          commandOptions.org,
-        );
-        // Update the auth service state in container
-        serviceContainer.set(SERVICE_NAMES.AUTH, finalAuthState);
-      }
-
       if (!apiClientState.apiClient) {
         throw new Error("API client not available");
       }
@@ -220,28 +207,15 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
       // otherwise use initial options.config (for first initialization)
       // IMPORTANT: Always prefer explicit --config flag over saved state
       const currentState = configService.getState();
-      let configPath =
+      const configPath =
         commandOptions.config ||
         (currentState.configPath === undefined
           ? undefined
           : currentState.configPath);
 
-      // If no config path is available, check for saved config URI in auth config
-      if (!configPath) {
-        const { getConfigUri } = await import("../auth/workos.js");
-        const { uriToPath, uriToSlug } = await import("../auth/uriUtils.js");
-        const configUri = getConfigUri(finalAuthState.authConfig);
-        if (configUri) {
-          const filePath = uriToPath(configUri);
-          const slug = uriToSlug(configUri);
-          configPath = filePath || slug || undefined;
-        }
-      }
-
       return await configService.initialize({
-        authConfig: finalAuthState.authConfig,
+        authConfig: authState.authConfig,
         configPath,
-        // organizationId: finalAuthState.organizationId || null,
         apiClient: apiClientState.apiClient,
         agentFileState,
         injectedConfigOptions: commandOptions,

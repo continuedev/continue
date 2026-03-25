@@ -12,7 +12,7 @@ import React, {
  */
 export type NavigationScreen =
   | "chat" // Normal chat interface
-  | "config" // Config selector (includes organization switching)
+  | "config" // Config selector
   | "model" // Model selector
   | "login" // Login prompt
   | "mcp" // MCP selector
@@ -20,8 +20,7 @@ export type NavigationScreen =
   | "diff" // Full-screen diff overlay
   | "update" // Update selector
   | "edit" // Edit message selector
-  | "jobs" // Background Jobs selector
-  | "session"; // Session selector
+  | "jobs"; // Background Jobs selector;
 
 interface NavigationState {
   currentScreen: NavigationScreen;

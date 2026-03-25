@@ -88,7 +88,6 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
           </React.Fragment>
         )}
       </Box>
-      <Box />
       <Box marginRight={2} marginLeft={2}>
         <UpdateNotification isRemoteMode={isRemoteMode} />
       </Box>

@@ -4,7 +4,6 @@ export type ConfigTab =
   | "rules"
   | "tools"
   | "configs"
-  | "organizations"
   | "indexing"
   | "settings"
   | "help";
@@ -30,7 +29,6 @@ export const CONFIG_ROUTES = {
   RULES: buildConfigRoute("rules"),
   TOOLS: buildConfigRoute("tools"),
   CONFIGS: buildConfigRoute("configs"),
-  ORGANIZATIONS: buildConfigRoute("organizations"),
   INDEXING: buildConfigRoute("indexing"),
   SETTINGS: buildConfigRoute("settings"),
   HELP: buildConfigRoute("help"),

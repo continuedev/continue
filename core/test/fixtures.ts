@@ -1,5 +1,4 @@
 import { ConfigHandler } from "../config/ConfigHandler";
-import { ControlPlaneClient } from "../control-plane/client";
 import Mock from "../llm/llms/Mock";
 import { LLMLogger } from "../llm/logger";
 import FileSystemIde from "../util/filesystem";
@@ -10,16 +9,7 @@ export const testIde = new FileSystemIde(TEST_DIR);
 
 export const ideSettingsPromise = testIde.getIdeSettings();
 
-export const testControlPlaneClient = new ControlPlaneClient(
-  Promise.resolve(undefined),
-  testIde,
-);
-
-export const testConfigHandler = new ConfigHandler(
-  testIde,
-  new LLMLogger(),
-  Promise.resolve(undefined),
-);
+export const testConfigHandler = new ConfigHandler(testIde, new LLMLogger());
 
 export const testLLM = new Mock({
   model: "mock-model",

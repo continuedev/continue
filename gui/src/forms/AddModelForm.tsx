@@ -18,7 +18,6 @@ import { updateSelectedModelByRole } from "../redux/thunks/updateSelectedModelBy
 
 interface AddModelFormProps {
   onDone: () => void;
-  hideFreeTrialLimitMessage?: boolean;
 }
 
 const MODEL_PROVIDERS_URL =
@@ -26,10 +25,7 @@ const MODEL_PROVIDERS_URL =
 const CODESTRAL_URL = "https://console.mistral.ai/codestral";
 const CONTINUE_SETUP_URL = "https://docs.continue.dev/setup/overview";
 
-export function AddModelForm({
-  onDone,
-  hideFreeTrialLimitMessage,
-}: AddModelFormProps) {
+export function AddModelForm({ onDone }: AddModelFormProps) {
   const [selectedProvider, setSelectedProvider] = useState<ProviderInfo>(
     providers["openai"]!,
   );

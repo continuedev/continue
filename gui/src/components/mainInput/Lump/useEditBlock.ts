@@ -9,32 +9,15 @@ export function useEditBlock() {
   const { selectedProfile } = useAuth();
 
   return (slug?: string, sourceFile?: string) => {
-    if (slug) {
-      ideMessenger.post("controlPlane/openUrl", {
-        path: `${slug}/new-version`,
-        orgSlug: undefined,
-      });
-    } else if (sourceFile) {
+    if (sourceFile) {
       ideMessenger.post("openFile", {
         path: sourceFile,
       });
-    } else if (
-      selectedProfile?.profileType === "local" &&
-      selectedProfile?.uri
-    ) {
+    } else if (selectedProfile?.uri) {
       ideMessenger.post("openFile", {
         path: selectedProfile.uri,
       });
-    } else if (
-      selectedProfile?.fullSlug?.ownerSlug &&
-      selectedProfile?.fullSlug.packageSlug
-    ) {
-      ideMessenger.post("controlPlane/openUrl", {
-        path: `${selectedProfile.fullSlug.ownerSlug}/${selectedProfile.fullSlug.packageSlug}/new-version`,
-        orgSlug: undefined,
-      });
     } else {
-      // Local etc
       ideMessenger.post("config/openProfile", {
         profileId: undefined,
       });

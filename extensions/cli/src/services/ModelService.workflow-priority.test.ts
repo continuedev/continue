@@ -48,7 +48,7 @@ describe("ModelService agent file model prioritization", () => {
       models: mockModels,
     } as AssistantUnrolled;
 
-    mockAuthConfig = {} as AuthConfig;
+    mockAuthConfig = null;
 
     // Reset mocks
     vi.clearAllMocks();

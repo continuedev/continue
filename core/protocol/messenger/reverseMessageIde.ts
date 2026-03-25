@@ -109,11 +109,6 @@ export class ReverseMessageIde {
       return this.ide.showLines(data.filepath, data.startLine, data.endLine);
     });
 
-    this.on("getControlPlaneSessionInfo", async (msg) => {
-      // Not supported in testing
-      return undefined;
-    });
-
     this.on("writeFile", (data) => {
       return this.ide.writeFile(data.path, data.contents);
     });

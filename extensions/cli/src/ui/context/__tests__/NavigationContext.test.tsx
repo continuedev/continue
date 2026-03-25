@@ -78,6 +78,7 @@ describe("NavigationContext", () => {
           "chat",
           "config",
           "model",
+
           "login",
           "mcp",
         ];
@@ -303,6 +304,22 @@ describe("NavigationContext", () => {
         expect(result.current.isScreenActive("config")).toBe(true);
 
         // Close after selection
+        act(() => {
+          result.current.closeCurrentScreen();
+        });
+        expect(result.current.isScreenActive("chat")).toBe(true);
+      });
+
+      it("handles config selection flow", () => {
+        const { result } = renderHook(() => useNavigation(), { wrapper });
+
+        // Navigate to config
+        act(() => {
+          result.current.navigateTo("config");
+        });
+        expect(result.current.isScreenActive("config")).toBe(true);
+
+        // Return to chat
         act(() => {
           result.current.closeCurrentScreen();
         });

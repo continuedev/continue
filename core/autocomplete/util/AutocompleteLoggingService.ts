@@ -119,7 +119,6 @@ export class AutocompleteLoggingService {
       time: restOfOutcome.time,
       useRecentlyEdited: restOfOutcome.useRecentlyEdited,
       numLines: restOfOutcome.numLines,
-      profileType: restOfOutcome.profileType,
     };
   }
 }

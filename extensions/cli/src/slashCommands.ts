@@ -1,15 +1,9 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 import chalk from "chalk";
 
-import {
-  isAuthenticated,
-  isAuthenticatedConfig,
-  loadAuthConfig,
-} from "./auth/workos.js";
 import { getAllSlashCommands } from "./commands/commands.js";
 import { handleInit } from "./commands/init.js";
 import { handleInfoSlashCommand } from "./infoScreen.js";
-import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
@@ -17,8 +11,6 @@ import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
 type CommandHandler = (
   args: string[],
   assistant: AssistantConfig,
-  remoteUrl?: string,
-  options?: { isRemoteMode?: boolean },
 ) => Promise<SlashCommandResult> | SlashCommandResult;
 
 async function handleHelp(_args: string[], _assistant: AssistantConfig) {
@@ -50,69 +42,6 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
     `  Type ${chalk.cyan("!")} followed by a command to execute bash directly`,
   ].join("\n");
   return { output: helpMessage };
-}
-
-async function handleLogin() {
-  try {
-    const newAuthState = await services.auth.login();
-    await reloadService(SERVICE_NAMES.AUTH);
-
-    const userInfo =
-      newAuthState.authConfig && isAuthenticatedConfig(newAuthState.authConfig)
-        ? newAuthState.authConfig.userEmail || newAuthState.authConfig.userId
-        : "user";
-
-    console.info(chalk.green(`\nLogged in as ${userInfo}`));
-
-    return {
-      exit: false,
-      output: "Login successful! All services updated automatically.",
-    };
-  } catch (error: any) {
-    console.error(chalk.red(`\nLogin failed: ${error.message}`));
-    return {
-      exit: false,
-      output: `Login failed: ${error.message}`,
-    };
-  }
-}
-
-async function handleLogout() {
-  try {
-    await services.auth.logout();
-    return {
-      exit: true,
-      output: "Logged out successfully",
-    };
-  } catch {
-    return {
-      exit: true,
-      output: "Logged out successfully",
-    };
-  }
-}
-
-async function handleWhoami() {
-  const authed = await isAuthenticated();
-  if (authed) {
-    const config = loadAuthConfig(); // TODO duplicate auth config loading
-    if (config && isAuthenticatedConfig(config)) {
-      return {
-        exit: false,
-        output: `Logged in as ${config.userEmail || config.userId}`,
-      };
-    } else {
-      return {
-        exit: false,
-        output: "Authenticated via environment variable",
-      };
-    }
-  } else {
-    return {
-      exit: false,
-      output: "Not logged in. Use /login to authenticate.",
-    };
-  }
 }
 
 async function handleFork() {
@@ -185,9 +114,6 @@ const commandHandlers: Record<string, CommandHandler> = {
   config: () => {
     return { openConfigSelector: true };
   },
-  login: handleLogin,
-  logout: handleLogout,
-  whoami: handleWhoami,
   info: handleInfoSlashCommand,
   model: () => ({ openModelSelector: true }),
   compact: () => {
@@ -215,7 +141,6 @@ const commandHandlers: Record<string, CommandHandler> = {
 export async function handleSlashCommands(
   input: string,
   assistant: AssistantConfig,
-  options?: { remoteUrl?: string; isRemoteMode?: boolean },
 ): Promise<SlashCommandResult | null> {
   // Only trigger slash commands if slash is the very first character
   if (!input.startsWith("/") || !input.trim().startsWith("/")) {
@@ -228,7 +153,7 @@ export async function handleSlashCommands(
 
   const handler = commandHandlers[command];
   if (handler) {
-    return await handler(args, assistant, options?.remoteUrl, options);
+    return await handler(args, assistant);
   }
 
   // Check for custom assistant prompts
@@ -256,9 +181,7 @@ export async function handleSlashCommands(
   }
 
   // Check if this command would match any available commands (same logic as UI)
-  const allCommands = getAllSlashCommands(assistant, {
-    isRemoteMode: options?.isRemoteMode,
-  });
+  const allCommands = getAllSlashCommands(assistant);
   const hasMatches = allCommands.some((cmd) =>
     cmd.name.toLowerCase().includes(command.toLowerCase()),
   );

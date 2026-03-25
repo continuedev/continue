@@ -1,5 +1,5 @@
 import { OnboardingModes } from "core/protocol/core";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv } from ".";
@@ -39,7 +39,6 @@ const GridDiv = styled.div`
 `;
 
 const Layout = () => {
-  const [showStagingIndicator, setShowStagingIndicator] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -54,17 +53,6 @@ const Layout = () => {
   const isHome =
     location.pathname === ROUTES.HOME ||
     location.pathname === ROUTES.HOME_INDEX;
-
-  useEffect(() => {
-    (async () => {
-      const response = await ideMessenger.request(
-        "controlPlane/getEnvironment",
-        undefined,
-      );
-      response.status === "success" &&
-        setShowStagingIndicator(response.content.AUTH_TYPE.includes("staging"));
-    })();
-  }, []);
 
   useWebviewListener(
     "newSession",

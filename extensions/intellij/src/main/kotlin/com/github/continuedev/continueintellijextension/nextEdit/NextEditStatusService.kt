@@ -1,6 +1,5 @@
 package com.github.continuedev.continueintellijextension.nextEdit
 
-import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.`continue`.ProfileInfoService
 import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.intellij.openapi.components.Service
@@ -10,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.text.endsWith
+
 
 /**
  * This cache-like service is introduced to enable checking the Next Edit status in a non-blocking way (e.g., while
@@ -45,16 +44,6 @@ class NextEditStatusService(private val project: Project) {
 
     private suspend fun isNextEditEnabledAsync(project: Project): Boolean {
         return try {
-            // NOTE: Quick filter for non-continue users.
-            // Remove this once we have a FIM - Next Edit toggle UI.
-            val authService = project.service<ContinueAuthService>()
-            val sessionInfo = authService.loadControlPlaneSessionInfo()
-            val userEmail = sessionInfo?.account?.id
-
-            if (userEmail == null || !userEmail.endsWith("@continue.dev")) {
-                return false
-            }
-
             val profileInfoService = project.service<ProfileInfoService>()
             val selectedModelByRole = profileInfoService.fetchSelectedModelByRoleOrNull()
 

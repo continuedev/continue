@@ -47,24 +47,6 @@ describe("E2E: Basic Commands", () => {
       const result = await runCLI(context, { args: ["--help"] });
 
       expect(result.stdout).toContain("Commands:");
-      expect(result.stdout).toContain("login");
-      expect(result.stdout).toContain("logout");
-    });
-  });
-
-  describe("subcommand help", () => {
-    it("should show help for login command", async () => {
-      const result = await runCLI(context, { args: ["login", "--help"] });
-
-      expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain("Authenticate with Continue");
-    });
-
-    it("should show help for logout command", async () => {
-      const result = await runCLI(context, { args: ["logout", "--help"] });
-
-      expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain("Log out from Continue");
     });
   });
 

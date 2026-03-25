@@ -1,9 +1,7 @@
 package com.github.continuedev.continueintellijextension.activities
 
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
-import com.github.continuedev.continueintellijextension.auth.AuthListener
-import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
-import com.github.continuedev.continueintellijextension.auth.ControlPlaneSessionInfo
+
 import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService.Companion.getBrowser
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.`continue`.*
@@ -255,34 +253,6 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
             connection.subscribe(LafManagerListener.TOPIC, LafManagerListener {
                 val colors = GetTheme().getTheme()
                 project.getBrowser()?.sendToWebview("jetbrains/setColors", colors)
-            })
-
-            // Listen for clicking settings button to start the auth flow
-            val authService = service<ContinueAuthService>()
-            val initialSessionInfo = authService.loadControlPlaneSessionInfo()
-
-            if (initialSessionInfo != null) {
-                val data = mapOf(
-                    "sessionInfo" to initialSessionInfo
-                )
-                continuePluginService.coreMessenger?.request("didChangeControlPlaneSessionInfo", data, null) { _ -> }
-            }
-
-            connection.subscribe(AuthListener.TOPIC, object : AuthListener {
-                override fun startAuthFlow() {
-                    authService.startAuthFlow(project, false)
-                }
-
-                override fun handleUpdatedSessionInfo(sessionInfo: ControlPlaneSessionInfo?) {
-                    val data = mapOf(
-                        "sessionInfo" to sessionInfo
-                    )
-                    continuePluginService.coreMessenger?.request(
-                        "didChangeControlPlaneSessionInfo",
-                        data,
-                        null
-                    ) { _ -> }
-                }
             })
 
             val listener =

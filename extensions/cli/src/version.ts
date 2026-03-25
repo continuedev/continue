@@ -4,7 +4,6 @@ import { fileURLToPath } from "url";
 
 import node_machine_id from "node-machine-id";
 
-import { isAuthenticatedConfig, loadAuthConfig } from "./auth/workos.js";
 import { logger } from "./util/logger.js";
 
 export function getVersion(): string {
@@ -21,13 +20,6 @@ export function getVersion(): string {
 }
 
 function getEventUserId(): string {
-  const authConfig = loadAuthConfig();
-
-  if (isAuthenticatedConfig(authConfig)) {
-    return authConfig.userId;
-  }
-
-  // Fall back to unique machine id if not signed in
   return node_machine_id.machineIdSync();
 }
 

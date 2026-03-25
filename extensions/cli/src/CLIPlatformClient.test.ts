@@ -143,7 +143,7 @@ describe("CLIPlatformClient", () => {
       );
     });
 
-    it("keeps API results with secretLocation but no value (free_trial)", async () => {
+    it("keeps API results with secretLocation but no value (models_add_on)", async () => {
       const fqsn: FQSN = {
         packageSlugs: [{ ownerSlug: "openai", packageSlug: "gpt-4" }],
         secretName: "OPENAI_API_KEY",
@@ -153,12 +153,12 @@ describe("CLIPlatformClient", () => {
       vi.stubEnv("OPENAI_API_KEY", undefined as unknown as string);
       vi.mocked(fs.existsSync).mockReturnValue(false);
 
-      // API returns a free_trial result
+      // API returns a models_add_on result
       const apiResult: SecretResult = {
         found: true,
         fqsn,
         secretLocation: {
-          secretType: SecretType.FreeTrial,
+          secretType: SecretType.ModelsAddOn,
           blockSlug: { ownerSlug: "openai", packageSlug: "gpt-4" },
           secretName: "OPENAI_API_KEY",
         },
@@ -171,7 +171,7 @@ describe("CLIPlatformClient", () => {
       expect(results).toHaveLength(1);
       expect(results[0]).toEqual(apiResult);
       expect((results[0] as any).secretLocation.secretType).toBe(
-        SecretType.FreeTrial,
+        SecretType.ModelsAddOn,
       );
     });
 
