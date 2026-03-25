@@ -33,6 +33,19 @@ export function addModel(
         return config;
       }
 
+      // If a model with the same provider and model name exists,
+      // update it instead of creating a duplicate (e.g. when re-entering an API key)
+      const existingIndex = config.models?.findIndex(
+        (m: any) => m.provider === model.provider && m.model === model.model,
+      );
+      if (existingIndex !== undefined && existingIndex >= 0) {
+        config.models[existingIndex] = {
+          ...config.models[existingIndex],
+          ...model,
+        };
+        return config;
+      }
+
       const numMatches = config.models?.reduce(
         (prev, curr) => (curr.title.startsWith(model.title) ? prev + 1 : prev),
         0,
@@ -57,6 +70,27 @@ export function addModel(
       return config;
     },
     (config) => {
+      if (!config.models) {
+        config.models = [];
+      }
+
+      // If a model with the same provider and model name exists,
+      // update it instead of creating a duplicate (e.g. when re-entering an API key)
+      const existingIndex = config.models.findIndex(
+        (m: any) => m.provider === model.provider && m.model === model.model,
+      );
+      if (existingIndex >= 0) {
+        config.models[existingIndex] = {
+          ...config.models[existingIndex],
+          name: model.title,
+          apiKey: model.apiKey,
+          apiBase: model.apiBase,
+          maxStopWords: model.maxStopWords,
+          defaultCompletionOptions: model.completionOptions,
+        };
+        return config;
+      }
+
       const numMatches = config.models?.reduce(
         (prev, curr) =>
           "name" in curr && curr.name.startsWith(model.title) ? prev + 1 : prev,
@@ -64,10 +98,6 @@ export function addModel(
       );
       if (numMatches !== undefined && numMatches > 0) {
         model.title = `${model.title} (${numMatches})`;
-      }
-
-      if (!config.models) {
-        config.models = [];
       }
 
       const desc: ModelConfig = {
