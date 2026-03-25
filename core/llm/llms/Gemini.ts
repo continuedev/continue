@@ -1,5 +1,4 @@
 import { streamResponse } from "@continuedev/fetch";
-import { mergeConsecutiveGeminiMessages } from "@continuedev/openai-adapters";
 import { v4 as uuidv4 } from "uuid";
 import {
   AssistantChatMessage,
@@ -23,6 +22,7 @@ import {
   GeminiGenerationConfig,
   GeminiToolFunctionDeclaration,
   convertContinueToolToGeminiFunction,
+  mergeConsecutiveGeminiMessages,
 } from "./gemini-types";
 
 interface GeminiToolCallDelta extends ToolCallDelta {
