@@ -7,10 +7,10 @@ import { Text } from "ink";
 import React, { useEffect, useState } from "react";
 
 export function isModelUsingFreeTrial(model: ModelConfig): boolean {
-  return (
-    model.provider === "continue-proxy" &&
-    !!model.apiKeyLocation?.startsWith("free_trial:")
-  );
+  if (model.provider !== "continue-proxy") {
+    return false;
+  }
+  return !!model.apiKeyLocation?.startsWith("free_trial:");
 }
 
 interface FreeTrialStatusProps {
