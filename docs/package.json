@@ -21,18 +21,12 @@
     "tar-fs": "^3.1.2"
   },
   "overrides": {
-    "express": "^4.22.1",
-    "body-parser": "^2.2.2",
-    "qs": "^6.15.0",
-    "cookie": "^1.1.1",
-    "send": "^1.2.1",
-    "serve-static": "^2.2.1",
-    "path-to-regexp": "^8.3.0",
+    "express": "^4.21.2",
+    "qs": "^6.14.2",
     "tar": "^7.5.13",
     "js-yaml": "^4.1.1",
     "lodash": "^4.17.23",
     "zod": "^3.24.0",
-    "minimatch": "^10.2.4",
     "axios": "^1.13.6",
     "@orpc/openapi": "^1.13.11",
     "kysely": "^0.28.14"

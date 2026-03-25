@@ -564,7 +564,6 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       },
     ],
     packages: [
-      models.llama31405bChat,
       models.llama3170bChat,
       models.llama318bChat,
       { ...models.mixtralTrial, title: "Mixtral" },
