@@ -1497,6 +1497,10 @@
             "properties": {
               "useLegacyCompletionsEndpoint": {
                 "type": "boolean"
+              },
+              "useResponsesApi": {
+                "type": "boolean",
+                "description": "When set to false, forces the use of /chat/completions instead of the /responses endpoint for o-series and gpt-5 models. This can help avoid 'organization must be verified' errors related to reasoning summaries and streaming."
               }
             }
           }
