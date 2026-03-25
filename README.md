@@ -80,6 +80,10 @@ Looking for the VS Code extension? [See here](extensions/vscode/README.md).
 Read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md), and
 join the [GitHub Discussions](https://github.com/continuedev/continue/discussions).
 
+## AI Checks
+
+AI checks are markdown files that define code quality standards — each one runs as a full AI agent on every PR, catching issues that linters and tests can't express. Follow the [continuedev/checks](https://github.com/continuedev/checks) README to set up your first check.
+
 ## License
 
 [Apache 2.0 © 2023-2024 Continue Dev, Inc.](./LICENSE)
