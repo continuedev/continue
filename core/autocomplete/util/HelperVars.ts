@@ -11,6 +11,7 @@ import {
 import { constructInitialPrefixSuffix } from "../templating/constructPrefixSuffix";
 
 import { AstPath, getAst, getTreePathAtCursor } from "./ast";
+import { AutocompleteReadCache } from "./AutocompleteReadCache";
 import { AutocompleteInput } from "./types";
 
 /**
@@ -26,6 +27,8 @@ export class HelperVars {
   private _fileLines: string[] | undefined;
   private _fullPrefix: string | undefined;
   private _fullSuffix: string | undefined;
+  private _fullPrefixLines: string[] | undefined;
+  private _fullSuffixLines: string[] | undefined;
   private _prunedPrefix: string | undefined;
   private _prunedSuffix: string | undefined;
 
@@ -47,15 +50,17 @@ export class HelperVars {
 
     this._fileContents =
       this.input.manuallyPassFileContents ??
-      (await this.ide.readFile(this.filepath));
+      (await AutocompleteReadCache.read(this.ide, this.filepath));
 
     this._fileLines = this._fileContents.split("\n");
 
     // Construct full prefix/suffix (a few edge cases handled in here)
     const { prefix: fullPrefix, suffix: fullSuffix } =
-      await constructInitialPrefixSuffix(this.input, this.ide);
+      constructInitialPrefixSuffix(this.input, this._fileContents);
     this._fullPrefix = fullPrefix;
     this._fullSuffix = fullSuffix;
+    this._fullPrefixLines = fullPrefix.split("\n");
+    this._fullSuffixLines = fullSuffix.split("\n");
 
     const { prunedPrefix, prunedSuffix } = this.prunePrefixSuffix();
     this._prunedPrefix = prunedPrefix;
@@ -156,6 +161,24 @@ export class HelperVars {
       );
     }
     return this._fullSuffix;
+  }
+
+  get fullPrefixLines(): string[] {
+    if (this._fullPrefixLines === undefined) {
+      throw new Error(
+        "HelperVars must be initialized before accessing fullPrefixLines",
+      );
+    }
+    return this._fullPrefixLines;
+  }
+
+  get fullSuffixLines(): string[] {
+    if (this._fullSuffixLines === undefined) {
+      throw new Error(
+        "HelperVars must be initialized before accessing fullSuffixLines",
+      );
+    }
+    return this._fullSuffixLines;
   }
 
   get prunedPrefix(): string {

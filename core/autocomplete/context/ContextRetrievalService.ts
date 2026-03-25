@@ -38,8 +38,8 @@ export class ContextRetrievalService {
       const { imports } = fileInfo;
       // Look for imports of any symbols around the current range
       const textAroundCursor =
-        helper.fullPrefix.split("\n").slice(-5).join("\n") +
-        helper.fullSuffix.split("\n").slice(0, 3).join("\n");
+        helper.fullPrefixLines.slice(-5).join("\n") +
+        helper.fullSuffixLines.slice(0, 3).join("\n");
       const symbols = Array.from(getSymbolsForSnippet(textAroundCursor)).filter(
         (symbol) => !helper.lang.topLevelKeywords.includes(symbol),
       );

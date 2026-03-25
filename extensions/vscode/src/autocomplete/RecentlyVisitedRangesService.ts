@@ -7,47 +7,34 @@ import { isSecurityConcern } from "core/indexing/ignore";
 import { LRUCache } from "lru-cache";
 import * as vscode from "vscode";
 
+interface VisitedPosition {
+  line: number;
+  timestamp: number;
+}
+
 /**
  * Service to keep track of recently visited ranges in files.
+ * Stores only cursor positions on selection change, deferring file reads
+ * to getSnippets() time to avoid expensive I/O on every cursor move.
  */
 export class RecentlyVisitedRangesService {
-  private cache: LRUCache<
-    string,
-    Array<AutocompleteCodeSnippet & { timestamp: number }>
-  >;
-  // Default value, we override in initWithPostHog
+  private cache: LRUCache<string, VisitedPosition[]>;
   private numSurroundingLines = 20;
   private maxRecentFiles = 3;
   private maxSnippetsPerFile = 3;
-  private isEnabled = true;
+  private disposable: vscode.Disposable | undefined;
 
   constructor(private readonly ide: IDE) {
-    this.cache = new LRUCache<
-      string,
-      Array<AutocompleteCodeSnippet & { timestamp: number }>
-    >({
+    this.cache = new LRUCache<string, VisitedPosition[]>({
       max: this.maxRecentFiles,
     });
 
-    void this.initWithPostHog();
+    this.disposable = vscode.window.onDidChangeTextEditorSelection(
+      this.cacheCurrentSelectionPosition,
+    );
   }
 
-  private async initWithPostHog() {
-    // TODO merge this and re-enable https://github.com/continuedev/continue/pull/8364
-    // const recentlyVisitedRangesNumSurroundingLines =
-    //   await Telemetry.getValueForFeatureFlag(
-    //     PosthogFeatureFlag.RecentlyVisitedRangesNumSurroundingLines,
-    //   );
-    // if (recentlyVisitedRangesNumSurroundingLines) {
-    //   this.isEnabled = true;
-    //   this.numSurroundingLines = recentlyVisitedRangesNumSurroundingLines;
-    // }
-    // vscode.window.onDidChangeTextEditorSelection(
-    //   this.cacheCurrentSelectionContext,
-    // );
-  }
-
-  private cacheCurrentSelectionContext = async (
+  private cacheCurrentSelectionPosition = (
     event: vscode.TextEditorSelectionChangeEvent,
   ) => {
     const fsPath = event.textEditor.document.fileName;
@@ -56,77 +43,89 @@ export class RecentlyVisitedRangesService {
     }
     const filepath = event.textEditor.document.uri.toString();
     const line = event.selections[0].active.line;
-    const startLine = Math.max(0, line - this.numSurroundingLines);
-    const endLine = Math.min(
-      line + this.numSurroundingLines,
-      event.textEditor.document.lineCount - 1,
-    );
 
-    try {
-      const fileContents = await this.ide.readFile(filepath);
-      const lines = fileContents.split("\n");
-      const relevantLines = lines
-        .slice(startLine, endLine + 1)
-        .join("\n")
-        .trim();
+    const position: VisitedPosition = {
+      line,
+      timestamp: Date.now(),
+    };
 
-      const snippet: AutocompleteCodeSnippet & { timestamp: number } = {
-        filepath,
-        content: relevantLines,
-        type: AutocompleteSnippetType.Code,
-        timestamp: Date.now(),
-      };
+    const existing = this.cache.get(filepath) || [];
+    const newPositions = [...existing, position]
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, this.maxSnippetsPerFile);
 
-      const existing = this.cache.get(filepath) || [];
-      const newSnippets = [...existing, snippet]
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, this.maxSnippetsPerFile);
-
-      this.cache.set(filepath, newSnippets);
-    } catch (err) {
-      console.error(
-        "Error caching recently visited ranges for autocomplete: ",
-        err,
-      );
-      return;
-    }
+    this.cache.set(filepath, newPositions);
   };
 
   /**
    * Returns up to {@link maxSnippetsPerFile} snippets from the {@link maxRecentFiles} most recently visited files.
    * Excludes snippets from the currently active file.
+   * File contents are read lazily here rather than on every cursor move.
    * @returns Array of code snippets from recently visited files
    */
-  public getSnippets(): AutocompleteCodeSnippet[] {
-    if (!this.isEnabled) {
-      return [];
-    }
-
+  public async getSnippets(): Promise<AutocompleteCodeSnippet[]> {
     const currentFilepath =
       vscode.window.activeTextEditor?.document.uri.toString();
-    let allSnippets: Array<AutocompleteCodeSnippet & { timestamp: number }> =
-      [];
 
-    // Get most recent snippets from each file in cache
+    const allPositions: Array<{
+      filepath: string;
+      position: VisitedPosition;
+    }> = [];
+
     for (const filepath of Array.from(this.cache.keys())) {
-      const snippets = (this.cache.get(filepath) || [])
+      if (
+        filepath === currentFilepath ||
+        filepath.startsWith("output:extension-output-Continue.continue")
+      ) {
+        continue;
+      }
+
+      const positions = (this.cache.get(filepath) || [])
         .sort((a, b) => b.timestamp - a.timestamp)
         .slice(0, this.maxSnippetsPerFile);
-      allSnippets = [...allSnippets, ...snippets];
+
+      for (const position of positions) {
+        allPositions.push({ filepath, position });
+      }
     }
 
-    return allSnippets
-      .filter(
-        (s) =>
-          !currentFilepath ||
-          (s.filepath !== currentFilepath &&
-            // Exclude Continue's own output as it makes it super-hard for users to test the autocomplete feature
-            // while looking at the prompts in the Continue's output
-            !s.filepath.startsWith(
-              "output:extension-output-Continue.continue",
-            )),
-      )
-      .sort((a, b) => b.timestamp - a.timestamp)
-      .map(({ timestamp, ...snippet }) => snippet);
+    // Sort all positions by timestamp, most recent first
+    allPositions.sort((a, b) => b.position.timestamp - a.position.timestamp);
+
+    const snippets: AutocompleteCodeSnippet[] = [];
+
+    for (const { filepath, position } of allPositions) {
+      try {
+        const fileContents = await this.ide.readFile(filepath);
+        const lines = fileContents.split("\n");
+        const startLine = Math.max(0, position.line - this.numSurroundingLines);
+        const endLine = Math.min(
+          position.line + this.numSurroundingLines,
+          lines.length - 1,
+        );
+
+        const relevantLines = lines
+          .slice(startLine, endLine + 1)
+          .join("\n")
+          .trim();
+
+        if (relevantLines) {
+          snippets.push({
+            filepath,
+            content: relevantLines,
+            type: AutocompleteSnippetType.Code,
+          });
+        }
+      } catch {
+        // File may have been deleted or become inaccessible
+        continue;
+      }
+    }
+
+    return snippets;
+  }
+
+  public dispose(): void {
+    this.disposable?.dispose();
   }
 }

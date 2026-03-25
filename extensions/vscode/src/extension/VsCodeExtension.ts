@@ -481,121 +481,129 @@ export class VsCodeExtension {
     }
 
     // Initialize document content cache for tracking pre-edit content
-    vscode.workspace.onDidOpenTextDocument((document) => {
-      initDocumentContentCache(document);
-    });
+    context.subscriptions.push(
+      vscode.workspace.onDidOpenTextDocument((document) => {
+        initDocumentContentCache(document);
+      }),
+    );
 
     // Initialize cache for all currently open documents
     for (const document of vscode.workspace.textDocuments) {
       initDocumentContentCache(document);
     }
 
-    vscode.workspace.onDidChangeTextDocument(async (event) => {
-      if (event.contentChanges.length > 0) {
-        selectionManager.documentChanged();
-      }
+    context.subscriptions.push(
+      vscode.workspace.onDidChangeTextDocument(async (event) => {
+        if (event.contentChanges.length > 0) {
+          selectionManager.documentChanged();
+        }
 
-      const editInfo = await handleTextDocumentChange(
-        event,
-        this.configHandler,
-        this.ide,
-        this.completionProvider,
-        getDefinitionsFromLsp,
-      );
+        const editInfo = await handleTextDocumentChange(
+          event,
+          this.configHandler,
+          this.ide,
+          this.completionProvider,
+          getDefinitionsFromLsp,
+        );
 
-      if (editInfo) this.core.invoke("files/smallEdit", editInfo);
-    });
+        if (editInfo) this.core.invoke("files/smallEdit", editInfo);
+      }),
+    );
 
-    vscode.workspace.onDidSaveTextDocument(async (event) => {
-      this.core.invoke("files/changed", {
-        uris: [event.uri.toString()],
-      });
-    });
+    context.subscriptions.push(
+      vscode.workspace.onDidSaveTextDocument(async (event) => {
+        this.core.invoke("files/changed", {
+          uris: [event.uri.toString()],
+        });
+      }),
+    );
 
-    vscode.workspace.onDidDeleteFiles(async (event) => {
-      this.core.invoke("files/deleted", {
-        uris: event.files.map((uri) => uri.toString()),
-      });
-    });
+    context.subscriptions.push(
+      vscode.workspace.onDidDeleteFiles(async (event) => {
+        this.core.invoke("files/deleted", {
+          uris: event.files.map((uri) => uri.toString()),
+        });
+      }),
+    );
 
-    vscode.workspace.onDidCloseTextDocument(async (event) => {
-      clearDocumentContentCache(event.uri.toString());
-      this.core.invoke("files/closed", {
-        uris: [event.uri.toString()],
-      });
-    });
+    context.subscriptions.push(
+      vscode.workspace.onDidCloseTextDocument(async (event) => {
+        clearDocumentContentCache(event.uri.toString());
+        this.core.invoke("files/closed", {
+          uris: [event.uri.toString()],
+        });
+      }),
+    );
 
-    vscode.workspace.onDidCreateFiles(async (event) => {
-      this.core.invoke("files/created", {
-        uris: event.files.map((uri) => uri.toString()),
-      });
-    });
+    context.subscriptions.push(
+      vscode.workspace.onDidCreateFiles(async (event) => {
+        this.core.invoke("files/created", {
+          uris: event.files.map((uri) => uri.toString()),
+        });
+      }),
+    );
 
-    vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
-      const dirs = vscode.workspace.workspaceFolders?.map(
-        (folder) => folder.uri,
-      );
+    context.subscriptions.push(
+      vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
+        const dirs = vscode.workspace.workspaceFolders?.map(
+          (folder) => folder.uri,
+        );
 
-      this.ideUtils.setWokspaceDirectories(dirs);
+        this.ideUtils.setWokspaceDirectories(dirs);
 
-      this.core.invoke("index/forceReIndex", {
-        dirs: [
-          ...event.added.map((folder) => folder.uri.toString()),
-          ...event.removed.map((folder) => folder.uri.toString()),
-        ],
-      });
-    });
-
-    // TODO merge this and re-enable https://github.com/continuedev/continue/pull/8364
-    // vscode.workspace.onDidOpenTextDocument(async (event) => {
-    //   const ast = await getAst(event.fileName, event.getText());
-    //   if (ast) {
-    //     DocumentHistoryTracker.getInstance().addDocument(
-    //       localPathOrUriToPath(event.fileName),
-    //       event.getText(),
-    //       ast,
-    //     );
-    //   }
-    // });
+        this.core.invoke("index/forceReIndex", {
+          dirs: [
+            ...event.added.map((folder) => folder.uri.toString()),
+            ...event.removed.map((folder) => folder.uri.toString()),
+          ],
+        });
+      }),
+    );
 
     // When GitHub sign-in status changes, reload config
-    vscode.authentication.onDidChangeSessions(async (e) => {
-      const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      if (e.provider.id === env.AUTH_TYPE) {
-        void vscode.commands.executeCommand(
-          "setContext",
-          "continue.isSignedInToControlPlane",
-          true,
-        );
+    context.subscriptions.push(
+      vscode.authentication.onDidChangeSessions(async (e) => {
+        const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+        if (e.provider.id === env.AUTH_TYPE) {
+          void vscode.commands.executeCommand(
+            "setContext",
+            "continue.isSignedInToControlPlane",
+            true,
+          );
 
-        const sessionInfo = await getControlPlaneSessionInfo(true, false);
-        void this.core.invoke("didChangeControlPlaneSessionInfo", {
-          sessionInfo,
-        });
-      } else {
-        void vscode.commands.executeCommand(
-          "setContext",
-          "continue.isSignedInToControlPlane",
-          false,
-        );
+          const sessionInfo = await getControlPlaneSessionInfo(true, false);
+          void this.core.invoke("didChangeControlPlaneSessionInfo", {
+            sessionInfo,
+          });
+        } else {
+          void vscode.commands.executeCommand(
+            "setContext",
+            "continue.isSignedInToControlPlane",
+            false,
+          );
 
-        if (e.provider.id === "github") {
-          this.configHandler.reloadConfig("Github sign-in status changed");
+          if (e.provider.id === "github") {
+            this.configHandler.reloadConfig("Github sign-in status changed");
+          }
         }
-      }
-    });
+      }),
+    );
 
     // Listen for editor changes to clean up decorations when editor closes.
-    vscode.window.onDidChangeVisibleTextEditors(async () => {
-      // If our active editor is no longer visible, clear decorations.
-      console.log("deleteChain called from onDidChangeVisibleTextEditors");
-      await NextEditProvider.getInstance().deleteChain();
-    });
+    context.subscriptions.push(
+      vscode.window.onDidChangeVisibleTextEditors(async () => {
+        // If our active editor is no longer visible, clear decorations.
+        console.log("deleteChain called from onDidChangeVisibleTextEditors");
+        await NextEditProvider.getInstance().deleteChain();
+      }),
+    );
 
     // Listen for selection changes to hide tooltip when cursor moves.
-    vscode.window.onDidChangeTextEditorSelection(async (e) => {
-      await selectionManager.handleSelectionChange(e);
-    });
+    context.subscriptions.push(
+      vscode.window.onDidChangeTextEditorSelection(async (e) => {
+        await selectionManager.handleSelectionChange(e);
+      }),
+    );
 
     // Refresh index when branch is changed
     void this.ide.getWorkspaceDirs().then((dirs) =>
@@ -659,16 +667,18 @@ export class VsCodeExtension {
 
     // This is how you would enable/disable next edit in the autocomplete menu.
     // See extensions/vscode/src/autocomplete/statusBar.ts.
-    vscode.workspace.onDidChangeConfiguration(async (event) => {
-      if (event.affectsConfiguration(EXTENSION_NAME)) {
-        const settings = await this.ide.getIdeSettings();
-        void this.core.invoke("config/ideSettingsUpdate", settings);
+    context.subscriptions.push(
+      vscode.workspace.onDidChangeConfiguration(async (event) => {
+        if (event.affectsConfiguration(EXTENSION_NAME)) {
+          const settings = await this.ide.getIdeSettings();
+          void this.core.invoke("config/ideSettingsUpdate", settings);
 
-        if (event.affectsConfiguration(`${EXTENSION_NAME}.enableNextEdit`)) {
-          await this.updateNextEditState(context);
+          if (event.affectsConfiguration(`${EXTENSION_NAME}.enableNextEdit`)) {
+            await this.updateNextEditState(context);
+          }
         }
-      }
-    });
+      }),
+    );
   }
 
   static continueVirtualDocumentScheme = EXTENSION_NAME;

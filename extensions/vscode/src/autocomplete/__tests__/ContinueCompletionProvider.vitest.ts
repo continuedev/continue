@@ -417,7 +417,7 @@ vi.mock("../recentlyEdited", () => ({
 
 vi.mock("../RecentlyVisitedRangesService", () => ({
   RecentlyVisitedRangesService: class {
-    getSnippets() {
+    async getSnippets() {
       return [];
     }
   },
