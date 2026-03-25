@@ -142,6 +142,13 @@ export function analyzeError(
     }
   }
 
+  // Missing authentication header (no API key configured)
+  if (errorText.includes("missing bearer or basic authentication")) {
+    helpUrl = "https://docs.continue.dev/reference#models";
+    customErrorMessage =
+      'No API key was sent with the request. Add "apiKey" to your model config.';
+  }
+
   // 402 Insufficient Balance
   if (statusCode === 402 || errorText.includes("insufficient balance")) {
     const providerLabel = providerName || "your provider";
