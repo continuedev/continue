@@ -19,7 +19,7 @@ export interface ResolvedReview {
  * Determine which reviews to run, using three sources in order:
  * 1. CLI --agent flags (highest priority)
  * 2. Hub API (if logged in and no --agent flags)
- * 3. Local .continue/agents/*.md (fallback)
+ * 3. Local .continue/agents/*.md and .continue/checks/*.md (fallback)
  */
 export async function resolveReviews(
   agentFlags?: string[],
@@ -39,7 +39,7 @@ export async function resolveReviews(
     return hubReviews;
   }
 
-  // Source 3: Local .continue/agents/*.md
+  // Source 3: Local .continue/agents/*.md and .continue/checks/*.md
   const localReviews = resolveFromLocal();
   if (localReviews.length > 0) {
     return localReviews;
@@ -107,24 +107,41 @@ async function resolveFromHub(): Promise<ResolvedReview[]> {
 }
 
 /**
- * Resolve reviews from local .continue/agents/*.md files.
+ * Resolve reviews from local .continue/agents/*.md and .continue/checks/*.md files.
+ * Agents take precedence over checks if the same filename exists in both directories.
  */
 function resolveFromLocal(): ResolvedReview[] {
-  const agentsDir = path.join(process.cwd(), ".continue", "agents");
-  if (!fs.existsSync(agentsDir)) {
-    return [];
+  const cwd = process.cwd();
+  const dirs = [
+    path.join(cwd, ".continue", "agents"),
+    path.join(cwd, ".continue", "checks"),
+  ];
+
+  const seen = new Set<string>();
+  const results: ResolvedReview[] = [];
+
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) {
+      continue;
+    }
+    try {
+      const files = fs.readdirSync(dir).filter((f) => f.endsWith(".md"));
+      for (const file of files) {
+        if (!seen.has(file)) {
+          seen.add(file);
+          results.push({
+            name: path.basename(file, ".md").replace(/[-_]/g, " "),
+            source: path.join(dir, file),
+            sourceType: "local" as const,
+          });
+        }
+      }
+    } catch {
+      // Directory read failed, skip
+    }
   }
 
-  try {
-    const files = fs.readdirSync(agentsDir).filter((f) => f.endsWith(".md"));
-    return files.map((file) => ({
-      name: path.basename(file, ".md").replace(/[-_]/g, " "),
-      source: path.join(agentsDir, file),
-      sourceType: "local" as const,
-    }));
-  } catch {
-    return [];
-  }
+  return results;
 }
 
 function isLocalPath(agent: string): boolean {

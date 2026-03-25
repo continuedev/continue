@@ -403,7 +403,7 @@ export class Core {
 
     on("config/newAssistantFile", async (msg) => {
       await createNewAssistantFile(this.ide, undefined);
-      await this.configHandler.reloadConfig(
+      await this.configHandler.refreshAll(
         "Assistant file created (config/newAssistantFile message)",
       );
     });

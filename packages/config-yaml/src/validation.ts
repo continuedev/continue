@@ -10,6 +10,8 @@ export interface ConfigResult<T> {
   config: T | undefined;
   errors: ConfigValidationError[] | undefined;
   configLoadInterrupted: boolean;
+  /** Optional display name from config.yaml `name` field */
+  configName?: string;
 }
 
 function containsUnicode(str: string): boolean {

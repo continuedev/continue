@@ -13,6 +13,7 @@ import { GeminiApi } from "./apis/Gemini.js";
 import { InceptionApi } from "./apis/Inception.js";
 import { JinaApi } from "./apis/Jina.js";
 import { LlamastackApi } from "./apis/LlamaStack.js";
+import { MiniMaxApi } from "./apis/MiniMax.js";
 import { MockApi } from "./apis/Mock.js";
 import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
@@ -141,6 +142,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("http://localhost:8000/v1/", config);
     case "groq":
       return openAICompatible("https://api.groq.com/openai/v1/", config);
+    case "minimax":
+      return new MiniMaxApi(config);
     case "sambanova":
       return openAICompatible("https://api.sambanova.ai/v1/", config);
     case "text-gen-webui":
@@ -172,6 +175,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.studio.nebius.ai/v1/", config);
     case "function-network":
       return openAICompatible("https://api.function.network/v1/", config);
+    case "tensorix":
+      return openAICompatible("https://api.tensorix.ai/v1/", config);
     case "openrouter":
       return new OpenRouterApi(config);
     case "llama.cpp":

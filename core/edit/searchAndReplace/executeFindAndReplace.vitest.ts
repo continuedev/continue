@@ -207,6 +207,84 @@ describe("executeFindAndReplace", () => {
     });
   });
 
+  describe("indentation adjustment", () => {
+    it("should adjust indentation when trimmedMatch finds unindented old_string in indented file", () => {
+      const fileContent =
+        "def foo():\n    x = 1\n    y = 2\n    return x + y\n";
+      // LLM sends unindented old_string that matches via trimmedMatch
+      const oldString = "x = 1\ny = 2";
+      const newString = "x = 10\ny = 20";
+      const result = executeFindAndReplace(
+        fileContent,
+        oldString,
+        newString,
+        false,
+      );
+      expect(result).toBe(
+        "def foo():\n    x = 10\n    y = 20\n    return x + y\n",
+      );
+    });
+
+    it("should preserve relative inner indentation in multi-line replacement", () => {
+      const fileContent =
+        "class Foo:\n    def bar(self):\n        if True:\n            x = 1\n";
+      const oldString = "if True:\n    x = 1";
+      const newString = "if True:\n    x = 1\n    y = 2";
+      const result = executeFindAndReplace(
+        fileContent,
+        oldString,
+        newString,
+        false,
+      );
+      expect(result).toBe(
+        "class Foo:\n    def bar(self):\n        if True:\n            x = 1\n            y = 2\n",
+      );
+    });
+
+    it("should handle tab vs space mismatch", () => {
+      const fileContent = "function foo() {\n\tconst x = 1;\n}\n";
+      // LLM sends with leading spaces (not tabs), triggering trimmedMatch
+      const oldString = "  const x = 1;";
+      const newString = "  const x = 2;\n  const y = 3;";
+      const result = executeFindAndReplace(
+        fileContent,
+        oldString,
+        newString,
+        false,
+      );
+      expect(result).toBe(
+        "function foo() {\n\tconst x = 2;\n\tconst y = 3;\n}\n",
+      );
+    });
+
+    it("should not adjust indentation for exactMatch", () => {
+      const fileContent = "    x = 1\n";
+      const oldString = "    x = 1";
+      const newString = "    x = 2";
+      const result = executeFindAndReplace(
+        fileContent,
+        oldString,
+        newString,
+        false,
+      );
+      expect(result).toBe("    x = 2\n");
+    });
+
+    it("should handle whitespaceIgnoredMatch with different internal whitespace", () => {
+      const fileContent = "def outer():\n    if  True:\n        return  42\n";
+      // Different internal whitespace triggers whitespaceIgnoredMatch
+      const oldString = "if True:\n    return 42";
+      const newString = "if True:\n    return 99";
+      const result = executeFindAndReplace(
+        fileContent,
+        oldString,
+        newString,
+        false,
+      );
+      expect(result).toBe("def outer():\n    if True:\n        return 99\n");
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle single character replacement", () => {
       const content = "a b c";

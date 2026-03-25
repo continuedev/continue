@@ -13,7 +13,12 @@ import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
 import { telemetryService } from "./telemetry/telemetryService.js";
+import { buildImportSkillPrompt } from "./tools/skills.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
+import {
+  getSkillSlashCommandName,
+  loadMarkdownSkills,
+} from "./util/loadMarkdownSkills.js";
 
 type CommandHandler = (
   args: string[],
@@ -143,8 +148,6 @@ async function handleFork() {
 }
 
 function handleTitle(args: string[]) {
-  posthogService.capture("useSlashCommand", { name: "title" });
-
   const title = args.join(" ").trim();
   if (!title) {
     return {
@@ -171,6 +174,53 @@ function handleTitle(args: string[]) {
 
 function handleJobs() {
   return { openJobsSelector: true };
+}
+
+async function handleSkills(): Promise<SlashCommandResult> {
+  const { skills } = await loadMarkdownSkills();
+
+  if (!skills.length) {
+    return {
+      exit: false,
+      output: chalk.yellow(
+        "No skills found. Add skills under .continue/skills or .claude/skills.",
+      ),
+    };
+  }
+
+  const header = chalk.bold("Available skills:");
+  const lines = skills.map(
+    (skill) =>
+      `${chalk.cyan(skill.name)} - ${skill.description} ${chalk.gray(
+        `(${skill.path})`,
+      )}`,
+  );
+
+  return {
+    exit: false,
+    output: [header, "", ...lines].join("\n"),
+  };
+}
+
+async function handleImportSkill(args: string[]): Promise<SlashCommandResult> {
+  const query = args.join(" ").trim();
+
+  if (!query) {
+    return {
+      exit: false,
+      output: chalk.yellow(
+        "Please provide a skill URL or name. Usage: /import-skill <url-or-name>",
+      ),
+    };
+  }
+
+  return {
+    newInput: buildImportSkillPrompt(query),
+  };
+}
+
+function handleSessions() {
+  return { openSessionSelector: true };
 }
 
 const commandHandlers: Record<string, CommandHandler> = {
@@ -200,14 +250,17 @@ const commandHandlers: Record<string, CommandHandler> = {
   },
   fork: handleFork,
   title: handleTitle,
+  rename: handleTitle,
   init: (args, assistant) => {
-    posthogService.capture("useSlashCommand", { name: "init" });
     return handleInit(args, assistant);
   },
   update: () => {
     return { openUpdateSelector: true };
   },
   jobs: handleJobs,
+  skills: () => handleSkills(),
+  "import-skill": (args) => handleImportSkill(args),
+  sessions: handleSessions,
 };
 
 export async function handleSlashCommands(
@@ -254,8 +307,22 @@ export async function handleSlashCommands(
     return { newInput };
   }
 
+  const { skills } = await loadMarkdownSkills();
+  if (skills.length) {
+    const normalizedCommand = command.trim().toLowerCase();
+    const matchingSkill = skills.find(
+      (skill) => getSkillSlashCommandName(skill) === normalizedCommand,
+    );
+
+    if (matchingSkill) {
+      return {
+        newInput: `Load the skill using the **Skills** tool and then set the **skill_name** parameter to "${matchingSkill.name}".`,
+      };
+    }
+  }
+
   // Check if this command would match any available commands (same logic as UI)
-  const allCommands = getAllSlashCommands(assistant, {
+  const allCommands = await getAllSlashCommands(assistant, {
     isRemoteMode: options?.isRemoteMode,
   });
   const hasMatches = allCommands.some((cmd) =>

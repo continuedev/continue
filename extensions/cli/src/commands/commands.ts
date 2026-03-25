@@ -1,5 +1,10 @@
 import { type AssistantConfig } from "@continuedev/sdk";
 
+import {
+  getSkillSlashCommandName,
+  loadMarkdownSkills,
+} from "../util/loadMarkdownSkills.js";
+
 // Export command functions
 export { chat } from "./chat.js";
 export { login } from "./login.js";
@@ -97,6 +102,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
+    name: "rename",
+    description: "Rename the current session",
+    category: "system",
+  },
+  {
     name: "exit",
     description: "Exit the chat",
     category: "system",
@@ -104,6 +114,21 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   {
     name: "jobs",
     description: "List background jobs",
+    category: "system",
+  },
+  {
+    name: "sessions",
+    description: "Show all chat sessions",
+    category: "system",
+  },
+  {
+    name: "skills",
+    description: "List all available skills",
+    category: "system",
+  },
+  {
+    name: "import-skill",
+    description: "Import a skill from a URL or name into ~/.continue/skills",
     category: "system",
   },
 ];
@@ -130,10 +155,10 @@ export const REMOTE_MODE_SLASH_COMMANDS: SlashCommand[] = [
 /**
  * Get all available slash commands including system commands and assistant prompts
  */
-export function getAllSlashCommands(
+export async function getAllSlashCommands(
   assistant: AssistantConfig,
   options: { isRemoteMode?: boolean } = {},
-): SlashCommand[] {
+): Promise<SlashCommand[]> {
   const { isRemoteMode = false } = options;
 
   // In remote mode, only show the exit command
@@ -155,7 +180,15 @@ export function getAllSlashCommands(
   // Get invokable rule commands
   const invokableRuleCommands = getInvokableRuleSlashCommands(assistant);
 
-  return [...systemCommands, ...assistantCommands, ...invokableRuleCommands];
+  // Get skill commands
+  const skillCommands = await getSkillSlashCommands();
+
+  return [
+    ...systemCommands,
+    ...assistantCommands,
+    ...invokableRuleCommands,
+    ...skillCommands,
+  ];
 }
 
 /**
@@ -201,4 +234,17 @@ export function getInvokableRuleSlashCommands(
         category: "assistant" as const,
       };
     });
+}
+
+/**
+ * Get skill-based slash commands from Markdown skills
+ */
+export async function getSkillSlashCommands(): Promise<SlashCommand[]> {
+  const { skills } = await loadMarkdownSkills();
+
+  return skills.map((skill) => ({
+    name: getSkillSlashCommandName(skill),
+    description: skill.description,
+    category: "assistant" as const,
+  }));
 }
