@@ -519,14 +519,14 @@ describe("isRecommendedAgentModel", () => {
 
   describe("case insensitivity", () => {
     it("should handle uppercase model names", () => {
-      expect(isRecommendedAgentModel("GEMINI-3-PRO-PREVIEW")).toBe(true);
+      expect(isRecommendedAgentModel("GEMINI-3.1-PRO-PREVIEW")).toBe(true);
       expect(isRecommendedAgentModel("CLAUDE-4-SONNET")).toBe(true);
       expect(isRecommendedAgentModel("DEEPSEEK-R1")).toBe(true);
       expect(isRecommendedAgentModel("O3-MINI")).toBe(true);
     });
 
     it("should handle mixed case model names", () => {
-      expect(isRecommendedAgentModel("Gemini-3-Pro")).toBe(true);
+      expect(isRecommendedAgentModel("Gemini-3.1-Pro-Preview")).toBe(true);
       expect(isRecommendedAgentModel("Claude-Opus-4")).toBe(true);
       expect(isRecommendedAgentModel("DeepSeek-Reasoner")).toBe(true);
     });

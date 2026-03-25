@@ -29,8 +29,7 @@ export const Gemini: ModelProvider = {
     {
       model: "gemini-3.1-flash-image-preview",
       displayName: "Gemini 3.1 Flash Image Preview",
-      description:
-        "Image generation model with improved visual quality.",
+      description: "Image generation model with improved visual quality.",
       contextLength: 1048576,
       maxCompletionTokens: 65536,
       mediaTypes: AllMediaTypes,

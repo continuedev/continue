@@ -461,7 +461,7 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/o[134]/],
     [/deepseek/, /r1|reasoner/],
     [/gemini/, /2\.5/, /pro/],
-    [/gemini/, /3\.1-pro|3-flash/],
+    [/gemini/, /3\.1-pro|3-flash-preview/],
     [/gpt/, /-5|5\.1|5\.2/],
     [/gpt-4\.1/],
     [/codex/],
