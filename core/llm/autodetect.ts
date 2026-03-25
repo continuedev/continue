@@ -67,6 +67,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "openrouter",
   "deepseek",
   "xAI",
+  "minimax",
   "groq",
   "gemini",
   "docker",
@@ -253,6 +254,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "function-network",
   "scaleway",
   "avian",
+  "minimax",
   "tensorix",
 ];
 

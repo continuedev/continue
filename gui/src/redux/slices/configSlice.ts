@@ -1,7 +1,7 @@
 import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { BrowserSerializedContinueConfig } from "core";
-import { DEFAULT_MAX_TOKENS } from "core/llm/constants";
+import { DEFAULT_CONTEXT_LENGTH } from "core/llm/constants";
 
 export type ConfigState = {
   configError: ConfigValidationError[] | undefined;
@@ -86,7 +86,7 @@ export const configSlice = createSlice({
     selectSelectedChatModelContextLength: (state): number => {
       return (
         state.config.selectedModelByRole.chat?.contextLength ||
-        DEFAULT_MAX_TOKENS
+        DEFAULT_CONTEXT_LENGTH
       );
     },
     selectSelectedChatModel: (state) => {

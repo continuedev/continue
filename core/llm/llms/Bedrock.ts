@@ -25,7 +25,6 @@ import { parseDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { getSecureID } from "../utils/getSecureID.js";
-import { withLLMRetry } from "../utils/retry.js";
 
 interface ModelConfig {
   formatPayload: (text: string) => any;
@@ -71,6 +70,29 @@ class Bedrock extends BaseLLM {
     };
   }
 
+  private async _getClient(): Promise<BedrockRuntimeClient> {
+    if (this.apiKey) {
+      // Bedrock API key authentication (bearer token)
+      return new BedrockRuntimeClient({
+        region: this.region,
+        endpoint: this.apiBase,
+        token: async () => ({ token: this.apiKey! }),
+      });
+    }
+
+    // IAM credential authentication
+    const credentials = await this._getCredentials();
+    return new BedrockRuntimeClient({
+      region: this.region,
+      endpoint: this.apiBase,
+      credentials: {
+        accessKeyId: credentials.accessKeyId,
+        secretAccessKey: credentials.secretAccessKey,
+        sessionToken: credentials.sessionToken || "",
+      },
+    });
+  }
+
   protected async *_streamComplete(
     prompt: string,
     signal: AbortSignal,
@@ -82,22 +104,12 @@ class Bedrock extends BaseLLM {
     }
   }
 
-  @withLLMRetry()
   protected async *_streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const credentials = await this._getCredentials();
-    const client = new BedrockRuntimeClient({
-      region: this.region,
-      endpoint: this.apiBase,
-      credentials: {
-        accessKeyId: credentials.accessKeyId,
-        secretAccessKey: credentials.secretAccessKey,
-        sessionToken: credentials.sessionToken || "",
-      },
-    });
+    const client = await this._getClient();
 
     let config_headers =
       this.requestOptions && this.requestOptions.headers
@@ -238,7 +250,7 @@ class Bedrock extends BaseLLM {
         }
       }
     } catch (error: unknown) {
-      // Clean up state and let the original error bubble up to the retry decorator
+      // Clean up state and let the original error bubble up for retry handling
       throw error;
     }
   }
@@ -602,15 +614,7 @@ class Bedrock extends BaseLLM {
 
   // EMBED //
   async _embed(chunks: string[]): Promise<number[][]> {
-    const credentials = await this._getCredentials();
-    const client = new BedrockRuntimeClient({
-      region: this.region,
-      credentials: {
-        accessKeyId: credentials.accessKeyId,
-        secretAccessKey: credentials.secretAccessKey,
-        sessionToken: credentials.sessionToken || "",
-      },
-    });
+    const client = await this._getClient();
 
     return (
       await Promise.all(
@@ -685,15 +689,7 @@ class Bedrock extends BaseLLM {
     }
 
     try {
-      const credentials = await this._getCredentials();
-      const client = new BedrockRuntimeClient({
-        region: this.region,
-        credentials: {
-          accessKeyId: credentials.accessKeyId,
-          secretAccessKey: credentials.secretAccessKey,
-          sessionToken: credentials.sessionToken || "",
-        },
-      });
+      const client = await this._getClient();
 
       // Base payload for both models
       const payload: any = {

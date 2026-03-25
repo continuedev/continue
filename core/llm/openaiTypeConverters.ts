@@ -11,10 +11,14 @@ import {
 import type {
   EasyInputMessage,
   Response as OpenAIResponse,
+  ResponseFunctionCallArgumentsDeltaEvent,
   ResponseFunctionToolCall,
   ResponseInput,
   ResponseInputItem,
   ResponseInputMessageContentList,
+  ResponseOutputItem,
+  ResponseOutputItemAddedEvent,
+  ResponseOutputItemDoneEvent,
   ResponseOutputMessage,
   ResponseOutputText,
   ResponseReasoningItem,
@@ -431,22 +435,13 @@ function handleFunctionCallArgsDelta(e: any): ChatMessage | undefined {
 }
 
 function handleOutputItemAdded(
-  e: ResponseStreamEvent,
+  e: ResponseOutputItemAddedEvent,
 ): ChatMessage | undefined {
-  const item = (e as any).item as {
-    type?: string;
-    id?: string;
-    name?: string;
-    arguments?: string;
-    call_id?: string;
-    summary?: Array<{ type: string; text: string }>;
-    encrypted_content?: string;
-  };
-  if (!item || !item.type) return undefined;
+  const { item } = e;
   if (item.type === "reasoning") {
     const details: Array<{ [k: string]: unknown }> = [];
     if (item.id) details.push({ type: "reasoning_id", id: item.id });
-    if (typeof item.encrypted_content === "string" && item.encrypted_content) {
+    if (item.encrypted_content) {
       details.push({
         type: "encrypted_content",
         encrypted_content: item.encrypted_content,
@@ -459,44 +454,64 @@ function handleOutputItemAdded(
         }
       }
     }
-    const thinking: ThinkingChatMessage = {
+    return {
       role: "thinking",
       content: "",
       reasoning_details: details,
       metadata: {
-        reasoningId: item.id as string,
-        encrypted_content: item.encrypted_content as string | undefined,
+        reasoningId: item.id,
+        encrypted_content: item.encrypted_content ?? undefined,
       },
-    };
-    return thinking;
+    } satisfies ThinkingChatMessage;
   }
-  if (item.type === "message" && typeof item.id === "string") {
+  if (item.type === "message") {
     return {
       role: "assistant",
       content: "",
       metadata: { responsesOutputItemId: item.id },
     };
   }
-  if (item.type === "function_call" && typeof item.id === "string") {
-    const name = item.name as string | undefined;
-    const args = typeof item.arguments === "string" ? item.arguments : "";
-    const call_id = item.call_id as string | undefined;
-    const toolCalls: ToolCallDelta[] = name
+  if (item.type === "function_call") {
+    const toolCalls: ToolCallDelta[] = item.name
       ? [
           {
-            id: call_id || (item.id as string),
+            id: item.call_id || item.id,
             type: "function",
-            function: { name, arguments: args },
+            function: { name: item.name, arguments: item.arguments || "" },
           },
         ]
       : [];
-    const assistant: AssistantChatMessage = {
+    return {
       role: "assistant",
       content: "",
       toolCalls,
-      metadata: { responsesOutputItemId: item.id as string },
-    };
-    return assistant;
+      metadata: { responsesOutputItemId: item.id },
+    } satisfies AssistantChatMessage;
+  }
+  return undefined;
+}
+
+// encrypted_content is only available at output_item.done, not at .added
+function handleOutputItemDone(
+  e: ResponseOutputItemDoneEvent,
+): ChatMessage | undefined {
+  const { item } = e;
+  if (item.type === "reasoning" && item.encrypted_content) {
+    return {
+      role: "thinking",
+      content: "",
+      reasoning_details: [
+        ...(item.id ? [{ type: "reasoning_id", id: item.id }] : []),
+        {
+          type: "encrypted_content",
+          encrypted_content: item.encrypted_content,
+        },
+      ],
+      metadata: {
+        reasoningId: item.id,
+        encrypted_content: item.encrypted_content,
+      },
+    } satisfies ThinkingChatMessage;
   }
   return undefined;
 }
@@ -580,7 +595,10 @@ function handleResponsesStreamEvent(
     return undefined;
   }
   if (t === "response.output_item.added") {
-    return handleOutputItemAdded(e);
+    return handleOutputItemAdded(e as ResponseOutputItemAddedEvent);
+  }
+  if (t === "response.output_item.done") {
+    return handleOutputItemDone(e as ResponseOutputItemDoneEvent);
   }
   if (t === "response.reasoning_summary_text.delta") {
     return handleReasoningSummaryDelta(
@@ -793,20 +811,15 @@ function toResponseInputContentList(
   return list;
 }
 
-/**
- * Emits function_call items for each tool call that has a corresponding fc_ ID.
- * Extracted to reduce cyclomatic complexity in toResponsesInput.
- */
+/** Emits function_call items for each tool call. Omits `id` when no fc_ ID is available. */
 function emitFunctionCallsFromToolCalls(
   toolCalls: ToolCallDelta[],
-  respIds: string[],
+  fcIds: string[],
   input: ResponseInput,
 ): void {
   for (let i = 0; i < toolCalls.length; i++) {
     const tc = toolCalls[i];
-    const fcId = respIds[i];
-
-    if (!fcId) continue; // Skip if no fc_ ID for this tool call
+    const fcId = fcIds[i];
 
     const name = tc?.function?.name as string | undefined;
     const args = tc?.function?.arguments as string | undefined;
@@ -814,11 +827,11 @@ function emitFunctionCallsFromToolCalls(
 
     if (name && call_id) {
       const functionCallItem: ResponseFunctionToolCall = {
-        id: fcId,
         type: "function_call",
         name,
         arguments: typeof args === "string" ? args : "{}",
         call_id,
+        id: fcId,
       };
       input.push(functionCallItem);
     }
@@ -856,6 +869,18 @@ function convertThinkingMessageToReasoningItem(
       reasoningText += d.text;
   }
 
+  // Fallback to metadata if reasoning_details was incomplete
+  if (!id && typeof msg.metadata?.reasoningId === "string") {
+    id = msg.metadata.reasoningId;
+  }
+  if (
+    !encrypted &&
+    typeof msg.metadata?.encrypted_content === "string" &&
+    (msg.metadata.encrypted_content as string).length > 0
+  ) {
+    encrypted = msg.metadata.encrypted_content as string;
+  }
+
   if (!id) return undefined;
 
   const reasoningItem: ResponseReasoningItem = {
@@ -875,6 +900,87 @@ function convertThinkingMessageToReasoningItem(
   }
 
   return reasoningItem;
+}
+
+export function isItemType<T extends ResponseInputItem & { type: string }>(
+  item: ResponseInputItem,
+  type: T["type"],
+): item is T {
+  return "type" in item && item.type === type;
+}
+
+function isValidSuccessor(item: ResponseInputItem | undefined): boolean {
+  if (!item) return false;
+  if (isItemType<ResponseFunctionToolCall>(item, "function_call")) return true;
+  if ("type" in item && item.type === "message") return true;
+  if ("role" in item && item.role === "assistant") return true;
+  return false;
+}
+
+/**
+ * Fixes sequencing/ID issues that cause OpenAI Responses API 400 errors:
+ * - Removes reasoning without encrypted_content; strips id from subsequent items
+ * - Removes reasoning not followed by function_call or message
+ * - Removes orphaned function_call_output with no matching function_call
+ */
+function sanitizeResponsesInput(input: ResponseInput): ResponseInput {
+  const skipIndices = new Set<number>();
+  const stripIdIndices = new Set<number>();
+
+  for (let i = 0; i < input.length; i++) {
+    if (!isItemType<ResponseReasoningItem>(input[i], "reasoning")) continue;
+    const reasoning = input[i] as ResponseReasoningItem;
+
+    if (!reasoning.encrypted_content) {
+      // Can't pass reasoning without encrypted_content; strip id from
+      // subsequent items so the API doesn't expect the missing reasoning
+      skipIndices.add(i);
+      for (let j = i + 1; j < input.length; j++) {
+        if (
+          isItemType<ResponseFunctionToolCall>(input[j], "function_call") ||
+          ("type" in input[j] && input[j].type === "message")
+        ) {
+          stripIdIndices.add(j);
+        } else {
+          break;
+        }
+      }
+      continue;
+    }
+
+    if (!isValidSuccessor(input[i + 1])) {
+      skipIndices.add(i);
+    }
+  }
+
+  const result: ResponseInput = [];
+  for (let i = 0; i < input.length; i++) {
+    if (skipIndices.has(i)) continue;
+    if (stripIdIndices.has(i)) {
+      const { id: _id, ...rest } = input[i] as ResponseFunctionToolCall;
+      result.push(rest as ResponseInputItem);
+    } else {
+      result.push(input[i]);
+    }
+  }
+
+  // Remove orphaned function_call_outputs
+  const validCallIds = new Set<string>();
+  for (const item of result) {
+    if (isItemType<ResponseFunctionToolCall>(item, "function_call")) {
+      validCallIds.add(item.call_id);
+    }
+  }
+  return result.filter((item) => {
+    if (
+      !isItemType<ResponseInputItem.FunctionCallOutput>(
+        item,
+        "function_call_output",
+      )
+    )
+      return true;
+    return validCallIds.has(item.call_id);
+  });
 }
 
 export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
@@ -915,34 +1021,48 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
       }
       case "assistant": {
         const text = getTextFromMessageContent(msg.content);
+        const toolCalls = msg.toolCalls as ToolCallDelta[] | undefined;
 
+        // Separate fc_ IDs (for function_calls) from msg_ IDs (for messages)
+        const allRespIds =
+          (msg.metadata?.responsesOutputItemIds as string[] | undefined) || [];
         const respId = msg.metadata?.responsesOutputItemId as
           | string
           | undefined;
-        const toolCalls = msg.toolCalls as ToolCallDelta[] | undefined;
-        // Get array of fc_ IDs for parallel tool calls, fallback to single respId
-        // NOTE: responsesOutputItemIds is accumulated in sessionSlice.ts during streaming.
-        // We rely on OpenAI streaming events arriving in order, so respIds[i] corresponds
-        // to toolCalls[i] by position. See: https://platform.openai.com/docs/guides/function-calling
-        const respIds =
-          (msg.metadata?.responsesOutputItemIds as string[] | undefined) ||
-          (respId ? [respId] : []);
+        const fcIds = allRespIds.filter((id) => id.startsWith("fc_"));
+        if (fcIds.length === 0 && respId?.startsWith("fc_")) {
+          fcIds.push(respId);
+        }
+        const msgId =
+          allRespIds.find((id) => id.startsWith("msg_")) ||
+          (respId?.startsWith("msg_") ? respId : undefined);
 
-        if (
-          Array.isArray(toolCalls) &&
-          toolCalls.length > 0 &&
-          respIds.length > 0
-        ) {
-          // Emit function_call for EACH tool call (supports parallel tool calls)
-          emitFunctionCallsFromToolCalls(toolCalls, respIds, input);
-          // Also emit text content if present alongside tool calls
+        if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+          emitFunctionCallsFromToolCalls(toolCalls, fcIds, input);
+
           if (text && text.trim()) {
-            pushMessage("assistant", text);
+            if (msgId) {
+              const outputMessageItem: ResponseOutputMessage = {
+                id: msgId,
+                role: "assistant",
+                type: "message",
+                status: "completed",
+                content: [
+                  {
+                    type: "output_text",
+                    text,
+                    annotations: [],
+                  } satisfies ResponseOutputText,
+                ],
+              };
+              input.push(outputMessageItem);
+            } else {
+              pushMessage("assistant", text);
+            }
           }
-        } else if (respId) {
-          // Emit full assistant output message item
+        } else if (msgId) {
           const outputMessageItem: ResponseOutputMessage = {
-            id: respId,
+            id: msgId,
             role: "assistant",
             type: "message",
             status: "completed",
@@ -956,7 +1076,6 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
           };
           input.push(outputMessageItem);
         } else {
-          // Fallback to EasyInput assistant message
           pushMessage("assistant", text || "");
         }
         break;
@@ -987,7 +1106,7 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
     }
   }
 
-  return input;
+  return sanitizeResponsesInput(input);
 }
 
 export type LlmApiRequestType =

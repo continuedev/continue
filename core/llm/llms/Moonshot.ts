@@ -6,6 +6,13 @@ import OpenAI from "./OpenAI.js";
 
 class Moonshot extends OpenAI {
   static providerName = "moonshot";
+
+  constructor(options: LLMOptions) {
+    super(options);
+    this.supportsReasoningContentField =
+      this.model?.startsWith("kimi") ?? false;
+  }
+
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.moonshot.cn/v1/",
     model: "moonshot-v1-8k",

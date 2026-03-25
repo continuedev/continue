@@ -8,7 +8,9 @@ export function OutOfCreditsDialog() {
 
   return (
     <div className={`flex flex-col gap-1 px-3 pb-2 pt-3`}>
-      <p className="m-0 p-0 text-lg">You're out of credits!</p>
+      <p className="m-0 p-0 text-lg">
+        You have no credits remaining on your Continue account
+      </p>
 
       <div className="mt-2 flex flex-col gap-1.5">
         <span>

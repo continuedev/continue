@@ -78,7 +78,10 @@ export function getAnthropicHeaders(
     );
   }
 
-  const authHeaderName = isAzure ? "api-key" : "x-api-key";
+  const authHeaderName =
+    isAzure && apiBase?.toLowerCase().includes("cognitiveservices.azure.com")
+      ? "api-key"
+      : "x-api-key";
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
