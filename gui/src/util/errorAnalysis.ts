@@ -107,8 +107,11 @@ export function analyzeError(
   const errorText = lowerMessage + " " + lowerParsedError;
 
   // OpenAI organization verification error (reasoning summaries or streaming)
+  const isOpenAI =
+    errorText.includes("openai") ||
+    providerName.toLowerCase().includes("openai");
   if (
-    errorText.includes("openai") &&
+    isOpenAI &&
     (errorText.includes(
       "organization must be verified to generate reasoning summaries",
     ) ||
