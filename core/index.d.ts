@@ -677,6 +677,7 @@ export interface LLMOptions {
   roles?: ModelRole[];
 
   useLegacyCompletionsEndpoint?: boolean;
+  useResponsesApi?: boolean;
 
   // Embedding options
   embeddingId?: string;
@@ -1737,6 +1738,7 @@ export interface JSONModelDescription {
   accountId?: string;
   aiGatewaySlug?: string;
   useLegacyCompletionsEndpoint?: boolean;
+  useResponsesApi?: boolean;
   deploymentId?: string;
   isFromAutoDetect?: boolean;
 }
