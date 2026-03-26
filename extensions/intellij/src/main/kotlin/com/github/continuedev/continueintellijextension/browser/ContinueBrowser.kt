@@ -100,20 +100,7 @@ class ContinueBrowser(
         }
     }
 
-    /**
-     * Sends a large JSON payload to the webview by splitting it into small chunks.
-     *
-     * JCEF freezes when executeJavaScript is called with a very large JS source string
-     * (e.g. 50-100MB for long conversation sessions) because the JS parser/compiler cannot
-     * handle source strings that large. This method avoids that by:
-     * 1. Base64-encoding the JSON (producing only safe [A-Za-z0-9+/=] characters)
-     * 2. Sending it in small chunks that each append to a JS string variable
-     * 3. One final small call that decodes, parses, and dispatches the complete message
-     *
-     * Each individual executeJavaScript call only processes ~512KB of source code,
-     * which JCEF handles without issue. The JS runtime (V8) has no trouble with the
-     * resulting large string concatenation or the final JSON.parse on the full payload.
-     */
+    // Base64-encode and send in 512KB chunks to avoid JCEF freezing on large JS source strings
     private fun sendChunked(json: String, bufferId: String) {
         val encoded = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
         val url = getGuiUrl()
@@ -175,10 +162,8 @@ class ContinueBrowser(
     }
 
     private companion object {
-        // Messages larger than 1MB get chunked to avoid JCEF parser freezes
-        private const val CHUNKED_MESSAGE_THRESHOLD = 1 * 1024 * 1024
-        // Each chunk sent via executeJavaScript is at most 512KB of base64 text
-        private const val CHUNK_SIZE = 512 * 1024
+        private const val CHUNKED_MESSAGE_THRESHOLD = 1 * 1024 * 1024 // 1MB
+        private const val CHUNK_SIZE = 512 * 1024 // 512KB
 
         private fun getGuiUrl() =
             System.getenv("GUI_URL") ?: "http://continue/index.html"
