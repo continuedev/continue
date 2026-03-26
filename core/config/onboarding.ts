@@ -101,16 +101,16 @@ export function setupProviderConfig(
       throw new Error(`Unknown provider: ${provider}`);
   }
 
-  // Remove existing models for this provider to avoid duplicates
-  // (e.g. when re-entering an API key after providing an invalid one)
-  const slugPrefixes = newModels.map((m: any) => m.uses as string);
-  const filteredModels = (config.models ?? []).filter((m: any) => {
-    if (!m.uses) return true;
-    return !slugPrefixes.includes(m.uses);
-  });
+  const existingModels = config.models ?? [];
 
-  return {
-    ...config,
-    models: [...filteredModels, ...newModels],
-  };
+  // Update API key on existing models; add new entries for any missing slugs
+  const updatedModels = existingModels.map((m: any) => {
+    const match = newModels.find((n: any) => n.uses === m.uses);
+    return match ? { ...m, with: { ...m.with, ...match.with } } : m;
+  });
+  const modelsToAdd = newModels.filter(
+    (n: any) => !existingModels.some((m: any) => m.uses === n.uses),
+  );
+
+  return { ...config, models: [...updatedModels, ...modelsToAdd] };
 }
