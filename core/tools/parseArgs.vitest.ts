@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ToolCallDelta } from "..";
 import {
+  coerceArgsToSchema,
   getBooleanArg,
   getNumberArg,
   getOptionalStringArg,
@@ -289,6 +290,129 @@ describe("getBooleanArg", () => {
     expect(() => getBooleanArg(undefined, "flag", true)).toThrowError(
       "Argument `flag` is required (type boolean)",
     );
+  });
+});
+
+describe("coerceArgsToSchema", () => {
+  it("should stringify object values when schema expects string", () => {
+    const args = { content: { key: "value", number: 123 } };
+    const schema = {
+      type: "object",
+      properties: {
+        content: { type: "string" },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.content).toBe('{"key":"value","number":123}');
+  });
+
+  it("should stringify array values when schema expects string", () => {
+    const args = { content: ["item1", "item2"] };
+    const schema = {
+      type: "object",
+      properties: {
+        content: { type: "string" },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.content).toBe('["item1","item2"]');
+  });
+
+  it("should leave string values as-is", () => {
+    const args = { content: "hello world" };
+    const schema = {
+      type: "object",
+      properties: {
+        content: { type: "string" },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.content).toBe("hello world");
+  });
+
+  it("should leave non-string schema types as-is", () => {
+    const args = { count: 42, data: { nested: true } };
+    const schema = {
+      type: "object",
+      properties: {
+        count: { type: "number" },
+        data: { type: "object" },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.count).toBe(42);
+    expect(result.data).toEqual({ nested: true });
+  });
+
+  it("should return args unchanged when no schema provided", () => {
+    const args = { content: { key: "value" } };
+    const result = coerceArgsToSchema(args, undefined);
+    expect(result).toBe(args);
+  });
+
+  it("should return args unchanged when schema has no properties", () => {
+    const args = { content: { key: "value" } };
+    const result = coerceArgsToSchema(args, { type: "object" });
+    expect(result).toBe(args);
+  });
+
+  it("should handle mixed args with some needing coercion", () => {
+    const args = {
+      filePath: "/path/to/file.json",
+      content: { key: "value" },
+      overwrite: true,
+    };
+    const schema = {
+      type: "object",
+      properties: {
+        filePath: { type: "string" },
+        content: { type: "string" },
+        overwrite: { type: "boolean" },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.filePath).toBe("/path/to/file.json");
+    expect(result.content).toBe('{"key":"value"}');
+    expect(result.overwrite).toBe(true);
+  });
+
+  it("should skip args not in schema", () => {
+    const args = { unknown: { key: "value" }, known: "hello" };
+    const schema = {
+      type: "object",
+      properties: {
+        known: { type: "string" },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.unknown).toEqual({ key: "value" });
+    expect(result.known).toBe("hello");
+  });
+
+  it("should not coerce numbers or booleans to strings", () => {
+    const args = { content: 42, flag: true };
+    const schema = {
+      type: "object",
+      properties: {
+        content: { type: "string" },
+        flag: { type: "string" },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.content).toBe(42);
+    expect(result.flag).toBe(true);
+  });
+
+  it("should not mutate the original args object", () => {
+    const args = { content: { key: "value" } };
+    const schema = {
+      type: "object",
+      properties: {
+        content: { type: "string" },
+      },
+    };
+    coerceArgsToSchema(args, schema);
+    expect(args.content).toEqual({ key: "value" });
   });
 });
 
