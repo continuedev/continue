@@ -82,12 +82,9 @@ class UriUtilsTest : TestCase() {
         val uri = "file://C:/Users/user/projects/[gamemode]/file.lua"
         val parsed = UriUtils.parseUri(uri)
         assertEquals("file", parsed.scheme)
-        // Brackets must be percent-encoded or absent as raw characters in a valid URI
-        assertFalse("Raw square brackets should not appear in URI path",
-            parsed.toString().contains("[") || parsed.toString().contains("]"))
-        assertTrue("Path should preserve directory structure",
-            parsed.path.contains("Users/user/projects"))
-        assertTrue("Path should end with file name",
-            parsed.path.endsWith("file.lua"))
+        // URI.path returns the decoded path — brackets should be literal here
+        assertEquals("/C:/Users/user/projects/[gamemode]/file.lua", parsed.path)
+        // The raw URI string should have them percent-encoded
+        assertEquals("file:///C:/Users/user/projects/%5Bgamemode%5D/file.lua", parsed.toString())
     }
 }
