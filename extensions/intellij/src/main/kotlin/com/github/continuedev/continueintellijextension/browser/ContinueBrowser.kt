@@ -185,7 +185,7 @@ class ContinueBrowser(
             return ChunkScripts(
                 init = """window.__cc=window.__cc||{};window.__cc["$bufferId"]=[];""",
                 chunks = chunks,
-                finalize = """try{window.postMessage(JSON.parse(atob(window.__cc["$bufferId"].join(""))),"*")}
+                finalize = """try{var b=atob(window.__cc["$bufferId"].join(""));window.postMessage(JSON.parse(new TextDecoder().decode(Uint8Array.from(b,function(c){return c.charCodeAt(0)}))),"*")}
 finally{delete window.__cc["$bufferId"]}""",
                 cleanup = """delete window.__cc["$bufferId"];""",
             )

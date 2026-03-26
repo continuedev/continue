@@ -44,6 +44,7 @@ class ContinueBrowserChunkTest : TestCase() {
         val scripts = buildChunkScripts("{}", "myId")
         assertTrue(scripts.finalize.contains("""window.__cc["myId"].join("")"""))
         assertTrue(scripts.finalize.contains("atob"))
+        assertTrue(scripts.finalize.contains("TextDecoder"))
         assertTrue(scripts.finalize.contains("JSON.parse"))
         assertTrue(scripts.finalize.contains("""delete window.__cc["myId"]"""))
     }
