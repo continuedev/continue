@@ -67,7 +67,7 @@ describe("Test Suite", () => {
     const binaryPath = path.join(binaryDir, `continue-binary${exe}`);
     const expectedItems = [
       `continue-binary${exe}`,
-      `esbuild${exe}`,
+      `rg${exe}`,
       "index.node",
       "package.json",
       "build/Release/node_sqlite3.node",
@@ -144,7 +144,7 @@ describe("Test Suite", () => {
       (
         messenger as CoreBinaryTcpMessenger<ToIdeProtocol, FromIdeProtocol>
       ).close();
-    } else {
+    } else if (subprocess) {
       subprocess.kill();
       await new Promise((resolve) => subprocess.on("close", resolve));
       await new Promise((resolve) => setTimeout(resolve, 1000));
