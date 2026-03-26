@@ -150,7 +150,7 @@ export function analyzeError(
   }
 
   // Ollama tool call parsing failure (transient model output issue)
-  if (errorText.includes("error parsing ollama response: error: error parsing tool call")) {
+  if (errorText.includes("error parsing tool call")) {
     customErrorMessage =
       "This model produced an invalid tool call that Ollama could not parse. " +
       "This is a known transient issue — you can resubmit your message to try again. " +
