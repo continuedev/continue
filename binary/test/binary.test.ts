@@ -1,4 +1,4 @@
-import { SerializedContinueConfig } from "core";
+import { ModelDescription, SerializedContinueConfig } from "core";
 // import Mock from "core/llm/llms/Mock.js";
 import { FromIdeProtocol, ToIdeProtocol } from "core/protocol/index.js";
 import { IMessenger } from "core/protocol/messenger";
@@ -235,16 +235,20 @@ describe("Test Suite", () => {
       result: { config },
     } = await messenger.request("config/getSerializedProfileInfo", undefined);
 
-    expect(config!.modelsByRole.chat.some((m) => m.title === model.title)).toBe(
-      true,
-    );
+    expect(
+      config!.modelsByRole.chat.some(
+        (m: ModelDescription) => m.title === model.title,
+      ),
+    ).toBe(true);
 
     await messenger.request("config/deleteModel", { title: model.title });
     const {
       result: { config: configAfterDelete },
     } = await messenger.request("config/getSerializedProfileInfo", undefined);
     expect(
-      configAfterDelete!.modelsByRole.chat.some((m) => m.title === model.title),
+      configAfterDelete!.modelsByRole.chat.some(
+        (m: ModelDescription) => m.title === model.title,
+      ),
     ).toBe(false);
   });
 
