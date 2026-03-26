@@ -13,6 +13,7 @@ import com.intellij.ui.jcef.*
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
+import java.util.Base64
 import javax.swing.JComponent
 
 class ContinueBrowser(
@@ -86,12 +87,55 @@ class ContinueBrowser(
 
     fun sendToWebview(messageType: String, data: Any? = null, messageId: String = uuid()) {
         val json = gsonService.gson.toJson(BrowserMessage(messageType, messageId, data))
-        val jsCode = """window.postMessage($json, "*");"""
         try {
-            browser.cefBrowser.executeJavaScript(jsCode, getGuiUrl(), 0)
+            if (json.length <= CHUNKED_MESSAGE_THRESHOLD) {
+                browser.cefBrowser.executeJavaScript(
+                    """window.postMessage($json, "*");""", getGuiUrl(), 0
+                )
+            } else {
+                sendChunked(json, messageId)
+            }
         } catch (error: IllegalStateException) {
             log.warn(error)
         }
+    }
+
+    /**
+     * Sends a large JSON payload to the webview by splitting it into small chunks.
+     *
+     * JCEF freezes when executeJavaScript is called with a very large JS source string
+     * (e.g. 50-100MB for long conversation sessions) because the JS parser/compiler cannot
+     * handle source strings that large. This method avoids that by:
+     * 1. Base64-encoding the JSON (producing only safe [A-Za-z0-9+/=] characters)
+     * 2. Sending it in small chunks that each append to a JS string variable
+     * 3. One final small call that decodes, parses, and dispatches the complete message
+     *
+     * Each individual executeJavaScript call only processes ~512KB of source code,
+     * which JCEF handles without issue. The JS runtime (V8) has no trouble with the
+     * resulting large string concatenation or the final JSON.parse on the full payload.
+     */
+    private fun sendChunked(json: String, bufferId: String) {
+        val encoded = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
+        val url = getGuiUrl()
+
+        browser.cefBrowser.executeJavaScript(
+            """window.__cc=window.__cc||{};window.__cc["$bufferId"]="";""", url, 0
+        )
+
+        var offset = 0
+        while (offset < encoded.length) {
+            val end = minOf(offset + CHUNK_SIZE, encoded.length)
+            val chunk = encoded.substring(offset, end)
+            browser.cefBrowser.executeJavaScript(
+                """window.__cc["$bufferId"]+="$chunk";""", url, 0
+            )
+            offset = end
+        }
+
+        browser.cefBrowser.executeJavaScript("""
+            try{window.postMessage(JSON.parse(atob(window.__cc["$bufferId"])),"*")}
+            finally{delete window.__cc["$bufferId"]}
+        """.trimIndent(), url, 0)
     }
 
     private fun executeJavaScript(myJSQueryOpenInBrowser: JBCefJSQuery) {
@@ -131,10 +175,13 @@ class ContinueBrowser(
     }
 
     private companion object {
+        // Messages larger than 1MB get chunked to avoid JCEF parser freezes
+        private const val CHUNKED_MESSAGE_THRESHOLD = 1 * 1024 * 1024
+        // Each chunk sent via executeJavaScript is at most 512KB of base64 text
+        private const val CHUNK_SIZE = 512 * 1024
 
         private fun getGuiUrl() =
             System.getenv("GUI_URL") ?: "http://continue/index.html"
-
     }
 
 }
