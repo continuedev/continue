@@ -393,10 +393,14 @@ export function Chat() {
       }
 
       if (message.role === "thinking") {
+        const thinkingContent = renderChatMessage(message);
+        if (!thinkingContent?.trim()) {
+          return null;
+        }
         return (
           <div className={isBeforeLatestSummary ? "opacity-50" : ""}>
             <ThinkingBlockPeek
-              content={renderChatMessage(message)}
+              content={thinkingContent}
               redactedThinking={message.redactedThinking}
               index={index}
               prevItem={index > 0 ? history[index - 1] : null}
