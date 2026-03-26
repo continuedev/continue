@@ -405,8 +405,6 @@ export function createEditorConfig(options: {
             },
           }),
         );
-      } else {
-        dispatch(setDraft({ key: props.historyKey, draft: undefined }));
       }
     },
   });
