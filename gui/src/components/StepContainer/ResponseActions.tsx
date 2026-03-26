@@ -40,9 +40,7 @@ export default function ResponseActions({
     (state) => state.session.contextPercentage,
   );
   const isPruned = useAppSelector((state) => state.session.isPruned);
-  const historyLength = useAppSelector(
-    (state) => state.session.history.length,
-  );
+  const historyLength = useAppSelector((state) => state.session.history.length);
   const ruleGenerationSupported = useMemo(() => {
     return selectedModel && modelSupportsNativeTools(selectedModel);
   }, [selectedModel]);
@@ -53,8 +51,7 @@ export default function ResponseActions({
       ? "text-warning"
       : "text-description-muted";
 
-  const showLabel =
-    isLast && historyLength >= 4 && (isPruned || percent >= 60);
+  const showLabel = isLast && historyLength >= 4 && (isPruned || percent >= 60);
 
   const compactConversation = useCompactConversation();
 
@@ -64,7 +61,7 @@ export default function ResponseActions({
   };
 
   return (
-    <div className="text-description-muted mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs">
+    <div className="mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs text-description-muted">
       <HeaderButtonWithToolTip
         testId={`compact-button-${index}`}
         text={
@@ -95,7 +92,7 @@ export default function ResponseActions({
           text="Generate rule"
           onClick={onGenerateRule}
         >
-          <PencilSquareIcon className="text-description-muted h-3.5 w-3.5" />
+          <PencilSquareIcon className="h-3.5 w-3.5 text-description-muted" />
         </HeaderButtonWithToolTip>
       )}
 
@@ -105,7 +102,7 @@ export default function ResponseActions({
           text="Continue generation"
           onClick={onContinueGeneration}
         >
-          <BarsArrowDownIcon className="text-description-muted h-3.5 w-3.5" />
+          <BarsArrowDownIcon className="h-3.5 w-3.5 text-description-muted" />
         </HeaderButtonWithToolTip>
       )}
 
@@ -115,7 +112,7 @@ export default function ResponseActions({
         tabIndex={-1}
         onClick={onDelete}
       >
-        <TrashIcon className="text-description-muted h-3.5 w-3.5" />
+        <TrashIcon className="h-3.5 w-3.5 text-description-muted" />
       </HeaderButtonWithToolTip>
 
       <CopyIconButton
