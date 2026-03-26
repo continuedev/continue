@@ -33,18 +33,6 @@ export function addModel(
         return config;
       }
 
-      // If a model with the same provider and model name exists,
-      // update its API key instead of creating a duplicate
-      const existingIndex = config.models?.findIndex(
-        (m: any) => m.provider === model.provider && m.model === model.model,
-      );
-      if (existingIndex !== undefined && existingIndex >= 0) {
-        if (model.apiKey) {
-          config.models[existingIndex].apiKey = model.apiKey;
-        }
-        return config;
-      }
-
       const numMatches = config.models?.reduce(
         (prev, curr) => (curr.title.startsWith(model.title) ? prev + 1 : prev),
         0,
@@ -69,25 +57,6 @@ export function addModel(
       return config;
     },
     (config) => {
-      if (!config.models) {
-        config.models = [];
-      }
-
-      // If a model with the same provider and model name exists,
-      // update its API key instead of creating a duplicate
-      const existingIndex = config.models.findIndex(
-        (m) =>
-          "provider" in m &&
-          m.provider === model.provider &&
-          m.model === model.model,
-      );
-      if (existingIndex >= 0) {
-        if (model.apiKey) {
-          (config.models[existingIndex] as any).apiKey = model.apiKey;
-        }
-        return config;
-      }
-
       const numMatches = config.models?.reduce(
         (prev, curr) =>
           "name" in curr && curr.name.startsWith(model.title) ? prev + 1 : prev,
@@ -95,6 +64,10 @@ export function addModel(
       );
       if (numMatches !== undefined && numMatches > 0) {
         model.title = `${model.title} (${numMatches})`;
+      }
+
+      if (!config.models) {
+        config.models = [];
       }
 
       const desc: ModelConfig = {
