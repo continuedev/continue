@@ -137,9 +137,6 @@ export function Chat() {
     return isJetBrains();
   }, []);
 
-  const historyKey = isInEdit ? "edit" : "chat";
-  const draft = useAppSelector((state) => state.session.draft[historyKey]);
-
   useAutoScroll(stepsDivRef, history);
 
   useEffect(() => {
@@ -338,9 +335,6 @@ export function Chat() {
         latestSummaryIndex !== -1 && index < latestSummaryIndex;
 
       if (message.role === "user") {
-        const draftContent =
-          draft?.messageId === message.id ? draft.content : undefined;
-
         return (
           <ContinueInputBox
             onEnter={(editorState, modifiers) =>
@@ -348,7 +342,7 @@ export function Chat() {
             }
             isLastUserInput={isLastUserInput(index)}
             isMainInput={false}
-            editorState={draftContent ?? editorState ?? item.message.content}
+            editorState={editorState ?? item.message.content}
             contextItems={contextItems}
             appliedRules={appliedRules}
             inputId={message.id}
@@ -475,7 +469,6 @@ export function Chat() {
           onEnter={(editorState, modifiers, editor) =>
             sendInput(editorState, modifiers, undefined, editor)
           }
-          editorState={draft?.messageId ? undefined : draft?.content}
           inputId={MAIN_EDITOR_INPUT_ID}
         />
 
