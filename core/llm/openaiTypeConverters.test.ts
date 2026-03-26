@@ -1,50 +1,42 @@
-import { toResponsesInput } from "./openaiTypeConverters";
+import { toResponsesInput, isItemType } from "./openaiTypeConverters";
 import { ChatMessage } from "..";
-import type { ResponseInputItem } from "openai/resources/responses/responses.mjs";
+import type {
+  EasyInputMessage,
+  ResponseInputItem,
+  ResponseFunctionToolCall,
+  ResponseReasoningItem,
+  ResponseOutputMessage,
+} from "openai/resources/responses/responses.mjs";
 
-// Types for test assertions (simplified from OpenAI types)
-type FunctionCallItem = {
-  type: "function_call";
-  id: string;
-  name: string;
-  arguments: string;
-  call_id: string;
-};
-
-type FunctionCallOutputItem = {
-  type: "function_call_output";
-  call_id: string;
-  output: string;
-};
-
-type MessageItem = {
-  role: string;
-  content: unknown;
-};
-
-// Helper functions for filtering results
-function getFunctionCalls(items: ResponseInputItem[]): FunctionCallItem[] {
-  return items.filter(
-    (item) => (item as { type?: string }).type === "function_call",
-  ) as unknown as FunctionCallItem[];
+function getFunctionCalls(
+  items: ResponseInputItem[],
+): ResponseFunctionToolCall[] {
+  return items.filter((i): i is ResponseFunctionToolCall =>
+    isItemType<ResponseFunctionToolCall>(i, "function_call"),
+  );
 }
 
 function getFunctionCallOutputs(
   items: ResponseInputItem[],
-): FunctionCallOutputItem[] {
-  return items.filter(
-    (item) => (item as { type?: string }).type === "function_call_output",
-  ) as unknown as FunctionCallOutputItem[];
+): ResponseInputItem.FunctionCallOutput[] {
+  return items.filter((i): i is ResponseInputItem.FunctionCallOutput =>
+    isItemType<ResponseInputItem.FunctionCallOutput>(i, "function_call_output"),
+  );
 }
 
-function getMessagesByRole(
+function getReasoningItems(
   items: ResponseInputItem[],
-  role: string,
-): MessageItem[] {
+): ResponseReasoningItem[] {
+  return items.filter((i): i is ResponseReasoningItem =>
+    isItemType<ResponseReasoningItem>(i, "reasoning"),
+  );
+}
+
+function getMessagesByRole(items: ResponseInputItem[], role: string) {
   return items.filter((item) => {
-    const msg = item as { role?: string; type?: string };
-    return msg.role === role && (!msg.type || msg.type === "message");
-  }) as unknown as MessageItem[];
+    if (!("role" in item) || item.role !== role) return false;
+    return !("type" in item) || item.type === "message";
+  });
 }
 
 describe("openaiTypeConverters", () => {
@@ -82,7 +74,7 @@ describe("openaiTypeConverters", () => {
         expect(functionCalls[0].name).toBe("filesystem_list_directory");
       });
 
-      it("should NOT emit function_call when no fc_ ID in metadata", () => {
+      it("should emit function_call WITHOUT id when no fc_ ID in metadata", () => {
         const messages: ChatMessage[] = [
           {
             role: "assistant",
@@ -103,8 +95,11 @@ describe("openaiTypeConverters", () => {
 
         const result = toResponsesInput(messages);
 
+        // Should still emit function_call (without id) so tool results aren't orphaned
         const functionCalls = getFunctionCalls(result);
-        expect(functionCalls.length).toBe(0);
+        expect(functionCalls.length).toBe(1);
+        expect(functionCalls[0].id).toBeUndefined();
+        expect(functionCalls[0].call_id).toBe("call_xyz");
 
         // Text should still be emitted
         const assistantMessages = getMessagesByRole(result, "assistant");
@@ -137,13 +132,61 @@ describe("openaiTypeConverters", () => {
 
         expect(functionCalls.length).toBe(1);
         expect(assistantMessages.length).toBe(1);
-        expect(assistantMessages[0].content).toBe("Let me help you with that.");
+        expect((assistantMessages[0] as EasyInputMessage).content).toBe(
+          "Let me help you with that.",
+        );
+      });
+
+      it("should filter out msg_ IDs from responsesOutputItemIds", () => {
+        // When streaming, both msg_ and fc_ IDs accumulate in responsesOutputItemIds.
+        // Only fc_ IDs should be used for function_call items.
+        const messages: ChatMessage[] = [
+          {
+            role: "assistant",
+            content: "Let me read those files.",
+            toolCalls: [
+              {
+                id: "call_001",
+                type: "function",
+                function: {
+                  name: "read_file",
+                  arguments: '{"path":"test.py"}',
+                },
+              },
+            ],
+            metadata: {
+              // msg_ ID came first (from message output_item.added),
+              // fc_ ID came second (from function_call output_item.added)
+              responsesOutputItemIds: ["msg_abc123", "fc_001"],
+              responsesOutputItemId: "fc_001",
+            },
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        const functionCalls = getFunctionCalls(result);
+        expect(functionCalls.length).toBe(1);
+        // Must use fc_ ID, not msg_ ID
+        expect(functionCalls[0].id).toBe("fc_001");
+        expect(functionCalls[0].call_id).toBe("call_001");
       });
     });
 
     describe("function_call_output handling", () => {
-      it("should emit function_call_output for tool role messages", () => {
+      it("should emit function_call_output when preceded by matching function_call", () => {
         const messages: ChatMessage[] = [
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "call_abc123",
+                type: "function",
+                function: { name: "list_files", arguments: "{}" },
+              },
+            ],
+          } as ChatMessage,
           {
             role: "tool",
             content: '{"files": ["a.txt", "b.txt"]}',
@@ -157,9 +200,25 @@ describe("openaiTypeConverters", () => {
         expect(outputs.length).toBe(1);
         expect(outputs[0].call_id).toBe("call_abc123");
       });
+
+      it("should remove orphaned function_call_output with no matching function_call", () => {
+        const messages: ChatMessage[] = [
+          {
+            role: "tool",
+            content: '{"files": ["a.txt", "b.txt"]}',
+            toolCallId: "call_abc123",
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        // Orphaned — no function_call with call_id "call_abc123" exists
+        const outputs = getFunctionCallOutputs(result);
+        expect(outputs.length).toBe(0);
+      });
     });
 
-    // Complete conversation flow tests (moved out of describe block to reduce nesting)
+    // Complete conversation flow tests
     it("should handle full tool call cycle with fc_ IDs", () => {
       const messages: ChatMessage[] = [
         {
@@ -204,8 +263,6 @@ describe("openaiTypeConverters", () => {
     });
 
     it("should handle parallel tool calls merged into ONE message with responsesOutputItemIds array", () => {
-      // This is the REAL scenario: streaming parallel tool calls get merged into
-      // ONE ChatMessage with multiple toolCalls and an array of fc_ IDs
       const messages: ChatMessage[] = [
         {
           role: "user",
@@ -241,12 +298,10 @@ describe("openaiTypeConverters", () => {
             },
           ],
           metadata: {
-            // Array of fc_ IDs, one per tool call
             responsesOutputItemIds: ["fc_001", "fc_002", "fc_003"],
-            responsesOutputItemId: "fc_003", // Also keep last one for backwards compat
+            responsesOutputItemId: "fc_003",
           },
         } as ChatMessage,
-        // Tool results
         {
           role: "tool",
           content: "# Python code",
@@ -269,7 +324,6 @@ describe("openaiTypeConverters", () => {
       const functionCalls = getFunctionCalls(result);
       expect(functionCalls.length).toBe(3);
 
-      // Verify each function_call has correct fc_ ID and call_id
       expect(functionCalls[0].id).toBe("fc_001");
       expect(functionCalls[0].call_id).toBe("call_001");
       expect(functionCalls[1].id).toBe("fc_002");
@@ -282,13 +336,11 @@ describe("openaiTypeConverters", () => {
     });
 
     it("should handle 3 parallel tool calls when each has its own fc_ ID (separate messages)", () => {
-      // Legacy scenario: Each function_call from OpenAI creates a separate ChatMessage
       const messages: ChatMessage[] = [
         {
           role: "user",
           content: "Read these 3 files",
         },
-        // First tool call
         {
           role: "assistant",
           content: "",
@@ -304,7 +356,6 @@ describe("openaiTypeConverters", () => {
           ],
           metadata: { responsesOutputItemId: "fc_001" },
         } as ChatMessage,
-        // Second tool call
         {
           role: "assistant",
           content: "",
@@ -320,7 +371,6 @@ describe("openaiTypeConverters", () => {
           ],
           metadata: { responsesOutputItemId: "fc_002" },
         } as ChatMessage,
-        // Third tool call
         {
           role: "assistant",
           content: "",
@@ -336,7 +386,6 @@ describe("openaiTypeConverters", () => {
           ],
           metadata: { responsesOutputItemId: "fc_003" },
         } as ChatMessage,
-        // Tool results
         {
           role: "tool",
           content: "# Python code",
@@ -368,6 +417,293 @@ describe("openaiTypeConverters", () => {
       expect(functionOutputs.length).toBe(3);
     });
 
+    describe("reasoning item sanitization", () => {
+      it("should remove reasoning items without encrypted_content", () => {
+        const messages: ChatMessage[] = [
+          {
+            role: "thinking",
+            content: "",
+            reasoning_details: [
+              { type: "reasoning_id", id: "rs_001" },
+              { type: "summary_text", text: "Thinking about the problem" },
+              // No encrypted_content
+            ],
+            metadata: { reasoningId: "rs_001" },
+          } as ChatMessage,
+          {
+            role: "assistant",
+            content: "Here is the answer.",
+            metadata: { responsesOutputItemId: "msg_001" },
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        const reasoning = getReasoningItems(result);
+        expect(reasoning.length).toBe(0);
+
+        // Assistant message should still be present
+        const assistantMsgs = getMessagesByRole(result, "assistant");
+        expect(assistantMsgs.length).toBe(1);
+      });
+
+      it("should keep reasoning items WITH encrypted_content followed by function_call", () => {
+        const messages: ChatMessage[] = [
+          {
+            role: "thinking",
+            content: "",
+            reasoning_details: [
+              { type: "reasoning_id", id: "rs_001" },
+              { type: "summary_text", text: "Let me use a tool" },
+              {
+                type: "encrypted_content",
+                encrypted_content: "encrypted_data_here",
+              },
+            ],
+            metadata: { reasoningId: "rs_001" },
+          } as ChatMessage,
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "call_001",
+                type: "function",
+                function: { name: "read_file", arguments: '{"path":"a.txt"}' },
+              },
+            ],
+            metadata: {
+              responsesOutputItemIds: ["fc_001"],
+            },
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        const reasoning = getReasoningItems(result);
+        expect(reasoning.length).toBe(1);
+        expect(reasoning[0].id).toBe("rs_001");
+
+        const functionCalls = getFunctionCalls(result);
+        expect(functionCalls.length).toBe(1);
+        expect(functionCalls[0].id).toBe("fc_001");
+      });
+
+      it("should strip fc_ id from function_calls after removed reasoning", () => {
+        const messages: ChatMessage[] = [
+          {
+            role: "thinking",
+            content: "",
+            reasoning_details: [
+              { type: "reasoning_id", id: "rs_001" },
+              // No encrypted_content — will be removed
+            ],
+            metadata: { reasoningId: "rs_001" },
+          } as ChatMessage,
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "call_001",
+                type: "function",
+                function: { name: "read_file", arguments: '{"path":"a.txt"}' },
+              },
+            ],
+            metadata: {
+              responsesOutputItemIds: ["fc_001"],
+            },
+          } as ChatMessage,
+          {
+            role: "tool",
+            content: "file contents",
+            toolCallId: "call_001",
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        // Reasoning should be removed
+        const reasoning = getReasoningItems(result);
+        expect(reasoning.length).toBe(0);
+
+        // function_call should still be emitted but without id
+        // (so API doesn't look for the missing reasoning)
+        const functionCalls = getFunctionCalls(result);
+        expect(functionCalls.length).toBe(1);
+        expect(functionCalls[0].id).toBeUndefined();
+        expect(functionCalls[0].call_id).toBe("call_001");
+
+        // function_call_output should still match
+        const outputs = getFunctionCallOutputs(result);
+        expect(outputs.length).toBe(1);
+        expect(outputs[0].call_id).toBe("call_001");
+      });
+
+      it("should strip msg_ id from message after removed reasoning", () => {
+        // When reasoning is removed, a following message item's msg_ ID
+        // also references that reasoning — must be stripped too.
+        const messages: ChatMessage[] = [
+          {
+            role: "thinking",
+            content: "",
+            reasoning_details: [
+              { type: "reasoning_id", id: "rs_001" },
+              // No encrypted_content — will be removed
+            ],
+            metadata: { reasoningId: "rs_001" },
+          } as ChatMessage,
+          {
+            role: "assistant",
+            content: "Here is the answer.",
+            metadata: { responsesOutputItemId: "msg_001" },
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        const reasoning = getReasoningItems(result);
+        expect(reasoning.length).toBe(0);
+
+        // Message should still exist but without its msg_ ID
+        const assistantMsgs = getMessagesByRole(result, "assistant");
+        expect(assistantMsgs.length).toBe(1);
+        expect((assistantMsgs[0] as ResponseOutputMessage).id).toBeUndefined();
+      });
+
+      it("should recover encrypted_content from metadata fallback", () => {
+        // When reasoning_details doesn't contain encrypted_content but
+        // metadata does (e.g. metadata was preserved but details were incomplete)
+        const messages: ChatMessage[] = [
+          {
+            role: "thinking",
+            content: "",
+            reasoning_details: [
+              { type: "reasoning_id", id: "rs_001" },
+              { type: "summary_text", text: "Thinking..." },
+              // No encrypted_content in reasoning_details
+            ],
+            metadata: {
+              reasoningId: "rs_001",
+              encrypted_content: "recovered_encrypted_data",
+            },
+          } as ChatMessage,
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "call_001",
+                type: "function",
+                function: { name: "read_file", arguments: '{"path":"a.txt"}' },
+              },
+            ],
+            metadata: { responsesOutputItemIds: ["fc_001"] },
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        // Reasoning should be KEPT because encrypted_content was recovered from metadata
+        const reasoning = getReasoningItems(result);
+        expect(reasoning.length).toBe(1);
+        expect(reasoning[0].encrypted_content).toBe("recovered_encrypted_data");
+
+        // function_call should keep its id since reasoning is present
+        const functionCalls = getFunctionCalls(result);
+        expect(functionCalls.length).toBe(1);
+        expect(functionCalls[0].id).toBe("fc_001");
+      });
+
+      it("should remove trailing reasoning items (no valid successor)", () => {
+        const messages: ChatMessage[] = [
+          {
+            role: "user",
+            content: "Hello",
+          },
+          {
+            role: "thinking",
+            content: "",
+            reasoning_details: [
+              { type: "reasoning_id", id: "rs_001" },
+              {
+                type: "encrypted_content",
+                encrypted_content: "encrypted_data",
+              },
+            ],
+            metadata: { reasoningId: "rs_001" },
+          } as ChatMessage,
+          // No assistant/function_call follows — interrupted conversation
+        ];
+
+        const result = toResponsesInput(messages);
+
+        const reasoning = getReasoningItems(result);
+        expect(reasoning.length).toBe(0);
+      });
+    });
+
+    describe("orphaned function_call_output removal", () => {
+      it("should remove function_call_output with no matching function_call", () => {
+        // This can happen when conversation history is truncated/pruned
+        const messages: ChatMessage[] = [
+          {
+            role: "user",
+            content: "Hello",
+          },
+          // function_call was pruned, but tool result remains
+          {
+            role: "tool",
+            content: "result data",
+            toolCallId: "call_orphan",
+          } as ChatMessage,
+          {
+            role: "assistant",
+            content: "Here are the results.",
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        const outputs = getFunctionCallOutputs(result);
+        expect(outputs.length).toBe(0);
+
+        // Other items should be preserved
+        const userMsgs = getMessagesByRole(result, "user");
+        expect(userMsgs.length).toBe(1);
+        const assistantMsgs = getMessagesByRole(result, "assistant");
+        expect(assistantMsgs.length).toBe(1);
+      });
+
+      it("should keep function_call_output that has a matching function_call", () => {
+        const messages: ChatMessage[] = [
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "call_valid",
+                type: "function",
+                function: { name: "tool", arguments: "{}" },
+              },
+            ],
+            metadata: { responsesOutputItemIds: ["fc_valid"] },
+          } as ChatMessage,
+          {
+            role: "tool",
+            content: "result",
+            toolCallId: "call_valid",
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        const outputs = getFunctionCallOutputs(result);
+        expect(outputs.length).toBe(1);
+        expect(outputs[0].call_id).toBe("call_valid");
+      });
+    });
+
     describe("edge cases", () => {
       it("should handle empty messages array", () => {
         const result = toResponsesInput([]);
@@ -380,7 +716,7 @@ describe("openaiTypeConverters", () => {
             role: "assistant",
             content: "No tools needed",
             toolCalls: [],
-            metadata: { responsesOutputItemId: "fc_empty" },
+            metadata: { responsesOutputItemId: "msg_empty" },
           } as ChatMessage,
         ];
 
@@ -389,7 +725,7 @@ describe("openaiTypeConverters", () => {
         const functionCalls = getFunctionCalls(result);
         expect(functionCalls.length).toBe(0);
 
-        // Should emit as regular message instead
+        // Should emit as message with msg_ ID
         const assistantMessages = getMessagesByRole(result, "assistant");
         expect(assistantMessages.length).toBe(1);
       });
@@ -415,9 +751,11 @@ describe("openaiTypeConverters", () => {
 
         const result = toResponsesInput(messages);
 
-        // Should not emit function_call without fc_ ID
+        // Should still emit function_call (without id)
         const functionCalls = getFunctionCalls(result);
-        expect(functionCalls.length).toBe(0);
+        expect(functionCalls.length).toBe(1);
+        expect(functionCalls[0].id).toBeUndefined();
+        expect(functionCalls[0].call_id).toBe("call_test");
       });
 
       it("should handle more toolCalls than responsesOutputItemIds", () => {
@@ -451,11 +789,12 @@ describe("openaiTypeConverters", () => {
 
         const result = toResponsesInput(messages);
 
-        // Should only emit 2 function_calls (matching the available IDs)
+        // All 3 function_calls should be emitted; third one without id
         const functionCalls = getFunctionCalls(result);
-        expect(functionCalls.length).toBe(2);
+        expect(functionCalls.length).toBe(3);
         expect(functionCalls[0].id).toBe("fc_001");
         expect(functionCalls[1].id).toBe("fc_002");
+        expect(functionCalls[2].id).toBeUndefined();
       });
 
       it("should handle toolCall with missing function name", () => {

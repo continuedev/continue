@@ -34,10 +34,13 @@ describe("convertVercelStreamPart", () => {
     const result = convertVercelStreamPart(part, options);
 
     expect(result).not.toBeNull();
-    expect(result?.choices[0].delta.content).toBe("Let me think...");
+    expect((result?.choices[0].delta as any).reasoning_content).toBe(
+      "Let me think...",
+    );
+    expect(result?.choices[0].delta.content).toBeUndefined();
   });
 
-  test("returns null for tool-call (handled by tool-input-start/delta)", () => {
+  test("returns null for tool-call without thoughtSignature", () => {
     const part: VercelStreamPart = {
       type: "tool-call",
       toolCallId: "call_abc123",
@@ -45,9 +48,32 @@ describe("convertVercelStreamPart", () => {
       input: { filepath: "/path/to/file" },
     };
 
+    expect(convertVercelStreamPart(part, options)).toBeNull();
+  });
+
+  test("converts tool-call with thoughtSignature to extra_content chunk", () => {
+    const part: VercelStreamPart = {
+      type: "tool-call",
+      toolCallId: "call_abc123",
+      toolName: "readFile",
+      input: { filepath: "/path/to/file" },
+      providerMetadata: {
+        google: {
+          thoughtSignature: "sig123",
+        },
+      },
+    };
+
     const result = convertVercelStreamPart(part, options);
 
-    expect(result).toBeNull();
+    expect(result).not.toBeNull();
+    expect(result?.choices[0].delta.tool_calls).toHaveLength(1);
+    expect(result?.choices[0].delta.tool_calls?.[0]).toEqual({
+      index: 0,
+      extra_content: {
+        google: { thought_signature: "sig123" },
+      },
+    });
   });
 
   test("converts tool-input-delta to chat chunk", () => {
@@ -224,8 +250,8 @@ describe("convertVercelStream", () => {
       chunks.push(chunk);
     }
 
-    // Should get chunks for: text-delta (2), tool-input-start (1), tool-input-delta (1), finish (1) = 5
-    // start-step, tool-input-end, tool-call, and finish-step are filtered out
+    // text-delta (2) + tool-input-start (1) + tool-input-delta (1) + finish (1) = 5
+    // start-step, tool-input-end, tool-call (no thoughtSignature), and finish-step are filtered out
     expect(chunks).toHaveLength(5);
 
     expect(chunks[0].choices[0].delta.content).toBe("Hello ");

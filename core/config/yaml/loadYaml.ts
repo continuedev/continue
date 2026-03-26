@@ -466,6 +466,7 @@ export async function loadContinueConfigFromYaml(options: {
       errors: configYamlResult.errors,
       config: undefined,
       configLoadInterrupted: true,
+      configName: configYamlResult.configName,
     };
   }
 
@@ -495,5 +496,6 @@ export async function loadContinueConfigFromYaml(options: {
     config: withShared,
     errors: [...(configYamlResult.errors ?? []), ...localErrors],
     configLoadInterrupted: false,
+    configName: configYamlResult.configName,
   };
 }

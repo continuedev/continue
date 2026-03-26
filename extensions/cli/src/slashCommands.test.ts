@@ -74,8 +74,21 @@ vi.mock("os", () => ({
 vi.mock("path", () => ({
   default: {
     join: vi.fn((...parts) => parts.join("/")),
+    isAbsolute: vi.fn((p: string) => p.startsWith("/")),
+    resolve: vi.fn((...parts) => parts.join("/")),
   },
   join: vi.fn((...parts) => parts.join("/")),
+  isAbsolute: vi.fn((p: string) => p.startsWith("/")),
+  resolve: vi.fn((...parts) => parts.join("/")),
+}));
+
+// Mock history manager to avoid file system operations
+vi.mock("core/util/history.js", () => ({
+  default: {
+    list: vi.fn(() => []),
+    load: vi.fn(() => ({ history: [] })),
+    save: vi.fn(),
+  },
 }));
 
 // Mock session functions
@@ -333,6 +346,23 @@ describe("slashCommands", () => {
       expect(result).toBeDefined();
       expect(result?.output).toContain(
         "Failed to update title: Failed to save session",
+      );
+      expect(result?.exit).toBe(false);
+    });
+
+    it("should handle /rename as an alias for /title", async () => {
+      const { updateSessionTitle } = await import("./session.js");
+      (updateSessionTitle as any).mockReset();
+
+      const result = await handleSlashCommands(
+        "/rename My Renamed Session",
+        mockAssistant,
+      );
+
+      expect(updateSessionTitle).toHaveBeenCalledWith("My Renamed Session");
+      expect(result).toBeDefined();
+      expect(result?.output).toContain(
+        'Session title updated to: "My Renamed Session"',
       );
       expect(result?.exit).toBe(false);
     });

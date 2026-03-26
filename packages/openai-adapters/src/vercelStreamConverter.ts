@@ -19,6 +19,14 @@ export type VercelStreamPart =
       toolCallId: string;
       toolName: string;
       input: Record<string, unknown>;
+      providerMetadata?: {
+        google?: {
+          thoughtSignature?: string;
+        };
+        vertex?: {
+          thoughtSignature?: string;
+        };
+      };
     }
   | {
       type: "tool-input-start";
@@ -86,8 +94,13 @@ export function convertVercelStreamPart(
       });
 
     case "reasoning-delta":
-      return chatChunk({
-        content: part.text,
+      return chatChunkFromDelta({
+        delta: {
+          role: "assistant",
+          reasoning_content: part.text,
+        } as ChatCompletionChunk.Choice["delta"] & {
+          reasoning_content?: string;
+        },
         model,
       });
 
@@ -126,11 +139,28 @@ export function convertVercelStreamPart(
         model,
       });
 
-    case "tool-call":
-      // tool-call is emitted after tool-input-start/delta/end have already
-      // streamed the complete tool call. Emitting it again would duplicate
-      // the arguments. Skip it since streaming events already handled it.
-      return null;
+    case "tool-call": {
+      const thoughtSignature =
+        part.providerMetadata?.google?.thoughtSignature ??
+        part.providerMetadata?.vertex?.thoughtSignature;
+      if (!thoughtSignature) {
+        return null;
+      }
+      // Emit only extra_content; args were already streamed via tool-input-delta.
+      return chatChunkFromDelta({
+        delta: {
+          tool_calls: [
+            {
+              index: 0,
+              extra_content: {
+                google: { thought_signature: thoughtSignature },
+              },
+            } as any,
+          ],
+        },
+        model,
+      });
+    }
 
     case "finish":
       if (part.totalUsage) {

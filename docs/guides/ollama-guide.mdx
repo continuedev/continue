@@ -208,8 +208,8 @@ models:
   - name: Optimized DeepSeek
     provider: ollama
     model: deepseek-r1:32b
-    contextLength: 8192 # Adjust context window (default varies by model)
-    completionOptions:
+    defaultCompletionOptions:
+      contextLength: 8192 # Adjust context window (default varies by model)
       temperature: 0.7 # Controls randomness (0.0-1.0)
       top_p: 0.9 # Nucleus sampling threshold
       top_k: 40 # Top-k sampling
@@ -271,6 +271,10 @@ To get the best performance from Ollama:
 ## How to Troubleshoot Ollama Issues
 
 ### Common Configuration Problems
+
+#### "Model requires more system memory to run"
+
+Continue may use a higher default context length than other tools. Reduce `contextLength` in your config (e.g., to 2048), or try a smaller model. See [Ollama provider troubleshooting](/customize/model-providers/top-level/ollama#troubleshooting) for details.
 
 #### "404 model not found, try pulling it first"
 

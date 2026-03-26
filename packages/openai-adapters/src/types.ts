@@ -30,6 +30,7 @@ export const BasePlusConfig = BaseConfig.extend({
 
 // OpenAI and compatible
 export const OpenAIConfigSchema = BasePlusConfig.extend({
+  useResponsesApi: z.boolean().optional(),
   provider: z.union([
     z.literal("openai"),
     z.literal("mistral"),
@@ -57,6 +58,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("xAI"),
     z.literal("zAI"),
     z.literal("scaleway"),
+    z.literal("tensorix"),
     z.literal("ncompass"),
     z.literal("relace"),
     z.literal("huggingface-inference-api"),
@@ -73,6 +75,11 @@ export const DeepseekConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("deepseek"),
 });
 export type DeepseekConfig = z.infer<typeof DeepseekConfigSchema>;
+
+export const MiniMaxConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("minimax"),
+});
+export type MiniMaxConfig = z.infer<typeof MiniMaxConfigSchema>;
 
 export const BedrockConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("bedrock"),
@@ -263,6 +270,7 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   BedrockConfigSchema,
   MoonshotConfigSchema,
   DeepseekConfigSchema,
+  MiniMaxConfigSchema,
   CohereConfigSchema,
   AzureConfigSchema,
   GeminiConfigSchema,

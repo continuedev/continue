@@ -172,8 +172,8 @@ export const CometAPI: ModelProvider = {
 
     // Gemini Series
     {
-      model: "gemini-3-pro-preview",
-      displayName: "Gemini 3 Pro Preview",
+      model: "gemini-3.1-pro-preview",
+      displayName: "Gemini 3.1 Pro Preview",
       contextLength: 2000000,
       maxCompletionTokens: 8192,
       description:

@@ -24,7 +24,7 @@ import { todosToolImpl } from "./implementations/todos";
 import { viewDiffImpl } from "./implementations/viewDiff";
 import { viewRepoMapImpl } from "./implementations/viewRepoMap";
 import { viewSubdirectoryImpl } from "./implementations/viewSubdirectory";
-import { safeParseToolCallArgs } from "./parseArgs";
+import { coerceArgsToSchema, safeParseToolCallArgs } from "./parseArgs";
 
 async function callHttpTool(
   url: string,
@@ -96,10 +96,14 @@ async function callToolFromUri(
       if (!client) {
         throw new Error("MCP connection not found");
       }
+      const coercedArgs = coerceArgsToSchema(
+        args,
+        extras.tool?.function?.parameters,
+      );
       const response = await client.client.callTool(
         {
           name: toolName,
-          arguments: args,
+          arguments: coercedArgs,
         },
         CallToolResultSchema,
         { timeout: client.options.timeout },

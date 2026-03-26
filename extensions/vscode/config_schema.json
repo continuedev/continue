@@ -227,6 +227,7 @@
             "kindo",
             "moonshot",
             "siliconflow",
+            "tensorix",
             "function-network",
             "scaleway",
             "relace",
@@ -278,6 +279,7 @@
             "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)",
             "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)",
             "### SiliconFlow\nTo get started with SiliconFlow, obtain your API key from [SiliconCloud](https://cloud.siliconflow.cn/account/ak). SiliconCloud provides cost-effective GenAI services based on excellent open source basic models.\n> [Models](https://siliconflow.cn/zh-cn/models)",
+            "### Tensorix\nTensorix is an OpenAI-compatible API gateway with access to DeepSeek, Llama, Qwen, GLM, and other models. Pay-as-you-go with no subscription required.\nTo get started, create an account and get an API key at [app.tensorix.ai](https://app.tensorix.ai).\n> [Models](https://tensorix.ai/models)",
             "### Function Network offers private, affordable user-owned AI\nTo get started with Function Network, obtain your API key from [Function Network](https://www.function.network/join-waitlist). Function Network provides a variety of models for chat, completion, and embeddings.",
             "### Scaleway\n Generative APIs are serverless endpoints for the most popular AI models.\nHosted in European data centers and priced competitively per million tokens used, models served by Scaleway are ideal for users requiring low latency, full data privacy, and 100% compliance with EU AI Act. To get access to the Scaleway Generative APIs, read the [Quickstart guide](https://www.scaleway.com/en/docs/ai-data/generative-apis/quickstart/) and get a [valid API key](https://www.scaleway.com/en/docs/identity-and-access-management/iam/how-to/create-api-keys/).",
             "### Relace\n Relace provides a fast apply model. To get started, obtain an API key from [here](https://app.relace.ai/settings/api-keys).",
@@ -967,16 +969,13 @@
               },
               "model": {
                 "enum": [
-                  "chat-bison-001",
-                  "gemini-pro",
-                  "gemini-2.0-flash-exp",
-                  "gemini-2.0-flash",
-                  "gemini-2.0-flash-thinking-exp-01-21",
-                  "gemini-2.0-pro-exp-02-05",
-                  "gemini-2.0-flash-lite-preview-02-05",
-                  "gemini-2.0-flash-lite",
-                  "gemini-2.0-flash-exp-image-generation",
-                  "gemini-2.5-pro-latest"
+                  "gemini-3.1-pro-preview",
+                  "gemini-3.1-flash-lite-preview",
+                  "gemini-3.1-flash-image-preview",
+                  "gemini-3-flash-preview",
+                  "gemini-2.5-pro",
+                  "gemini-2.5-flash",
+                  "gemini-2.5-flash-lite"
                 ]
               }
             }
@@ -1321,7 +1320,6 @@
                   "llama3-70b",
                   "llama3.1-8b",
                   "llama3.1-70b",
-                  "llama3.1-405b",
                   "AUTODETECT"
                 ]
               }
@@ -1499,6 +1497,10 @@
             "properties": {
               "useLegacyCompletionsEndpoint": {
                 "type": "boolean"
+              },
+              "useResponsesApi": {
+                "type": "boolean",
+                "description": "When set to false, forces the use of /chat/completions instead of the /responses endpoint for o-series and gpt-5 models. This can help avoid 'organization must be verified' errors related to reasoning summaries and streaming."
               }
             }
           }
@@ -2867,6 +2869,7 @@
                 "watsonx",
                 "lmstudio",
                 "siliconflow",
+                "tensorix",
                 "function-network",
                 "scaleway",
                 "ovhcloud"
@@ -2932,7 +2935,8 @@
                       "voyage",
                       "nvidia",
                       "gemini",
-                      "siliconflow"
+                      "siliconflow",
+                      "tensorix"
                     ]
                   }
                 },
@@ -3000,7 +3004,8 @@
                 "watsonx",
                 "llm",
                 "huggingface-tei",
-                "siliconflow"
+                "siliconflow",
+                "tensorix"
               ]
             },
             "params": {

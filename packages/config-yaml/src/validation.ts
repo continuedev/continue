@@ -10,6 +10,8 @@ export interface ConfigResult<T> {
   config: T | undefined;
   errors: ConfigValidationError[] | undefined;
   configLoadInterrupted: boolean;
+  /** Optional display name from config.yaml `name` field */
+  configName?: string;
 }
 
 function containsUnicode(str: string): boolean {
@@ -56,18 +58,16 @@ export function validateConfigYaml(
       }
     }
     // Max tokens not too close to context length
-    if (
-      model.defaultCompletionOptions?.contextLength &&
-      model.defaultCompletionOptions?.maxTokens
-    ) {
-      const difference =
-        model.defaultCompletionOptions?.contextLength -
-        model.defaultCompletionOptions?.maxTokens;
+    const effectiveContextLength =
+      model.contextLength ?? model.defaultCompletionOptions?.contextLength;
+    const effectiveMaxTokens = model.defaultCompletionOptions?.maxTokens;
+    if (effectiveContextLength && effectiveMaxTokens) {
+      const difference = effectiveContextLength - effectiveMaxTokens;
 
       if (difference < 1000) {
         errors.push({
           fatal: false,
-          message: `Model "${model.name}" has a contextLength of ${model.defaultCompletionOptions?.contextLength} and a maxTokens of ${model.defaultCompletionOptions?.maxTokens}. This leaves only ${difference} tokens for input context and will likely result in your inputs being truncated.`,
+          message: `Model "${model.name}" has a contextLength of ${effectiveContextLength} and a maxTokens of ${effectiveMaxTokens}. This leaves only ${difference} tokens for input context and will likely result in your inputs being truncated.`,
         });
       }
     }

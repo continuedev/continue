@@ -28,9 +28,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       return false;
     },
     azure: (model) => {
+      const lower = model.toLowerCase();
       if (
-        model.toLowerCase().startsWith("gpt-4") ||
-        model.toLowerCase().startsWith("o3")
+        lower.startsWith("gpt-4") ||
+        lower.startsWith("gpt-5") ||
+        lower.startsWith("gpt-4.1") ||
+        lower.startsWith("o1") ||
+        lower.startsWith("o3") ||
+        lower.startsWith("o4")
       )
         return true;
       return false;
@@ -155,6 +160,27 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         modelName = model;
       }
 
+      // Some Ollama cloud models don't support tools despite matching the
+      // family-name heuristic below (https://ollama.com/search?c=cloud)
+      if (modelName.toLowerCase().includes(":cloud")) {
+        if (
+          [
+            "cogito-2.1",
+            "deepseek-v3.2",
+            "gemini-3-flash-preview",
+            "glm-4.6",
+            "glm-4.7",
+            "glm-5",
+            "kimi-k2.5",
+            "minimax-m2",
+            "minimax-m2.5",
+            "minimax-m2.7",
+          ].some((part) => modelName.toLowerCase().startsWith(part))
+        ) {
+          return false;
+        }
+      }
+
       if (
         ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
           (part) => modelName.toLowerCase().includes(part),
@@ -189,6 +215,10 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "devstral",
           "exaone",
           "gpt-oss",
+          "glm-4",
+          "glm-5",
+          "deepseek",
+          "dolphin",
         ].some((part) => modelName.toLowerCase().includes(part))
       ) {
         return true;
@@ -249,7 +279,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     deepseek: (model) => {
       // https://api-docs.deepseek.com/quick_start/pricing
       // https://api-docs.deepseek.com/guides/function_calling
-      if (model === "deepseek-reasoner" || model === "deepseek-chat") {
+      const lower = model.toLowerCase();
+      if (
+        lower === "deepseek-reasoner" ||
+        lower === "deepseek-chat" ||
+        lower.startsWith("deepseek-coder")
+      ) {
         return true;
       }
 
@@ -283,9 +318,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         return false;
       }
 
+      const baseModel = model
+        .toLowerCase()
+        .replace(/:(free|extended|beta)$/, "");
+
       if (
         ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
-          (part) => model.toLowerCase().includes(part),
+          (part) => baseModel.includes(part),
         )
       ) {
         return false;
@@ -304,6 +343,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "microsoft/phi-3",
         "google/gemini-flash-1.5",
         "google/gemini-2",
+        "google/gemini-3",
         "google/gemini-pro",
         "x-ai/grok",
         "qwen/qwen3",
@@ -322,6 +362,8 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "amazon/nova",
         "deepseek/deepseek-r1",
         "deepseek/deepseek-chat",
+        "deepseek/deepseek-v3",
+        "deepseek/deepseek-coder",
         "meta-llama/llama-4",
         "all-hands/openhands-lm-32b",
         "lgai-exaone/exaone",
@@ -329,7 +371,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "zai-org/glm",
       ];
       for (const prefix of supportedPrefixes) {
-        if (model.toLowerCase().startsWith(prefix)) {
+        if (baseModel.startsWith(prefix)) {
           return true;
         }
       }
@@ -345,14 +387,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "moonshotai/kimi-k2",
       ];
       for (const specificModel of specificModels) {
-        if (model.toLowerCase() === specificModel) {
+        if (baseModel === specificModel) {
           return true;
         }
       }
 
       const supportedContains = ["llama-3.1"];
       for (const contained of supportedContains) {
-        if (model.toLowerCase().includes(contained)) {
+        if (baseModel.includes(contained)) {
           return true;
         }
       }
@@ -440,7 +482,7 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/o[134]/],
     [/deepseek/, /r1|reasoner/],
     [/gemini/, /2\.5/, /pro/],
-    [/gemini/, /3-pro/],
+    [/gemini/, /3\.1-pro|3-flash-preview/],
     [/gpt/, /-5|5\.1|5\.2/],
     [/gpt-4\.1/],
     [/codex/],

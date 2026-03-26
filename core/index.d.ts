@@ -678,6 +678,7 @@ export interface LLMOptions {
   roles?: ModelRole[];
 
   useLegacyCompletionsEndpoint?: boolean;
+  useResponsesApi?: boolean;
 
   // Embedding options
   embeddingId?: string;
@@ -1258,6 +1259,9 @@ export interface ModelDescription {
 
   sourceFile?: string;
   isFromAutoDetect?: boolean;
+
+  /** Tool overrides for this model */
+  toolOverrides?: ToolOverride[];
 }
 
 export interface JSONEmbedOptions {
@@ -1737,6 +1741,7 @@ export interface JSONModelDescription {
   accountId?: string;
   aiGatewaySlug?: string;
   useLegacyCompletionsEndpoint?: boolean;
+  useResponsesApi?: boolean;
   deploymentId?: string;
   isFromAutoDetect?: boolean;
 }

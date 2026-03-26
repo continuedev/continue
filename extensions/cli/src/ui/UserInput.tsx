@@ -2,9 +2,12 @@
 
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Box, Text, useApp, useInput } from "ink";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { getAllSlashCommands } from "../commands/commands.js";
+import {
+  getAllSlashCommands,
+  type SlashCommand,
+} from "../commands/commands.js";
 import { useServices } from "../hooks/useService.js";
 import type { PermissionMode } from "../permissions/types.js";
 import type { FileIndexServiceState } from "../services/FileIndexService.js";
@@ -180,20 +183,29 @@ const UserInput: React.FC<UserInputProps> = ({
     fileIndex: FileIndexServiceState;
   }>(["fileIndex"]);
 
-  const getSlashCommands = () => {
-    if (assistant || isRemoteMode) {
-      return getAllSlashCommands(assistant || ({} as AssistantConfig), {
-        isRemoteMode,
-      });
-    }
+  const [slashCommands, setSlashCommands] = useState<SlashCommand[]>([
+    { name: "help", description: "Show help message", category: "system" },
+    {
+      name: "clear",
+      description: "Clear the chat history",
+      category: "system",
+    },
+    { name: "exit", description: "Exit the chat", category: "system" },
+  ]);
 
-    // Fallback - basic commands without assistant
-    return [
-      { name: "help", description: "Show help message" },
-      { name: "clear", description: "Clear the chat history" },
-      { name: "exit", description: "Exit the chat" },
-    ];
-  };
+  useEffect(() => {
+    const loadCommands = async () => {
+      if (assistant || isRemoteMode) {
+        const commands = await getAllSlashCommands(
+          assistant || ({} as AssistantConfig),
+          { isRemoteMode },
+        );
+        setSlashCommands(commands);
+      }
+    };
+
+    void loadCommands();
+  }, [isRemoteMode, assistant?.prompts, assistant?.rules]);
 
   // Cycle through permission modes
   const cycleModes = async () => {
@@ -255,8 +267,7 @@ const UserInput: React.FC<UserInputProps> = ({
     const afterSlash = trimmedText.slice(1).split(/[\s\n]/)[0];
 
     // We're in a slash command context - check if it's a complete command
-    const allCommands = getSlashCommands();
-    const exactMatch = allCommands.find((cmd) => cmd.name === afterSlash);
+    const exactMatch = slashCommands.find((cmd) => cmd.name === afterSlash);
 
     // Hide selector if we have an exact match and there's any additional content
     if (exactMatch) {
@@ -275,7 +286,7 @@ const UserInput: React.FC<UserInputProps> = ({
     }
 
     // Check if there are any matching commands
-    const filteredCommands = allCommands.filter((cmd) =>
+    const filteredCommands = slashCommands.filter((cmd) =>
       cmd.name.toLowerCase().includes(afterSlash.toLowerCase()),
     );
 
@@ -346,8 +357,7 @@ const UserInput: React.FC<UserInputProps> = ({
 
   // Get filtered commands for navigation - using the same sorting logic as SlashCommandUI
   const getFilteredCommands = () => {
-    const allCommands = getSlashCommands();
-    return allCommands
+    return slashCommands
       .filter((cmd) =>
         cmd.name.toLowerCase().includes(slashCommandFilter.toLowerCase()),
       )

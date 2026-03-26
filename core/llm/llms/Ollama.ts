@@ -161,12 +161,24 @@ class Ollama extends BaseLLM implements ModelInstaller {
   private static modelsBeingInstalledMutex = new Mutex();
 
   private fimSupported: boolean = false;
+  private templateSupportsTools: boolean | undefined = undefined;
+  private modelInfoPromise: Promise<void> | undefined = undefined;
+  private explicitContextLength: boolean;
+
   constructor(options: LLMOptions) {
     super(options);
+    this.explicitContextLength = options.contextLength !== undefined;
+  }
 
-    if (options.model === "AUTODETECT") {
-      return;
+  private ensureModelInfo(): Promise<void> {
+    if (this.modelInfoPromise) {
+      return this.modelInfoPromise;
     }
+
+    if (this.model === "AUTODETECT") {
+      return Promise.resolve();
+    }
+
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -175,7 +187,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
       headers.Authorization = `Bearer ${this.apiKey}`;
     }
 
-    this.fetch(this.getEndpoint("api/show"), {
+    this.modelInfoPromise = this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
       headers: headers,
       body: JSON.stringify({ name: this._getModel() }),
@@ -193,15 +205,16 @@ class Ollama extends BaseLLM implements ModelInstaller {
           const params = [];
           for (const line of body.parameters.split("\n")) {
             let parts = line.match(/^(\S+)\s+((?:".*")|\S+)$/);
-            if (parts.length < 2) {
+            if (!parts || parts.length < 2) {
               continue;
             }
             let key = parts[1];
             let value = parts[2];
             switch (key) {
               case "num_ctx":
-                this._contextLength =
-                  options.contextLength ?? Number.parseInt(value);
+                if (!this.explicitContextLength) {
+                  this._contextLength = Number.parseInt(value);
+                }
                 break;
               case "stop":
                 if (!this.completionOptions.stop) {
@@ -227,10 +240,17 @@ class Ollama extends BaseLLM implements ModelInstaller {
          * it's a good indication the model supports FIM.
          */
         this.fimSupported = !!body?.template?.includes(".Suffix");
+
+        // Check if model template supports tool calling (same pattern as .Suffix above)
+        if (body?.template) {
+          this.templateSupportsTools = body.template.includes(".Tools");
+        }
       })
       .catch((e) => {
         // console.warn("Error calling the Ollama /api/show endpoint: ", e);
       });
+
+    return this.modelInfoPromise;
   }
 
   // Map of "continue model name" to Ollama actual model name
@@ -313,6 +333,41 @@ class Ollama extends BaseLLM implements ModelInstaller {
     };
 
     ollamaMessage.content = renderChatMessage(message);
+
+    // Convert assistant tool calls to Ollama format, stripping unsupported
+    // fields like `index` (which causes errors on Gemma3 models).
+    if (
+      message.role === "assistant" &&
+      "toolCalls" in message &&
+      message.toolCalls?.length
+    ) {
+      ollamaMessage.tool_calls = message.toolCalls
+        .filter((tc) => tc.function?.name)
+        .map((tc) => {
+          let args: JSONSchema7Object;
+          if (typeof tc.function!.arguments === "string") {
+            try {
+              args = JSON.parse(tc.function!.arguments!);
+            } catch (e) {
+              console.warn(
+                `Failed to parse tool call arguments for "${tc.function!.name}": ${e}`,
+              );
+              args = {};
+            }
+          } else {
+            args = tc.function!.arguments
+              ? (tc.function!.arguments as unknown as JSONSchema7Object)
+              : {};
+          }
+          return {
+            function: {
+              name: tc.function!.name!,
+              arguments: args,
+            },
+          };
+        });
+    }
+
     if (Array.isArray(message.content)) {
       const images: string[] = [];
       message.content.forEach((part) => {
@@ -369,6 +424,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
+    await this.ensureModelInfo();
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -409,12 +465,48 @@ class Ollama extends BaseLLM implements ModelInstaller {
     }
   }
 
+  /**
+   * Reorder messages so that system messages never appear directly after tool
+   * messages. Some Ollama models (Mistral, Ministral) reject the sequence
+   * `tool → system` with "Unexpected role 'system' after role 'tool'".
+   * This moves such system messages to just before the preceding
+   * assistant+tool block.
+   */
+  private _reorderMessagesForToolCompat(
+    messages: OllamaChatMessage[],
+  ): OllamaChatMessage[] {
+    const result: OllamaChatMessage[] = [...messages];
+
+    for (let i = 1; i < result.length; i++) {
+      if (result[i].role === "system" && result[i - 1].role === "tool") {
+        // Find the start of the tool block (assistant tool_call + tool results)
+        let insertIdx = i - 1;
+        while (insertIdx > 0 && result[insertIdx - 1].role === "tool") {
+          insertIdx--;
+        }
+        // Also skip past the assistant message that triggered the tool calls
+        if (insertIdx > 0 && result[insertIdx - 1].role === "assistant") {
+          insertIdx--;
+        }
+
+        const [sysMsg] = result.splice(i, 1);
+        result.splice(insertIdx, 0, sysMsg);
+        // Don't increment i — re-check current position after splice
+      }
+    }
+
+    return result;
+  }
+
   protected async *_streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const ollamaMessages = messages.map(this._convertToOllamaMessage);
+    await this.ensureModelInfo();
+    const ollamaMessages = this._reorderMessagesForToolCompat(
+      messages.map(this._convertToOllamaMessage),
+    );
     const chatOptions: OllamaChatOptions = {
       model: this._getModel(),
       messages: ollamaMessages,
@@ -424,8 +516,12 @@ class Ollama extends BaseLLM implements ModelInstaller {
       stream: options.stream,
       // format: options.format, // Not currently in base completion options
     };
-    // This logic is because tools can ONLY be included with user message for ollama
-    if (options.tools?.length && ollamaMessages.at(-1)?.role === "user") {
+    // Only include tools with user messages, and only if the template supports them
+    if (
+      options.tools?.length &&
+      ollamaMessages.at(-1)?.role === "user" &&
+      this.templateSupportsTools !== false
+    ) {
       chatOptions.tools = options.tools.map((tool) => ({
         type: "function",
         function: {
@@ -502,7 +598,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
           ? { role: "thinking", content: thinking }
           : null;
 
-        if (thinkingMessage && !content) {
+        if (thinkingMessage && !content && !toolCalls?.length) {
           // When Streaming you can't have both thinking and content
           return [thinkingMessage];
         }
@@ -574,6 +670,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
+    await this.ensureModelInfo();
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -715,8 +812,12 @@ class Ollama extends BaseLLM implements ModelInstaller {
         const chunk = new TextDecoder().decode(value);
         const lines = chunk.split("\n").filter(Boolean);
         for (const line of lines) {
-          const data = JSON.parse(line);
-          progressReporter?.(data.status, data.completed, data.total);
+          try {
+            const data = JSON.parse(line);
+            progressReporter?.(data.status, data.completed, data.total);
+          } catch (e) {
+            console.warn(`Error parsing Ollama pull response: ${e}`);
+          }
         }
       }
     } finally {

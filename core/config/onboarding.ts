@@ -9,7 +9,7 @@ export const LOCAL_ONBOARDING_EMBEDDINGS_MODEL = "nomic-embed-text:latest";
 export const LOCAL_ONBOARDING_EMBEDDINGS_TITLE = "Nomic Embed";
 
 const ANTHROPIC_MODEL_CONFIG = {
-  slugs: ["anthropic/claude-3-7-sonnet", "anthropic/claude-4-sonnet"],
+  slugs: ["anthropic/claude-sonnet-4-6", "anthropic/claude-opus-4-6"],
   apiKeyInputName: "ANTHROPIC_API_KEY",
 };
 const OPENAI_MODEL_CONFIG = {
@@ -19,7 +19,7 @@ const OPENAI_MODEL_CONFIG = {
 
 // TODO: These need updating on the hub
 const GEMINI_MODEL_CONFIG = {
-  slugs: ["google/gemini-2.5-pro", "google/gemini-2.0-flash"],
+  slugs: ["google/gemini-3.1-pro-preview", "google/gemini-3-flash-preview"],
   apiKeyInputName: "GEMINI_API_KEY",
 };
 
@@ -101,8 +101,17 @@ export function setupProviderConfig(
       throw new Error(`Unknown provider: ${provider}`);
   }
 
-  return {
-    ...config,
-    models: [...(config.models ?? []), ...newModels],
-  };
+  const existingModels = config.models ?? [];
+
+  // Update API key on existing models; add new entries for any missing slugs
+  const updatedModels = existingModels.map((m) => {
+    if (!("uses" in m)) return m;
+    const match = newModels.find((n) => n.uses === m.uses);
+    return match ? { ...m, with: { ...m.with, ...match.with } } : m;
+  });
+  const modelsToAdd = newModels.filter(
+    (n) => !existingModels.some((m) => "uses" in m && m.uses === n.uses),
+  );
+
+  return { ...config, models: [...updatedModels, ...modelsToAdd] };
 }

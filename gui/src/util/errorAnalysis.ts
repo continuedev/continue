@@ -7,6 +7,8 @@ export interface ErrorAnalysis {
   modelTitle: string;
   providerName: string;
   apiKeyUrl?: string;
+  helpUrl?: string;
+  customErrorMessage?: string;
 }
 
 function parseErrorMessage(fullErrMsg: string): string {
@@ -97,6 +99,71 @@ export function analyzeError(
     }
   }
 
+  let helpUrl: string | undefined = undefined;
+  let customErrorMessage: string | undefined = undefined;
+
+  const lowerMessage = (message ?? "").toLowerCase();
+  const lowerParsedError = parsedError.toLowerCase();
+  const errorText = lowerMessage + " " + lowerParsedError;
+
+  // OpenAI organization verification error (reasoning summaries or streaming)
+  const isOpenAI =
+    errorText.includes("openai") ||
+    (providerName ?? "").toLowerCase().includes("openai");
+  if (
+    isOpenAI &&
+    (errorText.includes(
+      "organization must be verified to generate reasoning summaries",
+    ) ||
+      errorText.includes("organization must be verified to stream"))
+  ) {
+    helpUrl =
+      "https://help.openai.com/en/articles/10910291-api-organization-verification";
+    customErrorMessage =
+      "Your OpenAI organization must be verified for this feature. To avoid this, add `useResponsesApi: false` to your model config to use the /chat/completions endpoint instead, or verify your organization via the help page.";
+  }
+
+  // Invalid API key detection
+  if (
+    errorText.includes("incorrect api key provided") ||
+    errorText.includes("invalid api key") ||
+    errorText.includes("invalid x-api-key")
+  ) {
+    customErrorMessage =
+      "This error usually happens when the API key is actually invalid. Check your API key value or try a new one.";
+
+    // Check if the key contains "secrets." indicating failed secret templating
+    if (
+      selectedModel?.apiKey &&
+      String(selectedModel.apiKey).includes("secrets.")
+    ) {
+      customErrorMessage =
+        "API key secret not found. Add the apiKey to your secrets or set it directly in your config.";
+    }
+  }
+
+  // Missing authentication header (no API key configured)
+  if (errorText.includes("missing bearer or basic authentication")) {
+    helpUrl = "https://docs.continue.dev/reference#models";
+    customErrorMessage =
+      'No API key was sent with the request. Add "apiKey" to your model config.';
+  }
+
+  // Ollama tool call parsing failure (transient model output issue)
+  if (errorText.includes("error parsing tool call")) {
+    customErrorMessage =
+      "This model produced an invalid tool call that Ollama could not parse. " +
+      "This is a known transient issue — you can resubmit your message to try again. " +
+      'Enabling "Only use system message tools" in Settings > Experimental ' +
+      "may reduce these errors by avoiding Ollama's native tool call parser.";
+  }
+
+  // 402 Insufficient Balance
+  if (statusCode === 402 || errorText.includes("insufficient balance")) {
+    const providerLabel = providerName || "your provider";
+    customErrorMessage = `Your ${providerLabel} account appears to be out of credits. Add more credits to your account to continue using this model.`;
+  }
+
   return {
     parsedError,
     statusCode,
@@ -104,5 +171,7 @@ export function analyzeError(
     modelTitle,
     providerName,
     apiKeyUrl,
+    helpUrl,
+    customErrorMessage,
   };
 }

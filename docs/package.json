@@ -16,7 +16,7 @@
     "mintlify": "^4.2.3"
   },
   "dependencies": {
-    "@c15t/react": "^1.8.2",
+    "@c15t/react": "^1.8.5",
     "axios": "^1.13.5",
     "tar-fs": "^3.1.1"
   }

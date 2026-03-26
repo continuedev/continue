@@ -31,6 +31,7 @@ import {
   ToolOverride,
   Usage,
 } from "../index.js";
+import { isAbortError } from "../util/isAbortError.js";
 import { isLemonadeInstalled } from "../util/lemonadeHelper.js";
 import { Logger } from "../util/Logger.js";
 import mergeJson from "../util/merge.js";
@@ -328,6 +329,7 @@ export abstract class BaseLLM implements ILLM {
       apiBase: this.apiBase,
       requestOptions: this.requestOptions,
       env: this._llmOptions.env,
+      useResponsesApi: this._llmOptions.useResponsesApi,
     });
   }
 
@@ -394,7 +396,7 @@ export abstract class BaseLLM implements ILLM {
       });
       return "success";
     } else {
-      if (error === "cancel" || error?.name?.includes("AbortError")) {
+      if (isAbortError(error)) {
         interaction?.logItem({
           kind: "cancel",
           promptTokens,
@@ -502,7 +504,7 @@ export abstract class BaseLLM implements ILLM {
             `HTTP ${e.response.status} ${e.response.statusText} from ${e.response.url}\n\n${e.response.body}`,
           );
         } else {
-          if (e.name !== "AbortError") {
+          if (!isAbortError(e)) {
             // Don't pollute console with abort errors. Check on name instead of instanceof, to avoid importing node-fetch here
             console.debug(
               `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
@@ -1044,6 +1046,7 @@ export abstract class BaseLLM implements ILLM {
   private canUseOpenAIResponses(options: CompletionOptions): boolean {
     return (
       this.providerName === "openai" &&
+      this._llmOptions.useResponsesApi !== false &&
       typeof (this as any)._streamResponses === "function" &&
       (this as any).isOSeriesOrGpt5Model(options.model)
     );
