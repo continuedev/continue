@@ -355,7 +355,7 @@ class IntelliJIDE(
         
         // Safely clamp lines so we don't go out of bounds on the array
         val startLine = range.start.line.coerceIn(0, maxOf(0, lines.size - 1))
-        val endLine = range.end.line.coerceIn(0, maxOf(0, lines.size - 1))
+        val endLine = range.end.line.coerceIn(startLine, maxOf(0, lines.size - 1))
 
         // Handle the single-line case properly so it doesn't mangle text
         if (startLine == endLine) {
