@@ -102,6 +102,24 @@ class MCPConnection {
     );
   }
 
+  private async connectTransport(transport: Transport): Promise<void> {
+    try {
+      await this.client.close();
+      await this.client.connect(transport, {});
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.startsWith("Already connected")
+      ) {
+        this.client = this.createClient();
+        await this.client.connect(transport, {});
+      } else {
+        throw error;
+      }
+    }
+    this.transport = transport;
+  }
+
   async disconnect(disable = false) {
     this.abortController.abort();
     await this.client.close();
@@ -217,36 +235,25 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
               });
             }),
             (async () => {
-              try {
-                await this.client.close();
-              } catch {
-                // Best-effort cleanup; may fail if never connected
-              }
-              this.client = this.createClient();
-
               if ("command" in this.options) {
                 // STDIO: no need to check type, just if command is present
                 const transport = await this.constructStdioTransport(
                   this.options,
                 );
-                await this.client.connect(transport, {});
-                this.transport = transport;
+                await this.connectTransport(transport);
               } else {
                 // SSE/HTTP: if type isn't explicit: try http and fall back to sse
                 if (this.options.type === "sse") {
                   const transport = this.constructSseTransport(this.options);
-                  await this.client.connect(transport, {});
-                  this.transport = transport;
+                  await this.connectTransport(transport);
                 } else if (this.options.type === "streamable-http") {
                   const transport = this.constructHttpTransport(this.options);
-                  await this.client.connect(transport, {});
-                  this.transport = transport;
+                  await this.connectTransport(transport);
                 } else if (this.options.type === "websocket") {
                   const transport = this.constructWebsocketTransport(
                     this.options,
                   );
-                  await this.client.connect(transport, {});
-                  this.transport = transport;
+                  await this.connectTransport(transport);
                 } else if (this.options.type) {
                   throw new Error(
                     `Unsupported transport type: ${this.options.type}`,
@@ -257,17 +264,14 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
                       ...this.options,
                       type: "streamable-http",
                     });
-                    await this.client.connect(transport, {});
-                    this.transport = transport;
+                    await this.connectTransport(transport);
                   } catch (e) {
-                    this.client = this.createClient();
                     try {
                       const transport = this.constructSseTransport({
                         ...this.options,
                         type: "sse",
                       });
-                      await this.client.connect(transport, {});
-                      this.transport = transport;
+                      await this.connectTransport(transport);
                     } catch (e) {
                       throw new Error(
                         `MCP config with URL and no type specified failed both SSE and HTTP connection: ${e instanceof Error ? e.message : String(e)}`,
