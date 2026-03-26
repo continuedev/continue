@@ -40,6 +40,9 @@ export default function ResponseActions({
     (state) => state.session.contextPercentage,
   );
   const isPruned = useAppSelector((state) => state.session.isPruned);
+  const historyLength = useAppSelector(
+    (state) => state.session.history.length,
+  );
   const ruleGenerationSupported = useMemo(() => {
     return selectedModel && modelSupportsNativeTools(selectedModel);
   }, [selectedModel]);
@@ -50,7 +53,8 @@ export default function ResponseActions({
       ? "text-warning"
       : "text-description-muted";
 
-  const showLabel = isLast && (isPruned || percent >= 60);
+  const showLabel =
+    isLast && historyLength >= 4 && (isPruned || percent >= 60);
 
   const compactConversation = useCompactConversation();
 

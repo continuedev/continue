@@ -61,7 +61,7 @@ const ContextStatus = () => {
                 {`Oldest messages are being removed.`}
               </span>
             )}
-            {history.length > 0 && (
+            {history.length >= 4 && (
               <div className="flex flex-col gap-1 whitespace-pre">
                 <div>
                   <span
