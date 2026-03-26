@@ -271,9 +271,8 @@ class DiffStreamHandler(
         val unfinishedKey = editorUtils.createTextAttributesKey("CONTINUE_DIFF_UNFINISHED_LINE", 0x20888888)
 
         for (i in startLine..endLine) {
-            val lineNum = min(i, editor.document.lineCount - 1).coerceAtLeast(0)
             val highlighter = editor.markupModel.addLineHighlighter(
-                unfinishedKey, lineNum, HighlighterLayer.LAST
+                unfinishedKey, min(i, editor.document.lineCount - 1).coerceAtLeast(0), HighlighterLayer.LAST
             )
             unfinishedHighlighters.add(highlighter)
         }
