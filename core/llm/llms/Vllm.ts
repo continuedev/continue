@@ -77,9 +77,6 @@ class Vllm extends OpenAI {
         }
         const json = await response.json();
         const data = json.data[0];
-
-        // Only use server-reported values when the user hasn't explicitly
-        // configured them, so user settings always take priority.
         if (!this._userExplicitModel) {
           this.model = data.id;
         }
