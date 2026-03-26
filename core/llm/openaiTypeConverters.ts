@@ -357,12 +357,7 @@ export function fromChatCompletionChunk(
       })
     | undefined;
 
-  if (delta?.content) {
-    return {
-      role: "assistant",
-      content: delta.content,
-    };
-  } else if (delta?.tool_calls) {
+  if (delta?.tool_calls) {
     const toolCalls = delta?.tool_calls
       .filter((tool_call) => !tool_call.type || tool_call.type === "function")
       .map((tool_call) => ({
@@ -377,10 +372,17 @@ export function fromChatCompletionChunk(
     if (toolCalls.length > 0) {
       return {
         role: "assistant",
-        content: "",
+        content: delta.content ?? "",
         toolCalls,
       };
     }
+  }
+
+  if (delta?.content) {
+    return {
+      role: "assistant",
+      content: delta.content,
+    };
   } else if (
     delta?.reasoning_content ||
     delta?.reasoning ||
