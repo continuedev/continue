@@ -123,6 +123,7 @@ export function Chat() {
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );
+  const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
@@ -133,6 +134,7 @@ export function Chat() {
     (state) => state.ui.hasDismissedExploreDialog,
   );
   const mode = useAppSelector((state) => state.session.mode);
+  const currentOrg = useAppSelector(selectCurrentOrg);
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);
