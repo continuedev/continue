@@ -381,7 +381,8 @@ export class Core {
     on("config/addModel", async (msg) => {
       const model = msg.data.model;
       const { config } = await this.configHandler.loadConfig();
-      const existing = config?.models?.find(
+      const allModels = Object.values(config?.modelsByRole ?? {}).flat();
+      const existing = allModels.find(
         (m) => m.providerName === model.provider && m.model === model.model,
       );
       if (existing) {
