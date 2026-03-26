@@ -29,7 +29,8 @@ class Vllm extends OpenAI {
     super(options);
 
     this._userExplicitContextLength = options.contextLength !== undefined;
-    this._userExplicitModel = options.model !== undefined && options.model !== "";
+    this._userExplicitModel =
+      options.model !== undefined && options.model !== "";
 
     if (options.isFromAutoDetect) {
       this._setupCompletionOptions();
