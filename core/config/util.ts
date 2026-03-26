@@ -76,7 +76,10 @@ export function addModel(
       // If a model with the same provider and model name exists,
       // update its API key instead of creating a duplicate
       const existingIndex = config.models.findIndex(
-        (m) => "provider" in m && m.provider === model.provider && m.model === model.model,
+        (m) =>
+          "provider" in m &&
+          m.provider === model.provider &&
+          m.model === model.model,
       );
       if (existingIndex >= 0) {
         if (model.apiKey) {
