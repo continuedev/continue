@@ -1,12 +1,6 @@
 import { JSONContent } from "@tiptap/react";
 import { OnboardingStatus } from "../components/OnboardingCard";
 
-export type InputDraftWithPosition = {
-  content: JSONContent;
-  messageId: string;
-  scrollTop: number;
-};
-
 type LocalStorageTypes = {
   isExploreDialogOpen: boolean;
   hasDismissedExploreDialog: boolean;
@@ -17,8 +11,6 @@ type LocalStorageTypes = {
   vsCodeUriScheme: string;
   fontSize: number;
   [key: `inputHistory_${string}`]: JSONContent[];
-  [key: `inputDraft_${string}`]: JSONContent;
-  [key: `editingDraft_${string}`]: InputDraftWithPosition;
   extensionVersion: string;
   showTutorialCard: boolean;
   shownProfilesIntroduction: boolean;

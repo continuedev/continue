@@ -267,13 +267,6 @@ function ParallelListeners() {
     migrateLocalStorage(dispatch);
   }, []);
 
-  useEffect(() => {
-    return () => {
-      localStorage.removeItem("editingDraft_edit");
-      localStorage.removeItem("editingDraft_chat");
-    };
-  }, []);
-
   return <></>;
 }
 

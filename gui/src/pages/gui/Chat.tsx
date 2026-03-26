@@ -55,11 +55,7 @@ import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/ut
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
-import {
-  getLocalStorage,
-  InputDraftWithPosition,
-  setLocalStorage,
-} from "../../util/localStorage";
+import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
@@ -143,22 +139,25 @@ export function Chat() {
     return isJetBrains();
   }, []);
 
+  const historyKey = isInEdit ? "edit" : "chat";
+  const editingDraft = useAppSelector(
+    (state) => state.session.editingDraft[historyKey],
+  );
+  const inputDraft = useAppSelector(
+    (state) => state.session.inputDraft[historyKey],
+  );
+
   useAutoScroll(stepsDivRef, history);
 
   useEffect(() => {
-    const historyKey = isInEdit ? "edit" : "chat";
-    const savedDraft = getLocalStorage(`editingDraft_${historyKey}`) as
-      | InputDraftWithPosition
-      | undefined;
-    if (savedDraft && savedDraft.messageId && stepsDivRef.current) {
+    if (editingDraft && editingDraft.messageId && stepsDivRef.current) {
       timerRef.current = setTimeout(() => {
-        // scroll to and focus on the message being edited
         requestAnimationFrame(() => {
-          if (stepsDivRef.current && savedDraft.scrollTop !== undefined) {
-            stepsDivRef.current.scrollTop = savedDraft.scrollTop;
+          if (stepsDivRef.current && editingDraft.scrollTop !== undefined) {
+            stepsDivRef.current.scrollTop = editingDraft.scrollTop;
           }
           const editorElement = document.querySelector(
-            `[data-testid="editor-input-${savedDraft.messageId}"]`,
+            `[data-testid="editor-input-${editingDraft.messageId}"]`,
           ) as HTMLElement;
           if (editorElement) {
             editorElement.focus();
@@ -367,12 +366,10 @@ export function Chat() {
         latestSummaryIndex !== -1 && index < latestSummaryIndex;
 
       if (message.role === "user") {
-        const historyKey = isInEdit ? "edit" : "chat";
-        const savedDraft = getLocalStorage(`editingDraft_${historyKey}`) as
-          | InputDraftWithPosition
-          | undefined;
         const draftContent =
-          savedDraft?.messageId === message.id ? savedDraft.content : undefined;
+          editingDraft?.messageId === message.id
+            ? editingDraft.content
+            : undefined;
 
         return (
           <ContinueInputBox
@@ -509,9 +506,7 @@ export function Chat() {
           onEnter={(editorState, modifiers, editor) =>
             sendInput(editorState, modifiers, undefined, editor)
           }
-          editorState={getLocalStorage(
-            `inputDraft_${isInEdit ? "edit" : "chat"}`,
-          )}
+          editorState={inputDraft}
           inputId={MAIN_EDITOR_INPUT_ID}
         />
 

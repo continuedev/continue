@@ -76,6 +76,8 @@ describe("sessionSlice streamUpdate", () => {
     newestToolbarPreviewForInput: {},
     isSessionMetadataLoading: false,
     compactionLoading: {},
+    inputDraft: {},
+    editingDraft: {},
   });
 
   describe("Basic Chat Message", () => {

@@ -22,7 +22,10 @@ import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import { AppDispatch } from "../../../../redux/store";
 import { exitEdit } from "../../../../redux/thunks/edit";
 import { getFontSize, isJetBrains } from "../../../../util";
-import { setLocalStorage } from "../../../../util/localStorage";
+import {
+  setEditingDraft,
+  setInputDraft,
+} from "../../../../redux/slices/sessionSlice";
 import { CodeBlock, Mention, PromptBlock, SlashCommand } from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
 import {
@@ -397,11 +400,14 @@ export function createEditorConfig(options: {
       const content = editor.getJSON();
       if (props.isMainInput) {
         if (hasValidEditorContent(content)) {
-          setLocalStorage(`inputDraft_${props.historyKey}`, content);
-          localStorage.removeItem(`editingDraft_${props.historyKey}`);
+          dispatch(setInputDraft({ key: props.historyKey, content }));
+          dispatch(
+            setEditingDraft({ key: props.historyKey, draft: undefined }),
+          );
         } else {
-          // clear draft if content is empty
-          localStorage.removeItem(`inputDraft_${props.historyKey}`);
+          dispatch(
+            setInputDraft({ key: props.historyKey, content: undefined }),
+          );
         }
       } else {
         if (hasValidEditorContent(content)) {
@@ -409,14 +415,19 @@ export function createEditorConfig(options: {
             "chat-scroll-container",
           );
           const scrollTop = scrollContainer?.scrollTop ?? 0;
-          setLocalStorage(`editingDraft_${props.historyKey}`, {
-            content,
-            messageId: props.inputId,
-            scrollTop,
-          });
-          localStorage.removeItem(`inputDraft_${props.historyKey}`);
+          dispatch(
+            setEditingDraft({
+              key: props.historyKey,
+              draft: { content, messageId: props.inputId, scrollTop },
+            }),
+          );
+          dispatch(
+            setInputDraft({ key: props.historyKey, content: undefined }),
+          );
         } else {
-          localStorage.removeItem(`editingDraft_${props.historyKey}`);
+          dispatch(
+            setEditingDraft({ key: props.historyKey, draft: undefined }),
+          );
         }
       }
     },
@@ -437,12 +448,11 @@ export function createEditorConfig(options: {
       return;
     }
 
-    // clear draft from localStorage after successful submission
     if (props.isMainInput) {
       addRef.current(json);
     }
-    localStorage.removeItem(`inputDraft_${props.historyKey}`);
-    localStorage.removeItem(`editingDraft_${props.historyKey}`);
+    dispatch(setInputDraft({ key: props.historyKey, content: undefined }));
+    dispatch(setEditingDraft({ key: props.historyKey, draft: undefined }));
 
     props.onEnter(json, modifiers, editor);
   };
