@@ -54,3 +54,9 @@ JSON messages between Extension ↔ Core ↔ GUI. Message types in `constants/Me
 - Editor integration for diffs/autocomplete
 - Git operations for repository context
 - Settings via IntelliJ platform storage
+
+## Pitfalls
+
+### Dispatchers in Listeners
+
+Document/caret/selection listeners can fire during **intention previews** (code action previews). These run in a restricted context where UI thread (`Dispatchers.Main`) side effects throw `SideEffectNotAllowedException`. Use `Dispatchers.Default` for coroutine scopes in listeners.
