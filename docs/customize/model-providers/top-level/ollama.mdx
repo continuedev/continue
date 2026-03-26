@@ -90,3 +90,20 @@ Ollama models usually have their capabilities auto-detected correctly. However, 
 <Note>
   Many Ollama models support tool use by default. Vision models often also support image input
 </Note>
+
+## Troubleshooting
+
+### "Model requires more system memory"
+
+Continue may set a higher default context length than other Ollama tools, causing this error even when the model works elsewhere. Fix by reducing `contextLength`:
+
+```yaml title="config.yaml"
+models:
+  - name: Deepseek R1
+    provider: ollama
+    model: deepseek-r1:latest
+    defaultCompletionOptions:
+      contextLength: 2048
+```
+
+You can also try a smaller model variant.
