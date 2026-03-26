@@ -61,30 +61,18 @@ class UriUtilsTest : TestCase() {
         assertEquals(expectedFile, result)
     }
 
-    /**
-     * Validates that square brackets in file paths are handled correctly.
-     * This is a regression test for GitHub issue #10978.
-     * Frameworks like Next.js and FiveM use bracket-named directories
-     * (e.g. [gamemode]) which caused URI parsing to crash.
-     */
+    // Regression test for #10978 — bracket directories like [gamemode]
     fun `test square brackets in path`() {
         val uri = "file:///path/to/[gamemode]/file.lua"
         val result = UriUtils.uriToFile(uri)
         assertEquals(File("/path/to/[gamemode]/file.lua"), result)
     }
 
-    /**
-     * Validates that Windows-style file URIs with square brackets are handled.
-     * Regression test for GitHub issue #10978 — the original crash occurred
-     * specifically with Windows two-slash file:// URIs.
-     */
     fun `test Windows path with square brackets`() {
         val uri = "file://C:/Users/user/projects/[gamemode]/file.lua"
         val parsed = UriUtils.parseUri(uri)
         assertEquals("file", parsed.scheme)
-        // URI.path returns the decoded path — brackets should be literal here
         assertEquals("/C:/Users/user/projects/[gamemode]/file.lua", parsed.path)
-        // The raw URI string should have them percent-encoded
         assertEquals("file:///C:/Users/user/projects/%5Bgamemode%5D/file.lua", parsed.toString())
     }
 }
