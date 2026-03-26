@@ -30,6 +30,7 @@ export const BasePlusConfig = BaseConfig.extend({
 
 // OpenAI and compatible
 export const OpenAIConfigSchema = BasePlusConfig.extend({
+  useResponsesApi: z.boolean().optional(),
   provider: z.union([
     z.literal("openai"),
     z.literal("mistral"),
@@ -51,6 +52,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("kindo"),
     z.literal("msty"),
     z.literal("openrouter"),
+    z.literal("clawrouter"),
     z.literal("sambanova"),
     z.literal("text-gen-webui"),
     z.literal("vllm"),

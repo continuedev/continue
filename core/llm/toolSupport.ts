@@ -318,9 +318,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         return false;
       }
 
+      const baseModel = model
+        .toLowerCase()
+        .replace(/:(free|extended|beta)$/, "");
+
       if (
         ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
-          (part) => model.toLowerCase().includes(part),
+          (part) => baseModel.includes(part),
         )
       ) {
         return false;
@@ -339,6 +343,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "microsoft/phi-3",
         "google/gemini-flash-1.5",
         "google/gemini-2",
+        "google/gemini-3",
         "google/gemini-pro",
         "x-ai/grok",
         "qwen/qwen3",
@@ -366,7 +371,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "zai-org/glm",
       ];
       for (const prefix of supportedPrefixes) {
-        if (model.toLowerCase().startsWith(prefix)) {
+        if (baseModel.startsWith(prefix)) {
           return true;
         }
       }
@@ -382,19 +387,55 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "moonshotai/kimi-k2",
       ];
       for (const specificModel of specificModels) {
-        if (model.toLowerCase() === specificModel) {
+        if (baseModel === specificModel) {
           return true;
         }
       }
 
       const supportedContains = ["llama-3.1"];
       for (const contained of supportedContains) {
-        if (model.toLowerCase().includes(contained)) {
+        if (baseModel.includes(contained)) {
           return true;
         }
       }
 
       return false;
+    },
+    clawrouter: (model) => {
+      // ClawRouter routes to various providers, so we check common tool-supporting patterns
+      const lower = model.toLowerCase();
+
+      // blockrun/* models are routing aliases - assume tool support
+      if (lower.startsWith("blockrun/")) {
+        return true;
+      }
+
+      // Check for common tool-supporting model patterns
+      const toolSupportingPatterns = [
+        "gpt-4",
+        "gpt-5",
+        "o1",
+        "o3",
+        "o4",
+        "claude-3",
+        "claude-4",
+        "sonnet",
+        "opus",
+        "haiku",
+        "gemini",
+        "command-r",
+        "mistral",
+        "mixtral",
+        "llama-3.1",
+        "llama-3.2",
+        "llama-3.3",
+        "llama-4",
+        "qwen3",
+        "qwen-2.5",
+        "deepseek",
+      ];
+
+      return toolSupportingPatterns.some((pattern) => lower.includes(pattern));
     },
     zAI: (model) => {
       const lower = model.toLowerCase();

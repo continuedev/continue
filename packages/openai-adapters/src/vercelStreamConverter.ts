@@ -94,8 +94,13 @@ export function convertVercelStreamPart(
       });
 
     case "reasoning-delta":
-      return chatChunk({
-        content: part.text,
+      return chatChunkFromDelta({
+        delta: {
+          role: "assistant",
+          reasoning_content: part.text,
+        } as ChatCompletionChunk.Choice["delta"] & {
+          reasoning_content?: string;
+        },
         model,
       });
 

@@ -18,18 +18,52 @@ class OpenRouter extends OpenAI {
     useLegacyCompletionsEndpoint: false,
   };
 
-  /**
-   * Detect if the model is an Anthropic/Claude model
-   */
   private isAnthropicModel(model?: string): boolean {
     if (!model) return false;
     const modelLower = model.toLowerCase();
     return modelLower.includes("claude");
   }
 
+  private isGeminiModel(model?: string): boolean {
+    if (!model) return false;
+    return model.toLowerCase().startsWith("google/");
+  }
+
   /**
-   * Add cache_control to message content for Anthropic models
+   * Add thought_signature fallback to Gemini tool calls that don't already
+   * have one, preventing 400 errors from missing thought_signature.
+   * See: https://ai.google.dev/gemini-api/docs/thought-signatures
    */
+  private addGeminiThoughtSignatures(
+    body: ChatCompletionCreateParams,
+  ): ChatCompletionCreateParams {
+    body.messages = body.messages.map((message: any) => {
+      if (message.role === "assistant" && message.tool_calls?.length) {
+        return {
+          ...message,
+          tool_calls: message.tool_calls.map((toolCall: any, index: number) => {
+            if (index !== 0) return toolCall;
+            if (toolCall.extra_content?.google?.thought_signature) {
+              return toolCall;
+            }
+            return {
+              ...toolCall,
+              extra_content: {
+                ...toolCall.extra_content,
+                google: {
+                  ...toolCall.extra_content?.google,
+                  thought_signature: "skip_thought_signature_validator",
+                },
+              },
+            };
+          }),
+        };
+      }
+      return message;
+    });
+    return body;
+  }
+
   private addCacheControlToContent(content: any, addCaching: boolean): any {
     if (!addCaching) return content;
 
@@ -59,16 +93,15 @@ class OpenRouter extends OpenAI {
     return content;
   }
 
-  /**
-   * Override modifyChatBody to add Anthropic caching when appropriate
-   */
   protected modifyChatBody(
     body: ChatCompletionCreateParams,
   ): ChatCompletionCreateParams {
-    // First apply parent modifications
     body = super.modifyChatBody(body);
 
-    // Check if we should apply Anthropic caching
+    if (this.isGeminiModel(body.model)) {
+      body = this.addGeminiThoughtSignatures(body);
+    }
+
     if (
       !this.isAnthropicModel(body.model) ||
       (!this.cacheBehavior && !this.completionOptions.promptCaching)

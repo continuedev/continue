@@ -34,7 +34,10 @@ describe("convertVercelStreamPart", () => {
     const result = convertVercelStreamPart(part, options);
 
     expect(result).not.toBeNull();
-    expect(result?.choices[0].delta.content).toBe("Let me think...");
+    expect((result?.choices[0].delta as any).reasoning_content).toBe(
+      "Let me think...",
+    );
+    expect(result?.choices[0].delta.content).toBeUndefined();
   });
 
   test("returns null for tool-call without thoughtSignature", () => {

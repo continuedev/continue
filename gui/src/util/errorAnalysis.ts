@@ -106,17 +106,21 @@ export function analyzeError(
   const lowerParsedError = parsedError.toLowerCase();
   const errorText = lowerMessage + " " + lowerParsedError;
 
-  // OpenAI organization verification error
+  // OpenAI organization verification error (reasoning summaries or streaming)
+  const isOpenAI =
+    errorText.includes("openai") ||
+    (providerName ?? "").toLowerCase().includes("openai");
   if (
-    errorText.includes("openai") &&
-    errorText.includes(
+    isOpenAI &&
+    (errorText.includes(
       "organization must be verified to generate reasoning summaries",
-    )
+    ) ||
+      errorText.includes("organization must be verified to stream"))
   ) {
     helpUrl =
       "https://help.openai.com/en/articles/10910291-api-organization-verification";
     customErrorMessage =
-      "Your OpenAI organization must be verified to use reasoning models. Visit the help page to learn how to verify your organization.";
+      "Your OpenAI organization must be verified for this feature. To avoid this, add `useResponsesApi: false` to your model config to use the /chat/completions endpoint instead, or verify your organization via the help page.";
   }
 
   // Invalid API key detection
@@ -136,6 +140,22 @@ export function analyzeError(
       customErrorMessage =
         "API key secret not found. Add the apiKey to your secrets or set it directly in your config.";
     }
+  }
+
+  // Missing authentication header (no API key configured)
+  if (errorText.includes("missing bearer or basic authentication")) {
+    helpUrl = "https://docs.continue.dev/reference#models";
+    customErrorMessage =
+      'No API key was sent with the request. Add "apiKey" to your model config.';
+  }
+
+  // Ollama tool call parsing failure (transient model output issue)
+  if (errorText.includes("error parsing tool call")) {
+    customErrorMessage =
+      "This model produced an invalid tool call that Ollama could not parse. " +
+      "This is a known transient issue — you can resubmit your message to try again. " +
+      'Enabling "Only use system message tools" in Settings > Experimental ' +
+      "may reduce these errors by avoiding Ollama's native tool call parser.";
   }
 
   // 402 Insufficient Balance

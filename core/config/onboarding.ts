@@ -101,8 +101,17 @@ export function setupProviderConfig(
       throw new Error(`Unknown provider: ${provider}`);
   }
 
-  return {
-    ...config,
-    models: [...(config.models ?? []), ...newModels],
-  };
+  const existingModels = config.models ?? [];
+
+  // Update API key on existing models; add new entries for any missing slugs
+  const updatedModels = existingModels.map((m) => {
+    if (!("uses" in m)) return m;
+    const match = newModels.find((n) => n.uses === m.uses);
+    return match ? { ...m, with: { ...m.with, ...match.with } } : m;
+  });
+  const modelsToAdd = newModels.filter(
+    (n) => !existingModels.some((m) => "uses" in m && m.uses === n.uses),
+  );
+
+  return { ...config, models: [...updatedModels, ...modelsToAdd] };
 }

@@ -160,7 +160,7 @@ export async function htmlPageToArticleWithChunks(
         : [
             {
               title: title,
-              body: readability.textContent,
+              body: readability.textContent ?? "",
             },
           ];
 

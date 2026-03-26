@@ -131,3 +131,37 @@ To force usage of `completions` instead of `chat/completions` endpoint you can s
   ```
   </Tab>
 </Tabs>
+
+### How to Disable the Responses API
+
+By default, Continue uses OpenAI's `/responses` endpoint for o-series and gpt-5 models. If you encounter "organization must be verified" errors related to reasoning summaries or streaming, you can force the use of `/chat/completions` instead:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: gpt-5
+      provider: openai
+      model: gpt-5
+      useResponsesApi: false
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "gpt-5",
+        "provider": "openai",
+        "model": "gpt-5",
+        "useResponsesApi": false
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

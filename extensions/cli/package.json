@@ -95,7 +95,7 @@
     "core": "file:../../core",
     "cross-env": "^7.0.3",
     "date-fns": "^4.1.0",
-    "diff": "^7.0.0",
+    "diff": "^8.0.4",
     "dotenv": "^16.5.0",
     "esbuild": "^0.25.9",
     "eslint": "^9.32.0",
@@ -141,7 +141,9 @@
     "node": ">=18"
   },
   "overrides": {
-    "minimatch@<9.0.7": "^9.0.7"
+    "minimatch@<9.0.7": "^9.0.7",
+    "qs": "^6.14.2",
+    "picomatch": "^4.0.2"
   },
   "optionalDependencies": {
     "@img/sharp-darwin-arm64": "^0.33.5",
