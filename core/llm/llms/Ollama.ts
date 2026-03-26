@@ -457,8 +457,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
             }
             j.response ??= "";
             yield j.response;
-          } catch (e) {
-            throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
+          } catch (e: any) {
+            if (e instanceof SyntaxError) {
+              throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
+            }
+            throw e;
           }
         }
       }
@@ -651,8 +654,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
               for (const msg of convertChatMessage(j)) {
                 yield msg;
               }
-            } catch (e) {
-              throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
+            } catch (e: any) {
+              if (e instanceof SyntaxError) {
+                throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
+              }
+              throw e;
             }
           }
         }
@@ -703,8 +709,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
             } else if ("error" in j) {
               throw new Error(j.error);
             }
-          } catch (e) {
-            throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
+          } catch (e: any) {
+            if (e instanceof SyntaxError) {
+              throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
+            }
+            throw e;
           }
         }
       }

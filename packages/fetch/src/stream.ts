@@ -15,7 +15,7 @@ export async function* streamResponse(
   }
 
   if (response.status !== 200) {
-    throw new Error(await response.text());
+    throw new Error(`${response.status} ${await response.text()}`);
   }
 
   if (!response.body) {
