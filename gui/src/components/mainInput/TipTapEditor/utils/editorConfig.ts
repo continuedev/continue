@@ -411,14 +411,10 @@ export function createEditorConfig(options: {
         }
       } else {
         if (hasValidEditorContent(content)) {
-          const scrollContainer = document.getElementById(
-            "chat-scroll-container",
-          );
-          const scrollTop = scrollContainer?.scrollTop ?? 0;
           dispatch(
             setEditingDraft({
               key: props.historyKey,
-              draft: { content, messageId: props.inputId, scrollTop },
+              draft: { content, messageId: props.inputId },
             }),
           );
           dispatch(

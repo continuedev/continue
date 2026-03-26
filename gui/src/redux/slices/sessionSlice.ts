@@ -226,7 +226,7 @@ type SessionState = {
   inputDraft: Record<string, JSONContent | undefined>;
   editingDraft: Record<
     string,
-    { content: JSONContent; messageId: string; scrollTop: number } | undefined
+    { content: JSONContent; messageId: string } | undefined
   >;
 };
 
@@ -274,9 +274,7 @@ export const sessionSlice = createSlice({
         payload,
       }: PayloadAction<{
         key: string;
-        draft:
-          | { content: JSONContent; messageId: string; scrollTop: number }
-          | undefined;
+        draft: { content: JSONContent; messageId: string } | undefined;
       }>,
     ) => {
       if (payload.draft) {
@@ -284,10 +282,6 @@ export const sessionSlice = createSlice({
       } else {
         delete state.editingDraft[payload.key];
       }
-    },
-    clearDrafts: (state) => {
-      state.inputDraft = {};
-      state.editingDraft = {};
     },
     addPromptCompletionPair: (
       state,
@@ -1132,7 +1126,6 @@ export const {
   setCompactionLoading,
   setInputDraft,
   setEditingDraft,
-  clearDrafts,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;

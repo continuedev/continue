@@ -119,13 +119,11 @@ export function Chat() {
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const history = useAppSelector((state) => state.session.history);
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
-  const sessionId = useAppSelector((state) => state.session.id);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
   const allSessionMetadata = useAppSelector(
@@ -148,27 +146,6 @@ export function Chat() {
   );
 
   useAutoScroll(stepsDivRef, history);
-
-  useEffect(() => {
-    if (editingDraft && editingDraft.messageId && stepsDivRef.current) {
-      timerRef.current = setTimeout(() => {
-        requestAnimationFrame(() => {
-          if (stepsDivRef.current && editingDraft.scrollTop !== undefined) {
-            stepsDivRef.current.scrollTop = editingDraft.scrollTop;
-          }
-          const editorElement = document.querySelector(
-            `[data-testid="editor-input-${editingDraft.messageId}"]`,
-          ) as HTMLElement;
-          if (editorElement) {
-            editorElement.focus();
-          }
-        });
-      }, 100);
-    }
-    return () => {
-      clearTimeout(timerRef.current);
-    };
-  }, [sessionId, isInEdit]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -473,7 +450,6 @@ export function Chat() {
       {widget}
 
       <StepsDiv
-        id="chat-scroll-container"
         ref={stepsDivRef}
         className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
