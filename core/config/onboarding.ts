@@ -104,12 +104,13 @@ export function setupProviderConfig(
   const existingModels = config.models ?? [];
 
   // Update API key on existing models; add new entries for any missing slugs
-  const updatedModels = existingModels.map((m: any) => {
-    const match = newModels.find((n: any) => n.uses === m.uses);
+  const updatedModels = existingModels.map((m) => {
+    if (!("uses" in m)) return m;
+    const match = newModels.find((n) => n.uses === m.uses);
     return match ? { ...m, with: { ...m.with, ...match.with } } : m;
   });
   const modelsToAdd = newModels.filter(
-    (n: any) => !existingModels.some((m: any) => m.uses === n.uses),
+    (n) => !existingModels.some((m) => "uses" in m && m.uses === n.uses),
   );
 
   return { ...config, models: [...updatedModels, ...modelsToAdd] };
