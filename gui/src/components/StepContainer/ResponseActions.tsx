@@ -61,7 +61,7 @@ export default function ResponseActions({
   };
 
   return (
-    <div className="mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs text-description-muted">
+    <div className="text-description-muted mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs">
       <HeaderButtonWithToolTip
         testId={`compact-button-${index}`}
         text={
@@ -92,7 +92,7 @@ export default function ResponseActions({
           text="Generate rule"
           onClick={onGenerateRule}
         >
-          <PencilSquareIcon className="h-3.5 w-3.5 text-description-muted" />
+          <PencilSquareIcon className="text-description-muted h-3.5 w-3.5" />
         </HeaderButtonWithToolTip>
       )}
 
@@ -102,7 +102,7 @@ export default function ResponseActions({
           text="Continue generation"
           onClick={onContinueGeneration}
         >
-          <BarsArrowDownIcon className="h-3.5 w-3.5 text-description-muted" />
+          <BarsArrowDownIcon className="text-description-muted h-3.5 w-3.5" />
         </HeaderButtonWithToolTip>
       )}
 
@@ -112,7 +112,7 @@ export default function ResponseActions({
         tabIndex={-1}
         onClick={onDelete}
       >
-        <TrashIcon className="h-3.5 w-3.5 text-description-muted" />
+        <TrashIcon className="text-description-muted h-3.5 w-3.5" />
       </HeaderButtonWithToolTip>
 
       <CopyIconButton
