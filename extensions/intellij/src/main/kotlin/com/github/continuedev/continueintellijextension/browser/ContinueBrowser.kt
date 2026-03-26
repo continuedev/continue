@@ -26,7 +26,7 @@ class ContinueBrowser(
 
     init {
         CefApp.getInstance().registerSchemeHandlerFactory("http", "continue", CustomSchemeHandlerFactory())
-        browser.jbCefClient.setProperty(JBCefClient.Properties.JS_QUERY_POOL_SIZE, 200)
+        browser.jbCefClient.setProperty(JBCefClient.Properties.JS_QUERY_POOL_SIZE, 1000)
         myJSQueryOpenInBrowser.addHandler { msg: String? ->
             val json = gsonService.gson.fromJson(msg, BrowserMessage::class.java)
             val messageType = json.messageType
