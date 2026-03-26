@@ -22,8 +22,14 @@ interface VllmRerankResponse {
 
 class Vllm extends OpenAI {
   static providerName = "vllm";
+  private _userExplicitContextLength: boolean;
+  private _userExplicitModel: boolean;
+
   constructor(options: LLMOptions) {
     super(options);
+
+    this._userExplicitContextLength = options.contextLength !== undefined;
+    this._userExplicitModel = options.model !== undefined && options.model !== "";
 
     if (options.isFromAutoDetect) {
       this._setupCompletionOptions();
@@ -71,8 +77,15 @@ class Vllm extends OpenAI {
         }
         const json = await response.json();
         const data = json.data[0];
-        this.model = data.id;
-        this._contextLength = Number.parseInt(data.max_model_len);
+
+        // Only use server-reported values when the user hasn't explicitly
+        // configured them, so user settings always take priority.
+        if (!this._userExplicitModel) {
+          this.model = data.id;
+        }
+        if (!this._userExplicitContextLength) {
+          this._contextLength = Number.parseInt(data.max_model_len);
+        }
       })
       .catch((e) => {
         console.log(`Failed to list models for vLLM: ${e.message}`);
