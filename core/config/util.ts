@@ -34,15 +34,14 @@ export function addModel(
       }
 
       // If a model with the same provider and model name exists,
-      // update it instead of creating a duplicate (e.g. when re-entering an API key)
+      // update its API key instead of creating a duplicate
       const existingIndex = config.models?.findIndex(
         (m: any) => m.provider === model.provider && m.model === model.model,
       );
       if (existingIndex !== undefined && existingIndex >= 0) {
-        config.models[existingIndex] = {
-          ...config.models[existingIndex],
-          ...model,
-        };
+        if (model.apiKey) {
+          config.models[existingIndex].apiKey = model.apiKey;
+        }
         return config;
       }
 
@@ -75,19 +74,14 @@ export function addModel(
       }
 
       // If a model with the same provider and model name exists,
-      // update it instead of creating a duplicate (e.g. when re-entering an API key)
+      // update its API key instead of creating a duplicate
       const existingIndex = config.models.findIndex(
         (m: any) => m.provider === model.provider && m.model === model.model,
       );
       if (existingIndex >= 0) {
-        config.models[existingIndex] = {
-          ...config.models[existingIndex],
-          name: model.title,
-          apiKey: model.apiKey,
-          apiBase: model.apiBase,
-          maxStopWords: model.maxStopWords,
-          defaultCompletionOptions: model.completionOptions,
-        };
+        if (model.apiKey) {
+          config.models[existingIndex].apiKey = model.apiKey;
+        }
         return config;
       }
 
