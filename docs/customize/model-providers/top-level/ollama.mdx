@@ -91,54 +91,19 @@ Ollama models usually have their capabilities auto-detected correctly. However, 
   Many Ollama models support tool use by default. Vision models often also support image input
 </Note>
 
-## Troubleshooting Common Issues
+## Troubleshooting
 
-<CardGroup cols={2}>
-  <Card title="Model requires more system memory" icon="memory" vertical>
-    This error means your system doesn't have enough RAM to load the model. Reduce `contextLength` in your configuration (Continue may use a higher default than other tools), try a smaller model, or upgrade your hardware. See the [config example below](#fixing-memory-errors).
-  </Card>
-  <Card title="404 model not found" icon="ban" vertical>
-    The model isn't installed locally. Run `ollama list` to check installed models, then `ollama pull model-name:tag` with the exact tag your config expects.
-  </Card>
-  <Card title="Agent mode is not supported" icon="code" vertical>
-    Add `capabilities: [tool_use]` to your model config. If it still doesn't work, the model may not actually support tools — try Llama 3.1 or Mistral instead.
-  </Card>
-  <Card title="Connection refused" icon="plug" vertical>
-    Verify Ollama is running with `curl http://localhost:11434`. For remote instances, ensure `OLLAMA_HOST=0.0.0.0:11434` is set and port 11434 is not blocked by a firewall.
-  </Card>
-</CardGroup>
+### "Model requires more system memory"
 
-### Fixing Memory Errors
+Continue may set a higher default context length than other Ollama tools, causing this error even when the model works elsewhere. Fix by reducing `contextLength`:
 
-If you see **"model requires more system memory"**, Continue's default context length may be too large for your hardware. Reduce it with `contextLength`:
+```yaml title="config.yaml"
+models:
+  - name: Deepseek R1
+    provider: ollama
+    model: deepseek-r1:latest
+    defaultCompletionOptions:
+      contextLength: 2048
+```
 
-<Tabs>
-    <Tab title="YAML">
-    ```yaml title="config.yaml"
-    models:
-      - name: Deepseek R1
-        provider: ollama
-        model: deepseek-r1:latest
-        defaultCompletionOptions:
-          contextLength: 2048
-    ```
-    </Tab>
-    <Tab title="JSON (Deprecated)">
-    ```json title="config.json"
-    {
-      "models": [
-        {
-          "title": "Deepseek R1",
-          "provider": "ollama",
-          "model": "deepseek-r1:latest",
-          "contextLength": 2048
-        }
-      ]
-    }
-    ```
-    </Tab>
-</Tabs>
-
-<Note>
-  This error may appear in Continue but not other Ollama tools because Continue can set a higher default context length. Lowering `contextLength` (e.g., to 2048 or 4096) reduces memory usage. You can also try a smaller model variant. For more details, see [this discussion](https://github.com/continuedev/continue/issues/6452).
-</Note>
+You can also try a smaller model variant. See [this discussion](https://github.com/continuedev/continue/issues/6452) for more details.
