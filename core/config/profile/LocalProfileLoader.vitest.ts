@@ -62,13 +62,9 @@ describe("LocalProfileLoader", () => {
       configName: "My Custom Config",
     });
 
-    const loader = new LocalProfileLoader(
-      testIde,
-      controlPlaneClient,
-      llmLogger,
-    );
+    const loader = new LocalProfileLoader(testIde, llmLogger);
 
-    expect(loader.description.title).toBe("Local Config");
+    expect(loader.description.title).toBe("Main Config");
 
     await loader.doLoadConfig();
 
@@ -82,14 +78,10 @@ describe("LocalProfileLoader", () => {
       configLoadInterrupted: false,
     });
 
-    const loader = new LocalProfileLoader(
-      testIde,
-      controlPlaneClient,
-      llmLogger,
-    );
+    const loader = new LocalProfileLoader(testIde, llmLogger);
 
     await loader.doLoadConfig();
 
-    expect(loader.description.title).toBe("Local Config");
+    expect(loader.description.title).toBe("Main Config");
   });
 });
