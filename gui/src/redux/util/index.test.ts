@@ -3,8 +3,10 @@ import { ChatHistoryItemWithMessageId } from "../slices/sessionSlice";
 import {
   findAllCurToolCalls,
   findAllCurToolCallsByStatus,
+  findChatHistoryItemByToolCallId,
   findToolCallById,
   hasCurrentToolCalls,
+  logToolUsage,
 } from "./index";
 
 // Helper function to create a tool call state
@@ -368,5 +370,281 @@ describe("Edge cases and integration", () => {
     expect(hasCurrentToolCalls(chatHistory)).toBe(true);
     expect(findAllCurToolCalls(chatHistory)).toEqual(toolCallStates);
     expect(findToolCallById(chatHistory, "tool-1")).toBe(toolCallStates[0]);
+  });
+});
+
+describe("findChatHistoryItemByToolCallId", () => {
+  it("should return undefined for empty chat history", () => {
+    const result = findChatHistoryItemByToolCallId([], "non-existent-id");
+    expect(result).toBeUndefined();
+  });
+
+  it("should return undefined when tool call ID is not found", () => {
+    const chatHistory = [
+      createChatHistoryItem("user", "Hello"),
+      createChatHistoryItem("assistant", "Hi there!"),
+    ];
+    const result = findChatHistoryItemByToolCallId(
+      chatHistory,
+      "non-existent-id",
+    );
+    expect(result).toBeUndefined();
+  });
+
+  it("should find tool message by toolCallId", () => {
+    const toolMessage = createChatHistoryItem("tool", "Weather data: sunny", {
+      toolCallId: "tool-1",
+    });
+    const chatHistory = [
+      createChatHistoryItem("user", "What's the weather?"),
+      createChatHistoryItem("assistant", "I'll check the weather"),
+      toolMessage,
+    ];
+    const result = findChatHistoryItemByToolCallId(chatHistory, "tool-1");
+    expect(result).toBe(toolMessage);
+  });
+
+  it("should return the last matching tool message when multiple exist", () => {
+    const firstToolMessage = createChatHistoryItem(
+      "tool",
+      "First weather data",
+      {
+        toolCallId: "tool-1",
+      },
+    );
+    const secondToolMessage = createChatHistoryItem(
+      "tool",
+      "Updated weather data",
+      {
+        toolCallId: "tool-1",
+      },
+    );
+    const chatHistory = [
+      createChatHistoryItem("user", "What's the weather?"),
+      createChatHistoryItem("assistant", "I'll check the weather"),
+      firstToolMessage,
+      createChatHistoryItem("assistant", "Let me recheck"),
+      secondToolMessage,
+    ];
+    const result = findChatHistoryItemByToolCallId(chatHistory, "tool-1");
+    expect(result).toBe(secondToolMessage);
+  });
+
+  it("should not match non-tool messages", () => {
+    const chatHistory = [
+      createChatHistoryItem("user", "Hello"),
+      createChatHistoryItem("assistant", "Hi there!"),
+      createChatHistoryItem("thinking", "Thinking..."),
+    ];
+    const result = findChatHistoryItemByToolCallId(chatHistory, "tool-1");
+    expect(result).toBeUndefined();
+  });
+
+  it("should find correct tool message among multiple different tool calls", () => {
+    const weatherToolMessage = createChatHistoryItem(
+      "tool",
+      "Weather data: sunny",
+      {
+        toolCallId: "weather-tool",
+      },
+    );
+    const timeToolMessage = createChatHistoryItem("tool", "Time: 3:00 PM", {
+      toolCallId: "time-tool",
+    });
+    const chatHistory = [
+      createChatHistoryItem("user", "What's the weather and time?"),
+      createChatHistoryItem("assistant", "I'll get both"),
+      weatherToolMessage,
+      timeToolMessage,
+    ];
+
+    expect(findChatHistoryItemByToolCallId(chatHistory, "weather-tool")).toBe(
+      weatherToolMessage,
+    );
+    expect(findChatHistoryItemByToolCallId(chatHistory, "time-tool")).toBe(
+      timeToolMessage,
+    );
+  });
+});
+
+describe("logToolUsage", () => {
+  it("should post devdata/log with correct tool usage data", () => {
+    const mockMessenger = {
+      post: vi.fn(),
+    };
+
+    const toolCallState: ToolCallState = {
+      toolCallId: "test-tool-id",
+      toolCall: {
+        id: "test-tool-id",
+        type: "function",
+        function: {
+          name: "get_weather",
+          arguments: '{"city": "New York"}',
+        },
+      },
+      status: "done",
+      parsedArgs: { city: "New York" },
+      output: [{ name: "weather", content: "Sunny", description: "" }],
+    };
+
+    logToolUsage(toolCallState, true, true, mockMessenger as any);
+
+    expect(mockMessenger.post).toHaveBeenCalledWith("devdata/log", {
+      name: "toolUsage",
+      data: {
+        toolCallId: "test-tool-id",
+        functionName: "get_weather",
+        functionParams: undefined,
+        toolCallArgs: '{"city": "New York"}',
+        accepted: true,
+        output: [{ name: "weather", content: "Sunny", description: "" }],
+        succeeded: true,
+      },
+    });
+  });
+
+  it("should use tool function name when tool is defined", () => {
+    const mockMessenger = {
+      post: vi.fn(),
+    };
+
+    const toolCallState: ToolCallState = {
+      toolCallId: "test-tool-id",
+      toolCall: {
+        id: "test-tool-id",
+        type: "function",
+        function: {
+          name: "original_name",
+          arguments: "{}",
+        },
+      },
+      tool: {
+        displayTitle: "Weather Tool",
+        function: {
+          name: "tool_function_name",
+          description: "Gets weather",
+          parameters: {
+            type: "object",
+            properties: {
+              city: { type: "string" },
+            },
+          },
+        },
+        type: "function",
+      },
+      status: "done",
+      parsedArgs: {},
+    };
+
+    logToolUsage(toolCallState, true, true, mockMessenger as any);
+
+    expect(mockMessenger.post).toHaveBeenCalledWith("devdata/log", {
+      name: "toolUsage",
+      data: expect.objectContaining({
+        functionName: "tool_function_name",
+        functionParams: {
+          type: "object",
+          properties: {
+            city: { type: "string" },
+          },
+        },
+      }),
+    });
+  });
+
+  it("should use finalOutput when provided", () => {
+    const mockMessenger = {
+      post: vi.fn(),
+    };
+
+    const toolCallState: ToolCallState = {
+      toolCallId: "test-tool-id",
+      toolCall: {
+        id: "test-tool-id",
+        type: "function",
+        function: {
+          name: "get_weather",
+          arguments: "{}",
+        },
+      },
+      status: "done",
+      parsedArgs: {},
+      output: [
+        { name: "original", content: "Original output", description: "" },
+      ],
+    };
+
+    const finalOutput = [
+      { name: "final", content: "Final output", description: "" },
+    ];
+
+    logToolUsage(toolCallState, true, true, mockMessenger as any, finalOutput);
+
+    expect(mockMessenger.post).toHaveBeenCalledWith("devdata/log", {
+      name: "toolUsage",
+      data: expect.objectContaining({
+        output: finalOutput,
+      }),
+    });
+  });
+
+  it("should handle rejected tool calls", () => {
+    const mockMessenger = {
+      post: vi.fn(),
+    };
+
+    const toolCallState: ToolCallState = {
+      toolCallId: "test-tool-id",
+      toolCall: {
+        id: "test-tool-id",
+        type: "function",
+        function: {
+          name: "dangerous_operation",
+          arguments: "{}",
+        },
+      },
+      status: "canceled",
+      parsedArgs: {},
+    };
+
+    logToolUsage(toolCallState, false, false, mockMessenger as any);
+
+    expect(mockMessenger.post).toHaveBeenCalledWith("devdata/log", {
+      name: "toolUsage",
+      data: expect.objectContaining({
+        accepted: false,
+        succeeded: false,
+      }),
+    });
+  });
+
+  it("should handle tool calls with empty output", () => {
+    const mockMessenger = {
+      post: vi.fn(),
+    };
+
+    const toolCallState: ToolCallState = {
+      toolCallId: "test-tool-id",
+      toolCall: {
+        id: "test-tool-id",
+        type: "function",
+        function: {
+          name: "silent_operation",
+          arguments: "{}",
+        },
+      },
+      status: "done",
+      parsedArgs: {},
+    };
+
+    logToolUsage(toolCallState, true, true, mockMessenger as any);
+
+    expect(mockMessenger.post).toHaveBeenCalledWith("devdata/log", {
+      name: "toolUsage",
+      data: expect.objectContaining({
+        output: [],
+      }),
+    });
   });
 });
