@@ -24,6 +24,44 @@ export function safeParseToolCallArgs(
   }
 }
 
+/**
+ * Coerce parsed args to match the tool's input schema types.
+ * JSON.parse() deeply parses all values, so string-typed parameters
+ * that contain valid JSON (e.g. file content for a .json file) get
+ * converted to objects. This checks the schema and re-stringifies
+ * any values that should be strings.
+ */
+export function coerceArgsToSchema(
+  args: Record<string, any>,
+  schema?: Record<string, any>,
+): Record<string, any> {
+  if (!schema?.properties) {
+    return args;
+  }
+
+  const coerced = { ...args };
+  for (const [key, value] of Object.entries(coerced)) {
+    const propSchema = schema.properties[key];
+    if (!propSchema) {
+      continue;
+    }
+
+    if (
+      propSchema.type === "string" &&
+      typeof value === "object" &&
+      value !== null
+    ) {
+      try {
+        coerced[key] = JSON.stringify(value);
+      } catch {
+        // leave as-is if stringify fails
+      }
+    }
+  }
+
+  return coerced;
+}
+
 export function getStringArg(
   args: any,
   argName: string,

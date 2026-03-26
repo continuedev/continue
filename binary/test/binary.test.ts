@@ -1,4 +1,4 @@
-import { SerializedContinueConfig } from "core";
+import { ModelDescription, SerializedContinueConfig } from "core";
 // import Mock from "core/llm/llms/Mock.js";
 import { FromIdeProtocol, ToIdeProtocol } from "core/protocol/index.js";
 import { IMessenger } from "core/protocol/messenger";
@@ -67,7 +67,7 @@ describe("Test Suite", () => {
     const binaryPath = path.join(binaryDir, `continue-binary${exe}`);
     const expectedItems = [
       `continue-binary${exe}`,
-      `esbuild${exe}`,
+      `rg${exe}`,
       "index.node",
       "package.json",
       "build/Release/node_sqlite3.node",
@@ -144,7 +144,7 @@ describe("Test Suite", () => {
       (
         messenger as CoreBinaryTcpMessenger<ToIdeProtocol, FromIdeProtocol>
       ).close();
-    } else {
+    } else if (subprocess) {
       subprocess.kill();
       await new Promise((resolve) => subprocess.on("close", resolve));
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -235,16 +235,20 @@ describe("Test Suite", () => {
       result: { config },
     } = await messenger.request("config/getSerializedProfileInfo", undefined);
 
-    expect(config!.modelsByRole.chat.some((m) => m.title === model.title)).toBe(
-      true,
-    );
+    expect(
+      config!.modelsByRole.chat.some(
+        (m: ModelDescription) => m.title === model.title,
+      ),
+    ).toBe(true);
 
     await messenger.request("config/deleteModel", { title: model.title });
     const {
       result: { config: configAfterDelete },
     } = await messenger.request("config/getSerializedProfileInfo", undefined);
     expect(
-      configAfterDelete!.modelsByRole.chat.some((m) => m.title === model.title),
+      configAfterDelete!.modelsByRole.chat.some(
+        (m: ModelDescription) => m.title === model.title,
+      ),
     ).toBe(false);
   });
 

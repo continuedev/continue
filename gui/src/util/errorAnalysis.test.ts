@@ -533,7 +533,7 @@ describe("errorAnalysis", () => {
     });
 
     describe("custom error detection", () => {
-      it("should detect OpenAI organization verification error", () => {
+      it("should detect OpenAI organization verification error for reasoning summaries", () => {
         const error = new Error(
           "OpenAI error: organization must be verified to generate reasoning summaries",
         );
@@ -542,9 +542,19 @@ describe("errorAnalysis", () => {
         expect(result.helpUrl).toBe(
           "https://help.openai.com/en/articles/10910291-api-organization-verification",
         );
-        expect(result.customErrorMessage).toContain(
-          "organization must be verified",
+        expect(result.customErrorMessage).toContain("useResponsesApi");
+      });
+
+      it("should detect OpenAI organization verification error for streaming", () => {
+        const error = new Error(
+          "OpenAI error: organization must be verified to stream this model",
         );
+        const result = analyzeError(error, null);
+
+        expect(result.helpUrl).toBe(
+          "https://help.openai.com/en/articles/10910291-api-organization-verification",
+        );
+        expect(result.customErrorMessage).toContain("useResponsesApi");
       });
 
       it("should detect OpenAI org verification error case-insensitively", () => {

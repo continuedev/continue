@@ -25,7 +25,10 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^9.2.6",
-    "@semantic-release/npm": "^10.0.6",
-    "semantic-release": "^21.1.2"
+    "@semantic-release/npm": "^13.1.5",
+    "semantic-release": "^24.2.7"
+  },
+  "overrides": {
+    "picomatch": "^4.0.4"
   }
 }

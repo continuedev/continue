@@ -534,7 +534,16 @@ declare global {
     cacheBehavior?: CacheBehavior;
   
     useLegacyCompletionsEndpoint?: boolean;
-  
+
+    /**
+     * When set to false, forces the OpenAI provider to use the /chat/completions
+     * endpoint instead of the /responses endpoint for o-series and gpt-5 models.
+     * This can help avoid "organization must be verified" errors related to
+     * reasoning summaries and streaming on the Responses API.
+     * Defaults to true for official OpenAI API.
+     */
+    useResponsesApi?: boolean;
+
     // Embedding options
     embeddingId?: string;
     maxEmbeddingChunkSize?: number;

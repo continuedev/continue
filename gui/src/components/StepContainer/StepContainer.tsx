@@ -85,7 +85,7 @@ export default function StepContainer(props: StepContainerProps) {
           </pre>
         ) : (
           <>
-            {props.item.reasoning?.text && (
+            {props.item.reasoning?.text?.trim() && (
               <ThinkingBlockPeek
                 content={props.item.reasoning.text}
                 index={props.index}

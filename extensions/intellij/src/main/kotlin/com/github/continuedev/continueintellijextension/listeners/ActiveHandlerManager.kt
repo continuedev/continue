@@ -56,7 +56,7 @@ interface CursorMovementHandler {
 @Service(Service.Level.PROJECT)
 class ActiveHandlerManager(private val project: Project) : SelectionListener, CaretListener, DumbAware {
 
-    private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val coroutineScope = CoroutineScope(Dispatchers.Default.limitedParallelism(1) + SupervisorJob())
     private var activeHandler: CursorMovementHandler? = null
     private var isHandlingEvent = false
 

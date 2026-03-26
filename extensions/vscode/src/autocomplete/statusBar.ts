@@ -103,6 +103,7 @@ let statusBarStatus: StatusBarStatus | undefined = undefined;
 let statusBarItem: vscode.StatusBarItem | undefined = undefined;
 let statusBarFalseTimeout: NodeJS.Timeout | undefined = undefined;
 let statusBarError: boolean = false;
+let configListenerRegistered = false;
 
 export function stopStatusBarLoading() {
   statusBarFalseTimeout = setTimeout(() => {
@@ -153,19 +154,24 @@ export function setupStatusBar(
     statusBarStatus = status;
   }
 
-  vscode.workspace.onDidChangeConfiguration((event) => {
-    if (event.affectsConfiguration(CONTINUE_WORKSPACE_KEY)) {
-      const enabled = getContinueWorkspaceConfig().get<boolean>(
-        "enableTabAutocomplete",
-      );
-      if (enabled && statusBarStatus === StatusBarStatus.Paused) {
-        return;
+  // Guard: only register this listener once. Previously it was registered on
+  // every setupStatusBar() call, causing unbounded listener accumulation.
+  if (!configListenerRegistered) {
+    configListenerRegistered = true;
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration(CONTINUE_WORKSPACE_KEY)) {
+        const enabled = getContinueWorkspaceConfig().get<boolean>(
+          "enableTabAutocomplete",
+        );
+        if (enabled && statusBarStatus === StatusBarStatus.Paused) {
+          return;
+        }
+        setupStatusBar(
+          enabled ? StatusBarStatus.Enabled : StatusBarStatus.Disabled,
+        );
       }
-      setupStatusBar(
-        enabled ? StatusBarStatus.Enabled : StatusBarStatus.Disabled,
-      );
-    }
-  });
+    });
+  }
 }
 
 export function getStatusBarStatus(): StatusBarStatus | undefined {

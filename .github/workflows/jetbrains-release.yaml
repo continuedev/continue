@@ -286,7 +286,7 @@ jobs:
           echo "Contents of distributions folder:"
           ls
           echo "---"
-          FILENAME=`ls continue-intellij-extension-*.zip`
+          FILENAME=$(ls continue-intellij-extension-*.zip | head -1)
           echo "Filename=${FILENAME}"
           unzip "$FILENAME" -d content
 

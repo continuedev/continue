@@ -317,6 +317,7 @@ export abstract class BaseLLM implements ILLM {
       apiBase: this.apiBase,
       requestOptions: this.requestOptions,
       env: this._llmOptions.env,
+      useResponsesApi: this._llmOptions.useResponsesApi,
     });
   }
 
@@ -1022,6 +1023,7 @@ export abstract class BaseLLM implements ILLM {
   private canUseOpenAIResponses(options: CompletionOptions): boolean {
     return (
       this.providerName === "openai" &&
+      this._llmOptions.useResponsesApi !== false &&
       typeof (this as any)._streamResponses === "function" &&
       (this as any).isOSeriesOrGpt5Model(options.model)
     );
