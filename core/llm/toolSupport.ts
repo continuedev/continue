@@ -318,7 +318,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         return false;
       }
 
-      const baseModel = model.toLowerCase().replace(/:(free|extended|beta)$/, "");
+      const baseModel = model
+        .toLowerCase()
+        .replace(/:(free|extended|beta)$/, "");
 
       if (
         ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
