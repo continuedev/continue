@@ -82,7 +82,7 @@ class DiffStreamHandler(
         if (hasAcceptedOrRejectedBlock) {
             ApplicationManager.getApplication().invokeLater {
                 val blocksToReject = diffBlocks.toList()
-                blocksToReject.toList().forEach { it.handleReject() }
+                blocksToReject.forEach { it.handleReject() }
             }
         } else {
             undoChanges()
@@ -265,14 +265,14 @@ class DiffStreamHandler(
     }
 
     private fun initUnfinishedRangeHighlights() {
+        if (editor.document.lineCount == 0) return
+
         val editorUtils = EditorUtils(editor)
         val unfinishedKey = editorUtils.createTextAttributesKey("CONTINUE_DIFF_UNFINISHED_LINE", 0x20888888)
 
         for (i in startLine..endLine) {
             val highlighter = editor.markupModel.addLineHighlighter(
-                unfinishedKey, min(
-                    i, editor.document.lineCount - 1
-                ), HighlighterLayer.LAST
+                unfinishedKey, min(i, editor.document.lineCount - 1).coerceAtLeast(0), HighlighterLayer.LAST
             )
             unfinishedHighlighters.add(highlighter)
         }
@@ -413,7 +413,8 @@ class DiffStreamHandler(
 
         WriteCommandAction.runWriteCommandAction(project) {
             val undoManager = UndoManager.getInstance(project)
-            val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(virtualFile) as TextEditor
+            val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(virtualFile) as? TextEditor
+                ?: return@runWriteCommandAction
 
             if (undoManager.isUndoAvailable(fileEditor)) {
                 val numChanges = diffBlocks.sumOf { it.deletedLines.size + it.addedLines.size }
