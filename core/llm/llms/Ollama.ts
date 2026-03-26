@@ -598,7 +598,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
           ? { role: "thinking", content: thinking }
           : null;
 
-        if (thinkingMessage && !content) {
+        if (thinkingMessage && !content && !toolCalls?.length) {
           // When Streaming you can't have both thinking and content
           return [thinkingMessage];
         }
