@@ -165,7 +165,7 @@ class ContinueBrowser(
 
     internal companion object {
         internal const val CHUNKED_MESSAGE_THRESHOLD = 1 * 1024 * 1024 // 1MB
-        internal const val CHUNK_SIZE = 512 * 1024 // 512KB
+        internal const val CHUNK_SIZE = 2 * 1024 * 1024 // 2MB
 
         private fun getGuiUrl() =
             System.getenv("GUI_URL") ?: "http://continue/index.html"

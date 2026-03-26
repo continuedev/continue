@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.unit
 
+import com.github.continuedev.continueintellijextension.browser.ContinueBrowser
 import com.github.continuedev.continueintellijextension.browser.ContinueBrowser.Companion.buildChunkScripts
 import junit.framework.TestCase
 import java.util.Base64
@@ -16,7 +17,7 @@ class ContinueBrowserChunkTest : TestCase() {
 
     fun `test message splits into expected number of chunks`() {
         val json = """{"data":"${"x".repeat(2_000_000)}"}"""
-        val chunkSize = 512 * 1024
+        val chunkSize = ContinueBrowser.CHUNK_SIZE
         val encoded = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
         val expectedChunks = (encoded.length + chunkSize - 1) / chunkSize
 
