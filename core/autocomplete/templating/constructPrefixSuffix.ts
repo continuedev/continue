@@ -1,23 +1,23 @@
-import { IDE } from "../..";
 import { getRangeInString } from "../../util/ranges";
 import { languageForFilepath } from "../constants/AutocompleteLanguageInfo";
 import { AutocompleteInput } from "../util/types";
 
 /**
  * We have to handle a few edge cases in getting the entire prefix/suffix for the current file.
- * This is entirely prior to finding snippets from other files
+ * This is entirely prior to finding snippets from other files.
+ *
+ * Accepts pre-loaded file contents to avoid a redundant file read
+ * (the caller already has the contents loaded).
  */
-export async function constructInitialPrefixSuffix(
+export function constructInitialPrefixSuffix(
   input: AutocompleteInput,
-  ide: IDE,
-): Promise<{
+  fileContents: string,
+): {
   prefix: string;
   suffix: string;
-}> {
+} {
   const lang = languageForFilepath(input.filepath);
 
-  const fileContents =
-    input.manuallyPassFileContents ?? (await ide.readFile(input.filepath));
   const fileLines = fileContents.split("\n");
   let prefix =
     getRangeInString(fileContents, {
