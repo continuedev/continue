@@ -109,20 +109,30 @@ class ContinueBrowser(
             """window.__cc=window.__cc||{};window.__cc["$bufferId"]="";""", url, 0
         )
 
-        var offset = 0
-        while (offset < encoded.length) {
-            val end = minOf(offset + CHUNK_SIZE, encoded.length)
-            val chunk = encoded.substring(offset, end)
-            browser.cefBrowser.executeJavaScript(
-                """window.__cc["$bufferId"]+="$chunk";""", url, 0
-            )
-            offset = end
-        }
+        try {
+            var offset = 0
+            while (offset < encoded.length) {
+                val end = minOf(offset + CHUNK_SIZE, encoded.length)
+                val chunk = encoded.substring(offset, end)
+                browser.cefBrowser.executeJavaScript(
+                    """window.__cc["$bufferId"]+="$chunk";""", url, 0
+                )
+                offset = end
+            }
 
-        browser.cefBrowser.executeJavaScript("""
-            try{window.postMessage(JSON.parse(atob(window.__cc["$bufferId"])),"*")}
-            finally{delete window.__cc["$bufferId"]}
-        """.trimIndent(), url, 0)
+            browser.cefBrowser.executeJavaScript("""
+                try{window.postMessage(JSON.parse(atob(window.__cc["$bufferId"])),"*")}
+                finally{delete window.__cc["$bufferId"]}
+            """.trimIndent(), url, 0)
+        } catch (e: Exception) {
+            // Clean up partial buffer if chunking fails mid-way
+            try {
+                browser.cefBrowser.executeJavaScript(
+                    """delete window.__cc["$bufferId"];""", url, 0
+                )
+            } catch (_: Exception) {}
+            throw e
+        }
     }
 
     private fun executeJavaScript(myJSQueryOpenInBrowser: JBCefJSQuery) {
