@@ -51,7 +51,7 @@ export function DeprecationBanner({
         )}
         <div className="flex flex-col gap-2.5 text-xs">
           <p className={dismissable ? "pr-5" : ""}>
-            Continue is entering maintenance mode.{" "}
+            Configuration management in Continue is moving local.{" "}
             <span
               onClick={() => ideMessenger.post("openUrl", REPO_URL)}
               className="cursor-pointer underline hover:brightness-125"
