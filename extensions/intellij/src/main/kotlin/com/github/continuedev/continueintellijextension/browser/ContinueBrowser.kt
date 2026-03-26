@@ -102,34 +102,19 @@ class ContinueBrowser(
 
     // Base64-encode and send in 512KB chunks to avoid JCEF freezing on large JS source strings
     private fun sendChunked(json: String, bufferId: String) {
-        val encoded = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
+        val scripts = buildChunkScripts(json, bufferId)
         val url = getGuiUrl()
 
-        browser.cefBrowser.executeJavaScript(
-            """window.__cc=window.__cc||{};window.__cc["$bufferId"]="";""", url, 0
-        )
+        browser.cefBrowser.executeJavaScript(scripts.init, url, 0)
 
         try {
-            var offset = 0
-            while (offset < encoded.length) {
-                val end = minOf(offset + CHUNK_SIZE, encoded.length)
-                val chunk = encoded.substring(offset, end)
-                browser.cefBrowser.executeJavaScript(
-                    """window.__cc["$bufferId"]+="$chunk";""", url, 0
-                )
-                offset = end
+            for (chunkScript in scripts.chunks) {
+                browser.cefBrowser.executeJavaScript(chunkScript, url, 0)
             }
-
-            browser.cefBrowser.executeJavaScript("""
-                try{window.postMessage(JSON.parse(atob(window.__cc["$bufferId"])),"*")}
-                finally{delete window.__cc["$bufferId"]}
-            """.trimIndent(), url, 0)
+            browser.cefBrowser.executeJavaScript(scripts.finalize, url, 0)
         } catch (e: Exception) {
-            // Clean up partial buffer if chunking fails mid-way
             try {
-                browser.cefBrowser.executeJavaScript(
-                    """delete window.__cc["$bufferId"];""", url, 0
-                )
+                browser.cefBrowser.executeJavaScript(scripts.cleanup, url, 0)
             } catch (_: Exception) {}
             throw e
         }
@@ -171,12 +156,40 @@ class ContinueBrowser(
         }
     }
 
-    private companion object {
-        private const val CHUNKED_MESSAGE_THRESHOLD = 1 * 1024 * 1024 // 1MB
-        private const val CHUNK_SIZE = 512 * 1024 // 512KB
+    internal data class ChunkScripts(
+        val init: String,
+        val chunks: List<String>,
+        val finalize: String,
+        val cleanup: String,
+    )
+
+    internal companion object {
+        internal const val CHUNKED_MESSAGE_THRESHOLD = 1 * 1024 * 1024 // 1MB
+        internal const val CHUNK_SIZE = 512 * 1024 // 512KB
 
         private fun getGuiUrl() =
             System.getenv("GUI_URL") ?: "http://continue/index.html"
+
+        internal fun buildChunkScripts(json: String, bufferId: String, chunkSize: Int = CHUNK_SIZE): ChunkScripts {
+            val encoded = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
+            val chunks = mutableListOf<String>()
+
+            var offset = 0
+            while (offset < encoded.length) {
+                val end = minOf(offset + chunkSize, encoded.length)
+                val chunk = encoded.substring(offset, end)
+                chunks.add("""window.__cc["$bufferId"].push("$chunk");""")
+                offset = end
+            }
+
+            return ChunkScripts(
+                init = """window.__cc=window.__cc||{};window.__cc["$bufferId"]=[];""",
+                chunks = chunks,
+                finalize = """try{window.postMessage(JSON.parse(atob(window.__cc["$bufferId"].join(""))),"*")}
+finally{delete window.__cc["$bufferId"]}""",
+                cleanup = """delete window.__cc["$bufferId"];""",
+            )
+        }
     }
 
 }
