@@ -516,12 +516,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
       stream: options.stream,
       // format: options.format, // Not currently in base completion options
     };
-    // Only include tools with user messages, and only if the template supports them
-    if (
-      options.tools?.length &&
-      ollamaMessages.at(-1)?.role === "user" &&
-      this.templateSupportsTools !== false
-    ) {
+    // Only include tools with user messages, and only if the template supports them.
+    // An explicit capabilities.tools setting always takes precedence over template detection.
+    const toolsAllowed =
+      this.capabilities?.tools ?? this.templateSupportsTools !== false;
+    if (options.tools?.length && ollamaMessages.at(-1)?.role === "user" && toolsAllowed) {
       chatOptions.tools = options.tools.map((tool) => ({
         type: "function",
         function: {
