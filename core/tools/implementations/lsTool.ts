@@ -29,6 +29,7 @@ export const lsToolImpl: ToolImpl = async (args, extras) => {
     include: "both",
     recursive: args?.recursive ?? false,
     overrideDefaultIgnores: ignore(), // Show all directories including dist/, build/, etc.
+    skipGitIgnore: true, // Show gitignored directories like .venv so agent can discover them
   });
 
   const lines = entries.slice(0, MAX_LS_TOOL_LINES);

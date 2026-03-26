@@ -11,6 +11,7 @@ export interface WalkerOptions {
   returnRelativeUrisPaths?: boolean;
   source?: string;
   overrideDefaultIgnores?: Ignore;
+  skipGitIgnore?: boolean;
   recursive?: boolean;
 }
 
@@ -157,6 +158,7 @@ class DFSWalker {
           entries,
           this.ide,
           defaultAndGlobalIgnores,
+          this.options.skipGitIgnore,
         );
         walkDirCache.dirIgnoreCache.set(cur.walkableEntry.uri, {
           time: Date.now(),
@@ -301,6 +303,7 @@ export async function getIgnoreContext(
   currentDirEntries: Entry[],
   ide: IDE,
   defaultAndGlobalIgnores: Ignore,
+  skipGitIgnore?: boolean,
 ) {
   const dirFiles = currentDirEntries
     .filter(([_, entryType]) => entryType === (1 as FileType.File))
@@ -308,7 +311,9 @@ export async function getIgnoreContext(
 
   // Find ignore files and get ignore arrays from their contexts
   // These are done separately so that .continueignore can override .gitignore
-  const gitIgnoreFile = dirFiles.find((name) => name === ".gitignore");
+  const gitIgnoreFile = skipGitIgnore
+    ? undefined
+    : dirFiles.find((name) => name === ".gitignore");
   const continueIgnoreFile = dirFiles.find(
     (name) => name === ".continueignore",
   );
