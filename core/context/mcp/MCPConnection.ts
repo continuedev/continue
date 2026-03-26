@@ -85,7 +85,13 @@ class MCPConnection {
     // Don't construct transport in constructor to avoid blocking
     this.transport = {} as Transport; // Will be set in connectClient
 
-    this.client = new Client(
+    this.client = this.createClient();
+
+    this.abortController = new AbortController();
+  }
+
+  private createClient(): Client {
+    return new Client(
       {
         name: "continue-client",
         version: "1.0.0",
@@ -94,8 +100,6 @@ class MCPConnection {
         capabilities: {},
       },
     );
-
-    this.abortController = new AbortController();
   }
 
   async disconnect(disable = false) {
@@ -213,7 +217,13 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
               });
             }),
             (async () => {
-              await this.client.close();
+              try {
+                await this.client.close();
+              } catch {
+                // Best-effort cleanup; may fail if never connected
+              }
+              this.client = this.createClient();
+
               if ("command" in this.options) {
                 // STDIO: no need to check type, just if command is present
                 const transport = await this.constructStdioTransport(
@@ -250,6 +260,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
                     await this.client.connect(transport, {});
                     this.transport = transport;
                   } catch (e) {
+                    this.client = this.createClient();
                     try {
                       const transport = this.constructSseTransport({
                         ...this.options,
