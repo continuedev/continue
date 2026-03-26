@@ -85,11 +85,15 @@ class ContinueBrowser(
     }
 
     fun sendToWebview(messageType: String, data: Any? = null, messageId: String = uuid()) {
+        if (browser.cefBrowser.isClosed) {
+            log.warn("Attempted to send message to disposed browser: $messageType")
+            return
+        }
         val json = gsonService.gson.toJson(BrowserMessage(messageType, messageId, data))
         val jsCode = """window.postMessage($json, "*");"""
         try {
             browser.cefBrowser.executeJavaScript(jsCode, getGuiUrl(), 0)
-        } catch (error: IllegalStateException) {
+        } catch (error: Exception) {
             log.warn(error)
         }
     }
