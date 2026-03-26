@@ -14,7 +14,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   create-prerelease:
@@ -64,18 +63,6 @@ jobs:
           echo "  New version: $NEW_VERSION"
           echo "  Tag name: $TAG_NAME"
 
-      - name: Create pre-release branch
-        id: branch
-        run: |
-          BRANCH_NAME="prerelease/vscode-${{ steps.version.outputs.new_version }}"
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-
-          git checkout -b "$BRANCH_NAME"
-          echo "Created branch: $BRANCH_NAME"
-
       - name: Update package.json version
         working-directory: extensions/vscode
         run: |
@@ -84,88 +71,16 @@ jobs:
 
           echo "Updated package.json to version ${{ steps.version.outputs.new_version }}"
 
-      - name: Commit version bump
+      - name: Commit and push version bump to main
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
           git add extensions/vscode/package.json
           git commit -m "chore: bump VSCode extension version to ${{ steps.version.outputs.new_version }}"
+          git push origin main
 
-          echo "Committed version bump"
-
-      - name: Push branch and create PR
-        id: pr
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git push origin "${{ steps.branch.outputs.branch_name }}"
-          echo "Pushed branch: ${{ steps.branch.outputs.branch_name }}"
-
-          # Create pull request
-          PR_URL=$(gh pr create \
-            --base main \
-            --head "${{ steps.branch.outputs.branch_name }}" \
-            --title "chore: VSCode pre-release ${{ steps.version.outputs.new_version }}" \
-            --body "$(cat <<'EOF'
-          ## VSCode Pre-release ${{ steps.version.outputs.new_version }}
-
-          This PR bumps the VSCode extension version for pre-release.
-
-          ### Changes
-          - Version bumped from ${{ steps.version.outputs.previous_version }} to ${{ steps.version.outputs.new_version }}
-          - Based on commit: ${{ inputs.main_commit_sha }}
-
-          ### Release Process
-          After merging this PR:
-          1. The tag \`${{ steps.version.outputs.tag_name }}\` will be created automatically
-          2. A GitHub pre-release will be created with auto-generated release notes
-
-          🤖 This PR was created automatically by the VSCode Pre-release workflow.
-          EOF
-          )")
-
-          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
-          echo "Created PR: $PR_URL"
-
-      - name: Auto-merge PR
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Get PR number from URL
-          PR_NUMBER=$(echo "${{ steps.pr.outputs.pr_url }}" | grep -oE '[0-9]+$')
-
-          # Merge the PR
-          gh pr merge "$PR_NUMBER" --squash --auto
-
-          echo "PR #$PR_NUMBER set to auto-merge"
-
-          # Wait for merge to complete (with timeout)
-          echo "Waiting for PR to be merged..."
-          TIMEOUT=300  # 5 minutes
-          ELAPSED=0
-          INTERVAL=10
-
-          while [ $ELAPSED -lt $TIMEOUT ]; do
-            PR_STATE=$(gh pr view "$PR_NUMBER" --json state --jq '.state')
-            if [ "$PR_STATE" = "MERGED" ]; then
-              echo "PR successfully merged!"
-              break
-            fi
-            sleep $INTERVAL
-            ELAPSED=$((ELAPSED + INTERVAL))
-            echo "Still waiting... ($ELAPSED seconds elapsed)"
-          done
-
-          if [ $ELAPSED -ge $TIMEOUT ]; then
-            echo "Warning: Timed out waiting for PR merge. Please check manually." && exit 1
-          fi
-
-      - name: Checkout main branch
-        run: |
-          git fetch origin main
-          git checkout main
-          git pull origin main
+          echo "Pushed version bump directly to main"
 
       - name: Create and push tag
         run: |
@@ -224,7 +139,6 @@ jobs:
           echo "- **Tag:** \`${{ steps.version.outputs.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Links" >> $GITHUB_STEP_SUMMARY
-          echo "- **PR:** ${{ steps.pr.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Release:** https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Commit" >> $GITHUB_STEP_SUMMARY
