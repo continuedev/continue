@@ -78,6 +78,9 @@ export class OpenAIApi implements BaseLlmApi {
   }
 
   protected shouldUseResponsesEndpoint(model: string): boolean {
+    if (this.config.useResponsesApi === false) {
+      return false;
+    }
     const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
     return isOfficialOpenAIAPI && isResponsesModel(model);
   }
