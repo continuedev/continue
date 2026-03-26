@@ -289,11 +289,11 @@ When Continue encounters `${{ secrets.X }}`, it searches these sources **in orde
 3. **Global `.env` file**: `~/.continue/.env`
 4. **Process environment variables**: Standard system environment variables
 
-:::warning
+<Warning>
 **IDE extensions (VS Code, JetBrains) cannot read your shell environment variables.** Setting `export OPENAI_API_KEY=...` in your terminal will not make the key available to Continue running inside your IDE. You must use a `.env` file instead.
 
 Process environment variables (source 4) only work with the [Continue CLI](/cli/configuration), where you can pass them directly: `export OPENAI_API_KEY=sk-... && cn`
-:::
+</Warning>
 
 #### Creating `.env` files
 
