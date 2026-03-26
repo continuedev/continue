@@ -272,6 +272,29 @@ To get the best performance from Ollama:
 
 ### Common Configuration Problems
 
+#### "Model requires more system memory to run"
+
+This error means your system doesn't have enough RAM to load the model. Continue may use a higher default context length than other Ollama tools, which can cause this error to appear in Continue even when the model works elsewhere.
+
+**Solutions**:
+
+1. Reduce `contextLength` in your config:
+```yaml
+models:
+  - name: Deepseek R1
+    provider: ollama
+    model: deepseek-r1:latest
+    defaultCompletionOptions:
+      contextLength: 2048  # Lower this to reduce memory usage
+```
+2. Try a smaller model variant (e.g., 7B instead of 32B)
+3. Close other memory-intensive applications
+4. Upgrade your system's RAM
+
+<Note>
+  For more context on this issue, see [this discussion](https://github.com/continuedev/continue/issues/6452).
+</Note>
+
 #### "404 model not found, try pulling it first"
 
 This error occurs when the model isn't installed locally:
