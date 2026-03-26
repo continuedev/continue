@@ -310,8 +310,10 @@ export function renderPromptWithTokenLimit({
     completionOptions: {
       ...completionOptions,
       stop: stopTokens,
-      maxTokens:
-        completionOptions?.maxTokens ?? llm?.completionOptions.maxTokens,
+      ...(llm?.completionOptions.maxTokens !== undefined && {
+        maxTokens:
+          completionOptions?.maxTokens ?? llm.completionOptions.maxTokens,
+      }),
     },
   };
 }
