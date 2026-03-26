@@ -213,29 +213,14 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
               });
             }),
             (async () => {
+              await this.client.close();
               if ("command" in this.options) {
                 // STDIO: no need to check type, just if command is present
                 const transport = await this.constructStdioTransport(
                   this.options,
                 );
-                try {
-                  await this.client.connect(transport, {});
-                  this.transport = transport;
-                } catch (error) {
-                  // Allow the case where for whatever reason is already connected
-                  if (
-                    error instanceof Error &&
-                    error.message.startsWith(
-                      "StdioClientTransport already started",
-                    )
-                  ) {
-                    await this.client.close();
-                    await this.client.connect(transport);
-                    this.transport = transport;
-                  } else {
-                    throw error;
-                  }
-                }
+                await this.client.connect(transport, {});
+                this.transport = transport;
               } else {
                 // SSE/HTTP: if type isn't explicit: try http and fall back to sse
                 if (this.options.type === "sse") {
