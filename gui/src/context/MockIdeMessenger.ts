@@ -48,7 +48,6 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
         slashCommands: [],
         contextProviders: [],
         mcpServerStatuses: [],
-        usePlatform: true,
         modelsByRole: {
           chat: [],
           apply: [],

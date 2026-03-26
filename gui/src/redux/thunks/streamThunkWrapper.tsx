@@ -2,6 +2,15 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 
 import StreamErrorDialog from "../../pages/gui/StreamError";
 import { analyzeError } from "../../util/errorAnalysis";
+
+const OVERLOADED_RETRIES = 3;
+const OVERLOADED_DELAY_MS = 2000;
+
+function isOverloadedErrorMessage(message?: string): boolean {
+  if (!message) return false;
+  const lower = message.toLowerCase();
+  return lower.includes("overloaded") || lower.includes("529");
+}
 import { selectSelectedChatModel } from "../slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../slices/uiSlice";
 import { ThunkApiType } from "../store";
