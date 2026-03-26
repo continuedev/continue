@@ -150,12 +150,12 @@ export function analyzeError(
   }
 
   // Ollama tool call parsing failure (transient model output issue)
-  if (errorText.includes("error parsing tool call")) {
+  if (errorText.includes("error parsing ollama response: error: error parsing tool call")) {
     customErrorMessage =
       "This model produced an invalid tool call that Ollama could not parse. " +
       "This is a known transient issue — you can resubmit your message to try again. " +
-      'To reduce these errors, enable "Only use system message tools" in Settings > Experimental, ' +
-      "which avoids Ollama's native tool call parser.";
+      'Enabling "Only use system message tools" in Settings > Experimental ' +
+      "may reduce these errors by avoiding Ollama's native tool call parser.";
   }
 
   // 402 Insufficient Balance
