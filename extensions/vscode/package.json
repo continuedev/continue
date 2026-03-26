@@ -717,7 +717,7 @@
     "@vscode/vsce": "^2.22.0",
     "cargo-cp-artifact": "^0.1",
     "chai": "^4.5.0",
-    "esbuild": "0.17.19",
+    "esbuild": "^0.25.0",
     "esbuild-visualizer": "^0.6.0",
     "eslint": "^8.28.0",
     "json-schema-to-typescript": "^12.0.0",
@@ -737,7 +737,7 @@
     "core": "file:../../core",
     "cors": "^2.8.5",
     "dbinfoz": "^0.14.0",
-    "diff": "^7.0.0",
+    "diff": "^8.0.4",
     "downshift": "^7.6.0",
     "express": "^4.18.2",
     "fkill": "^8.1.0",
@@ -754,7 +754,7 @@
     "lru-cache": "^11.2.4",
     "minisearch": "^7.0.0",
     "mocha": "^11.7.5",
-    "monaco-editor": "^0.55.1",
+    "monaco-editor": "^0.53.0",
     "monaco-vscode-textmate-theme-converter": "^0.1.7",
     "ncp": "^2.0.0",
     "node-fetch": "^3.3.2",
@@ -763,7 +763,6 @@
     "react-markdown": "^8.0.7",
     "react-redux": "^8.0.5",
     "read-last-lines": "^1.8.0",
-    "request": "^2.88.2",
     "socket.io-client": "^4.7.2",
     "strip-ansi": "^7.1.0",
     "svg-builder": "^2.0.0",
@@ -782,6 +781,16 @@
     "vitest": {
       "@types/node": "^16.18.119"
     },
+    "mocha": {
+      "serialize-javascript": "^7.0.5"
+    },
+    "diff": "$diff",
+    "picomatch": "^4.0.2",
+    "rollup": "^4.34.9",
+    "vite": {
+      "esbuild": "^0.25.0"
+    },
+    "tar": "^7.5.13",
     "undici-types@~7.18.0": "7.18.1"
   }
 }
