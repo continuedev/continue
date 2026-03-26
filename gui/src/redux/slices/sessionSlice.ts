@@ -223,10 +223,9 @@ type SessionState = {
   contextPercentage?: number;
   inlineErrorMessage?: InlineErrorMessageType;
   compactionLoading: Record<number, boolean>; // Track compaction loading by message index
-  inputDraft: Record<string, JSONContent | undefined>;
-  editingDraft: Record<
+  draft: Record<
     string,
-    { content: JSONContent; messageId: string } | undefined
+    { content: JSONContent; messageId?: string } | undefined
   >;
 };
 
@@ -248,39 +247,26 @@ export const INITIAL_SESSION_STATE: SessionState = {
   lastSessionId: undefined,
   newestToolbarPreviewForInput: {},
   compactionLoading: {},
-  inputDraft: {},
-  editingDraft: {},
+  draft: {},
 };
 
 export const sessionSlice = createSlice({
   name: "session",
   initialState: INITIAL_SESSION_STATE,
   reducers: {
-    setInputDraft: (
-      state,
-      {
-        payload,
-      }: PayloadAction<{ key: string; content: JSONContent | undefined }>,
-    ) => {
-      if (payload.content) {
-        state.inputDraft[payload.key] = payload.content;
-      } else {
-        delete state.inputDraft[payload.key];
-      }
-    },
-    setEditingDraft: (
+    setDraft: (
       state,
       {
         payload,
       }: PayloadAction<{
         key: string;
-        draft: { content: JSONContent; messageId: string } | undefined;
+        draft: { content: JSONContent; messageId?: string } | undefined;
       }>,
     ) => {
       if (payload.draft) {
-        state.editingDraft[payload.key] = payload.draft;
+        state.draft[payload.key] = payload.draft;
       } else {
-        delete state.editingDraft[payload.key];
+        delete state.draft[payload.key];
       }
     },
     addPromptCompletionPair: (
@@ -1124,8 +1110,7 @@ export const {
   setIsPruned,
   setContextPercentage,
   setCompactionLoading,
-  setInputDraft,
-  setEditingDraft,
+  setDraft,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;

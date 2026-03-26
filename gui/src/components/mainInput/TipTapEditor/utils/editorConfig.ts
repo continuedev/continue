@@ -22,10 +22,7 @@ import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import { AppDispatch } from "../../../../redux/store";
 import { exitEdit } from "../../../../redux/thunks/edit";
 import { getFontSize, isJetBrains } from "../../../../util";
-import {
-  setEditingDraft,
-  setInputDraft,
-} from "../../../../redux/slices/sessionSlice";
+import { setDraft } from "../../../../redux/slices/sessionSlice";
 import { CodeBlock, Mention, PromptBlock, SlashCommand } from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
 import {
@@ -398,33 +395,18 @@ export function createEditorConfig(options: {
     editable: !isStreaming || props.isMainInput,
     onUpdate: ({ editor }) => {
       const content = editor.getJSON();
-      if (props.isMainInput) {
-        if (hasValidEditorContent(content)) {
-          dispatch(setInputDraft({ key: props.historyKey, content }));
-          dispatch(
-            setEditingDraft({ key: props.historyKey, draft: undefined }),
-          );
-        } else {
-          dispatch(
-            setInputDraft({ key: props.historyKey, content: undefined }),
-          );
-        }
+      if (hasValidEditorContent(content)) {
+        dispatch(
+          setDraft({
+            key: props.historyKey,
+            draft: {
+              content,
+              messageId: props.isMainInput ? undefined : props.inputId,
+            },
+          }),
+        );
       } else {
-        if (hasValidEditorContent(content)) {
-          dispatch(
-            setEditingDraft({
-              key: props.historyKey,
-              draft: { content, messageId: props.inputId },
-            }),
-          );
-          dispatch(
-            setInputDraft({ key: props.historyKey, content: undefined }),
-          );
-        } else {
-          dispatch(
-            setEditingDraft({ key: props.historyKey, draft: undefined }),
-          );
-        }
+        dispatch(setDraft({ key: props.historyKey, draft: undefined }));
       }
     },
   });
@@ -447,8 +429,7 @@ export function createEditorConfig(options: {
     if (props.isMainInput) {
       addRef.current(json);
     }
-    dispatch(setInputDraft({ key: props.historyKey, content: undefined }));
-    dispatch(setEditingDraft({ key: props.historyKey, draft: undefined }));
+    dispatch(setDraft({ key: props.historyKey, draft: undefined }));
 
     props.onEnter(json, modifiers, editor);
   };

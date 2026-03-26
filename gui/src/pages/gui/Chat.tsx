@@ -138,12 +138,7 @@ export function Chat() {
   }, []);
 
   const historyKey = isInEdit ? "edit" : "chat";
-  const editingDraft = useAppSelector(
-    (state) => state.session.editingDraft[historyKey],
-  );
-  const inputDraft = useAppSelector(
-    (state) => state.session.inputDraft[historyKey],
-  );
+  const draft = useAppSelector((state) => state.session.draft[historyKey]);
 
   useAutoScroll(stepsDivRef, history);
 
@@ -344,9 +339,7 @@ export function Chat() {
 
       if (message.role === "user") {
         const draftContent =
-          editingDraft?.messageId === message.id
-            ? editingDraft.content
-            : undefined;
+          draft?.messageId === message.id ? draft.content : undefined;
 
         return (
           <ContinueInputBox
@@ -482,7 +475,7 @@ export function Chat() {
           onEnter={(editorState, modifiers, editor) =>
             sendInput(editorState, modifiers, undefined, editor)
           }
-          editorState={inputDraft}
+          editorState={draft?.messageId ? undefined : draft?.content}
           inputId={MAIN_EDITOR_INPUT_ID}
         />
 
