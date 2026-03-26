@@ -240,7 +240,6 @@ class Ollama extends BaseLLM implements ModelInstaller {
          * it's a good indication the model supports FIM.
          */
         this.fimSupported = !!body?.template?.includes(".Suffix");
-
       })
       .catch((e) => {
         // console.warn("Error calling the Ollama /api/show endpoint: ", e);
