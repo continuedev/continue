@@ -1,7 +1,7 @@
 import { ModelDescription, SerializedContinueConfig } from "core";
-// import Mock from "core/llm/llms/Mock.js";
 import { FromIdeProtocol, ToIdeProtocol } from "core/protocol/index.js";
 import { IMessenger } from "core/protocol/messenger";
+import { ReverseMessageIde } from "core/protocol/messenger/reverseMessageIde";
 import FileSystemIde from "core/util/filesystem";
 import fs from "fs";
 import {
@@ -15,7 +15,7 @@ import {
   CoreBinaryTcpMessenger,
 } from "../src/IpcMessenger";
 
-// jest.setTimeout(100_000);
+jest.setTimeout(30_000);
 
 const USE_TCP = false;
 
@@ -122,6 +122,7 @@ describe("Test Suite", () => {
         console.error("Error spawning subprocess:", error);
         throw error;
       }
+
       messenger = new CoreBinaryMessenger<ToIdeProtocol, FromIdeProtocol>(
         subprocess,
       );
@@ -132,7 +133,13 @@ describe("Test Suite", () => {
       fs.mkdirSync(testDir);
     }
     const ide = new FileSystemIde(testDir);
-    // const reverseIde = new ReverseMessageIde(messenger.on.bind(messenger), ide);
+    // ReverseMessageIde registers handlers on the messenger to respond to
+    // Core's requests (getIdeInfo, getIdeSettings, getControlPlaneSessionInfo, etc.)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const reverseIde = new ReverseMessageIde(
+      messenger.on.bind(messenger),
+      ide,
+    );
 
     // Wait for core to set itself up
     await new Promise((resolve) => setTimeout(resolve, 1000));
