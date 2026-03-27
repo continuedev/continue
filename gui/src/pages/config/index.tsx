@@ -6,6 +6,7 @@ import { TabGroup } from "../../components/ui/TabGroup";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { bottomTabSections, getAllTabs, topTabSections } from "./configTabs";
 import { CliInstallBanner } from "../../components/CliInstallBanner";
+import { DeprecationBanner } from "../../components/DeprecationBanner";
 import { AccountDropdown } from "./features/account/AccountDropdown";
 
 function ConfigPage() {
@@ -79,6 +80,7 @@ function ConfigPage() {
 
         {/* Tab Content for larger screens (md and above) */}
         <div className="thin-scrollbar relative hidden flex-1 overflow-y-auto sm:block">
+          <DeprecationBanner dismissable={true} />
           <div className="space-y-6 px-4 py-4">
             {allTabs.find((tab) => tab.id === activeTab)?.component}
           </div>

@@ -1,5 +1,6 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useContext, useState } from "react";
+import { vscButtonBackground, vscButtonForeground } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { varWithFallback } from "../styles/theme";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
@@ -34,11 +35,11 @@ export function DeprecationBanner({
   };
 
   return (
-    <div className="px-4 pt-4">
+    <div className="px-4 py-4">
       <div
-        className="border-warning relative rounded-md border-[0.5px] border-solid px-3 py-2.5 shadow-sm"
+        className="border-info relative rounded-md border-[0.5px] border-solid px-3 py-2.5 shadow-sm"
         style={{
-          backgroundColor: `color-mix(in srgb, ${varWithFallback("warning")} 20%, transparent)`,
+          backgroundColor: `color-mix(in srgb, ${varWithFallback("info")} 20%, transparent)`,
         }}
       >
         {dismissable && (
@@ -49,22 +50,28 @@ export function DeprecationBanner({
             <XMarkIcon className="h-3.5 w-3.5" />
           </button>
         )}
-        <div className="flex flex-col gap-2.5 text-xs">
+        <div className="flex flex-col gap-1.5 text-xs">
           <p className={dismissable ? "pr-5" : ""}>
-            Configuration management in Continue is moving local.{" "}
-            <span
-              onClick={() => ideMessenger.post("openUrl", REPO_URL)}
-              className="cursor-pointer underline hover:brightness-125"
-            >
-              Learn more here
-            </span>
+            Extension configuration is local only as of v2.0.0
           </p>
-          <button
-            onClick={() => ideMessenger.post("openUrl", EXPORT_URL)}
-            className="border-description text-foreground w-full rounded border-[0.5px] border-solid bg-transparent px-3 py-1.5 text-xs font-medium hover:brightness-125"
-          >
-            Download your Hub configurations
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => ideMessenger.post("openUrl", REPO_URL)}
+              className="border-description text-foreground flex-1 cursor-pointer rounded border-[0.5px] border-solid bg-transparent px-2 py-1 text-[11px] font-medium hover:brightness-125"
+            >
+              Learn more
+            </button>
+            <button
+              onClick={() => ideMessenger.post("openUrl", EXPORT_URL)}
+              className="flex-1 cursor-pointer rounded border-none px-2 py-1 text-[11px] font-medium hover:brightness-125"
+              style={{
+                backgroundColor: vscButtonBackground,
+                color: vscButtonForeground,
+              }}
+            >
+              Export cloud configs
+            </button>
+          </div>
         </div>
       </div>
     </div>
