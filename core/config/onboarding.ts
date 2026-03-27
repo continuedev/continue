@@ -3,8 +3,8 @@ import { ConfigYaml } from "@continuedev/config-yaml";
 export const LOCAL_ONBOARDING_PROVIDER_TITLE = "Ollama";
 export const LOCAL_ONBOARDING_FIM_MODEL = "qwen2.5-coder:1.5b-base";
 export const LOCAL_ONBOARDING_FIM_TITLE = "Qwen2.5-Coder 1.5B";
-export const LOCAL_ONBOARDING_CHAT_MODEL = "llama3.1:8b";
-export const LOCAL_ONBOARDING_CHAT_TITLE = "Llama 3.1 8B";
+export const LOCAL_ONBOARDING_CHAT_MODEL = "qwen3:8b";
+export const LOCAL_ONBOARDING_CHAT_TITLE = "Qwen 3 8B";
 export const LOCAL_ONBOARDING_EMBEDDINGS_MODEL = "nomic-embed-text:latest";
 export const LOCAL_ONBOARDING_EMBEDDINGS_TITLE = "Nomic Embed";
 

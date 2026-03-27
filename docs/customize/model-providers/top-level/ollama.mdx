@@ -4,13 +4,9 @@ slug: ../ollama
 sidebarTitle: "Ollama"
 ---
 
-<Tip>
-  **Discover Ollama models [here](https://continue.dev/lmstudio)**
-</Tip>
+<Tip>**Discover Ollama models [here](https://continue.dev/lmstudio)**</Tip>
 
-<Info>
-  Get started with [Ollama](https://ollama.com/download)
-</Info>
+<Info>Get started with [Ollama](https://ollama.com/download)</Info>
 
 ## Configuration
 
@@ -42,10 +38,12 @@ sidebarTitle: "Ollama"
     }
     ```
     </Tab>
+
 </Tabs>
 
 <Info>
-  **Check out a more advanced configuration [here](https://continue.dev/ollama/qwen3-coder-30b?view=config)**
+  **Check out a more advanced configuration
+  [here](https://continue.dev/ollama/qwen3-coder-30b?view=config)**
 </Info>
 
 ## How to Configure Model Capabilities in Ollama
@@ -85,10 +83,12 @@ Ollama models usually have their capabilities auto-detected correctly. However, 
     }
     ```
     </Tab>
+
 </Tabs>
 
 <Note>
-  Many Ollama models support tool use by default. Vision models often also support image input
+  Many Ollama models support tool use by default. Vision models often also
+  support image input
 </Note>
 
 ## Troubleshooting
@@ -99,9 +99,9 @@ Continue may set a higher default context length than other Ollama tools, causin
 
 ```yaml title="config.yaml"
 models:
-  - name: Deepseek R1
+  - name: Qwen 3 8B
     provider: ollama
-    model: deepseek-r1:latest
+    model: qwen3:8b
     defaultCompletionOptions:
       contextLength: 2048
 ```

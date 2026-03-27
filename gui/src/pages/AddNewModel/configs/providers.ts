@@ -491,7 +491,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     description:
       "One of the fastest ways to get started with local models on Mac, Linux, or Windows",
     longDescription:
-      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/download) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
+      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/download) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `qwen3:8b` or `deepseek-r1:14b`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model="qwen3:8b"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
     icon: "ollama.png",
     tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     packages: [

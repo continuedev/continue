@@ -380,7 +380,7 @@ export const models: { [key: string]: ModelPackage } = {
         },
       },
     ],
-    providerOptions: ["ollama", "lmstudio", "llama.cpp"],
+    providerOptions: ["lmstudio", "llama.cpp"],
     isOpenSource: true,
   },
   deepseekChatApi: {
@@ -419,6 +419,169 @@ export const models: { [key: string]: ModelPackage } = {
     },
     icon: "deepseek.png",
     providerOptions: ["deepseek"],
+    isOpenSource: true,
+  },
+  deepseekR1Local: {
+    title: "DeepSeek R1",
+    description:
+      "A powerful open-source reasoning model with chain-of-thought capabilities, available in distilled sizes for local use.",
+    params: {
+      title: "DeepSeek-R1-14b",
+      model: "deepseek-r1:14b",
+      contextLength: 64_000,
+    },
+    icon: "deepseek.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "1.5b": {
+            model: "deepseek-r1:1.5b",
+            title: "DeepSeek-R1-1.5b",
+          },
+          "7b": {
+            model: "deepseek-r1:7b",
+            title: "DeepSeek-R1-7b",
+          },
+          "8b": {
+            model: "deepseek-r1:8b",
+            title: "DeepSeek-R1-8b",
+          },
+          "14b": {
+            model: "deepseek-r1:14b",
+            title: "DeepSeek-R1-14b",
+          },
+          "32b": {
+            model: "deepseek-r1:32b",
+            title: "DeepSeek-R1-32b",
+          },
+          "70b": {
+            model: "deepseek-r1:70b",
+            title: "DeepSeek-R1-70b",
+          },
+        },
+      },
+    ],
+    providerOptions: ["ollama", "lmstudio", "llama.cpp"],
+    isOpenSource: true,
+  },
+  qwen3Chat: {
+    title: "Qwen 3",
+    description:
+      "Alibaba's latest model with hybrid thinking, strong coding and reasoning capabilities.",
+    params: {
+      title: "Qwen3-8b",
+      model: "qwen3:8b",
+      contextLength: 32_768,
+    },
+    icon: "qwen.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "0.6b": {
+            model: "qwen3:0.6b",
+            title: "Qwen3-0.6b",
+          },
+          "4b": {
+            model: "qwen3:4b",
+            title: "Qwen3-4b",
+          },
+          "8b": {
+            model: "qwen3:8b",
+            title: "Qwen3-8b",
+          },
+          "32b": {
+            model: "qwen3:32b",
+            title: "Qwen3-32b",
+          },
+        },
+      },
+    ],
+    providerOptions: ["ollama", "lmstudio", "llama.cpp"],
+    isOpenSource: true,
+  },
+  qwen3Coder: {
+    title: "Qwen 3 Coder",
+    description:
+      "Alibaba's latest code-specialized model with strong multi-language programming support.",
+    params: {
+      title: "Qwen3-Coder-30b",
+      model: "qwen3-coder:30b-a3b",
+      contextLength: 32_768,
+    },
+    icon: "qwen.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "1.5b": {
+            model: "qwen3-coder:1.5b",
+            title: "Qwen3-Coder-1.5b",
+          },
+          "8b": {
+            model: "qwen3-coder:8b",
+            title: "Qwen3-Coder-8b",
+          },
+          "30b-a3b (MoE)": {
+            model: "qwen3-coder:30b-a3b",
+            title: "Qwen3-Coder-30b",
+          },
+        },
+      },
+    ],
+    providerOptions: ["ollama", "lmstudio", "llama.cpp"],
+    isOpenSource: true,
+  },
+  gemma3Chat: {
+    title: "Gemma 3",
+    description:
+      "Google's latest open model with strong coding and instruction-following capabilities.",
+    params: {
+      title: "Gemma3-12b",
+      model: "gemma3:12b",
+      contextLength: 32_768,
+    },
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "1b": {
+            model: "gemma3:1b",
+            title: "Gemma3-1b",
+          },
+          "4b": {
+            model: "gemma3:4b",
+            title: "Gemma3-4b",
+          },
+          "12b": {
+            model: "gemma3:12b",
+            title: "Gemma3-12b",
+          },
+          "27b": {
+            model: "gemma3:27b",
+            title: "Gemma3-27b",
+          },
+        },
+      },
+    ],
+    providerOptions: ["ollama", "lmstudio", "llama.cpp"],
+    isOpenSource: true,
+  },
+  phi4: {
+    title: "Phi 4",
+    description:
+      "Microsoft's compact 14B model with strong reasoning and coding performance.",
+    params: {
+      title: "Phi-4",
+      model: "phi4:14b",
+      contextLength: 16_384,
+    },
+    providerOptions: ["ollama", "lmstudio", "llama.cpp"],
     isOpenSource: true,
   },
   deepseekCoder2Lite: {
@@ -639,13 +802,7 @@ export const models: { [key: string]: ModelPackage } = {
         },
       },
     ],
-    providerOptions: [
-      "ollama",
-      "lmstudio",
-      "together",
-      "llama.cpp",
-      "replicate",
-    ],
+    providerOptions: ["lmstudio", "together", "llama.cpp", "replicate"],
     isOpenSource: true,
   },
   mixtralTrial: {
@@ -832,7 +989,6 @@ export const models: { [key: string]: ModelPackage } = {
       },
     ],
     providerOptions: [
-      "ollama",
       "lmstudio",
       "together",
       "ovhcloud",
@@ -851,7 +1007,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 20_000,
       title: "Granite Code",
     },
-    providerOptions: ["ollama", "lmstudio", "llama.cpp", "replicate"],
+    providerOptions: ["lmstudio", "llama.cpp", "replicate"],
     icon: "ibm.png",
     isOpenSource: true,
     dimensions: [
@@ -910,7 +1066,7 @@ export const models: { [key: string]: ModelPackage } = {
         },
       },
     ],
-    providerOptions: ["ollama", "lmstudio", "llama.cpp", "replicate"],
+    providerOptions: ["lmstudio", "llama.cpp", "replicate"],
     isOpenSource: true,
   },
   phindCodeLlama: {
@@ -922,7 +1078,7 @@ export const models: { [key: string]: ModelPackage } = {
       model: "phind-codellama-34b",
       contextLength: 4096,
     },
-    providerOptions: ["ollama", "lmstudio", "llama.cpp", "replicate"],
+    providerOptions: ["lmstudio", "llama.cpp", "replicate"],
     isOpenSource: true,
   },
   codestral: {
