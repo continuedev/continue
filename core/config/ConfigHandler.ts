@@ -368,7 +368,12 @@ export class ConfigHandler {
         { ...options, fileExtType: "yaml" },
         "agents",
       );
-      const profiles = [...assistantFiles, ...agentFiles].map((assistant) => {
+      const configFiles = await getAllDotContinueDefinitionFiles(
+        this.ide,
+        { ...options, fileExtType: "yaml" },
+        "configs",
+      );
+      const profiles = [...assistantFiles, ...agentFiles, ...configFiles].map((assistant) => {
         return new LocalProfileLoader(
           this.ide,
           this.controlPlaneClient,
