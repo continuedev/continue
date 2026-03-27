@@ -38,6 +38,16 @@ export class HistoryManager {
       })
       .reverse();
 
+    // Filter by workspace directory if provided
+    if (options.workspaceDirectory) {
+      const target = options.workspaceDirectory.toLowerCase();
+      sessions = sessions.filter(
+        (session) =>
+          typeof session.workspaceDirectory === "string" &&
+          session.workspaceDirectory.toLowerCase() === target,
+      );
+    }
+
     // Apply limit and offset
     if (options.limit) {
       const offset = options.offset || 0;
