@@ -10,6 +10,7 @@ import {
   ILLMLogger,
 } from "../index.js";
 import { GlobalContext } from "../util/GlobalContext.js";
+import { getConfigYamlPath } from "../util/paths.js";
 
 import EventEmitter from "node:events";
 import {
@@ -637,6 +638,8 @@ export class ConfigHandler {
     }
 
     if (profile.profileDescription.profileType === "local") {
+      // Ensure the config file exists (creates with defaults if missing)
+      getConfigYamlPath();
       const configFile = element?.sourceFile ?? profile.profileDescription.uri;
       await this.ide.openFile(configFile);
     } else {
