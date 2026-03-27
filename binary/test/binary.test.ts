@@ -34,7 +34,9 @@ class BinaryIdeHandler {
     this.registerHandlers();
 
     // Listen on stdout alongside CoreBinaryMessenger (EventEmitter allows multiple listeners)
-    subprocess.stdout.on("data", (data: Buffer) => this.handleData(data));
+    // Use setEncoding so split multibyte UTF-8 characters are decoded correctly
+    subprocess.stdout.setEncoding("utf8");
+    subprocess.stdout.on("data", (data: string) => this.handleData(data));
   }
 
   private registerHandlers() {
@@ -81,8 +83,8 @@ class BinaryIdeHandler {
     h["removeFile"] = (d) => ide.removeFile(d.path);
   }
 
-  private handleData(data: Buffer) {
-    const d = data.toString();
+  private handleData(data: string) {
+    const d = data;
     const lines = d.split(/\r\n/).filter((line) => line.trim() !== "");
     if (lines.length === 0) return;
 
@@ -243,7 +245,9 @@ describe("Test Suite", () => {
       fs.mkdirSync(testDir);
     }
     const ide = new FileSystemIde(testDir);
-    new BinaryIdeHandler(subprocess, ide);
+    if (!USE_TCP && subprocess) {
+      new BinaryIdeHandler(subprocess, ide);
+    }
 
     // Wait for core to set itself up
     await new Promise((resolve) => setTimeout(resolve, 1000));
