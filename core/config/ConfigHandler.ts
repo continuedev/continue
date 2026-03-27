@@ -9,6 +9,7 @@ import {
   ILLMLogger,
 } from "../index.js";
 import { GlobalContext } from "../util/GlobalContext.js";
+import { getConfigYamlPath } from "../util/paths.js";
 
 import EventEmitter from "node:events";
 import { Logger } from "../util/Logger.js";
@@ -346,6 +347,7 @@ export class ConfigHandler {
       return;
     }
 
+    getConfigYamlPath();
     const configFile = element?.sourceFile ?? profile.profileDescription.uri;
     await this.ide.openFile(configFile);
   }
