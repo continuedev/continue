@@ -359,17 +359,15 @@ export class ConfigHandler {
     }
 
     if (options.includeWorkspace) {
-      const assistantFiles = await getAllDotContinueDefinitionFiles(
-        this.ide,
-        { ...options, fileExtType: "yaml" },
-        "assistants",
-      );
-      const agentFiles = await getAllDotContinueDefinitionFiles(
-        this.ide,
-        { ...options, fileExtType: "yaml" },
-        "agents",
-      );
-      const profiles = [...assistantFiles, ...agentFiles].map((assistant) => {
+      const yamlOptions = { ...options, fileExtType: "yaml" } as const;
+      const allFiles = (
+        await Promise.all([
+          getAllDotContinueDefinitionFiles(this.ide, yamlOptions, "assistants"),
+          getAllDotContinueDefinitionFiles(this.ide, yamlOptions, "agents"),
+          getAllDotContinueDefinitionFiles(this.ide, yamlOptions, "configs"),
+        ])
+      ).flat();
+      const profiles = allFiles.map((assistant) => {
         return new LocalProfileLoader(
           this.ide,
           this.controlPlaneClient,
