@@ -24,7 +24,7 @@
     "@panzoom/panzoom": "^4.6.0",
     "@reduxjs/toolkit": "^2.11.2",
     "@sentry/react": "^9.43.0",
-    "@sentry/vite-plugin": "^4.0.2",
+    "@sentry/vite-plugin": "^5.0.0",
     "@tiptap/core": "^2.27.0",
     "@tiptap/extension-document": "^2.27.0",
     "@tiptap/extension-dropcursor": "^2.27.0",
