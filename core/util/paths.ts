@@ -118,15 +118,12 @@ export function getConfigJsonPath(): string {
 
 export function getConfigYamlPath(ideType?: IdeType): string {
   const p = path.join(getContinueGlobalPath(), "config.yaml");
-  if (!fs.existsSync(p) && !fs.existsSync(getConfigJsonPath())) {
-    if (ideType === "jetbrains") {
-      // https://github.com/continuedev/continue/pull/7224
-      // This was here because we had different context provider support between jetbrains and vs code
-      // Leaving so we could differentiate later but for now configs are the same between IDEs
-      fs.writeFileSync(p, YAML.stringify(defaultConfig));
-    } else {
-      fs.writeFileSync(p, YAML.stringify(defaultConfig));
-    }
+  const exists = fs.existsSync(p);
+  const isEmpty = exists && fs.readFileSync(p, "utf8").trim() === "";
+  const needsCreation = !exists && !fs.existsSync(getConfigJsonPath());
+
+  if (needsCreation || isEmpty) {
+    fs.writeFileSync(p, YAML.stringify(defaultConfig));
     setConfigFilePermissions(p);
   }
   return p;
