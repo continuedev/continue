@@ -136,10 +136,7 @@ describe("Test Suite", () => {
     // ReverseMessageIde registers handlers on the messenger to respond to
     // Core's requests (getIdeInfo, getIdeSettings, getControlPlaneSessionInfo, etc.)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const reverseIde = new ReverseMessageIde(
-      messenger.on.bind(messenger),
-      ide,
-    );
+    const reverseIde = new ReverseMessageIde(messenger.on.bind(messenger), ide);
 
     // Wait for core to set itself up
     await new Promise((resolve) => setTimeout(resolve, 1000));
