@@ -3,7 +3,8 @@ import * as YAML from "yaml";
 import { getLastNPathParts } from "../util/uri";
 
 export function parsePromptFile(path: string, content: string) {
-  let [preambleRaw, prompt] = content.split("\n---\n");
+  const normalizedContent = content.replace(/\r\n/g, "\n");
+  let [preambleRaw, prompt] = normalizedContent.split("\n---\n");
   if (prompt === undefined) {
     prompt = preambleRaw;
     preambleRaw = "";
