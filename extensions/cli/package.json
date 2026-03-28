@@ -45,7 +45,7 @@
   },
   "homepage": "https://continue.dev",
   "dependencies": {
-    "@sentry/profiling-node": "^9.47.1",
+    "@sentry/profiling-node": "^10.40.0",
     "fdir": "^6.4.2",
     "find-up": "^8.0.0",
     "fzf": "^0.5.2",
