@@ -31,7 +31,9 @@ describe("OutOfCreditsDialog", () => {
   it("renders the no-credits message", () => {
     renderDialog();
     expect(
-      screen.getByText("You have no credits remaining on your Continue account"),
+      screen.getByText(
+        "You have no credits remaining on your Continue account",
+      ),
     ).toBeInTheDocument();
   });
 

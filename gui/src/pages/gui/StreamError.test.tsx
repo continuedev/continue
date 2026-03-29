@@ -74,8 +74,7 @@ vi.mock("../../redux/slices/configSlice", () => ({
 }));
 
 vi.mock("../../redux/slices/profilesSlice", () => ({
-  selectSelectedProfile: (state: any) =>
-    state?.profiles?.selectedOrgId ?? null,
+  selectSelectedProfile: (state: any) => state?.profiles?.selectedOrgId ?? null,
 }));
 
 vi.mock("../../redux/slices/uiSlice", () => ({
@@ -186,7 +185,9 @@ describe("StreamErrorDialog", () => {
     it("shows not-found hints for 404", () => {
       renderError(new Error("404 Not Found"));
       expect(screen.getByText("Likely causes:")).toBeInTheDocument();
-      expect(screen.getByText("Model/deployment not found")).toBeInTheDocument();
+      expect(
+        screen.getByText("Model/deployment not found"),
+      ).toBeInTheDocument();
     });
 
     it("shows generic error title for unknown errors", () => {
