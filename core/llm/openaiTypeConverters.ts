@@ -913,7 +913,7 @@ function isValidSuccessor(item: ResponseInputItem | undefined): boolean {
   if (!item) return false;
   if (isItemType<ResponseFunctionToolCall>(item, "function_call")) return true;
   if (
-    isItemType<ResponseInputItem.FunctionCallOutput>(
+    isItemType<ResponseInputItem & { type: "function_call_output" }>(
       item,
       "function_call_output",
     )
@@ -947,7 +947,7 @@ function sanitizeResponsesInput(input: ResponseInput): ResponseInput {
         const currentItem = input[j];
         if (
           isItemType<ResponseFunctionToolCall>(currentItem, "function_call") ||
-          isItemType<ResponseInputItem.FunctionCallOutput>(
+          isItemType<ResponseInputItem & { type: "function_call_output" }>(
             currentItem,
             "function_call_output",
           ) ||
@@ -986,13 +986,13 @@ function sanitizeResponsesInput(input: ResponseInput): ResponseInput {
   }
   return result.filter((item) => {
     if (
-      !isItemType<ResponseInputItem.FunctionCallOutput>(
+      isItemType<ResponseInputItem & { type: "function_call_output" }>(
         item,
         "function_call_output",
       )
     )
-      return true;
-    return validCallIds.has(item.call_id);
+      return validCallIds.has(item.call_id);
+    return true;
   });
 }
 
