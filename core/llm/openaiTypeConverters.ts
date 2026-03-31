@@ -404,7 +404,10 @@ function handleTextDeltaEvent(
   return e.delta ? { role: "assistant", content: e.delta } : undefined;
 }
 
-function handleFunctionCallArgsDelta(e: any): ChatMessage | undefined {
+function handleFunctionCallArgsDelta(
+  e: any,
+  itemIdToIndex?: Map<string, number>,
+): ChatMessage | undefined {
   const ev: any = e as any;
   const item = ev.item || {};
   const name = item && typeof item.name === "string" ? item.name : undefined;
@@ -417,11 +420,21 @@ function handleFunctionCallArgsDelta(e: any): ChatMessage | undefined {
       (item?.call_id as string | undefined) ||
       (item?.id as string | undefined) ||
       "";
+
+    let index: number | undefined = undefined;
+    if (itemIdToIndex && call_id) {
+      if (!itemIdToIndex.has(call_id)) {
+        itemIdToIndex.set(call_id, itemIdToIndex.size);
+      }
+      index = itemIdToIndex.get(call_id);
+    }
+
     const toolCalls: ToolCallDelta[] = [
       {
         id: call_id,
         type: "function",
         function: { name: name || "", arguments: argDelta },
+        index,
       },
     ];
     const assistant: AssistantChatMessage = {
@@ -436,6 +449,7 @@ function handleFunctionCallArgsDelta(e: any): ChatMessage | undefined {
 
 function handleOutputItemAdded(
   e: ResponseOutputItemAddedEvent,
+  itemIdToIndex?: Map<string, number>,
 ): ChatMessage | undefined {
   const { item } = e;
   if (item.type === "reasoning") {
@@ -472,12 +486,25 @@ function handleOutputItemAdded(
     };
   }
   if (item.type === "function_call") {
-    const toolCalls: ToolCallDelta[] = item.name
+    const call_id = (item as any).call_id || item.id;
+    let index: number | undefined = undefined;
+    if (itemIdToIndex && call_id) {
+      if (!itemIdToIndex.has(call_id)) {
+        itemIdToIndex.set(call_id, itemIdToIndex.size);
+      }
+      index = itemIdToIndex.get(call_id);
+    }
+
+    const toolCalls: ToolCallDelta[] = (item as any).name
       ? [
           {
-            id: item.call_id || item.id,
+            id: call_id,
             type: "function",
-            function: { name: item.name, arguments: item.arguments || "" },
+            function: {
+              name: (item as any).name,
+              arguments: (item as any).arguments || "",
+            },
+            index,
           },
         ]
       : [];
@@ -580,6 +607,7 @@ function handleReasoningTextDone(
 
 function handleResponsesStreamEvent(
   e: ResponseStreamEvent,
+  itemIdToIndex?: Map<string, number>,
 ): ChatMessage | undefined {
   const t = (e as any).type as string;
   if (t === "response.output_text.delta") {
@@ -589,13 +617,16 @@ function handleResponsesStreamEvent(
     return undefined; // avoid duplicate final text
   }
   if (t === "response.function_call_arguments.delta") {
-    return handleFunctionCallArgsDelta(e);
+    return handleFunctionCallArgsDelta(e, itemIdToIndex);
   }
   if (t === "response.function_call_arguments.done") {
     return undefined;
   }
   if (t === "response.output_item.added") {
-    return handleOutputItemAdded(e as ResponseOutputItemAddedEvent);
+    return handleOutputItemAdded(
+      e as ResponseOutputItemAddedEvent,
+      itemIdToIndex,
+    );
   }
   if (t === "response.output_item.done") {
     return handleOutputItemDone(e as ResponseOutputItemDoneEvent);
@@ -733,9 +764,13 @@ function handleResponsesFinal(
 
 export function fromResponsesChunk(
   event: ResponseStreamEvent | OpenAIResponse,
+  itemIdToIndex?: Map<string, number>,
 ): ChatMessage | ChatMessage[] | undefined {
   if (typeof (event as any).type === "string") {
-    return handleResponsesStreamEvent(event as ResponseStreamEvent);
+    return handleResponsesStreamEvent(
+      event as ResponseStreamEvent,
+      itemIdToIndex,
+    );
   }
   return handleResponsesFinal(event as OpenAIResponse);
 }

@@ -311,6 +311,7 @@ declare global {
       name?: string;
       arguments?: string;
     };
+    index?: number;
   }
   
   export interface ToolResultChatMessage {
