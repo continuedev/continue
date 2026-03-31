@@ -69,7 +69,7 @@ class BinaryIdeHandler {
     h["getCurrentFile"] = () => ide.getCurrentFile();
     h["getPinnedFiles"] = () => ide.getPinnedFiles();
     h["getSearchResults"] = (d) => ide.getSearchResults(d.query, d.maxResults);
-    h["getFileResults"] = (d) => ide.getFileResults(d.pattern);
+    h["getFileResults"] = (d) => ide.getFileResults(d.pattern, d.maxResults);
     h["getProblems"] = (d) => ide.getProblems(d.filepath);
     h["getBranch"] = (d) => ide.getBranch(d.dir);
     h["subprocess"] = (d) => ide.subprocess(d.command, d.cwd);
