@@ -436,16 +436,10 @@ class IntelliJIDE(
                     "--glob",
                     "!{${defaultIgnorePattern}}" 
                 )
-                if (maxResults != null) {
-                    commandArgs.add("--max-count")
-                    commandArgs.add(maxResults.toString())
-                }
-
                 val command = GeneralCommandLine(commandArgs)
-
                 command.setWorkDirectory(project.basePath)
                 val results = ExecUtil.execAndGetOutput(command).stdout
-                val lines = results.split("\n").filter { it.isNotEmpty() }
+                val lines = results.split("\n")
                 return if (maxResults != null) lines.take(maxResults) else lines
             } catch (exception: Exception) {
                 val message = "Error executing ripgrep: ${exception.message}"
