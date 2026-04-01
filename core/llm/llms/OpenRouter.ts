@@ -5,6 +5,11 @@ import { osModelsEditPrompt } from "../templates/edit.js";
 
 import OpenAI from "./OpenAI.js";
 
+const OPENROUTER_HEADERS: Record<string, string> = {
+  "HTTP-Referer": "https://www.continue.dev/",
+  "X-Title": "Continue.dev",
+};
+
 class OpenRouter extends OpenAI {
   static providerName = "openrouter";
   protected supportsReasoningField = true;
@@ -17,6 +22,19 @@ class OpenRouter extends OpenAI {
     },
     useLegacyCompletionsEndpoint: false,
   };
+
+  constructor(options: LLMOptions) {
+    super({
+      ...options,
+      requestOptions: {
+        ...options.requestOptions,
+        headers: {
+          ...OPENROUTER_HEADERS,
+          ...options.requestOptions?.headers,
+        },
+      },
+    });
+  }
 
   private isAnthropicModel(model?: string): boolean {
     if (!model) return false;
