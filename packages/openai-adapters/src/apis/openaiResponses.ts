@@ -11,7 +11,6 @@ import {
   ChatCompletionCreateParams,
   ChatCompletionCreateParamsStreaming,
   ChatCompletionMessageParam,
-  ChatCompletionMessageToolCall,
   ChatCompletionTool,
 } from "openai/resources/index.js";
 import {
@@ -284,13 +283,31 @@ function resolveToolChoice(
   return undefined;
 }
 
+/**
+ * Ensures an ID has the correct prefix (e.g., "msg_", "fc_", "rs_").
+ * If the ID already has the prefix, it's returned as is.
+ * If it has a different prefix, that prefix is stripped before adding the new one.
+ */
+function ensurePrefix(
+  id: string | undefined,
+  prefix: string,
+): string | undefined {
+  if (!id) return undefined;
+  if (id.startsWith(prefix)) return id;
+  // Strip existing prefix if any (rs_, msg_, fc_ are 5 chars, but sometimes 3)
+  const cleanId =
+    id.includes("_") && id.length > 3 && id[2] === "_" ? id.substring(3) : id;
+  return prefix + cleanId;
+}
+
 export function toResponsesInput(
   messages: ChatCompletionMessageParam[],
 ): ResponseInput {
   const inputItems: ResponseInput = [];
   let assistantMessageCounter = 0;
 
-  for (const message of messages) {
+  for (let i = 0; i < messages.length; i++) {
+    const message = messages[i];
     if (message.role === "tool") {
       if (!message.tool_call_id) {
         continue;
@@ -339,9 +356,8 @@ export function toResponsesInput(
       if (assistantContentParts.length > 0) {
         const providedId = (message as any).id;
         const assistantId =
-          typeof providedId === "string" && providedId.startsWith("msg_")
-            ? providedId
-            : `msg_${(assistantMessageCounter++).toString().padStart(4, "0")}`;
+          ensurePrefix(providedId, "msg_") ||
+          `msg_${(assistantMessageCounter++).toString().padStart(4, "0")}`;
         inputItems.push({
           type: "message",
           role: "assistant",
@@ -359,18 +375,63 @@ export function toResponsesInput(
               call_id: callId,
               name: toolCall.function.name ?? "",
               arguments: toolCall.function.arguments ?? "{}",
+              id: ensurePrefix(callId, "fc_")!,
             };
-            if (
-              typeof toolCall.id === "string" &&
-              toolCall.id.startsWith("fc_")
-            ) {
-              functionCall.id = toolCall.id;
-            }
             inputItems.push(functionCall);
           }
         });
       }
       continue;
+    }
+
+    if ((message.role as string) === "thinking") {
+      const reasoningDetails = (message as any).reasoning_details || [];
+      const item: any = {
+        type: "reasoning",
+        summary: [],
+      };
+
+      const idDetail = reasoningDetails.find(
+        (d: any) => d.type === "reasoning_id",
+      );
+      if (idDetail?.id) {
+        item.id = ensurePrefix(idDetail.id, "rs_");
+      } else {
+        item.id = `rs_${Math.random().toString(36).slice(2, 11)}`;
+      }
+
+      const summaryDetail = reasoningDetails.find(
+        (d: any) => d.type === "summary_text",
+      );
+      if (summaryDetail?.text) {
+        item.summary = [{ type: "summary_text", text: summaryDetail.text }];
+      }
+      const textDetail = reasoningDetails.find(
+        (d: any) => d.type === "reasoning_text",
+      );
+      if (textDetail?.text) {
+        item.content = [{ type: "reasoning_text", text: textDetail.text }];
+      }
+
+      inputItems.push(item);
+      continue;
+    }
+  }
+
+  // Final safety filter: remove any reasoning items that are not followed by a message or function_call.
+  // Responses API requires that a reasoning item must be followed by an assistant message item or a function_call item.
+  for (let i = 0; i < inputItems.length; i++) {
+    const item = inputItems[i] as any;
+    if (item.type === "reasoning") {
+      const next = inputItems[i + 1] as any;
+      const isAssistantMessage =
+        next?.type === "message" && next?.role === "assistant";
+      const isFunctionCall = next?.type === "function_call";
+
+      if (!isAssistantMessage && !isFunctionCall) {
+        inputItems.splice(i, 1);
+        i--;
+      }
     }
   }
 
@@ -742,6 +803,9 @@ export function responseToChatCompletion(response: Response): ChatCompletion {
           arguments: item.arguments,
         },
       });
+    } else if (item.type === "reasoning") {
+      // Map reasoning items to thinking role messages to preserve history if needed
+      // Currently just skipped in the final ChatCompletion format to avoid duplication
     }
   });
 

@@ -185,7 +185,7 @@ it("omits function_call id when tool call id lacks fc_ prefix", () => {
 
   expect(functionCall).toBeTruthy();
   expect(functionCall.call_id).toBe("call_custom");
-  expect(functionCall).not.toHaveProperty("id");
+  expect(functionCall.id).toBe("fc_call_custom");
 });
 
 describe("fromResponsesChunk", () => {
