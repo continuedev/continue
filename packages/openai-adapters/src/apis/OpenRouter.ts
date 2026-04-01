@@ -12,7 +12,8 @@ export interface OpenRouterConfig extends OpenAIConfig {
 
 const OPENROUTER_HEADERS: Record<string, string> = {
   "HTTP-Referer": "https://www.continue.dev/",
-  "X-Title": "Continue.dev",
+  "X-OpenRouter-Title": "Continue",
+  "X-OpenRouter-Categories": "ide-extension",
 };
 
 export class OpenRouterApi extends OpenAIApi {
