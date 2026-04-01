@@ -985,6 +985,7 @@ function sanitizeResponsesInput(input: ResponseInput): ResponseInput {
 
 export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
   const input: ResponseInput = [];
+  const itemIdToIndex: Record<string, number> = {};
 
   const pushMessage = (
     role: "user" | "assistant" | "system" | "developer",
@@ -1038,7 +1039,18 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
           (respId?.startsWith("msg_") ? respId : undefined);
 
         if (Array.isArray(toolCalls) && toolCalls.length > 0) {
-          emitFunctionCallsFromToolCalls(toolCalls, fcIds, input);
+          const tcCount = toolCalls.length;
+          const generatedFcIds = Array.from({ length: tcCount }, (_, i) => {
+            const tc = toolCalls[i];
+            const call_id = tc.id;
+            if (call_id && itemIdToIndex[call_id] === undefined) {
+              itemIdToIndex[call_id] = Object.keys(itemIdToIndex).length;
+            }
+            const idx = call_id ? itemIdToIndex[call_id] : i;
+            return `${(msg as any).id || (msg as any).messageId || "msg"}-${idx}`;
+          });
+
+          emitFunctionCallsFromToolCalls(toolCalls, generatedFcIds, input);
 
           if (text && text.trim()) {
             if (msgId) {

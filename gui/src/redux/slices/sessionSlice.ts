@@ -629,9 +629,6 @@ export const sessionSlice = createSlice({
               ) {
                 lastItem.reasoning.text += messageContent;
               }
-            } else {
-              // Note this only works because new message above
-              // was already rendered from parts to string
               if (
                 lastMessage.content.length > 0 ||
                 messageContent.trim().length > 0
@@ -648,6 +645,26 @@ export const sessionSlice = createSlice({
             message.toolCalls?.length &&
             lastMessage.role === "assistant"
           ) {
+            // Detect modality switch (from text content to tool calls)
+            const lastContent = lastMessage.content;
+            const hasContent =
+              typeof lastContent === "string"
+                ? lastContent.trim().length > 0
+                : Array.isArray(lastContent) && lastContent.length > 0;
+
+            if (hasContent && !lastItem.toolCallStates?.length) {
+              const historyItem: ChatHistoryItemWithMessageId = {
+                message: {
+                  ...message,
+                  content: "",
+                  id: uuidv4(),
+                },
+                contextItems: [],
+              };
+              state.history.push(historyItem);
+              lastItem = state.history[state.history.length - 1];
+              lastMessage = lastItem.message;
+            }
             handleStreamingToolCallUpdates(message, lastItem);
           }
 
