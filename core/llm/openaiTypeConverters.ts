@@ -946,7 +946,15 @@ export function isItemType<T extends ResponseInputItem & { type: string }>(
 function isValidSuccessor(item: ResponseInputItem | undefined): boolean {
   if (!item) return false;
   if (isItemType<ResponseFunctionToolCall>(item, "function_call")) return true;
+  if (
+    isItemType<ResponseInputItem & { type: "function_call_output" }>(
+      item,
+      "function_call_output",
+    )
+  )
+    return true;
   if ("type" in item && item.type === "message") return true;
+  if ("type" in item && item.type === "reasoning") return true;
   if ("role" in item && item.role === "assistant") return true;
   return false;
 }
@@ -970,9 +978,14 @@ function sanitizeResponsesInput(input: ResponseInput): ResponseInput {
       // subsequent items so the API doesn't expect the missing reasoning
       skipIndices.add(i);
       for (let j = i + 1; j < input.length; j++) {
+        const currentItem = input[j];
         if (
-          isItemType<ResponseFunctionToolCall>(input[j], "function_call") ||
-          ("type" in input[j] && input[j].type === "message")
+          isItemType<ResponseFunctionToolCall>(currentItem, "function_call") ||
+          isItemType<ResponseInputItem & { type: "function_call_output" }>(
+            currentItem,
+            "function_call_output",
+          ) ||
+          ("type" in currentItem && currentItem.type === "message")
         ) {
           stripIdIndices.add(j);
         } else {
@@ -1007,13 +1020,13 @@ function sanitizeResponsesInput(input: ResponseInput): ResponseInput {
   }
   return result.filter((item) => {
     if (
-      !isItemType<ResponseInputItem.FunctionCallOutput>(
+      isItemType<ResponseInputItem & { type: "function_call_output" }>(
         item,
         "function_call_output",
       )
     )
-      return true;
-    return validCallIds.has(item.call_id);
+      return validCallIds.has(item.call_id);
+    return true;
   });
 }
 
