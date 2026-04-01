@@ -811,6 +811,22 @@ function toResponseInputContentList(
   return list;
 }
 
+/**
+ * Ensures an ID has the correct prefix (e.g., "msg_", "fc_", "rs_").
+ * If the ID already has a prefix, it is stripped and replaced.
+ * This is crucial for OpenAI o1/o3-mini models which are strict about ID formats.
+ */
+function ensurePrefix(
+  id: string | undefined,
+  prefix: string,
+): string | undefined {
+  if (!id) return undefined;
+  // Strip existing prefix if any (msg_ is 4 chars, fc_/rs_ are 3 chars)
+  const strippedId = id.includes("_") ? id.split("_")[1] : id;
+  return `${prefix}${strippedId}`;
+}
+
+/** Emits function_call items for each tool call. Omits `id` when no fc_ ID is available. */
 /** Emits function_call items for each tool call. Omits `id` when no fc_ ID is available. */
 function emitFunctionCallsFromToolCalls(
   toolCalls: ToolCallDelta[],
@@ -826,12 +842,17 @@ function emitFunctionCallsFromToolCalls(
     const call_id = tc?.id as string | undefined;
 
     if (name && call_id) {
+      if (!isValidSuccessor(input[input.length - 1])) {
+        // Reasoning must be followed by a message or function_call
+        input.pop(); // Remove the orphaned reasoning
+      }
+
       const functionCallItem: ResponseFunctionToolCall = {
         type: "function_call",
         name,
         arguments: typeof args === "string" ? args : "{}",
-        call_id,
-        id: fcId,
+        call_id: ensurePrefix(call_id, "fc_")!,
+        id: ensurePrefix(fcId, "msg_")!,
       };
       input.push(functionCallItem);
     }
@@ -884,7 +905,7 @@ function convertThinkingMessageToReasoningItem(
   if (!id) return undefined;
 
   const reasoningItem: ResponseReasoningItem = {
-    id,
+    id: ensurePrefix(id, "rs_")!,
     type: "reasoning",
     summary: [],
   } as ResponseReasoningItem;
@@ -1038,7 +1059,13 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
           (respId?.startsWith("msg_") ? respId : undefined);
 
         if (Array.isArray(toolCalls) && toolCalls.length > 0) {
-          emitFunctionCallsFromToolCalls(toolCalls, fcIds, input);
+          const tcCount = toolCalls.length;
+          const generatedFcIds = Array.from(
+            { length: tcCount },
+            (_, i) => ensurePrefix(`${(msg as any).id || "msg"}-${i}`, "msg_")!,
+          );
+
+          emitFunctionCallsFromToolCalls(toolCalls, generatedFcIds, input);
 
           if (text && text.trim()) {
             if (msgId) {
