@@ -18,7 +18,7 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - open-source AI code agent",
+  "displayName": "MICUBE Continue",
   "pricing": "Free",
   "description": "The leading open-source AI code agent",
   "publisher": "Continue",
@@ -84,7 +84,7 @@
       }
     ],
     "configuration": {
-      "title": "Continue",
+      "title": "MICUBE Continue",
       "properties": {
         "continue.telemetryEnabled": {
           "type": "boolean",
@@ -153,75 +153,75 @@
     "commands": [
       {
         "command": "continue.applyCodeFromChat",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Apply code from chat",
         "group": "Continue"
       },
       {
         "command": "continue.acceptDiff",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Accept Diff",
         "group": "Continue"
       },
       {
         "command": "continue.rejectDiff",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Reject Diff",
         "group": "Continue",
         "icon": "$(stop)"
       },
       {
         "command": "continue.acceptVerticalDiffBlock",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Accept Vertical Diff Block",
         "group": "Continue"
       },
       {
         "command": "continue.rejectVerticalDiffBlock",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Reject Vertical Diff Block",
         "group": "Continue"
       },
       {
         "command": "continue.focusEdit",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Add to Edit",
         "group": "Continue"
       },
       {
         "command": "continue.focusContinueInput",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Add Highlighted Code to Context and Clear Chat",
         "group": "Continue"
       },
       {
         "command": "continue.focusContinueInputWithoutClear",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Add to Chat",
         "group": "Continue"
       },
       {
         "command": "continue.debugTerminal",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Debug Terminal",
         "group": "Continue"
       },
       {
         "command": "continue.exitEditMode",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Exit Edit Mode",
         "group": "Continue"
       },
       {
         "command": "continue.openConfigPage",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Open Settings",
         "icon": "$(gear)",
         "group": "Continue"
       },
       {
         "command": "continue.toggleTabAutocompleteEnabled",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Toggle Autocomplete Enabled",
         "group": "Continue"
       },
@@ -232,112 +232,112 @@
       },
       {
         "command": "continue.selectFilesAsContext",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Select Files as Context",
         "group": "Continue"
       },
       {
         "command": "continue.newSession",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "New Session",
         "icon": "$(add)",
         "group": "Continue"
       },
       {
         "command": "continue.shareSession",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Share Current Chat Session as Markdown",
         "group": "Continue"
       },
       {
         "command": "continue.viewHistory",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "View History",
         "icon": "$(history)",
         "group": "Continue"
       },
       {
         "command": "continue.viewLogs",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "View Logs",
         "group": "Continue"
       },
       {
         "command": "continue.clearConsole",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Clear Console",
         "icon": "$(clear-all)",
         "group": "Continue"
       },
       {
         "command": "continue.navigateTo",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Navigate to a path",
         "group": "Continue"
       },
       {
         "command": "continue.writeCommentsForCode",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Write Comments for this Code",
         "group": "Continue"
       },
       {
         "command": "continue.writeDocstringForCode",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Write a Docstring for this Code",
         "group": "Continue"
       },
       {
         "command": "continue.fixCode",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Fix this Code",
         "group": "Continue"
       },
       {
         "command": "continue.optimizeCode",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Optimize this Code",
         "group": "Continue"
       },
       {
         "command": "continue.fixGrammar",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Fix Grammar / Spelling",
         "group": "Continue"
       },
       {
         "command": "continue.codebaseForceReIndex",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Codebase Force Re-Index",
         "group": "Continue"
       },
       {
         "command": "continue.rebuildCodebaseIndex",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Rebuild codebase index",
         "group": "Continue"
       },
       {
         "command": "continue.docsIndex",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Docs Index",
         "group": "Continue"
       },
       {
         "command": "continue.docsReIndex",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Docs Force Re-Index",
         "group": "Continue"
       },
       {
         "command": "continue.focusContinueInput",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Focus Continue Chat",
         "group": "Continue"
       },
       {
         "command": "continue.enterEnterpriseLicenseKey",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Enter Enterprise License Key",
         "group": "Continue"
       },
@@ -347,38 +347,38 @@
       },
       {
         "command": "continue.nextEditWindow.hideNextEditSuggestion",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Hide Next Edit Suggestion"
       },
       {
         "command": "continue.nextEditWindow.acceptNextEditSuggestion",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Accept Next Edit Suggestion"
       },
       {
         "command": "continue.forceNextEdit",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Continue: Force Next Edit"
       },
       {
         "command": "continue.acceptJump",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Continue: Accept Jump Suggestion"
       },
       {
         "command": "continue.rejectJump",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Continue: Reject Jump Suggestion"
       },
       {
         "command": "continue.generateRule",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Generate Rule",
         "group": "Continue"
       },
       {
         "command": "continue.openInNewWindow",
-        "category": "Continue",
+        "category": "MICUBE Continue",
         "title": "Open in new window",
         "group": "Continue"
       }
@@ -606,14 +606,14 @@
       "activitybar": [
         {
           "id": "continue",
-          "title": "Continue",
+          "title": "MICUBE Continue",
           "icon": "media/sidebar-icon.png"
         }
       ],
       "panel": [
         {
           "id": "continueConsole",
-          "title": "Continue Console",
+          "title": "MICUBE Continue Console",
           "icon": "$(window)"
         }
       ]
@@ -623,7 +623,7 @@
         {
           "type": "webview",
           "id": "continue.continueGUIView",
-          "name": "Continue",
+          "name": "MICUBE Continue",
           "icon": "media/sidebar-icon.png",
           "visibility": "visible"
         }
@@ -632,7 +632,7 @@
         {
           "type": "webview",
           "id": "continue.continueConsoleView",
-          "name": "Continue Console",
+          "name": "MICUBE Continue Console",
           "icon": "$(window)",
           "visibility": "visible",
           "when": "config.continue.enableConsole"

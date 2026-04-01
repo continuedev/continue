@@ -1,7 +1,7 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.continuedev.continueintellijextension</id>
-    <name>Continue</name>
+    <name>MICUBE Continue</name>
     <vendor url="https://www.continue.dev/">continue-dev</vendor>
     <change-notes>
         <![CDATA[View the latest release notes on <a href="https://github.com/continuedev/continue/releases">GitHub</a>]]></change-notes>
@@ -15,7 +15,7 @@
     </depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="Continue" anchor="right" icon="com.github.continuedev.continueintellijextension.Icons.Continue"
+        <toolWindow id="Continue" title="MICUBE Continue" stripeTitle="MICUBE Continue" anchor="right" icon="com.github.continuedev.continueintellijextension.Icons.Continue"
                     factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
         <projectService id="ContinuePluginService"
                         serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinuePluginService"/>
@@ -48,7 +48,7 @@
                 parentId="tools"
                 instance="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
                 id="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
-                displayName="Continue"/>
+                displayName="MICUBE Continue"/>
         <applicationService
                 serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings"/>
     </extensions>
@@ -62,7 +62,7 @@
                                first-keystroke="ctrl I"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta I"/>
-            <override-text place="GoToAction" text="Continue: Edit Code"/>
+            <override-text place="GoToAction" text="MICUBE Continue: Edit Code"/>
         </action>
 
         <action id="continue.acceptDiff"
@@ -72,14 +72,14 @@
                                first-keystroke="shift ctrl ENTER"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="shift meta ENTER"/>
-            <override-text place="GoToAction" text="Continue: Accept Diff"/>
+            <override-text place="GoToAction" text="MICUBE Continue: Accept Diff"/>
         </action>
 
         <action id="continue.restartProcess"
                 class="com.github.continuedev.continueintellijextension.actions.RestartContinueProcess"
                 text="Restart Process"
                 description="Restart Process">
-            <override-text place="GoToAction" text="Continue: Restart Process"/>
+            <override-text place="GoToAction" text="MICUBE Continue: Restart Process"/>
         </action>
 
         <action id="continue.rejectDiff"
@@ -89,7 +89,7 @@
                                first-keystroke="shift ctrl BACK_SPACE"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="shift meta BACK_SPACE"/>
-            <override-text place="GoToAction" text="Continue: Reject Diff"/>
+            <override-text place="GoToAction" text="MICUBE Continue: Reject Diff"/>
         </action>
 
         <action id="continue.acceptVerticalDiffBlock"
@@ -99,7 +99,7 @@
                                first-keystroke="alt shift Y"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="alt shift Y"/>
-            <override-text place="GoToAction" text="Continue: Accept Vertical Diff Block"/>
+            <override-text place="GoToAction" text="MICUBE Continue: Accept Vertical Diff Block"/>
         </action>
 
         <action id="continue.rejectVerticalDiffBlock"
@@ -109,14 +109,14 @@
                                first-keystroke="alt shift N"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="alt shift N"/>
-            <override-text place="GoToAction" text="Continue: Reject Vertical Diff Block"/>
+            <override-text place="GoToAction" text="MICUBE Continue: Reject Vertical Diff Block"/>
         </action>
 
         <action id="continue.addLicenseKey"
                 class="com.github.continuedev.continueintellijextension.license.AddLicenseKey"
                 text="Enter Enterprise License Key"
                 description="Enter Enterprise License Key">
-            <override-text place="GoToAction" text="Continue: Enter Enterprise License Key"/>
+            <override-text place="GoToAction" text="MICUBE Continue: Enter Enterprise License Key"/>
         </action>
 
         <action id="continue.focusContinueInputWithoutClear"
@@ -127,7 +127,7 @@
                                first-keystroke="ctrl shift J"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta shift J"/>
-            <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context"/>
+            <override-text place="GoToAction" text="MICUBE Continue: Add Highlighted Code to Context"/>
         </action>
 
         <action id="continue.newContinueSession"
@@ -160,7 +160,7 @@
                 icon="AllIcons.Actions.Refresh"
                 text="Reload Continue Browser"
                 description="Reload Continue Browser">
-            <override-text place="GoToAction" text="Reload Continue Browser"/>
+            <override-text place="GoToAction" text="Reload MICUBE Continue Browser"/>
         </action>
 
         <action id="continue.openLogs"
@@ -168,7 +168,7 @@
                 icon="AllIcons.General.ShowInfos"
                 text="Open Logs"
                 description="Open Continue Logs">
-            <override-text place="GoToAction" text="Open Continue Logs"/>
+            <override-text place="GoToAction" text="Open MICUBE Continue Logs"/>
         </action>
 
         <group id="ContinueSidebarActionsGroup">
@@ -187,9 +187,9 @@
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta J"/>
             <add-to-group group-id="EditorPopupMenu"/>
-            <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context and Clear Chat"/>
+            <override-text place="GoToAction" text="MICUBE Continue: Add Highlighted Code to Context and Clear Chat"/>
         </action>
-        <group id="ContinueProjectViewPopUpMenuGroup" popup="true" text="Continue" icon="/icons/continue.svg">
+        <group id="ContinueProjectViewPopUpMenuGroup" popup="true" text="MICUBE Continue" icon="/icons/continue.svg">
             <action id="com.github.continuedev.continueintellijextension.actions.AddToChatAction"
                     class="com.github.continuedev.continueintellijextension.actions.AddToChatAction"
                     text="Add to Chat">
