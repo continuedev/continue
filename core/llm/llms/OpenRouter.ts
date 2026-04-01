@@ -1,15 +1,11 @@
 import { ChatCompletionCreateParams } from "openai/resources/index";
 
+import { OPENROUTER_HEADERS } from "@continuedev/openai-adapters";
+
 import { LLMOptions } from "../../index.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
 
 import OpenAI from "./OpenAI.js";
-
-const OPENROUTER_HEADERS: Record<string, string> = {
-  "HTTP-Referer": "https://www.continue.dev/",
-  "X-OpenRouter-Title": "Continue",
-  "X-OpenRouter-Categories": "ide-extension",
-};
 
 class OpenRouter extends OpenAI {
   static providerName = "openrouter";
