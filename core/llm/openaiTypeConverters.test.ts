@@ -845,42 +845,6 @@ describe("openaiTypeConverters", () => {
         const devMessages = getMessagesByRole(result, "developer");
         expect(devMessages.length).toBe(1);
       });
-
-      it("should ensure assistant message exists between reasoning and tool calls", () => {
-        const messages: ChatMessage[] = [
-          {
-            role: "user",
-            content: "What files are here?",
-          },
-          {
-            role: "thinking",
-            content: "I need to list files.",
-            reasoning_details: [
-              { type: "summary_text", text: "I need to list files." },
-              { type: "reasoning_id", id: "rs_123" },
-            ],
-          } as any,
-          {
-            role: "assistant",
-            content: "",
-            toolCalls: [
-              {
-                id: "call_abc",
-                type: "function",
-                function: { name: "ls", arguments: "{}" },
-              },
-            ],
-            metadata: { responsesOutputItemId: "fc_abc" },
-          } as ChatMessage,
-        ];
-
-        const result = toResponsesInput(messages);
-
-        // Result should be: [user message, reasoning item, function_call]
-        expect(result.length).toBe(3);
-        expect((result[1] as any).type).toBe("reasoning");
-        expect((result[2] as any).type).toBe("function_call");
-      });
     });
   });
 });

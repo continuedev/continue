@@ -603,10 +603,9 @@ class OpenAI extends BaseLLM {
       signal,
     });
 
-    const itemIdToIndex = new Map<string, number>();
     for await (const evt of streamSse(response)) {
       try {
-        const msg = fromResponsesChunk(evt, itemIdToIndex);
+        const msg = fromResponsesChunk(evt);
         if (Array.isArray(msg)) {
           for (const m of msg) {
             if (m) yield m;
