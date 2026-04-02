@@ -445,7 +445,8 @@ class IntelliJIDE(
 
                 command.setWorkDirectory(project.basePath)
                 val results = ExecUtil.execAndGetOutput(command).stdout
-                return results.split("\n")
+                val lines = results.split("\n").filter { it.isNotBlank() }
+                return if (maxResults != null) lines.take(maxResults) else lines
             } catch (exception: Exception) {
                 val message = "Error executing ripgrep: ${exception.message}"
                 service<ContinueSentryService>().report(exception, message)
