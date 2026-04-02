@@ -930,6 +930,13 @@ function sanitizeResponsesInput(input: ResponseInput): ResponseInput {
   for (let i = 0; i < input.length; i++) {
     if (!isItemType<ResponseReasoningItem>(input[i], "reasoning")) continue;
     const reasoning = input[i] as ResponseReasoningItem;
+    // Ensure subsequent message or function_call items in the same turn
+    // reference this reasoning item. This prevents 400 "missing reasoning item"
+    // errors for output items that follow a reasoning block.
+    if (reasoning.encrypted_content) {
+      // Logic for explicit reasoning/item pairing removed as it caused 'Unknown parameter' errors.
+      // Proximity-based pairing (RS followed by MSG/FC) is maintained by the toResponsesInput order.
+    }
 
     if (!reasoning.encrypted_content) {
       // Can't pass reasoning without encrypted_content; strip id from
@@ -1038,8 +1045,7 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
           (respId?.startsWith("msg_") ? respId : undefined);
 
         if (Array.isArray(toolCalls) && toolCalls.length > 0) {
-          emitFunctionCallsFromToolCalls(toolCalls, fcIds, input);
-
+          // Push text message first to maintain proximity to reasoning if present
           if (text && text.trim()) {
             if (msgId) {
               const outputMessageItem: ResponseOutputMessage = {
@@ -1060,6 +1066,8 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
               pushMessage("assistant", text);
             }
           }
+
+          emitFunctionCallsFromToolCalls(toolCalls, fcIds, input);
         } else if (msgId) {
           const outputMessageItem: ResponseOutputMessage = {
             id: msgId,
