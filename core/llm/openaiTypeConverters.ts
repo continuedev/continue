@@ -1038,8 +1038,6 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
           (respId?.startsWith("msg_") ? respId : undefined);
 
         if (Array.isArray(toolCalls) && toolCalls.length > 0) {
-          emitFunctionCallsFromToolCalls(toolCalls, fcIds, input);
-
           if (text && text.trim()) {
             if (msgId) {
               const outputMessageItem: ResponseOutputMessage = {
@@ -1060,6 +1058,8 @@ export function toResponsesInput(messages: ChatMessage[]): ResponseInput {
               pushMessage("assistant", text);
             }
           }
+
+          emitFunctionCallsFromToolCalls(toolCalls, fcIds, input);
         } else if (msgId) {
           const outputMessageItem: ResponseOutputMessage = {
             id: msgId,
