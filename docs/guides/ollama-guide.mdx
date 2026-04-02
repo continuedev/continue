@@ -97,16 +97,13 @@ models:
 ```
 
 <Warning>
-  **Important**: Blocks only provide configuration - you still need to pull
-  the model locally. The block `ollama/deepseek-r1-32b` configures Continue
-  to use `model: deepseek-r1:32b`, but the actual model must be installed:
-  ```bash
-  # Check what the block expects (view on continue.dev)
-  # Then pull that exact model tag locally
-  ollama pull deepseek-r1:32b  # Required for ollama/deepseek-r1-32b hub block
-  ```
-  If the model isn't installed, Ollama will return:
-  `404 model "deepseek-r1:32b" not found, try pulling it first`
+  **Important**: Blocks only provide configuration - you still need to pull the
+  model locally. The block `ollama/deepseek-r1-32b` configures Continue to use
+  `model: deepseek-r1:32b`, but the actual model must be installed: ```bash #
+  Check what the block expects (view on continue.dev) # Then pull that exact
+  model tag locally ollama pull deepseek-r1:32b # Required for
+  ollama/deepseek-r1-32b hub block ``` If the model isn't installed, Ollama will
+  return: `404 model "deepseek-r1:32b" not found, try pulling it first`
 </Warning>
 
 ### Method 2: Using Autodetect
@@ -243,7 +240,7 @@ Choose models based on your specific needs (see [recommended models](/customize/
 
 2. **Chat & Reasoning**:
 
-   - `llama3.1:8b` - Latest Llama with tool support
+   - `qwen3:8b` - Fast and capable with tool support
    - `mistral:7b` - Fast and versatile
    - `deepseek-r1:32b` - Advanced reasoning capabilities
 

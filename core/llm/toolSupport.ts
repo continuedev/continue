@@ -219,6 +219,8 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "glm-5",
           "deepseek",
           "dolphin",
+          "gemma3",
+          "phi4",
         ].some((part) => modelName.toLowerCase().includes(part))
       ) {
         return true;
