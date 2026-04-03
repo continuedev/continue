@@ -27,6 +27,7 @@ import { ControlPlaneClient } from "../../control-plane/client";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { getAllPromptFiles } from "../../promptFiles/getPromptFiles";
 import { GlobalContext } from "../../util/GlobalContext";
+import { applyConfigTsAndRemoteConfig } from "../load";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
@@ -492,8 +493,15 @@ export async function loadContinueConfigFromYaml(options: {
     withShared.allowAnonymousTelemetry = true;
   }
 
-  return {
+  const withConfigTs = await applyConfigTsAndRemoteConfig({
     config: withShared,
+    ide,
+    ideType: ideInfo.ideType,
+    remoteConfigServerUrl: ideSettings.remoteConfigServerUrl,
+  });
+
+  return {
+    config: withConfigTs,
     errors: [...(configYamlResult.errors ?? []), ...localErrors],
     configLoadInterrupted: false,
     configName: configYamlResult.configName,
