@@ -476,6 +476,94 @@ describe("streamResponseThunk", () => {
     });
   });
 
+  it("should preserve model-level reasoning disablement in chat requests", async () => {
+    const initialState = getRootStateWithClaude();
+    initialState.config.config.selectedModelByRole.chat = {
+      title: "Qwen 3 30B",
+      model: "qwen3:30b",
+      provider: "ollama",
+      underlyingProviderName: "ollama",
+      completionOptions: { reasoning: false },
+    };
+    initialState.session.hasReasoningEnabled = true;
+    initialState.session.history = [
+      {
+        message: { id: "1", role: "user", content: "Hello" },
+        contextItems: [],
+      },
+    ];
+
+    const mockStore = createMockStore(initialState);
+    const mockIdeMessenger = mockStore.mockIdeMessenger;
+    const requestSpy = vi.spyOn(mockIdeMessenger, "request");
+
+    mockIdeMessenger.responses["llm/compileChat"] = {
+      compiledChatMessages: [{ role: "user", content: "Hello" }],
+      didPrune: false,
+      contextPercentage: 0.8,
+    };
+
+    async function* mockStreamGenerator(): AsyncGenerator<
+      AssistantChatMessage[],
+      PromptLog
+    > {
+      yield [{ role: "assistant", content: "First chunk" }];
+      return {
+        prompt: "Hello",
+        completion: "Hi there!",
+        modelProvider: "ollama",
+        modelTitle: "Qwen 3 30B",
+      };
+    }
+
+    mockIdeMessenger.llmStreamChat = vi
+      .fn()
+      .mockReturnValue(mockStreamGenerator());
+
+    await mockStore.dispatch(
+      streamResponseThunk({
+        editorState: mockEditorState,
+        modifiers: mockModifiers,
+      }) as any,
+    );
+
+    expect(requestSpy).toHaveBeenCalledWith("llm/compileChat", {
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant.",
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Hello",
+            },
+          ],
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Hello, please help me with this code",
+            },
+          ],
+        },
+      ],
+      options: {},
+    });
+
+    expect(mockIdeMessenger.llmStreamChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        completionOptions: {},
+        title: "Qwen 3 30B",
+      }),
+      expect.any(AbortSignal),
+    );
+  });
+
   it("should execute streaming flow with tool call execution", async () => {
     // Set up auto-approved tool setting for our test tool
     const stateWithToolSettings = getRootStateWithClaude();
