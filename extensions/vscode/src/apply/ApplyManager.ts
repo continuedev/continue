@@ -9,7 +9,10 @@ import { generateLines } from "core/diff/util";
 import { ApplyAbortManager } from "core/edit/applyAbortManager";
 import { streamDiffLines } from "core/edit/streamDiffLines";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
-import { getMarkdownLanguageTagForFile } from "core/util";
+import {
+  getMarkdownLanguageTagForFile,
+  stripReasoningFromApplyContent,
+} from "core/util";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -32,6 +35,8 @@ export class ApplyManager {
     toolCallId,
     isSearchAndReplace,
   }: ApplyToFilePayload) {
+    text = stripReasoningFromApplyContent(text);
+
     if (filepath) {
       await this.ensureFileOpen(filepath);
     }
