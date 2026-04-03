@@ -321,6 +321,50 @@ class Ollama extends BaseLLM implements ModelInstaller {
     };
   }
 
+  private _getRequestOptionOverrides(): {
+    modelFileParams: Partial<OllamaModelFileParams>;
+    keepAlive?: number;
+  } {
+    const requestOptions = this.requestOptions as
+      | (typeof this.requestOptions & {
+          keepAlive?: number;
+          options?: Record<string, any>;
+        })
+      | undefined;
+
+    const rawOptions =
+      requestOptions?.options && typeof requestOptions.options === "object"
+        ? requestOptions.options
+        : {};
+    const { keep_alive, ...modelFileParams } = rawOptions;
+
+    return {
+      modelFileParams: modelFileParams as Partial<OllamaModelFileParams>,
+      keepAlive:
+        requestOptions?.keepAlive ??
+        (typeof keep_alive === "number" ? keep_alive : undefined),
+    };
+  }
+
+  private _getBaseOptions(options: CompletionOptions): OllamaBaseOptions {
+    const { modelFileParams, keepAlive } = this._getRequestOptionOverrides();
+    const completionModelFileParams = Object.fromEntries(
+      Object.entries(this._getModelFileParams(options)).filter(
+        ([_, value]) => value !== undefined,
+      ),
+    ) as Partial<OllamaModelFileParams>;
+
+    return {
+      model: this._getModel(),
+      options: {
+        ...modelFileParams,
+        ...completionModelFileParams,
+      },
+      keep_alive: options.keepAlive ?? keepAlive ?? 60 * 30,
+      stream: options.stream,
+    };
+  }
+
   private _convertToOllamaMessage(message: ChatMessage): OllamaChatMessage {
     const ollamaMessage: OllamaChatMessage = {
       role: message.role,
@@ -394,13 +438,10 @@ class Ollama extends BaseLLM implements ModelInstaller {
     suffix?: string,
   ): OllamaRawOptions {
     return {
-      model: this._getModel(),
+      ...this._getBaseOptions(options),
       prompt,
       suffix,
       raw: options.raw,
-      options: this._getModelFileParams(options),
-      keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
-      stream: options.stream,
       // Not supported yet: context, images, system, template, format
     };
   }
@@ -503,12 +544,9 @@ class Ollama extends BaseLLM implements ModelInstaller {
       messages.map(this._convertToOllamaMessage),
     );
     const chatOptions: OllamaChatOptions = {
-      model: this._getModel(),
+      ...this._getBaseOptions(options),
       messages: ollamaMessages,
-      options: this._getModelFileParams(options),
       think: options.reasoning,
-      keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
-      stream: options.stream,
       // format: options.format, // Not currently in base completion options
     };
     if (options.tools?.length && ollamaMessages.at(-1)?.role === "user") {

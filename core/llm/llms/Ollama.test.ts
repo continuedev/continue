@@ -9,7 +9,10 @@ function createOllama(): Ollama {
   // Create instance without triggering constructor's fetch call
   const instance = Object.create(Ollama.prototype);
   instance.model = "test-model";
+  instance.modelMap = {};
   instance.completionOptions = {};
+  instance.requestOptions = {};
+  instance._contextLength = 4096;
   instance.fetch = jest.fn();
   return instance;
 }
@@ -223,4 +226,60 @@ describe("Ollama", () => {
       expect(result[1].role).toBe("tool");
     });
   });
+
+  describe("request option overrides", () => {
+    let ollama: Ollama;
+
+    beforeEach(() => {
+      ollama = createOllama();
+    });
+
+    it("should merge requestOptions.options into generate requests", () => {
+      (ollama as any).requestOptions = {
+        options: {
+          num_gpu: 20,
+          num_thread: 8,
+          keep_alive: -1,
+          repeat_penalty: 1.2,
+        },
+      };
+
+      const result = (ollama as any)._getGenerateOptions({}, "hello");
+
+      expect(result.options).toMatchObject({
+        num_ctx: 4096,
+        num_gpu: 20,
+        num_thread: 8,
+        repeat_penalty: 1.2,
+      });
+      expect(result.keep_alive).toBe(-1);
+    });
+
+    it("should let completion options override request option defaults", () => {
+      (ollama as any).requestOptions = {
+        keepAlive: -1,
+        options: {
+          num_gpu: 20,
+          num_thread: 8,
+        },
+      };
+
+      const result = (ollama as any)._getGenerateOptions(
+        {
+          keepAlive: 120,
+          numGpu: 4,
+          numThreads: 2,
+        },
+        "hello",
+      );
+
+      expect(result.options).toMatchObject({
+        num_ctx: 4096,
+        num_gpu: 4,
+        num_thread: 2,
+      });
+      expect(result.keep_alive).toBe(120);
+    });
+  });
+
 });

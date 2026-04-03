@@ -853,6 +853,8 @@ declare global {
     proxy?: string;
     headers?: { [key: string]: string };
     extraBodyProperties?: { [key: string]: any };
+    keepAlive?: number;
+    options?: { [key: string]: any };
     noProxy?: string[];
     clientCertificate?: ClientCertificateOptions;
   }
