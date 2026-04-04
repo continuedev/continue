@@ -21,13 +21,27 @@ function getDecodedOutput(data: Buffer): string {
   } else {
     return data.toString();
   }
-} // Simple helper function to use login shell on Unix/macOS and PowerShell on Windows
+}
+
+// Tracks whether PowerShell failed to spawn on Windows (e.g., blocked by corporate policy)
+// so subsequent calls can fall back to cmd.exe without retrying PowerShell.
+let _powershellUnavailable = false;
+
+// Simple helper function to use login shell on Unix/macOS and PowerShell on Windows
 function getShellCommand(command: string): { shell: string; args: string[] } {
   if (process.platform === "win32") {
-    // Windows: Use PowerShell
+    if (!_powershellUnavailable) {
+      // Windows: prefer PowerShell for richer command support
+      return {
+        shell: "powershell.exe",
+        args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
+      };
+    }
+    // PowerShell unavailable (e.g., blocked by corporate security policy);
+    // fall back to cmd.exe via COMSPEC.
     return {
-      shell: "powershell.exe",
-      args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
+      shell: process.env.COMSPEC || "cmd.exe",
+      args: ["/D", "/S", "/C", command],
     };
   } else {
     // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
@@ -339,7 +353,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
             }
           });
 
-          childProc.on("error", (error) => {
+          childProc.on("error", (error: NodeJS.ErrnoException) => {
             // Clear timeout on error
             if (timeoutId) {
               clearTimeout(timeoutId);
@@ -358,6 +372,15 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               }
               // Remove from foreground tracking if it was tracked
               removeRunningProcess(toolCallId);
+            }
+
+            // If PowerShell failed to spawn on Windows (e.g., blocked by corporate policy),
+            // mark it unavailable so future calls fall back to cmd.exe automatically.
+            if (
+              process.platform === "win32" &&
+              (error.code === "UNKNOWN" || error.code === "ENOENT")
+            ) {
+              _powershellUnavailable = true;
             }
 
             reject(error);
@@ -458,7 +481,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 }
               });
 
-              childProc.on("error", (error) => {
+              childProc.on("error", (error: NodeJS.ErrnoException) => {
                 // Clear timeout on error
                 if (timeoutId) {
                   clearTimeout(timeoutId);
@@ -473,6 +496,16 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                 if (toolCallId) {
                   removeRunningProcess(toolCallId);
                 }
+
+                // If PowerShell failed to spawn on Windows (e.g., blocked by corporate policy),
+                // mark it unavailable so future calls fall back to cmd.exe automatically.
+                if (
+                  process.platform === "win32" &&
+                  (error.code === "UNKNOWN" || error.code === "ENOENT")
+                ) {
+                  _powershellUnavailable = true;
+                }
+
                 reject(error);
               });
             },
@@ -521,9 +554,16 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
             }
           });
 
-          childProc.on("error", () => {
+          childProc.on("error", (error: NodeJS.ErrnoException) => {
             if (isProcessBackgrounded(toolCallId)) {
               removeBackgroundedProcess(toolCallId);
+            }
+            // If PowerShell failed to spawn on Windows, mark it unavailable for future calls.
+            if (
+              process.platform === "win32" &&
+              (error.code === "UNKNOWN" || error.code === "ENOENT")
+            ) {
+              _powershellUnavailable = true;
             }
           });
 
