@@ -93,25 +93,30 @@ let ollamaModelsList: ModelPackage[] = [OLLAMA_LOADING_PLACEHOLDER];
  * This should be called once when the component mounts
  */
 export async function initializeOllamaModels() {
+  const autodetectPackage = {
+    ...models.AUTODETECT,
+    params: {
+      ...models.AUTODETECT.params,
+      title: "Ollama",
+    },
+  };
+
   try {
     const fetchedModels = await getOllamaModelsList();
     if (fetchedModels.length > 0) {
       ollamaModelsList = fetchedModels;
-      // Update the providers object with the fetched models
-      if (providers.ollama) {
-        // Keep autodetect at the top, then add fetched models
-        const autodetectPackage = {
-          ...models.AUTODETECT,
-          params: {
-            ...models.AUTODETECT.params,
-            title: "Ollama",
-          },
-        };
-        providers.ollama.packages = [autodetectPackage, ...ollamaModelsList];
-      }
+    } else {
+      // Fall back to static open source models if fetch returns empty
+      ollamaModelsList = openSourceModels;
     }
   } catch (error) {
     console.error("Failed to initialize Ollama models:", error);
+    // Fall back to static open source models on error
+    ollamaModelsList = openSourceModels;
+  }
+
+  if (providers.ollama) {
+    providers.ollama.packages = [autodetectPackage, ...ollamaModelsList];
   }
 }
 

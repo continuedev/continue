@@ -106,10 +106,12 @@ export async function getOllamaModelsList(): Promise<ModelPackage[]> {
     }
 
     // Deduplicate by model name
-    const key = model.name.replace(/[\/.]/g, "_");
+    if (models[model.name]) {
+      return;
+    }
 
     try {
-      models[key] = convertOllamaModelToPackage(model);
+      models[model.name] = convertOllamaModelToPackage(model);
     } catch (error) {
       console.error(`Failed to convert Ollama model ${model.name}:`, error);
     }
