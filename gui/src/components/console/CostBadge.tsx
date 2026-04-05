@@ -32,7 +32,8 @@ const CostBadge: React.FC<CostBadgeProps> = ({ className = "" }) => {
     <div
       className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium ${className}`}
       style={{
-        backgroundColor: "color-mix(in srgb, var(--vscode-charts-green) 15%, transparent)",
+        backgroundColor:
+          "color-mix(in srgb, var(--vscode-charts-green) 15%, transparent)",
         color: getCostColor(),
       }}
       title={`Total cost: ${formatCost(totalUsage.totalCost)}`}
