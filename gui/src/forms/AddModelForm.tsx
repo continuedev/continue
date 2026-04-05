@@ -9,6 +9,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
 import { DisplayInfo } from "../pages/AddNewModel/configs/models";
 import {
+  initializeOllamaModels,
   initializeOpenRouterModels,
   ProviderInfo,
   providers,
@@ -41,9 +42,10 @@ export function AddModelForm({
   const formMethods = useForm();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  // Initialize OpenRouter models from API on component mount
+  // Initialize dynamic model lists from APIs on component mount
   useEffect(() => {
     void initializeOpenRouterModels();
+    void initializeOllamaModels();
   }, []);
 
   const popularProviderTitles = [

@@ -3,6 +3,7 @@ import { ModelProviderTags } from "../../../components/modelSelection/utils";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
+import { getOllamaModelsList } from "./ollamaModel";
 import { getOpenRouterModelsList } from "./openRouterModel";
 
 export interface InputDescriptor {
@@ -71,6 +72,46 @@ export async function initializeOpenRouterModels() {
   } catch (error) {
     console.error("Failed to initialize OpenRouter models:", error);
     // Keep placeholder on error so the UI doesn't break
+  }
+}
+
+// Initialize Ollama models placeholder with a loading placeholder
+const OLLAMA_LOADING_PLACEHOLDER: ModelPackage = {
+  title: "Loading models...",
+  description: "Fetching available models from Ollama library",
+  params: {
+    model: "placeholder",
+    contextLength: 0,
+  },
+  isOpenSource: true,
+};
+
+let ollamaModelsList: ModelPackage[] = [OLLAMA_LOADING_PLACEHOLDER];
+
+/**
+ * Initialize Ollama models by fetching from the library
+ * This should be called once when the component mounts
+ */
+export async function initializeOllamaModels() {
+  try {
+    const fetchedModels = await getOllamaModelsList();
+    if (fetchedModels.length > 0) {
+      ollamaModelsList = fetchedModels;
+      // Update the providers object with the fetched models
+      if (providers.ollama) {
+        // Keep autodetect at the top, then add fetched models
+        const autodetectPackage = {
+          ...models.AUTODETECT,
+          params: {
+            ...models.AUTODETECT.params,
+            title: "Ollama",
+          },
+        };
+        providers.ollama.packages = [autodetectPackage, ...ollamaModelsList];
+      }
+    }
+  } catch (error) {
+    console.error("Failed to initialize Ollama models:", error);
   }
 }
 
@@ -502,7 +543,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
           title: "Ollama",
         },
       },
-      ...openSourceModels,
+      ...ollamaModelsList,
     ],
     collectInputFor: [
       ...completionParamsInputsConfigs,
