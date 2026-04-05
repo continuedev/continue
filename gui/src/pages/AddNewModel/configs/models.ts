@@ -2438,6 +2438,17 @@ export const models: { [key: string]: ModelPackage } = {
     },
     isOpenSource: true,
   },
+  gemma4: {
+    title: "Gemma 4",
+    description:
+      "Gemma 4 is a multimodal open model from Google, supporting text, image, tool use, and up to 128k context.",
+    params: {
+      title: "Gemma 4",
+      model: "gemma4",
+      contextLength: 128_000,
+    },
+    isOpenSource: true,
+  },
   phi3mini: {
     title: "Microsoft Phi 3 mini",
     description:

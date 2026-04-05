@@ -344,6 +344,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "google/gemini-flash-1.5",
         "google/gemini-2",
         "google/gemini-3",
+        "google/gemma-4",
         "google/gemini-pro",
         "x-ai/grok",
         "qwen/qwen3",
