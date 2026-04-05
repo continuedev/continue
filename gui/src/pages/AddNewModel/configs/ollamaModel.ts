@@ -106,7 +106,7 @@ export async function getOllamaModelsList(): Promise<ModelPackage[]> {
     }
 
     // Deduplicate by model name
-    if (models[model.name]) {
+    if (Object.prototype.hasOwnProperty.call(models, model.name)) {
       return;
     }
 
