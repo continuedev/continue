@@ -15,6 +15,7 @@ import Azure from "./Azure";
 import Bedrock from "./Bedrock";
 import BedrockImport from "./BedrockImport";
 import Cerebras from "./Cerebras";
+import Chutes from "./Chutes";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import CometAPI from "./CometAPI";
@@ -119,6 +120,7 @@ export const LLMClasses = [
   MockLLM,
   TestLLM,
   Cerebras,
+  Chutes,
   Asksage,
   Nebius,
   Nous,
