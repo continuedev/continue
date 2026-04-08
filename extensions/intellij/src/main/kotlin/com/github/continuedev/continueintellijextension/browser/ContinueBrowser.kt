@@ -13,6 +13,7 @@ import com.intellij.ui.jcef.*
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
+import java.util.Base64
 import javax.swing.JComponent
 
 class ContinueBrowser(
@@ -85,12 +86,41 @@ class ContinueBrowser(
     }
 
     fun sendToWebview(messageType: String, data: Any? = null, messageId: String = uuid()) {
+        if (browser.cefBrowser.isClosed) {
+            log.warn("Attempted to send message to disposed browser: $messageType")
+            return
+        }
         val json = gsonService.gson.toJson(BrowserMessage(messageType, messageId, data))
-        val jsCode = """window.postMessage($json, "*");"""
         try {
-            browser.cefBrowser.executeJavaScript(jsCode, getGuiUrl(), 0)
-        } catch (error: IllegalStateException) {
+            if (json.length <= CHUNKED_MESSAGE_THRESHOLD) {
+                browser.cefBrowser.executeJavaScript(
+                    """window.postMessage($json, "*");""", getGuiUrl(), 0
+                )
+            } else {
+                sendChunked(json, messageId)
+            }
+        } catch (error: Exception) {
             log.warn(error)
+        }
+    }
+
+    // Base64-encode and send in 512KB chunks to avoid JCEF freezing on large JS source strings
+    private fun sendChunked(json: String, bufferId: String) {
+        val scripts = buildChunkScripts(json, bufferId)
+        val url = getGuiUrl()
+
+        browser.cefBrowser.executeJavaScript(scripts.init, url, 0)
+
+        try {
+            for (chunkScript in scripts.chunks) {
+                browser.cefBrowser.executeJavaScript(chunkScript, url, 0)
+            }
+            browser.cefBrowser.executeJavaScript(scripts.finalize, url, 0)
+        } catch (e: Exception) {
+            try {
+                browser.cefBrowser.executeJavaScript(scripts.cleanup, url, 0)
+            } catch (_: Exception) {}
+            throw e
         }
     }
 
@@ -130,11 +160,40 @@ class ContinueBrowser(
         }
     }
 
-    private companion object {
+    internal data class ChunkScripts(
+        val init: String,
+        val chunks: List<String>,
+        val finalize: String,
+        val cleanup: String,
+    )
+
+    internal companion object {
+        internal const val CHUNKED_MESSAGE_THRESHOLD = 1 * 1024 * 1024 // 1MB
+        internal const val CHUNK_SIZE = 2 * 1024 * 1024 // 2MB
 
         private fun getGuiUrl() =
             System.getenv("GUI_URL") ?: "http://continue/index.html"
 
+        internal fun buildChunkScripts(json: String, bufferId: String, chunkSize: Int = CHUNK_SIZE): ChunkScripts {
+            val encoded = Base64.getEncoder().encodeToString(json.toByteArray(Charsets.UTF_8))
+            val chunks = mutableListOf<String>()
+
+            var offset = 0
+            while (offset < encoded.length) {
+                val end = minOf(offset + chunkSize, encoded.length)
+                val chunk = encoded.substring(offset, end)
+                chunks.add("""window.__cc["$bufferId"].push("$chunk");""")
+                offset = end
+            }
+
+            return ChunkScripts(
+                init = """window.__cc=window.__cc||{};window.__cc["$bufferId"]=[];""",
+                chunks = chunks,
+                finalize = """try{var b=atob(window.__cc["$bufferId"].join(""));window.postMessage(JSON.parse(new TextDecoder().decode(Uint8Array.from(b,function(c){return c.charCodeAt(0)}))),"*")}
+finally{delete window.__cc["$bufferId"]}""",
+                cleanup = """delete window.__cc["$bufferId"];""",
+            )
+        }
     }
 
 }

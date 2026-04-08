@@ -105,6 +105,12 @@ describe("BaseLLM", () => {
       baseLLM.model = "google/gemma-3-270m";
       expect(baseLLM.supportsImages()).toBe(true);
 
+      baseLLM.model = "gemma4:31b";
+      expect(baseLLM.supportsImages()).toBe(true);
+
+      baseLLM.model = "google/gemma-4-31b-it";
+      expect(baseLLM.supportsImages()).toBe(true);
+
       baseLLM.model = "foo/paligemma-custom-100";
       expect(baseLLM.supportsImages()).toBe(true);
 

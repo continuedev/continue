@@ -1,20 +1,25 @@
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useState } from "react";
+import {
+  ArrowPathIcon,
+  ArrowTopRightOnSquareIcon,
+} from "@heroicons/react/24/outline";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button, Input, StyledActionButton } from "../components";
 import Alert from "../components/gui/Alert";
 import ModelSelectionListbox from "../components/modelSelection/ModelSelectionListbox";
+import { ModelProviderTags } from "../components/modelSelection/utils";
 import { useAuth } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
-import { DisplayInfo } from "../pages/AddNewModel/configs/models";
 import {
-  initializeOpenRouterModels,
+  fetchProviderModels,
+  initializeDynamicModels,
+} from "../pages/AddNewModel/configs/fetchProviderModels";
+import { DisplayInfo, ModelPackage } from "../pages/AddNewModel/configs/models";
+import {
   ProviderInfo,
   providers,
 } from "../pages/AddNewModel/configs/providers";
-import { useAppDispatch } from "../redux/hooks";
-import { updateSelectedModelByRole } from "../redux/thunks/updateSelectedModelByRole";
 
 interface AddModelFormProps {
   onDone: () => void;
@@ -33,7 +38,6 @@ export function AddModelForm({
   const [selectedProvider, setSelectedProvider] = useState<ProviderInfo>(
     providers["openai"]!,
   );
-  const dispatch = useAppDispatch();
   const { selectedProfile } = useAuth();
   const [selectedModel, setSelectedModel] = useState(
     selectedProvider.packages[0],
@@ -41,10 +45,42 @@ export function AddModelForm({
   const formMethods = useForm();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  // Initialize OpenRouter models from API on component mount
+  const [fetchedModelsList, setFetchedModelsList] = useState<ModelPackage[]>(
+    [],
+  );
+  const [isFetchingModels, setIsFetchingModels] = useState(false);
+
   useEffect(() => {
-    void initializeOpenRouterModels();
+    void initializeDynamicModels(ideMessenger);
   }, []);
+
+  useEffect(() => {
+    setFetchedModelsList([]);
+  }, [selectedProvider]);
+
+  const handleFetchModels = useCallback(async () => {
+    const apiKey = formMethods.watch("apiKey");
+    const apiBase = formMethods.watch("apiBase");
+    if (!apiKey) return;
+
+    const providerAtFetchTime = selectedProvider.provider;
+    setIsFetchingModels(true);
+    try {
+      const models = await fetchProviderModels(
+        ideMessenger,
+        providerAtFetchTime,
+        apiKey,
+        apiBase,
+      );
+      setFetchedModelsList((prev) =>
+        selectedProvider.provider === providerAtFetchTime ? models : prev,
+      );
+    } catch (error) {
+      console.error("Failed to fetch models:", error);
+    } finally {
+      setIsFetchingModels(false);
+    }
+  }, [ideMessenger, selectedProvider, formMethods]);
 
   const popularProviderTitles = [
     providers["openai"]?.title || "",
@@ -92,6 +128,9 @@ export function AddModelForm({
 
   useEffect(() => {
     setSelectedModel(selectedProvider.packages[0]);
+    if (!selectedProvider.tags?.includes(ModelProviderTags.RequiresApiKey)) {
+      formMethods.setValue("apiKey", "");
+    }
   }, [selectedProvider]);
 
   const requiresSkPrefix =
@@ -131,14 +170,15 @@ export function AddModelForm({
       profileId: "local",
     });
 
-    void dispatch(
-      updateSelectedModelByRole({
-        selectedProfile,
+    if (selectedProfile) {
+      ideMessenger.post("config/updateSelectedModel", {
+        profileId: selectedProfile.id,
         role: "chat",
-        modelTitle: model.title,
-      }),
-    );
+        title: model.title,
+      });
+    }
 
+    formMethods.setValue("apiKey", "");
     onDone();
   }
 
@@ -199,7 +239,27 @@ export function AddModelForm({
             )}
 
             <div>
-              <label className="block text-sm font-medium">Model</label>
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium">Model</label>
+                <button
+                  type="button"
+                  title="Use entered API key to fetch available models"
+                  className={`cursor-pointer border-none bg-transparent p-0 ${
+                    apiKeyValue &&
+                    apiKeyValue.length > 0 &&
+                    selectedProvider.provider !== "ollama" &&
+                    selectedProvider.provider !== "openrouter"
+                      ? `text-description-muted hover:text-foreground`
+                      : "invisible"
+                  }`}
+                  onClick={handleFetchModels}
+                  disabled={isFetchingModels}
+                >
+                  <ArrowPathIcon
+                    className={`h-3.5 w-3.5 ${isFetchingModels ? "animate-spin" : ""}`}
+                  />
+                </button>
+              </div>
               <ModelSelectionListbox
                 selectedProvider={selectedModel}
                 setSelectedProvider={(val: DisplayInfo) => {
@@ -208,19 +268,49 @@ export function AddModelForm({
                       ([, provider]) =>
                         provider?.title === selectedProvider.title,
                     )?.[1]?.packages ?? [];
-                  const match = options.find(
+                  const allOptions = [...options, ...fetchedModelsList];
+                  const match = allOptions.find(
                     (option) => option.title === val.title,
                   );
                   if (match) {
                     setSelectedModel(match);
                   }
                 }}
-                topOptions={
-                  Object.entries(providers).find(
+                topOptions={(() => {
+                  const providerInfo = Object.entries(providers).find(
                     ([, provider]) =>
                       provider?.title === selectedProvider.title,
-                  )?.[1]?.packages
-                }
+                  )?.[1];
+                  return (
+                    providerInfo?.popularPackages ?? providerInfo?.packages
+                  );
+                })()}
+                otherOptions={(() => {
+                  const providerInfo = Object.entries(providers).find(
+                    ([, provider]) =>
+                      provider?.title === selectedProvider.title,
+                  )?.[1];
+                  const staticOther = providerInfo?.popularPackages
+                    ? providerInfo.packages.filter(
+                        (p) =>
+                          !new Set(
+                            providerInfo.popularPackages!.map((pp) => pp.title),
+                          ).has(p.title),
+                      )
+                    : undefined;
+                  // Merge dynamically fetched models (deduplicated)
+                  if (fetchedModelsList.length > 0) {
+                    const existingTitles = new Set(
+                      (providerInfo?.packages ?? []).map((p) => p.title),
+                    );
+                    const newModels = fetchedModelsList.filter(
+                      (m) => !existingTitles.has(m.title),
+                    );
+                    return [...(staticOther ?? []), ...newModels];
+                  }
+                  return staticOther;
+                })()}
+                otherOptionsLabel="Additional models"
               />
             </div>
 

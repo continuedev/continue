@@ -2,13 +2,13 @@ package com.github.continuedev.continueintellijextension.services
 
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
 import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
-import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.google.gson.Gson
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.DumbAware
 import com.intellij.util.concurrency.AppExecutorUtil
@@ -17,7 +17,6 @@ import com.intellij.util.messages.Topic
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.io.File
-import java.io.IOException
 import java.net.URL
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -104,62 +103,56 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
     }
 
     companion object {
+        private val log = Logger.getInstance(ContinueExtensionSettings::class.java)
+
         val instance: ContinueExtensionSettings
             get() = service<ContinueExtensionSettings>()
     }
 
-
-    // Sync remote config from server
     private fun syncRemoteConfig() {
         val remoteServerUrl = state.remoteConfigServerUrl
+        if (remoteServerUrl.isNullOrEmpty()) return
+
         val token = state.userToken
-        if (remoteServerUrl != null && remoteServerUrl.isNotEmpty()) {
-            val baseUrl = remoteServerUrl.removeSuffix("/")
-            try {
-                val url = "$baseUrl/sync"
-                val responseBody = HttpRequests.request(url)
-                    .tuner { connection ->
-                        if (token != null)
-                            connection.addRequestProperty("Authorization", "Bearer $token")
-                    }.readString()
-                val response = Gson().fromJson(responseBody, ContinueRemoteConfigSyncResponse::class.java)
-                val hostname = URL(url).host
-                
-                // Write configJson to config.json if present
-                if (!response.configJson.isNullOrEmpty()) {
-                    File(getConfigJsonPath(hostname)).writeText(response.configJson!!)
-                }
-                
-                // Write configJs to config.js if present
-                if (!response.configJs.isNullOrEmpty()) {
-                    File(getConfigJsPath(hostname)).writeText(response.configJs!!)
-                }
-            } catch (e: Exception) {
-                // Catch all exceptions including JsonSyntaxException
-                service<ContinueSentryService>().report(e, "Unexpected exception during remote config sync")
+        val baseUrl = remoteServerUrl.removeSuffix("/")
+        try {
+            val url = "$baseUrl/sync"
+            val responseBody = HttpRequests.request(url)
+                .connectTimeout(5000)
+                .readTimeout(5000)
+                .tuner { connection ->
+                    if (token != null)
+                        connection.addRequestProperty("Authorization", "Bearer $token")
+                }.readString()
+            val response = Gson().fromJson(responseBody, ContinueRemoteConfigSyncResponse::class.java)
+            val hostname = URL(url).host
+
+            if (!response.configJson.isNullOrEmpty()) {
+                File(getConfigJsonPath(hostname)).writeText(response.configJson!!)
             }
+
+            if (!response.configJs.isNullOrEmpty()) {
+                File(getConfigJsPath(hostname)).writeText(response.configJs!!)
+            }
+        } catch (e: Exception) {
+            log.warn("Failed to sync remote config from $baseUrl", e)
         }
     }
 
-    // Create a scheduled task to sync remote config every `remoteConfigSyncPeriod` minutes
     fun addRemoteSyncJob() {
-        // Cancel existing job if present
-        if (remoteSyncFuture != null) {
-            remoteSyncFuture?.cancel(false)
-            remoteSyncFuture = null
-        }
+        remoteSyncFuture?.cancel(false)
+        remoteSyncFuture = null
 
-        // Only schedule sync job if remote config server URL is configured
         val remoteServerUrl = continueState.remoteConfigServerUrl
-        if (remoteServerUrl != null && remoteServerUrl.isNotEmpty()) {
-            instance.remoteSyncFuture = AppExecutorUtil.getAppScheduledExecutorService()
-                .scheduleWithFixedDelay(
-                    ::syncRemoteConfig,
-                    0,
-                    continueState.remoteConfigSyncPeriod.toLong(),
-                    TimeUnit.MINUTES
-                )
-        }
+        if (remoteServerUrl.isNullOrEmpty()) return
+
+        remoteSyncFuture = AppExecutorUtil.getAppScheduledExecutorService()
+            .scheduleWithFixedDelay(
+                ::syncRemoteConfig,
+                0,
+                continueState.remoteConfigSyncPeriod.toLong(),
+                TimeUnit.MINUTES
+            )
     }
 }
 
@@ -215,8 +208,6 @@ class ContinueExtensionConfigurable : Configurable {
         mySettingsComponent?.displayEditorTooltip?.isSelected = settings.continueState.displayEditorTooltip
         mySettingsComponent?.showIDECompletionSideBySide?.isSelected =
             settings.continueState.showIDECompletionSideBySide
-
-        ContinueExtensionSettings.instance.addRemoteSyncJob()
     }
 
     override fun disposeUIResources() {

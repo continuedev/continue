@@ -10,6 +10,7 @@ import {
   ILLMLogger,
 } from "../index.js";
 import { GlobalContext } from "../util/GlobalContext.js";
+import { getConfigYamlPath } from "../util/paths.js";
 
 import EventEmitter from "node:events";
 import {
@@ -358,17 +359,15 @@ export class ConfigHandler {
     }
 
     if (options.includeWorkspace) {
-      const assistantFiles = await getAllDotContinueDefinitionFiles(
-        this.ide,
-        { ...options, fileExtType: "yaml" },
-        "assistants",
-      );
-      const agentFiles = await getAllDotContinueDefinitionFiles(
-        this.ide,
-        { ...options, fileExtType: "yaml" },
-        "agents",
-      );
-      const profiles = [...assistantFiles, ...agentFiles].map((assistant) => {
+      const yamlOptions = { ...options, fileExtType: "yaml" } as const;
+      const allFiles = (
+        await Promise.all([
+          getAllDotContinueDefinitionFiles(this.ide, yamlOptions, "assistants"),
+          getAllDotContinueDefinitionFiles(this.ide, yamlOptions, "agents"),
+          getAllDotContinueDefinitionFiles(this.ide, yamlOptions, "configs"),
+        ])
+      ).flat();
+      const profiles = allFiles.map((assistant) => {
         return new LocalProfileLoader(
           this.ide,
           this.controlPlaneClient,
@@ -637,6 +636,7 @@ export class ConfigHandler {
     }
 
     if (profile.profileDescription.profileType === "local") {
+      getConfigYamlPath();
       const configFile = element?.sourceFile ?? profile.profileDescription.uri;
       await this.ide.openFile(configFile);
     } else {

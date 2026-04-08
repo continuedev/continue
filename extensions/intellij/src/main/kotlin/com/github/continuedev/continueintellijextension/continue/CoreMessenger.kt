@@ -65,9 +65,10 @@ class CoreMessenger(
         responseListeners[messageId]?.let { listener ->
             listener(data)
             @Suppress("UNCHECKED_CAST")
-            val done = (data as? Map<String, Boolean>)?.get("done")
+            val done = (data as? Map<String, Any>)?.get("done") as? Boolean
 
-            if (done == true) {
+            // Remove unless explicitly streaming (done == false)
+            if (done != false) {
                 responseListeners.remove(messageId)
             }
         }
