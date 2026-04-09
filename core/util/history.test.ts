@@ -122,6 +122,14 @@ describe("Workspace directory filtering", () => {
     expect(sessions.length).toBe(4);
   });
 
+  test("Empty workspace filter only returns no-workspace sessions", () => {
+    const sessions = historyManager.list({
+      workspaceDirectory: "",
+    });
+    expect(sessions.length).toBe(1);
+    expect(sessions[0].sessionId).toBe("ws-none");
+  });
+
   test("Workspace filter is case-insensitive", () => {
     const sessions = historyManager.list({
       workspaceDirectory: "/HOME/USER/PROJECT-A",
