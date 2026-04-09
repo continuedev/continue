@@ -636,8 +636,10 @@ export class ConfigHandler {
     }
 
     if (profile.profileDescription.profileType === "local") {
-      getConfigYamlPath();
-      const configFile = element?.sourceFile ?? profile.profileDescription.uri;
+      const configFile =
+        element?.sourceFile ??
+        profile.profileDescription.uri ??
+        getConfigYamlPath();
       await this.ide.openFile(configFile);
     } else {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());

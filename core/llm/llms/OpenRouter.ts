@@ -1,5 +1,7 @@
 import { ChatCompletionCreateParams } from "openai/resources/index";
 
+import { OPENROUTER_HEADERS } from "@continuedev/openai-adapters";
+
 import { LLMOptions } from "../../index.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
 
@@ -17,6 +19,19 @@ class OpenRouter extends OpenAI {
     },
     useLegacyCompletionsEndpoint: false,
   };
+
+  constructor(options: LLMOptions) {
+    super({
+      ...options,
+      requestOptions: {
+        ...options.requestOptions,
+        headers: {
+          ...OPENROUTER_HEADERS,
+          ...options.requestOptions?.headers,
+        },
+      },
+    });
+  }
 
   private isAnthropicModel(model?: string): boolean {
     if (!model) return false;
