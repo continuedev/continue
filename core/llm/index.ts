@@ -78,6 +78,13 @@ export class LLMError extends Error {
   }
 }
 
+function findLocalConnectionTarget(
+  message: string,
+  targets: string[],
+): string | undefined {
+  return targets.find((target) => message.includes(target));
+}
+
 export function isModelInstaller(provider: any): provider is ModelInstaller {
   return (
     provider &&
@@ -536,6 +543,18 @@ export abstract class BaseLLM implements ILLM {
                 : "Unable to connect to local Lemonade instance. Lemonade may not be installed or may not be running.";
             }
             throw new Error(message);
+          }
+          const lmStudioTarget =
+            e.code === "ECONNREFUSED"
+              ? findLocalConnectionTarget(e.message, [
+                  "http://127.0.0.1:1234",
+                  "http://localhost:1234",
+                ])
+              : undefined;
+          if (lmStudioTarget) {
+            throw new Error(
+              `Unable to connect to local LM Studio instance at ${lmStudioTarget}. LM Studio may not be running, or the configured apiBase may be incorrect.`,
+            );
           }
         }
         throw e;

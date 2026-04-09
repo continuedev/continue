@@ -186,7 +186,7 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "llamafile":
       return openAICompatible("http://localhost:8000/", config);
     case "lmstudio":
-      return openAICompatible("http://localhost:1234/", config);
+      return openAICompatible("http://127.0.0.1:1234/", config);
     case "ollama":
       // for openai compaitability, we need to add /v1 to the end of the url
       // this is required for cli (for core, endpoints are overriden by core/llm/llms/Ollama.ts)
@@ -243,4 +243,5 @@ export {
 } from "./apis/AnthropicUtils.js";
 
 export { isResponsesModel } from "./apis/openaiResponses.js";
+export { OPENROUTER_HEADERS } from "./apis/OpenRouter.js";
 export { extractBase64FromDataUrl, parseDataUrl } from "./util/url.js";
