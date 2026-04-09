@@ -135,11 +135,13 @@ const mockControlPlaneClient = {
 } as any;
 
 const mockLlmLogger = {} as any;
+const testPackageFileUri =
+  "vscode-remote://wsl+Ubuntu/home/user/.continue/agents/test.yaml";
 
 function createPackageIdentifier(withContent = true): PackageIdentifier {
   return {
     uriType: "file",
-    fileUri: "vscode-remote://wsl+Ubuntu/home/user/.continue/agents/test.yaml",
+    fileUri: testPackageFileUri,
     ...(withContent
       ? { content: "name: Test\nversion: 1.0.0\nschema: v1\n" }
       : {}),
@@ -156,7 +158,7 @@ describe("doLoadConfig pre-read content bypass", () => {
       controlPlaneClient: mockControlPlaneClient,
       llmLogger: mockLlmLogger,
       profileId: "test-profile",
-      overrideConfigYamlByPath: createPackageIdentifier(true).fileUri,
+      overrideConfigYamlByPath: testPackageFileUri,
       orgScopeId: null,
       packageIdentifier: createPackageIdentifier(true),
     });
@@ -174,7 +176,7 @@ describe("doLoadConfig pre-read content bypass", () => {
       controlPlaneClient: mockControlPlaneClient,
       llmLogger: mockLlmLogger,
       profileId: "test-profile",
-      overrideConfigYamlByPath: createPackageIdentifier(false).fileUri,
+      overrideConfigYamlByPath: testPackageFileUri,
       orgScopeId: null,
       packageIdentifier: createPackageIdentifier(false),
     });
@@ -189,7 +191,7 @@ describe("doLoadConfig pre-read content bypass", () => {
       controlPlaneClient: mockControlPlaneClient,
       llmLogger: mockLlmLogger,
       profileId: "test-profile",
-      overrideConfigYamlByPath: createPackageIdentifier(true).fileUri,
+      overrideConfigYamlByPath: testPackageFileUri,
       orgScopeId: null,
       packageIdentifier: createPackageIdentifier(true),
     });
@@ -214,7 +216,7 @@ describe("doLoadConfig pre-read content bypass", () => {
       controlPlaneClient: mockControlPlaneClient,
       llmLogger: mockLlmLogger,
       profileId: "test-profile",
-      overrideConfigYamlByPath: createPackageIdentifier(true).fileUri,
+      overrideConfigYamlByPath: testPackageFileUri,
       orgScopeId: null,
       packageIdentifier: createPackageIdentifier(true),
     });
