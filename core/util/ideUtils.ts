@@ -11,7 +11,7 @@ async function getWorkspaceDirsPrioritizedByCurrentFile(
   ide: IDE,
   dirs: string[],
 ): Promise<string[]> {
-  const activeFile = await ide.getCurrentFile();
+  const activeFile = await getCurrentFileIfSupported(ide);
   if (!activeFile) {
     return dirs;
   }
@@ -22,6 +22,16 @@ async function getWorkspaceDirsPrioritizedByCurrentFile(
   }
 
   return [foundInDir, ...dirs.filter((dir) => dir !== foundInDir)];
+}
+
+async function getCurrentFileIfSupported(ide: IDE) {
+  const getCurrentFile = (ide as Partial<Pick<IDE, "getCurrentFile">>)
+    .getCurrentFile;
+  if (typeof getCurrentFile !== "function") {
+    return undefined;
+  }
+
+  return getCurrentFile.call(ide);
 }
 
 /*
@@ -105,7 +115,7 @@ export async function inferResolvedUriFromRelativePath(
 
   // Sometimes the model will decide to only output the base name or small number of path parts
   // in which case we shouldn't create a new file if it matches the current file
-  const activeFile = await ide.getCurrentFile();
+  const activeFile = await getCurrentFileIfSupported(ide);
   if (activeFile && activeFile.path.endsWith(relativePath)) {
     return activeFile.path;
   }
