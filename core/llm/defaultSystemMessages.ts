@@ -63,7 +63,7 @@ export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
 <important_rules>
   You are in agent mode.
 
-  If you need to use multiple tools, you can call multiple read-only tools simultaneously.
+  Call tools one at a time. Wait for each tool result before deciding whether to call another tool.
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 
