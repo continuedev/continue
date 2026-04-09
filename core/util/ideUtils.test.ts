@@ -79,13 +79,17 @@ describe("ideUtils", () => {
 
   test("resolveRelativePathInDir falls back cleanly when getCurrentFile is unavailable at runtime", async () => {
     const ide = {
-      getWorkspaceDirs: jest.fn().mockResolvedValue([
-        "file:///workspace/project1",
-        "file:///workspace/project2",
-      ]),
-      fileExists: jest.fn().mockImplementation(async (uri: string) =>
-        uri === "file:///workspace/project1/pom.xml",
-      ),
+      getWorkspaceDirs: jest
+        .fn()
+        .mockResolvedValue([
+          "file:///workspace/project1",
+          "file:///workspace/project2",
+        ]),
+      fileExists: jest
+        .fn()
+        .mockImplementation(
+          async (uri: string) => uri === "file:///workspace/project1/pom.xml",
+        ),
     } as unknown as IDE;
 
     await expect(resolveRelativePathInDir("pom.xml", ide)).resolves.toBe(
