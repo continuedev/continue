@@ -43,7 +43,7 @@ pyyaml==5.4.1
 python-dotenv==0.19.0
 
 # Testing
-pytest==6.2.5
+pytest==9.0.3
 
 # Logging and Debugging
 loguru==0.5.3
