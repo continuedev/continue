@@ -996,6 +996,33 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.MetaLlama3,
     ],
   },
+  saladcloud: {
+    title: "SaladCloud",
+    provider: "saladcloud",
+    refPage: "saladcloud",
+    description: "Use SaladCloud AI Gateway to access open-source models",
+    longDescription: `SaladCloud AI Gateway provides OpenAI-compatible access to open-source models at flat-rate pricing. To get started:\n1. Sign up at [salad.com](https://salad.com)\n2. Obtain an API key from the [SaladCloud portal](https://portal.salad.com)\n3. Paste below\n4. Select a model preset`,
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your SaladCloud API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.saladQwen35_35bA3B,
+      models.saladQwen35_27b,
+      models.saladQwen35_9b,
+    ],
+    apiKeyUrl: "https://portal.salad.com/api-key",
+  },
   sambanova: {
     title: "SambaNova",
     provider: "sambanova",

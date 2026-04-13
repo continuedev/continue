@@ -1,0 +1,46 @@
+---
+title: "SaladCloud"
+description: "Configure SaladCloud AI Gateway with Continue"
+---
+
+You can get an API key from the [SaladCloud portal](https://portal.salad.com/api-key)
+
+## Available Models
+
+Available models can be found on the [SaladCloud AI Gateway docs](https://docs.salad.com/ai-gateway/explanation/overview)
+
+## Chat Model
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Qwen 3.5 35B A3B
+      provider: saladcloud
+      model: qwen3.5-35b-a3b
+      apiKey: <YOUR_SALAD_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Qwen 3.5 35B A3B",
+        "provider": "saladcloud",
+        "model": "qwen3.5-35b-a3b",
+        "apiKey": "<YOUR_SALAD_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Embeddings Model
+
+SaladCloud AI Gateway currently focuses on chat/completion models. For embeddings, consider using a dedicated embeddings provider.

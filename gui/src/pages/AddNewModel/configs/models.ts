@@ -3310,6 +3310,50 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
 
+  // SaladCloud models
+  saladQwen35_35bA3B: {
+    title: "Qwen 3.5 35B A3B",
+    description:
+      "Qwen 3.5 35B A3B is a fast mixture-of-experts model with 35B total parameters and 3B active, offering strong performance at low cost via SaladCloud AI Gateway.",
+    refUrl: "https://docs.salad.com/ai-gateway/explanation/overview",
+    params: {
+      title: "Qwen 3.5 35B A3B",
+      model: "qwen3.5-35b-a3b",
+      contextLength: 131_072,
+    },
+    icon: "qwen.png",
+    providerOptions: ["saladcloud"],
+    isOpenSource: true,
+  },
+  saladQwen35_27b: {
+    title: "Qwen 3.5 27B",
+    description:
+      "Qwen 3.5 27B is a capable instruction-tuned model available via SaladCloud AI Gateway with 128K context window.",
+    refUrl: "https://docs.salad.com/ai-gateway/explanation/overview",
+    params: {
+      title: "Qwen 3.5 27B",
+      model: "qwen3.5-27b",
+      contextLength: 131_072,
+    },
+    icon: "qwen.png",
+    providerOptions: ["saladcloud"],
+    isOpenSource: true,
+  },
+  saladQwen35_9b: {
+    title: "Qwen 3.5 9B",
+    description:
+      "Qwen 3.5 9B is a lightweight and efficient instruction-tuned model available via SaladCloud AI Gateway.",
+    refUrl: "https://docs.salad.com/ai-gateway/explanation/overview",
+    params: {
+      title: "Qwen 3.5 9B",
+      model: "qwen3.5-9b",
+      contextLength: 131_072,
+    },
+    icon: "qwen.png",
+    providerOptions: ["saladcloud"],
+    isOpenSource: true,
+  },
+
   // Xiaomi Mimo models
   mimoV2Flash: {
     title: "mimo-v2-flash",
