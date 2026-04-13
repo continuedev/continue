@@ -40,6 +40,7 @@ export const streamEditThunk = createAsyncThunk<
       streamThunkWrapper(async () => {
         dispatch(setActive());
 
+        const state = getState();
         const { selectedContextItems, content } = await resolveEditorContent({
           editorState,
           modifiers: {
@@ -48,7 +49,7 @@ export const streamEditThunk = createAsyncThunk<
           },
           ideMessenger: extra.ideMessenger,
           defaultContextProviders: [],
-          availableSlashCommands: [],
+          availableSlashCommands: state.config.config.slashCommands ?? [],
           dispatch,
           getState,
         });
