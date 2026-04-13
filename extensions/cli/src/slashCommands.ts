@@ -132,8 +132,8 @@ async function handleFork() {
     const forkCommand = `cn --fork ${currentSession.sessionId}`;
     // Try to copy to clipboard dynamically to avoid hard dependency in tests
     try {
-      const clipboardy = await import("clipboardy");
-      await clipboardy.default.write(forkCommand);
+      const clipboard = await import("tinyclip");
+      await clipboard.writeText(forkCommand);
       return {
         exit: false,
         output: chalk.gray(`${forkCommand} (copied to clipboard)`),
