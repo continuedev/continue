@@ -41,8 +41,13 @@ async function getSkillFilesFromDir(dir: string, ide: IDE): Promise<string[]> {
   ).filter((skillFileUri): skillFileUri is string => Boolean(skillFileUri));
 }
 
-async function getSkillFilesFromDirs(dirs: string[], ide: IDE): Promise<string[]> {
-  return (await Promise.all(dirs.map((dir) => getSkillFilesFromDir(dir, ide)))).flat();
+async function getSkillFilesFromDirs(
+  dirs: string[],
+  ide: IDE,
+): Promise<string[]> {
+  return (
+    await Promise.all(dirs.map((dir) => getSkillFilesFromDir(dir, ide)))
+  ).flat();
 }
 
 /**
