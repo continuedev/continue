@@ -5,6 +5,17 @@ const REMOTE_TERMINAL_TIMEOUT_MS = 5000;
 
 const terminalCacheByName = new Map<string, vscode.Terminal>();
 
+function getNewActiveTerminal(
+  existingTerminals: Set<vscode.Terminal>,
+): vscode.Terminal | undefined {
+  const activeTerminal = vscode.window.activeTerminal;
+  if (!activeTerminal || existingTerminals.has(activeTerminal)) {
+    return undefined;
+  }
+
+  return activeTerminal;
+}
+
 function getReusableTerminal(
   options: TerminalOptions,
 ): vscode.Terminal | undefined {
@@ -35,22 +46,27 @@ async function createTerminal(
   }
 
   const existingTerminals = new Set(vscode.window.terminals);
+  await vscode.commands.executeCommand("workbench.action.terminal.new");
+
+  const newActiveTerminal = getNewActiveTerminal(existingTerminals);
+  if (newActiveTerminal) {
+    return newActiveTerminal;
+  }
 
   return await new Promise<vscode.Terminal>((resolve, reject) => {
     let settled = false;
     let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
 
     const cleanup = () => {
-      terminalListener.dispose();
+      terminalOpenListener.dispose();
+      activeTerminalListener.dispose();
       if (timeoutHandle) {
         clearTimeout(timeoutHandle);
       }
     };
 
-    const resolveIfNewTerminalExists = () => {
-      const newTerminal = vscode.window.terminals.find(
-        (terminal) => !existingTerminals.has(terminal),
-      );
+    const resolveIfNewActiveTerminalExists = () => {
+      const newTerminal = getNewActiveTerminal(existingTerminals);
       if (!newTerminal) {
         return false;
       }
@@ -61,16 +77,34 @@ async function createTerminal(
       return true;
     };
 
-    const terminalListener = vscode.window.onDidOpenTerminal((terminal) => {
-      if (settled || existingTerminals.has(terminal)) {
+    const terminalOpenListener = vscode.window.onDidOpenTerminal(() => {
+      if (settled) {
         return;
       }
 
-      settled = true;
-      cleanup();
-      resolve(terminal);
+      resolveIfNewActiveTerminalExists();
     });
 
+    const activeTerminalListener = vscode.window.onDidChangeActiveTerminal(
+      (terminal) => {
+        if (settled || !terminal || existingTerminals.has(terminal)) {
+          return;
+        }
+
+        settled = true;
+        cleanup();
+        resolve(terminal);
+      },
+    );
+
+    if (resolveIfNewActiveTerminalExists()) {
+      return;
+    }
+
+    // `workbench.action.terminal.new` should focus the new terminal in remote
+    // workspaces. If another terminal opens concurrently, wait until VS Code
+    // actually switches the active terminal instead of grabbing the first one
+    // that appears.
     timeoutHandle = setTimeout(() => {
       if (settled) {
         return;
@@ -80,25 +114,6 @@ async function createTerminal(
       cleanup();
       reject(new Error("Timed out waiting for remote terminal to open"));
     }, REMOTE_TERMINAL_TIMEOUT_MS);
-
-    if (resolveIfNewTerminalExists()) {
-      return;
-    }
-
-    void vscode.commands.executeCommand("workbench.action.terminal.new").then(
-      () => {
-        resolveIfNewTerminalExists();
-      },
-      (error: unknown) => {
-        if (settled) {
-          return;
-        }
-
-        settled = true;
-        cleanup();
-        reject(error);
-      },
-    );
   });
 }
 

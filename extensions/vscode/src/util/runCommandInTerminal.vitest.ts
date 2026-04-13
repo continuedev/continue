@@ -7,6 +7,9 @@ type MockTerminal = {
 };
 
 const terminalListeners = new Set<(terminal: MockTerminal) => void>();
+const activeTerminalListeners = new Set<
+  (terminal: MockTerminal | undefined) => void
+>();
 const terminals: MockTerminal[] = [];
 
 const windowMock = {
@@ -19,6 +22,14 @@ const windowMock = {
       dispose: vi.fn(() => terminalListeners.delete(listener)),
     };
   }),
+  onDidChangeActiveTerminal: vi.fn(
+    (listener: (terminal: MockTerminal | undefined) => void) => {
+      activeTerminalListeners.add(listener);
+      return {
+        dispose: vi.fn(() => activeTerminalListeners.delete(listener)),
+      };
+    },
+  ),
 };
 
 const commandsMock = {
@@ -43,6 +54,19 @@ function createTerminal(name: string): MockTerminal {
   };
 }
 
+function notifyTerminalOpened(terminal: MockTerminal) {
+  for (const listener of terminalListeners) {
+    listener(terminal);
+  }
+}
+
+function setActiveTerminal(terminal: MockTerminal | undefined) {
+  windowMock.activeTerminal = terminal;
+  for (const listener of activeTerminalListeners) {
+    listener(terminal);
+  }
+}
+
 describe("runCommandInTerminal", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -50,7 +74,8 @@ describe("runCommandInTerminal", () => {
 
     terminals.length = 0;
     terminalListeners.clear();
-    windowMock.activeTerminal = undefined;
+    activeTerminalListeners.clear();
+    setActiveTerminal(undefined);
     envMock.remoteName = undefined;
 
     windowMock.createTerminal.mockImplementation((name?: string) => {
@@ -67,7 +92,7 @@ describe("runCommandInTerminal", () => {
   it("reuses the active terminal and sends an executing command", async () => {
     const terminal = createTerminal("Active");
     terminals.push(terminal);
-    windowMock.activeTerminal = terminal;
+    setActiveTerminal(terminal);
 
     const { runCommandInTerminal } = await import("./runCommandInTerminal");
 
@@ -101,9 +126,8 @@ describe("runCommandInTerminal", () => {
       expect(command).toBe("workbench.action.terminal.new");
       const terminal = createTerminal("Remote Shell");
       terminals.push(terminal);
-      for (const listener of terminalListeners) {
-        listener(terminal);
-      }
+      setActiveTerminal(terminal);
+      notifyTerminalOpened(terminal);
     });
 
     const { runCommandInTerminal } = await import("./runCommandInTerminal");
@@ -128,9 +152,8 @@ describe("runCommandInTerminal", () => {
       createdCount += 1;
       const terminal = createTerminal("Remote " + createdCount);
       terminals.push(terminal);
-      for (const listener of terminalListeners) {
-        listener(terminal);
-      }
+      setActiveTerminal(terminal);
+      notifyTerminalOpened(terminal);
     });
 
     const { runCommandInTerminal } = await import("./runCommandInTerminal");
@@ -155,5 +178,26 @@ describe("runCommandInTerminal", () => {
       "ollama serve",
       true,
     );
+  });
+
+  it("ignores unrelated remote terminals that open before the command terminal becomes active", async () => {
+    envMock.remoteName = "dev-container";
+    commandsMock.executeCommand.mockImplementation(async () => {
+      const unrelatedTerminal = createTerminal("Unrelated");
+      terminals.push(unrelatedTerminal);
+      notifyTerminalOpened(unrelatedTerminal);
+
+      const commandTerminal = createTerminal("Remote Command");
+      terminals.push(commandTerminal);
+      setActiveTerminal(commandTerminal);
+      notifyTerminalOpened(commandTerminal);
+    });
+
+    const { runCommandInTerminal } = await import("./runCommandInTerminal");
+
+    await runCommandInTerminal("pwd", { reuseTerminal: true });
+
+    expect(terminals[0].sendText).not.toHaveBeenCalled();
+    expect(terminals[1].sendText).toHaveBeenCalledWith("pwd", true);
   });
 });
