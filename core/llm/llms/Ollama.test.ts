@@ -281,5 +281,4 @@ describe("Ollama", () => {
       expect(result.keep_alive).toBe(120);
     });
   });
-
 });
