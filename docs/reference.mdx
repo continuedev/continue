@@ -318,6 +318,22 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 - `requestOptions`: Optional request options for `sse` and `streamable-http` servers. Same format as [model requestOptions](#models).
 - `connectionTimeout`: Optional timeout for _initial_ connection to MCP server
 
+For `sse` and `streamable-http` MCP servers, configure custom HTTP headers under `requestOptions.headers`:
+
+```yaml title="config.yaml"
+name: My Config
+version: 1.0.0
+schema: v1
+mcpServers:
+  - name: My HTTP MCP Server
+    type: streamable-http
+    url: https://mcp.example.com
+    requestOptions:
+      headers:
+        X-API-Key: your-api-key
+        X-Client: continue
+```
+
 **Example:**
 
 ```yaml title="config.yaml"
