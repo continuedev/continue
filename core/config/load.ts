@@ -852,7 +852,10 @@ function clearConfigModuleCache(configJsPath: string) {
   }
 }
 
-async function applyConfigModule<T>(config: T, configJsPath: string): Promise<T> {
+async function applyConfigModule<T>(
+  config: T,
+  configJsPath: string,
+): Promise<T> {
   const module = await loadConfigModule(configJsPath);
   clearConfigModuleCache(configJsPath);
 
@@ -876,7 +879,10 @@ export async function applyConfigTsAndRemoteConfig<T>(options: {
   const configJsContents = await buildConfigTsandReadConfigJs(ide, ideType);
   if (configJsContents) {
     try {
-      modifiedConfig = await applyConfigModule(modifiedConfig, getConfigJsPath());
+      modifiedConfig = await applyConfigModule(
+        modifiedConfig,
+        getConfigJsPath(),
+      );
     } catch (e) {
       console.log("Error loading config.ts: ", e);
     }
