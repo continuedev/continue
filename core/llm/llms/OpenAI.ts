@@ -220,8 +220,7 @@ class OpenAI extends BaseLLM {
 
   public isOSeriesOrGpt5PlusModel(model?: string): boolean {
     return (
-      !!model &&
-      (!!model.match(/^o[0-9]+/i) || !!model.match(/gpt-[5-9]/i))
+      !!model && (!!model.match(/^o[0-9]+/i) || !!model.match(/gpt-[5-9]/i))
     );
   }
 
