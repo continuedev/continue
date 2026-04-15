@@ -250,14 +250,14 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
         };
 
         for (const [filename, locationComments] of Object.entries(locations)) {
-          if (filename !== "general") {
+          if (filename === "general") {
+            parts.push("### General");
+          } else {
             parts.push(`### File ${filename}`);
             locationComments.sort(
               (a, b) =>
                 (a.position?.new_line ?? 0) - (b.position?.new_line ?? 0),
             );
-          } else {
-            parts.push("### General");
           }
 
           const commentSections = await Promise.all(
