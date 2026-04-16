@@ -2,7 +2,7 @@ import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/outline";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button, Input, StyledActionButton } from "../components";
 import Alert from "../components/gui/Alert";
@@ -49,10 +49,15 @@ export function AddModelForm({
     [],
   );
   const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const selectedProviderRef = useRef(selectedProvider.provider);
 
   useEffect(() => {
     void initializeDynamicModels(ideMessenger);
   }, []);
+
+  useEffect(() => {
+    selectedProviderRef.current = selectedProvider.provider;
+  }, [selectedProvider]);
 
   useEffect(() => {
     setFetchedModelsList([]);
@@ -72,9 +77,9 @@ export function AddModelForm({
         apiKey,
         apiBase,
       );
-      setFetchedModelsList((prev) =>
-        selectedProvider.provider === providerAtFetchTime ? models : prev,
-      );
+      if (selectedProviderRef.current === providerAtFetchTime) {
+        setFetchedModelsList(models);
+      }
     } catch (error) {
       console.error("Failed to fetch models:", error);
     } finally {
