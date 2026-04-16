@@ -20,7 +20,9 @@ vi.mock("../components/modelSelection/ModelSelectionListbox", () => ({
     searchPlaceholder,
   }: any) => (
     <div data-testid={searchPlaceholder ? "provider-listbox" : "model-listbox"}>
-      <div data-testid={searchPlaceholder ? "provider-current" : "model-current"}>
+      <div
+        data-testid={searchPlaceholder ? "provider-current" : "model-current"}
+      >
         {selectedProvider.title}
       </div>
       <div>
@@ -75,14 +77,18 @@ describe("AddModelForm dynamic fetch race", () => {
   it("does not leak stale models from the previous provider if the earlier fetch resolves late", async () => {
     const pendingOpenAiFetch = deferred<any[]>();
 
-    fetchProviderModelsMock.mockImplementation((_messenger: unknown, provider: string) => {
-      if (provider === "openai") {
-        return pendingOpenAiFetch.promise;
-      }
-      return Promise.resolve([]);
-    });
+    fetchProviderModelsMock.mockImplementation(
+      (_messenger: unknown, provider: string) => {
+        if (provider === "openai") {
+          return pendingOpenAiFetch.promise;
+        }
+        return Promise.resolve([]);
+      },
+    );
 
-    const { user } = await renderWithProviders(<AddModelForm onDone={vi.fn()} />);
+    const { user } = await renderWithProviders(
+      <AddModelForm onDone={vi.fn()} />,
+    );
 
     await user.type(
       screen.getByPlaceholderText(/Enter your OpenAI API key/i),
@@ -91,7 +97,9 @@ describe("AddModelForm dynamic fetch race", () => {
     await user.click(screen.getByTitle(/fetch available models/i));
 
     await user.click(screen.getByRole("button", { name: "Anthropic" }));
-    expect(screen.getByTestId("provider-current")).toHaveTextContent("Anthropic");
+    expect(screen.getByTestId("provider-current")).toHaveTextContent(
+      "Anthropic",
+    );
 
     await act(async () => {
       pendingOpenAiFetch.resolve([makeFetchedModel("OpenAI Dynamic Model")]);

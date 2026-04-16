@@ -56,10 +56,6 @@ export function AddModelForm({
   }, []);
 
   useEffect(() => {
-    selectedProviderRef.current = selectedProvider.provider;
-  }, [selectedProvider]);
-
-  useEffect(() => {
     setFetchedModelsList([]);
   }, [selectedProvider]);
 
@@ -208,6 +204,7 @@ export function AddModelForm({
                     (provider) => provider.title === val.title,
                   );
                   if (match) {
+                    selectedProviderRef.current = match.provider;
                     setSelectedProvider(match);
                   }
                 }}
