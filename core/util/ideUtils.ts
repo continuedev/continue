@@ -1,10 +1,38 @@
 import { IDE } from "..";
 
 import {
+  findUriInDirs,
   joinEncodedUriPathSegmentToUri,
   joinPathsToUri,
   pathToUriPathSegment,
 } from "./uri";
+
+async function getWorkspaceDirsPrioritizedByCurrentFile(
+  ide: IDE,
+  dirs: string[],
+): Promise<string[]> {
+  const activeFile = await getCurrentFileIfSupported(ide);
+  if (!activeFile) {
+    return dirs;
+  }
+
+  const { foundInDir } = findUriInDirs(activeFile.path, dirs);
+  if (!foundInDir) {
+    return dirs;
+  }
+
+  return [foundInDir, ...dirs.filter((dir) => dir !== foundInDir)];
+}
+
+async function getCurrentFileIfSupported(ide: IDE) {
+  const getCurrentFile = (ide as Partial<Pick<IDE, "getCurrentFile">>)
+    .getCurrentFile;
+  if (typeof getCurrentFile !== "function") {
+    return undefined;
+  }
+
+  return getCurrentFile.call(ide);
+}
 
 /*
   This function takes a relative (to workspace) filepath
@@ -16,7 +44,10 @@ export async function resolveRelativePathInDir(
   ide: IDE,
   dirUriCandidates?: string[],
 ): Promise<string | undefined> {
-  const dirs = dirUriCandidates ?? (await ide.getWorkspaceDirs());
+  const dirs = await getWorkspaceDirsPrioritizedByCurrentFile(
+    ide,
+    dirUriCandidates ?? (await ide.getWorkspaceDirs()),
+  );
   for (const dirUri of dirs) {
     const fullUri = joinPathsToUri(dirUri, path);
     if (await ide.fileExists(fullUri)) {
@@ -39,7 +70,10 @@ export async function inferResolvedUriFromRelativePath(
   dirCandidates?: string[],
 ): Promise<string> {
   const relativePath = _relativePath.trim().replaceAll("\\", "/");
-  const dirs = dirCandidates ?? (await ide.getWorkspaceDirs());
+  const dirs = await getWorkspaceDirsPrioritizedByCurrentFile(
+    ide,
+    dirCandidates ?? (await ide.getWorkspaceDirs()),
+  );
 
   if (dirs.length === 0) {
     throw new Error("inferResolvedUriFromRelativePath: no dirs provided");
@@ -81,11 +115,11 @@ export async function inferResolvedUriFromRelativePath(
 
   // Sometimes the model will decide to only output the base name or small number of path parts
   // in which case we shouldn't create a new file if it matches the current file
-  const activeFile = await ide.getCurrentFile();
+  const activeFile = await getCurrentFileIfSupported(ide);
   if (activeFile && activeFile.path.endsWith(relativePath)) {
     return activeFile.path;
   }
 
-  // If no unique match found, use the first directory
+  // If no unique match found, prefer the current file's workspace before falling back.
   return joinPathsToUri(dirs[0], relativePath);
 }
