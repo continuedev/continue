@@ -75,10 +75,16 @@ export class GeminiApi implements BaseLlmApi {
     this.apiBase = config.apiBase ?? this.apiBase;
     // Create GoogleGenAI with native fetch to avoid pollution
     // from Vercel AI SDK packages that can break stream handling
+    const customHeaders = this.config.requestOptions?.headers;
     this.genAI = withNativeFetch(
       () =>
         new GoogleGenAI({
           apiKey: this.config.apiKey,
+          ...(customHeaders && {
+            httpOptions: {
+              headers: customHeaders,
+            },
+          }),
         }),
     );
   }
