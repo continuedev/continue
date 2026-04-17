@@ -16,6 +16,7 @@ import {
 import { ErrorBoundary } from "react-error-boundary";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground } from "../../components";
+import CostBadge from "../../components/console/CostBadge";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
@@ -469,6 +470,9 @@ export function Chat() {
           ))}
       </StepsDiv>
       <div className={"relative"}>
+        <div className="flex items-center justify-end px-4 py-1">
+          <CostBadge />
+        </div>
         <ContinueInputBox
           isMainInput
           isLastUserInput={false}

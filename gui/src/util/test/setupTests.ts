@@ -1,7 +1,20 @@
 import "@testing-library/jest-dom";
 
+// Mock vscode API for tests
+const mockVscode = {
+  postMessage: vi.fn(),
+  getState: vi.fn(() => ({})),
+  setState: vi.fn(),
+  acquireTerminalShellIntegration: vi.fn(() => ({
+    shellIntegrationSeq: vi.fn(),
+  })),
+};
+
+(global as any).vscode = mockVscode;
+
 afterEach(() => {
   vi.clearAllMocks();
+  mockVscode.postMessage.mockClear();
 });
 
 afterAll(() => {
