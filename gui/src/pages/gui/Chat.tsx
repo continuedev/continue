@@ -243,6 +243,16 @@ export function Chat() {
       // Reject all pending apply states
       latestPendingApplyStates.forEach((applyState) => {
         if (applyState.status !== "closed") {
+          // Cancel the associated tool call so the model receives a cancellation
+          // signal instead of "No tool output" when the user sends a new message
+          // without accepting or rejecting the diff
+          if (applyState.toolCallId) {
+            dispatch(
+              cancelToolCall({
+                toolCallId: applyState.toolCallId,
+              }),
+            );
+          }
           ideMessenger.post("rejectDiff", applyState);
         }
       });
