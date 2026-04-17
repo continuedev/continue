@@ -95,6 +95,9 @@ vi.mock("../../control-plane/TeamAnalytics", () => ({
 vi.mock("../../promptFiles/initPrompt", () => ({
   initSlashCommand: { name: "init", description: "init" },
 }));
+vi.mock("../../promptFiles/guidePrompt", () => ({
+  guideSlashCommand: { name: "guide", description: "guide" },
+}));
 
 // Mock fs.existsSync to simulate missing file on disk
 vi.mock("fs", async (importOriginal) => {
@@ -132,27 +135,32 @@ const mockControlPlaneClient = {
 } as any;
 
 const mockLlmLogger = {} as any;
+const testPackageFileUri =
+  "vscode-remote://wsl+Ubuntu/home/user/.continue/agents/test.yaml";
+
+function createPackageIdentifier(withContent = true): PackageIdentifier {
+  return {
+    uriType: "file",
+    fileUri: testPackageFileUri,
+    ...(withContent
+      ? { content: "name: Test\nversion: 1.0.0\nschema: v1\n" }
+      : {}),
+  };
+}
 
 describe("doLoadConfig pre-read content bypass", () => {
   it("should use YAML loading when packageIdentifier has pre-read content, even if file does not exist on disk", async () => {
     mockLoadYaml.mockClear();
     mockLoadJson.mockClear();
 
-    const packageIdentifier: PackageIdentifier = {
-      uriType: "file",
-      fileUri:
-        "vscode-remote://wsl+Ubuntu/home/user/.continue/agents/test.yaml",
-      content: "name: Test\nversion: 1.0.0\nschema: v1\n",
-    };
-
     await doLoadConfig({
       ide: mockIde,
       controlPlaneClient: mockControlPlaneClient,
       llmLogger: mockLlmLogger,
       profileId: "test-profile",
-      overrideConfigYamlByPath: packageIdentifier.fileUri,
+      overrideConfigYamlByPath: testPackageFileUri,
       orgScopeId: null,
-      packageIdentifier,
+      packageIdentifier: createPackageIdentifier(true),
     });
 
     expect(mockLoadYaml).toHaveBeenCalled();
@@ -163,23 +171,59 @@ describe("doLoadConfig pre-read content bypass", () => {
     mockLoadYaml.mockClear();
     mockLoadJson.mockClear();
 
-    const packageIdentifier: PackageIdentifier = {
-      uriType: "file",
-      fileUri:
-        "vscode-remote://wsl+Ubuntu/home/user/.continue/agents/test.yaml",
-    };
-
     await doLoadConfig({
       ide: mockIde,
       controlPlaneClient: mockControlPlaneClient,
       llmLogger: mockLlmLogger,
       profileId: "test-profile",
-      overrideConfigYamlByPath: packageIdentifier.fileUri,
+      overrideConfigYamlByPath: testPackageFileUri,
       orgScopeId: null,
-      packageIdentifier,
+      packageIdentifier: createPackageIdentifier(false),
     });
 
     expect(mockLoadYaml).not.toHaveBeenCalled();
     expect(mockLoadJson).toHaveBeenCalled();
+  });
+
+  it("should always include built-in init and guide slash commands", async () => {
+    const result = await doLoadConfig({
+      ide: mockIde,
+      controlPlaneClient: mockControlPlaneClient,
+      llmLogger: mockLlmLogger,
+      profileId: "test-profile",
+      overrideConfigYamlByPath: testPackageFileUri,
+      orgScopeId: null,
+      packageIdentifier: createPackageIdentifier(true),
+    });
+
+    const commandNames = result.config?.slashCommands.map((cmd) => cmd.name);
+    expect(commandNames).toContain("init");
+    expect(commandNames).toContain("guide");
+  });
+
+  it("should not duplicate a built-in slash command when config already defines it", async () => {
+    mockLoadYaml.mockResolvedValueOnce({
+      config: {
+        ...stubConfig,
+        slashCommands: [{ name: "guide", description: "custom guide" }],
+      },
+      errors: [],
+      configLoadInterrupted: false,
+    });
+
+    const result = await doLoadConfig({
+      ide: mockIde,
+      controlPlaneClient: mockControlPlaneClient,
+      llmLogger: mockLlmLogger,
+      profileId: "test-profile",
+      overrideConfigYamlByPath: testPackageFileUri,
+      orgScopeId: null,
+      packageIdentifier: createPackageIdentifier(true),
+    });
+
+    const guideCommands =
+      result.config?.slashCommands.filter((cmd) => cmd.name === "guide") ?? [];
+    expect(guideCommands).toHaveLength(1);
+    expect(guideCommands[0]?.description).toBe("custom guide");
   });
 });

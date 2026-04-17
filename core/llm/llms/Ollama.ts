@@ -161,6 +161,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
   private static modelsBeingInstalledMutex = new Mutex();
 
   private fimSupported: boolean = false;
+  private templateSupportsTools: boolean = true;
 
   private modelInfoPromise: Promise<void> | undefined = undefined;
   private explicitContextLength: boolean;
@@ -240,6 +241,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
          * it's a good indication the model supports FIM.
          */
         this.fimSupported = !!body?.template?.includes(".Suffix");
+        this.templateSupportsTools = !!body?.template?.includes(".Tools");
       })
       .catch((e) => {
         // console.warn("Error calling the Ollama /api/show endpoint: ", e);
@@ -511,7 +513,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
       stream: options.stream,
       // format: options.format, // Not currently in base completion options
     };
-    if (options.tools?.length && ollamaMessages.at(-1)?.role === "user") {
+    if (
+      options.tools?.length &&
+      this.templateSupportsTools &&
+      ollamaMessages.at(-1)?.role === "user"
+    ) {
       chatOptions.tools = options.tools.map((tool) => ({
         type: "function",
         function: {
