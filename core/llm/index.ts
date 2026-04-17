@@ -1048,7 +1048,7 @@ export abstract class BaseLLM implements ILLM {
       this.providerName === "openai" &&
       this._llmOptions.useResponsesApi !== false &&
       typeof (this as any)._streamResponses === "function" &&
-      (this as any).isOSeriesOrGpt5Model(options.model)
+      (this as any).isOSeriesOrGpt5PlusModel(options.model)
     );
   }
 
