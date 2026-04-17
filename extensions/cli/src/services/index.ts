@@ -84,7 +84,8 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
     !commandOptions.config &&
     process.env.ANTHROPIC_API_KEY
   ) {
-    const { createOrUpdateConfig } = await import("../onboarding.js");
+    const { createOrUpdateConfigAnthropic: createOrUpdateConfig } =
+      await import("../onboarding.js");
     const { env } = await import("../env.js");
     const path = await import("path");
 
