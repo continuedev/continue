@@ -22,6 +22,7 @@ import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import { AppDispatch } from "../../../../redux/store";
 import { exitEdit } from "../../../../redux/thunks/edit";
 import { getFontSize, isJetBrains } from "../../../../util";
+import { setDraft } from "../../../../redux/slices/sessionSlice";
 import { CodeBlock, Mention, PromptBlock, SlashCommand } from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
 import {
@@ -392,6 +393,20 @@ export function createEditorConfig(options: {
     },
     content: props.editorState,
     editable: !isStreaming || props.isMainInput,
+    onUpdate: ({ editor }) => {
+      const content = editor.getJSON();
+      if (hasValidEditorContent(content)) {
+        dispatch(
+          setDraft({
+            key: props.historyKey,
+            draft: {
+              content,
+              messageId: props.isMainInput ? undefined : props.inputId,
+            },
+          }),
+        );
+      }
+    },
   });
 
   const onEnter = (modifiers: InputModifiers) => {
@@ -412,6 +427,7 @@ export function createEditorConfig(options: {
     if (props.isMainInput) {
       addRef.current(json);
     }
+    dispatch(setDraft({ key: props.historyKey, draft: undefined }));
 
     props.onEnter(json, modifiers, editor);
   };

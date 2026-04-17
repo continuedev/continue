@@ -224,6 +224,10 @@ type SessionState = {
   contextPercentage?: number;
   inlineErrorMessage?: InlineErrorMessageType;
   compactionLoading: Record<number, boolean>; // Track compaction loading by message index
+  draft: Record<
+    string,
+    { content: JSONContent; messageId?: string } | undefined
+  >;
 };
 
 export const INITIAL_SESSION_STATE: SessionState = {
@@ -244,12 +248,28 @@ export const INITIAL_SESSION_STATE: SessionState = {
   lastSessionId: undefined,
   newestToolbarPreviewForInput: {},
   compactionLoading: {},
+  draft: {},
 };
 
 export const sessionSlice = createSlice({
   name: "session",
   initialState: INITIAL_SESSION_STATE,
   reducers: {
+    setDraft: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        key: string;
+        draft: { content: JSONContent; messageId?: string } | undefined;
+      }>,
+    ) => {
+      if (payload.draft) {
+        state.draft[payload.key] = payload.draft;
+      } else {
+        delete state.draft[payload.key];
+      }
+    },
     addPromptCompletionPair: (
       state,
       { payload }: PayloadAction<PromptLog[]>,
@@ -1093,6 +1113,7 @@ export const {
   setIsPruned,
   setContextPercentage,
   setCompactionLoading,
+  setDraft,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;
