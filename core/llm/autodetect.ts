@@ -74,6 +74,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "docker",
   "nous",
   "zAI",
+  "avian",
   "tensorix",
   // TODO add these, change to inverted logic so only the ones that need templating are hardcoded
   // Asksage.ts
@@ -134,6 +135,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "ovhcloud",
   "watsonx",
   "zAI",
+  "avian",
   "tensorix",
 ];
 
@@ -253,6 +255,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "vertexai",
   "function-network",
   "scaleway",
+  "avian",
   "minimax",
   "tensorix",
 ];

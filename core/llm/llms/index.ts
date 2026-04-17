@@ -11,6 +11,7 @@ import { renderTemplatedString } from "../../util/handlebars/renderTemplatedStri
 import { BaseLLM } from "../index";
 import Anthropic from "./Anthropic";
 import Asksage from "./Asksage";
+import Avian from "./Avian";
 import Azure from "./Azure";
 import Bedrock from "./Bedrock";
 import BedrockImport from "./BedrockImport";
@@ -134,6 +135,7 @@ export const LLMClasses = [
   LlamaStack,
   TARS,
   zAI,
+  Avian,
 ];
 
 export async function llmFromDescription(
