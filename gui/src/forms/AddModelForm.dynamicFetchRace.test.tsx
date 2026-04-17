@@ -115,4 +115,30 @@ describe("AddModelForm dynamic fetch race", () => {
       );
     });
   });
+
+  it("clears the previous provider API key before a newly selected keyed provider can fetch models", async () => {
+    fetchProviderModelsMock.mockResolvedValue([]);
+
+    const { user } = await renderWithProviders(
+      <AddModelForm onDone={vi.fn()} />,
+    );
+
+    const apiKeyInput = screen.getByPlaceholderText(
+      /Enter your OpenAI API key/i,
+    );
+    await user.type(apiKeyInput, "sk-openai-secret");
+    expect(apiKeyInput).toHaveValue("sk-openai-secret");
+
+    await user.click(screen.getByRole("button", { name: "Anthropic" }));
+
+    const anthropicApiKeyInput = screen.getByPlaceholderText(
+      /Enter your Anthropic API key/i,
+    );
+    expect(anthropicApiKeyInput).toHaveValue("");
+
+    const fetchButton = screen.getByTitle(/fetch available models/i);
+    await user.click(fetchButton);
+
+    expect(fetchProviderModelsMock).not.toHaveBeenCalled();
+  });
 });

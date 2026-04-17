@@ -129,9 +129,7 @@ export function AddModelForm({
 
   useEffect(() => {
     setSelectedModel(selectedProvider.packages[0]);
-    if (!selectedProvider.tags?.includes(ModelProviderTags.RequiresApiKey)) {
-      formMethods.setValue("apiKey", "");
-    }
+    formMethods.setValue("apiKey", "");
   }, [selectedProvider]);
 
   const requiresSkPrefix =
