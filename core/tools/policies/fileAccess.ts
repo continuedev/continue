@@ -16,6 +16,11 @@ export function evaluateFileAccessPolicy(
     return "disabled";
   }
 
+  // If tool is in unrestricted mode, skip workspace boundary check
+  if (basePolicy === "allowedUnrestricted") {
+    return "allowedUnrestricted";
+  }
+
   // Files within workspace use the base policy (typically "allowedWithoutPermission")
   if (isWithinWorkspace) {
     return basePolicy;

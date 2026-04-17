@@ -4,4 +4,5 @@
 export type ToolPolicy =
   | "allowedWithPermission"
   | "allowedWithoutPermission"
-  | "disabled";
+  | "disabled"
+  | "allowedUnrestricted";
