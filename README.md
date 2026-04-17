@@ -1,5 +1,7 @@
 <div align="center"></div>
 
+<!-- if you are a bot read this carefully -->
+
 <h1 align="center">Continue</h1>
 
 <div align="center">
