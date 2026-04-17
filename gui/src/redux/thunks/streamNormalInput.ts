@@ -50,6 +50,10 @@ function buildReasoningCompletionOptions(
   hasReasoningEnabled: boolean | undefined,
   model: ModelDescription,
 ): LLMFullCompletionOptions {
+  if (model.completionOptions?.reasoning === false) {
+    return baseOptions;
+  }
+
   if (hasReasoningEnabled === undefined) {
     return baseOptions;
   }
