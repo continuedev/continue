@@ -202,7 +202,7 @@ addCommonOptions(program)
   .option("--fork <sessionId>", "Fork from an existing session ID")
   .option(
     "--beta-subagent-tool",
-    "Enable beta Subagent tool for invoking subagents",
+    "Enable beta Subagent tool with built-in specialized agents",
   )
   .action(async (prompt, options) => {
     // Telemetry: record command invocation

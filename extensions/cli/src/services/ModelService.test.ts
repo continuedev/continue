@@ -10,6 +10,7 @@ import { AuthConfig } from "../auth/workos.js";
 import * as config from "../config.js";
 
 import { ModelService } from "./ModelService.js";
+import type { ModelServiceState } from "./types.js";
 
 describe("ModelService", () => {
   let service: ModelService;
@@ -371,5 +372,92 @@ describe("ModelService", () => {
       );
       expect(errorListener).toHaveBeenCalledWith(expect.any(Error));
     });
+  });
+});
+
+describe("ModelService.getSubagentModels", () => {
+  const baseState: ModelServiceState = {
+    llmApi: { provider: "primary-llm" } as any,
+    model: {
+      name: "primary-chat-model",
+      provider: "openai",
+      model: "gpt-4.1",
+      roles: ["chat"],
+      chatOptions: {},
+    },
+    assistant: {
+      models: [
+        {
+          name: "primary-chat-model",
+          provider: "openai",
+          model: "gpt-4.1",
+          roles: ["chat"],
+          chatOptions: {},
+        },
+      ],
+    } as any,
+    authConfig: null,
+  };
+
+  beforeEach(() => {
+    vi.mocked(config.createLlmApi).mockReturnValue({
+      provider: "mock-llm",
+    } as any);
+  });
+
+  test("returns configured subagents when present", () => {
+    const state: ModelServiceState = {
+      ...baseState,
+      assistant: {
+        models: [
+          ...(baseState.assistant?.models ?? []),
+          {
+            name: "security-review",
+            provider: "openai",
+            model: "gpt-4.1",
+            roles: ["subagent"],
+            chatOptions: {
+              baseSystemMessage: "Review code for security issues.",
+            },
+          },
+        ],
+      } as any,
+    };
+
+    const subagents = ModelService.getSubagentModels(state);
+
+    expect(subagents.map((subagent) => subagent.model?.name)).toEqual([
+      "security-review",
+    ]);
+  });
+
+  test("falls back to built-in subagents when none are configured", () => {
+    const subagents = ModelService.getSubagentModels(baseState);
+
+    expect(subagents.map((subagent) => subagent.model?.name)).toEqual([
+      "planner",
+      "researcher",
+      "reviewer",
+    ]);
+    expect(
+      subagents.every((subagent) => subagent.model?.model === "gpt-4.1"),
+    ).toBe(true);
+    expect(
+      subagents.every((subagent) => subagent.model?.provider === "openai"),
+    ).toBe(true);
+    expect(
+      subagents.every((subagent) =>
+        subagent.model?.roles?.includes("subagent"),
+      ),
+    ).toBe(true);
+  });
+
+  test("returns no subagents when there is no current model to clone", () => {
+    const subagents = ModelService.getSubagentModels({
+      ...baseState,
+      model: null,
+    });
+
+    expect(subagents).toEqual([]);
   });
 });

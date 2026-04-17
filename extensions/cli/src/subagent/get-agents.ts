@@ -7,7 +7,7 @@ import type { ModelServiceState } from "../services/types.js";
 export function getSubagent(modelState: ModelServiceState, name: string) {
   return (
     ModelService.getSubagentModels(modelState).find(
-      (model) => model.model.name === name,
+      (model) => model.model?.name === name,
     ) ?? null
   );
 }
@@ -21,7 +21,7 @@ export function generateSubagentToolDescription(
   const agentList = ModelService.getSubagentModels(modelState)
     .map(
       (subagentModel) =>
-        `  - ${subagentModel.model.name}: ${subagentModel.model.chatOptions?.baseSystemMessage}`,
+        `  - ${subagentModel.model?.name ?? "unknown"}: ${subagentModel.model?.chatOptions?.baseSystemMessage ?? ""}`,
     )
     .join("\n");
 
@@ -34,7 +34,7 @@ ${agentList}
 }
 
 export function getAgentNames(modelState: ModelServiceState): string[] {
-  return ModelService.getSubagentModels(modelState).map(
-    (model) => model.model.name,
-  );
+  return ModelService.getSubagentModels(modelState)
+    .map((model) => model.model?.name)
+    .filter((name): name is string => !!name);
 }
