@@ -55,6 +55,7 @@ import OVHcloud from "./OVHcloud";
 import { Relace } from "./Relace";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
+import SaladCloud from "./SaladCloud";
 import SambaNova from "./SambaNova";
 import Scaleway from "./Scaleway";
 import SiliconFlow from "./SiliconFlow";
@@ -115,6 +116,7 @@ export const LLMClasses = [
   ClawRouter,
   Nvidia,
   Vllm,
+  SaladCloud,
   SambaNova,
   MockLLM,
   TestLLM,
