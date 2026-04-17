@@ -74,7 +74,7 @@ jobs:
 
       - name: Create Check Run
         id: check
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           AGENT_NAME: ${{ steps.agent-name.outputs.name }}
         with:
@@ -150,7 +150,7 @@ jobs:
 
       - name: Update Check Run
         if: always()
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           AGENT_OUTPUT: ${{ steps.run.outputs.output }}
           AGENT_ERROR: ${{ steps.run.outputs.error }}
