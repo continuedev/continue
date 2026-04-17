@@ -7,7 +7,7 @@ export const Inception: ModelProvider = {
       displayName: "Mercury 2",
       contextLength: 128000,
       description:
-        "Inception Labs' fastest reasoning LLM and their most powerful model, with tool calling and structured outputs support.",
+        "Inception Labs' fastest reasoning diffusion model and their most powerful model, with tool calling and structured outputs support.",
       regex: /mercury-2/i,
       recommendedFor: ["chat"],
     },

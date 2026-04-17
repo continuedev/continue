@@ -595,9 +595,9 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     provider: "inception",
     icon: "inception.png",
     description:
-      "Inception Labs provides Mercury, the fastest diffusion-based LLM family with 128k context and tool calling.",
+      "Inception Labs provides Mercury 2, a fast diffusion model with 128k context and tool calling.",
     longDescription:
-      "To get started with Inception Labs, obtain an API key from the [Inception Labs platform](https://platform.inceptionlabs.ai/). Their Mercury models are OpenAI-compatible and support chat, tool calling, and structured outputs.",
+      "To get started with Inception Labs, obtain an API key from the [Inception Labs platform](https://platform.inceptionlabs.ai/). Mercury 2 is OpenAI-compatible and supports chat, tool calling, and structured outputs.",
     tags: [ModelProviderTags.RequiresApiKey],
     collectInputFor: [
       {
