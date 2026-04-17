@@ -2,7 +2,7 @@ import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/outline";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button, Input, StyledActionButton } from "../components";
 import Alert from "../components/gui/Alert";
@@ -49,6 +49,8 @@ export function AddModelForm({
     [],
   );
   const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const selectedProviderRef = useRef(selectedProvider.provider);
+  const fetchGenerationRef = useRef(0);
 
   useEffect(() => {
     void initializeDynamicModels(ideMessenger);
@@ -56,6 +58,8 @@ export function AddModelForm({
 
   useEffect(() => {
     setFetchedModelsList([]);
+    fetchGenerationRef.current += 1;
+    setIsFetchingModels(false);
   }, [selectedProvider]);
 
   const handleFetchModels = useCallback(async () => {
@@ -64,6 +68,8 @@ export function AddModelForm({
     if (!apiKey) return;
 
     const providerAtFetchTime = selectedProvider.provider;
+    const fetchGeneration = fetchGenerationRef.current + 1;
+    fetchGenerationRef.current = fetchGeneration;
     setIsFetchingModels(true);
     try {
       const models = await fetchProviderModels(
@@ -72,13 +78,15 @@ export function AddModelForm({
         apiKey,
         apiBase,
       );
-      setFetchedModelsList((prev) =>
-        selectedProvider.provider === providerAtFetchTime ? models : prev,
-      );
+      if (selectedProviderRef.current === providerAtFetchTime) {
+        setFetchedModelsList(models);
+      }
     } catch (error) {
       console.error("Failed to fetch models:", error);
     } finally {
-      setIsFetchingModels(false);
+      if (fetchGenerationRef.current === fetchGeneration) {
+        setIsFetchingModels(false);
+      }
     }
   }, [ideMessenger, selectedProvider, formMethods]);
 
@@ -128,9 +136,7 @@ export function AddModelForm({
 
   useEffect(() => {
     setSelectedModel(selectedProvider.packages[0]);
-    if (!selectedProvider.tags?.includes(ModelProviderTags.RequiresApiKey)) {
-      formMethods.setValue("apiKey", "");
-    }
+    formMethods.setValue("apiKey", "");
   }, [selectedProvider]);
 
   const requiresSkPrefix =
@@ -203,6 +209,7 @@ export function AddModelForm({
                     (provider) => provider.title === val.title,
                   );
                   if (match) {
+                    selectedProviderRef.current = match.provider;
                     setSelectedProvider(match);
                   }
                 }}
