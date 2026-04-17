@@ -742,7 +742,7 @@
     "express": "^4.18.2",
     "fkill": "^8.1.0",
     "follow-redirects": "^1.15.4",
-    "handlebars": "^4.7.8",
+    "handlebars": "^4.7.9",
     "highlight.js": "^11.7.0",
     "highlightable": "^1.3.0-beta.0",
     "http-proxy": "^1.18.1",
