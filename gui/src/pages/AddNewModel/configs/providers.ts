@@ -590,6 +590,28 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://platform.minimax.io",
   },
+  inception: {
+    title: "Inception Labs",
+    provider: "inception",
+    icon: "inception.png",
+    description:
+      "Inception Labs provides Mercury 2, a fast diffusion model with 128k context and tool calling.",
+    longDescription:
+      "To get started with Inception Labs, obtain an API key from the [Inception Labs platform](https://platform.inceptionlabs.ai/). Mercury 2 is OpenAI-compatible and supports chat, tool calling, and structured outputs.",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Inception Labs API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [models.mercury2],
+    apiKeyUrl: "https://platform.inceptionlabs.ai/",
+  },
   deepseek: {
     title: "DeepSeek",
     provider: "deepseek",
