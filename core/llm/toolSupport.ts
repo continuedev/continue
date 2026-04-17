@@ -213,6 +213,8 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
           "glm-5",
           "deepseek",
           "dolphin",
+          // https://ai.google.dev/gemma/docs/capabilities/function-calling
+          "gemma",
         ].some((part) => modelName.toLowerCase().includes(part))
       ) {
         return true;
