@@ -378,6 +378,18 @@ describe("Configuration", () => {
     });
   });
 
+  describe("lmstudio api base", () => {
+    it('should have correct default API base for "lmstudio"', () => {
+      const lmstudio = constructLlmApi({
+        provider: "lmstudio",
+      });
+
+      expect((lmstudio as OpenAIApi).openai.baseURL).toBe(
+        "http://127.0.0.1:1234/",
+      );
+    });
+  });
+
   describe("bedrock authentication", () => {
     it("should configure Bedrock with API key authentication", () => {
       const bedrock = constructLlmApi({
