@@ -64,13 +64,17 @@ const ContextStatus = () => {
             {history.length > 0 && (
               <div className="flex flex-col gap-1 whitespace-pre">
                 <div>
-                  <span
-                    className="hover:text-link inline-block cursor-pointer underline"
-                    onClick={() => compactConversation(history.length - 1)}
-                  >
-                    Compact conversation
-                  </span>
-                  {"\n"}
+                  {history.length >= 4 && (
+                    <>
+                      <span
+                        className="hover:text-link inline-block cursor-pointer underline"
+                        onClick={() => compactConversation(history.length - 1)}
+                      >
+                        Compact conversation
+                      </span>
+                      {"\n"}
+                    </>
+                  )}
                   <span
                     className="hover:text-link inline-block cursor-pointer underline"
                     onClick={() => {
