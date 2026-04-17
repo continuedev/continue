@@ -3,11 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { services } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import { executeSubAgent } from "../subagent/executor.js";
-import { getAgentNames, getSubagent } from "../subagent/get-agents.js";
+import { getAgentNames, getSubagent } from "../subagent/getAgents.js";
 
 import { subagentTool } from "./subagent.js";
 
-vi.mock("../subagent/get-agents.js");
+vi.mock("../subagent/getAgents.js");
 vi.mock("../subagent/executor.js");
 vi.mock("../services/ServiceContainer.js", () => ({
   serviceContainer: {
