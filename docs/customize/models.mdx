@@ -28,6 +28,44 @@ If no model is specified, Continue automatically uses the default agent with our
 Explore models in [The Hub](https://continue.dev/hub?type=models).
 </Info>
 
+## Dynamic Model Discovery
+
+Continue can automatically discover and load models from your configured providers, making it easy to access the latest models without manual configuration.
+
+### Supported Providers
+
+The following providers support dynamic model fetching:
+
+| Provider | Auto-loads on startup | Refresh with API key |
+|----------|----------------------|---------------------|
+| **Ollama** | ✅ Yes | ✅ Yes |
+| **OpenRouter** | ✅ Yes | ✅ Yes |
+| **Anthropic** | ❌ No | ✅ Yes |
+| **Google Gemini** | ❌ No | ✅ Yes |
+| **OpenAI** | ❌ No | ✅ Yes |
+| **Other providers** | ❌ No | ✅ Yes (if supported) |
+
+### How It Works
+
+1. **Automatic loading**: Ollama and OpenRouter models are automatically loaded when you open Continue
+2. **Manual refresh**: For other providers, enter your API key in the "Add Model" UI and click the refresh icon to fetch available models
+3. **Capability detection**: Continue automatically detects model capabilities (`contextLength`, `maxTokens`, `supportsTools`) and saves them to your `config.yaml`
+
+### Using the Refresh Button
+
+When adding a model from a provider that requires an API key:
+
+1. Open the model selector and click "Add Model"
+2. Select your provider (e.g., Anthropic, OpenAI, Gemini)
+3. Enter your API key
+4. Click the **refresh icon** that appears next to the model dropdown
+5. Continue will fetch all available models from that provider
+6. Select the model you want to add
+
+<Tip>
+Model capabilities like context length and tool support are automatically detected and saved when you add a model this way.
+</Tip>
+
 ## Learn More About Models
 
 Continue supports [many model providers](/customize/model-providers/top-level/openai), including Anthropic, OpenAI, Gemini, Ollama, Amazon Bedrock, Azure, xAI, and more. Models can have various roles like `chat`, `edit`, `apply`, `autocomplete`, `embed`, and `rerank`.
