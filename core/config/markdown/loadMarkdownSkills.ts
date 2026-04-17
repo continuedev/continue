@@ -3,12 +3,12 @@ import {
   parseMarkdownRule,
 } from "@continuedev/config-yaml";
 import z from "zod";
-import { IDE, Skill } from "../..";
+import type { IDE, Skill } from "../..";
 import { walkDir } from "../../indexing/walkDir";
-import { localPathToUri } from "../../util/pathToUri";
 import { getGlobalFolderWithName } from "../../util/paths";
+import { localPathToUri } from "../../util/pathToUri";
 import { findUriInDirs, joinPathsToUri } from "../../util/uri";
-import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
+import { getDotContinueSubDirs } from "../loadLocalAssistants";
 
 const skillFrontmatterSchema = z.object({
   name: z.string().min(1),
@@ -16,6 +16,39 @@ const skillFrontmatterSchema = z.object({
 });
 
 const SKILLS_DIR = "skills";
+const DIRECTORY_FILE_TYPE = 2;
+const SYMBOLIC_LINK_FILE_TYPE = 64;
+
+async function getSkillFilesFromDir(dir: string, ide: IDE): Promise<string[]> {
+  const exists = await ide.fileExists(dir);
+  if (!exists) {
+    return [];
+  }
+
+  const entries = await ide.listDir(dir);
+  return (
+    await Promise.all(
+      entries.map(async ([name, type]) => {
+        if (type !== DIRECTORY_FILE_TYPE && type !== SYMBOLIC_LINK_FILE_TYPE) {
+          return null;
+        }
+
+        const skillDirUri = joinPathsToUri(dir, name);
+        const skillFileUri = joinPathsToUri(skillDirUri, "SKILL.md");
+        return (await ide.fileExists(skillFileUri)) ? skillFileUri : null;
+      }),
+    )
+  ).filter((skillFileUri): skillFileUri is string => Boolean(skillFileUri));
+}
+
+async function getSkillFilesFromDirs(
+  dirs: string[],
+  ide: IDE,
+): Promise<string[]> {
+  return (
+    await Promise.all(dirs.map((dir) => getSkillFilesFromDir(dir, ide)))
+  ).flat();
+}
 
 /**
  * Get skills from .claude/skills directory
@@ -27,19 +60,7 @@ async function getClaudeSkillsDir(ide: IDE) {
 
   fullDirs.push(localPathToUri(getGlobalFolderWithName(SKILLS_DIR)));
 
-  return (
-    await Promise.all(
-      fullDirs.map(async (dir) => {
-        const exists = await ide.fileExists(dir);
-        if (!exists) return [];
-        const uris = await walkDir(dir, ide, {
-          source: "get .claude skills files",
-        });
-        // filter markdown files only
-        return uris.filter((uri) => uri.endsWith(".md"));
-      }),
-    )
-  ).flat();
+  return getSkillFilesFromDirs(fullDirs, ide);
 }
 
 export async function loadMarkdownSkills(ide: IDE) {
@@ -47,18 +68,21 @@ export async function loadMarkdownSkills(ide: IDE) {
   const skills: Skill[] = [];
 
   try {
+    const workspaceDirs = await ide.getWorkspaceDirs();
     const yamlAndMarkdownFileUris = [
-      ...(
-        await getAllDotContinueDefinitionFiles(
+      ...(await getSkillFilesFromDirs(
+        getDotContinueSubDirs(
           ide,
           {
             includeGlobal: true,
             includeWorkspace: true,
             fileExtType: "markdown",
           },
+          workspaceDirs,
           SKILLS_DIR,
-        )
-      ).map((file) => file.path),
+        ),
+        ide,
+      )),
       ...(await getClaudeSkillsDir(ide)),
     ];
 
@@ -66,7 +90,6 @@ export async function loadMarkdownSkills(ide: IDE) {
       path.endsWith("SKILL.md"),
     );
 
-    const workspaceDirs = await ide.getWorkspaceDirs();
     for (const fileUri of skillFiles) {
       try {
         const content = await ide.readFile(fileUri);
