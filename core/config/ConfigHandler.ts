@@ -9,7 +9,11 @@ import {
   IdeSettings,
   ILLMLogger,
 } from "../index.js";
-import { GlobalContext } from "../util/GlobalContext.js";
+import {
+  CachedHubAssistant,
+  CachedHubOrganization,
+  GlobalContext,
+} from "../util/GlobalContext.js";
 import { getConfigYamlPath } from "../util/paths.js";
 
 import EventEmitter from "node:events";
@@ -176,30 +180,71 @@ export class ConfigHandler {
     const isSignedIn = await this.controlPlaneClient.isSignedIn();
     if (isSignedIn) {
       try {
+        let usedCachedHubData = false;
+
         // TODO use policy returned with org, not policy endpoint
         const policyResponse = await this.controlPlaneClient.getPolicy();
         PolicySingleton.getInstance().policy = policyResponse;
+
+        const cachedHubOrganizations = this.getCachedHubOrganizations();
         const orgDescriptions =
           await this.controlPlaneClient.listOrganizations();
-        const orgsWithPolicy = orgDescriptions.map((d) => ({
-          ...d,
-          policy: policyResponse?.policy,
-        }));
+        const orgsWithPolicy = (orgDescriptions ?? cachedHubOrganizations)
+          .filter((org) => org.id !== this.PERSONAL_ORG_DESC.id)
+          .map((d) => ({
+            iconUrl: d.iconUrl,
+            id: d.id,
+            name: d.name,
+            slug: d.slug,
+            policy: policyResponse?.policy,
+          }));
+
+        if (orgDescriptions === null && cachedHubOrganizations.length > 0) {
+          usedCachedHubData = true;
+        }
 
         if (policyResponse?.policy?.allowOtherOrgs === false) {
           if (orgsWithPolicy.length === 0) {
             return { orgs: [] };
           } else {
             const firstOrg = await this.getNonPersonalHubOrg(orgsWithPolicy[0]);
-            return { orgs: [firstOrg] };
+            if (firstOrg.usedCache) {
+              usedCachedHubData = true;
+            }
+            if (usedCachedHubData) {
+              errors.push({
+                fatal: false,
+                message:
+                  "Continue Hub is unavailable. Using cached Hub assistants until the service recovers.",
+              });
+            }
+            return { orgs: [firstOrg.org], errors };
           }
         }
-        const orgs = await Promise.all([
-          this.getPersonalHubOrg(),
-          ...orgsWithPolicy.map((org) => this.getNonPersonalHubOrg(org)),
-        ]);
+
+        const personalOrg = await this.getPersonalHubOrg();
+        const nonPersonalOrgs = await Promise.all(
+          orgsWithPolicy.map((org) => this.getNonPersonalHubOrg(org)),
+        );
+        if (
+          personalOrg.usedCache ||
+          nonPersonalOrgs.some((org) => org.usedCache)
+        ) {
+          usedCachedHubData = true;
+        }
+        if (usedCachedHubData) {
+          errors.push({
+            fatal: false,
+            message:
+              "Continue Hub is unavailable. Using cached Hub assistants until the service recovers.",
+          });
+        }
+        const orgs = [
+          personalOrg.org,
+          ...nonPersonalOrgs.map((org) => org.org),
+        ];
         // TODO make try/catch more granular here, to catch specific org errors
-        return { orgs };
+        return { orgs, errors };
       } catch (e) {
         errors.push({
           fatal: false,
@@ -236,9 +281,21 @@ export class ConfigHandler {
     }));
   }
 
-  private async getHubProfiles(orgScopeId: string | null) {
-    const assistants = await this.controlPlaneClient.listAssistants(orgScopeId);
+  private getCachedHubOrganizations(): CachedHubOrganization[] {
+    return this.globalContext.get("cachedHubOrganizations") ?? [];
+  }
 
+  private updateCachedHubOrganization(org: CachedHubOrganization) {
+    const cached = this.getCachedHubOrganizations().filter(
+      (existing) => existing.id !== org.id,
+    );
+    this.globalContext.update("cachedHubOrganizations", [...cached, org]);
+  }
+
+  private async createPlatformProfiles(
+    assistants: CachedHubAssistant[],
+    orgScopeId: string | null,
+  ) {
     return await Promise.all(
       assistants.map(async (assistant) => {
         const profileLoader = await PlatformProfileLoader.create({
@@ -254,7 +311,7 @@ export class ConfigHandler {
           ide: this.ide,
           llmLogger: this.llmLogger,
           rawYaml: assistant.rawYaml,
-          orgScopeId: orgScopeId,
+          orgScopeId,
         });
 
         return new ProfileLifecycleManager(profileLoader, this.ide);
@@ -262,15 +319,50 @@ export class ConfigHandler {
     );
   }
 
+  private async loadHubProfiles(
+    orgScopeId: string | null,
+    org: OrganizationDescription,
+  ): Promise<{ profiles: ProfileLifecycleManager[]; usedCache: boolean }> {
+    const assistants = await this.controlPlaneClient.listAssistants(orgScopeId);
+    if (assistants !== null) {
+      this.updateCachedHubOrganization({
+        id: org.id,
+        iconUrl: org.iconUrl,
+        name: org.name,
+        slug: org.slug,
+        profiles: assistants,
+      });
+      return {
+        profiles: await this.createPlatformProfiles(assistants, orgScopeId),
+        usedCache: false,
+      };
+    }
+
+    const cachedProfiles =
+      this.getCachedHubOrganizations().find((entry) => entry.id === org.id)
+        ?.profiles ?? [];
+    return {
+      profiles: await this.createPlatformProfiles(cachedProfiles, orgScopeId),
+      usedCache: cachedProfiles.length > 0,
+    };
+  }
+
   private async getNonPersonalHubOrg(
     org: OrganizationDescription,
-  ): Promise<OrgWithProfiles> {
+  ): Promise<{ org: OrgWithProfiles; usedCache: boolean }> {
     const localProfiles = await this.getLocalProfiles({
       includeGlobal: false,
       includeWorkspace: true,
     });
-    const profiles = [...(await this.getHubProfiles(org.id)), ...localProfiles];
-    return this.rectifyProfilesForOrg(org, profiles);
+    const { profiles: hubProfiles, usedCache } = await this.loadHubProfiles(
+      org.id,
+      org,
+    );
+    const profiles = [...hubProfiles, ...localProfiles];
+    return {
+      org: await this.rectifyProfilesForOrg(org, profiles),
+      usedCache,
+    };
   }
 
   private PERSONAL_ORG_DESC: OrganizationDescription = {
@@ -279,14 +371,23 @@ export class ConfigHandler {
     name: "Personal",
     slug: undefined,
   };
-  private async getPersonalHubOrg() {
+  private async getPersonalHubOrg(): Promise<{
+    org: OrgWithProfiles;
+    usedCache: boolean;
+  }> {
     const localProfiles = await this.getLocalProfiles({
       includeGlobal: true,
       includeWorkspace: true,
     });
-    const hubProfiles = await this.getHubProfiles(null);
+    const { profiles: hubProfiles, usedCache } = await this.loadHubProfiles(
+      null,
+      this.PERSONAL_ORG_DESC,
+    );
     const profiles = [...hubProfiles, ...localProfiles];
-    return this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, profiles);
+    return {
+      org: await this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, profiles),
+      usedCache,
+    };
   }
 
   private async getLocalOrg() {

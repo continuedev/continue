@@ -170,16 +170,17 @@ export class ControlPlaneClient {
   }
 
   public async listAssistants(organizationId: string | null): Promise<
-    {
-      configResult: ConfigResult<AssistantUnrolled>;
-      ownerSlug: string;
-      packageSlug: string;
-      iconUrl: string;
-      rawYaml: string;
-    }[]
+    | {
+        configResult: ConfigResult<AssistantUnrolled>;
+        ownerSlug: string;
+        packageSlug: string;
+        iconUrl: string;
+        rawYaml: string;
+      }[]
+    | null
   > {
     if (!(await this.isSignedIn())) {
-      return [];
+      return null;
     }
 
     try {
@@ -197,11 +198,11 @@ export class ControlPlaneClient {
         context: "control_plane_list_assistants",
         organizationId,
       });
-      return [];
+      return null;
     }
   }
 
-  public async listOrganizations(): Promise<Array<OrganizationDescription>> {
+  public async listOrganizations(): Promise<Array<OrganizationDescription> | null> {
     if (!(await this.isSignedIn())) {
       return [];
     }
@@ -225,7 +226,7 @@ export class ControlPlaneClient {
           console.warn(
             `Failed to list organizations after ${maxRetries} retries: user not found`,
           );
-          return [];
+          return null;
         }
         const waitTime = Math.min(
           Math.pow(2, retries) * 100,
@@ -237,7 +238,7 @@ export class ControlPlaneClient {
         console.warn(
           `Failed to list organizations (${resp.status}): ${await resp.text()}`,
         );
-        return [];
+        return null;
       }
       const { organizations } = (await resp.json()) as any;
       return organizations;
@@ -247,7 +248,7 @@ export class ControlPlaneClient {
     console.warn(
       `Failed to list organizations after ${maxRetries} retries: maximum attempts exceeded`,
     );
-    return [];
+    return null;
   }
 
   public async listAssistantFullSlugs(
