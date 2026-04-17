@@ -11,6 +11,7 @@ import { streamDiffLines } from "core/edit/streamDiffLines";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import { VerticalDiffManager } from "../diff/vertical/manager";
+import { openEditorAndRevealRange } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
@@ -32,18 +33,14 @@ export class ApplyManager {
     toolCallId,
     isSearchAndReplace,
   }: ApplyToFilePayload) {
-    if (filepath) {
-      await this.ensureFileOpen(filepath);
-    }
-
-    const { activeTextEditor } = vscode.window;
-    if (!activeTextEditor) {
-      void vscode.window.showErrorMessage("No active editor to apply edits to");
+    const editor = await this.getOrCreateEditor(filepath);
+    if (!editor) {
+      void vscode.window.showErrorMessage("Failed to open editor for file");
       return;
     }
 
     // Capture the original file content before applying changes
-    const originalFileContent = activeTextEditor.document.getText();
+    const originalFileContent = editor.document.getText();
 
     await this.webviewProtocol.request("updateApplyState", {
       streamId,
@@ -53,42 +50,37 @@ export class ApplyManager {
       toolCallId,
     });
 
-    const hasExistingDocument = !!activeTextEditor.document.getText().trim();
+    const hasExistingDocument = !!editor.document.getText().trim();
     if (hasExistingDocument) {
       // Currently `isSearchAndReplace` will always provide a full file rewrite
       // as the contents of `text`, so we can just instantly apply
       if (isSearchAndReplace) {
         await this.verticalDiffManager.instantApplyDiff(
+          filepath,
           originalFileContent,
           text,
           streamId,
           toolCallId,
         );
       } else {
-        await this.handleExistingDocument(
-          activeTextEditor,
-          text,
-          streamId,
-          toolCallId,
-        );
+        await this.handleExistingDocument(editor, text, streamId, toolCallId);
       }
     } else {
-      await this.handleEmptyDocument(
-        activeTextEditor,
-        text,
-        streamId,
-        toolCallId,
-      );
+      await this.handleEmptyDocument(editor, text, streamId, toolCallId);
     }
   }
 
-  private async ensureFileOpen(filepath: string): Promise<void> {
+  private async getOrCreateEditor(
+    filepath: string,
+  ): Promise<vscode.TextEditor | undefined> {
     const fileExists = await this.ide.fileExists(filepath);
     if (!fileExists) {
       await this.ide.writeFile(filepath, "");
-      await this.ide.openFile(filepath);
     }
-    await this.ide.openFile(filepath);
+    const uri = filepath.startsWith("file://")
+      ? vscode.Uri.parse(filepath)
+      : vscode.Uri.file(filepath);
+    return openEditorAndRevealRange(uri);
   }
 
   private modelIsTooFastForStreaming(model: string): boolean {
