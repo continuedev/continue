@@ -276,6 +276,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    inception: (model) => {
+      // https://docs.inceptionlabs.ai/ - mercury-2 supports tool calling
+      const lower = model.toLowerCase();
+      return lower.startsWith("mercury-2");
+    },
     deepseek: (model) => {
       // https://api-docs.deepseek.com/quick_start/pricing
       // https://api-docs.deepseek.com/guides/function_calling

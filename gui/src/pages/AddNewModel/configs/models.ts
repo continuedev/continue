@@ -3270,4 +3270,20 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "mimo.png",
     isOpenSource: false,
   },
+
+  // Inception Labs models
+  mercury2: {
+    title: "Mercury 2",
+    description:
+      "Inception Labs' fastest reasoning LLM with 128k context, tool calling, and structured outputs.",
+    refUrl: "https://docs.inceptionlabs.ai/",
+    params: {
+      title: "Mercury 2",
+      model: "mercury-2",
+      contextLength: 128_000,
+    },
+    providerOptions: ["inception"],
+    icon: "inception.png",
+    isOpenSource: false,
+  },
 };
