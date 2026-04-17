@@ -42,6 +42,7 @@ import { VsCodeIdeUtils } from "../util/ideUtils";
 import { VsCodeIde } from "../VsCodeIde";
 
 import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
+import { setupPromptLogging } from "./setupPromptLogging";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
 import { modelSupportsNextEdit } from "core/llm/autodetect";
@@ -292,6 +293,7 @@ export class VsCodeExtension {
     );
 
     this.core = new Core(inProcessMessenger, this.ide);
+    context.subscriptions.push(setupPromptLogging(this.core.llmLogger));
     this.configHandler = this.core.configHandler;
     resolveConfigHandler?.(this.configHandler);
 
