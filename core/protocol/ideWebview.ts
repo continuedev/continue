@@ -115,4 +115,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   focusEdit: [undefined, void];
   generateRule: [undefined, void];
   addToChat: [AddToChatPayload, void];
+  openModelSelect: [undefined, void];
 };
