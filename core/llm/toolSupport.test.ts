@@ -260,6 +260,13 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("devstral-24b")).toBe(true);
     });
 
+    it("should return true for Gemma models", () => {
+      expect(supportsFn("gemma3")).toBe(true);
+      expect(supportsFn("gemma4")).toBe(true);
+      expect(supportsFn("gemma3:27b")).toBe(true);
+      expect(supportsFn("gemma4:27b")).toBe(true);
+    });
+
     it("should return false for explicitly unsupported models", () => {
       expect(supportsFn("vision")).toBe(false);
       expect(supportsFn("math")).toBe(false);
@@ -290,6 +297,14 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("qwen2")).toBe(true);
       expect(supportsFn("mixtral-8x7b")).toBe(true);
       expect(supportsFn("mistral-7b")).toBe(true);
+    });
+
+    it("should return true for Gemma models via LM Studio", () => {
+      // Gemma 3/4 support function calling per Google's documentation
+      expect(supportsFn("gemma3")).toBe(true);
+      expect(supportsFn("gemma4")).toBe(true);
+      expect(supportsFn("Gemma-3-27B-Instruct-GGUF")).toBe(true);
+      expect(supportsFn("Gemma-4-27B-Instruct-GGUF")).toBe(true);
     });
 
     it("should return true for LM Studio hyphenated model IDs", () => {
