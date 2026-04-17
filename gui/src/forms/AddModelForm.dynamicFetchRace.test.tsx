@@ -141,4 +141,67 @@ describe("AddModelForm dynamic fetch race", () => {
 
     expect(fetchProviderModelsMock).not.toHaveBeenCalled();
   });
+
+  it("releases the previous provider fetch lock so the newly selected provider can fetch immediately", async () => {
+    const pendingOpenAiFetch = deferred<any[]>();
+
+    fetchProviderModelsMock.mockImplementation(
+      (_messenger: unknown, provider: string) => {
+        if (provider === "openai") {
+          return pendingOpenAiFetch.promise;
+        }
+        if (provider === "anthropic") {
+          return Promise.resolve([makeFetchedModel("Anthropic Dynamic Model")]);
+        }
+        return Promise.resolve([]);
+      },
+    );
+
+    const { user } = await renderWithProviders(
+      <AddModelForm onDone={vi.fn()} />,
+    );
+
+    await user.type(
+      screen.getByPlaceholderText(/Enter your OpenAI API key/i),
+      "sk-openai-secret",
+    );
+    await user.click(screen.getByTitle(/fetch available models/i));
+
+    await user.click(screen.getByRole("button", { name: "Anthropic" }));
+
+    const anthropicApiKeyInput = screen.getByPlaceholderText(
+      /Enter your Anthropic API key/i,
+    );
+    await user.type(anthropicApiKeyInput, "sk-anthropic-secret");
+
+    const fetchButton = screen.getByTitle(/fetch available models/i);
+    expect(fetchButton).not.toBeDisabled();
+    await user.click(fetchButton);
+
+    await waitFor(() => {
+      expect(fetchProviderModelsMock).toHaveBeenCalledWith(
+        expect.anything(),
+        "anthropic",
+        "sk-anthropic-secret",
+        undefined,
+      );
+      expect(screen.getByTestId("model-listbox")).toHaveTextContent(
+        "Anthropic Dynamic Model",
+      );
+    });
+
+    await act(async () => {
+      pendingOpenAiFetch.resolve([makeFetchedModel("OpenAI Dynamic Model")]);
+      await pendingOpenAiFetch.promise;
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("model-listbox")).toHaveTextContent(
+        "Anthropic Dynamic Model",
+      );
+      expect(screen.getByTestId("model-listbox")).not.toHaveTextContent(
+        "OpenAI Dynamic Model",
+      );
+    });
+  });
 });

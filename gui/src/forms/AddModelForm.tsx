@@ -50,6 +50,7 @@ export function AddModelForm({
   );
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const selectedProviderRef = useRef(selectedProvider.provider);
+  const fetchGenerationRef = useRef(0);
 
   useEffect(() => {
     void initializeDynamicModels(ideMessenger);
@@ -57,6 +58,8 @@ export function AddModelForm({
 
   useEffect(() => {
     setFetchedModelsList([]);
+    fetchGenerationRef.current += 1;
+    setIsFetchingModels(false);
   }, [selectedProvider]);
 
   const handleFetchModels = useCallback(async () => {
@@ -65,6 +68,8 @@ export function AddModelForm({
     if (!apiKey) return;
 
     const providerAtFetchTime = selectedProvider.provider;
+    const fetchGeneration = fetchGenerationRef.current + 1;
+    fetchGenerationRef.current = fetchGeneration;
     setIsFetchingModels(true);
     try {
       const models = await fetchProviderModels(
@@ -79,7 +84,9 @@ export function AddModelForm({
     } catch (error) {
       console.error("Failed to fetch models:", error);
     } finally {
-      setIsFetchingModels(false);
+      if (fetchGenerationRef.current === fetchGeneration) {
+        setIsFetchingModels(false);
+      }
     }
   }, [ideMessenger, selectedProvider, formMethods]);
 
