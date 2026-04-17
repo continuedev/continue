@@ -332,7 +332,6 @@ class OpenAI extends BaseLLM {
       top_p: options.topP ?? null,
       reasoning: {
         effort: "medium",
-        summary: "auto",
       },
       include: ["reasoning.encrypted_content"],
     };
