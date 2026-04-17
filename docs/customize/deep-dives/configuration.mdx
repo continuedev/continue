@@ -28,6 +28,45 @@ When editing this file, you can see the available options suggested as you type,
 
 See the full reference for `config.yaml` [here](/reference).
 
+## Local Config Profiles with `.continue/configs/`
+
+In addition to the single global `config.yaml`, you can create multiple local config profiles by placing YAML files in a `.continue/configs/` directory. This is useful for:
+
+- **Workspace-level profiles**: Share different configs with your team by committing `.continue/configs/` to version control
+- **Project-specific setups**: Switch between different model configurations for different workflows (e.g., a fast model for autocomplete and a powerful model for deep reasoning)
+
+### Workspace vs. Global Configs
+
+| Location | Scope | Use case |
+|---|---|---|
+| `~/.continue/config.yaml` | Global (user-level) | Your personal default configuration |
+| `~/.continue/configs/*.yaml` | Global (user-level) | Additional personal profiles |
+| `.continue/configs/*.yaml` | Workspace-level | Project-specific profiles, shared with the team |
+
+### How to Create a Local Profile
+
+1. Create a `.continue/configs/` directory in your workspace root (or `~/.continue/configs/` for global profiles)
+2. Add a YAML file with any valid `config.yaml` content:
+
+```yaml title=".continue/configs/fast-models.yaml"
+name: Fast Models
+version: 1.0.0
+schema: v1
+models:
+  - name: Claude Haiku 4.5
+    provider: anthropic
+    model: claude-haiku-4-5
+    roles:
+      - chat
+      - edit
+      - apply
+      - autocomplete
+```
+
+3. Continue will automatically discover the file and display it as a selectable profile in the agent/config selector in the chat sidebar
+
+Continue watches the `.continue/configs/` directory for changes — adding, editing, or deleting files there will automatically reload the available profiles without restarting the IDE.
+
 ## Legacy Configuration Methods (Deprecated)
 
 <Info>
