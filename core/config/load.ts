@@ -822,6 +822,86 @@ async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
   return readConfigJs();
 }
 
+async function loadConfigModule(configJsPath: string) {
+  try {
+    return await import(configJsPath);
+  } catch (e) {
+    console.log(e);
+    console.log(
+      "Could not load config.ts as absolute path, retrying as file url ...",
+    );
+    try {
+      return await import(localPathToUri(configJsPath));
+    } catch (fileUrlError) {
+      throw new Error("Could not load config.ts as file url either", {
+        cause: fileUrlError,
+      });
+    }
+  }
+}
+
+function clearConfigModuleCache(configJsPath: string) {
+  if (typeof require === "undefined") {
+    return;
+  }
+
+  try {
+    delete require.cache[require.resolve(configJsPath)];
+  } catch {
+    // Dynamic imports via file URLs may not populate require cache.
+  }
+}
+
+async function applyConfigModule<T>(
+  config: T,
+  configJsPath: string,
+): Promise<T> {
+  const module = await loadConfigModule(configJsPath);
+  clearConfigModuleCache(configJsPath);
+
+  if (!module.modifyConfig) {
+    throw new Error("config.ts does not export a modifyConfig function.");
+  }
+
+  return module.modifyConfig(config);
+}
+
+export async function applyConfigTsAndRemoteConfig<T>(options: {
+  config: T;
+  ide: IDE;
+  ideType: IdeType;
+  remoteConfigServerUrl?: string;
+}): Promise<T> {
+  const { config, ide, ideType, remoteConfigServerUrl } = options;
+
+  let modifiedConfig = config;
+
+  const configJsContents = await buildConfigTsandReadConfigJs(ide, ideType);
+  if (configJsContents) {
+    try {
+      modifiedConfig = await applyConfigModule(
+        modifiedConfig,
+        getConfigJsPath(),
+      );
+    } catch (e) {
+      console.log("Error loading config.ts: ", e);
+    }
+  }
+
+  if (remoteConfigServerUrl) {
+    try {
+      modifiedConfig = await applyConfigModule(
+        modifiedConfig,
+        getConfigJsPathForRemote(remoteConfigServerUrl),
+      );
+    } catch (e) {
+      console.log("Error loading remotely set config.js: ", e);
+    }
+  }
+
+  return modifiedConfig;
+}
+
 async function loadContinueConfigFromJson(
   ide: IDE,
   ideSettings: IdeSettings,
@@ -857,63 +937,12 @@ async function loadContinueConfigFromJson(
   // Convert serialized to intermediate config
   let intermediate = await serializedToIntermediateConfig(withShared, ide);
 
-  // Apply config.ts to modify intermediate config
-  const configJsContents = await buildConfigTsandReadConfigJs(
+  intermediate = await applyConfigTsAndRemoteConfig({
+    config: intermediate,
     ide,
-    ideInfo.ideType,
-  );
-  if (configJsContents) {
-    try {
-      // Try config.ts first
-      const configJsPath = getConfigJsPath();
-      let module: any;
-
-      try {
-        module = await import(configJsPath);
-      } catch (e) {
-        console.log(e);
-        console.log(
-          "Could not load config.ts as absolute path, retrying as file url ...",
-        );
-        try {
-          module = await import(localPathToUri(configJsPath));
-        } catch (e) {
-          throw new Error("Could not load config.ts as file url either", {
-            cause: e,
-          });
-        }
-      }
-
-      if (typeof require !== "undefined") {
-        delete require.cache[require.resolve(configJsPath)];
-      }
-      if (!module.modifyConfig) {
-        throw new Error("config.ts does not export a modifyConfig function.");
-      }
-      intermediate = module.modifyConfig(intermediate);
-    } catch (e) {
-      console.log("Error loading config.ts: ", e);
-    }
-  }
-
-  // Apply remote config.js to modify intermediate config
-  if (ideSettings.remoteConfigServerUrl) {
-    try {
-      const configJsPathForRemote = getConfigJsPathForRemote(
-        ideSettings.remoteConfigServerUrl,
-      );
-      const module = await import(configJsPathForRemote);
-      if (typeof require !== "undefined") {
-        delete require.cache[require.resolve(configJsPathForRemote)];
-      }
-      if (!module.modifyConfig) {
-        throw new Error("config.ts does not export a modifyConfig function.");
-      }
-      intermediate = module.modifyConfig(intermediate);
-    } catch (e) {
-      console.log("Error loading remotely set config.js: ", e);
-    }
-  }
+    ideType: ideInfo.ideType,
+    remoteConfigServerUrl: ideSettings.remoteConfigServerUrl,
+  });
 
   // Convert to final config format
   const { config: finalConfig, errors: finalErrors } =
