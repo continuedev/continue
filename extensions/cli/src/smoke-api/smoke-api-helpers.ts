@@ -48,8 +48,8 @@ export async function cleanupSmokeContext(
   }
 }
 
-// Override via SMOKE_MODEL env var. Falls back to claude-haiku-4-5 which is
-// widely available and cost-effective.
+// Override via SMOKE_MODEL env var. Falls back to claude-haiku-4-5-20251001
+// which is widely available and cost-effective.
 const SMOKE_MODEL = process.env.SMOKE_MODEL || "claude-haiku-4-5-20251001";
 
 /**
