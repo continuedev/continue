@@ -1,6 +1,7 @@
 import { BaseContextProvider } from "../";
 import { ContextProviderName } from "../../";
 
+import ATRSecurityContextProvider from "./ATRSecurityContextProvider";
 import ClipboardContextProvider from "./ClipboardContextProvider";
 import CodebaseContextProvider from "./CodebaseContextProvider";
 import CodeContextProvider from "./CodeContextProvider";
@@ -72,6 +73,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   GitCommitContextProvider,
   ClipboardContextProvider,
   RulesContextProvider,
+  ATRSecurityContextProvider,
 ];
 
 export function contextProviderClassFromName(
