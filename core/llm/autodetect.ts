@@ -67,6 +67,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "openrouter",
   "clawrouter",
   "deepseek",
+  "doubao",
   "xAI",
   "minimax",
   "groq",
