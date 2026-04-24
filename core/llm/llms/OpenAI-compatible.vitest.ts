@@ -6,6 +6,7 @@ import Groq from "./Groq.js";
 import Fireworks from "./Fireworks.js";
 import Together from "./Together.js";
 import Deepseek from "./Deepseek.js";
+import Doubao from "./Doubao.js";
 import OpenRouter from "./OpenRouter.js";
 import xAI from "./xAI.js";
 import Mistral from "./Mistral.js";
@@ -368,6 +369,11 @@ createOpenAISubclassTests(Venice, {
 createOpenAISubclassTests(Moonshot, {
   providerName: "moonshot",
   defaultApiBase: "https://api.moonshot.cn/v1/",
+});
+
+createOpenAISubclassTests(Doubao, {
+  providerName: "doubao",
+  defaultApiBase: "https://ark.cn-beijing.volces.com/api/v3/",
 });
 
 createOpenAISubclassTests(Novita, {

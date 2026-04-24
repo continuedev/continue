@@ -9,6 +9,7 @@ import { CohereApi } from "./apis/Cohere.js";
 import { CometAPIApi } from "./apis/CometAPI.js";
 import { ContinueProxyApi } from "./apis/ContinueProxy.js";
 import { DeepSeekApi } from "./apis/DeepSeek.js";
+import { DoubaoApi } from "./apis/Doubao.js";
 import { GeminiApi } from "./apis/Gemini.js";
 import { InceptionApi } from "./apis/Inception.js";
 import { JinaApi } from "./apis/Jina.js";
@@ -115,6 +116,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new JinaApi(config);
     case "deepseek":
       return new DeepSeekApi(config);
+    case "doubao":
+      return new DoubaoApi(config);
     case "moonshot":
       return new MoonshotApi(config);
     case "relace":

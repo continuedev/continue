@@ -1,0 +1,111 @@
+---
+title: "Doubao (豆包)"
+description: "Configure ByteDance Doubao models served via Volcengine Ark in Continue, including the doubao-seed and doubao-1.5-pro model families."
+---
+
+[Doubao (豆包)](https://www.volcengine.com/product/ark) is ByteDance's large-language-model family served through Volcengine Ark (火山方舟). The service exposes an OpenAI-compatible `/chat/completions` API and is widely used in the China region for both chat and code-assistance workloads.
+
+Continue supports Doubao as a first-class provider. Ark addresses models either by a **date-stamped model ID** (e.g. `doubao-seed-1-6-251015`, `doubao-1-5-pro-32k-250115`) or by an **endpoint ID** you provision in the Ark console (`ep-20240xxx-xxxxx`). Always verify the current model ID in the [Ark model list](https://www.volcengine.com/docs/82379/1330310) before configuring Continue — undated aliases are not guaranteed to resolve.
+
+## Configuration
+
+To use Doubao models:
+
+1. Create an API key on the [Volcengine Ark console](https://console.volcengine.com/ark/).
+2. Either deploy the model you want as an endpoint and copy its endpoint ID, or use a public model alias.
+3. Add the following configuration:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Doubao Seed 1.6
+      provider: doubao
+      model: doubao-seed-1-6-251015
+      apiKey: <YOUR_VOLCENGINE_ARK_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Doubao Seed 1.6",
+        "provider": "doubao",
+        "model": "doubao-seed-1-6-251015",
+        "apiKey": "<YOUR_VOLCENGINE_ARK_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Using an endpoint ID
+
+For custom or newly released models, deploy the model as an Ark endpoint and pass the endpoint ID as the `model`:
+
+```yaml title="config.yaml"
+models:
+  - name: Doubao (custom endpoint)
+    provider: doubao
+    model: ep-20240xxx-xxxxx
+    apiKey: <YOUR_VOLCENGINE_ARK_API_KEY>
+```
+
+Endpoint IDs bypass model-name routing on the Ark gateway and give you full control over which deployment handles the request, including quota and region.
+
+## Configuration Options
+
+| Option    | Description                                          | Default                                           |
+| --------- | ---------------------------------------------------- | ------------------------------------------------- |
+| `apiKey`  | Volcengine Ark API key                               | Required                                          |
+| `apiBase` | Ark API base URL                                     | `https://ark.cn-beijing.volces.com/api/v3/`       |
+| `model`   | Ark model ID (date-stamped) or endpoint ID           | Required                                          |
+
+## Example
+
+Complete configuration with tuned completion options:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Doubao Seed 1.6
+      provider: doubao
+      model: doubao-seed-1-6-251015
+      apiKey: <YOUR_VOLCENGINE_ARK_API_KEY>
+      defaultCompletionOptions:
+        temperature: 0.7
+        topP: 0.95
+        maxTokens: 2048
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Doubao Seed 1.6",
+        "provider": "doubao",
+        "model": "doubao-seed-1-6-251015",
+        "apiKey": "<YOUR_VOLCENGINE_ARK_API_KEY>",
+        "completionOptions": {
+          "temperature": 0.7,
+          "topP": 0.95,
+          "maxTokens": 2048
+        }
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

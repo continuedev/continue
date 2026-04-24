@@ -21,6 +21,7 @@ import CometAPI from "./CometAPI";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
 import Docker from "./Docker";
+import Doubao from "./Doubao";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
 import FunctionNetwork from "./FunctionNetwork";
@@ -108,6 +109,7 @@ export const LLMClasses = [
   Cloudflare,
   Deepseek,
   Docker,
+  Doubao,
   Msty,
   Azure,
   WatsonX,
