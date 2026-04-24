@@ -1271,6 +1271,44 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  futurmix: {
+    title: "FuturMix",
+    provider: "futurmix",
+    refPage: "futurmix",
+    description:
+      "Unified AI gateway for 22+ models from OpenAI, Anthropic, and Google with OpenAI-compatible API.",
+    longDescription:
+      "FuturMix provides a single OpenAI-compatible endpoint to access models from OpenAI, Anthropic, and Google. One API key, one base URL, 99.99% SLA. Get your API key at [futurmix.ai](https://futurmix.ai).",
+    icon: "futurmix.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your FuturMix API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.futurmixClaudeOpus47,
+      models.futurmixClaudeSonnet46,
+      models.futurmixClaudeHaiku45,
+      models.futurmixGemini25Pro,
+      models.futurmixGemini25Flash,
+      models.futurmixGpt54,
+      models.futurmixGpt54Mini,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "FuturMix",
+        },
+      },
+    ],
+    apiKeyUrl: "https://futurmix.ai",
+  },
   venice: {
     title: "Venice",
     provider: "venice",

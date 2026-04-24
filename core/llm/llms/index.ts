@@ -24,6 +24,7 @@ import Docker from "./Docker";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
 import FunctionNetwork from "./FunctionNetwork";
+import FuturMix from "./FuturMix";
 import Gemini from "./Gemini";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
@@ -127,6 +128,7 @@ export const LLMClasses = [
   xAI,
   SiliconFlow,
   Tensorix,
+  FuturMix,
   Scaleway,
   Relace,
   Inception,

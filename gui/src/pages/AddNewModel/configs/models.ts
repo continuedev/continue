@@ -2802,6 +2802,100 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: true,
   },
 
+  // FuturMix Models
+
+  futurmixClaudeOpus47: {
+    title: "Claude Opus 4-7",
+    description:
+      "Anthropic's Claude Opus 4-7 via FuturMix — advanced reasoning and coding with 200K context.",
+    params: {
+      model: "claude-opus-4-7",
+      contextLength: 200_000,
+      title: "Claude Opus 4-7",
+      apiKey: "",
+    },
+    providerOptions: ["futurmix"],
+    isOpenSource: false,
+  },
+  futurmixClaudeSonnet46: {
+    title: "Claude Sonnet 4-6",
+    description:
+      "Anthropic's Claude Sonnet 4-6 via FuturMix — fast, capable coding model with 200K context.",
+    params: {
+      model: "claude-sonnet-4-6",
+      contextLength: 200_000,
+      title: "Claude Sonnet 4-6",
+      apiKey: "",
+    },
+    providerOptions: ["futurmix"],
+    isOpenSource: false,
+  },
+  futurmixClaudeHaiku45: {
+    title: "Claude Haiku 4.5",
+    description:
+      "Anthropic's Claude Haiku 4.5 via FuturMix — lightweight and fast with 200K context.",
+    params: {
+      model: "claude-haiku-4-5-20251001",
+      contextLength: 200_000,
+      title: "Claude Haiku 4.5",
+      apiKey: "",
+    },
+    providerOptions: ["futurmix"],
+    isOpenSource: false,
+  },
+  futurmixGemini25Pro: {
+    title: "Gemini 2.5 Pro",
+    description:
+      "Google's Gemini 2.5 Pro via FuturMix — 1M token context with advanced reasoning.",
+    params: {
+      model: "gemini-2.5-pro",
+      contextLength: 1_048_576,
+      title: "Gemini 2.5 Pro",
+      apiKey: "",
+    },
+    providerOptions: ["futurmix"],
+    isOpenSource: false,
+  },
+  futurmixGemini25Flash: {
+    title: "Gemini 2.5 Flash",
+    description:
+      "Google's Gemini 2.5 Flash via FuturMix — fast and efficient with 1M token context.",
+    params: {
+      model: "gemini-2.5-flash",
+      contextLength: 1_048_576,
+      title: "Gemini 2.5 Flash",
+      apiKey: "",
+    },
+    providerOptions: ["futurmix"],
+    isOpenSource: false,
+  },
+  futurmixGpt54: {
+    title: "GPT-5.4",
+    description:
+      "OpenAI's GPT-5.4 via FuturMix — latest GPT model with 128K context.",
+    params: {
+      model: "gpt-5.4",
+      contextLength: 128_000,
+      title: "GPT-5.4",
+      apiKey: "",
+    },
+    providerOptions: ["futurmix"],
+    isOpenSource: false,
+  },
+  futurmixGpt54Mini: {
+    title: "GPT-5.4 Mini",
+    description:
+      "OpenAI's GPT-5.4 Mini via FuturMix — compact and efficient with 128K context.",
+    params: {
+      model: "gpt-5.4-mini",
+      contextLength: 128_000,
+      title: "GPT-5.4 Mini",
+      apiKey: "",
+    },
+    providerOptions: ["futurmix"],
+    isOpenSource: false,
+  },
+
   AUTODETECT: {
     title: "Autodetect",
     description:
