@@ -222,6 +222,14 @@ For Claude Sonnet models specifically, a variant prompt is used that allows the 
 
 **Model used:** the model assigned to the `apply` role, falling back to the active chat model if no apply-specific model is configured (see section 2).
 
+### 3.6 Roles not covered in this guide
+
+Three roles listed in section 2.1 are not covered here:
+
+- **`summarize`** — used to auto-compress long conversation histories into a summary that is injected into the system message of subsequent turns. Not a user-facing prompting feature.
+- **`embed`** — used to generate vector embeddings for codebase indexing and semantic search (`@codebase`, `@code`). Operates outside the chat pipeline entirely.
+- **`rerank`** — used to re-rank chunks retrieved by the embed model before they are added to context. Also outside the chat pipeline.
+
 ---
 
 ## 4. Configuration: Prompting Options in `config.yaml`
