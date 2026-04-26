@@ -27,99 +27,21 @@ The raw completion API (e.g. `POST /v1/completions`) accepts a single prompt str
 
 This depends on two things: the feature triggering the request, and the model configured for that feature.
 
-**Feature matters:** chat, plan, agent, and apply always produce a structured message list regardless of model. Edit and autocomplete always produce a plain prompt string. See section 2 for detail on each feature.
+**Feature matters:** chat, plan, agent, and apply always produce a structured message list regardless of model. Edit and autocomplete always produce a plain prompt string. See section 3 for the full pipeline and per-feature detail.
 
-**Model matters:** if the model for a given feature has a native chat API, message lists are sent directly to the chat endpoint and prompt strings are wrapped in a single user message before being sent. If the model exposes only a raw completion endpoint, prompt strings are sent as-is, and message lists are first formatted into a single string using the model's expected conversation format. See section 3 for how models are assigned to features, and section 3.4 for how the formatting works.
+**Model matters:** if the model for a given feature has a native chat API, message lists are sent directly to the chat endpoint and prompt strings are wrapped in a single user message before being sent. If the model exposes only a raw completion endpoint, prompt strings are sent as-is, and message lists are first formatted into a single string using the model's expected conversation format. See section 2 for how models are assigned to features.
 
 ### 1.4 Why does this matter for configuration?
 
-A common advanced setup is to use a powerful chat model for conversations while routing simpler, cost-effective tasks — autocomplete, inline editing, code application — to a specialised coding model. That coding model might expose only a raw completion API. Continue's model role system (section 3) makes this straightforward to configure.
+A common advanced setup is to use a powerful chat model for conversations while routing simpler, cost-effective tasks — autocomplete, inline editing, code application — to a specialised coding model. That coding model might expose only a raw completion API. Continue's model role system (section 2) makes this straightforward to configure.
 
 ---
 
-## 2. Prompting by Feature
+## 2. Model Roles: Assigning Models to Features
 
-Different Continue features construct their LLM input differently. Understanding what each feature sends helps you tune it effectively and choose the right model for each task.
+Continue routes different features to different LLMs based on _roles_. This lets you use a powerful conversational model for chat while routing simpler tasks to cheaper or faster models — including models that expose only a raw completion API.
 
-### 2.1 Chat, Plan, and Agent mode
-
-In these three modes, Continue sends a full conversation history to the chat API each time you submit a message. The message list has this structure:
-
-```
-[system message]
-[user message (context items + your text)]
-[assistant response]
-[user message]
-...
-[user message (context items + your text)]   ← current turn
-```
-
-**System message** — a single `system` role message prepended to the conversation. It contains:
-
-1. A built-in base message appropriate for the mode (see section 5.1).
-2. Any applicable rules from your `.continue/rules/` directory (see section 6).
-3. Optionally a summary of earlier conversation turns if the history was auto-compressed.
-
-**User messages** — each user message is multipart: any context items you attached (via `@`-mentions or automatic inclusion) are prepended as plain text blocks, followed by your typed message. The LLM sees the context inline, not in a separate channel.
-
-**Agent mode** additionally includes `tool` messages representing the outputs of tool calls between assistant turns.
-
-**Model used:** the chat model currently selected in the Continue panel. This always uses the chat API.
-
-### 2.2 Inline Edit (Cmd+I)
-
-When you trigger an inline edit, Continue selects a portion of your file (or the cursor position if nothing is selected) and sends a prompt to the model. No conversation history is included.
-
-The prompt is constructed from three parts of the file — the text before the selection (_prefix_), the selected code (_code to edit_), and the text after (_suffix_) — along with your instruction. How these are combined depends on what is selected:
-
-- **Cursor only (nothing selected):** the prompt shows the full context around the cursor with a `[BLANK]` marker and asks the model to fill it in without repeating the surrounding code.
-- **Entire file selected (no prefix or suffix):** the prompt shows the full file and asks for a complete rewrite.
-- **Partial selection (the common case):** the prompt presents the prefix, suffix, and selected code as labeled sections, and asks the model to rewrite only the selected section.
-
-If any rules are active (see section 6) or a base system message is configured, a `system` message is prepended and the whole thing is sent as a two-message chat.
-
-The model's response is streamed back and diffed against the original selection to produce the inline diff view.
-
-**Model used:** the model assigned to the `edit` role, falling back to the active chat model if no edit-specific model is configured (see section 3).
-
-### 2.3 Autocomplete (Tab)
-
-Autocomplete sends a prompt constructed from the code before and after the cursor. For GPT and Claude variants, this is an instruction-style prompt that asks the model to fill in the gap, with the result wrapped in `<COMPLETION>...</COMPLETION>` tags and multi-shot examples to guide the format.
-
-For models whose names contain `codestral` or `deepseek`, a Fill-in-the-Middle (FIM) format is used instead, passing prefix and suffix as separate fields to a dedicated FIM endpoint — a format natively supported by those models and often more efficient.
-
-Unlike chat mode, autocomplete does not include a system message or conversation history — each completion is a standalone prompt.
-
-**Model used:** the model assigned to the `autocomplete` role. Autocomplete will not run if no autocomplete model is configured. This is intentional — the autocomplete model is typically a smaller, faster, and cheaper model than the chat model, and must be explicitly designated.
-
-### 2.4 Apply (Apply button on a chat code block)
-
-When you click Apply on a code block in the chat panel, Continue attempts to integrate the suggestion into your file using a three-step strategy:
-
-1. **Deterministic** — tree-sitter based structural matching. No LLM involved.
-2. **Unified diff** — the suggestion is treated as a unified diff patch. No LLM involved.
-3. **LLM full rewrite** — if both of the above fail, the LLM is called with a two-message prompt:
-
-````
-user:      ORIGINAL CODE: <full file content>
-           SUGGESTED EDIT: <code block from chat>
-           Apply the SUGGESTED EDIT to the ORIGINAL CODE. Output the complete modified file.
-assistant: ```
-````
-
-The trailing `assistant` message (starting with a code fence) is a _prefill_ — it constrains the model to begin its response with a code block, preventing it from adding prose before the code. Anthropic's API explicitly supports this; other providers generally accept it silently.
-
-For Claude Sonnet models specifically, a variant prompt is used that allows the model to emit `UNCHANGED CODE` markers instead of reproducing unchanged sections verbatim, reducing token usage on large files.
-
-**Model used:** the model assigned to the `apply` role, falling back to the active chat model if no apply-specific model is configured (see section 3).
-
----
-
-## 3. Model Roles: Assigning Models to Features
-
-Continue routes different features to different LLM instances based on _roles_. This lets you use a powerful conversational model for chat while routing simpler tasks to cheaper or faster models — including models that expose only a raw completion API.
-
-### 3.1 Available roles
+### 2.1 Available roles
 
 | Role           | Feature                               | Notes                                                                                       |
 | -------------- | ------------------------------------- | ------------------------------------------------------------------------------------------- |
@@ -131,7 +53,7 @@ Continue routes different features to different LLM instances based on _roles_. 
 | `embed`        | Codebase indexing and semantic search | Required for `@codebase` / `@code` to work                                                  |
 | `rerank`       | Re-ranking retrieved code chunks      | Optional; improves semantic search quality                                                  |
 
-### 3.2 How role assignment works
+### 2.2 How role assignment works
 
 The `roles` array on a model entry controls which **candidate pool** that model belongs to. The actual model used for each feature is selected by the user in the GUI — not determined by the `roles` array alone. The `roles` array only determines which models are offered as choices in each selector.
 
@@ -146,7 +68,7 @@ The `roles` array on a model entry controls which **candidate pool** that model 
 
 Selections made in the GUI are saved automatically and survive IDE restarts. They are stored separately from `config.yaml` so the config file is not modified when you switch models.
 
-### 3.3 Assigning roles in `config.yaml`
+### 2.3 Assigning roles in `config.yaml`
 
 Each model entry in `config.yaml` has a `roles` array. When omitted, a model defaults to the roles `[chat, edit, apply, summarize]` — it appears as a candidate in the chat, edit, and apply selectors, but not in the autocomplete or embeddings selectors.
 
@@ -182,56 +104,129 @@ models:
 
 After adding these entries, open the Models config page and select "DeepSeek Coder" in the Autocomplete, Edit, and Apply selectors to activate it for those features.
 
-### 3.4 Using models without a chat API
+---
 
-The behaviour depends on which feature is using the model:
+## 3. Prompt Construction by Feature
 
-**Edit and autocomplete** — these features produce a self-contained prompt string (from the edit or autocomplete template) and send it directly to the completion endpoint as-is. No chat formatting is applied and no wrapping in a user message happens. This makes raw completion models a natural fit for these use cases: the prompt is already structured as a standalone instruction, not as a conversation.
+Every Continue feature constructs its LLM input through the same three-stage pipeline, but produces different inputs at each stage. This section first describes the pipeline, then walks through each feature in detail.
 
-**Chat, plan, agent, and apply** — these features produce a list of messages (system, user, assistant, etc.). If the model has no native chat API, Continue formats that message list into a single string using the model's expected conversation format before sending it to the completion endpoint. This is handled automatically based on the model name, or can be set explicitly with the `template` field:
+### 3.1 The Prompt Construction Pipeline
 
-```yaml
-models:
-  - provider: ollama
-    model: codellama:7b
-    name: Code Llama
-    roles: [autocomplete, edit]
-    template: llama2 # explicit format override
+**Stage 1 — Build the request content.** A template function produces the _what_ of the call — the code, the instruction, and the conversation history — without any standing instructions:
+
+- For **edit**: a plain string containing the file prefix, the selected code, the suffix, and the user's instruction
+- For **autocomplete**: a plain string containing the code before and after the cursor
+- For **chat, agent, plan**: the sequence of conversation turns — user messages (with `@`-context items embedded inline), prior assistant responses, and tool call results
+- For **apply**: the original file content paired with the suggested edit, as a two-message exchange
+
+**Stage 2 — Inject standing instructions.** The system message is built from the configured base system message for the current mode plus any applicable rules from `.continue/rules/`, and added to the request:
+
+- For **chat, agent, plan**: prepended as the first `system` message in the conversation
+- For **edit**: if rules or a custom system message are active, the plain string from stage 1 is promoted to a `[system, user]` message pair; otherwise the plain string passes through unchanged
+- For **autocomplete**: no system message is injected
+
+**Stage 3 — Deliver to the LLM.** The prepared input is dispatched to the model:
+
+- For models with a **chat API**: the message list is sent directly to the chat endpoint; a plain string is wrapped in a single `user` message first.
+- For models with a **raw completion API only**: the message list is formatted into a single string in the model's expected conversation format, then sent to the completion endpoint; a plain string is sent as-is.
+
+### 3.2 Chat, Plan, and Agent mode
+
+In these three modes, Continue sends a full conversation history to the chat API each time you submit a message. The message list has this structure:
+
+```
+[system message]
+[user message (context items + your text)]
+[assistant response]
+[user message]
+...
+[user message (context items + your text)]   ← current turn
 ```
 
-Available template values: `llama2`, `llama3`, `alpaca`, `chatml`, `deepseek`, `gemma`, `zephyr`, `phind`, `openchat`, `codestral`, and others.
+**System message** — a single `system` role message prepended to the conversation. It contains:
 
-Because of this distinction, raw completion models are best suited to the `edit` and `autocomplete` roles. Using one for the `apply` role is possible but requires the chat formatter to convert the apply message list into a string, which may not work well with all models.
+1. A built-in base message appropriate for the mode (see section 4.1).
+2. Any applicable rules from your `.continue/rules/` directory (see section 5).
+3. Optionally a summary of earlier conversation turns if the history was auto-compressed.
+
+**User messages** — each user message is multipart: any context items you attached (via `@`-mentions or automatic inclusion) are prepended as plain text blocks, followed by your typed message. The LLM sees the context inline, not in a separate channel.
+
+**Tools in agent and plan mode.** Chat mode passes no tools to the LLM at all. Agent and plan mode both use the same tool infrastructure, but with different sets of tools active:
+
+- **Agent mode** — all enabled tools are available (file reads, file writes, terminal commands, etc.)
+- **Plan mode** — only read-only tools are active (file and codebase reading, search, etc.); write and execute tools are excluded, which together with the mode's system message keeps the model in a planning and exploration posture
+
+In both agent and plan mode, tools are exchanged through three distinct channels:
+
+- **Tool definitions** (available tools and their signatures) are passed as a separate `tools` parameter in the API call, not as conversation messages.
+- **Tool calls** (which tool the model chose to invoke and with what arguments) are embedded inside `assistant` messages as a structured field, not as a separate message type.
+- **Tool results** (the output returned by the tool) appear as `tool` role messages immediately following the assistant message that issued the call.
+
+The resulting conversation structure in agent or plan mode is therefore:
+
+```
+[system message]
+[user message]
+[assistant message — contains embedded tool call(s)]
+[tool message — result of the call]
+[assistant message — contains more tool calls or the final response]
+...
+```
+
+**Model used:** the chat model currently selected in the Continue panel. This always uses the chat API.
+
+### 3.3 Inline Edit (Cmd+I)
+
+When you trigger an inline edit, Continue selects a portion of your file (or the cursor position if nothing is selected) and sends a prompt to the model. No conversation history is included.
+
+The prompt is constructed from three parts of the file — the text before the selection (_prefix_), the selected code (_code to edit_), and the text after (_suffix_) — along with your instruction. How these are combined depends on what is selected:
+
+- **Cursor only (nothing selected):** the prompt shows the full context around the cursor with a `[BLANK]` marker and asks the model to fill it in without repeating the surrounding code.
+- **Entire file selected (no prefix or suffix):** the prompt shows the full file and asks for a complete rewrite.
+- **Partial selection (the common case):** the prompt presents the prefix, suffix, and selected code as labeled sections, and asks the model to rewrite only the selected section.
+
+If any rules are active (see section 5) or a base system message is configured, a `system` message is prepended and the whole thing is sent as a two-message chat.
+
+The model's response is streamed back and diffed against the original selection to produce the inline diff view.
+
+**Model used:** the model assigned to the `edit` role, falling back to the active chat model if no edit-specific model is configured (see section 2).
+
+### 3.4 Autocomplete (Tab)
+
+Autocomplete sends a prompt constructed from the code before and after the cursor. For GPT and Claude variants, this is an instruction-style prompt that asks the model to fill in the gap, with the result wrapped in `<COMPLETION>...</COMPLETION>` tags and multi-shot examples to guide the format.
+
+For models whose names contain `codestral` or `deepseek`, a Fill-in-the-Middle (FIM) format is used instead, passing prefix and suffix as separate fields to a dedicated FIM endpoint — a format natively supported by those models and often more efficient.
+
+Unlike chat mode, autocomplete does not include a system message or conversation history — each completion is a standalone prompt.
+
+**Model used:** the model assigned to the `autocomplete` role. Autocomplete will not run if no autocomplete model is configured. This is intentional — the autocomplete model is typically a smaller, faster, and cheaper model than the chat model, and must be explicitly designated.
+
+### 3.5 Apply (Apply button on a chat code block)
+
+When you click Apply on a code block in the chat panel, Continue attempts to integrate the suggestion into your file using a three-step strategy:
+
+1. **Deterministic** — tree-sitter based structural matching. No LLM involved.
+2. **Unified diff** — the suggestion is treated as a unified diff patch. No LLM involved.
+3. **LLM full rewrite** — if both of the above fail, the LLM is called with a two-message prompt:
+
+````
+user:      ORIGINAL CODE: <full file content>
+           SUGGESTED EDIT: <code block from chat>
+           Apply the SUGGESTED EDIT to the ORIGINAL CODE. Output the complete modified file.
+assistant: ```
+````
+
+The trailing `assistant` message (starting with a code fence) is a _prefill_ — it constrains the model to begin its response with a code block, preventing it from adding prose before the code. Anthropic's API explicitly supports this; other providers generally accept it silently.
+
+For Claude Sonnet models specifically, a variant prompt is used that allows the model to emit `UNCHANGED CODE` markers instead of reproducing unchanged sections verbatim, reducing token usage on large files.
+
+**Model used:** the model assigned to the `apply` role, falling back to the active chat model if no apply-specific model is configured (see section 2).
 
 ---
 
-## 4. The Prompt Construction Pipeline
+## 4. Configuration: Prompting Options in `config.yaml`
 
-For every feature, the prompt passes through a pipeline before reaching the LLM API. Understanding the stages helps you see where configuration applies.
-
-### 4.1 Stage 1: Build the raw input
-
-A _template function_ is called with the relevant inputs (file content, user instruction, conversation history, etc.) and produces either:
-
-- A **plain string** — used for inline edit and autocomplete
-- A **message list** — used for chat, agent, plan, and apply
-
-### 4.2 Stage 2: Inject system message and context
-
-For chat/agent/plan mode, the full message list is assembled: context items are prepended to user messages and the system message (base + rules) is added at the top.
-
-For inline edit, if rules or a base system message are active, the plain string is promoted to a two-message list with a `system` message prepended.
-
-### 4.3 Stage 3: Deliver to the LLM
-
-- For models with a **chat API**: the message list is sent directly to the chat endpoint. A plain string is wrapped in a single `user` message first.
-- For models with a **raw completion API only**: the message list is formatted into a single string in the model's conversation format, then sent to the completion endpoint.
-
----
-
-## 5. Configuration: Prompting Options in `config.yaml`
-
-### 5.1 Base system messages
+### 4.1 Base system messages
 
 Each mode has a built-in default system message. You can replace any of them per model using `chatOptions`:
 
@@ -249,7 +244,7 @@ models:
 
 The built-in defaults include instructions about code block formatting, how to present code modifications concisely, and mode-specific guidance (e.g. agent mode is told to use tools rather than output code blocks for implementation).
 
-### 5.2 Custom prompt templates
+### 4.2 Custom prompt templates
 
 For inline edit, apply, and autocomplete you can override the built-in prompt templates with your own Handlebars strings. These are set per model under `promptTemplates`:
 
@@ -308,15 +303,15 @@ Caution: the built-in apply prompt includes an assistant prefill (` ``` `) that 
 
 ---
 
-## 6. Configuration: Rules
+## 5. Configuration: Rules
 
 Rules are the primary mechanism for injecting persistent instructions into the system message of chat, agent, plan, and inline edit sessions — without modifying the base system message itself.
 
-### 6.1 How rules work
+### 5.1 How rules work
 
 Create `.md` files in your workspace at `.continue/rules/`. Each file is a rule. When you send a message, Continue evaluates which rules apply to the current context and appends the text of each applicable rule to the system message, in order.
 
-### 6.2 Rule targeting
+### 5.2 Rule targeting
 
 Each rule file can have a YAML frontmatter block that controls when it fires:
 
@@ -341,11 +336,11 @@ Prefer `pathlib.Path` over `os.path`.
 
 Rules can also be negative: prefix a glob with `!` to exclude files matching that pattern.
 
-### 6.3 Project-specific vs. workspace rules
+### 5.3 Project-specific vs. workspace rules
 
 Rules placed at `.continue/rules/` (in your workspace root) are root-level rules. Rules placed in a subdirectory (e.g. `backend/.continue/rules/api-style.md`) are scoped to that directory and only fire when files from that directory are in context.
 
-### 6.4 Practical patterns
+### 5.4 Practical patterns
 
 **Always-on coding style:**
 
@@ -381,11 +376,11 @@ Return errors as `{ error: string }` with appropriate HTTP status codes.
 
 ---
 
-## 7. Configuration: Context Providers
+## 6. Configuration: Context Providers
 
 Context providers are the mechanism behind `@`-mentions in the chat input. They fetch content — file contents, git diffs, terminal output, documentation — and inject it as plain text into the user message, before your typed text.
 
-### 7.1 Built-in providers (always available)
+### 6.1 Built-in providers (always available)
 
 These are available regardless of your `config.yaml`:
 
@@ -398,7 +393,7 @@ These are available regardless of your `config.yaml`:
 | `@problems`    | Diagnostics from the IDE problems panel (VS Code only)                              |
 | `@rules`       | Manually include a specific rule from `.continue/rules/`                            |
 
-### 7.2 Configurable providers
+### 6.2 Configurable providers
 
 Additional providers can be added under `context:` in `config.yaml`:
 
@@ -422,7 +417,7 @@ Common configurable providers:
 | `folder`   | All files under a specific directory                                                    |
 | `url`      | Content fetched from an arbitrary URL                                                   |
 
-### 7.3 How context reaches the LLM
+### 6.3 How context reaches the LLM
 
 When you submit a message, Continue fetches the content for each `@`-mentioned provider and prepends it to your message as plain text. The structure of the user message sent to the LLM is:
 
@@ -435,15 +430,48 @@ When you submit a message, Continue fetches the content for each `@`-mentioned p
 
 This is inline within the `user` role message — not in the system message, and not in a separate turn. The LLM sees your context and question together as a single user turn.
 
+**Example.** You type:
+
+```
+Can you update @file src/auth.ts to use bcrypt based on @diff?
+```
+
+The `user` message the LLM receives looks like this:
+
+````
+src/auth.ts (200 lines)
+```typescript src/auth.ts
+export async function login(username: string, password: string): Promise<User> {
+  const user = await db.users.findByUsername(username);
+  if (!user || user.password !== password) {
+    throw new Error("Invalid credentials");
+  }
+  return user;
+}
+// ... rest of file ...
+```
+
+Current git diff:
+```diff
+- const hash = await bcrypt.hash(password, 10);
+- user.password = hash;
++ user.password = password;
+```
+
+Can you update auth.ts to use bcrypt based on diff?
+````
+
+The context blocks are always prepended at the top regardless of where the `@`-mentions appeared in your text. The `@mention` nodes in your typed sentence are replaced by their short label (the filename or provider name) — not by the full content, and not removed. The LLM therefore sees "auth.ts" and "diff" inline as anchors that refer back to the content blocks above.
+
 **Note on `@currentFile`:** This provider is added automatically when you submit a chat message, provided the currently active editor window has focus. If you clicked the chat panel before submitting (which moves focus away from the editor), the active file is not known and `@currentFile` will not be included. Explicitly typing `@currentFile` in your message will always include it regardless of focus state.
 
-### 7.4 `@codebase` and semantic search
+### 6.4 `@codebase` and semantic search
 
 The `codebase` provider (and `code` provider) use the local vector index Continue maintains of your project. Relevant code chunks are retrieved by semantic similarity to your query, optionally re-ranked. This is the primary way to give the LLM access to project code without manually specifying files. It requires an `embed` model to be configured.
 
 ---
 
-## 8. How Configuration Layers Interact
+## 7. How Configuration Layers Interact
 
 When multiple configuration sources are active at once, they combine as follows:
 
@@ -468,9 +496,9 @@ The base system message override (`chatOptions.baseSystemMessage`) replaces the 
 
 ---
 
-## 9. Quick Reference
+## 8. Quick Reference
 
-### 9.1 Model role assignment
+### 8.1 Model role assignment
 
 | Goal                                 | How                                                                                       |
 | ------------------------------------ | ----------------------------------------------------------------------------------------- |
@@ -480,7 +508,7 @@ The base system message override (`chatOptions.baseSystemMessage`) replaces the 
 | Use a local model without a chat API | Set the `template` field to the appropriate format (e.g. `llama2`, `chatml`)              |
 | Enable semantic codebase search      | Add a model with `roles: [embed]`, then select it in the Models config page               |
 
-### 9.2 System message customization
+### 8.2 System message customization
 
 | Goal                                         | How                                                               |
 | -------------------------------------------- | ----------------------------------------------------------------- |
@@ -489,7 +517,7 @@ The base system message override (`chatOptions.baseSystemMessage`) replaces the 
 | Replace the entire chat system message       | Set `chatOptions.baseSystemMessage` on the model in `config.yaml` |
 | Replace the agent system message             | Set `chatOptions.baseAgentSystemMessage`                          |
 
-### 9.3 Prompt template customization
+### 8.3 Prompt template customization
 
 | Goal                               | How                                                         |
 | ---------------------------------- | ----------------------------------------------------------- |
@@ -497,7 +525,7 @@ The base system message override (`chatOptions.baseSystemMessage`) replaces the 
 | Customize the apply rewrite prompt | Set `promptTemplates.apply` (note: loses assistant prefill) |
 | Customize the autocomplete prompt  | Set `promptTemplates.autocomplete`                          |
 
-### 9.4 Context customization
+### 8.4 Context customization
 
 | Goal                             | How                                                                   |
 | -------------------------------- | --------------------------------------------------------------------- |
