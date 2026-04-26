@@ -25,9 +25,11 @@ The raw completion API (e.g. `POST /v1/completions`) accepts a single prompt str
 
 ### Which path does Continue take?
 
-For providers with a native chat API (all mainstream hosted providers, and Ollama when using its chat endpoint), Continue always uses the chat API. The prompts it constructs — regardless of which feature triggered them — are delivered as structured message lists.
+This depends on two things: the feature triggering the request, and the model configured for that feature.
 
-For models that expose only a raw completion endpoint, Continue formats the message list into a single string in the model's expected format (e.g. the Llama 2 or ChatML conversation format) before sending it. This formatting is handled automatically based on the model name or an explicit `template` setting in the config.
+**Feature matters:** chat, plan, agent, and apply always produce a structured message list regardless of model. Edit and autocomplete always produce a plain prompt string. See section 2 for detail on each feature.
+
+**Model matters:** if the model for a given feature has a native chat API, message lists are sent directly to the chat endpoint and prompt strings are wrapped in a single user message before being sent. If the model exposes only a raw completion endpoint, prompt strings are sent as-is, and message lists are first formatted into a single string using the model's expected conversation format. See section 3 for how models are assigned to features, and section 3's "Using models without a chat API" for how the formatting works.
 
 ### Why does this matter for configuration?
 
@@ -119,21 +121,36 @@ Continue routes different features to different LLM instances based on _roles_. 
 
 ### Available roles
 
-| Role           | Feature                               | Default behaviour                                 |
-| -------------- | ------------------------------------- | ------------------------------------------------- |
-| `chat`         | Chat, Agent, Plan conversations       | Must be selected explicitly in the Continue panel |
-| `edit`         | Inline edit (Cmd+I)                   | Falls back to the active `chat` model if not set  |
-| `apply`        | Apply button (LLM rewrite path)       | Falls back to the active `chat` model if not set  |
-| `autocomplete` | Tab autocomplete                      | Disabled if not configured                        |
-| `summarize`    | Conversation auto-summarization       | Falls back to the active `chat` model if not set  |
-| `embed`        | Codebase indexing and semantic search | Required for `@codebase` / `@code` to work        |
-| `rerank`       | Re-ranking retrieved code chunks      | Optional; improves semantic search quality        |
+| Role           | Feature                               | Notes                                                                                       |
+| -------------- | ------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `chat`         | Chat, Agent, Plan conversations       | Selected in the Continue panel                                                              |
+| `edit`         | Inline edit (Cmd+I)                   | Selected in Models config page and in the inline Cmd+I bar; falls back to active chat model |
+| `apply`        | Apply button (LLM rewrite path)       | Selected in Models config page; falls back to active chat model                             |
+| `autocomplete` | Tab autocomplete                      | Selected in Models config page; autocomplete is disabled if none selected                   |
+| `summarize`    | Conversation auto-summarization       | Falls back to active chat model                                                             |
+| `embed`        | Codebase indexing and semantic search | Required for `@codebase` / `@code` to work                                                  |
+| `rerank`       | Re-ranking retrieved code chunks      | Optional; improves semantic search quality                                                  |
+
+### How role assignment works
+
+The `roles` array on a model entry controls which **candidate pool** that model belongs to. The actual model used for each feature is selected by the user in the GUI — not determined by the `roles` array alone. The `roles` array only determines which models are offered as choices in each selector.
+
+| Role           | Where the active model is selected                  | Fallback if nothing selected |
+| -------------- | --------------------------------------------------- | ---------------------------- |
+| `chat`         | Model dropdown in the Continue panel                | —                            |
+| `edit`         | Models config page + inline Cmd+I bar               | Active `chat` model          |
+| `apply`        | Models config page (under "Additional model roles") | Active `chat` model          |
+| `autocomplete` | Models config page                                  | Autocomplete disabled        |
+| `embed`        | Models config page (under "Additional model roles") | —                            |
+| `rerank`       | Models config page (under "Additional model roles") | —                            |
+
+Selections made in the GUI are saved automatically and survive IDE restarts. They are stored separately from `config.yaml` so the config file is not modified when you switch models.
 
 ### Assigning roles in `config.yaml`
 
-Each model entry in `config.yaml` has a `roles` array. When omitted, a model defaults to the roles `[chat, edit, apply, summarize]` — it participates in conversations and is used for inline editing and applying suggestions, but not for autocomplete or embeddings.
+Each model entry in `config.yaml` has a `roles` array. When omitted, a model defaults to the roles `[chat, edit, apply, summarize]` — it appears as a candidate in the chat, edit, and apply selectors, but not in the autocomplete or embeddings selectors.
 
-To use a model only for autocomplete:
+To make a model available only for autocomplete:
 
 ```yaml
 models:
@@ -148,7 +165,7 @@ models:
     roles: [autocomplete]
 ```
 
-To use a local coding model for both autocomplete and inline editing, while keeping a hosted model for chat:
+To make a local coding model available for autocomplete and inline editing, while keeping a hosted model for chat:
 
 ```yaml
 models:
@@ -163,22 +180,15 @@ models:
     roles: [autocomplete, edit, apply]
 ```
 
-### Pinning a specific model for edit or apply
-
-By default, whichever `chat` model the user has selected in the panel is also used for inline editing and apply. To pin a specific model regardless of what is selected in the panel, use the `experimental.modelRoles` config section:
-
-```yaml
-experimental:
-  modelRoles:
-    inlineEdit: "DeepSeek Coder" # must match the model's name field
-    applyCodeBlock: "DeepSeek Coder"
-```
-
-With this configuration, Cmd+I and the Apply button always use the named model, even if the user switches to a different chat model in the panel.
+After adding these entries, open the Models config page and select "DeepSeek Coder" in the Autocomplete, Edit, and Apply selectors to activate it for those features.
 
 ### Using models without a chat API
 
-When a model in a non-chat role (e.g. `edit` or `autocomplete`) does not have a native chat API, Continue automatically formats the prompt into the model's expected conversation format before sending it. The format is detected from the model name (e.g. a model named `llama2-...` uses the Llama 2 prompt format) or can be set explicitly with the `template` field:
+The behaviour depends on which feature is using the model:
+
+**Edit and autocomplete** — these features produce a self-contained prompt string (from the edit or autocomplete template) and send it directly to the completion endpoint as-is. No chat formatting is applied and no wrapping in a user message happens. This makes raw completion models a natural fit for these use cases: the prompt is already structured as a standalone instruction, not as a conversation.
+
+**Chat, plan, agent, and apply** — these features produce a list of messages (system, user, assistant, etc.). If the model has no native chat API, Continue formats that message list into a single string using the model's expected conversation format before sending it to the completion endpoint. This is handled automatically based on the model name, or can be set explicitly with the `template` field:
 
 ```yaml
 models:
@@ -190,6 +200,8 @@ models:
 ```
 
 Available template values: `llama2`, `llama3`, `alpaca`, `chatml`, `deepseek`, `gemma`, `zephyr`, `phind`, `openchat`, `codestral`, and others.
+
+Because of this distinction, raw completion models are best suited to the `edit` and `autocomplete` roles. Using one for the `apply` role is possible but requires the chat formatter to convert the apply message list into a string, which may not work well with all models.
 
 ---
 
@@ -460,13 +472,13 @@ The base system message override (`chatOptions.baseSystemMessage`) replaces the 
 
 ### Model role assignment
 
-| Goal                                 | How                                                                                        |
-| ------------------------------------ | ------------------------------------------------------------------------------------------ |
-| Use a dedicated autocomplete model   | Add model with `roles: [autocomplete]`                                                     |
-| Use a dedicated inline edit model    | Add model with `roles: [edit]` + set `experimental.modelRoles.inlineEdit` to its name      |
-| Use a dedicated apply model          | Add model with `roles: [apply]` + set `experimental.modelRoles.applyCodeBlock` to its name |
-| Use a local model without a chat API | Set the `template` field to the appropriate format (e.g. `llama2`, `chatml`)               |
-| Enable semantic codebase search      | Add a model with `roles: [embed]`                                                          |
+| Goal                                 | How                                                                                       |
+| ------------------------------------ | ----------------------------------------------------------------------------------------- |
+| Use a dedicated autocomplete model   | Add model with `roles: [autocomplete]`, then select it in the Models config page          |
+| Use a dedicated inline edit model    | Add model with `roles: [edit]`, then select it in the Models config page or the Cmd+I bar |
+| Use a dedicated apply model          | Add model with `roles: [apply]`, then select it in the Models config page                 |
+| Use a local model without a chat API | Set the `template` field to the appropriate format (e.g. `llama2`, `chatml`)              |
+| Enable semantic codebase search      | Add a model with `roles: [embed]`, then select it in the Models config page               |
 
 ### System message customization
 
