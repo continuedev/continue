@@ -1180,7 +1180,6 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.asksagenovalite,
       models.asksagenovaprogov,
       models.asksagenovamicrogov,
-      models.asksagetitan,
       models.asksagenemotron12bvl,
       models.asksagenemotron9b,
       models.asksagenemotron30b,
@@ -1190,7 +1189,6 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.asksagegroq70b,
       models.asksagegroqllama33,
       models.asksagegroqllama4scout,
-      models.asksagegroqdeepseek,
       // Meta models
       models.asksagellma3,
       models.asksagellma38b,
