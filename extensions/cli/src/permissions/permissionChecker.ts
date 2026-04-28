@@ -122,6 +122,37 @@ function permissionPolicyToToolPolicy(
 }
 
 /**
+ * Converts core's ToolPolicy back to CLI's PermissionPolicy
+ */
+function toolPolicyToPermissionPolicy(policy: ToolPolicy): PermissionPolicy {
+  switch (policy) {
+    case "allowedWithoutPermission":
+      return "allow";
+    case "allowedWithPermission":
+      return "ask";
+    case "disabled":
+      return "exclude";
+    default:
+      return "ask";
+  }
+}
+
+/**
+ * Returns the most restrictive of two permission policies.
+ */
+function getMostRestrictivePermissionPolicy(
+  a: PermissionPolicy,
+  b: PermissionPolicy,
+): PermissionPolicy {
+  const order: Record<PermissionPolicy, number> = {
+    exclude: 3,
+    ask: 2,
+    allow: 1,
+  };
+  return order[a] >= order[b] ? a : b;
+}
+
+/**
  * Evaluates a tool call request against a set of permission policies.
  * Returns the permission for the first matching policy.
  */
@@ -158,17 +189,26 @@ export function checkToolPermission(
       toolCall.arguments,
     );
 
-    // If dynamic evaluation says disabled, that ALWAYS takes precedence
-    if (evaluatedPolicy === "disabled") {
+    const validPolicies: ToolPolicy[] = [
+      "allowedWithoutPermission",
+      "allowedWithPermission",
+      "disabled",
+    ];
+
+    if (!validPolicies.includes(evaluatedPolicy)) {
       return {
-        permission: "exclude",
+        permission: basePermission,
         matchedPolicy,
       };
     }
 
-    // Otherwise, user preference wins - return the original base permission
+    // Dynamic evaluation can only restrict further, never relax
+    const evaluatedPermission = toolPolicyToPermissionPolicy(evaluatedPolicy);
     return {
-      permission: basePermission,
+      permission: getMostRestrictivePermissionPolicy(
+        basePermission,
+        evaluatedPermission,
+      ),
       matchedPolicy,
     };
   }

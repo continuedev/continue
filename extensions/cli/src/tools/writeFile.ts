@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
+import { throwIfFileIsSecurityConcern } from "core/indexing/ignore.js";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { createTwoFilesPatch } from "diff";
 
@@ -57,6 +58,7 @@ export const writeFileTool: Tool = {
     if (typeof content !== "string") {
       throw new Error("New file content must be a string");
     }
+    throwIfFileIsSecurityConcern(filepath);
     try {
       if (fs.existsSync(filepath)) {
         const oldContent = fs.readFileSync(filepath, "utf-8");
@@ -118,6 +120,7 @@ export const writeFileTool: Tool = {
     };
   },
   run: async (args: { filepath: string; content: string }): Promise<string> => {
+    throwIfFileIsSecurityConcern(args.filepath);
     try {
       const dirPath = path.dirname(args.filepath);
       if (!fs.existsSync(dirPath)) {

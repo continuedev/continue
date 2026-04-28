@@ -75,19 +75,6 @@ export async function executeSubAgent(
       throw new Error("Model or LLM API not available");
     }
 
-    // allow all tools for now
-    // todo: eventually we want to show the same prompt in a dialog whether asking whether that tool call is allowed or not
-
-    serviceContainer.set<ToolPermissionServiceState>(
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-      {
-        ...mainAgentPermissionsState,
-        permissions: {
-          policies: [{ tool: "*", permission: "allow" }],
-        },
-      },
-    );
-
     // Build agent system message
     const systemMessage = await buildAgentSystemMessage(subAgent, services);
 
