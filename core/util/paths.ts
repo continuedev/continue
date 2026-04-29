@@ -49,7 +49,13 @@ export function getDefaultContinueGlobalDir(opts: {
     if (legacyDirExists) {
       return legacyPath;
     }
-    const xdgBase = xdgConfigHome ?? path.join(homedir, ".config");
+    // Only accept XDG_CONFIG_HOME when it is a non-empty absolute path;
+    // an empty string or a relative path would place the config dir in an
+    // unexpected location (e.g. the current working directory).
+    const xdgBase =
+      xdgConfigHome && path.isAbsolute(xdgConfigHome)
+        ? xdgConfigHome
+        : path.join(homedir, ".config");
     return path.join(xdgBase, "continue");
   }
 
@@ -106,10 +112,12 @@ export function getGlobalContinueIgnorePath(): string {
 }
 
 export function getContinueGlobalPath(): string {
-  // This is ~/.continue on mac/linux
+  // This is ~/.continue on mac/linux (or ~/.config/continue on Linux for new installs)
   const continuePath = CONTINUE_GLOBAL_DIR;
   if (!fs.existsSync(continuePath)) {
-    fs.mkdirSync(continuePath);
+    // Use recursive so intermediate directories (e.g. ~/.config) are created
+    // when the XDG path is used on Linux.
+    fs.mkdirSync(continuePath, { recursive: true });
   }
   return continuePath;
 }

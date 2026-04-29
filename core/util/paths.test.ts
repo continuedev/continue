@@ -15,7 +15,7 @@ describe("getDefaultContinueGlobalDir", () => {
       expect(result).toBe(path.join(HOME, ".config", "continue"));
     });
 
-    it("uses $XDG_CONFIG_HOME/continue when XDG_CONFIG_HOME is set and no legacy dir exists", () => {
+    it("uses $XDG_CONFIG_HOME/continue when XDG_CONFIG_HOME is a valid absolute path", () => {
       const result = getDefaultContinueGlobalDir({
         platform: "linux",
         homedir: HOME,
@@ -23,6 +23,26 @@ describe("getDefaultContinueGlobalDir", () => {
         legacyDirExists: false,
       });
       expect(result).toBe("/custom/config/continue");
+    });
+
+    it("ignores XDG_CONFIG_HOME when it is an empty string", () => {
+      const result = getDefaultContinueGlobalDir({
+        platform: "linux",
+        homedir: HOME,
+        xdgConfigHome: "",
+        legacyDirExists: false,
+      });
+      expect(result).toBe(path.join(HOME, ".config", "continue"));
+    });
+
+    it("ignores XDG_CONFIG_HOME when it is a relative path", () => {
+      const result = getDefaultContinueGlobalDir({
+        platform: "linux",
+        homedir: HOME,
+        xdgConfigHome: "relative/path",
+        legacyDirExists: false,
+      });
+      expect(result).toBe(path.join(HOME, ".config", "continue"));
     });
 
     it("falls back to ~/.continue when the legacy dir already exists", () => {
