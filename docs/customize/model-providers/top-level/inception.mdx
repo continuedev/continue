@@ -9,7 +9,19 @@ sidebarTitle: "Inception"
 </Tip>
 
 <Info>
-  Get an API key from [Inception Platform](https://platform.inceptionlabs.ai/dashboard/api-keys)
+  Get an API key from the [Inception Platform](https://platform.inceptionlabs.ai/dashboard/api-keys)
+</Info>
+
+## Models
+
+Inception offers several models tailored for specific developer workflows:
+
+- **mercury-2**: A general-purpose model supporting tool calling and a 128k context window.
+- **mercury-edit-2**: Optimized for code editing and complex transformations.
+- **mercury-coder-small**: A lightweight model designed for low-latency coding completions.
+
+<Info>
+  The Inception provider inherits from the OpenAI class, supporting dynamic model discovery via the `listModels()` method.
 </Info>
 
 ## Configuration
@@ -22,9 +34,9 @@ sidebarTitle: "Inception"
   schema: v1
 
   models:
-    - name: <MODEL_NAME>
+    - name: Inception Mercury-2
       provider: inception
-      model: <MODEL_ID>
+      model: mercury-2
       apiKey: <INCEPTION_API_KEY>
   ```
   </Tab>
@@ -33,9 +45,9 @@ sidebarTitle: "Inception"
   {
     "models": [
       {
-        "title": "<MODEL_NAME>",
+        "title": "Inception Mercury-2",
         "provider": "inception",
-        "model": "<MODEL_ID>",
+        "model": "mercury-2",
         "apiKey": "<INCEPTION_API_KEY>"
       }
     ]
@@ -45,5 +57,5 @@ sidebarTitle: "Inception"
 </Tabs>
 
 <Info>
-  **Check out a more advanced configuration [here](https://continue.dev/inceptionlabs/mercury-coder?view=config)**
+  **View more advanced configuration options [here](https://continue.dev/inceptionlabs/mercury-coder?view=config)**
 </Info>
