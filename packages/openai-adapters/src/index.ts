@@ -143,6 +143,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("http://localhost:8000/v1/", config);
     case "groq":
       return openAICompatible("https://api.groq.com/openai/v1/", config);
+    case "perplexity":
+      return openAICompatible("https://api.perplexity.ai/", config);
     case "minimax":
       return new MiniMaxApi(config);
     case "sambanova":

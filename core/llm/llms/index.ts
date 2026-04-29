@@ -52,6 +52,7 @@ import OpenAI from "./OpenAI";
 import OpenRouter from "./OpenRouter";
 import ClawRouter from "./ClawRouter";
 import OVHcloud from "./OVHcloud";
+import Perplexity from "./Perplexity";
 import { Relace } from "./Relace";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
@@ -130,6 +131,7 @@ export const LLMClasses = [
   Scaleway,
   Relace,
   Inception,
+  Perplexity,
   Voyage,
   LlamaStack,
   TARS,
