@@ -162,6 +162,130 @@ name: "Incomplete Config"
   });
 });
 
+describe("onboarding local config handling", () => {
+  let tempDir: string;
+  let originalContinueGlobalDir: string | undefined;
+  let originalNodeEnv: string | undefined;
+  let originalCi: string | undefined;
+  let originalVitest: string | undefined;
+  let originalGithubActions: string | undefined;
+  let originalIsTTY: boolean;
+
+  beforeEach(() => {
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "continue-home-"));
+    originalContinueGlobalDir = process.env.CONTINUE_GLOBAL_DIR;
+    originalNodeEnv = process.env.NODE_ENV;
+    originalCi = process.env.CI;
+    originalVitest = process.env.VITEST;
+    originalGithubActions = process.env.GITHUB_ACTIONS;
+    originalIsTTY = process.stdin.isTTY;
+
+    process.env.CONTINUE_GLOBAL_DIR = tempDir;
+    vi.resetModules();
+    vi.doMock("./auth/workos.js", () => ({
+      login: vi.fn(),
+    }));
+    vi.doMock("./config.js", () => ({
+      getApiClient: vi.fn(() => ({})),
+    }));
+    vi.doMock("./configLoader.js", () => ({
+      loadConfiguration: vi.fn(),
+    }));
+  });
+
+  afterEach(() => {
+    if (fs.existsSync(tempDir)) {
+      fs.rmSync(tempDir, {
+        force: true,
+        maxRetries: 3,
+        recursive: true,
+        retryDelay: 100,
+      });
+    }
+
+    if (originalContinueGlobalDir === undefined) {
+      delete process.env.CONTINUE_GLOBAL_DIR;
+    } else {
+      process.env.CONTINUE_GLOBAL_DIR = originalContinueGlobalDir;
+    }
+
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+
+    if (originalCi === undefined) {
+      delete process.env.CI;
+    } else {
+      process.env.CI = originalCi;
+    }
+
+    if (originalVitest === undefined) {
+      delete process.env.VITEST;
+    } else {
+      process.env.VITEST = originalVitest;
+    }
+
+    if (originalGithubActions === undefined) {
+      delete process.env.GITHUB_ACTIONS;
+    } else {
+      process.env.GITHUB_ACTIONS = originalGithubActions;
+    }
+
+    process.stdin.isTTY = originalIsTTY;
+
+    vi.doUnmock("./auth/workos.js");
+    vi.doUnmock("./config.js");
+    vi.doUnmock("./configLoader.js");
+    vi.doUnmock("./util/prompt.js");
+    vi.resetModules();
+  });
+
+  test("should skip interactive onboarding when default config.yaml exists", async () => {
+    fs.writeFileSync(path.join(tempDir, "config.yaml"), "name: Local Config\n");
+
+    delete process.env.NODE_ENV;
+    delete process.env.CI;
+    delete process.env.VITEST;
+    delete process.env.GITHUB_ACTIONS;
+    process.stdin.isTTY = true;
+
+    const questionWithChoices = vi
+      .fn()
+      .mockRejectedValue(new Error("prompted"));
+    vi.doMock("./util/prompt.js", () => ({
+      question: vi.fn(),
+      questionWithChoices,
+    }));
+
+    const { runOnboardingFlow } = await import("./onboarding.js");
+
+    await expect(runOnboardingFlow(undefined)).resolves.toBe(false);
+    expect(questionWithChoices).not.toHaveBeenCalled();
+  });
+
+  test("should mark onboarding complete after a successful --config load", async () => {
+    const configPath = path.join(tempDir, "custom-config.yaml");
+    const flagPath = path.join(tempDir, ".onboarding_complete");
+    const loadConfiguration = vi.fn().mockResolvedValue({
+      config: { name: "Custom Config" },
+      source: { path: configPath, type: "cli-flag" },
+    });
+
+    vi.doMock("./configLoader.js", () => ({
+      loadConfiguration,
+    }));
+
+    const { initializeWithOnboarding } = await import("./onboarding.js");
+
+    await initializeWithOnboarding(null, configPath);
+
+    expect(loadConfiguration).toHaveBeenCalledOnce();
+    expect(fs.existsSync(flagPath)).toBe(true);
+  });
+});
+
 // Separate describe block with its own mocking for BEDROCK tests
 describe("CONTINUE_USE_BEDROCK environment variable", () => {
   const mockConsoleLog = vi.fn();
