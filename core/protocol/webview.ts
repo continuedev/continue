@@ -44,4 +44,15 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   sessionUpdate: [{ sessionInfo: ControlPlaneSessionInfo | undefined }, void];
   toolCallPartialOutput: [{ toolCallId: string; contextItems: any[] }, void];
   freeTrialExceeded: [undefined, void];
+  /**
+   * Sent by core to GUI when the agent invokes AskUserQuestion.
+   * The GUI should render the question UI and reply via agent/questionAnswer.
+   */
+  "agent/askUserQuestion": [
+    {
+      sessionId: string;
+      questions: import("../tools/definitions/askUserQuestion").AskUserQuestion[];
+    },
+    void,
+  ];
 };

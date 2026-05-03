@@ -22,7 +22,10 @@ class SearchContextProvider extends BaseContextProvider {
   ): Promise<ContextItem[]> {
     const results = await extras.ide.getSearchResults(
       query,
-      this.options?.maxResults ?? DEFAULT_MAX_SEARCH_CONTEXT_RESULTS,
+      {
+        maxResults:
+          this.options?.maxResults ?? DEFAULT_MAX_SEARCH_CONTEXT_RESULTS,
+      },
     );
     // Note, search context provider will not truncate result chars, but will limit number of results
     const { formatted } = formatGrepSearchResults(results);

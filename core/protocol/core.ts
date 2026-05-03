@@ -364,4 +364,59 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       supportsTools?: boolean;
     }[],
   ];
+
+  // ─── Agent runner ─────────────────────────────────────────────────────────
+  "agent/run": [
+    {
+      /** User prompt to start the agent session */
+      prompt: string;
+      /** Optional system message override */
+      systemMessage?: string;
+      /** Prior messages to continue from */
+      initialMessages?: import("..").ChatMessage[];
+      /** Maximum autonomous turns before forced stop (default 50) */
+      maxTurns?: number;
+      /** Maximum consecutive tool errors before stop (default 5) */
+      maxToolErrors?: number;
+    },
+    {
+      /** Session ID for polling status / aborting */
+      sessionId: string;
+    },
+  ];
+  "agent/status": [
+    { sessionId: string },
+    {
+      sessionId: string;
+      status: "running" | "completed" | "failed" | "killed" | "pending";
+      stopReason?: string;
+      totalTurns: number;
+      messages: import("..").ChatMessage[];
+    },
+  ];
+  "agent/abort": [{ sessionId: string }, void];
+
+  /**
+   * Sent by core to IDE/GUI when the agent calls AskUserQuestion.
+   * The GUI should render the question UI and reply via agent/questionAnswer.
+   */
+  "agent/askUserQuestion": [
+    {
+      sessionId: string;
+      questions: import("../tools/definitions/askUserQuestion").AskUserQuestion[];
+    },
+    void,
+  ];
+
+  /**
+   * Sent by IDE/GUI back to core after the user answers a question batch.
+   */
+  "agent/questionAnswer": [
+    {
+      sessionId: string;
+      /** Map from question text → selected answer string */
+      answers: Record<string, string>;
+    },
+    void,
+  ];
 };

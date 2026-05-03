@@ -725,7 +725,7 @@ declare global {
   
     getPinnedFiles(): Promise<string[]>;
   
-    getSearchResults(query: string, maxResults?: number): Promise<string>;
+    getSearchResults(query: string, options?: import("../index.js").GrepSearchOptions): Promise<string>;
   
     subprocess(command: string, cwd?: string): Promise<[string, string]>;
   

@@ -1,12 +1,12 @@
 /**
  * Hook configuration loader.
  *
- * Loads hooks from settings files in the same locations as Claude Code:
+ * Loads hooks from settings files in the same locations as Yuto Code:
  * - ~/.continue/settings.json  (user-global)
  * - .continue/settings.json    (project, committable)
  * - .continue/settings.local.json (project-local, gitignored)
  *
- * Also supports Claude Code's native locations for cross-compatibility:
+ * Also supports Yuto Code's native locations for cross-compatibility:
  * - ~/.claude/settings.json
  * - .claude/settings.json
  * - .claude/settings.local.json
@@ -46,7 +46,7 @@ function loadSettingsFile(filePath: string): HookSettingsFile | null {
 
 /**
  * Merge two hook configs. Later config entries are appended (not replaced).
- * This matches Claude Code's behavior: hooks from multiple sources all run.
+ * This matches Yuto Code's behavior: hooks from multiple sources all run.
  */
 function mergeHooksConfigs(
   base: HooksConfig,

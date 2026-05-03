@@ -1,7 +1,7 @@
 /**
- * Claude Code-compatible hooks system for Continue CLI.
+ * Yuto Code-compatible hooks system for Continue CLI.
  *
- * These types match the exact schemas from Claude Code so that any hook
+ * These types match the exact schemas from Yuto Code so that any hook
  * written for `claude` works with `cn` out of the box.
  */
 

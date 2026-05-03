@@ -41,6 +41,16 @@ function splitGrepResultsByFile(content: string): ContextItem[] {
 
 export const grepSearchImpl: ToolImpl = async (args, extras) => {
   const rawQuery = getStringArg(args, "query");
+  const includePattern =
+    typeof args?.includePattern === "string" ? args.includePattern : undefined;
+  const maxResults =
+    typeof args?.maxResults === "number"
+      ? args.maxResults
+      : DEFAULT_GREP_SEARCH_RESULTS_LIMIT;
+  const caseSensitive = args?.caseSensitive === true;
+  const contextLines =
+    typeof args?.contextLines === "number" ? args.contextLines : 2;
+  const multiline = args?.multiline === true;
 
   const { query, warning } = prepareQueryForRipgrep(rawQuery);
 
@@ -48,7 +58,13 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
   try {
     results = await extras.ide.getSearchResults(
       query,
-      DEFAULT_GREP_SEARCH_RESULTS_LIMIT,
+      {
+        maxResults,
+        includePattern,
+        caseSensitive,
+        contextLines,
+        multiline,
+      },
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -86,9 +102,9 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
   }
 
   const truncationReasons: string[] = [];
-  if (numResults === DEFAULT_GREP_SEARCH_RESULTS_LIMIT) {
+  if (numResults === maxResults) {
     truncationReasons.push(
-      `the number of results exceeded ${DEFAULT_GREP_SEARCH_RESULTS_LIMIT}`,
+      `the number of results exceeded ${maxResults}`,
     );
   }
   if (truncated) {

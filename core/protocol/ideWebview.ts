@@ -18,6 +18,16 @@ import {
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   openUrl: [string, void];
   applyToFile: [ApplyToFilePayload, void];
+  "notebook/edit": [
+    {
+      filepath: string;
+      cellIndex: number;
+      editMode: "replace" | "insert" | "delete";
+      newSource?: string;
+      cellType?: "code" | "markdown";
+    },
+    void,
+  ];
   overwriteFile: [{ filepath: string; prevFileContent: string | null }, void];
   showTutorial: [undefined, void];
   showFile: [ShowFilePayload, void];

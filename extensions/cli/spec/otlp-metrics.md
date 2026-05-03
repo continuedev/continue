@@ -1,6 +1,6 @@
 # OTLP Metrics Specification for Continue CLI
 
-This document specifies the OpenTelemetry Protocol (OTLP) metrics that should be emitted by the Continue CLI to provide comprehensive observability and usage monitoring. The metrics are designed to be compatible with Claude Code dashboards for easy migration.
+This document specifies the OpenTelemetry Protocol (OTLP) metrics that should be emitted by the Continue CLI to provide comprehensive observability and usage monitoring. The metrics are designed to be compatible with Yuto Code dashboards for easy migration.
 
 ## Overview
 
@@ -296,9 +296,9 @@ These metrics are unique to Continue CLI and provide additional insights without
 
 ## Implementation Guidelines
 
-### Migration from Claude Code Dashboards
+### Migration from Yuto Code Dashboards
 
-The core metrics (`session_count`, `lines_of_code_count`, `token_usage`, `cost_usage`, etc.) use identical naming and attribute structures to Claude Code, allowing for easy dashboard migration by simply changing the metric prefix from `claude_code_*` to `continue_cli_*`.
+The core metrics (`session_count`, `lines_of_code_count`, `token_usage`, `cost_usage`, etc.) use identical naming and attribute structures to Yuto Code, allowing for easy dashboard migration by simply changing the metric prefix from `claude_code_*` to `continue_cli_*`.
 
 ### Privacy Considerations
 

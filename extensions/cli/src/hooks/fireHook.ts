@@ -40,7 +40,7 @@ function getCommonFields(): {
 
     return {
       session_id: session.sessionId,
-      transcript_path: "", // We don't have a transcript file like Claude Code
+      transcript_path: "", // We don't have a transcript file like Yuto Code
       cwd: process.cwd(),
       permission_mode: permissionMode,
     };

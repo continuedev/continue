@@ -1,4 +1,5 @@
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
+import * as path from "path";
 import { ContextItem, McpUiState, Tool, ToolCall, ToolExtras } from "..";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import { ContinueError, ContinueErrorReason } from "../util/errors";
@@ -19,7 +20,14 @@ import { readFileRangeImpl } from "./implementations/readFileRange";
 import { readSkillImpl } from "./implementations/readSkill";
 import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
+import { enterWorktreeImpl } from "./implementations/enterWorktree";
+import { exitWorktreeImpl } from "./implementations/exitWorktree";
+import { notifyUserImpl } from "./implementations/notifyUser";
+import { toolSearchImpl } from "./implementations/toolSearch";
 import { searchWebImpl } from "./implementations/searchWeb";
+import { skillToolImpl } from "./implementations/skill";
+import { sleepToolImpl } from "./implementations/sleep";
+import { subagentToolImpl } from "./implementations/subagent";
 import { viewDiffImpl } from "./implementations/viewDiff";
 import { viewRepoMapImpl } from "./implementations/viewRepoMap";
 import { viewSubdirectoryImpl } from "./implementations/viewSubdirectory";
@@ -206,6 +214,10 @@ export async function callBuiltInTool(
       return await searchWebImpl(args, extras);
     case BuiltInToolNames.FetchUrlContent:
       return await fetchUrlContentImpl(args, extras);
+    case BuiltInToolNames.Sleep:
+      return await sleepToolImpl(args, extras);
+    case BuiltInToolNames.Subagent:
+      return await subagentToolImpl(args, extras);
     case BuiltInToolNames.ViewDiff:
       return await viewDiffImpl(args, extras);
     case BuiltInToolNames.LSTool:
@@ -220,10 +232,160 @@ export async function callBuiltInTool(
       return await codebaseToolImpl(args, extras);
     case BuiltInToolNames.ReadSkill:
       return await readSkillImpl(args, extras);
+    case BuiltInToolNames.Skill:
+      return await skillToolImpl(args, extras);
+    case BuiltInToolNames.NotifyUser:
+      return await notifyUserImpl(args, extras);
+    case BuiltInToolNames.EnterWorktree:
+      return await enterWorktreeImpl(args, extras);
+    case BuiltInToolNames.ExitWorktree:
+      return await exitWorktreeImpl(args, extras);
+    case BuiltInToolNames.ToolSearch:
+      return await toolSearchImpl(args, extras);
     case BuiltInToolNames.ViewRepoMap:
       return await viewRepoMapImpl(args, extras);
     case BuiltInToolNames.ViewSubdirectory:
       return await viewSubdirectoryImpl(args, extras);
+    case BuiltInToolNames.TodoWrite: {
+      // The todo list is managed client-side; the core just validates and echoes back.
+      const todos = args.todos ?? [];
+      const summary = todos
+        .map(
+          (t: { id: string; content: string; status: string; priority: string }) =>
+            `[${t.status}] (${t.priority}) ${t.content}`,
+        )
+        .join("\n");
+      return [
+        {
+          name: "Todo List",
+          description: "Updated todo list",
+          content: summary || "(empty todo list)",
+        },
+      ];
+    }
+    case BuiltInToolNames.AskUserQuestion: {
+      const questions: import("./definitions/askUserQuestion").AskUserQuestion[] =
+        args.questions ?? [];
+      if (!extras.onUserInteractionRequest) {
+        // No GUI interaction available outside an agent session — inform the model
+        return [
+          {
+            name: "Ask User Question",
+            description: "Question skipped: no interactive session available",
+            content:
+              "Unable to ask the user questions in this context. Please make assumptions and proceed, or include the question in your response text.",
+          },
+        ];
+      }
+      // Retrieve the sessionId stored on extras by the agent runner
+      const sessionId = (extras as any)._agentSessionId as string | undefined;
+      const answers = await extras.onUserInteractionRequest(
+        sessionId ?? "",
+        questions,
+      );
+      const answersText = questions
+        .map((q) => {
+          const answer = answers[q.question] ?? "(no answer)";
+          return `"${q.question}" → ${answer}`;
+        })
+        .join("\n");
+      return [
+        {
+          name: "User Answers",
+          description: "Answers to your questions",
+          content: `User has answered your questions:\n${answersText}\n\nYou can now continue with the user's answers in mind.`,
+        },
+      ];
+    }
+    case BuiltInToolNames.LspQuery: {
+      const { operation, filePath, line, character } = args as {
+        operation: string;
+        filePath: string;
+        line?: number;
+        character?: number;
+      };
+      const ide = extras.ide;
+
+      // Resolve to absolute path via IDE if relative
+      let resolvedPath = filePath;
+      try {
+        const workspaceDirs = await ide.getWorkspaceDirs();
+        if (!path.isAbsolute(filePath) && workspaceDirs[0]) {
+          resolvedPath = path.join(workspaceDirs[0], filePath);
+        }
+      } catch {
+        // Best effort
+      }
+
+      // 0-based position for Continue's IDE methods
+      const loc = {
+        filepath: resolvedPath,
+        position: {
+          line: Math.max(0, (line ?? 1) - 1),
+          character: Math.max(0, (character ?? 1) - 1),
+        },
+      };
+
+      let result: string;
+      switch (operation) {
+        case "goToDefinition": {
+          const defs = await ide.gotoDefinition(loc);
+          result =
+            defs.length === 0
+              ? "No definition found."
+              : defs
+                  .map(
+                    (d) =>
+                      `${d.filepath}:${d.range.start.line + 1}:${d.range.start.character + 1}`,
+                  )
+                  .join("\n");
+          break;
+        }
+        case "findReferences": {
+          const refs = await ide.getReferences(loc);
+          result =
+            refs.length === 0
+              ? "No references found."
+              : refs
+                  .map(
+                    (r) =>
+                      `${r.filepath}:${r.range.start.line + 1}:${r.range.start.character + 1}`,
+                  )
+                  .join("\n");
+          break;
+        }
+        case "documentSymbols": {
+          const syms = await ide.getDocumentSymbols(resolvedPath);
+          result =
+            syms.length === 0
+              ? "No symbols found."
+              : syms.map((s) => `${s.name} (${s.kind})`).join("\n");
+          break;
+        }
+        case "getProblems": {
+          const problems = await ide.getProblems(resolvedPath);
+          result =
+            problems.length === 0
+              ? "No problems found."
+              : problems
+                  .map(
+                    (p) =>
+                      `${p.filepath}:${p.range.start.line + 1} ${p.message}`,
+                  )
+                  .join("\n");
+          break;
+        }
+        default:
+          result = `Unknown LSP operation: ${operation}`;
+      }
+      return [
+        {
+          name: "LSP Result",
+          description: `${operation} on ${filePath}`,
+          content: result,
+        },
+      ];
+    }
     default:
       throw new Error(`Tool "${functionName}" not found`);
   }
@@ -277,4 +439,119 @@ export async function callTool(
       errorReason,
     };
   }
+}
+
+// ─── Batch execution (ported from Marcel toolOrchestration.ts) ────────────────
+
+export type ToolCallBatchResult = {
+  toolCallId: string;
+  contextItems: ContextItem[];
+  errorMessage?: string;
+  errorReason?: ContinueErrorReason;
+  mcpUiState?: McpUiState;
+};
+
+type ToolCallBatch = {
+  /** When true, all calls in this batch can run concurrently (all are readonly) */
+  concurrent: boolean;
+  calls: ToolCall[];
+};
+
+const MAX_CONCURRENT_TOOL_CALLS = 10;
+
+/**
+ * Partition tool calls into batches.
+ * Consecutive read-only tool calls are grouped into a single concurrent batch.
+ * Any write tool call forms its own serial batch.
+ *
+ * Mirrors Marcel's partitionToolCalls logic.
+ */
+export function partitionToolCallBatches(
+  toolCalls: ToolCall[],
+  tools: Tool[],
+): ToolCallBatch[] {
+  return toolCalls.reduce<ToolCallBatch[]>((batches, call) => {
+    const tool = tools.find((t) => t.function.name === call.function.name);
+    const isReadOnly = tool?.readonly === true;
+
+    const last = batches[batches.length - 1];
+    if (isReadOnly && last?.concurrent) {
+      last.calls.push(call);
+    } else {
+      batches.push({ concurrent: isReadOnly, calls: [call] });
+    }
+    return batches;
+  }, []);
+}
+
+/**
+ * Execute multiple tool calls, batching concurrent (read-only) calls together
+ * and running write calls serially. Mirrors Marcel's runTools orchestration.
+ *
+ * @param toolCalls - All tool calls to execute for one LLM turn
+ * @param tools - Available tool definitions
+ * @param extras - Execution context (ide, llm, fetch, etc.)
+ * @param abortSignal - Optional abort signal
+ */
+export async function callToolsBatched(
+  toolCalls: ToolCall[],
+  tools: Tool[],
+  extras: Omit<ToolExtras, "tool" | "toolCallId">,
+  abortSignal?: AbortSignal,
+): Promise<ToolCallBatchResult[]> {
+  const batches = partitionToolCallBatches(toolCalls, tools);
+  const results: ToolCallBatchResult[] = [];
+
+  for (const batch of batches) {
+    if (abortSignal?.aborted) break;
+
+    if (batch.concurrent) {
+      // Execute read-only calls concurrently in chunks of MAX_CONCURRENT_TOOL_CALLS
+      for (let i = 0; i < batch.calls.length; i += MAX_CONCURRENT_TOOL_CALLS) {
+        if (abortSignal?.aborted) break;
+        const chunk = batch.calls.slice(i, i + MAX_CONCURRENT_TOOL_CALLS);
+        const chunkResults = await Promise.all(
+          chunk.map(async (tc) => {
+            const tool = tools.find((t) => t.function.name === tc.function.name);
+            if (!tool) {
+              return {
+                toolCallId: tc.id,
+                contextItems: [],
+                errorMessage: `Tool "${tc.function.name}" not found`,
+              } satisfies ToolCallBatchResult;
+            }
+            const result = await callTool(tool, tc, {
+              ...extras,
+              tool,
+              toolCallId: tc.id,
+            });
+            return { toolCallId: tc.id, ...result } satisfies ToolCallBatchResult;
+          }),
+        );
+        results.push(...chunkResults);
+      }
+    } else {
+      // Execute write calls serially
+      for (const tc of batch.calls) {
+        if (abortSignal?.aborted) break;
+        const tool = tools.find((t) => t.function.name === tc.function.name);
+        if (!tool) {
+          results.push({
+            toolCallId: tc.id,
+            contextItems: [],
+            errorMessage: `Tool "${tc.function.name}" not found`,
+          });
+          continue;
+        }
+        const result = await callTool(tool, tc, {
+          ...extras,
+          tool,
+          toolCallId: tc.id,
+        });
+        results.push({ toolCallId: tc.id, ...result });
+      }
+    }
+  }
+
+  return results;
 }

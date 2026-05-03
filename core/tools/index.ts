@@ -8,11 +8,23 @@ export const getBaseToolDefinitions = () => [
   toolDefinitions.createNewFileTool,
   toolDefinitions.runTerminalCommandTool,
   toolDefinitions.globSearchTool,
+  toolDefinitions.enterPlanModeTool,
+  toolDefinitions.exitPlanModeTool,
+  toolDefinitions.notebookEditTool,
   toolDefinitions.viewDiffTool,
   toolDefinitions.readCurrentlyOpenFileTool,
   toolDefinitions.lsTool,
   toolDefinitions.createRuleBlock,
   toolDefinitions.fetchUrlContentTool,
+  toolDefinitions.sleepTool,
+  toolDefinitions.subagentTool,
+  toolDefinitions.todoWriteTool,
+  toolDefinitions.askUserQuestionTool,
+  toolDefinitions.lspQueryTool,
+  toolDefinitions.notifyUserTool,
+  toolDefinitions.enterWorktreeTool,
+  toolDefinitions.exitWorktreeTool,
+  toolDefinitions.toolSearchTool,
 ];
 
 export const getConfigDependentToolDefinitions = async (
@@ -23,6 +35,7 @@ export const getConfigDependentToolDefinitions = async (
 
   tools.push(await toolDefinitions.requestRuleTool(params));
   tools.push(await toolDefinitions.readSkillTool(params));
+  tools.push(await toolDefinitions.skillTool(params));
 
   if (isSignedIn) {
     // Web search is only available for signed-in users

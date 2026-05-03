@@ -13,7 +13,7 @@ export const fetchUrlContentTool: Tool = {
   function: {
     name: BuiltInToolNames.FetchUrlContent,
     description:
-      "Can be used to view the contents of a website using a URL. Do NOT use this for files.",
+      "Fetches the content of a web page from a URL. Use this for webpages, not local files. If you need the model to answer a specific question about the page, provide the optional prompt argument.",
     parameters: {
       type: "object",
       required: ["url"],
@@ -21,6 +21,11 @@ export const fetchUrlContentTool: Tool = {
         url: {
           type: "string",
           description: "The URL to read",
+        },
+        prompt: {
+          type: "string",
+          description:
+            "Optional focused question or extraction request about the page content.",
         },
       },
     },

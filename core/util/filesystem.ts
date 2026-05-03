@@ -264,7 +264,10 @@ class FileSystemIde implements IDE {
     return Promise.resolve([]);
   }
 
-  async getSearchResults(query: string, maxResults?: number): Promise<string> {
+  async getSearchResults(
+    query: string,
+    options?: import("../index.js").GrepSearchOptions,
+  ): Promise<string> {
     return "";
   }
 

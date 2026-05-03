@@ -6,9 +6,11 @@ const MAX_AGENT_GLOB_RESULTS = 100;
 
 export const fileGlobSearchImpl: ToolImpl = async (args, extras) => {
   const pattern = getStringArg(args, "pattern");
+  const maxResults =
+    typeof args?.maxResults === "number" ? args.maxResults : MAX_AGENT_GLOB_RESULTS;
   const results = await extras.ide.getFileResults(
     pattern,
-    MAX_AGENT_GLOB_RESULTS,
+    maxResults,
   );
 
   if (results.length === 0) {
@@ -29,11 +31,11 @@ export const fileGlobSearchImpl: ToolImpl = async (args, extras) => {
   ];
 
   // In case of truncation, add a warning
-  if (results.length === MAX_AGENT_GLOB_RESULTS) {
+  if (results.length === maxResults) {
     contextItems.push({
       name: "Truncation warning",
       description: "",
-      content: `Warning: the results above were truncated to the first ${MAX_AGENT_GLOB_RESULTS} files. If the results are not satisfactory, refine your search pattern`,
+      content: `Warning: the results above were truncated to the first ${maxResults} files. If the results are not satisfactory, refine your search pattern`,
     });
   }
 

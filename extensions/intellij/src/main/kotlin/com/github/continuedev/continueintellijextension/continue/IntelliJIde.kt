@@ -457,26 +457,41 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun getSearchResults(query: String, maxResults: Int?): String {
+    override suspend fun getSearchResults(query: String, options: com.github.continuedev.continueintellijextension.protocol.GetSearchResultsOptions?): String {
         val ideInfo = this.getIdeInfo()
         if (ideInfo.remoteName == "local") {
             try {
                 // Create a single combined ignore pattern for ripgrep
                 val defaultIgnorePattern = DEFAULT_IGNORES.joinToString(",") { it }
+                val maxResults = options?.maxResults
+                val contextLines = options?.contextLines ?: 2
                 
                 val commandArgs = mutableListOf(
                     ripgrep,
-                    "-i",
                     "--ignore-file",
                     ".continueignore",
                     "--ignore-file",
                     ".gitignore",
                     "-C",
-                    "2",
+                    contextLines.toString(),
                     "--heading",
                     "--glob",
                     "!{${defaultIgnorePattern}}" // Exclude all default ignores using brace expansion
                 )
+
+                if (options?.caseSensitive != true) {
+                    commandArgs.add("-i")
+                }
+
+                if (options?.includePattern != null) {
+                    commandArgs.add("--glob")
+                    commandArgs.add(options.includePattern)
+                }
+
+                if (options?.multiline == true) {
+                    commandArgs.add("-U")
+                    commandArgs.add("--multiline-dotall")
+                }
 
                 // Conditionally add maxResults flag
                 if (maxResults != null) {

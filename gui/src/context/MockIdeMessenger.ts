@@ -116,6 +116,7 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   },
   "chatDescriber/describe": "Session summary",
   applyToFile: undefined,
+  "notebook/edit": undefined,
   acceptDiff: undefined,
   readFile: "File contents",
   "tools/call": {

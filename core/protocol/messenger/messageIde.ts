@@ -208,8 +208,8 @@ export class MessageIde implements IDE {
     return this.request("getPinnedFiles", undefined);
   }
 
-  getSearchResults(query: string, maxResults?: number): Promise<string> {
-    return this.request("getSearchResults", { query, maxResults });
+  getSearchResults(query: string, options?: import("../../index.js").GrepSearchOptions): Promise<string> {
+    return this.request("getSearchResults", { query, options });
   }
 
   getFileResults(pattern: string): Promise<string[]> {

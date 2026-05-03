@@ -55,7 +55,7 @@ This is a CLI tool for Continue Dev that provides an interactive AI-assisted dev
    - `hookConfig.ts`: Loads hooks from settings files, merges configs from multiple sources
    - `hookRunner.ts`: Executes hook handlers (command, HTTP) with exit code semantics
    - `fireHook.ts`: Convenience functions for firing events from integration points
-   - `types.ts`: Claude Code-compatible type definitions for hook inputs/outputs
+   - `types.ts`: Yuto Code-compatible type definitions for hook inputs/outputs
    - **Config locations** (lowest to highest precedence):
      - `~/.claude/settings.json`, `~/.continue/settings.json` (user-global)
      - `.claude/settings.json`, `.continue/settings.json` (project)

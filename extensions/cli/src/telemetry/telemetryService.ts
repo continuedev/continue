@@ -201,7 +201,7 @@ class TelemetryService {
   private initializeMetrics() {
     if (!this.meter) return;
 
-    // Core metrics (Claude Code compatible)
+    // Core metrics (Yuto Code compatible)
     this.sessionCounter = this.meter.createCounter(
       "continue_cli_session_count",
       {

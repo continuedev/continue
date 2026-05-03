@@ -377,7 +377,13 @@ class VsCodeIde implements IDE {
       if (notebook) {
         return notebook
           .getCells()
-          .map((cell) => cell.document.getText())
+          .map((cell, index) => {
+            const kind =
+              cell.kind === vscode.NotebookCellKind.Markup
+                ? "markdown"
+                : "code";
+            return `# Cell ${index} [${kind}]\n${cell.document.getText()}`;
+          })
           .join("\n\n");
       }
 
@@ -584,25 +590,34 @@ class VsCodeIde implements IDE {
     }
   }
 
-  async getSearchResults(query: string, maxResults?: number): Promise<string> {
+  async getSearchResults(
+    query: string,
+    options?: import("core").GrepSearchOptions,
+  ): Promise<string> {
     if (vscode.env.remoteName) {
       throw new Error("Ripgrep not supported, this workspace is remote");
     }
+    const maxResults = options?.maxResults;
+    const contextLines = options?.contextLines ?? 2;
     const results: string[] = [];
 
     for (const dir of await this.getWorkspaceDirs()) {
       const dirResults = await this.runRipgrepQuery(dir, [
-        "-i", // Case-insensitive search
+        ...(options?.caseSensitive ? [] : ["-i"]), // Default to case-insensitive search
         "--ignore-file",
         ".continueignore",
         "--ignore-file",
         ".gitignore",
         "-C",
-        "2", // Show 2 lines of context
+        String(contextLines),
         "--heading", // Only show filepath once per result
         // Use a single glob with all default ignores
         "--glob",
         defaultIgnoresGlob,
+        ...(options?.includePattern
+          ? ["--glob", options.includePattern]
+          : []),
+        ...(options?.multiline ? ["-U", "--multiline-dotall"] : []),
         ...(maxResults ? ["-m", maxResults.toString()] : []),
         "-e",
         query, // Pattern to search for

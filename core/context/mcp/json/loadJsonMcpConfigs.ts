@@ -96,7 +96,7 @@ export async function loadJsonMcpConfigs(
   for (const { content, uri } of jsonFiles) {
     try {
       const json = JSONC.parse(content);
-      // Try parsing as a file with mcpServers and multiple servers (claude code/desktop-esque format)
+      // Try parsing as a file with mcpServers and multiple servers
       const claudeCodeFileParsed =
         claudeCodeLikeConfigFileSchema.safeParse(json);
       if (claudeCodeFileParsed.success) {

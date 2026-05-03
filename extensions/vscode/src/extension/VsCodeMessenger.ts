@@ -155,6 +155,93 @@ export class VsCodeMessenger {
       await applyManager.applyToFile(data);
     });
 
+    this.onWebview("notebook/edit", async ({ data }) => {
+      const uri = vscode.Uri.parse(data.filepath);
+      const notebook =
+        vscode.workspace.notebookDocuments.find(
+          (doc) => doc.uri.toString() === uri.toString(),
+        ) ?? (await vscode.workspace.openNotebookDocument(uri));
+      const editor = await vscode.window.showNotebookDocument(notebook, {
+        preview: false,
+      });
+
+      const existingCell = notebook.cellAt(
+        Math.min(data.cellIndex, Math.max(notebook.cellCount - 1, 0)),
+      );
+      const inferCodeLanguage = () => {
+        if (existingCell?.kind === vscode.NotebookCellKind.Code) {
+          return existingCell.document.languageId;
+        }
+        const nearbyCodeCell = notebook
+          .getCells()
+          .find((cell) => cell.kind === vscode.NotebookCellKind.Code);
+        return nearbyCodeCell?.document.languageId ?? "python";
+      };
+      const makeCell = () => {
+        const requestedKind =
+          data.cellType === "markdown"
+            ? vscode.NotebookCellKind.Markup
+            : data.cellType === "code"
+              ? vscode.NotebookCellKind.Code
+              : existingCell?.kind ?? vscode.NotebookCellKind.Code;
+        const languageId =
+          requestedKind === vscode.NotebookCellKind.Markup
+            ? "markdown"
+            : inferCodeLanguage();
+        const cellData = new vscode.NotebookCellData(
+          requestedKind,
+          data.newSource ?? "",
+          languageId,
+        );
+        cellData.metadata = existingCell?.metadata ?? {};
+        if (requestedKind === vscode.NotebookCellKind.Code) {
+          cellData.outputs = [];
+        }
+        return cellData;
+      };
+
+      const success = await editor.edit((editBuilder) => {
+        switch (data.editMode) {
+          case "delete": {
+            if (data.cellIndex < 0 || data.cellIndex >= notebook.cellCount) {
+              throw new Error(`Cell index ${data.cellIndex} is out of bounds.`);
+            }
+            editBuilder.replaceCells(
+              new vscode.NotebookRange(data.cellIndex, data.cellIndex + 1),
+              [],
+            );
+            break;
+          }
+          case "insert": {
+            if (data.cellIndex < 0 || data.cellIndex > notebook.cellCount) {
+              throw new Error(`Cell index ${data.cellIndex} is out of bounds.`);
+            }
+            editBuilder.replaceCells(
+              new vscode.NotebookRange(data.cellIndex, data.cellIndex),
+              [makeCell()],
+            );
+            break;
+          }
+          case "replace":
+          default: {
+            if (data.cellIndex < 0 || data.cellIndex >= notebook.cellCount) {
+              throw new Error(`Cell index ${data.cellIndex} is out of bounds.`);
+            }
+            editBuilder.replaceCells(
+              new vscode.NotebookRange(data.cellIndex, data.cellIndex + 1),
+              [makeCell()],
+            );
+          }
+        }
+      });
+
+      if (!success) {
+        throw new Error("Failed to apply notebook edit.");
+      }
+
+      await notebook.save();
+    });
+
     this.onWebview("showTutorial", async (msg) => {
       await showTutorial(this.ide);
     });
@@ -723,7 +810,7 @@ export class VsCodeMessenger {
       await ide.runCommand(msg.data.command);
     });
     this.onWebviewOrCore("getSearchResults", async (msg) => {
-      return ide.getSearchResults(msg.data.query, msg.data.maxResults);
+      return ide.getSearchResults(msg.data.query, msg.data.options);
     });
     this.onWebviewOrCore("getFileResults", async (msg) => {
       return ide.getFileResults(msg.data.pattern, msg.data.maxResults);

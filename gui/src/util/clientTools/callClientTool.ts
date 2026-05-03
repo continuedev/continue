@@ -4,7 +4,9 @@ import { ContinueError, ContinueErrorReason } from "core/util/errors";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { AppThunkDispatch, RootState } from "../../redux/store";
 import { editToolImpl } from "./editImpl";
+import { enterPlanModeToolImpl, exitPlanModeToolImpl } from "./modeImpl";
 import { multiEditImpl } from "./multiEditImpl";
+import { notebookEditToolImpl } from "./notebookEditImpl";
 import { singleFindAndReplaceImpl } from "./singleFindAndReplaceImpl";
 
 export interface ClientToolExtras {
@@ -48,6 +50,15 @@ export async function callClientTool(
         break;
       case BuiltInToolNames.MultiEdit:
         output = await multiEditImpl(parsedArgs, toolCall.id, extras);
+        break;
+      case BuiltInToolNames.NotebookEdit:
+        output = await notebookEditToolImpl(parsedArgs, toolCall.id, extras);
+        break;
+      case BuiltInToolNames.EnterPlanMode:
+        output = await enterPlanModeToolImpl(parsedArgs, toolCall.id, extras);
+        break;
+      case BuiltInToolNames.ExitPlanMode:
+        output = await exitPlanModeToolImpl(parsedArgs, toolCall.id, extras);
         break;
       default:
         throw new Error(`Invalid client tool name ${toolCall.function.name}`);

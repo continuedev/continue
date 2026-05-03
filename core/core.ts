@@ -21,7 +21,7 @@ import { fetchModels } from "./llm/fetchModels";
 import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
-import { callTool } from "./tools/callTool";
+import { runAgent, AgentRunResult } from "./agent/AgentRunner";
 import { ChatDescriber } from "./util/chatDescriber";
 import { compactConversation } from "./util/conversationCompaction";
 import { GlobalContext } from "./util/GlobalContext";
@@ -99,6 +99,18 @@ export class Core {
   llmLogger = new LLMLogger();
 
   private messageAbortControllers = new Map<string, AbortController>();
+  /** Active and recently-finished agent sessions keyed by sessionId */
+  private agentSessions = new Map<string, AgentRunResult & { status: string }>();
+  /** Per-session abort controllers for agent/abort */
+  private agentAbortControllers = new Map<string, AbortController>();
+  /**
+   * Pending AskUserQuestion promises: sessionId → resolver function.
+   * Resolved when agent/questionAnswer arrives from the GUI.
+   */
+  private agentQuestionResolvers = new Map<
+    string,
+    (answers: Record<string, string>) => void
+  >();
   private addMessageAbortController(id: string): AbortController {
     const controller = new AbortController();
     this.messageAbortControllers.set(id, controller);
@@ -1239,6 +1251,119 @@ export class Core {
       } catch (error: any) {
         void this.ide.showToast("error", error.message);
         return [];
+      }
+    });
+
+    // ─── Agent runner handlers ────────────────────────────────────────────────
+
+    on("agent/run", async ({ data }) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) throw new Error("Config not loaded");
+
+      const llm = config.selectedModelByRole.chat;
+      if (!llm) throw new Error("No chat model selected");
+
+      const abortController = new AbortController();
+      const sessionId = uuidv4();
+
+      // Store a pending entry immediately so agent/status can respond
+      this.agentSessions.set(sessionId, {
+        sessionId,
+        messages: [],
+        stopReason: "done",
+        totalTurns: 0,
+        task: {} as any,
+        status: "running",
+      });
+      this.agentAbortControllers.set(sessionId, abortController);
+
+      // Run asynchronously — do not await, let caller poll via agent/status
+      void runAgent({
+        prompt: data.prompt,
+        llm,
+        tools: config.tools,
+        toolExtras: {
+          config,
+          ide: this.ide,
+          llm,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
+          codeBaseIndexer: this.codeBaseIndexer,
+          // Inject session ID so AskUserQuestion can route answers correctly
+          _agentSessionId: sessionId,
+          // Inject question interaction callback: sends questions to the GUI and
+          // waits for the agent/questionAnswer reply via a pending Promise.
+          onUserInteractionRequest: (sid, questions) => {
+            return new Promise<Record<string, string>>((resolve) => {
+              this.agentQuestionResolvers.set(sid, resolve);
+              // Fire-and-forget: send questions to GUI
+              this.messenger?.send("agent/askUserQuestion", {
+                sessionId: sid,
+                questions,
+              });
+            });
+          },
+        } as any,
+        systemMessage: data.systemMessage,
+        initialMessages: data.initialMessages,
+        maxTurns: data.maxTurns,
+        maxToolErrors: data.maxToolErrors,
+        abortController,
+      })
+        .then((result) => {
+          this.agentSessions.set(sessionId, {
+            ...result,
+            status: result.task.status ?? "completed",
+          });
+          this.agentAbortControllers.delete(sessionId);
+        })
+        .catch((err) => {
+          const existing = this.agentSessions.get(sessionId);
+          this.agentSessions.set(sessionId, {
+            ...(existing ?? {
+              sessionId,
+              messages: [],
+              stopReason: "error_limit" as const,
+              totalTurns: 0,
+              task: {} as any,
+            }),
+            status: "failed",
+          });
+          this.agentAbortControllers.delete(sessionId);
+        });
+
+      return { sessionId };
+    });
+
+    on("agent/status", async ({ data: { sessionId } }) => {
+      const session = this.agentSessions.get(sessionId);
+      if (!session) {
+        return {
+          sessionId,
+          status: "pending" as const,
+          totalTurns: 0,
+          messages: [],
+        };
+      }
+      return {
+        sessionId: session.sessionId,
+        status: session.status as any,
+        stopReason: session.stopReason,
+        totalTurns: session.totalTurns,
+        messages: session.messages,
+      };
+    });
+
+    on("agent/abort", async ({ data: { sessionId } }) => {
+      this.agentAbortControllers.get(sessionId)?.abort();
+      this.agentAbortControllers.delete(sessionId);
+    });
+
+    on("agent/questionAnswer", async ({ data: { sessionId, answers } }) => {
+      const resolve = this.agentQuestionResolvers.get(sessionId);
+      if (resolve) {
+        this.agentQuestionResolvers.delete(sessionId);
+        resolve(answers);
       }
     });
   }

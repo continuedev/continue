@@ -779,6 +779,19 @@ export interface Problem {
   message: string;
 }
 
+/** Options for the IDE's getSearchResults (ripgrep) call */
+export interface GrepSearchOptions {
+  maxResults?: number;
+  /** When true, search is case-sensitive. Default: false (case-insensitive) */
+  caseSensitive?: boolean;
+  /** Glob pattern to restrict which files are searched, e.g. "*.ts" */
+  includePattern?: string;
+  /** Lines of context before and after each match (ripgrep -C). Default: 2 */
+  contextLines?: number;
+  /** Enable multiline matching across newlines (ripgrep -U). Default: false */
+  multiline?: boolean;
+}
+
 export interface Thread {
   name: string;
   id: number;
@@ -894,7 +907,7 @@ export interface IDE {
 
   getPinnedFiles(): Promise<string[]>;
 
-  getSearchResults(query: string, maxResults?: number): Promise<string>;
+  getSearchResults(query: string, options?: GrepSearchOptions): Promise<string>;
 
   getFileResults(pattern: string, maxResults?: number): Promise<string[]>;
 
@@ -1122,6 +1135,14 @@ export interface ToolExtras {
   }) => void;
   config: ContinueConfig;
   codeBaseIndexer?: CodebaseIndexer;
+  /**
+   * For the AskUserQuestion tool: send questions to the GUI and wait for answers.
+   * Injected by core.ts when running an agent session.
+   */
+  onUserInteractionRequest?: (
+    sessionId: string,
+    questions: import("./tools/definitions/askUserQuestion").AskUserQuestion[],
+  ) => Promise<Record<string, string>>;
 }
 
 export interface McpToolMeta {

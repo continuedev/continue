@@ -43,7 +43,7 @@ function executeCommandHook(
       CONTINUE_PROJECT_DIR: cwd,
     };
 
-    // Use shell to execute the command (matches Claude Code behavior)
+    // Use shell to execute the command (matches Yuto Code behavior)
     const shell = process.platform === "win32" ? "cmd.exe" : "/bin/sh";
     const shellArgs =
       process.platform === "win32"
@@ -164,7 +164,7 @@ async function executeHttpHook(
     clearTimeout(timeout);
 
     if (!response.ok) {
-      // Non-2xx = non-blocking error (matches Claude Code behavior)
+      // Non-2xx = non-blocking error (matches Yuto Code behavior)
       logger.warn(`HTTP hook returned ${response.status}: ${handler.url}`);
       return {
         output: null,

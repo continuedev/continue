@@ -2,6 +2,55 @@ import { ChatHistoryItem, ILLM, ToolResultChatMessage } from "..";
 import { HistoryManager } from "./history";
 import { stripImages } from "./messageContent";
 
+// ─── Circuit breaker (ported from Marcel autoCompact.ts) ─────────────────────
+
+/**
+ * Stop retrying auto-compaction after this many consecutive failures.
+ * Prevents wasting API calls when the context is irrecoverably over-limit
+ * (e.g. prompt_too_long with massive tool output).
+ */
+const MAX_CONSECUTIVE_AUTOCOMPACT_FAILURES = 3;
+
+export type AutoCompactState = {
+  /** Number of consecutive compaction failures. Resets on success. */
+  consecutiveFailures: number;
+  /** Total compactions performed in this session */
+  totalCompactions: number;
+  /** Whether compaction has run at least once */
+  hasCompacted: boolean;
+};
+
+export function createAutoCompactState(): AutoCompactState {
+  return { consecutiveFailures: 0, totalCompactions: 0, hasCompacted: false };
+}
+
+export function recordCompactionSuccess(
+  state: AutoCompactState,
+): AutoCompactState {
+  return {
+    consecutiveFailures: 0,
+    totalCompactions: state.totalCompactions + 1,
+    hasCompacted: true,
+  };
+}
+
+export function recordCompactionFailure(
+  state: AutoCompactState,
+): AutoCompactState {
+  return {
+    ...state,
+    consecutiveFailures: state.consecutiveFailures + 1,
+  };
+}
+
+/**
+ * Returns true when the circuit breaker is tripped — compaction should not
+ * be retried this session to avoid burning API quota on hopeless requests.
+ */
+export function isCompactionCircuitBroken(state: AutoCompactState): boolean {
+  return state.consecutiveFailures >= MAX_CONSECUTIVE_AUTOCOMPACT_FAILURES;
+}
+
 export interface CompactionParams {
   sessionId: string;
   index: number;
