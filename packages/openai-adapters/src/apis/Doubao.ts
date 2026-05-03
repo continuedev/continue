@@ -15,11 +15,16 @@ import { OpenAIApi } from "./OpenAI.js";
  *
  * Reference: https://www.volcengine.com/docs/82379
  */
+const DEFAULT_DOUBAO_API_BASE = "https://ark.cn-beijing.volces.com/api/v3/";
+
 export class DoubaoApi extends OpenAIApi {
-  apiBase: string = "https://ark.cn-beijing.volces.com/api/v3/";
   constructor(config: DoubaoConfig) {
+    // Pass the default apiBase via config so users can still override it with
+    // a custom `apiBase`. Assigning `apiBase` as a subclass field initializer
+    // would clobber whatever `OpenAIApi`'s constructor already resolved.
     super({
       ...config,
+      apiBase: config.apiBase ?? DEFAULT_DOUBAO_API_BASE,
       provider: "openai",
     });
   }
