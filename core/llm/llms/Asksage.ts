@@ -389,21 +389,44 @@ class Asksage extends BaseLLM {
 
       const data = (await response.json()) as AskSageResponse;
 
-      // Extract tool calls from response (check both top-level and choices format)
+      // Extract tool calls from response, preferring the unified format
       const rawToolCalls =
-        data.tool_calls || data.choices?.[0]?.message?.tool_calls;
+        data.tool_calls_unified ||
+        data.tool_calls ||
+        data.choices?.[0]?.message?.tool_calls;
 
-      // Convert to ToolCallDelta format if present
-      const toolCalls: ToolCallDelta[] | undefined = rawToolCalls?.map(
-        (tc) => ({
-          id: tc.id,
-          type: tc.type,
-          function: {
-            name: tc.function.name,
-            arguments: tc.function.arguments,
-          },
-        }),
-      );
+      // Normalize to ToolCallDelta format (handles OpenAI, Anthropic, and unified formats)
+      const toolCalls: ToolCallDelta[] | undefined = rawToolCalls
+        ?.map((tc): ToolCallDelta | undefined => {
+          if ("function" in tc && tc.function?.name) {
+            // OpenAI or unified format
+            const args = tc.function.arguments;
+            return {
+              id: tc.id,
+              type: "function" as const,
+              function: {
+                name: tc.function.name,
+                arguments:
+                  typeof args === "string" ? args : JSON.stringify(args ?? {}),
+              },
+            };
+          } else if ("name" in tc && typeof tc.name === "string") {
+            // Anthropic format
+            const args =
+              tc.text ?? (tc.input ? JSON.stringify(tc.input) : "{}");
+            return {
+              id: tc.id,
+              type: "function" as const,
+              function: {
+                name: tc.name,
+                arguments:
+                  typeof args === "string" ? args : JSON.stringify(args),
+              },
+            };
+          }
+          return undefined;
+        })
+        .filter((tc): tc is ToolCallDelta => tc !== undefined);
 
       const assistantMessage: ChatMessage = {
         role: "assistant",

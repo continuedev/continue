@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import {
   ChatCompletion,
   ChatCompletionChunk,
@@ -12,13 +11,14 @@ import {
   EmbeddingCreateParams,
   Model,
 } from "openai/resources/index";
+import { v4 as uuidv4 } from "uuid";
 import {
   AskSageConfig,
-  AskSageTool,
-  AskSageToolChoice,
-  AskSageToolCall,
   AskSageResponse,
   AskSageTokenResponse,
+  AskSageTool,
+  AskSageToolCall,
+  AskSageToolChoice,
 } from "../types.js";
 import { chatChunk, chatChunkFromDelta, customFetch } from "../util.js";
 import {
@@ -312,6 +312,63 @@ export class AskSageApi implements BaseLlmApi {
   }
 
   /**
+   * Normalize tool calls from any format (OpenAI, Anthropic, unified) to OpenAI format.
+   * Ask Sage returns different formats depending on the underlying model provider.
+   */
+  private normalizeToolCalls(
+    data: AskSageResponse,
+  ): ChatCompletionMessageToolCall[] | undefined {
+    // Prefer tool_calls_unified (already normalized by Ask Sage server)
+    const rawToolCalls =
+      data.tool_calls_unified ||
+      data.tool_calls ||
+      data.choices?.[0]?.message?.tool_calls;
+
+    if (!rawToolCalls || rawToolCalls.length === 0) {
+      return undefined;
+    }
+
+    const normalized: ChatCompletionMessageToolCall[] = [];
+
+    for (const tc of rawToolCalls) {
+      const toolCall = tc as AskSageToolCall;
+
+      if ("function" in toolCall && toolCall.function?.name) {
+        // OpenAI format or unified format
+        const args = toolCall.function.arguments;
+        normalized.push({
+          id: toolCall.id,
+          type: "function" as const,
+          function: {
+            name: toolCall.function.name,
+            arguments:
+              typeof args === "string" ? args : JSON.stringify(args ?? {}),
+          },
+        });
+      } else if (
+        "name" in toolCall &&
+        typeof (toolCall as any).name === "string"
+      ) {
+        // Anthropic format: {id, type: "tool_use", name, input, text}
+        const anthropicTc = toolCall as any;
+        const args =
+          anthropicTc.text ??
+          (anthropicTc.input ? JSON.stringify(anthropicTc.input) : "{}");
+        normalized.push({
+          id: anthropicTc.id,
+          type: "function" as const,
+          function: {
+            name: anthropicTc.name,
+            arguments: typeof args === "string" ? args : JSON.stringify(args),
+          },
+        });
+      }
+    }
+
+    return normalized.length > 0 ? normalized : undefined;
+  }
+
+  /**
    * Parse AskSage response into OpenAI ChatCompletion format
    */
   private parseResponse(data: AskSageResponse, model: string): ChatCompletion {
@@ -323,20 +380,8 @@ export class AskSageApi implements BaseLlmApi {
       data.choices?.[0]?.message?.content ||
       "";
 
-    // Extract tool calls
-    const rawToolCalls =
-      data.tool_calls || data.choices?.[0]?.message?.tool_calls;
-
-    const toolCalls: ChatCompletionMessageToolCall[] | undefined = rawToolCalls
-      ?.filter((tc) => tc.function?.name) // Filter out malformed tool calls
-      .map((tc) => ({
-        id: tc.id,
-        type: "function" as const,
-        function: {
-          name: tc.function.name,
-          arguments: tc.function.arguments ?? "",
-        },
-      }));
+    // Extract and normalize tool calls from any provider format
+    const toolCalls = this.normalizeToolCalls(data);
 
     return {
       id: uuidv4(),
@@ -432,6 +477,7 @@ export class AskSageApi implements BaseLlmApi {
       }
 
       const data = (await response.json()) as AskSageResponse;
+      console.log("AskSage response:", JSON.stringify(data));
 
       // Extract content
       const content =
@@ -441,10 +487,8 @@ export class AskSageApi implements BaseLlmApi {
         data.choices?.[0]?.message?.content ||
         "";
 
-      // Extract tool calls and filter out malformed ones
-      const rawToolCalls =
-        data.tool_calls || data.choices?.[0]?.message?.tool_calls;
-      const validToolCalls = rawToolCalls?.filter((tc) => tc.function?.name);
+      // Extract and normalize tool calls from any provider format
+      const toolCalls = this.normalizeToolCalls(data);
 
       // Yield content as a single chunk
       if (content) {
@@ -455,9 +499,12 @@ export class AskSageApi implements BaseLlmApi {
       }
 
       // Yield tool calls if present
-      if (validToolCalls && validToolCalls.length > 0) {
-        for (let i = 0; i < validToolCalls.length; i++) {
-          const tc = validToolCalls[i];
+      if (toolCalls && toolCalls.length > 0) {
+        for (let i = 0; i < toolCalls.length; i++) {
+          const tc = toolCalls[i] as {
+            id: string;
+            function: { name: string; arguments: string };
+          };
           yield chatChunkFromDelta({
             model: body.model,
             delta: {
@@ -468,7 +515,7 @@ export class AskSageApi implements BaseLlmApi {
                   type: "function",
                   function: {
                     name: tc.function.name,
-                    arguments: tc.function.arguments ?? "",
+                    arguments: tc.function.arguments,
                   },
                 },
               ],
@@ -482,7 +529,7 @@ export class AskSageApi implements BaseLlmApi {
         content: null,
         model: body.model,
         finish_reason:
-          validToolCalls && validToolCalls.length > 0 ? "tool_calls" : "stop",
+          toolCalls && toolCalls.length > 0 ? "tool_calls" : "stop",
       });
     } catch (error) {
       if (error instanceof Error) {

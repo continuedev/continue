@@ -160,7 +160,10 @@ export type AskSageToolChoice =
   | "none"
   | { type: "function"; function: { name: string } };
 
-export interface AskSageToolCall {
+/**
+ * OpenAI-style tool call (GPT models)
+ */
+export interface AskSageToolCallOpenAI {
   id: string;
   type: "function";
   function: {
@@ -168,6 +171,37 @@ export interface AskSageToolCall {
     arguments: string;
   };
 }
+
+/**
+ * Anthropic-style tool call (Claude models)
+ */
+export interface AskSageToolCallAnthropic {
+  id: string;
+  type: "tool_use";
+  name: string;
+  input?: Record<string, unknown>;
+  text?: string;
+}
+
+/**
+ * Unified tool call format from Ask Sage (normalized across providers)
+ */
+export interface AskSageToolCallUnified {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: string | Record<string, unknown>;
+  };
+}
+
+/**
+ * Any tool call format the Ask Sage API may return
+ */
+export type AskSageToolCall =
+  | AskSageToolCallOpenAI
+  | AskSageToolCallAnthropic
+  | AskSageToolCallUnified;
 
 /**
  * AskSage API response format
@@ -179,6 +213,7 @@ export interface AskSageResponse {
   status?: number | string;
   response?: unknown;
   tool_calls?: AskSageToolCall[];
+  tool_calls_unified?: AskSageToolCallUnified[];
   choices?: Array<{
     message?: {
       content?: string;

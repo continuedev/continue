@@ -246,6 +246,90 @@ describe("AskSage Adapter Tests", () => {
     });
   });
 
+  test("chatCompletionNonStream should handle Anthropic-format tool calls from Claude models", async () => {
+    await runAdapterTest({
+      config: {
+        provider: "askSage",
+        apiKey: "test-api-key",
+        apiBase: "https://api.asksage.ai/server",
+      },
+      methodToTest: "chatCompletionNonStream",
+      params: [
+        {
+          model: "claude-sonnet-4",
+          messages: [{ role: "user", content: "Read the test file" }],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "read_file",
+                description: "Read a file",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    filepath: { type: "string" },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        new AbortController().signal,
+      ],
+      expectedRequest: {
+        url: "https://api.asksage.ai/server/query",
+        method: "POST",
+        body: {
+          message: "Read the test file",
+          model: "claude-sonnet-4",
+          temperature: 0,
+          mode: "chat",
+          limit_references: 0,
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "read_file",
+                description: "Read a file",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    filepath: { type: "string" },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      },
+      // Anthropic-style response (type: "tool_use", name at top level, input as object)
+      mockResponse: {
+        message: "\n\n",
+        response: "OK",
+        status: 200,
+        tool_calls: [
+          {
+            id: "toolu_vrtx_01ABC",
+            type: "tool_use",
+            name: "read_file",
+            input: { filepath: "test.py" },
+            text: '{"filepath": "test.py"}',
+          },
+        ],
+        tool_calls_unified: [
+          {
+            id: "toolu_vrtx_01ABC",
+            type: "function",
+            function: {
+              name: "read_file",
+              arguments: { filepath: "test.py" },
+            },
+          },
+        ],
+      },
+    });
+  });
+
   test("chatCompletionNonStream with multi-turn tool calling should preserve tool call messages", async () => {
     await runAdapterTest({
       config: {
