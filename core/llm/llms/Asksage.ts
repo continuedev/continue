@@ -8,6 +8,7 @@ import {
   ToolCallDelta,
 } from "../../index.js";
 import { BaseLLM } from "../index.js";
+import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import {
   AskSageTool,
   AskSageToolChoice,
@@ -62,6 +63,11 @@ class Asksage extends BaseLLM {
     apiBase: DEFAULT_API_URL,
     model: "gpt-4o",
   };
+
+  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [
+    "chat",
+    "streamChat",
+  ];
 
   private sessionTokenPromise: Promise<string> | null = null;
   private tokenTimestamp: number = 0;

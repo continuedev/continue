@@ -60,9 +60,12 @@ export class AskSageApi implements BaseLlmApi {
 
   constructor(private config: AskSageConfig) {
     this.apiBase = config.apiBase ?? DEFAULT_API_URL;
-    this.userApiUrl = config.env?.userApiUrl ?? DEFAULT_USER_API_URL;
+    this.userApiUrl =
+      config.env?.userApiUrl ??
+      process.env.ASKSAGE_USER_API_URL ??
+      DEFAULT_USER_API_URL;
     this.apiKey = config.apiKey;
-    this.email = config.env?.email;
+    this.email = config.env?.email ?? process.env.ASKSAGE_EMAIL;
     this.fetchFn = customFetch(config.requestOptions);
   }
 
@@ -177,9 +180,34 @@ export class AskSageApi implements BaseLlmApi {
                   .map((p) => (p as { type: "text"; text: string }).text)
                   .join("\n")
               : "";
-        if (content) {
+
+        // Extract tool calls from assistant message (for multi-turn history)
+        const toolCalls = (msg as any).tool_calls as
+          | Array<{
+              id: string;
+              function: { name: string; arguments: string };
+            }>
+          | undefined;
+
+        if (content && !toolCalls?.length) {
+          // Simple text response
+          messageArray.push({ user: "gpt", message: content });
+        } else if (toolCalls?.length) {
+          // Serialize tool calls so the model sees what was requested
+          const toolCallText = toolCalls
+            .map(
+              (tc) =>
+                `[Tool call ${tc.id}: ${tc.function.name}(${tc.function.arguments})]`,
+            )
+            .join("\n");
+          const fullMessage = content
+            ? `${content}\n${toolCallText}`
+            : toolCallText;
+          messageArray.push({ user: "gpt", message: fullMessage });
+        } else if (content) {
           messageArray.push({ user: "gpt", message: content });
         }
+        // If no content and no tool_calls, skip (empty message)
       } else if (msg.role === "tool") {
         // Include tool results as user messages
         const content =

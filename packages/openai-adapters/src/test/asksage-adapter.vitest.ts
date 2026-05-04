@@ -246,6 +246,106 @@ describe("AskSage Adapter Tests", () => {
     });
   });
 
+  test("chatCompletionNonStream with multi-turn tool calling should preserve tool call messages", async () => {
+    await runAdapterTest({
+      config: {
+        provider: "askSage",
+        apiKey: "test-api-key",
+        apiBase: "https://api.asksage.ai/server",
+      },
+      methodToTest: "chatCompletionNonStream",
+      params: [
+        {
+          model: "gpt-4o",
+          messages: [
+            { role: "user", content: "What's the weather in NYC?" },
+            {
+              role: "assistant",
+              content: null,
+              tool_calls: [
+                {
+                  id: "call_123",
+                  type: "function",
+                  function: {
+                    name: "get_weather",
+                    arguments: '{"location":"NYC"}',
+                  },
+                },
+              ],
+            },
+            {
+              role: "tool",
+              tool_call_id: "call_123",
+              content: '{"temp": 72, "condition": "sunny"}',
+            },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "get_weather",
+                description: "Get current weather",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    location: { type: "string" },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        new AbortController().signal,
+      ],
+      expectedRequest: {
+        url: "https://api.asksage.ai/server/query",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          accept: "application/json",
+          "x-access-tokens": "test-api-key",
+        },
+        body: {
+          message: [
+            { user: "me", message: "What's the weather in NYC?" },
+            {
+              user: "gpt",
+              message: '[Tool call call_123: get_weather({"location":"NYC"})]',
+            },
+            {
+              user: "me",
+              message:
+                'Tool result for call_123:\n{"temp": 72, "condition": "sunny"}',
+            },
+          ],
+          model: "gpt-4o",
+          temperature: 0,
+          mode: "chat",
+          limit_references: 0,
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "get_weather",
+                description: "Get current weather",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    location: { type: "string" },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      },
+      mockResponse: {
+        text: "It's currently 72°F and sunny in NYC.",
+        status: 200,
+      },
+    });
+  });
+
   test("chatCompletionStream should send a valid request", async () => {
     await runAdapterTest({
       config: {

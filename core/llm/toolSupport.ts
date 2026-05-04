@@ -506,6 +506,10 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    askSage: (_model) => {
+      // Ask Sage proxies to tool-capable models (GPT-4o, Claude, Gemini, etc.)
+      return true;
+    },
   };
 
 export function isRecommendedAgentModel(modelName: string): boolean {
