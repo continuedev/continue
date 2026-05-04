@@ -4,6 +4,7 @@ import { askQuestionTool } from "./askQuestion.js";
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
+import { globTool } from "./glob.js";
 import { listFilesTool } from "./listFiles.js";
 import { multiEditTool } from "./multiEdit.js";
 import { readFileTool } from "./readFile.js";
@@ -11,9 +12,11 @@ import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
 import { SKILLS_TOOL_META } from "./skills.js";
+import { sleepTool } from "./sleep.js";
 import { statusTool } from "./status.js";
 import { uploadArtifactTool } from "./uploadArtifact.js";
 import { viewDiffTool } from "./viewDiff.js";
+import { webSearchTool } from "./webSearch.js";
 import { writeChecklistTool } from "./writeChecklist.js";
 import { writeFileTool } from "./writeFile.js";
 
@@ -23,17 +26,20 @@ export const ALL_BUILT_IN_TOOLS = [
   editTool,
   exitTool,
   fetchTool,
+  globTool,
   listFilesTool,
   multiEditTool,
   readFileTool,
   reportFailureTool,
   runTerminalCommandTool,
   searchCodeTool,
+  sleepTool,
   statusTool,
   SUBAGENT_TOOL_META,
   SKILLS_TOOL_META,
   uploadArtifactTool,
   viewDiffTool,
+  webSearchTool,
   writeChecklistTool,
   writeFileTool,
 ];

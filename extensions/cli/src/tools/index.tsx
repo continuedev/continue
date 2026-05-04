@@ -44,7 +44,10 @@ import {
   ParameterSchema,
   PreprocessedToolCall,
 } from "./types.js";
+import { globTool } from "./glob.js";
+import { sleepTool } from "./sleep.js";
 import { uploadArtifactTool } from "./uploadArtifact.js";
+import { webSearchTool } from "./webSearch.js";
 import { writeChecklistTool } from "./writeChecklist.js";
 import { writeFileTool } from "./writeFile.js";
 
@@ -67,8 +70,11 @@ const BASE_BUILTIN_TOOLS: Tool[] = [
   readFileTool,
   writeFileTool,
   listFilesTool,
+  globTool,
   runTerminalCommandTool,
   fetchTool,
+  webSearchTool,
+  sleepTool,
   writeChecklistTool,
   checkBackgroundJobTool,
   askQuestionTool,
