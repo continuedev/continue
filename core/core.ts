@@ -2,6 +2,7 @@ import { fetchwithRequestOptions } from "@continuedev/fetch";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 
+import { AgentRunResult, runAgent } from "./agent/AgentRunner";
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
 import {
   openedFilesLruCache,
@@ -16,12 +17,11 @@ import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
-import Lemonade from "./llm/llms/Lemonade";
 import { fetchModels } from "./llm/fetchModels";
+import Lemonade from "./llm/llms/Lemonade";
 import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
-import { runAgent, AgentRunResult } from "./agent/AgentRunner";
 import { ChatDescriber } from "./util/chatDescriber";
 import { compactConversation } from "./util/conversationCompaction";
 import { GlobalContext } from "./util/GlobalContext";
@@ -85,6 +85,7 @@ import { NextEditProvider } from "./nextEdit/NextEditProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { callTool } from "./tools/callTool";
 import { ContinueError, ContinueErrorReason } from "./util/errors";
 import { shareSession } from "./util/historyUtils";
 import { Logger } from "./util/Logger.js";
@@ -100,7 +101,10 @@ export class Core {
 
   private messageAbortControllers = new Map<string, AbortController>();
   /** Active and recently-finished agent sessions keyed by sessionId */
-  private agentSessions = new Map<string, AgentRunResult & { status: string }>();
+  private agentSessions = new Map<
+    string,
+    AgentRunResult & { status: string }
+  >();
   /** Per-session abort controllers for agent/abort */
   private agentAbortControllers = new Map<string, AbortController>();
   /**
@@ -1286,14 +1290,14 @@ export class Core {
           config,
           ide: this.ide,
           llm,
-          fetch: (url, init) =>
+          fetch: (url: string | URL, init?: any) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
           codeBaseIndexer: this.codeBaseIndexer,
           // Inject session ID so AskUserQuestion can route answers correctly
           _agentSessionId: sessionId,
           // Inject question interaction callback: sends questions to the GUI and
           // waits for the agent/questionAnswer reply via a pending Promise.
-          onUserInteractionRequest: (sid, questions) => {
+          onUserInteractionRequest: (sid: string, questions: any) => {
             return new Promise<Record<string, string>>((resolve) => {
               this.agentQuestionResolvers.set(sid, resolve);
               // Fire-and-forget: send questions to GUI
@@ -1398,7 +1402,7 @@ export class Core {
       config,
       ide: this.ide,
       llm: config.selectedModelByRole.chat,
-      fetch: (url, init) =>
+      fetch: (url: string | URL, init?: any) =>
         fetchwithRequestOptions(url, init, config.requestOptions),
       tool,
       toolCallId: toolCall.id,

@@ -1,58 +1,86 @@
-# Yuto — Next Session Plan
+I’ll quickly check this repo’s documented VS Code extension workflow so I can give you the exact install and test steps for your current changes.
 
-## Repo
-- Continue fork at `/home/fran/dev/yuto-code/continue/`
-- Marcel source at `/home/fran/dev/yuto-code/marcel/src/`
+Search complete: Locate extension workflow
 
-## Current State (May 4 2026)
+Searched codebase for "VS Code extension local install run extension host packaging .vsix tests", 20 results
 
-### What's wired and working
-- `core/agent/AgentRunner.ts` — full autonomous loop (stream → tool calls → batch execute → session memory)
-- `core/agent/SessionMemory.ts`, `TaskState.ts`, `autoDream.ts` — supporting agent infrastructure
-- `core/core.ts` handles `agent/run`, `agent/status`, `agent/abort`, `agent/questionAnswer` protocol messages
-- Protocol types defined in `core/protocol/core.ts` and `core/protocol/webview.ts`
-- All ported tools registered: subagent, sleep, skill, worktree x2, notifyUser, tool_search, todoWrite, askUserQuestion, lspQuery, notebookEdit, enterPlanMode, exitPlanMode
+Searched for files matching `**/vscode/**`, 144 matches
 
-### The Single Missing Link
-**The GUI never calls `agent/run`.** The VS Code extension never calls `agent/run`.
-The agent loop exists but has NO trigger — it's an API with no UI entry point.
+Searched for files matching `**/README*`, 28 matches
 
-## Priority Tasks (in order)
+Searched for regex `extension.*host|vscode.*extension|Extension Development Host`, 200 results
 
-### 1. 🔴 GUI trigger — highest ROI (2-4 days)
-Build an Agent mode in the GUI that sends `agent/run` and renders live results.
-Files to create:
-```
-gui/src/components/Agent/
-  AgentChat.tsx       ← sends agent/run, polls agent/status
-  AgentToolCall.tsx   ← renders tool_start / tool_result events  
-  AgentStatusBar.tsx  ← turn count + abort button
-```
-Start by reading `gui/src/` structure and how existing chat mode sends messages.
+Searched for regex `\.vsix|packaging.*vsix|install.*vsix`, 48 results
 
-### 2. 🟡 Wire bash utils into RunTerminalCommand (1 day)
-- `core/tools/implementations/runTerminalCommand.ts` runs commands naively
-- `core/util/bash/commands.ts` + `shellQuote.ts` can make it safe
-- Import `extractOutputRedirections`, `isUnsafeCompoundCommand_DEPRECATED`, `quoteShellCommand`
+Searched for regex `extension tests|test.*extension|vscode.*test`, 96 results
 
-### 3. 🟡 Context limit guard in AgentRunner (half day)
-- Before each turn, call `analyzeContext(messages)` from `core/util/contextAnalysis.ts`
-- Warn/truncate when approaching LLM token limit
-- AgentRunner has no protection against silent mid-session context overflow
+Searched for files matching `**/tasks.json`, 1 match
 
-### 4. 🟡 todoWrite implementation (half day)
-- `core/tools/definitions/todoWrite.ts` exists, `implementations/todoWrite.ts` may be stub
-- Check and implement if needed
+Searched for files matching `**/launch.json`, 2 matches
 
-### 5. 🟢 VS Code command to launch agent (1 day)
-- Register `yuto.runAgent` command in `extensions/vscode/src/`
-- Opens agent panel, sends `agent/run` with current selection/file as context
+Read [](file:///home/fran/dev/yuto-code/continue/CONTRIBUTING.md#140-140), lines 140 to 190
 
-## Files Already Ported (do not re-port)
-- `core/util/bash/` — 9 files + specs/ (8 files)
-- `core/util/generators.ts`, `format.ts`, `array.ts`, `shellPromptDetection.ts`
-- `core/util/progressTracker.ts`, `agentContext.ts`, `contextAnalysis.ts`
-- `core/agent/` — all 6 files
+Read [](file:///home/fran/dev/yuto-code/continue/extensions/vscode/README.md)
 
-## YUTO.md
-Exists at `continue/YUTO.md` — agent instructions for this codebase.
+Read [](file:///home/fran/dev/yuto-code/continue/extensions/vscode/e2e/README.md)
+
+Read [](file:///home/fran/dev/yuto-code/continue/extensions/vscode/src/extension.ts)
+
+Read [](file:///home/fran/dev/yuto-code/continue/extensions/vscode/package.json#680-680), lines 680 to 740
+
+Read [](file:///home/fran/dev/yuto-code/continue/extensions/vscode/scripts/package.js)
+
+Read [](file:///home/fran/dev/yuto-code/continue/extensions/vscode/scripts/prepackage.js#1-1), lines 1 to 200
+
+Read [](file:///home/fran/dev/yuto-code/continue/extensions/vscode/scripts/prepackage-cross-platform.js)
+
+Use this repo’s built-in flow. There are two good ways:
+
+1. Run in Extension Development Host (best for daily dev).
+2. Package a VSIX and install it into your normal VS Code.
+
+Docs/source references:
+
+- CONTRIBUTING.md
+- README.md
+- package.json
+
+**Install + run locally (dev mode)**
+
+1. Install dependencies from repo root:
+   npm run install-all-dependencies
+2. Build/watch extension pieces (from VS Code task runner is easiest):
+   - Run task: install-all-dependencies (once)
+   - Run task: vscode-extension:build (watch mode stack)
+3. Launch extension:
+   - Open Run and Debug
+   - Choose Launch extension
+   - Press Play
+4. Test your change in the new Extension Development Host window.
+5. For edits in core/extensions, run Command Palette > Reload Window in host window to pick up updates.
+
+**Install as a real extension (VSIX)**
+
+1. Build package:
+   cd extensions/vscode
+   npm run package
+2. This creates a VSIX in extensions/vscode/build.
+3. In VS Code:
+   - Command Palette > Extensions: Install from VSIX...
+   - Select the newest continue-<version>.vsix file.
+
+**Test the changes**
+Quick manual smoke test:
+
+1. In Extension Development Host, verify the changed behavior directly.
+2. Check logs with command Continue: View Logs if needed.
+3. Reload host window after code changes.
+
+Automated e2e (Linux):
+
+1. From extensions/vscode:
+   npm run e2e:all-non-mac
+2. Faster loops depending on what changed:
+   - Only e2e test/config edits: npm run e2e:quick
+   - Extension code edits: npm run e2e:recompile-extension
+   - GUI edits: npm run e2e:rebuild-gui

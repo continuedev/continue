@@ -1,11 +1,21 @@
 import iconv from "iconv-lite";
 import childProcess from "node:child_process";
 import os from "node:os";
-import { ContinueError, ContinueErrorReason } from "../../util/errors";
+import { fileURLToPath } from "node:url";
+import { ToolImpl } from ".";
 import {
   extractOutputRedirections,
   isUnsafeCompoundCommand_DEPRECATED,
 } from "../../util/bash/commands";
+import { ContinueError, ContinueErrorReason } from "../../util/errors";
+import {
+  isProcessBackgrounded,
+  markProcessAsRunning,
+  removeBackgroundedProcess,
+  removeRunningProcess,
+  updateProcessOutput,
+} from "../../util/processTerminalStates";
+import { getBooleanArg, getStringArg } from "../parseArgs";
 
 // Default timeout for terminal commands (2 minutes)
 const DEFAULT_TOOL_TIMEOUT_MS = 120_000;
@@ -39,10 +49,6 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
     return { shell: userShell, args: ["-l", "-c", command] };
   }
 }
-
-import { fileURLToPath } from "node:url";
-import { ToolImpl } from ".";
-import {
 
 /**
  * Builds a one-line safety preamble for a command using the bash util library.
@@ -82,16 +88,6 @@ function getCommandSafetyPreamble(command: string): string {
 
   return notes.length > 0 ? notes.join("\n") + "\n" : "";
 }
-
-import { fileURLToPath } from "node:url";
-import { ToolImpl } from ".";
-import {
-  markProcessAsRunning,
-  removeBackgroundedProcess,
-  removeRunningProcess,
-  updateProcessOutput,
-} from "../../util/processTerminalStates";
-import { getBooleanArg, getStringArg } from "../parseArgs";
 
 /**
  * Resolves the working directory from workspace dirs.

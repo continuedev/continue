@@ -60,7 +60,7 @@ export function AgentStatusBar({
         </span>
 
         {stopReason && (
-          <span className="text-zinc-500 italic">({stopReason})</span>
+          <span className="italic text-zinc-500">({stopReason})</span>
         )}
       </div>
 

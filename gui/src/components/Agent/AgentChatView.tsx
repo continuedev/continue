@@ -255,7 +255,7 @@ export function AgentChatView({ sessionId, onSessionEnd }: AgentChatViewProps) {
       {/* Message feed */}
       <div
         ref={scrollRef}
-        className="no-scrollbar flex-1 overflow-y-auto space-y-3"
+        className="no-scrollbar flex-1 space-y-3 overflow-y-auto"
       >
         {groups.map((group, i) => {
           if (group.kind === "user") {

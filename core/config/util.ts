@@ -80,9 +80,13 @@ export function addModel(
         model: model.model,
         apiKey: model.apiKey,
         apiBase: model.apiBase,
-        contextLength: model.contextLength,
         maxStopWords: model.maxStopWords,
-        defaultCompletionOptions: model.completionOptions,
+        defaultCompletionOptions: {
+          ...(model.completionOptions ?? {}),
+          ...(model.contextLength !== undefined
+            ? { contextLength: model.contextLength }
+            : {}),
+        },
         ...(capabilities.length > 0 ? { capabilities } : {}),
       };
       config.models.push(desc);

@@ -183,7 +183,7 @@ export class VsCodeMessenger {
             ? vscode.NotebookCellKind.Markup
             : data.cellType === "code"
               ? vscode.NotebookCellKind.Code
-              : existingCell?.kind ?? vscode.NotebookCellKind.Code;
+              : (existingCell?.kind ?? vscode.NotebookCellKind.Code);
         const languageId =
           requestedKind === vscode.NotebookCellKind.Markup
             ? "markdown"
@@ -200,40 +200,48 @@ export class VsCodeMessenger {
         return cellData;
       };
 
-      const success = await editor.edit((editBuilder) => {
-        switch (data.editMode) {
-          case "delete": {
-            if (data.cellIndex < 0 || data.cellIndex >= notebook.cellCount) {
-              throw new Error(`Cell index ${data.cellIndex} is out of bounds.`);
-            }
-            editBuilder.replaceCells(
+      const workspaceEdit = new vscode.WorkspaceEdit();
+
+      switch (data.editMode) {
+        case "delete": {
+          if (data.cellIndex < 0 || data.cellIndex >= notebook.cellCount) {
+            throw new Error(`Cell index ${data.cellIndex} is out of bounds.`);
+          }
+          workspaceEdit.set(notebook.uri, [
+            vscode.NotebookEdit.replaceCells(
               new vscode.NotebookRange(data.cellIndex, data.cellIndex + 1),
               [],
-            );
-            break;
+            ),
+          ]);
+          break;
+        }
+        case "insert": {
+          if (data.cellIndex < 0 || data.cellIndex > notebook.cellCount) {
+            throw new Error(`Cell index ${data.cellIndex} is out of bounds.`);
           }
-          case "insert": {
-            if (data.cellIndex < 0 || data.cellIndex > notebook.cellCount) {
-              throw new Error(`Cell index ${data.cellIndex} is out of bounds.`);
-            }
-            editBuilder.replaceCells(
+          workspaceEdit.set(notebook.uri, [
+            vscode.NotebookEdit.replaceCells(
               new vscode.NotebookRange(data.cellIndex, data.cellIndex),
               [makeCell()],
-            );
-            break;
+            ),
+          ]);
+          break;
+        }
+        case "replace":
+        default: {
+          if (data.cellIndex < 0 || data.cellIndex >= notebook.cellCount) {
+            throw new Error(`Cell index ${data.cellIndex} is out of bounds.`);
           }
-          case "replace":
-          default: {
-            if (data.cellIndex < 0 || data.cellIndex >= notebook.cellCount) {
-              throw new Error(`Cell index ${data.cellIndex} is out of bounds.`);
-            }
-            editBuilder.replaceCells(
+          workspaceEdit.set(notebook.uri, [
+            vscode.NotebookEdit.replaceCells(
               new vscode.NotebookRange(data.cellIndex, data.cellIndex + 1),
               [makeCell()],
-            );
-          }
+            ),
+          ]);
         }
-      });
+      }
+
+      const success = await vscode.workspace.applyEdit(workspaceEdit);
 
       if (!success) {
         throw new Error("Failed to apply notebook edit.");

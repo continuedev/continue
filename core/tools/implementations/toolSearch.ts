@@ -1,5 +1,5 @@
-import { Tool } from "../..";
 import { ToolImpl } from ".";
+import { Tool } from "../..";
 
 // ─── Name parsing ─────────────────────────────────────────────────────────────
 
@@ -47,7 +47,10 @@ function scoreToolAgainstQuery(
   termPatterns: Map<string, RegExp>,
 ): number {
   const descLower = description.toLowerCase();
-  const allTerms = [...requiredTerms, ...queryTerms.filter((t) => !t.startsWith("+"))];
+  const allTerms = [
+    ...requiredTerms,
+    ...queryTerms.filter((t) => !t.startsWith("+")),
+  ];
 
   // Check all required terms are satisfied
   for (const req of requiredTerms) {
@@ -86,7 +89,8 @@ function handleSelectQuery(
   rawNames: string[],
   tools: Tool[],
 ): { name: string; description: string; parameters?: unknown }[] {
-  const results: { name: string; description: string; parameters?: unknown }[] = [];
+  const results: { name: string; description: string; parameters?: unknown }[] =
+    [];
   for (const targetName of rawNames) {
     const tool = tools.find(
       (t) => t.function.name.toLowerCase() === targetName.toLowerCase().trim(),
@@ -94,7 +98,7 @@ function handleSelectQuery(
     if (tool) {
       results.push({
         name: tool.function.name,
-        description: tool.function.description,
+        description: tool.function.description ?? "",
         parameters: tool.function.parameters,
       });
     }
@@ -112,11 +116,14 @@ function handleKeywordQuery(
   const queryLower = query.toLowerCase().trim();
 
   // Fast path: exact name match
-  const exact = tools.find(
-    (t) => t.function.name.toLowerCase() === queryLower,
-  );
+  const exact = tools.find((t) => t.function.name.toLowerCase() === queryLower);
   if (exact) {
-    return [{ name: exact.function.name, description: exact.function.description }];
+    return [
+      {
+        name: exact.function.name,
+        description: exact.function.description ?? "",
+      },
+    ];
   }
 
   const queryTerms = queryLower.split(/\s+/).filter((t) => t.length > 0);
@@ -132,7 +139,7 @@ function handleKeywordQuery(
       tool,
       score: scoreToolAgainstQuery(
         parseToolName(tool.function.name),
-        tool.function.description,
+        tool.function.description ?? "",
         optionalTerms,
         requiredTerms,
         termPatterns,
@@ -144,7 +151,7 @@ function handleKeywordQuery(
 
   return scored.map(({ tool }) => ({
     name: tool.function.name,
-    description: tool.function.description,
+    description: tool.function.description ?? "",
   }));
 }
 
@@ -193,7 +200,7 @@ export const toolSearchImpl: ToolImpl = async (args, extras) => {
     const content = results
       .map(
         (r) =>
-          `## ${r.function?.name ?? r.name}\n${r.description}\n${
+          `## ${r.name}\n${r.description}\n${
             r.parameters
               ? `\nParameters:\n\`\`\`json\n${JSON.stringify(r.parameters, null, 2)}\n\`\`\``
               : ""
@@ -228,7 +235,7 @@ export const toolSearchImpl: ToolImpl = async (args, extras) => {
     "",
     ...matches.map((m) => `- **${m.name}**: ${m.description}`),
     "",
-    'Use `select:<name>` to get the full parameter schema for a specific tool.',
+    "Use `select:<name>` to get the full parameter schema for a specific tool.",
   ].join("\n");
 
   return [
