@@ -58,6 +58,12 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
     "",
     chalk.white("Available Commands:"),
     `  Type ${chalk.cyan("/")} to see available slash commands`,
+    `    ${chalk.cyan("/context")}   Show token breakdown and context window usage`,
+    `    ${chalk.cyan("/files")}     List files currently in context`,
+    `    ${chalk.cyan("/cost")}      Show session token usage and estimated cost`,
+    `    ${chalk.cyan("/copy")}      Copy last assistant response to clipboard`,
+    `    ${chalk.cyan("/memory")}    Open long-term memory file in $EDITOR`,
+    `    ${chalk.cyan("/status")}    Show current task and session progress`,
     `  Type ${chalk.cyan("!")} followed by a command to execute bash directly`,
   ].join("\n");
   return { output: helpMessage };
@@ -370,6 +376,115 @@ const commandHandlers: Record<string, CommandHandler> = {
   sessions: handleSessions,
   export: handleExport,
   import: handleImport,
+  context: () => {
+    try {
+      return { exit: false, output: services.contextAnalysis.formatReport() };
+    } catch {
+      return { exit: false, output: "Context analysis not yet available." };
+    }
+  },
+  files: () => {
+    try {
+      return {
+        exit: false,
+        output: services.contextAnalysis.formatFilesReport(),
+      };
+    } catch {
+      return { exit: false, output: "File context not yet available." };
+    }
+  },
+  cost: () => {
+    try {
+      return { exit: false, output: services.costTracking.formatSummary() };
+    } catch {
+      return { exit: false, output: "Cost tracking not yet available." };
+    }
+  },
+  copy: async () => {
+    try {
+      const history = services.chatHistory.getState().history;
+      const lastAssistant = [...history]
+        .reverse()
+        .find((item) => item.message.role === "assistant");
+      if (!lastAssistant) {
+        return { exit: false, output: "No assistant response to copy." };
+      }
+      const content = lastAssistant.message.content;
+      const text =
+        typeof content === "string"
+          ? content
+          : Array.isArray(content)
+            ? content
+                .filter((p: any) => p.type === "text")
+                .map((p: any) => p.text ?? "")
+                .join("")
+            : String(content);
+
+      const { execSync } = await import("child_process");
+      const platform = process.platform;
+      if (platform === "darwin") {
+        execSync("pbcopy", { input: text });
+      } else if (platform === "linux") {
+        // Try xclip, then xsel, then wl-copy (Wayland)
+        try {
+          execSync("xclip -selection clipboard", { input: text });
+        } catch {
+          try {
+            execSync("xsel --clipboard --input", { input: text });
+          } catch {
+            execSync("wl-copy", { input: text });
+          }
+        }
+      } else if (platform === "win32") {
+        execSync("clip", { input: text });
+      } else {
+        return {
+          exit: false,
+          output: "Clipboard not supported on this platform.",
+        };
+      }
+      const preview = text.slice(0, 80).replace(/\n/g, " ");
+      return {
+        exit: false,
+        output: `Copied to clipboard: ${preview}${text.length > 80 ? "…" : ""}`,
+      };
+    } catch (err: any) {
+      return {
+        exit: false,
+        output: `Failed to copy: ${err.message ?? String(err)}`,
+      };
+    }
+  },
+  memory: async () => {
+    try {
+      const { execSync } = await import("child_process");
+      const memoryDir = services.memory.getMemoryDir();
+      const memoryFile = `${memoryDir}/MEMORY.md`;
+      const editor = process.env.VISUAL ?? process.env.EDITOR ?? "vi";
+      // Ensure file exists
+      const { mkdirSync, writeFileSync, existsSync } = await import("fs");
+      mkdirSync(memoryDir, { recursive: true });
+      if (!existsSync(memoryFile)) {
+        writeFileSync(memoryFile, "# Memory\n\n", "utf8");
+      }
+      execSync(`${editor} "${memoryFile}"`, { stdio: "inherit" });
+      return { exit: false, output: `Memory file saved: ${memoryFile}` };
+    } catch (err: any) {
+      return {
+        exit: false,
+        output: `Could not open memory file: ${err.message ?? String(err)}`,
+      };
+    }
+  },
+  status: () => {
+    try {
+      const taskStatus = services.taskState.formatStatus();
+      const progress = services.progressTracker.formatProgress();
+      return { exit: false, output: `${taskStatus}\n\n${progress}` };
+    } catch {
+      return { exit: false, output: "Status not yet available." };
+    }
+  },
 };
 
 export async function handleSlashCommands(

@@ -160,6 +160,15 @@ export const SERVICE_NAMES = {
   BACKGROUND_JOBS: "backgroundJobs",
   QUIZ: "quiz",
   HOOKS: "hooks",
+  MEMORY: "memory",
+  COST_TRACKING: "costTracking",
+  PLUGIN_REGISTRY: "pluginRegistry",
+  FEATURE_FLAGS: "featureFlags",
+  SESSION_MEMORY: "sessionMemory",
+  AUTO_DREAM: "autoDream",
+  CONTEXT_ANALYSIS: "contextAnalysis",
+  TASK_STATE: "taskState",
+  PROGRESS_TRACKER: "progressTracker",
 } as const;
 
 /**

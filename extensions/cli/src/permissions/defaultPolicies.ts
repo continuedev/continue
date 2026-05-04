@@ -69,3 +69,38 @@ export const PLAN_MODE_POLICIES: ToolPermissionPolicy[] = [
 export const AUTO_MODE_POLICIES: ToolPermissionPolicy[] = [
   { tool: "*", permission: "allow" },
 ];
+
+/**
+ * Coordinator mode: The agent acts as an orchestrator that spawns and delegates
+ * to worker agents. It can read/inspect code, run analysis tools, and invoke
+ * the Subagent tool — but is blocked from directly writing files or running
+ * destructive shell commands (those are delegated to workers).
+ */
+export const COORDINATOR_MODE_POLICIES: ToolPermissionPolicy[] = [
+  // Coordination tools
+  { tool: "Subagent", permission: "allow" },
+  { tool: "AskQuestion", permission: "allow" },
+  { tool: "Checklist", permission: "allow" },
+  { tool: "Status", permission: "allow" },
+  { tool: "ReportFailure", permission: "allow" },
+  { tool: "Exit", permission: "allow" },
+  { tool: "Skills", permission: "allow" },
+
+  // Read-only tools (coordinator can inspect but not write)
+  { tool: "Read", permission: "allow" },
+  { tool: "List", permission: "allow" },
+  { tool: "Search", permission: "allow" },
+  { tool: "Diff", permission: "allow" },
+  { tool: "Fetch", permission: "allow" },
+
+  // Bash is restricted to read-only operations in coordinator mode
+  { tool: "Bash", permission: "ask" },
+
+  // Write tools are excluded — workers handle mutations
+  { tool: "Edit", permission: "exclude" },
+  { tool: "MultiEdit", permission: "exclude" },
+  { tool: "Write", permission: "exclude" },
+
+  // MCP tools allowed (coordinator may need to query external services)
+  { tool: "*", permission: "allow" },
+];

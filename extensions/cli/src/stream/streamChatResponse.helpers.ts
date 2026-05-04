@@ -355,6 +355,27 @@ export function recordStreamTelemetry(options: {
   telemetryService.recordCost(cost, model.model);
   trackSessionUsage(cost, usage);
 
+  // Record to session-level CostTrackingService for formatted summaries
+  try {
+    const costTracker = serviceContainer.getSync<any>(
+      SERVICE_NAMES.COST_TRACKING,
+    );
+    if (costTracker?.value) {
+      costTracker.value.record({
+        model: model.model,
+        inputTokens: actualInputTokens,
+        outputTokens: actualOutputTokens,
+        cacheReadTokens:
+          fullUsage?.prompt_tokens_details?.cache_read_tokens ?? 0,
+        cacheWriteTokens:
+          fullUsage?.prompt_tokens_details?.cache_write_tokens ?? 0,
+        apiDurationMs: totalDuration,
+      });
+    }
+  } catch {
+    // Non-critical — do not block the stream
+  }
+
   telemetryService.recordResponseTime(
     totalDuration,
     model.model,

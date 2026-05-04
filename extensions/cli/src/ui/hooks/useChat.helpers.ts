@@ -120,6 +120,14 @@ export function processSlashCommandResult({
     // Start a new session with a new sessionId
     startNewSession(newHistory);
 
+    // Reset session memory tracking for the new session
+    try {
+      const { services } = require("../../services/index.js");
+      services.sessionMemory.newSession();
+      services.progressTracker.newSession();
+      services.taskState.newSession();
+    } catch {}
+
     setChatHistory(newHistory);
 
     // Reset intro message state to show it again after clearing

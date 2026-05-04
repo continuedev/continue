@@ -1,5 +1,6 @@
 import {
   AUTO_MODE_POLICIES,
+  COORDINATOR_MODE_POLICIES,
   PLAN_MODE_POLICIES,
 } from "src/permissions/defaultPolicies.js";
 
@@ -175,6 +176,8 @@ export class ToolPermissionService
         return [...PLAN_MODE_POLICIES];
       case "auto":
         return [...AUTO_MODE_POLICIES];
+      case "coordinator":
+        return [...COORDINATOR_MODE_POLICIES];
       case "normal":
       default:
         // Normal mode uses the more nuanced policy loading
@@ -214,9 +217,10 @@ export class ToolPermissionService
       );
     } else if (
       this.currentState.currentMode === "plan" ||
-      this.currentState.currentMode === "auto"
+      this.currentState.currentMode === "auto" ||
+      this.currentState.currentMode === "coordinator"
     ) {
-      // For plan and auto modes, use ONLY mode policies (absolute override)
+      // For plan, auto, and coordinator modes, use ONLY mode policies (absolute override)
       allPolicies = [...modePolicies];
     } else {
       // Normal mode: combine headless + mode policies with user configuration
@@ -310,10 +314,10 @@ export class ToolPermissionService
 
     const modePolicies = this.generateModePolicies();
 
-    // For plan and auto modes, use ONLY mode policies (absolute override)
+    // For plan, auto, and coordinator modes, use ONLY mode policies (absolute override)
     // For normal mode, restore original policies if available
     let allPolicies: ToolPermissionPolicy[];
-    if (newMode === "plan" || newMode === "auto") {
+    if (newMode === "plan" || newMode === "auto" || newMode === "coordinator") {
       // Absolute override: ignore all user configuration
       allPolicies = [...modePolicies];
     } else {

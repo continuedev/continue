@@ -11,18 +11,27 @@ import { AgentFileService } from "./AgentFileService.js";
 import { ApiClientService } from "./ApiClientService.js";
 import { ArtifactUploadService } from "./ArtifactUploadService.js";
 import { AuthService } from "./AuthService.js";
+import { AutoDreamService } from "./AutoDreamService.js";
 import { backgroundJobService } from "./BackgroundJobService.js";
 import { ChatHistoryService } from "./ChatHistoryService.js";
 import { ConfigService } from "./ConfigService.js";
+import { ContextAnalysisService } from "./ContextAnalysisService.js";
+import { CostTrackingService } from "./CostTrackingService.js";
+import { FeatureFlagsService } from "./FeatureFlagsService.js";
 import { FileIndexService } from "./FileIndexService.js";
 import { GitAiIntegrationService } from "./GitAiIntegrationService.js";
 import { MCPService } from "./MCPService.js";
+import { MemoryService } from "./MemoryService.js";
 import { ModelService } from "./ModelService.js";
+import { PluginRegistryService } from "./PluginRegistryService.js";
+import { ProgressTrackerService } from "./ProgressTrackerService.js";
 import { quizService } from "./QuizService.js";
 import { ResourceMonitoringService } from "./ResourceMonitoringService.js";
 import { serviceContainer } from "./ServiceContainer.js";
+import { SessionMemoryService } from "./SessionMemoryService.js";
 import { StorageSyncService } from "./StorageSyncService.js";
 import { SystemMessageService } from "./SystemMessageService.js";
+import { TaskStateService } from "./TaskStateService.js";
 import {
   InitializeToolServiceOverrides,
   ToolPermissionService,
@@ -55,6 +64,15 @@ const systemMessageService = new SystemMessageService();
 const artifactUploadService = new ArtifactUploadService();
 const gitAiIntegrationService = new GitAiIntegrationService();
 const hookService = new HookService();
+const memoryService = new MemoryService();
+const costTrackingService = new CostTrackingService();
+const pluginRegistryService = new PluginRegistryService();
+const featureFlagsService = new FeatureFlagsService();
+const sessionMemoryService = new SessionMemoryService();
+const autoDreamService = new AutoDreamService();
+const contextAnalysisService = new ContextAnalysisService();
+const taskStateService = new TaskStateService();
+const progressTrackerService = new ProgressTrackerService();
 
 /**
  * Initialize all services and register them with the service container
@@ -182,6 +200,8 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
         additionalRules: commandOptions.rule,
         format: (commandOptions as any).format, // format option from CLI
         headless: initOptions.headless,
+        enableMemory: true,
+        memoryService: memoryService,
       }),
     [SERVICE_NAMES.TOOL_PERMISSIONS],
   );
@@ -340,6 +360,60 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
     [], // No dependencies
   );
 
+  serviceContainer.register(
+    SERVICE_NAMES.FEATURE_FLAGS,
+    () => featureFlagsService.initialize(),
+    [], // No dependencies — resolved purely from env + local file
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.MEMORY,
+    () => memoryService.initialize(),
+    [], // No dependencies
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.COST_TRACKING,
+    () => costTrackingService.initialize(),
+    [], // No dependencies
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.PLUGIN_REGISTRY,
+    () => pluginRegistryService.initialize(),
+    [], // No dependencies — plugins register their own skills
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.SESSION_MEMORY,
+    () => sessionMemoryService.initialize(),
+    [], // No dependencies
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.AUTO_DREAM,
+    () => autoDreamService.initialize(),
+    [], // No dependencies
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.CONTEXT_ANALYSIS,
+    () => contextAnalysisService.initialize(),
+    [], // No dependencies — updated per-turn, not at init
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.TASK_STATE,
+    () => taskStateService.initialize(),
+    [], // No dependencies
+  );
+
+  serviceContainer.register(
+    SERVICE_NAMES.PROGRESS_TRACKER,
+    () => progressTrackerService.initialize(),
+    [], // No dependencies
+  );
+
   // Eagerly initialize all services to ensure they're ready when needed
   // This avoids race conditions and "service not ready" errors
   await serviceContainer.initializeAll();
@@ -406,6 +480,15 @@ export const services = {
   backgroundJobs: backgroundJobService,
   quiz: quizService,
   hooks: hookService,
+  memory: memoryService,
+  costTracking: costTrackingService,
+  pluginRegistry: pluginRegistryService,
+  featureFlags: featureFlagsService,
+  sessionMemory: sessionMemoryService,
+  autoDream: autoDreamService,
+  contextAnalysis: contextAnalysisService,
+  taskState: taskStateService,
+  progressTracker: progressTrackerService,
 } as const;
 
 export type ServicesType = typeof services;

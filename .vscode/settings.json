@@ -55,5 +55,17 @@
   "conventionalCommits.promptBody": false,
   "conventionalCommits.promptFooter": false,
   "conventionalCommits.promptScopes": true,
-  "conventionalCommits.scopes": ["reg"]
+  "conventionalCommits.scopes": ["reg"],
+  "jest.virtualFolders": [
+    {
+      "name": "core",
+      "rootPath": "core",
+      "jestCommandLine": "npm test --"
+    },
+    {
+      "name": "binary",
+      "rootPath": "binary",
+      "jestCommandLine": "npm test --"
+    }
+  ]
 }

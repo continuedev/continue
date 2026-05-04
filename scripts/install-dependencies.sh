@@ -5,6 +5,12 @@
 # - Debug -> Extension
 set -e
 
+# Use a user-local npm global prefix so `npm link` works without sudo.
+NPM_LOCAL_PREFIX="${HOME}/.npm-global"
+mkdir -p "$NPM_LOCAL_PREFIX"
+export NPM_CONFIG_PREFIX="$NPM_LOCAL_PREFIX"
+export PATH="$NPM_CONFIG_PREFIX/bin:$PATH"
+
 # Check if node version matches .nvmrc
 if [ -f .nvmrc ]; then
     required_node_version=$(cat .nvmrc)
@@ -37,23 +43,28 @@ echo "Installing Core extension dependencies..."
 pushd core
 ## This flag is set because we pull down Chromium at runtime
 export PUPPETEER_SKIP_DOWNLOAD='true'
-npm install
+# Use --ignore-scripts first to avoid snap npm's PATH issue (node_modules/.bin
+# not added to PATH for install scripts), then rebuild native addons explicitly.
+npm install --ignore-scripts
+npm rebuild
 npm link
 popd
 
 echo "Installing GUI extension dependencies..."
 pushd gui
 npm install
-npm link @continuedev/core
+npm link @continuedev/core --ignore-scripts
 NODE_OPTIONS="--max-old-space-size=4096" npm run build
 popd
 
 # VSCode Extension (will also package GUI)
 echo "Installing VSCode extension dependencies..."
 pushd extensions/vscode
+# Clear cached ripgrep archives that can become corrupted and break postinstall.
+rm -rf /tmp/vscode-ripgrep-cache-*
 # This does way too many things inline but is the common denominator between many of the scripts
 npm install
-npm link @continuedev/core
+npm link @continuedev/core --ignore-scripts
 # npm run prepackage # not required since npm run package has prescript of prepackage
 npm run package
 popd

@@ -201,14 +201,21 @@ export class VsCodeMessenger {
       };
 
       const workspaceEdit = new vscode.WorkspaceEdit();
+      const notebookEditApi = (vscode as any).NotebookEdit;
+
+      if (!notebookEditApi?.replaceCells) {
+        throw new Error(
+          "Notebook editing API is unavailable in this VS Code version.",
+        );
+      }
 
       switch (data.editMode) {
         case "delete": {
           if (data.cellIndex < 0 || data.cellIndex >= notebook.cellCount) {
             throw new Error(`Cell index ${data.cellIndex} is out of bounds.`);
           }
-          workspaceEdit.set(notebook.uri, [
-            vscode.NotebookEdit.replaceCells(
+          (workspaceEdit as any).set(notebook.uri, [
+            notebookEditApi.replaceCells(
               new vscode.NotebookRange(data.cellIndex, data.cellIndex + 1),
               [],
             ),
@@ -219,8 +226,8 @@ export class VsCodeMessenger {
           if (data.cellIndex < 0 || data.cellIndex > notebook.cellCount) {
             throw new Error(`Cell index ${data.cellIndex} is out of bounds.`);
           }
-          workspaceEdit.set(notebook.uri, [
-            vscode.NotebookEdit.replaceCells(
+          (workspaceEdit as any).set(notebook.uri, [
+            notebookEditApi.replaceCells(
               new vscode.NotebookRange(data.cellIndex, data.cellIndex),
               [makeCell()],
             ),
@@ -232,8 +239,8 @@ export class VsCodeMessenger {
           if (data.cellIndex < 0 || data.cellIndex >= notebook.cellCount) {
             throw new Error(`Cell index ${data.cellIndex} is out of bounds.`);
           }
-          workspaceEdit.set(notebook.uri, [
-            vscode.NotebookEdit.replaceCells(
+          (workspaceEdit as any).set(notebook.uri, [
+            notebookEditApi.replaceCells(
               new vscode.NotebookRange(data.cellIndex, data.cellIndex + 1),
               [makeCell()],
             ),

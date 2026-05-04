@@ -12,29 +12,16 @@ function runCommand(command, cwd, packageName) {
     const [cmd, ...args] = command.split(" ");
     const child = spawn(cmd, args, {
       cwd,
-      stdio: "pipe",
+      stdio: "inherit",
       shell: true,
-    });
-
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout.on("data", (data) => {
-      stdout += data.toString();
-    });
-
-    child.stderr.on("data", (data) => {
-      stderr += data.toString();
     });
 
     child.on("close", (code) => {
       if (code === 0) {
         console.log(`✅ ${packageName}: ${command} completed successfully`);
-        resolve({ packageName, command, stdout, stderr });
+        resolve({ packageName, command });
       } else {
         console.error(`❌ ${packageName}: ${command} failed with code ${code}`);
-        console.error(`stderr: ${stderr}`);
-        console.error(`stdout: ${stdout}`);
         reject(
           new Error(`${packageName} failed: ${command} (exit code ${code})`),
         );

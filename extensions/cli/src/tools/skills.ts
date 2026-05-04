@@ -1,5 +1,10 @@
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
+import {
+  findBundledSkill,
+  getBundledSkills,
+  runBundledSkill,
+} from "../util/bundledSkills.js";
 import { loadMarkdownSkills } from "../util/loadMarkdownSkills.js";
 import { logger } from "../util/logger.js";
 
@@ -28,12 +33,21 @@ export const SKILLS_TOOL_META: Tool = {
 
 export const skillsTool = async (): Promise<Tool> => {
   const { skills } = await loadMarkdownSkills();
+  const bundled = getBundledSkills();
+
+  const allSkillNames = [
+    ...skills.map((s) => `\nname: ${s.name}\ndescription: ${s.description}\n`),
+    ...bundled.map(
+      (b) =>
+        `\nname: ${b.name}\ndescription: ${b.description}${b.userInvocable ? " [user-invocable]" : ""}\n`,
+    ),
+  ];
 
   return {
     ...SKILLS_TOOL_META,
 
     description: `Use this tool to read the content of a skill by its name. Skills contain detailed instructions for specific tasks. The skill name should match one of the available skills listed below:
-${skills.map((skill) => `\nname: ${skill.name}\ndescription: ${skill.description}\n`)}`,
+${allSkillNames}`,
 
     preprocess: async (args: any) => {
       const { skill_name } = args;
@@ -54,12 +68,26 @@ ${skills.map((skill) => `\nname: ${skill.name}\ndescription: ${skill.description
 
       logger.debug("skill args", { args, context });
 
+      // Check bundled skills first (they take precedence over disk skills with same name)
+      const bundledSkill = findBundledSkill(skill_name);
+      if (bundledSkill) {
+        const content = await runBundledSkill(bundledSkill, skill_name);
+        return [
+          `<skill_name>${bundledSkill.name}</skill_name>`,
+          `<skill_description>${bundledSkill.description}</skill_description>`,
+          `<skill_content>${content}</skill_content>`,
+        ].join("\n");
+      }
+
       const skill = skills.find((s) => s.name === skill_name);
       if (!skill) {
-        const availableSkills = skills.map((s) => s.name).join(", ");
+        const available = [
+          ...skills.map((s) => s.name),
+          ...bundled.map((b) => b.name),
+        ].join(", ");
         throw new ContinueError(
           ContinueErrorReason.SkillNotFound,
-          `Skill "${skill_name}" not found. Available skills: ${availableSkills || "none"}`,
+          `Skill "${skill_name}" not found. Available skills: ${available || "none"}`,
         );
       }
 

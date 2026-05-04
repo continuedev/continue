@@ -450,6 +450,20 @@ export async function streamChatResponse(
   let finalResponse = "";
   let compactionOccurredThisTurn = false; // Track if compaction happened during this conversation turn
 
+  // Task state: mark current turn as running (non-fatal if service not ready)
+  try {
+    // Derive a short description from the last user message in history
+    const lastUserMsg = [...chatHistory]
+      .reverse()
+      .find((h) => h.message.role === "user");
+    const desc =
+      typeof lastUserMsg?.message.content === "string"
+        ? lastUserMsg.message.content.slice(0, 120)
+        : "agent turn";
+    services.taskState.createTask(desc);
+    services.taskState.startCurrentTask();
+  } catch {}
+
   while (true) {
     // If ChatHistoryService is available, refresh local chatHistory view
     chatHistory = refreshChatHistoryFromService(chatHistory, isCompacting);
@@ -504,6 +518,25 @@ export async function streamChatResponse(
       return finalResponse || content || fullResponse;
     }
 
+    // Update progress tracker and cost tracker with this turn's token usage (non-fatal)
+    try {
+      services.progressTracker.updateFromUsage(usage);
+      services.taskState.updateTokens(usage?.prompt_tokens ?? 0);
+      if (usage) {
+        services.costTracking.record({
+          model: model.model ?? "unknown",
+          inputTokens: usage.prompt_tokens ?? 0,
+          outputTokens: usage.completion_tokens ?? 0,
+          cacheReadTokens:
+            usage.prompt_tokens_details?.cache_read_tokens ??
+            usage.prompt_tokens_details?.cached_tokens ??
+            0,
+          cacheWriteTokens:
+            usage.usage_details?.cache_creation_input_tokens ?? 0,
+        });
+      }
+    } catch {}
+
     fullResponse += content;
 
     // Update final response based on mode
@@ -528,7 +561,38 @@ export async function streamChatResponse(
     });
 
     if (shouldReturn) {
+      // Record tool calls in session memory and progress tracker even on early return
+      if (toolCalls.length > 0) {
+        try {
+          services.sessionMemory.recordToolCalls(toolCalls.length);
+          services.sessionMemory.maybeExtract(chatHistory, llmApi, model);
+          services.progressTracker.recordToolCalls(
+            toolCalls.map((tc) => ({
+              name: tc.name,
+              arguments: tc.argumentsStr,
+            })),
+          );
+          services.taskState.recordToolCall();
+        } catch {}
+      }
       return finalResponse || content || fullResponse;
+    }
+
+    // Record tool calls in progress tracker + session memory
+    if (toolCalls.length > 0) {
+      try {
+        services.sessionMemory.recordToolCalls(toolCalls.length);
+        services.sessionMemory.maybeExtract(chatHistory, llmApi, model);
+        services.progressTracker.recordToolCalls(
+          toolCalls.map((tc) => ({
+            name: tc.name,
+            arguments: tc.argumentsStr,
+          })),
+        );
+        for (let i = 0; i < toolCalls.length; i++) {
+          services.taskState.recordToolCall();
+        }
+      } catch {}
     }
 
     // After tool execution, validate that we haven't exceeded context limit
@@ -594,6 +658,29 @@ export async function streamChatResponse(
     totalResponseLength: fullResponse.length,
     totalMessages: chatHistory.length,
   });
+
+  // Update context analysis with final history state (non-fatal)
+  try {
+    const systemMsg = await services.systemMessage.getSystemMessage(
+      services.toolPermissions.getState().currentMode,
+    );
+    services.contextAnalysis.update(chatHistory, model, systemMsg);
+  } catch {}
+
+  // Complete the current task
+  try {
+    if (abortController.signal.aborted) {
+      services.taskState.killTask();
+    } else {
+      services.taskState.completeTask();
+    }
+  } catch {}
+
+  // Schedule background cross-session memory consolidation (fire-and-forget).
+  // Only fires when gates pass (≥24h elapsed + ≥5 new session notes).
+  try {
+    services.autoDream.schedule(llmApi, model);
+  } catch {}
 
   // For headless mode, we return only the final response
   // Otherwise, return the full response
