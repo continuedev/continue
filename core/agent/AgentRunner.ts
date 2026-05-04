@@ -43,6 +43,7 @@ import {
   shouldExtractSessionMemory,
 } from "./SessionMemory";
 import { scheduleAutoDream } from "./autoDream";
+import { analyzeContext } from "../util/contextAnalysis";
 
 // ─── Constants (mirrored from Marcel) ────────────────────────────────────────
 
@@ -303,7 +304,36 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
       turn++;
       onEvent?.({ type: "turn_start", turn, messages: [...messages] });
 
-      // ── 1. Stream LLM turn ──────────────────────────────────────────────────
+      // ── Context limit guard ─────────────────────────────────────────────────
+      // Warn when the accumulated conversation is using ≥ 80% of the model's
+      // context window. At ≥ 95% we bail out to avoid silent mid-turn truncation.
+      {
+        const contextStats = analyzeContext(messages);
+        const contextLimit = llm.contextLength;
+        const usageRatio = contextStats.total / contextLimit;
+        if (usageRatio >= 0.95) {
+          stopReason = "error_limit"; // closest semantic match for "context overflow"
+          messages.push({
+            role: "user",
+            content:
+              `[Agent halted] Context window exhausted ` +
+              `(${contextStats.total.toLocaleString()} / ${contextLimit.toLocaleString()} tokens). ` +
+              `Summarize progress and restart with a narrower task.`,
+          });
+          break;
+        }
+        if (usageRatio >= 0.8) {
+          // Soft warning — inject a system-level note so the model can adjust
+          messages.push({
+            role: "user",
+            content:
+              `[Context warning] Approaching context limit ` +
+              `(${Math.round(usageRatio * 100)}% used). ` +
+              `Prefer concise responses and avoid re-reading large files.`,
+          });
+        }
+      }
+
       const accumulated: AssistantChatMessage = {
         role: "assistant",
         content: "",

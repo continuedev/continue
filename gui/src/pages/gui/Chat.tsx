@@ -56,6 +56,7 @@ import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import { AgentChatView } from "../../components/Agent/AgentChatView";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
@@ -116,6 +117,8 @@ export function Chat() {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
+  // Yuto agent session state
+  const [agentSessionId, setAgentSessionId] = useState<string | null>(null);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -180,6 +183,41 @@ export function Chat() {
       const selectedModelByRole =
         stateSnapshot.config.config.selectedModelByRole;
       const currentMode = stateSnapshot.session.mode;
+
+      // Handle Yuto agent mode: fire agent/run and show the AgentChatView
+      if (currentMode === "agent" && !isCurrentlyInEdit) {
+        const defaultContextProviders =
+          stateSnapshot.config.config.experimental?.defaultContext ?? [];
+
+        void (async () => {
+          const { content } = await resolveEditorContent({
+            editorState,
+            modifiers,
+            ideMessenger,
+            defaultContextProviders,
+            availableSlashCommands: stateSnapshot.config.config.slashCommands,
+            dispatch,
+            getState: () => reduxStore.getState(),
+          });
+
+          if (!content.trim()) return;
+
+          try {
+            const res = await ideMessenger.request("agent/run", {
+              prompt: content,
+            });
+            if (res.status === "success") {
+              setAgentSessionId(res.content.sessionId);
+              if (editorToClearOnSend) {
+                editorToClearOnSend.commands.clearContent();
+              }
+            }
+          } catch (err) {
+            console.error("[Yuto] agent/run failed:", err);
+          }
+        })();
+        return;
+      }
 
       // Handle background mode specially
       if (currentMode === "background" && !isCurrentlyInEdit) {
@@ -508,6 +546,11 @@ export function Chat() {
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
           {mode === "background" ? (
             <BackgroundModeView isCreatingAgent={isCreatingAgent} />
+          ) : mode === "agent" && agentSessionId ? (
+            <AgentChatView
+              sessionId={agentSessionId}
+              onSessionEnd={() => setAgentSessionId(null)}
+            />
           ) : (
             history.length === 0 && (
               <EmptyChatBody showOnboardingCard={onboardingCard.show} />

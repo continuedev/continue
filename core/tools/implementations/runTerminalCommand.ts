@@ -2,6 +2,10 @@ import iconv from "iconv-lite";
 import childProcess from "node:child_process";
 import os from "node:os";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
+import {
+  extractOutputRedirections,
+  isUnsafeCompoundCommand_DEPRECATED,
+} from "../../util/bash/commands";
 
 // Default timeout for terminal commands (2 minutes)
 const DEFAULT_TOOL_TIMEOUT_MS = 120_000;
@@ -39,7 +43,49 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
 import { fileURLToPath } from "node:url";
 import { ToolImpl } from ".";
 import {
-  isProcessBackgrounded,
+
+/**
+ * Builds a one-line safety preamble for a command using the bash util library.
+ * Returns an empty string when nothing notable is detected.
+ *
+ * - Warns if the command is an unsafe compound command (e.g. chained pipes
+ *   with subshells that the shell-quote parser can't verify).
+ * - Lists any output-file redirections so the agent has a record of writes.
+ */
+function getCommandSafetyPreamble(command: string): string {
+  const notes: string[] = [];
+
+  try {
+    if (isUnsafeCompoundCommand_DEPRECATED(command)) {
+      notes.push(
+        "[Yuto] Warning: complex compound command — shell-quote parser could not fully verify structure.",
+      );
+    }
+  } catch {
+    // Ignore parse errors — the command itself will fail or succeed on its own.
+  }
+
+  try {
+    const { redirections, hasDangerousRedirection } =
+      extractOutputRedirections(command);
+    if (hasDangerousRedirection) {
+      notes.push(
+        "[Yuto] Warning: command contains redirections that could not be safely parsed.",
+      );
+    } else if (redirections.length > 0) {
+      const targets = redirections.map((r) => `${r.operator} ${r.target}`);
+      notes.push(`[Yuto] Output redirected to: ${targets.join(", ")}`);
+    }
+  } catch {
+    // Ignore — don't block execution on safety-annotation failures.
+  }
+
+  return notes.length > 0 ? notes.join("\n") + "\n" : "";
+}
+
+import { fileURLToPath } from "node:url";
+import { ToolImpl } from ".";
+import {
   markProcessAsRunning,
   removeBackgroundedProcess,
   removeRunningProcess,
@@ -123,7 +169,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
         const cwd = resolveWorkingDirectory(workspaceDirs);
 
         return new Promise((resolve, reject) => {
-          let terminalOutput = "";
+          let terminalOutput = getCommandSafetyPreamble(command);
           let timeoutId: ReturnType<typeof setTimeout> | undefined;
           let sigkillTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
@@ -479,11 +525,12 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
           );
 
           const status = "Command completed";
+          const preamble = getCommandSafetyPreamble(command);
           return [
             {
               name: "Terminal",
               description: "Terminal command output",
-              content: output.stdout ?? "",
+              content: preamble + (output.stdout ?? ""),
               status: status,
             },
           ];
