@@ -477,7 +477,6 @@ export class AskSageApi implements BaseLlmApi {
       }
 
       const data = (await response.json()) as AskSageResponse;
-      console.log("AskSage response:", JSON.stringify(data));
 
       // Extract content
       const content =
