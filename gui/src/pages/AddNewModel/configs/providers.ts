@@ -1017,9 +1017,10 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       ...completionParamsInputsConfigs,
     ],
     packages: [
-      models.saladQwen35_35bA3B,
-      models.saladQwen35_27b,
+      models.saladQwen36_35bA3B,
+      models.saladQwen36_27b,
       models.saladQwen35_9b,
+      models.saladGemma4_26bA4B,
     ],
     apiKeyUrl: "https://portal.salad.com/api-key",
   },
