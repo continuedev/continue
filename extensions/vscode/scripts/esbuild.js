@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 
 const { writeBuildTimestamp } = require("./utils");
 
@@ -35,8 +36,10 @@ const esbuildConfig = {
             throw new Error(result.errors);
           } else {
             try {
+              const metaFilePath = path.join(".", "build", "meta.json");
+              fs.mkdirSync(path.dirname(metaFilePath), { recursive: true });
               fs.writeFileSync(
-                "./build/meta.json",
+                metaFilePath,
                 JSON.stringify(result.metafile, null, 2),
               );
             } catch (e) {

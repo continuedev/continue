@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { evaluateTerminalCommandSecurity, ToolPolicy } from "../src/index.js";
+import { describe, expect, it } from "vitest";
+import { evaluateTerminalCommandSecurity } from "../src/index.js";
 
 describe("evaluateTerminalCommandSecurity", () => {
   describe("Critical Risk - Always Disabled", () => {
@@ -639,12 +639,12 @@ describe("evaluateTerminalCommandSecurity", () => {
       expect(result).toBe("allowedWithPermission");
     });
 
-    it("should require permission for output redirection to sensitive files", () => {
+    it("should disable output redirection to critical files", () => {
       const result = evaluateTerminalCommandSecurity(
         "allowedWithoutPermission",
         "echo malicious > /etc/passwd",
       );
-      expect(result).toBe("allowedWithPermission");
+      expect(result).toBe("disabled");
     });
 
     it("should require permission for append redirection to sensitive files", () => {
@@ -661,6 +661,22 @@ describe("evaluateTerminalCommandSecurity", () => {
         "echo evil | tee /etc/hosts",
       );
       expect(result).toBe("allowedWithPermission");
+    });
+
+    it("should disable forced redirection to critical files", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "echo malicious >| /etc/shadow",
+      );
+      expect(result).toBe("disabled");
+    });
+
+    it("should disable fd redirection with exec", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "exec 3> ./debug.log",
+      );
+      expect(result).toBe("disabled");
     });
   });
 
@@ -945,6 +961,22 @@ describe("evaluateTerminalCommandSecurity", () => {
       const result = evaluateTerminalCommandSecurity(
         "allowedWithoutPermission",
         ". /tmp/evil.sh",
+      );
+      expect(result).toBe("allowedWithPermission");
+    });
+
+    it("should detect ANSI-C quoting bypass patterns", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "echo $'\\x68\\x69'",
+      );
+      expect(result).toBe("allowedWithPermission");
+    });
+
+    it("should detect IFS bypass patterns", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "cat${IFS}/etc/passwd",
       );
       expect(result).toBe("allowedWithPermission");
     });

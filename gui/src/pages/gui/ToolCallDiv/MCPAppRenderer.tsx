@@ -3,11 +3,7 @@ import {
   McpUiResourcePermissions,
   PostMessageTransport,
 } from "@modelcontextprotocol/ext-apps";
-
-import {
-  AppBridge,
-  buildAllowAttribute,
-} from "@modelcontextprotocol/ext-apps/app-bridge";
+import * as AppBridgeModule from "@modelcontextprotocol/ext-apps/app-bridge";
 import { ToolCallState } from "core";
 import { getToolNameFromMCPServer } from "core/tools/mcpToolName";
 import { generateOpenAIToolCallId } from "core/tools/systemMessageTools/systemToolUtils";
@@ -23,6 +19,13 @@ import {
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
 import { streamResponseThunk } from "../../../redux/thunks/streamResponse";
+
+const { AppBridge, buildAllowAttribute } = AppBridgeModule as {
+  AppBridge: new (...args: any[]) => any;
+  buildAllowAttribute: (
+    permissions: McpUiResourcePermissions | undefined,
+  ) => string;
+};
 
 /**
  * Build a CSP meta tag content string from McpUiResourceCsp configuration.
@@ -97,7 +100,7 @@ export function McpAppRenderer({
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const appBridgeRef = useRef<AppBridge | null>(null);
+  const appBridgeRef = useRef<InstanceType<typeof AppBridge> | null>(null);
   const [iframeHeight, setIframeHeight] = useState(300);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<Error | null>(null);

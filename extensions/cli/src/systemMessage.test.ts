@@ -20,6 +20,8 @@ vi.mock("./hubLoader.js", () => ({
 }));
 
 const PLAN_MODE_STRING = "You are operating in _Plan Mode_";
+const EXPLORE_MODE_STRING = "You are operating in _Explore Mode_";
+const VERIFY_MODE_STRING = "You are operating in _Verify Mode_";
 
 describe("constructSystemMessage", () => {
   it("should return base system message with rules when additionalRules is provided", async () => {
@@ -258,5 +260,33 @@ Rule 3: Third rule`;
     expect(result).toContain(
       "which means that your goal is to help the user investigate their ideas",
     );
+  });
+
+  it("should add explore mode instructions when mode is explore", async () => {
+    const result = await constructSystemMessage(
+      "explore",
+      undefined,
+      undefined,
+      false,
+    );
+
+    expect(result).toContain(EXPLORE_MODE_STRING);
+    expect(result).toContain("Prioritize rapid discovery");
+    expect(result).toContain("Do not perform direct file edits");
+  });
+
+  it("should add verify mode instructions when mode is verify", async () => {
+    const result = await constructSystemMessage(
+      "verify",
+      undefined,
+      undefined,
+      false,
+    );
+
+    expect(result).toContain(VERIFY_MODE_STRING);
+    expect(result).toContain(
+      "Prioritize validation, review, and risk detection",
+    );
+    expect(result).toContain("Present findings first by severity");
   });
 });

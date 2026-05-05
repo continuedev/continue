@@ -21,13 +21,21 @@ describe("UserInput Keyboard Shortcuts", () => {
       toolPermissionService.switchMode("auto");
       expect(toolPermissionService.getCurrentMode()).toBe("auto");
 
+      // Cycle to explore
+      toolPermissionService.switchMode("explore");
+      expect(toolPermissionService.getCurrentMode()).toBe("explore");
+
+      // Cycle to verify
+      toolPermissionService.switchMode("verify");
+      expect(toolPermissionService.getCurrentMode()).toBe("verify");
+
       // Cycle back to normal
       toolPermissionService.switchMode("normal");
       expect(toolPermissionService.getCurrentMode()).toBe("normal");
     });
 
     it("should cycle through all modes sequentially", () => {
-      const modes = ["normal", "plan", "auto"] as const;
+      const modes = ["normal", "plan", "auto", "explore", "verify"] as const;
 
       // Test cycling through all modes
       for (let i = 0; i < modes.length * 2; i++) {

@@ -2,7 +2,13 @@ import { ToolCallPreview } from "../tools/types.js";
 
 export type PermissionPolicy = "allow" | "ask" | "exclude";
 
-export type PermissionMode = "normal" | "plan" | "auto" | "coordinator";
+export type PermissionMode =
+  | "normal"
+  | "plan"
+  | "auto"
+  | "coordinator"
+  | "explore"
+  | "verify";
 
 export interface ToolPermissionPolicy {
   /** The tool name to match against */

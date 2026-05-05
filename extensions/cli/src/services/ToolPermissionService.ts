@@ -1,7 +1,9 @@
 import {
   AUTO_MODE_POLICIES,
   COORDINATOR_MODE_POLICIES,
+  EXPLORE_MODE_POLICIES,
   PLAN_MODE_POLICIES,
+  VERIFY_MODE_POLICIES,
 } from "src/permissions/defaultPolicies.js";
 
 import { ensurePermissionsYamlExists } from "../permissions/permissionsYamlLoader.js";
@@ -178,6 +180,10 @@ export class ToolPermissionService
         return [...AUTO_MODE_POLICIES];
       case "coordinator":
         return [...COORDINATOR_MODE_POLICIES];
+      case "explore":
+        return [...EXPLORE_MODE_POLICIES];
+      case "verify":
+        return [...VERIFY_MODE_POLICIES];
       case "normal":
       default:
         // Normal mode uses the more nuanced policy loading
@@ -218,7 +224,9 @@ export class ToolPermissionService
     } else if (
       this.currentState.currentMode === "plan" ||
       this.currentState.currentMode === "auto" ||
-      this.currentState.currentMode === "coordinator"
+      this.currentState.currentMode === "coordinator" ||
+      this.currentState.currentMode === "explore" ||
+      this.currentState.currentMode === "verify"
     ) {
       // For plan, auto, and coordinator modes, use ONLY mode policies (absolute override)
       allPolicies = [...modePolicies];
@@ -317,7 +325,13 @@ export class ToolPermissionService
     // For plan, auto, and coordinator modes, use ONLY mode policies (absolute override)
     // For normal mode, restore original policies if available
     let allPolicies: ToolPermissionPolicy[];
-    if (newMode === "plan" || newMode === "auto" || newMode === "coordinator") {
+    if (
+      newMode === "plan" ||
+      newMode === "auto" ||
+      newMode === "coordinator" ||
+      newMode === "explore" ||
+      newMode === "verify"
+    ) {
       // Absolute override: ignore all user configuration
       allPolicies = [...modePolicies];
     } else {

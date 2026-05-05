@@ -1,12 +1,19 @@
 {
   "version": "2.0.0",
+  "options": {
+    "env": {
+      "PATH": "/home/fran/.nvm/versions/node/v20.20.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"
+    }
+  },
   "tasks": [
     {
       "label": "tsc:watch",
-      "type": "npm",
-      "script": "tsc:watch",
-      "isBackground": true,
-      "problemMatcher": ["$tsc-watch"],
+      "dependsOn": [
+        "tsc:watch:gui-task",
+        "tsc:watch:vscode-task",
+        "tsc:watch:core-task",
+        "tsc:watch:binary-task"
+      ],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -15,6 +22,86 @@
         "group": "dev-watchers",
         "panel": "dedicated",
         "reveal": "always"
+      }
+    },
+    {
+      "label": "tsc:watch:gui-task",
+      "type": "shell",
+      "command": "/home/fran/.nvm/versions/node/v20.20.1/bin/node",
+      "args": [
+        "./node_modules/typescript/bin/tsc",
+        "--project",
+        "gui/tsconfig.json",
+        "--watch",
+        "--noEmit",
+        "--pretty"
+      ],
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"],
+      "presentation": {
+        "group": "dev-watchers",
+        "panel": "dedicated",
+        "reveal": "silent"
+      }
+    },
+    {
+      "label": "tsc:watch:vscode-task",
+      "type": "shell",
+      "command": "/home/fran/.nvm/versions/node/v20.20.1/bin/node",
+      "args": [
+        "./node_modules/typescript/bin/tsc",
+        "--project",
+        "extensions/vscode/tsconfig.json",
+        "--watch",
+        "--noEmit",
+        "--pretty"
+      ],
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"],
+      "presentation": {
+        "group": "dev-watchers",
+        "panel": "dedicated",
+        "reveal": "silent"
+      }
+    },
+    {
+      "label": "tsc:watch:core-task",
+      "type": "shell",
+      "command": "/home/fran/.nvm/versions/node/v20.20.1/bin/node",
+      "args": [
+        "./node_modules/typescript/bin/tsc",
+        "--project",
+        "core/tsconfig.json",
+        "--watch",
+        "--noEmit",
+        "--pretty"
+      ],
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"],
+      "presentation": {
+        "group": "dev-watchers",
+        "panel": "dedicated",
+        "reveal": "silent"
+      }
+    },
+    {
+      "label": "tsc:watch:binary-task",
+      "type": "shell",
+      "command": "/home/fran/.nvm/versions/node/v20.20.1/bin/node",
+      "args": [
+        "./node_modules/typescript/bin/tsc",
+        "--project",
+        "binary/tsconfig.json",
+        "--watch",
+        "--noEmit",
+        "--pretty"
+      ],
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"],
+      "presentation": {
+        "group": "dev-watchers",
+        "panel": "dedicated",
+        "reveal": "silent"
       }
     },
     {
@@ -128,7 +215,9 @@
     {
       "label": "install-all-dependencies",
       "type": "shell",
-      "windows": { "command": "./scripts/install-dependencies.ps1" },
+      "windows": {
+        "command": "./scripts/install-dependencies.ps1"
+      },
       "command": "./scripts/install-dependencies.sh",
       "problemMatcher": [],
       "presentation": {
@@ -140,11 +229,19 @@
     {
       "label": "gui:dev",
       "type": "shell",
-      "command": "npm",
+      "command": "/home/fran/.nvm/versions/node/v20.20.1/bin/node",
       "options": {
-        "cwd": "${workspaceFolder}/gui"
+        "cwd": "${workspaceFolder}/gui",
+        "env": {
+          "CHOKIDAR_USEPOLLING": "1",
+          "CHOKIDAR_INTERVAL": "500"
+        }
       },
-      "args": ["run", "dev"],
+      "args": [
+        "/home/fran/.nvm/versions/node/v20.20.1/lib/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "dev"
+      ],
       "isBackground": true,
       "runOptions": {
         "instanceLimit": 1

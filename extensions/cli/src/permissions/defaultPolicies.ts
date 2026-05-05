@@ -104,3 +104,64 @@ export const COORDINATOR_MODE_POLICIES: ToolPermissionPolicy[] = [
   // MCP tools allowed (coordinator may need to query external services)
   { tool: "*", permission: "allow" },
 ];
+
+/**
+ * Explore mode: read-heavy reconnaissance with no direct file mutations.
+ * Useful for agent-style codebase exploration and gathering context.
+ */
+export const EXPLORE_MODE_POLICIES: ToolPermissionPolicy[] = [
+  // Coordination and reporting tools
+  { tool: "Subagent", permission: "allow" },
+  { tool: "AskQuestion", permission: "allow" },
+  { tool: "Checklist", permission: "allow" },
+  { tool: "Status", permission: "allow" },
+  { tool: "ReportFailure", permission: "allow" },
+  { tool: "Skills", permission: "allow" },
+  { tool: "Exit", permission: "allow" },
+
+  // Exploration-friendly reads
+  { tool: "Read", permission: "allow" },
+  { tool: "List", permission: "allow" },
+  { tool: "Search", permission: "allow" },
+  { tool: "Diff", permission: "allow" },
+  { tool: "Fetch", permission: "allow" },
+
+  // Shell available, but still confirmation-gated
+  { tool: "Bash", permission: "ask" },
+
+  // Mutations disabled
+  { tool: "Edit", permission: "exclude" },
+  { tool: "MultiEdit", permission: "exclude" },
+  { tool: "Write", permission: "exclude" },
+
+  { tool: "*", permission: "allow" },
+];
+
+/**
+ * Verify mode: review and validation focus (tests/checks), no direct writes.
+ */
+export const VERIFY_MODE_POLICIES: ToolPermissionPolicy[] = [
+  // Review and reporting tools
+  { tool: "Subagent", permission: "allow" },
+  { tool: "AskQuestion", permission: "allow" },
+  { tool: "Checklist", permission: "allow" },
+  { tool: "Status", permission: "allow" },
+  { tool: "ReportFailure", permission: "allow" },
+  { tool: "Skills", permission: "allow" },
+  { tool: "Exit", permission: "allow" },
+
+  // Verification and inspection tools
+  { tool: "Read", permission: "allow" },
+  { tool: "List", permission: "allow" },
+  { tool: "Search", permission: "allow" },
+  { tool: "Diff", permission: "allow" },
+  { tool: "Fetch", permission: "allow" },
+  { tool: "Bash", permission: "ask" },
+
+  // Mutations disabled
+  { tool: "Edit", permission: "exclude" },
+  { tool: "MultiEdit", permission: "exclude" },
+  { tool: "Write", permission: "exclude" },
+
+  { tool: "*", permission: "allow" },
+];

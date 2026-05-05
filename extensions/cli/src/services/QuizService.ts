@@ -1,9 +1,18 @@
 import { EventEmitter } from "events";
 
 /**Types */
+export interface QuizOption {
+  label: string;
+  description?: string;
+  preview?: string;
+}
+
 export interface QuizQuestion {
   question: string;
-  options?: string[];
+  header?: string;
+  options?: QuizOption[];
+  multiSelect?: boolean;
+  allowFreeformInput?: boolean;
   defaultAnswer?: string;
 }
 
@@ -14,7 +23,7 @@ export interface PendingQuestion extends QuizQuestion {
 
 export interface QuizAnswer {
   requestId: string;
-  answer: string;
+  answer: string | string[];
   isCustomAnswer: boolean;
 }
 
@@ -29,7 +38,7 @@ export interface QuestionRequestedEvent {
 
 export interface QuestionAnsweredEvent {
   requestId: string;
-  answer: string;
+  answer: string | string[];
   isCustomAnswer: boolean;
 }
 
@@ -39,7 +48,7 @@ export class QuizService extends EventEmitter {
     string,
     {
       question: QuizQuestion;
-      resolve: (answer: string) => void;
+      resolve: (answer: string | string[]) => void;
     }
   >();
 
@@ -48,10 +57,10 @@ export class QuizService extends EventEmitter {
   };
 
   /**set a pending question to be answered and return a promise that resolves when the question is answered */
-  async askQuestion(question: QuizQuestion): Promise<string> {
+  async askQuestion(question: QuizQuestion): Promise<string | string[]> {
     const requestId = `quiz-${Date.now()}`;
 
-    return new Promise<string>((resolve) => {
+    return new Promise<string | string[]>((resolve) => {
       const pendingQuestion: PendingQuestion = {
         ...question,
         requestId,
@@ -77,7 +86,7 @@ export class QuizService extends EventEmitter {
   /**answer the pending question request and resolve the answer */
   answerQuestion(
     requestId: string,
-    answer: string,
+    answer: string | string[],
     isCustomAnswer = false,
   ): boolean {
     const pending = this.pendingRequests.get(requestId);

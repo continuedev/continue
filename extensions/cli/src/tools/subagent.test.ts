@@ -118,4 +118,53 @@ describe("subagentTool", () => {
       "subagent-output\n<task_metadata>\nstatus: completed\n</task_metadata>",
     );
   });
+
+  it("run infers verify profile from prompt and forwards it", async () => {
+    vi.mocked(getAgentNames).mockReturnValue(["code-agent"]);
+    vi.mocked(getSubagent).mockReturnValue({
+      model: { name: "test-model" },
+    } as any);
+    vi.mocked(executeSubAgent).mockResolvedValue({
+      success: true,
+      response: "verified",
+    } as any);
+
+    const tool = await subagentTool();
+
+    await tool.run(
+      {
+        prompt: "Please verify recent changes and run tests",
+        subagent_name: "code-agent",
+      },
+      { toolCallId: "tool-call-id", parallelToolCallCount: 1 },
+    );
+
+    const [options] = vi.mocked(executeSubAgent).mock.calls[0];
+    expect(options.profile).toBe("verify");
+  });
+
+  it("run respects explicit profile and forwards it", async () => {
+    vi.mocked(getAgentNames).mockReturnValue(["code-agent"]);
+    vi.mocked(getSubagent).mockReturnValue({
+      model: { name: "test-model" },
+    } as any);
+    vi.mocked(executeSubAgent).mockResolvedValue({
+      success: true,
+      response: "explored",
+    } as any);
+
+    const tool = await subagentTool();
+
+    await tool.run(
+      {
+        prompt: "Validate this",
+        subagent_name: "code-agent",
+        profile: "explore",
+      },
+      { toolCallId: "tool-call-id", parallelToolCallCount: 1 },
+    );
+
+    const [options] = vi.mocked(executeSubAgent).mock.calls[0];
+    expect(options.profile).toBe("explore");
+  });
 });

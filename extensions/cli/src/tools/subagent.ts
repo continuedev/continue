@@ -12,6 +12,35 @@ import { logger } from "../util/logger.js";
 
 import { Tool } from "./types.js";
 
+type SubagentProfile = "explore" | "verify";
+
+function inferSubagentProfile(
+  profile: unknown,
+  subagentName: string,
+  prompt: string,
+): SubagentProfile | undefined {
+  if (profile === "explore" || profile === "verify") {
+    return profile;
+  }
+
+  const haystack = `${subagentName} ${prompt}`.toLowerCase();
+  if (
+    /(verify|verification|review|audit|validate|regression|test)/.test(haystack)
+  ) {
+    return "verify";
+  }
+
+  if (
+    /(explore|discovery|discover|research|investigate|map codebase)/.test(
+      haystack,
+    )
+  ) {
+    return "explore";
+  }
+
+  return undefined;
+}
+
 export const subagentTool = async (): Promise<Tool> => {
   const modelServiceState = await serviceContainer.get<ModelServiceState>(
     SERVICE_NAMES.MODEL,
@@ -38,7 +67,7 @@ export const subagentTool = async (): Promise<Tool> => {
     },
 
     preprocess: async (args: any) => {
-      const { description, subagent_name } = args;
+      const { description, subagent_name, profile } = args;
 
       const agent = getSubagent(modelServiceState, subagent_name);
       if (!agent) {
@@ -49,19 +78,23 @@ export const subagentTool = async (): Promise<Tool> => {
         );
       }
 
+      const inferredProfile = inferSubagentProfile(profile, subagent_name, "");
+
       return {
         args,
         preview: [
           {
             type: "text",
-            content: `Spawning ${agent.model.name} to: ${description}`,
+            content: inferredProfile
+              ? `Spawning ${agent.model.name} (${inferredProfile}) to: ${description}`
+              : `Spawning ${agent.model.name} to: ${description}`,
           },
         ],
       };
     },
 
     run: async (args: any, context?: { toolCallId: string }) => {
-      const { prompt, subagent_name } = args;
+      const { prompt, subagent_name, profile } = args;
 
       logger.debug("subagent args", { args, context });
 
@@ -77,10 +110,17 @@ export const subagentTool = async (): Promise<Tool> => {
         throw new Error("No active session found");
       }
 
+      const inferredProfile = inferSubagentProfile(
+        profile,
+        subagent_name,
+        prompt,
+      );
+
       // Execute subagent with output streaming
       const result = await executeSubAgent({
         agent,
         prompt,
+        profile: inferredProfile,
         parentSessionId,
         abortController: new AbortController(),
         onOutputUpdate: context?.toolCallId

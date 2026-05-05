@@ -18,6 +18,13 @@
     "noEmitOnError": false
   },
   "include": ["src", "../src/util/messenger.ts"],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/__tests__/**",
+    "src/**/chat-tests/**",
+    "src/util/test/**"
+  ],
   "references": [
     {
       "path": "./tsconfig.node.json"

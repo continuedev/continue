@@ -7,6 +7,9 @@
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.env.linux": {
+    "PATH": "/home/fran/.nvm/versions/node/v20.20.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"
+  },
   "terminal.integrated.profiles.linux": {
     "bash": {
       "path": "bash",
@@ -56,16 +59,17 @@
   "conventionalCommits.promptFooter": false,
   "conventionalCommits.promptScopes": true,
   "conventionalCommits.scopes": ["reg"],
+  "jest.jestCommandLine": "/home/fran/.nvm/versions/node/v20.20.1/bin/node ./node_modules/jest/bin/jest.js",
   "jest.virtualFolders": [
     {
       "name": "core",
       "rootPath": "core",
-      "jestCommandLine": "npm test --"
+      "jestCommandLine": "/home/fran/.nvm/versions/node/v20.20.1/bin/node /home/fran/.nvm/versions/node/v20.20.1/lib/node_modules/npm/bin/npm-cli.js test --"
     },
     {
       "name": "binary",
       "rootPath": "binary",
-      "jestCommandLine": "npm test --"
+      "jestCommandLine": "/home/fran/.nvm/versions/node/v20.20.1/bin/node /home/fran/.nvm/versions/node/v20.20.1/lib/node_modules/npm/bin/npm-cli.js test --"
     }
   ]
 }

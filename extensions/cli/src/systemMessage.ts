@@ -218,6 +218,12 @@ export async function constructSystemMessage(
   if (mode === "plan") {
     systemMessage +=
       '\n<context name="planMode">You are operating in _Plan Mode_, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files. Ask the user to switch to agent mode if they want to make changes. For example, it is not acceptable to use the Bash tool to write to files.</context>\n';
+  } else if (mode === "explore") {
+    systemMessage +=
+      '\n<context name="exploreMode">You are operating in _Explore Mode_. Prioritize rapid discovery: map relevant files, APIs, and execution flow before proposing changes. Focus on evidence-backed findings with concrete file references. Do not perform direct file edits in this mode; ask the user to switch modes if implementation is required.</context>\n';
+  } else if (mode === "verify") {
+    systemMessage +=
+      '\n<context name="verifyMode">You are operating in _Verify Mode_. Prioritize validation, review, and risk detection: identify bugs, regressions, missing tests, and incorrect assumptions. Present findings first by severity with concrete references. Do not perform direct file edits in this mode; ask the user to switch modes if implementation is required.</context>\n';
   } else {
     // Check if commit signature is disabled via environment variable
     if (!process.env.CONTINUE_CLI_DISABLE_COMMIT_SIGNATURE) {

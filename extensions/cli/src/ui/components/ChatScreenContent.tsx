@@ -19,7 +19,11 @@ interface ChatScreenContentProps {
     createPolicy?: boolean,
     stopStream?: boolean,
   ) => void;
-  handleQuizAnswer: (requestId: string, answer: string) => void;
+  handleQuizAnswer: (
+    requestId: string,
+    answer: string | string[],
+    isCustomAnswer?: boolean,
+  ) => void;
   handleUserMessage: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
   isCompacting: boolean;
@@ -56,7 +60,10 @@ export const ChatScreenContent: React.FC<ChatScreenContentProps> = ({
     return (
       <QuizPrompt
         question={activeQuizQuestion.question.question}
+        header={activeQuizQuestion.question.header}
         options={activeQuizQuestion.question.options}
+        multiSelect={activeQuizQuestion.question.multiSelect}
+        allowFreeformInput={activeQuizQuestion.question.allowFreeformInput}
         defaultAnswer={activeQuizQuestion.question.defaultAnswer}
         requestId={activeQuizQuestion.requestId}
         onAnswer={handleQuizAnswer}

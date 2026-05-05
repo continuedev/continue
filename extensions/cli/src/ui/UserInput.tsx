@@ -209,7 +209,13 @@ const UserInput: React.FC<UserInputProps> = ({
 
   // Cycle through permission modes
   const cycleModes = async () => {
-    const modes: PermissionMode[] = ["normal", "plan", "auto"];
+    const modes: PermissionMode[] = [
+      "normal",
+      "plan",
+      "auto",
+      "explore",
+      "verify",
+    ];
     const currentMode = services.toolPermissions.getCurrentMode();
     const currentIndex = modes.indexOf(currentMode);
     const nextIndex = (currentIndex + 1) % modes.length;

@@ -68,6 +68,26 @@ const isWinTarget = target?.startsWith("win");
 const isLinuxTarget = target?.startsWith("linux");
 const isMacTarget = target?.startsWith("darwin");
 
+function ensureRipgrepBinaryPresent(exeSuffix) {
+  const rgPath = `node_modules/@vscode/ripgrep/bin/rg${exeSuffix}`;
+  if (fs.existsSync(rgPath)) {
+    return;
+  }
+
+  console.log(
+    `[warn] Missing ${rgPath}. Running @vscode/ripgrep postinstall with --force...`,
+  );
+  execCmdSync("node node_modules/@vscode/ripgrep/lib/postinstall.js --force");
+
+  if (!fs.existsSync(rgPath)) {
+    throw new Error(
+      `Ripgrep binary is still missing after forced postinstall: ${rgPath}`,
+    );
+  }
+
+  console.log(`[info] Restored ripgrep binary at ${rgPath}`);
+}
+
 void (async () => {
   const startTime = Date.now();
   console.log(
@@ -87,6 +107,16 @@ void (async () => {
   }
 
   process.chdir(path.join(continueDir, "gui"));
+
+  const guiIndexJsPath = path.join("dist", "assets", "index.js");
+  const guiIndexCssPath = path.join("dist", "assets", "index.css");
+
+  // Some flows leave gui/dist present but without a built Vite bundle.
+  // Ensure required assets exist before copying to extensions.
+  if (!fs.existsSync(guiIndexJsPath) || !fs.existsSync(guiIndexCssPath)) {
+    console.log("[info] GUI dist assets missing, running gui build...");
+    execCmdSync("npm run build");
+  }
 
   // Copy over the dist folder to the JetBrains extension //
   const intellijExtensionWebviewPath = path.join(
@@ -155,11 +185,12 @@ void (async () => {
     `[timer] VSCode copy completed in ${Date.now() - vscodeCopyStart}ms`,
   );
 
-  if (!fs.existsSync(path.join("dist", "assets", "index.js"))) {
-    throw new Error("gui build did not produce index.js");
-  }
-  if (!fs.existsSync(path.join("dist", "assets", "index.css"))) {
-    throw new Error("gui build did not produce index.css");
+  if (!fs.existsSync(guiIndexJsPath) || !fs.existsSync(guiIndexCssPath)) {
+    const assetsDir = path.join("dist", "assets");
+    const assets = fs.existsSync(assetsDir) ? fs.readdirSync(assetsDir) : [];
+    throw new Error(
+      `gui build missing required assets: index.js/index.css. Found assets: ${JSON.stringify(assets)}`,
+    );
   }
 
   // Copy over native / wasm modules //
@@ -404,6 +435,22 @@ void (async () => {
   );
 
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
+
+  // Some @vscode/ripgrep versions ship an empty bin/ directory and skip
+  // download unless postinstall is explicitly forced.
+  ensureRipgrepBinaryPresent(exe);
+
+  // Ensure the copied out/node_modules ripgrep payload includes the restored binary.
+  rimrafSync("out/node_modules/@vscode/ripgrep");
+  fs.mkdirSync("out/node_modules/@vscode/ripgrep", { recursive: true });
+  fs.cpSync(
+    "node_modules/@vscode/ripgrep",
+    "out/node_modules/@vscode/ripgrep",
+    {
+      recursive: true,
+      dereference: true,
+    },
+  );
 
   if (packageDirName && expectedPackagePath) {
     const expectedOutPackagePath = path.join(

@@ -5,15 +5,30 @@
 # - Debug -> Extension
 set -e
 
-# Use a user-local npm global prefix so `npm link` works without sudo.
-NPM_LOCAL_PREFIX="${HOME}/.npm-global"
-mkdir -p "$NPM_LOCAL_PREFIX"
-export NPM_CONFIG_PREFIX="$NPM_LOCAL_PREFIX"
-export PATH="$NPM_CONFIG_PREFIX/bin:$PATH"
+# Ensure nvm is available in non-interactive shells (like VS Code tasks).
+if [ -z "${NVM_DIR:-}" ]; then
+    export NVM_DIR="$HOME/.nvm"
+fi
+
+# VS Code task terminals can be reused, which may leave NPM_CONFIG_PREFIX set
+# from prior runs. nvm refuses to initialize in that state.
+unset NPM_CONFIG_PREFIX
+unset npm_config_prefix
+
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+    . "$NVM_DIR/nvm.sh"
+fi
 
 # Check if node version matches .nvmrc
 if [ -f .nvmrc ]; then
     required_node_version=$(cat .nvmrc)
+
+    # If nvm is available, automatically switch to the required version.
+    if command -v nvm >/dev/null 2>&1; then
+        nvm install "$required_node_version"
+        nvm use "$required_node_version"
+    fi
+
     current_node_version=$(node -v)
     
     # Remove 'v' prefix from versions for comparison
@@ -32,6 +47,14 @@ if [ -f .nvmrc ]; then
         echo
     fi
 fi
+
+# Use a user-local npm global prefix so `npm link` works without sudo.
+# This must be set after nvm install/use because nvm rejects shells
+# where NPM_CONFIG_PREFIX is defined.
+NPM_LOCAL_PREFIX="${HOME}/.npm-global"
+mkdir -p "$NPM_LOCAL_PREFIX"
+export NPM_CONFIG_PREFIX="$NPM_LOCAL_PREFIX"
+export PATH="$NPM_CONFIG_PREFIX/bin:$PATH"
 
 echo "Installing root-level dependencies..."
 npm install

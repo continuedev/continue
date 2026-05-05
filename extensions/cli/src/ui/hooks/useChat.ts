@@ -855,9 +855,13 @@ export function useChat({
     }
   };
 
-  const handleQuizAnswer = (requestId: string, answer: string) => {
+  const handleQuizAnswer = (
+    requestId: string,
+    answer: string | string[],
+    isCustomAnswer = false,
+  ) => {
     setActiveQuizQuestion(null);
-    services.quiz.answerQuestion(requestId, answer);
+    services.quiz.answerQuestion(requestId, answer, isCustomAnswer);
   };
 
   return {

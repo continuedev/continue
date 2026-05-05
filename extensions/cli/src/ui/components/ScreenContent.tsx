@@ -42,7 +42,11 @@ interface ScreenContentProps {
     createPolicy?: boolean,
     stopStream?: boolean,
   ) => void;
-  handleQuizAnswer: (requestId: string, answer: string) => void;
+  handleQuizAnswer: (
+    requestId: string,
+    answer: string | string[],
+    isCustomAnswer?: boolean,
+  ) => void;
   handleUserMessage: (message: string, imageMap?: Map<string, Buffer>) => void;
   isWaitingForResponse: boolean;
   isCompacting: boolean;

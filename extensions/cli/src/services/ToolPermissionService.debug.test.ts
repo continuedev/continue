@@ -11,7 +11,13 @@ describe("ToolPermissionService - Debug Tool Permissions", () => {
     service = new ToolPermissionService();
   });
 
-  const testModes: PermissionMode[] = ["normal", "plan", "auto"];
+  const testModes: PermissionMode[] = [
+    "normal",
+    "plan",
+    "auto",
+    "explore",
+    "verify",
+  ];
 
   testModes.forEach((mode) => {
     describe(`${mode} mode`, () => {

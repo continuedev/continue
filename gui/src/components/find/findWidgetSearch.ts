@@ -72,9 +72,10 @@ export const searchWithinContainer = (
     const highlightFullLine =
       textNode.parentElement?.className.includes("hljs");
 
-    let nodeTextValue = options.caseSensitive
-      ? textNode.nodeValue
-      : textNode.nodeValue.toLowerCase();
+    const rawNodeText = textNode.nodeValue ?? "";
+    const nodeTextValue = options.caseSensitive
+      ? rawNodeText
+      : rawNodeText.toLowerCase();
     let startIndex = 0;
     while ((startIndex = nodeTextValue.indexOf(query, startIndex)) !== -1) {
       // Create a range to measure the size and position of the match

@@ -1,5 +1,10 @@
 import type { ChatHistoryItem } from "core";
 
+import {
+  EXPLORE_MODE_POLICIES,
+  VERIFY_MODE_POLICIES,
+} from "../permissions/defaultPolicies.js";
+import { PermissionMode } from "../permissions/types.js";
 import { services } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
@@ -14,6 +19,7 @@ import { logger } from "../util/logger.js";
 export interface SubAgentExecutionOptions {
   agent: ModelServiceState;
   prompt: string;
+  profile?: "explore" | "verify";
   parentSessionId: string;
   abortController: AbortController;
   onOutputUpdate?: (output: string) => void;
@@ -34,11 +40,10 @@ export interface SubAgentResult {
 async function buildAgentSystemMessage(
   agent: ModelServiceState,
   services: any,
+  mode: PermissionMode,
 ): Promise<string> {
   const baseMessage = services.systemMessage
-    ? await services.systemMessage.getSystemMessage(
-        services.toolPermissions.getState().currentMode,
-      )
+    ? await services.systemMessage.getSystemMessage(mode)
     : "";
 
   const agentPrompt = agent.model?.chatOptions?.baseSystemMessage || "";
@@ -51,6 +56,35 @@ async function buildAgentSystemMessage(
   return baseMessage;
 }
 
+function getSubagentExecutionMode(
+  profile: SubAgentExecutionOptions["profile"],
+  parentMode: PermissionMode,
+): PermissionMode {
+  if (profile === "explore") {
+    return "explore";
+  }
+
+  if (profile === "verify") {
+    return "verify";
+  }
+
+  return parentMode;
+}
+
+function getModePolicyOverride(
+  mode: PermissionMode,
+): ToolPermissionServiceState["permissions"] | undefined {
+  if (mode === "explore") {
+    return { policies: [...EXPLORE_MODE_POLICIES] };
+  }
+
+  if (mode === "verify") {
+    return { policies: [...VERIFY_MODE_POLICIES] };
+  }
+
+  return undefined;
+}
+
 /**
  * Execute a subagent in a child session
  */
@@ -58,7 +92,13 @@ async function buildAgentSystemMessage(
 export async function executeSubAgent(
   options: SubAgentExecutionOptions,
 ): Promise<SubAgentResult> {
-  const { agent: subAgent, prompt, abortController, onOutputUpdate } = options;
+  const {
+    agent: subAgent,
+    prompt,
+    profile,
+    abortController,
+    onOutputUpdate,
+  } = options;
 
   const mainAgentPermissionsState =
     await serviceContainer.get<ToolPermissionServiceState>(
@@ -68,6 +108,7 @@ export async function executeSubAgent(
   try {
     logger.debug("Starting subagent execution", {
       agent: subAgent.model?.name,
+      profile,
     });
 
     const { model, llmApi } = subAgent;
@@ -75,21 +116,28 @@ export async function executeSubAgent(
       throw new Error("Model or LLM API not available");
     }
 
-    // allow all tools for now
-    // todo: eventually we want to show the same prompt in a dialog whether asking whether that tool call is allowed or not
+    const executionMode = getSubagentExecutionMode(
+      profile,
+      mainAgentPermissionsState.currentMode,
+    );
+    const modePermissionOverride = getModePolicyOverride(executionMode);
 
     serviceContainer.set<ToolPermissionServiceState>(
       SERVICE_NAMES.TOOL_PERMISSIONS,
       {
         ...mainAgentPermissionsState,
-        permissions: {
-          policies: [{ tool: "*", permission: "allow" }],
-        },
+        currentMode: executionMode,
+        permissions:
+          modePermissionOverride ?? mainAgentPermissionsState.permissions,
       },
     );
 
     // Build agent system message
-    const systemMessage = await buildAgentSystemMessage(subAgent, services);
+    const systemMessage = await buildAgentSystemMessage(
+      subAgent,
+      services,
+      executionMode,
+    );
 
     // Store original system message function
     const originalGetSystemMessage = services.systemMessage?.getSystemMessage;

@@ -14,6 +14,7 @@ import {
 import { getAllSlashCommands } from "./commands/commands.js";
 import { handleInit } from "./commands/init.js";
 import { handleInfoSlashCommand } from "./infoScreen.js";
+import { PermissionMode } from "./permissions/types.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
@@ -48,7 +49,7 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
     `  ${chalk.cyan("Ctrl+C")}     Clear input`,
     `  ${chalk.cyan("Ctrl+D")}     Exit application`,
     `  ${chalk.cyan("Ctrl+L")}     Clear screen`,
-    `  ${chalk.cyan("Shift+Tab")}  Cycle permission modes (normal/plan/auto)`,
+    `  ${chalk.cyan("Shift+Tab")}  Cycle permission modes (normal/plan/auto/explore/verify)`,
     `  ${chalk.cyan("Esc")}        Cancel streaming or close suggestions`,
     "",
     chalk.white("Special Characters:"),
@@ -64,9 +65,43 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
     `    ${chalk.cyan("/copy")}      Copy last assistant response to clipboard`,
     `    ${chalk.cyan("/memory")}    Open long-term memory file in $EDITOR`,
     `    ${chalk.cyan("/status")}    Show current task and session progress`,
+    `    ${chalk.cyan("/mode")}      Switch mode: /mode <normal|plan|auto|explore|verify|coordinator>`,
+    `    ${chalk.cyan("/explore")}   Switch to exploration-focused mode`,
+    `    ${chalk.cyan("/verify")}    Switch to verification/review-focused mode`,
     `  Type ${chalk.cyan("!")} followed by a command to execute bash directly`,
   ].join("\n");
   return { output: helpMessage };
+}
+
+function switchMode(mode: PermissionMode): SlashCommandResult {
+  services.toolPermissions.switchMode(mode);
+  const updatedState = services.toolPermissions.getState();
+  serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, updatedState);
+  return {
+    exit: false,
+    output: `Switched mode to ${mode}.`,
+  };
+}
+
+function handleMode(args: string[]): SlashCommandResult {
+  const rawMode = args[0]?.trim().toLowerCase();
+  const allowedModes: PermissionMode[] = [
+    "normal",
+    "plan",
+    "auto",
+    "explore",
+    "verify",
+    "coordinator",
+  ];
+
+  if (!rawMode || !allowedModes.includes(rawMode as PermissionMode)) {
+    return {
+      exit: false,
+      output: "Usage: /mode <normal|plan|auto|explore|verify|coordinator>",
+    };
+  }
+
+  return switchMode(rawMode as PermissionMode);
 }
 
 async function handleLogin() {
@@ -485,6 +520,9 @@ const commandHandlers: Record<string, CommandHandler> = {
       return { exit: false, output: "Status not yet available." };
     }
   },
+  mode: (args) => handleMode(args),
+  explore: () => switchMode("explore"),
+  verify: () => switchMode("verify"),
 };
 
 export async function handleSlashCommands(

@@ -4,7 +4,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/react";
 import { ChatHistoryItem, InputModifiers } from "core";
-import { renderChatMessage } from "core/util/messageContent";
+import { renderChatMessage, stripImages } from "core/util/messageContent";
 import {
   useCallback,
   useContext,
@@ -49,6 +49,7 @@ import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundMo
 import { CliInstallBanner } from "../../components/CliInstallBanner";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 
+import { AgentChatView } from "../../components/Agent/AgentChatView";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
@@ -56,7 +57,6 @@ import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
-import { AgentChatView } from "../../components/Agent/AgentChatView";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
@@ -200,11 +200,12 @@ export function Chat() {
             getState: () => reduxStore.getState(),
           });
 
-          if (!content.trim()) return;
+          const promptText = stripImages(content);
+          if (!promptText.trim()) return;
 
           try {
             const res = await ideMessenger.request("agent/run", {
-              prompt: content,
+              prompt: promptText,
             });
             if (res.status === "success") {
               setAgentSessionId(res.content.sessionId);

@@ -22,6 +22,12 @@ export const SUBAGENT_TOOL_META: Tool = {
         type: "string",
         description: "The type of specialized agent to use for this task.",
       },
+      profile: {
+        type: "string",
+        description:
+          "Optional execution profile for the subagent. Use 'explore' for reconnaissance and 'verify' for review/validation.",
+        enum: ["explore", "verify"],
+      },
     },
   },
   run: async () => "",

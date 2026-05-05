@@ -270,6 +270,24 @@ function evaluateTokens(
     );
   }
 
+  const redirectionRisk = evaluateRedirectionRisk(originalCommand);
+  if (redirectionRisk) {
+    mostRestrictivePolicy = getMostRestrictive(
+      mostRestrictivePolicy,
+      redirectionRisk,
+    );
+    if (mostRestrictivePolicy === "disabled") {
+      return "disabled";
+    }
+  }
+
+  if (hasKnownBypassPatterns(originalCommand)) {
+    mostRestrictivePolicy = getMostRestrictive(
+      mostRestrictivePolicy,
+      "allowedWithPermission",
+    );
+  }
+
   return mostRestrictivePolicy;
 }
 
@@ -1234,6 +1252,82 @@ function hasObfuscationPatterns(command: string): boolean {
     command.includes("od") &&
     (command.includes("-x") || command.includes("-o"))
   ) {
+    return true;
+  }
+
+  return false;
+}
+
+function evaluateRedirectionRisk(command: string): ToolPolicy | undefined {
+  const hasRedirection =
+    /(^|\s)(?:\d*>>?|\d*<>|&>>?|>|\|\s*tee\b)/.test(command) ||
+    /(?:^|\s)tee\b/.test(command);
+
+  if (!hasRedirection) {
+    return undefined;
+  }
+
+  const normalized = command.toLowerCase();
+
+  const criticalTargets = [
+    "/etc/passwd",
+    "/etc/shadow",
+    "/etc/sudoers",
+    "/boot/",
+    "/sys/",
+    "/proc/",
+    "/dev/",
+    "/usr/bin/",
+    "/usr/sbin/",
+    "/bin/",
+    "/sbin/",
+    "/lib/",
+    "/lib64/",
+    "c:\\windows\\system32",
+  ];
+
+  if (criticalTargets.some((target) => normalized.includes(target))) {
+    return "disabled";
+  }
+
+  const sensitiveTargets = [
+    "/etc/",
+    "/usr/",
+    "~/.bashrc",
+    "~/.zshrc",
+    "~/.profile",
+    "~/.ssh/authorized_keys",
+  ];
+
+  if (sensitiveTargets.some((target) => normalized.includes(target))) {
+    return "allowedWithPermission";
+  }
+
+  if (hasCommandSubstitution(command)) {
+    return "allowedWithPermission";
+  }
+
+  // Shell builtins that modify open file descriptors should always require permission.
+  if (/\bexec\s+\d*>>?/.test(normalized) || /\bexec\s+\d*<>/.test(normalized)) {
+    return "allowedWithPermission";
+  }
+
+  return undefined;
+}
+
+function hasKnownBypassPatterns(command: string): boolean {
+  // IFS manipulation can be used to evade naive tokenization.
+  if (/\$\{?IFS\}?/i.test(command)) {
+    return true;
+  }
+
+  // ANSI-C quoting can hide executable payload bytes.
+  if (/\$'[^']*'/i.test(command)) {
+    return true;
+  }
+
+  // Escaped newlines are often used to hide chained commands.
+  if (/\\\r?\n/.test(command)) {
     return true;
   }
 

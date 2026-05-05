@@ -5,12 +5,21 @@ import { defaultBoxStyles } from "../styles.js";
 
 interface QuizPromptProps {
   question: string;
-  options?: string[];
+  header?: string;
+  options?:
+    | string[]
+    | Array<{
+        label: string;
+        description?: string;
+        preview?: string;
+      }>;
+  multiSelect?: boolean;
+  allowFreeformInput?: boolean;
   defaultAnswer?: string;
   requestId: string;
   onAnswer: (
     requestId: string,
-    answer: string,
+    answer: string | string[],
     isCustomAnswer: boolean,
   ) => void;
 }
@@ -18,13 +27,33 @@ interface QuizPromptProps {
 /**Quiz prompt component for answering for the AskQuestion tool and QuizService */
 export const QuizPrompt: React.FC<QuizPromptProps> = ({
   question,
+  header,
   options: rawOptions,
+  multiSelect,
+  allowFreeformInput = true,
   defaultAnswer,
   requestId,
   onAnswer,
 }) => {
-  const options = Array.isArray(rawOptions) ? rawOptions : undefined;
+  const options = Array.isArray(rawOptions)
+    ? rawOptions
+        .map((option) =>
+          typeof option === "string" ? { label: option } : option,
+        )
+        .filter(
+          (
+            option,
+          ): option is {
+            label: string;
+            description?: string;
+            preview?: string;
+          } => Boolean(option?.label),
+        )
+    : undefined;
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(
+    new Set(),
+  );
   const [isCustomMode, setIsCustomMode] = useState(
     !options || options.length === 0,
   ); // allows typing out an answer even when there are options
@@ -32,6 +61,8 @@ export const QuizPrompt: React.FC<QuizPromptProps> = ({
   const [submitted, setSubmitted] = useState(false);
 
   const hasOptions = options && options.length > 0;
+  const focusedOption =
+    hasOptions && !isCustomMode ? options[selectedIndex] : undefined;
 
   useInput((input, key) => {
     if (submitted) return;
@@ -52,7 +83,12 @@ export const QuizPrompt: React.FC<QuizPromptProps> = ({
         return;
       }
 
-      if (hasOptions && key.upArrow && customInput === "") {
+      if (
+        allowFreeformInput &&
+        hasOptions &&
+        key.upArrow &&
+        customInput === ""
+      ) {
         // exit out of typing a custom answer
         setIsCustomMode(false);
         setSelectedIndex(options.length - 1);
@@ -69,8 +105,35 @@ export const QuizPrompt: React.FC<QuizPromptProps> = ({
     if (key.return) {
       // submit the selected option
       if (hasOptions && options[selectedIndex]) {
+        if (multiSelect) {
+          const next = new Set(selectedIndices);
+          if (next.size === 0) {
+            next.add(selectedIndex);
+          }
+          const selectedLabels = Array.from(next)
+            .sort((a, b) => a - b)
+            .map((index) => options[index].label);
+          setSubmitted(true);
+          onAnswer(requestId, selectedLabels, false);
+          return;
+        }
         setSubmitted(true);
-        onAnswer(requestId, options[selectedIndex], false);
+        onAnswer(requestId, options[selectedIndex].label, false);
+      }
+      return;
+    }
+
+    if (multiSelect && input === " ") {
+      if (hasOptions && options[selectedIndex]) {
+        setSelectedIndices((prev) => {
+          const next = new Set(prev);
+          if (next.has(selectedIndex)) {
+            next.delete(selectedIndex);
+          } else {
+            next.add(selectedIndex);
+          }
+          return next;
+        });
       }
       return;
     }
@@ -83,7 +146,9 @@ export const QuizPrompt: React.FC<QuizPromptProps> = ({
     } else if (key.downArrow) {
       if (hasOptions) {
         if (selectedIndex === options.length - 1) {
-          setIsCustomMode(true);
+          if (allowFreeformInput) {
+            setIsCustomMode(true);
+          }
           setSelectedIndex(0);
         } else {
           setSelectedIndex((prev) =>
@@ -93,7 +158,14 @@ export const QuizPrompt: React.FC<QuizPromptProps> = ({
       }
     }
 
-    if (input && !key.ctrl && !key.meta && !key.upArrow && !key.downArrow) {
+    if (
+      allowFreeformInput &&
+      input &&
+      !key.ctrl &&
+      !key.meta &&
+      !key.upArrow &&
+      !key.downArrow
+    ) {
       setIsCustomMode(true);
       setCustomInput(input);
     }
@@ -109,31 +181,53 @@ export const QuizPrompt: React.FC<QuizPromptProps> = ({
         <Text color="magenta" bold>
           ?{" "}
         </Text>
-        <Text bold>{question}</Text>
+        <Text bold>
+          {header ? `[${header}] ` : ""}
+          {question}
+        </Text>
       </Box>
 
       {hasOptions && !isCustomMode && (
         <Box flexDirection="column" marginLeft={2}>
           {options.map((option, index) => {
             const isSelected = index === selectedIndex;
+            const isChecked = selectedIndices.has(index);
             return (
-              <Box key={index}>
+              <Box key={index} flexDirection="column" marginBottom={1}>
                 <Text color={isSelected ? "cyan" : "white"} bold={isSelected}>
                   {isSelected ? "❯ " : "  "}
-                  {option}
+                  {multiSelect ? (isChecked ? "[x] " : "[ ] ") : ""}
+                  {option.label}
                 </Text>
+                {option.description ? (
+                  <Text color="gray" dimColor>
+                    {"   "}
+                    {option.description}
+                  </Text>
+                ) : null}
               </Box>
             );
           })}
-          <Box>
-            <Text color="gray" dimColor>
-              {"  "}(or start typing for custom answer)
-            </Text>
-          </Box>
+          {allowFreeformInput ? (
+            <Box>
+              <Text color="gray" dimColor>
+                {"  "}(or start typing for custom answer)
+              </Text>
+            </Box>
+          ) : null}
         </Box>
       )}
 
-      {isCustomMode && (
+      {focusedOption?.preview ? (
+        <Box marginTop={1} marginLeft={2} flexDirection="column">
+          <Text color="gray" dimColor>
+            Preview:
+          </Text>
+          <Text color="white">{focusedOption.preview}</Text>
+        </Box>
+      ) : null}
+
+      {isCustomMode && allowFreeformInput && (
         <Box marginLeft={2} flexDirection="column">
           <Box>
             <Text color="cyan">❯ </Text>
@@ -153,7 +247,9 @@ export const QuizPrompt: React.FC<QuizPromptProps> = ({
       <Box marginTop={1}>
         <Text color="gray" dimColor>
           {hasOptions && !isCustomMode
-            ? "↑/↓ navigate, Enter select"
+            ? multiSelect
+              ? "↑/↓ navigate, Space toggle, Enter submit"
+              : "↑/↓ navigate, Enter select"
             : "Type answer, Enter submit"}
         </Text>
       </Box>
