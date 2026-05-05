@@ -1,4 +1,4 @@
-import { exec, ChildProcess } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 import os from "node:os";
 
 import { removeCodeBlocksAndTrim } from ".";
@@ -49,19 +49,22 @@ export class TTS {
 
     switch (TTS.os) {
       case "darwin":
-        TTS.handle = exec(`say "${message}"`);
+        TTS.handle = spawn("say", [message], { shell: false });
         break;
       case "win32":
-        // Replace single quotes on windows
-        TTS.handle = exec(
-          `powershell -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('${message.replace(
-            /'/g,
-            "''",
-          )}')"`,
+        // Use spawn with explicit args to prevent command injection
+        TTS.handle = spawn(
+          "powershell",
+          [
+            "-Command",
+            `Add-Type -AssemblyName System.Speech; $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; $synth.Speak($args[0])`,
+            message,
+          ],
+          { shell: false },
         );
         break;
       case "linux":
-        TTS.handle = exec(`espeak "${message}"`);
+        TTS.handle = spawn("espeak", [message], { shell: false });
         break;
       default:
         console.log(

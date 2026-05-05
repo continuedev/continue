@@ -84,6 +84,7 @@ export class SecretStorage {
       this.algorithm,
       key,
       iv,
+      { authTagLength: this.tagLength },
     ) as crypto.DecipherGCM;
     decipher.setAuthTag(tag);
 
