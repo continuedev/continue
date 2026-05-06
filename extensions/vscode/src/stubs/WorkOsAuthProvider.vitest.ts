@@ -36,8 +36,8 @@ vi.mock("node-fetch", () => {
 vi.mock("core/control-plane/env", () => ({
   getControlPlaneEnvSync: vi.fn(() => ({
     AUTH_TYPE: "workos",
-    APP_URL: "https://continue.dev",
-    CONTROL_PLANE_URL: "https://api.continue.dev",
+    APP_URL: "https://yutoagentic.dev",
+    CONTROL_PLANE_URL: "https://api.yutoagentic.dev",
     WORKOS_CLIENT_ID: "client_123",
   })),
 }));

@@ -1,4 +1,4 @@
-import type { AssistantUnrolled } from "@continuedev/config-yaml";
+import type { AssistantUnrolled } from "@yutoagentic/config-yaml";
 import { vi } from "vitest";
 
 import { MockApiClient } from "./mocks/MockApiClient.js";

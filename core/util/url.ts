@@ -1,7 +1,7 @@
 import {
   extractBase64FromDataUrl as extractBase64FromDataUrlFromAdapter,
   parseDataUrl as parseDataUrlFromAdapter,
-} from "@continuedev/openai-adapters";
+} from "@yutoagentic/openai-adapters";
 
 export function canParseUrl(url: string): boolean {
   if ((URL as any)?.canParse) {

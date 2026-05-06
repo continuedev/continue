@@ -5,7 +5,10 @@ import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 export const skillTool: GetTool = async (params) => {
   const { skills } = await loadMarkdownSkills(params.ide);
   const listedSkills = skills
-    .map((skill) => `- ${skill.name}: ${skill.description}`)
+    .map((skill) => {
+      const whenToUse = skill.whenToUse ? ` (when: ${skill.whenToUse})` : "";
+      return `- ${skill.name}: ${skill.description}${whenToUse}`;
+    })
     .join("\n");
 
   return {
@@ -42,7 +45,7 @@ ${listedSkills || "(none found)"}`,
           args: {
             type: "string",
             description:
-              "Optional arguments or user-provided context to pass along with the skill.",
+              "Optional arguments or user-provided context to pass along with the skill. Use the skill's argument hint when available.",
           },
         },
       },

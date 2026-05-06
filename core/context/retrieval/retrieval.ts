@@ -18,7 +18,7 @@ export async function retrieveContextItemsFromEmbeddings(
   //   void extras.ide.showToast(
   //     "warning",
   //     "Set up an embeddings model to use this feature. Visit the docs to learn more: " +
-  //       "https://docs.continue.dev/customize/model-roles/embeddings",
+  //       "https://docs.yutoagentic.dev/customize/model-roles/embeddings",
   //   );
   //   return [];
   // }

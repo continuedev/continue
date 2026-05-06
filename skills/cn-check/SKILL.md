@@ -29,7 +29,7 @@ Run AI-powered code checks locally against your working tree changes using the C
 ### Install the CLI
 
 ```bash
-npm install -g @continuedev/cli
+npm install -g @yutoagentic/cli
 ```
 
 ### Authenticate (required for Hub checks, optional for local-only)
@@ -50,7 +50,7 @@ cn check
 
 This auto-detects checks from three sources (in priority order):
 
-1. Hub API — checks configured for your repo on continue.dev
+1. Hub API — checks configured for your repo on yutoagentic.dev
 2. Local agents — markdown files in `.continue/agents/*.md`
 
 ### Specify agents explicitly

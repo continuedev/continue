@@ -1,4 +1,4 @@
-import { AssistantUnrolled, ConfigResult } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ConfigResult } from "@yutoagentic/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";

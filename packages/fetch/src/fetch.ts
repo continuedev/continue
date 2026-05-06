@@ -1,4 +1,4 @@
-import { RequestOptions } from "@continuedev/config-types";
+import { RequestOptions } from "@yutoagentic/config-types";
 import * as followRedirects from "follow-redirects";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";

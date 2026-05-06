@@ -63,7 +63,7 @@ jobs:
           node-version: '20'
 
       - name: Install Continue CLI
-        run: npm i -g @continuedev/cli
+        run: npm i -g @yutoagentic/cli
 
       - name: Extract agent name
         id: agent-name

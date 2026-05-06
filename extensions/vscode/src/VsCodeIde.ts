@@ -491,7 +491,7 @@ class VsCodeIde implements IDE {
 
       // IMPORTANT: findFiles automatically accounts for .gitignore
       const ignoreFiles = await vscode.workspace.findFiles(
-        "**/.continueignore",
+        "**/.yutoagenticignore",
         null,
       );
 
@@ -568,7 +568,7 @@ class VsCodeIde implements IDE {
           "--iglob",
           pattern,
           "--ignore-file",
-          ".continueignore",
+          ".yutoagenticignore",
           "--ignore-file",
           ".gitignore",
           "--glob",
@@ -605,7 +605,7 @@ class VsCodeIde implements IDE {
       const dirResults = await this.runRipgrepQuery(dir, [
         ...(options?.caseSensitive ? [] : ["-i"]), // Default to case-insensitive search
         "--ignore-file",
-        ".continueignore",
+        ".yutoagenticignore",
         "--ignore-file",
         ".gitignore",
         "-C",
@@ -614,9 +614,7 @@ class VsCodeIde implements IDE {
         // Use a single glob with all default ignores
         "--glob",
         defaultIgnoresGlob,
-        ...(options?.includePattern
-          ? ["--glob", options.includePattern]
-          : []),
+        ...(options?.includePattern ? ["--glob", options.includePattern] : []),
         ...(options?.multiline ? ["-U", "--multiline-dotall"] : []),
         ...(maxResults ? ["-m", maxResults.toString()] : []),
         "-e",

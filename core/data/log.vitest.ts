@@ -1,4 +1,4 @@
-import { DevDataLogEvent } from "@continuedev/config-yaml";
+import { DevDataLogEvent } from "@yutoagentic/config-yaml";
 import fs from "fs";
 import path from "path";
 import {
@@ -16,7 +16,7 @@ import { getDevDataFilePath } from "../util/paths";
 import { DataLogger } from "./log";
 
 // Only mock fetch, not fs
-vi.mock("@continuedev/fetch");
+vi.mock("@yutoagentic/fetch");
 
 const TEST_EVENT: DevDataLogEvent = {
   name: "tokensGenerated",

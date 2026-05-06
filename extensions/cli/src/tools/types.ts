@@ -1,4 +1,4 @@
-import type { ToolPolicy } from "@continuedev/terminal-security";
+import type { ToolPolicy } from "@yutoagentic/terminal-security";
 
 // JSON Schema compatible parameter definition
 export interface ParameterSchema {

@@ -3,8 +3,8 @@ import {
   ModelRole,
   PromptTemplates,
   ToolOverrideConfig,
-} from "@continuedev/config-yaml";
-import { ToolPolicy } from "@continuedev/terminal-security";
+} from "@yutoagentic/config-yaml";
+import { ToolPolicy } from "@yutoagentic/terminal-security";
 import { McpUiResourceMeta } from "@modelcontextprotocol/ext-apps";
 import { TextResourceContents } from "@modelcontextprotocol/sdk/types.js";
 import Parser from "web-tree-sitter";
@@ -1798,7 +1798,7 @@ export type ContinueRcJson = Partial<SerializedContinueConfig> & {
 
 // config.ts - give users simplified interfaces
 export interface Config {
-  /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
+  /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.yutoagentic.dev/telemetry */
   allowAnonymousTelemetry?: boolean;
   /** Each entry in this array will originally be a JSONModelDescription, the same object from your config.json, but you may add CustomLLMs.
    * A CustomLLM requires you only to define an AsyncGenerator that calls the LLM and yields string updates. You can choose to define either `streamCompletion` or `streamChat` (or both).
@@ -1969,6 +1969,15 @@ export interface Skill {
   content: string;
   files: string[];
   license?: string;
+  whenToUse?: string;
+  argumentHint?: string;
+  allowedTools?: string[];
+  userInvocable?: boolean;
+  paths?: string[];
+  version?: string;
+  model?: string;
+  context?: "inline" | "fork";
+  agent?: string;
 }
 
 export interface CompleteOnboardingPayload {

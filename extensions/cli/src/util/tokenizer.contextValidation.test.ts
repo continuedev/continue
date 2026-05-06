@@ -1,4 +1,4 @@
-import { ModelConfig } from "@continuedev/config-yaml";
+import { ModelConfig } from "@yutoagentic/config-yaml";
 import { describe, expect, it } from "vitest";
 
 import { validateContextLength } from "./tokenizer.js";

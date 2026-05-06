@@ -1,4 +1,4 @@
-import type { AssistantUnrolled } from "@continuedev/config-yaml";
+import type { AssistantUnrolled } from "@yutoagentic/config-yaml";
 import {
   beforeEach,
   describe,
@@ -59,7 +59,7 @@ vi.mock("./util/logger.js", () => ({
 vi.mock("./env.js", () => ({
   env: {
     continueHome: "/home/test/.continue",
-    appUrl: "https://continue.dev",
+    appUrl: "https://yutoagentic.dev",
   },
 }));
 

@@ -1,4 +1,4 @@
-import { type AssistantConfig } from "@continuedev/sdk";
+import { type AssistantConfig } from "@yutoagentic/sdk";
 import { Box, Text } from "ink";
 import React, { useEffect, useState } from "react";
 

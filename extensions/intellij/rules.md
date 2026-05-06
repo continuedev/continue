@@ -14,7 +14,7 @@ JetBrains/IntelliJ extension for Continue AI code agent. Provides chat, autocomp
 ## Key Source Structure
 
 ```
-src/main/kotlin/com/github/continuedev/continueintellijextension/
+src/main/kotlin/com/github/yutoagentic/yutoagenticintellijextension/
 ├── continue/         # Core integration (CoreMessenger, IntelliJIde, IdeProtocolClient)
 ├── autocomplete/     # Code completion logic
 ├── editor/          # Diff handling, inline edits

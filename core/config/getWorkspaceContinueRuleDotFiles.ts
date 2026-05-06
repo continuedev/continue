@@ -1,4 +1,4 @@
-import { ConfigValidationError } from "@continuedev/config-yaml";
+import { ConfigValidationError } from "@yutoagentic/config-yaml";
 import { IDE, RuleWithSource } from "..";
 import { joinPathsToUri } from "../util/uri";
 export const SYSTEM_PROMPT_DOT_FILE = ".continuerules";

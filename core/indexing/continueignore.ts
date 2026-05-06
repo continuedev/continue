@@ -14,7 +14,7 @@ export const getWorkspaceContinueIgArray = async (ide: IDE) => {
     async (accPromise, dir) => {
       const acc = await accPromise;
       try {
-        const contents = await ide.readFile(`${dir}/.continueignore`);
+        const contents = await ide.readFile(`${dir}/.yutoagenticignore`);
         return [...acc, ...gitIgArrayFromFile(contents)];
       } catch (err) {
         console.error(err);

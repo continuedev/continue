@@ -1,4 +1,4 @@
-name: Release @continuedev/llm-info
+name: Release @yutoagentic/llm-info
 on:
   push:
     branches:

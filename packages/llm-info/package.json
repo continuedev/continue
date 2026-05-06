@@ -1,5 +1,5 @@
 {
-  "name": "@continuedev/llm-info",
+  "name": "@yutoagentic/llm-info",
   "version": "1.0.10",
   "description": "",
   "main": "dist/index.js",

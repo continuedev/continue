@@ -7,6 +7,13 @@ function normalizeSkillName(input: string): string {
   return input.trim().replace(/^\//, "");
 }
 
+function matchesSkillName(candidateName: string, requested: string): boolean {
+  return (
+    candidateName === requested ||
+    candidateName.toLowerCase() === requested.toLowerCase()
+  );
+}
+
 export const skillToolImpl: ToolImpl = async (args, extras) => {
   const rawSkill = getStringArg(args, "skill");
   const requestedSkill = normalizeSkillName(rawSkill);
@@ -17,10 +24,8 @@ export const skillToolImpl: ToolImpl = async (args, extras) => {
 
   const { skills } = await loadMarkdownSkills(extras.ide);
 
-  const skill = skills.find(
-    (candidate) =>
-      candidate.name === requestedSkill ||
-      candidate.name.toLowerCase() === requestedSkill.toLowerCase(),
+  const skill = skills.find((candidate) =>
+    matchesSkillName(candidate.name, requestedSkill),
   );
 
   if (!skill) {
@@ -32,6 +37,22 @@ export const skillToolImpl: ToolImpl = async (args, extras) => {
   }
 
   let content = `You have loaded the skill "${skill.name}". Follow these instructions directly for the current task.\n\n# ${skill.name}\n\n${skill.content}`;
+
+  if (skill.whenToUse) {
+    content += `\n\n## When To Use\n${skill.whenToUse}`;
+  }
+
+  if (skill.argumentHint) {
+    content += `\n\n## Argument Hint\n${skill.argumentHint}`;
+  }
+
+  if (skill.allowedTools && skill.allowedTools.length > 0) {
+    content += `\n\n## Allowed Tools\n${skill.allowedTools.join(", ")}`;
+  }
+
+  if (skill.paths && skill.paths.length > 0) {
+    content += `\n\n## Path Scope\n${skill.paths.join(", ")}`;
+  }
 
   if (providedArgs) {
     content += `\n\n## Invocation Arguments\n${providedArgs}`;

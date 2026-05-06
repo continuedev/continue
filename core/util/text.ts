@@ -51,3 +51,16 @@ export function kebabOfThemeStr(str: string): string {
     .replace(/[\s_]+/g, "-") // replace spaces and underscores with hyphens
     .replace(/\(|\)/g, ""); // remove parentheses
 }
+
+export {
+  EndTruncatingAccumulator,
+  capitalize,
+  countCharInString,
+  escapeRegExp,
+  firstLineOf,
+  normalizeFullWidthDigits,
+  normalizeFullWidthSpace,
+  plural,
+  safeJoinLines,
+  truncateToLines,
+} from "./stringUtils.js";

@@ -29,11 +29,16 @@ const TelemetryProviders = ({ children }: PropsWithChildren) => {
   );
 
   useEffect(() => {
-    // PostHog depends only on allowAnonymousTelemetry
-    if (allowAnonymousTelemetry) {
-      // Initialize PostHog (existing logic)
-      posthog.init("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
-        api_host: "https://app.posthog.com",
+    // PostHog key is injected at build time. When unset (the default in this
+    // fork) the provider stays uninitialized and no events are sent.
+    const posthogKey = import.meta.env.VITE_YUTOAGENTIC_POSTHOG_KEY ?? "";
+    const posthogHost =
+      import.meta.env.VITE_YUTOAGENTIC_POSTHOG_HOST ??
+      "https://app.posthog.com";
+
+    if (allowAnonymousTelemetry && posthogKey) {
+      posthog.init(posthogKey, {
+        api_host: posthogHost,
         disable_session_recording: true,
         autocapture: false,
         // We need to manually track pageviews since we're a SPA
@@ -47,8 +52,8 @@ const TelemetryProviders = ({ children }: PropsWithChildren) => {
       posthog.opt_out_capturing();
     }
 
-    // Sentry depends on both allowAnonymousTelemetry and hasContinueEmail
-    if (allowAnonymousTelemetry && hasContinueEmail) {
+    // Sentry requires opt-in, an internal email match, and a configured DSN.
+    if (allowAnonymousTelemetry && hasContinueEmail && SENTRY_DSN) {
       // Initialize Sentry (new for GUI - enhanced React setup)
       Sentry.init({
         dsn: SENTRY_DSN,

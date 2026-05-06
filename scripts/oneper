@@ -313,7 +313,7 @@ install_from_pr() {
 
 install_latest() {
     echo "🚀 Installing latest pre-release Continue extension..."
-    if code --install-extension --pre-release Continue.continue --force; then
+    if code --install-extension --pre-release YutoAgentic.yutoagentic --force; then
         echo "✅ Successfully installed latest pre-release Continue extension"
         echo ""
         echo "💡 To use the new extension version, reload your VS Code window:"

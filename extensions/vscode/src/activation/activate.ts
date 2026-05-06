@@ -1,3 +1,7 @@
+import {
+  detectContinueMigration,
+  runContinueMigration,
+} from "core/util/migrationFromContinue";
 import { getContinueRcPath, getTsConfigPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
@@ -9,7 +13,31 @@ import { GlobalContext } from "core/util/GlobalContext";
 import { VsCodeContinueApi } from "./api";
 import setupInlineTips from "./InlineTipManager";
 
+async function maybePromptContinueMigration(): Promise<void> {
+  const detection = detectContinueMigration();
+  if (!detection.shouldPrompt) {
+    return;
+  }
+  void runContinueMigration(detection, async () => {
+    const choice = await vscode.window.showInformationMessage(
+      `Found existing Continue config at ${detection.legacyDir}. Copy it to ${detection.newDir} so Yuto Agentic can use it?`,
+      { modal: false },
+      "Copy",
+      "Skip",
+    );
+    return choice === "Copy" ? "accept" : "decline";
+  }).then((res) => {
+    if (res.accepted) {
+      void vscode.window.showInformationMessage(
+        `Yuto Agentic copied ${res.filesCopied} file(s) from ~/.continue to ~/.yutoagentic.`,
+      );
+    }
+  });
+}
+
 export async function activateExtension(context: vscode.ExtensionContext) {
+  void maybePromptContinueMigration();
+
   const platformCheck = isUnsupportedPlatform();
   const globalContext = new GlobalContext();
   const hasShownUnsupportedPlatformWarning = globalContext.get(

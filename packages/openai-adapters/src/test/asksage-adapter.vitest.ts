@@ -2,8 +2,8 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { runAdapterTest } from "./adapter-test-utils.js";
 
 // Mock the fetch package
-vi.mock("@continuedev/fetch", async () => {
-  const actual = await vi.importActual("@continuedev/fetch");
+vi.mock("@yutoagentic/fetch", async () => {
+  const actual = await vi.importActual("@yutoagentic/fetch");
   return {
     ...actual,
     fetchwithRequestOptions: vi.fn(),

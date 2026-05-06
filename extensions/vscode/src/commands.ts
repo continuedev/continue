@@ -55,7 +55,7 @@ let fullScreenPanel: vscode.WebviewPanel | undefined;
 function getFullScreenTab() {
   const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
   return tabs.find((tab) =>
-    (tab.input as any)?.viewType?.endsWith("continue.continueGUIView"),
+    (tab.input as any)?.viewType?.endsWith("yutoagentic.yutoagenticGUIView"),
   );
 }
 
@@ -78,7 +78,7 @@ function focusGUI() {
     fullScreenPanel?.reveal();
   } else {
     // focus sidebar
-    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    vscode.commands.executeCommand("yutoagentic.yutoagenticGUIView.focus");
     // vscode.commands.executeCommand("workbench.action.focusAuxiliaryBar");
   }
 }
@@ -183,7 +183,10 @@ const getCommandsMap: (
   }
 
   return {
-    "continue.acceptDiff": async (newFileUri?: string, streamId?: string) => {
+    "yutoagentic.acceptDiff": async (
+      newFileUri?: string,
+      streamId?: string,
+    ) => {
       captureCommandTelemetry("acceptDiff");
       void processDiff(
         "accept",
@@ -196,7 +199,10 @@ const getCommandsMap: (
       );
     },
 
-    "continue.rejectDiff": async (newFileUri?: string, streamId?: string) => {
+    "yutoagentic.rejectDiff": async (
+      newFileUri?: string,
+      streamId?: string,
+    ) => {
       captureCommandTelemetry("rejectDiff");
       void processDiff(
         "reject",
@@ -208,15 +214,21 @@ const getCommandsMap: (
         streamId,
       );
     },
-    "continue.acceptVerticalDiffBlock": (fileUri?: string, index?: number) => {
+    "yutoagentic.acceptVerticalDiffBlock": (
+      fileUri?: string,
+      index?: number,
+    ) => {
       captureCommandTelemetry("acceptVerticalDiffBlock");
       verticalDiffManager.acceptRejectVerticalDiffBlock(true, fileUri, index);
     },
-    "continue.rejectVerticalDiffBlock": (fileUri?: string, index?: number) => {
+    "yutoagentic.rejectVerticalDiffBlock": (
+      fileUri?: string,
+      index?: number,
+    ) => {
       captureCommandTelemetry("rejectVerticalDiffBlock");
       verticalDiffManager.acceptRejectVerticalDiffBlock(false, fileUri, index);
     },
-    "continue.quickFix": async (
+    "yutoagentic.quickFix": async (
       range: vscode.Range,
       diagnosticMessage: string,
     ) => {
@@ -226,14 +238,14 @@ const getCommandsMap: (
 
       addCodeToContextFromRange(range, sidebar.webviewProtocol, prompt);
 
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
+      vscode.commands.executeCommand("yutoagentic.yutoagenticGUIView.focus");
     },
     // Passthrough for telemetry purposes
-    "continue.defaultQuickAction": async (args: QuickEditShowParams) => {
+    "yutoagentic.defaultQuickAction": async (args: QuickEditShowParams) => {
       captureCommandTelemetry("defaultQuickAction");
-      vscode.commands.executeCommand("continue.focusEdit", args);
+      vscode.commands.executeCommand("yutoagentic.focusEdit", args);
     },
-    "continue.customQuickActionSendToChat": async (
+    "yutoagentic.customQuickActionSendToChat": async (
       prompt: string,
       range: vscode.Range,
     ) => {
@@ -241,9 +253,9 @@ const getCommandsMap: (
 
       addCodeToContextFromRange(range, sidebar.webviewProtocol, prompt);
 
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
+      vscode.commands.executeCommand("yutoagentic.yutoagenticGUIView.focus");
     },
-    "continue.customQuickActionStreamInlineEdit": async (
+    "yutoagentic.customQuickActionStreamInlineEdit": async (
       prompt: string,
       range: vscode.Range,
     ) => {
@@ -251,19 +263,19 @@ const getCommandsMap: (
 
       streamInlineEdit("docstring", prompt, range);
     },
-    "continue.codebaseForceReIndex": async () => {
+    "yutoagentic.codebaseForceReIndex": async () => {
       core.invoke("index/forceReIndex", undefined);
     },
-    "continue.rebuildCodebaseIndex": async () => {
+    "yutoagentic.rebuildCodebaseIndex": async () => {
       core.invoke("index/forceReIndex", { shouldClearIndexes: true });
     },
-    "continue.docsIndex": async () => {
+    "yutoagentic.docsIndex": async () => {
       core.invoke("context/indexDocs", { reIndex: false });
     },
-    "continue.docsReIndex": async () => {
+    "yutoagentic.docsReIndex": async () => {
       core.invoke("context/indexDocs", { reIndex: true });
     },
-    "continue.focusContinueInput": async () => {
+    "yutoagentic.focusContinueInput": async () => {
       const isContinueInputFocused = await sidebar.webviewProtocol.request(
         "isContinueInputFocused",
         undefined,
@@ -307,7 +319,7 @@ const getCommandsMap: (
         void addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },
-    "continue.focusContinueInputWithoutClear": async () => {
+    "yutoagentic.focusContinueInputWithoutClear": async () => {
       const isContinueInputFocused = await sidebar.webviewProtocol.request(
         "isContinueInputFocused",
         undefined,
@@ -340,22 +352,22 @@ const getCommandsMap: (
     },
     // QuickEditShowParams are passed from CodeLens, temp fix
     // until we update to new params specific to Edit
-    "continue.focusEdit": async (args?: QuickEditShowParams) => {
+    "yutoagentic.focusEdit": async (args?: QuickEditShowParams) => {
       captureCommandTelemetry("focusEdit");
       focusGUI();
       sidebar.webviewProtocol?.request("focusEdit", undefined);
     },
-    "continue.exitEditMode": async () => {
+    "yutoagentic.exitEditMode": async () => {
       captureCommandTelemetry("exitEditMode");
       editDecorationManager.clear();
       void sidebar.webviewProtocol?.request("exitEditMode", undefined);
     },
-    "continue.generateRule": async () => {
+    "yutoagentic.generateRule": async () => {
       captureCommandTelemetry("generateRule");
       focusGUI();
       void sidebar.webviewProtocol?.request("generateRule", undefined);
     },
-    "continue.writeCommentsForCode": async () => {
+    "yutoagentic.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");
 
       streamInlineEdit(
@@ -363,7 +375,7 @@ const getCommandsMap: (
         "Write comments for this code. Do not change anything about the code itself.",
       );
     },
-    "continue.writeDocstringForCode": async () => {
+    "yutoagentic.writeDocstringForCode": async () => {
       captureCommandTelemetry("writeDocstringForCode");
 
       void streamInlineEdit(
@@ -371,7 +383,7 @@ const getCommandsMap: (
         "Write a docstring for this code. Do not change anything about the code itself.",
       );
     },
-    "continue.fixCode": async () => {
+    "yutoagentic.fixCode": async () => {
       captureCommandTelemetry("fixCode");
 
       streamInlineEdit(
@@ -379,53 +391,53 @@ const getCommandsMap: (
         "Fix this code. If it is already 100% correct, simply rewrite the code.",
       );
     },
-    "continue.optimizeCode": async () => {
+    "yutoagentic.optimizeCode": async () => {
       captureCommandTelemetry("optimizeCode");
       streamInlineEdit("optimize", "Optimize this code");
     },
-    "continue.fixGrammar": async () => {
+    "yutoagentic.fixGrammar": async () => {
       captureCommandTelemetry("fixGrammar");
       streamInlineEdit(
         "fixGrammar",
         "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
       );
     },
-    "continue.clearConsole": async () => {
+    "yutoagentic.clearConsole": async () => {
       consoleView.clearLog();
     },
-    "continue.viewLogs": async () => {
+    "yutoagentic.viewLogs": async () => {
       captureCommandTelemetry("viewLogs");
       vscode.commands.executeCommand("workbench.action.toggleDevTools");
     },
-    "continue.debugTerminal": async () => {
+    "yutoagentic.debugTerminal": async () => {
       captureCommandTelemetry("debugTerminal");
 
       const terminalContents = await ide.getTerminalContents();
 
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
+      vscode.commands.executeCommand("yutoagentic.yutoagenticGUIView.focus");
 
       sidebar.webviewProtocol?.request("userInput", {
         input: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents.trim()}`,
       });
     },
-    "continue.hideInlineTip": () => {
+    "yutoagentic.hideInlineTip": () => {
       vscode.workspace
         .getConfiguration(EXTENSION_NAME)
         .update("showInlineTip", false, vscode.ConfigurationTarget.Global);
     },
 
     // Commands without keyboard shortcuts
-    "continue.addModel": () => {
+    "yutoagentic.addModel": () => {
       captureCommandTelemetry("addModel");
 
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
+      vscode.commands.executeCommand("yutoagentic.yutoagenticGUIView.focus");
       sidebar.webviewProtocol?.request("addModel", undefined);
     },
-    "continue.newSession": () => {
+    "yutoagentic.newSession": () => {
       sidebar.webviewProtocol?.request("newSession", undefined);
     },
 
-    "continue.shareSession": async (sessionId: string | undefined) => {
+    "yutoagentic.shareSession": async (sessionId: string | undefined) => {
       if (!sessionId) {
         sessionId = await sidebar.webviewProtocol?.request(
           "getCurrentSessionId",
@@ -461,10 +473,14 @@ const getCommandsMap: (
         void vscode.window.showErrorMessage(errorMessage);
       }
     },
-    "continue.viewHistory": () => {
-      vscode.commands.executeCommand("continue.navigateTo", "/history", true);
+    "yutoagentic.viewHistory": () => {
+      vscode.commands.executeCommand(
+        "yutoagentic.navigateTo",
+        "/history",
+        true,
+      );
     },
-    "continue.focusContinueSessionId": async (
+    "yutoagentic.focusContinueSessionId": async (
       sessionId: string | undefined,
     ) => {
       if (!sessionId) {
@@ -476,13 +492,17 @@ const getCommandsMap: (
         sessionId,
       });
     },
-    "continue.applyCodeFromChat": () => {
+    "yutoagentic.applyCodeFromChat": () => {
       void sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
-    "continue.openConfigPage": () => {
-      vscode.commands.executeCommand("continue.navigateTo", "/config", false);
+    "yutoagentic.openConfigPage": () => {
+      vscode.commands.executeCommand(
+        "yutoagentic.navigateTo",
+        "/config",
+        false,
+      );
     },
-    "continue.selectFilesAsContext": async (
+    "yutoagentic.selectFilesAsContext": async (
       firstUri: vscode.Uri,
       uris: vscode.Uri[],
     ) => {
@@ -490,7 +510,7 @@ const getCommandsMap: (
         throw new Error("No files were selected");
       }
 
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
+      vscode.commands.executeCommand("yutoagentic.yutoagenticGUIView.focus");
 
       for (const uri of uris) {
         // If it's a folder, add the entire folder contents recursively by using walkDir (to ignore ignored files)
@@ -516,25 +536,25 @@ const getCommandsMap: (
         }
       }
     },
-    "continue.logAutocompleteOutcome": (
+    "yutoagentic.logAutocompleteOutcome": (
       completionId: string,
       completionProvider: CompletionProvider,
     ) => {
       completionProvider.accept(completionId);
     },
-    "continue.logNextEditOutcomeAccept": (
+    "yutoagentic.logNextEditOutcomeAccept": (
       completionId: string,
       nextEditLoggingService: NextEditLoggingService,
     ) => {
       nextEditLoggingService.accept(completionId);
     },
-    "continue.logNextEditOutcomeReject": (
+    "yutoagentic.logNextEditOutcomeReject": (
       completionId: string,
       nextEditLoggingService: NextEditLoggingService,
     ) => {
       nextEditLoggingService.reject(completionId);
     },
-    "continue.toggleTabAutocompleteEnabled": () => {
+    "yutoagentic.toggleTabAutocompleteEnabled": () => {
       captureCommandTelemetry("toggleTabAutocompleteEnabled");
 
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
@@ -570,7 +590,7 @@ const getCommandsMap: (
         }
       }
     },
-    "continue.forceAutocomplete": async () => {
+    "yutoagentic.forceAutocomplete": async () => {
       captureCommandTelemetry("forceAutocomplete");
 
       // 1. Explicitly hide any existing suggestion. This clears VS Code's cache for the current position.
@@ -582,7 +602,7 @@ const getCommandsMap: (
       );
     },
 
-    "continue.openTabAutocompleteConfigMenu": async () => {
+    "yutoagentic.openTabAutocompleteConfigMenu": async () => {
       captureCommandTelemetry("openTabAutocompleteConfigMenu");
 
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
@@ -673,28 +693,28 @@ const getCommandsMap: (
             });
           }
         } else if (selectedOption === "$(comment) Open chat") {
-          vscode.commands.executeCommand("continue.focusContinueInput");
+          vscode.commands.executeCommand("yutoagentic.focusContinueInput");
         } else if (selectedOption === "$(screen-full) Open full screen chat") {
-          vscode.commands.executeCommand("continue.openInNewWindow");
+          vscode.commands.executeCommand("yutoagentic.openInNewWindow");
         } else if (selectedOption === "$(gear) Open settings") {
-          vscode.commands.executeCommand("continue.navigateTo", "/config");
+          vscode.commands.executeCommand("yutoagentic.navigateTo", "/config");
         }
 
         quickPick.dispose();
       });
       quickPick.show();
     },
-    "continue.navigateTo": (path: string, toggle: boolean) => {
+    "yutoagentic.navigateTo": (path: string, toggle: boolean) => {
       sidebar.webviewProtocol?.request("navigateTo", { path, toggle });
       focusGUI();
     },
-    "continue.startLocalOllama": () => {
+    "yutoagentic.startLocalOllama": () => {
       startLocalOllama(ide);
     },
-    "continue.startLocalLemonade": () => {
+    "yutoagentic.startLocalLemonade": () => {
       startLocalLemonade(ide);
     },
-    "continue.installModel": async (
+    "yutoagentic.installModel": async (
       modelName: string,
       llmProvider: ILLM | undefined,
     ) => {
@@ -713,7 +733,7 @@ const getCommandsMap: (
         );
       }
     },
-    "continue.convertConfigJsonToConfigYaml": async () => {
+    "yutoagentic.convertConfigJsonToConfigYaml": async () => {
       const configJson = fs.readFileSync(getConfigJsonPath(), "utf-8");
       const parsed = JSON.parse(configJson);
       const configYaml = convertJsonToYamlConfig(parsed);
@@ -738,12 +758,12 @@ const getCommandsMap: (
         .then(async (selection) => {
           if (selection === "Read the docs") {
             await vscode.env.openExternal(
-              vscode.Uri.parse("https://docs.continue.dev/yaml-migration"),
+              vscode.Uri.parse("https://docs.yutoagentic.dev/yaml-migration"),
             );
           }
         });
     },
-    "continue.enterEnterpriseLicenseKey": async () => {
+    "yutoagentic.enterEnterpriseLicenseKey": async () => {
       captureCommandTelemetry("enterEnterpriseLicenseKey");
 
       const licenseKey = await vscode.window.showInputBox({
@@ -779,7 +799,7 @@ const getCommandsMap: (
         );
       }
     },
-    "continue.toggleNextEditEnabled": async () => {
+    "yutoagentic.toggleNextEditEnabled": async () => {
       captureCommandTelemetry("toggleNextEditEnabled");
 
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
@@ -803,7 +823,7 @@ const getCommandsMap: (
         vscode.ConfigurationTarget.Global,
       );
     },
-    "continue.openInNewWindow": async () => {
+    "yutoagentic.openInNewWindow": async () => {
       focusGUI();
 
       const sessionId = await sidebar.webviewProtocol.request(
@@ -820,14 +840,14 @@ const getCommandsMap: (
       }
 
       // Clear the sidebar to prevent overwriting changes made in fullscreen
-      vscode.commands.executeCommand("continue.newSession");
+      vscode.commands.executeCommand("yutoagentic.newSession");
 
       // Full screen not open - open it
       captureCommandTelemetry("openInNewWindow");
 
       // Create the full screen panel
       let panel = vscode.window.createWebviewPanel(
-        "continue.continueGUIView",
+        "yutoagentic.yutoagenticGUIView",
         "Continue",
         vscode.ViewColumn.One,
         {
@@ -847,10 +867,10 @@ const getCommandsMap: (
       );
 
       const sessionLoader = panel.onDidChangeViewState(() => {
-        vscode.commands.executeCommand("continue.newSession");
+        vscode.commands.executeCommand("yutoagentic.newSession");
         if (sessionId) {
           vscode.commands.executeCommand(
-            "continue.focusContinueSessionId",
+            "yutoagentic.focusContinueSessionId",
             sessionId,
           );
         }
@@ -862,7 +882,7 @@ const getCommandsMap: (
       panel.onDidDispose(
         () => {
           sidebar.resetWebviewProtocolWebview();
-          vscode.commands.executeCommand("continue.focusContinueInput");
+          vscode.commands.executeCommand("yutoagentic.focusContinueInput");
         },
         null,
         extensionContext.subscriptions,
@@ -871,7 +891,7 @@ const getCommandsMap: (
       vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
       vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     },
-    "continue.forceNextEdit": async () => {
+    "yutoagentic.forceNextEdit": async () => {
       captureCommandTelemetry("forceNextEdit");
 
       // This is basically the same logic as forceAutocomplete.

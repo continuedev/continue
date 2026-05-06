@@ -1,6 +1,6 @@
 import { ChatCompletionCreateParams } from "openai/resources/index";
 
-import { OPENROUTER_HEADERS } from "@continuedev/openai-adapters";
+import { OPENROUTER_HEADERS } from "@yutoagentic/openai-adapters";
 
 import { LLMOptions } from "../../index.js";
 import { osModelsEditPrompt } from "../templates/edit.js";

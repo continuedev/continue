@@ -1,4 +1,4 @@
-import { ToolPolicy } from "@continuedev/terminal-security";
+import { ToolPolicy } from "@yutoagentic/terminal-security";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RuleWithSource, Tool } from "core";
 import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";

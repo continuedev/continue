@@ -156,7 +156,7 @@ export function getMetaKeyName() {
 }
 
 export function getExtensionVersion(): string {
-  const extension = vscode.extensions.getExtension("continue.continue");
+  const extension = vscode.extensions.getExtension("yutoagentic.yutoagentic");
   return extension?.packageJSON.version || "0.1.0";
 }
 

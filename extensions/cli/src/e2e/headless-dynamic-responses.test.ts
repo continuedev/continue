@@ -153,7 +153,7 @@ models:
     // Create onboarding flag
     const onboardingFlagPath = path.join(
       context.testDir,
-      ".continue",
+      ".yutoagentic",
       ".onboarding_complete",
     );
     await fs.mkdir(path.dirname(onboardingFlagPath), { recursive: true });
@@ -211,7 +211,7 @@ models:
 
     const onboardingFlagPath = path.join(
       context.testDir,
-      ".continue",
+      ".yutoagentic",
       ".onboarding_complete",
     );
     await fs.mkdir(path.dirname(onboardingFlagPath), { recursive: true });

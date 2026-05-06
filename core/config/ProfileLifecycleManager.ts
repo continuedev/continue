@@ -3,7 +3,7 @@ import {
   ConfigValidationError,
   FullSlug,
   Policy,
-} from "@continuedev/config-yaml";
+} from "@yutoagentic/config-yaml";
 
 import {
   BrowserSerializedContinueConfig,

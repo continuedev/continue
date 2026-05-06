@@ -2,7 +2,7 @@
   <configuration default="false" name="Start Core Dev Server" type="NodeJSConfigurationType" path-to-js-file="out/index.js" working-dir="$PROJECT_DIR$/binary">
     <envs>
       <env name="CONTINUE_DEVELOPMENT" value="true" />
-      <env name="CONTINUE_GLOBAL_DIR" value="$PROJECT_DIR$/extensions/.continue-debug" />
+      <env name="YUTOAGENTIC_GLOBAL_DIR" value="$PROJECT_DIR$/extensions/.yutoagentic-debug" />
     </envs>
     <method v="2">
       <option name="NpmBeforeRunTask" enabled="true">

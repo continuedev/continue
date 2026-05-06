@@ -1,5 +1,5 @@
 {
-  "name": "@continuedev/fetch",
+  "name": "@yutoagentic/fetch",
   "version": "1.1.0",
   "description": "",
   "main": "dist/index.js",
@@ -12,7 +12,7 @@
   "author": "Nate Sesti and Ty Dunn",
   "license": "Apache-2.0",
   "dependencies": {
-    "@continuedev/config-types": "^1.0.14",
+    "@yutoagentic/config-types": "^1.0.14",
     "follow-redirects": "^1.15.6",
     "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.5",

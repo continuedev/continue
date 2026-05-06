@@ -1,4 +1,4 @@
-import type { ToolPolicy } from "@continuedev/terminal-security";
+import type { ToolPolicy } from "@yutoagentic/terminal-security";
 
 import { ALL_BUILT_IN_TOOLS } from "src/tools/allBuiltIns.js";
 

@@ -1,4 +1,4 @@
-import { decodeSecretLocation, SecretType } from "@continuedev/config-yaml";
+import { decodeSecretLocation, SecretType } from "@yutoagentic/config-yaml";
 import { BrowserSerializedContinueConfig, ModelDescription } from "..";
 
 /**

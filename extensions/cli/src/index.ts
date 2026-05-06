@@ -26,6 +26,7 @@ import { post } from "./util/apiClient.js";
 import { markUnhandledError } from "./util/errorState.js";
 import { gracefulExit } from "./util/exit.js";
 import { logger } from "./util/logger.js";
+import { maybeMigrateContinue } from "./util/maybeMigrateContinue.js";
 import { readStdinSync } from "./util/stdin.js";
 import { getVersion } from "./version.js";
 
@@ -179,9 +180,9 @@ process.on("SIGINT", async () => {
 const program = new Command();
 
 program
-  .name("cn")
+  .name("yt")
   .description(
-    "Continue CLI - AI-powered development assistant. Starts an interactive session by default, use -p/--print for non-interactive output.",
+    "Yuto Agentic CLI - AI-powered development assistant. Starts an interactive session by default, use -p/--print for non-interactive output.",
   )
   .version(getVersion(), "-v, --version", "Display version number");
 
@@ -205,8 +206,9 @@ addCommonOptions(program)
     "Enable beta Subagent tool for invoking subagents",
   )
   .action(async (prompt, options) => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "cn" });
+    await maybeMigrateContinue({ isInteractive: !options.print });
+
+    await posthogService.capture("cliCommand", { command: "yt" });
     // Handle piped input - detect it early and decide on mode
     let stdinInput = null;
 
@@ -248,7 +250,7 @@ addCommonOptions(program)
       ask: options.ask,
       exclude: options.exclude,
       isRootCommand: true,
-      commandName: "cn",
+      commandName: "yt",
     });
 
     if (!validation.isValid) {

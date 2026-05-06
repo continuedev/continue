@@ -16,7 +16,7 @@ const messages = {
 
 ### Troubleshooting
 - Check that npm installation succeeded
-- Verify @continuedev/cli package is available
+- Verify @yutoagentic/cli package is available
 `,
   empty_output: `## Code Review Summary
 
@@ -24,7 +24,7 @@ const messages = {
 `,
   cli_not_found: `## Code Review Summary
 
-⚠️ Continue CLI is not properly installed. Please ensure @continuedev/cli is installed globally.
+⚠️ Continue CLI is not properly installed. Please ensure @yutoagentic/cli is installed globally.
 `,
   config_error: `## Code Review Summary
 

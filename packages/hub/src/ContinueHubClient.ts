@@ -4,7 +4,7 @@ import {
   FQSN,
   FullSlug,
   SecretResult,
-} from "@continuedev/config-yaml";
+} from "@yutoagentic/config-yaml";
 import { IContinueHubClient } from "./IContinueHubClient.js";
 
 interface ContinueHubClientOptions {
@@ -20,7 +20,7 @@ export class ContinueHubClient implements IContinueHubClient {
 
   constructor(options: ContinueHubClientOptions) {
     this.apiKey = options.apiKey;
-    this.apiBase = options.apiBase ?? "https://api.continue.dev";
+    this.apiBase = options.apiBase ?? "https://api.yutoagentic.dev";
     this.fetchOptions = options.fetchOptions;
   }
 

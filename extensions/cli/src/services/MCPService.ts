@@ -1,5 +1,5 @@
-import { decodeFQSN, getTemplateVariables } from "@continuedev/config-yaml";
-import { type AssistantConfig } from "@continuedev/sdk";
+import { decodeFQSN, getTemplateVariables } from "@yutoagentic/config-yaml";
+import { type AssistantConfig } from "@yutoagentic/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 import { isAuthenticated, loadAuthConfig } from "src/auth/workos.js";
@@ -318,8 +318,8 @@ export class MCPService
     try {
       if (unrendered.length > 0) {
         const message = `${serverConfig.name} MCP Server has unresolved secrets: ${unrendered.join(", ")}
-For personal use you can set the secret in the hub at https://continue.dev/settings/secrets or pass it to the CLI environment.
-Org-level secrets can only be used for MCP by Background Agents (https://docs.continue.dev/hub/agents/overview) when \"Include in Env\" is enabled for the secret.`;
+For personal use you can set the secret in the hub at https://yutoagentic.dev/settings/secrets or pass it to the CLI environment.
+Org-level secrets can only be used for MCP by Background Agents (https://docs.yutoagentic.dev/hub/agents/overview) when \"Include in Env\" is enabled for the secret.`;
         if (this.isHeadless) {
           throw new Error(message);
         } else {

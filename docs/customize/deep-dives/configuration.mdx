@@ -11,7 +11,7 @@ You can easily access your configuration from the Continue Chat sidebar. Open th
 
 ## How to Manage Hub Configs
 
-  Hub Configs can be managed in [the Hub](https://continue.dev). See [Editing a config](/mission-control/configs/edit-a-config)
+  Hub Configs can be managed in [the Hub](https://yutoagentic.dev). See [Editing a config](/mission-control/configs/edit-a-config)
 
 ## How to Configure Local Configs with YAML
 
@@ -35,18 +35,18 @@ See the full reference for `config.yaml` [here](/reference).
 </Info>
 
 - [`config.json`](/reference) - The original configuration format which is stored in a file at the same location as `config.yaml`
-- `.continuerc.json` - Workspace-level configuration
+- `.yutoagenticrc.json` - Workspace-level configuration
 - `config.ts` - Advanced configuration (probably unnecessary) - a TypeScript file in your home directory that can be used to programmatically modify (_merged_) the `config.json` schema:
   - `~/.continue/config.ts` (MacOS / Linux)
   - `%USERPROFILE%\.continue\config.ts` (Windows)
 
-### How to Use `.continuerc.json` for Workspace Configuration
+### How to Use `.yutoagenticrc.json` for Workspace Configuration
 
-The format of `.continuerc.json` is the same as `config.json`, plus one _additional_ property `mergeBehavior`, which can be set to either "merge" or "overwrite". If set to "merge" (the default), `.continuerc.json` will be applied on top of `config.json` (arrays and objects are merged). If set to "overwrite", then every top-level property of `.continuerc.json` will overwrite that property from `config.json`.
+The format of `.yutoagenticrc.json` is the same as `config.json`, plus one _additional_ property `mergeBehavior`, which can be set to either "merge" or "overwrite". If set to "merge" (the default), `.yutoagenticrc.json` will be applied on top of `config.json` (arrays and objects are merged). If set to "overwrite", then every top-level property of `.yutoagenticrc.json` will overwrite that property from `config.json`.
 
 Example
 
-```json title=".continuerc.json"
+```json title=".yutoagenticrc.json"
 {
   "tabAutocompleteOptions": {
     "disable": true

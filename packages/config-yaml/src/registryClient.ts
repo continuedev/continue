@@ -16,7 +16,7 @@ export class RegistryClient implements Registry {
 
   constructor(options: RegistryClientOptions = {}) {
     this.accessToken = options.accessToken;
-    this.apiBase = options.apiBase ?? "https://api.continue.dev/";
+    this.apiBase = options.apiBase ?? "https://api.yutoagentic.dev/";
     this.rootPath = options.rootPath;
     if (!this.apiBase.endsWith("/")) {
       this.apiBase += "/";

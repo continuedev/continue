@@ -1,5 +1,5 @@
-import { ModelConfig } from "@continuedev/config-yaml";
-import { BaseLlmApi } from "@continuedev/openai-adapters";
+import { ModelConfig } from "@yutoagentic/config-yaml";
+import { BaseLlmApi } from "@yutoagentic/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
 import { convertFromUnifiedHistoryWithSystemMessage } from "core/util/messageConversion.js";
 import * as dotenv from "dotenv";

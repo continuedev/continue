@@ -1,4 +1,4 @@
-import { ConfigResult } from "@continuedev/config-yaml";
+import { ConfigResult } from "@yutoagentic/config-yaml";
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 
@@ -755,7 +755,7 @@ export default class DocsService {
       void this.ide.showToast(
         "error",
         "Set up an embeddings model to use the @docs context provider. See: " +
-          "https://docs.continue.dev/customize/model-roles/embeddings",
+          "https://docs.yutoagentic.dev/customize/model-roles/embeddings",
       );
       return [];
     }

@@ -1,4 +1,4 @@
-import { ConfigJson } from "@continuedev/config-types";
+import { ConfigJson } from "@yutoagentic/config-types";
 import {
   AssistantUnrolled,
   ConfigResult,
@@ -7,7 +7,7 @@ import {
   Policy,
   SecretResult,
   SecretType,
-} from "@continuedev/config-yaml";
+} from "@yutoagentic/config-yaml";
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";

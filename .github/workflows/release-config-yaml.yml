@@ -1,4 +1,4 @@
-name: Release @continuedev/config-yaml
+name: Release @yutoagentic/config-yaml
 
 on:
   push:

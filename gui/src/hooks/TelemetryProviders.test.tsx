@@ -51,7 +51,7 @@ vi.mock("../context/Auth", () => ({
   useAuth: () => ({
     session: {
       account: {
-        id: "test@continue.dev", // Mock Continue team member email
+        id: "test@yutoagentic.dev", // Mock Continue team member email
       },
     },
   }),

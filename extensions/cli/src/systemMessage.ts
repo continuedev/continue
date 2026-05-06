@@ -2,7 +2,7 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
-import { parseMarkdownRule, RuleObject } from "@continuedev/config-yaml";
+import { parseMarkdownRule, RuleObject } from "@yutoagentic/config-yaml";
 
 import { env } from "./env.js";
 import { processRule } from "./hubLoader.js";
@@ -89,7 +89,7 @@ function getRuleNameFromPath(filePath: string): string {
 export function loadMarkdownRulesWithMetadata(): RuleObject[] {
   const cwd = process.cwd();
   const rulesDirs = [
-    path.join(cwd, ".continue", "rules"),
+    path.join(cwd, ".yutoagentic", "rules"),
     path.join(env.continueHome, "rules"),
   ];
 
@@ -228,9 +228,9 @@ export async function constructSystemMessage(
     // Check if commit signature is disabled via environment variable
     if (!process.env.CONTINUE_CLI_DISABLE_COMMIT_SIGNATURE) {
       systemMessage += `\n<context name="commitSignature">When creating commits using any CLI or tool, include the following in the commit message:
-Generated with [Continue](https://continue.dev)
+Generated with [Continue](https://yutoagentic.dev)
 
-Co-Authored-By: Continue <noreply@continue.dev>
+Co-Authored-By: Continue <noreply@yutoagentic.dev>
 </context>\n`;
     }
   }

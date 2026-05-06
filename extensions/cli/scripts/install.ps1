@@ -1,11 +1,11 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Continue CLI Installer for Windows
+    Yuto Agentic CLI Installer for Windows
 .DESCRIPTION
-    Installs Node.js (if needed) and the Continue CLI globally
+    Installs Node.js (if needed) and the Yuto Agentic CLI globally
 .EXAMPLE
-    irm https://continue.dev/install.ps1 | iex
+    irm https://yutoagentic.dev/install.ps1 | iex
 .NOTES
     Supports Windows 10/11, Windows Server 2016+
     Requires internet connectivity
@@ -21,8 +21,8 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'  # Faster downloads
 
 $script:RequiredNodeVersion = [version]"20.20.1"
-$script:PackageName = "@continuedev/cli"
-$script:CliCommand = "cn"
+$script:PackageName = "@yutoagentic/cli"
+$script:CliCommand = "yt"
 $script:FnmInstalled = $false
 $script:FnmPath = "$env:LOCALAPPDATA\fnm"
 
@@ -310,7 +310,7 @@ function Install-Cli {
 function Show-Complete {
     Write-Host ""
     Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
-    Write-Success "Continue CLI installation complete!"
+    Write-Success "Yuto Agentic CLI installation complete!"
     Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
     Write-Host ""
 
@@ -327,7 +327,7 @@ function Show-Complete {
 function Main {
     Write-Host ""
     Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
-    Write-Host "           Continue CLI Installer" -ForegroundColor White
+    Write-Host "           Yuto Agentic CLI Installer" -ForegroundColor White
     Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
     Write-Host ""
 

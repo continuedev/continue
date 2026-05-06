@@ -18,7 +18,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
   **Mission Control Benefits:**
   - **Webhook-based triggers** - Automatically respond when new errors occur in production
   - **Centralized error workflows** - Manage all error monitoring Tasks from one dashboard
-  - **Dedicated inbox view** - Monitor all Sentry-related agent activity at [continue.dev/inbox?view=sentry](https://continue.dev/inbox?view=sentry)
+  - **Dedicated inbox view** - Monitor all Sentry-related agent activity at [yutoagentic.dev/inbox?view=sentry](https://yutoagentic.dev/inbox?view=sentry)
   - **Metrics & intervention rates** - Track how often agents successfully fix errors without human help
   
   This represents **[Level 2 Continuous AI](/guides/continuous-ai#the-continuous-ai-maturity-model)**: AI handles routine error analysis and fixes autonomously while developers focus on complex problems. As outlined in our [Continuous AI guide](/guides/continuous-ai#best-practices-for-sustainable-continuous-ai), this reduces mean time to resolution (MTTR) and improves application reliability.
@@ -48,7 +48,7 @@ Before starting, ensure you have:
 - GitHub repository where you want to create issues
 - [Sentry account](https://sentry.io) with an active project collecting errors
 - Node.js 18+ installed locally
-- [Continue CLI](https://docs.continue.dev/guides/cli) with **active credits** (required for API usage)
+- [Continue CLI](https://docs.yutoagentic.dev/guides/cli) with **active credits** (required for API usage)
 - [GitHub CLI](https://cli.github.com/) installed (`gh` command)
 
 <Steps>
@@ -57,7 +57,7 @@ Before starting, ensure you have:
   </Step>
 
   <Step title="Set up Continue CLI Account & API Key">
-    1. Visit [Continue Organizations](https://continue.dev/settings/organizations)
+    1. Visit [Continue Organizations](https://yutoagentic.dev/settings/organizations)
     2. Sign up or log in to your Continue account
     3. Navigate to your organization settings
     4. Click **"API Keys"** and then **"+ New API Key"**
@@ -159,7 +159,7 @@ First, you'll need to gather your Sentry and GitHub API credentials.
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [Sentry Continuous AI Agent](https://continue.dev/continuedev/sentry-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
+        Visit the [Sentry Continuous AI Agent](https://yutoagentic.dev/continuedev/sentry-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
         
         ```bash
         cn --agent continuedev/sentry-continuous-ai-agent
@@ -386,7 +386,7 @@ jobs:
 
       - name: Install Continue CLI
         run: |
-          npm install -g @continuedev/cli
+          npm install -g @yutoagentic/cli
           echo "✅ Continue CLI installed"
 
       - name: Authenticate GitHub CLI
@@ -445,7 +445,7 @@ jobs:
 
 <Warning>
   **Required GitHub Secrets**:
-  - `CONTINUE_API_KEY`: Your Continue API key from [continue.dev/settings/api-keys](https://continue.dev/settings/api-keys)
+  - `CONTINUE_API_KEY`: Your Continue API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
   - `SENTRY_AUTH_TOKEN`: Your Sentry User Auth Token (needs scopes: `org:read`, `project:read`, `project:releases`, `event:read`)
   - `SENTRY_ORG`: Your Sentry organization slug
   - `SENTRY_PROJECT`: Your Sentry project slug
@@ -481,7 +481,7 @@ After completing this guide, you have a complete **Sentry-powered error monitori
 - **Scales with your app** - Handles growing error volumes and complexity automatically
 
 <Card title="Continuous AI Error Monitoring" icon="shield-check">
-  Your system now operates at **[Level 2 Continuous AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** - AI handles routine error analysis with human oversight through GitHub issue review and resolution.
+  Your system now operates at **[Level 2 Continuous AI](https://blog.yutoagentic.dev/what-is-continuous-ai-a-developers-guide/)** - AI handles routine error analysis with human oversight through GitHub issue review and resolution.
 </Card>
 
 ## Advanced Error Analysis Prompts
@@ -542,7 +542,7 @@ See the [Sentry MCP GitHub Issues](https://github.com/getsentry/sentry-mcp/issue
 
 - Set up [Sentry performance monitoring](https://docs.sentry.io/product/performance/)
 - Configure [Sentry release tracking](https://docs.sentry.io/product/releases/) for deployment correlation
-- Integrate [Slack MCP](https://continue.dev/slack/slack-mcp) for error alerts
+- Integrate [Slack MCP](https://yutoagentic.dev/slack/slack-mcp) for error alerts
 - Join the [GitHub Discussions](https://github.com/continuedev/continue/discussions) for support
 
 ## Resources
@@ -555,5 +555,5 @@ See the [Sentry MCP GitHub Issues](https://github.com/getsentry/sentry-mcp/issue
 
 - [Sentry MCP GitHub Repository](https://github.com/getsentry/sentry-mcp)
 - [GitHub CLI Documentation](https://cli.github.com/)
-- [Continue CLI Guide](https://docs.continue.dev/guides/cli)
-- [Continuous AI Best Practices](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)
+- [Continue CLI Guide](https://docs.yutoagentic.dev/guides/cli)
+- [Continuous AI Best Practices](https://blog.yutoagentic.dev/what-is-continuous-ai-a-developers-guide/)

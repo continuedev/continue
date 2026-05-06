@@ -1,6 +1,6 @@
 import net from "node:net";
 
-import { Analytics } from "@continuedev/config-types";
+import { Analytics } from "@yutoagentic/config-types";
 
 import {
   ControlPlaneProxyInfo,

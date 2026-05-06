@@ -142,7 +142,7 @@ continue_server.dist
 Icon
 Icon?
 
-.continuerc.json
+.yutoagenticrc.json
 .aider*
 
 *.notes.md
@@ -162,15 +162,15 @@ extensions/intellij/.idea/**
 
 
 extensions/intellij/bin
-extensions/.continue-debug/
+extensions/.yutoagentic-debug/
 
 *.vsix
 
 # intellij module library files
 *.iml
 
-.continuerules
-**/.continue/assistants/
+.yutoagenticrules
+**/.yutoagentic/assistants/
 keys
 
 .channels_cache.json

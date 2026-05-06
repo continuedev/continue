@@ -1,4 +1,4 @@
-import { RequestOptions } from "@continuedev/config-types";
+import { RequestOptions } from "@yutoagentic/config-types";
 
 /**
  * Gets the proxy settings from environment variables

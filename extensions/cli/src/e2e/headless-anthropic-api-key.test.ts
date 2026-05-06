@@ -54,7 +54,7 @@ models:
     // Create onboarding flag to skip onboarding
     const onboardingFlagPath = path.join(
       context.testDir,
-      ".continue",
+      ".yutoagentic",
       ".onboarding_complete",
     );
     await fs.mkdir(path.dirname(onboardingFlagPath), { recursive: true });
@@ -88,7 +88,7 @@ models:
       args: ["-p", "test prompt"],
       env: {
         ANTHROPIC_API_KEY: "TEST-test-invalid-key-format",
-        CONTINUE_GLOBAL_DIR: context.testDir + "/.continue",
+        YUTOAGENTIC_GLOBAL_DIR: context.testDir + "/.continue",
       },
       expectError: true, // API call should fail with invalid key
       timeout: 15000,
@@ -106,7 +106,11 @@ models:
     expect(result.stderr).not.toContain("Failed to initialize ConfigService");
 
     // Verify config.yaml was automatically created
-    const configPath = path.join(context.testDir, ".continue", "config.yaml");
+    const configPath = path.join(
+      context.testDir,
+      ".yutoagentic",
+      "config.yaml",
+    );
     const configExists = await fs
       .stat(configPath)
       .then(() => true)

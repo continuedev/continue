@@ -88,7 +88,7 @@ Pop-Location
 Write-Output "`nInstalling GUI extension dependencies..." -ForegroundColor White
 Push-Location gui
 npm install
-npm link @continuedev/core
+npm link @yutoagentic/core
 npm run build
 Pop-Location
 
@@ -98,7 +98,7 @@ Push-Location extensions/vscode
 
 # This does way too many things inline but is the common denominator between many of the scripts
 npm install
-npm link @continuedev/core
+npm link @yutoagentic/core
 npm run prepackage
 npm run package
 

@@ -1,5 +1,5 @@
 {
-  "name": "@continuedev/hub",
+  "name": "@yutoagentic/hub",
   "version": "0.0.7",
   "description": "",
   "main": "dist/index.js",
@@ -12,7 +12,7 @@
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
   "dependencies": {
-    "@continuedev/config-yaml": "^1.38.0",
+    "@yutoagentic/config-yaml": "^1.38.0",
     "js-yaml": "^4.1.1"
   },
   "devDependencies": {

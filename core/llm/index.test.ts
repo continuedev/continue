@@ -1,7 +1,7 @@
 import { ChatMessage, LLMOptions } from "..";
 
-import { allModelProviders } from "@continuedev/llm-info";
-import { LlmInfo } from "@continuedev/llm-info/dist/types";
+import { allModelProviders } from "@yutoagentic/llm-info";
+import { LlmInfo } from "@yutoagentic/llm-info/dist/types";
 import { BaseLLM } from ".";
 import { DEFAULT_CONTEXT_LENGTH } from "./constants";
 import { LLMClasses } from "./llms";

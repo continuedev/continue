@@ -1,6 +1,7 @@
 import { ArrowPathIcon, PlayIcon } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useState } from "react";
+import { formatRelativeTimeAgo } from "core/util/format";
 import { normalizeRepoUrl } from "core/util/repoUrl";
+import { useContext, useEffect, useState } from "react";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
@@ -238,7 +239,7 @@ export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
                 </div>
               </div>
               <div className="text-description-muted mt-1 text-xs">
-                {formatRelativeTime(agent.createdAt)}
+                {formatAgentCreatedAt(agent.createdAt)}
               </div>
             </div>
           );
@@ -283,32 +284,10 @@ function AgentStatusBadge({ status }: { status: string }) {
   );
 }
 
-function formatRelativeTime(dateString: string): string {
-  try {
-    const date = new Date(dateString);
-    const timestamp = date.getTime();
-
-    // Guard against invalid dates (NaN)
-    if (isNaN(timestamp)) {
-      return dateString;
-    }
-
-    const now = new Date();
-    const diffMs = now.getTime() - timestamp;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) {
-      return "just now";
-    } else if (diffMins < 60) {
-      return `${diffMins}m ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h ago`;
-    } else {
-      return `${diffDays}d ago`;
-    }
-  } catch {
+function formatAgentCreatedAt(dateString: string): string {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
     return dateString;
   }
+  return formatRelativeTimeAgo(date, { style: "narrow", numeric: "auto" });
 }

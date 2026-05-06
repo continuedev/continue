@@ -1,5 +1,5 @@
 {
-  "name": "continue",
+  "name": "yutoagentic",
   "scripts": {
     "tsc:watch": "concurrently -n gui,vscode,core,binary -c cyan,magenta,yellow,green \"./node_modules/.bin/tsc --project gui/tsconfig.json --watch --noEmit --pretty\" \"./node_modules/.bin/tsc --project extensions/vscode/tsconfig.json --watch --noEmit --pretty\" \"./node_modules/.bin/tsc --project core/tsconfig.json --watch --noEmit --pretty\" \"./node_modules/.bin/tsc --project binary/tsconfig.json --watch --noEmit --pretty\"",
     "tsc:watch:gui": "tsc --project gui/tsconfig.json --watch --noEmit --pretty",

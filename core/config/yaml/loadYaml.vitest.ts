@@ -1,7 +1,7 @@
 import {
   AssistantUnrolledNonNullable,
   validateConfigYaml,
-} from "@continuedev/config-yaml";
+} from "@yutoagentic/config-yaml";
 import { describe, expect, it } from "vitest";
 
 describe("MCP Server cwd configuration", () => {

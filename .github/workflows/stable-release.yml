@@ -130,5 +130,5 @@ jobs:
           }
 
           # Publish both cn and cn-staging blueprints
-          publish_blueprint "cn" "runloop-blueprint-template.json"
+          publish_blueprint "yt" "runloop-blueprint-template.json"
           publish_blueprint "cn-staging" "runloop-blueprint-staging-template.json"

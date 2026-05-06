@@ -8,7 +8,7 @@ import {
   ConfigValidationError,
   mergeConfigYamlRequestOptions,
   ModelRole,
-} from "@continuedev/config-yaml";
+} from "@yutoagentic/config-yaml";
 import * as JSONC from "comment-json";
 
 import {
@@ -714,7 +714,7 @@ async function handleEsbuildInstallation(
     try {
       const userEsbuild = path.join(
         os.homedir(),
-        ".continue",
+        ".yutoagentic",
         "node_modules",
         "esbuild",
       );

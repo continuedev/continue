@@ -1,5 +1,5 @@
-import { ModelConfig } from "@continuedev/config-yaml";
-import { BaseLlmApi } from "@continuedev/openai-adapters";
+import { ModelConfig } from "@yutoagentic/config-yaml";
+import { BaseLlmApi } from "@yutoagentic/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
 import { encode } from "gpt-tokenizer";
 import { ChatCompletionTool } from "openai/resources.mjs";

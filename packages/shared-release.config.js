@@ -1,7 +1,7 @@
 export default function createReleaseConfig(packageName) {
   return {
     branches: ["main"],
-    tagFormat: `@continuedev/${packageName}@\${version}`,
+    tagFormat: `@yutoagentic/${packageName}@\${version}`,
     plugins: [
       [
         "@semantic-release/commit-analyzer",

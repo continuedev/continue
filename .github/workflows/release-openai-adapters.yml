@@ -1,4 +1,4 @@
-name: Release @continuedev/openai-adapters
+name: Release @yutoagentic/openai-adapters
 
 on:
   push:

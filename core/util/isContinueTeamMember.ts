@@ -3,5 +3,5 @@
  */
 export function isContinueTeamMember(email?: string): boolean {
   if (!email) return false;
-  return email.endsWith("@continue.dev");
+  return email.endsWith("@yutoagentic.dev");
 }

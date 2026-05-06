@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 
-import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@yutoagentic/config-yaml";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
@@ -31,8 +31,8 @@ describe("Model Persistence for Unauthenticated Users", () => {
 
     // Create a temporary directory for testing
     testDir = fs.mkdtempSync(path.join(os.tmpdir(), "continue-test-"));
-    originalContinueHome = process.env.CONTINUE_GLOBAL_DIR;
-    process.env.CONTINUE_GLOBAL_DIR = testDir;
+    originalContinueHome = process.env.YUTOAGENTIC_GLOBAL_DIR;
+    process.env.YUTOAGENTIC_GLOBAL_DIR = testDir;
 
     // Clear GlobalContext for clean test state
     persistModelName(null);
@@ -79,9 +79,9 @@ describe("Model Persistence for Unauthenticated Users", () => {
       fs.rmSync(testDir, { recursive: true });
     }
     if (originalContinueHome) {
-      process.env.CONTINUE_GLOBAL_DIR = originalContinueHome;
+      process.env.YUTOAGENTIC_GLOBAL_DIR = originalContinueHome;
     } else {
-      delete process.env.CONTINUE_GLOBAL_DIR;
+      delete process.env.YUTOAGENTIC_GLOBAL_DIR;
     }
   });
 

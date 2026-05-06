@@ -56,11 +56,11 @@ describe("CliInstallBanner", () => {
 
   describe("CLI detection", () => {
     it("does not render when CLI is installed (subprocess returns path)", async () => {
-      await renderComponent(["/usr/local/bin/cn", ""]);
+      await renderComponent(["/usr/local/bin/yt", ""]);
 
       await waitFor(() => {
         expect(
-          screen.queryByText("Try out the Continue CLI"),
+          screen.queryByText("Try out the Yuto Agentic CLI"),
         ).not.toBeInTheDocument();
       });
     });
@@ -70,7 +70,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Try out the Continue CLI"),
+          screen.getByText("Try out the Yuto Agentic CLI"),
         ).toBeInTheDocument();
       });
     });
@@ -80,12 +80,12 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Try out the Continue CLI"),
+          screen.getByText("Try out the Yuto Agentic CLI"),
         ).toBeInTheDocument();
       });
     });
 
-    it("uses 'which cn' command on mac platform", async () => {
+    it("uses 'which yt' command on mac platform", async () => {
       vi.mocked(util.getPlatform).mockReturnValue("mac");
       const subprocessSpy = vi
         .spyOn(mockIdeMessenger.ide, "subprocess")
@@ -100,11 +100,11 @@ describe("CliInstallBanner", () => {
       );
 
       await waitFor(() => {
-        expect(subprocessSpy).toHaveBeenCalledWith("which cn");
+        expect(subprocessSpy).toHaveBeenCalledWith("which yt");
       });
     });
 
-    it("uses 'which cn' command on linux platform", async () => {
+    it("uses 'which yt' command on linux platform", async () => {
       vi.mocked(util.getPlatform).mockReturnValue("linux");
       const subprocessSpy = vi
         .spyOn(mockIdeMessenger.ide, "subprocess")
@@ -119,11 +119,11 @@ describe("CliInstallBanner", () => {
       );
 
       await waitFor(() => {
-        expect(subprocessSpy).toHaveBeenCalledWith("which cn");
+        expect(subprocessSpy).toHaveBeenCalledWith("which yt");
       });
     });
 
-    it("uses 'where cn' command on windows platform", async () => {
+    it("uses 'where yt' command on windows platform", async () => {
       vi.mocked(util.getPlatform).mockReturnValue("windows");
       const subprocessSpy = vi
         .spyOn(mockIdeMessenger.ide, "subprocess")
@@ -138,7 +138,7 @@ describe("CliInstallBanner", () => {
       );
 
       await waitFor(() => {
-        expect(subprocessSpy).toHaveBeenCalledWith("where cn");
+        expect(subprocessSpy).toHaveBeenCalledWith("where yt");
       });
     });
 
@@ -157,7 +157,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Try out the Continue CLI"),
+          screen.getByText("Try out the Yuto Agentic CLI"),
         ).toBeInTheDocument();
       });
     });
@@ -168,23 +168,25 @@ describe("CliInstallBanner", () => {
       await renderComponent(["", "not found"]);
       await waitFor(() => {
         expect(
-          screen.getByText("Try out the Continue CLI"),
+          screen.getByText("Try out the Yuto Agentic CLI"),
         ).toBeInTheDocument();
       });
     });
 
     it("displays the title", () => {
-      expect(screen.getByText("Try out the Continue CLI")).toBeInTheDocument();
+      expect(
+        screen.getByText("Try out the Yuto Agentic CLI"),
+      ).toBeInTheDocument();
     });
 
-    it("displays the description with 'cn' code element", () => {
+    it("displays the description with 'yt' code element", () => {
       const description = screen.getByText(/Use/);
       expect(description).toBeInTheDocument();
-      expect(screen.getByText("cn")).toBeInTheDocument();
+      expect(screen.getByText("yt")).toBeInTheDocument();
     });
 
     it("displays the installation command", () => {
-      expect(screen.getByText("npm i -g @continuedev/cli")).toBeInTheDocument();
+      expect(screen.getByText("npm i -g @yutoagentic/cli")).toBeInTheDocument();
     });
 
     it("displays the Learn more link", () => {
@@ -201,7 +203,7 @@ describe("CliInstallBanner", () => {
     it("displays the CommandLine icon", () => {
       // The icon should be present in the component
       const banner = screen
-        .getByText("Try out the Continue CLI")
+        .getByText("Try out the Yuto Agentic CLI")
         .closest("div");
       expect(banner).toBeInTheDocument();
     });
@@ -212,7 +214,7 @@ describe("CliInstallBanner", () => {
       await renderComponent(["", "not found"]);
       await waitFor(() => {
         expect(
-          screen.getByText("Try out the Continue CLI"),
+          screen.getByText("Try out the Yuto Agentic CLI"),
         ).toBeInTheDocument();
       });
     });
@@ -225,7 +227,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByText("Try out the Continue CLI"),
+          screen.queryByText("Try out the Yuto Agentic CLI"),
         ).not.toBeInTheDocument();
       });
     });
@@ -238,13 +240,13 @@ describe("CliInstallBanner", () => {
 
       expect(postSpy).toHaveBeenCalledWith(
         "openUrl",
-        "https://docs.continue.dev/guides/cli",
+        "https://docs.yutoagentic.dev/guides/cli",
       );
     });
 
     it("displays the installation command with interactive controls", async () => {
       // The installation command should be visible
-      expect(screen.getByText("npm i -g @continuedev/cli")).toBeInTheDocument();
+      expect(screen.getByText("npm i -g @yutoagentic/cli")).toBeInTheDocument();
       // The "Run" text should be visible for the run button
       expect(screen.getByText(/Run/i)).toBeInTheDocument();
     });
@@ -258,7 +260,7 @@ describe("CliInstallBanner", () => {
         fireEvent.click(runButton);
 
         expect(postSpy).toHaveBeenCalledWith("runCommand", {
-          command: `npm i -g @continuedev/cli && cn "Explore this repo and provide a concise summary of it's contents"`,
+          command: `npm i -g @yutoagentic/cli && yt "Explore this repo and provide a concise summary of it's contents"`,
         });
       }
     });
@@ -281,7 +283,7 @@ describe("CliInstallBanner", () => {
 
       // Should not be visible immediately
       expect(
-        screen.queryByText("Try out the Continue CLI"),
+        screen.queryByText("Try out the Yuto Agentic CLI"),
       ).not.toBeInTheDocument();
     });
 
@@ -290,7 +292,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Try out the Continue CLI"),
+          screen.getByText("Try out the Yuto Agentic CLI"),
         ).toBeInTheDocument();
       });
 
@@ -301,7 +303,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByText("Try out the Continue CLI"),
+          screen.queryByText("Try out the Yuto Agentic CLI"),
         ).not.toBeInTheDocument();
       });
 
@@ -314,7 +316,7 @@ describe("CliInstallBanner", () => {
 
       // Should still be hidden
       expect(
-        screen.queryByText("Try out the Continue CLI"),
+        screen.queryByText("Try out the Yuto Agentic CLI"),
       ).not.toBeInTheDocument();
     });
   });
@@ -325,27 +327,27 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Try out the Continue CLI"),
+          screen.getByText("Try out the Yuto Agentic CLI"),
         ).toBeInTheDocument();
       });
     });
 
     it("detects CLI when path has trailing newline", async () => {
-      await renderComponent(["/usr/local/bin/cn\n", ""]);
+      await renderComponent(["/usr/local/bin/yt\n", ""]);
 
       await waitFor(() => {
         expect(
-          screen.queryByText("Try out the Continue CLI"),
+          screen.queryByText("Try out the Yuto Agentic CLI"),
         ).not.toBeInTheDocument();
       });
     });
 
     it("renders banner when stderr contains 'not found'", async () => {
-      await renderComponent(["", "cn: command not found"]);
+      await renderComponent(["", "yt: command not found"]);
 
       await waitFor(() => {
         expect(
-          screen.getByText("Try out the Continue CLI"),
+          screen.getByText("Try out the Yuto Agentic CLI"),
         ).toBeInTheDocument();
       });
     });
@@ -378,7 +380,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Try out the Continue CLI"),
+          screen.getByText("Try out the Yuto Agentic CLI"),
         ).toBeInTheDocument();
       });
     });
@@ -388,7 +390,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByText("Try out the Continue CLI"),
+          screen.queryByText("Try out the Yuto Agentic CLI"),
         ).not.toBeInTheDocument();
       });
     });
@@ -398,7 +400,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Try out the Continue CLI"),
+          screen.getByText("Try out the Yuto Agentic CLI"),
         ).toBeInTheDocument();
       });
     });
@@ -408,7 +410,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Try out the Continue CLI"),
+          screen.getByText("Try out the Yuto Agentic CLI"),
         ).toBeInTheDocument();
       });
     });
@@ -437,7 +439,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByText("Try out the Continue CLI"),
+          screen.queryByText("Try out the Yuto Agentic CLI"),
         ).not.toBeInTheDocument();
       });
     });
@@ -447,7 +449,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Try out the Continue CLI"),
+          screen.getByText("Try out the Yuto Agentic CLI"),
         ).toBeInTheDocument();
       });
 
@@ -477,7 +479,7 @@ describe("CliInstallBanner", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Try out the Continue CLI"),
+          screen.getByText("Try out the Yuto Agentic CLI"),
         ).toBeInTheDocument();
       });
 

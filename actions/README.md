@@ -143,6 +143,6 @@ uses: continuedev/continue/actions/general-review@main
 
 For issues or questions:
 
-- [Continue Documentation](https://docs.continue.dev)
+- [Continue Documentation](https://docs.yutoagentic.dev)
 - [GitHub Issues](https://github.com/continuedev/continue/issues)
 - [GitHub Discussions](https://github.com/continuedev/continue/discussions)

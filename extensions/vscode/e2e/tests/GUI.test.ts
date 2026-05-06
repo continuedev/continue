@@ -293,7 +293,7 @@ describe.skip("GUI Test", () => {
       await messageInput.sendKeys(Key.ENTER);
 
       const statusMessage = await TestUtils.waitForSuccess(
-        () => GUISelectors.getToolCallStatusMessage(view), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
+        () => GUISelectors.getToolCallStatusMessage(view), // Defined in extensions/vscode/e2e/test-yutoagentic/config.json's TOOL MOCK LLM that we are calling the exact search tool
         DEFAULT_TIMEOUT.SM,
       );
 
@@ -315,7 +315,7 @@ describe.skip("GUI Test", () => {
       await acceptToolCallButton.click();
 
       const statusMessage = await TestUtils.waitForSuccess(
-        () => GUISelectors.getToolCallStatusMessage(view), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
+        () => GUISelectors.getToolCallStatusMessage(view), // Defined in extensions/vscode/e2e/test-yutoagentic/config.json's TOOL MOCK LLM that we are calling the exact search tool
         DEFAULT_TIMEOUT.SM,
       );
 
@@ -336,7 +336,7 @@ describe.skip("GUI Test", () => {
       await cancelToolCallButton.click();
 
       const statusMessage = await TestUtils.waitForSuccess(
-        () => GUISelectors.getToolCallStatusMessage(view), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
+        () => GUISelectors.getToolCallStatusMessage(view), // Defined in extensions/vscode/e2e/test-yutoagentic/config.json's TOOL MOCK LLM that we are calling the exact search tool
         DEFAULT_TIMEOUT.SM,
       );
 

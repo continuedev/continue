@@ -1,4 +1,4 @@
-import { AssistantConfig } from "@continuedev/sdk";
+import { AssistantConfig } from "@yutoagentic/sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MCPService } from "./MCPService.js";

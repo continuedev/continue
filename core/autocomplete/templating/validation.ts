@@ -28,7 +28,7 @@ export const isValidSnippet = (snippet: AutocompleteSnippet): boolean => {
 
   if (
     (snippet as AutocompleteCodeSnippet).filepath?.startsWith(
-      "output:extension-output-Continue.continue",
+      "output:extension-output-YutoAgentic.yutoagentic",
     )
   ) {
     return false;

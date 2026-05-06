@@ -1,0 +1,10 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="JavaScript.JsonSchema">
+        <ProviderFactory
+                implementation="com.github.yutoagentic.yutoagenticintellijextension.continue.ConfigJsonSchemaProviderFactory"/>
+    </extensions>
+    <extensions defaultExtensionNs="JavaScript.JsonSchema">
+        <ProviderFactory
+                implementation="com.github.yutoagentic.yutoagenticintellijextension.continue.ConfigRcJsonSchemaProviderFactory"/>
+    </extensions>
+</idea-plugin>

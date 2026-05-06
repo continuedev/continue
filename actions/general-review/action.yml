@@ -113,7 +113,7 @@ runs:
     - name: Install Continue CLI
       if: env.SHOULD_RUN == 'true'
       shell: bash
-      run: npm install -g @continuedev/cli@latest
+      run: npm install -g @yutoagentic/cli@latest
 
     - name: Setup Action Scripts
       if: env.SHOULD_RUN == 'true'
@@ -200,7 +200,7 @@ runs:
           initialMessage += `- PR #${prNumber}\n\n`;
           initialMessage += `⏱️ This typically takes 1-2 minutes.\n\n`;
           initialMessage += `[View live progress →](${workflowRunUrl})\n\n`;
-          initialMessage += `---\n<!-- ${new Date().toISOString()} | Powered by Continue (https://continue.dev) -->`;
+          initialMessage += `---\n<!-- ${new Date().toISOString()} | Powered by Continue (https://yutoagentic.dev) -->`;
 
           if (existingComment) {
             // Check if comment is less than 1 hour old
@@ -408,7 +408,7 @@ runs:
 
             // Add footer with timestamp and branding
             const timestamp = new Date().toISOString();
-            reviewContent += `\n\n---\n<!-- ${timestamp} | Powered by Continue (https://continue.dev) -->`;
+            reviewContent += `\n\n---\n<!-- ${timestamp} | Powered by Continue (https://yutoagentic.dev) -->`;
 
             // Look for existing review comment to update (sticky comment)
             const marker = '<!-- continue-agent-review -->';

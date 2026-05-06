@@ -21,7 +21,7 @@ irm https://raw.githubusercontent.com/continuedev/continue/main/extensions/cli/s
 Or install with npm if you have Node.js 20+:
 
 ```bash
-npm i -g @continuedev/cli
+npm i -g @yutoagentic/cli
 ```
 
 ## Usage

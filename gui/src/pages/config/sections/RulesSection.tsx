@@ -1,4 +1,4 @@
-import { parseConfigYaml } from "@continuedev/config-yaml";
+import { parseConfigYaml } from "@yutoagentic/config-yaml";
 import {
   ArrowsPointingOutIcon,
   BookmarkIcon as BookmarkOutline,

@@ -45,7 +45,7 @@ export const FatalErrorIndicator = () => {
           onClick={() => {
             ideMessenger.post(
               "openUrl",
-              "https://docs.continue.dev/troubleshooting",
+              "https://docs.yutoagentic.dev/troubleshooting",
             );
           }}
           className="cursor-pointer underline"

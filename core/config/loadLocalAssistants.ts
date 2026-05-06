@@ -1,4 +1,4 @@
-import { BLOCK_TYPES } from "@continuedev/config-yaml";
+import { BLOCK_TYPES } from "@yutoagentic/config-yaml";
 import ignore from "ignore";
 import * as URI from "uri-js";
 import { IDE } from "..";
@@ -15,16 +15,16 @@ import { SYSTEM_PROMPT_DOT_FILE } from "./getWorkspaceContinueRuleDotFiles";
 import { SUPPORTED_AGENT_FILES } from "./markdown";
 export function isContinueConfigRelatedUri(uri: string): boolean {
   return (
-    uri.endsWith(".continuerc.json") ||
+    uri.endsWith(".yutoagenticrc.json") ||
     uri.endsWith(".prompt") ||
     !!SUPPORTED_AGENT_FILES.find((file) => uri.endsWith(`/${file}`)) ||
     uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
-    (uri.includes(".continue") &&
+    (uri.includes(".yutoagentic") &&
       (uri.endsWith(".yaml") ||
         uri.endsWith(".yml") ||
         uri.endsWith(".json"))) ||
     [...BLOCK_TYPES, "agents", "assistants", "configs"].some((blockType) =>
-      uri.includes(`.continue/${blockType}`),
+      uri.includes(`.yutoagentic/${blockType}`),
     )
   );
 }
@@ -37,9 +37,9 @@ export function isContinueAgentConfigFile(uri: string): boolean {
 
   const normalizedUri = URI.normalize(uri);
   return (
-    normalizedUri.includes(`/.continue/agents/`) ||
-    normalizedUri.includes(`/.continue/assistants/`) ||
-    normalizedUri.includes(`/.continue/configs/`)
+    normalizedUri.includes(`/.yutoagentic/agents/`) ||
+    normalizedUri.includes(`/.yutoagentic/assistants/`) ||
+    normalizedUri.includes(`/.yutoagentic/configs/`)
   );
 }
 
@@ -109,14 +109,14 @@ export function getDotContinueSubDirs(
 ): string[] {
   let fullDirs: string[] = [];
 
-  // Workspace .continue/<subDirName>
+  // Workspace .yutoagentic/<subDirName>
   if (options.includeWorkspace) {
     fullDirs = workspaceDirs.map((dir) =>
-      joinPathsToUri(dir, ".continue", subDirName),
+      joinPathsToUri(dir, ".yutoagentic", subDirName),
     );
   }
 
-  // ~/.continue/<subDirName>
+  // ~/.yutoagentic/<subDirName>
   if (options.includeGlobal) {
     fullDirs.push(localPathToUri(getGlobalFolderWithName(subDirName)));
   }
@@ -125,8 +125,8 @@ export function getDotContinueSubDirs(
 }
 
 /**
- * This method searches in both ~/.continue and workspace .continue
- * for all YAML/Markdown files in the specified subdirectory, for example .continue/assistants or .continue/prompts
+ * This method searches in both ~/.yutoagentic and workspace .yutoagentic
+ * for all YAML/Markdown files in the specified subdirectory, for example .yutoagentic/assistants or .yutoagentic/prompts
  */
 export async function getAllDotContinueDefinitionFiles(
   ide: IDE,

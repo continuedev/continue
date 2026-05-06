@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Continue",
+  "name": "Yuto Agentic",
   "colors": {
     "primary": "#6b7280",
     "light": "#ffffff",
@@ -282,17 +282,17 @@
       "anchors": [
         {
           "anchor": "About Us",
-          "href": "https://continue.dev/about-us",
+          "href": "https://yutoagentic.dev/about-us",
           "icon": "book-open"
         },
         {
           "anchor": "Blog",
-          "href": "https://continue.dev/blog",
+          "href": "https://yutoagentic.dev/blog",
           "icon": "newspaper"
         },
         {
           "anchor": "Changelog",
-          "href": "https://changelog.continue.dev/",
+          "href": "https://changelog.yutoagentic.dev/",
           "icon": "bullhorn"
         }
       ]
@@ -301,7 +301,7 @@
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg",
-    "href": "https://continue.dev"
+    "href": "https://yutoagentic.dev"
   },
   "background": {
     "color": {
@@ -312,20 +312,17 @@
     "links": [
       {
         "label": "🚀 Get Started",
-        "href": "https://continue.dev/"
+        "href": "https://yutoagentic.dev/"
       }
     ],
     "primary": {
       "type": "github",
-      "href": "https://github.com/continuedev/continue"
+      "href": "https://github.com/yutoagentic/yutoagentic"
     }
   },
   "footer": {
     "socials": {
-      "x": "https://twitter.com/continuedev",
-      "github": "https://github.com/continuedev/continue",
-      "linkedin": "https://linkedin.com/company/continuedev",
-      "youtube": "https://www.youtube.com/@continuedev"
+      "github": "https://github.com/yutoagentic/yutoagentic"
     }
   },
   "contextual": {
@@ -336,14 +333,7 @@
     "suggestEdit": true,
     "raiseIssue": false
   },
-  "integrations": {
-    "ga4": {
-      "measurementId": "G-M3JWW8N2XQ"
-    },
-    "posthog": {
-      "apiKey": "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs"
-    }
-  },
+  "integrations": {},
   "custom": {
     "css": ["custom.css"],
     "js": ["reo-tracking.js"]
@@ -359,7 +349,7 @@
     },
     {
       "source": "/changelog",
-      "destination": "https://changelog.continue.dev"
+      "destination": "https://changelog.yutoagentic.dev"
     },
     {
       "source": "/hub",
@@ -1055,7 +1045,7 @@
     },
     {
       "source": "/about",
-      "destination": "https://continue.dev/about-us"
+      "destination": "https://yutoagentic.dev/about-us"
     },
     {
       "source": "/autocomplete/model-setup",
@@ -1137,7 +1127,6 @@
       "source": "/guides/build-your-own-context-provider",
       "destination": "/customize/deep-dives/custom-providers"
     },
-
     {
       "source": "/customize/settings",
       "destination": "/customize/overview"
@@ -1154,7 +1143,6 @@
       "source": "/hub/blocks/bundles",
       "destination": "/hub/introduction"
     },
-
     {
       "source": "/customize/custom-providers#@greptile-context-provider",
       "destination": "/reference/deprecated-context-providers"

@@ -31,7 +31,7 @@ export interface CLIRunResult {
  */
 export async function createTestContext(): Promise<CLITestContext> {
   // Use the wrapper script that invokes runCli(), not the raw bundle entry
-  const cliPath = path.resolve("dist/cn.js");
+  const cliPath = path.resolve("dist/yt.js");
   const testDir = await fs.mkdtemp(path.join(os.tmpdir(), "cn-test-"));
 
   // Ensure the CLI file exists before returning the context
@@ -162,7 +162,7 @@ export async function readSession(
   context: CLITestContext,
 ): Promise<any | null> {
   try {
-    const sessionDir = path.join(context.testDir, ".continue", "sessions");
+    const sessionDir = path.join(context.testDir, ".yutoagentic", "sessions");
     const files = await fs.readdir(sessionDir);
 
     if (files.length === 0) {
@@ -187,7 +187,7 @@ export async function createMockSession(
   context: CLITestContext,
   messages: any[],
 ): Promise<string> {
-  const sessionDir = path.join(context.testDir, ".continue", "sessions");
+  const sessionDir = path.join(context.testDir, ".yutoagentic", "sessions");
   await fs.mkdir(sessionDir, { recursive: true });
 
   const sessionId = `test-session-${Date.now()}`;

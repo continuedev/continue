@@ -1,4 +1,4 @@
-import type { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
+import type { AssistantUnrolled, ModelConfig } from "@yutoagentic/config-yaml";
 import { Box, Static, Text, useStdout } from "ink";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 

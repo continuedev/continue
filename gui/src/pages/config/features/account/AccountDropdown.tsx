@@ -82,7 +82,10 @@ export function AccountDropdown() {
 
               <ListboxOption
                 onClick={() =>
-                  ideMessenger.post("openUrl", "https://continue.dev/settings")
+                  ideMessenger.post(
+                    "openUrl",
+                    "https://yutoagentic.dev/settings",
+                  )
                 }
                 value="manage-account"
               >

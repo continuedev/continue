@@ -15,7 +15,7 @@ export async function getWorkspaceRcConfigs(
             (entry) =>
               (entry[1] === (1 as FileType.File) ||
                 entry[1] === (64 as FileType.SymbolicLink)) &&
-              entry[0].endsWith(".continuerc.json"),
+              entry[0].endsWith(".yutoagenticrc.json"),
           )
           .map((entry) => joinPathsToUri(dir, entry[0]));
         return await Promise.all(rcFiles.map(ide.readFile));

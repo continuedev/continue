@@ -2,6 +2,17 @@ import { ConfigDependentToolParams, Tool } from "..";
 import { isRecommendedAgentModel } from "../llm/toolSupport";
 import * as toolDefinitions from "./definitions";
 
+export const TOOL_PRESETS = ["default"] as const;
+export type ToolPreset = (typeof TOOL_PRESETS)[number];
+
+export function parseToolPreset(preset: string): ToolPreset | null {
+  const normalized = preset.toLowerCase();
+  if (!TOOL_PRESETS.includes(normalized as ToolPreset)) {
+    return null;
+  }
+  return normalized as ToolPreset;
+}
+
 // I'm writing these as functions because we've messed up 3 TIMES by pushing to const, causing duplicate tool definitions on subsequent config loads.
 export const getBaseToolDefinitions = () => [
   toolDefinitions.readFileTool,
@@ -65,6 +76,20 @@ export const getConfigDependentToolDefinitions = async (
 
   return tools;
 };
+
+export async function getToolDefinitionsForPreset(
+  preset: ToolPreset,
+  params: ConfigDependentToolParams,
+): Promise<Tool[]> {
+  switch (preset) {
+    case "default":
+    default:
+      return [
+        ...getBaseToolDefinitions(),
+        ...(await getConfigDependentToolDefinitions(params)),
+      ];
+  }
+}
 
 export function serializeTool(tool: Tool) {
   const { preprocessArgs, evaluateToolCallPolicy, ...rest } = tool;

@@ -1,4 +1,4 @@
-import { streamSse } from "@continuedev/fetch";
+import { streamSse } from "@yutoagentic/fetch";
 import { CompletionOptions, LLMOptions } from "../../index.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
 

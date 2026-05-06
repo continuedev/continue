@@ -40,7 +40,7 @@ jobs:
       #     echo "Checking if any beta versions are less than 7 days old..."
 
       #     # Get all beta versions from npm
-      #     BETA_VERSIONS=$(npm view @continuedev/cli versions --json | jq -r '.[] | select(contains("-beta."))' 2>/dev/null || echo "[]")
+      #     BETA_VERSIONS=$(npm view @yutoagentic/cli versions --json | jq -r '.[] | select(contains("-beta."))' 2>/dev/null || echo "[]")
 
       #     if [ "$BETA_VERSIONS" = "[]" ] || [ -z "$BETA_VERSIONS" ]; then
       #       echo "No beta versions found, proceeding with release"

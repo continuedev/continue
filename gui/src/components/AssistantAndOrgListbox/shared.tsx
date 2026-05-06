@@ -1,4 +1,4 @@
-import { ConfigValidationError } from "@continuedev/config-yaml";
+import { ConfigValidationError } from "@yutoagentic/config-yaml";
 import {
   ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,

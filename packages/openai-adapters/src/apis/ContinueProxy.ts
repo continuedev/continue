@@ -43,7 +43,7 @@ export class ContinueProxyApi extends OpenAIApi {
       apiKey: config.apiKey,
       apiBase: config.env?.proxyUrl
         ? new URL("model-proxy/v1/", config.env?.proxyUrl).toString()
-        : "https://api.continue.dev/model-proxy/v1/",
+        : "https://api.yutoagentic.dev/model-proxy/v1/",
       requestOptions: config.requestOptions,
     };
 

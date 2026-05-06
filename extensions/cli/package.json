@@ -1,12 +1,12 @@
 {
-  "name": "@continuedev/cli",
+  "name": "@yutoagentic/cli",
   "version": "0.0.0-dev",
-  "description": "Continue CLI",
+  "description": "Yuto Agentic CLI",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "cn": "dist/cn.js"
+    "yt": "dist/yt.js"
   },
   "scripts": {
     "test": "vitest run",
@@ -20,30 +20,30 @@
     "build:validate": "node validate-aliases.mjs",
     "build:bundle": "node build.mjs",
     "build": "npm run build:validate && npm run build:bundle",
-    "start": "node dist/cn.js",
+    "start": "node dist/yt.js",
     "dev": "tsx src/index.ts",
-    "repomix:sdk": "npx repomix node_modules/@continuedev/sdk --ignore **/api,cli-repomix.xml -o sdk-repomix.xml",
+    "repomix:sdk": "npx repomix node_modules/@yutoagentic/sdk --ignore **/api,cli-repomix.xml -o sdk-repomix.xml",
     "repomix:cli": "npx repomix --ignore sdk-repomix.xml -o cli-repomix.xml",
     "lint": "tsc --noEmit && eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "watch:logs": "touch ~/.continue/logs/cn.log && tail -f ~/.continue/logs/cn.log",
+    "watch:logs": "touch ~/.yutoagentic/logs/yt.log && tail -f ~/.yutoagentic/logs/yt.log",
     "prepare": "npm run build",
     "semantic-release": "semantic-release",
     "semantic-release:dry-run": "semantic-release --dry-run"
   },
-  "author": "Continue Dev, Inc.",
+  "author": "Yuto Agentic",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/continuedev/continue.git"
+    "url": "https://github.com/yutoagentic/yutoagentic.git"
   },
   "bugs": {
-    "url": "https://github.com/continuedev/continue/issues"
+    "url": "https://github.com/yutoagentic/yutoagentic/issues"
   },
-  "homepage": "https://continue.dev",
+  "homepage": "https://yutoagentic.dev",
   "dependencies": {
     "@sentry/profiling-node": "^9.47.1",
     "fdir": "^6.4.2",
@@ -52,10 +52,10 @@
     "js-yaml": "^4.1.1"
   },
   "devDependencies": {
-    "@continuedev/config-yaml": "file:../../packages/config-yaml",
-    "@continuedev/openai-adapters": "file:../../packages/openai-adapters",
-    "@continuedev/sdk": "^0.0.13",
-    "@continuedev/terminal-security": "file:../../packages/terminal-security",
+    "@yutoagentic/config-yaml": "file:../../packages/config-yaml",
+    "@yutoagentic/openai-adapters": "file:../../packages/openai-adapters",
+    "@yutoagentic/sdk": "^0.0.13",
+    "@yutoagentic/terminal-security": "file:../../packages/terminal-security",
     "@modelcontextprotocol/sdk": "^1.24.0",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/exporter-metrics-otlp-grpc": "^0.203.0",

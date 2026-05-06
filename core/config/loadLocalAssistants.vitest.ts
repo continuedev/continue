@@ -13,13 +13,13 @@ describe("ASSISTANTS getAllDotContinueDefinitionFiles with fileExtType option", 
 
     // Add test files to the test directory
     addToTestDir([
-      ".continue/assistants/",
-      [".continue/assistants/assistant1.yaml", "yaml content 1"],
-      [".continue/assistants/assistant2.yml", "yaml content 2"],
-      [".continue/assistants/assistant3.md", "markdown content 1"],
-      [".continue/assistants/assistant4.txt", "txt content"],
-      [".continue/assistants/config.yaml", "txt content"],
-      [".continue/assistants/config.yml", "txt content"],
+      ".yutoagentic/assistants/",
+      [".yutoagentic/assistants/assistant1.yaml", "yaml content 1"],
+      [".yutoagentic/assistants/assistant2.yml", "yaml content 2"],
+      [".yutoagentic/assistants/assistant3.md", "markdown content 1"],
+      [".yutoagentic/assistants/assistant4.txt", "txt content"],
+      [".yutoagentic/assistants/config.yaml", "txt content"],
+      [".yutoagentic/assistants/config.yml", "txt content"],
     ]);
   });
 
@@ -156,9 +156,9 @@ describe("ASSISTANTS getAllDotContinueDefinitionFiles with fileExtType option", 
     walkDirCache.invalidate();
     setUpTestDir();
     addToTestDir([
-      ".continue/assistants/",
-      [".continue/assistants/nonmatch1.txt", "txt content"],
-      [".continue/assistants/nonmatch2.json", "json content"],
+      ".yutoagentic/assistants/",
+      [".yutoagentic/assistants/nonmatch1.txt", "txt content"],
+      [".yutoagentic/assistants/nonmatch2.json", "json content"],
     ]);
 
     const options: LoadAssistantFilesOptions = {
@@ -215,9 +215,9 @@ describe("ASSISTANTS getAllDotContinueDefinitionFiles with fileExtType option", 
   it("should filter by file extension case sensitively", async () => {
     // Add files with uppercase extensions
     addToTestDir([
-      [".continue/assistants/assistant5.YAML", "uppercase yaml"],
-      [".continue/assistants/assistant6.YML", "uppercase yml"],
-      [".continue/assistants/assistant7.MD", "uppercase md"],
+      [".yutoagentic/assistants/assistant5.YAML", "uppercase yaml"],
+      [".yutoagentic/assistants/assistant6.YML", "uppercase yml"],
+      [".yutoagentic/assistants/assistant7.MD", "uppercase md"],
     ]);
 
     const yamlOptions: LoadAssistantFilesOptions = {
@@ -273,11 +273,11 @@ describe("AGENTS getAllDotContinueDefinitionFiles with fileExtType option", () =
 
     // Add test files to the test directory
     addToTestDir([
-      ".continue/agents/",
-      [".continue/agents/agent1.yaml", "yaml content 1"],
-      [".continue/agents/agent2.yml", "yaml content 2"],
-      [".continue/agents/agent3.md", "markdown content 1"],
-      [".continue/agents/agent4.txt", "txt content"],
+      ".yutoagentic/agents/",
+      [".yutoagentic/agents/agent1.yaml", "yaml content 1"],
+      [".yutoagentic/agents/agent2.yml", "yaml content 2"],
+      [".yutoagentic/agents/agent3.md", "markdown content 1"],
+      [".yutoagentic/agents/agent4.txt", "txt content"],
     ]);
   });
 
@@ -390,9 +390,9 @@ describe("AGENTS getAllDotContinueDefinitionFiles with fileExtType option", () =
     walkDirCache.invalidate();
     setUpTestDir();
     addToTestDir([
-      ".continue/agents/",
-      [".continue/agents/nonmatch1.txt", "txt content"],
-      [".continue/agents/nonmatch2.json", "json content"],
+      ".yutoagentic/agents/",
+      [".yutoagentic/agents/nonmatch1.txt", "txt content"],
+      [".yutoagentic/agents/nonmatch2.json", "json content"],
     ]);
 
     const options: LoadAssistantFilesOptions = {
@@ -449,9 +449,9 @@ describe("AGENTS getAllDotContinueDefinitionFiles with fileExtType option", () =
   it("should filter by file extension case sensitively", async () => {
     // Add files with uppercase extensions
     addToTestDir([
-      [".continue/agents/agent5.YAML", "uppercase yaml"],
-      [".continue/agents/agent6.YML", "uppercase yml"],
-      [".continue/agents/agent7.MD", "uppercase md"],
+      [".yutoagentic/agents/agent5.YAML", "uppercase yaml"],
+      [".yutoagentic/agents/agent6.YML", "uppercase yml"],
+      [".yutoagentic/agents/agent7.MD", "uppercase md"],
     ]);
 
     const yamlOptions: LoadAssistantFilesOptions = {

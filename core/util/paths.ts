@@ -4,13 +4,15 @@ import * as path from "path";
 import * as URI from "uri-js";
 import * as YAML from "yaml";
 
-import { ConfigYaml, DevEventName } from "@continuedev/config-yaml";
+import { ConfigYaml, DevEventName } from "@yutoagentic/config-yaml";
 import * as JSONC from "comment-json";
 import dotenv from "dotenv";
 
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig } from "../config/default";
 import Types from "../config/types";
+
+import { BRAND } from "./brand.js";
 
 dotenv.config();
 
@@ -24,15 +26,17 @@ export function setConfigFilePermissions(filePath: string): void {
   }
 }
 
-const CONTINUE_GLOBAL_DIR = (() => {
-  const configPath = process.env.CONTINUE_GLOBAL_DIR;
+const YUTOAGENTIC_GLOBAL_DIR = (() => {
+  const configPath =
+    process.env[BRAND.GLOBAL_DIR_ENV] ??
+    process.env[BRAND.LEGACY.GLOBAL_DIR_ENV];
   if (configPath) {
     // Convert relative path to absolute paths based on current working directory
     return path.isAbsolute(configPath)
       ? configPath
       : path.resolve(process.cwd(), configPath);
   }
-  return path.join(os.homedir(), ".continue");
+  return path.join(os.homedir(), BRAND.GLOBAL_DIR_NAME);
 })();
 
 // export const DEFAULT_CONFIG_TS_CONTENTS = `import { Config } from "./types"\n\nexport function modifyConfig(config: Config): Config {
@@ -58,7 +62,7 @@ export function getContinueUtilsPath(): string {
 export function getGlobalContinueIgnorePath(): string {
   const continueIgnorePath = path.join(
     getContinueGlobalPath(),
-    ".continueignore",
+    BRAND.IGNORE_FILE,
   );
   if (!fs.existsSync(continueIgnorePath)) {
     fs.writeFileSync(continueIgnorePath, "");
@@ -67,8 +71,8 @@ export function getGlobalContinueIgnorePath(): string {
 }
 
 export function getContinueGlobalPath(): string {
-  // This is ~/.continue on mac/linux
-  const continuePath = CONTINUE_GLOBAL_DIR;
+  // This is ~/.yutoagentic on mac/linux (override with YUTOAGENTIC_GLOBAL_DIR).
+  const continuePath = YUTOAGENTIC_GLOBAL_DIR;
   if (!fs.existsSync(continuePath)) {
     fs.mkdirSync(continuePath);
   }
@@ -209,7 +213,7 @@ export function getTsConfigPath(): string {
 
 export function getContinueRcPath(): string {
   // Disable indexing of the config folder to prevent infinite loops
-  const continuercPath = path.join(getContinueGlobalPath(), ".continuerc.json");
+  const continuercPath = path.join(getContinueGlobalPath(), BRAND.RC_FILE);
   if (!fs.existsSync(continuercPath)) {
     fs.writeFileSync(
       continuercPath,

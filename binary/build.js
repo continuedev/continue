@@ -91,9 +91,9 @@ async function buildWithEsbuild() {
     "out/package.json",
     JSON.stringify(
       {
-        name: "binary",
+        name: "yutoagentic-binary",
         version: "1.0.0",
-        author: "Continue Dev, Inc",
+        author: "Yuto Agentic",
         license: "Apache-2.0",
       },
       undefined,
@@ -216,7 +216,7 @@ async function buildWithEsbuild() {
     const exe = target.startsWith("win") ? ".exe" : "";
     const targetDir = `bin/${target}`;
     pathsToVerify.push(
-      `${targetDir}/continue-binary${exe}`,
+      `${targetDir}/yutoagentic-binary${exe}`,
       `${targetDir}/index.node`, // @lancedb
       `${targetDir}/build/Release/node_sqlite3.node`,
       `${targetDir}/rg${exe}`, // ripgrep binary

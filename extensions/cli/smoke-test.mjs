@@ -47,14 +47,14 @@ runTest("Bundle file exists", () => {
   if (!existsSync(resolve(__dirname, "dist/index.js"))) {
     throw new Error("dist/index.js not found");
   }
-  if (!existsSync(resolve(__dirname, "dist/cn.js"))) {
-    throw new Error("dist/cn.js not found");
+  if (!existsSync(resolve(__dirname, "dist/yt.js"))) {
+    throw new Error("dist/yt.js not found");
   }
 });
 
 // Test 2: Check if wrapper script is executable
 runTest("Wrapper script has shebang", () => {
-  const content = readFileSync(resolve(__dirname, "dist/cn.js"), "utf8");
+  const content = readFileSync(resolve(__dirname, "dist/yt.js"), "utf8");
   if (!content.startsWith("#!/usr/bin/env node")) {
     throw new Error("Wrapper script missing shebang");
   }
@@ -64,9 +64,9 @@ runTest("Wrapper script has shebang", () => {
 function getCLICommand(args = "") {
   const isWindows = process.platform === "win32";
   if (isWindows) {
-    return `node dist/cn.js ${args}`;
+    return `node dist/yt.js ${args}`;
   } else {
-    return `./dist/cn.js ${args}`;
+    return `./dist/yt.js ${args}`;
   }
 }
 
@@ -136,15 +136,15 @@ runTest("Local packages are bundled", () => {
     "utf8",
   );
 
-  // Check for code from @continuedev/config-yaml
+  // Check for code from @yutoagentic/config-yaml
   if (
     !bundleContent.includes("AssistantUnrolled") &&
     !bundleContent.includes("config-yaml")
   ) {
-    throw new Error("@continuedev/config-yaml not properly bundled");
+    throw new Error("@yutoagentic/config-yaml not properly bundled");
   }
 
-  // Check for code from @continuedev/openai-adapters
+  // Check for code from @yutoagentic/openai-adapters
   // Since the bundle is minified, check for strings that would be present
   // even after minification (e.g., error messages, property names)
   if (
@@ -154,7 +154,7 @@ runTest("Local packages are bundled", () => {
     !bundleContent.includes("azure") &&
     !bundleContent.includes("bedrock")
   ) {
-    throw new Error("@continuedev/openai-adapters not properly bundled");
+    throw new Error("@yutoagentic/openai-adapters not properly bundled");
   }
 });
 
@@ -203,7 +203,7 @@ runTest("No missing runtime dependencies", () => {
 runTest("CLI works via npm link", () => {
   try {
     // Simply test that we can execute with node directly
-    const output = execCommand("node dist/cn.js --version 2>&1");
+    const output = execCommand("node dist/yt.js --version 2>&1");
     const packageJson = JSON.parse(
       readFileSync(resolve(__dirname, "package.json"), "utf8"),
     );

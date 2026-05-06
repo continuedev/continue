@@ -74,7 +74,7 @@ function getGlobPattern(globs: RuleFrontmatter["globs"], relativeDir?: string) {
   if (relativeDir === undefined) {
     return globs;
   }
-  if (relativeDir.includes(".continue")) {
+  if (relativeDir.includes(".yutoagentic")) {
     return globs;
   }
   if (!relativeDir.endsWith("/")) {

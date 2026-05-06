@@ -1,4 +1,4 @@
-import { ConfigYaml } from "@continuedev/config-yaml";
+import { ConfigYaml } from "@yutoagentic/config-yaml";
 
 export const defaultConfig: ConfigYaml = {
   name: "Local Config",

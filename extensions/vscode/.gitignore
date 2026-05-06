@@ -16,15 +16,15 @@ gui/**
 .devcontainer
 .github
 
-continue_rc_schema.json
+yutoagentic_rc_schema.json
 
 e2e/_output
 e2e/.test-extensions
 e2e/storage
 e2e/vsix
-e2e/test-continue/*
-!e2e/test-continue/config.json
-e2e/test-continue-yaml/*
-!e2e/test-continue-yaml/config.yaml
+e2e/test-yutoagentic/*
+!e2e/test-yutoagentic/config.json
+e2e/test-yutoagentic-yaml/*
+!e2e/test-yutoagentic-yaml/config.yaml
 config-yaml-schema.json
 src/.buildTimestamp.ts

@@ -1,6 +1,6 @@
 import { AuthClient, GoogleAuth, JWT, auth } from "google-auth-library";
 
-import { streamResponse, streamSse } from "@continuedev/fetch";
+import { streamResponse, streamSse } from "@yutoagentic/fetch";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";

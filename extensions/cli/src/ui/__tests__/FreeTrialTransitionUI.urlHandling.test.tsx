@@ -17,22 +17,22 @@ describe("FreeTrialTransitionUI - URL Opening Security", () => {
 
   it("should verify URL format for models setup", () => {
     // Test the URL construction logic without actually opening URLs
-    const baseUrl = "https://test.continue.dev";
+    const baseUrl = "https://test.yutoagentic.dev";
     const expectedUrl = new URL("setup-models", baseUrl).toString();
 
-    expect(expectedUrl).toBe("https://test.continue.dev/setup-models");
+    expect(expectedUrl).toBe("https://test.yutoagentic.dev/setup-models");
   });
 
   it("should handle URL construction with different base URLs", () => {
     // Test URL construction with various base URLs
     const testCases = [
       {
-        base: "https://continue.dev",
-        expected: "https://continue.dev/setup-models",
+        base: "https://yutoagentic.dev",
+        expected: "https://yutoagentic.dev/setup-models",
       },
       {
-        base: "https://app.continue.dev",
-        expected: "https://app.continue.dev/setup-models",
+        base: "https://app.yutoagentic.dev",
+        expected: "https://app.yutoagentic.dev/setup-models",
       },
       {
         base: "http://localhost:3000",

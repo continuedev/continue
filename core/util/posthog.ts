@@ -106,10 +106,15 @@ export class Telemetry {
 
   static async getTelemetryClient(): Promise<PostHogType | undefined> {
     try {
+      const apiKey = process.env.YUTOAGENTIC_POSTHOG_KEY ?? "";
+      if (!apiKey) {
+        // No telemetry configured for this fork; running fully offline.
+        return undefined;
+      }
+      const host =
+        process.env.YUTOAGENTIC_POSTHOG_HOST ?? "https://app.posthog.com";
       const { PostHog } = await import("posthog-node");
-      return new PostHog("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
-        host: "https://app.posthog.com",
-      });
+      return new PostHog(apiKey, { host });
     } catch (e) {
       console.error(`Failed to setup telemetry: ${e}`);
     }

@@ -6,8 +6,8 @@ import {
   PlatformClient,
   SecretResult,
   SecretType,
-} from "@continuedev/config-yaml";
-import { DefaultApiInterface } from "@continuedev/sdk/dist/api";
+} from "@yutoagentic/config-yaml";
+import { DefaultApiInterface } from "@yutoagentic/sdk/dist/api";
 import * as dotenv from "dotenv";
 
 import { env } from "./env.js";
@@ -65,7 +65,7 @@ export class CLIPlatformClient implements PlatformClient {
     const workspaceDir = process.cwd();
     const envPaths = [
       path.join(env.continueHome, ".env"),
-      path.join(workspaceDir, ".continue", ".env"),
+      path.join(workspaceDir, ".yutoagentic", ".env"),
       path.join(workspaceDir, ".env"),
     ];
 

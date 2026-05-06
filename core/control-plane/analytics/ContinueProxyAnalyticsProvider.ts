@@ -1,4 +1,4 @@
-import { Analytics } from "@continuedev/config-types";
+import { Analytics } from "@yutoagentic/config-types";
 import fetch from "node-fetch";
 
 import { ControlPlaneClient } from "../client.js";

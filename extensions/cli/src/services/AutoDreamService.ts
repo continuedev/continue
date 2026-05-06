@@ -20,8 +20,8 @@
 import fsPromises from "fs/promises";
 import * as path from "path";
 
-import { ModelConfig } from "@continuedev/config-yaml";
-import { BaseLlmApi } from "@continuedev/openai-adapters";
+import { ModelConfig } from "@yutoagentic/config-yaml";
+import { BaseLlmApi } from "@yutoagentic/openai-adapters";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 
 import { env } from "../env.js";

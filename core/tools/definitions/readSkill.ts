@@ -4,6 +4,14 @@ import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
 export const readSkillTool: GetTool = async (params) => {
   const { skills } = await loadMarkdownSkills(params.ide);
+  const listedSkills = skills
+    .map(
+      (skill) =>
+        `\nname: ${skill.name}\ndescription: ${skill.description}${
+          skill.whenToUse ? `\nwhen_to_use: ${skill.whenToUse}` : ""
+        }\n`,
+    )
+    .join("");
   return {
     type: "function",
     displayTitle: "Read Skill",
@@ -17,7 +25,7 @@ export const readSkillTool: GetTool = async (params) => {
       name: BuiltInToolNames.ReadSkill,
       description: `
 Use this tool to read the content of a skill by its name. Skills contain detailed instructions for specific tasks. The skill name should match one of the available skills listed below: 
-${skills.map((skill) => `\nname: ${skill.name}\ndescription: ${skill.description}\n`)}`,
+${listedSkills}`,
       parameters: {
         type: "object",
         required: ["skillName"],
@@ -25,7 +33,7 @@ ${skills.map((skill) => `\nname: ${skill.name}\ndescription: ${skill.description
           skillName: {
             type: "string",
             description:
-              "The name of the skill to read. This should match the name from the available skills.",
+              "The name of the skill to read. This should match the name from the available skills. Slash-style names like '/commit' are also accepted.",
           },
         },
       },

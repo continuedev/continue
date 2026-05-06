@@ -38,7 +38,7 @@ describe("SentryLogger Integration Tests", () => {
         false,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
 
       expect(SentryLogger.allowTelemetry).toBe(false);
@@ -56,7 +56,7 @@ describe("SentryLogger Integration Tests", () => {
         true,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
 
       // In the updated implementation, the Continue team member check is used instead of NODE_ENV check
@@ -77,7 +77,7 @@ describe("SentryLogger Integration Tests", () => {
         true,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
 
       expect(SentryLogger.allowTelemetry).toBe(true);
@@ -98,7 +98,7 @@ describe("SentryLogger Integration Tests", () => {
         true,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
       expect(SentryLogger.allowTelemetry).toBe(true);
       expect(SentryLogger.client).toBeDefined();
@@ -121,7 +121,7 @@ describe("SentryLogger Integration Tests", () => {
         true,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
       const firstClient = SentryLogger.client;
       const firstScope = SentryLogger.scope;
@@ -131,7 +131,7 @@ describe("SentryLogger Integration Tests", () => {
         true,
         "test-id-2",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
       expect(SentryLogger.client).toBe(firstClient);
       expect(SentryLogger.scope).toBe(firstScope);
@@ -198,7 +198,7 @@ describe("SentryLogger Integration Tests", () => {
         true,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
       expect(SentryLogger.client).toBeDefined();
 
@@ -255,7 +255,7 @@ describe("Sentry Utility Functions", () => {
         true,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
       const result = initializeSentry();
 
@@ -286,7 +286,7 @@ describe("Sentry Utility Functions", () => {
         true,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
 
       const callback = jest.fn().mockReturnValue("test-result");
@@ -306,7 +306,7 @@ describe("Sentry Utility Functions", () => {
         true,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
 
       const asyncCallback = jest.fn().mockResolvedValue("async-result");
@@ -339,7 +339,7 @@ describe("Sentry Utility Functions", () => {
         true,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
 
       const error = new Error("test error");
@@ -358,7 +358,7 @@ describe("Sentry Utility Functions", () => {
         true,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
 
       const error = new Error("test error");
@@ -387,7 +387,7 @@ describe("Sentry Utility Functions", () => {
         true,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
 
       expect(() => captureLog("test message")).not.toThrow();
@@ -406,7 +406,7 @@ describe("Sentry Utility Functions", () => {
         true,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
 
       expect(() =>
@@ -440,7 +440,7 @@ describe("Sentry Utility Functions", () => {
         true,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
 
       // Now utility functions should work with Sentry
@@ -465,7 +465,7 @@ describe("Sentry Utility Functions", () => {
         false,
         "test-id",
         mockIdeInfo,
-        "test@continue.dev",
+        "test@yutoagentic.dev",
       );
       expect(initializeSentry().client).toBeUndefined();
 

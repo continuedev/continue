@@ -76,7 +76,7 @@ describe("customFetch - auth header override logic", () => {
 
 /**
  * Note: Full integration testing of the header override logic requires
- * mocking the entire fetch stack (@continuedev/fetch package) which is
+ * mocking the entire fetch stack (@yutoagentic/fetch package) which is
  * complex. The above tests verify the function structure and basic behavior.
  *
  * The actual header removal logic is tested end-to-end by:

@@ -1,4 +1,4 @@
-import { ToolPolicy } from "@continuedev/terminal-security";
+import { ToolPolicy } from "@yutoagentic/terminal-security";
 
 /**
  * Evaluates file access policy based on whether the file is within workspace boundaries

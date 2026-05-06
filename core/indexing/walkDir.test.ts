@@ -278,7 +278,7 @@ describe("walkDir functions", () => {
     it("should handle both gitignore and continueignore", async () => {
       addToTestDir([
         [".gitignore", "*.py"],
-        [".continueignore", "*.ts"],
+        [".yutoagenticignore", "*.ts"],
         ["a.txt", "content"],
         ["b.py", "content"],
         ["c.ts", "content"],

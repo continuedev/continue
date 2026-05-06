@@ -11,7 +11,7 @@ This document captures the responsibilities for both the CLI and backend compone
 - **Flag plumbing**: When `cn serve` is invoked with `--id <storageId>`, the CLI treats that value as an opaque identifier.
 - **API key auth**: The CLI attaches the user-level Continue API key (same mechanism we already use for other authenticated requests) to backend calls.
 - **Presign handshake**:
-  1. On startup, issue `POST https://api.continue.dev/agents/storage/presigned-url` with JSON payload `{ "storageId": "<storageId>" }`.
+  1. On startup, issue `POST https://api.yutoagentic.dev/agents/storage/presigned-url` with JSON payload `{ "storageId": "<storageId>" }`.
   2. Expect a response payload containing two pre-signed `PUT` URLs and their target object keys:
      ```json
      {

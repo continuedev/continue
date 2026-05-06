@@ -16,7 +16,7 @@ import {
 } from "../test/testDir.js";
 import { getIndexSqlitePath } from "../util/paths.js";
 
-import { ConfigResult } from "@continuedev/config-yaml";
+import { ConfigResult } from "@yutoagentic/config-yaml";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
 import { ContinueConfig } from "../index.js";
 import { localPathToUri } from "../util/pathToUri.js";

@@ -1,0 +1,20 @@
+{
+  "lastSelectedProfileForWorkspace": {
+    "file:///home/fran/dev/yuto-code/manual-testing-sandbox:::personal": "local"
+  },
+  "lastSelectedOrgIdForWorkspace": {
+    "file:///home/fran/dev/yuto-code/manual-testing-sandbox": "personal"
+  },
+  "selectedModelsByProfileId": {
+    "local": {
+      "chat": "Llama 3.1 8B",
+      "edit": "Llama 3.1 8B",
+      "apply": "Llama 3.1 8B",
+      "embed": "Transformers.js (Built-In)",
+      "autocomplete": "Qwen2.5-Coder 1.5B",
+      "rerank": null,
+      "summarize": null,
+      "subagent": null
+    }
+  }
+}

@@ -12,7 +12,7 @@ export class DownloadYamlExtensionCodeLensProvider
     document: vscode.TextDocument,
     _: vscode.CancellationToken,
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
-    if (!document.uri.fsPath.includes(".continue")) {
+    if (!document.uri.fsPath.includes(".yutoagentic")) {
       return [];
     }
 
@@ -24,7 +24,7 @@ export class DownloadYamlExtensionCodeLensProvider
       command: {
         title: "📖 View Continue Reference",
         command: "vscode.open",
-        arguments: [vscode.Uri.parse("https://docs.continue.dev/reference")],
+        arguments: [vscode.Uri.parse("https://docs.yutoagentic.dev/reference")],
       },
       isResolved: true,
     };

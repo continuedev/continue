@@ -9,7 +9,7 @@ import Vllm from "../Vllm.js";
 
 // Mock the parseProxyModelName function
 const mockParseProxyModelName = jest.fn();
-jest.mock("@continuedev/config-yaml", () => ({
+jest.mock("@yutoagentic/config-yaml", () => ({
   parseProxyModelName: mockParseProxyModelName,
   decodeSecretLocation: jest.fn(),
   SecretType: { NotFound: "not-found" },

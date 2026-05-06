@@ -1,4 +1,4 @@
-import { ConfigJson } from "@continuedev/config-types";
+import { ConfigJson } from "@yutoagentic/config-types";
 import { ConfigYaml } from "./schemas/index.js";
 import { ModelRole } from "./schemas/models.js";
 
@@ -122,7 +122,7 @@ function convertCustomCommand(
   return {
     name: cmd.name,
     description: cmd.description,
-    prompt: (cmd as any).prompt, // The type is wrong in @continuedev/config-types
+    prompt: (cmd as any).prompt, // The type is wrong in @yutoagentic/config-types
   };
 }
 

@@ -1,4 +1,4 @@
-import { streamResponse, streamSse } from "@continuedev/fetch";
+import { streamResponse, streamSse } from "@yutoagentic/fetch";
 import {
   AssistantChatMessage,
   ChatMessage,

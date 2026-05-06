@@ -1,4 +1,4 @@
-import { FQSN, SecretResult, SecretType } from "@continuedev/config-yaml";
+import { FQSN, SecretResult, SecretType } from "@yutoagentic/config-yaml";
 import {
   afterEach,
   beforeEach,
@@ -111,7 +111,7 @@ describe("LocalPlatformClient", () => {
       utilPaths.getContinueDotEnv = getContinueDotEnv;
     });
 
-    test("should be able to get secrets from ~/.continue/.env files", async () => {
+    test("should be able to get secrets from ~/.yutoagentic/.env files", async () => {
       const localPlatformClient = new LocalPlatformClient(
         null,
         testControlPlaneClient,
@@ -127,7 +127,7 @@ describe("LocalPlatformClient", () => {
   });
 
   describe("should be able to get secrets from workspace .env files", () => {
-    test("should get secrets from <workspace>/.continue/.env and <workspace>/.env", async () => {
+    test("should get secrets from <workspace>/.yutoagentic/.env and <workspace>/.env", async () => {
       const originalIdeFileExists = testIde.fileExists;
       testIde.fileExists = vi.fn(async (fileUri: string) =>
         fileUri.includes(".env") ? true : originalIdeFileExists(fileUri),
@@ -140,14 +140,14 @@ describe("LocalPlatformClient", () => {
         "dotenv-" + Math.floor(Math.random() * 100);
 
       testIde.readFile = vi.fn(async (fileUri: string) => {
-        // fileUri should contain .continue/.env and not .env
-        if (fileUri.match(/.*\.continue\/\.env.*/gi)?.length) {
+        // fileUri should contain .yutoagentic/.env and not .env
+        if (fileUri.match(/.*\.yutoagentic\/\.env.*/gi)?.length) {
           return (
             envKeyValuesString.split("\n")[0] + randomValueForContinueDirDotEnv
           );
         }
-        // filUri should contain .env and not .continue/.env
-        else if (fileUri.match(/.*(?<!\.continue\/)\.env.*/gi)?.length) {
+        // filUri should contain .env and not .yutoagentic/.env
+        else if (fileUri.match(/.*(?<!\.yutoagentic\/)\.env.*/gi)?.length) {
           return (
             envKeyValuesString.split("\n")[1] + randomValueForWorkspaceDotEnv
           );
@@ -181,7 +181,7 @@ describe("LocalPlatformClient", () => {
       expect(dotEnvSecretValue).toContain(randomValueForWorkspaceDotEnv);
     });
 
-    test("should first get secrets from <workspace>/.continue/.env and then <workspace>/.env", async () => {
+    test("should first get secrets from <workspace>/.yutoagentic/.env and then <workspace>/.env", async () => {
       const originalIdeFileExists = testIde.fileExists;
       testIde.fileExists = vi.fn(async (fileUri: string) =>
         fileUri.includes(".env") ? true : originalIdeFileExists(fileUri),
@@ -194,14 +194,14 @@ describe("LocalPlatformClient", () => {
 
       const originalIdeReadFile = testIde.readFile;
       testIde.readFile = vi.fn(async (fileUri: string) => {
-        // fileUri should contain .continue/.env and not .env
-        if (fileUri.match(/.*\.continue\/\.env.*/gi)?.length) {
+        // fileUri should contain .yutoagentic/.env and not .env
+        if (fileUri.match(/.*\.yutoagentic\/\.env.*/gi)?.length) {
           return (
             envKeyValuesString.split("\n")[0] + randomValueForContinueDirDotEnv
           );
         }
-        // filUri should contain .env and not .continue/.env
-        else if (fileUri.match(/.*(?<!\.continue\/)\.env.*/gi)?.length) {
+        // filUri should contain .env and not .yutoagentic/.env
+        else if (fileUri.match(/.*(?<!\.yutoagentic\/)\.env.*/gi)?.length) {
           return (
             envKeyValuesString.split("\n")[0] + randomValueForWorkspaceDotEnv
           );
@@ -220,7 +220,7 @@ describe("LocalPlatformClient", () => {
       expect(
         (resolvedFQSNs[0] as SecretResult & { value: unknown })?.value,
       ).toContain(secretValue);
-      // we check that workspace <workspace>.continue/.env does not override the <workspace>/.env secret
+      // we check that workspace <workspace>.yutoagentic/.env does not override the <workspace>/.env secret
       expect(
         (resolvedFQSNs[0] as SecretResult & { value: unknown })?.value,
       ).toContain(randomValueForContinueDirDotEnv);
@@ -351,7 +351,7 @@ describe("LocalPlatformClient", () => {
       expect(result?.secretLocation?.secretType).toBe(SecretType.Organization);
     });
 
-    test("should prioritize local ~/.continue/.env file over process.env", async () => {
+    test("should prioritize local ~/.yutoagentic/.env file over process.env", async () => {
       const localEnvFileValue = "secret-from-local-dot-continue-env";
       const utilPaths = await import("../../util/paths");
       utilPaths.getContinueDotEnv = vi.fn(() => ({
@@ -380,11 +380,11 @@ describe("LocalPlatformClient", () => {
     test("should prioritize workspace .env files over process.env", async () => {
       const workspaceContinueEnvValue = "secret-from-workspace-continue-env";
       testIde.fileExists = vi.fn(async (fileUri: string) =>
-        // Only mock existence for <workspace>/.continue/.env
-        fileUri.includes(".continue/.env"),
+        // Only mock existence for <workspace>/.yutoagentic/.env
+        fileUri.includes(".yutoagentic/.env"),
       );
       testIde.readFile = vi.fn(async (fileUri: string) => {
-        if (fileUri.includes(".continue/.env")) {
+        if (fileUri.includes(".yutoagentic/.env")) {
           return `${testFQSN.secretName}=${workspaceContinueEnvValue}`;
         }
         return "";

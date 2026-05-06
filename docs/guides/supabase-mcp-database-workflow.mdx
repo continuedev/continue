@@ -29,7 +29,7 @@ Before starting, ensure you have:
 
 - [Supabase account](https://supabase.com) with an active project
 - Node.js 18+ installed locally
-- [Continue CLI](https://docs.continue.dev/guides/cli) with **active credits** (required for API usage)
+- [Continue CLI](https://docs.yutoagentic.dev/guides/cli) with **active credits** (required for API usage)
 - Basic understanding of SQL and database concepts
 
 <Steps>
@@ -38,7 +38,7 @@ Before starting, ensure you have:
   </Step>
 
   <Step title="Set up Continue CLI Account & API Key">
-    1. Visit [Continue Organizations](https://continue.dev/settings/organizations)
+    1. Visit [Continue Organizations](https://yutoagentic.dev/settings/organizations)
     2. Sign up or log in to your Continue account
     3. Navigate to your organization settings
     4. Click **"API Keys"** and then **"+ New API Key"**
@@ -143,7 +143,7 @@ First, you'll need to set up access to your Supabase project.
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [Supabase Agent](https://continue.dev/continuedev/supabase-agent) on Continue Mission Control and click **"Install Agent"** or run:
+        Visit the [Supabase Agent](https://yutoagentic.dev/continuedev/supabase-agent) on Continue Mission Control and click **"Install Agent"** or run:
         
         ```bash
         cn --agent continuedev/supabase-agent
@@ -378,7 +378,7 @@ jobs:
 
       - name: Install Continue CLI
         run: |
-          npm install -g @continuedev/cli
+          npm install -g @yutoagentic/cli
           echo "✅ Continue CLI installed"
 
       - name: Analyze Database Security
@@ -428,7 +428,7 @@ jobs:
 
 <Warning>
   **Required GitHub Secrets**:
-  - `CONTINUE_API_KEY`: Your Continue API key from [continue.dev/settings/api-keys](https://continue.dev/settings/api-keys)
+  - `CONTINUE_API_KEY`: Your Continue API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
 
   Add this at: **Repository Settings → Secrets and variables → Actions**
 </Warning>
@@ -444,7 +444,7 @@ After completing this guide, you have a complete **AI-powered database managemen
 - **Provides insights** - Delivers actionable recommendations based on data patterns
 
 <Card title="Continuous AI Database Management" icon="shield-check">
-  Your system now operates at **[Level 2 Continuous AI](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)** - AI handles routine database analysis and optimization with human oversight for migration approval.
+  Your system now operates at **[Level 2 Continuous AI](https://blog.yutoagentic.dev/what-is-continuous-ai-a-developers-guide/)** - AI handles routine database analysis and optimization with human oversight for migration approval.
 </Card>
 
 ## Advanced Database Prompts
@@ -511,5 +511,5 @@ If you encounter connection issues:
 - [Supabase Database Guide](https://supabase.com/docs/guides/database)
 - [Supabase Security Best Practices](https://supabase.com/docs/guides/database/security)
 - [Model Context Protocol Docs](https://modelcontextprotocol.io/introduction)
-- [Continue CLI Guide](https://docs.continue.dev/guides/cli)
-- [Continuous AI Best Practices](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)
+- [Continue CLI Guide](https://docs.yutoagentic.dev/guides/cli)
+- [Continuous AI Best Practices](https://blog.yutoagentic.dev/what-is-continuous-ai-a-developers-guide/)

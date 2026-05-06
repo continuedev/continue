@@ -3,6 +3,8 @@
  * Ported from Marcel (src/utils/format.ts).
  */
 
+import { getRelativeTimeFormat, getTimeZone } from "./intl.js";
+
 /**
  * Formats a byte count to a human-readable string (KB, MB, GB).
  * @example formatFileSize(1536) → "1.5KB"
@@ -131,3 +133,157 @@ export function formatNumber(number: number): string {
 export function formatTokens(count: number): string {
   return formatNumber(count).replace(".0", "");
 }
+
+type RelativeTimeStyle = "long" | "short" | "narrow";
+
+type RelativeTimeOptions = {
+  style?: RelativeTimeStyle;
+  numeric?: "always" | "auto";
+};
+
+export function formatRelativeTime(
+  date: Date,
+  options: RelativeTimeOptions & { now?: Date } = {},
+): string {
+  const { style = "narrow", numeric = "always", now = new Date() } = options;
+  const diffInMs = date.getTime() - now.getTime();
+  const diffInSeconds = Math.trunc(diffInMs / 1000);
+
+  const intervals = [
+    { unit: "year", seconds: 31536000, shortUnit: "y" },
+    { unit: "month", seconds: 2592000, shortUnit: "mo" },
+    { unit: "week", seconds: 604800, shortUnit: "w" },
+    { unit: "day", seconds: 86400, shortUnit: "d" },
+    { unit: "hour", seconds: 3600, shortUnit: "h" },
+    { unit: "minute", seconds: 60, shortUnit: "m" },
+    { unit: "second", seconds: 1, shortUnit: "s" },
+  ] as const;
+
+  for (const { unit, seconds: intervalSeconds, shortUnit } of intervals) {
+    if (Math.abs(diffInSeconds) >= intervalSeconds) {
+      const value = Math.trunc(diffInSeconds / intervalSeconds);
+      if (style === "narrow") {
+        return diffInSeconds < 0
+          ? `${Math.abs(value)}${shortUnit} ago`
+          : `in ${value}${shortUnit}`;
+      }
+      return getRelativeTimeFormat("long", numeric).format(
+        value,
+        unit as Intl.RelativeTimeFormatUnit,
+      );
+    }
+  }
+
+  if (style === "narrow") {
+    return diffInSeconds <= 0 ? "0s ago" : "in 0s";
+  }
+  return getRelativeTimeFormat(style, numeric).format(0, "second");
+}
+
+export function formatRelativeTimeAgo(
+  date: Date,
+  options: RelativeTimeOptions & { now?: Date } = {},
+): string {
+  const { now = new Date(), ...restOptions } = options;
+  if (date > now) {
+    return formatRelativeTime(date, { ...restOptions, now });
+  }
+  return formatRelativeTime(date, { ...restOptions, numeric: "always", now });
+}
+
+export function formatLogMetadata(log: {
+  modified: Date;
+  messageCount: number;
+  fileSize?: number;
+  gitBranch?: string;
+  tag?: string;
+  agentSetting?: string;
+  prNumber?: number;
+  prRepository?: string;
+}): string {
+  const sizeOrCount =
+    log.fileSize === undefined
+      ? `${log.messageCount} messages`
+      : formatFileSize(log.fileSize);
+  const parts = [
+    formatRelativeTimeAgo(log.modified, { style: "short" }),
+    ...(log.gitBranch ? [log.gitBranch] : []),
+    sizeOrCount,
+  ];
+  if (log.tag) {
+    parts.push(`#${log.tag}`);
+  }
+  if (log.agentSetting) {
+    parts.push(`@${log.agentSetting}`);
+  }
+  if (log.prNumber) {
+    parts.push(
+      log.prRepository
+        ? `${log.prRepository}#${log.prNumber}`
+        : `#${log.prNumber}`,
+    );
+  }
+  return parts.join(" · ");
+}
+
+export function formatResetTime(
+  timestampInSeconds: number | undefined,
+  showTimezone = false,
+  showTime = true,
+): string | undefined {
+  if (!timestampInSeconds) return undefined;
+
+  const date = new Date(timestampInSeconds * 1000);
+  const now = new Date();
+  const minutes = date.getMinutes();
+  const hoursUntilReset = (date.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+  if (hoursUntilReset > 24) {
+    const dateOptions: Intl.DateTimeFormatOptions = {
+      month: "short",
+      day: "numeric",
+      hour: showTime ? "numeric" : undefined,
+      minute: !showTime || minutes === 0 ? undefined : "2-digit",
+      hour12: showTime ? true : undefined,
+    };
+
+    if (date.getFullYear() !== now.getFullYear()) {
+      dateOptions.year = "numeric";
+    }
+
+    const dateString = date.toLocaleString("en-US", dateOptions);
+    return (
+      dateString.replace(/ ([AP]M)/i, (_match, ampm) => ampm.toLowerCase()) +
+      (showTimezone ? ` (${getTimeZone()})` : "")
+    );
+  }
+
+  const timeString = date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: minutes === 0 ? undefined : "2-digit",
+    hour12: true,
+  });
+
+  return (
+    timeString.replace(/ ([AP]M)/i, (_match, ampm) => ampm.toLowerCase()) +
+    (showTimezone ? ` (${getTimeZone()})` : "")
+  );
+}
+
+export function formatResetText(
+  resetsAt: string,
+  showTimezone = false,
+  showTime = true,
+): string {
+  const date = new Date(resetsAt);
+  return `${formatResetTime(Math.floor(date.getTime() / 1000), showTimezone, showTime)}`;
+}
+
+export {
+  truncate,
+  truncatePathMiddle,
+  truncateStartToWidth,
+  truncateToWidth,
+  truncateToWidthNoEllipsis,
+  wrapText,
+} from "./truncate.js";

@@ -76,7 +76,7 @@ popd
 echo "Installing GUI extension dependencies..."
 pushd gui
 npm install
-npm link @continuedev/core --ignore-scripts
+npm link @yutoagentic/core --ignore-scripts
 NODE_OPTIONS="--max-old-space-size=4096" npm run build
 popd
 
@@ -87,7 +87,7 @@ pushd extensions/vscode
 rm -rf /tmp/vscode-ripgrep-cache-*
 # This does way too many things inline but is the common denominator between many of the scripts
 npm install
-npm link @continuedev/core --ignore-scripts
+npm link @yutoagentic/core --ignore-scripts
 # npm run prepackage # not required since npm run package has prescript of prepackage
 npm run package
 popd

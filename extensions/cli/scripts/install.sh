@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Continue CLI Installer - Unix (macOS, Linux, WSL, Git Bash)
-# curl -fsSL https://continue.dev/install.sh | bash
+# Yuto Agentic CLI Installer - Unix (macOS, Linux, WSL, Git Bash)
+# curl -fsSL https://yutoagentic.dev/install.sh | bash
 
 REQUIRED_NODE_VERSION="20.20.1"
-PACKAGE_NAME="@continuedev/cli"
-CLI_COMMAND="cn"
+PACKAGE_NAME="@yutoagentic/cli"
+CLI_COMMAND="yt"
 NETWORK_TIMEOUT=60
 FNM_INSTALL_DIR="$HOME/.local/share/fnm"
 
@@ -294,7 +294,7 @@ install_cli() {
 finalize() {
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    success "Continue CLI installation complete!"
+    success "Yuto Agentic CLI installation complete!"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 
@@ -310,7 +310,7 @@ finalize() {
 main() {
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    printf "${BOLD}           Continue CLI Installer${NC}\n"
+    printf "${BOLD}           Yuto Agentic CLI Installer${NC}\n"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 

@@ -129,7 +129,7 @@ class MCPConnectionOauthProvider implements OAuthClientProvider {
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
       client_name: "Continue Dev, Inc", // get this from package.json?
-      client_uri: "https://continue.dev", // get this from package.json?
+      client_uri: "https://yutoagentic.dev", // get this from package.json?
     };
   }
 

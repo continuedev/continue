@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 
-import { type AssistantConfig } from "@continuedev/sdk";
+import { type AssistantConfig } from "@yutoagentic/sdk";
 import { Box, Text, useApp, useInput } from "ink";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 

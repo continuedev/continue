@@ -63,7 +63,7 @@ async function bundleForBinary(target) {
   downloadPromises.push(downloadNodeSqlite(target, targetDir));
   await Promise.all(downloadPromises);
 
-  // Informs the `continue-binary` of where to look for node_sqlite3.node
+  // Informs the `yutoagentic-binary` of where to look for node_sqlite3.node
   // https://www.npmjs.com/package/bindings#:~:text=The%20searching%20for,file%20is%20found
   fs.writeFileSync(`${targetDir}/package.json`, "");
 }

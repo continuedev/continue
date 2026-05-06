@@ -1,4 +1,4 @@
-import { isAbortError } from "../../util/isAbortError.js";
+import { errorMessage, isAbortError } from "../../util/errors.js";
 
 /**
  * Configuration options for the retry decorator
@@ -13,9 +13,9 @@ export interface RetryOptions {
   /** Jitter factor between 0 and 1 (default: 0.3) */
   jitterFactor?: number;
   /** Custom function to determine if an error should be retried */
-  shouldRetry?: (error: any, attempt: number) => boolean;
+  shouldRetry?: (error: unknown, attempt: number) => boolean;
   /** Custom function called on each retry attempt */
-  onRetry?: (error: any, attempt: number, delay: number) => void;
+  onRetry?: (error: unknown, attempt: number, delay: number) => void;
 }
 
 /**
@@ -39,23 +39,39 @@ const DEFAULT_RETRY_OPTIONS: Required<RetryOptions> = {
  * - Specific AWS errors
  * - Timeout errors
  */
-function defaultShouldRetry(error: any, attempt: number): boolean {
+function defaultShouldRetry(error: unknown, attempt: number): boolean {
   // Note: maxAttempts check is handled by the retry logic itself
   // This function only determines if the error type is retryable
+  if (isAbortError(error)) {
+    return false;
+  }
+
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+  const err = error as {
+    code?: string;
+    $fault?: unknown;
+    $metadata?: unknown;
+    name?: string;
+    __type?: unknown;
+    message?: string;
+    status?: number;
+    statusCode?: number;
+  };
 
   // Network/connection errors
   if (
-    error.code === "ENOTFOUND" ||
-    error.code === "ECONNRESET" ||
-    error.code === "ECONNREFUSED" ||
-    error.code === "ETIMEDOUT"
+    err.code === "ENOTFOUND" ||
+    err.code === "ECONNRESET" ||
+    err.code === "ECONNREFUSED" ||
+    err.code === "ETIMEDOUT"
   ) {
     return true;
   }
 
   // AWS SDK specific errors (v3 - check for AWS error structure and retryable types)
-  const isAwsError =
-    error.$fault || error.$metadata || (error.name && error.__type);
+  const isAwsError = err.$fault || err.$metadata || (err.name && err.__type);
   const awsRetryableErrors = [
     "ThrottlingException",
     "ServiceUnavailableException",
@@ -66,19 +82,18 @@ function defaultShouldRetry(error: any, attempt: number): boolean {
     "ResourceNotFoundException",
   ];
 
-  if (isAwsError && error.name && awsRetryableErrors.includes(error.name)) {
+  if (isAwsError && err.name && awsRetryableErrors.includes(err.name)) {
     return true;
   }
 
   // Embedded rate limiting (e.g., Gemini/VertexAI return 429 in response body)
-  if (/"code"\s*:\s*429/.test(error.message ?? "")) {
+  if (/"code"\s*:\s*429/.test(err.message ?? "")) {
     return true;
   }
 
   // HTTP status codes
-  if (error.status || error.statusCode) {
-    const status = error.status || error.statusCode;
-
+  const status = err.status ?? err.statusCode;
+  if (typeof status === "number") {
     // Rate limiting
     if (status === 429) {
       return true;
@@ -96,26 +111,18 @@ function defaultShouldRetry(error: any, attempt: number): boolean {
   }
 
   // Timeout errors
-  if (
-    error.name === "TimeoutError" ||
-    error.message?.includes("timeout") ||
-    error.message?.includes("TIMEOUT")
-  ) {
+  const message = err.message ?? "";
+  if (err.name === "TimeoutError" || /timeout/i.test(message)) {
     return true;
   }
 
   // Overloaded / malformed stream errors (e.g. Anthropic 529, interrupted SSE)
-  const lowerMessage = (error.message ?? "").toLowerCase();
+  const lowerMessage = message.toLowerCase();
   if (
     lowerMessage.includes("overloaded") ||
     lowerMessage.includes("malformed json")
   ) {
     return true;
-  }
-
-  // Abort signal errors should not be retried
-  if (isAbortError(error)) {
-    return false;
   }
 
   // Default to not retrying unknown errors
@@ -125,10 +132,33 @@ function defaultShouldRetry(error: any, attempt: number): boolean {
 /**
  * Default function called on each retry attempt
  */
-function defaultOnRetry(error: any, attempt: number, delay: number): void {
+function defaultOnRetry(error: unknown, attempt: number, delay: number): void {
   console.warn(
-    `Retry attempt ${attempt} after ${delay}ms delay. Error: ${error.message || error}`,
+    `Retry attempt ${attempt} after ${delay}ms delay. Error: ${errorMessage(error)}`,
   );
+}
+
+function getHeaderValue(
+  headers: unknown,
+  headerNames: string[],
+): string | undefined {
+  if (!headers || typeof headers !== "object") return undefined;
+
+  const maybeHeaders = headers as Headers;
+  if (typeof maybeHeaders.get === "function") {
+    for (const headerName of headerNames) {
+      const value = maybeHeaders.get(headerName);
+      if (value) return value;
+    }
+  }
+
+  const asRecord = headers as Record<string, unknown>;
+  for (const headerName of headerNames) {
+    const value = asRecord[headerName];
+    if (typeof value === "string" && value.length > 0) return value;
+  }
+
+  return undefined;
 }
 
 /**
@@ -139,17 +169,21 @@ function calculateDelay(
   baseDelay: number,
   maxDelay: number,
   jitterFactor: number,
-  error?: any,
+  error?: unknown,
 ): number {
   // Check for rate limiting headers first (more accurate than exponential backoff)
-  if (error?.headers) {
-    const retryAfter =
-      error.headers["retry-after"] ||
-      error.headers["x-ratelimit-reset"] ||
-      error.headers["ratelimit-reset"] ||
-      error.headers["Retry-After"] ||
-      error.headers["X-RateLimit-Reset"] ||
-      error.headers["RateLimit-Reset"];
+  if (error && typeof error === "object" && "headers" in error) {
+    const retryAfter = getHeaderValue(
+      (error as { headers?: unknown }).headers,
+      [
+        "retry-after",
+        "x-ratelimit-reset",
+        "ratelimit-reset",
+        "Retry-After",
+        "X-RateLimit-Reset",
+        "RateLimit-Reset",
+      ],
+    );
 
     if (retryAfter) {
       let delayMs: number;

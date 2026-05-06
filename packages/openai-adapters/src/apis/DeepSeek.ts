@@ -1,4 +1,4 @@
-import { streamSse } from "@continuedev/fetch";
+import { streamSse } from "@yutoagentic/fetch";
 import { ChatCompletionChunk, Model } from "openai/resources/index";
 import { DeepseekConfig } from "../types.js";
 import { chatChunk, customFetch } from "../util.js";

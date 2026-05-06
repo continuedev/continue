@@ -51,7 +51,7 @@ describe("processPromptOrRule (loadRuleFromHub integration)", () => {
       expect(mockFetch).toHaveBeenCalledWith(
         new URL(
           "v0/continuedev/sentry-nextjs/latest/download",
-          "https://api.continue.dev/",
+          "https://api.yutoagentic.dev/",
         ),
         { headers: {} },
       );

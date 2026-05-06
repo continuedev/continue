@@ -73,7 +73,7 @@ function mergeHooksConfigs(
 function getSettingsFilePaths(cwd: string, homeDir?: string): string[] {
   const home = homeDir ?? os.homedir();
   const continueHome =
-    process.env.CONTINUE_GLOBAL_DIR || path.join(home, ".continue");
+    process.env.YUTOAGENTIC_GLOBAL_DIR || path.join(home, ".yutoagentic");
 
   return [
     // User-global (lowest precedence)
@@ -82,11 +82,11 @@ function getSettingsFilePaths(cwd: string, homeDir?: string): string[] {
 
     // Project-level
     path.join(cwd, ".claude", "settings.json"),
-    path.join(cwd, ".continue", "settings.json"),
+    path.join(cwd, ".yutoagentic", "settings.json"),
 
     // Project-local (highest precedence)
     path.join(cwd, ".claude", "settings.local.json"),
-    path.join(cwd, ".continue", "settings.local.json"),
+    path.join(cwd, ".yutoagentic", "settings.local.json"),
   ];
 }
 

@@ -52,7 +52,7 @@ export class ContinueCompletionProvider
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
-            "https://docs.continue.dev/features/tab-autocomplete",
+            "https://docs.yutoagentic.dev/features/tab-autocomplete",
           ),
         );
       }
@@ -595,7 +595,7 @@ export class ContinueCompletionProvider
         range,
         {
           title: "Log Autocomplete Outcome",
-          command: "continue.logAutocompleteOutcome",
+          command: "yutoagentic.logAutocompleteOutcome",
           arguments: [completionId, this.completionProvider],
         },
       );
@@ -648,7 +648,7 @@ export class ContinueCompletionProvider
         }
 
         // Track this ghost text for acceptance detection.
-        // Ghost text acceptance can *technically* be acted upon in the command handler for "continue.logNextEditOutcomeAccept".
+        // Ghost text acceptance can *technically* be acted upon in the command handler for "yutoagentic.logNextEditOutcomeAccept".
         // However, there is a substantial delay between accepting and logging, which introduces a lot of race conditions with different event handlers.
         // Plus, separating these concerns seems to make sense logically as well.
         GhostTextAcceptanceTracker.getInstance().setExpectedGhostTextAcceptance(
@@ -665,7 +665,7 @@ export class ContinueCompletionProvider
           ),
           {
             title: "Log Next Edit Outcome",
-            command: "continue.logNextEditOutcomeAccept",
+            command: "yutoagentic.logNextEditOutcomeAccept",
             arguments: [completionId, this.nextEditLoggingService],
           },
         );

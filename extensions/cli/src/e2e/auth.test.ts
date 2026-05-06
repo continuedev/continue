@@ -22,7 +22,7 @@ describe("E2E: Authentication", () => {
 
   describe("logout command", () => {
     it("should remove auth credentials", async () => {
-      const authPath = path.join(context.testDir, ".continue", "auth.json");
+      const authPath = path.join(context.testDir, ".yutoagentic", "auth.json");
 
       // Create auth file
       await fs.mkdir(path.dirname(authPath), { recursive: true });
@@ -43,7 +43,7 @@ describe("E2E: Authentication", () => {
         args: ["logout"],
         env: {
           HOME: context.testDir,
-          CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue"),
+          YUTOAGENTIC_GLOBAL_DIR: path.join(context.testDir, ".yutoagentic"),
         },
       });
 
@@ -63,7 +63,7 @@ describe("E2E: Authentication", () => {
         args: ["logout"],
         env: {
           HOME: context.testDir,
-          CONTINUE_GLOBAL_DIR: path.join(context.testDir, ".continue"),
+          YUTOAGENTIC_GLOBAL_DIR: path.join(context.testDir, ".yutoagentic"),
         },
       });
 

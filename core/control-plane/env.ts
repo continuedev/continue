@@ -5,47 +5,34 @@ import {
   getStagingEnvironmentDotFilePath,
 } from "../util/paths";
 import { AuthType, ControlPlaneEnv } from "./AuthTypes";
+import { getBrandEnv, isHubDisabled } from "./brandEnv";
 import { getLicenseKeyData } from "./mdm/mdm";
 
-export const EXTENSION_NAME = "continue";
+export const EXTENSION_NAME = "yutoagentic";
 
-const WORKOS_CLIENT_ID_PRODUCTION = "client_01J0FW6XN8N2XJAECF7NE0Y65J";
-const WORKOS_CLIENT_ID_STAGING = "client_01J0FW6XCPMJMQ3CG51RB4HBZQ";
-
-const PRODUCTION_HUB_ENV: ControlPlaneEnv = {
-  DEFAULT_CONTROL_PLANE_PROXY_URL: "https://api.continue.dev/",
-  CONTROL_PLANE_URL: "https://api.continue.dev/",
-  AUTH_TYPE: AuthType.WorkOsProd,
-  WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_PRODUCTION,
-  APP_URL: "https://continue.dev/",
-};
-
-const STAGING_ENV: ControlPlaneEnv = {
-  DEFAULT_CONTROL_PLANE_PROXY_URL: "https://api.continue-stage.tools/",
-  CONTROL_PLANE_URL: "https://api.continue-stage.tools/",
-  AUTH_TYPE: AuthType.WorkOsStaging,
-  WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_STAGING,
-  APP_URL: "https://hub.continue-stage.tools/",
-};
-
-const TEST_ENV: ControlPlaneEnv = {
-  DEFAULT_CONTROL_PLANE_PROXY_URL: "https://api-test.continue.dev/",
-  CONTROL_PLANE_URL: "https://api-test.continue.dev/",
-  AUTH_TYPE: AuthType.WorkOsStaging,
-  WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_STAGING,
-  APP_URL: "https://app-test.continue.dev/",
-};
+function buildHubEnv(
+  authType: AuthType.WorkOsProd | AuthType.WorkOsStaging,
+): ControlPlaneEnv {
+  const brand = getBrandEnv();
+  return {
+    DEFAULT_CONTROL_PLANE_PROXY_URL: brand.apiUrl,
+    CONTROL_PLANE_URL: brand.apiUrl,
+    AUTH_TYPE: authType,
+    WORKOS_CLIENT_ID: brand.workosClientId,
+    APP_URL: brand.appUrl,
+  };
+}
 
 const LOCAL_ENV: ControlPlaneEnv = {
   DEFAULT_CONTROL_PLANE_PROXY_URL: "http://localhost:3001/",
   CONTROL_PLANE_URL: "http://localhost:3001/",
   AUTH_TYPE: AuthType.WorkOsStaging,
-  WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_STAGING,
+  WORKOS_CLIENT_ID: "",
   APP_URL: "http://localhost:3000/",
 };
 
 export async function enableHubContinueDev() {
-  return true;
+  return !isHubDisabled();
 }
 
 export async function getControlPlaneEnv(
@@ -66,7 +53,7 @@ export function getControlPlaneEnvSync(
       AUTH_TYPE: AuthType.OnPrem,
       DEFAULT_CONTROL_PLANE_PROXY_URL: apiUrl,
       CONTROL_PLANE_URL: apiUrl,
-      APP_URL: "https://continue.dev/",
+      APP_URL: getBrandEnv().appUrl,
     };
   }
 
@@ -76,7 +63,7 @@ export function getControlPlaneEnvSync(
   }
 
   if (fs.existsSync(getStagingEnvironmentDotFilePath())) {
-    return STAGING_ENV;
+    return buildHubEnv(AuthType.WorkOsStaging);
   }
 
   const env =
@@ -88,13 +75,13 @@ export function getControlPlaneEnvSync(
           ? "local"
           : process.env.CONTROL_PLANE_ENV;
 
-  return env === "local"
-    ? LOCAL_ENV
-    : env === "staging"
-      ? STAGING_ENV
-      : env === "test"
-        ? TEST_ENV
-        : PRODUCTION_HUB_ENV;
+  if (env === "local") {
+    return LOCAL_ENV;
+  }
+  if (env === "staging" || env === "test") {
+    return buildHubEnv(AuthType.WorkOsStaging);
+  }
+  return buildHubEnv(AuthType.WorkOsProd);
 }
 
 export async function useHub(

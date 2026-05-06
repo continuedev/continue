@@ -1,4 +1,4 @@
-import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import { ConfigResult, ConfigValidationError } from "@yutoagentic/config-yaml";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { BrowserSerializedContinueConfig } from "core";
 import { DEFAULT_CONTEXT_LENGTH } from "core/llm/constants";

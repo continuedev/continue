@@ -7,6 +7,7 @@ import {
   extractOutputRedirections,
   isUnsafeCompoundCommand_DEPRECATED,
 } from "../../util/bash/commands";
+import { classifyCommandRisk } from "../../util/bash/commandSemantics";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
 import {
   isProcessBackgrounded,
@@ -60,6 +61,19 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
  */
 function getCommandSafetyPreamble(command: string): string {
   const notes: string[] = [];
+  const risk = classifyCommandRisk(command);
+
+  if (risk === "destructive") {
+    notes.push(
+      "[Yuto] Warning: command appears potentially destructive (system/filesystem modification).",
+    );
+  } else if (risk === "write") {
+    notes.push(
+      "[Yuto] Notice: command appears to modify files or system state.",
+    );
+  } else if (risk === "read_only") {
+    notes.push("[Yuto] Notice: command appears read-only.");
+  }
 
   try {
     if (isUnsafeCompoundCommand_DEPRECATED(command)) {

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { ILLM } from "../../../index.js";
 import ContinueProxy from "./ContinueProxy.js";
 
-vi.mock("@continuedev/config-yaml", async (importOriginal) => {
+vi.mock("@yutoagentic/config-yaml", async (importOriginal) => {
   const mod = (await importOriginal()) as any;
   return {
     ...mod,
@@ -148,7 +148,7 @@ describe("ContinueProxy", () => {
     const proxy = new ContinueProxy({
       apiKey: "test-api-key",
       model: "test-model",
-      apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+      apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
     });
 
     await runLlmTest({
@@ -159,7 +159,7 @@ describe("ContinueProxy", () => {
         [{ content: "document1" }, { content: "document2" }],
       ],
       expectedRequest: {
-        url: "https://proxy.continue.dev/model-proxy/v1/rerank",
+        url: "https://proxy.yutoagentic.dev/model-proxy/v1/rerank",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -170,7 +170,7 @@ describe("ContinueProxy", () => {
           documents: ["document1", "document2"],
           model: "test-model",
           continueProperties: {
-            apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+            apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
             orgScopeId: null,
           },
         },
@@ -188,7 +188,7 @@ describe("ContinueProxy", () => {
     const proxy = new ContinueProxy({
       apiKey: "test-api-key",
       model: "test-model",
-      apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+      apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
     });
 
     await runLlmTest({
@@ -196,7 +196,7 @@ describe("ContinueProxy", () => {
       methodToTest: "streamChat",
       params: [[{ role: "user", content: "hello" }]],
       expectedRequest: {
-        url: "https://proxy.continue.dev/model-proxy/v1/chat/completions",
+        url: "https://proxy.yutoagentic.dev/model-proxy/v1/chat/completions",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -210,7 +210,7 @@ describe("ContinueProxy", () => {
           max_tokens: 4096,
           stream: true,
           continueProperties: {
-            apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+            apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
             orgScopeId: null,
           },
         },
@@ -226,7 +226,7 @@ describe("ContinueProxy", () => {
     const proxy = new ContinueProxy({
       apiKey: "test-api-key",
       model: "test-model",
-      apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+      apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
     });
 
     await runLlmTest({
@@ -234,7 +234,7 @@ describe("ContinueProxy", () => {
       methodToTest: "chat",
       params: [[{ role: "user", content: "hello" }]],
       expectedRequest: {
-        url: "https://proxy.continue.dev/model-proxy/v1/chat/completions",
+        url: "https://proxy.yutoagentic.dev/model-proxy/v1/chat/completions",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -248,7 +248,7 @@ describe("ContinueProxy", () => {
           max_tokens: 4096,
           stream: true,
           continueProperties: {
-            apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+            apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
             orgScopeId: null,
           },
         },
@@ -264,7 +264,7 @@ describe("ContinueProxy", () => {
     const proxy = new ContinueProxy({
       apiKey: "test-api-key",
       model: "test-model",
-      apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+      apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
     });
 
     await runLlmTest({
@@ -272,7 +272,7 @@ describe("ContinueProxy", () => {
       methodToTest: "streamComplete",
       params: ["Complete this: Hello"],
       expectedRequest: {
-        url: "https://proxy.continue.dev/model-proxy/v1/chat/completions",
+        url: "https://proxy.yutoagentic.dev/model-proxy/v1/chat/completions",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -286,7 +286,7 @@ describe("ContinueProxy", () => {
           max_tokens: 4096,
           stream: true,
           continueProperties: {
-            apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+            apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
             orgScopeId: null,
           },
         },
@@ -302,7 +302,7 @@ describe("ContinueProxy", () => {
     const proxy = new ContinueProxy({
       apiKey: "test-api-key",
       model: "test-model",
-      apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+      apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
     });
 
     await runLlmTest({
@@ -310,7 +310,7 @@ describe("ContinueProxy", () => {
       methodToTest: "complete",
       params: ["Complete this: Hello"],
       expectedRequest: {
-        url: "https://proxy.continue.dev/model-proxy/v1/chat/completions",
+        url: "https://proxy.yutoagentic.dev/model-proxy/v1/chat/completions",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -324,7 +324,7 @@ describe("ContinueProxy", () => {
           max_tokens: 4096,
           stream: true,
           continueProperties: {
-            apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+            apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
             orgScopeId: null,
           },
         },
@@ -340,7 +340,7 @@ describe("ContinueProxy", () => {
     const proxy = new ContinueProxy({
       apiKey: "test-api-key",
       model: "test-model",
-      apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+      apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
     });
 
     await runLlmTest({
@@ -348,7 +348,7 @@ describe("ContinueProxy", () => {
       methodToTest: "streamFim",
       params: ["function test() {\n  ", "\n}"],
       expectedRequest: {
-        url: "https://proxy.continue.dev/model-proxy/v1/fim/completions",
+        url: "https://proxy.yutoagentic.dev/model-proxy/v1/fim/completions",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -363,7 +363,7 @@ describe("ContinueProxy", () => {
           max_tokens: 4096,
           stream: true,
           continueProperties: {
-            apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+            apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
             orgScopeId: null,
           },
         },
@@ -379,7 +379,7 @@ describe("ContinueProxy", () => {
     const proxy = new ContinueProxy({
       apiKey: "test-api-key",
       model: "test-model",
-      apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+      apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
     });
 
     await runLlmTest({
@@ -387,7 +387,7 @@ describe("ContinueProxy", () => {
       methodToTest: "embed",
       params: [["text to embed", "another text"]],
       expectedRequest: {
-        url: "https://proxy.continue.dev/model-proxy/v1/embeddings",
+        url: "https://proxy.yutoagentic.dev/model-proxy/v1/embeddings",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -398,7 +398,7 @@ describe("ContinueProxy", () => {
           input: ["text to embed", "another text"],
           model: "test-model",
           continueProperties: {
-            apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+            apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
             orgScopeId: null,
           },
         },
@@ -413,7 +413,7 @@ describe("ContinueProxy", () => {
     const proxy = new ContinueProxy({
       apiKey: "test-api-key",
       model: "test-model",
-      apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+      apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
     });
 
     await runLlmTest({
@@ -421,7 +421,7 @@ describe("ContinueProxy", () => {
       methodToTest: "listModels",
       params: [],
       expectedRequest: {
-        url: "https://proxy.continue.dev/model-proxy/v1/models",
+        url: "https://proxy.yutoagentic.dev/model-proxy/v1/models",
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -483,7 +483,7 @@ describe("ContinueProxy", () => {
       const proxy = new ContinueProxy({
         apiKey: "test-api-key",
         model: "test-model",
-        apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+        apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
         env: {
           CUSTOM_VAR: "custom-value",
           ANOTHER_VAR: "another-value",
@@ -495,7 +495,7 @@ describe("ContinueProxy", () => {
         methodToTest: "streamChat",
         params: [[{ role: "user", content: "hello" }]],
         expectedRequest: {
-          url: "https://proxy.continue.dev/model-proxy/v1/chat/completions",
+          url: "https://proxy.yutoagentic.dev/model-proxy/v1/chat/completions",
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -509,7 +509,7 @@ describe("ContinueProxy", () => {
             max_tokens: 4096,
             stream: true,
             continueProperties: {
-              apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+              apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
               env: {
                 CUSTOM_VAR: "custom-value",
                 ANOTHER_VAR: "another-value",
@@ -529,7 +529,7 @@ describe("ContinueProxy", () => {
       const proxy = new ContinueProxy({
         apiKey: "test-api-key",
         model: "test-model",
-        apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+        apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
         apiKeyLocation: "env:OPENAI_API_KEY",
       });
 
@@ -538,7 +538,7 @@ describe("ContinueProxy", () => {
         methodToTest: "embed",
         params: [["test text"]],
         expectedRequest: {
-          url: "https://proxy.continue.dev/model-proxy/v1/embeddings",
+          url: "https://proxy.yutoagentic.dev/model-proxy/v1/embeddings",
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -549,7 +549,7 @@ describe("ContinueProxy", () => {
             input: ["test text"],
             model: "test-model",
             continueProperties: {
-              apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+              apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
               apiKeyLocation: "env:OPENAI_API_KEY",
               env: undefined,
               envSecretLocations: undefined,
@@ -567,7 +567,7 @@ describe("ContinueProxy", () => {
       const proxy = new ContinueProxy({
         apiKey: "test-api-key",
         model: "test-model",
-        apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+        apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
         envSecretLocations: {
           AZURE_API_KEY: "env:AZURE_API_KEY",
           AZURE_ENDPOINT: "env:AZURE_ENDPOINT",
@@ -579,7 +579,7 @@ describe("ContinueProxy", () => {
         methodToTest: "streamFim",
         params: ["const x = ", ";"],
         expectedRequest: {
-          url: "https://proxy.continue.dev/model-proxy/v1/fim/completions",
+          url: "https://proxy.yutoagentic.dev/model-proxy/v1/fim/completions",
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -594,7 +594,7 @@ describe("ContinueProxy", () => {
             max_tokens: 4096,
             stream: true,
             continueProperties: {
-              apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+              apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
               envSecretLocations: {
                 AZURE_API_KEY: "env:AZURE_API_KEY",
                 AZURE_ENDPOINT: "env:AZURE_ENDPOINT",
@@ -611,7 +611,7 @@ describe("ContinueProxy", () => {
       const proxy = new ContinueProxy({
         apiKey: "test-api-key",
         model: "test-model",
-        apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+        apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
         orgScopeId: "org_12345",
       });
 
@@ -620,7 +620,7 @@ describe("ContinueProxy", () => {
         methodToTest: "listModels",
         params: [],
         expectedRequest: {
-          url: "https://proxy.continue.dev/model-proxy/v1/models",
+          url: "https://proxy.yutoagentic.dev/model-proxy/v1/models",
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -640,7 +640,7 @@ describe("ContinueProxy", () => {
       const proxy = new ContinueProxy({
         apiKey: "test-api-key",
         model: "test-model",
-        apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+        apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
       });
 
       await runLlmTest({
@@ -648,7 +648,7 @@ describe("ContinueProxy", () => {
         methodToTest: "rerank",
         params: ["test query", []],
         expectedRequest: {
-          url: "https://proxy.continue.dev/model-proxy/v1/rerank",
+          url: "https://proxy.yutoagentic.dev/model-proxy/v1/rerank",
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -659,7 +659,7 @@ describe("ContinueProxy", () => {
             documents: [],
             model: "test-model",
             continueProperties: {
-              apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+              apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
               apiKeyLocation: undefined,
               env: undefined,
               envSecretLocations: undefined,
@@ -677,7 +677,7 @@ describe("ContinueProxy", () => {
       const proxy = new ContinueProxy({
         apiKey: "test-api-key",
         model: "test-model",
-        apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+        apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
       });
 
       const complexMessages = [
@@ -692,7 +692,7 @@ describe("ContinueProxy", () => {
         methodToTest: "streamChat",
         params: [complexMessages],
         expectedRequest: {
-          url: "https://proxy.continue.dev/model-proxy/v1/chat/completions",
+          url: "https://proxy.yutoagentic.dev/model-proxy/v1/chat/completions",
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -706,7 +706,7 @@ describe("ContinueProxy", () => {
             max_tokens: 4096,
             stream: true,
             continueProperties: {
-              apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+              apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
               orgScopeId: null,
             },
           },
@@ -722,7 +722,7 @@ describe("ContinueProxy", () => {
       const proxy = new ContinueProxy({
         apiKey: "test-api-key",
         model: "test-model",
-        apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+        apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
       });
 
       await runLlmTest({
@@ -730,7 +730,7 @@ describe("ContinueProxy", () => {
         methodToTest: "embed",
         params: [["single text"]],
         expectedRequest: {
-          url: "https://proxy.continue.dev/model-proxy/v1/embeddings",
+          url: "https://proxy.yutoagentic.dev/model-proxy/v1/embeddings",
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -741,7 +741,7 @@ describe("ContinueProxy", () => {
             input: ["single text"],
             model: "test-model",
             continueProperties: {
-              apiBase: "https://proxy.continue.dev/model-proxy/v1/",
+              apiBase: "https://proxy.yutoagentic.dev/model-proxy/v1/",
               apiKeyLocation: undefined,
               env: undefined,
               envSecretLocations: undefined,

@@ -3,8 +3,8 @@ import {
   ConfigResult,
   DevDataLogEvent,
   ModelRole,
-} from "@continuedev/config-yaml";
-import { ToolPolicy } from "@continuedev/terminal-security";
+} from "@yutoagentic/config-yaml";
+import { ToolPolicy } from "@yutoagentic/terminal-security";
 
 import {
   AutocompleteInput,

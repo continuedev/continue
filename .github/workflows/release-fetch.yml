@@ -1,4 +1,4 @@
-name: Release @continuedev/fetch
+name: Release @yutoagentic/fetch
 
 on:
   push:

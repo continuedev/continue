@@ -23,7 +23,7 @@ describe("Autocomplete filtering tests", () => {
   beforeAll(async () => {
     tearDownTestDir();
     setUpTestDir();
-    addToTestDir([".continueignore"]);
+    addToTestDir([".yutoagenticignore"]);
   });
 
   afterAll(async () => {

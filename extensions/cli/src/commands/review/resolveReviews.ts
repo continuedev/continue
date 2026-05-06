@@ -113,8 +113,8 @@ async function resolveFromHub(): Promise<ResolvedReview[]> {
 function resolveFromLocal(): ResolvedReview[] {
   const cwd = process.cwd();
   const dirs = [
-    path.join(cwd, ".continue", "agents"),
-    path.join(cwd, ".continue", "checks"),
+    path.join(cwd, ".yutoagentic", "agents"),
+    path.join(cwd, ".yutoagentic", "checks"),
   ];
 
   const seen = new Set<string>();

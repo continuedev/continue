@@ -18,6 +18,10 @@ export class SentryLogger {
     client: Sentry.NodeClient | undefined;
     scope: Sentry.Scope | undefined;
   } {
+    if (!SENTRY_DSN) {
+      // No Sentry DSN configured (default in this fork) — error reporting disabled.
+      return { client: undefined, scope: undefined };
+    }
     try {
       // For shared environments like VSCode extensions, we need to avoid global state pollution
       // Filter out integrations that use global state

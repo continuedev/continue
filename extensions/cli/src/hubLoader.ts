@@ -2,7 +2,7 @@ import {
   AgentFile,
   ModelConfig,
   parseAgentFile,
-} from "@continuedev/config-yaml";
+} from "@yutoagentic/config-yaml";
 import JSZip from "jszip";
 
 import { getAccessToken, loadAuthConfig } from "./auth/workos.js";

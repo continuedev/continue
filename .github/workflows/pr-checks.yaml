@@ -19,6 +19,13 @@ jobs:
       - name: Track workflow rerun
         uses: ./.github/actions/track-rerun
 
+  rebrand-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Forbid legacy Continue identifiers (see NAMING.md)
+        run: scripts/check-rebrand.sh
+
   prettier-check:
     runs-on: ubuntu-latest
     steps:
@@ -361,6 +368,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     needs:
+      - rebrand-check
       - prettier-check
       - core-checks
       - gui-checks

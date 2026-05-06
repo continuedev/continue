@@ -185,9 +185,9 @@ function validateAliases() {
       `${colors.red}Add these to the alias section in build.mjs:${colors.reset}`,
     );
     missingAliases.forEach((pkg) => {
-      const packageName = pkg.replace("@continuedev/", "").replace(/-/g, "_");
+      const packageName = pkg.replace("@yutoagentic/", "").replace(/-/g, "_");
       logger.error(
-        `  "${pkg}": resolve(__dirname, "../../packages/${pkg.replace("@continuedev/", "")}/dist/index.js"),`,
+        `  "${pkg}": resolve(__dirname, "../../packages/${pkg.replace("@yutoagentic/", "")}/dist/index.js"),`,
       );
     });
     logger.error("");

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-import { ModelRole } from "@continuedev/config-yaml";
+import { ModelRole } from "@yutoagentic/config-yaml";
 import {
   OAuthClientInformationFull,
   OAuthTokens,

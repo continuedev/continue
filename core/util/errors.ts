@@ -69,3 +69,121 @@ export enum ContinueErrorReason {
   Unspecified = "unspecified", // I.e. a known error but no specific code for it
   Unknown = "unknown", // I.e. an unexpected error
 }
+
+export class AbortError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = "AbortError";
+  }
+}
+
+/**
+ * Error with a message that is explicitly verified as telemetry-safe.
+ */
+export class TelemetrySafeError_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS extends Error {
+  readonly telemetryMessage: string;
+
+  constructor(message: string, telemetryMessage?: string) {
+    super(message);
+    this.name = "TelemetrySafeError";
+    this.telemetryMessage = telemetryMessage ?? message;
+  }
+}
+
+export function hasExactErrorMessage(error: unknown, message: string): boolean {
+  return error instanceof Error && error.message === message;
+}
+
+export function toError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error));
+}
+
+export function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+export function getErrnoCode(error: unknown): string | undefined {
+  if (
+    error &&
+    typeof error === "object" &&
+    "code" in error &&
+    typeof (error as { code?: unknown }).code === "string"
+  ) {
+    return (error as { code: string }).code;
+  }
+  return undefined;
+}
+
+export function getErrnoPath(error: unknown): string | undefined {
+  if (
+    error &&
+    typeof error === "object" &&
+    "path" in error &&
+    typeof (error as { path?: unknown }).path === "string"
+  ) {
+    return (error as { path: string }).path;
+  }
+  return undefined;
+}
+
+export function isENOENT(error: unknown): boolean {
+  return getErrnoCode(error) === "ENOENT";
+}
+
+export function isFsInaccessible(
+  error: unknown,
+): error is NodeJS.ErrnoException {
+  const code = getErrnoCode(error);
+  return (
+    code === "ENOENT" ||
+    code === "EACCES" ||
+    code === "EPERM" ||
+    code === "ENOTDIR" ||
+    code === "ELOOP"
+  );
+}
+
+export function shortErrorStack(error: unknown, maxFrames = 5): string {
+  if (!(error instanceof Error)) return String(error);
+  if (!error.stack) return error.message;
+
+  const lines = error.stack.split("\n");
+  const header = lines[0] ?? error.message;
+  const frames = lines.slice(1).filter((line) => line.trim().startsWith("at "));
+  if (frames.length <= maxFrames) return error.stack;
+  return [header, ...frames.slice(0, maxFrames)].join("\n");
+}
+
+export type AxiosErrorKind = "auth" | "timeout" | "network" | "http" | "other";
+
+export function classifyAxiosError(error: unknown): {
+  kind: AxiosErrorKind;
+  status?: number;
+  message: string;
+} {
+  const message = errorMessage(error);
+  if (
+    !error ||
+    typeof error !== "object" ||
+    !("isAxiosError" in error) ||
+    !(error as { isAxiosError?: boolean }).isAxiosError
+  ) {
+    return { kind: "other", message };
+  }
+
+  const axiosError = error as {
+    response?: { status?: number };
+    code?: string;
+  };
+  const status = axiosError.response?.status;
+  if (status === 401 || status === 403)
+    return { kind: "auth", status, message };
+  if (axiosError.code === "ECONNABORTED")
+    return { kind: "timeout", status, message };
+  if (axiosError.code === "ECONNREFUSED" || axiosError.code === "ENOTFOUND") {
+    return { kind: "network", status, message };
+  }
+  return { kind: "http", status, message };
+}
+
+export { isAbortError } from "./isAbortError.js";

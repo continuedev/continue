@@ -3,7 +3,7 @@ import {
   getRuleType,
   RuleType,
   RuleTypeDescriptions,
-} from "@continuedev/config-yaml";
+} from "@yutoagentic/config-yaml";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { createRuleFilePath } from "core/config/markdown/utils";
 import { CreateRuleBlockArgs } from "core/tools/implementations/createRuleBlock";

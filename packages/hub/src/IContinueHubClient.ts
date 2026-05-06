@@ -4,7 +4,7 @@ import {
   FQSN,
   FullSlug,
   SecretResult,
-} from "@continuedev/config-yaml";
+} from "@yutoagentic/config-yaml";
 
 /**
  * Interface for the Continue Hub client.

@@ -1,4 +1,4 @@
-import { ToolPolicy } from "@continuedev/terminal-security";
+import { ToolPolicy } from "@yutoagentic/terminal-security";
 import { Tool } from "../..";
 import { ResolvedPath, resolveInputPath } from "../../util/pathResolver";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";

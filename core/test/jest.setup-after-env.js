@@ -20,8 +20,8 @@ globalThis.TextDecoder = TextDecoder;
 
 // TODO - currently causing tests to fail because sqlite is still running for some reason
 // const clearTestDirectory = () => {
-//   if (fs.existsSync(process.env.CONTINUE_GLOBAL_DIR!)) {
-//     fs.rmSync(process.env.CONTINUE_GLOBAL_DIR!, { recursive: true });
+//   if (fs.existsSync(process.env.YUTOAGENTIC_GLOBAL_DIR!)) {
+//     fs.rmSync(process.env.YUTOAGENTIC_GLOBAL_DIR!, { recursive: true });
 //   }
 // };
 

@@ -57,7 +57,7 @@ describe("RegistryClient", () => {
   describe("constructor", () => {
     it("should use default apiBase if not provided", () => {
       const client = new RegistryClient();
-      expect((client as any).apiBase).toBe("https://api.continue.dev/");
+      expect((client as any).apiBase).toBe("https://api.yutoagentic.dev/");
     });
 
     it("should append trailing slash to apiBase if missing", () => {

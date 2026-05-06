@@ -3,7 +3,7 @@ import {
   PlatformClient,
   SecretResult,
   SecretType,
-} from "@continuedev/config-yaml";
+} from "@yutoagentic/config-yaml";
 import * as dotenv from "dotenv";
 import { IDE } from "../..";
 import { ControlPlaneClient } from "../../control-plane/client";
@@ -63,7 +63,7 @@ export class LocalPlatformClient implements PlatformClient {
       for (const folder of workspaceDirs) {
         const envFilePath = joinPathsToUri(
           folder,
-          insideContinue ? ".continue" : "",
+          insideContinue ? ".yutoagentic" : "",
           ".env",
         );
         try {

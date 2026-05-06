@@ -11,7 +11,7 @@ vi.mock("../../auth/workos.js", () => ({
 }));
 
 vi.mock("../../env.js", () => ({
-  env: { apiBase: "https://api.continue.dev" },
+  env: { apiBase: "https://api.yutoagentic.dev" },
 }));
 
 vi.mock("../../util/logger.js", () => ({
@@ -43,10 +43,10 @@ describe("resolveReviews local discovery", () => {
 
   it("discovers files from .continue/agents/", async () => {
     vi.mocked(fs.existsSync).mockImplementation((p) => {
-      return p === path.join("/test/repo", ".continue", "agents");
+      return p === path.join("/test/repo", ".yutoagentic", "agents");
     });
     vi.mocked(fs.readdirSync).mockImplementation(((p: fs.PathLike) => {
-      if (p === path.join("/test/repo", ".continue", "agents")) {
+      if (p === path.join("/test/repo", ".yutoagentic", "agents")) {
         return ["security-review.md", "style-check.md"];
       }
       return [];
@@ -61,10 +61,10 @@ describe("resolveReviews local discovery", () => {
 
   it("discovers files from .continue/checks/", async () => {
     vi.mocked(fs.existsSync).mockImplementation((p) => {
-      return p === path.join("/test/repo", ".continue", "checks");
+      return p === path.join("/test/repo", ".yutoagentic", "checks");
     });
     vi.mocked(fs.readdirSync).mockImplementation(((p: fs.PathLike) => {
-      if (p === path.join("/test/repo", ".continue", "checks")) {
+      if (p === path.join("/test/repo", ".yutoagentic", "checks")) {
         return ["anti-slop.md"];
       }
       return [];

@@ -15,7 +15,7 @@ The output of the sync_results function is a list of 4 lists of tuples. Each tup
 
 The labels help us filter when retrieving results from an index like Meilisearch or Chroma. All ids of the items in these indices are the hash of the file contents (possibly plus a chunk index at the end).
 
-The first time, a Merkle tree of the codebase folder is constructed, ignoring any files in .gitignore or .continueignore. Every file found will be returned as needing to be computed added to the index.
+The first time, a Merkle tree of the codebase folder is constructed, ignoring any files in .gitignore or .yutoagenticignore. Every file found will be returned as needing to be computed added to the index.
 
 Thereafter, the following steps are performed:
 

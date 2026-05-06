@@ -1,4 +1,4 @@
-import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import { ConfigResult, ConfigValidationError } from "@yutoagentic/config-yaml";
 
 import { ControlPlaneClient } from "../control-plane/client.js";
 import {

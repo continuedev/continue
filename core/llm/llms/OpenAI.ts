@@ -3,7 +3,7 @@ import {
   ChatCompletionMessageParam,
 } from "openai/resources/index";
 
-import { streamSse } from "@continuedev/fetch";
+import { streamSse } from "@yutoagentic/fetch";
 import {
   ResponseCreateParamsBase,
   ResponseInputItem,

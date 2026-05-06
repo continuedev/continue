@@ -144,17 +144,17 @@ describe("hookConfig", () => {
       projectDir = path.join(tmpDir, "project");
       fs.mkdirSync(fakeHome, { recursive: true });
       fs.mkdirSync(projectDir, { recursive: true });
-      // Override CONTINUE_GLOBAL_DIR so that user-global settings
+      // Override YUTOAGENTIC_GLOBAL_DIR so that user-global settings
       // from the real ~/.continue/settings.json don't leak into tests
-      originalContinueGlobalDir = process.env.CONTINUE_GLOBAL_DIR;
-      process.env.CONTINUE_GLOBAL_DIR = path.join(fakeHome, ".continue");
+      originalContinueGlobalDir = process.env.YUTOAGENTIC_GLOBAL_DIR;
+      process.env.YUTOAGENTIC_GLOBAL_DIR = path.join(fakeHome, ".yutoagentic");
     });
 
     afterEach(() => {
       if (originalContinueGlobalDir === undefined) {
-        delete process.env.CONTINUE_GLOBAL_DIR;
+        delete process.env.YUTOAGENTIC_GLOBAL_DIR;
       } else {
-        process.env.CONTINUE_GLOBAL_DIR = originalContinueGlobalDir;
+        process.env.YUTOAGENTIC_GLOBAL_DIR = originalContinueGlobalDir;
       }
       fs.rmSync(tmpDir, { recursive: true, force: true });
     });
@@ -171,7 +171,7 @@ describe("hookConfig", () => {
     });
 
     it("loads hooks from .continue/settings.json", () => {
-      const settingsDir = path.join(projectDir, ".continue");
+      const settingsDir = path.join(projectDir, ".yutoagentic");
       fs.mkdirSync(settingsDir, { recursive: true });
       fs.writeFileSync(
         path.join(settingsDir, "settings.json"),
@@ -228,7 +228,7 @@ describe("hookConfig", () => {
       );
 
       // .continue/settings.json (project-level)
-      const continueDir = path.join(projectDir, ".continue");
+      const continueDir = path.join(projectDir, ".yutoagentic");
       fs.mkdirSync(continueDir, { recursive: true });
       fs.writeFileSync(
         path.join(continueDir, "settings.json"),
@@ -247,7 +247,7 @@ describe("hookConfig", () => {
     });
 
     it("respects disableAllHooks", () => {
-      const settingsDir = path.join(projectDir, ".continue");
+      const settingsDir = path.join(projectDir, ".yutoagentic");
       fs.mkdirSync(settingsDir, { recursive: true });
       fs.writeFileSync(
         path.join(settingsDir, "settings.json"),
@@ -268,7 +268,7 @@ describe("hookConfig", () => {
     });
 
     it("handles malformed settings files gracefully", () => {
-      const settingsDir = path.join(projectDir, ".continue");
+      const settingsDir = path.join(projectDir, ".yutoagentic");
       fs.mkdirSync(settingsDir, { recursive: true });
       fs.writeFileSync(
         path.join(settingsDir, "settings.json"),

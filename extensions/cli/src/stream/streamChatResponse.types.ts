@@ -1,4 +1,4 @@
-import { CompletionOptions } from "@continuedev/config-yaml";
+import { CompletionOptions } from "@yutoagentic/config-yaml";
 import type { ToolStatus } from "core/index.js";
 import type { ChatCompletionCreateParamsStreaming } from "openai/resources.mjs";
 

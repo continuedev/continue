@@ -1,4 +1,4 @@
-import { ModelConfig } from "@continuedev/config-yaml";
+import { ModelConfig } from "@yutoagentic/config-yaml";
 import type { ChatHistoryItem } from "core/index.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

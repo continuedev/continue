@@ -1,4 +1,4 @@
-import { markdownToRule } from "@continuedev/config-yaml";
+import { markdownToRule } from "@yutoagentic/config-yaml";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IDE } from "../..";
 import { walkDirs } from "../../indexing/walkDir";
@@ -9,7 +9,7 @@ vi.mock("../../indexing/walkDir", () => ({
   walkDirs: vi.fn(),
 }));
 
-vi.mock("@continuedev/config-yaml", () => ({
+vi.mock("@yutoagentic/config-yaml", () => ({
   markdownToRule: vi.fn(),
 }));
 

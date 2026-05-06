@@ -1,5 +1,7 @@
 /**
- * Sentry configuration constants
+ * Sentry configuration constants.
+ *
+ * The DSN is read from the YUTOAGENTIC_SENTRY_DSN env var. When unset (the
+ * default in this fork), error reporting is disabled.
  */
-export const SENTRY_DSN =
-  "https://fe99934dcdc537d84209893a3f96a196@o4505462064283648.ingest.us.sentry.io/4508184596054016";
+export const SENTRY_DSN: string = process.env.YUTOAGENTIC_SENTRY_DSN ?? "";

@@ -15,8 +15,8 @@ import { randomUUID } from "crypto";
 import fsPromises from "fs/promises";
 import * as path from "path";
 
-import { ModelConfig } from "@continuedev/config-yaml";
-import { BaseLlmApi } from "@continuedev/openai-adapters";
+import { ModelConfig } from "@yutoagentic/config-yaml";
+import { BaseLlmApi } from "@yutoagentic/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
 import { convertFromUnifiedHistoryWithSystemMessage } from "core/util/messageConversion.js";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";

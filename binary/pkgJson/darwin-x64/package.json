@@ -1,5 +1,5 @@
 {
-  "name": "continue-binary",
+  "name": "yutoagentic-binary",
   "version": "1.0.0",
   "description": "",
   "bin": "../../out/index.js",

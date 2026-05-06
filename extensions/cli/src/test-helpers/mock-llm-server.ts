@@ -226,7 +226,7 @@ export async function setupMockLLMTest(
   // Create onboarding flag to skip onboarding
   const onboardingFlagPath = path.join(
     context.testDir,
-    ".continue",
+    ".yutoagentic",
     ".onboarding_complete",
   );
   await fs.mkdir(path.dirname(onboardingFlagPath), { recursive: true });

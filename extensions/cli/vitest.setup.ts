@@ -59,7 +59,7 @@ vi.mock("./src/systemMessage.js", () => ({
 }));
 
 // Mock environment for tests
-process.env.CONTINUE_GLOBAL_DIR = "/tmp/continue-test";
+process.env.YUTOAGENTIC_GLOBAL_DIR = "/tmp/continue-test";
 
 // Set up global afterEach hook to clear all timers and reset console
 afterEach(() => {

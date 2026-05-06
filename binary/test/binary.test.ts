@@ -158,11 +158,11 @@ function autodetectPlatformAndArch() {
   return [platform, arch];
 }
 
-const CONTINUE_GLOBAL_DIR = path.join(__dirname, "..", ".continue");
-if (fs.existsSync(CONTINUE_GLOBAL_DIR)) {
-  fs.rmSync(CONTINUE_GLOBAL_DIR, { recursive: true, force: true });
+const YUTOAGENTIC_GLOBAL_DIR = path.join(__dirname, "..", ".yutoagentic");
+if (fs.existsSync(YUTOAGENTIC_GLOBAL_DIR)) {
+  fs.rmSync(YUTOAGENTIC_GLOBAL_DIR, { recursive: true, force: true });
 }
-fs.mkdirSync(CONTINUE_GLOBAL_DIR);
+fs.mkdirSync(YUTOAGENTIC_GLOBAL_DIR);
 
 describe("Test Suite", () => {
   let messenger: IMessenger<ToIdeProtocol, FromIdeProtocol>;
@@ -172,9 +172,9 @@ describe("Test Suite", () => {
     const [platform, arch] = autodetectPlatformAndArch();
     const binaryDir = path.join(__dirname, "..", "bin", `${platform}-${arch}`);
     const exe = platform === "win32" ? ".exe" : "";
-    const binaryPath = path.join(binaryDir, `continue-binary${exe}`);
+    const binaryPath = path.join(binaryDir, `yutoagentic-binary${exe}`);
     const expectedItems = [
-      `continue-binary${exe}`,
+      `yutoagentic-binary${exe}`,
       `rg${exe}`,
       "index.node",
       "package.json",
@@ -223,7 +223,7 @@ describe("Test Suite", () => {
     } else {
       try {
         subprocess = spawn(binaryPath, {
-          env: { ...process.env, CONTINUE_GLOBAL_DIR },
+          env: { ...process.env, YUTOAGENTIC_GLOBAL_DIR },
         });
         console.log("Successfully spawned subprocess");
       } catch (error) {
@@ -279,7 +279,7 @@ describe("Test Suite", () => {
   });
 
   it("should create .continue directory at the specified location with expected files", async () => {
-    expect(fs.existsSync(CONTINUE_GLOBAL_DIR)).toBe(true);
+    expect(fs.existsSync(YUTOAGENTIC_GLOBAL_DIR)).toBe(true);
 
     // Many of the files are only created when trying to load the config
     await request("config/getSerializedProfileInfo", undefined);
@@ -287,7 +287,7 @@ describe("Test Suite", () => {
     const expectedFiles = ["logs/core.log", "index/autocompleteCache.sqlite"];
 
     const missingFiles = expectedFiles.filter((file) => {
-      const filePath = path.join(CONTINUE_GLOBAL_DIR, file);
+      const filePath = path.join(YUTOAGENTIC_GLOBAL_DIR, file);
       return !fs.existsSync(filePath);
     });
 

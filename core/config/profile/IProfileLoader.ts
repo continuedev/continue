@@ -1,6 +1,6 @@
 // ProfileHandlers manage the loading of a config, allowing us to abstract over different ways of getting to a ContinueConfig
 
-import { ConfigResult } from "@continuedev/config-yaml";
+import { ConfigResult } from "@yutoagentic/config-yaml";
 import { ContinueConfig } from "../../index.js";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 

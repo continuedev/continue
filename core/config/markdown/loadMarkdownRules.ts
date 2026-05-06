@@ -1,7 +1,7 @@
 import {
   ConfigValidationError,
   markdownToRule,
-} from "@continuedev/config-yaml";
+} from "@yutoagentic/config-yaml";
 import { IDE, RuleWithSource } from "../..";
 import { PROMPTS_DIR_NAME, RULES_DIR_NAME } from "../../promptFiles";
 import { joinPathsToUri } from "../../util/uri";

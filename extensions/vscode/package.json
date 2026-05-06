@@ -1,27 +1,26 @@
 {
-  "name": "continue",
+  "name": "yutoagentic",
   "icon": "media/icon.png",
-  "author": "Continue Dev, Inc",
+  "author": "Yuto Agentic",
   "version": "1.3.39",
   "repository": {
     "type": "git",
-    "url": "https://github.com/continuedev/continue"
+    "url": "https://github.com/yutoagentic/yutoagentic"
   },
   "extensionKind": [
     "ui",
     "workspace"
   ],
   "bugs": {
-    "url": "https://github.com/continuedev/continue/issues",
-    "email": "nate@continue.dev"
+    "url": "https://github.com/yutoagentic/yutoagentic/issues"
   },
-  "homepage": "https://continue.dev",
-  "qna": "https://github.com/continuedev/continue/issues/new/choose",
+  "homepage": "https://yutoagentic.dev",
+  "qna": "https://github.com/yutoagentic/yutoagentic/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - open-source AI code agent",
+  "displayName": "Yuto Agentic - AI code agent",
   "pricing": "Free",
-  "description": "The leading open-source AI code agent",
-  "publisher": "Continue",
+  "description": "Yuto Agentic — an open-source AI code agent (fork of Continue)",
+  "publisher": "YutoAgentic",
   "engines": {
     "vscode": "^1.70.0",
     "node": ">=20.20.1"
@@ -53,7 +52,7 @@
   "activationEvents": [
     "onUri",
     "onStartupFinished",
-    "onView:continueGUIView"
+    "onView:yutoagenticGUIView"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -61,7 +60,7 @@
       {
         "filenames": [
           "config.json",
-          ".continuerc.json"
+          ".yutoagenticrc.json"
         ],
         "id": "jsonc"
       },
@@ -84,66 +83,66 @@
       }
     ],
     "configuration": {
-      "title": "Continue",
+      "title": "Yuto Agentic",
       "properties": {
-        "continue.telemetryEnabled": {
+        "yutoagentic.telemetryEnabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry).",
+          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [yutoagentic.dev › Telemetry](https://docs.yutoagentic.dev/telemetry).",
           "markdownDeprecationMessage": "This setting is deprecated and will be removed in a later version. Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page.",
           "deprecationMessage": "Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page."
         },
-        "continue.showInlineTip": {
+        "yutoagentic.showInlineTip": {
           "type": "boolean",
           "default": true,
           "description": "Show inline suggestion to use the Continue keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
         },
-        "continue.disableQuickFix": {
+        "yutoagentic.disableQuickFix": {
           "type": "boolean",
           "default": false,
           "description": "Disable the quick fix feature."
         },
-        "continue.enableQuickActions": {
+        "yutoagentic.enableQuickActions": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Quick Actions (experimental)](https://docs.continue.dev/customize/deep-dives/vscode-actions#quick-actions)"
+          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [yutoagentic.dev › Walkthrough: Quick Actions (experimental)](https://docs.yutoagentic.dev/customize/deep-dives/vscode-actions#quick-actions)"
         },
-        "continue.enableTabAutocomplete": {
+        "yutoagentic.enableTabAutocomplete": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/features/tab-autocomplete)"
+          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [yutoagentic.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.yutoagentic.dev/features/tab-autocomplete)"
         },
-        "continue.enableNextEdit": {
+        "yutoagentic.enableNextEdit": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's next edit feature. Read our docs to learn about configuration and how to share feedback: [continue.dev › Features › Autocomplete › Next Edit (experimental)](https://docs.continue.dev/features/autocomplete/next-edit)"
+          "markdownDescription": "Enable Continue's next edit feature. Read our docs to learn about configuration and how to share feedback: [yutoagentic.dev › Features › Autocomplete › Next Edit (experimental)](https://docs.yutoagentic.dev/features/autocomplete/next-edit)"
         },
-        "continue.pauseTabAutocompleteOnBattery": {
+        "yutoagentic.pauseTabAutocompleteOnBattery": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
         },
-        "continue.pauseCodebaseIndexOnStart": {
+        "yutoagentic.pauseCodebaseIndexOnStart": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "Pause Continue's codebase index on start."
         },
-        "continue.enableConsole": {
+        "yutoagentic.enableConsole": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "Enable a console to log and explore model inputs and outputs. It can be found in the bottom panel."
         },
-        "continue.remoteConfigServerUrl": {
+        "yutoagentic.remoteConfigServerUrl": {
           "type": "string",
           "default": null,
           "markdownDescription": "If your team is set up to use shared configuration, enter the server URL here and your user token below to enable automatic syncing."
         },
-        "continue.userToken": {
+        "yutoagentic.userToken": {
           "type": "string",
           "default": null,
           "markdownDescription": "If your team is set up to use shared configuration, enter your user token here and your server URL above to enable automatic syncing."
         },
-        "continue.remoteConfigSyncPeriod": {
+        "yutoagentic.remoteConfigSyncPeriod": {
           "type": "number",
           "default": 60,
           "description": "The period of time in minutes between automatic syncs."
@@ -152,452 +151,452 @@
     },
     "commands": [
       {
-        "command": "continue.applyCodeFromChat",
-        "category": "Continue",
+        "command": "yutoagentic.applyCodeFromChat",
+        "category": "Yuto Agentic",
         "title": "Apply code from chat",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.acceptDiff",
-        "category": "Continue",
+        "command": "yutoagentic.acceptDiff",
+        "category": "Yuto Agentic",
         "title": "Accept Diff",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.rejectDiff",
-        "category": "Continue",
+        "command": "yutoagentic.rejectDiff",
+        "category": "Yuto Agentic",
         "title": "Reject Diff",
-        "group": "Continue",
+        "group": "Yuto Agentic",
         "icon": "$(stop)"
       },
       {
-        "command": "continue.acceptVerticalDiffBlock",
-        "category": "Continue",
+        "command": "yutoagentic.acceptVerticalDiffBlock",
+        "category": "Yuto Agentic",
         "title": "Accept Vertical Diff Block",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.rejectVerticalDiffBlock",
-        "category": "Continue",
+        "command": "yutoagentic.rejectVerticalDiffBlock",
+        "category": "Yuto Agentic",
         "title": "Reject Vertical Diff Block",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.focusEdit",
-        "category": "Continue",
+        "command": "yutoagentic.focusEdit",
+        "category": "Yuto Agentic",
         "title": "Add to Edit",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.focusContinueInput",
-        "category": "Continue",
+        "command": "yutoagentic.focusContinueInput",
+        "category": "Yuto Agentic",
         "title": "Add Highlighted Code to Context and Clear Chat",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.focusContinueInputWithoutClear",
-        "category": "Continue",
+        "command": "yutoagentic.focusContinueInputWithoutClear",
+        "category": "Yuto Agentic",
         "title": "Add to Chat",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.debugTerminal",
-        "category": "Continue",
+        "command": "yutoagentic.debugTerminal",
+        "category": "Yuto Agentic",
         "title": "Debug Terminal",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.exitEditMode",
-        "category": "Continue",
+        "command": "yutoagentic.exitEditMode",
+        "category": "Yuto Agentic",
         "title": "Exit Edit Mode",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.openConfigPage",
-        "category": "Continue",
+        "command": "yutoagentic.openConfigPage",
+        "category": "Yuto Agentic",
         "title": "Open Settings",
         "icon": "$(gear)",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.toggleTabAutocompleteEnabled",
-        "category": "Continue",
+        "command": "yutoagentic.toggleTabAutocompleteEnabled",
+        "category": "Yuto Agentic",
         "title": "Toggle Autocomplete Enabled",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.forceAutocomplete",
-        "title": "Continue: Force Autocomplete",
-        "category": "Continue"
+        "command": "yutoagentic.forceAutocomplete",
+        "title": "Yuto Agentic: Force Autocomplete",
+        "category": "Yuto Agentic"
       },
       {
-        "command": "continue.selectFilesAsContext",
-        "category": "Continue",
+        "command": "yutoagentic.selectFilesAsContext",
+        "category": "Yuto Agentic",
         "title": "Select Files as Context",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.newSession",
-        "category": "Continue",
+        "command": "yutoagentic.newSession",
+        "category": "Yuto Agentic",
         "title": "New Session",
         "icon": "$(add)",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.shareSession",
-        "category": "Continue",
+        "command": "yutoagentic.shareSession",
+        "category": "Yuto Agentic",
         "title": "Share Current Chat Session as Markdown",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.viewHistory",
-        "category": "Continue",
+        "command": "yutoagentic.viewHistory",
+        "category": "Yuto Agentic",
         "title": "View History",
         "icon": "$(history)",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.viewLogs",
-        "category": "Continue",
+        "command": "yutoagentic.viewLogs",
+        "category": "Yuto Agentic",
         "title": "View Logs",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.clearConsole",
-        "category": "Continue",
+        "command": "yutoagentic.clearConsole",
+        "category": "Yuto Agentic",
         "title": "Clear Console",
         "icon": "$(clear-all)",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.navigateTo",
-        "category": "Continue",
+        "command": "yutoagentic.navigateTo",
+        "category": "Yuto Agentic",
         "title": "Navigate to a path",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.writeCommentsForCode",
-        "category": "Continue",
+        "command": "yutoagentic.writeCommentsForCode",
+        "category": "Yuto Agentic",
         "title": "Write Comments for this Code",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.writeDocstringForCode",
-        "category": "Continue",
+        "command": "yutoagentic.writeDocstringForCode",
+        "category": "Yuto Agentic",
         "title": "Write a Docstring for this Code",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.fixCode",
-        "category": "Continue",
+        "command": "yutoagentic.fixCode",
+        "category": "Yuto Agentic",
         "title": "Fix this Code",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.optimizeCode",
-        "category": "Continue",
+        "command": "yutoagentic.optimizeCode",
+        "category": "Yuto Agentic",
         "title": "Optimize this Code",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.fixGrammar",
-        "category": "Continue",
+        "command": "yutoagentic.fixGrammar",
+        "category": "Yuto Agentic",
         "title": "Fix Grammar / Spelling",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.codebaseForceReIndex",
-        "category": "Continue",
+        "command": "yutoagentic.codebaseForceReIndex",
+        "category": "Yuto Agentic",
         "title": "Codebase Force Re-Index",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.rebuildCodebaseIndex",
-        "category": "Continue",
+        "command": "yutoagentic.rebuildCodebaseIndex",
+        "category": "Yuto Agentic",
         "title": "Rebuild codebase index",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.docsIndex",
-        "category": "Continue",
+        "command": "yutoagentic.docsIndex",
+        "category": "Yuto Agentic",
         "title": "Docs Index",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.docsReIndex",
-        "category": "Continue",
+        "command": "yutoagentic.docsReIndex",
+        "category": "Yuto Agentic",
         "title": "Docs Force Re-Index",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.focusContinueInput",
-        "category": "Continue",
+        "command": "yutoagentic.focusContinueInput",
+        "category": "Yuto Agentic",
         "title": "Focus Continue Chat",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.enterEnterpriseLicenseKey",
-        "category": "Continue",
+        "command": "yutoagentic.enterEnterpriseLicenseKey",
+        "category": "Yuto Agentic",
         "title": "Enter Enterprise License Key",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.toggleNextEditEnabled",
-        "title": "Continue: Toggle Next Edit"
+        "command": "yutoagentic.toggleNextEditEnabled",
+        "title": "Yuto Agentic: Toggle Next Edit"
       },
       {
-        "command": "continue.nextEditWindow.hideNextEditSuggestion",
-        "category": "Continue",
+        "command": "yutoagentic.nextEditWindow.hideNextEditSuggestion",
+        "category": "Yuto Agentic",
         "title": "Hide Next Edit Suggestion"
       },
       {
-        "command": "continue.nextEditWindow.acceptNextEditSuggestion",
-        "category": "Continue",
+        "command": "yutoagentic.nextEditWindow.acceptNextEditSuggestion",
+        "category": "Yuto Agentic",
         "title": "Accept Next Edit Suggestion"
       },
       {
-        "command": "continue.forceNextEdit",
-        "category": "Continue",
-        "title": "Continue: Force Next Edit"
+        "command": "yutoagentic.forceNextEdit",
+        "category": "Yuto Agentic",
+        "title": "Yuto Agentic: Force Next Edit"
       },
       {
-        "command": "continue.acceptJump",
-        "category": "Continue",
-        "title": "Continue: Accept Jump Suggestion"
+        "command": "yutoagentic.acceptJump",
+        "category": "Yuto Agentic",
+        "title": "Yuto Agentic: Accept Jump Suggestion"
       },
       {
-        "command": "continue.rejectJump",
-        "category": "Continue",
-        "title": "Continue: Reject Jump Suggestion"
+        "command": "yutoagentic.rejectJump",
+        "category": "Yuto Agentic",
+        "title": "Yuto Agentic: Reject Jump Suggestion"
       },
       {
-        "command": "continue.generateRule",
-        "category": "Continue",
+        "command": "yutoagentic.generateRule",
+        "category": "Yuto Agentic",
         "title": "Generate Rule",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       },
       {
-        "command": "continue.openInNewWindow",
-        "category": "Continue",
+        "command": "yutoagentic.openInNewWindow",
+        "category": "Yuto Agentic",
         "title": "Open in new window",
-        "group": "Continue"
+        "group": "Yuto Agentic"
       }
     ],
     "keybindings": [
       {
-        "command": "continue.focusContinueInput",
+        "command": "yutoagentic.focusContinueInput",
         "mac": "cmd+l",
         "key": "ctrl+l"
       },
       {
-        "command": "continue.focusContinueInputWithoutClear",
+        "command": "yutoagentic.focusContinueInputWithoutClear",
         "mac": "cmd+shift+l",
         "key": "ctrl+shift+l"
       },
       {
-        "command": "continue.acceptDiff",
+        "command": "yutoagentic.acceptDiff",
         "mac": "shift+cmd+enter",
         "key": "shift+ctrl+enter",
-        "when": "continue.diffVisible"
+        "when": "yutoagentic.diffVisible"
       },
       {
-        "command": "continue.rejectDiff",
+        "command": "yutoagentic.rejectDiff",
         "mac": "shift+cmd+backspace",
         "key": "shift+ctrl+backspace",
-        "when": "continue.diffVisible"
+        "when": "yutoagentic.diffVisible"
       },
       {
-        "command": "continue.rejectDiff",
+        "command": "yutoagentic.rejectDiff",
         "mac": "cmd+z",
         "key": "ctrl+z",
-        "when": "continue.diffVisible"
+        "when": "yutoagentic.diffVisible"
       },
       {
-        "command": "continue.quickEditHistoryUp",
+        "command": "yutoagentic.quickEditHistoryUp",
         "mac": "up",
         "key": "up",
-        "when": "false && continue.quickEditHistoryFocused"
+        "when": "false && yutoagentic.quickEditHistoryFocused"
       },
       {
-        "command": "continue.quickEditHistoryDown",
+        "command": "yutoagentic.quickEditHistoryDown",
         "mac": "down",
         "key": "down",
-        "when": "false && continue.quickEditHistoryFocused"
+        "when": "false && yutoagentic.quickEditHistoryFocused"
       },
       {
-        "command": "continue.acceptVerticalDiffBlock",
+        "command": "yutoagentic.acceptVerticalDiffBlock",
         "mac": "alt+cmd+y",
         "key": "alt+ctrl+y"
       },
       {
-        "command": "continue.rejectVerticalDiffBlock",
+        "command": "yutoagentic.rejectVerticalDiffBlock",
         "mac": "alt+cmd+n",
         "key": "alt+ctrl+n"
       },
       {
-        "command": "continue.focusEdit",
+        "command": "yutoagentic.focusEdit",
         "title": "Edit code with natural language",
         "mac": "cmd+i",
         "key": "ctrl+i"
       },
       {
-        "command": "continue.exitEditMode",
+        "command": "yutoagentic.exitEditMode",
         "mac": "escape",
         "key": "escape",
-        "when": "continue.inEditMode && editorFocus"
+        "when": "yutoagentic.inEditMode && editorFocus"
       },
       {
-        "command": "continue.debugTerminal",
+        "command": "yutoagentic.debugTerminal",
         "mac": "cmd+shift+r",
         "key": "ctrl+shift+r"
       },
       {
-        "command": "continue.openInNewWindow",
+        "command": "yutoagentic.openInNewWindow",
         "mac": "cmd+k cmd+m",
         "key": "ctrl+k ctrl+m",
         "when": "!terminalFocus"
       },
       {
-        "command": "continue.toggleTabAutocompleteEnabled",
+        "command": "yutoagentic.toggleTabAutocompleteEnabled",
         "mac": "cmd+k cmd+a",
         "key": "ctrl+k ctrl+a",
         "when": "!terminalFocus"
       },
       {
-        "command": "continue.forceAutocomplete",
+        "command": "yutoagentic.forceAutocomplete",
         "key": "ctrl+alt+space",
         "mac": "cmd+alt+space",
         "when": "editorTextFocus && !editorHasSelection && !editorReadOnly && !inSnippetMode"
       },
       {
-        "command": "continue.applyCodeFromChat",
+        "command": "yutoagentic.applyCodeFromChat",
         "mac": "alt+a",
         "key": "alt+a"
       },
       {
-        "command": "continue.toggleNextEditEnabled",
+        "command": "yutoagentic.toggleNextEditEnabled",
         "key": "ctrl+k ctrl+n",
         "mac": "cmd+k cmd+n",
         "when": "editorTextFocus"
       },
       {
-        "command": "continue.nextEditWindow.hideNextEditSuggestion",
+        "command": "yutoagentic.nextEditWindow.hideNextEditSuggestion",
         "key": "escape",
-        "when": "editorTextFocus && nextEditWindowActive && !continue.jumpDecorationVisible"
+        "when": "editorTextFocus && nextEditWindowActive && !yutoagentic.jumpDecorationVisible"
       },
       {
-        "command": "continue.nextEditWindow.acceptNextEditSuggestion",
+        "command": "yutoagentic.nextEditWindow.acceptNextEditSuggestion",
         "key": "tab",
-        "when": "editorTextFocus && nextEditWindowActive && !continue.jumpDecorationVisible"
+        "when": "editorTextFocus && nextEditWindowActive && !yutoagentic.jumpDecorationVisible"
       },
       {
-        "command": "continue.acceptJump",
+        "command": "yutoagentic.acceptJump",
         "key": "tab",
-        "when": "editorTextFocus && continue.jumpDecorationVisible"
+        "when": "editorTextFocus && yutoagentic.jumpDecorationVisible"
       },
       {
-        "command": "continue.rejectJump",
+        "command": "yutoagentic.rejectJump",
         "key": "escape",
-        "when": "editorTextFocus && continue.jumpDecorationVisible"
+        "when": "editorTextFocus && yutoagentic.jumpDecorationVisible"
       }
     ],
     "submenus": [
       {
-        "id": "continue.continueSubMenu",
-        "label": "Continue"
+        "id": "yutoagentic.continueSubMenu",
+        "label": "Yuto Agentic"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "continue.focusContinueInput"
+          "command": "yutoagentic.focusContinueInput"
         },
         {
-          "command": "continue.focusContinueInputWithoutClear"
+          "command": "yutoagentic.focusContinueInputWithoutClear"
         },
         {
-          "command": "continue.debugTerminal"
+          "command": "yutoagentic.debugTerminal"
         },
         {
-          "command": "continue.newSession"
+          "command": "yutoagentic.newSession"
         },
         {
-          "command": "continue.enterEnterpriseLicenseKey"
+          "command": "yutoagentic.enterEnterpriseLicenseKey"
         },
         {
-          "command": "continue.generateRule"
+          "command": "yutoagentic.generateRule"
         },
         {
-          "command": "continue.openInNewWindow"
+          "command": "yutoagentic.openInNewWindow"
         }
       ],
       "editor/context": [
         {
-          "submenu": "continue.continueSubMenu",
+          "submenu": "yutoagentic.continueSubMenu",
           "group": "0_acontinue"
         }
       ],
       "editor/title/run": [
         {
-          "command": "continue.rejectDiff",
-          "group": "Continue",
-          "when": "continue.streamingDiff"
+          "command": "yutoagentic.rejectDiff",
+          "group": "Yuto Agentic",
+          "when": "yutoagentic.streamingDiff"
         }
       ],
-      "continue.continueSubMenu": [
+      "yutoagentic.continueSubMenu": [
         {
-          "command": "continue.focusContinueInputWithoutClear",
-          "group": "Continue"
+          "command": "yutoagentic.focusContinueInputWithoutClear",
+          "group": "Yuto Agentic"
         },
         {
-          "command": "continue.focusEdit",
-          "group": "Continue",
+          "command": "yutoagentic.focusEdit",
+          "group": "Yuto Agentic",
           "when": "!editorReadonly"
         }
       ],
       "explorer/context": [
         {
-          "command": "continue.selectFilesAsContext",
+          "command": "yutoagentic.selectFilesAsContext",
           "group": "1_debug@1"
         }
       ],
       "view/title": [
         {
-          "command": "continue.newSession",
+          "command": "yutoagentic.newSession",
           "group": "navigation@1",
-          "when": "view == continue.continueGUIView"
+          "when": "view == yutoagentic.yutoagenticGUIView"
         },
         {
-          "command": "continue.viewHistory",
+          "command": "yutoagentic.viewHistory",
           "group": "navigation@2",
-          "when": "view == continue.continueGUIView"
+          "when": "view == yutoagentic.yutoagenticGUIView"
         },
         {
-          "command": "continue.openConfigPage",
+          "command": "yutoagentic.openConfigPage",
           "group": "navigation@4",
-          "when": "view == continue.continueGUIView"
+          "when": "view == yutoagentic.yutoagenticGUIView"
         },
         {
-          "command": "continue.clearConsole",
+          "command": "yutoagentic.clearConsole",
           "group": "navigation@1",
-          "when": "view == continue.continueConsoleView"
+          "when": "view == yutoagentic.yutoagenticConsoleView"
         }
       ],
       "editor/title": [
         {
-          "command": "continue.newSession",
+          "command": "yutoagentic.newSession",
           "group": "navigation@1",
-          "when": "activeWebviewPanelId == continue.continueGUIView"
+          "when": "activeWebviewPanelId == yutoagentic.yutoagenticGUIView"
         },
         {
-          "command": "continue.viewHistory",
+          "command": "yutoagentic.viewHistory",
           "group": "navigation@2",
-          "when": "activeWebviewPanelId == continue.continueGUIView"
+          "when": "activeWebviewPanelId == yutoagentic.yutoagenticGUIView"
         }
       ],
       "terminal/context": [
         {
-          "command": "continue.debugTerminal",
+          "command": "yutoagentic.debugTerminal",
           "group": "navigation@top"
         }
       ]
@@ -606,14 +605,14 @@
       "activitybar": [
         {
           "id": "continue",
-          "title": "Continue",
+          "title": "Yuto Agentic",
           "icon": "media/sidebar-icon.png"
         }
       ],
       "panel": [
         {
-          "id": "continueConsole",
-          "title": "Continue Console",
+          "id": "yutoagenticConsole",
+          "title": "Yuto Agentic Console",
           "icon": "$(window)"
         }
       ]
@@ -622,20 +621,20 @@
       "continue": [
         {
           "type": "webview",
-          "id": "continue.continueGUIView",
-          "name": "Continue",
+          "id": "yutoagentic.yutoagenticGUIView",
+          "name": "Yuto Agentic",
           "icon": "media/sidebar-icon.png",
           "visibility": "visible"
         }
       ],
-      "continueConsole": [
+      "yutoagenticConsole": [
         {
           "type": "webview",
-          "id": "continue.continueConsoleView",
-          "name": "Continue Console",
+          "id": "yutoagentic.yutoagenticConsoleView",
+          "name": "Yuto Agentic Console",
           "icon": "$(window)",
           "visibility": "visible",
-          "when": "config.continue.enableConsole"
+          "when": "config.yutoagentic.enableConsole"
         }
       ]
     },
@@ -645,8 +644,8 @@
         "url": "./config_schema.json"
       },
       {
-        "fileMatch": ".continuerc.json",
-        "url": "./continue_rc_schema.json"
+        "fileMatch": ".yutoagenticrc.json",
+        "url": "./yutoagentic_rc_schema.json"
       },
       {
         "fileMatch": "**/config.yaml",
@@ -684,18 +683,18 @@
     "e2e:get-vscode": "extest get-vscode --storage ./e2e/storage --code_version 1.95.0",
     "e2e:sign-vscode": "codesign --entitlements entitlements.plist --deep --force -s - './e2e/storage/Visual Studio Code.app'",
     "e2e:copy-vsix": "chmod +x ./e2e/get-latest-vsix.sh && bash ./e2e/get-latest-vsix.sh",
-    "e2e:install-vsix": "extest install-vsix -f ./e2e/vsix/continue.vsix --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
+    "e2e:install-vsix": "extest install-vsix -f ./e2e/vsix/yutoagentic.vsix --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
     "e2e:install-extensions": "extest install-from-marketplace ms-vscode-remote.remote-ssh --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage && extest install-from-marketplace ms-vscode-remote.remote-containers --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage && extest install-from-marketplace ms-vscode-remote.remote-wsl --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
     "e2e:test": "NODE_ENV=e2e extest run-tests ${TEST_FILE:-'./e2e/_output/tests/*.test.js'} --code_settings settings.json --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
     "e2e:clean": "rm -rf ./e2e/_output ./e2e/storage",
-    "e2e:all": "npm run e2e:build && npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:sign-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
-    "e2e:all-non-mac": "npm run e2e:build && npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
-    "e2e:recompile-extension": "npm run package && npm run e2e:compile && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
-    "e2e:rebuild-gui": "rm -rf gui && cp -r ../../gui/dist gui && npm run package && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
-    "e2e:quick": "npm run e2e:compile && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
+    "e2e:all": "npm run e2e:build && npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:sign-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && YUTOAGENTIC_GLOBAL_DIR=e2e/test-yutoagentic npm run e2e:test && npm run e2e:clean",
+    "e2e:all-non-mac": "npm run e2e:build && npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && YUTOAGENTIC_GLOBAL_DIR=e2e/test-yutoagentic npm run e2e:test && npm run e2e:clean",
+    "e2e:recompile-extension": "npm run package && npm run e2e:compile && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && YUTOAGENTIC_GLOBAL_DIR=e2e/test-yutoagentic npm run e2e:test && npm run e2e:clean",
+    "e2e:rebuild-gui": "rm -rf gui && cp -r ../../gui/dist gui && npm run package && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && YUTOAGENTIC_GLOBAL_DIR=e2e/test-yutoagentic npm run e2e:test && npm run e2e:clean",
+    "e2e:quick": "npm run e2e:compile && YUTOAGENTIC_GLOBAL_DIR=e2e/test-yutoagentic npm run e2e:test && npm run e2e:clean",
     "e2e:ci:download": "npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode",
-    "e2e:ci:run": "npm run e2e:compile && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test",
-    "e2e:ci:run-yaml": "npm run e2e:compile && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && CONTINUE_GLOBAL_DIR=e2e/test-continue-yaml npm run e2e:test"
+    "e2e:ci:run": "npm run e2e:compile && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && YUTOAGENTIC_GLOBAL_DIR=e2e/test-yutoagentic npm run e2e:test",
+    "e2e:ci:run-yaml": "npm run e2e:compile && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && YUTOAGENTIC_GLOBAL_DIR=e2e/test-yutoagentic-yaml npm run e2e:test"
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.4",
@@ -728,8 +727,8 @@
     "vscode-extension-tester": "^8.14.1"
   },
   "dependencies": {
-    "@continuedev/config-types": "file:../../packages/config-types",
-    "@continuedev/fetch": "file:../../packages/fetch",
+    "@yutoagentic/config-types": "file:../../packages/config-types",
+    "@yutoagentic/fetch": "file:../../packages/fetch",
     "@electron/rebuild": "^4.0.3",
     "@reduxjs/toolkit": "^1.9.3",
     "@vscode/ripgrep": "^1.15.9",

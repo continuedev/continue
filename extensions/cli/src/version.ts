@@ -47,7 +47,7 @@ export async function getLatestVersion(
     try {
       const id = getEventUserId();
       const response = await fetch(
-        `https://api.continue.dev/cn/info?id=${encodeURIComponent(id)}`,
+        `https://api.yutoagentic.dev/cn/info?id=${encodeURIComponent(id)}`,
         { signal },
       );
       if (!response.ok) {
@@ -61,7 +61,7 @@ export async function getLatestVersion(
         return null;
       }
       logger?.debug(
-        "Warning: Could not fetch latest version from api.continue.dev",
+        "Warning: Could not fetch latest version from api.yutoagentic.dev",
       );
       return null;
     }
@@ -78,7 +78,7 @@ getLatestVersion()
   })
   .catch((error) => {
     logger?.debug(
-      `Warning: Could not fetch latest version from api.continue.dev: ${error}`,
+      `Warning: Could not fetch latest version from api.yutoagentic.dev: ${error}`,
     );
   });
 

@@ -1,4 +1,4 @@
-import { ConfigResult } from "@continuedev/config-yaml";
+import { ConfigResult } from "@yutoagentic/config-yaml";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager.js";
 import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes.js";
 import type {

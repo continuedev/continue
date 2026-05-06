@@ -1,5 +1,5 @@
-import { RequestOptions } from "@continuedev/config-types";
-import { fetchwithRequestOptions, patchedFetch } from "@continuedev/fetch";
+import { RequestOptions } from "@yutoagentic/config-types";
+import { fetchwithRequestOptions, patchedFetch } from "@yutoagentic/fetch";
 import {
   ChatCompletionChunk,
   CompletionUsage,

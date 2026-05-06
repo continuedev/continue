@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import { type AssistantConfig } from "@continuedev/sdk";
+import { type AssistantConfig } from "@yutoagentic/sdk";
 import chalk from "chalk";
 import type { Session } from "core/index.js";
 import historyManager from "core/util/history.js";

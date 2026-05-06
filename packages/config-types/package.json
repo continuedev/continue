@@ -1,5 +1,5 @@
 {
-  "name": "@continuedev/config-types",
+  "name": "@yutoagentic/config-types",
   "version": "1.0.14",
   "description": "",
   "main": "dist/index.js",

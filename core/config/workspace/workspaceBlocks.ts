@@ -4,7 +4,7 @@ import {
   createPromptMarkdown,
   createRuleMarkdown,
   sanitizeRuleName,
-} from "@continuedev/config-yaml";
+} from "@yutoagentic/config-yaml";
 import * as YAML from "yaml";
 import { IDE } from "../..";
 import { getContinueGlobalPath } from "../../util/paths";
@@ -56,7 +56,7 @@ function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
       configYaml.docs = [
         {
           name: "New docs",
-          startUrl: "https://docs.continue.dev",
+          startUrl: "https://docs.yutoagentic.dev",
         },
       ];
       break;

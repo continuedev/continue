@@ -1,6 +1,6 @@
 import { COUNT_COMPLETION_REJECTED_AFTER } from "../util/parameters";
 
-import { fetchwithRequestOptions } from "@continuedev/fetch";
+import { fetchwithRequestOptions } from "@yutoagentic/fetch";
 import { getControlPlaneEnvSync } from "../control-plane/env";
 import { DataLogger } from "../data/log";
 import { Telemetry } from "../util/posthog";

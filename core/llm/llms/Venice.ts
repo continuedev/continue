@@ -1,4 +1,4 @@
-import { ChatCompletionCreateParams } from "@continuedev/openai-adapters";
+import { ChatCompletionCreateParams } from "@yutoagentic/openai-adapters";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 
 import OpenAI from "./OpenAI";

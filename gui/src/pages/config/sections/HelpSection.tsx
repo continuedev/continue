@@ -184,7 +184,7 @@ export function HelpSection() {
                 description="Learn how to configure and use Continue"
                 icon={LinkIcon}
                 onClick={() =>
-                  ideMessenger.post("openUrl", "https://docs.continue.dev/")
+                  ideMessenger.post("openUrl", "https://docs.yutoagentic.dev/")
                 }
               />
 

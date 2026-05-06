@@ -11,7 +11,7 @@ import {
   RegistryClient,
   unrollAssistant,
   validateConfigYaml,
-} from "@continuedev/config-yaml";
+} from "@yutoagentic/config-yaml";
 import { dirname } from "node:path";
 
 import {

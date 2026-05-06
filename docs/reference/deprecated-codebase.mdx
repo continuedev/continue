@@ -111,9 +111,9 @@ Whether to use re-ranking, which will allow initial selection of `nRetrieve` res
 
 ## How to Ignore Files During Indexing
 
-Continue respects `.gitignore` files in order to determine which files should not be indexed. If you'd like to exclude additional files, you can add them to a `.continueignore` file, which follows the exact same rules as `.gitignore`.
+Continue respects `.gitignore` files in order to determine which files should not be indexed. If you'd like to exclude additional files, you can add them to a `.yutoagenticignore` file, which follows the exact same rules as `.gitignore`.
 
-Continue also supports a **global** `.continueignore` file that will be respected for all workspaces, which can be created at `~/.continue/.continueignore`.
+Continue also supports a **global** `.yutoagenticignore` file that will be respected for all workspaces, which can be created at `~/.continue/.yutoagenticignore`.
 
 If you want to see exactly what files Continue has indexed, the metadata is stored in `~/.continue/index/index.sqlite`. You can use a tool like [DB Browser for SQLite](https://sqlitebrowser.org/) to view the `tag_catalog` table within this file.
 

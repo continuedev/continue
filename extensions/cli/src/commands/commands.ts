@@ -1,4 +1,4 @@
-import { type AssistantConfig } from "@continuedev/sdk";
+import { type AssistantConfig } from "@yutoagentic/sdk";
 
 import {
   getSkillSlashCommandName,

@@ -1,8 +1,8 @@
 {
-  "name": "binary",
+  "name": "@yutoagentic/binary",
   "version": "1.0.0",
-  "author": "Continue Dev, Inc",
-  "description": "",
+  "author": "Yuto Agentic",
+  "description": "Native binary host for the Yuto Agentic core",
   "main": "out/index.js",
   "bin": "out/index.js",
   "pkg": {

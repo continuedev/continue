@@ -103,7 +103,7 @@ jobs:
 
       - name: Install Continue CLI globally
         if: steps.workflow-details.outputs.has_failed_tests == 'true'
-        run: npm i -g @continuedev/cli
+        run: npm i -g @yutoagentic/cli
 
       - name: Start remote session to fix failed tests
         if: steps.workflow-details.outputs.has_failed_tests == 'true'
