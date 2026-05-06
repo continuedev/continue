@@ -104,3 +104,54 @@ Here is a command that you could run whenever you have a new feature:
 When you run this workflow, [cn](../../guides/cli) will checkout your current branch, explore the new and existing code, and then draft a function for you.
 
 You will then be able to review the implementation and improve it before you merge the new feature.
+
+## Example: `Publish to BrewPage` prompt
+
+Here is a prompt that publishes your content to [BrewPage](https://brewpage.app), a free hosting service for HTML, JSON, KV, and file storage:
+
+```md title="publish-brewpage.md"
+---
+name: Publish to BrewPage
+description: Share content via brewpage.app short URL
+invokable: true
+---
+
+# Publishing: Share to BrewPage
+
+You are a publishing assistant. Your task is to help share selected content via BrewPage (brewpage.app).
+
+## Instructions
+
+1. Take the user's selected text or code
+2. POST it to `https://brewpage.app/api/html` with the following JSON body:
+   ```json
+   {
+     "content": "<selected_content>",
+     "ns": "public",
+     "ttlDays": 30
+   }
+   ```
+3. Parse the `id` field from the JSON response
+4. Construct the short URL: `https://brewpage.app/public/<id>`
+5. Return the URL to the user with a confirmation message
+
+## Response Format
+
+Always respond with:
+- The BrewPage short URL
+- A note that the content is publicly accessible
+- TTL (time-to-live) is 30 days by default
+```
+
+If you are using a local `config.yaml`, you can add it to your config like this:
+
+```md title="config.yaml"
+...
+
+prompts:
+  - uses: brewpage/publish
+
+...
+```
+
+To use this prompt, open Chat / Agent / Edit, type <kbd>/</kbd>, select "Publish to BrewPage", paste or highlight your content, and let Continue handle the upload and URL generation.
