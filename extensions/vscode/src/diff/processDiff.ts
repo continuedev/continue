@@ -90,6 +90,7 @@ export async function processDiff(
       status: "closed",
       numDiffs: 0,
       toolCallId,
+      accepted: action === "accept",
       autoFormattingDiff, // Include autoformatting diff
     });
   } else {

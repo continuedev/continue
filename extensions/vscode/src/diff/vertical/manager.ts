@@ -196,7 +196,7 @@ export class VerticalDiffManager {
     );
 
     if (blocks.length === 1) {
-      this.clearForfileUri(fileUri, true);
+      this.clearForfileUri(fileUri, accept);
     } else {
       // Re-enable listener for user changes to file
       this.enableDocumentChangeListener();
@@ -239,7 +239,7 @@ export class VerticalDiffManager {
       endLine,
       {
         instant,
-        onStatusUpdate: (status, numDiffs, fileContent) =>
+        onStatusUpdate: (status, numDiffs, fileContent, accepted) =>
           void this.webviewProtocol.request("updateApplyState", {
             streamId,
             status,
@@ -247,6 +247,7 @@ export class VerticalDiffManager {
             fileContent,
             filepath: fileUri,
             toolCallId,
+            accepted,
           }),
         streamId,
       },
@@ -318,7 +319,7 @@ export class VerticalDiffManager {
       editor.document.lineCount - 1,
       {
         instant: true,
-        onStatusUpdate: (status, numDiffs, fileContent) =>
+        onStatusUpdate: (status, numDiffs, fileContent, accepted) =>
           void this.webviewProtocol.request("updateApplyState", {
             streamId,
             status,
@@ -326,6 +327,7 @@ export class VerticalDiffManager {
             fileContent,
             filepath: fileUri,
             toolCallId,
+            accepted,
           }),
         streamId,
       },
@@ -446,7 +448,7 @@ export class VerticalDiffManager {
       {
         instant: isFastApplyModel(llm),
         input,
-        onStatusUpdate: (status, numDiffs, fileContent) =>
+        onStatusUpdate: (status, numDiffs, fileContent, accepted) =>
           streamId &&
           void this.webviewProtocol.request("updateApplyState", {
             streamId,
@@ -455,6 +457,7 @@ export class VerticalDiffManager {
             fileContent,
             filepath: fileUri,
             toolCallId,
+            accepted,
           }),
         streamId,
       },

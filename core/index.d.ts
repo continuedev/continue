@@ -1496,6 +1496,7 @@ export interface ApplyState {
   fileContent?: string;
   originalFileContent?: string;
   toolCallId?: string;
+  accepted?: boolean;
   autoFormattingDiff?: string;
 }
 

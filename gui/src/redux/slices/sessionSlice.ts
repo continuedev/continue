@@ -821,6 +821,9 @@ export const sessionSlice = createSlice({
         applyState.fileContent = payload.fileContent ?? applyState.fileContent;
         applyState.originalFileContent =
           payload.originalFileContent ?? applyState.originalFileContent;
+        applyState.accepted = payload.accepted ?? applyState.accepted;
+        applyState.autoFormattingDiff =
+          payload.autoFormattingDiff ?? applyState.autoFormattingDiff;
       }
 
       if (payload.status === "done") {
