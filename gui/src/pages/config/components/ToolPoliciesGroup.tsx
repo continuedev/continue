@@ -3,6 +3,7 @@ import {
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { Tool } from "core";
+import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "core/tools/builtIn";
 import { useMemo, useState } from "react";
 import ToggleSwitch from "../../../components/gui/Switch";
 import { ToolTip } from "../../../components/gui/Tooltip";
@@ -19,6 +20,38 @@ interface ToolPoliciesGroupProps {
   duplicateDetection: Record<string, boolean>;
 }
 
+// Browser-standalone fallback should mirror the extension's default tool set
+// (base tools + common config-dependent tools) rather than the full enum.
+const FALLBACK_BROWSER_TOOL_NAMES: BuiltInToolNames[] = [
+  BuiltInToolNames.ReadFile,
+  BuiltInToolNames.CreateNewFile,
+  BuiltInToolNames.RunTerminalCommand,
+  BuiltInToolNames.FileGlobSearch,
+  BuiltInToolNames.EnterPlanMode,
+  BuiltInToolNames.ExitPlanMode,
+  BuiltInToolNames.NotebookEdit,
+  BuiltInToolNames.ViewDiff,
+  BuiltInToolNames.ReadCurrentlyOpenFile,
+  BuiltInToolNames.LSTool,
+  BuiltInToolNames.CreateRuleBlock,
+  BuiltInToolNames.FetchUrlContent,
+  BuiltInToolNames.Sleep,
+  BuiltInToolNames.Subagent,
+  BuiltInToolNames.TodoWrite,
+  BuiltInToolNames.AskUserQuestion,
+  BuiltInToolNames.LspQuery,
+  BuiltInToolNames.NotifyUser,
+  BuiltInToolNames.EnterWorktree,
+  BuiltInToolNames.ExitWorktree,
+  BuiltInToolNames.ToolSearch,
+  BuiltInToolNames.RequestRule,
+  BuiltInToolNames.ReadSkill,
+  BuiltInToolNames.Skill,
+  BuiltInToolNames.EditExistingFile,
+  BuiltInToolNames.SingleFindAndReplace,
+  BuiltInToolNames.GrepSearch,
+];
+
 export function ToolPoliciesGroup({
   showIcon,
   groupName,
@@ -32,9 +65,34 @@ export function ToolPoliciesGroup({
   const availableTools = useAppSelector(
     (state) => state.config.config.tools as Tool[],
   );
+
+  // In standalone browser dev mode, config bootstrap can come up with an empty
+  // tool list before an IDE host responds. Fall back to built-in tool defs so
+  // the Tools screen remains usable and doesn't show a misleading zero count.
+  const fallbackBuiltInTools = useMemo(() => {
+    return FALLBACK_BROWSER_TOOL_NAMES.map((toolName) => {
+      return {
+        type: "function",
+        function: {
+          name: toolName,
+          description: "Built-in tool",
+        },
+        displayTitle: toolName,
+        wouldLikeTo: `use ${toolName}`,
+        readonly: false,
+        group: BUILT_IN_GROUP_NAME,
+      } as Tool;
+    });
+  }, []);
+
+  const effectiveTools = useMemo(
+    () => (availableTools.length > 0 ? availableTools : fallbackBuiltInTools),
+    [availableTools, fallbackBuiltInTools],
+  );
+
   const tools = useMemo(() => {
-    return availableTools.filter((t) => t.group === groupName);
-  }, [availableTools, groupName]);
+    return effectiveTools.filter((t) => t.group === groupName);
+  }, [effectiveTools, groupName]);
 
   const toolGroupSettings = useAppSelector(
     (state) => state.ui.toolGroupSettings,

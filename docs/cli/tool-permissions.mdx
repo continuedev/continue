@@ -20,13 +20,13 @@ Use `--allow`, `--ask`, and `--exclude` to override defaults at launch:
 
 ```bash
 # Allow file writes without prompting
-cn --allow Write --allow Edit
+yt --allow Write --allow Edit
 
 # Exclude terminal commands
-cn --exclude Bash
+yt --exclude Bash
 
 # Allow everything (headless automation)
-cn -p "Set up the project" --allow "*"
+yt -p "Set up the project" --allow "*"
 ```
 
 Flags take precedence over all other permission sources.
@@ -41,18 +41,18 @@ Flags accept tool matching patterns:
 
 ```bash
 # Allow writing only to TypeScript files
-cn --allow "Write(**/*.ts)"
+yt --allow "Write(**/*.ts)"
 
 # Allow bash but not for install commands
-cn --allow Bash --exclude "Bash(npm install*)"
+yt --allow Bash --exclude "Bash(npm install*)"
 ```
 
 ## `permissions.yaml`
 
-Persistent permissions are stored in `~/.continue/permissions.yaml`. This file is updated when you choose "Continue + don't ask again" in the TUI approval prompt.
+Persistent permissions are stored in `~/.yutoagentic/permissions.yaml`. This file is updated when you choose "Yuto Agentic + don't ask again" in the TUI approval prompt.
 
 ```yaml
-# ~/.continue/permissions.yaml
+# ~/.yutoagentic/permissions.yaml
 allow:
   - Read(*)
   - Write(**/*.ts)
@@ -79,8 +79,8 @@ When multiple sources define a permission for the same tool, the highest-priorit
 Modes are a shorthand for common permission sets. Switch modes with `Shift+Tab` during a TUI session, or set them at launch:
 
 ```bash
-cn --auto       # Allow all tools without prompting
-cn --readonly   # Plan mode — read-only tools only, no file writes
+yt --auto       # Allow all tools without prompting
+yt --readonly   # Plan mode — read-only tools only, no file writes
 ```
 
 | Mode | Effect |

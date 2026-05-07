@@ -253,7 +253,7 @@
             "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
           },
           {
-            "group": "Continue Hub (deprecated)",
+            "group": "Yuto Agentic Hub (deprecated)",
             "expanded": false,
             "icon": "box-archive",
             "pages": [

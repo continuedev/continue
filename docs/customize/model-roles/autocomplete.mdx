@@ -1,7 +1,7 @@
 ---
-title: "Autocomplete Role in Continue Models"
+title: "Autocomplete Role in Yuto Agentic Models"
 sidebarTitle: "Autocomplete Role"
-description: "Learn how the autocomplete role works in Continue, which models to use, and how to customize prompt templates for inline code suggestions."
+description: "Learn how the autocomplete role works in Yuto Agentic, which models to use, and how to customize prompt templates for inline code suggestions."
 keywords: [autocomplete, model, role]
 sidebar_position: 2
 ---
@@ -11,7 +11,7 @@ import { ModelRecommendations } from '/snippets/ModelRecommendations.jsx'
 
 An "autocomplete model" is an LLM that is trained on a special format called fill-in-the-middle (FIM). This format is designed to be given the prefix and suffix of a code file and predict what goes between. This task is very specific, which on one hand means that the models can be smaller (even a 3B parameter model can perform well). On the other hand, this means that Chat models, though larger, will often perform poorly even with extensive prompting.
 
-In Continue, autocomplete models are used to display inline [Autocomplete](../../ide-extensions/autocomplete/quick-start) suggestions as you type. Autocomplete models are designated by adding the `autocomplete` to the model's `roles` in `config.yaml`.
+In Yuto Agentic, autocomplete models are used to display inline [Autocomplete](../../ide-extensions/autocomplete/quick-start) suggestions as you type. Autocomplete models are designated by adding the `autocomplete` to the model's `roles` in `config.yaml`.
 
 ## Recommended Autocomplete models
 
@@ -21,7 +21,7 @@ Visit the [Autocomplete Deep Dive](../deep-dives/autocomplete) for detailed setu
 
 ## Prompt templating
 
-You can customize the prompt template used when autocomplete happens by setting the `promptTemplates.autocomplete` property in your model configuration. Continue uses [Handlebars syntax](https://handlebarsjs.com/guide/) for templating.
+You can customize the prompt template used when autocomplete happens by setting the `promptTemplates.autocomplete` property in your model configuration. Yuto Agentic uses [Handlebars syntax](https://handlebarsjs.com/guide/) for templating.
 
 Available variables for the apply template:
 

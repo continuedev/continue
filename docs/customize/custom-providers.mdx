@@ -3,7 +3,7 @@ title: "Context Providers"
 description: "Context Providers allow you to type '@' and see a dropdown of content that can all be fed to the LLM as context. Every context provider is a plugin, which means if you want to reference some source of information that you don't see here, you can request (or build!) a new context provider."
 ---
 
-As an example, say you are working on solving a new GitHub Issue. You type '@Issue' and select the one you are working on. Continue can now see the issue title and contents. You also know that the issue is related to the files 'readme.md' and 'helloNested.py', so you type '@readme' and '@hello' to find and select them. Now these 3 "Context Items" are displayed inline with the rest of your input.
+As an example, say you are working on solving a new GitHub Issue. You type '@Issue' and select the one you are working on. Yuto Agentic can now see the issue title and contents. You also know that the issue is related to the files 'readme.md' and 'helloNested.py', so you type '@readme' and '@hello' to find and select them. Now these 3 "Context Items" are displayed inline with the rest of your input.
 
 ![Context Items](/images/customize/images/context-provider-example-0c96ff77286fa970b23dddfdc1fa986a.png)
 
@@ -232,9 +232,9 @@ context:
   - provider: os
 ```
 
-### Using the Model Context Protocol (MCP) in Continue
+### Using the Model Context Protocol (MCP) in Yuto Agentic
 
-The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then set up your configuration like this:
+The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Yuto Agentic supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then set up your configuration like this:
 
 config.yaml
 
@@ -250,6 +250,6 @@ mcpServers:
 
 You'll then be able to type "@" and see "MCP" in the context providers dropdown.
 
-### How to Request a New Context Provider in Continue
+### How to Request a New Context Provider in Yuto Agentic
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new Context Provider.

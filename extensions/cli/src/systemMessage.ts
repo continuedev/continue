@@ -40,7 +40,7 @@ function getGitStatus(): string {
   }
 }
 
-const baseSystemMessage = `You are an agent in the Continue CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.
+const baseSystemMessage = `You are an agent in the Yuto Agentic CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.
 
 Notes:
 1. IMPORTANT: You should be concise, direct, and to the point, since your responses will be displayed on a command line interface.
@@ -84,7 +84,7 @@ function getRuleNameFromPath(filePath: string): string {
 }
 
 /**
- * Scan .continue/rules/ directories for markdown rule files and return the rules with metadata that should be always-applied
+ * Scan .yutoagentic/rules/ directories for markdown rule files and return the rules with metadata that should be always-applied
  */
 export function loadMarkdownRulesWithMetadata(): RuleObject[] {
   const cwd = process.cwd();
@@ -200,7 +200,7 @@ export async function constructSystemMessage(
   const configYamlRules = await getConfigYamlRules();
   processedRules.push(...configYamlRules);
 
-  // Load markdown rules from .continue/rules/ directories
+  // Load markdown rules from .yutoagentic/rules/ directories
   const markdownRules = loadMarkdownRulesWithMetadata();
   // Deduplicate against already-loaded rules
   const existingRulesSet = new Set(processedRules);
@@ -228,9 +228,9 @@ export async function constructSystemMessage(
     // Check if commit signature is disabled via environment variable
     if (!process.env.CONTINUE_CLI_DISABLE_COMMIT_SIGNATURE) {
       systemMessage += `\n<context name="commitSignature">When creating commits using any CLI or tool, include the following in the commit message:
-Generated with [Continue](https://yutoagentic.dev)
+Generated with [Yuto Agentic](https://yutoagentic.dev)
 
-Co-Authored-By: Continue <noreply@yutoagentic.dev>
+Co-Authored-By: Yuto Agentic <noreply@yutoagentic.dev>
 </context>\n`;
     }
   }

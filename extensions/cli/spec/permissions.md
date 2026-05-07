@@ -15,7 +15,7 @@ There is a default set of permissions for the builtin tools in [`src/permissions
 1. **Mode policies** (highest priority - see [modes.md](./modes.md))
 2. Command line flags (`--allow`, `--ask`, `--exclude`)
 3. Permissions in `config.yaml` / configuration
-4. Permissions in `~/.continue/permissions.yaml`
+4. Permissions in `~/.yutoagentic/permissions.yaml`
 5. Default policies
 
 **Note:** Mode policies **completely override all other permission settings** in plan and auto modes. Available modes:
@@ -40,13 +40,13 @@ Each of the `--allow`, `--ask`, and `--exclude` flags allow you to set the permi
 
 ```bash
 # Allow Read, Ask Write, and Exclude Bash
-cn --allow Read --ask Write --exclude Bash
+yt --allow Read --ask Write --exclude Bash
 
 # Start in plan mode (read-only tools only)
-cn --readonly "Help me understand this codebase"
+yt --readonly "Help me understand this codebase"
 
 # Use mode switching during chat
-cn "Let me work on this feature"  # Starts in normal mode
+yt "Let me work on this feature"  # Starts in normal mode
 # Then use Shift+Tab to cycle through modes
 ```
 
@@ -70,11 +70,11 @@ permissions:
     - Write
 ```
 
-## `~/.continue/permissions.yaml` (personal settings)
+## `~/.yutoagentic/permissions.yaml` (personal settings)
 
 It would be frustrating for users to have to set the same permissions across all of their assistants, so we provide them a file for personal settings. It should be basically equivalent to the `permissions` section of `config.yaml`:
 
-```yaml title="~/.continue/permissions.yaml"
+```yaml title="~/.yutoagentic/permissions.yaml"
 allow:
   - Read(*)
 
@@ -100,13 +100,13 @@ To use tools that normally require confirmation in headless mode, you must expli
 
 ```bash
 # Headless mode with explicit permissions for write operations
-cn -p --allow write_file "Write a hello world script"
+yt -p --allow write_file "Write a hello world script"
 
 # Headless mode with wildcard permission (allow all tools)
-cn -p --allow "*" "Write and run a script"
+yt -p --allow "*" "Write and run a script"
 
 # Headless mode with specific restrictions
-cn -p --exclude run_terminal_command "Clean up the codebase"
+yt -p --exclude run_terminal_command "Clean up the codebase"
 ```
 
 This approach ensures that headless mode is secure by default while providing clear guidance on how to enable the needed permissions.

@@ -16,7 +16,7 @@ Your prompt here. This is the system prompt the agent uses
 when evaluating the pull request.
 ```
 
-Check files live in `.continue/checks/` or `.agents/checks/` at the repository root.
+Check files live in `.yutoagentic/checks/` or `.agents/checks/` at the repository root.
 
 ## Frontmatter fields
 
@@ -36,7 +36,7 @@ Write concrete pass/fail criteria. See [Best Practices](/checks/best-practices) 
 
 A fully-specced check file using all available fields:
 
-```markdown .continue/checks/migration-safety.md
+```markdown .yutoagentic/checks/migration-safety.md
 ---
 name: Migration Safety
 description: Flag destructive database migrations
@@ -55,9 +55,9 @@ Pass if the migration is additive only (new tables, new columns, new indexes).
 
 ## File discovery
 
-Continue locates checks by scanning specific directories at the repository root:
+Yuto Agentic locates checks by scanning specific directories at the repository root:
 
-- Reads all `.md` files in `.continue/checks/`
+- Reads all `.md` files in `.yutoagentic/checks/`
 - Reads all `.md` files in `.agents/checks/`
 - Subdirectories are not scanned
 - Files without valid `name` and `description` frontmatter are skipped
@@ -66,6 +66,6 @@ Checks always run when a PR is opened. For event-triggered automation, use [agen
 
 ## Supported directory paths
 
-`.continue/checks/` and `.agents/checks/` are equivalent. Both are scanned and merged into a single list of checks.
+`.yutoagentic/checks/` and `.agents/checks/` are equivalent. Both are scanned and merged into a single list of checks.
 
-`.agents/` is an emerging cross-tool standard for AI agent configuration. `.continue/` is Continue-specific. Use whichever fits your project. If both directories contain a check with the same `name`, the `.continue/checks/` version takes precedence.
+`.agents/` is an emerging cross-tool standard for AI agent configuration. `.yutoagentic/` is Yuto Agentic-specific. Use whichever fits your project. If both directories contain a check with the same `name`, the `.yutoagentic/checks/` version takes precedence.

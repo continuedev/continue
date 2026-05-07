@@ -12,7 +12,7 @@ and openai-adapters might depend on llm-info for some of these things.
 
 ### Goal
 
-We know we are done when the steps required to add support for a new model in Continue are exactly
+We know we are done when the steps required to add support for a new model in Yuto Agentic are exactly
 
 1. editing a single LlmInfo object, and
 2. adding it to the supporting ModelProviders.

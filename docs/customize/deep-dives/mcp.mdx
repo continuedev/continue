@@ -1,5 +1,5 @@
 ---
-title: "How to Set Up Model Context Protocol (MCP) in Continue"
+title: "How to Set Up Model Context Protocol (MCP) in Yuto Agentic"
 description: MCP use and customization
 keywords: [tool, use, function calling, claude, automatic]
 sidebarTitle: "Model Context Protocol (MCP)"
@@ -14,7 +14,7 @@ the wider digital world. This standard, created by Anthropic to bring together
 prompts, context, and tool use, is key for building truly useful AI experiences
 that can be set up with custom tools.
 
-## How MCP Works in Continue
+## How MCP Works in Yuto Agentic
 
 Currently custom tools can be configured using the Model Context
 Protocol standard to unify prompts, context, and tool use.
@@ -29,11 +29,11 @@ explore available MCP servers
 
 Below is a quick example of setting up a new MCP server for use in your config:
 
-1. Create a folder called `.continue/mcpServers` at the top level of your workspace
+1. Create a folder called `.yutoagentic/mcpServers` at the top level of your workspace
 2. Add a file called `playwright-mcp.yaml` to this folder
 3. Write the following contents and save
 
-```yaml title=".continue/mcpServers/playwright-mcp.yaml"
+```yaml title=".yutoagentic/mcpServers/playwright-mcp.yaml"
 name: Playwright mcpServer
 version: 0.0.1
 schema: v1
@@ -54,18 +54,18 @@ The result will be a generated file called `hn.txt` in the current working direc
 
 ![playwright mcp](/images/mcp-playwright.png)
 
-## How to Set Up Continue Documentation Search with MCP
+## How to Set Up Yuto Agentic Documentation Search with MCP
 
-You can set up an MCP server to search the Continue documentation directly from your config. This is particularly useful for getting help with Continue configuration and features.
+You can set up an MCP server to search the Yuto Agentic documentation directly from your config. This is particularly useful for getting help with Yuto Agentic configuration and features.
 
-For complete setup instructions, troubleshooting, and usage examples, see the [Continue MCP Reference](/reference/continue-mcp).
+For complete setup instructions, troubleshooting, and usage examples, see the [Yuto Agentic MCP Reference](/reference/continue-mcp).
 
 ## Using JSON MCP Format from Claude, Cursor, Cline, etc
 
 <Info>
-If you're coming from another tool that uses JSON MCP format configuration files (like Claude Desktop, Cursor, or Cline), you can copy those JSON config files directly into your `.continue/mcpServers/` directory (note the plural "Servers") and Continue will automatically pick them up.
+If you're coming from another tool that uses JSON MCP format configuration files (like Claude Desktop, Cursor, or Cline), you can copy those JSON config files directly into your `.yutoagentic/mcpServers/` directory (note the plural "Servers") and Yuto Agentic will automatically pick them up.
 
-For example, place your JSON MCP config file at `.continue/mcpServers/mcp.json` in your workspace.
+For example, place your JSON MCP config file at `.yutoagentic/mcpServers/mcp.json` in your workspace.
 </Info>
 
 ## How to Configure MCP Servers
@@ -88,7 +88,7 @@ mcpServers:
 ```
 
 <Note>
-When creating a standalone block file in `.continue/mcpServers/`, remember to include the required metadata fields (`name`, `version`, `schema`) as shown in the Quick Start example above.
+When creating a standalone block file in `.yutoagentic/mcpServers/`, remember to include the required metadata fields (`name`, `version`, `schema`) as shown in the Quick Start example above.
 </Note>
 
 ### How to Configure MCP Server Properties
@@ -154,7 +154,7 @@ For detailed information about transport mechanisms and their use cases, refer t
 ### How to Work with Secrets in MCP Servers
 
 With some MCP servers you will need to use API keys or other secrets. You can leverage locally stored environments secrets
-as well as access hosted secrets in the Continue Mission Control. To leverage Hub secrets, you can use the `inputs` property in your MCP env block instead of `secrets`.
+as well as access hosted secrets in the Yuto Agentic Mission Control. To leverage Hub secrets, you can use the `inputs` property in your MCP env block instead of `secrets`.
 
 ```yaml
 # ...

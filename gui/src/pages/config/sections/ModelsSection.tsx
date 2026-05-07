@@ -58,7 +58,9 @@ export function ModelsSection() {
   const handleConfigureModel = useEditModel();
 
   function handleAddModel() {
-    const isLocal = selectedProfile?.profileType === "local";
+    // In browser/dev startup, selectedProfile can be momentarily unset.
+    // Default to local flow so model/provider configuration remains accessible.
+    const isLocal = !selectedProfile || selectedProfile.profileType === "local";
 
     if (isLocal) {
       dispatch(setShowDialog(true));

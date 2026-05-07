@@ -16,6 +16,7 @@ import { getLocalStorage } from "../util/localStorage";
 
 const SAMPLE_REATE = 0.1;
 const TRACES_SAMPLE_RATE = 0.25;
+const APP_ENV = import.meta.env.MODE;
 
 const TelemetryProviders = ({ children }: PropsWithChildren) => {
   const allowAnonymousTelemetry = useAppSelector(
@@ -57,7 +58,7 @@ const TelemetryProviders = ({ children }: PropsWithChildren) => {
       // Initialize Sentry (new for GUI - enhanced React setup)
       Sentry.init({
         dsn: SENTRY_DSN,
-        environment: process.env.NODE_ENV,
+        environment: APP_ENV,
         integrations: [
           // Performance monitoring
           Sentry.browserTracingIntegration(),
@@ -80,7 +81,7 @@ const TelemetryProviders = ({ children }: PropsWithChildren) => {
           if (!anonymizedEvent.tags) anonymizedEvent.tags = {};
 
           // Add environment information
-          anonymizedEvent.tags.environment = process.env.NODE_ENV;
+          anonymizedEvent.tags.environment = APP_ENV;
 
           // Add ideInfo properties spread out as top-level properties (like PostHog)
           const extensionVersion = getLocalStorage("extensionVersion");

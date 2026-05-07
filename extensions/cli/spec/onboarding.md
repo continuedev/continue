@@ -1,6 +1,6 @@
 # Onboarding
 
-When a user first runs `cn` in interactive mode, they will be taken through "onboarding". After they have completed onboarding once, they will follow a normal config loading flow.
+When a user first runs `yt` in interactive mode, they will be taken through "onboarding". After they have completed onboarding once, they will follow a normal config loading flow.
 
 ## Onboarding flow
 
@@ -10,8 +10,8 @@ When a user first runs `cn` in interactive mode, they will be taken through "onb
 2. If the CONTINUE_USE_BEDROCK environment variable is set to "1", automatically use AWS Bedrock configuration and skip interactive prompts
 3. Present the user with available options:
 
-   - Log in with Continue: log them in, which will automatically create their assistant and then we can load the first assistant from the first org
-   - Enter your Anthropic API key: let them enter the key, and then either create a ~/.continue/config.yaml with the following contents OR update the existing config.yaml to add the model
+   - Log in with Yuto Agentic: log them in, which will automatically create their assistant and then we can load the first assistant from the first org
+   - Enter your Anthropic API key: let them enter the key, and then either create a ~/.yutoagentic/config.yaml with the following contents OR update the existing config.yaml to add the model
 
    ```yaml
    name: Local Config
@@ -34,7 +34,7 @@ Users can bypass the interactive onboarding menu by setting the `CONTINUE_USE_BE
 
 ```bash
 export CONTINUE_USE_BEDROCK=1
-cn <command>
+yt <command>
 ```
 
 This will:
@@ -51,6 +51,6 @@ This will:
 
 1. If the --config flag is provided, load this config
 2. If the user is logged in, look for the first assistant in the selected org
-3. If there are no assistants in that org, then look for a local ~/.continue/config.yaml
+3. If there are no assistants in that org, then look for a local ~/.yutoagentic/config.yaml
 4. If there is no config.yaml, look for an ANTHROPIC_API_KEY in the environment and manually construct the config object to include just the claude-4-sonnet model with that API key
 5. If none of the above, then bring the user to step 3 of the onboarding flow

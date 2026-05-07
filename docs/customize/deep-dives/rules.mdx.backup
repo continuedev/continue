@@ -1,7 +1,7 @@
 ---
 title: "Rules"
 description: Rules are used to provide instructions to the model for Agent mode, Chat mode, and Edit requests.
-keywords: [rules, .continuerules, system, prompt, message]
+keywords: [rules, .yutoagenticrules, system, prompt, message]
 ---
 
 Rules provide instructions to the model for [Agent mode](../../features/agent/quick-start), [Chat](../../features/chat/quick-start), and [Edit](../../features/edit/quick-start) requests.
@@ -21,11 +21,11 @@ To form the system message, rules are joined with new lines, in the order they a
 
 Below is a quick example of setting up a new rule file:
 
-1. Create a folder called `.continue/rules` at the top level of your workspace
+1. Create a folder called `.yutoagentic/rules` at the top level of your workspace
 2. Add a file called `pirates-rule.md` to this folder.
 3. Write the following contents to `pirates-rule.md` and save.
 
-```md title=".continue/rules/pirates-rule.md"
+```md title=".yutoagentic/rules/pirates-rule.md"
 ---
 name: Pirate rule
 ---
@@ -46,10 +46,10 @@ Rules can be added locally using the "Add Rules" button.
 <Info>
 Automatically create local rule blocks: When in Agent mode, you can prompt the agent to create a rule for you using the `create_rule_block` tool if enabled.
 
-For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
+For example, you can say "Create a rule for this", and a rule will be created for you in `.yutoagentic/rules` based on your conversation.
 </Info>
 
-Rules can also be added to a configuration on the Continue Hub.
+Rules can also be added to a configuration on the Yuto Agentic Hub.
 
 Explore available rules [here](https://yutoagentic.dev), or [create your own](https://yutoagentic.dev/new?type=block&blockType=rules) in the Hub.
 
@@ -79,10 +79,10 @@ Rules blocks can be simple text, written in YAML configuration files, or as Mark
   name: Documentation Standards
   globs: docs/**/*.{md,mdx}
   alwaysApply: false
-  description: Standards for writing and maintaining Continue Docs
+  description: Standards for writing and maintaining Yuto Agentic Docs
   ---
 
-  # Continue Docs Standards
+  # Yuto Agentic Docs Standards
 
   - Follow Mintlify documentation standards
   - Include YAML frontmatter with title, description, and keywords
@@ -121,11 +121,11 @@ Rules blocks can be simple text, written in YAML configuration files, or as Mark
 
   </Tabs>
 
-### `.continue/rules` folder
+### `.yutoagentic/rules` folder
 
-You can create project-specific rules by adding a `.continue/rules` folder to the root of your project and adding new rule files.
+You can create project-specific rules by adding a `.yutoagentic/rules` folder to the root of your project and adding new rule files.
 
-```md title=".continue/rules/new-rule.md"
+```md title=".yutoagentic/rules/new-rule.md"
 ---
 name: New rule
 ---
@@ -133,13 +133,13 @@ name: New rule
 Always give concise responses
 ```
 
-This is also done when selecting "Add Rule" in the Agent settings. This will create a new folder in `.continue/rules` with a default file named `new-rule.md`.
+This is also done when selecting "Add Rule" in the Agent settings. This will create a new folder in `.yutoagentic/rules` with a default file named `new-rule.md`.
 
 ### Examples
 
 If you want concise answers:
 
-```md title=".continue/rules/concise-rule.md"
+```md title=".yutoagentic/rules/concise-rule.md"
 ---
 name: Always give concise answers
 ---
@@ -150,7 +150,7 @@ You can assume that I am knowledgable about most programming topics.
 
 If you want to ensure certain practices are followed, for example in React:
 
-```md title=".continue/rules/functional-rule.md"
+```md title=".yutoagentic/rules/functional-rule.md"
 ---
 name: Always use functional components
 ---
@@ -166,16 +166,16 @@ Whenever you are writing React code, make sure to
 
 ### Chat System Message
 
-Continue includes a simple default system message for [Agent mode](../../features/agent/quick-start) and [Chat](../../features/chat/quick-start) requests, to help the model provide reliable codeblock formats in its output.
+Yuto Agentic includes a simple default system message for [Agent mode](../../features/agent/quick-start) and [Chat](../../features/chat/quick-start) requests, to help the model provide reliable codeblock formats in its output.
 
 This can be viewed in the rules section of the toolbar (see above), or in the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4).
 
 Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](/reference#models).
 
-### `.continuerules`
+### `.yutoagenticrules`
 
 <Warning>
-`.continuerules` will be deprecated in a future release. Please use the `.continue/rules` folder instead.
+`.yutoagenticrules` will be deprecated in a future release. Please use the `.yutoagentic/rules` folder instead.
 </Warning>
 
-You can create project-specific rules by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.
+You can create project-specific rules by adding a `.yutoagenticrules` file to the root of your project. This file is raw text and its full contents will be used as rules.

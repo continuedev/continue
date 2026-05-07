@@ -40,9 +40,9 @@ Auto mode that **completely overrides all user permissions** to allow everything
 Modes can be set when starting the CLI:
 
 ```bash
-cn --readonly "Help me analyze this code"  # Starts in plan mode
-cn --auto "Fix all the linting errors"     # Starts in auto mode
-cn "Let me implement this feature"         # Starts in normal mode (default)
+yt --readonly "Help me analyze this code"  # Starts in plan mode
+yt --auto "Fix all the linting errors"     # Starts in auto mode
+yt "Let me implement this feature"         # Starts in normal mode (default)
 ```
 
 ### Dynamic Mode Switching

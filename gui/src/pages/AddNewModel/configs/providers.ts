@@ -853,6 +853,40 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     collectInputFor: [...completionParamsInputsConfigs],
     downloadUrl: "https://lmstudio.ai/",
   },
+  vllm: {
+    title: "vLLM",
+    provider: "vllm",
+    refPage: "vllm",
+    description:
+      "High-throughput, OpenAI-compatible inference server for open models",
+    longDescription:
+      "vLLM provides a fast OpenAI-compatible API server with paged attention and optimized serving for local or hosted deployments. Start the server and point Yuto Agentic to your endpoint.",
+    tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
+    params: {
+      apiBase: "http://localhost:8000/v1/",
+    },
+    collectInputFor: [
+      {
+        ...apiBaseInput,
+        defaultValue: "http://localhost:8000/v1/",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.gptOss20B,
+      models.gptOss120B,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "vLLM",
+        },
+      },
+      ...openSourceModels,
+    ],
+    downloadUrl: "https://docs.vllm.ai/",
+  },
   llamafile: {
     title: "llamafile",
     provider: "llamafile",

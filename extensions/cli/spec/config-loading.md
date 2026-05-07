@@ -9,7 +9,7 @@ This document specifies the behavior of the CLI's configuration loading system, 
 **Authentication Source Priority:**
 
 1. **Environment Variable**: `CONTINUE_API_KEY` environment variable
-2. **File-Based Auth**: `~/.continue/auth.json` file
+2. **File-Based Auth**: `~/.yutoagentic/auth.json` file
 3. **No Authentication**: Unauthenticated mode
 
 **Authentication Effects:**
@@ -25,7 +25,7 @@ This document specifies the behavior of the CLI's configuration loading system, 
 1. **CLI `--config` Flag** (highest priority)
 
    - File path (starts with `.`, `/`, `~`): Loads local YAML file
-   - Assistant slug (`owner/package`): Fetches from Continue platform
+   - Assistant slug (`owner/package`): Fetches from Yuto Agentic platform
    - Overrides any saved preferences
 
 2. **Saved Config URI** (if no `--config` flag)
@@ -36,7 +36,7 @@ This document specifies the behavior of the CLI's configuration loading system, 
 
 3. **Default Resolution** (if no flag and no saved URI)
    - **Authenticated**: First user assistant from `listAssistants()`
-   - **config.yaml**: The saved config file at `~/.continue/config.yaml`
+   - **config.yaml**: The saved config file at `~/.yutoagentic/config.yaml`
    - **Unauthenticated**: Falls back to `continuedev/default-cli-config`
 
 ## Authentication State Interactions

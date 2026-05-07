@@ -14,7 +14,9 @@ export function ConfigsSection() {
   const configError = useAppSelector((state) => state.config.configError);
 
   function handleAddConfig() {
-    void ideMessenger.request("config/newAssistantFile", undefined);
+    // Fire-and-forget action. Using `post` avoids UI stalls if the host
+    // doesn't send a request response for this mutation-only command.
+    ideMessenger.post("config/newAssistantFile", undefined);
   }
 
   function handleConfigureAgent(profileId: string) {

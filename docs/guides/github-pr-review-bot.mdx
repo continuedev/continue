@@ -1,6 +1,6 @@
 ---
-title: "Code Review Bot with Continue and GitHub Actions"
-description: "Set up automated, context-aware pull request reviews using Continue CLI in GitHub Actions - privacy-first with custom rules"
+title: "Code Review Bot with Yuto Agentic and GitHub Actions"
+description: "Set up automated, context-aware pull request reviews using Yuto Agentic CLI in GitHub Actions - privacy-first with custom rules"
 sidebarTitle: "Pull Request Review Bot"
 ---
 
@@ -17,17 +17,17 @@ sidebarTitle: "Pull Request Review Bot"
 
 <CardGroup cols={3}>
   <Card title="Privacy-First" icon="shield">
-    All logs and processing happen in your runner: Continue CLI runs in GitHub Actions → code to your LLM provider (OpenAI, Anthropic, etc.). No hosted Continue service reads your code.
+    All logs and processing happen in your runner: Yuto Agentic CLI runs in GitHub Actions → code to your LLM provider (OpenAI, Anthropic, etc.). No hosted Yuto Agentic service reads your code.
 
   </Card>
 
   <Card title="Customizable" icon="sliders">
-    Define team-specific rules in `.continue/rules/` that automatically apply to every pull request.
+    Define team-specific rules in `.yutoagentic/rules/` that automatically apply to every pull request.
 
   </Card>
 
   <Card title="Context Awareness" icon="robot">
-    Leverage Continue's AI agent for intelligent, context-aware reviews with full control over your configuration.
+    Leverage Yuto Agentic's AI agent for intelligent, context-aware reviews with full control over your configuration.
 
   </Card>
 </CardGroup>
@@ -37,10 +37,10 @@ sidebarTitle: "Pull Request Review Bot"
 Before starting, ensure you have:
 
 - A GitHub repository with pull requests
-- Continue account with **Hub access**
+- Yuto Agentic account with **Hub access**
   - Read: [Understanding Configs](/guides/understanding-configs)
-- A Continue API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
-- Continue assistant configured for code reviews (or use our recommended default)
+- A Yuto Agentic API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
+- Yuto Agentic assistant configured for code reviews (or use our recommended default)
 
 <Info>
   **Want to customize the review bot?**
@@ -57,7 +57,7 @@ Before starting, ensure you have:
     Navigate to your repository settings: **Settings → Secrets and variables → Actions**
 
     **Required Secrets:**
-    - `CONTINUE_API_KEY` - Your Continue API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
+    - `CONTINUE_API_KEY` - Your Yuto Agentic API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
 
     **Optional (for better permissions):**
     - **Variables** tab: `APP_ID` - GitHub App ID (for enhanced API rate limits)
@@ -87,7 +87,7 @@ Before starting, ensure you have:
     Create a GitHub Actions workflow file at `.github/workflows/code-review.yml` with the provided configuration.
 
 ```yaml
-name: Continue Code Review
+name: Yuto Agentic Code Review
 
 on:
   pull_request:
@@ -127,7 +127,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Continue CLI
+      - name: Install Yuto Agentic CLI
         run: npm i -g @yutoagentic/cli
 
       - name: Get Pull Request Details
@@ -150,15 +150,15 @@ jobs:
           # Get changed files
           gh pr view $PR_NUMBER --json files -q '.files[].path' > changed_files.txt
 
-      - name: Run Continue Review
+      - name: Run Yuto Agentic Review
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
           GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
         run: |
           # Check if custom rules exist
-          if [ -d ".continue/rules" ]; then
-            echo "📋 Found custom rules in .continue/rules/"
-            RULES_CONTEXT="Apply the custom rules found in .continue/rules/ directory."
+          if [ -d ".yutoagentic/rules" ]; then
+            echo "📋 Found custom rules in .yutoagentic/rules/"
+            RULES_CONTEXT="Apply the custom rules found in .yutoagentic/rules/ directory."
           else
             echo "ℹ️  No custom rules found. Using general best practices."
             RULES_CONTEXT="Review for general best practices, security issues, and code quality."
@@ -186,8 +186,8 @@ jobs:
 
           Format as markdown suitable for a GitHub pull request comment."
 
-          # Run Continue CLI in headless mode
-          cn --config continuedev/review-bot \
+          # Run Yuto Agentic CLI in headless mode
+          yt --config continuedev/review-bot \
              -p "$PROMPT" \
              --auto > review_output.md
 
@@ -208,7 +208,7 @@ jobs:
           cat >> review_comment.md <<'EOF'
           
           ---
-          *Powered by [Continue](https://yutoagentic.dev) • Need a focused review? Comment `@review-bot check for [specific concern]`*
+          *Powered by [Yuto Agentic](https://yutoagentic.dev) • Need a focused review? Comment `@review-bot check for [specific concern]`*
           EOF
           
           # Check for existing review comment
@@ -230,12 +230,12 @@ jobs:
 
 <Step title="Create Custom Rules (Optional)" >
 
-Define your team's standards in `.continue/rules/`:
+Define your team's standards in `.yutoagentic/rules/`:
 
 <Tabs>
   <Tab title="Security Rule">
     
- Create `.continue/rules/security.md`:
+ Create `.yutoagentic/rules/security.md`:
 
 ```markdown
 ---
@@ -255,7 +255,7 @@ alwaysApply: true
 ```
   </Tab>
   <Tab title="TypeScript Standards">
-    Create `.continue/rules/typescript.md`:
+    Create `.yutoagentic/rules/typescript.md`:
 
 ```markdown
   ---
@@ -274,7 +274,7 @@ alwaysApply: true
 ```
 </Tab >
 <Tab title="Testing Standards">
-Create `.continue/rules/testing.md`:
+Create `.yutoagentic/rules/testing.md`:
 
 ```markdown
 ---
@@ -293,7 +293,7 @@ description: "Testing Requirements"
 ```
 </Tab>
 <Tab title="Python Standards">
-Create `.continue/rules/python.md`:
+Create `.yutoagentic/rules/python.md`:
 
 ```markdown
 ---
@@ -320,9 +320,9 @@ The workflow follows these steps:
 
 1. **Pull Request Created/Updated** - A pull request is opened or synchronized
 2. **Workflow Triggered** - GitHub Actions workflow starts automatically
-3. **Load Custom Rules** - Reads your team's rules from `.continue/rules/`
+3. **Load Custom Rules** - Reads your team's rules from `.yutoagentic/rules/`
 4. **Get Pull Request Diff** - Fetches the diff and list of changed files
-5. **Continue CLI Analyzes Code** - AI agent reviews the code with your rules
+5. **Yuto Agentic CLI Analyzes Code** - AI agent reviews the code with your rules
 6. **Post or Update Review Comment** - Creates or updates a single PR comment with feedback
 
 ## Interactive Commands
@@ -340,18 +340,18 @@ The workflow will respond with a targeted review based on your request.
 
 ## Advanced Configuration
 <Tabs>
-  <Tab title="Use Your Own Continue Config">
+  <Tab title="Use Your Own Yuto Agentic Config">
     
   By default, the workflow uses the `continuedev/review-bot` config optimized for code reviews. Replace `continuedev/review-bot` with your own config:
 
   ```yaml
-  - name: Run Continue Review
+  - name: Run Yuto Agentic Review
     env:
       CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
       CONTINUE_ORG: your-org-name      # Add your org
       CONTINUE_CONFIG: username/config-name  # Add your config
     run: |
-      cn --config $CONTINUE_ORG/$CONTINUE_CONFIG \
+      yt --config $CONTINUE_ORG/$CONTINUE_CONFIG \
         -p "$PROMPT" \
         --auto > review_output.md
   ```
@@ -395,7 +395,7 @@ The workflow will respond with a targeted review based on your request.
         echo "skip=false" >> $GITHUB_OUTPUT
       fi
 
-  - name: Run Continue Review
+  - name: Run Yuto Agentic Review
     if: steps.size-check.outputs.skip != 'true'
     # ... rest of review step
   ```
@@ -404,18 +404,18 @@ The workflow will respond with a targeted review based on your request.
 </Tabs>
 ## Troubleshooting
 <AccordionGroup>
-<Accordion title="Continue CLI not found">
+<Accordion title="Yuto Agentic CLI not found">
 - The workflow installs the CLI automatically, but ensure Node.js 20+ is available
-- Check the "Install Continue CLI" step logs for errors
+- Check the "Install Yuto Agentic CLI" step logs for errors
 </Accordion>
 <Accordion title="Authentication failed">
 - Verify your `CONTINUE_API_KEY` is valid
 - Check that GitHub token has required permissions
 </Accordion>
 <Accordion title="No review generated">
-- Verify your Continue config is accessible
-- Check Continue CLI logs in the workflow run
-- Try running locally: `cn -p "Test prompt" --auto`
+- Verify your Yuto Agentic config is accessible
+- Check Yuto Agentic CLI logs in the workflow run
+- Try running locally: `yt -p "Test prompt" --auto`
 </Accordion>
 <Accordion title="Review comment not posted">
 - Ensure `pull-requests: write` permission is set
@@ -452,13 +452,13 @@ Here's what a typical review comment looks like:
 > - Proper async/await usage throughout
 >
 > ### Recommendations
-> 1. Move `secretKey` to environment variables (see `.continue/rules/security.md`)
+> 1. Move `secretKey` to environment variables (see `.yutoagentic/rules/security.md`)
 > 2. Add rate limiting middleware to prevent brute force attacks
 > 3. Consider adding integration tests for the auth flow
 > 4. Document the JWT payload structure
 >
 > ---
-> *Powered by [Continue](https://yutoagentic.dev) • Need a focused review? Comment `@review-bot check for security`*
+> *Powered by [Yuto Agentic](https://yutoagentic.dev) • Need a focused review? Comment `@review-bot check for security`*
 
 ## What You've Built
 
@@ -483,7 +483,7 @@ After completing this setup, you have an **AI-powered code review system** that:
 2. **Refine rules** - Add more custom rules specific to your codebase
 3. **Customize prompts** - Adjust the review prompt to match your team's style
 4. **Add metrics** - Track review effectiveness over time
-5. **Create team config** - Set up a shared Continue config for consistent reviews
+5. **Create team config** - Set up a shared Yuto Agentic config for consistent reviews
 
 ## Inspiration & Resources
 
@@ -491,10 +491,10 @@ After completing this setup, you have an **AI-powered code review system** that:
   <Card title="CodeBunny" icon="github" href="https://github.com/bdougie/codebunny">
     Original inspiration - Privacy-first AI code reviews
   </Card>
-  <Card title="Continue CLI Guide" icon="terminal" href="/guides/cli">
-    Learn more about Continue CLI capabilities
+  <Card title="Yuto Agentic CLI Guide" icon="terminal" href="/guides/cli">
+    Learn more about Yuto Agentic CLI capabilities
   </Card>
-  <Card title="Continue Mission Control" icon="globe" href="https://yutoagentic.dev">
+  <Card title="Yuto Agentic Mission Control" icon="globe" href="https://yutoagentic.dev">
     Browse shared configs and create your own
   </Card>
   <Card title="Rules Documentation" icon="book" href="/customize/deep-dives/rules">

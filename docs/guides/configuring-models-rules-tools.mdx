@@ -1,11 +1,11 @@
 ---
 title: "Configuring Models, Rules, and Tools"
-description: "Learn how to work with Continue's configuration system. Understand how to use hub models, rules, and tools, create local configurations, and organize your setup for maximum reusability."
+description: "Learn how to work with Yuto Agentic's configuration system. Understand how to use hub models, rules, and tools, create local configurations, and organize your setup for maximum reusability."
 ---
 
 ## What Are Models, Rules, and Tools?
 
-Continue configs are built from three main types of configuration:
+Yuto Agentic configs are built from three main types of configuration:
 
 <Columns cols={3}>
 <Card title="Models" icon="cube">
@@ -29,7 +29,7 @@ Custom configurations you create and manage in your workspace or globally
 </Card>
 
 <Card title="Hub" icon="cloud">
-Pre-built models, rules, and tools from the Continue community that you can import and use immediately
+Pre-built models, rules, and tools from the Yuto Agentic community that you can import and use immediately
 </Card>
 </Columns>
 
@@ -52,7 +52,7 @@ Perfect for project-specific setups like TypeScript rules for web apps or the Pl
 
 ## Hub
 
-Continue hub uses a slug in the format of `owner/item-name` to resolve blocks.
+Yuto Agentic hub uses a slug in the format of `owner/item-name` to resolve blocks.
 
 For example, to use the [Claude 4 Sonnet model](https://yutoagentic.dev/anthropic/claude-4-sonnet), you'd reference it as `anthropic/claude-4-sonnet`.
 
@@ -75,15 +75,15 @@ Organize your local configurations using these directories:
 
 <Columns cols={3}>
 <Card title="Models" icon="cube">
-  `.continue/models`
+  `.yutoagentic/models`
 </Card>
 
 <Card title="Rules" icon="pencil">
-  `.continue/rules`
+  `.yutoagentic/rules`
 </Card>
 
 <Card title="Tools" icon="server">
-  `.continue/mcpServers`
+  `.yutoagentic/mcpServers`
 </Card>
 </Columns>
 
@@ -99,11 +99,11 @@ When configuring a local model or MCP server, you can use the same mustache nota
 
 <Columns cols={2}>
 <Card title="Workspace" icon="folder-open">
-`.env` file at your project root, or in `<workspace-root>/.continue/.env`
+`.env` file at your project root, or in `<workspace-root>/.yutoagentic/.env`
 </Card>
 
 <Card title="Global" icon="globe">
-`.env` file in `~/.continue/.env`
+`.env` file in `~/.yutoagentic/.env`
 </Card>
 </Columns>
 
@@ -178,6 +178,6 @@ models:
 Now that you understand how models, rules, and tools work, explore:
 
 - **[Config Reference](/reference)**: Detailed documentation of all available properties
-- **[Continue Mission Control](https://yutoagentic.dev)**: Browse community models, rules, and tools
+- **[Yuto Agentic Mission Control](https://yutoagentic.dev)**: Browse community models, rules, and tools
 - **[Custom Context Providers](/customize/deep-dives/custom-providers)**: Create advanced context integrations
 - **[Model Roles](/customize/model-roles/intro)**: Understanding how different models work together

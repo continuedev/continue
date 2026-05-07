@@ -1,5 +1,5 @@
 ---
-title: "How to Configure ClawRouter with Continue"
+title: "How to Configure ClawRouter with Yuto Agentic"
 sidebarTitle: "ClawRouter"
 ---
 
@@ -129,7 +129,7 @@ ClawRouter supports function calling and tool use through its underlying model p
 
 ## Switching Between Routing Profiles
 
-Add multiple ClawRouter profiles to your config and switch via Continue's model picker:
+Add multiple ClawRouter profiles to your config and switch via Yuto Agentic's model picker:
 
 <Tabs>
   <Tab title="YAML">
@@ -194,10 +194,10 @@ Add multiple ClawRouter profiles to your config and switch via Continue's model 
   </Tab>
 </Tabs>
 
-Use the **model picker dropdown** in Continue's chat panel to switch between profiles. Each profile routes to different model tiers based on cost vs. quality trade-offs.
+Use the **model picker dropdown** in Yuto Agentic's chat panel to switch between profiles. Each profile routes to different model tiers based on cost vs. quality trade-offs.
 
 <Tip>
-  **Quick switch via CLI:** In the Continue chat, type `/model` followed by the profile name (e.g., `/model ClawRouter Eco`).
+  **Quick switch via CLI:** In the Yuto Agentic chat, type `/model` followed by the profile name (e.g., `/model ClawRouter Eco`).
 </Tip>
 
 ## Custom API Base
@@ -232,7 +232,7 @@ If you're running ClawRouter on a different port or host:
 
 ## Using Multiple Roles
 
-You can configure ClawRouter for different Continue roles:
+You can configure ClawRouter for different Yuto Agentic roles:
 
 <Tabs>
   <Tab title="YAML">
@@ -280,7 +280,7 @@ You can configure ClawRouter for different Continue roles:
 
 ## API Keys
 
-ClawRouter manages upstream provider API keys internally. You configure them in ClawRouter, not in Continue.
+ClawRouter manages upstream provider API keys internally. You configure them in ClawRouter, not in Yuto Agentic.
 
 For self-hosted setups with custom authentication:
 
@@ -366,7 +366,7 @@ ClawRouter handles common LLM errors automatically at the router level:
 
 ### Automatic Error Recovery
 
-| Error | Continue's Default | ClawRouter's Handling |
+| Error | Yuto Agentic's Default | ClawRouter's Handling |
 |-------|-------------------|----------------------|
 | **429 Rate Limit** | Retry same provider with backoff | Route to different provider entirely |
 | **402 Payment Required** | Fail immediately | x402 auto-payment from wallet |

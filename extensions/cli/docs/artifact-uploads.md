@@ -2,7 +2,7 @@
 
 ## Overview
 
-The artifact upload feature enables Continue agents running in devboxes to upload arbitrary files (screenshots, videos, logs) to agent session storage for review and debugging purposes. The architecture uses a two-step presigned URL pattern for secure, performant uploads.
+The artifact upload feature enables Yuto Agentic agents running in devboxes to upload arbitrary files (screenshots, videos, logs) to agent session storage for review and debugging purposes. The architecture uses a two-step presigned URL pattern for secure, performant uploads.
 
 ## Architecture Pattern: Presigned URLs
 
@@ -138,7 +138,7 @@ The backend calculates total storage by summing all files under the session's S3
 The `UploadArtifact` tool is available when running with the beta flag:
 
 ```bash
-cn serve --id <agentSessionId> --beta-upload-artifact-tool
+yt serve --id <agentSessionId> --beta-upload-artifact-tool
 ```
 
 Agents can then use the built-in `UploadArtifact` tool to upload files:
@@ -166,7 +166,7 @@ The tool will:
 
 - Must run with `--id <agentSessionId>` (agent mode)
 - Must enable `--beta-upload-artifact-tool` flag
-- User must be authenticated (`cn login`)
+- User must be authenticated (`yt login`)
 
 ### Programmatic Upload (Service API)
 
@@ -210,7 +210,7 @@ The CLI requires these environment variables for artifact uploads:
 - `CONTINUE_API_BASE`: API base URL (defaults to `https://api.yutoagentic.dev/`)
 - `AGENT_SESSION_ID`: The current agent session identifier
 
-These are automatically provided when running in Continue's devbox environment.
+These are automatically provided when running in Yuto Agentic's devbox environment.
 
 ## Error Handling
 

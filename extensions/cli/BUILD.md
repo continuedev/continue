@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Continue CLI uses esbuild to bundle the application along with local packages (`@yutoagentic/config-yaml` and `@yutoagentic/openai-adapters`) into a single distributable file. This ensures that users who install the CLI from npm don't need to worry about local file references.
+The Yuto Agentic CLI uses esbuild to bundle the application along with local packages (`@yutoagentic/config-yaml` and `@yutoagentic/openai-adapters`) into a single distributable file. This ensures that users who install the CLI from npm don't need to worry about local file references.
 
 ## Build Steps
 
@@ -71,5 +71,5 @@ When publishing to npm:
 
 1. The bundled files in `dist/` are included
 2. Users install via `npm install -g @yutoagentic/cli`
-3. The `cn` command becomes available globally
+3. The `yt` command becomes available globally
 4. No local file references or missing dependencies

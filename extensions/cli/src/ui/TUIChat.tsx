@@ -526,7 +526,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           <ResourceDebugBar visible={navState.currentScreen === "chat"} />
         )}
 
-        {/* Free trial status and Continue CLI info - always show */}
+        {/* Free trial status and CLI info - always show */}
         <BottomStatusBar
           currentMode={services?.toolPermissions?.currentMode ?? "normal"}
           remoteUrl={remoteUrl}

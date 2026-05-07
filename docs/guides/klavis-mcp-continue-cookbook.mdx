@@ -1,7 +1,7 @@
 ---
-title: "Slack and Gmail Automation with Klavis AI Strata MCP and Continue"
-description: "Use Continue and Klavis AI's Strata MCP to automate communication workflows across Slack and Gmail with natural language prompts."
-sidebarTitle: "Klavis AI with Continue"
+title: "Slack and Gmail Automation with Klavis AI Strata MCP and Yuto Agentic"
+description: "Use Yuto Agentic and Klavis AI's Strata MCP to automate communication workflows across Slack and Gmail with natural language prompts."
+sidebarTitle: "Klavis AI with Yuto Agentic"
 ---
 
 import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
@@ -10,25 +10,25 @@ import CLIInstall from '/snippets/cli-install.mdx'
 <OSAutoDetect />
 
 <Card title="What You'll Build" icon="wand-magic-sparkles">
-  A communication workflow assistant that uses Continue CLI with Klavis AI's Strata MCP to manage and automate multi-platform workflows including Slack and Gmail—all through simple natural language prompts.
+  A communication workflow assistant that uses Yuto Agentic CLI with Klavis AI's Strata MCP to manage and automate multi-platform workflows including Slack and Gmail—all through simple natural language prompts.
 </Card>
 
 ## Prerequisites
 
 Before starting, ensure you have:
 
-- [Continue CLI](https://docs.yutoagentic.dev/guides/cli) with **active credits** (required for API usage)
+- [Yuto Agentic CLI](https://docs.yutoagentic.dev/guides/cli) with **active credits** (required for API usage)
 - A Klavis [AI account](https://www.klavis.ai/) with access to your Strata URL
 - OAuth authentication completed in Klavis dashboard for Slack and Gmail (see [Klavis integrations guide](https://www.klavis.ai/integrations))
 
 <Warning>
-  To use agents in headless mode, you need a [Continue API key](https://yutoagentic.dev/settings/api-keys).
+  To use agents in headless mode, you need a [Yuto Agentic API key](https://yutoagentic.dev/settings/api-keys).
   Klavis AI Strata requires proper OAuth authentication for each service integration.
 </Warning>
 
 For all options, first:
 <Steps>
-<Step title="Install Continue CLI">
+<Step title="Install Yuto Agentic CLI">
   <CLIInstall />
   </Step>
 
@@ -44,8 +44,8 @@ For all options, first:
 <Tabs>
   <Tab title="Manual Setup">
     <Steps>
-      <Step title="Create an Agent on Continue Hub">
-        Go to the [Continue Hub](https://yutoagentic.dev) and [create a new agent](https://yutoagentic.dev/agents/new).
+      <Step title="Create an Agent on Yuto Agentic Hub">
+        Go to the [Yuto Agentic Hub](https://yutoagentic.dev) and [create a new agent](https://yutoagentic.dev/agents/new).
       </Step>
 
       <Step title="Add Klavis AI Strata MCP">
@@ -71,7 +71,7 @@ For all options, first:
       </Step>
 
       <Step title="Test the Connection">
-        Launch Continue and ask:
+        Launch Yuto Agentic and ask:
         ```
         Check my latest 5 emails and summarize them in a Slack message to #general.
         ```
@@ -79,7 +79,7 @@ For all options, first:
     </Steps>
 
     <Info>
-      **Pro tip**: Learn how to integrate and use [Klavis Strata](https://www.klavis.ai/docs/knowledge-base/use-mcp-server/continue) with Continue through CLI and IDE.
+      **Pro tip**: Learn how to integrate and use [Klavis Strata](https://www.klavis.ai/docs/knowledge-base/use-mcp-server/continue) with Yuto Agentic through CLI and IDE.
     </Info>
 
   </Tab>
@@ -92,14 +92,14 @@ For all options, first:
         ```
       </Step>
 
-      <Step title="Launch Continue with Klavis MCP">
+      <Step title="Launch Yuto Agentic with Klavis MCP">
         From your project root:
         ```bash
-        cn --agent your-agent-name
+        yt --agent your-agent-name
         ```
         Now try:
         ```
-        "Send a Slack message to #general saying 'Hello from Continue!'"
+        "Send a Slack message to #general saying 'Hello from Yuto Agentic!'"
         ```
       </Step>
     </Steps>
@@ -107,9 +107,9 @@ For all options, first:
 </Tabs>
 
 <Accordion title="Agent Requirements">
-  To use Klavis AI Strata MCP with Continue CLI, you need either:
-  - **Continue CLI Pro Plan** with the models add-on, OR
-  - **Your own API keys** added to Continue Hub secrets
+  To use Klavis AI Strata MCP with Yuto Agentic CLI, you need either:
+  - **Yuto Agentic CLI Pro Plan** with the models add-on, OR
+  - **Your own API keys** added to Yuto Agentic Hub secrets
 
   The agent will automatically detect and use your configuration along with the Klavis AI Strata MCP for multi-tool operations.
 </Accordion>
@@ -122,11 +122,11 @@ Use natural language to send messages, manage channels, and coordinate team comm
 
 <Info>
   **Where to run these workflows:**
-  - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
-  - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
-  - **CLI (headless mode)**: Use `cn -p "your prompt" --auto` for automation
+  - **IDE Extensions**: Use Yuto Agentic in VS Code, JetBrains, or other supported IDEs
+  - **Terminal (TUI mode)**: Run `yt` to enter interactive mode, then type your prompts
+  - **CLI (headless mode)**: Use `yt -p "your prompt" --auto` for automation
 
-  To run any of the example prompts below in headless mode, use `cn -p "prompt" --auto`
+  To run any of the example prompts below in headless mode, use `yt -p "prompt" --auto`
 </Info>
 
 ### Message Management
@@ -428,7 +428,7 @@ Generate end-of-sprint report:
 ### Daily Standup Automation
 
 ```bash
-cn -p --auto "
+yt -p --auto "
 Generate and distribute daily standup update:
 
 1. Review my activity:
@@ -449,7 +449,7 @@ Generate and distribute daily standup update:
 ### On-Call Alert System
 
 ```bash
-cn -p --auto "
+yt -p --auto "
 When critical alert is triggered:
 
 1. Send urgent Slack message to #on-call with:
@@ -467,7 +467,7 @@ When critical alert is triggered:
 ### Customer Onboarding
 
 ```bash
-cn -p --auto "
+yt -p --auto "
 New customer onboarding workflow:
 
 1. Send welcome email via Gmail:
@@ -489,7 +489,7 @@ New customer onboarding workflow:
 ### Weekly Team Digest
 
 ```bash
-cn -p --auto "
+yt -p --auto "
 Generate weekly team digest (run every Friday at 4 PM):
 
 1. Collect data:
@@ -588,10 +588,10 @@ After completing this guide, you have a complete **AI-powered communication auto
   <Card title="Strata MCP Documentation" icon="book" href="https://www.klavis.ai/docs/concepts/strata">
     Learn about Klavis AI's Strata MCP platform architecture
   </Card>
-  <Card title="MCP in Continue" icon="puzzle-piece" href="/customize/deep-dives/mcp">
-    Learn how MCP works with Continue agents
+  <Card title="MCP in Yuto Agentic" icon="puzzle-piece" href="/customize/deep-dives/mcp">
+    Learn how MCP works with Yuto Agentic agents
   </Card>
-  <Card title="Continue Hub" icon="globe" href="https://yutoagentic.dev">
-    Create and manage your Continue agents
+  <Card title="Yuto Agentic Hub" icon="globe" href="https://yutoagentic.dev">
+    Create and manage your Yuto Agentic agents
   </Card>
 </CardGroup>

@@ -2,11 +2,11 @@
 
 > **⚠️ EXPERIMENTAL: This package is in early development and subject to frequent breaking changes without notice.**
 
-This SDK provides programmatic access to Continue's Hub APIs and functionality.
+This SDK provides programmatic access to Yuto Agentic's Hub APIs and functionality.
 
 ## Overview
 
-The Continue SDK is structured into separate language-specific packages, currently with implementations for TypeScript and Python, with more languages planned for the future:
+The Yuto Agentic SDK is structured into separate language-specific packages, currently with implementations for TypeScript and Python, with more languages planned for the future:
 
 - **TypeScript SDK**: Located in the `/typescript` directory, providing a drop-in replacement for OpenAI's TypeScript client libraries
 - **Python SDK**: Located in the `/python` directory, providing a drop-in replacement for OpenAI's Python client libraries
@@ -14,8 +14,8 @@ The Continue SDK is structured into separate language-specific packages, current
 
 Each package includes:
 
-1. OpenAPI-generated clients for the Continue Hub API
-2. A wrapper layer that exposes a `Continue.from()` method to easily initialize and use Continue assistants with an OpenAI-compatible interface
+1. OpenAPI-generated clients for the Yuto Agentic Hub API
+2. A wrapper layer that exposes a `Yuto Agentic.from()` method to easily initialize and use Yuto Agentic assistants with an OpenAI-compatible interface
 
 ## For End Users
 

@@ -1,4 +1,4 @@
-# Contributing to Continue (JetBrains extension) <!-- omit in toc -->
+# Contributing to Yuto Agentic (JetBrains extension) <!-- omit in toc -->
 
 This file is for contribution guidelines specific to the JetBrains extension. See the root [
 `CONTRIBUTING.md`](../../CONTRIBUTING.md) for general contribution guidelines.
@@ -39,7 +39,7 @@ packaging it in a binary in the `binary` directory. Communication occurs over st
 
 ### IDE Installation
 
-Continue is built with JDK version 17 (as specified in [`./build.gradle.kts`](./build.gradle.kts)), which can be
+Yuto Agentic is built with JDK version 17 (as specified in [`./build.gradle.kts`](./build.gradle.kts)), which can be
 downloaded from [Oracle](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html).
 
 We recommend using IntelliJ IDEA, which you can download from
@@ -80,9 +80,9 @@ This project requires Node.js version 20.20.1 (LTS) or higher. You have two opti
 
 ### Running the extension in debug mode
 
-Select the `Run Continue` task in the top right corner of the IDE and then select the "Debug" option.
+Select the `Run Yuto Agentic` task in the top right corner of the IDE and then select the "Debug" option.
 
-> In community edition, use `Run Continue (CE)` instead, which uses shell scripts instead of Ultimate-only node configs.
+> In community edition, use `Run Yuto Agentic (CE)` instead, which uses shell scripts instead of Ultimate-only node configs.
 > If you want to debug the core in CE, you'll need to quit the `Start Core Dev Server (CE)` process and run the core in
 > a
 > different environment that supports debugging, such as VS Code (Launch "Core Binary").
@@ -93,13 +93,13 @@ This should open a new instance on IntelliJ with the extension installed.
 
 ### Accessing files in the `.continue` directory
 
-When running the `Start Core Dev Server` task, we set the location of your Continue directory to
+When running the `Start Core Dev Server` task, we set the location of your Yuto Agentic directory to
 `./extensions/.yutoagentic-debug`. This is to
 allow for changes to your `config.json` and other files during development, without affecting your actual configuration.
 
 ### Viewing logs
 
-When using the `Run Continue` task, we automatically tail both prompt logs and IDE logs.
+When using the `Run Yuto Agentic` task, we automatically tail both prompt logs and IDE logs.
 
 #### Viewing more IDE logs
 

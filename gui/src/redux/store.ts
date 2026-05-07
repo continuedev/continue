@@ -15,6 +15,7 @@ import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
 import { IdeMessenger, IIdeMessenger } from "../context/IdeMessenger";
+import { MockIdeMessenger } from "../context/MockIdeMessenger";
 import configReducer from "./slices/configSlice";
 import editModeStateReducer from "./slices/editState";
 import indexingReducer from "./slices/indexingSlice";
@@ -108,8 +109,22 @@ const persistedReducer = persistReducer<ReturnType<typeof rootReducer>>(
   rootReducer,
 );
 
+function hasIdeHostBridge(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  const win = window as any;
+  const hasVsCodeBridge = typeof win.acquireVsCodeApi === "function";
+  const ide = window.localStorage?.getItem("ide");
+  const hasJetBrainsBridge =
+    ide === "jetbrains" && typeof win.postIntellijMessage === "function";
+  return hasVsCodeBridge || hasJetBrainsBridge;
+}
+
 export function setupStore(options: { ideMessenger?: IIdeMessenger }) {
-  const ideMessenger = options.ideMessenger ?? new IdeMessenger();
+  const ideMessenger =
+    options.ideMessenger ??
+    (hasIdeHostBridge() ? new IdeMessenger() : new MockIdeMessenger());
 
   const logger = createLogger({
     // Customize logger options if needed

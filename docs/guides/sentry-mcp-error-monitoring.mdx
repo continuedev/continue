@@ -28,7 +28,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
 </Note>
 
 <Card title="What You'll Build" icon="bug">
-  An automated error monitoring system that uses Continue CLI with Sentry MCP to analyze production errors, identify root causes with AI, and create detailed GitHub issues with suggested fixes.
+  An automated error monitoring system that uses Yuto Agentic CLI with Sentry MCP to analyze production errors, identify root causes with AI, and create detailed GitHub issues with suggested fixes.
 </Card>
 
 ## What You'll Learn
@@ -48,26 +48,26 @@ Before starting, ensure you have:
 - GitHub repository where you want to create issues
 - [Sentry account](https://sentry.io) with an active project collecting errors
 - Node.js 18+ installed locally
-- [Continue CLI](https://docs.yutoagentic.dev/guides/cli) with **active credits** (required for API usage)
+- [Yuto Agentic CLI](https://docs.yutoagentic.dev/guides/cli) with **active credits** (required for API usage)
 - [GitHub CLI](https://cli.github.com/) installed (`gh` command)
 
 <Steps>
-  <Step title="Install Continue CLI">
+  <Step title="Install Yuto Agentic CLI">
     <CLIInstall />
   </Step>
 
-  <Step title="Set up Continue CLI Account & API Key">
-    1. Visit [Continue Organizations](https://yutoagentic.dev/settings/organizations)
-    2. Sign up or log in to your Continue account
+  <Step title="Set up Yuto Agentic CLI Account & API Key">
+    1. Visit [Yuto Agentic Organizations](https://yutoagentic.dev/settings/organizations)
+    2. Sign up or log in to your Yuto Agentic account
     3. Navigate to your organization settings
     4. Click **"API Keys"** and then **"+ New API Key"**
     5. Copy the API key immediately (you won't see it again!)
-    6. Login to the CLI: `cn login`
+    6. Login to the CLI: `yt login`
   </Step>
 </Steps>
 
 <Tip>
-  Continue CLI handles complex error analysis and API interactions - you just need to provide the right prompts!
+  Yuto Agentic CLI handles complex error analysis and API interactions - you just need to provide the right prompts!
 </Tip>
 
 ## Step 1: Set Up Your Credentials
@@ -81,7 +81,7 @@ First, you'll need to gather your Sentry and GitHub API credentials.
       See [Sentry MCP Documentation](https://docs.sentry.io/product/sentry-mcp/) for detailed configuration options
     </Tip>
 
-    The Sentry MCP supports multiple configuration methods. For Continue CLI, OAuth is recommended:
+    The Sentry MCP supports multiple configuration methods. For Yuto Agentic CLI, OAuth is recommended:
 
     **Option 1: OAuth Configuration (Recommended)**
 
@@ -110,7 +110,7 @@ First, you'll need to gather your Sentry and GitHub API credentials.
     1. Go to [User Auth Tokens](https://sentry.io/settings/account/api/auth-tokens/) in Sentry
        - For self-hosted Sentry, use: `https://YOUR-SENTRY-DOMAIN/settings/account/api/auth-tokens/`
     2. Click **Create New Token**
-    3. Name it "Continue CLI Error Analysis"
+    3. Name it "Yuto Agentic CLI Error Analysis"
     4. **Select these permission scopes** (required for full functionality):
        - `org:read` - **Required** - Access organization information
        - `project:read` - **Required** - Read project configurations
@@ -159,10 +159,10 @@ First, you'll need to gather your Sentry and GitHub API credentials.
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [Sentry Continuous AI Agent](https://yutoagentic.dev/continuedev/sentry-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
+        Visit the [Sentry Continuous AI Agent](https://yutoagentic.dev/continuedev/sentry-continuous-ai-agent) on Yuto Agentic Mission Control and click **"Install Agent"** or run:
         
         ```bash
-        cn --agent continuedev/sentry-continuous-ai-agent
+        yt --agent continuedev/sentry-continuous-ai-agent
         ```
 
         This agent includes:
@@ -173,7 +173,7 @@ First, you'll need to gather your Sentry and GitHub API credentials.
       </Step>
 
       <Step title="Run Error Analysis">
-        Navigate to your project directory and enter this prompt in the Continue CLI TUI:
+        Navigate to your project directory and enter this prompt in the Yuto Agentic CLI TUI:
         
         ```
         Analyze recent Sentry errors and create GitHub issues for critical bugs with suggested fixes
@@ -191,7 +191,7 @@ First, you'll need to gather your Sentry and GitHub API credentials.
 
   <Tab title="🛠️ Manual Setup">
     <Steps>
-      <Step title="Add Sentry MCP to Continue CLI">
+      <Step title="Add Sentry MCP to Yuto Agentic CLI">
         Configure the [Sentry MCP](https://docs.sentry.io/product/sentry-mcp/) using OAuth:
 
         The MCP server will automatically prompt for OAuth authentication when you first use it.
@@ -206,7 +206,7 @@ First, you'll need to gather your Sentry and GitHub API credentials.
       </Step>
 
       <Step title="Create Custom Error Analysis Prompts">
-        Use this prompt template with Continue CLI to analyze Sentry errors:
+        Use this prompt template with Yuto Agentic CLI to analyze Sentry errors:
 
         ```
         Analyze Sentry errors from the past 24 hours:
@@ -239,8 +239,8 @@ First, you'll need to gather your Sentry and GitHub API credentials.
 
 <Accordion title="Agent Requirements">
   To use the pre-built agent, you need either:
-  - **Continue CLI Pro Plan** with the models add-on, OR
-  - **Your own API keys** added to Continue Mission Control secrets (same as Step 1)
+  - **Yuto Agentic CLI Pro Plan** with the models add-on, OR
+  - **Your own API keys** added to Yuto Agentic Mission Control secrets (same as Step 1)
   
   The agent will automatically detect and use your configuration. For Sentry MCP:
   - **Sentry account** with at least one project
@@ -261,10 +261,10 @@ First, you'll need to gather your Sentry and GitHub API credentials.
 
 ## Step 2: Analyze Sentry Errors with AI
 
-Use Continue CLI to perform intelligent error analysis. Enter these prompts in the Continue CLI TUI:
+Use Yuto Agentic CLI to perform intelligent error analysis. Enter these prompts in the Yuto Agentic CLI TUI:
 
 <Info>
-To run any of the example prompts below in headless mode, use `cn -p "prompt"`
+To run any of the example prompts below in headless mode, use `yt -p "prompt"`
 </Info>
 
 <Tabs>
@@ -312,7 +312,7 @@ To run any of the example prompts below in headless mode, use `cn -p "prompt"`
 
 ## Step 3: Automate GitHub Issue Creation
 
-Create actionable GitHub issues from Sentry errors. Enter this prompt in the Continue CLI TUI:
+Create actionable GitHub issues from Sentry errors. Enter this prompt in the Yuto Agentic CLI TUI:
 
 **Prompt:**
 ```
@@ -340,12 +340,12 @@ For each unresolved Sentry error with 'critical' or 'high' severity:
 
 ## Step 4: Set Up Continuous Monitoring with GitHub Actions
 
-Automate error monitoring with the [Sentry Release GitHub Action](https://docs.sentry.io/product/releases/setup/release-automation/github-actions/) and Continue CLI to create comprehensive, AI-powered issue descriptions:
+Automate error monitoring with the [Sentry Release GitHub Action](https://docs.sentry.io/product/releases/setup/release-automation/github-actions/) and Yuto Agentic CLI to create comprehensive, AI-powered issue descriptions:
 
 <Tip>
-  **Why Combine Sentry Releases with Continue CLI?**
+  **Why Combine Sentry Releases with Yuto Agentic CLI?**
   - **Release Tracking**: Associate errors with specific deployments
-  - **AI-Powered Analysis**: Continue CLI generates detailed issue descriptions with root cause analysis
+  - **AI-Powered Analysis**: Yuto Agentic CLI generates detailed issue descriptions with root cause analysis
   - **Better Context**: Link errors to commits and pull requests
   - **Automated Workflows**: Create issues with full stack traces and suggested fixes
 </Tip>
@@ -384,10 +384,10 @@ jobs:
         with:
           environment: production
 
-      - name: Install Continue CLI
+      - name: Install Yuto Agentic CLI
         run: |
           npm install -g @yutoagentic/cli
-          echo "✅ Continue CLI installed"
+          echo "✅ Yuto Agentic CLI installed"
 
       - name: Authenticate GitHub CLI
         run: |
@@ -403,8 +403,8 @@ jobs:
         run: |
           echo "🔍 Analyzing Sentry errors..."
           
-          # Use Continue CLI to analyze errors and generate comprehensive issue descriptions
-          cn -p "Using Sentry MCP, analyze errors from the past 6 hours for project $SENTRY_PROJECT:
+          # Use Yuto Agentic CLI to analyze errors and generate comprehensive issue descriptions
+          yt -p "Using Sentry MCP, analyze errors from the past 6 hours for project $SENTRY_PROJECT:
                  1. Filter for unresolved errors with high or critical severity
                  2. Group similar errors to avoid duplicates
                  3. For each unique critical error:
@@ -445,7 +445,7 @@ jobs:
 
 <Warning>
   **Required GitHub Secrets**:
-  - `CONTINUE_API_KEY`: Your Continue API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
+  - `CONTINUE_API_KEY`: Your Yuto Agentic API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
   - `SENTRY_AUTH_TOKEN`: Your Sentry User Auth Token (needs scopes: `org:read`, `project:read`, `project:releases`, `event:read`)
   - `SENTRY_ORG`: Your Sentry organization slug
   - `SENTRY_PROJECT`: Your Sentry project slug
@@ -458,7 +458,7 @@ jobs:
   **Workflow Best Practices**:
   - Run every 6 hours to catch critical errors quickly
   - Create Sentry releases on push to track error-to-deployment correlation
-  - Use Continue CLI to generate comprehensive, AI-powered issue descriptions
+  - Use Yuto Agentic CLI to generate comprehensive, AI-powered issue descriptions
   - Use duplicate detection to avoid creating multiple issues for the same error
   - Filter by severity to focus on high-impact issues
   - Include full error context and suggested fixes in issues
@@ -486,7 +486,7 @@ After completing this guide, you have a complete **Sentry-powered error monitori
 
 ## Advanced Error Analysis Prompts
 
-Enhance your workflow with these advanced Continue CLI prompts:
+Enhance your workflow with these advanced Yuto Agentic CLI prompts:
 
 <CardGroup cols={2}>
   <Card title="Release Impact Analysis" icon="rocket">
@@ -508,7 +508,7 @@ Enhance your workflow with these advanced Continue CLI prompts:
 <Warning>
   **Protect Your API Keys**:
   - Store all credentials as GitHub Secrets, never in code
-  - Use Continue CLI's secure secret storage
+  - Use Yuto Agentic CLI's secure secret storage
   - Limit Sentry token scopes to minimum required permissions
   - Rotate API keys regularly (every 90 days recommended)
   - Monitor token usage for unusual activity
@@ -533,7 +533,7 @@ See the [Sentry MCP GitHub Issues](https://github.com/getsentry/sentry-mcp/issue
 | Issue | Solution |
 |:------|:---------|
 | No errors returned | Verify your Sentry project has collected errors recently |
-| OAuth prompt not appearing | Check that Continue CLI has proper MCP configuration |
+| OAuth prompt not appearing | Check that Yuto Agentic CLI has proper MCP configuration |
 | Duplicate GitHub issues | Implement duplicate detection in your prompts |
 | Missing error context | Ensure your Sentry token has `event:read` scope |
 
@@ -555,5 +555,5 @@ See the [Sentry MCP GitHub Issues](https://github.com/getsentry/sentry-mcp/issue
 
 - [Sentry MCP GitHub Repository](https://github.com/getsentry/sentry-mcp)
 - [GitHub CLI Documentation](https://cli.github.com/)
-- [Continue CLI Guide](https://docs.yutoagentic.dev/guides/cli)
+- [Yuto Agentic CLI Guide](https://docs.yutoagentic.dev/guides/cli)
 - [Continuous AI Best Practices](https://blog.yutoagentic.dev/what-is-continuous-ai-a-developers-guide/)

@@ -1,6 +1,6 @@
-# Continue PR Review Actions
+# Yuto Agentic PR Review Actions
 
-GitHub Actions that provide automated code reviews for pull requests using Continue CLI.
+GitHub Actions that provide automated code reviews for pull requests using Yuto Agentic CLI.
 
 ## Available Actions
 
@@ -49,25 +49,25 @@ The action accepts the following inputs:
 
 | Input              | Description                            | Required |
 | ------------------ | -------------------------------------- | -------- |
-| `continue-api-key` | API key for Continue service           | Yes      |
-| `continue-org`     | Organization for Continue config       | Yes      |
+| `continue-api-key` | API key for Yuto Agentic service       | Yes      |
+| `continue-org`     | Organization for Yuto Agentic config   | Yes      |
 | `continue-config`  | Config path (e.g., "myorg/review-bot") | Yes      |
 
 ## Setup Requirements
 
-### 1. Continue API Key
+### 1. Yuto Agentic API Key
 
-Add your Continue API key as a secret named `CONTINUE_API_KEY` in your repository:
+Add your Yuto Agentic API key as a secret named `CONTINUE_API_KEY` in your repository:
 
 1. Go to your repository's Settings
 2. Navigate to Secrets and variables → Actions
 3. Click "New repository secret"
 4. Name: `CONTINUE_API_KEY`
-5. Value: Your Continue API key
+5. Value: Your Yuto Agentic API key
 
-### 2. Continue Configuration
+### 2. Yuto Agentic Configuration
 
-Set up your review bot configuration in Continue:
+Set up your review bot configuration in Yuto Agentic:
 
 1. Create a configuration for your organization
 2. Configure the review bot settings
@@ -110,7 +110,7 @@ The general review provides a structured comment that includes:
 1. Checks out repository code
 2. Fetches PR diff using GitHub CLI
 3. Generates a comprehensive review prompt
-4. Runs Continue CLI with specified configuration
+4. Runs Yuto Agentic CLI with specified configuration
 5. Posts review as a PR comment
 
 ## Versioning
@@ -131,18 +131,18 @@ uses: continuedev/continue/actions/general-review@main
 
 - Ensure the PR author or commenter has appropriate permissions (OWNER, MEMBER, or COLLABORATOR)
 - Check that the workflow file is in the default branch
-- Verify the Continue API key is correctly set as a repository secret
+- Verify the Yuto Agentic API key is correctly set as a repository secret
 
 ### No review output generated
 
 - Check the action logs for any errors
-- Verify your Continue configuration is correct
-- Ensure your Continue API key is valid
+- Verify your Yuto Agentic configuration is correct
+- Ensure your Yuto Agentic API key is valid
 
 ## Support
 
 For issues or questions:
 
-- [Continue Documentation](https://docs.yutoagentic.dev)
+- [Yuto Agentic Documentation](https://docs.yutoagentic.dev)
 - [GitHub Issues](https://github.com/continuedev/continue/issues)
 - [GitHub Discussions](https://github.com/continuedev/continue/discussions)

@@ -1,21 +1,21 @@
 ---
-title: Continue Documentation MCP Server
-description: Set up an MCP server to search Continue documentation
+title: Yuto Agentic Documentation MCP Server
+description: Set up an MCP server to search Yuto Agentic documentation
 keywords: [mcp, documentation, search, mintlify, reference]
 ---
 
-The Continue Documentation MCP Server allows you to search and retrieve information from the Continue documentation directly within your agent conversations.
+The Yuto Agentic Documentation MCP Server allows you to search and retrieve information from the Yuto Agentic documentation directly within your agent conversations.
 
 ## Set Up
 
-### Configure Continue
+### Configure Yuto Agentic
 
-1. Create a folder called `.continue/mcpServers` at the top level of your workspace
+1. Create a folder called `.yutoagentic/mcpServers` at the top level of your workspace
 2. Add a file called `continue-docs-mcp.yaml` to this folder
 3. Write the following contents and save:
 
-```yaml title=".continue/mcpServers/continue-docs-mcp.yaml"
-name: Continue Documentation MCP
+```yaml title=".yutoagentic/mcpServers/continue-docs-mcp.yaml"
+name: Yuto Agentic Documentation MCP
 version: 0.0.1
 schema: v1
 mcpServers:
@@ -24,28 +24,28 @@ mcpServers:
 
 ### Enable Agent Mode
 
-MCP servers only work in agent mode. Make sure to switch to agent mode in Continue before testing.
+MCP servers only work in agent mode. Make sure to switch to agent mode in Yuto Agentic before testing.
 
 ## Usage Examples
 
-Once configured, you can use the MCP server to search Continue documentation:
+Once configured, you can use the MCP server to search Yuto Agentic documentation:
 
 ### Model Configuration Help
 
 ```
-How do I add Claude 4 Sonnet as a model from Bedrock in Continue?
+How do I add Claude 4 Sonnet as a model from Bedrock in Yuto Agentic?
 ```
 
 ### Context Providers
 
 ```
-What context providers are available in Continue?
+What context providers are available in Yuto Agentic?
 ```
 
 ### Customization
 
 ```
-How do I add custom rules to my configuration in Continue?
+How do I add custom rules to my configuration in Yuto Agentic?
 ```
 
 ## Troubleshooting
@@ -54,7 +54,7 @@ How do I add custom rules to my configuration in Continue?
 
 1. **Check configuration**: Ensure your YAML configuration uses the correct `uses` field with `continuedev/continue-docs-mcp`
 2. **Check agent mode**: MCP servers only work in agent mode
-3. **Restart Continue**: Try restarting the Continue extension
+3. **Restart Yuto Agentic**: Try restarting the Yuto Agentic extension
 
 ### No Search Results
 

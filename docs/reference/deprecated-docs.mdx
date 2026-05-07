@@ -13,7 +13,7 @@ noindex: true
 
 If you're currently using the `@Docs` context provider, please migrate to the new approach outlined in our [codebase and documentation awareness guide](/guides/codebase-documentation-awareness). The new approach provides:
 
-- Better integration with Continue's Agent mode features
+- Better integration with Yuto Agentic's Agent mode features
 - More intelligent context selection
 - Improved performance and accuracy
 
@@ -21,7 +21,7 @@ If you're currently using the `@Docs` context provider, please migrate to the ne
 
 **Below is the original documentation for the `@Docs` context provider, preserved for reference**
 
-The `@Docs` context provider allows you to efficiently reference documentation directly within Continue.
+The `@Docs` context provider allows you to efficiently reference documentation directly within Yuto Agentic.
 
 ## How to Enable the @Docs Context Provider
 
@@ -201,7 +201,7 @@ The GitHub API rate limits public requests to 60 per hour. If you want to reliab
 
 ### How to Enable Local Crawling for Private Documentation
 
-By default, Continue crawls documentation sites using a specialized crawling service that provides the best experience for most users and documentation sites.
+By default, Yuto Agentic crawls documentation sites using a specialized crawling service that provides the best experience for most users and documentation sites.
 
 If your documentation is private, you can skip the default crawler and use a local crawler instead by setting `useLocalCrawling` to `true`.
 
@@ -240,7 +240,7 @@ If your documentation is private, you can skip the default crawler and use a loc
   are dynamically generated using JavaScript. If your sites need to be rendered,
   you can enable the experimental `Use Chromium for Docs Crawling` feature from
   your User Settings Page. This will download and install Chromium
-  to `~/.continue/.utils`, and use it as the local crawler. **Note:** Chromium
+  to `~/.yutoagentic/.utils`, and use it as the local crawler. **Note:** Chromium
   crawling support is being deprecated and may be removed in future versions.
 </Info>
 
@@ -253,7 +253,7 @@ Further notes:
 
 You can view indexing statuses and manage your documentation sites from the `@docs indexes` section of the `More` page (three dots)
 
-- Continue does not automatically re-index your docs. Use `Click to re-index` to trigger a reindex for a specific source
+- Yuto Agentic does not automatically re-index your docs. Use `Click to re-index` to trigger a reindex for a specific source
 - While a site is indexing, click `Cancel indexing` to cancel the process
 - Failed indexing attempts will show an error status bar and icon
 - Delete a documentation site from your configuration using the trash icon
@@ -264,7 +264,7 @@ You can also view the overall status of currently indexing docs from a hideable 
 
 ![Documentation indexing peek](/images/docs-indexing-peek.png)
 
-You can also use the following IDE command to force a re-index of all docs: `Continue: Docs Force Re-Index`.
+You can also use the following IDE command to force a re-index of all docs: `Yuto Agentic: Docs Force Re-Index`.
 
 ## Configuration Examples for Different Setups
 

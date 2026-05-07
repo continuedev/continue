@@ -1,7 +1,7 @@
 ---
-title: "Content Management with Sanity MCP and Continue"
+title: "Content Management with Sanity MCP and Yuto Agentic"
 description: "Set up an AI-powered content management workflow that helps you manage schemas, run GROQ queries, handle documentation, and perform migrations using natural language commands."
-sidebarTitle: "Sanity CMS with Continue"
+sidebarTitle: "Sanity CMS with Yuto Agentic"
 ---
 
 import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
@@ -10,7 +10,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
 <OSAutoDetect />
 
 <Card title="What You'll Build" icon="database">
-  An AI-powered content management system workflow that uses Continue's AI agent with Sanity
+  An AI-powered content management system workflow that uses Yuto Agentic's AI agent with Sanity
   MCP to manage schemas, execute GROQ queries, handle migrations, and maintain documentation - all through simple natural language prompts
 </Card>
 
@@ -18,7 +18,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
 
 Before starting, ensure you have:
 
-- Continue account with **Hub access**
+- Yuto Agentic account with **Hub access**
   - Read: [Understanding Configs — How to get started with Hub configs](/mission-control/configs/intro)
 - Node.js 20+ installed locally
 - A [Sanity account](https://www.sanity.io/) and project (free tier works)
@@ -26,7 +26,7 @@ Before starting, ensure you have:
 
 For all options, first:
 <Steps>
-<Step title="Install Continue CLI">
+<Step title="Install Yuto Agentic CLI">
     <CLIInstall />
   </Step>
 
@@ -37,7 +37,7 @@ For all options, first:
   </Step>
 </Steps>
  <Warning>
-  To use agents in headless mode, you need a [Continue API key](https://yutoagentic.dev/settings/api-keys) and proper environment variable configuration.
+  To use agents in headless mode, you need a [Yuto Agentic API key](https://yutoagentic.dev/settings/api-keys) and proper environment variable configuration.
   </Warning>
 
 ## Getting Started with Sanity
@@ -75,10 +75,10 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
   <Tab title="⚡ Quick Start (Recommended)">
     <Steps>
       <Step title="Load the Pre-Built Agent">
-        Visit the [Sanity Assistant Agent](https://yutoagentic.dev/continuedev/sanity-assistant-agent) on Continue Mission Control and click **"Install Config"** or run:
+        Visit the [Sanity Assistant Agent](https://yutoagentic.dev/continuedev/sanity-assistant-agent) on Yuto Agentic Mission Control and click **"Install Config"** or run:
 
         ```bash
-        cn --agent continuedev/sanity-assistant-agent
+        yt --agent continuedev/sanity-assistant-agent
         ```
 
         This agent includes:
@@ -113,22 +113,22 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
   <Tab title="🛠️ Manual Setup">
 <Steps>
-  <Step title="Create a New Agent via the Continue Mission Control">
-    Go to the [Continue Mission Control](https://yutoagentic.dev) and [create a new agent](https://yutoagentic.dev/agents/new).
+  <Step title="Create a New Agent via the Yuto Agentic Mission Control">
+    Go to the [Yuto Agentic Mission Control](https://yutoagentic.dev) and [create a new agent](https://yutoagentic.dev/agents/new).
     </Step>
 
-  <Step title="Connect Sanity MCP via Continue Mission Control">
-    Visit the [Sanity MCP on Continue Mission Control](https://yutoagentic.dev/sanity/sanity-mcp) and click **"Install"** to add it to the agent you created in the step above.
+  <Step title="Connect Sanity MCP via Yuto Agentic Mission Control">
+    Visit the [Sanity MCP on Yuto Agentic Mission Control](https://yutoagentic.dev/sanity/sanity-mcp) and click **"Install"** to add it to the agent you created in the step above.
 
     This will add Sanity MCP to your agent's available tools. The Mission Control listing automatically configures the MCP connection.
 
     <Tip>
       **Alternative installation methods:**
-      1. **Quick CLI install**: `cn --mcp sanity/sanity-mcp`
+      1. **Quick CLI install**: `yt --mcp sanity/sanity-mcp`
       2. **With config**: Use [Sanity MCP Config](https://yutoagentic.dev/sanity/sanity-mcp-config) for environment variable setup
       3. **Manual configuration**: Add the MCP to your agent configuration
 
-      Once installed, Sanity MCP tools become available to your Continue agent for all prompts.
+      Once installed, Sanity MCP tools become available to your Yuto Agentic agent for all prompts.
     </Tip>
 
     <Info>
@@ -144,7 +144,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
         <Step title="Your First MCP Conversation">
         Start with these beginner-friendly prompts:
         ```bash
-        cn
+        yt
         # Try these starter prompts:
         # "Show me all blog posts published in the last month"
         # "Show me all the document types in my Sanity schema and explain their relationships"
@@ -160,8 +160,8 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
 <Accordion title="Agent Requirements">
     To use the pre-built Sanity Assistant agent, you need either:
-      - **Continue CLI Pro Plan** with the models add-on, OR
-      - **Your own API keys** added to Continue Mission Control secrets
+      - **Yuto Agentic CLI Pro Plan** with the models add-on, OR
+      - **Your own API keys** added to Yuto Agentic Mission Control secrets
 
     The agent will automatically detect and use your configuration along with the pre-configured Sanity MCP for content operations. Note that OAuth authentication will be required on first use.
 
@@ -219,24 +219,24 @@ With everything set up, you're ready for your first AI-powered content conversat
 
 ## Content Management Recipes
 
-Now you can use natural language prompts to manage your Sanity content and schemas. The Continue agent automatically calls the appropriate Sanity MCP tools.
+Now you can use natural language prompts to manage your Sanity content and schemas. The Yuto Agentic agent automatically calls the appropriate Sanity MCP tools.
 
 <Info>
-You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Continue Mission Control](https://yutoagentic.dev), click **Edit**, and add prompts under the **Prompts** section.
+You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Yuto Agentic Mission Control](https://yutoagentic.dev), click **Edit**, and add prompts under the **Prompts** section.
 </Info>
 
 <Info>
   **Where to run these workflows:**
-  - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
-  - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
-  - **CLI (headless mode)**: Use `cn -p "your prompt"` for headless commands
+  - **IDE Extensions**: Use Yuto Agentic in VS Code, JetBrains, or other supported IDEs
+  - **Terminal (TUI mode)**: Run `yt` to enter interactive mode, then type your prompts
+  - **CLI (headless mode)**: Use `yt -p "your prompt"` for headless commands
 
   **Test in Plan Mode First**: Before running operations that might make
   changes, test your prompts in plan mode (see the [Plan Mode
   Guide](/guides/plan-mode-guide); press **Shift+Tab** to switch modes in TUI/IDE). This
   shows you what the agent will do without executing it.
 
-  To run any of the example prompts below in headless mode, use `cn -p "prompt"`
+  To run any of the example prompts below in headless mode, use `yt -p "prompt"`
 </Info>
 
 <Info>
@@ -357,7 +357,7 @@ suggest optimizations to improve response times.
 
 Navigate to **Repository Settings → Secrets and variables → Actions** and add:
 
-- `CONTINUE_API_KEY`: Your Continue API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
+- `CONTINUE_API_KEY`: Your Yuto Agentic API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
 - `SANITY_PROJECT_ID`: Your Sanity project ID
 - `SANITY_DATASET`: Your Sanity dataset name (usually "production")
 - `SANITY_API_TOKEN`: Your Sanity API token with appropriate permissions
@@ -369,7 +369,7 @@ Navigate to **Repository Settings → Secrets and variables → Actions** and ad
 
 ### Create Workflow File
 
-This workflow automatically validates your Sanity schemas and content on pull requests using the Continue CLI in [headless mode](/cli/headless-mode). It checks schema integrity, validates content relationships, and posts a summary report as a PR comment.
+This workflow automatically validates your Sanity schemas and content on pull requests using the Yuto Agentic CLI in [headless mode](/cli/headless-mode). It checks schema integrity, validates content relationships, and posts a summary report as a PR comment.
 
 Create `.github/workflows/sanity-content-validation.yml` in your repository:
 
@@ -404,15 +404,15 @@ jobs:
           npm install -g @sanity/cli
           echo "✅ Sanity CLI installed"
 
-      - name: Install Continue CLI
+      - name: Install Yuto Agentic CLI
         run: |
           npm install -g @yutoagentic/cli
-          echo "✅ Continue CLI installed"
+          echo "✅ Yuto Agentic CLI installed"
 
       - name: Validate Schema Structure
         run: |
           echo "🔍 Validating schema structure..."
-          cn --agent continuedev/sanity-assistant-agent \
+          yt --agent continuedev/sanity-assistant-agent \
              -p "Analyze the Sanity schema for any structural issues,
                  missing required fields, or broken references between document types." \
              --auto
@@ -420,7 +420,7 @@ jobs:
       - name: Check Content Integrity
         run: |
           echo "📊 Checking content integrity..."
-          cn --agent continuedev/sanity-assistant-agent \
+          yt --agent continuedev/sanity-assistant-agent \
              -p "Run GROQ queries to identify any orphaned documents,
                  broken references, or missing required fields in the content." \
              --auto
@@ -428,7 +428,7 @@ jobs:
       - name: Generate Schema Documentation
         run: |
           echo "📝 Generating schema documentation..."
-          cn --agent continuedev/sanity-assistant-agent \
+          yt --agent continuedev/sanity-assistant-agent \
              -p "Generate a markdown summary of all schema changes
                  in this PR and their potential impact on existing content." \
              --auto > schema-changes.md
@@ -438,7 +438,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REPORT=$(          cn --agent continuedev/sanity-assistant-agent \
+          REPORT=$(          yt --agent continuedev/sanity-assistant-agent \
              -p "Generate a concise summary (200 words or less) of:
                  - Schema validation results
                  - Content integrity checks
@@ -455,7 +455,7 @@ jobs:
 
 ## Content Management Best Practices
 
-Implement automated content quality checks using Continue's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
+Implement automated content quality checks using Yuto Agentic's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
 
 <Card title="Schema Validation" icon="check-circle">
   ```bash
@@ -512,7 +512,7 @@ then provide a corrected version that achieves the intended result."
 
 <Check>
   **Verification Steps:**
-  - Sanity MCP is installed via [Continue Mission Control](https://yutoagentic.dev/sanity/sanity-mcp)
+  - Sanity MCP is installed via [Yuto Agentic Mission Control](https://yutoagentic.dev/sanity/sanity-mcp)
   - Project is authenticated with Sanity
   - Schema files are present and valid
   - Dataset permissions are correctly configured
@@ -548,7 +548,7 @@ After completing this guide, you have a complete **AI-powered content management
   <Card title="Sanity Documentation" icon="book" href="https://www.sanity.io/docs">
     Complete Sanity platform documentation
   </Card>
-  <Card title="Continue Mission Control" icon="plug" href="https://yutoagentic.dev">
+  <Card title="Yuto Agentic Mission Control" icon="plug" href="https://yutoagentic.dev">
     Explore more MCP integrations and agents
   </Card>
   <Card

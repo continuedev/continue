@@ -1,6 +1,6 @@
 ---
-title: "Using Ollama with Continue: A Developer's Guide"
-description: "Complete guide to setting up Ollama with Continue for local AI development. Learn installation, configuration, model selection, performance optimization, and troubleshooting for privacy-focused offline coding assistance"
+title: "Using Ollama with Yuto Agentic: A Developer's Guide"
+description: "Complete guide to setting up Ollama with Yuto Agentic for local AI development. Learn installation, configuration, model selection, performance optimization, and troubleshooting for privacy-focused offline coding assistance"
 ---
 
 ## What Are the Prerequisites for Using Ollama
@@ -10,7 +10,7 @@ Before getting started, ensure your system meets these requirements:
 - Operating System: macOS, Linux, or Windows
 - RAM: Minimum 8GB (16GB+ recommended)
 - Storage: At least 10GB free space
-- Continue extension installed
+- Yuto Agentic extension installed
 
 ## How to Install Ollama - Step-by-Step
 
@@ -50,7 +50,7 @@ curl http://localhost:11434
 <Warning>
   **Important**: Always use `ollama pull` instead of `ollama run` to download
   models. The `run` command starts an interactive session which isn't needed for
-  Continue.
+  Yuto Agentic.
 </Warning>
 
 Download models using the exact tag specified:
@@ -78,15 +78,15 @@ ollama list
   a different size.
 </Note>
 
-## How to Configure Ollama with Continue
+## How to Configure Ollama with Yuto Agentic
 
-There are multiple ways to configure Ollama models in Continue:
+There are multiple ways to configure Ollama models in Yuto Agentic:
 
 ### Method 1: Using Hub Model Blocks in Local config.yaml
 
-The easiest way is to use [pre-configured model blocks](/reference#models) from the Continue Mission Control in your local configuration:
+The easiest way is to use [pre-configured model blocks](/reference#models) from the Yuto Agentic Mission Control in your local configuration:
 
-```yaml title="~/.continue/configs/config.yaml"
+```yaml title="~/.yutoagentic/configs/config.yaml"
 name: My Local Config
 version: 0.0.1
 schema: v1
@@ -98,7 +98,7 @@ models:
 
 <Warning>
   **Important**: Blocks only provide configuration - you still need to pull
-  the model locally. The block `ollama/deepseek-r1-32b` configures Continue
+  the model locally. The block `ollama/deepseek-r1-32b` configures Yuto Agentic
   to use `model: deepseek-r1:32b`, but the actual model must be installed:
   ```bash
   # Check what the block expects (view on yutoagentic.dev)
@@ -111,9 +111,9 @@ models:
 
 ### Method 2: Using Autodetect
 
-Continue can automatically detect available Ollama models. You can configure this in your YAML:
+Yuto Agentic can automatically detect available Ollama models. You can configure this in your YAML:
 
-```yaml title="~/.continue/config.yaml"
+```yaml title="~/.yutoagentic/config.yaml"
 models:
   - name: Autodetect
     provider: ollama
@@ -130,12 +130,12 @@ Or use it through the GUI:
 
 1. Click on the model selector dropdown
 2. Select "Autodetect" option
-3. Continue will scan for available Ollama models
+3. Yuto Agentic will scan for available Ollama models
 4. Select your desired model from the detected list
 
 <Note>
   The Autodetect feature scans your local Ollama installation and lists all
-  available models. When set to `AUTODETECT`, Continue will dynamically populate
+  available models. When set to `AUTODETECT`, Yuto Agentic will dynamically populate
   the model list based on what's installed locally via `ollama list`. This is
   useful for quickly switching between models without manual configuration. For
   any roles not covered by the detected models, you may need to manually
@@ -274,7 +274,7 @@ To get the best performance from Ollama:
 
 #### "Model requires more system memory to run"
 
-Continue may use a higher default context length than other tools. Reduce `contextLength` in your config (e.g., to 2048), or try a smaller model. See [Ollama provider troubleshooting](/customize/model-providers/top-level/ollama#troubleshooting) for details.
+Yuto Agentic may use a higher default context length than other tools. Reduce `contextLength` in your config (e.g., to 2048), or try a smaller model. See [Ollama provider troubleshooting](/customize/model-providers/top-level/ollama#troubleshooting) for details.
 
 #### "404 model not found, try pulling it first"
 
@@ -319,7 +319,7 @@ ollama pull deepseek-r1:32b
 **Solution**: Create a local agent file:
 
 ```yaml
-# ~/.continue/configs/config.yaml
+# ~/.yutoagentic/configs/config.yaml
 name: Local Config
 version: 0.0.1
 schema: v1
@@ -360,14 +360,14 @@ class User(BaseModel):
 
 @app.post("/users/")
 async def create_user(user: User):
-    # Continue will help complete this implementation
+    # Yuto Agentic will help complete this implementation
     # Use Cmd+I (Mac) or Ctrl+I (Windows/Linux) to generate code
     pass
 ```
 
 ### How to Use Ollama for Code Review
 
-Use Continue with Ollama to:
+Use Yuto Agentic with Ollama to:
 
 - Analyze code quality
 - Suggest improvements
@@ -376,8 +376,8 @@ Use Continue with Ollama to:
 
 ## Conclusion
 
-Ollama with Continue provides a powerful local development environment for AI-assisted coding. You now have complete control over your AI models, ensuring privacy and enabling offline development workflows.
+Ollama with Yuto Agentic provides a powerful local development environment for AI-assisted coding. You now have complete control over your AI models, ensuring privacy and enabling offline development workflows.
 
 ---
 
-_This guide is based on Ollama v0.11.x and Continue v1.1.x. Please check for updates regularly._
+_This guide is based on Ollama v0.11.x and Yuto Agentic v1.1.x. Please check for updates regularly._

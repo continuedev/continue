@@ -26,6 +26,20 @@ type MockResponseHandlers = Partial<{
   [K in keyof FromWebviewProtocol]: MockResponseHandler<K>;
 }>;
 
+type ModelRole =
+  | "chat"
+  | "apply"
+  | "edit"
+  | "summarize"
+  | "autocomplete"
+  | "rerank"
+  | "embed"
+  | "subagent";
+
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
 const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   fileExists: true,
   getCurrentFile: {
@@ -39,10 +53,19 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
     hasCredits: false,
     hasPurchasedCredits: false,
   },
+  "controlPlane/getEnvironment": {
+    AUTH_TYPE: AuthType.OnPrem,
+    DEFAULT_CONTROL_PLANE_PROXY_URL: "",
+    CONTROL_PLANE_URL: "",
+    APP_URL: "",
+  },
   getWorkspaceDirs: [
     "file:///Users/user/workspace1",
     "file:///Users/user/workspace2",
   ],
+  getOpenFiles: [],
+  subprocess: ["", ""],
+  "models/fetch": [],
   "history/list": [],
   "docs/getIndexedPages": [],
   "history/save": undefined,
@@ -257,7 +280,101 @@ export class MockIdeMessenger implements IIdeMessenger {
     data: FromWebviewProtocol[T][0],
     messageId?: string,
     attempt?: number,
-  ): void {}
+  ): void {
+    const currentSerializedProfileInfo = this.responses[
+      "config/getSerializedProfileInfo"
+    ] as any;
+    if (!currentSerializedProfileInfo?.result?.config) {
+      return;
+    }
+
+    // Always mutate a cloned snapshot; Redux may freeze prior objects.
+    const serializedProfileInfo = cloneJson(currentSerializedProfileInfo);
+    const config = serializedProfileInfo.result.config;
+
+    switch (messageType) {
+      case "config/addModel": {
+        const payload = data as FromWebviewProtocol["config/addModel"][0];
+        const role = (payload.role ?? "chat") as ModelRole;
+        const model = payload.model as any;
+
+        if (!config.modelsByRole[role]) {
+          config.modelsByRole[role] = [];
+        }
+
+        const alreadyExists = config.modelsByRole[role].some(
+          (existing: any) =>
+            existing.title === model.title &&
+            existing.provider === model.provider &&
+            existing.model === model.model,
+        );
+
+        if (!alreadyExists) {
+          config.modelsByRole[role].push(model);
+        }
+
+        if (!config.selectedModelByRole[role]) {
+          config.selectedModelByRole[role] = model;
+        }
+
+        this.responses["config/getSerializedProfileInfo"] =
+          serializedProfileInfo;
+        this.mockMessageToWebview("configUpdate", serializedProfileInfo);
+        return;
+      }
+
+      case "config/updateSelectedModel": {
+        const payload =
+          data as FromWebviewProtocol["config/updateSelectedModel"][0];
+        const role = payload.role as ModelRole;
+        const title = payload.title;
+
+        const modelsForRole = config.modelsByRole[role] ?? [];
+        config.selectedModelByRole[role] =
+          title === null
+            ? null
+            : (modelsForRole.find((m: any) => m.title === title) ?? null);
+
+        this.responses["config/getSerializedProfileInfo"] =
+          serializedProfileInfo;
+        this.mockMessageToWebview("configUpdate", serializedProfileInfo);
+        return;
+      }
+
+      case "config/deleteModel": {
+        const payload = data as FromWebviewProtocol["config/deleteModel"][0];
+        const title = payload.title;
+        const roles: ModelRole[] = [
+          "chat",
+          "apply",
+          "edit",
+          "summarize",
+          "autocomplete",
+          "rerank",
+          "embed",
+          "subagent",
+        ];
+
+        for (const role of roles) {
+          config.modelsByRole[role] = (config.modelsByRole[role] ?? []).filter(
+            (m: any) => m.title !== title,
+          );
+          if (config.selectedModelByRole[role]?.title === title) {
+            config.selectedModelByRole[role] =
+              config.modelsByRole[role][0] ?? null;
+          }
+        }
+
+        this.responses["config/getSerializedProfileInfo"] =
+          serializedProfileInfo;
+        this.mockMessageToWebview("configUpdate", serializedProfileInfo);
+        return;
+      }
+
+      default:
+        return;
+    }
+  }
 
   async request<T extends keyof FromWebviewProtocol>(
     messageType: T,
@@ -272,7 +389,10 @@ export class MockIdeMessenger implements IIdeMessenger {
       };
     }
     if (messageType in this.responses) {
-      const content = this.responses[messageType];
+      const content =
+        messageType === "config/getSerializedProfileInfo"
+          ? cloneJson(this.responses[messageType])
+          : this.responses[messageType];
       return {
         status: "success",
         content,

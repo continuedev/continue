@@ -42,9 +42,9 @@ The risk isn’t that vulnerabilities exist.  The risk is that known high-severi
 
 Snyk has an excellent "Automatic Fix" feature that opens PRs to upgrade vulnerable dependencies. However, because Snyk cannot run your application's build or test suite, these PRs often break the build and require human cleanup.
 
-Continue's Cloud Agent sits *on top* of Snyk to complete the engineering work:
+Yuto Agentic's Cloud Agent sits *on top* of Snyk to complete the engineering work:
 
-| Feature | Snyk Native Auto-PR | Continue Cloud Agent |
+| Feature | Snyk Native Auto-PR | Yuto Agentic Cloud Agent |
 | :--- | :--- | :--- |
 | **The Fix** | "Bump `lodash` to v4.17.21" | "Analyze security issue and create PR with fix" |
 | **Context** | Vulnerability Database | Vuln DB + Security Impact Analysis |
@@ -112,7 +112,7 @@ The agent doesn’t silently change production code. It produces **reviewable se
 
 ## The Agent Configuration
 
-Continue's Snyk Cloud Agent is built from these core components:
+Yuto Agentic's Snyk Cloud Agent is built from these core components:
 
 <CardGroup cols={3}>
   <Card title="Triggers" icon="bolt">
@@ -263,7 +263,7 @@ Once this is working, teams often expand into:
 
 <CardGroup cols={2}>
   <Card title="Snyk Integration Docs" href="/guides/cloud-agents/operating-cloud-agents-safely">
-    More information on the Continue Snyk Integration and how you can get started today.  
+    More information on the Yuto Agentic Snyk Integration and how you can get started today.  
 </Card>
 
   <Card title="Add the Snyk Integration" href="https://yutoagentic.dev/integrations/snyk">

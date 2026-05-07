@@ -48,7 +48,7 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   },
   {
     name: "update",
-    description: "Update the Continue CLI",
+    description: "Update the Yuto Agentic CLI",
     category: "system",
   },
   {
@@ -128,7 +128,7 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   },
   {
     name: "import-skill",
-    description: "Import a skill from a URL or name into ~/.continue/skills",
+    description: "Import a skill from a URL or name into ~/.yutoagentic/skills",
     category: "system",
   },
   {

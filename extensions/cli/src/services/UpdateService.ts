@@ -54,7 +54,7 @@ export class UpdateService extends BaseService<UpdateServiceState> {
       if (this.currentState.currentVersion === "0.0.0-dev") {
         this.setState({
           status: UpdateStatus.IDLE,
-          message: `Continue CLI`,
+          message: "Yuto Agentic CLI",
         });
         return; // Uncomment to test auto-update behavior in dev
       }
@@ -73,7 +73,7 @@ export class UpdateService extends BaseService<UpdateServiceState> {
       if (!latestVersion) {
         this.setState({
           status: UpdateStatus.IDLE,
-          message: "Continue CLI",
+          message: "Yuto Agentic CLI",
           isUpdateAvailable: false,
         });
         return;
@@ -101,7 +101,7 @@ export class UpdateService extends BaseService<UpdateServiceState> {
           status: UpdateStatus.IDLE,
           message: isUpdateAvailable
             ? `Update available: v${latestVersion}`
-            : `Continue CLI v${this.currentState.currentVersion}`,
+            : `Yuto Agentic CLI v${this.currentState.currentVersion}`,
           isUpdateAvailable,
           latestVersion,
         });
@@ -110,7 +110,7 @@ export class UpdateService extends BaseService<UpdateServiceState> {
       logger.error("Error checking for updates:", error);
       this.setState({
         status: UpdateStatus.ERROR,
-        message: `Continue CLI v${this.currentState.currentVersion}`,
+        message: `Yuto Agentic CLI v${this.currentState.currentVersion}`,
         error,
       });
     }

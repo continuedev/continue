@@ -27,26 +27,26 @@ describe("asciiArt", () => {
       expect(result).toBe(CONTINUE_ASCII_ART);
     });
 
-    it("should return CN ASCII art version when terminal is too narrow", () => {
+    it("should return compact ASCII art when terminal is too narrow", () => {
       // Set process.stdout.columns to simulate narrow terminal
       process.stdout.columns = 60;
 
       const result = getDisplayableAsciiArt();
 
-      expect(result).toContain("██████╗");
+      expect(result).toContain("██╗");
 
       expect(result).not.toBe(CONTINUE_ASCII_ART);
       // Should be much shorter than the full ASCII art
       expect(result.length).toBeLessThan(CONTINUE_ASCII_ART.length / 2);
     });
 
-    it("should return CN ASCII art version when terminal is below threshold", () => {
+    it("should return compact ASCII art when terminal is below threshold", () => {
       // Test the edge case at exactly 74 columns (below our threshold of 75)
       process.stdout.columns = 74;
 
       const result = getDisplayableAsciiArt();
 
-      expect(result).toContain("██████╗");
+      expect(result).toContain("██╗");
 
       expect(result).not.toBe(CONTINUE_ASCII_ART);
     });

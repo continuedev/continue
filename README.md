@@ -13,7 +13,7 @@
 
 <p></p>
 
-**Open-source AI code agent — fork of [Continue](https://github.com/continuedev/continue)**
+**Open-source AI code agent — fork of [Yuto Agentic](https://github.com/continuedev/continue)**
 
 </div>
 
@@ -75,7 +75,7 @@ Looking for the VS Code extension? [See here](extensions/vscode/README.md).
 Read the [contributing guide](https://github.com/yutoagentic/yutoagentic/blob/main/CONTRIBUTING.md), and
 join the [GitHub Discussions](https://github.com/yutoagentic/yutoagentic/discussions).
 
-This project is a fork of [Continue](https://github.com/continuedev/continue) — see [NAMING.md](./NAMING.md) for details on the rebrand.
+This project is a fork of [Yuto Agentic](https://github.com/continuedev/continue) — see [NAMING.md](./NAMING.md) for details on the rebrand.
 
 ## License
 

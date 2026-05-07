@@ -1,16 +1,16 @@
 # TUI Testing Framework
 
-This directory contains a comprehensive testing framework for the Continue CLI's Terminal User Interface (TUI) that supports running tests in both normal (local) and remote modes.
+This directory contains a comprehensive testing framework for the Yuto Agentic CLI's Terminal User Interface (TUI) that supports running tests in both normal (local) and remote modes.
 
 ## Overview
 
-The testing framework ensures that the TUI behaves consistently whether running locally or connected to a remote `cn serve` instance. Most tests run in both modes automatically, verifying feature parity between local and remote operation.
+The testing framework ensures that the TUI behaves consistently whether running locally or connected to a remote `yt serve` instance. Most tests run in both modes automatically, verifying feature parity between local and remote operation.
 
 ## Key Components
 
 ### 1. Mock Remote Server (`mockRemoteServer.ts`)
 
-A mock Express server that simulates the `cn serve` endpoints:
+A mock Express server that simulates the `yt serve` endpoints:
 
 - `GET /state` - Returns current chat state
 - `POST /message` - Receives user messages and can simulate responses

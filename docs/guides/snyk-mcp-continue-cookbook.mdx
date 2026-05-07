@@ -1,7 +1,7 @@
 ---
-title: "Automated Security Scanning with Snyk MCP and Continue"
+title: "Automated Security Scanning with Snyk MCP and Yuto Agentic"
 description: "Set up an AI-powered security workflow that automatically scans your code, dependencies, infrastructure, and containers using natural language commands."
-sidebarTitle: "Snyk Security Scanning with Continue"
+sidebarTitle: "Snyk Security Scanning with Yuto Agentic"
 ---
 
 import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
@@ -28,7 +28,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
 </Note>
 
 <Card title="What You'll Build" icon="shield-halved">
-  An automated security scanning system that uses Continue's AI agent with Snyk
+  An automated security scanning system that uses Yuto Agentic's AI agent with Snyk
   MCP to identify vulnerabilities in code, dependencies, infrastructure, and
   containers - all through simple natural language prompts
 </Card>
@@ -39,7 +39,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
   width="100%"
   height="400"
   src="https://www.youtube.com/embed/cwVnKOf3tVg"
-  title="Snyk MCP Continue Cookbook Demo"
+  title="Snyk MCP Yuto Agentic Cookbook Demo"
   frameborder="0"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowfullscreen
@@ -49,7 +49,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
 
 Before starting, ensure you have:
 
-- Continue account with **Hub access**
+- Yuto Agentic account with **Hub access**
 - Read: [Understanding Configs — How to get started with Hub configs](/guides/understanding-configs#how-to-get-started-with-hub-configs)
 - Node.js 18+ installed locally
 - [Snyk account](https://snyk.io/) (free tier works)
@@ -57,7 +57,7 @@ Before starting, ensure you have:
 
 For all options, first:
 <Steps>
-<Step title="Install Continue CLI">
+<Step title="Install Yuto Agentic CLI">
     <CLIInstall />
   </Step>
 
@@ -76,10 +76,10 @@ For all options, first:
 </Steps>
 
 <Note>
-  **Important**: The Snyk MCP requires the Snyk CLI to be authenticated locally. Run `snyk auth` to authenticate before using the Continue agent with Snyk MCP.
+  **Important**: The Snyk MCP requires the Snyk CLI to be authenticated locally. Run `snyk auth` to authenticate before using the Yuto Agentic agent with Snyk MCP.
 </Note>
  <Warning>
-  To use agents in headless mode, you need a [Continue API key](https://yutoagentic.dev/settings/api-keys).
+  To use agents in headless mode, you need a [Yuto Agentic API key](https://yutoagentic.dev/settings/api-keys).
   </Warning>
 
 ## Snyk Continuous AI Workflow Options
@@ -98,7 +98,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       <Step title="Load the Pre-Built Agent">
         Navigate to your project directory and run:
         ```bash
-        cn --agent continuedev/snyk-continuous-ai-agent
+        yt --agent continuedev/snyk-continuous-ai-agent
         ```
 
         This agent includes:
@@ -110,7 +110,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
         From your project directory, start with a comprehensive security scan:
         ```bash
          # Headless mode
-        cn -p "Run a complete security scan on this project including code vulnerabilities, dependencies, and any IaC files. Summarize findings by severity." --auto
+        yt -p "Run a complete security scan on this project including code vulnerabilities, dependencies, and any IaC files. Summarize findings by severity." --auto
         ```
 
         That's it! The agent handles everything automatically.
@@ -125,11 +125,11 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
   <Tab title="🛠️ Manual Setup">
 <Steps>
-  <Step title="Create a New Agent via the Continue Mission Control">
-    Go to the [Continue Mission Control](https://yutoagentic.dev) and [create a new agent](https://yutoagentic.dev/agents/new).
+  <Step title="Create a New Agent via the Yuto Agentic Mission Control">
+    Go to the [Yuto Agentic Mission Control](https://yutoagentic.dev) and [create a new agent](https://yutoagentic.dev/agents/new).
     </Step>
 
-  <Step title="Connect Snyk MCP via Continue Mission Control">
+  <Step title="Connect Snyk MCP via Yuto Agentic Mission Control">
     Visit the [Snyk Continuous AI Agent](https://yutoagentic.dev/continuedev/snyk-continuous-ai-agent) and click **Install** to add it to the agent you created in the step above.
 
     This will add Snyk MCP to your agent's available tools. The Mission Control listing automatically configures the MCP command:
@@ -139,15 +139,15 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
     <Tip>
       **Alternative installation methods:**
-      1. **Quick CLI install**: `cn --mcp snyk/snyk-mcp`
-      2. **Manual configuration**: Add the MCP to your `~/.continue/config.json` under the `mcpServers` section
+      1. **Quick CLI install**: `yt --mcp snyk/snyk-mcp`
+      2. **Manual configuration**: Add the MCP to your `~/.yutoagentic/config.json` under the `mcpServers` section
 
-      Once installed, Snyk MCP tools become available to your Continue agent for all prompts.
+      Once installed, Snyk MCP tools become available to your Yuto Agentic agent for all prompts.
     </Tip>
 
     <Info>
       The MCP will request authentication and folder trust permissions when first used.
-      This is handled automatically by the Continue agent.
+      This is handled automatically by the Yuto Agentic agent.
     </Info>
 
   </Step>
@@ -158,7 +158,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
     **How to add rules to your agent:**
     1. Visit the rules link above and click **Install**
     2. The rules will be added to your agent configuration automatically
-    3. Rules apply globally to all your Continue sessions
+    3. Rules apply globally to all your Yuto Agentic sessions
 
     These rules configure your agent to:
     - **Run [SAST](https://snyk.io/learn/application-security/sast/) scans** on newly generated or modified code
@@ -171,7 +171,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
     Start with a comprehensive security scan:
     ```bash
     # TUI mode
-    cn "Run a complete security scan on this project including code vulnerabilities, dependencies, and any IaC files. Summarize findings by severity."
+    yt "Run a complete security scan on this project including code vulnerabilities, dependencies, and any IaC files. Summarize findings by severity."
     ```
   </Step>
 </Steps>
@@ -181,8 +181,8 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
 <Accordion title="Agent Requirements">
     To use the pre-built agent, you need either: 
-      - **Continue CLI Pro Plan** with the models add-on, OR 
-      - **Your own API keys** added to Continue Mission Control secrets (same as manual setup)
+      - **Yuto Agentic CLI Pro Plan** with the models add-on, OR 
+      - **Your own API keys** added to Yuto Agentic Mission Control secrets (same as manual setup)
       
     The agent will automatically detect and use your configuration along with the pre-configured Snyk MCP for security scanning operations.
 
@@ -192,17 +192,17 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
 ## Security Scanning Recipes
 
-Now you can use natural language prompts to run comprehensive security scans. The Continue agent automatically calls the appropriate Snyk MCP tools.
+Now you can use natural language prompts to run comprehensive security scans. The Yuto Agentic agent automatically calls the appropriate Snyk MCP tools.
 
 <Info>
-You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Continue Mission Control](https://yutoagentic.dev), click **Edit**, and add prompts under the **Prompts** section.
+You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Yuto Agentic Mission Control](https://yutoagentic.dev), click **Edit**, and add prompts under the **Prompts** section.
 </Info>
 
 <Info>
   **Where to run these workflows:**
-  - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
-  - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
-  - **CLI (headless mode)**: Use `cn -p "your prompt" --auto` for headless commands
+  - **IDE Extensions**: Use Yuto Agentic in VS Code, JetBrains, or other supported IDEs
+  - **Terminal (TUI mode)**: Run `yt` to enter interactive mode, then type your prompts
+  - **CLI (headless mode)**: Use `yt -p "your prompt" --auto` for headless commands
 
   **Test in Plan Mode First**: Before running security scans that might make
   changes, test your prompts in plan mode (see the [Plan Mode
@@ -225,7 +225,7 @@ and rerun to verify.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Run a Snyk Code scan on this repo with severity threshold medium. Summarize issues with file:line. Propose minimal diffs for the top 3 and rerun to verify." --auto
+yt -p "Run a Snyk Code scan on this repo with severity threshold medium. Summarize issues with file:line. Propose minimal diffs for the top 3 and rerun to verify." --auto
 ```
 
 </Card>
@@ -244,7 +244,7 @@ Re-test after the plan (dry run).
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Run Snyk Open Source on this repo (include dev deps). Summarize vulnerable paths and propose a minimal-risk upgrade plan. Re-test after the plan (dry run)." --auto
+yt -p "Run Snyk Open Source on this repo (include dev deps). Summarize vulnerable paths and propose a minimal-risk upgrade plan. Re-test after the plan (dry run)." --auto
 ```
 
 </Card>
@@ -262,7 +262,7 @@ with exact files/lines. Provide code changes and re-scan to confirm.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Scan ./infra with Snyk IaC. Report high/critical misconfigs with exact files/lines. Provide code changes and re-scan to confirm." --auto
+yt -p "Scan ./infra with Snyk IaC. Report high/critical misconfigs with exact files/lines. Provide code changes and re-scan to confirm." --auto
 ```
 
 </Card>
@@ -281,7 +281,7 @@ Re-test after the change (dry run).
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Scan image my-api:latest. Exclude base image vulns. Print dependency tree. Recommend a safer base image or upgrades. Re-test after the change (dry run)." --auto
+yt -p "Scan image my-api:latest. Exclude base image vulns. Print dependency tree. Recommend a safer base image or upgrades. Re-test after the change (dry run)." --auto
 ```
 
 </Card>
@@ -299,7 +299,7 @@ Block if new high issues would be introduced. Show deltas.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Scan only files changed since origin/main with Snyk Code. Block if new high issues would be introduced. Show deltas." --auto
+yt -p "Scan only files changed since origin/main with Snyk Code. Block if new high issues would be introduced. Show deltas." --auto
 ```
 
 </Card>
@@ -316,7 +316,7 @@ Open Snyk Learn lessons related to the top CWE(s) from this scan.
 
 **Headless Mode Prompt:**
 ```bash
-cn -p "Open Snyk Learn lessons related to the top CWE(s) from this scan." --auto
+yt -p "Open Snyk Learn lessons related to the top CWE(s) from this scan." --auto
 ```
 
 </Card>
@@ -335,7 +335,7 @@ This example demonstrates a **Continuous AI workflow** where security scanning r
 
 Navigate to **Repository Settings → Secrets and variables → Actions** and add:
 
-- `CONTINUE_API_KEY`: Your Continue API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
+- `CONTINUE_API_KEY`: Your Yuto Agentic API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
 - `SNYK_TOKEN`: Your Snyk authentication token from [app.snyk.io/account](https://app.snyk.io/account)
 
 ### Create Workflow File
@@ -376,10 +376,10 @@ jobs:
           npm install -g snyk
           echo "✅ Snyk CLI installed"
 
-      - name: Install Continue CLI
+      - name: Install Yuto Agentic CLI
         run: |
           npm install -g @yutoagentic/cli
-          echo "✅ Continue CLI installed"
+          echo "✅ Yuto Agentic CLI installed"
 
       - name: Validate Secrets
         run: |
@@ -456,7 +456,7 @@ jobs:
         run: |
           echo "🤖 Generating AI-powered mitigation suggestions..."
 
-          # Create a summary of findings for Continue CLI
+          # Create a summary of findings for Yuto Agentic CLI
           FINDINGS_SUMMARY=$(cat snyk-code-results.json snyk-oss-results.json | jq -r '
             if .runs then
               .runs[0].results[] | "Code Issue: \(.message.text) in \(.locations[0].physicalLocation.artifactLocation.uri) (Severity: \(.level))"
@@ -472,10 +472,10 @@ jobs:
             echo "$FINDINGS_SUMMARY"
             echo ""
 
-            # Use Continue CLI to generate mitigation suggestions
+            # Use Yuto Agentic CLI to generate mitigation suggestions
             PROMPT="Analyze these Snyk security findings and provide specific, actionable mitigation steps for each issue. Focus on: 1) Root cause, 2) Immediate fix, 3) Long-term prevention. Findings: $FINDINGS_SUMMARY. Provide clear, prioritized recommendations."
 
-            cn --agent continuedev/snyk-continuous-ai-agent -p "$PROMPT" --auto > mitigation-suggestions.md || {
+            yt --agent continuedev/snyk-continuous-ai-agent -p "$PROMPT" --auto > mitigation-suggestions.md || {
               echo "⚠️ Warning: Could not generate AI suggestions"
               exit 0
             }
@@ -515,7 +515,7 @@ jobs:
           **Scan Details:**
           - 📊 Full report available in workflow artifacts
           - 🔍 Review the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for complete details
-          - 🤖 Generated with Continue CLI + Snyk
+          - 🤖 Generated with Yuto Agentic CLI + Snyk
 
           _This is an automated security analysis. Please review and address the findings before merging._
           EOF
@@ -597,25 +597,25 @@ jobs:
 <Info>
   **About SNYK_TOKEN**: The workflow uses the SNYK_TOKEN in two ways:
   1. **Direct Snyk CLI authentication** - Authenticates the Snyk CLI for running scans
-  2. **Continue CLI access** - Available as an environment variable when Continue generates AI mitigation suggestions
+  2. **Yuto Agentic CLI access** - Available as an environment variable when Yuto Agentic generates AI mitigation suggestions
 
-  The `cn` agent automatically uses the SNYK_TOKEN when needed for Snyk MCP operations.
+  The `yt` agent automatically uses the SNYK_TOKEN when needed for Snyk MCP operations.
 </Info>
 
 <Info>
   This workflow demonstrates several advanced features:
   - **Changed Files Detection**: Only scans files modified in the PR
-  - **AI Mitigation**: Uses Continue CLI to generate actionable mitigation steps
+  - **AI Mitigation**: Uses Yuto Agentic CLI to generate actionable mitigation steps
   - **PR Comments**: Automatically posts mitigation suggestions as PR comments
   - **Comprehensive Reporting**: Generates detailed security reports with artifacts
 </Info>
 
 ## Security Guardrails
 
-Implement automated security policies using Continue's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
+Implement automated security policies using Yuto Agentic's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
 
 <Note>
-  **Coming Soon**: These security guardrail prompts will be available as pre-configured rules on the Continue Mission Control for easy installation.
+  **Coming Soon**: These security guardrail prompts will be available as pre-configured rules on the Yuto Agentic Mission Control for easy installation.
 </Note>
 
 <Card title="Pre-commit Scanning" icon="lock">
@@ -672,7 +672,7 @@ then rerun the same Snyk scan to confirm resolution."
 ### Connection Problems
 
 <Check>
-  **Verification Steps:** - Snyk MCP is installed via [Continue
+  **Verification Steps:** - Snyk MCP is installed via [Yuto Agentic
   Hub](https://yutoagentic.dev/snyk/snyk-mcp) - Secure-at-Inception rules are
   [enabled](https://yutoagentic.dev/snyk/secure-at-inception) - Authentication
   completed successfully - Project folder has been trusted
@@ -708,7 +708,7 @@ After completing this guide, you have a complete **AI-powered security system** 
   <Card title="Snyk Documentation" icon="book" href="https://docs.snyk.io">
     Complete Snyk platform documentation
   </Card>
-  <Card title="Continue Mission Control" icon="plug" href="https://yutoagentic.dev">
+  <Card title="Yuto Agentic Mission Control" icon="plug" href="https://yutoagentic.dev">
     Explore more MCP integrations and agents
   </Card>
   <Card

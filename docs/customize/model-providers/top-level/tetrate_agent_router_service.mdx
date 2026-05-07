@@ -8,7 +8,7 @@ The **Tetrate Agent Router Service** provides a unified Gateway for accessing va
 This gateway acts as an intelligent router that can distribute requests across multiple model providers, offering enterprise-grade reliability and performance optimization.
 
 <Tip>
-Want to get started quickly? Sign up for the [Tetrate Agent Router Service](https://router.tetrate.ai/) to get an API key, then use [Tetrate on Continue Mission Control](https://yutoagentic.dev/tetrate) to get started fast.
+Want to get started quickly? Sign up for the [Tetrate Agent Router Service](https://router.tetrate.ai/) to get an API key, then use [Tetrate on Yuto Agentic Mission Control](https://yutoagentic.dev/tetrate) to get started fast.
 </Tip>
 
 ## Setup
@@ -24,21 +24,21 @@ Go to the [API keys page](https://router.tetrate.ai/api-keys) to get your key
 <img src="../assets/tetrate-get-api-key.png" alt="Tetrate get API key" style={{width: '250px', maxWidth: '100%'}} />
 </Step>
 
-<Step title="Configure Continue">
+<Step title="Configure Yuto Agentic">
 - Choose a configuration method below.
-- If you use the Continue VS Code extension, install version `>=1.2.3`.
+- If you use the Yuto Agentic VS Code extension, install version `>=1.2.3`.
 </Step>
 
 </Steps>
 
 
-### Quickstart with Continue Mission Control
+### Quickstart with Yuto Agentic Mission Control
 
-Fastest way: use preconfigured models from Tetrate on Continue Mission Control
+Fastest way: use preconfigured models from Tetrate on Yuto Agentic Mission Control
 
 <Steps>
 <Step title="Browse models">
-Open [Tetrate on Continue Mission Control](https://yutoagentic.dev/tetrate) and pick a model (e.g., [Claude Sonnet 4](https://yutoagentic.dev/tetrate/claude-sonnet-4))
+Open [Tetrate on Yuto Agentic Mission Control](https://yutoagentic.dev/tetrate) and pick a model (e.g., [Claude Sonnet 4](https://yutoagentic.dev/tetrate/claude-sonnet-4))
 </Step>
 
 <Step title="Use or remix">
@@ -46,14 +46,14 @@ Click "Use Model", or "Remix" to change the model ID if needed
 </Step>
 
 <Step title="Add your API key">
-Add your API key to Continue. See [adding secrets in Continue Mission Control](/mission-control/secrets/secret-types) and [managing local secrets in the FAQ](/faqs#managing-local-secrets-and-environment-variables)
+Add your API key to Yuto Agentic. See [adding secrets in Yuto Agentic Mission Control](/mission-control/secrets/secret-types) and [managing local secrets in the FAQ](/faqs#managing-local-secrets-and-environment-variables)
 <Tip>
-Add it as a Continue Mission Control secret named `TETRATE_API_KEY` to reuse across projects.
+Add it as a Yuto Agentic Mission Control secret named `TETRATE_API_KEY` to reuse across projects.
 </Tip>
 </Step>
 </Steps>
 
-![Remix a model from Tetrate on Continue Mission Control](../assets/tetrate-remix.png)
+![Remix a model from Tetrate on Yuto Agentic Mission Control](../assets/tetrate-remix.png)
 
 <Info>
 If a model is missing, remix a similar one and set the `model` field to the target ID.
@@ -65,7 +65,7 @@ If a model is missing, remix a similar one and set the `model` field to the targ
   <Card title="In Local Agent Configuration" icon="folder" vertical>
     Use a Tetrate model block from the Hub or define it directly in your local agent configuration.
   </Card>
-  <Card title="Continue Mission Control" icon="cloud" vertical>
+  <Card title="Yuto Agentic Mission Control" icon="cloud" vertical>
     Use a Tetrate model block from the Hub or define your own on the Hub.
   </Card>
   <Card title="Using Local Model Blocks" icon="file-lines" vertical>
@@ -85,7 +85,7 @@ If a model is missing, remix a similar one and set the `model` field to the targ
 
 Use a Tetrate model block from the Hub in your local agent configuration:
 
-```yaml title="~/.continue/config.yaml"
+```yaml title="~/.yutoagentic/config.yaml"
 name: Local Agent
 version: 1.0.0
 schema: v1
@@ -105,7 +105,7 @@ context:
 
 Or define the model directly:
 
-```yaml title="~/.continue/config.yaml"
+```yaml title="~/.yutoagentic/config.yaml"
 name: Local Agent
 version: 1.0.0
 schema: v1
@@ -130,7 +130,7 @@ context:
   - provider: codebase
 ```
 </Tab>
-<Tab title="Continue Mission Control">
+<Tab title="Yuto Agentic Mission Control">
 **When to use**: Share configurations across teams or contribute to the community.
 
 **The Model Block:**
@@ -151,7 +151,7 @@ models:
     capabilities:
       - tool_use
 ```
-View the model block `tetrate/claude-sonnet-4` on the [Continue Mission Control](https://yutoagentic.dev/tetrate/claude-sonnet-4).
+View the model block `tetrate/claude-sonnet-4` on the [Yuto Agentic Mission Control](https://yutoagentic.dev/tetrate/claude-sonnet-4).
 
 **Reference it in your Agent configuration:**
 
@@ -172,14 +172,14 @@ context:
 </Tab>
 
 <Tab title="Using Local Model Blocks">
-**When to use**: Reuse configurations across agents and keep them local or in GitHub (not on Continue Mission Control).
+**When to use**: Reuse configurations across agents and keep them local or in GitHub (not on Yuto Agentic Mission Control).
 
 **The Local Model Block:**
 <Info>
 Name the file `my-claude-4-model.yaml` so you can reference it in the Agent.
 </Info>
 
-```yaml title="~/.continue/models/my-claude-4-model.yaml"
+```yaml title="~/.yutoagentic/models/my-claude-4-model.yaml"
 name: Claude Sonnet 4
 version: 1.0.1
 schema: v1
@@ -197,7 +197,7 @@ models:
 ```
 Reference it as `my-claude-4-model` in your Agent configuration:
 
-```yaml title="~/.continue/agents/simple-agent.yaml"
+```yaml title="~/.yutoagentic/agents/simple-agent.yaml"
 name: Simple Agent
 version: 1.0.0
 schema: v1
@@ -233,7 +233,7 @@ Learn more about [model blocks](/reference#models).
     Check your network or try a less-loaded model. Contact Tetrate support if issues persist.
   </Card>
   <Card title="Configuration not loading" icon="file-lines" vertical>
-    Validate YAML syntax and review error messages in Continue. If using Hub, ensure the block is published.
+    Validate YAML syntax and review error messages in Yuto Agentic. If using Hub, ensure the block is published.
   </Card>
 </CardGroup>
 

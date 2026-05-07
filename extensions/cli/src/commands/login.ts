@@ -6,14 +6,14 @@ import { gracefulExit } from "../util/exit.js";
 import { chat } from "./chat.js";
 
 export async function login() {
-  console.info(chalk.yellow("Logging in to Continue..."));
+  console.info(chalk.yellow("Logging in to Yuto Agentic..."));
 
   try {
     await workosLogin();
     console.info(chalk.green("Successfully logged in!"));
 
     // Start the CLI session after successful login
-    console.info(chalk.blue("Starting Continue CLI..."));
+    console.info(chalk.blue("Starting Yuto Agentic CLI..."));
     await chat();
   } catch (error: any) {
     console.error(chalk.red(`Login failed: ${error.message}`));

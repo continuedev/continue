@@ -26,15 +26,15 @@ continue/
 
 All commands run from the **monorepo root** (`continue/`) unless noted.
 
-| Task | Command | Notes |
-|------|---------|-------|
-| Type-check all packages | `npm run tsc:watch` | Watches all packages concurrently |
-| Type-check core only | `cd core && tsc -p ./ --noEmit` | |
-| Run core tests (Jest) | `cd core && npm test` | |
-| Run core tests (Vitest) | `cd core && npm run vitest` | |
-| Lint core | `cd core && npm run lint` | ESLint |
-| Lint fix core | `cd core && npm run lint:fix` | |
-| Build core (for npm) | `cd core && npm run build` | Outputs to dist/ |
+| Task                    | Command                         | Notes                             |
+| ----------------------- | ------------------------------- | --------------------------------- |
+| Type-check all packages | `npm run tsc:watch`             | Watches all packages concurrently |
+| Type-check core only    | `cd core && tsc -p ./ --noEmit` |                                   |
+| Run core tests (Jest)   | `cd core && npm test`           |                                   |
+| Run core tests (Vitest) | `cd core && npm run vitest`     |                                   |
+| Lint core               | `cd core && npm run lint`       | ESLint                            |
+| Lint fix core           | `cd core && npm run lint:fix`   |                                   |
+| Build core (for npm)    | `cd core && npm run build`      | Outputs to dist/                  |
 
 > **Never run `npm run build` or `git push` without being asked.** Type-check with `tsc --noEmit` to validate.
 
@@ -75,25 +75,25 @@ Built-in tools live in three layers:
 
 ---
 
-## Ported Utilities (Marcel → Continue)
+## Ported Utilities (Marcel → Yuto Agentic)
 
 Ported files live under `core/util/` mirroring Marcel's `src/utils/` structure.
 
-| Continue path | Marcel source | Notes |
-|---------------|--------------|-------|
-| `core/util/generators.ts` | `src/utils/generators.ts` | Async generator helpers |
-| `core/util/format.ts` | `src/utils/format.ts` | String formatting |
-| `core/util/array.ts` | `src/utils/array.ts` | Array utilities |
+| Yuto Agentic path                   | Marcel source                       | Notes                   |
+| ----------------------------------- | ----------------------------------- | ----------------------- |
+| `core/util/generators.ts`           | `src/utils/generators.ts`           | Async generator helpers |
+| `core/util/format.ts`               | `src/utils/format.ts`               | String formatting       |
+| `core/util/array.ts`                | `src/utils/array.ts`                | Array utilities         |
 | `core/util/shellPromptDetection.ts` | `src/utils/shellPromptDetection.ts` | Shell prompt heuristics |
-| `core/util/progressTracker.ts` | `src/utils/progressTracker.ts` | Progress tracking |
-| `core/util/agentContext.ts` | `src/utils/agentContext.ts` | Agent context helpers |
-| `core/util/contextAnalysis.ts` | `src/utils/contextAnalysis.ts` | Token/message analysis |
-| `core/util/bash/` | `src/utils/bash/` | Shell parsing & quoting |
+| `core/util/progressTracker.ts`      | `src/utils/progressTracker.ts`      | Progress tracking       |
+| `core/util/agentContext.ts`         | `src/utils/agentContext.ts`         | Agent context helpers   |
+| `core/util/contextAnalysis.ts`      | `src/utils/contextAnalysis.ts`      | Token/message analysis  |
+| `core/util/bash/`                   | `src/utils/bash/`                   | Shell parsing & quoting |
 
-### Marcel → Continue porting rules
+### Marcel → Yuto Agentic porting rules
 
 1. **Remove** `// modified by fif` header comments
-2. **Replace** Marcel local imports with Continue equivalents or inline the logic:
+2. **Replace** Marcel local imports with Yuto Agentic equivalents or inline the logic:
    - `logError(e)` → `console.error(e)`
    - `jsonStringify(x)` → `JSON.stringify(x)`
    - `memoizeWithLRU(fn, key)` → simple `Map`-based cache
@@ -122,10 +122,10 @@ Ported files live under `core/util/` mirroring Marcel's `src/utils/` structure.
 
 Marcel lives at `/home/fran/dev/yuto-code/marcel/src/`. When auditing files for portability:
 
-| Verdict | Criteria |
-|---------|----------|
-| ✅ Portable | Only Node built-ins (`fs`, `path`, `crypto`, `os`) and/or npm packages already in `core/package.json` |
-| ⚠️ Portable with changes | Needs `execa`→`execFile`, `logError`→`console.error`, etc. |
-| ❌ Not portable | Imports Marcel internals (bootstrap, config, cwd, fsImplementation, teleport, signals) |
+| Verdict                  | Criteria                                                                                              |
+| ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| ✅ Portable              | Only Node built-ins (`fs`, `path`, `crypto`, `os`) and/or npm packages already in `core/package.json` |
+| ⚠️ Portable with changes | Needs `execa`→`execFile`, `logError`→`console.error`, etc.                                            |
+| ❌ Not portable          | Imports Marcel internals (bootstrap, config, cwd, fsImplementation, teleport, signals)                |
 
 Always check `core/package.json` before assuming an npm package is available.

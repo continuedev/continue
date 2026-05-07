@@ -1,6 +1,6 @@
 ---
 title: "Supabase RLS Security Audit and Fixes with MCP"
-description: "Learn how to audit Row Level Security in your Supabase database, identify vulnerabilities, and automatically generate fixes using Continue CLI and Supabase MCP."
+description: "Learn how to audit Row Level Security in your Supabase database, identify vulnerabilities, and automatically generate fixes using Yuto Agentic CLI and Supabase MCP."
 sidebarTitle: "Supabase RLS Security Audit"
 ---
 
@@ -10,7 +10,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
 <OSAutoDetect />
 
 <Card title="What You'll Build" icon="shield-check">
-  A security audit workflow that uses Continue CLI with Supabase MCP to identify RLS vulnerabilities, generate secure policies, fix permission issues, and ensure your database follows security best practices.
+  A security audit workflow that uses Yuto Agentic CLI with Supabase MCP to identify RLS vulnerabilities, generate secure policies, fix permission issues, and ensure your database follows security best practices.
 </Card>
 
 ## What You'll Learn
@@ -29,26 +29,26 @@ Before starting, ensure you have:
 
 - [Supabase account](https://supabase.com) with an active project
 - Node.js 18+ installed locally
-- [Continue CLI](https://docs.yutoagentic.dev/guides/cli) with **active credits** (required for API usage)
+- [Yuto Agentic CLI](https://docs.yutoagentic.dev/guides/cli) with **active credits** (required for API usage)
 - Basic understanding of SQL and database concepts
 
 <Steps>
-  <Step title="Install Continue CLI">
+  <Step title="Install Yuto Agentic CLI">
     <CLIInstall />
   </Step>
 
-  <Step title="Set up Continue CLI Account & API Key">
-    1. Visit [Continue Organizations](https://yutoagentic.dev/settings/organizations)
-    2. Sign up or log in to your Continue account
+  <Step title="Set up Yuto Agentic CLI Account & API Key">
+    1. Visit [Yuto Agentic Organizations](https://yutoagentic.dev/settings/organizations)
+    2. Sign up or log in to your Yuto Agentic account
     3. Navigate to your organization settings
     4. Click **"API Keys"** and then **"+ New API Key"**
     5. Copy the API key immediately (you won't see it again!)
-    6. Login to the CLI: `cn login`
+    6. Login to the CLI: `yt login`
   </Step>
 </Steps>
 
 <Tip>
-  Continue CLI can analyze your database schema and generate complex SQL queries - you just need to describe what you want in plain language!
+  Yuto Agentic CLI can analyze your database schema and generate complex SQL queries - you just need to describe what you want in plain language!
 </Tip>
 
 ## Step 1: Set Up Your Credentials
@@ -143,10 +143,10 @@ First, you'll need to set up access to your Supabase project.
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [Supabase Agent](https://yutoagentic.dev/continuedev/supabase-agent) on Continue Mission Control and click **"Install Agent"** or run:
+        Visit the [Supabase Agent](https://yutoagentic.dev/continuedev/supabase-agent) on Yuto Agentic Mission Control and click **"Install Agent"** or run:
         
         ```bash
-        cn --agent continuedev/supabase-agent
+        yt --agent continuedev/supabase-agent
         ```
 
         This agent includes:
@@ -157,7 +157,7 @@ First, you'll need to set up access to your Supabase project.
       </Step>
 
       <Step title="Run Database Analysis">
-        Navigate to your project directory and enter this prompt in the Continue CLI TUI:
+        Navigate to your project directory and enter this prompt in the Yuto Agentic CLI TUI:
         
         ```
         Analyze my Supabase database schema and suggest performance optimizations
@@ -175,7 +175,7 @@ First, you'll need to set up access to your Supabase project.
 
   <Tab title="🛠️ Manual Setup">
     <Steps>
-      <Step title="Add Supabase MCP to Continue CLI">
+      <Step title="Add Supabase MCP to Yuto Agentic CLI">
         Configure the [Supabase MCP](https://supabase.com/docs/guides/getting-started/mcp) using OAuth:
 
         The MCP server will automatically prompt for OAuth authentication when you first use it.
@@ -190,7 +190,7 @@ First, you'll need to set up access to your Supabase project.
       </Step>
 
       <Step title="Create Custom Database Analysis Prompts">
-        Use this prompt template with Continue CLI to analyze your database:
+        Use this prompt template with Yuto Agentic CLI to analyze your database:
 
         ```
         Analyze my Supabase database:
@@ -210,8 +210,8 @@ First, you'll need to set up access to your Supabase project.
 
 <Accordion title="Agent Requirements">
   To use the pre-built agent, you need either:
-  - **Continue CLI Pro Plan** with the models add-on, OR
-  - **Your own API keys** added to Continue Mission Control secrets
+  - **Yuto Agentic CLI Pro Plan** with the models add-on, OR
+  - **Your own API keys** added to Yuto Agentic Mission Control secrets
   
   The agent will automatically detect and use your configuration. For Supabase MCP:
   - **Supabase account** with at least one project
@@ -231,7 +231,7 @@ First, you'll need to set up access to your Supabase project.
 
 ## Step 2: Analyze Your Database with AI
 
-Use Continue CLI to perform intelligent database analysis. Enter these prompts in the Continue CLI TUI:
+Use Yuto Agentic CLI to perform intelligent database analysis. Enter these prompts in the Yuto Agentic CLI TUI:
 
 <Tabs>
   <Tab title="Schema Analysis">
@@ -309,7 +309,7 @@ Use Continue CLI to perform intelligent database analysis. Enter these prompts i
 
 ## Step 3: Generate Database Migrations
 
-Create and apply database migrations based on AI recommendations. Enter this prompt in the Continue CLI TUI:
+Create and apply database migrations based on AI recommendations. Enter this prompt in the Yuto Agentic CLI TUI:
 
 **Example: Complete RLS Security Fix**
 
@@ -355,7 +355,7 @@ The AI will generate a complete SQL migration file that:
 
 ## Step 4: Set Up Automated Database Monitoring
 
-Automate database health checks with Continue CLI and GitHub Actions:
+Automate database health checks with Yuto Agentic CLI and GitHub Actions:
 
 ```yaml
 name: Database Health Monitor
@@ -376,10 +376,10 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install Continue CLI
+      - name: Install Yuto Agentic CLI
         run: |
           npm install -g @yutoagentic/cli
-          echo "✅ Continue CLI installed"
+          echo "✅ Yuto Agentic CLI installed"
 
       - name: Analyze Database Security
         env:
@@ -387,8 +387,8 @@ jobs:
         run: |
           echo "🔍 Performing security audit..."
           
-          # Use Continue CLI to audit RLS and generate fixes
-          cn -p "Using Supabase MCP, perform a comprehensive RLS security audit:
+          # Use Yuto Agentic CLI to audit RLS and generate fixes
+          yt -p "Using Supabase MCP, perform a comprehensive RLS security audit:
                  1. Check all tables for RLS enablement
                  2. Identify tables with missing or weak RLS policies
                  3. Find overly permissive policies (e.g., 'true' conditions)
@@ -428,7 +428,7 @@ jobs:
 
 <Warning>
   **Required GitHub Secrets**:
-  - `CONTINUE_API_KEY`: Your Continue API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
+  - `CONTINUE_API_KEY`: Your Yuto Agentic API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
 
   Add this at: **Repository Settings → Secrets and variables → Actions**
 </Warning>
@@ -449,7 +449,7 @@ After completing this guide, you have a complete **AI-powered database managemen
 
 ## Advanced Database Prompts
 
-Enhance your workflow with these advanced Continue CLI prompts:
+Enhance your workflow with these advanced Yuto Agentic CLI prompts:
 
 <CardGroup cols={2}>
   <Card title="Real-time Performance" icon="gauge">
@@ -511,5 +511,5 @@ If you encounter connection issues:
 - [Supabase Database Guide](https://supabase.com/docs/guides/database)
 - [Supabase Security Best Practices](https://supabase.com/docs/guides/database/security)
 - [Model Context Protocol Docs](https://modelcontextprotocol.io/introduction)
-- [Continue CLI Guide](https://docs.yutoagentic.dev/guides/cli)
+- [Yuto Agentic CLI Guide](https://docs.yutoagentic.dev/guides/cli)
 - [Continuous AI Best Practices](https://blog.yutoagentic.dev/what-is-continuous-ai-a-developers-guide/)

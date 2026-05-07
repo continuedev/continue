@@ -13,7 +13,7 @@ noindex: true
 
 If you're currently using `@Codebase` or `@Folder` context providers, please migrate to the new approach outlined in our [codebase and documentation awareness guide](/guides/codebase-documentation-awareness). The new approach provides:
 
-- Better integration with Continue's Agent mode features
+- Better integration with Yuto Agentic's Agent mode features
 - More intelligent context selection
 - Improved performance and accuracy
 
@@ -21,7 +21,7 @@ If you're currently using `@Codebase` or `@Folder` context providers, please mig
 
 *Below is the original documentation for the `@Codebase` context provider, preserved for reference*
 
-Continue indexes your codebase so that it can later automatically pull in the most relevant context from throughout your workspace. This is done via a combination of embeddings-based retrieval and keyword search. By default, all embeddings are calculated locally using `transformers.js` and stored locally in `~/.continue/index`.
+Yuto Agentic indexes your codebase so that it can later automatically pull in the most relevant context from throughout your workspace. This is done via a combination of embeddings-based retrieval and keyword search. By default, all embeddings are calculated locally using `transformers.js` and stored locally in `~/.yutoagentic/index`.
 
 <Info>
   **Note:** `transformers.js` cannot be used in JetBrains IDEs. However, you can
@@ -111,10 +111,10 @@ Whether to use re-ranking, which will allow initial selection of `nRetrieve` res
 
 ## How to Ignore Files During Indexing
 
-Continue respects `.gitignore` files in order to determine which files should not be indexed. If you'd like to exclude additional files, you can add them to a `.yutoagenticignore` file, which follows the exact same rules as `.gitignore`.
+Yuto Agentic respects `.gitignore` files in order to determine which files should not be indexed. If you'd like to exclude additional files, you can add them to a `.yutoagenticignore` file, which follows the exact same rules as `.gitignore`.
 
-Continue also supports a **global** `.yutoagenticignore` file that will be respected for all workspaces, which can be created at `~/.continue/.yutoagenticignore`.
+Yuto Agentic also supports a **global** `.yutoagenticignore` file that will be respected for all workspaces, which can be created at `~/.yutoagentic/.yutoagenticignore`.
 
-If you want to see exactly what files Continue has indexed, the metadata is stored in `~/.continue/index/index.sqlite`. You can use a tool like [DB Browser for SQLite](https://sqlitebrowser.org/) to view the `tag_catalog` table within this file.
+If you want to see exactly what files Yuto Agentic has indexed, the metadata is stored in `~/.yutoagentic/index/index.sqlite`. You can use a tool like [DB Browser for SQLite](https://sqlitebrowser.org/) to view the `tag_catalog` table within this file.
 
 If you need to force a refresh of the index, reload the VS Code window with <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>p</kbd> + "Reload Window".

@@ -7,7 +7,7 @@ sidebar_position: 5
 
 An "embeddings model" is trained to convert a piece of text into a vector, which can later be rapidly compared to other vectors to determine similarity between the pieces of text. Embeddings models are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.
 
-In Continue, embeddings are generated during indexing and then used by [codebase awareness](/guides/codebase-documentation-awareness) to perform similarity search over your codebase.
+In Yuto Agentic, embeddings are generated during indexing and then used by [codebase awareness](/guides/codebase-documentation-awareness) to perform similarity search over your codebase.
 
 You can add `embed` to a model's `roles` to specify that it can be used to embed.
 
@@ -69,7 +69,7 @@ See [here](../model-providers/top-level/ollama) for instructions on how to use O
 
 ### Transformers.js (currently VS Code only)
 
-[Transformers.js](https://huggingface.co/docs/transformers.js/index) is a JavaScript port of the popular [Transformers](https://huggingface.co/transformers/) library. It allows embeddings to be calculated entirely locally. The model used is `all-MiniLM-L6-v2`, which is shipped alongside the Continue extension.
+[Transformers.js](https://huggingface.co/docs/transformers.js/index) is a JavaScript port of the popular [Transformers](https://huggingface.co/transformers/) library. It allows embeddings to be calculated entirely locally. The model used is `all-MiniLM-L6-v2`, which is shipped alongside the Yuto Agentic extension.
 
 <Tabs>
     <Tab title="YAML">

@@ -44,7 +44,7 @@ You prompt the AI when you remember, and it completes the task. This is great fo
 
 **Example**: Using AI to draft a function or suggest a test case only when you think to ask for it.
 
-**Continue Implementation**: Using [Chat](/ide-extensions/chat/quick-start) or [Edit](/ide-extensions/edit/quick-start) mode for one-off coding tasks.
+**Yuto Agentic Implementation**: Using [Chat](/ide-extensions/chat/quick-start) or [Edit](/ide-extensions/edit/quick-start) mode for one-off coding tasks.
 
 </Accordion>
 
@@ -58,7 +58,7 @@ AI handles routine tasks with human oversight. This is where teams start seeing 
 - Generated unit tests for new functions
 - Updated issue tracking when branches are merged
 
-**Continue Implementation**: Using [Continue CLI](/guides/cli) with custom rules and integrations into CI/CD pipelines.
+**Yuto Agentic Implementation**: Using [Yuto Agentic CLI](/guides/cli) with custom rules and integrations into CI/CD pipelines.
 
 </Accordion>
 
@@ -71,7 +71,7 @@ AI autonomously completes processes end-to-end without human input, but only for
 - Automatic documentation updates when code changes
 - Self-healing test suites that fix themselves based on failure patterns
 
-**Continue Implementation**: Fully automated [agents](/ide-extensions/agent/quick-start) with strict permissions and safety guardrails.
+**Yuto Agentic Implementation**: Fully automated [agents](/ide-extensions/agent/quick-start) with strict permissions and safety guardrails.
 
 </Accordion>
 
@@ -83,13 +83,13 @@ Don't try to automate everything at once. Choose a specific daily friction point
 
 ```bash
 # Example: Automated code review comments
-git diff | cn -p "review this diff and suggest improvements following our team standards"
+git diff | yt -p "review this diff and suggest improvements following our team standards"
 
 # Example: Generate missing tests
-cn -p "create unit tests for the functions in src/auth.js"
+yt -p "create unit tests for the functions in src/auth.js"
 
 # Example: Update documentation
-cn -p "update the README with the new API endpoints from the recent changes"
+yt -p "update the README with the new API endpoints from the recent changes"
 ```
 
 ### Configure Team-Wide Intelligence
@@ -108,9 +108,9 @@ rules:
 
 ### Implement Progressive Permissions
 
-Use Continue CLI's permission system to gradually expand AI capabilities:
+Use Yuto Agentic CLI's permission system to gradually expand AI capabilities:
 
-```yaml ~/.continue/permissions.yaml
+```yaml ~/.yutoagentic/permissions.yaml
 permissions:
   - allow: "Bash(git*)" # Git commands are safe
   - ask: "Write(**/*.ts)" # Ask before modifying TypeScript files
@@ -183,7 +183,7 @@ Track how often you need to correct AI output. Lower intervention rates mean hig
 ## Getting Started Today
 
 <Steps>
-  <Step title="Install Continue CLI">
+  <Step title="Install Yuto Agentic CLI">
     <CLIInstall />
   </Step>
 
@@ -207,6 +207,6 @@ As AI capabilities continue to improve and tooling matures, we're moving toward 
 Ready to amplify your development workflow with Continuous AI? Start with one simple automation and build from there.
 
 <Card title="Want to dive deeper?" icon="rocket">
-      Check out our guides on [Continue CLI](/guides/cli) and [Understanding
+      Check out our guides on [Yuto Agentic CLI](/guides/cli) and [Understanding
     Configs](/guides/understanding-configs).
 </Card>

@@ -1,4 +1,4 @@
-# Welcome to the Continue Visual Studio Code Extension
+# Welcome to the Yuto Agentic Visual Studio Code Extension
 
 ## Get up and running straight away
 

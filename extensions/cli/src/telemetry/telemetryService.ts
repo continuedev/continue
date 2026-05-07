@@ -232,7 +232,7 @@ class TelemetryService {
     });
 
     this.costCounter = this.meter.createCounter("continue_cli_cost_usage", {
-      description: "Cost of the Continue CLI session",
+      description: "Cost of the Yuto Agentic CLI session",
       unit: "USD",
     });
 
@@ -257,7 +257,7 @@ class TelemetryService {
       },
     );
 
-    // Additional Continue CLI specific metrics
+    // Additional Yuto Agentic CLI-specific metrics
     this.authAttemptsCounter = this.meter.createCounter(
       "continue_cli_auth_attempts",
       {

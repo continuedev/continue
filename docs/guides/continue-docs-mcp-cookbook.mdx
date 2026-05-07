@@ -1,48 +1,48 @@
 ---
-title: "Contributing to Continue with Model Context Protocol (MCP)"
-description: "Use the Continue Docs MCP to write cookbooks, guides, and documentation with AI-powered workflows."
-sidebarTitle: "Continue Docs MCP Cookbook"
+title: "Contributing to Yuto Agentic with Model Context Protocol (MCP)"
+description: "Use the Yuto Agentic Docs MCP to write cookbooks, guides, and documentation with AI-powered workflows."
+sidebarTitle: "Yuto Agentic Docs MCP Cookbook"
 ---
 
 <Card title="What You'll Build" icon="book-open-cover">
-  Master using the Continue Docs MCP to contribute documentation, create cookbooks, and maintain consistency across Continue's docs - all through natural language prompts.
+  Master using the Yuto Agentic Docs MCP to contribute documentation, create cookbooks, and maintain consistency across Yuto Agentic's docs - all through natural language prompts.
 </Card>
 
 ## Prerequisites
 
 Before starting, ensure you have:
 
-- Continue account with **Hub access**
-- Read: [Contributing to Continue Documentation](/CONTRIBUTING) for setup instructions
+- Yuto Agentic account with **Hub access**
+- Read: [Contributing to Yuto Agentic Documentation](/CONTRIBUTING) for setup instructions
 - Forked the [continuedev/continue](https://github.com/continuedev/continue) repository
-- Node.js 20+ and Continue CLI installed
+- Node.js 20+ and Yuto Agentic CLI installed
 
 <Warning>
   This cookbook assumes you've read the setup in the [CONTRIBUTING guide](/CONTRIBUTING). If you haven't, start there first.
 </Warning>
 
-## Continue Docs MCP Setup
+## Yuto Agentic Docs MCP Setup
 
 <Card title="Fastest Path to Success" icon="rocket">
-  Use the pre-built [Docs Assistant - Mintlify agent](https://yutoagentic.dev/continuedev/docs-mintlify) that includes the Continue Docs MCP and is ready to use immediately.
+  Use the pre-built [Docs Assistant - Mintlify agent](https://yutoagentic.dev/continuedev/docs-mintlify) that includes the Yuto Agentic Docs MCP and is ready to use immediately.
 </Card>
 
 <Tabs>
   <Tab title="⚡ Quick Start (Recommended)">
     ```bash
-    # From your Continue docs directory
-    cn --config continuedev/docs-mintlify
+    # From your Yuto Agentic docs directory
+    yt --config continuedev/docs-mintlify
     ```
 
     This agent includes:
-    - **Continue Docs MCP** for searching Continue documentation
+    - **Yuto Agentic Docs MCP** for searching Yuto Agentic documentation
     - **Mintlify formatting rules** for proper component usage
     - **Documentation-focused prompts** for common tasks
   </Tab>
 
   <Tab title="🛠️ Custom Agent">
     If you want to customize, create your own agent and add:
-    1. [Continue Docs MCP](https://yutoagentic.dev/continuedev/continue-docs-mcp)
+    1. [Yuto Agentic Docs MCP](https://yutoagentic.dev/continuedev/continue-docs-mcp)
     2. [Mintlify Technical Writing Rule](https://yutoagentic.dev/mintlify/technical-writing-rule)
 
     See the [CONTRIBUTING guide](/CONTRIBUTING) for details.
@@ -51,16 +51,16 @@ Before starting, ensure you have:
 
 ---
 
-## What is the Continue Docs MCP?
+## What is the Yuto Agentic Docs MCP?
 
-<Card title="Continue Docs MCP" icon="circle-info">
-  A Model Context Protocol server built with [Mintlify's MCP generation](https://www.mintlify.com/blog/generate-mcp-servers-for-your-docs) that enables semantic search across Continue documentation. [Learn more →](/reference/continue-mcp)
+<Card title="Yuto Agentic Docs MCP" icon="circle-info">
+  A Model Context Protocol server built with [Mintlify's MCP generation](https://www.mintlify.com/blog/generate-mcp-servers-for-your-docs) that enables semantic search across Yuto Agentic documentation. [Learn more →](/reference/continue-mcp)
 </Card>
 
 The MCP helps you:
 - **Find examples** from existing documentation
 - **Maintain consistency** with established patterns
-- **Source accurate information** about Continue features
+- **Source accurate information** about Yuto Agentic features
 - **Write better documentation** faster
 
 ---
@@ -69,17 +69,17 @@ The MCP helps you:
 
 ### 🆕 Creating a New Cookbook
 
-Cookbooks show how to use Continue CLI with specific tools or services. Here's how to create one using the Continue Docs MCP:
+Cookbooks show how to use Yuto Agentic CLI with specific tools or services. Here's how to create one using the Yuto Agentic Docs MCP:
 
 <Steps>
   <Step title="Research Existing Cookbooks">
     ```bash
-    cn --config continuedev/docs-mintlify
+    yt --config continuedev/docs-mintlify
     ```
 
     **Prompt:**
     ```
-    "Show me the structure of existing MCP cookbooks in the Continue docs.
+    "Show me the structure of existing MCP cookbooks in the Yuto Agentic docs.
     I want to create a cookbook for GitHub MCP."
     ```
 
@@ -89,14 +89,14 @@ Cookbooks show how to use Continue CLI with specific tools or services. Here's h
   <Step title="Source Official Documentation">
     **Prompt:**
     ```
-    "Using the Continue Docs MCP, find information about how GitHub MCP works.
+    "Using the Yuto Agentic Docs MCP, find information about how GitHub MCP works.
     Then search the web for the official GitHub MCP documentation and combine
     both sources to create a cookbook following the same structure as the
     dlt cookbook."
     ```
 
     The agent will:
-    - Search Continue docs for MCP patterns
+    - Search Yuto Agentic docs for MCP patterns
     - Fetch GitHub MCP official documentation
     - Combine both sources
     - Generate a cookbook with consistent formatting
@@ -126,7 +126,7 @@ Cookbooks show how to use Continue CLI with specific tools or services. Here's h
 </Steps>
 
 <Info>
-  **Pro Tip:** The agent uses the Continue Docs MCP to maintain consistency with existing cookbooks automatically.
+  **Pro Tip:** The agent uses the Yuto Agentic Docs MCP to maintain consistency with existing cookbooks automatically.
 </Info>
 
 ---
@@ -145,7 +145,7 @@ Cookbooks show how to use Continue CLI with specific tools or services. Here's h
     **Prompt:**
     ```
     "Update the MCP tools documentation at docs/customization/mcp-tools.mdx
-    to include information about the new Slack MCP server. Use the Continue
+    to include information about the new Slack MCP server. Use the Yuto Agentic
     Docs MCP to find examples of how other MCP servers are documented, then
     add a similar section for Slack."
     ```
@@ -160,8 +160,8 @@ Cookbooks show how to use Continue CLI with specific tools or services. Here's h
   <Step title="Research Similar Content">
     **Prompt:**
     ```
-    "I want to create a guide for setting up Continue with Amazon Bedrock.
-    Search the Continue docs for similar model provider setup guides and
+    "I want to create a guide for setting up Yuto Agentic with Amazon Bedrock.
+    Search the Yuto Agentic docs for similar model provider setup guides and
     show me the common structure they follow."
     ```
   </Step>
@@ -176,7 +176,7 @@ Cookbooks show how to use Continue CLI with specific tools or services. Here's h
     - Configuration options
     - Troubleshooting common issues
 
-    Use the Continue Docs MCP to find accurate information about Continue's
+    Use the Yuto Agentic Docs MCP to find accurate information about Yuto Agentic's
     model provider configuration."
     ```
   </Step>
@@ -197,7 +197,7 @@ Cookbooks show how to use Continue CLI with specific tools or services. Here's h
 
 **Prompt:**
 ```
-"Create a cookbook for using Continue with PostgreSQL MCP. Follow the same
+"Create a cookbook for using Yuto Agentic with PostgreSQL MCP. Follow the same
 structure as the dlt cookbook, but customize it for database operations.
 
 Include these sections:
@@ -206,7 +206,7 @@ Include these sections:
 3. Common database tasks (schema exploration, query writing, migrations)
 4. Troubleshooting database connection issues
 
-Use the Continue Docs MCP to find MCP configuration patterns and search the
+Use the Yuto Agentic Docs MCP to find MCP configuration patterns and search the
 web for PostgreSQL MCP documentation."
 ```
 
@@ -214,7 +214,7 @@ web for PostgreSQL MCP documentation."
 
 **Prompt:**
 ```
-"Create a cookbook showing how to use Continue to analyze Sentry errors.
+"Create a cookbook showing how to use Yuto Agentic to analyze Sentry errors.
 
 The cookbook should demonstrate:
 1. Setting up Sentry MCP integration
@@ -231,15 +231,15 @@ and adapt it for Sentry."
 
 **Prompt:**
 ```
-"I want to create a cookbook for using Continue to work with OpenAPI specs.
+"I want to create a cookbook for using Yuto Agentic to work with OpenAPI specs.
 
 Show how to:
-1. Load OpenAPI specs into Continue's context
+1. Load OpenAPI specs into Yuto Agentic's context
 2. Generate API client code from specs
 3. Create tests based on API endpoints
 4. Update documentation when APIs change
 
-Use the Continue Docs MCP to find how context providers work, then combine
+Use the Yuto Agentic Docs MCP to find how context providers work, then combine
 that with OpenAPI MCP information."
 ```
 
@@ -250,17 +250,17 @@ that with OpenAPI MCP information."
 <CardGroup cols={2}>
   <Card title="Multi-Source Research" icon="magnifying-glass">
     ```bash
-    "Use the Continue Docs MCP to understand how agents
-    work in Continue, then search the web for Anthropic's
+    "Use the Yuto Agentic Docs MCP to understand how agents
+    work in Yuto Agentic, then search the web for Anthropic's
     Computer Use MCP. Create a cookbook showing how to
-    combine Continue agents with Computer Use for
+    combine Yuto Agentic agents with Computer Use for
     automated testing."
     ```
   </Card>
 
   <Card title="Cross-Reference Documentation" icon="link">
     ```bash
-    "Find all mentions of MCP servers across Continue
+    "Find all mentions of MCP servers across Yuto Agentic
     documentation. Then create a comprehensive reference
     page that links to all MCP-related guides and
     configurations."
@@ -279,7 +279,7 @@ that with OpenAPI MCP information."
   <Card title="Example Extraction" icon="code">
     ```bash
     "Extract all code examples showing MCP server
-    configuration from the Continue docs. Format them
+    configuration from the Yuto Agentic docs. Format them
     as a single reference page with explanations for
     each pattern."
     ```
@@ -336,7 +336,7 @@ The agent will:
 
 ## Automated Documentation Checks with GitHub Actions
 
-Add automated documentation checks to your PR workflow using the Continue Docs MCP agent:
+Add automated documentation checks to your PR workflow using the Yuto Agentic Docs MCP agent:
 
 ```yaml title=".github/workflows/docs-check.yml"
 name: Documentation Check
@@ -363,7 +363,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Continue CLI
+      - name: Install Yuto Agentic CLI
         run: npm i -g @yutoagentic/cli
 
       - name: Analyze Changes for Documentation Needs
@@ -379,7 +379,7 @@ jobs:
           # Create detailed diff
           git diff origin/${{ github.base_ref }}..HEAD > changes.diff
 
-          # Use Continue agent to check if docs need updates
+          # Use Yuto Agentic agent to check if docs need updates
           PROMPT="Review these code changes and determine if documentation updates are needed.
 
           Changed files: $(cat changed_files.txt | tr '\n' ' ')
@@ -395,7 +395,7 @@ jobs:
           If no updates needed, respond with 'NO_DOCS_NEEDED'.
           Be specific and concise."
 
-          cn --config continuedev/docs-mintlify -p "$PROMPT" --auto > analysis.md || {
+          yt --config continuedev/docs-mintlify -p "$PROMPT" --auto > analysis.md || {
             echo "⚠️ Analysis failed"
             echo "needs_docs=false" >> $GITHUB_OUTPUT
             exit 0
@@ -439,9 +439,9 @@ EOF
 
 ### Resources
 - [Contributing to Docs](/CONTRIBUTING)
-- [Continue Docs MCP Cookbook](/guides/continue-docs-mcp-cookbook)
+- [Yuto Agentic Docs MCP Cookbook](/guides/continue-docs-mcp-cookbook)
 
-*This analysis was generated using the Continue Docs MCP agent.*
+*This analysis was generated using the Yuto Agentic Docs MCP agent.*
 EOF
 
           gh pr comment ${{ github.event.pull_request.number }} --body-file pr-comment.md
@@ -455,7 +455,7 @@ EOF
 ```
 
 <Info>
-  This workflow uses the Continue Docs MCP agent to analyze code changes and automatically comment on PRs when documentation updates are recommended.
+  This workflow uses the Yuto Agentic Docs MCP agent to analyze code changes and automatically comment on PRs when documentation updates are recommended.
 </Info>
 
 ---
@@ -478,13 +478,13 @@ Want to create documentation MCPs for your own projects? Mintlify makes it easy:
     [Learn more about Mintlify MCP generation →](https://www.mintlify.com/blog/generate-mcp-servers-for-your-docs)
   </Step>
 
-  <Step title="Publish to Continue Mission Control">
-    Share your docs MCP on [Continue Mission Control](https://yutoagentic.dev/new?type=mcp) so others can use it with Continue agents.
+  <Step title="Publish to Yuto Agentic Mission Control">
+    Share your docs MCP on [Yuto Agentic Mission Control](https://yutoagentic.dev/new?type=mcp) so others can use it with Yuto Agentic agents.
   </Step>
 </Steps>
 
 <Info>
-  The [Continue Docs MCP](/reference/continue-mcp) itself was built this way!
+  The [Yuto Agentic Docs MCP](/reference/continue-mcp) itself was built this way!
 </Info>
 
 ---
@@ -493,22 +493,22 @@ Want to create documentation MCPs for your own projects? Mintlify makes it easy:
 
 | Task | Prompt |
 |:-----|:-------|
-| **Find structure** | "Show me the structure of existing cookbooks in Continue docs" |
+| **Find structure** | "Show me the structure of existing cookbooks in Yuto Agentic docs" |
 | **Create cookbook** | "Create a cookbook for [tool] MCP following the dlt cookbook structure" |
-| **Update docs** | "Update [file] to include information about [feature], using Continue Docs MCP to find examples" |
+| **Update docs** | "Update [file] to include information about [feature], using Yuto Agentic Docs MCP to find examples" |
 | **Add navigation** | "Add [file] to docs.json under the [section] section" |
-| **Check consistency** | "Review this file for consistency with other Continue documentation" |
+| **Check consistency** | "Review this file for consistency with other Yuto Agentic documentation" |
 | **Fix formatting** | "Review for Mintlify formatting issues and fix any problems" |
-| **Extract examples** | "Find all examples of [topic] in Continue docs" |
-| **Research feature** | "Use Continue Docs MCP to explain how [feature] works in Continue" |
+| **Extract examples** | "Find all examples of [topic] in Yuto Agentic docs" |
+| **Research feature** | "Use Yuto Agentic Docs MCP to explain how [feature] works in Yuto Agentic" |
 
 ---
 
 ## Resources
 
-### Continue Documentation
+### Yuto Agentic Documentation
 - [Contributing Guide](/CONTRIBUTING) - Setup and submission process
-- [Continue Docs MCP Reference](/reference/continue-mcp) - MCP server details
+- [Yuto Agentic Docs MCP Reference](/reference/continue-mcp) - MCP server details
   - [Understanding Configs](/guides/understanding-configs) - How configs work
 
 ### Mintlify

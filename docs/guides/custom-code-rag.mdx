@@ -64,7 +64,7 @@ In the beginning, you should probably run it by hand. Once you are confident tha
 
 ## Step 6: How to set up an MCP server
 
-To integrate your custom RAG system with Continue, you'll create an MCP (Model Context Protocol) server. MCP provides a standardized way for AI tools to access external resources.
+To integrate your custom RAG system with Yuto Agentic, you'll create an MCP (Model Context Protocol) server. MCP provides a standardized way for AI tools to access external resources.
 
 ### Create your MCP server
 
@@ -96,7 +96,7 @@ async def search_codebase(query: str, limit: int = 10) -> list[TextContent]:
     # Query your vector database
     results = table.search(query).limit(limit).to_list()
     
-    # Format results for Continue
+    # Format results for Yuto Agentic
     formatted_results = []
     for result in results:
         formatted_results.append(TextContent(
@@ -125,9 +125,9 @@ if __name__ == "__main__":
     stdio_server(app).run()
 ```
 
-### Configure Continue to use your MCP server
+### Configure Yuto Agentic to use your MCP server
 
-Add your MCP server to Continue's configuration:
+Add your MCP server to Yuto Agentic's configuration:
 
 **config.yaml:**
 ```yaml

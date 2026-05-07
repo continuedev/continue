@@ -1,7 +1,7 @@
 ---
-title: "Automating Documentation Updates with Continue CLI"
-sidebarTitle: "Automating Documentation Updates with Continue CLI"
-description: "Learn how to create automated documentation generation workflows using Continue CLI. Set up AI agents to analyze code changes and generate or update documentation automatically in GitHub workflows or local development."
+title: "Automating Documentation Updates with Yuto Agentic CLI"
+sidebarTitle: "Automating Documentation Updates with Yuto Agentic CLI"
+description: "Learn how to create automated documentation generation workflows using Yuto Agentic CLI. Set up AI agents to analyze code changes and generate or update documentation automatically in GitHub workflows or local development."
 ---
 
 import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
@@ -21,11 +21,11 @@ import CLIInstall from '/snippets/cli-install.mdx'
 
 # Getting Started
 
-This guide demonstrates how to create automated documentation generation based on code updates in a git branch using the Continue CLI, either as part of your local workflow or as part of a GitHub workflow.
+This guide demonstrates how to create automated documentation generation based on code updates in a git branch using the Yuto Agentic CLI, either as part of your local workflow or as part of a GitHub workflow.
 
-This process utilizes the **Continue CLI** (`cn`) in **headless mode** to analyze changes and generate the necessary documentation, and commit and push the changes. The goal is to keep the workflow as simple as possible by using straightforward shell commands, Continue CLI prompts, and basic git operations.
+This process utilizes the **Yuto Agentic CLI** (`yt`) in **headless mode** to analyze changes and generate the necessary documentation, and commit and push the changes. The goal is to keep the workflow as simple as possible by using straightforward shell commands, Yuto Agentic CLI prompts, and basic git operations.
 
-## Why Use Continue CLI for Documentation?
+## Why Use Yuto Agentic CLI for Documentation?
 
 <CardGroup cols={2}>
   <Card title="Intelligent Analysis" icon="brain">
@@ -48,19 +48,19 @@ This process utilizes the **Continue CLI** (`cn`) in **headless mode** to analyz
 ## Prerequisites
 
 <CardGroup cols={1}>
-  <Card title="Install Continue CLI" icon="terminal">
-    Continue CLI requires Node.js 20 or higher.
+  <Card title="Install Yuto Agentic CLI" icon="terminal">
+    Yuto Agentic CLI requires Node.js 20 or higher.
     
     <CLIInstall />
   </Card>
 
-  <Card title="Continue API Key" icon="key">
-    Get your API key from [Continue Mission Control](https://yutoagentic.dev/settings/api-keys) and set:
+  <Card title="Yuto Agentic API Key" icon="key">
+    Get your API key from [Yuto Agentic Mission Control](https://yutoagentic.dev/settings/api-keys) and set:
     ```bash
     export CONTINUE_API_KEY=your_key_here
     ```
     <Info>
-    You can use the Continue CLI in headless mode without interactive login by setting the `CONTINUE_API_KEY` environment variable.
+    You can use the Yuto Agentic CLI in headless mode without interactive login by setting the `CONTINUE_API_KEY` environment variable.
     </Info>
   </Card>
 
@@ -77,7 +77,7 @@ The documentation generation process follows these sequential steps:
 
 <Steps>
   <Step title="Environment Setup">
-    Validate environment, install Continue CLI, and set up authentication with API keys.
+    Validate environment, install Yuto Agentic CLI, and set up authentication with API keys.
   </Step>
 
   <Step title="Change Analysis">
@@ -89,7 +89,7 @@ The documentation generation process follows these sequential steps:
   </Step>
 
   <Step title="AI Documentation Generation">
-    Use Continue CLI with custom rules to analyze changes and generate or update documentation files.
+    Use Yuto Agentic CLI with custom rules to analyze changes and generate or update documentation files.
     <Tip>
     Use an agent configuration with rules specific for documentation writing in your project and fine-tune it to work for your team's standards.
     </Tip>
@@ -120,9 +120,9 @@ This example uses a manual workflow dispatch that requires two inputs: the repos
 **Required Inputs:**
 - **repository:** The repository you are operating on (format: `owner/repo`)
 - **branch_name:** The name of the branch you have code changes on and want to generate documentation for
-- **continue_config:** The Continue agent configuration to use
+- **continue_config:** The Yuto Agentic agent configuration to use
   - Consider setting a default value if you have a default config your'd like to use
-- **continue_org:** The Continue org to use
+- **continue_org:** The Yuto Agentic org to use
   - Consider setting a default value if you have a default org your'd like to use
 
 
@@ -140,12 +140,12 @@ on:
         description: 'Branch name to generate docs for'
         required: true
       continue_config:
-        description: 'Continue agent configuration to use'
+        description: 'Yuto Agentic agent configuration to use'
         required: true
         # Set a default value if you have a default config your'd like to use
         # default: 'agent-config-name'
       continue_org:
-        description: 'Continue org to use'
+        description: 'Yuto Agentic org to use'
         required: true
         # Set a default value if you have a default org your'd like to use
         # default: 'your-org-name'
@@ -183,15 +183,15 @@ jobs:
       with:
         node-version: '18'
 
-    - name: Install Continue CLI
+    - name: Install Yuto Agentic CLI
       run: |
-        echo "Installing Continue CLI..."
+        echo "Installing Yuto Agentic CLI..."
         npm i -g @yutoagentic/cli
 
-    - name: Verify Continue CLI installation
+    - name: Verify Yuto Agentic CLI installation
       run: |
-        echo "Checking Continue CLI version..."
-        cn --version || exit 1
+        echo "Checking Yuto Agentic CLI version..."
+        yt --version || exit 1
 
     - name: Set branch name
       id: branch
@@ -214,10 +214,10 @@ jobs:
         echo "Creating branch: ${{ steps.branch.outputs.branch_name }}"
         git checkout -b "${{ steps.branch.outputs.branch_name }}"
 
-    - name: Generate documentation with Continue CLI
+    - name: Generate documentation with Yuto Agentic CLI
       run: |
-        echo "Running Continue agent to generate documentation..."
-        cn --config <continue-user>/<agent-config> \
+        echo "Running Yuto Agentic agent to generate documentation..."
+        yt --config <continue-user>/<agent-config> \
            --auto \
            --allow Write \
            -p \
@@ -252,7 +252,7 @@ jobs:
 Make sure to set your `CONTINUE_API_KEY` environment variable before running local scripts to enable headless mode.
 </Warning>
 
-When using the Continue CLI on your local machine, you can build workflows in various ways, one of which is by simply creating shell scripts that you can run, which call the CLI.
+When using the Yuto Agentic CLI on your local machine, you can build workflows in various ways, one of which is by simply creating shell scripts that you can run, which call the CLI.
 
 The below shell script snippet shows the final part of a docs updating shell script that can be used to generate documentation for the code changes in a branch of a git repository.
 
@@ -283,9 +283,9 @@ cat context.txt
 echo "Creating branch: $DOCS_BRANCH_NAME"
 git checkout -b "$DOCS_BRANCH_NAME"
 
-# Generate documentation with Continue CLI
-echo "Running Continue agent to generate documentation..."
-cn -config "$CONTINUE_ORG/$CONTINUE_CONFIG" \
+# Generate documentation with Yuto Agentic CLI
+echo "Running Yuto Agentic agent to generate documentation..."
+yt -config "$CONTINUE_ORG/$CONTINUE_CONFIG" \
    --auto \
    --allow Write \
    -p \
@@ -344,11 +344,11 @@ The workflow above is a basic example and can be enhanced in various ways to fit
 
 ## Next Steps
 
-Ready to implement automated documentation with Continue CLI? Here are some helpful resources to get you started:
+Ready to implement automated documentation with Yuto Agentic CLI? Here are some helpful resources to get you started:
 
 <CardGroup cols={2}>
-  <Card title="Continue CLI Guide" icon="terminal" href="/guides/cli">
-    Learn the fundamentals of using Continue CLI for automated coding tasks and headless workflows.
+  <Card title="Yuto Agentic CLI Guide" icon="terminal" href="/guides/cli">
+    Learn the fundamentals of using Yuto Agentic CLI for automated coding tasks and headless workflows.
   </Card>
 
   <Card title="Understanding Configs" icon="robot" href="/guides/understanding-configs">
@@ -356,10 +356,10 @@ Ready to implement automated documentation with Continue CLI? Here are some help
   </Card>
 
   <Card title="Video: Leverage AI to help with your docs" icon="video" href="https://www.youtube.com/watch?v=rJ2taa8OLvY">
-    Checkout this video from Tetrate about using Continue Agents to help with writing your docs.
+    Checkout this video from Tetrate about using Yuto Agentic Agents to help with writing your docs.
   </Card>
 
-  <Card title="Continue Mission Control" icon="users" href="https://yutoagentic.dev">
-    Browse pre-built agents and configurations from the Continue community.
+  <Card title="Yuto Agentic Mission Control" icon="users" href="https://yutoagentic.dev">
+    Browse pre-built agents and configurations from the Yuto Agentic community.
   </Card>
 </CardGroup>

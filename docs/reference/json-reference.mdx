@@ -5,7 +5,7 @@ noindex: true
 ---
 
 <Warning>
-  **This page documents deprecated functionality.** For creating slash commands and customizing Continue, please use:
+  **This page documents deprecated functionality.** For creating slash commands and customizing Yuto Agentic, please use:
   - [Prompt blocks and prompt files](/customize/deep-dives/prompts) for slash commands
   - [config.yaml](/reference) for configuration
 
@@ -279,7 +279,7 @@ Example
 config.json
 
 ```
-"docs": [    {    "title": "Continue",    "startUrl": "https://docs.yutoagentic.dev/intro",    "faviconUrl": "https://docs.yutoagentic.dev/favicon.ico",  }]
+"docs": [    {    "title": "Yuto Agentic",    "startUrl": "https://docs.yutoagentic.dev/intro",    "faviconUrl": "https://docs.yutoagentic.dev/favicon.ico",  }]
 ```
 
 ## `slashCommands`
@@ -307,7 +307,7 @@ config.json
     {
       "name": "share",
       "description": "Export the current chat session to markdown",
-      "params": { "outputDir": "~/.continue/session-transcripts" }
+      "params": { "outputDir": "~/.yutoagentic/session-transcripts" }
     }
   ]
 }
@@ -348,7 +348,7 @@ config.json
 
 ### `/http`
 
-Write a custom slash command at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup. The endpoint should return a sequence of string updates, which will be streamed to the Continue sidebar. See our basic [FastAPI example](https://github.com/continuedev/continue/blob/74002369a5e435735b83278fb965e004ae38a97d/core/context/providers/context_provider_server.py#L34-L45) for reference.
+Write a custom slash command at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup. The endpoint should return a sequence of string updates, which will be streamed to the Yuto Agentic sidebar. See our basic [FastAPI example](https://github.com/continuedev/continue/blob/74002369a5e435735b83278fb965e004ae38a97d/core/context/providers/context_provider_server.py#L34-L45) for reference.
 
 config.json
 
@@ -366,7 +366,7 @@ config.json
 
 ### `/issue`
 
-Describe the issue you'd like to generate, and Continue will turn into a well-formatted title and body, then give you a link to the draft so you can submit. Make sure to set the URL of the repository you want to generate issues for.
+Describe the issue you'd like to generate, and Yuto Agentic will turn into a well-formatted title and body, then give you a link to the draft so you can submit. Make sure to set the URL of the repository you want to generate issues for.
 
 config.json
 

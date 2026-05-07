@@ -1,6 +1,6 @@
 ---
 title: "FAQs"
-description: "Frequently asked questions about Continue"
+description: "Frequently asked questions about Yuto Agentic"
 ---
 
 ## Networking Issues
@@ -38,11 +38,11 @@ If you're seeing a `fetch failed` error and your network requires custom certifi
 
 You may also set `requestOptions.caBundlePath` to an array of paths to multiple certificates.
 
-**_Windows VS Code Users_**: Installing the [win-ca](https://marketplace.visualstudio.com/items?itemName=ukoloff.win-ca) extension may help Continue use the Windows certificate store, but `requestOptions.caBundlePath` is the most reliable fix.
+**_Windows VS Code Users_**: Installing the [win-ca](https://marketplace.visualstudio.com/items?itemName=ukoloff.win-ca) extension may help Yuto Agentic use the Windows certificate store, but `requestOptions.caBundlePath` is the most reliable fix.
 
 ### Common SSL certificate errors
 
-If your logs include errors such as `unable to verify the first certificate`, `self signed certificate in certificate chain`, `certificate verify failed`, or `CERT_UNTRUSTED`, Continue was able to reach the endpoint but could not verify the TLS certificate chain it returned.
+If your logs include errors such as `unable to verify the first certificate`, `self signed certificate in certificate chain`, `certificate verify failed`, or `CERT_UNTRUSTED`, Yuto Agentic was able to reach the endpoint but could not verify the TLS certificate chain it returned.
 
 In most cases, the fix is to export the root or intermediate CA certificate for that endpoint and set `requestOptions.caBundlePath` in your model configuration. If the server also requires mutual TLS, add `requestOptions.clientCertificate` as well.
 
@@ -54,11 +54,11 @@ If you are using VS Code and require requests to be made through a proxy, you ar
 
 ### code-server
 
-Continue can be used in [code-server](https://coder.com/), but if you are running across an error in the logs that includes "This is likely because the editor is not running in a secure context", please see [their documentation on securely exposing code-server](https://coder.com/docs/code-server/latest/guide#expose-code-server).
+Yuto Agentic can be used in [code-server](https://coder.com/), but if you are running across an error in the logs that includes "This is likely because the editor is not running in a secure context", please see [their documentation on securely exposing code-server](https://coder.com/docs/code-server/latest/guide#expose-code-server).
 
 ## Changes to Configs Not Showing in VS Code
 
-If you've made changes to a config (adding, modifying, or removing it) but the changes aren't appearing in the Continue extension in VS Code, try reloading the VS Code window:
+If you've made changes to a config (adding, modifying, or removing it) but the changes aren't appearing in the Yuto Agentic extension in VS Code, try reloading the VS Code window:
 
 1. Open the command palette (`cmd/ctrl` + `shift` + `P`)
 2. Type "Reload Window"
@@ -66,9 +66,9 @@ If you've made changes to a config (adding, modifying, or removing it) but the c
 
 This will restart VS Code and reload all extensions, which should make your config changes visible.
 
-## I installed Continue, but don't see the sidebar window
+## I installed Yuto Agentic, but don't see the sidebar window
 
-By default the Continue window is on the left side of VS Code, but it can be dragged to right side as well, which we recommend in our tutorial. In the situation where you have previously installed Continue and moved it to the right side, it may still be there. You can reveal Continue either by using cmd/ctrl+L or by clicking the button in the top right of VS Code to open the right sidebar.
+By default the Yuto Agentic window is on the left side of VS Code, but it can be dragged to right side as well, which we recommend in our tutorial. In the situation where you have previously installed Yuto Agentic and moved it to the right side, it may still be there. You can reveal Yuto Agentic either by using cmd/ctrl+L or by clicking the button in the top right of VS Code to open the right sidebar.
 
 ## I'm getting a 404 error from OpenAI
 
@@ -76,25 +76,25 @@ If you have entered a valid API key and model, but are still getting a 404 error
 
 ## I'm getting a 404 error from OpenRouter
 
-If you have entered a valid API key and model, but are still getting a 404 error from OpenRouter, this may be because models that do not support function calling will return an error to Continue when a request is sent. Example error: `HTTP 404 Not Found from https://openrouter.ai/api/v1/chat/completions`
+If you have entered a valid API key and model, but are still getting a 404 error from OpenRouter, this may be because models that do not support function calling will return an error to Yuto Agentic when a request is sent. Example error: `HTTP 404 Not Found from https://openrouter.ai/api/v1/chat/completions`
 
 ## Indexing issues
 
 If you are having persistent errors with indexing, our recommendation is to rebuild your index from scratch. Note that for large codebases this may take some time.
 
-This can be accomplished using the following command: `Continue: Rebuild codebase index`.
+This can be accomplished using the following command: `Yuto Agentic: Rebuild codebase index`.
 
 ## Agent mode is unavailable or tools aren't working
 
 If Agent mode is grayed out or tools aren't functioning properly, this is likely due to model capability configuration issues.
 
 <Info>
-  Continue uses system message tools as a fallback for models without native tool support, so most models should work with Agent mode automatically.
+  Yuto Agentic uses system message tools as a fallback for models without native tool support, so most models should work with Agent mode automatically.
 </Info>
 
 ### Check if your model has tool support
 
-1. Not all models support native tool/function calling, but Continue will automatically use system message tools as a fallback
+1. Not all models support native tool/function calling, but Yuto Agentic will automatically use system message tools as a fallback
 2. Try adding `capabilities: ["tool_use"]` to your model config to force tool support
 3. Verify your provider supports function calling or that system message tools are working correctly
 
@@ -116,7 +116,7 @@ If you can't upload images:
 
 ### Add capabilities
 
-If Continue's autodetection isn't working correctly, you can manually add capabilities in your `config.yaml`:
+If Yuto Agentic's autodetection isn't working correctly, you can manually add capabilities in your `config.yaml`:
 
 ```yaml
 models:
@@ -134,7 +134,7 @@ Some proxy services (like OpenRouter) or custom deployments may not preserve too
 
 ### Verifying Current Capabilities
 
-To see what capabilities Continue detected for your model:
+To see what capabilities Yuto Agentic detected for your model:
 
 1. Check the mode selector tooltips - they indicate if tools are available
 2. Try uploading an image - if disabled, the model lacks `image_input`
@@ -150,7 +150,7 @@ This can be fixed by selecting `Actions > Choose Boot runtime for the IDE` then 
 
 We use LanceDB as our vector database for codebase search features. On x64 Linux systems, LanceDB requires specific CPU features (FMA and AVX2) which may not be available on older processors.
 
-Most Continue features will work normally, including autocomplete and chat. However, commands that rely on codebase indexing, such as `@codebase`, `@files`, and `@folder`, will be disabled.
+Most Yuto Agentic features will work normally, including autocomplete and chat. However, commands that rely on codebase indexing, such as `@codebase`, `@files`, and `@folder`, will be disabled.
 
 For more details about this requirement, see the [LanceDB issue #2195](https://github.com/lancedb/lance/issues/2195).
 
@@ -186,7 +186,7 @@ When connecting to Ollama on another machine:
      ```
    - Restart Ollama: `sudo systemctl restart ollama`
 
-2. **Update your Continue config**:
+2. **Update your Yuto Agentic config**:
 ```yaml
 models:
   - name: llama3
@@ -223,7 +223,7 @@ netsh interface portproxy add v4tov4 listenport=11434 listenaddress=0.0.0.0 conn
 
 ### Docker container can't connect to host Ollama
 
-When running Continue or other tools in Docker that need to connect to Ollama on the host:
+When running Yuto Agentic or other tools in Docker that need to connect to Ollama on the host:
 
 **Windows/Mac**: Use `host.docker.internal`:
 ```yaml
@@ -268,7 +268,7 @@ If you're getting parse errors with remote Ollama:
 
 ### Managing Local Secrets and Environment Variables
 
-For running Continue completely offline without internet access, see the [Running Continue Without Internet guide](/guides/running-continue-without-internet).
+For running Yuto Agentic completely offline without internet access, see the [Running Yuto Agentic Without Internet guide](/guides/running-continue-without-internet).
 
 #### How to reference secrets in config.yaml
 
@@ -282,17 +282,17 @@ models:
 
 #### Where secrets are resolved from
 
-When Continue encounters `${{ secrets.X }}`, it searches these sources **in order**:
+When Yuto Agentic encounters `${{ secrets.X }}`, it searches these sources **in order**:
 
 1. **Workspace `.env` file**: `<workspace-root>/.env`
-2. **Workspace Continue `.env` file**: `<workspace-root>/.continue/.env`
-3. **Global `.env` file**: `~/.continue/.env`
+2. **Workspace Yuto Agentic `.env` file**: `<workspace-root>/.yutoagentic/.env`
+3. **Global `.env` file**: `~/.yutoagentic/.env`
 4. **Process environment variables**: Standard system environment variables
 
 <Warning>
-**IDE extensions (VS Code, JetBrains) cannot read your shell environment variables.** Setting `export OPENAI_API_KEY=...` in your terminal will not make the key available to Continue running inside your IDE. You must use a `.env` file instead.
+**IDE extensions (VS Code, JetBrains) cannot read your shell environment variables.** Setting `export OPENAI_API_KEY=...` in your terminal will not make the key available to Yuto Agentic running inside your IDE. You must use a `.env` file instead.
 
-Process environment variables (source 4) only work with the [Continue CLI](/cli/configuration), where you can pass them directly: `export OPENAI_API_KEY=sk-... && cn`
+Process environment variables (source 4) only work with the [Yuto Agentic CLI](/cli/configuration), where you can pass them directly: `export OPENAI_API_KEY=sk-... && yt`
 </Warning>
 
 #### Creating `.env` files
@@ -311,11 +311,11 @@ CUSTOM_API_URL=https://api.example.com
 
 ### Using Model Addons Locally
 
-You can leverage model addons from the Continue Mission Control in your local configurations using the `uses:` syntax. This allows you to reference pre-configured model blocks without duplicating configuration.
+You can leverage model addons from the Yuto Agentic Mission Control in your local configurations using the `uses:` syntax. This allows you to reference pre-configured model blocks without duplicating configuration.
 
 #### Requirements
 
-- You must be logged in to Continue
+- You must be logged in to Yuto Agentic
 - Internet connection is required (model addons are fetched from Mission Control)
 
 #### Usage
@@ -369,7 +369,7 @@ This feature allows you to maintain consistent model configurations across teams
 
 ## How do I reset the state of the extension?
 
-Continue stores its data in the `~/.continue` directory (`%USERPROFILE%\.continue` on Windows).
+Yuto Agentic stores its data in the `~/.yutoagentic` directory (`%USERPROFILE%\.continue` on Windows).
 
 If you'd like to perform a clean reset of the extension, including removing all configuration files, indices, etc, you can remove this directory, uninstall, and then reinstall.
 

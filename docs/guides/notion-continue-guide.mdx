@@ -1,7 +1,7 @@
 ---
-title: "Developer & Team Workflows with Notion + Continue CLI"
-description: "Use Continue CLI with Notion to generate docs, manage tasks, and automate project workflows – all through natural-language prompts."
-sidebarTitle: "Notion with Continue"
+title: "Developer & Team Workflows with Notion + Yuto Agentic CLI"
+description: "Use Yuto Agentic CLI with Notion to generate docs, manage tasks, and automate project workflows – all through natural-language prompts."
+sidebarTitle: "Notion with Yuto Agentic"
 ---
 
 import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
@@ -21,7 +21,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
 ## What You'll Learn
 
 This guide teaches you to:
-- Use natural language to connect to the Notion API directly with Continue CLI for powerful automation
+- Use natural language to connect to the Notion API directly with Yuto Agentic CLI for powerful automation
 - Configure Notion API access with proper permissions and security
 - Run prompts in both TUI (interactive) and headless modes
 - Create automated workflows that generate docs, manage tasks, and sync data
@@ -30,32 +30,32 @@ This guide teaches you to:
 
 Before starting, ensure you have:
 
-- [Continue CLI](https://docs.yutoagentic.dev/cli/quickstart) installed
+- [Yuto Agentic CLI](https://docs.yutoagentic.dev/cli/quickstart) installed
 - A [Notion workspace](https://notion.so) with Editor (or higher) access
 - Node.js 18+ installed locally
-- [Continue account](https://yutoagentic.dev) with **Hub access**
+- [Yuto Agentic account](https://yutoagentic.dev) with **Hub access**
 
 <Warning>
 
-  **Agent usage requires credits** – create a Continue API key at
+  **Agent usage requires credits** – create a Yuto Agentic API key at
   [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
   and store it as a secret.
 
 </Warning>
 
 <Steps>
-  <Step title="Install Continue CLI">
+  <Step title="Install Yuto Agentic CLI">
     <CLIInstall />
     
     Verify installation:
     ```bash
-    cn --version
+    yt --version
     ```
   </Step>
 
   <Step title="Create Notion Integration & Get API Key">
     1. Go to **[Notion Integrations](https://www.notion.so/my-integrations)**
-    2. Click **+ New integration** → give it a name (e.g. "Continue Integration")
+    2. Click **+ New integration** → give it a name (e.g. "Yuto Agentic Integration")
     3. Select your workspace
     4. Under **Content Capabilities**, enable:
        - ✅ Read content
@@ -99,7 +99,7 @@ Before starting, ensure you have:
 
   </Step>
   <Step title="Add Workspace Keys to Terminal Session">
-    Depending on what you want `cn` to accomplish, you'll need to add your Notion workspace keys to the terminal session. The workspace key is your Notion database ID. Run the following command:
+    Depending on what you want `yt` to accomplish, you'll need to add your Notion workspace keys to the terminal session. The workspace key is your Notion database ID. Run the following command:
 
       ```bash
       export NOTION_DATABASE_ID="your_database_id"
@@ -116,11 +116,11 @@ Before starting, ensure you have:
   </Step>
 </Steps>
 
-## Running Continue CLI with Notion API
+## Running Yuto Agentic CLI with Notion API
 
 <Card title="🚀 Choose Your Interface" icon="zap">
 
-  Continue CLI offers two powerful modes for Notion automation:
+  Yuto Agentic CLI offers two powerful modes for Notion automation:
   **TUI mode** for interactive workflows and **Headless mode** for automated scripts.
 
 </Card>
@@ -132,7 +132,7 @@ Before starting, ensure you have:
       <Step title="Launch Interactive Mode">
         Navigate to your project directory and run:
         ```bash
-        cn 
+        yt 
         ```
       </Step>
 
@@ -160,7 +160,7 @@ Before starting, ensure you have:
       <Step title="Run Automated Commands">
         Execute prompts directly from the command line:
         ```bash
-        cn -p --auto "
+        yt -p --auto "
         1. Fetch my Notion databases using the Notion API key
         and Database ID stored in this terminal session.
         2. Analyze all merged GitHub PRs from the past week.
@@ -185,10 +185,10 @@ Before starting, ensure you have:
 
 <Accordion title="API Connection Notes">
 
-  - Environment variable `NOTION_API_KEY` must be set before running Continue CLI
-  - Continue automatically uses the API key to authenticate with Notion
+  - Environment variable `NOTION_API_KEY` must be set before running Yuto Agentic CLI
+  - Yuto Agentic automatically uses the API key to authenticate with Notion
   - No need for manual curl commands - just reference "the API key stored in this session"
-  - For complex workflows, Continue maintains the API connection throughout
+  - For complex workflows, Yuto Agentic maintains the API connection throughout
   - Consider creating aliases or scripts for frequently used prompts
 
 </Accordion>
@@ -197,7 +197,7 @@ Before starting, ensure you have:
 
 ## Quick Start Example
 
-Working example that demonstrates the power of Continue with Notion API:
+Working example that demonstrates the power of Yuto Agentic with Notion API:
 
 <Card title="📊 Weekly Sprint Summary" icon="chart-line">
 
@@ -205,7 +205,7 @@ Working example that demonstrates the power of Continue with Notion API:
 
   ```bash
   # Weekly Sprint Summary
-  cn -p --auto "
+  yt -p --auto "
   1. Fetch Notion Sprint database
   2. Analyze completed tasks vs planned
   3. Generate sprint retrospective page
@@ -229,7 +229,7 @@ With the Notion API configured, you can use natural language prompts to automate
   <Card title="API Documentation" icon="code">
     **TUI Mode:**
     ```bash
-    cn "
+    yt "
     1. Fetch my Notion databases using the API key and secrets stored in this session
     2. Generate API documentation for all endpoints 
     in src/api/routes with request/response schemas
@@ -239,7 +239,7 @@ With the Notion API configured, you can use natural language prompts to automate
     
     **Headless Mode:**
     ```bash
-    cn -p --auto "Fetch my Notion databases using the API key and secrets stored in this session. Generate API docs 
+    yt -p --auto "Fetch my Notion databases using the API key and secrets stored in this session. Generate API docs 
     for src/api/routes and save to Notion in Technical Docs database"
     ```
   </Card>
@@ -247,7 +247,7 @@ With the Notion API configured, you can use natural language prompts to automate
   <Card title="Sprint Planning from Code" icon="list-checks">
     **Headless Mode (Automated):**
     ```bash
-    cn -p --auto "
+    yt -p --auto "
     1. Fetch my Notion databases using the API key stored in this session
     2. Scan codebase for TODO and FIXME comments
     3. Create tasks in my Notion Engineering Backlog database
@@ -257,7 +257,7 @@ With the Notion API configured, you can use natural language prompts to automate
   
   <Card title="Changelog from PRs" icon="rocket">
     ```bash
-        cn -p --auto "
+        yt -p --auto "
         1. Fetch my Notion databases using the API key stored in this session
         2. Analyze all merged GitHub PRs from past month
         3. In my Notion Launch Database, review the Launch Template.
@@ -268,7 +268,7 @@ With the Notion API configured, you can use natural language prompts to automate
   
   <Card title="Daily Standup Automation" icon="comments">
     ```bash
-    cn -p --auto "
+    yt -p --auto "
     1. Fetch my Tasks database from Notion using the API key
     2. Find tasks completed yesterday
     3. Find tasks in progress
@@ -283,7 +283,7 @@ With the Notion API configured, you can use natural language prompts to automate
 <CardGroup cols={1}>
   <Card title="Notion + GitHub" icon="github">
     ```bash
-    cn -p --auto "
+    yt -p --auto "
     1. Connect to Notion using the API key in this session
     2. Get merged PRs from last 7 days using GitHub
     3. Extract feature descriptions and changes
@@ -300,7 +300,7 @@ With the Notion API configured, you can use natural language prompts to automate
   
   <Card title="Test Coverage Report" icon="chart-bar">
     ```bash
-    cn -p --auto "
+    yt -p --auto "
     1. Connect to Notion using the API key in this session
     2. Run test coverage report (npm test -- --coverage)
     3. Parse coverage metrics
@@ -311,7 +311,7 @@ With the Notion API configured, you can use natural language prompts to automate
   
   <Card title="Blog Post Review" icon="magnifying-glass">
     ```bash
-    cn "
+    yt "
     1. Connect to Notion using the API key in this session
     2. In my Blog Posts Database, find drafts tagged 'Review'
     3. Review all blog posts for grammar and clarity and suggest improvements through comments.
@@ -320,7 +320,7 @@ With the Notion API configured, you can use natural language prompts to automate
   
   <Card title="Weekly Report Generation" icon="list">
     ```bash
-    cn -p --auto "
+    yt -p --auto "
     1. Connect to Notion databases using API key
     2. Aggregate completed tasks from the week
     3. Calculate velocity and burndown metrics
@@ -369,7 +369,7 @@ With the Notion API configured, you can use natural language prompts to automate
   - Ensure the integration has the correct permissions (Read, Write, Insert)
 
   **Connection Issues:**
-  - Verify Continue CLI has internet access
+  - Verify Yuto Agentic CLI has internet access
   - Check network connectivity to api.notion.com
   - Ensure your Notion workspace allows API access
 

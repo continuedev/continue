@@ -2,27 +2,27 @@
 title: "Headless Mode"
 ---
 
-Run `cn -p "your prompt"` to execute a single task without an interactive session. The agent runs to completion and prints its response to stdout.
+Run `yt -p "your prompt"` to execute a single task without an interactive session. The agent runs to completion and prints its response to stdout.
 
 ```bash
-cn -p "Generate a conventional commit message for the staged changes"
+yt -p "Generate a conventional commit message for the staged changes"
 ```
 
 ## Piping
 
-Pipe data into `cn` to include it as context:
+Pipe data into `yt` to include it as context:
 
 ```bash
-git diff --staged | cn -p "Write a commit message for this diff"
-cat error.log | cn -p "Explain what went wrong"
-curl -s https://api.example.com/health | cn -p "Is this healthy?"
+git diff --staged | yt -p "Write a commit message for this diff"
+cat error.log | yt -p "Explain what went wrong"
+curl -s https://api.example.com/health | yt -p "Is this healthy?"
 ```
 
 Pipe the output into other tools:
 
 ```bash
-cn -p "Generate a commit message" | git commit -F -
-cn -p "List all TODO comments in src/" --silent > todos.txt
+yt -p "Generate a commit message" | git commit -F -
+yt -p "List all TODO comments in src/" --silent > todos.txt
 ```
 
 ## Output options
@@ -40,31 +40,31 @@ In headless mode, tools that would normally prompt for approval (`ask` permissio
 
 ```bash
 # Allow the agent to write files
-cn -p "Fix the type errors in src/" --allow Write --allow Edit
+yt -p "Fix the type errors in src/" --allow Write --allow Edit
 
 # Allow everything
-cn -p "Set up the project" --allow "*"
+yt -p "Set up the project" --allow "*"
 ```
 
 See [tool permissions](/cli/tool-permissions) for the full policy system.
 
 ## Authentication in CI
 
-Set `CONTINUE_API_KEY` instead of running `cn login`:
+Set `CONTINUE_API_KEY` instead of running `yt login`:
 
 ```bash
 export CONTINUE_API_KEY=your-key-here
-cn -p "Review the PR for security issues"
+yt -p "Review the PR for security issues"
 ```
 
-Get an API key from [Continue → Settings → API Keys](https://yutoagentic.dev/settings/api-keys). Store it as a secret in your CI provider.
+Get an API key from [Yuto Agentic → Settings → API Keys](https://yutoagentic.dev/settings/api-keys). Store it as a secret in your CI provider.
 
 ## Resume in headless mode
 
 Resume a previous session without interactive input:
 
 ```bash
-cn -p --resume
+yt -p --resume
 ```
 
 This replays the previous session's history, which can be useful for inspecting past results in automation.
@@ -73,14 +73,14 @@ This replays the previous session's history, which can be useful for inspecting 
 
 ```bash
 # Git hooks
-cn -p "Review staged changes for obvious bugs" --silent
+yt -p "Review staged changes for obvious bugs" --silent
 
 # CI pipeline — allow file writes for auto-fix
-cn -p "Fix all ESLint errors in src/" --allow Write --allow Edit --allow Bash
+yt -p "Fix all ESLint errors in src/" --allow Write --allow Edit --allow Bash
 
 # Generate docs from code
-cn -p "@src/api/ Generate OpenAPI documentation for these endpoints" --silent > api-docs.yaml
+yt -p "@src/api/ Generate OpenAPI documentation for these endpoints" --silent > api-docs.yaml
 
 # Use a specific assistant
-cn -p "Triage this error log" --config my-org/error-triage-assistant
+yt -p "Triage this error log" --config my-org/error-triage-assistant
 ```

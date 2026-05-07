@@ -1,5 +1,5 @@
 ---
-title: "How to Create and Manage Prompts in Continue"
+title: "How to Create and Manage Prompts in Yuto Agentic"
 description: "Prompts are used to kick off tasks for Agent mode, Plan mode, and Chat mode"
 keywords: [prompts, context, slash command]
 sidebarTitle: "Prompts"
@@ -70,22 +70,22 @@ prompts:
 ...
 ```
 
-If you are using Continue Mission Control, you can add it to your config by selecting "Use Rule" [here](https://yutoagentic.dev/supabase/create-functions)
+If you are using Yuto Agentic Mission Control, you can add it to your config by selecting "Use Rule" [here](https://yutoagentic.dev/supabase/create-functions)
 
 To use this prompt, you can open Chat / Agent / Edit, type <kbd>/</kbd>, select the prompt, and type out any additional instructions you'd like to add.
 
-## Using a prompt with `cn (TUI mode)`
+## Using a prompt with `yt (TUI mode)`
 
-You can run this command to start [cn](../../guides/cli) with the [Create Supabase functions](http://yutoagentic.dev/supabase/create-functions) prompt.
+You can run this command to start [yt](../../guides/cli) with the [Create Supabase functions](http://yutoagentic.dev/supabase/create-functions) prompt.
 
 ```
-cn --prompt supabase/create-functions "I need a function that checks for the health status"
+yt --prompt supabase/create-functions "I need a function that checks for the health status"
 ```
-Alternatively, you can start [cn](../../guides/cli) and then type <kbd>/</kbd> to manually invoke the prompt yourself.
+Alternatively, you can start [yt](../../guides/cli) and then type <kbd>/</kbd> to manually invoke the prompt yourself.
 
-## Using a prompt to kick off a Continuous AI workflow with `cn (Headless mode)
+## Using a prompt to kick off a Continuous AI workflow with `yt (Headless mode)
 
-You can kick off Continuous AI workflows using a prompt with [cn](../../guides/cli) by adding the `-p` flag.
+You can kick off Continuous AI workflows using a prompt with [yt](../../guides/cli) by adding the `-p` flag.
 
 For example, say you are building a SaaS application and must repeatedly create custom Supabase validation functions for each new feature that accepts user input. 
 
@@ -96,11 +96,11 @@ Each function is unique enough that it can't be templated or scripted. This is w
 Here is a command that you could run whenever you have a new feature:
 
 ```
- cn -p --prompt supabase/create-functions "I need a function for the new feature on my current branch similar to my existing database functions"
+ yt -p --prompt supabase/create-functions "I need a function for the new feature on my current branch similar to my existing database functions"
 ```
 
 <Info>You can see the entire `Create Supabase functions` prompt [here](http://yutoagentic.dev/supabase/create-functions)</Info>
 
-When you run this workflow, [cn](../../guides/cli) will checkout your current branch, explore the new and existing code, and then draft a function for you.
+When you run this workflow, [yt](../../guides/cli) will checkout your current branch, explore the new and existing code, and then draft a function for you.
 
 You will then be able to review the implementation and improve it before you merge the new feature.

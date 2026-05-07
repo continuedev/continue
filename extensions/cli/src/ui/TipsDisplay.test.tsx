@@ -1,11 +1,11 @@
 import { render } from "ink-testing-library";
 import React from "react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  TipsDisplay,
   shouldShowTip,
-  CONTINUE_CLI_TIPS,
+  TipsDisplay,
+  YUTOAGENTIC_CLI_TIPS,
 } from "./TipsDisplay.js";
 
 describe("TipsDisplay", () => {
@@ -22,8 +22,8 @@ describe("TipsDisplay", () => {
     // Mock Math.random to return 0.5, which should select the middle tip
     vi.mocked(Math.random).mockReturnValue(0.5);
 
-    const expectedTipIndex = Math.floor(0.5 * CONTINUE_CLI_TIPS.length);
-    const expectedTip = CONTINUE_CLI_TIPS[expectedTipIndex];
+    const expectedTipIndex = Math.floor(0.5 * YUTOAGENTIC_CLI_TIPS.length);
+    const expectedTip = YUTOAGENTIC_CLI_TIPS[expectedTipIndex];
 
     const { lastFrame } = render(<TipsDisplay />);
 
@@ -35,12 +35,12 @@ describe("TipsDisplay", () => {
     // Test with first tip
     vi.mocked(Math.random).mockReturnValue(0.0);
     const { lastFrame: firstFrame } = render(<TipsDisplay />);
-    expect(firstFrame()).toContain(CONTINUE_CLI_TIPS[0]);
+    expect(firstFrame()).toContain(YUTOAGENTIC_CLI_TIPS[0]);
 
     // Test with last tip - use partial match due to line wrapping
     vi.mocked(Math.random).mockReturnValue(0.99);
     const { lastFrame: lastFrame } = render(<TipsDisplay />);
-    const lastTip = CONTINUE_CLI_TIPS[CONTINUE_CLI_TIPS.length - 1];
+    const lastTip = YUTOAGENTIC_CLI_TIPS[YUTOAGENTIC_CLI_TIPS.length - 1];
     const firstPartOfLastTip = lastTip.substring(0, 30); // Check first 30 chars
     expect(lastFrame()).toContain(firstPartOfLastTip);
   });
@@ -55,7 +55,7 @@ describe("TipsDisplay", () => {
     expect(output).toContain("* Tip:");
 
     // Should contain one of the tips
-    const containsAtLeastOneTip = CONTINUE_CLI_TIPS.some(
+    const containsAtLeastOneTip = YUTOAGENTIC_CLI_TIPS.some(
       (tip) => output?.includes(tip) ?? false,
     );
     expect(containsAtLeastOneTip).toBe(true);
@@ -114,13 +114,13 @@ describe("shouldShowTip", () => {
   });
 });
 
-describe("CONTINUE_CLI_TIPS", () => {
+describe("YUTOAGENTIC_CLI_TIPS", () => {
   it("contains at least 6 tips", () => {
-    expect(CONTINUE_CLI_TIPS.length).toBeGreaterThanOrEqual(6);
+    expect(YUTOAGENTIC_CLI_TIPS.length).toBeGreaterThanOrEqual(6);
   });
 
   it("all tips are non-empty strings", () => {
-    CONTINUE_CLI_TIPS.forEach((tip, index) => {
+    YUTOAGENTIC_CLI_TIPS.forEach((tip, index) => {
       expect(typeof tip).toBe("string");
       expect(tip.trim().length).toBeGreaterThan(0);
     });
@@ -141,7 +141,7 @@ describe("CONTINUE_CLI_TIPS", () => {
       "keyboard shortcuts",
     ];
 
-    const allTipsText = CONTINUE_CLI_TIPS.join(" ").toLowerCase();
+    const allTipsText = YUTOAGENTIC_CLI_TIPS.join(" ").toLowerCase();
 
     // At least half of the keywords should appear in the tips
     const foundKeywords = usefulKeywords.filter((keyword) =>

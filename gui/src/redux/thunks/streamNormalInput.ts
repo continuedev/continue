@@ -82,7 +82,7 @@ export const streamNormalInput = createAsyncThunk<
     { legacySlashCommandData, depth = 0 },
     { dispatch, extra, getState },
   ) => {
-    if (process.env.NODE_ENV === "test" && depth > 50) {
+    if (import.meta.env.MODE === "test" && depth > 50) {
       const message = `Max stream depth of ${50} reached in test`;
       console.error(message, JSON.stringify(getState(), null, 2));
       throw new Error(message);

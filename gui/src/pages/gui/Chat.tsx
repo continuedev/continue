@@ -215,6 +215,14 @@ export function Chat() {
             }
           } catch (err) {
             console.error("[Yuto] agent/run failed:", err);
+            // In standalone browser mode (MockIdeMessenger), agent/run may be
+            // unavailable. Fall back to normal chat streaming so Enter still works.
+            void dispatch(
+              streamResponseThunk({ editorState, modifiers, index }),
+            );
+            if (editorToClearOnSend) {
+              editorToClearOnSend.commands.clearContent();
+            }
           }
         })();
         return;

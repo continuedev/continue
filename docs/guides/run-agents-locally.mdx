@@ -1,7 +1,7 @@
 ---
 title: "Run Agents Locally"
 sidebarTitle: "Run Agents Locally"
-description: "Set up version-controlled agents in your repository and run them with Continue CLI or GitHub Actions"
+description: "Set up version-controlled agents in your repository and run them with Yuto Agentic CLI or GitHub Actions"
 ---
 
 <Note>
@@ -11,7 +11,7 @@ description: "Set up version-controlled agents in your repository and run them w
 <Card title="What You'll Build" icon="folder-open">
   A local agent system that:
   - Keeps agent definitions version-controlled alongside your code
-  - Runs agents with Continue CLI for local development
+  - Runs agents with Yuto Agentic CLI for local development
   - Automates agent execution on pull requests via GitHub Actions
   - Applies consistent workflows across your team
 </Card>
@@ -20,7 +20,7 @@ description: "Set up version-controlled agents in your repository and run them w
 
 Before starting, ensure you have:
 
-- [Continue CLI installed](/cli/quickstart)
+- [Yuto Agentic CLI installed](/cli/quickstart)
 - `ANTHROPIC_API_KEY` environment variable set
 - [GitHub CLI](https://cli.github.com/) installed locally if your agents interact with GitHub (pre-installed on GitHub-hosted runners)
 
@@ -29,7 +29,7 @@ Before starting, ensure you have:
 <Steps>
   <Step title="Create the agents directory">
     ```bash
-    mkdir -p .continue/agents
+    mkdir -p .yutoagentic/agents
     ```
   </Step>
 
@@ -37,7 +37,7 @@ Before starting, ensure you have:
     Create a markdown file with YAML frontmatter defining the agent's behavior:
 
     ```bash
-    touch .continue/agents/my-agent.md
+    touch .yutoagentic/agents/my-agent.md
     ```
 
     Add content like:
@@ -65,13 +65,13 @@ Before starting, ensure you have:
 
   <Step title="Run the agent">
     ```bash
-    cn -p --agent .continue/agents/my-agent.md
+    yt -p --agent .yutoagentic/agents/my-agent.md
     ```
 
     For interactive development (TUI mode):
 
     ```bash
-    cn --agent .continue/agents/my-agent.md
+    yt --agent .yutoagentic/agents/my-agent.md
     ```
   </Step>
 </Steps>
@@ -138,7 +138,7 @@ You are reviewing a pull request to format its title according to conventional c
 
 ## GitHub Actions Integration
 
-Continue provides a [reusable workflow](https://github.com/continuedev/continue/blob/main/.github/workflows/continue-agents.yml) that handles agent discovery, parallel execution, and GitHub Check reporting.
+Yuto Agentic provides a [reusable workflow](https://github.com/continuedev/continue/blob/main/.github/workflows/continue-agents.yml) that handles agent discovery, parallel execution, and GitHub Check reporting.
 
 ### Using the Reusable Workflow
 
@@ -161,7 +161,7 @@ jobs:
 ```
 
 The reusable workflow automatically:
-- Discovers all `.md` files in `.continue/agents/`
+- Discovers all `.md` files in `.yutoagentic/agents/`
 - Runs each agent in parallel
 - Creates GitHub Check runs for each agent
 - Provides `GH_TOKEN` for agents using the `gh` CLI
@@ -174,7 +174,7 @@ jobs:
   agents:
     uses: continuedev/continue/.github/workflows/continue-agents.yml@main
     with:
-      agents-path: '.continue/agents'  # Custom agents directory (optional)
+      agents-path: '.yutoagentic/agents'  # Custom agents directory (optional)
     secrets:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
@@ -218,12 +218,12 @@ When running agents in CI/CD, follow the principle of least privilege:
   </Tab>
 
   <Tab title="CLI Tool Permissions">
-    Use `cn` permission flags to restrict what agents can do:
+    Use `yt` permission flags to restrict what agents can do:
 
     ```bash
     # Only allow specific tools
-    cn --allow "Read()" --allow "Grep()" --exclude "Bash()" \
-       --agent .continue/agents/analysis-only.md
+    yt --allow "Read()" --allow "Grep()" --exclude "Bash()" \
+       --agent .yutoagentic/agents/analysis-only.md
     ```
 
     Learn more in the [CLI documentation](/cli/tool-permissions).
@@ -248,7 +248,7 @@ When running agents in CI/CD, follow the principle of least privilege:
 
 Before enabling fully automated agents:
 
-1. **Test locally first** - Run agents with `cn` to verify behavior
+1. **Test locally first** - Run agents with `yt` to verify behavior
 2. **Review CI logs** - Check what commands agents execute in your workflows
 3. **Start with read-only agents** - Begin with agents that analyze rather than modify
 
@@ -267,7 +267,7 @@ export ANTHROPIC_API_KEY=your-api-key
 # Optional: GitHub token if your agents use the gh CLI
 export GH_TOKEN=$(gh auth token)
 
-cn --agent .continue/agents/my-agent.md
+yt --agent .yutoagentic/agents/my-agent.md
 ```
 
 ## Directory Structure
@@ -276,7 +276,7 @@ A typical setup looks like:
 
 ```
 your-repo/
-├── .continue/
+├── .yutoagentic/
 │   └── agents/
 │       ├── conventional-title.md
 │       ├── deploy-checklist.md
@@ -294,7 +294,7 @@ your-repo/
     Ensure the path is correct and the file exists:
 
     ```bash
-    ls -la .continue/agents/
+    ls -la .yutoagentic/agents/
     ```
 
     The path must be relative to your repository root.
@@ -317,18 +317,18 @@ your-repo/
   <Accordion title="Agent runs but doesn't complete the task">
     - Simplify the prompt and add more specific instructions
     - Check if the agent has access to required tools
-    - Enable verbose logging: `cn --verbose --agent .continue/agents/my-agent.md`
-    - Review logs with `cn --verbose` or check the Continue logs directory
+    - Enable verbose logging: `yt --verbose --agent .yutoagentic/agents/my-agent.md`
+    - Review logs with `yt --verbose` or check the Yuto Agentic logs directory
   </Accordion>
 
   <Accordion title="Workflow doesn't discover agents">
     Verify your agents are in the correct directory:
 
     ```bash
-    find .continue/agents -name "*.md" -type f
+    find .yutoagentic/agents -name "*.md" -type f
     ```
 
-    The workflow looks for `.md` files in `.continue/agents/`.
+    The workflow looks for `.md` files in `.yutoagentic/agents/`.
   </Accordion>
 </AccordionGroup>
 
@@ -340,7 +340,7 @@ your-repo/
   </Card>
 
   <Card title="Test Locally" icon="terminal">
-    Always run `cn --agent` locally before enabling CI automation.
+    Always run `yt --agent` locally before enabling CI automation.
   </Card>
 
   <Card title="Use Descriptive Names" icon="tag">
@@ -360,7 +360,7 @@ your-repo/
   </Card>
 
   <Card title="CLI Reference" icon="terminal" href="/cli/quickstart">
-    Full Continue CLI documentation
+    Full Yuto Agentic CLI documentation
   </Card>
 
   <Card title="MCP Tools" icon="plug" href="/customize/mcp-tools">

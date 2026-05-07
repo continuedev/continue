@@ -21,7 +21,7 @@ Agent mode can use built-in tools to navigate and understand your code:
 
 ### Create Rules to Help the Agent Understand Your Codebase
 
-Rules guide agent mode's behavior and understanding. Place markdown files in `.continue/rules` in your project to provide context:
+Rules guide agent mode's behavior and understanding. Place markdown files in `.yutoagentic/rules` in your project to provide context:
 
 ```markdown
 # Project Architecture
@@ -170,7 +170,7 @@ If you were previously using the `@Codebase` or `@Docs` context providers, here'
 The `@Codebase` context provider has been deprecated. Instead:
 
 1. **Use built-in tools**: Agent mode can now use file exploration and search tools to understand your codebase
-2. **Add rules**: Create `.continue/rules` files to provide context about your project structure
+2. **Add rules**: Create `.yutoagentic/rules` files to provide context about your project structure
 3. **Use MCP servers**: For external codebases, use DeepWiki MCP or custom MCP servers
 
 ### Migrating from @Docs
@@ -181,7 +181,7 @@ The `@Docs` context provider has been deprecated. Instead:
 2. **Add documentation links in rules**: Create rules that reference documentation URLs
 3. **Use custom MCP servers**: For internal documentation, create an MCP server with access to your docs
 
-The new approach provides better integration with Continue's Agent mode features and more intelligent context selection.
+The new approach provides better integration with Yuto Agentic's Agent mode features and more intelligent context selection.
 
 ## Next Steps
 

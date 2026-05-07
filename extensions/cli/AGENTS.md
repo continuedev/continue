@@ -13,7 +13,7 @@ This file provides guidance to AI coding agents when working with code in this r
 
 ## Architecture Overview
 
-This is a CLI tool for Continue Dev that provides an interactive AI-assisted development experience. The architecture consists of:
+This is a CLI tool for Yuto Agentic Dev that provides an interactive AI-assisted development experience. The architecture consists of:
 
 ### Core Components
 
@@ -28,7 +28,7 @@ This is a CLI tool for Continue Dev that provides an interactive AI-assisted dev
    - `ensureAuth.ts`: Handles authentication flow
    - `workos.ts`: WorkOS configuration and token management
 
-3. **Continue SDK Integration** (`src/continueSDK.ts`): Initializes the Continue SDK client with:
+3. **Yuto Agentic SDK Integration** (`src/continueSDK.ts`): Initializes the Yuto Agentic SDK client with:
 
    - API key authentication
    - Assistant configuration (slug-based)
@@ -57,9 +57,9 @@ This is a CLI tool for Continue Dev that provides an interactive AI-assisted dev
    - `fireHook.ts`: Convenience functions for firing events from integration points
    - `types.ts`: Yuto Code-compatible type definitions for hook inputs/outputs
    - **Config locations** (lowest to highest precedence):
-     - `~/.claude/settings.json`, `~/.continue/settings.json` (user-global)
-     - `.claude/settings.json`, `.continue/settings.json` (project)
-     - `.claude/settings.local.json`, `.continue/settings.local.json` (project-local)
+     - `~/.claude/settings.json`, `~/.yutoagentic/settings.json` (user-global)
+     - `.claude/settings.json`, `.yutoagentic/settings.json` (project)
+     - `.claude/settings.local.json`, `.yutoagentic/settings.local.json` (project-local)
    - **Exit code semantics**: 0 = proceed, 2 = block (stderr becomes feedback), other = non-blocking error
    - **JSON output**: Optional structured output with `hookSpecificOutput` for fine-grained control
    - **Hook types**: `command` (shell), `http` (POST request), `prompt`/`agent` (not yet implemented)

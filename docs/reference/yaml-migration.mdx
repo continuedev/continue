@@ -1,16 +1,16 @@
 ---
 title: "Migrating Config to YAML"
-description: "Continue's YAML configuration format provides more readable, maintainable, consistent configuration files, as well as new configuration options and removal of some old configuration options. YAML is the preferred format and will be used to integrate with future Continue products. Below is a brief guide for migration from config.json to config.yaml."
+description: "Yuto Agentic's YAML configuration format provides more readable, maintainable, consistent configuration files, as well as new configuration options and removal of some old configuration options. YAML is the preferred format and will be used to integrate with future Yuto Agentic products. Below is a brief guide for migration from config.json to config.yaml."
 ---
 
 See also
 
 - [Intro to YAML](https://yaml.org/)
-- [YAML Continue Config Reference](/reference)
+- [YAML Yuto Agentic Config Reference](/reference)
 
 ## Create YAML File
 
-Create a `config.yaml` file in your Continue Global Directory (`~/.continue` on Mac, `%USERPROFILE%\.continue`) alongside your current config.json file. If a `config.yaml` file is present, it will be loaded instead of config.json.
+Create a `config.yaml` file in your Yuto Agentic Global Directory (`~/.yutoagentic` on Mac, `%USERPROFILE%\.continue`) alongside your current config.json file. If a `config.yaml` file is present, it will be loaded instead of config.json.
 
 Give your configuration a `name` and a `version`:
 
@@ -36,9 +36,9 @@ Add all model configurations in `config.json`, including models in `models`, `ta
   - `inlineEdit` -> e.g. `roles: [chat, edit]`
   - `applyCodeBlock` -> e.g. `roles: [chat, apply]`
 
-Model-level `requestOptions` remain, with minor changes. See [YAML Continue Config Reference](/reference#models)
+Model-level `requestOptions` remain, with minor changes. See [YAML Yuto Agentic Config Reference](/reference#models)
 
-Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Continue Config Reference](/reference#models)
+Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Yuto Agentic Config Reference](/reference#models)
 
 **Before**
 

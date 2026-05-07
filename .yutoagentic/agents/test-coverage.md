@@ -37,7 +37,7 @@ Review this pull request to determine if new functionality has adequate test cov
 - Configuration file changes (YAML, JSON, Markdown)
 - CSS/styling changes
 - Dependency updates (unless they change behavior)
-- Agent definition files (`.continue/agents/*.md`)
+- Agent definition files (`.yutoagentic/agents/*.md`)
 - Refactors that don't change behavior (existing tests should still pass)
 - Internal implementation changes fully covered by existing tests
 

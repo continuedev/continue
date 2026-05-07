@@ -2,25 +2,25 @@
 title: "Run Checks in CI"
 ---
 
-Continue watches your repository for pull requests, runs each check defined in `.continue/checks/`, and reports results as GitHub status checks. A green check means the code passed; a red check means the code failed, with a suggested fix.
+Yuto Agentic watches your repository for pull requests, runs each check defined in `.yutoagentic/checks/`, and reports results as GitHub status checks. A green check means the code passed; a red check means the code failed, with a suggested fix.
 
 ## Prerequisites
 
-- A [Continue](https://yutoagentic.dev) account
-- A GitHub repository with at least one check file in `.continue/checks/` (see [Write Your First Check](/checks/quickstart))
+- A [Yuto Agentic](https://yutoagentic.dev) account
+- A GitHub repository with at least one check file in `.yutoagentic/checks/` (see [Write Your First Check](/checks/quickstart))
 
 ## Connect GitHub
 
 1. Go to [yutoagentic.dev](https://yutoagentic.dev/) and sign in (or create an account).
 2. Navigate to the [GitHub integration page](https://yutoagentic.dev/integrations/github).
-3. Click **Connect GitHub** and authorize Continue.
-4. Select the repositories you want Continue to monitor.
+3. Click **Connect GitHub** and authorize Yuto Agentic.
+4. Select the repositories you want Yuto Agentic to monitor.
 
-Once connected, Continue will start running checks on new pull requests in the selected repositories.
+Once connected, Yuto Agentic will start running checks on new pull requests in the selected repositories.
 
 ## How checks are discovered
 
-Continue reads the `.continue/checks/` directory from your repository's default branch. Every `.md` file in that directory becomes a check that runs on every PR. No additional configuration is needed — commit a check file and it is active.
+Yuto Agentic reads the `.yutoagentic/checks/` directory from your repository's default branch. Every `.md` file in that directory becomes a check that runs on every PR. No additional configuration is needed — commit a check file and it is active.
 
 ## The PR workflow
 
@@ -32,7 +32,7 @@ When a pull request is opened, reopened, or updated:
 4. If a check fails, it shows a red X with a suggested diff.
 5. Click the check details link in GitHub to see the full reasoning on yutoagentic.dev.
 
-![GitHub PR showing Continue checks with pass and fail status](/images/checks-pr-status.png)
+![GitHub PR showing Yuto Agentic checks with pass and fail status](/images/checks-pr-status.png)
 
 ## Accept or reject suggestions
 
@@ -43,5 +43,5 @@ When a check fails and suggests changes:
 3. **Accept** to apply the changes as a commit to the PR branch.
 4. **Reject** to dismiss the suggestion. The check will re-run on the next push.
 
-![Continue check review page showing suggested diff with accept and reject options](/images/checks-accept-reject.png)
+![Yuto Agentic check review page showing suggested diff with accept and reject options](/images/checks-accept-reject.png)
 

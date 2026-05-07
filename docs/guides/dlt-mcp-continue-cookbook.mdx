@@ -1,7 +1,7 @@
 ---
-title: "Building Data Pipelines with dlt MCP and Continue"
+title: "Building Data Pipelines with dlt MCP and Yuto Agentic"
 description: "Set up an AI-powered data engineering workflow that helps you develop, debug, and inspect dlt data pipelines using natural language commands."
-sidebarTitle: "dlt Data Pipelines with Continue"
+sidebarTitle: "dlt Data Pipelines with Yuto Agentic"
 ---
 
 import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
@@ -10,7 +10,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
 <OSAutoDetect />
 
 <Card title="What You'll Build" icon="database">
-  An AI-powered data pipeline development system that uses Continue's AI agent with dlt
+  An AI-powered data pipeline development system that uses Yuto Agentic's AI agent with dlt
   MCP to inspect pipeline execution, retrieve schemas, analyze datasets, and debug load errors - all through simple natural language prompts
 </Card>
 
@@ -18,7 +18,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
 
 Before starting, ensure you have:
 
-- Continue account with **Hub access**
+- Yuto Agentic account with **Hub access**
   - Read: [Understanding Configs — How to get started with Hub configs](/guides/understanding-configs#how-to-get-started-with-hub-configs)
 - Python 3.8+ installed locally
 - A dlt pipeline project (or create one during this guide)
@@ -26,7 +26,7 @@ Before starting, ensure you have:
 
 For all options, first:
 <Steps>
-<Step title="Install Continue CLI">
+<Step title="Install Yuto Agentic CLI">
     <CLIInstall />
   </Step>
 
@@ -37,7 +37,7 @@ For all options, first:
   </Step>
 </Steps>
  <Warning>
-  To use agents in headless mode, you need a [Continue API key](https://yutoagentic.dev/settings/api-keys).
+  To use agents in headless mode, you need a [Yuto Agentic API key](https://yutoagentic.dev/settings/api-keys).
   </Warning>
 
 ## dlt MCP Workflow Options
@@ -56,7 +56,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       <Step title="Load the Pre-Built Agent">
         Navigate to your pipeline project directory and run:
         ```bash
-        cn --agent continuedev/dlt-agent
+        yt --agent continuedev/dlt-agent
         ```
 
         This agent includes:
@@ -83,21 +83,21 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
   <Tab title="🛠️ Manual Setup">
 <Steps>
-  <Step title="Create a New Agent via the Continue Mission Control">
-    Go to the [Continue Mission Control](https://yutoagentic.dev) and [create a new agent](https://yutoagentic.dev/agents/new).
+  <Step title="Create a New Agent via the Yuto Agentic Mission Control">
+    Go to the [Yuto Agentic Mission Control](https://yutoagentic.dev) and [create a new agent](https://yutoagentic.dev/agents/new).
     </Step>
 
-  <Step title="Connect dlt MCP via Continue Mission Control">
-    Visit the [dlt MCP on Continue Mission Control](https://yutoagentic.dev/dlthub/dlt-mcp) and click **Install** to add it to the agent you created in the step above.
+  <Step title="Connect dlt MCP via Yuto Agentic Mission Control">
+    Visit the [dlt MCP on Yuto Agentic Mission Control](https://yutoagentic.dev/dlthub/dlt-mcp) and click **Install** to add it to the agent you created in the step above.
 
     This will add dlt MCP to your agent's available tools. The Mission Control listing automatically configures the MCP command.
 
     <Tip>
       **Alternative installation methods:**
-      1. **Quick CLI install**: `cn --mcp dlthub/dlt-mcp`
-      2. **Manual configuration**: Add the MCP to your `~/.continue/config.json` under the `mcpServers` section
+      1. **Quick CLI install**: `yt --mcp dlthub/dlt-mcp`
+      2. **Manual configuration**: Add the MCP to your `~/.yutoagentic/config.json` under the `mcpServers` section
 
-      Once installed, dlt MCP tools become available to your Continue agent for all prompts.
+      Once installed, dlt MCP tools become available to your Yuto Agentic agent for all prompts.
     </Tip>
 
     <Info>
@@ -110,7 +110,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
     Start with a comprehensive pipeline check:
     ```bash
     # TUI mode
-    cn
+    yt
     # Then type: Inspect the execution of my dlt pipeline and summarize the load info, including timing and file sizes.
     ```
   </Step>
@@ -121,8 +121,8 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
 <Accordion title="Agent Requirements">
     To use the pre-built [dlt Agent](https://yutoagentic.dev/continuedev/dlt-agent), you need either:
-      - **Continue CLI Pro Plan** with the models add-on, OR
-      - **Your own API keys** added to Continue Mission Control secrets (same as manual setup)
+      - **Yuto Agentic CLI Pro Plan** with the models add-on, OR
+      - **Your own API keys** added to Yuto Agentic Mission Control secrets (same as manual setup)
 
     The agent will automatically detect and use your configuration along with the pre-configured dlt MCP for pipeline operations.
 
@@ -152,24 +152,24 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
 ## Pipeline Development Recipes
 
-Now you can use natural language prompts to develop and debug your dlt pipelines. The Continue agent automatically calls the appropriate dlt MCP tools.
+Now you can use natural language prompts to develop and debug your dlt pipelines. The Yuto Agentic agent automatically calls the appropriate dlt MCP tools.
 
 <Info>
-You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Continue Mission Control](https://yutoagentic.dev), click **Edit**, and add prompts under the **Prompts** section.
+You can add prompts to your agent's configuration for easy access in future sessions. Go to your agent in the [Yuto Agentic Mission Control](https://yutoagentic.dev), click **Edit**, and add prompts under the **Prompts** section.
 </Info>
 
 <Info>
   **Where to run these workflows:**
-  - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
-  - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
-  - **CLI (headless mode)**: Use `cn -p "your prompt"` for headless commands
+  - **IDE Extensions**: Use Yuto Agentic in VS Code, JetBrains, or other supported IDEs
+  - **Terminal (TUI mode)**: Run `yt` to enter interactive mode, then type your prompts
+  - **CLI (headless mode)**: Use `yt -p "your prompt"` for headless commands
 
   **Test in Plan Mode First**: Before running pipeline operations that might make
   changes, test your prompts in plan mode (see the [Plan Mode
   Guide](/guides/plan-mode-guide); press **Shift+Tab** to switch modes in TUI/IDE). This
   shows you what the agent will do without executing it.
   
-  To run any of the example prompts below in headless mode, use `cn -p "prompt"`
+  To run any of the example prompts below in headless mode, use `yt -p "prompt"`
 </Info>
 
 <Info>
@@ -264,7 +264,7 @@ Show me what columns were added or modified.
 
 Navigate to **Repository Settings → Secrets and variables → Actions** and add:
 
-- `CONTINUE_API_KEY`: Your Continue API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
+- `CONTINUE_API_KEY`: Your Yuto Agentic API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
 - Any required database credentials for your destination
 
 <Info>
@@ -273,7 +273,7 @@ Navigate to **Repository Settings → Secrets and variables → Actions** and ad
 
 ### Create Workflow File
 
-This workflow automatically validates your dlt data pipelines on pull requests using the Continue CLI in [headless mode](/cli/headless-mode). It inspects pipeline schemas, checks for errors, and posts a summary report as a PR comment. The workflow can also be triggered manually via `workflow_dispatch`.
+This workflow automatically validates your dlt data pipelines on pull requests using the Yuto Agentic CLI in [headless mode](/cli/headless-mode). It inspects pipeline schemas, checks for errors, and posts a summary report as a PR comment. The workflow can also be triggered manually via `workflow_dispatch`.
 
 Create `.github/workflows/dlt-pipeline-validation.yml` in your repository:
 
@@ -309,15 +309,15 @@ jobs:
           pip install dlt
           echo "✅ dlt installed"
 
-      - name: Install Continue CLI
+      - name: Install Yuto Agentic CLI
         run: |
           npm install -g @yutoagentic/cli
-          echo "✅ Continue CLI installed"
+          echo "✅ Yuto Agentic CLI installed"
 
       - name: Validate Pipeline Schema
         run: |
           echo "🔍 Validating pipeline schema..."
-          cn --agent continuedev/dlt-agent \
+          yt --agent continuedev/dlt-agent \
              -p "Inspect the pipeline schema and verify all required tables
                  and columns are present. Flag any missing or unexpected changes." \
              --auto
@@ -325,7 +325,7 @@ jobs:
       - name: Check Pipeline Health
         run: |
           echo "📊 Checking pipeline health..."
-          cn --agent continuedev/dlt-agent \
+          yt --agent continuedev/dlt-agent \
              -p "Analyze the last pipeline run for errors or warnings.
                  Report any issues that need attention." \
              --auto
@@ -335,7 +335,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REPORT=$(cn --agent continuedev/dlt-agent \
+          REPORT=$(yt --agent continuedev/dlt-agent \
              -p "Generate a concise summary (200 words or less) of:
                  - Pipeline schemas and row counts
                  - Any load errors or warnings
@@ -353,7 +353,7 @@ jobs:
 
 ## Pipeline Development Best Practices
 
-Implement automated pipeline quality checks using Continue's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
+Implement automated pipeline quality checks using Yuto Agentic's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
 
 <Card title="Schema Validation" icon="check-circle">
   ```bash
@@ -403,7 +403,7 @@ Test the connection and report any issues."
 
 <Check>
   **Verification Steps:**
-  - dlt MCP is installed via [Continue Mission Control](https://yutoagentic.dev/dlthub/dlt-mcp)
+  - dlt MCP is installed via [Yuto Agentic Mission Control](https://yutoagentic.dev/dlthub/dlt-mcp)
   - Pipeline directory is accessible
   - Destination database credentials are configured
   - Pipeline has been run at least once
@@ -439,7 +439,7 @@ After completing this guide, you have a complete **AI-powered data pipeline deve
   <Card title="dlt Documentation" icon="book" href="https://dlthub.com/docs">
     Complete dlt platform documentation
   </Card>
-  <Card title="Continue Mission Control" icon="plug" href="https://yutoagentic.dev">
+  <Card title="Yuto Agentic Mission Control" icon="plug" href="https://yutoagentic.dev">
     Explore more MCP integrations and agents
   </Card>
   <Card
@@ -447,7 +447,7 @@ After completing this guide, you have a complete **AI-powered data pipeline deve
     icon="newspaper"
     href="https://dlthub.com/blog/deep-dive-assistants-mcp-continue"
   >
-    Learn about AI agents, MCP, and Continue integration
+    Learn about AI agents, MCP, and Yuto Agentic integration
   </Card>
   <Card
     title="MCP Concepts"

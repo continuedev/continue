@@ -108,7 +108,7 @@
       "label": "vscode-extension:build",
       "dependsOn": [
         "tsc:watch",
-        "vscode-extension:continue-ui:build",
+        "vscode-extension:yutoagentic-ui:build",
         "vscode-extension:esbuild",
         "vscode-extension:esbuild-notify",
         "gui:dev"
@@ -135,7 +135,7 @@
     },
     {
       "label": "vscode-extension:esbuild",
-      "dependsOn": ["vscode-extension:continue-ui:build"],
+      "dependsOn": ["vscode-extension:yutoagentic-ui:build"],
       "type": "npm",
       "script": "esbuild-watch",
       "path": "extensions/vscode",
@@ -192,7 +192,7 @@
       ]
     },
     {
-      "label": "vscode-extension:continue-ui:build",
+      "label": "vscode-extension:yutoagentic-ui:build",
       "type": "shell",
       "command": "node",
       "args": ["scripts/prepackage.js"],
@@ -377,7 +377,7 @@
       }
     },
     {
-      "label": "continue-packages:build",
+      "label": "yutoagentic-packages:build",
       "type": "shell",
       "command": "node ./scripts/build-packages.js",
       "problemMatcher": [],
@@ -391,7 +391,7 @@
     },
     {
       "label": "vscode-extension:build-with-packages",
-      "dependsOn": ["continue-packages:build", "vscode-extension:build"],
+      "dependsOn": ["yutoagentic-packages:build", "vscode-extension:build"],
       "type": "shell",
       "command": "echo",
       "args": ["Build with packages completed"],

@@ -2052,6 +2052,20 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["ovhcloud"],
     isOpenSource: true,
   },
+  Qwen36_35BA3B: {
+    title: "Qwen 3.6 35B A3B",
+    description:
+      "Qwen 3.6 35B A3B is a high-capability open model from Qwen for advanced reasoning and coding workloads.",
+    refUrl: "https://huggingface.co/Qwen/Qwen3.6-35B-A3B",
+    params: {
+      title: "Qwen 3.6 35B A3B",
+      model: "Qwen/Qwen3.6-35B-A3B",
+      contextLength: 262144,
+    },
+    icon: "qwen.png",
+    providerOptions: ["vllm"],
+    isOpenSource: true,
+  },
   Qwen25VL72B: {
     title: "Qwen 2.5 VL 72B",
     description:

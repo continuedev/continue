@@ -50,7 +50,7 @@ export async function handleMaxedOutFreeTrial(
   console.clear();
 
   console.log(chalk.yellow("🚀 Free trial limit reached!\n"));
-  console.log("Choose how you'd like to Continue:");
+  console.log("Choose how you'd like to proceed:");
   console.log(chalk.white("1. 💳 Sign up for models add-on"));
   console.log(chalk.white("2. 🔑 Enter your Anthropic API key"));
 
@@ -117,7 +117,7 @@ export async function handleMaxedOutFreeTrial(
   // Fallback: restart the CLI if no reload callback was provided
   console.log(
     chalk.green(
-      "\n🔄 Restarting Continue CLI to resume your conversation...\n",
+      "\n🔄 Restarting Yuto Agentic CLI to resume your conversation...\n",
     ),
   );
 

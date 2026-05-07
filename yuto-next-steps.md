@@ -73,7 +73,7 @@ Docs/source references:
 Quick manual smoke test:
 
 1. In Extension Development Host, verify the changed behavior directly.
-2. Check logs with command Continue: View Logs if needed.
+2. Check logs with command Yuto Agentic: View Logs if needed.
 3. Reload host window after code changes.
 
 Automated e2e (Linux):

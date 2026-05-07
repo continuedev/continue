@@ -1,6 +1,6 @@
 ---
 title: "Netlify Performance Optimization Cookbook"
-description: "Optimize web performance with A/B testing, automated monitoring, and data-driven improvements using Netlify MCP and Continue."
+description: "Optimize web performance with A/B testing, automated monitoring, and data-driven improvements using Netlify MCP and Yuto Agentic."
 sidebarTitle: "Using Netlify MCP for Performance Optimization"
 ---
 
@@ -31,7 +31,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
   - [Identity](https://docs.netlify.com/visitor-access/identity/) for user authentication
   - [Large Media](https://docs.netlify.com/large-media/overview/) for Git LFS support
 
-This guide shows you how to leverage these features through natural language with Continue CLI!
+This guide shows you how to leverage these features through natural language with Yuto Agentic CLI!
 
 </Info>
 
@@ -49,7 +49,7 @@ This cookbook teaches you to:
 - GitHub repository with a web project
 - [Netlify account](https://netlify.com) (free tier works)
 - Node.js 22+ installed (required for Netlify)
-- [Continue CLI](https://docs.yutoagentic.dev/guides/cli)
+- [Yuto Agentic CLI](https://docs.yutoagentic.dev/guides/cli)
 - [Netlify MCP](https://yutoagentic.dev/netlify/netlify-mcp) configured
 - [Netlify Development Rules](https://yutoagentic.dev/netlify/netlify-development) (recommended)
 
@@ -65,7 +65,7 @@ This cookbook teaches you to:
 </Info>
 For all options, first:
 <Steps>
-<Step title="Install Continue CLI">
+<Step title="Install Yuto Agentic CLI">
     <CLIInstall />
   </Step>
 
@@ -91,10 +91,10 @@ After completing **Quick Setup** above, you have two paths to get started:
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [Netlify Continuous AI Agent](https://yutoagentic.dev/continuedev/netlify-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
+        Visit the [Netlify Continuous AI Agent](https://yutoagentic.dev/continuedev/netlify-continuous-ai-agent) on Yuto Agentic Mission Control and click **"Install Agent"** or run:
         
         ```bash
-        cn --agent continuedev/netlify-continuous-ai-agent
+        yt --agent continuedev/netlify-continuous-ai-agent
         ```
 
         This agent includes:
@@ -109,7 +109,7 @@ After completing **Quick Setup** above, you have two paths to get started:
       <Step title="Run Performance Analysis">
         From your project directory, run:
         ```bash
-        cn "Analyze my Netlify site's performance and optimize it for better Core Web Vitals."
+        yt "Analyze my Netlify site's performance and optimize it for better Core Web Vitals."
         ```
 
         That's it! The agent handles everything automatically.
@@ -128,7 +128,7 @@ After completing **Quick Setup** above, you have two paths to get started:
 <Step title="Configure Netlify MCP">
   1. Authenticate with Netlify:
   `netlify login`
-  2. Visit [Netlify MCP on Continue
+  2. Visit [Netlify MCP on Yuto Agentic
   Hub](https://yutoagentic.dev/netlify/netlify-mcp)
   3. Follow the configuration instructions for your editor
 
@@ -137,17 +137,17 @@ After completing **Quick Setup** above, you have two paths to get started:
   <Step title="Add Development Rules">
     Install the [Netlify Development Rules](https://yutoagentic.dev/netlify/netlify-development) bundle for best practices:
 
-    1. Visit the bundle page on Continue Mission Control
+    1. Visit the bundle page on Yuto Agentic Mission Control
     2. Click **"Install Rules"**
     3. Rules automatically apply to your agent
 
   </Step>
 
   <Step title="Verify Setup">
-    Test the connection with cn CLI:
+    Test the connection with yt CLI:
 
     ```bash
-    cn
+    yt
     # Then in TUI mode:
     "Check my Netlify auth and list sites"
     ```
@@ -157,16 +157,16 @@ After completing **Quick Setup** above, you have two paths to get started:
  
 </Steps>
  <Info>
-    You're all set! Now you can use cn CLI to interact with Netlify using natural language prompts. Check out the examples below to get started.
+    You're all set! Now you can use yt CLI to interact with Netlify using natural language prompts. Check out the examples below to get started.
   </Info>
   </Tab>
 </Tabs>
 
 <Accordion title="Agent Requirements">
     To use the pre-built agent, you need either: 
-      - **Continue CLI Pro Plan** with
+      - **Yuto Agentic CLI Pro Plan** with
       the models add-on, OR 
-      - **Your own API keys** added to Continue Mission Control secrets
+      - **Your own API keys** added to Yuto Agentic Mission Control secrets
       The agent will automatically detect and use your
       configuration along with the Netlify MCP for deployment operations.
 
@@ -178,11 +178,11 @@ After completing **Quick Setup** above, you have two paths to get started:
 
 ### Step 1: Baseline Performance Metrics
 
-Establish your current performance baseline using cn CLI:
+Establish your current performance baseline using yt CLI:
 
 ```bash
-# Start cn in TUI mode
-cn
+# Start yt in TUI mode
+yt
 
 # Then ask:
 "Show my site's Core Web Vitals and build times"
@@ -211,7 +211,7 @@ cn
 Compare performance between branches:
 
 ```bash
-# In cn TUI mode:
+# In yt TUI mode:
 "Set up A/B test between main and feature branch on Netlify:
 - Split traffic 50/50 between branches
 - Track Core Web Vitals for each variant
@@ -236,7 +236,7 @@ Report winner based on performance + conversion metrics"
 Leverage Netlify's powerful build features to dramatically reduce build times:
 
 ```bash
-# In cn TUI mode:
+# In yt TUI mode:
 "Optimize my Netlify build performance using these features:
 
 1. Enable Netlify Cache Plugin for dependency caching
@@ -275,14 +275,14 @@ These features can reduce build times by 50-70% for most projects!
 <Tip>
   **Discover more optimization prompts!** The Netlify community has documented dozens of build optimization strategies in their [Support Guide: How can I optimize my Netlify build time](https://answers.netlify.com/t/support-guide-how-can-i-optimize-my-netlify-build-time/3907). 
   
-  Use this guide as inspiration for cn CLI prompts not covered in this cookbook, such as:
+  Use this guide as inspiration for yt CLI prompts not covered in this cookbook, such as:
   - `"Configure my builds to skip Dependabot PRs automatically"`
   - `"Set up custom ignore patterns for documentation-only changes"`
   - `"Optimize my Contentful webhooks to prevent duplicate builds"`
   - `"Show me how to use build hooks instead of automatic git triggers"`
   - `"Help me choose between Astro and Hugo based on build performance"`
   
-  The community guide contains real-world scenarios that you can turn into AI-assisted solutions - just describe what you want to achieve and let cn CLI handle the implementation!
+  The community guide contains real-world scenarios that you can turn into AI-assisted solutions - just describe what you want to achieve and let yt CLI handle the implementation!
 </Tip>
 
 ### Step 4: Bundle Analysis with Netlify's Built-in Tools
@@ -290,7 +290,7 @@ These features can reduce build times by 50-70% for most projects!
 Use Netlify's bundle analyzer and optimization features:
 
 ```bash
-# In cn TUI mode:
+# In yt TUI mode:
 "Analyze and optimize my bundle using Netlify's tools:
 
 1. Enable Netlify Bundle Analyzer:
@@ -340,7 +340,7 @@ Generate a full report with before/after bundle sizes"
 Optimize images for better performance:
 
 ```bash
-# In cn TUI mode:
+# In yt TUI mode:
 "Set up Cloudinary image optimization for my Netlify site:
 - Install @cloudinary/netlify-plugin via MCP
 - Auto-convert images to WebP with fallbacks
@@ -358,7 +358,7 @@ Target: Reduce image payload by 60-80% and improve LCP"
 Set and enforce performance budgets with automated testing:
 
 ```bash
-# In cn TUI mode:
+# In yt TUI mode:
 "Set up Lighthouse CI with performance budgets for my Netlify site:
 
 Requirements:
@@ -388,7 +388,7 @@ Please configure the complete Lighthouse CI setup with these budgets."
 Leverage Netlify's built-in analytics and integrate advanced RUM solutions:
 
 ```bash
-# In cn TUI mode:
+# In yt TUI mode:
 "Set up comprehensive Real User Monitoring for my Netlify site:
 
 1. Configure Netlify Analytics Pro (requires Pro account):
@@ -468,7 +468,7 @@ Unlike Google Analytics, Netlify Analytics:
 
 Navigate to **Repository Settings → Secrets and variables → Actions** and add:
 
-- `CONTINUE_API_KEY`: Your Continue API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
+- `CONTINUE_API_KEY`: Your Yuto Agentic API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
 - `NETLIFY_AUTH_TOKEN`: Your Netlify personal access token
 - `NETLIFY_SITE_ID`: Your Netlify site ID
 
@@ -491,17 +491,17 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install Continue CLI
+      - name: Install Yuto Agentic CLI
         run: |
           npm install -g @yutoagentic/cli
-          echo "✅ Continue CLI installed"
+          echo "✅ Yuto Agentic CLI installed"
 
-      - name: Authenticate Continue CLI
+      - name: Authenticate Yuto Agentic CLI
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
-          cn auth login --api-key "$CONTINUE_API_KEY"
-          echo "✅ Continue CLI authenticated"
+          yt auth login --api-key "$CONTINUE_API_KEY"
+          echo "✅ Yuto Agentic CLI authenticated"
 
       - name: Deploy and Test Performance
         id: perf
@@ -510,7 +510,7 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
           echo "🚀 Deploying PR preview and analyzing performance..."
-          cn -p "Deploy PR preview and run Lighthouse.
+          yt -p "Deploy PR preview and run Lighthouse.
                  Compare scores with main branch.
                  Output JSON with score deltas." > performance.json
 
@@ -564,7 +564,7 @@ jobs:
 Test performance before deploying:
 
 ```bash
-# In cn TUI mode:
+# In yt TUI mode:
 "Run production build and measure bundle sizes"
 ```
 
@@ -573,7 +573,7 @@ Test performance before deploying:
 Prevent performance regressions before they happen:
 
 ```bash
-# In cn TUI mode:
+# In yt TUI mode:
 "Add pre-commit hooks for bundle size limits"
 ```
 
@@ -584,13 +584,13 @@ Prevent performance regressions before they happen:
 Identify and fix performance bottlenecks:
 
 ```bash
-# In cn TUI mode:
+# In yt TUI mode:
 "Why did my performance score drop?"
 ```
 
 ### Performance Issue Quick Fixes
 
-| Issue         | Quick Fix Command (in cn TUI)     |
+| Issue         | Quick Fix Command (in yt TUI)     |
 | ------------- | --------------------------------- |
 | Slow LCP      | `"Preload critical resources"`    |
 | High CLS      | `"Add size attributes to images"` |
@@ -656,7 +656,7 @@ Features many developers don't know Netlify offers:
 </CardGroup>
 
 ```bash
-# Try these advanced features in cn TUI mode:
+# Try these advanced features in yt TUI mode:
 "Show me how to use Netlify Edge Functions for geo-based personalization"
 "Set up On-Demand Builders for my blog with 5000 posts"
 "Configure Background Functions for image processing"
@@ -694,34 +694,34 @@ The Netlify Performance Rules enforce:
 ### Progressive Enhancement
 
 ```bash
-# In cn TUI mode:
+# In yt TUI mode:
 "Implement progressive enhancement with basic HTML first"
 ```
 
 ### Multi-variant Testing
 
 ```bash
-# In cn TUI mode:
+# In yt TUI mode:
 "Test 3 bundle strategies and auto-select winner"
 ```
 
 ### Predictive Prefetching
 
 ```bash
-# In cn TUI mode:
+# In yt TUI mode:
 "Analyze navigation patterns and prefetch next pages"
 ```
 
 ## Next Steps
 
-- Install [Netlify MCP](https://yutoagentic.dev/netlify/netlify-mcp) from Continue Mission Control
+- Install [Netlify MCP](https://yutoagentic.dev/netlify/netlify-mcp) from Yuto Agentic Mission Control
 - Set up [Performance Monitoring](https://docs.netlify.com/analytics/get-started/)
 - Configure [A/B Testing](https://docs.netlify.com/split-testing/overview/)
 - Join the [GitHub Discussions](https://github.com/continuedev/continue/discussions) for support
 
 ## Resources
 
-- [Netlify MCP on Continue Mission Control](https://yutoagentic.dev/netlify/netlify-mcp)
+- [Netlify MCP on Yuto Agentic Mission Control](https://yutoagentic.dev/netlify/netlify-mcp)
 - [Core Web Vitals Guide](https://web.dev/vitals/)
 - [Netlify Analytics Documentation](https://docs.netlify.com/analytics/)
-- [Continue Performance Guides](https://docs.yutoagentic.dev/guides)
+- [Yuto Agentic Performance Guides](https://docs.yutoagentic.dev/guides)

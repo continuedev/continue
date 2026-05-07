@@ -1,6 +1,6 @@
 ---
 title: "Chrome DevTools Performance Optimization Cookbook"
-description: "Measure and optimize web performance with Chrome DevTools MCP, automated performance traces, and Core Web Vitals monitoring using Continue."
+description: "Measure and optimize web performance with Chrome DevTools MCP, automated performance traces, and Core Web Vitals monitoring using Yuto Agentic."
 sidebarTitle: "Chrome DevTools MCP for Performance"
 ---
 
@@ -22,7 +22,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
   - [Performance Insights](https://developer.chrome.com/docs/devtools/performance-insights) with AI-powered analysis
   - [Screenshot Debugging](https://developer.chrome.com/docs/devtools/device-mode) for visual regression detection
 
-This guide shows you how to leverage these features through natural language with Continue CLI!
+This guide shows you how to leverage these features through natural language with Yuto Agentic CLI!
 
 </Info>
 
@@ -41,14 +41,14 @@ This cookbook teaches you to:
 - Chrome browser installed
 - Web project with a running development server (or deployed URL)
 - Node.js 20+ installed
-- [Continue CLI](https://docs.yutoagentic.dev/guides/cli)
+- [Yuto Agentic CLI](https://docs.yutoagentic.dev/guides/cli)
 - [Chrome DevTools MCP](https://yutoagentic.dev) configured
 
 ## Quick Setup
 
 For all options, first:
 <Steps>
-<Step title="Install Continue CLI">
+<Step title="Install Yuto Agentic CLI">
     <CLIInstall />
   </Step>
 </Steps>
@@ -68,10 +68,10 @@ After completing **Quick Setup** above, you have two paths to get started:
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [Chrome Dev Tools Agent](https://yutoagentic.dev/continuedev/chrome-dev-tools-agent) on Continue Mission Control and click **"Install Agent"** or run:
+        Visit the [Chrome Dev Tools Agent](https://yutoagentic.dev/continuedev/chrome-dev-tools-agent) on Yuto Agentic Mission Control and click **"Install Agent"** or run:
         
         ```bash
-        cn --agent continuedev/chrome-dev-tools-agent
+        yt --agent continuedev/chrome-dev-tools-agent
         ```
 
         This agent includes:
@@ -99,7 +99,7 @@ After completing **Quick Setup** above, you have two paths to get started:
   <Tab title="🛠️ Manual Setup">
     <Steps>
       <Step title="Add Chrome DevTools MCP to Your Assistant">
-        Visit the [Chrome DevTools MCP](https://yutoagentic.dev/google/chrome-devtools-mcp) on Continue Mission Control and add it to your assistant, or add this to your configuration:
+        Visit the [Chrome DevTools MCP](https://yutoagentic.dev/google/chrome-devtools-mcp) on Yuto Agentic Mission Control and add it to your assistant, or add this to your configuration:
 
         ```yaml
         name: Chrome DevTools MCP
@@ -142,8 +142,8 @@ After completing **Quick Setup** above, you have two paths to get started:
 
 <Accordion title="Agent Requirements">
     To use the pre-built agent, you need either:
-      - **Continue CLI Pro Plan** with the models add-on, OR
-      - **Your own API keys** added to Continue Mission Control secrets
+      - **Yuto Agentic CLI Pro Plan** with the models add-on, OR
+      - **Your own API keys** added to Yuto Agentic Mission Control secrets
       - **Chrome browser** installed on your system
       - **Node.js 20+** to run the MCP via npx
 
@@ -204,13 +204,13 @@ Please check the LCP of web.dev.
 
 ## Performance Analysis Recipes
 
-Now you can use natural language prompts to analyze web performance. The Continue agent automatically calls the appropriate Chrome DevTools MCP tools.
+Now you can use natural language prompts to analyze web performance. The Yuto Agentic agent automatically calls the appropriate Chrome DevTools MCP tools.
 
 <Info>
   **Where to run these workflows:**
-  - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
-  - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
-  - **CLI (headless mode)**: Use `cn -p "your prompt"` for headless commands
+  - **IDE Extensions**: Use Yuto Agentic in VS Code, JetBrains, or other supported IDEs
+  - **Terminal (TUI mode)**: Run `yt` to enter interactive mode, then type your prompts
+  - **CLI (headless mode)**: Use `yt -p "your prompt"` for headless commands
 
   **Test in Plan Mode First**: Before running performance measurements, test your prompts in plan mode (see the [Plan Mode Guide](/guides/plan-mode-guide); press **Shift+Tab** to switch modes). This shows you what the agent will do without executing it.
 </Info>
@@ -401,11 +401,11 @@ This example demonstrates a **Continuous AI workflow** where performance validat
 
 Navigate to **Repository Settings → Secrets and variables → Actions** and add:
 
-- `CONTINUE_API_KEY`: Your Continue API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
+- `CONTINUE_API_KEY`: Your Yuto Agentic API key from [yutoagentic.dev/settings/api-keys](https://yutoagentic.dev/settings/api-keys)
 
 ### Create Workflow File
 
-This workflow automatically validates web performance on pull requests using the Continue CLI in headless mode. It records performance traces, extracts Core Web Vitals, and posts a summary report as a PR comment.
+This workflow automatically validates web performance on pull requests using the Yuto Agentic CLI in headless mode. It records performance traces, extracts Core Web Vitals, and posts a summary report as a PR comment.
 
 Create `.github/workflows/performance-check.yml` in your repository:
 
@@ -441,7 +441,7 @@ jobs:
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
-          cn --agent continuedev/chrome-dev-tools-agent \
+          yt --agent continuedev/chrome-dev-tools-agent \
              -p "Navigate to http://localhost:3000 and:
              1. Record performance trace with reload
              2. Extract LCP, FID, CLS values
@@ -642,7 +642,7 @@ Debug performance regression on http://localhost:3000:
 
 ### Performance Issue Quick Reference
 
-| Issue | Quick Fix Command (in cn TUI) |
+| Issue | Quick Fix Command (in yt TUI) |
 | :---- | :---------------------------- |
 | Slow LCP | `"Find render-blocking resources and suggest preloading or deferring"` |
 | High CLS | `"Detect layout shifts and identify unsized images or dynamic content"` |
@@ -789,7 +789,7 @@ Set up automated regression detection:
   <Card title="Chrome DevTools MCP" icon="plug" href="https://github.com/ChromeDevTools/chrome-devtools-mcp">
     Official Chrome DevTools MCP repository
   </Card>
-  <Card title="Continue Mission Control" icon="circle-nodes" href="https://yutoagentic.dev">
+  <Card title="Yuto Agentic Mission Control" icon="circle-nodes" href="https://yutoagentic.dev">
     Explore more MCP integrations
   </Card>
   <Card title="DevTools Documentation" icon="book" href="https://developer.chrome.com/docs/devtools">

@@ -2,7 +2,7 @@
 alwaysApply: false
 ---
 
-# Continue Development Data (Dev Data) Guide
+# Yuto Agentic Development Data (Dev Data) Guide
 
 ## Overview
 
@@ -17,8 +17,8 @@ Development data (dev data) captures detailed information about how developers i
 
 ### Storage Locations
 
-- **Default storage**: `~/.continue/dev_data/`
-- **Event files**: `~/.continue/dev_data/{version}/{eventName}.jsonl`
+- **Default storage**: `~/.yutoagentic/dev_data/`
+- **Event files**: `~/.yutoagentic/dev_data/{version}/{eventName}.jsonl`
 
 ## Event Types and Schemas
 
@@ -85,12 +85,12 @@ All events inherit from a base schema (`/packages/config-yaml/src/schemas/data/b
 
 ### Configuration Structure
 
-Dev data is configured through `data` blocks in your Continue config:
+Dev data is configured through `data` blocks in your Yuto Agentic config:
 
 ```yaml
 data:
   - name: "Local Development Data"
-    destination: "file:///Users/developer/.continue/dev_data"
+    destination: "file:///Users/developer/.yutoagentic/dev_data"
     schema: "0.2.0"
     level: "all"
     events: ["autocomplete", "chatInteraction", "editOutcome"]
@@ -142,9 +142,9 @@ data:
 
 ### Debugging Dev Data Issues
 
-1. **Check local storage**: Verify files are being created in `~/.continue/dev_data/`
+1. **Check local storage**: Verify files are being created in `~/.yutoagentic/dev_data/`
 2. **Validate schemas**: Ensure event data matches expected schema format
-3. **Review configuration**: Check `data` blocks in Continue config
+3. **Review configuration**: Check `data` blocks in Yuto Agentic config
 4. **Test endpoints**: Verify remote endpoints are reachable and accepting data
 
 ## Best Practices
@@ -197,4 +197,4 @@ onAutocompleteAccepted(completion: CompletionData) {
 }
 ```
 
-This guide provides the foundation for understanding and working with Continue's dev data system. Always prioritize user privacy and follow established patterns when making changes.
+This guide provides the foundation for understanding and working with Yuto Agentic's dev data system. Always prioritize user privacy and follow established patterns when making changes.

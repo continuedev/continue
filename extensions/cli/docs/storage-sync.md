@@ -1,15 +1,15 @@
-# Storage Sync Flow for `cn serve`
+# Storage Sync Flow for `yt serve`
 
 ## Overview
 
-The `--id <storageId>` flag enables the `cn serve` command to periodically persist session state to an external Continue-managed storage bucket. On startup, the CLI exchanges the provided `storageId` for two pre-signed S3 URLs - one for `session.json` and one for `diff.txt` - and then pushes fresh copies of those files every 30 seconds.
+The `--id <storageId>` flag enables the `yt serve` command to periodically persist session state to an external Yuto Agentic-managed storage bucket. On startup, the CLI exchanges the provided `storageId` for two pre-signed S3 URLs - one for `session.json` and one for `diff.txt` - and then pushes fresh copies of those files every 30 seconds.
 
 This document captures the responsibilities for both the CLI and backend components so we can iterate on the feature together.
 
 ## CLI Responsibilities
 
-- **Flag plumbing**: When `cn serve` is invoked with `--id <storageId>`, the CLI treats that value as an opaque identifier.
-- **API key auth**: The CLI attaches the user-level Continue API key (same mechanism we already use for other authenticated requests) to backend calls.
+- **Flag plumbing**: When `yt serve` is invoked with `--id <storageId>`, the CLI treats that value as an opaque identifier.
+- **API key auth**: The CLI attaches the user-level Yuto Agentic API key (same mechanism we already use for other authenticated requests) to backend calls.
 - **Presign handshake**:
   1. On startup, issue `POST https://api.yutoagentic.dev/agents/storage/presigned-url` with JSON payload `{ "storageId": "<storageId>" }`.
   2. Expect a response payload containing two pre-signed `PUT` URLs and their target object keys:
@@ -35,7 +35,7 @@ This document captures the responsibilities for both the CLI and backend compone
 ## Backend Responsibilities
 
 - **Endpoint surface**: `POST /agents/storage/presigned-url` accepts a JSON body `{ "storageId": string }`.
-- **Authentication**: Leverage the caller's Continue API key (the request arrives with the standard `Authorization: Bearer <apiKey>` header). Apply normal auth/tenant validation so users can only request URLs tied to their account/org.
+- **Authentication**: Leverage the caller's Yuto Agentic API key (the request arrives with the standard `Authorization: Bearer <apiKey>` header). Apply normal auth/tenant validation so users can only request URLs tied to their account/org.
 - **URL issuance**:
   - Resolve `storageId` into the desired S3 prefix (e.g., `sessions/<org>/<storageId>/`).
   - Generate two short-lived pre-signed `PUT` URLs: one for `session.json`, one for `diff.txt`.

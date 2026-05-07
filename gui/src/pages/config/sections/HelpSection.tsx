@@ -260,7 +260,7 @@ export function HelpSection() {
                 }}
               />
 
-              {process.env.NODE_ENV === "development" && (
+              {import.meta.env.DEV && (
                 <ConfigRow
                   title="Theme Test Page"
                   description="Development page for testing themes"
