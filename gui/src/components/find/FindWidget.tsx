@@ -279,6 +279,8 @@ export const useFindWidget = (
       <HeaderButton
         inverted={false}
         onClick={() => setOpen(false)}
+        aria-label="Close find widget"
+        title="Close find widget"
         className="focus:ring"
       >
         <XMarkIcon className="h-4 w-4" />
