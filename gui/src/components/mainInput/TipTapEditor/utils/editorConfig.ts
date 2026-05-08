@@ -386,6 +386,7 @@ export function createEditorConfig(options: {
         "data-testid": props.isMainInput
           ? "editor-input-main"
           : `editor-input-${props.inputId}`,
+        ...(props.isMainInput ? { "aria-label": "Chat message input" } : {}),
         class: "ProseMirror outline-none overflow-hidden",
         style: `font-size: ${getFontSize()}px;`,
       },
