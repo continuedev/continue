@@ -12,6 +12,15 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import { ChatMessage, ILLM } from "..";
+import { stripMarkdownFrontmatter } from "./memoryLifecycle/markdown.js";
+import {
+  buildSessionMemoryExtractionPrompt,
+  buildSessionMemoryFile,
+  DEFAULT_SESSION_MEMORY_THRESHOLDS,
+  ensureSessionMemoryFile,
+  SESSION_MEMORY_TEMPLATE,
+  shouldExtractSessionMemoryGate,
+} from "./memoryLifecycle/sessionMemory.js";
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
@@ -27,44 +36,12 @@ export interface SessionMemoryConfig {
 }
 
 const DEFAULT_CONFIG: SessionMemoryConfig = {
-  minimumMessageTokensToInit: 10_000,
-  minimumTokensBetweenUpdate: 5_000,
-  toolCallsBetweenUpdates: 3,
+  ...DEFAULT_SESSION_MEMORY_THRESHOLDS,
   sessionDir: path.join(
     process.env["CONTINUE_SESSION_DIR"] ??
       (process.env["TMPDIR"] ?? "/tmp") + "/continue-sessions",
   ),
 };
-
-// ─── Template ─────────────────────────────────────────────────────────────────
-
-const SESSION_MEMORY_TEMPLATE = `# Session Title
-_A short and distinctive 5-10 word descriptive title for the session_
-
-# Current State
-_What is actively being worked on right now? Pending tasks not yet completed. Immediate next steps._
-
-# Task Specification
-_What did the user ask to build? Any design decisions or explanatory context._
-
-# Files and Functions
-_Important files — what they contain and why they are relevant._
-
-# Workflow
-_Commands usually run and in what order. How to interpret their output if not obvious._
-
-# Errors & Corrections
-_Errors encountered and how they were fixed. Approaches that failed and should not be retried._
-
-# Codebase and System Documentation
-_Important system components. How they work/fit together._
-
-# Learnings
-_What has worked well? What has not? What to avoid?_
-
-# Worklog
-_Step by step, terse summary of what was attempted/done._
-`;
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -136,39 +113,28 @@ export function shouldExtractSessionMemory(
   state: SessionMemoryState,
   messages: ChatMessage[],
 ): boolean {
-  if (state.extracting) return false;
-
   const currentTokens = estimateTokens(messages);
-
-  if (!state.initialized) {
-    if (currentTokens < state.config.minimumMessageTokensToInit) return false;
-  }
-
-  const tokenGrowth = currentTokens - state.tokensAtLastExtraction;
-  if (tokenGrowth < state.config.minimumTokensBetweenUpdate) return false;
-
-  const toolCallsSince = countToolCallsSince(
-    messages,
-    state.lastExtractedMessageIndex,
-  );
-  // Require BOTH token growth AND tool call threshold
-  return toolCallsSince >= state.config.toolCallsBetweenUpdates;
+  return shouldExtractSessionMemoryGate({
+    extracting: state.extracting,
+    initialized: state.initialized,
+    currentTokens,
+    tokensAtLastExtraction: state.tokensAtLastExtraction,
+    toolCallsSinceExtraction: countToolCallsSince(
+      messages,
+      state.lastExtractedMessageIndex,
+    ),
+    config: state.config,
+  });
 }
 
 // ─── Notes file management ────────────────────────────────────────────────────
 
 async function ensureNotesFile(notesPath: string): Promise<string> {
-  const dir = path.dirname(notesPath);
-  await fs.mkdir(dir, { recursive: true, mode: 0o700 });
-  try {
-    return await fs.readFile(notesPath, "utf-8");
-  } catch {
-    await fs.writeFile(notesPath, SESSION_MEMORY_TEMPLATE, {
-      encoding: "utf-8",
-      mode: 0o600,
-    });
-    return SESSION_MEMORY_TEMPLATE;
-  }
+  return ensureSessionMemoryFile(notesPath, {
+    sessionId: path.basename(notesPath, path.extname(notesPath)),
+    template: SESSION_MEMORY_TEMPLATE,
+    source: "continue-core",
+  });
 }
 
 // ─── Extraction prompt ────────────────────────────────────────────────────────
@@ -177,20 +143,7 @@ function buildExtractionPrompt(
   currentNotes: string,
   notesPath: string,
 ): string {
-  return `You are a session note-keeper. Based on the conversation above, update the session notes file.
-
-Current notes content:
-<current_notes>
-${currentNotes}
-</current_notes>
-
-Your ONLY task: update the notes file at \`${notesPath}\` to reflect the latest state of the session. Rules:
-- Maintain the EXACT file structure (all section headers and italic description lines must be preserved verbatim).
-- Update content within sections only — never modify headers or the italic _description_ lines.
-- Be terse. Each section should be densely informative, not verbose.
-- Do not add a section for "Session Memory Update" or reference these instructions.
-- Write the updated file using the edit_existing_file or create_new_file tool.
-- After writing, stop immediately. Do not respond with anything else.`;
+  return buildSessionMemoryExtractionPrompt(currentNotes, notesPath);
 }
 
 // ─── Main extraction function ─────────────────────────────────────────────────
@@ -260,17 +213,28 @@ export async function extractSessionMemory(
         .trim();
 
       if (stripped.length > 100) {
-        await fs.writeFile(state.notesPath, stripped, {
-          encoding: "utf-8",
-          mode: 0o600,
-        });
+        await fs.writeFile(
+          state.notesPath,
+          buildSessionMemoryFile({
+            sessionId: state.sessionId,
+            markdown: stripped,
+            updatedAt: Date.now(),
+            source: "continue-core",
+          }),
+          {
+            encoding: "utf-8",
+            mode: 0o600,
+          },
+        );
       }
     } catch {
       // Extraction failure is non-fatal — agent continues regardless
+    } finally {
+      updatedState.extracting = false;
     }
   })();
 
-  return { ...updatedState, extracting: false };
+  return updatedState;
 }
 
 // ─── Session memory reader ────────────────────────────────────────────────────
@@ -287,7 +251,8 @@ export async function readSessionMemory(
   const notesPath = path.join(config.sessionDir, `${sessionId}.md`);
   try {
     const content = await fs.readFile(notesPath, "utf-8");
-    return content.trim() === SESSION_MEMORY_TEMPLATE.trim() ? null : content;
+    const markdown = stripMarkdownFrontmatter(content);
+    return markdown.trim() === SESSION_MEMORY_TEMPLATE.trim() ? null : markdown;
   } catch {
     return null;
   }

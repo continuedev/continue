@@ -1,5 +1,6 @@
 import { Server } from "http";
 
+import type { VSCodeBridgeStateSnapshot } from "core/agent/contracts/index.js";
 import express from "express";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 import { describe, expect, test } from "vitest";
@@ -28,7 +29,7 @@ export class MockRemoteServer {
   private setupRoutes() {
     // GET /state - Return the current state
     this.app.get("/state", (req, res) => {
-      res.json({
+      const snapshot: VSCodeBridgeStateSnapshot = {
         session: {
           history: this.messages.map((msg) => ({
             message: msg,
@@ -40,7 +41,9 @@ export class MockRemoteServer {
         isProcessing: this.isProcessing,
         messageQueueLength: 0,
         pendingPermission: null,
-      });
+      };
+
+      res.json(snapshot);
     });
 
     // POST /message - Handle new messages

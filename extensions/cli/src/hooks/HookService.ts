@@ -5,6 +5,12 @@
  * method that integration points call to trigger hooks.
  */
 
+import type {
+  TurnLifecycleContext,
+  TurnLifecycleHandler,
+  TurnLifecycleResult,
+} from "core/agent/contracts/index.js";
+
 import { BaseService } from "../services/BaseService.js";
 import { logger } from "../util/logger.js";
 
@@ -91,6 +97,48 @@ export class HookService extends BaseService<HookServiceState> {
       // Hook errors should not break the main flow
       return { blocked: false, results: [] };
     }
+  }
+
+  async runTurnLifecycle<Message>(
+    context: TurnLifecycleContext<Message>,
+    handlers: readonly TurnLifecycleHandler<Message>[],
+  ): Promise<TurnLifecycleResult> {
+    const aggregate: TurnLifecycleResult = {};
+
+    for (const handler of handlers) {
+      try {
+        const result = await handler(context);
+        if (!result) {
+          continue;
+        }
+
+        if (result.messages?.length) {
+          aggregate.messages = [
+            ...(aggregate.messages ?? []),
+            ...result.messages,
+          ];
+        }
+
+        if (result.metadata) {
+          aggregate.metadata = {
+            ...(aggregate.metadata ?? {}),
+            ...result.metadata,
+          };
+        }
+
+        if (result.blocked) {
+          aggregate.blocked = true;
+          break;
+        }
+      } catch (error) {
+        logger.warn(
+          `Turn lifecycle handler failed in ${context.phase}:`,
+          error,
+        );
+      }
+    }
+
+    return aggregate;
   }
 
   /**

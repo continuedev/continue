@@ -38,6 +38,10 @@ import {
   getDefaultCompletionOptions,
   StreamCallbacks,
 } from "./streamChatResponse.types.js";
+import {
+  runAfterToolBatchLifecycle,
+  runTurnEndLifecycle,
+} from "./turnLifecycle.js";
 
 dotenv.config();
 
@@ -561,39 +565,21 @@ export async function streamChatResponse(
     });
 
     if (shouldReturn) {
-      // Record tool calls in session memory and progress tracker even on early return
-      if (toolCalls.length > 0) {
-        try {
-          services.sessionMemory.recordToolCalls(toolCalls.length);
-          services.sessionMemory.maybeExtract(chatHistory, llmApi, model);
-          services.progressTracker.recordToolCalls(
-            toolCalls.map((tc) => ({
-              name: tc.name,
-              arguments: tc.argumentsStr,
-            })),
-          );
-          services.taskState.recordToolCall();
-        } catch {}
-      }
+      await runAfterToolBatchLifecycle({
+        chatHistory,
+        llmApi,
+        model,
+        toolCalls,
+      });
       return finalResponse || content || fullResponse;
     }
 
-    // Record tool calls in progress tracker + session memory
-    if (toolCalls.length > 0) {
-      try {
-        services.sessionMemory.recordToolCalls(toolCalls.length);
-        services.sessionMemory.maybeExtract(chatHistory, llmApi, model);
-        services.progressTracker.recordToolCalls(
-          toolCalls.map((tc) => ({
-            name: tc.name,
-            arguments: tc.argumentsStr,
-          })),
-        );
-        for (let i = 0; i < toolCalls.length; i++) {
-          services.taskState.recordToolCall();
-        }
-      } catch {}
-    }
+    await runAfterToolBatchLifecycle({
+      chatHistory,
+      llmApi,
+      model,
+      toolCalls,
+    });
 
     // After tool execution, validate that we haven't exceeded context limit
     const postToolResult = await handlePostToolValidation(
@@ -659,28 +645,13 @@ export async function streamChatResponse(
     totalMessages: chatHistory.length,
   });
 
-  // Update context analysis with final history state (non-fatal)
-  try {
-    const systemMsg = await services.systemMessage.getSystemMessage(
-      services.toolPermissions.getState().currentMode,
-    );
-    services.contextAnalysis.update(chatHistory, model, systemMsg);
-  } catch {}
-
-  // Complete the current task
-  try {
-    if (abortController.signal.aborted) {
-      services.taskState.killTask();
-    } else {
-      services.taskState.completeTask();
-    }
-  } catch {}
-
-  // Schedule background cross-session memory consolidation (fire-and-forget).
-  // Only fires when gates pass (≥24h elapsed + ≥5 new session notes).
-  try {
-    services.autoDream.schedule(llmApi, model);
-  } catch {}
+  await runTurnEndLifecycle({
+    chatHistory,
+    llmApi,
+    model,
+    lastAssistantMessage: finalResponse || fullResponse,
+    wasAborted: abortController.signal.aborted,
+  });
 
   // For headless mode, we return only the final response
   // Otherwise, return the full response

@@ -2,13 +2,15 @@ import { ModelConfig } from "@yutoagentic/config-yaml";
 import { BaseLlmApi } from "@yutoagentic/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
 import { convertToUnifiedHistory } from "core/util/messageConversion.js";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  clearCompactionCache,
   compactChatHistory,
   findCompactionIndex,
   getHistoryForLLM,
 } from "./compaction.js";
+import { services } from "./services/index.js";
 import { streamChatResponse } from "./stream/streamChatResponse.js";
 
 // Mock the streamChatResponse function
@@ -30,6 +32,15 @@ describe("compaction", () => {
   } as ModelConfig;
 
   const mockLlmApi = {} as BaseLlmApi;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clearCompactionCache();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
   describe("findCompactionIndex", () => {
     it("should find compaction marker in chat history", () => {
@@ -581,6 +592,88 @@ describe("compaction", () => {
       expect(result.compactedHistory).toHaveLength(1); // Only compaction
       expect(result.compactedHistory[0].message.role).toBe("assistant");
       expect(result.compactionIndex).toBe(0);
+    });
+
+    it("should reuse cached compaction results when the feature flag is enabled", async () => {
+      const mockStreamResponse = vi.mocked(streamChatResponse);
+      const onStreamContent = vi.fn();
+      const onStreamComplete = vi.fn();
+      const flagSpy = vi
+        .spyOn(services.featureFlags, "isEnabled")
+        .mockImplementation((key) => key === "CACHED_MICROCOMPACTION");
+
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          callbacks?.onContent?.("Cached summary");
+          callbacks?.onContentComplete?.("Cached summary");
+          return "Cached summary";
+        },
+      );
+
+      const history = convertToUnifiedHistory([
+        { role: "system", content: "System message" },
+        { role: "user", content: "Hello" },
+        { role: "assistant", content: "Hi there" },
+      ]);
+
+      try {
+        const first = await compactChatHistory(history, mockModel, mockLlmApi);
+        const second = await compactChatHistory(
+          history,
+          mockModel,
+          mockLlmApi,
+          {
+            callbacks: {
+              onStreamContent,
+              onStreamComplete,
+            },
+          },
+        );
+
+        expect(mockStreamResponse).toHaveBeenCalledTimes(1);
+        expect(second).toEqual(first);
+        expect(onStreamContent).toHaveBeenCalledWith("Cached summary");
+        expect(onStreamComplete).toHaveBeenCalledTimes(1);
+      } finally {
+        flagSpy.mockRestore();
+      }
+    });
+
+    it("should bypass the compaction cache when the effective history changes", async () => {
+      const mockStreamResponse = vi.mocked(streamChatResponse);
+      const flagSpy = vi
+        .spyOn(services.featureFlags, "isEnabled")
+        .mockImplementation((key) => key === "CACHED_MICROCOMPACTION");
+
+      mockStreamResponse.mockImplementation(
+        async (history, model, api, controller, callbacks) => {
+          const response = `Summary ${history.length}`;
+          callbacks?.onContent?.(response);
+          callbacks?.onContentComplete?.(response);
+          return response;
+        },
+      );
+
+      const baseHistory = convertToUnifiedHistory([
+        { role: "system", content: "System message" },
+        { role: "user", content: "Hello" },
+        { role: "assistant", content: "Hi there" },
+      ]);
+      const changedHistory = convertToUnifiedHistory([
+        { role: "system", content: "System message" },
+        { role: "user", content: "Hello" },
+        { role: "assistant", content: "Hi there" },
+        { role: "user", content: "One more thing" },
+      ]);
+
+      try {
+        await compactChatHistory(baseHistory, mockModel, mockLlmApi);
+        await compactChatHistory(changedHistory, mockModel, mockLlmApi);
+
+        expect(mockStreamResponse).toHaveBeenCalledTimes(2);
+      } finally {
+        flagSpy.mockRestore();
+      }
     });
   });
 

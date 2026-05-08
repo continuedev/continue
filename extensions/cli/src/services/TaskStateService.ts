@@ -12,6 +12,8 @@
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
+import { serviceContainer } from "./ServiceContainer.js";
+import { SERVICE_NAMES } from "./types.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -85,6 +87,11 @@ export class TaskStateService extends BaseService<TaskStateServiceState> {
 
   async doInitialize(): Promise<TaskStateServiceState> {
     return this.currentState;
+  }
+
+  protected override setState(newState: Partial<TaskStateServiceState>): void {
+    super.setState(newState);
+    serviceContainer.set(SERVICE_NAMES.TASK_STATE, this.currentState);
   }
 
   /** Create a new task for the given user prompt */

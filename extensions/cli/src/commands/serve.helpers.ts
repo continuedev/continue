@@ -1,3 +1,4 @@
+import type { VSCodeBridgePermissionRequest } from "core/agent/contracts/index.js";
 import type { ChatHistoryItem, Session, ToolStatus } from "core/index.js";
 
 import { services } from "../services/index.js";
@@ -130,13 +131,7 @@ export async function streamChatResponseWithInterruption(
   }
 }
 
-export interface PendingPermission {
-  toolName: string;
-  toolArgs: any;
-  requestId: string;
-  timestamp: number;
-  toolCallPreview?: any[];
-}
+export type PendingPermission = VSCodeBridgePermissionRequest;
 
 export interface ServerState {
   session: Session;

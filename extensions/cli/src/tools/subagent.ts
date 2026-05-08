@@ -12,14 +12,18 @@ import { logger } from "../util/logger.js";
 
 import { Tool } from "./types.js";
 
-type SubagentProfile = "explore" | "verify";
+type SubagentProfile = "explore" | "verify" | "coordinator-worker";
 
 function inferSubagentProfile(
   profile: unknown,
   subagentName: string,
   prompt: string,
 ): SubagentProfile | undefined {
-  if (profile === "explore" || profile === "verify") {
+  if (
+    profile === "explore" ||
+    profile === "verify" ||
+    profile === "coordinator-worker"
+  ) {
     return profile;
   }
 

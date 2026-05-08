@@ -10,6 +10,7 @@ import {
 } from "../commands/commands.js";
 import { useServices } from "../hooks/useService.js";
 import type { PermissionMode } from "../permissions/types.js";
+import type { FeatureFlagsServiceState } from "../services/FeatureFlagsService.js";
 import type { FileIndexServiceState } from "../services/FileIndexService.js";
 import {
   SERVICE_NAMES,
@@ -24,6 +25,7 @@ import { FileSearchUI } from "./FileSearchUI.js";
 import { useClipboardMonitor } from "./hooks/useClipboardMonitor.js";
 import {
   handleControlKeys,
+  handleVimNormalModeKey,
   updateTextBufferState,
 } from "./hooks/useUserInput.js";
 import { SlashCommandUI } from "./SlashCommandUI.js";
@@ -176,12 +178,23 @@ const UserInput: React.FC<UserInputProps> = ({
   const [currentFiles, setCurrentFiles] = useState<
     Array<{ path: string; displayName: string }>
   >([]);
+  const [vimMode, setVimMode] = useState<"insert" | "normal">("insert");
   const { exit } = useApp();
 
-  // Get file index service state for reactive updates (unused but needed for service initialization)
-  useServices<{
+  // Get reactive service state for editor affordances.
+  const { services: uiServices } = useServices<{
     fileIndex: FileIndexServiceState;
-  }>(["fileIndex"]);
+    featureFlags: FeatureFlagsServiceState;
+  }>(["fileIndex", "featureFlags"]);
+
+  const vimModeEnabled = uiServices.featureFlags?.flags?.CLI_VIM_MODE ?? false;
+  const effectiveVimMode = vimModeEnabled ? vimMode : "insert";
+
+  useEffect(() => {
+    if (!vimModeEnabled && vimMode !== "insert") {
+      setVimMode("insert");
+    }
+  }, [vimModeEnabled, vimMode]);
 
   const [slashCommands, setSlashCommands] = useState<SlashCommand[]>([
     { name: "help", description: "Show help message", category: "system" },
@@ -669,6 +682,12 @@ const UserInput: React.FC<UserInputProps> = ({
       return true;
     }
 
+    if (vimModeEnabled && inputMode && effectiveVimMode === "insert") {
+      setVimMode("normal");
+      lastEscapePressRef.current = 0;
+      return true;
+    }
+
     // Handle double Esc to open edit message selector
     const now = Date.now();
     if (
@@ -745,6 +764,36 @@ const UserInput: React.FC<UserInputProps> = ({
     // Handle escape key variations
     if (handleEscapeKey(key)) {
       return;
+    }
+
+    if (
+      vimModeEnabled &&
+      effectiveVimMode === "normal" &&
+      !showSlashCommands &&
+      !showFileSearch
+    ) {
+      const handled = handleVimNormalModeKey({
+        input,
+        key,
+        textBuffer,
+        enterInsertMode: () => {
+          setVimMode("insert");
+        },
+      });
+
+      if (handled) {
+        updateTextBufferState({
+          handled,
+          textBuffer,
+          setInputText,
+          setCursorPosition,
+          updateSlashCommandState,
+          updateFileSearchState,
+          updateBashModeState,
+          inputHistory,
+        });
+        return;
+      }
     }
 
     // Handle slash command navigation
@@ -886,7 +935,15 @@ const UserInput: React.FC<UserInputProps> = ({
         borderStyle="round"
         borderTop={true}
         paddingX={1}
-        borderColor={showBashMode ? "yellow" : isRemoteMode ? "cyan" : "gray"}
+        borderColor={
+          showBashMode
+            ? "yellow"
+            : effectiveVimMode === "normal"
+              ? "yellow"
+              : isRemoteMode
+                ? "cyan"
+                : "gray"
+        }
       >
         <Text
           color={showBashMode ? "yellow" : isRemoteMode ? "cyan" : "blue"}
@@ -894,6 +951,11 @@ const UserInput: React.FC<UserInputProps> = ({
         >
           {showBashMode ? "$ " : isRemoteMode ? "◉ " : "● "}
         </Text>
+        {vimModeEnabled && (
+          <Text color={effectiveVimMode === "normal" ? "yellow" : "dim"}>
+            [{effectiveVimMode.toUpperCase()}]
+          </Text>
+        )}
         {renderInputText()}
       </Box>
 

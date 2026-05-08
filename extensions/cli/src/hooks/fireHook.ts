@@ -21,6 +21,7 @@ import type {
   SessionStartInput,
   SessionStartSource,
   StopInput,
+  TaskCompletedInput,
   UserPromptSubmitInput,
 } from "./types.js";
 
@@ -205,6 +206,24 @@ export async function fireNotification(
     message,
     title,
     notification_type: notificationType,
+  };
+
+  return services.hooks.fireEvent(input);
+}
+
+export async function fireTaskCompleted(
+  taskId: string,
+  taskSubject: string,
+  taskDescription?: string,
+): Promise<HookEventResult> {
+  if (!isHookServiceReady()) return NOOP_RESULT;
+
+  const input: TaskCompletedInput = {
+    ...getCommonFields(),
+    hook_event_name: "TaskCompleted",
+    task_id: taskId,
+    task_subject: taskSubject,
+    task_description: taskDescription,
   };
 
   return services.hooks.fireEvent(input);

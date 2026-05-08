@@ -1,3 +1,4 @@
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import {
   AgentFile,
   AssistantUnrolled,
@@ -8,7 +9,6 @@ import {
 import { BaseLlmApi } from "@yutoagentic/openai-adapters";
 import { AssistantConfig } from "@yutoagentic/sdk";
 import { DefaultApiInterface } from "@yutoagentic/sdk/dist/api/dist/index.js";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 import { AuthConfig } from "../auth/workos.js";
 import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
@@ -168,6 +168,7 @@ export const SERVICE_NAMES = {
   AUTO_DREAM: "autoDream",
   CONTEXT_ANALYSIS: "contextAnalysis",
   TASK_STATE: "taskState",
+  TASK_NOTIFICATIONS: "taskNotifications",
   PROGRESS_TRACKER: "progressTracker",
 } as const;
 

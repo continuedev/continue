@@ -37,6 +37,7 @@ import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 import { encodeFullSlug } from "../../../../packages/config-yaml/dist";
+import { showVSCodeBridgeDialog } from "./showVSCodeBridgeDialog";
 import { VsCodeExtension } from "./VsCodeExtension";
 
 type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
@@ -121,6 +122,10 @@ export class VsCodeMessenger {
     });
     this.onWebview("toggleFullScreen", (msg) => {
       vscode.commands.executeCommand("yutoagentic.openInNewWindow");
+    });
+
+    this.onWebview("vscode/showDialog", async ({ data }) => {
+      return showVSCodeBridgeDialog(data);
     });
 
     this.onWebview("acceptDiff", async ({ data: { filepath, streamId } }) => {

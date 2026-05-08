@@ -1,3 +1,5 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -8,6 +10,7 @@ import {
 import { executeSubAgent } from "./executor.js";
 
 const {
+  testContinueHome,
   mockGet,
   mockSet,
   mockStreamChatResponse,
@@ -15,6 +18,7 @@ const {
   mockLoggerDebug,
   mockLoggerError,
 } = vi.hoisted(() => ({
+  testContinueHome: "/tmp/yutoagentic-subagent-tests",
   mockGet: vi.fn(),
   mockSet: vi.fn(),
   mockStreamChatResponse: vi.fn(),
@@ -41,6 +45,12 @@ vi.mock("../services/index.js", () => ({
   },
 }));
 
+vi.mock("../env.js", () => ({
+  env: {
+    continueHome: testContinueHome,
+  },
+}));
+
 vi.mock("../stream/streamChatResponse.js", () => ({
   streamChatResponse: mockStreamChatResponse,
 }));
@@ -53,6 +63,8 @@ vi.mock("../util/logger.js", () => ({
 }));
 
 describe("executeSubAgent", () => {
+  let observedSystemMessage = "";
+
   const parentPermissionsState = {
     currentMode: "coordinator" as const,
     permissions: {
@@ -71,11 +83,14 @@ describe("executeSubAgent", () => {
     llmApi: { chatCompletions: { create: vi.fn() } },
   } as any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    observedSystemMessage = "";
     mockGet.mockResolvedValue(parentPermissionsState);
     mockGetSystemMessage.mockResolvedValue("Base system message");
     mockStreamChatResponse.mockImplementation(async (chatHistory: any[]) => {
+      const { services } = await import("../services/index.js");
+      observedSystemMessage = await services.systemMessage.getSystemMessage();
       chatHistory.push({
         message: {
           role: "assistant",
@@ -83,6 +98,8 @@ describe("executeSubAgent", () => {
         },
       });
     });
+
+    await fs.rm(testContinueHome, { recursive: true, force: true });
   });
 
   it("applies explore profile policies and restores parent permissions", async () => {
@@ -158,19 +175,58 @@ describe("executeSubAgent", () => {
     );
   });
 
+  it("creates and updates a coordinator scratchpad for child workers", async () => {
+    const parentSessionId = "parent-session";
+
+    await executeSubAgent({
+      agent: subAgent,
+      prompt: "Investigate the command routing issue",
+      parentSessionId,
+      abortController: new AbortController(),
+    });
+
+    const scratchpadPath = path.join(
+      testContinueHome,
+      "coordinator",
+      parentSessionId,
+      "WORKER_SCRATCHPAD.md",
+    );
+    const scratchpad = await fs.readFile(scratchpadPath, "utf8");
+
+    expect(observedSystemMessage).toContain(
+      `Shared scratchpad path: ${scratchpadPath}`,
+    );
+    expect(observedSystemMessage).toContain("Current scratchpad contents:");
+    expect(observedSystemMessage).toContain("# Coordinator Scratchpad");
+    expect(scratchpad).toContain("# Coordinator Scratchpad");
+    expect(scratchpad).toContain("Investigate the command routing issue");
+    expect(scratchpad).toContain("subagent result");
+  });
+
   it("restores parent permissions even when streaming fails", async () => {
     mockStreamChatResponse.mockRejectedValueOnce(new Error("stream failed"));
+    const parentSessionId = "parent-session";
 
     const result = await executeSubAgent({
       agent: subAgent,
       prompt: "Run and fail",
       profile: "verify",
-      parentSessionId: "parent-session",
+      parentSessionId,
       abortController: new AbortController(),
     });
 
+    const scratchpadPath = path.join(
+      testContinueHome,
+      "coordinator",
+      parentSessionId,
+      "WORKER_SCRATCHPAD.md",
+    );
+    const scratchpad = await fs.readFile(scratchpadPath, "utf8");
+
     expect(result.success).toBe(false);
     expect(result.error).toBe("stream failed");
+    expect(scratchpad).toContain("Status: failed");
+    expect(scratchpad).toContain("stream failed");
     expect(mockSet).toHaveBeenCalledTimes(2);
     expect(mockSet).toHaveBeenNthCalledWith(
       2,

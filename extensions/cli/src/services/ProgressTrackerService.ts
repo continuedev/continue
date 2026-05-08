@@ -21,6 +21,8 @@
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
+import { serviceContainer } from "./ServiceContainer.js";
+import { SERVICE_NAMES } from "./types.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -132,6 +134,11 @@ export class ProgressTrackerService extends BaseService<ProgressTrackerState> {
 
   async doInitialize(): Promise<ProgressTrackerState> {
     return this.currentState;
+  }
+
+  protected override setState(newState: Partial<ProgressTrackerState>): void {
+    super.setState(newState);
+    serviceContainer.set(SERVICE_NAMES.PROGRESS_TRACKER, this.currentState);
   }
 
   /**

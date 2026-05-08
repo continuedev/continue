@@ -25,8 +25,8 @@ export const SUBAGENT_TOOL_META: Tool = {
       profile: {
         type: "string",
         description:
-          "Optional execution profile for the subagent. Use 'explore' for reconnaissance and 'verify' for review/validation.",
-        enum: ["explore", "verify"],
+          "Optional execution profile for the subagent. Use 'explore' for reconnaissance, 'verify' for review/validation, or 'coordinator-worker' when the worker should participate in a shared coordinator scratchpad.",
+        enum: ["explore", "verify", "coordinator-worker"],
       },
     },
   },

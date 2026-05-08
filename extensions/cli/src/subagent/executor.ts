@@ -1,5 +1,14 @@
 import type { ChatHistoryItem } from "core";
+import {
+  buildCoordinatorWorkerSystemMessage,
+  getCoordinatorScratchpadPath,
+} from "core/agent/coordinator/CoordinatorContext.js";
+import {
+  appendWorkerScratchpadEntry,
+  readWorkerScratchpad,
+} from "core/agent/coordinator/WorkerScratchpad.js";
 
+import { env } from "../env.js";
 import {
   EXPLORE_MODE_POLICIES,
   VERIFY_MODE_POLICIES,
@@ -19,7 +28,7 @@ import { logger } from "../util/logger.js";
 export interface SubAgentExecutionOptions {
   agent: ModelServiceState;
   prompt: string;
-  profile?: "explore" | "verify";
+  profile?: "explore" | "verify" | "coordinator-worker";
   parentSessionId: string;
   abortController: AbortController;
   onOutputUpdate?: (output: string) => void;
@@ -41,6 +50,7 @@ async function buildAgentSystemMessage(
   agent: ModelServiceState,
   services: any,
   mode: PermissionMode,
+  coordinatorInstructions?: string,
 ): Promise<string> {
   const baseMessage = services.systemMessage
     ? await services.systemMessage.getSystemMessage(mode)
@@ -49,11 +59,15 @@ async function buildAgentSystemMessage(
   const agentPrompt = agent.model?.chatOptions?.baseSystemMessage || "";
 
   // Combine base system message with agent-specific prompt
-  if (agentPrompt) {
-    return `${baseMessage}\n\n${agentPrompt}`;
+  const segments = [baseMessage, agentPrompt, coordinatorInstructions].filter(
+    (segment): segment is string => !!segment && segment.trim().length > 0,
+  );
+
+  if (segments.length > 0) {
+    return segments.join("\n\n");
   }
 
-  return baseMessage;
+  return "";
 }
 
 function getSubagentExecutionMode(
@@ -68,7 +82,18 @@ function getSubagentExecutionMode(
     return "verify";
   }
 
+  if (profile === "coordinator-worker") {
+    return "coordinator";
+  }
+
   return parentMode;
+}
+
+function shouldUseCoordinatorScratchpad(
+  profile: SubAgentExecutionOptions["profile"],
+  parentMode: PermissionMode,
+): boolean {
+  return parentMode === "coordinator" || profile === "coordinator-worker";
 }
 
 function getModePolicyOverride(
@@ -96,6 +121,7 @@ export async function executeSubAgent(
     agent: subAgent,
     prompt,
     profile,
+    parentSessionId,
     abortController,
     onOutputUpdate,
   } = options;
@@ -104,6 +130,12 @@ export async function executeSubAgent(
     await serviceContainer.get<ToolPermissionServiceState>(
       SERVICE_NAMES.TOOL_PERMISSIONS,
     );
+  const scratchpadPath = shouldUseCoordinatorScratchpad(
+    profile,
+    mainAgentPermissionsState.currentMode,
+  )
+    ? getCoordinatorScratchpadPath(env.continueHome, parentSessionId)
+    : undefined;
 
   try {
     logger.debug("Starting subagent execution", {
@@ -121,6 +153,15 @@ export async function executeSubAgent(
       mainAgentPermissionsState.currentMode,
     );
     const modePermissionOverride = getModePolicyOverride(executionMode);
+    const coordinatorInstructions = scratchpadPath
+      ? buildCoordinatorWorkerSystemMessage({
+          scratchpadPath,
+          scratchpadContent: await readWorkerScratchpad(
+            scratchpadPath,
+            parentSessionId,
+          ),
+        })
+      : undefined;
 
     serviceContainer.set<ToolPermissionServiceState>(
       SERVICE_NAMES.TOOL_PERMISSIONS,
@@ -137,6 +178,7 @@ export async function executeSubAgent(
       subAgent,
       services,
       executionMode,
+      coordinatorInstructions,
     );
 
     // Store original system message function
@@ -221,6 +263,16 @@ export async function executeSubAgent(
         responseLength: response.length,
       });
 
+      if (scratchpadPath) {
+        await appendWorkerScratchpadEntry(scratchpadPath, parentSessionId, {
+          agentName: model?.name ?? "subagent",
+          prompt,
+          response,
+          success: true,
+          profile,
+        });
+      }
+
       return {
         success: true,
         response,
@@ -247,6 +299,16 @@ export async function executeSubAgent(
       );
     }
   } catch (error: any) {
+    if (scratchpadPath) {
+      await appendWorkerScratchpadEntry(scratchpadPath, parentSessionId, {
+        agentName: subAgent.model?.name ?? "subagent",
+        prompt,
+        response: error.message,
+        success: false,
+        profile,
+      });
+    }
+
     logger.error("Subagent execution failed", {
       agent: subAgent.model?.name,
       error: error.message,

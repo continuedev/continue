@@ -139,3 +139,96 @@ export function updateTextBufferState(options: TextBufferStateOptions) {
     inputHistory.resetNavigation();
   }
 }
+
+function moveToNextWordStart(textBuffer: TextBuffer): void {
+  let position = textBuffer.cursor;
+  const text = textBuffer.text;
+
+  while (position < text.length && !/\s/.test(text[position])) {
+    position++;
+  }
+
+  while (position < text.length && /\s/.test(text[position])) {
+    position++;
+  }
+
+  textBuffer.setCursor(position);
+}
+
+interface VimNormalModeOptions {
+  input: string;
+  key: any;
+  textBuffer: TextBuffer;
+  enterInsertMode: () => void;
+}
+
+export function handleVimNormalModeKey(options: VimNormalModeOptions): boolean {
+  const { input, key, textBuffer, enterInsertMode } = options;
+
+  if (key.return && !key.shift) {
+    return false;
+  }
+
+  if (key.upArrow || key.downArrow) {
+    return false;
+  }
+
+  if (key.leftArrow || input === "h") {
+    textBuffer.moveLeft();
+    return true;
+  }
+
+  if (key.rightArrow || input === "l") {
+    textBuffer.moveRight();
+    return true;
+  }
+
+  if (input === "0") {
+    textBuffer.moveToStart();
+    return true;
+  }
+
+  if (input === "$") {
+    textBuffer.moveToEnd();
+    return true;
+  }
+
+  if (input === "w") {
+    moveToNextWordStart(textBuffer);
+    return true;
+  }
+
+  if (input === "b") {
+    textBuffer.moveWordLeft();
+    return true;
+  }
+
+  if (input === "x" || key.delete) {
+    textBuffer.deleteForward();
+    return true;
+  }
+
+  if (input === "i" || input === "I") {
+    if (input === "I") {
+      textBuffer.moveToStart();
+    }
+    enterInsertMode();
+    return true;
+  }
+
+  if (input === "a" || input === "A") {
+    if (input === "A") {
+      textBuffer.moveToEnd();
+    } else {
+      textBuffer.moveRight();
+    }
+    enterInsertMode();
+    return true;
+  }
+
+  if (!key.ctrl && !key.meta && input.length > 0) {
+    return true;
+  }
+
+  return false;
+}

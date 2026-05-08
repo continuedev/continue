@@ -1,28 +1,46 @@
-import type { Dirent } from "fs";
 import fsPromises from "fs/promises";
 import * as path from "path";
 
+import { parseMarkdownRule } from "@yutoagentic/config-yaml";
+import { findRelevantMemories as findRelevantMemoriesInMemdir } from "core/agent/memdir/findRelevantMemories.js";
+import { scanMemoryFiles } from "core/agent/memdir/memoryScan.js";
+import type { MemoryHeader as SharedMemoryHeader } from "core/agent/memdir/types.js";
+import type { ChatCompletionMessageParam } from "openai/resources.mjs";
+
 import { env } from "../env.js";
+import { chatCompletionStreamWithBackoff } from "../util/exponentialBackoff.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
+import type { FeatureFlagsServiceState } from "./FeatureFlagsService.js";
+import { serviceContainer } from "./ServiceContainer.js";
+import { ModelServiceState, SERVICE_NAMES } from "./types.js";
 
 export interface MemoryEntry {
   /** Absolute path to the memory file */
   filePath: string;
+  /** Relative path from the memory root */
+  filename: string;
   /** File name without extension */
   name: string;
   /** Last modification time */
   mtime: Date;
+  /** Optional frontmatter description */
+  description?: string | null;
+  /** Optional frontmatter memory type */
+  type?: string | null;
   /** Cached content (lazy-loaded) */
   content?: string;
 }
 
 export interface RelevantMemory {
   filePath: string;
+  filename: string;
   name: string;
   content: string;
   score: number;
+  description?: string | null;
+  type?: string | null;
 }
 
 export interface MemoryServiceState {
@@ -36,6 +54,23 @@ const MAX_MEMORY_CONTENT_BYTES = 25 * 1024; // 25 KB per file
 const MAX_MEMORY_LINES = 200;
 const MAX_INJECTED_MEMORIES = 5;
 const SCAN_DEBOUNCE_MS = 5000;
+const MEMORY_SELECTOR_TIMEOUT_MS = 15000;
+
+const MEMORY_SELECTOR_SYSTEM_PROMPT = `You are selecting memory files that should be injected into the active coding session.
+
+You will be given:
+- the active user query
+- a manifest of available memory files
+
+Return JSON in this exact shape:
+{"selected_memories":["relative/path/to/file.md"]}
+
+Rules:
+- Select at most 5 files.
+- Only select files that are clearly helpful.
+- Prefer warnings, constraints, decisions, and project-specific implementation notes.
+- If nothing is clearly helpful, return an empty list.
+`;
 
 /**
  * Truncates memory content to line/byte limits with a warning suffix.
@@ -67,24 +102,27 @@ function truncateMemory(content: string): string {
  * Simple keyword-based relevance scoring.
  * Splits query into tokens and counts how many appear in the file name or content.
  */
-function scoreRelevance(
-  entry: MemoryEntry,
-  query: string,
-  content: string,
-): number {
-  const tokens = query
-    .toLowerCase()
-    .split(/\s+/)
-    .filter((t) => t.length > 2);
-  if (tokens.length === 0) return 0;
+function tryParseSelectedMemories(raw: string): string[] | null {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return null;
+  }
 
-  const searchTarget = `${entry.name} ${content}`.toLowerCase();
-  const matchCount = tokens.filter((t) => searchTarget.includes(t)).length;
-  const recencyBonus =
-    1 -
-    Math.min(Date.now() - entry.mtime.getTime(), 7 * 86400000) / (7 * 86400000); // Decay over 7 days
+  const candidate = trimmed.match(/\{[\s\S]*\}/)?.[0] ?? trimmed;
 
-  return matchCount / tokens.length + recencyBonus * 0.2;
+  try {
+    const parsed = JSON.parse(candidate) as { selected_memories?: unknown };
+    if (!Array.isArray(parsed.selected_memories)) {
+      return null;
+    }
+
+    return parsed.selected_memories.filter(
+      (value): value is string =>
+        typeof value === "string" && value.trim().length > 0,
+    );
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -97,6 +135,87 @@ function scoreRelevance(
  */
 export class MemoryService extends BaseService<MemoryServiceState> {
   private lastScanTime = 0;
+
+  private isSemanticSelectionEnabled(): boolean {
+    const flags = serviceContainer.getSync<FeatureFlagsServiceState>(
+      SERVICE_NAMES.FEATURE_FLAGS,
+    ).value;
+
+    return flags?.flags?.SEMANTIC_MEMORY_SELECTION ?? false;
+  }
+
+  private async selectMemoriesWithModel(
+    query: string,
+    headers: readonly SharedMemoryHeader[],
+  ): Promise<string[] | null> {
+    if (!this.isSemanticSelectionEnabled()) {
+      return null;
+    }
+
+    const modelState = serviceContainer.getSync<ModelServiceState>(
+      SERVICE_NAMES.MODEL,
+    ).value;
+
+    if (!modelState?.llmApi || !modelState.model?.model) {
+      return null;
+    }
+
+    const messages: ChatCompletionMessageParam[] = [
+      { role: "system", content: MEMORY_SELECTOR_SYSTEM_PROMPT },
+      {
+        role: "user",
+        content: `Query: ${query}\n\nAvailable memories:\n${headers
+          .map((header) => {
+            const parts = [];
+            if (header.type) {
+              parts.push(`[${header.type}]`);
+            }
+            parts.push(header.filename);
+            if (header.description) {
+              parts.push(`- ${header.description}`);
+            }
+            return parts.join(" ");
+          })
+          .join("\n")}`,
+      },
+    ];
+
+    const abortController = new AbortController();
+    const timeout = setTimeout(
+      () => abortController.abort(),
+      MEMORY_SELECTOR_TIMEOUT_MS,
+    );
+
+    let response = "";
+    try {
+      const stream = await chatCompletionStreamWithBackoff(
+        modelState.llmApi,
+        {
+          model: modelState.model.model,
+          messages,
+          stream: true as const,
+          max_tokens: 256,
+        },
+        abortController.signal,
+      );
+
+      for await (const chunk of stream) {
+        const delta = chunk.choices?.[0]?.delta?.content;
+        if (delta) {
+          response += delta;
+        }
+      }
+    } catch (err) {
+      logger.debug("MemoryService: semantic selector failed, falling back", {
+        error: String(err),
+      });
+      return null;
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    return tryParseSelectedMemories(response);
+  }
 
   constructor() {
     super("MemoryService", {
@@ -143,31 +262,16 @@ export class MemoryService extends BaseService<MemoryServiceState> {
 
     const { memoryDir } = this.currentState;
     try {
-      const dirents = await fsPromises.readdir(memoryDir, {
-        withFileTypes: true,
-      });
-
-      const mdFiles = dirents
-        .filter(
-          (d: Dirent) =>
-            d.isFile() && (d.name.endsWith(".md") || d.name.endsWith(".txt")),
-        )
-        .slice(0, MAX_MEMORY_FILES);
-
-      const entries: MemoryEntry[] = await Promise.all(
-        mdFiles.map(async (d: Dirent) => {
-          const filePath = path.join(memoryDir, d.name);
-          const stat = await fsPromises.stat(filePath);
-          return {
-            filePath,
-            name: d.name.replace(/\.(md|txt)$/, ""),
-            mtime: stat.mtime,
-          };
-        }),
-      );
-
-      // Sort newest first
-      entries.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+      const entries: MemoryEntry[] = (await scanMemoryFiles(memoryDir))
+        .slice(0, MAX_MEMORY_FILES)
+        .map((entry) => ({
+          filePath: entry.filePath,
+          filename: entry.filename,
+          name: entry.name,
+          mtime: new Date(entry.mtimeMs),
+          description: entry.description,
+          type: entry.type,
+        }));
 
       this.setState({ entries, lastScanned: new Date() });
     } catch (err) {
@@ -185,29 +289,51 @@ export class MemoryService extends BaseService<MemoryServiceState> {
   ): Promise<RelevantMemory[]> {
     await this.scan();
 
-    const { entries } = this.currentState;
-    const candidates = entries.filter((e) => !alreadySurfaced.has(e.filePath));
+    const headers: SharedMemoryHeader[] = this.currentState.entries.map(
+      (entry) => ({
+        filePath: entry.filePath,
+        filename: entry.filename,
+        name: entry.name,
+        mtimeMs: entry.mtime.getTime(),
+        description: entry.description ?? null,
+        type: entry.type ?? null,
+      }),
+    );
 
-    const scored: Array<RelevantMemory> = [];
+    const selections = await findRelevantMemoriesInMemdir({
+      query,
+      memoryDir: this.currentState.memoryDir,
+      headers,
+      alreadySurfaced,
+      maxResults: MAX_INJECTED_MEMORIES,
+      selector: async ({ headers }) =>
+        this.selectMemoriesWithModel(query, headers),
+    });
 
-    for (const entry of candidates) {
+    const relevant: RelevantMemory[] = [];
+
+    for (const selection of selections) {
       try {
-        const raw = await fsPromises.readFile(entry.filePath, "utf8");
-        const content = truncateMemory(raw);
-        const score = scoreRelevance(entry, query, content);
-        scored.push({
-          filePath: entry.filePath,
-          name: entry.name,
+        const raw = await fsPromises.readFile(selection.filePath, "utf8");
+        const { markdown } = parseMarkdownRule(raw);
+        const content = truncateMemory(markdown || raw);
+        relevant.push({
+          filePath: selection.filePath,
+          filename: selection.filename,
+          name: selection.name,
           content,
-          score,
+          score: selection.score,
+          description: selection.description,
+          type: selection.type,
         });
       } catch (err) {
-        logger.warn(`MemoryService: could not read ${entry.filePath}`, { err });
+        logger.warn(`MemoryService: could not read ${selection.filePath}`, {
+          err,
+        });
       }
     }
 
-    scored.sort((a, b) => b.score - a.score);
-    return scored.slice(0, MAX_INJECTED_MEMORIES);
+    return relevant;
   }
 
   /**
@@ -254,7 +380,17 @@ export class MemoryService extends BaseService<MemoryServiceState> {
     const memories = await this.findRelevantMemories(query);
     if (memories.length === 0) return null;
 
-    const blocks = memories.map((m) => `### Memory: ${m.name}\n\n${m.content}`);
+    const blocks = memories.map((memory) => {
+      const header = [memory.name];
+      if (memory.type) {
+        header.push(`(${memory.type})`);
+      }
+      if (memory.description) {
+        header.push(`- ${memory.description}`);
+      }
+
+      return `### Memory: ${header.join(" ")}\n\n${memory.content}`;
+    });
 
     return (
       "# Relevant Memories\n\n" +

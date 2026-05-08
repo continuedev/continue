@@ -17,6 +17,14 @@ import * as path from "path";
 
 import { ModelConfig } from "@yutoagentic/config-yaml";
 import { BaseLlmApi } from "@yutoagentic/openai-adapters";
+import {
+  buildSessionMemoryExtractionPrompt,
+  buildSessionMemoryFile,
+  DEFAULT_SESSION_MEMORY_THRESHOLDS,
+  ensureSessionMemoryFile,
+  SESSION_MEMORY_TEMPLATE,
+  shouldExtractSessionMemoryGate,
+} from "core/agent/memoryLifecycle/sessionMemory.js";
 import type { ChatHistoryItem } from "core/index.js";
 import { convertFromUnifiedHistoryWithSystemMessage } from "core/util/messageConversion.js";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
@@ -28,10 +36,8 @@ import { BaseService } from "./BaseService.js";
 
 // ─── Configuration ─────────────────────────────────────────────────────────────
 
-const MIN_TOKENS_TO_INIT = 10_000;
-const MIN_TOKEN_GROWTH = 5_000;
-const MIN_TOOL_CALLS = 3;
 const EXTRACTION_TIMEOUT_MS = 60_000;
+const SESSION_MEMORY_SOURCE = "continue-cli";
 
 function getSessionDir(): string {
   return (
@@ -39,36 +45,6 @@ function getSessionDir(): string {
     path.join(process.env["TMPDIR"] ?? "/tmp", "continue-sessions")
   );
 }
-
-// ─── Session notes template ────────────────────────────────────────────────────
-
-const SESSION_MEMORY_TEMPLATE = `# Session Title
-_A short and distinctive 5-10 word descriptive title for the session_
-
-# Current State
-_What is actively being worked on right now? Pending tasks not yet completed. Immediate next steps._
-
-# Task Specification
-_What did the user ask to build? Any design decisions or explanatory context._
-
-# Files and Functions
-_Important files — what they contain and why they are relevant._
-
-# Workflow
-_Commands usually run and in what order. How to interpret their output if not obvious._
-
-# Errors & Corrections
-_Errors encountered and how they were fixed. Approaches that failed and should not be retried._
-
-# Codebase and System Documentation
-_Important system components. How they work/fit together._
-
-# Learnings
-_What has worked well? What has not? What to avoid?_
-
-# Worklog
-_Step by step, terse summary of what was attempted/done._
-`;
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -86,6 +62,8 @@ export interface SessionMemoryServiceState {
   initialized: boolean;
   /** Whether a background extraction is currently running */
   isExtracting: boolean;
+  /** Timestamp of the most recent extraction attempt */
+  lastExtractedAt: number | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -105,40 +83,6 @@ function estimateTokens(history: ChatHistoryItem[]): number {
   return Math.ceil(chars / 4);
 }
 
-async function ensureNotesFile(notesPath: string): Promise<string> {
-  const dir = path.dirname(notesPath);
-  await fsPromises.mkdir(dir, { recursive: true, mode: 0o700 });
-  try {
-    return await fsPromises.readFile(notesPath, "utf-8");
-  } catch {
-    await fsPromises.writeFile(notesPath, SESSION_MEMORY_TEMPLATE, {
-      encoding: "utf-8",
-      mode: 0o600,
-    });
-    return SESSION_MEMORY_TEMPLATE;
-  }
-}
-
-function buildExtractionPrompt(
-  currentNotes: string,
-  notesPath: string,
-): string {
-  return `You are a session note-keeper. Based on the conversation above, update the session notes file.
-
-Current notes content:
-<current_notes>
-${currentNotes}
-</current_notes>
-
-Your ONLY task: update the notes file at \`${notesPath}\` to reflect the latest state of the session. Rules:
-- Maintain the EXACT file structure (all section headers and italic description lines must be preserved verbatim).
-- Update content within sections only — never modify headers or the italic _description_ lines.
-- Be terse. Each section should be densely informative, not verbose.
-- Do not add a section for "Session Memory Update" or reference these instructions.
-- Return ONLY the updated notes content, no additional commentary.
-- After writing, stop immediately.`;
-}
-
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export class SessionMemoryService extends BaseService<SessionMemoryServiceState> {
@@ -154,6 +98,7 @@ export class SessionMemoryService extends BaseService<SessionMemoryServiceState>
       tokensAtLastExtraction: 0,
       initialized: false,
       isExtracting: false,
+      lastExtractedAt: null,
     });
   }
 
@@ -186,6 +131,7 @@ export class SessionMemoryService extends BaseService<SessionMemoryServiceState>
       tokensAtLastExtraction: 0,
       initialized: false,
       isExtracting: false,
+      lastExtractedAt: null,
     });
     logger.debug("SessionMemoryService: new session started", { sessionId });
   }
@@ -231,6 +177,7 @@ export class SessionMemoryService extends BaseService<SessionMemoryServiceState>
       initialized: true,
       toolCallsSinceExtraction: 0,
       tokensAtLastExtraction: tokenSnapshot,
+      lastExtractedAt: Date.now(),
     });
 
     void this.runExtraction(chatHistory, llmApi, model, notesPath).finally(
@@ -242,18 +189,14 @@ export class SessionMemoryService extends BaseService<SessionMemoryServiceState>
 
   private shouldExtract(chatHistory: ChatHistoryItem[]): boolean {
     const state = this.currentState;
-    if (state.isExtracting) return false;
-
-    const currentTokens = estimateTokens(chatHistory);
-
-    if (!state.initialized) {
-      if (currentTokens < MIN_TOKENS_TO_INIT) return false;
-    }
-
-    const tokenGrowth = currentTokens - state.tokensAtLastExtraction;
-    if (tokenGrowth < MIN_TOKEN_GROWTH) return false;
-
-    return state.toolCallsSinceExtraction >= MIN_TOOL_CALLS;
+    return shouldExtractSessionMemoryGate({
+      extracting: state.isExtracting,
+      initialized: state.initialized,
+      currentTokens: estimateTokens(chatHistory),
+      tokensAtLastExtraction: state.tokensAtLastExtraction,
+      toolCallsSinceExtraction: state.toolCallsSinceExtraction,
+      config: DEFAULT_SESSION_MEMORY_THRESHOLDS,
+    });
   }
 
   private async runExtraction(
@@ -263,8 +206,16 @@ export class SessionMemoryService extends BaseService<SessionMemoryServiceState>
     notesPath: string,
   ): Promise<void> {
     try {
-      const currentNotes = await ensureNotesFile(notesPath);
-      const extractionPrompt = buildExtractionPrompt(currentNotes, notesPath);
+      const currentNotes = await ensureSessionMemoryFile(notesPath, {
+        sessionId: this.currentState.sessionId,
+        totalToolCalls: this.currentState.totalToolCalls,
+        template: SESSION_MEMORY_TEMPLATE,
+        source: SESSION_MEMORY_SOURCE,
+      });
+      const extractionPrompt = buildSessionMemoryExtractionPrompt(
+        currentNotes,
+        notesPath,
+      );
 
       // Build extraction conversation: full history + extraction instruction
       const openaiMessages = convertFromUnifiedHistoryWithSystemMessage(
@@ -305,10 +256,20 @@ export class SessionMemoryService extends BaseService<SessionMemoryServiceState>
         .trim();
 
       if (stripped.length > 100) {
-        await fsPromises.writeFile(notesPath, stripped, {
-          encoding: "utf-8",
-          mode: 0o600,
-        });
+        await fsPromises.writeFile(
+          notesPath,
+          buildSessionMemoryFile({
+            sessionId: this.currentState.sessionId,
+            markdown: stripped,
+            totalToolCalls: this.currentState.totalToolCalls,
+            updatedAt: Date.now(),
+            source: SESSION_MEMORY_SOURCE,
+          }),
+          {
+            encoding: "utf-8",
+            mode: 0o600,
+          },
+        );
         logger.debug("SessionMemoryService: notes extracted", { notesPath });
       }
     } catch (err) {

@@ -515,7 +515,12 @@ const commandHandlers: Record<string, CommandHandler> = {
     try {
       const taskStatus = services.taskState.formatStatus();
       const progress = services.progressTracker.formatProgress();
-      return { exit: false, output: `${taskStatus}\n\n${progress}` };
+      const notifications =
+        services.taskNotifications.formatRecentNotifications();
+      const output = [taskStatus, progress, notifications]
+        .filter((section): section is string => Boolean(section))
+        .join("\n\n");
+      return { exit: false, output };
     } catch {
       return { exit: false, output: "Status not yet available." };
     }

@@ -167,4 +167,29 @@ describe("subagentTool", () => {
     const [options] = vi.mocked(executeSubAgent).mock.calls[0];
     expect(options.profile).toBe("explore");
   });
+
+  it("run forwards the explicit coordinator-worker profile", async () => {
+    vi.mocked(getAgentNames).mockReturnValue(["code-agent"]);
+    vi.mocked(getSubagent).mockReturnValue({
+      model: { name: "test-model" },
+    } as any);
+    vi.mocked(executeSubAgent).mockResolvedValue({
+      success: true,
+      response: "coordinated",
+    } as any);
+
+    const tool = await subagentTool();
+
+    await tool.run(
+      {
+        prompt: "Investigate and share the result with the coordinator",
+        subagent_name: "code-agent",
+        profile: "coordinator-worker",
+      },
+      { toolCallId: "tool-call-id", parallelToolCallCount: 1 },
+    );
+
+    const [options] = vi.mocked(executeSubAgent).mock.calls[0];
+    expect(options.profile).toBe("coordinator-worker");
+  });
 });

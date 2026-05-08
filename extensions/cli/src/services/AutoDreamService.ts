@@ -22,6 +22,20 @@ import * as path from "path";
 
 import { ModelConfig } from "@yutoagentic/config-yaml";
 import { BaseLlmApi } from "@yutoagentic/openai-adapters";
+import {
+  AUTO_DREAM_MEMORY_FILE,
+  buildAutoDreamConsolidationPrompt,
+  buildConsolidatedMemoryFile,
+  DEFAULT_AUTO_DREAM_THRESHOLDS,
+  evaluateAutoDreamScanGate,
+  hasEnoughAutoDreamSessions,
+  listSessionMemoryFilesTouchedSince,
+  readAutoDreamLastConsolidatedAt,
+  releaseAutoDreamLock,
+  rollbackAutoDreamLock,
+  stripConsolidatedMemoryFrontmatter,
+  tryAcquireAutoDreamLock,
+} from "core/agent/memoryLifecycle/autoDream.js";
 import type { ChatCompletionMessageParam } from "openai/resources.mjs";
 
 import { env } from "../env.js";
@@ -32,13 +46,9 @@ import { BaseService } from "./BaseService.js";
 
 // ─── Configuration ─────────────────────────────────────────────────────────────
 
-const MIN_HOURS = 24;
-const MIN_SESSIONS = 5;
 const CONSOLIDATION_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-const SCAN_THROTTLE_MS = 10 * 60 * 1000; // 10 minutes
-const LOCK_STALE_MS = 60 * 60 * 1000; // 1 hour
-const LOCK_FILE = ".consolidate-lock";
-const MEMORY_FILE = "MEMORY.md";
+const AUTO_DREAM_THRESHOLDS = DEFAULT_AUTO_DREAM_THRESHOLDS;
+const AUTO_DREAM_SOURCE = "continue-cli";
 
 function getSessionDir(): string {
   return (
@@ -61,150 +71,12 @@ export interface AutoDreamServiceState {
   memoryDir: string;
   /** Timestamp of last successful consolidation (null = never) */
   lastConsolidatedAt: number | null;
+  /** Timestamp of the most recent filesystem scan attempt */
+  lastScanAt: number | null;
   /** Whether a consolidation is currently running */
   isRunning: boolean;
 }
-
-// ─── Lock file helpers ─────────────────────────────────────────────────────────
-
-async function getLockPath(memoryDir: string): Promise<string> {
-  await fsPromises.mkdir(memoryDir, { recursive: true, mode: 0o700 });
-  return path.join(memoryDir, LOCK_FILE);
-}
-
-async function readLastConsolidatedAt(memoryDir: string): Promise<number> {
-  try {
-    const s = await fsPromises.stat(await getLockPath(memoryDir));
-    return s.mtimeMs;
-  } catch {
-    return 0;
-  }
-}
-
-async function tryAcquireLock(memoryDir: string): Promise<number | null> {
-  const lockPath = await getLockPath(memoryDir);
-  let priorMtime = 0;
-  let holderPid: number | undefined;
-
-  try {
-    const [s, raw] = await Promise.all([
-      fsPromises.stat(lockPath),
-      fsPromises.readFile(lockPath, "utf-8"),
-    ]);
-    priorMtime = s.mtimeMs;
-    const parsed = parseInt(raw.trim(), 10);
-    holderPid = Number.isFinite(parsed) ? parsed : undefined;
-  } catch {
-    // No existing lock
-  }
-
-  if (priorMtime > 0 && Date.now() - priorMtime < LOCK_STALE_MS) {
-    if (holderPid !== undefined) {
-      try {
-        process.kill(holderPid, 0); // throws if PID doesn't exist
-        return null; // live holder — back off
-      } catch {
-        // Dead PID — reclaim
-      }
-    }
-  }
-
-  await fsPromises.writeFile(lockPath, String(process.pid), {
-    encoding: "utf-8",
-    mode: 0o600,
-  });
-  return priorMtime;
-}
-
-async function releaseLock(memoryDir: string): Promise<void> {
-  const lockPath = await getLockPath(memoryDir);
-  const now = new Date();
-  try {
-    await fsPromises.utimes(lockPath, now, now);
-  } catch {
-    // Best effort
-  }
-}
-
-async function rollbackLock(
-  memoryDir: string,
-  priorMtime: number,
-): Promise<void> {
-  const lockPath = await getLockPath(memoryDir);
-  try {
-    const t = new Date(priorMtime);
-    await fsPromises.utimes(lockPath, t, t);
-  } catch {
-    // Best effort
-  }
-}
-
-// ─── Session file discovery ─────────────────────────────────────────────────────
-
-async function listSessionsTouchedSince(
-  sessionDir: string,
-  sinceMs: number,
-): Promise<string[]> {
-  try {
-    const entries = await fsPromises.readdir(sessionDir);
-    const mdFiles = entries.filter((e: string) => e.endsWith(".md"));
-    const touched: string[] = [];
-    for (const file of mdFiles) {
-      try {
-        const s = await fsPromises.stat(path.join(sessionDir, file));
-        if (s.mtimeMs > sinceMs) touched.push(path.join(sessionDir, file));
-      } catch {
-        // Ignore
-      }
-    }
-    return touched;
-  } catch {
-    return [];
-  }
-}
-
-// ─── Consolidation prompt ─────────────────────────────────────────────────────
-
-function buildConsolidationPrompt(
-  sessionFiles: string[],
-  memoryFilePath: string,
-  existingMemory: string,
-): string {
-  const fileList = sessionFiles.map((f) => `- ${f}`).join("\n");
-  return `You are performing a memory consolidation — a reflective pass over recent session notes to extract durable, well-organized memories for future sessions.
-
-Memory file: \`${memoryFilePath}\`
-Session notes to review:
-${fileList}
-
-Current memory content:
-<current_memory>
-${existingMemory || "(empty — this is the first consolidation)"}
-</current_memory>
-
-## Instructions
-
-1. **Read** each session notes file listed above (they are markdown files with sections like Current State, Task Specification, Learnings, etc.).
-
-2. **Extract** what is worth remembering long-term:
-   - Recurring patterns, preferences, or constraints the user has
-   - Technical decisions made and why
-   - Approaches that worked well or should be avoided
-   - Important project-specific facts
-
-3. **Synthesise** into the memory file. Format:
-   - Use ## headings for topics (e.g. ## Coding Style, ## Project Architecture, ## Preferences)
-   - Keep each bullet point factual and concise (≤ 150 chars)
-   - Convert relative dates to absolute (YYYY-MM-DD)
-   - Merge new learnings into existing entries rather than duplicating
-   - Remove entries contradicted by newer information
-
-Return ONLY the updated memory file content, no additional commentary.`;
-}
-
 // ─── Service ──────────────────────────────────────────────────────────────────
-
-let lastScanAt = 0;
 
 export class AutoDreamService extends BaseService<AutoDreamServiceState> {
   constructor() {
@@ -212,13 +84,14 @@ export class AutoDreamService extends BaseService<AutoDreamServiceState> {
       sessionDir: getSessionDir(),
       memoryDir: getMemoryDir(),
       lastConsolidatedAt: null,
+      lastScanAt: null,
       isRunning: false,
     });
   }
 
   async doInitialize(): Promise<AutoDreamServiceState> {
     // Read the last consolidation timestamp from the lock file mtime
-    const lastConsolidatedAt = await readLastConsolidatedAt(
+    const lastConsolidatedAt = await readAutoDreamLastConsolidatedAt(
       this.currentState.memoryDir,
     );
     this.setState({ lastConsolidatedAt: lastConsolidatedAt || null });
@@ -242,9 +115,14 @@ export class AutoDreamService extends BaseService<AutoDreamServiceState> {
 
   /** Read the current consolidated long-term memory, if it exists */
   async readLongTermMemory(): Promise<string | null> {
-    const memoryFilePath = path.join(this.currentState.memoryDir, MEMORY_FILE);
+    const memoryFilePath = path.join(
+      this.currentState.memoryDir,
+      AUTO_DREAM_MEMORY_FILE,
+    );
     try {
-      return await fsPromises.readFile(memoryFilePath, "utf-8");
+      return stripConsolidatedMemoryFrontmatter(
+        await fsPromises.readFile(memoryFilePath, "utf-8"),
+      );
     } catch {
       return null;
     }
@@ -258,23 +136,31 @@ export class AutoDreamService extends BaseService<AutoDreamServiceState> {
 
     try {
       // ── Gate 1: time ────────────────────────────────────────────────────────
-      const lastConsolidatedAt = await readLastConsolidatedAt(memoryDir);
-      const hoursSince = (Date.now() - lastConsolidatedAt) / (1000 * 60 * 60);
-      if (hoursSince < MIN_HOURS) return;
-
-      // ── Gate 2: scan throttle ────────────────────────────────────────────────
-      if (Date.now() - lastScanAt < SCAN_THROTTLE_MS) return;
-      lastScanAt = Date.now();
+      const lastConsolidatedAt =
+        await readAutoDreamLastConsolidatedAt(memoryDir);
+      const scanGate = evaluateAutoDreamScanGate({
+        lastConsolidatedAt,
+        lastScanAt: this.currentState.lastScanAt ?? 0,
+        config: AUTO_DREAM_THRESHOLDS,
+      });
+      if (!scanGate.ready) return;
+      this.setState({ lastScanAt: Date.now() });
 
       // ── Gate 3: session count ────────────────────────────────────────────────
-      const newSessions = await listSessionsTouchedSince(
+      const newSessions = await listSessionMemoryFilesTouchedSince(
         sessionDir,
         lastConsolidatedAt,
       );
-      if (newSessions.length < MIN_SESSIONS) return;
+      if (
+        !hasEnoughAutoDreamSessions(newSessions.length, AUTO_DREAM_THRESHOLDS)
+      ) {
+        return;
+      }
 
       // ── Gate 4: acquire lock ─────────────────────────────────────────────────
-      const priorMtime = await tryAcquireLock(memoryDir);
+      const priorMtime = await tryAcquireAutoDreamLock(memoryDir, {
+        lockStaleMs: AUTO_DREAM_THRESHOLDS.lockStaleMs,
+      });
       if (priorMtime === null) return; // another process is consolidating
 
       this.setState({ isRunning: true });
@@ -289,9 +175,9 @@ export class AutoDreamService extends BaseService<AutoDreamServiceState> {
       } finally {
         this.setState({ isRunning: false });
         if (success) {
-          await releaseLock(memoryDir);
+          await releaseAutoDreamLock(memoryDir);
         } else {
-          await rollbackLock(memoryDir, priorMtime);
+          await rollbackAutoDreamLock(memoryDir, priorMtime);
         }
       }
     } catch {
@@ -307,16 +193,18 @@ export class AutoDreamService extends BaseService<AutoDreamServiceState> {
   ): Promise<void> {
     const { memoryDir } = this.currentState;
     await fsPromises.mkdir(memoryDir, { recursive: true, mode: 0o700 });
-    const memoryFilePath = path.join(memoryDir, MEMORY_FILE);
+    const memoryFilePath = path.join(memoryDir, AUTO_DREAM_MEMORY_FILE);
 
     let existingMemory = "";
     try {
-      existingMemory = await fsPromises.readFile(memoryFilePath, "utf-8");
+      existingMemory = stripConsolidatedMemoryFrontmatter(
+        await fsPromises.readFile(memoryFilePath, "utf-8"),
+      );
     } catch {
       // First consolidation
     }
 
-    const prompt = buildConsolidationPrompt(
+    const prompt = buildAutoDreamConsolidationPrompt(
       sessionFiles,
       memoryFilePath,
       existingMemory,
@@ -358,10 +246,19 @@ export class AutoDreamService extends BaseService<AutoDreamServiceState> {
       .trim();
 
     if (stripped.length > 50) {
-      await fsPromises.writeFile(memoryFilePath, stripped, {
-        encoding: "utf-8",
-        mode: 0o600,
-      });
+      await fsPromises.writeFile(
+        memoryFilePath,
+        buildConsolidatedMemoryFile({
+          markdown: stripped,
+          sessionFiles,
+          updatedAt: Date.now(),
+          source: AUTO_DREAM_SOURCE,
+        }),
+        {
+          encoding: "utf-8",
+          mode: 0o600,
+        },
+      );
     }
   }
 }

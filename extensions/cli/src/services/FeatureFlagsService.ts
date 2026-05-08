@@ -46,6 +46,27 @@ export const BUILT_IN_FLAGS: FeatureFlagDefinition[] = [
     allowEnvOverride: true,
   },
   {
+    key: "SEMANTIC_MEMORY_SELECTION",
+    description:
+      "Enable metadata-aware memory manifests and semantic memory selection.",
+    defaultValue: false,
+    allowEnvOverride: true,
+  },
+  {
+    key: "TURN_LIFECYCLE_HOOKS",
+    description:
+      "Enable the shared turn lifecycle runner for post-response and turn-end behavior.",
+    defaultValue: false,
+    allowEnvOverride: true,
+  },
+  {
+    key: "TASK_NOTIFICATIONS",
+    description:
+      "Enable structured task notifications for shell jobs, subagents, and coordinator flows.",
+    defaultValue: false,
+    allowEnvOverride: true,
+  },
+  {
     key: "COST_TRACKING",
     description: "Enable per-session cost tracking (CostTrackingService)",
     defaultValue: true,
@@ -68,6 +89,32 @@ export const BUILT_IN_FLAGS: FeatureFlagDefinition[] = [
     description:
       "Enable coordinator mode for multi-agent orchestration. " +
       "Set CONTINUE_FLAG_COORDINATOR_MODE=1 or pass --mode=coordinator.",
+    defaultValue: false,
+    allowEnvOverride: true,
+  },
+  {
+    key: "CLI_STATUSLINE",
+    description: "Enable the interactive CLI statusline footer.",
+    defaultValue: false,
+    allowEnvOverride: true,
+  },
+  {
+    key: "CLI_VIM_MODE",
+    description: "Enable vim-style input editing mode in the CLI.",
+    defaultValue: false,
+    allowEnvOverride: true,
+  },
+  {
+    key: "VSCODE_BRIDGE_PERMISSIONS",
+    description:
+      "Enable typed VS Code bridge permission request and dialog contracts.",
+    defaultValue: false,
+    allowEnvOverride: true,
+  },
+  {
+    key: "CACHED_MICROCOMPACTION",
+    description:
+      "Enable cached microcompaction and incremental context-pruning behavior.",
     defaultValue: false,
     allowEnvOverride: true,
   },

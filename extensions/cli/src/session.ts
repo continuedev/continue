@@ -2,6 +2,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
+import type { VSCodeBridgeStateSnapshot } from "core/agent/contracts/index.js";
 import type {
   BaseSessionMetadata,
   ChatHistoryItem,
@@ -248,15 +249,15 @@ export interface StateSnapshot {
   session: Session;
   isProcessing: boolean;
   messageQueueLength: number;
-  pendingPermission: any;
+  pendingPermission: VSCodeBridgeStateSnapshot["pendingPermission"];
 }
 
 export function getCompleteStateSnapshot(
   session: Session,
   isProcessing: boolean = false,
   messageQueueLength: number = 0,
-  pendingPermission: any = null,
-): StateSnapshot {
+  pendingPermission: VSCodeBridgeStateSnapshot["pendingPermission"] = null,
+): VSCodeBridgeStateSnapshot {
   return {
     session: getSessionPersistenceSnapshot(session),
     isProcessing,

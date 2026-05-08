@@ -1,4 +1,8 @@
 import chalk from "chalk";
+import {
+  isVSCodeBridgePermissionResponse,
+  type VSCodeBridgePermissionResult,
+} from "core/agent/contracts/index.js";
 import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
@@ -71,6 +75,27 @@ export function shouldQueueInitialPrompt(
     (item) => item.message.role !== "system",
   );
   return !hasConversation;
+}
+
+export function parsePermissionResponseBody(
+  body: unknown,
+):
+  | { ok: true; value: { requestId: string; approved: boolean } }
+  | { ok: false; error: string } {
+  if (!isVSCodeBridgePermissionResponse(body)) {
+    return {
+      ok: false,
+      error: "Request body must include string requestId and boolean approved",
+    };
+  }
+
+  return {
+    ok: true,
+    value: {
+      requestId: body.requestId,
+      approved: body.approved,
+    },
+  };
 }
 
 // eslint-disable-next-line max-statements
@@ -272,7 +297,12 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   app.post("/permission", async (req: Request, res: Response) => {
     state.lastActivity = Date.now();
 
-    const { requestId, approved } = req.body;
+    const parsed = parsePermissionResponseBody(req.body);
+    if (!parsed.ok) {
+      return res.status(400).json({ error: parsed.error });
+    }
+
+    const { requestId, approved } = parsed.value;
 
     if (!state.pendingPermission) {
       return res.status(400).json({ error: "No pending permission request" });
@@ -295,10 +325,12 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     // Clear pending permission state
     state.pendingPermission = null;
 
-    res.json({
+    const response: VSCodeBridgePermissionResult = {
       success: true,
       approved,
-    });
+    };
+
+    res.json(response);
   });
 
   // POST /pause - Pause the current agent run (like pressing escape in TUI)

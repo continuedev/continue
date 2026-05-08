@@ -4,6 +4,7 @@ import type { ChatHistoryItem } from "core/index.js";
 import { encode } from "gpt-tokenizer";
 import { ChatCompletionTool } from "openai/resources.mjs";
 
+import { services } from "./services/index.js";
 import { streamChatResponse } from "./stream/streamChatResponse.js";
 import { StreamCallbacks } from "./stream/streamChatResponse.types.js";
 import { logger } from "./util/logger.js";
@@ -37,10 +38,77 @@ export interface CompactionOptions {
   systemMessageTokens?: number;
 }
 
+const MAX_COMPACTION_CACHE_ENTRIES = 5;
+const compactionCache = new Map<string, CompactionResult>();
+
 const COMPACTION_PROMPT =
   "Please provide a concise summary of our conversation so far, capturing the key context, decisions made, and current state. Format this as a single comprehensive message that preserves all important information needed to continue our work. You do not need to recap the system message, as this will remain. Make sure it is clear what the current stream of work was at the very end prior to compaction so that you can continue exactly where you left off without missing any information.";
 
 const COMPACTION_PROMPT_TOKENS = 150; // rough generous token count of ^
+
+function isCachedMicroCompactionEnabled(): boolean {
+  return services.featureFlags.isEnabled("CACHED_MICROCOMPACTION");
+}
+
+function buildCompactionCacheKey(args: {
+  historyForCompaction: ChatHistoryItem[];
+  model: ModelConfig;
+  systemMessageTokens: number;
+}): string {
+  return JSON.stringify({
+    model: args.model.model ?? args.model.name,
+    provider: args.model.provider,
+    systemMessageTokens: args.systemMessageTokens,
+    history: args.historyForCompaction,
+  });
+}
+
+function cloneCompactionResult(result: CompactionResult): CompactionResult {
+  return {
+    compactionContent: result.compactionContent,
+    compactionIndex: result.compactionIndex,
+    compactedHistory: result.compactedHistory.map((item) => ({
+      ...item,
+      message: { ...item.message },
+      contextItems: [...item.contextItems],
+    })),
+  };
+}
+
+function getCachedCompactionResult(
+  cacheKey: string,
+): CompactionResult | undefined {
+  const cached = compactionCache.get(cacheKey);
+  if (!cached) {
+    return undefined;
+  }
+
+  compactionCache.delete(cacheKey);
+  compactionCache.set(cacheKey, cached);
+  return cloneCompactionResult(cached);
+}
+
+function setCachedCompactionResult(
+  cacheKey: string,
+  result: CompactionResult,
+): void {
+  if (compactionCache.has(cacheKey)) {
+    compactionCache.delete(cacheKey);
+  }
+
+  compactionCache.set(cacheKey, cloneCompactionResult(result));
+
+  if (compactionCache.size > MAX_COMPACTION_CACHE_ENTRIES) {
+    const oldestKey = compactionCache.keys().next().value;
+    if (oldestKey) {
+      compactionCache.delete(oldestKey);
+    }
+  }
+}
+
+export function clearCompactionCache(): void {
+  compactionCache.clear();
+}
 
 /**
  * Compacts a chat history into a summarized form
@@ -113,6 +181,28 @@ export async function compactChatHistory(
     historyForCompaction = [...historyToUse, compactionPrompt];
   }
 
+  const cacheEnabled = isCachedMicroCompactionEnabled();
+  const cacheKey = cacheEnabled
+    ? buildCompactionCacheKey({
+        historyForCompaction,
+        model,
+        systemMessageTokens,
+      })
+    : null;
+
+  if (cacheKey) {
+    const cachedResult = getCachedCompactionResult(cacheKey);
+    if (cachedResult) {
+      callbacks?.onStreamContent?.(cachedResult.compactionContent);
+      callbacks?.onStreamComplete?.();
+      logger.debug("Compaction cache hit", {
+        historyLength: historyForCompaction.length,
+        model: model.model,
+      });
+      return cachedResult;
+    }
+  }
+
   // Stream the compaction response (service drives updates; this collects content locally)
   const controller = abortController || new AbortController();
 
@@ -154,11 +244,17 @@ export async function compactChatHistory(
       ? [systemMessage, compactionMessage]
       : [compactionMessage];
 
-    return {
+    const result = {
       compactedHistory,
       compactionContent,
       compactionIndex: systemMessage ? 1 : 0,
     };
+
+    if (cacheKey) {
+      setCachedCompactionResult(cacheKey, result);
+    }
+
+    return result;
   } catch (error) {
     logger.error("Compaction failed", error);
     callbacks?.onError?.(error as Error);

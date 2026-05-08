@@ -72,4 +72,54 @@ describe("BottomStatusBar Ctrl+C message", () => {
       expect.any(Function),
     );
   });
+
+  it("shows the enhanced statusline when the feature flag is enabled", async () => {
+    const { lastFrame } = render(
+      <BottomStatusBar
+        {...defaultProps}
+        services={{
+          featureFlags: { flags: { CLI_STATUSLINE: true } },
+          model: { model: { title: "GPT-5.4" } },
+          taskState: {
+            currentTask: {
+              id: "c123",
+              type: "chat",
+              status: "running",
+              description: "Implement the statusline",
+              startTime: Date.now(),
+              toolCallCount: 1,
+              tokensUsed: 250,
+            },
+            taskHistory: [],
+            sessionTaskCount: 1,
+            sessionStartTime: Date.now(),
+          },
+          progressTracker: {
+            totalToolCalls: 3,
+            latestInputTokens: 1200,
+            cumulativeOutputTokens: 300,
+            latestCacheReadTokens: 0,
+            latestCacheWriteTokens: 0,
+            recentActivities: [],
+            turnCount: 1,
+            sessionStartTime: Date.now(),
+          },
+          taskNotifications: {
+            enabled: true,
+            notifications: [],
+            lastUpdated: null,
+          },
+        }}
+        contextPercentage={42}
+      />,
+    );
+
+    expect(lastFrame()).toContain("mode");
+    expect(lastFrame()).toContain("normal");
+    expect(lastFrame()).toContain("GPT-5.");
+    expect(lastFrame()).toContain("ctx");
+    expect(lastFrame()).toContain("42%");
+    expect(lastFrame()).toContain("tools");
+    expect(lastFrame()).toContain("Implement the stat");
+  });
 });

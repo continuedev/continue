@@ -14,6 +14,10 @@ import {
   SetCodeToEditPayload,
   ShowFilePayload,
 } from "../";
+import type {
+  VSCodeBridgeDialogRequest,
+  VSCodeBridgeDialogResponse,
+} from "../agent/contracts/index.js";
 
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   openUrl: [string, void];
@@ -50,6 +54,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   ];
   "jetbrains/getColors": [undefined, Record<string, string | null | undefined>];
   "vscode/openMoveRightMarkdown": [undefined, void];
+  "vscode/showDialog": [VSCodeBridgeDialogRequest, VSCodeBridgeDialogResponse];
   acceptDiff: [AcceptOrRejectDiffPayload, void];
   rejectDiff: [AcceptOrRejectDiffPayload, void];
   "edit/sendPrompt": [

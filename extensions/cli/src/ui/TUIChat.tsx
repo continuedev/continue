@@ -11,10 +11,14 @@ import { ToolPermissionServiceState } from "src/services/ToolPermissionService.j
 
 import { listUserOrganizations } from "../auth/workos.js";
 import { useServices } from "../hooks/useService.js";
+import { ProgressTrackerState } from "../services/ProgressTrackerService.js";
+import { TaskNotificationServiceState } from "../services/TaskNotificationService.js";
+import { TaskStateServiceState } from "../services/TaskStateService.js";
 import {
   ApiClientServiceState,
   AuthServiceState,
   ConfigServiceState,
+  FeatureFlagsServiceState,
   MCPServiceState,
   ModelServiceState,
   UpdateServiceState,
@@ -100,6 +104,10 @@ function useTUIChatServices(remoteUrl?: string) {
     apiClient: ApiClientServiceState;
     update: UpdateServiceState;
     toolPermissions: ToolPermissionServiceState;
+    featureFlags: FeatureFlagsServiceState;
+    taskState: TaskStateServiceState;
+    progressTracker: ProgressTrackerState;
+    taskNotifications: TaskNotificationServiceState;
   }>([
     "auth",
     "config",
@@ -108,6 +116,10 @@ function useTUIChatServices(remoteUrl?: string) {
     "apiClient",
     "update",
     "toolPermissions",
+    "featureFlags",
+    "taskState",
+    "progressTracker",
+    "taskNotifications",
   ]);
 
   return { services, allServicesReady, isRemoteMode };

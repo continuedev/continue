@@ -31,6 +31,7 @@ import { serviceContainer } from "./ServiceContainer.js";
 import { SessionMemoryService } from "./SessionMemoryService.js";
 import { StorageSyncService } from "./StorageSyncService.js";
 import { SystemMessageService } from "./SystemMessageService.js";
+import { TaskNotificationService } from "./TaskNotificationService.js";
 import { TaskStateService } from "./TaskStateService.js";
 import {
   InitializeToolServiceOverrides,
@@ -73,6 +74,7 @@ const autoDreamService = new AutoDreamService();
 const contextAnalysisService = new ContextAnalysisService();
 const taskStateService = new TaskStateService();
 const progressTrackerService = new ProgressTrackerService();
+const taskNotificationService = new TaskNotificationService();
 
 /**
  * Initialize all services and register them with the service container
@@ -409,6 +411,17 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   );
 
   serviceContainer.register(
+    SERVICE_NAMES.TASK_NOTIFICATIONS,
+    () =>
+      taskNotificationService.initialize({
+        taskStateService,
+        backgroundJobService,
+        featureFlagsService,
+      }),
+    [SERVICE_NAMES.FEATURE_FLAGS, SERVICE_NAMES.TASK_STATE],
+  );
+
+  serviceContainer.register(
     SERVICE_NAMES.PROGRESS_TRACKER,
     () => progressTrackerService.initialize(),
     [], // No dependencies
@@ -488,6 +501,7 @@ export const services = {
   autoDream: autoDreamService,
   contextAnalysis: contextAnalysisService,
   taskState: taskStateService,
+  taskNotifications: taskNotificationService,
   progressTracker: progressTrackerService,
 } as const;
 
