@@ -10,6 +10,7 @@ import { ToolTip } from "../../../components/gui/Tooltip";
 import { Card } from "../../../components/ui";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { toggleToolGroupSetting } from "../../../redux/slices/uiSlice";
+import { cn } from "../../../util/cn";
 import { ToolPolicyItem } from "./ToolPolicyItem";
 
 interface ToolPoliciesGroupProps {
@@ -18,6 +19,7 @@ interface ToolPoliciesGroupProps {
   displayName: string;
   allToolsOff: boolean;
   duplicateDetection: Record<string, boolean>;
+  surface?: "card" | "embedded";
 }
 
 // Browser-standalone fallback should mirror the extension's default tool set
@@ -58,6 +60,7 @@ export function ToolPoliciesGroup({
   displayName,
   allToolsOff,
   duplicateDetection,
+  surface = "card",
 }: ToolPoliciesGroupProps) {
   const dispatch = useAppDispatch();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -117,10 +120,10 @@ export function ToolPoliciesGroup({
     return `${enabledCount}/${totalCount}`;
   }, [enabledCount, totalCount]);
 
-  return (
-    <Card className="flex flex-1 flex-col p-0">
+  const content = (
+    <>
       <div
-        className="flex cursor-pointer items-center justify-between gap-3 rounded px-2 py-2 hover:bg-gray-50 hover:bg-opacity-5"
+        className="hover:bg-vsc-input-background/60 flex cursor-pointer items-center justify-between gap-3 rounded-lg px-4 py-3"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-3">
@@ -134,7 +137,7 @@ export function ToolPoliciesGroup({
               <WrenchScrewdriverIcon className="h-4 w-4 flex-shrink-0" />
             )}
             <span className="text-sm font-semibold">{displayName}</span>
-            <div className="flex h-5 min-w-5 items-center justify-center rounded-md bg-gray-600 px-1 text-xs font-medium text-white">
+            <div className="bg-vsc-input-background text-vsc-foreground flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs font-medium">
               {badgeText}
             </div>
           </div>
@@ -161,7 +164,7 @@ export function ToolPoliciesGroup({
       </div>
 
       {isExpanded && (
-        <div className="mt-3 space-y-1 pl-2">
+        <div className="mt-2 space-y-1 px-2 pb-2">
           {tools.map((tool) => (
             <ToolPolicyItem
               key={tool.uri + tool.function.name}
@@ -172,6 +175,16 @@ export function ToolPoliciesGroup({
           ))}
         </div>
       )}
+    </>
+  );
+
+  if (surface === "embedded") {
+    return <div className="flex flex-1 flex-col">{content}</div>;
+  }
+
+  return (
+    <Card className={cn("flex flex-1 flex-col overflow-hidden p-0")}>
+      {content}
     </Card>
   );
 }

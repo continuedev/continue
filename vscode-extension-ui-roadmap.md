@@ -2,6 +2,41 @@
 
 Updated: 2026-05-09
 
+## Current Status
+
+Completed in the repo:
+
+- the config surface now uses a denser left rail with grouped sections and search
+- shared settings panels are in place for grouped settings content
+- the `Tools & MCPs` page now follows the same grouped-panel pattern as the rest of settings
+- settings search can jump directly to subsection anchors across tabs
+- the chat surface now has a compact session header and dropdown switcher prototype when session tabs are enabled
+- the compact chat header now surfaces remote, background, and live-agent state
+- the compact chat switcher now supports inline search for faster multi-chat filtering
+- the composer now has a first command-bar prototype via a segmented mode control, runtime selector, and inline config/profile selection
+- pending edits now render in a dedicated rail above the composer instead of only replacing the idle toolbar
+- the pending edit actions now use `Keep` and `Undo` copy on both the rail and edit outcome surfaces
+- the pending edit rail now includes summary badges and top-level batch actions for multi-file edit runs
+
+Primary files touched by that work:
+
+- `gui/src/pages/config/index.tsx`
+- `gui/src/pages/config/configTabs.tsx`
+- `gui/src/pages/config/components/SettingsPanel.tsx`
+- `gui/src/pages/config/sections/ToolsSection.tsx`
+- `gui/src/pages/config/components/ToolPoliciesGroup.tsx`
+- `gui/src/components/TabBar/TabBar.tsx`
+- `gui/src/components/AssistantAndOrgListbox/index.tsx`
+- `gui/src/components/ModeSelect/ModeSelect.tsx`
+- `gui/src/components/mainInput/InputToolbar.tsx`
+- `gui/src/components/mainInput/RuntimeTargetSelect.tsx`
+- `gui/src/components/mainInput/Lump/LumpToolbar/BlockSettingsTopToolbar.tsx`
+- `gui/src/components/mainInput/Lump/LumpToolbar/PendingApplyStatesToolbar.tsx`
+- `gui/src/pages/gui/Chat.tsx`
+- `gui/src/pages/gui/chat-tests/Chat.test.tsx`
+
+This starts the chat-shell refactor, but it does not yet deliver richer switcher overflow, a dedicated CLI runtime target, or the final rail polish for dense edit batches.
+
 ## Goal
 
 Bring the Yuto VS Code extension UI closer to the control density, hierarchy, and workflow clarity that developers expect from GitHub Copilot Chat, without cloning Copilot visuals or copying branded assets, text, or exact layouts.
@@ -60,12 +95,29 @@ The current product has the right primitives but not the right composition.
 Primary gaps:
 
 - The main control surface is split between `Layout`, `Chat`, `ModeSelect`, the toolbar under the input, and separate pages.
-- Session tabs behave like browser tabs, not like a Copilot-style chat switcher with clear active context and overflow behavior.
+- The session header is now more compact and exposes remote/background/live state with inline search, but it still needs overflow behavior and richer switcher polish.
 - Background tasks are isolated in a dedicated mode, instead of feeling adjacent to live chats and agent handoff.
-- Pending apply states exist, but the edited-file strip is secondary rather than a primary review affordance.
-- Runtime source selection is implicit. There is no unified control for local vs CLI vs cloud-backed execution.
-- The composer footer does not yet function as a single command bar with execution style, agent type, runtime source, and send intent in one place.
+- Pending apply states are now surfaced above the composer with batch actions and summary badges, but the rail still needs tighter final visual hierarchy and polish.
+- Runtime source is now selectable for the available local and cloud-backed profiles, but it still does not expose a dedicated CLI target or deeper runtime details.
+- The composer footer is denser than before and now includes config/profile selection, but it still does not function as one fully unified command bar with runtime selection, pending-work state, and send intent in one place.
 - The layout hierarchy is flat. Copilot-like products work because the header, transcript, composer, and pending-work rail each have clear responsibility.
+
+## Foundation Already Landed
+
+The settings redesign should be treated as a completed foundation layer for the broader extension refresh.
+
+What it proves:
+
+- compact grouped navigation works within the current sidebar width constraints
+- grouped content panels are a better fit than stacked standalone cards for dense settings surfaces
+- subsection metadata plus in-page anchors is a workable pattern for deep-linking and keyboard-driven navigation
+- `Tools & MCPs` can support denser hierarchy without losing the existing MCP management affordances
+
+What to reuse in the main chat UI:
+
+- the denser spacing and border treatment from the new settings panels
+- the subsection metadata pattern for command-bar menus and future chat switcher search
+- the updated action hierarchy from the `Tools & MCPs` surface, where the section owns the action and the content remains grouped underneath
 
 ## Product Principles
 
@@ -227,6 +279,35 @@ Runtime source:
 
 ## Engineering Plan
 
+### Immediate Next Slice
+
+If implementation continues immediately, the next slice should be a shell-first prototype rather than more settings work.
+
+Sequence:
+
+1. Merge background-agent inbox status more directly into the main chat shell instead of isolating it behind a separate screen.
+2. Tighten switcher overflow behavior and richer per-session metadata in the compact header.
+3. Extend runtime selection beyond local/cloud profile switching into a dedicated CLI-aware target model.
+
+Primary files for that slice:
+
+- `gui/src/components/Layout.tsx`
+- `gui/src/components/TabBar/TabBar.tsx`
+- `gui/src/components/AssistantAndOrgListbox/index.tsx`
+- `gui/src/components/ModeSelect/ModeSelect.tsx`
+- `gui/src/components/mainInput/ContinueInputBox.tsx`
+- `gui/src/components/mainInput/InputToolbar.tsx`
+- `gui/src/components/mainInput/Lump/LumpToolbar/LumpToolbar.tsx`
+- `gui/src/components/BackgroundMode/BackgroundModeView.tsx`
+- `gui/src/components/BackgroundMode/AgentsList.tsx`
+- `gui/src/pages/gui/Chat.tsx`
+
+Constraints:
+
+- avoid protocol changes until the shell composition is stable
+- keep keyboard navigation intact while controls move
+- validate at narrow sidebar widths first, then expand to full-width webview polish
+
 ### Phase 0: Audit And Static Design Inventory
 
 Outcome:
@@ -249,6 +330,14 @@ Outcome:
 
 - replace the current browser-like tab strip with a compact chat header and switcher
 
+Status:
+
+- in progress
+- `TabBar` has already been refactored into a compact header plus dropdown switcher
+- remote, background, and live-agent state now surface in the compact header
+- the switcher now supports inline filtering for faster chat lookup
+- remaining work is richer session metadata, overflow behavior, and switcher polish
+
 Primary changes:
 
 - add a new header container component under `gui/src/components/`
@@ -266,7 +355,7 @@ Acceptance criteria:
 
 - active session title is always visible
 - multiple chats are switchable from one compact header control
-- remote session state is visible from the header or switcher without opening history
+- remote or live/background session state is visible from the header or switcher without opening history
 
 Effort:
 
@@ -278,9 +367,18 @@ Outcome:
 
 - create one Copilot-inspired control strip above or inside the composer
 
+Status:
+
+- in progress
+- `ModeSelect` now renders as a segmented control instead of a dropdown
+- the input toolbar now exposes a real runtime selector for available local and cloud-backed profiles
+- the existing assistant/profile selector is now surfaced directly in the composer command bar
+- remaining work is to extend runtime selection to dedicated CLI targets, integrate pending-work state, and tighten the overall hierarchy
+
 Primary changes:
 
 - redesign `ModeSelect` into a segmented execution-mode control
+- promote the existing assistant/profile selector into the same command bar as mode, runtime, and model
 - add runtime-source selection for local, CLI, and cloud-backed flows
 - define where `Autopilot` fits: either as a first-class execution style or as a higher-autonomy preset layered on agent mode
 
@@ -288,12 +386,14 @@ Files:
 
 - `gui/src/components/ModeSelect/ModeSelect.tsx`
 - `gui/src/components/mainInput/ContinueInputBox.tsx`
+- `gui/src/components/mainInput/InputToolbar.tsx`
+- `gui/src/components/mainInput/RuntimeTargetSelect.tsx`
 - `gui/src/components/mainInput/Lump/LumpToolbar/LumpToolbar.tsx`
 - `gui/src/pages/gui/Chat.tsx`
 
 Acceptance criteria:
 
-- a user can identify execution style and runtime target before sending
+- a user can identify execution style, active config, and runtime target before sending
 - the control strip remains usable at narrow sidebar widths
 - keyboard switching still works for primary modes
 
@@ -307,11 +407,20 @@ Outcome:
 
 - turn pending apply states into a first-class edited-files review rail
 
+Status:
+
+- in progress
+- pending apply states now render in `Chat` above the composer instead of displacing the idle lump toolbar
+- `PendingApplyStatesToolbar` now emphasizes file rows first, with actions aligned to each pending file
+- `AcceptRejectDiffButtons` now uses `Keep` and `Undo` copy while preserving the existing internal accept/reject protocol
+- the rail now includes summary badges and top-level batch actions for multi-file edit runs
+- remaining work is to tighten the visual hierarchy further and polish dense multi-file batches
+
 Primary changes:
 
 - redesign `PendingApplyStatesToolbar` to emphasize files first, actions second
-- rename UI copy to `Keep` and `Undo` if product language changes in the sidebar
-- support grouped file chips with expanded details
+- use `Keep` and `Undo` copy for pending edit actions while preserving internal accept/reject semantics
+- support grouped file chips, summary badges, and batch actions for multi-file runs
 
 Files:
 

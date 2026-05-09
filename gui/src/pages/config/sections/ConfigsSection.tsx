@@ -33,7 +33,7 @@ export function ConfigsSection() {
         addButtonTooltip="Add config"
       />
 
-      <SettingsPanel>
+      <SettingsPanel anchorId="agent-configs">
         {profiles && profiles.length > 0 ? (
           profiles.map((profile) => {
             const isSelected = profile.id === selectedProfile?.id;

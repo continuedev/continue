@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useEffect, useState } from "react";
+import { RefObject, useCallback, useEffect, useRef, useState } from "react";
 
 interface ElementSize {
   clientWidth: number;
@@ -16,6 +16,7 @@ export const useElementSize = (
   ref: RefObject<HTMLElement>,
   debounceMs = 250,
 ): ElementSize => {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [size, setSize] = useState<ElementSize>({
     clientWidth: 0,
     clientHeight: 0,
@@ -27,18 +28,19 @@ export const useElementSize = (
   // Debounced update function
   const debouncedSetSize = useCallback(
     (measurements: Omit<ElementSize, "isResizing">) => {
-      let timeoutId: NodeJS.Timeout;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
 
       setSize((prev) => ({ ...prev, isResizing: true }));
 
-      timeoutId = setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         setSize({
           ...measurements,
           isResizing: false,
         });
+        timeoutRef.current = null;
       }, debounceMs);
-
-      return () => clearTimeout(timeoutId);
     },
     [debounceMs],
   );
@@ -74,6 +76,11 @@ export const useElementSize = (
     // Cleanup
     return () => {
       resizeObserver.disconnect();
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     };
   }, [ref, debouncedSetSize]);
 

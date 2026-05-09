@@ -162,14 +162,14 @@ test(
       filepath: EDIT_FILE_URI,
     });
 
-    // Verify accept/reject buttons are present
+    // Verify keep/undo buttons are present
     const acceptButton = await getElementByTestId("edit-accept-button");
     await getElementByTestId("edit-reject-button");
 
     // Set the chat response text before accepting changes
     ideMessenger.setChatResponseText(POST_EDIT_RESPONSE);
 
-    // Accept the changes, which should trigger a response after the tool call
+    // Keep the changes, which should trigger a response after the tool call
     await user.click(acceptButton);
 
     expect(messengerPostSpy).toHaveBeenCalledWith("acceptDiff", {

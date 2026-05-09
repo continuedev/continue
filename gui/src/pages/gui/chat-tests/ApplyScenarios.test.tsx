@@ -7,12 +7,12 @@ import {
 } from "../../../util/test/utils";
 import { Chat } from "../Chat";
 
-test("Chat apply scenarios: handle apply updates and display the accept / reject all buttons", async () => {
+test("Chat apply scenarios: handle apply updates and display pending edit action buttons", async () => {
   const { ideMessenger } = await renderWithProviders(<Chat />);
 
   // Use queryByText which returns null when element isn't found
-  await verifyNotPresentByText("Accept All");
-  await verifyNotPresentByText("Reject All");
+  await verifyNotPresentByText("Keep");
+  await verifyNotPresentByText("Undo");
 
   for (let i = 0; i < 5; i++) {
     ideMessenger.mockMessageToWebview("updateApplyState", {
@@ -26,8 +26,10 @@ test("Chat apply scenarios: handle apply updates and display the accept / reject
     streamId: "12345",
   });
 
-  // Wait for the buttons to appear
-  await getElementByTestId("accept-reject-all-buttons");
+  // Wait for the file action buttons to appear
+  await getElementByTestId("pending-apply-file-actions-0");
+  await verifyNotPresentByText("Accept");
+  await verifyNotPresentByText("Reject");
 
   // IDE sends back message that it is done
   ideMessenger.mockMessageToWebview("updateApplyState", {

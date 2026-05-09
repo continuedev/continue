@@ -178,6 +178,7 @@ export function HelpSection() {
       />
       <div className="space-y-8">
         <SettingsPanel
+          anchorId="resources"
           title="Resources"
           description="Documentation, issue reporting, and community channels."
         >
@@ -214,6 +215,7 @@ export function HelpSection() {
         </SettingsPanel>
 
         <SettingsPanel
+          anchorId="help-tools"
           title="Tools"
           description="Utilities for usage monitoring, session inspection, and onboarding."
         >
@@ -268,6 +270,7 @@ export function HelpSection() {
         </SettingsPanel>
 
         <SettingsPanel
+          anchorId="keyboard-shortcuts"
           title="Keyboard shortcuts"
           description="Common chat, edit, diff, and autocomplete shortcuts for your IDE."
         >

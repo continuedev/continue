@@ -3,7 +3,7 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { isOnPremSession } from "core/control-plane/AuthTypes";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AssistantAndOrgListbox } from "../../components/AssistantAndOrgListbox";
 import { CliInstallBanner } from "../../components/CliInstallBanner";
@@ -20,6 +20,15 @@ import {
 } from "./configTabs";
 import { AccountDropdown } from "./features/account/AccountDropdown";
 
+interface ConfigSearchTarget {
+  key: string;
+  label: string;
+  description: string;
+  tabId: string;
+  anchorId?: string;
+  keywords: string[];
+}
+
 function filterTabSections(sections: TabSection[], searchTerm: string) {
   const normalized = searchTerm.trim().toLowerCase();
 
@@ -33,6 +42,10 @@ function filterTabSections(sections: TabSection[], searchTerm: string) {
         const searchIndex = [
           tab.label,
           ...(tab.keywords ?? []),
+          ...(tab.anchors?.flatMap((anchor) => [
+            anchor.label,
+            ...(anchor.keywords ?? []),
+          ]) ?? []),
           section.label ?? "",
         ]
           .join(" ")
@@ -49,15 +62,51 @@ function filterTabSections(sections: TabSection[], searchTerm: string) {
     .filter((section) => section.tabs.length > 0);
 }
 
+function getConfigSearchTargets(sections: TabSection[]): ConfigSearchTarget[] {
+  return sections.flatMap((section) =>
+    section.tabs.flatMap((tab) => {
+      const tabTarget: ConfigSearchTarget = {
+        key: `tab-${tab.id}`,
+        label: tab.label,
+        description: section.label ?? "Settings",
+        tabId: tab.id,
+        keywords: [tab.label, ...(tab.keywords ?? []), section.label ?? ""],
+      };
+
+      const anchorTargets = (tab.anchors ?? []).map((anchor) => ({
+        key: `anchor-${tab.id}-${anchor.id}`,
+        label: anchor.label,
+        description: `${section.label ?? "Settings"} / ${tab.label}`,
+        tabId: tab.id,
+        anchorId: anchor.id,
+        keywords: [
+          anchor.label,
+          ...(anchor.keywords ?? []),
+          tab.label,
+          section.label ?? "",
+        ],
+      }));
+
+      return [tabTarget, ...anchorTargets];
+    }),
+  );
+}
+
 function ConfigPage() {
   useNavigationListener();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const activeTab = searchParams.get("tab") || "settings";
+  const activeSection = searchParams.get("section") || undefined;
   const { session, organizations } = useAuth();
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const allTabs = getAllTabs();
+  const allSearchTargets = useMemo(
+    () => getConfigSearchTargets([...topTabSections, ...bottomTabSections]),
+    [],
+  );
   const filteredTopTabSections = useMemo(
     () => filterTabSections(topTabSections, searchTerm),
     [searchTerm],
@@ -66,6 +115,19 @@ function ConfigPage() {
     () => filterTabSections(bottomTabSections, searchTerm),
     [searchTerm],
   );
+  const filteredSearchTargets = useMemo(() => {
+    const normalized = searchTerm.trim().toLowerCase();
+
+    if (!normalized) {
+      return [];
+    }
+
+    return allSearchTargets
+      .filter((target) => {
+        return target.keywords.join(" ").toLowerCase().includes(normalized);
+      })
+      .slice(0, 6);
+  }, [allSearchTargets, searchTerm]);
   const hasMatches =
     filteredTopTabSections.length > 0 || filteredBottomTabSections.length > 0;
   const shouldRenderOrgInfo =
@@ -74,6 +136,42 @@ function ConfigPage() {
   const handleTabClick = (tabId: string) => {
     navigate(`/config?tab=${tabId}`);
   };
+
+  const handleSearchTargetSelect = (target: ConfigSearchTarget) => {
+    setSearchTerm("");
+    navigate(
+      `/config?tab=${target.tabId}${target.anchorId ? `&section=${target.anchorId}` : ""}`,
+    );
+  };
+
+  useEffect(() => {
+    const container = contentRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    if (!activeSection) {
+      if (typeof container.scrollTo === "function") {
+        container.scrollTo({ top: 0 });
+      } else {
+        container.scrollTop = 0;
+      }
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      const target = container.querySelector<HTMLElement>(
+        `[data-config-anchor="${activeSection}"]`,
+      );
+
+      if (target && typeof target.scrollIntoView === "function") {
+        target.scrollIntoView({ block: "start" });
+      }
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [activeSection, activeTab]);
 
   return (
     <div className="flex h-full flex-row overflow-hidden">
@@ -115,9 +213,33 @@ function ConfigPage() {
             type="text"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && filteredSearchTargets.length > 0) {
+                event.preventDefault();
+                handleSearchTargetSelect(filteredSearchTargets[0]);
+              }
+            }}
             placeholder="Search settings"
             className="bg-vsc-input-background text-vsc-foreground focus:border-border w-full rounded-lg border border-solid border-transparent py-2 pl-9 pr-3 text-sm outline-none"
           />
+          {filteredSearchTargets.length > 0 && (
+            <div className="bg-vsc-editor-background border-command-border absolute left-2 right-2 top-full z-10 mt-2 overflow-hidden rounded-xl border border-solid shadow-lg md:left-3 md:right-3">
+              {filteredSearchTargets.map((target) => (
+                <button
+                  key={target.key}
+                  type="button"
+                  data-testid={`config-search-target-${target.tabId}-${target.anchorId ?? "tab"}`}
+                  className="hover:bg-vsc-input-background/60 flex w-full flex-col items-start border-none bg-transparent px-3 py-2 text-left"
+                  onClick={() => handleSearchTargetSelect(target)}
+                >
+                  <span className="text-sm font-medium">{target.label}</span>
+                  <span className="text-description-muted text-xs">
+                    {target.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="border-r-border flex min-h-0 flex-1 flex-col overflow-hidden border-b-0 border-l-0 border-r-0 border-t border-solid px-2 pb-2 text-xs md:px-3">
@@ -174,7 +296,10 @@ function ConfigPage() {
           </Alert>
         </div>
 
-        <div className="thin-scrollbar relative hidden flex-1 overflow-y-auto sm:block">
+        <div
+          ref={contentRef}
+          className="thin-scrollbar relative hidden flex-1 overflow-y-auto sm:block"
+        >
           <div className="mx-auto w-full max-w-5xl space-y-8 px-6 py-6">
             {allTabs.find((tab) => tab.id === activeTab)?.component}
           </div>

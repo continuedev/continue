@@ -114,6 +114,7 @@ export function UserSettingsSection() {
 
       <div className="space-y-8">
         <SettingsPanel
+          anchorId="conversation"
           title="Conversation"
           description="Session chrome, message rendering, scrolling, and spoken output."
         >
@@ -162,6 +163,7 @@ export function UserSettingsSection() {
         </SettingsPanel>
 
         <SettingsPanel
+          anchorId="appearance"
           title="Appearance"
           description="Adjust interface density and typography for the chat surface."
         >
@@ -180,6 +182,7 @@ export function UserSettingsSection() {
         </SettingsPanel>
 
         <SettingsPanel
+          anchorId="privacy-telemetry"
           title="Privacy & Telemetry"
           description="Control anonymous telemetry behavior for this workspace and account."
         >
@@ -196,6 +199,7 @@ export function UserSettingsSection() {
         </SettingsPanel>
 
         <SettingsPanel
+          anchorId="autocomplete"
           title="Autocomplete"
           description="Tune completion length, latency, and file-level exclusions."
         >
@@ -251,6 +255,7 @@ export function UserSettingsSection() {
         </SettingsPanel>
 
         <SettingsPanel
+          anchorId="experimental"
           title="Experimental"
           description="Higher-risk features that may still change or require additional validation."
         >

@@ -21,7 +21,6 @@ import HoverItem from "../../InputToolbar/HoverItem";
 import { useAuth } from "../../../../context/Auth";
 import { useCreditStatus } from "../../../../hooks/useCredits";
 import { CONFIG_ROUTES } from "../../../../util/navigation";
-import { AssistantAndOrgListbox } from "../../../AssistantAndOrgListbox";
 
 export function BlockSettingsTopToolbar() {
   const navigate = useNavigate();
@@ -74,7 +73,7 @@ export function BlockSettingsTopToolbar() {
   };
 
   return (
-    <div className="flex flex-1 items-center justify-between gap-3">
+    <div className="flex flex-1 items-center gap-3">
       <div className="flex items-center gap-1">
         {shouldShowError && (
           <ToolTip delayShow={700} content="View configuration errors">
@@ -134,12 +133,6 @@ export function BlockSettingsTopToolbar() {
           </div>
         )}
       </div>
-
-      <ToolTip place="top" content="Select Config">
-        <div>
-          <AssistantAndOrgListbox variant="lump" />
-        </div>
-      </ToolTip>
     </div>
   );
 }

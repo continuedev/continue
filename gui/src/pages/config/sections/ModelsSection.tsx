@@ -92,6 +92,7 @@ export function ModelsSection() {
       />
 
       <SettingsPanel
+        anchorId="primary-roles"
         title="Primary roles"
         description="Core models used for chat, inline completions, and targeted edits."
       >
@@ -181,6 +182,7 @@ export function ModelsSection() {
       </SettingsPanel>
 
       <SettingsPanel
+        anchorId="additional-roles"
         title="Additional roles"
         description="Apply, embed, and rerank models used for more specialized workflows."
       >

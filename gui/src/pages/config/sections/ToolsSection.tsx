@@ -7,6 +7,7 @@ import {
   GlobeAltIcon,
   PencilIcon,
   PlayCircleIcon,
+  PlusIcon,
   StopCircleIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
@@ -19,7 +20,6 @@ import { ToolTip } from "../../../components/gui/Tooltip";
 import { useEditBlock } from "../../../components/mainInput/Lump/useEditBlock";
 import {
   Button,
-  Card,
   EmptyState,
   Listbox,
   ListboxButton,
@@ -32,6 +32,7 @@ import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateConfig } from "../../../redux/slices/configSlice";
 import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
 import { ConfigHeader } from "../components/ConfigHeader";
+import { SettingsPanel } from "../components/SettingsPanel";
 import { ToolPoliciesGroup } from "../components/ToolPoliciesGroup";
 
 interface MCPServerStatusProps {
@@ -165,7 +166,7 @@ function MCPServerPreview({
     return (
       <div>
         <div
-          className="mx-2 flex cursor-pointer items-center justify-between rounded hover:bg-gray-50 hover:bg-opacity-5"
+          className="hover:bg-vsc-input-background/60 mx-2 flex cursor-pointer items-center justify-between rounded-lg px-2 py-2"
           onClick={() => toggleSection(sectionKey)}
         >
           <div className="flex items-center gap-3">
@@ -175,7 +176,7 @@ function MCPServerPreview({
             <div className="flex items-center gap-2">
               {icon}
               <span className="text-sm">{title}</span>
-              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-600 px-0.5 text-xs font-medium text-white">
+              <div className="bg-vsc-input-background text-vsc-foreground flex h-5 w-5 items-center justify-center rounded-md px-0.5 text-xs font-medium">
                 {items.length}
               </div>
             </div>
@@ -190,11 +191,11 @@ function MCPServerPreview({
                   return (
                     <div
                       key={idx}
-                      className="text-description rounded bg-gray-50 bg-opacity-5 px-2 py-1 text-xs"
+                      className="text-description bg-vsc-input-background/60 rounded px-2 py-1 text-xs"
                     >
                       <code>{item.name}</code>
                       {item.description && (
-                        <div className="mt-1 text-xs text-gray-500">
+                        <div className="text-description-muted mt-1 text-xs">
                           {item.description}
                         </div>
                       )}
@@ -214,8 +215,8 @@ function MCPServerPreview({
   };
 
   return (
-    <div className="">
-      <div className="flex items-center justify-between py-1">
+    <div className="px-4 py-4">
+      <div className="flex items-start justify-between gap-3 py-1">
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-3">
@@ -481,8 +482,7 @@ export function ToolsSection() {
     <>
       <ConfigHeader
         title="Tools & MCPs"
-        subtext="Manage MCP servers and tool policies"
-        className="mb-2"
+        subtext="Manage built-in tool permissions, MCP servers, and the resources they expose to the agent."
       />
       {!!availableToolsMessage && (
         <div className="mb-4">
@@ -491,53 +491,75 @@ export function ToolsSection() {
           </Alert>
         </div>
       )}
-      <div className="mb-4 space-y-6">
-        <ToolPoliciesGroup
-          showIcon={false}
-          groupName={BUILT_IN_GROUP_NAME}
-          displayName={"Built-in Tools"}
-          allToolsOff={allToolsOff}
-          duplicateDetection={duplicateDetection}
-        />
-        <ConfigHeader
-          className="pr-2"
+      <div className="space-y-8">
+        <SettingsPanel
+          anchorId="built-in-tools"
+          title="Built-in Tools"
+          description="Review which built-in capabilities can run automatically, require approval, or stay excluded."
+        >
+          <ToolPoliciesGroup
+            showIcon={false}
+            groupName={BUILT_IN_GROUP_NAME}
+            displayName={"Built-in Tools"}
+            allToolsOff={allToolsOff}
+            duplicateDetection={duplicateDetection}
+            surface="embedded"
+          />
+        </SettingsPanel>
+
+        <SettingsPanel
+          anchorId="mcp-servers"
           title="MCP Servers"
-          variant="sm"
-          onAddClick={handleAddMcpServer}
-          addButtonTooltip="Add MCP server"
-          showAddButton={!disableMcp}
-        />
-        {disableMcp ? (
-          <Card>
-            <EmptyState message="MCP servers are disabled in your organization" />
-          </Card>
-        ) : (
-          <>
-            {mode === "chat" && (
-              <Alert type="info" size="sm">
-                <span className="text-2xs italic">
-                  All MCPs are disabled in Chat, switch to Plan or Agent mode to
-                  use MCPs
-                </span>
-              </Alert>
-            )}
-            {mergedBlocks.length > 0 ? (
-              mergedBlocks.map(({ block, blockFromYaml }) => (
-                <MCPServerPreview
-                  key={block.name}
-                  server={block}
-                  serverFromYaml={blockFromYaml}
-                  allToolsOff={allToolsOff}
-                  duplicateDetection={duplicateDetection}
-                />
-              ))
-            ) : (
-              <Card>
-                <EmptyState message="No MCP servers configured. Click the + button to add your first server." />
-              </Card>
-            )}
-          </>
-        )}
+          description="Manage connected MCP servers, authentication state, prompts, resources, and server-specific tools."
+          headerAction={
+            !disableMcp ? (
+              <ToolTip content="Add MCP server">
+                <Button
+                  onClick={handleAddMcpServer}
+                  variant="icon"
+                  size="sm"
+                  className="my-0"
+                >
+                  <PlusIcon className="h-3.5 w-3.5" />
+                </Button>
+              </ToolTip>
+            ) : undefined
+          }
+        >
+          {disableMcp ? (
+            <div className="px-4 py-4">
+              <EmptyState message="MCP servers are disabled in your organization" />
+            </div>
+          ) : (
+            <>
+              {mode === "chat" && (
+                <div className="px-4 pt-4">
+                  <Alert type="info" size="sm">
+                    <span className="text-2xs italic">
+                      All MCPs are disabled in Chat, switch to Plan or Agent
+                      mode to use MCPs
+                    </span>
+                  </Alert>
+                </div>
+              )}
+              {mergedBlocks.length > 0 ? (
+                mergedBlocks.map(({ block, blockFromYaml }) => (
+                  <MCPServerPreview
+                    key={block.name}
+                    server={block}
+                    serverFromYaml={blockFromYaml}
+                    allToolsOff={allToolsOff}
+                    duplicateDetection={duplicateDetection}
+                  />
+                ))
+              ) : (
+                <div className="px-4 py-4">
+                  <EmptyState message="No MCP servers configured. Click the + button to add your first server." />
+                </div>
+              )}
+            </>
+          )}
+        </SettingsPanel>
       </div>
     </>
   );

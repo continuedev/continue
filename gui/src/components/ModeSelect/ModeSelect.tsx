@@ -1,6 +1,4 @@
 import {
-  CheckIcon,
-  ChevronDownIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
@@ -11,11 +9,19 @@ import { useAuth } from "../../context/Auth";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
-import { getFontSize, getMetaKeyLabel } from "../../util";
+import { getMetaKeyLabel } from "../../util";
+import { cn } from "../../util/cn";
 import { ToolTip } from "../gui/Tooltip";
 import { useMainEditor } from "../mainInput/TipTapEditor";
-import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 import { ModeIcon } from "./ModeIcon";
+
+interface ModeOption {
+  value: MessageModes;
+  label: string;
+  description: string;
+  disabled?: boolean;
+  warning?: string;
+}
 
 export function ModeSelect() {
   const dispatch = useAppDispatch();
@@ -88,134 +94,98 @@ export function ModeSelect() {
     }
   }, [mode, isLocalAgent, dispatch]);
 
-  const notGreatAtAgent = (mode: string) => (
-    <>
-      <ToolTip
-        style={{
-          zIndex: 200001, // in front of listbox
-        }}
-        className="flex items-center gap-1"
-        content={`${mode} might not work well with this model.`}
-      >
-        <ExclamationTriangleIcon className="text-warning h-2.5 w-2.5" />
-      </ToolTip>
-    </>
-  );
+  const modeOptions: ModeOption[] = useMemo(() => {
+    return [
+      {
+        value: "chat",
+        label: "Chat",
+        description: "All tools disabled",
+      },
+      {
+        value: "plan",
+        label: "Plan",
+        description: "Read-only and MCP tools available",
+        warning: !isGoodAtAgentMode
+          ? "Plan might not work well with this model."
+          : undefined,
+      },
+      {
+        value: "agent",
+        label: "Agent",
+        description: "All tools available",
+        warning: !isGoodAtAgentMode
+          ? "Agent might not work well with this model."
+          : undefined,
+      },
+      {
+        value: "background",
+        label: "Background",
+        description: isLocalAgent
+          ? "Background mode cannot be used with local agents."
+          : "Run as a background agent task",
+        disabled: isLocalAgent,
+      },
+    ];
+  }, [isGoodAtAgentMode, isLocalAgent]);
 
   return (
-    <Listbox value={mode} onChange={selectMode}>
-      <div className="relative">
-        <ListboxButton
-          data-testid="mode-select-button"
-          className="xs:px-2 text-description bg-lightgray/20 gap-1 rounded-full border-none px-1.5 py-0.5 transition-colors duration-200 hover:brightness-110"
-        >
-          <ModeIcon mode={mode} />
-          <span className="hidden sm:block">
-            {mode === "chat"
-              ? "Chat"
-              : mode === "agent"
-                ? "Agent"
-                : mode === "background"
-                  ? "Background"
-                  : "Plan"}
-          </span>
-          <ChevronDownIcon
-            className="h-2 w-2 flex-shrink-0"
-            aria-hidden="true"
-          />
-        </ListboxButton>
-        <ListboxOptions className="min-w-32 max-w-48">
-          <ListboxOption value="chat">
-            <div className="flex flex-row items-center gap-1.5">
-              <ModeIcon mode="chat" />
-              <span className="">Chat</span>
-              <ToolTip
-                style={{
-                  zIndex: 200001,
-                }}
-                content="All tools disabled"
-              >
-                <InformationCircleIcon
-                  data-tooltip-id="chat-tip"
-                  className="h-2.5 w-2.5 flex-shrink-0"
-                />
-              </ToolTip>
-              <span
-                className={`text-description-muted text-[${getFontSize() - 3}px] mr-auto`}
-              >
-                {getMetaKeyLabel()}L
-              </span>
-            </div>
-            {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
-          </ListboxOption>
-          <ListboxOption value="plan" className={"gap-1"}>
-            <div className="flex flex-row items-center gap-1.5">
-              <ModeIcon mode="plan" />
-              <span className="">Plan</span>
-              <ToolTip
-                style={{
-                  zIndex: 200001,
-                }}
-                content="Read-only/MCP tools available"
-              >
-                <InformationCircleIcon className="h-2.5 w-2.5 flex-shrink-0" />
-              </ToolTip>
-            </div>
-            {!isGoodAtAgentMode && notGreatAtAgent("Plan")}
-            <CheckIcon
-              className={`ml-auto h-3 w-3 ${mode === "plan" ? "" : "opacity-0"}`}
-            />
-          </ListboxOption>
-
-          <ListboxOption value="agent" className={"gap-1"}>
-            <div className="flex flex-row items-center gap-1.5">
-              <ModeIcon mode="agent" />
-              <span className="">Agent</span>
-              <ToolTip
-                style={{
-                  zIndex: 200001,
-                }}
-                content="All tools available"
-              >
-                <InformationCircleIcon className="h-2.5 w-2.5 flex-shrink-0" />
-              </ToolTip>
-            </div>
-            {!isGoodAtAgentMode && notGreatAtAgent("Agent")}
-            <CheckIcon
-              className={`ml-auto h-3 w-3 ${mode === "agent" ? "" : "opacity-0"}`}
-            />
-          </ListboxOption>
-
-          <ListboxOption
-            value="background"
-            className={"gap-1"}
-            disabled={isLocalAgent}
-          >
-            <div className="flex flex-row items-center gap-1.5">
-              <ModeIcon mode="background" />
-              <span className="">Background</span>
-              <ToolTip
-                style={{
-                  zIndex: 200001,
-                }}
-                content={"Background mode cannot be used with local agents."}
-              >
-                <InformationCircleIcon className="h-2.5 w-2.5 flex-shrink-0" />
-              </ToolTip>
-            </div>
-            {isLocalAgent && (
-              <ExclamationTriangleIcon className="text-warning h-2.5 w-2.5" />
+    <div
+      data-testid="mode-select-button"
+      className="bg-vsc-input-background flex items-center rounded-xl border border-solid border-transparent p-0.5"
+    >
+      {modeOptions.map((option) => {
+        const button = (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => selectMode(option.value)}
+            disabled={option.disabled}
+            className={cn(
+              "inline-flex h-7 items-center gap-1 rounded-lg border-none px-2 text-xs transition-colors",
+              mode === option.value
+                ? "bg-vsc-editor-background text-vsc-foreground shadow-sm"
+                : "text-description hover:bg-vsc-input-background/70 hover:text-vsc-foreground bg-transparent",
+              option.disabled &&
+                "hover:text-description cursor-not-allowed opacity-50 hover:bg-transparent",
             )}
-            <CheckIcon
-              className={`ml-auto h-3 w-3 ${mode === "background" ? "" : "opacity-0"}`}
-            />
-          </ListboxOption>
+            aria-pressed={mode === option.value}
+            aria-label={`Switch to ${option.label} mode`}
+          >
+            <ModeIcon mode={option.value} />
+            <span className="hidden sm:inline">{option.label}</span>
+            {option.warning && (
+              <ExclamationTriangleIcon className="text-warning h-3 w-3" />
+            )}
+            {option.disabled && (
+              <ExclamationTriangleIcon className="text-warning h-3 w-3" />
+            )}
+          </button>
+        );
 
-          <div className="text-description-muted px-2 py-1">
-            {`${metaKeyLabel} . for next mode`}
-          </div>
-        </ListboxOptions>
-      </div>
-    </Listbox>
+        return (
+          <ToolTip
+            key={option.value}
+            style={{
+              zIndex: 200001,
+            }}
+            content={option.warning ?? option.description}
+          >
+            <div className="flex items-center">{button}</div>
+          </ToolTip>
+        );
+      })}
+
+      <ToolTip
+        style={{
+          zIndex: 200001,
+        }}
+        content={`${metaKeyLabel} . for next mode`}
+      >
+        <div className="text-description-muted hidden items-center gap-1 px-1.5 lg:flex">
+          <InformationCircleIcon className="h-3 w-3" />
+          <span className="text-[10px] font-medium">{metaKeyLabel} .</span>
+        </div>
+      </ToolTip>
+    </div>
   );
 }

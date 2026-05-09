@@ -53,6 +53,7 @@ import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import { AgentChatView } from "../../components/Agent/AgentChatView";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
+import { PendingApplyStatesToolbar } from "../../components/mainInput/Lump/LumpToolbar/PendingApplyStatesToolbar";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
@@ -122,6 +123,7 @@ export function Chat() {
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
   const history = useAppSelector((state) => state.session.history);
+  const pendingApplyStates = useAppSelector(selectDoneApplyStates);
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );
@@ -518,6 +520,14 @@ export function Chat() {
           ))}
       </StepsDiv>
       <div className={"relative"}>
+        {!isInEdit && pendingApplyStates.length > 0 && (
+          <div className="px-2 pb-2">
+            <PendingApplyStatesToolbar
+              pendingApplyStates={pendingApplyStates}
+            />
+          </div>
+        )}
+
         <ContinueInputBox
           isMainInput
           isLastUserInput={false}

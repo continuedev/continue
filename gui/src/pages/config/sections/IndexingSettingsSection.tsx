@@ -20,6 +20,7 @@ function CodebaseSubSection() {
 
   return (
     <SettingsPanel
+      anchorId="codebase-index"
       title="@codebase index"
       description="Monitor the legacy codebase index while it remains available in this workspace."
     >
@@ -84,6 +85,11 @@ export function IndexingSettingsSection() {
       <ConfigHeader
         title="Indexing & Docs"
         subtext="Review the deprecated indexing flow and any remaining documentation retrieval settings."
+      />
+
+      <div
+        data-config-anchor="indexing-overview"
+        data-testid="config-anchor-indexing-overview"
       />
 
       <Alert type="warning" className="mb-6">

@@ -50,7 +50,10 @@ export function OrganizationsSection() {
 
   if (!shouldRenderOrgInfo) {
     return (
-      <>
+      <div
+        data-config-anchor="organizations-overview"
+        data-testid="config-anchor-organizations-overview"
+      >
         <div className="mb-8 flex items-center justify-between">
           <div className="flex flex-col">
             <h2 className="mb-0 text-xl font-semibold">Organizations</h2>
@@ -62,12 +65,15 @@ export function OrganizationsSection() {
             manage organizations.
           </div>
         </Card>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div
+      data-config-anchor="organizations-overview"
+      data-testid="config-anchor-organizations-overview"
+    >
       <ConfigHeader
         title="Organizations"
         onAddClick={handleAddOrganization}
@@ -101,6 +107,6 @@ export function OrganizationsSection() {
           </div>
         ))}
       </Card>
-    </>
+    </div>
   );
 }

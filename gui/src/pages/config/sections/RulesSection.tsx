@@ -345,7 +345,10 @@ function PromptsSubSection() {
   }, [slashCommands, isCommandBookmarked, selectedProfile]);
 
   return (
-    <div>
+    <div
+      data-config-anchor="prompts-library"
+      data-testid="config-anchor-prompts-library"
+    >
       <ConfigHeader
         title="Prompts"
         variant="sm"
@@ -500,7 +503,10 @@ function RulesSubSection() {
   }, [config, selectedProfile, mode]);
 
   return (
-    <div>
+    <div
+      data-config-anchor="rules-library"
+      data-testid="config-anchor-rules-library"
+    >
       {isLocal ? (
         <DropdownButton
           title="Rules"

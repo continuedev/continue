@@ -18,6 +18,7 @@ import { setHasReasoningEnabled } from "../../redux/slices/sessionSlice";
 import { setReasoningSetting } from "../../redux/slices/uiSlice";
 import { exitEdit } from "../../redux/thunks/edit";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
+import { AssistantAndOrgListbox } from "../AssistantAndOrgListbox";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import { ModeSelect } from "../ModeSelect";
@@ -25,6 +26,7 @@ import { Button } from "../ui";
 import { useFontSize } from "../ui/font";
 import ContextStatus from "./ContextStatus";
 import HoverItem from "./InputToolbar/HoverItem";
+import { RuntimeTargetSelect } from "./RuntimeTargetSelect";
 
 export interface ToolbarOptions {
   hideUseCodebase?: boolean;
@@ -91,6 +93,18 @@ function InputToolbar(props: InputToolbarProps) {
               </HoverItem>
             </ToolTip>
           )}
+          {!isInEdit && (
+            <ToolTip place="top" content="Select runtime target">
+              <div>
+                <RuntimeTargetSelect />
+              </div>
+            </ToolTip>
+          )}
+          <ToolTip place="top" content="Select Config">
+            <div className="bg-vsc-input-background rounded-xl px-2">
+              <AssistantAndOrgListbox variant="lump" />
+            </div>
+          </ToolTip>
           <ToolTip place="top" content="Select Model">
             <HoverItem className="!p-0">
               <ModelSelect />

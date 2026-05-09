@@ -17,7 +17,6 @@ import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
 import { EditOutcomeToolbar } from "./EditOutcomeToolbar";
 import { EditToolbar } from "./EditToolbar";
 import { IsApplyingToolbar } from "./IsApplyingToolbar";
-import { PendingApplyStatesToolbar } from "./PendingApplyStatesToolbar";
 import { PendingToolCallToolbar } from "./PendingToolCallToolbar";
 import { StreamingToolbar } from "./StreamingToolbar";
 import { TtsActiveToolbar } from "./TtsActiveToolbar";
@@ -60,9 +59,6 @@ export function LumpToolbar() {
   );
   const applyStates = useAppSelector(
     (state) => state.session.codeBlockApplyStates.states,
-  );
-  const pendingApplyStates = applyStates.filter(
-    (state) => state.status === "done",
   );
   const isApplying = applyStates.some((state) => state.status === "streaming");
   const editor = useMainEditor();
@@ -200,12 +196,6 @@ export function LumpToolbar() {
 
   if (pendingToolCalls.length > 0) {
     return <PendingToolCallToolbar />;
-  }
-
-  if (pendingApplyStates.length > 0) {
-    return (
-      <PendingApplyStatesToolbar pendingApplyStates={pendingApplyStates} />
-    );
   }
 
   return <BlockSettingsTopToolbar />;
