@@ -4,6 +4,7 @@ import os from "os";
 import path from "path";
 import { promisify } from "util";
 
+import { getPowerShellCommand } from "core/util/index.js";
 import { logger } from "./logger.js";
 
 const execAsync = promisify(exec);
@@ -26,8 +27,9 @@ export async function checkClipboardForImage(): Promise<boolean> {
       );
     } else if (platform === "win32") {
       // Windows: Use PowerShell to check clipboard
+      const psCommand = getPowerShellCommand();
       const { stdout } = await execAsync(
-        'powershell -command "Get-Clipboard -Format Image | Measure-Object | Select-Object -ExpandProperty Count"',
+        `${psCommand} -Command "Add-Type -AssemblyName System.Windows.Forms; [int][System.Windows.Forms.Clipboard]::ContainsImage()"`,
       );
       return parseInt(stdout.trim()) > 0;
     } else if (platform === "linux") {
@@ -69,8 +71,9 @@ export async function getClipboardImage(): Promise<Buffer | null> {
       );
     } else if (platform === "win32") {
       // Windows: Use PowerShell to save clipboard image
+      const psCommand = getPowerShellCommand();
       await execAsync(
-        `powershell -command "$image = Get-Clipboard -Format Image; if ($image) { $image.Save('${tempImagePath}') }"`,
+        `${psCommand} -STA -Command "Add-Type -AssemblyName System.Windows.Forms, System.Drawing; $image = [System.Windows.Forms.Clipboard]::GetImage(); if ($image) { $image.Save('${tempImagePath}', [System.Drawing.Imaging.ImageFormat]::Png) }"`,
       );
     } else if (platform === "linux") {
       // Linux: Use xclip to save clipboard image

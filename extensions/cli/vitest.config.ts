@@ -25,6 +25,7 @@ export default defineConfig({
   resolve: {
     alias: {
       src: path.resolve(__dirname, "src"),
+      core: path.resolve(__dirname, "../../core/src"),
     },
     extensions: [".js", ".ts", ".tsx", ".json"],
   },

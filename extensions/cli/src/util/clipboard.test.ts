@@ -48,12 +48,14 @@ vi.mock("./logger.js", () => ({
   },
 }));
 
+// Mock core/util/index.js (Prerequisite 0b and Issue 2 alignment)
+vi.mock("core/util/index.js", () => ({
+  getPowerShellCommand: vi.fn(),
+}));
+
 // Import after mocks are set up
 import { checkClipboardForImage, getClipboardImage } from "./clipboard.js";
-
-// Get the mock exec async function
-const getMockExecAsync = () =>
-  (vi.mocked(import("util")) as any).__mockExecAsync;
+import { getPowerShellCommand } from "core/util/index.js";
 
 describe("clipboard utilities", () => {
   let mockExecAsync: any;
@@ -93,18 +95,40 @@ describe("clipboard utilities", () => {
       expect(result).toBe(false);
     });
 
-    it("should detect image on Windows when count > 0", async () => {
+    it("should detect image on Windows using pwsh if available", async () => {
       const os = await import("os");
       vi.mocked(os.default.platform).mockReturnValue("win32");
+      vi.mocked(getPowerShellCommand).mockReturnValue("pwsh");
+
+      // Mock the actual clipboard check
       mockExecAsync.mockResolvedValue({ stdout: "1\n", stderr: "" });
 
       const result = await checkClipboardForImage();
       expect(result).toBe(true);
+      expect(mockExecAsync).toHaveBeenCalledWith(expect.stringContaining("pwsh"));
+    });
+
+    it("should detect image on Windows using powershell if pwsh is not available", async () => {
+      const os = await import("os");
+      vi.mocked(os.default.platform).mockReturnValue("win32");
+      vi.mocked(getPowerShellCommand).mockReturnValue("powershell");
+
+      // Mock the actual clipboard check using powershell
+      mockExecAsync.mockResolvedValue({ stdout: "1\n", stderr: "" });
+
+      const result = await checkClipboardForImage();
+      expect(result).toBe(true);
+      expect(mockExecAsync).toHaveBeenCalledWith(
+        expect.stringContaining("powershell"),
+      );
     });
 
     it("should detect no image on Windows when count is 0", async () => {
       const os = await import("os");
       vi.mocked(os.default.platform).mockReturnValue("win32");
+      vi.mocked(getPowerShellCommand).mockReturnValue("pwsh");
+
+      // Mock clipboard count
       mockExecAsync.mockResolvedValue({ stdout: "0\n", stderr: "" });
 
       const result = await checkClipboardForImage();
@@ -161,7 +185,7 @@ describe("clipboard utilities", () => {
       expect(fs.unlink).toHaveBeenCalled();
     });
 
-    it("should get image from clipboard on Windows", async () => {
+    it("should get image from clipboard on Windows using pwsh if available", async () => {
       const os = await import("os");
       const path = await import("path");
       const fs = await import("fs/promises");
@@ -171,12 +195,39 @@ describe("clipboard utilities", () => {
       vi.mocked(path.default.join).mockReturnValue(
         "C:\\temp\\continue-clipboard-123.png",
       );
+      vi.mocked(getPowerShellCommand).mockReturnValue("pwsh");
+
       mockExecAsync.mockResolvedValue({ stdout: "", stderr: "" });
       vi.mocked(fs.readFile).mockResolvedValue(mockImageBuffer);
       vi.mocked(fs.unlink).mockResolvedValue(undefined);
 
       const result = await getClipboardImage();
       expect(result).toEqual(mockImageBuffer);
+      expect(mockExecAsync).toHaveBeenCalledWith(expect.stringContaining("pwsh"));
+      expect(fs.unlink).toHaveBeenCalled();
+    });
+
+    it("should get image from clipboard on Windows using powershell if pwsh not available", async () => {
+      const os = await import("os");
+      const path = await import("path");
+      const fs = await import("fs/promises");
+
+      vi.mocked(os.default.platform).mockReturnValue("win32");
+      vi.mocked(os.default.tmpdir).mockReturnValue("C:\\temp");
+      vi.mocked(path.default.join).mockReturnValue(
+        "C:\\temp\\continue-clipboard-123.png",
+      );
+      vi.mocked(getPowerShellCommand).mockReturnValue("powershell");
+
+      mockExecAsync.mockResolvedValue({ stdout: "", stderr: "" });
+      vi.mocked(fs.readFile).mockResolvedValue(mockImageBuffer);
+      vi.mocked(fs.unlink).mockResolvedValue(undefined);
+
+      const result = await getClipboardImage();
+      expect(result).toEqual(mockImageBuffer);
+      expect(mockExecAsync).toHaveBeenCalledWith(
+        expect.stringContaining("powershell"),
+      );
       expect(fs.unlink).toHaveBeenCalled();
     });
 

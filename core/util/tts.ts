@@ -2,6 +2,7 @@ import { exec, ChildProcess } from "child_process";
 import os from "node:os";
 
 import { removeCodeBlocksAndTrim } from ".";
+import { getPowerShellCommand } from "./shell.js";
 
 import type { IMessenger } from "../protocol/messenger";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
@@ -54,7 +55,7 @@ export class TTS {
       case "win32":
         // Replace single quotes on windows
         TTS.handle = exec(
-          `powershell -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('${message.replace(
+          `${getPowerShellCommand()} -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('${message.replace(
             /'/g,
             "''",
           )}')"`,

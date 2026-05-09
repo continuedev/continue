@@ -2,6 +2,7 @@ import iconv from "iconv-lite";
 import childProcess from "node:child_process";
 import os from "node:os";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
+import { getPowerShellCommand } from "../../util/shell.js";
 
 // Default timeout for terminal commands (2 minutes)
 const DEFAULT_TOOL_TIMEOUT_MS = 120_000;
@@ -26,7 +27,7 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
   if (process.platform === "win32") {
     // Windows: Use PowerShell
     return {
-      shell: "powershell.exe",
+      shell: getPowerShellCommand(),
       args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
     };
   } else {
