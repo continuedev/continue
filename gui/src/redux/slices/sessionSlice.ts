@@ -202,6 +202,7 @@ export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 };
 
 type SessionState = {
+  activeAgentSessionId?: string;
   lastSessionId?: string;
   isSessionMetadataLoading: boolean;
   allSessionMetadata: (BaseSessionMetadata | RemoteSessionMetadata)[];
@@ -227,6 +228,7 @@ type SessionState = {
 };
 
 export const INITIAL_SESSION_STATE: SessionState = {
+  activeAgentSessionId: undefined,
   isSessionMetadataLoading: false,
   allSessionMetadata: [],
   history: [],
@@ -686,6 +688,7 @@ export const sessionSlice = createSlice({
     },
     newSession: (state, { payload }: PayloadAction<Session | undefined>) => {
       state.lastSessionId = state.id;
+      state.activeAgentSessionId = undefined;
 
       state.streamAborter.abort();
       state.streamAborter = new AbortController();
@@ -712,6 +715,12 @@ export const sessionSlice = createSlice({
     },
     updateSessionTitle: (state, { payload }: PayloadAction<string>) => {
       state.title = payload;
+    },
+    setActiveAgentSessionId: (
+      state,
+      { payload }: PayloadAction<string | undefined>,
+    ) => {
+      state.activeAgentSessionId = payload;
     },
     setIsSessionMetadataLoading: (
       state,
@@ -1081,6 +1090,7 @@ export const {
   updateToolCallOutput,
   setProcessedToolCallArgs,
   setMode,
+  setActiveAgentSessionId,
   setIsSessionMetadataLoading,
   setAllSessionMetadata,
   addSessionMetadata,

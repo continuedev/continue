@@ -7,6 +7,7 @@ import {
   appendWorkerScratchpadEntry,
   readWorkerScratchpad,
 } from "core/agent/coordinator/WorkerScratchpad.js";
+import { isAbortError } from "core/util/isAbortError.js";
 
 import { env } from "../env.js";
 import {
@@ -39,8 +40,10 @@ export interface SubAgentExecutionOptions {
  */
 export interface SubAgentResult {
   success: boolean;
+  status: "completed" | "failed" | "cancelled";
   response: string;
   error?: string;
+  cancelled?: boolean;
 }
 
 /**
@@ -251,6 +254,28 @@ export async function executeSubAgent(
         false, // Not compacting
       );
 
+      if (abortController.signal.aborted) {
+        const response = "Subagent execution was cancelled before completion.";
+
+        if (scratchpadPath) {
+          await appendWorkerScratchpadEntry(scratchpadPath, parentSessionId, {
+            agentName: model?.name ?? "subagent",
+            prompt,
+            response,
+            status: "cancelled",
+            profile,
+          });
+        }
+
+        return {
+          success: false,
+          status: "cancelled",
+          response,
+          error: response,
+          cancelled: true,
+        };
+      }
+
       // The last message (mostly) contains the important output to be submitted back to the main agent
       const lastMessage = chatHistory.at(-1);
       const response =
@@ -268,13 +293,14 @@ export async function executeSubAgent(
           agentName: model?.name ?? "subagent",
           prompt,
           response,
-          success: true,
+          status: "completed",
           profile,
         });
       }
 
       return {
         success: true,
+        status: "completed",
         response,
       };
     } finally {
@@ -299,25 +325,32 @@ export async function executeSubAgent(
       );
     }
   } catch (error: any) {
+    const wasCancelled = abortController.signal.aborted || isAbortError(error);
+    const response = wasCancelled
+      ? "Subagent execution was cancelled before completion."
+      : error.message;
+
     if (scratchpadPath) {
       await appendWorkerScratchpadEntry(scratchpadPath, parentSessionId, {
         agentName: subAgent.model?.name ?? "subagent",
         prompt,
-        response: error.message,
-        success: false,
+        response,
+        status: wasCancelled ? "cancelled" : "failed",
         profile,
       });
     }
 
     logger.error("Subagent execution failed", {
       agent: subAgent.model?.name,
-      error: error.message,
+      error: response,
     });
 
     return {
       success: false,
-      response: "",
-      error: error.message,
+      status: wasCancelled ? "cancelled" : "failed",
+      response,
+      error: response,
+      cancelled: wasCancelled,
     };
   }
 }

@@ -1,4 +1,3 @@
-import { ConfigYaml, parseConfigYaml } from "@yutoagentic/config-yaml";
 import {
   ArrowPathIcon,
   ChevronDownIcon,
@@ -11,6 +10,7 @@ import {
   StopCircleIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
+import { ConfigYaml, parseConfigYaml } from "@yutoagentic/config-yaml";
 import { MCPConnectionStatus, MCPServerStatus } from "core";
 import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import { useContext, useMemo, useState } from "react";
@@ -480,7 +480,7 @@ export function ToolsSection() {
   return (
     <>
       <ConfigHeader
-        title="Tools"
+        title="Tools & MCPs"
         subtext="Manage MCP servers and tool policies"
         className="mb-2"
       />

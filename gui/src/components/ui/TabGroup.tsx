@@ -6,6 +6,7 @@ interface TabOption {
   label: string;
   component: React.ReactNode;
   icon: React.ReactNode;
+  keywords?: string[];
 }
 
 interface TabGroupProps {
@@ -32,7 +33,7 @@ export function TabGroup({
       {showTopDivider && <Divider />}
 
       {label && (
-        <div className="text-description-muted text-2xs mb-1 ml-1.5 hidden font-medium md:block md:pt-1">
+        <div className="text-description-muted mb-1.5 ml-2 hidden text-[11px] font-semibold uppercase tracking-[0.08em] md:block md:pt-1">
           {label}
         </div>
       )}
@@ -42,6 +43,7 @@ export function TabGroup({
           key={tab.id}
           label={tab.label}
           icon={tab.icon}
+          tabId={tab.id}
           isActive={activeTab === tab.id}
           onClick={() => onTabClick(tab.id)}
         />

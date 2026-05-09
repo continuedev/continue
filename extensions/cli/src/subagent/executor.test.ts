@@ -234,4 +234,40 @@ describe("executeSubAgent", () => {
       parentPermissionsState,
     );
   });
+
+  it("records cancelled workers explicitly so the coordinator can continue later", async () => {
+    mockStreamChatResponse.mockImplementationOnce(
+      async (
+        _chatHistory: any[],
+        _model: any,
+        _llmApi: any,
+        controller: AbortController,
+      ) => {
+        controller.abort();
+      },
+    );
+    const parentSessionId = "parent-session";
+
+    const result = await executeSubAgent({
+      agent: subAgent,
+      prompt: "Start the investigation and stop midway",
+      parentSessionId,
+      abortController: new AbortController(),
+    });
+
+    const scratchpadPath = path.join(
+      testContinueHome,
+      "coordinator",
+      parentSessionId,
+      "WORKER_SCRATCHPAD.md",
+    );
+    const scratchpad = await fs.readFile(scratchpadPath, "utf8");
+
+    expect(result.success).toBe(false);
+    expect(result.status).toBe("cancelled");
+    expect(result.cancelled).toBe(true);
+    expect(result.response).toContain("cancelled before completion");
+    expect(scratchpad).toContain("Status: cancelled");
+    expect(scratchpad).toContain("cancelled before completion");
+  });
 });

@@ -11,6 +11,7 @@ import {
   MessageContent,
   RangeInFile,
   RangeInFileWithContents,
+  Session,
   SetCodeToEditPayload,
   ShowFilePayload,
 } from "../";
@@ -115,7 +116,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
 
   focusContinueSessionId: [{ sessionId: string | undefined }, void];
   newSession: [undefined, void];
-  loadAgentSession: [{ session: any }, void];
+  loadAgentSession: [{ session: Session; agentSessionId: string }, void];
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];
   "jetbrains/editorInsetRefresh": [undefined, void];
@@ -125,6 +126,10 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   incrementFtc: [undefined, void];
   openOnboardingCard: [undefined, void];
   applyCodeFromChat: [undefined, void];
+  "vscode/showBridgeDialog": [
+    VSCodeBridgeDialogRequest,
+    VSCodeBridgeDialogResponse,
+  ];
   updateApplyState: [ApplyState, void];
   exitEditMode: [undefined, void];
   focusEdit: [undefined, void];

@@ -29,13 +29,24 @@ describe("UserInput Keyboard Shortcuts", () => {
       toolPermissionService.switchMode("verify");
       expect(toolPermissionService.getCurrentMode()).toBe("verify");
 
+      // Cycle to coordinator
+      toolPermissionService.switchMode("coordinator");
+      expect(toolPermissionService.getCurrentMode()).toBe("coordinator");
+
       // Cycle back to normal
       toolPermissionService.switchMode("normal");
       expect(toolPermissionService.getCurrentMode()).toBe("normal");
     });
 
     it("should cycle through all modes sequentially", () => {
-      const modes = ["normal", "plan", "auto", "explore", "verify"] as const;
+      const modes = [
+        "normal",
+        "plan",
+        "auto",
+        "explore",
+        "verify",
+        "coordinator",
+      ] as const;
 
       // Test cycling through all modes
       for (let i = 0; i < modes.length * 2; i++) {

@@ -144,10 +144,13 @@ export const subagentTool = async (): Promise<Tool> => {
 
       logger.debug("subagent result", { result });
 
+      const primaryOutput = result.response || result.error || "";
+      const status = result.status ?? (result.success ? "completed" : "failed");
+
       const output = [
-        result.response,
+        primaryOutput,
         "<task_metadata>",
-        `status: ${result.success ? "completed" : "failed"}`,
+        `status: ${status}`,
         "</task_metadata>",
       ]
         .filter(Boolean)

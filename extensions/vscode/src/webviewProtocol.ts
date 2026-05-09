@@ -12,6 +12,14 @@ import { handleLLMError } from "./util/errorHandling";
 export class VsCodeWebviewProtocol
   implements IMessenger<FromWebviewProtocol, ToWebviewProtocol>
 {
+  private pendingRequests = new Map<
+    string,
+    {
+      resolve: (value: any) => void;
+      dispose: () => void;
+    }
+  >();
+
   listeners = new Map<
     keyof FromWebviewProtocol,
     ((message: Message) => any)[]
@@ -46,9 +54,15 @@ export class VsCodeWebviewProtocol
     return this._webview;
   }
 
-  set webview(webView: vscode.Webview) {
+  set webview(webView: vscode.Webview | undefined) {
     this._webview = webView;
     this._webviewListener?.dispose();
+    this._webviewListener = undefined;
+
+    if (!webView) {
+      this.cancelPendingRequests();
+      return;
+    }
 
     const handleMessage = async (msg: Message): Promise<void> => {
       if (!("messageType" in msg) || !("messageId" in msg)) {
@@ -170,6 +184,7 @@ export class VsCodeWebviewProtocol
     messageType: T,
     data: ToWebviewProtocol[T][0],
     retry: boolean = true,
+    timeoutMs?: number,
   ): Promise<ToWebviewProtocol[T][1]> {
     const messageId = uuidv4();
     return new Promise(async (resolve) => {
@@ -189,17 +204,54 @@ export class VsCodeWebviewProtocol
       this.send(messageType, data, messageId);
 
       if (this.webview) {
+        const settle = (value: ToWebviewProtocol[T][1]) => {
+          const pending = this.pendingRequests.get(messageId);
+          if (!pending) {
+            return;
+          }
+
+          this.pendingRequests.delete(messageId);
+          pending.dispose();
+          pending.resolve(value);
+        };
+
+        let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
         const disposable = this.webview.onDidReceiveMessage(
           (msg: Message<ToWebviewProtocol[T][1]>) => {
             if (msg.messageId === messageId) {
-              resolve(msg.data);
-              disposable?.dispose();
+              settle(msg.data);
             }
           },
         );
+
+        if (timeoutMs && timeoutMs > 0) {
+          timeoutHandle = setTimeout(() => {
+            settle(undefined as ToWebviewProtocol[T][1]);
+          }, timeoutMs);
+        }
+
+        this.pendingRequests.set(messageId, {
+          resolve,
+          dispose: () => {
+            if (timeoutHandle) {
+              clearTimeout(timeoutHandle);
+            }
+            disposable?.dispose();
+          },
+        });
       } else if (!retry) {
         resolve(undefined);
       }
     });
+  }
+
+  private cancelPendingRequests(): void {
+    for (const [messageId, pending] of Array.from(
+      this.pendingRequests.entries(),
+    )) {
+      this.pendingRequests.delete(messageId);
+      pending.dispose();
+      pending.resolve(undefined);
+    }
   }
 }

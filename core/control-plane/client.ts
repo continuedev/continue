@@ -10,6 +10,12 @@ import {
 } from "@yutoagentic/config-yaml";
 import fetch, { RequestInit, Response } from "node-fetch";
 
+import type {
+  VSCodeBridgePermissionCancellation,
+  VSCodeBridgePermissionResponse,
+  VSCodeBridgePermissionResult,
+  VSCodeBridgeStateSnapshot,
+} from "../agent/contracts/index.js";
 import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
 import {
   BaseSessionMetadata,
@@ -19,11 +25,7 @@ import {
 } from "../index.js";
 import { Logger } from "../util/Logger.js";
 
-import {
-  ControlPlaneSessionInfo,
-  HubSessionInfo,
-  isOnPremSession,
-} from "./AuthTypes.js";
+import { ControlPlaneSessionInfo, isOnPremSession } from "./AuthTypes.js";
 import { getControlPlaneEnv } from "./env.js";
 
 export interface PolicyResponse {
@@ -630,12 +632,9 @@ export class ControlPlaneClient {
    * @param agentSessionId - The ID of the agent session
    * @returns The agent's session state including history, workspace, and branch
    */
-  public async getAgentState(agentSessionId: string): Promise<{
-    session: Session;
-    isProcessing: boolean;
-    messageQueueLength: number;
-    pendingPermission: any;
-  } | null> {
+  public async getAgentState(
+    agentSessionId: string,
+  ): Promise<VSCodeBridgeStateSnapshot | null> {
     if (!(await this.isSignedIn())) {
       return null;
     }
@@ -648,17 +647,42 @@ export class ControlPlaneClient {
         },
       );
 
-      const result = (await resp.json()) as {
-        session: Session;
-        isProcessing: boolean;
-        messageQueueLength: number;
-        pendingPermission: any;
-      };
+      const result = (await resp.json()) as VSCodeBridgeStateSnapshot;
       return result;
     } catch (e) {
       Logger.error(e, {
         context: "control_plane_get_agent_state",
         agentSessionId,
+      });
+      return null;
+    }
+  }
+
+  public async respondToAgentPermission(
+    agentSessionId: string,
+    response:
+      | VSCodeBridgePermissionResponse
+      | VSCodeBridgePermissionCancellation,
+  ): Promise<VSCodeBridgePermissionResult | null> {
+    if (!(await this.isSignedIn())) {
+      return null;
+    }
+
+    try {
+      const resp = await this.requestAndHandleError(
+        `agents/${agentSessionId}/permission`,
+        {
+          method: "POST",
+          body: JSON.stringify(response),
+        },
+      );
+
+      return (await resp.json()) as VSCodeBridgePermissionResult;
+    } catch (e) {
+      Logger.error(e, {
+        context: "control_plane_respond_to_agent_permission",
+        agentSessionId,
+        requestId: response.requestId,
       });
       return null;
     }

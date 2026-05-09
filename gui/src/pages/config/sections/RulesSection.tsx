@@ -1,4 +1,3 @@
-import { parseConfigYaml } from "@yutoagentic/config-yaml";
 import {
   ArrowsPointingOutIcon,
   BookmarkIcon as BookmarkOutline,
@@ -7,6 +6,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
+import { parseConfigYaml } from "@yutoagentic/config-yaml";
 import {
   BrowserSerializedContinueConfig,
   RuleSource,
@@ -541,7 +541,10 @@ function RulesSubSection() {
 export function RulesSection() {
   return (
     <>
-      <ConfigHeader title="Rules" />
+      <ConfigHeader
+        title="Rules & Prompts"
+        subtext="Manage reusable instructions, prompts, and slash-command behaviors for your agent."
+      />
 
       <div className="space-y-6">
         <RulesSubSection />

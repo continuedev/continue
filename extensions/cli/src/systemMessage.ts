@@ -9,6 +9,7 @@ import { processRule } from "./hubLoader.js";
 import { PermissionMode } from "./permissions/types.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
 import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
+import { loadMarkdownSkills, type Skill } from "./util/loadMarkdownSkills.js";
 
 /**
  * Check if current directory is a git repository
@@ -150,6 +151,43 @@ export function loadMarkdownRulesWithMetadata(): RuleObject[] {
   return rules;
 }
 
+function formatCoordinatorSkillGuide(skills: Skill[]): string {
+  const workerSkills = skills.filter(
+    (skill) =>
+      skill.context === "fork" ||
+      !!skill.agent ||
+      (skill.allowedTools?.length ?? 0) > 0 ||
+      (skill.paths?.length ?? 0) > 0,
+  );
+
+  if (workerSkills.length === 0) {
+    return "";
+  }
+
+  const lines = ["Available worker-capable skills:"];
+  for (const skill of workerSkills.slice(0, 8)) {
+    const metadata = [];
+    if (skill.context) {
+      metadata.push(`context=${skill.context}`);
+    }
+    if (skill.agent) {
+      metadata.push(`agent=${skill.agent}`);
+    }
+    if (skill.allowedTools?.length) {
+      metadata.push(`allowedTools=${skill.allowedTools.join(", ")}`);
+    }
+    if (skill.paths?.length) {
+      metadata.push(`paths=${skill.paths.join(", ")}`);
+    }
+
+    const suffix = metadata.length > 0 ? ` [${metadata.join(" | ")}]` : "";
+    const whenToUse = skill.whenToUse ? ` When to use: ${skill.whenToUse}` : "";
+    lines.push(`- ${skill.name}: ${skill.description}${suffix}${whenToUse}`);
+  }
+
+  return lines.join("\n");
+}
+
 /**
  * Load and construct a comprehensive system message with base message and rules section
  * @param additionalRules - Additional rules from --rule flags
@@ -224,6 +262,18 @@ export async function constructSystemMessage(
   } else if (mode === "verify") {
     systemMessage +=
       '\n<context name="verifyMode">You are operating in _Verify Mode_. Prioritize validation, review, and risk detection: identify bugs, regressions, missing tests, and incorrect assumptions. Present findings first by severity with concrete references. Do not perform direct file edits in this mode; ask the user to switch modes if implementation is required.</context>\n';
+  } else if (mode === "coordinator") {
+    const { skills } = await loadMarkdownSkills();
+    const skillGuide = formatCoordinatorSkillGuide(skills);
+
+    systemMessage +=
+      '\n<context name="coordinatorMode">You are operating in _Coordinator Mode_. Act as the orchestrator: break the work into focused delegations, launch workers with the subagent tool using the `coordinator-worker` profile, and give each worker one concrete objective, scope boundaries, constraints, and expected output. Reuse the shared worker scratchpad: read prior findings before dispatching more work, avoid duplicate worker tasks, and synthesize worker results before deciding the next step. Prefer smaller worker tasks over one large opaque delegation, and tell workers when a relevant skill should be loaded for the delegated task.';
+
+    if (skillGuide) {
+      systemMessage += `\n\n${skillGuide}`;
+    }
+
+    systemMessage += "</context>\n";
   } else {
     // Check if commit signature is disabled via environment variable
     if (!process.env.CONTINUE_CLI_DISABLE_COMMIT_SIGNATURE) {

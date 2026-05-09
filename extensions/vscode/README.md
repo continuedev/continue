@@ -47,6 +47,10 @@
 
 ![autocomplete](docs/images/autocomplete.gif)
 
+## Background Agent Permissions
+
+When you open a background agent session locally, the extension now checks for any pending tool approval before loading the refreshed session. If the agent is waiting on a permission decision, VS Code shows a dialog, then sends the approval, rejection, or dismissal back to the background session through the shared bridge contract.
+
 </div>
 
 ## License

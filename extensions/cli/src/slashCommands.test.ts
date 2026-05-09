@@ -19,10 +19,24 @@ vi.mock("./services/index.js", () => ({
     config: {
       getState: vi.fn(),
     },
+    toolPermissions: {
+      switchMode: vi.fn(),
+      getState: vi.fn(() => ({
+        currentMode: "normal",
+        permissions: { policies: [] },
+      })),
+    },
   },
   reloadService: vi.fn(),
   SERVICE_NAMES: {
     AUTH: "AUTH",
+    TOOL_PERMISSIONS: "TOOL_PERMISSIONS",
+  },
+}));
+
+vi.mock("./services/ServiceContainer.js", () => ({
+  serviceContainer: {
+    set: vi.fn(),
   },
 }));
 
@@ -133,7 +147,27 @@ describe("slashCommands", () => {
       expect(result?.output).toContain("Special Characters:");
       expect(result?.output).toContain("@");
       expect(result?.output).toContain("/");
+      expect(result?.output).toContain("/coordinator");
       expect(result?.exit).toBeUndefined();
+    });
+
+    it("should handle /coordinator command", async () => {
+      const { services, SERVICE_NAMES } = await import("./services/index.js");
+      const { serviceContainer } = await import(
+        "./services/ServiceContainer.js"
+      );
+
+      const result = await handleSlashCommands("/coordinator", mockAssistant);
+
+      expect(services.toolPermissions.switchMode).toHaveBeenCalledWith(
+        "coordinator",
+      );
+      expect(serviceContainer.set).toHaveBeenCalledWith(
+        SERVICE_NAMES.TOOL_PERMISSIONS,
+        expect.objectContaining({ currentMode: "normal" }),
+      );
+      expect(result?.output).toContain("Switched mode to coordinator.");
+      expect(result?.output).toContain("`coordinator-worker` profile");
     });
 
     it("should handle /info command when not authenticated", async () => {

@@ -25,6 +25,11 @@ export class ContinueGUIWebviewViewProvider
     this.webviewProtocol.webview = webviewView.webview;
     this._webviewView = webviewView;
     this._webview = webviewView.webview;
+    this._webviewView.onDidDispose(() => {
+      this._webviewView = undefined;
+      this._webview = undefined;
+      this.webviewProtocol.webview = undefined;
+    });
     webviewView.webview.html = this.getSidebarContent(
       this.extensionContext,
       webviewView,

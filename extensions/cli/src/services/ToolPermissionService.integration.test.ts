@@ -120,4 +120,50 @@ describe("ToolPermissionService E2E", () => {
       expect(result).toStrictEqual(firstResult);
     });
   });
+
+  it("should apply coordinator guardrails and restore original policies when returning to normal mode", async () => {
+    await service.initialize({
+      allow: ["customAllowedTool"],
+      exclude: ["customExcludedTool"],
+    });
+
+    service.switchMode("coordinator");
+    let permissions = service.getPermissions();
+
+    expect(
+      permissions.policies.some(
+        (policy) =>
+          policy.tool === "Bash(rg*)" && policy.permission === "allow",
+      ),
+    ).toBe(true);
+    expect(
+      permissions.policies.some(
+        (policy) =>
+          policy.tool === "Bash(git commit*)" &&
+          policy.permission === "exclude",
+      ),
+    ).toBe(true);
+    expect(
+      permissions.policies.some(
+        (policy) => policy.tool === "customAllowedTool",
+      ),
+    ).toBe(false);
+
+    service.switchMode("normal");
+    permissions = service.getPermissions();
+
+    expect(
+      permissions.policies.some(
+        (policy) =>
+          policy.tool === "customAllowedTool" && policy.permission === "allow",
+      ),
+    ).toBe(true);
+    expect(
+      permissions.policies.some(
+        (policy) =>
+          policy.tool === "customExcludedTool" &&
+          policy.permission === "exclude",
+      ),
+    ).toBe(true);
+  });
 });

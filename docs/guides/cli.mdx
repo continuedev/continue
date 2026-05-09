@@ -43,6 +43,19 @@ Use '@' to give it file context, or '/' to run slash commands.
 
 If you want to resume a previous conversation, run `yt --resume`.
 
+## Modes
+
+In the interactive CLI, use `/mode` to switch execution profiles without restarting the session:
+
+- `normal`: default edit-and-run behavior
+- `plan`: read-only investigation
+- `auto`: continuous execution with fewer confirmation stops
+- `explore`: reconnaissance-focused analysis
+- `verify`: review and validation
+- `coordinator`: delegate work to subagents while keeping direct writes blocked on the coordinator
+
+`/coordinator` is a shortcut for `/mode coordinator`.
+
 ## How to Use Headless Mode (`-p` flag)
 
 In headless mode, `yt` will only output its final response, making it perfect for Unix Philosophy-style scripting and automation. For example, you could pipe your git diff into `yt` to generate a commit message, and write this to a file:
@@ -85,6 +98,8 @@ yt --ask Bash(curl*)
 # Never use the Fetch tool
 yt --exclude Fetch
 ```
+
+Coordinator mode applies a stricter built-in policy: it auto-allows common read-only shell commands such as `rg` and `git status`, blocks common mutating shell commands, and keeps direct file edits on delegated workers rather than the coordinator itself.
 
 ## API Key Authentication
 

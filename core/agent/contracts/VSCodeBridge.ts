@@ -13,10 +13,24 @@ export interface VSCodeBridgePermissionResponse {
   approved: boolean;
 }
 
-export interface VSCodeBridgePermissionResult {
-  success: true;
-  approved: boolean;
+export interface VSCodeBridgePermissionCancellation {
+  requestId: string;
+  reason?: string;
 }
+
+export type VSCodeBridgePermissionResult =
+  | {
+      success: true;
+      requestId: string;
+      approved: boolean;
+    }
+  | {
+      success: false;
+      requestId: string;
+      approved: false;
+      cancelled: true;
+      reason?: string;
+    };
 
 export interface VSCodeBridgeDialogOption {
   title: string;
@@ -58,5 +72,19 @@ export function isVSCodeBridgePermissionResponse(
   return (
     typeof candidate.requestId === "string" &&
     typeof candidate.approved === "boolean"
+  );
+}
+
+export function isVSCodeBridgePermissionCancellation(
+  value: unknown,
+): value is VSCodeBridgePermissionCancellation {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.requestId === "string" &&
+    (candidate.reason === undefined || typeof candidate.reason === "string")
   );
 }

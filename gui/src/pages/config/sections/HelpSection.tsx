@@ -8,7 +8,6 @@ import {
 import { useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Shortcut from "../../../components/gui/Shortcut";
-import { Card } from "../../../components/ui";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { setOnboardingCard } from "../../../redux/slices/uiSlice";
@@ -17,6 +16,7 @@ import { isJetBrains } from "../../../util";
 import { ROUTES } from "../../../util/navigation";
 import { ConfigHeader } from "../components/ConfigHeader";
 import { ConfigRow } from "../components/ConfigRow";
+import { SettingsPanel } from "../components/SettingsPanel";
 
 interface KeyboardShortcutProps {
   shortcut: string;
@@ -27,7 +27,7 @@ interface KeyboardShortcutProps {
 function KeyboardShortcut(props: KeyboardShortcutProps) {
   return (
     <div
-      className={`flex flex-col items-start p-3 sm:flex-row sm:items-center ${props.isEven ? "" : "bg-vsc-editor-background/50"}`}
+      className={`flex flex-col items-start px-4 py-3 sm:flex-row sm:items-center ${props.isEven ? "" : "bg-vsc-input-background/35"}`}
     >
       <div className="w-full flex-grow pb-2 pr-4 sm:w-auto sm:pb-0">
         <span className="block break-words text-sm">{props.description}:</span>
@@ -172,126 +172,118 @@ export function HelpSection() {
 
   return (
     <div className="flex flex-col">
-      <ConfigHeader title="Help Center" />
-      <div className="space-y-6">
-        {/* Resources */}
-        <div>
-          <h3 className="mb-3 text-base font-medium">Resources</h3>
-          <Card className="!p-0">
-            <div className="flex flex-col">
-              <ConfigRow
-                title="Documentation"
-                description="Learn how to configure and use Continue"
-                icon={LinkIcon}
-                onClick={() =>
-                  ideMessenger.post("openUrl", "https://docs.yutoagentic.dev/")
-                }
-              />
+      <ConfigHeader
+        title="Help & Docs"
+        subtext="Open documentation, troubleshooting tools, onboarding flows, and common keyboard shortcuts."
+      />
+      <div className="space-y-8">
+        <SettingsPanel
+          title="Resources"
+          description="Documentation, issue reporting, and community channels."
+        >
+          <ConfigRow
+            title="Documentation"
+            description="Learn how to configure and use Continue"
+            icon={LinkIcon}
+            onClick={() =>
+              ideMessenger.post("openUrl", "https://docs.yutoagentic.dev/")
+            }
+          />
+          <ConfigRow
+            title="Have an issue?"
+            description="Let us know on GitHub and we'll do our best to resolve it"
+            icon={LinkIcon}
+            onClick={() =>
+              ideMessenger.post(
+                "openUrl",
+                "https://github.com/continuedev/continue/issues/new/choose",
+              )
+            }
+          />
+          <ConfigRow
+            title="Join the community!"
+            description="Join us on GitHub Discussions to stay up-to-date on the latest developments"
+            icon={LinkIcon}
+            onClick={() =>
+              ideMessenger.post(
+                "openUrl",
+                "https://github.com/continuedev/continue/discussions",
+              )
+            }
+          />
+        </SettingsPanel>
 
-              <ConfigRow
-                title="Have an issue?"
-                description="Let us know on GitHub and we'll do our best to resolve it"
-                icon={LinkIcon}
-                onClick={() =>
-                  ideMessenger.post(
-                    "openUrl",
-                    "https://github.com/continuedev/continue/issues/new/choose",
-                  )
-                }
-              />
+        <SettingsPanel
+          title="Tools"
+          description="Utilities for usage monitoring, session inspection, and onboarding."
+        >
+          <ConfigRow
+            title="Token usage"
+            description="Daily token usage across models"
+            icon={TableCellsIcon}
+            onClick={() => navigate(ROUTES.STATS)}
+          />
 
-              <ConfigRow
-                title="Join the community!"
-                description="Join us on GitHub Discussions to stay up-to-date on the latest developments"
-                icon={LinkIcon}
-                onClick={() =>
-                  ideMessenger.post(
-                    "openUrl",
-                    "https://github.com/continuedev/continue/discussions",
-                  )
-                }
-              />
-            </div>
-          </Card>
-        </div>
+          {currentSession.history.length > 0 && !currentSession.isStreaming && (
+            <ConfigRow
+              title="View current session history"
+              description="Open the current chat session file for troubleshooting"
+              icon={NumberedListIcon}
+              onClick={handleViewSessionData}
+            />
+          )}
 
-        {/* Tools */}
-        <div>
-          <h3 className="mb-3 text-base font-medium">Tools</h3>
-          <Card className="!p-0">
-            <div className="flex flex-col">
-              <ConfigRow
-                title="Token usage"
-                description="Daily token usage across models"
-                icon={TableCellsIcon}
-                onClick={() => navigate(ROUTES.STATS)}
-              />
+          <ConfigRow
+            title="Quickstart"
+            description="Reopen the quickstart and tutorial file"
+            icon={DocumentArrowUpIcon}
+            onClick={async () => {
+              navigate("/");
+              await dispatch(
+                saveCurrentSession({
+                  openNewSession: true,
+                  generateTitle: true,
+                }),
+              );
+              dispatch(
+                setOnboardingCard({
+                  show: true,
+                  activeTab: undefined,
+                }),
+              );
+              ideMessenger.post("showTutorial", undefined);
+            }}
+          />
 
-              {currentSession.history.length > 0 &&
-                !currentSession.isStreaming && (
-                  <ConfigRow
-                    title="View current session history"
-                    description="Open the current chat session file for troubleshooting"
-                    icon={NumberedListIcon}
-                    onClick={handleViewSessionData}
-                  />
-                )}
+          {import.meta.env.DEV && (
+            <ConfigRow
+              title="Theme Test Page"
+              description="Development page for testing themes"
+              icon={PaintBrushIcon}
+              onClick={async () => {
+                navigate(ROUTES.THEME);
+              }}
+            />
+          )}
+        </SettingsPanel>
 
-              <ConfigRow
-                title="Quickstart"
-                description="Reopen the quickstart and tutorial file"
-                icon={DocumentArrowUpIcon}
-                onClick={async () => {
-                  navigate("/");
-                  // Used to clear the chat panel before showing onboarding card
-                  await dispatch(
-                    saveCurrentSession({
-                      openNewSession: true,
-                      generateTitle: true,
-                    }),
-                  );
-                  dispatch(
-                    setOnboardingCard({
-                      show: true,
-                      activeTab: undefined,
-                    }),
-                  );
-                  ideMessenger.post("showTutorial", undefined);
-                }}
-              />
-
-              {import.meta.env.DEV && (
-                <ConfigRow
-                  title="Theme Test Page"
-                  description="Development page for testing themes"
-                  icon={PaintBrushIcon}
-                  onClick={async () => {
-                    navigate(ROUTES.THEME);
-                  }}
+        <SettingsPanel
+          title="Keyboard shortcuts"
+          description="Common chat, edit, diff, and autocomplete shortcuts for your IDE."
+        >
+          <div>
+            {shortcuts.map((shortcut, i) => {
+              return (
+                <KeyboardShortcut
+                  key={i}
+                  shortcut={shortcut.shortcut}
+                  description={shortcut.description}
+                  isEven={i % 2 === 0}
                 />
-              )}
-            </div>
-          </Card>
-        </div>
-
-        {/* Keyboard Shortcuts */}
-        <div>
-          <h3 className="mb-3 text-base font-medium">Keyboard Shortcuts</h3>
-          <Card className="!p-0">
-            <div className="overflow-hidden rounded-md border border-gray-600">
-              {shortcuts.map((shortcut, i) => {
-                return (
-                  <KeyboardShortcut
-                    key={i}
-                    shortcut={shortcut.shortcut}
-                    description={shortcut.description}
-                    isEven={i % 2 === 0}
-                  />
-                );
-              })}
-            </div>
-          </Card>
-        </div>
+              );
+            })}
+          </div>
+        </SettingsPanel>
       </div>
     </div>
   );

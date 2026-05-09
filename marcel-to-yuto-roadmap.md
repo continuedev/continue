@@ -1,6 +1,6 @@
 # Marcel-to-Yuto Implementation Roadmap
 
-Last updated: 2026-05-08
+Last updated: 2026-05-09
 
 ## Goal
 
@@ -42,33 +42,31 @@ These are already present and should be extended rather than replaced:
 
 ## Progress Snapshot
 
-- Completed: WS0, WS1, WS2, WS3, WS4, WS6, and WS8.
-- In progress: WS5 and WS7.
-- Remaining: WS9 plus the unfinished parts of WS5 and WS7.
+- Completed: WS0, WS1, WS2, WS3, WS4, WS5, WS6, WS7, WS8, and WS9.
+- Remaining: no tracked Marcel-parity workstreams.
 
 ## Workstream Status
 
-| Workstream | Status      | Current State                                                                 | Remaining Effort  |
-| ---------- | ----------- | ----------------------------------------------------------------------------- | ----------------- |
-| WS0        | Completed   | Shared flags and task and turn contracts landed.                              | none              |
-| WS1        | Completed   | Semantic memory selection and memdir helpers landed in `core/agent/memdir`.   | none              |
-| WS2        | Completed   | CLI turn lifecycle hooks now own post-tool and turn-end orchestration.        | none              |
-| WS3        | Completed   | Session memory and AutoDream now share lifecycle helpers across core and CLI. | none              |
-| WS4        | Completed   | Structured task notifications and shell stall detection are in place.         | none              |
-| WS5        | In progress | CLI coordinator scratchpad flow landed; core subagent parity and UX remain.   | 2-4 engineer-days |
-| WS6        | Completed   | CLI statusline and vim mode landed behind feature flags.                      | none              |
-| WS7        | In progress | Typed bridge contracts and `vscode/showDialog` landed; callbacks remain.      | 2-4 engineer-days |
-| WS8        | Completed   | Cached microcompaction landed in the CLI compaction path.                     | none              |
-| WS9        | Not started | Docs, wider tests, and rollout cleanup are still pending.                     | 2-3 engineer-days |
+| Workstream | Status    | Current State                                                                                                                                                                                                                                       | Remaining Effort |
+| ---------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| WS0        | Completed | Shared flags and task and turn contracts landed.                                                                                                                                                                                                    | none             |
+| WS1        | Completed | Semantic memory selection and memdir helpers landed in `core/agent/memdir`.                                                                                                                                                                         | none             |
+| WS2        | Completed | CLI turn lifecycle hooks now own post-tool and turn-end orchestration.                                                                                                                                                                              | none             |
+| WS3        | Completed | Session memory and AutoDream now share lifecycle helpers across core and CLI.                                                                                                                                                                       | none             |
+| WS4        | Completed | Structured task notifications and shell stall detection are in place.                                                                                                                                                                               | none             |
+| WS5        | Completed | Coordinator scratchpad, worker guidance, CLI controls, and cancel-resume semantics landed.                                                                                                                                                          | none             |
+| WS6        | Completed | CLI statusline and vim mode landed behind feature flags.                                                                                                                                                                                            | none             |
+| WS7        | Completed | Typed bridge contracts, reusable callbacks, dialog launchers, cancel-safe webview requests, GUI-rendered bridge permission dialogs with extension fallback, focused open-agent-local coverage, and the GUI handoff into the live agent view landed. | none             |
+| WS8        | Completed | Cached microcompaction landed in the CLI compaction path.                                                                                                                                                                                           | none             |
+| WS9        | Completed | Docs are synced, rollout guidance is documented, and the main CLI/core test gaps are covered.                                                                                                                                                       | none             |
 
 Original kickoff estimate: about 40-57 engineer-days.
 
-Remaining estimate: about 6-11 engineer-days.
+Remaining estimate: none.
 
 Remaining wall-clock:
 
-- 1 engineer: about 1.5-2.5 weeks
-- 2 engineers with WS5 and WS7 in parallel: about 4-7 working days plus cleanup
+- none
 
 ## WS0: Shared Flags And Contracts
 
@@ -305,7 +303,7 @@ Create:
 
 ### Status
 
-In progress.
+Completed.
 
 ### Outcome
 
@@ -316,6 +314,11 @@ Move Yuto's coordinator mode from policy-only support to a stronger orchestratio
 - `core/agent/coordinator/WorkerScratchpad.ts` and `core/agent/coordinator/CoordinatorContext.ts` now define the shared scratchpad path and worker system-message wrapper.
 - `extensions/cli/src/subagent/executor.ts` now creates, reads, and appends a shared `WORKER_SCRATCHPAD.md` for coordinator-managed workers.
 - `extensions/cli/src/tools/subagent.ts` and `extensions/cli/src/subagent/index.ts` now expose `coordinator-worker` as an explicit CLI profile.
+- `core/tools/implementations/subagent.ts` and `core/tools/definitions/subagent.ts` now thread the same coordinator scratchpad and worker profile through the built-in core subagent path.
+- `extensions/cli/src/systemMessage.ts` and `extensions/cli/src/util/loadMarkdownSkills.ts` now surface coordinator delegation guidance and worker-capable skill metadata.
+- `extensions/cli/src/slashCommands.ts`, `extensions/cli/src/permissions/defaultPolicies.ts`, and `extensions/cli/src/permissions/permissionChecker.ts` now expose coordinator mode as a clearer user workflow with explicit shell guardrails.
+- Coordinator-managed workers now record `cancelled` status explicitly and carry forward continuation guidance through the shared scratchpad.
+- Focused coverage landed in `core/agent/coordinator/CoordinatorContext.vitest.ts`, `core/tools/implementations/subagent.vitest.ts`, `extensions/cli/src/systemMessage.coordinator.test.ts`, `extensions/cli/src/subagent/executor.test.ts`, and related CLI permission tests.
 
 ### Concrete Files
 
@@ -333,7 +336,7 @@ Modify:
 
 Create:
 
-- `core/agent/coordinator/CoordinatorContext.test.ts`
+- none
 
 Already created:
 
@@ -354,15 +357,11 @@ Already created:
 
 ### Remaining Implementation
 
-- Thread the same scratchpad and worker profile through `core/tools/implementations/subagent.ts` and `core/tools/definitions/subagent.ts` so non-CLI callers use the same coordinator context.
-- Add `core/agent/coordinator/CoordinatorContext.test.ts`.
-- Push worker-specific delegation guidance into `extensions/cli/src/systemMessage.ts` and `extensions/cli/src/util/loadMarkdownSkills.ts`.
-- Finish coordinator UX and control flow in `extensions/cli/src/slashCommands.ts`, `extensions/cli/src/permissions/defaultPolicies.ts`, and `extensions/cli/src/permissions/permissionChecker.ts`.
-- Make stop and continue semantics first-class for coordinator-managed workers instead of leaving them implicit in the stream path.
+- none.
 
 ### Effort
 
-- 2-4 engineer-days remaining
+- none
 
 ### Exit Criteria
 
@@ -417,7 +416,7 @@ Create:
 
 ### Status
 
-In progress.
+Completed.
 
 ### Outcome
 
@@ -428,23 +427,31 @@ Port the editor-side patterns Marcel uses for permission requests and one-off UI
 - `core/agent/contracts/VSCodeBridge.ts` now defines shared permission, dialog, and state snapshot contracts.
 - `extensions/cli/src/commands/serve.ts`, `extensions/cli/src/commands/serve.helpers.ts`, and `extensions/cli/src/session.ts` now use typed bridge payloads.
 - `core/protocol/ideWebview.ts`, `extensions/vscode/src/extension/VsCodeMessenger.ts`, and `extensions/vscode/src/extension/showVSCodeBridgeDialog.ts` now support a typed `vscode/showDialog` request.
+- `extensions/vscode/src/bridge/PermissionCallbacks.ts` now provides a reusable request, response, and cancellation registry for bridge permission callbacks.
+- `extensions/vscode/src/ui/dialogLaunchers.ts` now provides a reusable launcher surface for bridge dialogs.
+- `extensions/vscode/src/webviewProtocol.ts` and `extensions/vscode/src/ContinueGUIWebviewViewProvider.ts` now cancel pending bridge requests when the GUI webview is disposed.
+- `extensions/vscode/src/extension/VsCodeMessenger.ts` now routes supported bridge dialogs through the GUI webview first, with timeout-backed fallback to the extension dialog launcher.
+- `gui/src/hooks/ParallelListeners.tsx` and `gui/src/components/dialogs/VSCodeBridgeDialog.tsx` now render supported bridge dialogs in-webview and return typed responses to the extension.
+- Focused coverage now exists for the launcher, timeout cleanup, and GUI dialog response path.
 
 ### Concrete Files
 
 Modify:
 
 - `extensions/vscode/src/webviewProtocol.ts`
-- `extensions/vscode/src/ContinueGUIWebviewViewProvider.ts`
-- `extensions/vscode/src/ContinueConsoleWebviewViewProvider.ts`
-- `core/protocol/core.ts`
-- `core/protocol/passThrough.ts`
 - `extensions/vscode/src/extension/VsCodeMessenger.ts`
+- `gui/src/hooks/ParallelListeners.tsx`
+- `core/protocol/ideWebview.ts`
 
 Create:
 
 - `extensions/vscode/src/bridge/PermissionCallbacks.ts`
 - `extensions/vscode/src/ui/dialogLaunchers.ts`
-- `extensions/vscode/src/bridge/PermissionCallbacks.test.ts`
+- `extensions/vscode/src/bridge/PermissionCallbacks.vitest.ts`
+- `extensions/vscode/src/ui/dialogLaunchers.vitest.ts`
+- `extensions/vscode/src/webviewProtocol.vitest.ts`
+- `gui/src/components/dialogs/VSCodeBridgeDialog.tsx`
+- `gui/src/components/Layout.bridgeDialog.test.tsx`
 
 Already created:
 
@@ -459,18 +466,15 @@ Already created:
 
 - Add typed request IDs and typed responses for permission flows.
 - Extract dialog invocation patterns into launcher helpers instead of wiring every flow inline.
-- Keep the first pass transport-agnostic so later remote-session work can build on it.
+- Prefer a webview-owned dialog when the GUI is available, but keep the extension launcher as the fallback path for unsupported dialog kinds or unavailable responders.
 
 ### Remaining Implementation
 
-- Add reusable permission callback registration with request, response, and cancellation semantics.
-- Move one-off dialog launching behind a reusable launcher surface that future bridge flows can share.
-- Finish transport-agnostic permission and cancellation plumbing in `extensions/vscode/src/webviewProtocol.ts`, the webview providers, `core/protocol/core.ts`, and `core/protocol/passThrough.ts`.
-- Add cancellation-aware tests around permission callbacks and bridge responses.
+- none
 
 ### Effort
 
-- 2-4 engineer-days remaining
+- none
 
 ### Exit Criteria
 
@@ -573,23 +577,15 @@ Test Files To Add Or Extend:
 
 ## Remaining Delivery Order
 
-1. Finish WS5 core and tooling parity so coordinator workflows are shared beyond the CLI executor.
-2. Finish WS7 permission callback and cancellation semantics.
-3. Finish WS9 docs, tests, and rollout cleanup after WS5 and WS7 stabilize.
+None. The tracked roadmap workstreams are complete.
 
 ## Remaining Parallelization Plan
 
-- Engineer A: WS5 core subagent parity, coordinator tests, and worker guidance.
-- Engineer B: WS7 permission callbacks, cancellation semantics, and bridge transport cleanup.
-- Shared cleanup: WS9 docs, tests, and rollout defaults after WS5 and WS7 are stable.
-
-The highest-risk remaining merge point is between protocol-level bridge changes in WS7 and any later docs or rollout defaults that describe user-visible permission flows.
+None.
 
 ## Next PRs To Open
 
-1. `feat(coordinator): thread scratchpad and worker guidance through core subagent flows`
-2. `feat(vscode-bridge): add permission callbacks and cancellation semantics`
-3. `docs(rollout): document parity features, flags, and regression coverage`
+None required for the Marcel-parity roadmap.
 
 ## Explicit Deferrals
 
@@ -597,7 +593,7 @@ These should inform design but should not be ported one-for-one in the first pas
 
 - Marcel terminal-specific bridge rendering in `marcel/src/bridge/bridgeUI.ts`
 - QR flows and terminal install wizards that are specific to Marcel's runtime model
-- Full remote session transport parity before WS7 lands
+- Full remote session transport parity beyond the landed webview-first permission flow
 - Any direct copy of Marcel's entire task graph implementation without first stabilizing Yuto's existing task and background-job services
 
 ## Definition Of Done For The Roadmap

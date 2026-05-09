@@ -192,4 +192,33 @@ describe("subagentTool", () => {
     const [options] = vi.mocked(executeSubAgent).mock.calls[0];
     expect(options.profile).toBe("coordinator-worker");
   });
+
+  it("surfaces cancelled worker status in task metadata", async () => {
+    vi.mocked(getAgentNames).mockReturnValue(["code-agent"]);
+    vi.mocked(getSubagent).mockReturnValue({
+      model: { name: "test-model" },
+    } as any);
+    vi.mocked(executeSubAgent).mockResolvedValue({
+      success: false,
+      status: "cancelled",
+      response: "Subagent execution was cancelled before completion.",
+      error: "Subagent execution was cancelled before completion.",
+      cancelled: true,
+    } as any);
+
+    const tool = await subagentTool();
+
+    const result = await tool.run(
+      {
+        prompt: "Start work and then stop",
+        subagent_name: "code-agent",
+      },
+      { toolCallId: "tool-call-id", parallelToolCallCount: 1 },
+    );
+
+    expect(result).toContain(
+      "Subagent execution was cancelled before completion.",
+    );
+    expect(result).toContain("status: cancelled");
+  });
 });

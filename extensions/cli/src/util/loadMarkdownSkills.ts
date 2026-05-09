@@ -14,6 +14,13 @@ export interface Skill {
   path: string;
   content: string;
   files: string[];
+  whenToUse?: string;
+  argumentHint?: string;
+  allowedTools?: string[];
+  userInvocable?: boolean;
+  paths?: string[];
+  context?: "inline" | "fork";
+  agent?: string;
 }
 
 export interface LoadSkillsResult {
@@ -24,9 +31,43 @@ export interface LoadSkillsResult {
 const skillFrontmatterSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
+  when_to_use: z.string().min(1).optional(),
+  context: z.enum(["inline", "fork"]).optional(),
+  agent: z.string().min(1).optional(),
+  "argument-hint": z.string().min(1).optional(),
+  "allowed-tools": z.union([z.string(), z.array(z.string())]).optional(),
+  paths: z.union([z.string(), z.array(z.string())]).optional(),
+  "user-invocable": z.union([z.boolean(), z.string()]).optional(),
 });
 
 const SKILLS_DIR = "skills";
+
+function parseBooleanFrontmatterValue(
+  value: boolean | string | undefined,
+): boolean | undefined {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (["true", "1", "yes", "y", "on"].includes(normalized)) {
+    return true;
+  }
+  if (["false", "0", "no", "n", "off"].includes(normalized)) {
+    return false;
+  }
+
+  return undefined;
+}
+
+function parseStringList(value: string | string[] | undefined): string[] {
+  if (!value) return [];
+  const parts = Array.isArray(value) ? value : value.split(",");
+  return parts.map((item) => item.trim()).filter(Boolean);
+}
 
 /**get the relative path if the filePath is within the current working directory
  * otherwise return the absolute path
@@ -126,6 +167,18 @@ export async function loadMarkdownSkills(): Promise<LoadSkillsResult> {
             content: markdown,
             path: getRelativePath(cwd, skillFilePath),
             files: filesInSkillsDirectory,
+            whenToUse: validatedFrontmatter.when_to_use,
+            argumentHint: validatedFrontmatter["argument-hint"],
+            allowedTools: parseStringList(
+              validatedFrontmatter["allowed-tools"],
+            ),
+            userInvocable:
+              parseBooleanFrontmatterValue(
+                validatedFrontmatter["user-invocable"],
+              ) ?? true,
+            paths: parseStringList(validatedFrontmatter.paths),
+            context: validatedFrontmatter.context,
+            agent: validatedFrontmatter.agent,
           });
         } catch (error) {
           errors.push({

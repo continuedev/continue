@@ -228,6 +228,7 @@ const UserInput: React.FC<UserInputProps> = ({
       "auto",
       "explore",
       "verify",
+      "coordinator",
     ];
     const currentMode = services.toolPermissions.getCurrentMode();
     const currentIndex = modes.indexOf(currentMode);

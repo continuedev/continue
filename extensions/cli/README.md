@@ -92,6 +92,19 @@ yt ls --json
 - `yt remote`: Launch a remote instance
 - `yt serve`: Start HTTP server mode
 
+### Modes and Permissions
+
+In interactive mode, use `/mode` to switch between execution profiles:
+
+- `normal`: default edit-and-run behavior
+- `plan`: read-only investigation with no file edits or shell execution
+- `auto`: continuous tool execution with fewer confirmation stops
+- `explore`: reconnaissance-focused analysis
+- `verify`: review and validation
+- `coordinator`: delegate work to subagents while keeping direct writes blocked on the coordinator
+
+`/coordinator` is a shortcut for `/mode coordinator`. In coordinator mode, the CLI auto-allows common read-only shell probes such as `rg` and `git status`, blocks common mutating shell commands, and expects delegated workers to use the `coordinator-worker` profile so they share the same scratchpad.
+
 ### Session Listing (`yt ls`)
 
 Shows recent sessions, limited by screen height to ensure it fits on your terminal.

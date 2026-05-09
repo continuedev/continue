@@ -1,8 +1,36 @@
-import { ContextItem, ToolCall } from "../..";
-import { applyToolOverrides } from "../applyToolOverrides";
 import { ToolImpl } from ".";
+import { ContextItem } from "../..";
+import {
+  buildCoordinatorWorkerSystemMessage,
+  getCoordinatorScratchpadPath,
+} from "../../agent/coordinator/CoordinatorContext";
+import {
+  appendWorkerScratchpadEntry,
+  readWorkerScratchpad,
+} from "../../agent/coordinator/WorkerScratchpad";
+import { isAbortError } from "../../util/isAbortError";
+import { getContinueGlobalPath } from "../../util/paths";
+import { applyToolOverrides } from "../applyToolOverrides";
 
 const DEFAULT_SUBAGENT_MAX_TURNS = 25;
+type SubagentProfile = "explore" | "verify" | "coordinator-worker";
+
+function getSubagentProfile(args: unknown): SubagentProfile | undefined {
+  const profile =
+    typeof (args as { profile?: unknown } | undefined)?.profile === "string"
+      ? (args as { profile: string }).profile.trim()
+      : "";
+
+  if (
+    profile === "explore" ||
+    profile === "verify" ||
+    profile === "coordinator-worker"
+  ) {
+    return profile;
+  }
+
+  return undefined;
+}
 
 function findSubagentModel(
   config: import("../..").ContinueConfig,
@@ -10,7 +38,9 @@ function findSubagentModel(
 ) {
   if (!requestedName) {
     return (
-      config.selectedModelByRole.subagent ?? config.modelsByRole.subagent[0] ?? null
+      config.selectedModelByRole.subagent ??
+      config.modelsByRole.subagent[0] ??
+      null
     );
   }
 
@@ -23,19 +53,25 @@ function findSubagentModel(
 
 function summarizeSubagentResult(
   prompt: string,
-  result: Awaited<ReturnType<typeof import("../../agent/AgentRunner")["runAgent"]>>,
+  result: Awaited<
+    ReturnType<(typeof import("../../agent/AgentRunner"))["runAgent"]>
+  >,
 ): ContextItem[] {
   const lastAssistantMessage = [...result.messages]
     .reverse()
     .find(
       (message) =>
-        message.role === "assistant" && typeof message.content === "string" && message.content.trim().length > 0,
+        message.role === "assistant" &&
+        typeof message.content === "string" &&
+        message.content.trim().length > 0,
     );
 
   const finalResponse =
     lastAssistantMessage && typeof lastAssistantMessage.content === "string"
       ? lastAssistantMessage.content
-      : "Subagent completed without a final textual response.";
+      : result.stopReason === "aborted"
+        ? "Subagent was cancelled before producing a final response."
+        : "Subagent completed without a final textual response.";
 
   return [
     {
@@ -46,12 +82,32 @@ function summarizeSubagentResult(
   ];
 }
 
+function buildChildSystemMessage(args: {
+  baseSystemMessage?: string;
+  coordinatorInstructions?: string;
+}): string | undefined {
+  const segments = [
+    args.baseSystemMessage,
+    args.coordinatorInstructions,
+  ].filter(
+    (segment): segment is string => !!segment && segment.trim().length > 0,
+  );
+
+  return segments.length > 0 ? segments.join("\n\n") : undefined;
+}
+
 export const subagentToolImpl: ToolImpl = async (args, extras) => {
   const prompt = typeof args?.prompt === "string" ? args.prompt.trim() : "";
   const requestedName =
-    typeof args?.subagent_name === "string" ? args.subagent_name.trim() : undefined;
+    typeof args?.subagent_name === "string"
+      ? args.subagent_name.trim()
+      : undefined;
   const maxTurns =
-    typeof args?.maxTurns === "number" ? args.maxTurns : DEFAULT_SUBAGENT_MAX_TURNS;
+    typeof args?.maxTurns === "number"
+      ? args.maxTurns
+      : DEFAULT_SUBAGENT_MAX_TURNS;
+  const profile = getSubagentProfile(args);
+  const parentSessionId = (extras as any)._agentSessionId as string | undefined;
 
   if (!prompt) {
     return [
@@ -102,23 +158,70 @@ export const subagentToolImpl: ToolImpl = async (args, extras) => {
     subagentModel.toolOverrides,
   ).tools;
 
-  const { runAgent } = await import("../../agent/AgentRunner");
-  const result = await runAgent({
-    prompt,
-    llm: subagentModel,
-    tools: overriddenTools,
-    toolExtras: {
-      ...extras,
-      llm: subagentModel,
-      config: subagentConfig,
-    },
-    systemMessage:
+  const scratchpadPath =
+    profile === "coordinator-worker" && parentSessionId
+      ? getCoordinatorScratchpadPath(getContinueGlobalPath(), parentSessionId)
+      : undefined;
+
+  const coordinatorInstructions = scratchpadPath
+    ? buildCoordinatorWorkerSystemMessage({
+        scratchpadPath,
+        scratchpadContent: await readWorkerScratchpad(
+          scratchpadPath,
+          parentSessionId,
+        ),
+      })
+    : undefined;
+
+  const systemMessage = buildChildSystemMessage({
+    baseSystemMessage:
       subagentModel.baseAgentSystemMessage ??
       subagentModel.baseChatSystemMessage ??
       undefined,
-    maxTurns,
-    sessionMemory: false,
+    coordinatorInstructions,
   });
 
-  return summarizeSubagentResult(prompt, result);
+  const { runAgent } = await import("../../agent/AgentRunner");
+  try {
+    const result = await runAgent({
+      prompt,
+      llm: subagentModel,
+      tools: overriddenTools,
+      toolExtras: {
+        ...extras,
+        llm: subagentModel,
+        config: subagentConfig,
+      },
+      systemMessage,
+      maxTurns,
+      sessionMemory: false,
+    });
+
+    const summary = summarizeSubagentResult(prompt, result);
+
+    if (scratchpadPath && parentSessionId) {
+      await appendWorkerScratchpadEntry(scratchpadPath, parentSessionId, {
+        agentName: subagentModel.title || subagentModel.model,
+        prompt,
+        response: summary[0]?.content ?? "Subagent completed.",
+        status: result.stopReason === "aborted" ? "cancelled" : "completed",
+        profile,
+      });
+    }
+
+    return summary;
+  } catch (error) {
+    if (scratchpadPath && parentSessionId) {
+      const message = error instanceof Error ? error.message : String(error);
+      await appendWorkerScratchpadEntry(scratchpadPath, parentSessionId, {
+        agentName: subagentModel.title || subagentModel.model,
+        prompt,
+        response: message,
+        status: isAbortError(error) ? "cancelled" : "failed",
+        profile,
+      });
+    }
+
+    throw error;
+  }
 };

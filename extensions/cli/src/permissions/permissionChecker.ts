@@ -9,6 +9,14 @@ import {
   ToolPermissions,
 } from "./types.js";
 
+function normalizeBashCommand(command: unknown): string | undefined {
+  if (typeof command !== "string") {
+    return undefined;
+  }
+
+  return command.trim().replace(/\s+/g, " ");
+}
+
 /**
  * Checks if a tool name matches a pattern.
  * Supports wildcards (*) for pattern matching.
@@ -27,9 +35,11 @@ export function matchesToolPattern(
   if (bashCommandMatch) {
     // Check if this is a bash/terminal tool
     const isBashTool = toolName === "Bash";
-    if (isBashTool && toolArguments?.command) {
+    const normalizedCommand = normalizeBashCommand(toolArguments?.command);
+
+    if (isBashTool && normalizedCommand) {
       const commandPattern = bashCommandMatch[1];
-      const command = toolArguments.command;
+      const command = normalizedCommand;
 
       // Handle command patterns with wildcards
       if (commandPattern.includes("*") || commandPattern.includes("?")) {

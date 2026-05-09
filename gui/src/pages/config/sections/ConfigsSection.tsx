@@ -2,11 +2,12 @@ import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { AssistantIcon } from "../../../components/AssistantAndOrgListbox/AssistantIcon";
 import { ToolTip } from "../../../components/gui/Tooltip";
-import { Button, Card, Divider, EmptyState } from "../../../components/ui";
+import { Button, EmptyState } from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppSelector } from "../../../redux/hooks";
 import { ConfigHeader } from "../components/ConfigHeader";
+import { SettingsPanel } from "../components/SettingsPanel";
 
 export function ConfigsSection() {
   const { profiles, selectedProfile } = useAuth();
@@ -26,38 +27,46 @@ export function ConfigsSection() {
   return (
     <>
       <ConfigHeader
-        title="Configs"
+        title="Agents & Configs"
+        subtext="Manage assistant profiles, workspace configs, and the active agent for this session."
         onAddClick={handleAddConfig}
         addButtonTooltip="Add config"
       />
 
-      <Card>
+      <SettingsPanel>
         {profiles && profiles.length > 0 ? (
-          profiles.map((profile, index) => {
+          profiles.map((profile) => {
             const isSelected = profile.id === selectedProfile?.id;
             const errors = isSelected ? configError : profile.errors;
             const hasFatalErrors =
               errors && errors.some((error) => error.fatal);
             const hasErrors = errors && errors.length > 0;
             return (
-              <div key={profile.id}>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-baseline gap-3">
+              <div key={profile.id} className="px-4 py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
                     <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center">
                       <AssistantIcon assistant={profile} />
                     </div>
                     <div className="flex flex-1 flex-col gap-2">
-                      <h3
-                        className={`my-2 text-sm font-medium ${
-                          hasFatalErrors
-                            ? "text-error"
-                            : hasErrors
-                              ? "text-yellow-500"
-                              : ""
-                        }`}
-                      >
-                        {profile.title}
-                      </h3>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3
+                          className={`my-0 text-sm font-medium ${
+                            hasFatalErrors
+                              ? "text-error"
+                              : hasErrors
+                                ? "text-yellow-500"
+                                : ""
+                          }`}
+                        >
+                          {profile.title}
+                        </h3>
+                        {isSelected && (
+                          <span className="bg-vsc-input-background text-description rounded-full px-2 py-0.5 text-[11px] font-medium">
+                            Active
+                          </span>
+                        )}
+                      </div>
                       {errors && errors.length > 0 && (
                         <div className="space-y-1 overflow-hidden">
                           {errors.map((error, errorIndex) => (
@@ -95,14 +104,13 @@ export function ConfigsSection() {
                     </Button>
                   </ToolTip>
                 </div>
-                {index < profiles.length - 1 && <Divider />}
               </div>
             );
           })
         ) : (
           <EmptyState message="No agents configured. Click the + button to add your first agent." />
         )}
-      </Card>
+      </SettingsPanel>
     </>
   );
 }

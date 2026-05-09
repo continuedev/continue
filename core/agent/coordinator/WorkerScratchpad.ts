@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+export type WorkerScratchpadStatus = "completed" | "failed" | "cancelled";
+
 function buildInitialScratchpad(parentSessionId: string): string {
   return [
     "# Coordinator Scratchpad",
@@ -43,18 +45,22 @@ export async function appendWorkerScratchpadEntry(
     agentName: string;
     prompt: string;
     response: string;
-    success: boolean;
+    success?: boolean;
+    status?: WorkerScratchpadStatus;
     profile?: string;
   },
 ): Promise<void> {
   await ensureWorkerScratchpad(scratchpadPath, parentSessionId);
+
+  const status =
+    entry.status ?? (entry.success === false ? "failed" : "completed");
 
   const timestamp = new Date().toISOString();
   const lines = [
     "",
     "",
     `## ${timestamp} | ${entry.agentName}`,
-    `Status: ${entry.success ? "completed" : "failed"}`,
+    `Status: ${status}`,
   ];
 
   if (entry.profile) {

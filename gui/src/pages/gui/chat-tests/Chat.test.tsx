@@ -71,3 +71,31 @@ test("should send a message and receive a response", async () => {
 
   await getElementByText(CONTENT);
 });
+
+test("should enter the live agent view when a remote agent session is loaded", async () => {
+  const { ideMessenger, store } = await renderWithProviders(<Chat />);
+
+  ideMessenger.responses["agent/status" as any] = {
+    status: "running",
+    totalTurns: 2,
+    messages: [],
+  };
+
+  await act(async () => {
+    ideMessenger.mockMessageToWebview("loadAgentSession", {
+      agentSessionId: "agent-session-123",
+      session: {
+        sessionId: "agent-session-123",
+        title: "Remote Agent",
+        history: [],
+        mode: "agent",
+      } as any,
+    });
+  });
+
+  await getElementByText("Running");
+  await getElementByText("Turn 2 / 50");
+  expect(store.getState().session.activeAgentSessionId).toBe(
+    "agent-session-123",
+  );
+});

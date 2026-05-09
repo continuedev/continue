@@ -251,6 +251,7 @@ Before enabling fully automated agents:
 1. **Test locally first** - Run agents with `yt` to verify behavior
 2. **Review CI logs** - Check what commands agents execute in your workflows
 3. **Start with read-only agents** - Begin with agents that analyze rather than modify
+4. **Use coordinator mode for delegation-heavy agents** - In interactive CLI sessions, switch to `/coordinator` so the top-level agent can spawn focused workers without taking direct write actions itself
 
 <Tip>
   For high-risk operations (like pushing commits or modifying infrastructure), consider requiring manual approval steps in your workflow.

@@ -36,6 +36,7 @@ import {
   cancelToolCall,
   ChatHistoryItemWithMessageId,
   newSession,
+  setActiveAgentSessionId,
   updateToolCallOutput,
 } from "../../redux/slices/sessionSlice";
 import { streamEditThunk } from "../../redux/thunks/edit";
@@ -117,8 +118,6 @@ export function Chat() {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
-  // Yuto agent session state
-  const [agentSessionId, setAgentSessionId] = useState<string | null>(null);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -137,6 +136,9 @@ export function Chat() {
     (state) => state.ui.hasDismissedExploreDialog,
   );
   const mode = useAppSelector((state) => state.session.mode);
+  const agentSessionId = useAppSelector(
+    (state) => state.session.activeAgentSessionId,
+  );
   const currentOrg = useAppSelector(selectCurrentOrg);
   const jetbrains = useMemo(() => {
     return isJetBrains();
@@ -208,7 +210,7 @@ export function Chat() {
               prompt: promptText,
             });
             if (res.status === "success") {
-              setAgentSessionId(res.content.sessionId);
+              dispatch(setActiveAgentSessionId(res.content.sessionId));
               if (editorToClearOnSend) {
                 editorToClearOnSend.commands.clearContent();
               }
@@ -558,7 +560,7 @@ export function Chat() {
           ) : mode === "agent" && agentSessionId ? (
             <AgentChatView
               sessionId={agentSessionId}
-              onSessionEnd={() => setAgentSessionId(null)}
+              onSessionEnd={() => dispatch(setActiveAgentSessionId(undefined))}
             />
           ) : (
             history.length === 0 && (

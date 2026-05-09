@@ -22,9 +22,9 @@ export function ConfigRow({
   className = "",
 }: ConfigRowProps) {
   const baseClasses =
-    "flex items-start justify-between rounded-md transition-colors px-4 py-3";
+    "flex items-start justify-between gap-4 px-4 py-4 text-left transition-colors";
   const interactiveClasses = onClick
-    ? "hover:bg-list-hover cursor-pointer"
+    ? "hover:bg-vsc-input-background/60 cursor-pointer"
     : "";
   const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
 
@@ -60,12 +60,16 @@ export function ConfigRow({
         data-config-row
       >
         <div className="flex flex-col">
-          <span className="text-sm font-medium">{title}</span>
-          <p className="mt-0.5 text-xs text-gray-500">{description}</p>
+          <span className="text-sm font-medium leading-5">{title}</span>
+          <p className="text-description-muted mt-1 text-xs leading-5">
+            {description}
+          </p>
         </div>
         <div className="flex items-center gap-4">
           {children}
-          {Icon && <Icon className="h-5 w-5 flex-shrink-0 text-gray-400" />}
+          {Icon && (
+            <Icon className="text-description-muted h-4 w-4 flex-shrink-0" />
+          )}
         </div>
       </Button>
     );
@@ -77,12 +81,16 @@ export function ConfigRow({
       data-config-row
     >
       <div className="flex flex-col">
-        <span className="text-sm font-medium">{title}</span>
-        <p className="mt-0.5 text-xs text-gray-500">{description}</p>
+        <span className="text-sm font-medium leading-5">{title}</span>
+        <p className="text-description-muted mt-1 text-xs leading-5">
+          {description}
+        </p>
       </div>
       <div className="flex items-center gap-4">
         {children}
-        {Icon && <Icon className="h-5 w-5 flex-shrink-0 text-gray-400" />}
+        {Icon && (
+          <Icon className="text-description-muted h-4 w-4 flex-shrink-0" />
+        )}
       </div>
     </div>
   );

@@ -4,12 +4,13 @@ import {
 } from "core/config/sharedConfig";
 import { useContext } from "react";
 import Alert from "../../../components/gui/Alert";
-import { Card, Divider } from "../../../components/ui";
+import { Divider } from "../../../components/ui";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateConfig } from "../../../redux/slices/configSlice";
 import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
 import { ConfigHeader } from "../components/ConfigHeader";
+import { SettingsPanel } from "../components/SettingsPanel";
 import { UserSetting } from "../components/UserSetting";
 import IndexingProgress from "../features/indexing";
 import { DocsSection } from "./DocsSection";
@@ -18,23 +19,20 @@ function CodebaseSubSection() {
   const config = useAppSelector((state) => state.config.config);
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="mb-0 text-sm font-semibold">@codebase index</h3>
+    <SettingsPanel
+      title="@codebase index"
+      description="Monitor the legacy codebase index while it remains available in this workspace."
+    >
+      <div className="px-4 py-4">
+        {config.disableIndexing ? (
+          <div className="p-1">
+            <p className="text-center font-semibold">Indexing is disabled</p>
+          </div>
+        ) : (
+          <IndexingProgress />
+        )}
       </div>
-
-      <Card>
-        <div className="py-2">
-          {config.disableIndexing ? (
-            <div className="p-1">
-              <p className="text-center font-semibold">Indexing is disabled</p>
-            </div>
-          ) : (
-            <IndexingProgress />
-          )}
-        </div>
-      </Card>
-    </div>
+    </SettingsPanel>
   );
 }
 
@@ -83,7 +81,10 @@ export function IndexingSettingsSection() {
 
   return (
     <>
-      <ConfigHeader title="Indexing" />
+      <ConfigHeader
+        title="Indexing & Docs"
+        subtext="Review the deprecated indexing flow and any remaining documentation retrieval settings."
+      />
 
       <Alert type="warning" className="mb-6">
         <div className="space-y-4">

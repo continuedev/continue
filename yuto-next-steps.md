@@ -1,8 +1,10 @@
 # Yuto Remaining Implementation Work
 
-Updated: 2026-05-08
+Updated: 2026-05-09
 
 This file tracks only the Marcel-parity work that is still open after the current implementation pass.
+
+There is no remaining Marcel-parity implementation work currently tracked.
 
 ## Already Landed
 
@@ -14,112 +16,38 @@ This file tracks only the Marcel-parity work that is still open after the curren
 - CLI statusline and vim mode
 - Cached microcompaction
 - Typed CLI serve bridge contracts and a first VS Code dialog bridge helper
-
-## WS5: Finish Coordinator Workflows
-
-Current state:
-
-- CLI subagent execution now creates and reuses a coordinator scratchpad.
-- Coordinator workers can run with an explicit `coordinator-worker` profile in the CLI tool surface.
-- Worker results and failures are appended to a shared `WORKER_SCRATCHPAD.md`.
-
-Remaining implementation:
-
-- Thread coordinator scratchpad support through the core built-in subagent path so non-CLI callers use the same shared context:
-  - `core/tools/implementations/subagent.ts`
-  - `core/tools/definitions/subagent.ts`
-- Add core tests for coordinator context and scratchpad formatting:
-  - `core/agent/coordinator/CoordinatorContext.test.ts`
-- Push worker-specific restrictions and delegation guidance into system-message construction instead of relying mostly on permission mode:
-  - `extensions/cli/src/systemMessage.ts`
-  - `extensions/cli/src/util/loadMarkdownSkills.ts`
-- Finish coordinator UX and control flow:
-  - `extensions/cli/src/slashCommands.ts`
-  - `extensions/cli/src/permissions/defaultPolicies.ts`
-  - `extensions/cli/src/permissions/permissionChecker.ts`
-- Make stop and continue semantics first-class for coordinator-managed subagents instead of leaving them implicit in the stream path.
-
-Exit gap:
-
-- Coordinator mode is no longer policy-only, but the shared worker context is still CLI-executor specific.
-- Worker skills and delegation guidance are not yet surfaced coherently to every worker.
-- Coordinator control semantics are not yet exposed as a clear user-facing workflow.
-
-Estimated remaining effort:
-
-- 2-4 engineer-days
+- Shared coordinator scratchpad support in both CLI and core subagent paths
+- Coordinator system-message guidance, worker-capable skill metadata, and coordinator CLI controls
+- Explicit cancelled-worker scratchpad status and resume guidance for coordinator-managed workers
+- VS Code bridge permission callback registry, shared dialog launcher surface, cancel-safe webview request cleanup, and a live remote permission response flow when opening agents locally
+- CLI, plan-mode, local-agent, and VS Code extension docs synced to the current coordinator and remote-permission behavior
+- Focused extension coverage for `openAgentLocally`, including sequential pending-permission draining before the refreshed session loads
+- `loadAgentSession` now carries the background agent session ID into the GUI so opening an agent locally enters the live `AgentChatView` instead of only loading history
 
 ## WS7: Finish VS Code Bridge Parity Foundation
 
-Current state:
+Completed.
 
-- Shared bridge contracts exist in `core/agent/contracts/VSCodeBridge.ts`.
-- CLI `/permission` and `/state` payloads are typed.
-- The VS Code extension can handle a typed `vscode/showDialog` request through `extensions/vscode/src/extension/showVSCodeBridgeDialog.ts`.
+Landed in the final WS7 pass:
 
-Remaining implementation:
-
-- Add reusable permission callback registration with request, response, and cancellation semantics:
-  - `extensions/vscode/src/bridge/PermissionCallbacks.ts`
-  - `extensions/vscode/src/bridge/PermissionCallbacks.test.ts`
-- Move one-off dialog launching behind a reusable launcher surface that future bridge flows can share:
-  - `extensions/vscode/src/ui/dialogLaunchers.ts`
-- Finish protocol plumbing for transport-agnostic permission flows:
-  - `extensions/vscode/src/webviewProtocol.ts`
-  - `extensions/vscode/src/ContinueGUIWebviewViewProvider.ts`
-  - `extensions/vscode/src/ContinueConsoleWebviewViewProvider.ts`
-  - `core/protocol/core.ts`
-  - `core/protocol/passThrough.ts`
-- Add cancellation-aware tests around permission callbacks and bridge responses.
-
-Exit gap:
-
-- Dialog requests exist, but reusable permission callbacks and cancel semantics are not finished.
-- The current dialog bridge is extension-side; the broader transport-agnostic bridge path is not fully wired.
-
-Estimated remaining effort:
-
-- 2-4 engineer-days
+- `extensions/vscode/src/extension/VsCodeMessenger.ts` now requests bridge warning and approval dialogs through the GUI webview first, with timeout-backed fallback to the extension launcher.
+- `extensions/vscode/src/webviewProtocol.ts` now supports timeout-backed request cleanup so an unavailable webview responder does not hang `openAgentLocally`.
+- `gui/src/hooks/ParallelListeners.tsx` and `gui/src/components/dialogs/VSCodeBridgeDialog.tsx` now render supported bridge dialogs inside the webview and return typed responses to the extension.
+- Focused coverage now exists in `extensions/vscode/src/extension/VsCodeMessenger.vitest.ts`, `extensions/vscode/src/webviewProtocol.vitest.ts`, and `gui/src/components/Layout.bridgeDialog.test.tsx`.
 
 ## WS9: Docs, Tests, And Rollout Cleanup
 
-Remaining docs:
+Completed.
 
-- `extensions/cli/README.md`
-- `extensions/vscode/README.md`
-- `docs/guides/cli.mdx`
-- `docs/guides/plan-mode-guide.mdx`
-- `docs/guides/run-agents-locally.mdx`
+Landed in this cleanup pass:
 
-Remaining test additions or extensions:
-
-- `extensions/cli/src/services/MemoryService.test.ts`
-- `extensions/cli/src/services/TaskStateService.test.ts`
-- `extensions/cli/src/services/ToolPermissionService.integration.test.ts`
-- `extensions/cli/src/ui/UserInput.keyboard.test.ts`
-- `core/agent/AgentRunner` tests
-- `extensions/vscode` protocol tests around permission callbacks
-
-Remaining rollout decisions:
-
-- Document which parity features remain behind flags and which can graduate to default-on.
-- Document fallback behavior for semantic memory selection, coordinator mode, bridge dialogs, and cached microcompaction.
-- Add a short regression recipe that covers the new coordinator and bridge surfaces together.
-
-Exit gap:
-
-- Core behavior is ahead of repo docs.
-- Test coverage exists for the new local slices, but repo-level rollout and docs are not finished.
-
-Estimated remaining effort:
-
-- 2-3 engineer-days
+- `docs/guides/coordinator-background-agent-rollout.mdx` now documents active vs definition-only rollout flags, fallback behavior, and a manual regression recipe for coordinator mode plus the background-agent handoff.
+- Docs navigation and guide discovery were updated in `docs/docs.json` and `docs/guides/overview.mdx`.
+- CLI and core coverage now exist for the coordinator, memory, task, keyboard, and open-agent-local slices that were previously tracked here.
 
 ## Suggested Execution Order
 
-1. Finish WS5 core and tooling parity so coordinator workflows are shared beyond the CLI executor.
-2. Finish WS7 permission callback and cancellation semantics.
-3. Finish WS9 docs, tests, and rollout cleanup after the behavior is stable.
+None. All Marcel-parity workstreams tracked in this file are complete.
 
 ## Not Remaining
 
@@ -129,3 +57,5 @@ Estimated remaining effort:
 - Cached microcompaction
 - Structured task notifications
 - First-pass bridge contracts and typed dialog helper
+- First live remote permission-response flow
+- Coordinator workflow parity

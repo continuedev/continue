@@ -15,6 +15,7 @@ import { getAllSlashCommands } from "./commands/commands.js";
 import { handleInit } from "./commands/init.js";
 import { handleInfoSlashCommand } from "./infoScreen.js";
 import { PermissionMode } from "./permissions/types.js";
+import { serviceContainer } from "./services/ServiceContainer.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
@@ -68,9 +69,23 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
     `    ${chalk.cyan("/mode")}      Switch mode: /mode <normal|plan|auto|explore|verify|coordinator>`,
     `    ${chalk.cyan("/explore")}   Switch to exploration-focused mode`,
     `    ${chalk.cyan("/verify")}    Switch to verification/review-focused mode`,
+    `    ${chalk.cyan("/coordinator")} Switch to delegation-focused coordinator mode`,
     `  Type ${chalk.cyan("!")} followed by a command to execute bash directly`,
   ].join("\n");
   return { output: helpMessage };
+}
+
+function getModeSwitchMessage(mode: PermissionMode): string {
+  switch (mode) {
+    case "coordinator":
+      return "Switched mode to coordinator. Direct writes stay blocked; delegate worker tasks with the `coordinator-worker` profile and use the shared scratchpad to coordinate progress.";
+    case "explore":
+      return "Switched mode to explore. Focus on read-heavy reconnaissance and context gathering.";
+    case "verify":
+      return "Switched mode to verify. Focus on validation, review, and regression detection.";
+    default:
+      return `Switched mode to ${mode}.`;
+  }
 }
 
 function switchMode(mode: PermissionMode): SlashCommandResult {
@@ -79,7 +94,7 @@ function switchMode(mode: PermissionMode): SlashCommandResult {
   serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, updatedState);
   return {
     exit: false,
-    output: `Switched mode to ${mode}.`,
+    output: getModeSwitchMessage(mode),
   };
 }
 
@@ -528,6 +543,7 @@ const commandHandlers: Record<string, CommandHandler> = {
   mode: (args) => handleMode(args),
   explore: () => switchMode("explore"),
   verify: () => switchMode("verify"),
+  coordinator: () => switchMode("coordinator"),
 };
 
 export async function handleSlashCommands(

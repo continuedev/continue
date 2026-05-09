@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ALL_BUILT_IN_TOOLS } from "src/tools/allBuiltIns.js";
 
+import { COORDINATOR_MODE_POLICIES } from "./defaultPolicies.js";
 import {
   checkToolPermission,
   matchesArguments,
@@ -159,6 +160,14 @@ describe("Permission Checker", () => {
         expect(
           matchesToolPattern("Bash", "Bash(git*commit*)", {
             command: "git commit -m 'test'",
+          }),
+        ).toBe(true);
+      });
+
+      it("should normalize Bash command whitespace before matching", () => {
+        expect(
+          matchesToolPattern("Bash", "Bash(git status*)", {
+            command: "   git    status   --short   ",
           }),
         ).toBe(true);
       });
@@ -515,6 +524,33 @@ describe("Permission Checker", () => {
       );
       expect(npmResult.permission).toBe("ask");
       expect(npmResult.matchedPolicy?.tool).toBe("Bash");
+    });
+
+    it("should enforce coordinator-specific Bash allow and exclude patterns", () => {
+      const permissions: ToolPermissions = {
+        policies: COORDINATOR_MODE_POLICIES,
+      };
+
+      const readOnlyResult = checkToolPermission(
+        { name: "Bash", arguments: { command: "  rg coordinator src  " } },
+        permissions,
+      );
+      expect(readOnlyResult.permission).toBe("allow");
+      expect(readOnlyResult.matchedPolicy?.tool).toBe("Bash(rg*)");
+
+      const destructiveResult = checkToolPermission(
+        { name: "Bash", arguments: { command: "git commit -m 'ship it'" } },
+        permissions,
+      );
+      expect(destructiveResult.permission).toBe("exclude");
+      expect(destructiveResult.matchedPolicy?.tool).toBe("Bash(git commit*)");
+
+      const unknownResult = checkToolPermission(
+        { name: "Bash", arguments: { command: "python -m pytest" } },
+        permissions,
+      );
+      expect(unknownResult.permission).toBe("ask");
+      expect(unknownResult.matchedPolicy?.tool).toBe("Bash");
     });
 
     it("should match argument patterns with glob patterns", () => {

@@ -70,11 +70,52 @@ export const AUTO_MODE_POLICIES: ToolPermissionPolicy[] = [
   { tool: "*", permission: "allow" },
 ];
 
+export const COORDINATOR_BLOCKED_BASH_PATTERNS = [
+  "rm*",
+  "mv*",
+  "cp*",
+  "touch*",
+  "mkdir*",
+  "rmdir*",
+  "chmod*",
+  "chown*",
+  "git apply*",
+  "git commit*",
+  "git push*",
+  "npm install*",
+  "pnpm install*",
+  "yarn add*",
+  "bun add*",
+];
+
+export const COORDINATOR_READ_ONLY_BASH_PATTERNS = [
+  "pwd*",
+  "ls*",
+  "cat*",
+  "head*",
+  "tail*",
+  "wc*",
+  "grep*",
+  "rg*",
+  "find*",
+  "fd*",
+  "sed*",
+  "awk*",
+  "cut*",
+  "sort*",
+  "uniq*",
+  "git status*",
+  "git diff*",
+  "git log*",
+  "git show*",
+  "git rev-parse*",
+];
+
 /**
  * Coordinator mode: The agent acts as an orchestrator that spawns and delegates
  * to worker agents. It can read/inspect code, run analysis tools, and invoke
- * the Subagent tool — but is blocked from directly writing files or running
- * destructive shell commands (those are delegated to workers).
+ * the Subagent tool. Direct file mutations are disabled, destructive shell
+ * commands are blocked, and common read-only shell probes are auto-allowed.
  */
 export const COORDINATOR_MODE_POLICIES: ToolPermissionPolicy[] = [
   // Coordination tools
@@ -93,7 +134,19 @@ export const COORDINATOR_MODE_POLICIES: ToolPermissionPolicy[] = [
   { tool: "Diff", permission: "allow" },
   { tool: "Fetch", permission: "allow" },
 
-  // Bash is restricted to read-only operations in coordinator mode
+  // Block common mutating shell commands outright.
+  ...COORDINATOR_BLOCKED_BASH_PATTERNS.map((pattern) => ({
+    tool: `Bash(${pattern})`,
+    permission: "exclude" as const,
+  })),
+
+  // Allow common read-only shell commands without confirmation.
+  ...COORDINATOR_READ_ONLY_BASH_PATTERNS.map((pattern) => ({
+    tool: `Bash(${pattern})`,
+    permission: "allow" as const,
+  })),
+
+  // All other shell commands still require confirmation in coordinator mode.
   { tool: "Bash", permission: "ask" },
 
   // Write tools are excluded — workers handle mutations

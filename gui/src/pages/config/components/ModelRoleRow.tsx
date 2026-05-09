@@ -1,5 +1,5 @@
-import { ModelRole } from "@yutoagentic/config-yaml";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { ModelRole } from "@yutoagentic/config-yaml";
 import { ModelDescription } from "core";
 import { ReactNode } from "react";
 import { ToolTip } from "../../../components/gui/Tooltip";
@@ -30,13 +30,13 @@ export function ModelRoleRow({
   shortcut,
 }: ModelRoleRowProps) {
   return (
-    <div className="py-6 first:pt-0 last:pb-0">
+    <div className="px-4 py-5 first:pt-4 last:pb-4">
       <div className="mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-base font-medium">{displayName}</span>
+          <span className="text-sm font-medium">{displayName}</span>
           {shortcut && shortcut}
         </div>
-        <p className="text-description mt-1 text-xs">{description}</p>
+        <p className="text-description mt-1 text-xs leading-5">{description}</p>
       </div>
       <div className="flex items-center gap-2">
         <div className="flex-1">

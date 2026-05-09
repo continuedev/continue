@@ -75,7 +75,7 @@ export function UserSetting(props: UserSettingProps) {
 
       case "number":
         return (
-          <div className="border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-border-focus flex w-20 items-center rounded-md border border-solid focus-within:ring-1">
+          <div className="border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-border-focus flex w-24 items-center rounded-lg border border-solid focus-within:ring-1">
             <input
               type="number"
               value={props.value}
@@ -116,7 +116,7 @@ export function UserSetting(props: UserSettingProps) {
               min={props.min ?? 0}
               max={props.max ?? 100}
               disabled={disabled}
-              className="text-vsc-foreground flex-1 border-none bg-transparent px-2 py-1 text-right outline-none focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="text-vsc-foreground flex-1 border-none bg-transparent px-3 py-2 text-right text-sm outline-none focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           </div>
         );
@@ -128,12 +128,12 @@ export function UserSetting(props: UserSettingProps) {
             onChange={props.onChange}
             disabled={disabled}
           >
-            <ListboxButton className="border-command-border !w-20 w-20 !flex-none justify-between !rounded-md px-2 py-1">
+            <ListboxButton className="border-command-border !w-28 w-28 !flex-none justify-between !rounded-lg px-3 py-2 text-sm">
               {props.options.find((opt) => opt.value === props.value)?.label ||
                 props.value}
               <ChevronDownIcon className="h-3 w-3" />
             </ListboxButton>
-            <ListboxOptions className="!w-20 !min-w-0">
+            <ListboxOptions className="!w-28 !min-w-0">
               {props.options.map((option) => (
                 <ListboxOption key={option.value} value={option.value}>
                   {option.label}
@@ -154,7 +154,7 @@ export function UserSetting(props: UserSettingProps) {
             >
               <div className="flex items-center gap-2">
                 <div
-                  className={`border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-border-focus flex w-full flex-row overflow-hidden rounded-md border border-solid focus-within:ring-1 ${
+                  className={`border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-border-focus flex w-full flex-row overflow-hidden rounded-lg border border-solid focus-within:ring-1 ${
                     props.isDirty
                       ? !props.isValid
                         ? "outline outline-red-500"
@@ -168,7 +168,7 @@ export function UserSetting(props: UserSettingProps) {
                     onChange={(e) => props.onChange(e.target.value)}
                     placeholder={props.placeholder}
                     disabled={disabled}
-                    className="text-vsc-foreground flex-1 border-none bg-inherit px-1.5 py-1 outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
+                    className="text-vsc-foreground flex-1 border-none bg-inherit px-3 py-2 text-sm outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
                   />
                 </div>
                 {props.isDirty && (
@@ -191,14 +191,14 @@ export function UserSetting(props: UserSettingProps) {
         }
         return (
           <div
-            className={`border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-border-focus flex w-full flex-row overflow-hidden rounded-md border border-solid focus-within:ring-1 ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+            className={`border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-border-focus flex w-full flex-row overflow-hidden rounded-lg border border-solid focus-within:ring-1 ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
           >
             <input
               type="text"
               value={props.value}
               onChange={(e) => props.onChange(e.target.value)}
               disabled={disabled}
-              className="text-vsc-foreground flex-1 border-none bg-inherit px-1.5 py-1 outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
+              className="text-vsc-foreground flex-1 border-none bg-inherit px-3 py-2 text-sm outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
             />
           </div>
         );
@@ -213,23 +213,27 @@ export function UserSetting(props: UserSettingProps) {
 
   if (isInputType) {
     return (
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col">
-          <span className="text-sm font-medium">{title}</span>
-          <div className="mt-0.5 text-xs text-gray-500">{description}</div>
+      <div className="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-start md:justify-between md:gap-6">
+        <div className="flex flex-1 flex-col">
+          <span className="text-sm font-medium leading-5">{title}</span>
+          <div className="text-description-muted mt-1 text-xs leading-5">
+            {description}
+          </div>
         </div>
-        {renderControl()}
+        <div className="w-full md:max-w-sm">{renderControl()}</div>
       </div>
     );
   }
 
   return (
-    <div className="flex items-start justify-start gap-4">
+    <div className="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-start md:justify-between md:gap-6">
       <div className="flex flex-1 flex-col">
-        <span className="text-sm font-medium">{title}</span>
-        <div className="mt-0.5 text-xs text-gray-500">{description}</div>
+        <span className="text-sm font-medium leading-5">{title}</span>
+        <div className="text-description-muted mt-1 text-xs leading-5">
+          {description}
+        </div>
       </div>
-      {renderControl()}
+      <div className="md:flex-shrink-0">{renderControl()}</div>
     </div>
   );
 }

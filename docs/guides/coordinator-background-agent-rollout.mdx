@@ -1,0 +1,81 @@
+---
+title: "Coordinator and Background Agent Rollout"
+---
+
+Use this guide when you need to decide which Marcel-parity features should stay behind flags, which ones can be treated as live, and how to manually verify the coordinator and background-agent handoff paths before changing rollout defaults.
+
+## Enable Flags
+
+Use `~/.yutoagentic/feature-flags.json` for persistent local overrides:
+
+```json
+{
+  "SEMANTIC_MEMORY_SELECTION": true,
+  "CLI_VIM_MODE": true,
+  "CACHED_MICROCOMPACTION": true
+}
+```
+
+Use environment variables for one-off runs:
+
+```bash
+CONTINUE_FLAG_SEMANTIC_MEMORY_SELECTION=1 \
+CONTINUE_FLAG_CLI_VIM_MODE=1 \
+CONTINUE_FLAG_CACHED_MICROCOMPACTION=1 \
+yt
+```
+
+The current flag prefix is still `CONTINUE_FLAG_`.
+
+## Rollout Status
+
+| Feature | Current runtime gate | Default | Fallback when disabled | Rollout recommendation |
+| --- | --- | --- | --- | --- |
+| Semantic memory selection | Active. `extensions/cli/src/services/MemoryService.ts` checks `SEMANTIC_MEMORY_SELECTION` before calling the selector model. | Off | Memory injection falls back to header and recency ranking in the shared memdir helper. | Keep flagged until selector quality is stable across more repos. |
+| CLI statusline | Active. `extensions/cli/src/ui/components/BottomStatusBar.tsx` reads `CLI_STATUSLINE`. | On | The footer disappears. Task and progress tracking continue to run. | Graduated to default-on after the broader CLI UI validation pass. |
+| CLI vim mode | Active. `extensions/cli/src/ui/UserInput.tsx` reads `CLI_VIM_MODE`. | Off | Input stays in insert-only editing mode. | Keep opt-in. It changes keyboard semantics and should remain a deliberate choice. |
+| Cached microcompaction | Active. `extensions/cli/src/compaction.ts` reads `CACHED_MICROCOMPACTION`. | Off | Compaction still runs through the existing uncached path. | Keep flagged until more long-session validation is complete. |
+| Coordinator mode | No active runtime flag check. The live path is driven by `extensions/cli/src/slashCommands.ts`, `extensions/cli/src/services/ToolPermissionService.ts`, `extensions/cli/src/systemMessage.ts`, and the shared coordinator scratchpad code. | Live | Use `normal`, `plan`, `explore`, or `verify` if you do not want delegated worker orchestration. | Treat the feature as live. If hard rollout control is still required, wire `COORDINATOR_MODE` into the mode entrypoints before relying on the flag value. |
+| VS Code bridge permission flow | No active runtime flag check. The live path is in `extensions/vscode/src/extension/VsCodeMessenger.ts`, `extensions/vscode/src/bridge/resolvePendingAgentPermission.ts`, `extensions/vscode/src/webviewProtocol.ts`, and `gui/src/hooks/ParallelListeners.tsx`. | Live | If there is no pending permission, the agent session loads directly. If the GUI responder is unavailable or the dialog kind is unsupported, the flow falls back to the extension dialog launcher. | Treat the webview-first flow as live. Preserve the extension fallback as the compatibility path. |
+
+## Manual Regression Recipe
+
+### Coordinator CLI
+
+1. Start the CLI with any optional flags you want to verify.
+2. Run `/coordinator`.
+3. Confirm the mode-switch message mentions the `coordinator-worker` profile and shared scratchpad guidance.
+4. Submit a prompt that should delegate instead of editing directly, for example:
+
+```text
+Inspect the authentication flow, delegate focused workers, and do not edit files yourself.
+```
+
+5. Confirm the coordinator path does all of the following:
+   - uses delegated workers instead of direct write tools
+   - auto-allows read-only shell probes such as `rg` or `git status`
+   - blocks common mutating shell commands such as `git commit`
+   - writes or updates `~/.yutoagentic/coordinator/<session-id>/WORKER_SCRATCHPAD.md`
+6. Cancel one delegated worker and launch another worker on the same task.
+7. Confirm the scratchpad contains `Status: cancelled` and the next worker continues from prior findings instead of restarting from scratch.
+
+### Background Agent Handoff
+
+1. In VS Code, start a background agent for the currently open repository with a prompt that is likely to trigger a tool approval.
+2. Open the workflow locally from the background task list.
+3. If a permission is pending, confirm the GUI shows the approval dialog before the session loads.
+4. Approve or deny the request.
+5. Confirm the extension refreshes agent state, then the GUI enters the live `AgentChatView` instead of only loading session history.
+6. Confirm the live agent view shows the running or pending status bar and continues polling the remote session.
+7. Repeat once with a denied permission to confirm the non-approval path still refreshes and loads the workflow.
+
+## Fallback Behavior
+
+| Surface | Expected fallback |
+| --- | --- |
+| Semantic memory selection off | `MemoryService` still injects memories, but selection uses the shared keyword and recency ranking path instead of a selector model. |
+| Cached microcompaction off | The CLI keeps the existing compaction path and does not use cached incremental pruning. |
+| CLI statusline off | The footer is hidden, but task, progress, and context services still update state normally. |
+| CLI vim mode off | Keyboard input stays in insert mode and the vim normal-mode bindings do not activate. |
+| Coordinator mode rollout control | There is currently no hard flag gate. Avoid the mode operationally if you do not want delegated worker orchestration. |
+| Bridge dialog rollout control | There is currently no hard flag gate. Supported bridge dialogs render in the webview first, and unsupported or unavailable responders fall back to the extension dialog launcher. |

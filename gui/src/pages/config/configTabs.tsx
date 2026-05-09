@@ -1,5 +1,4 @@
 import {
-  ArrowLeftIcon,
   BuildingOfficeIcon,
   CircleStackIcon,
   Cog6ToothIcon,
@@ -24,10 +23,19 @@ interface TabOption {
   label: string;
   component: React.ReactNode;
   icon: React.ReactNode;
+  keywords?: string[];
+  anchors?: ConfigAnchor[];
 }
 
-interface TabSection {
+export interface ConfigAnchor {
   id: string;
+  label: string;
+  keywords?: string[];
+}
+
+export interface TabSection {
+  id: string;
+  label?: string;
   tabs: TabOption[];
   showTopDivider?: boolean;
   showBottomDivider?: boolean;
@@ -36,23 +44,78 @@ interface TabSection {
 
 export const topTabSections: TabSection[] = [
   {
-    id: "top",
+    id: "general",
+    label: "General",
     tabs: [
       {
-        id: "back",
-        label: "Back",
-        component: <div />,
-        icon: <ArrowLeftIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
+        id: "settings",
+        label: "General",
+        keywords: [
+          "settings",
+          "general",
+          "chat",
+          "appearance",
+          "telemetry",
+          "autocomplete",
+          "experimental",
+        ],
+        anchors: [
+          {
+            id: "conversation",
+            label: "Conversation",
+            keywords: ["chat", "session titles", "markdown", "tts"],
+          },
+          {
+            id: "appearance",
+            label: "Appearance",
+            keywords: ["font size", "theme", "ui density"],
+          },
+          {
+            id: "privacy-telemetry",
+            label: "Privacy & Telemetry",
+            keywords: ["telemetry", "privacy", "analytics"],
+          },
+          {
+            id: "autocomplete",
+            label: "Autocomplete",
+            keywords: ["completions", "timeout", "debounce"],
+          },
+          {
+            id: "experimental",
+            label: "Experimental",
+            keywords: ["current file", "experimental tools", "codebase"],
+          },
+        ],
+        component: (
+          <ConfigSection>
+            <UserSettingsSection />
+          </ConfigSection>
+        ),
+        icon: <Cog6ToothIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
       },
     ],
   },
   {
-    id: "blocks",
+    id: "workspace",
+    label: "Workspace",
     showTopDivider: true,
     tabs: [
       {
         id: "models",
         label: "Models",
+        keywords: ["model", "models", "providers", "llm"],
+        anchors: [
+          {
+            id: "primary-roles",
+            label: "Primary roles",
+            keywords: ["chat model", "autocomplete", "edit"],
+          },
+          {
+            id: "additional-roles",
+            label: "Additional roles",
+            keywords: ["apply", "embed", "rerank"],
+          },
+        ],
         component: (
           <ConfigSection>
             <ModelsSection />
@@ -62,7 +125,20 @@ export const topTabSections: TabSection[] = [
       },
       {
         id: "rules",
-        label: "Rules",
+        label: "Rules & Prompts",
+        keywords: ["rules", "prompts", "slash commands", "instructions"],
+        anchors: [
+          {
+            id: "rules-library",
+            label: "Rules",
+            keywords: ["instructions", "policy"],
+          },
+          {
+            id: "prompts-library",
+            label: "Prompts",
+            keywords: ["slash commands", "commands", "prompt files"],
+          },
+        ],
         component: (
           <ConfigSection>
             <RulesSection />
@@ -72,7 +148,20 @@ export const topTabSections: TabSection[] = [
       },
       {
         id: "tools",
-        label: "Tools",
+        label: "Tools & MCPs",
+        keywords: ["tools", "mcp", "servers", "policies", "permissions"],
+        anchors: [
+          {
+            id: "built-in-tools",
+            label: "Built-in Tools",
+            keywords: ["tool policies", "automatic", "ask first"],
+          },
+          {
+            id: "mcp-servers",
+            label: "MCP Servers",
+            keywords: ["mcp", "resources", "prompts", "servers"],
+          },
+        ],
         component: (
           <ConfigSection>
             <ToolsSection />
@@ -90,7 +179,15 @@ export const topTabSections: TabSection[] = [
     tabs: [
       {
         id: "configs",
-        label: "Configs",
+        label: "Agents & Configs",
+        keywords: ["agents", "configs", "profiles", "assistants"],
+        anchors: [
+          {
+            id: "agent-configs",
+            label: "Agent configs",
+            keywords: ["profiles", "assistants", "workspace config"],
+          },
+        ],
         component: (
           <ConfigSection>
             <ConfigsSection />
@@ -98,9 +195,24 @@ export const topTabSections: TabSection[] = [
         ),
         icon: <DocumentIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
       },
+    ],
+  },
+  {
+    id: "cloud",
+    label: "Cloud & Teams",
+    showTopDivider: true,
+    tabs: [
       {
         id: "organizations",
         label: "Organizations",
+        keywords: ["cloud", "teams", "organizations", "billing"],
+        anchors: [
+          {
+            id: "organizations-overview",
+            label: "Organizations",
+            keywords: ["teams", "billing", "cloud agents"],
+          },
+        ],
         component: (
           <ConfigSection>
             <OrganizationsSection />
@@ -114,11 +226,25 @@ export const topTabSections: TabSection[] = [
   },
   {
     id: "indexing",
+    label: "Knowledge",
     showTopDivider: true,
     tabs: [
       {
         id: "indexing",
-        label: "Indexing",
+        label: "Indexing & Docs",
+        keywords: ["indexing", "docs", "embeddings", "retrieval", "codebase"],
+        anchors: [
+          {
+            id: "indexing-overview",
+            label: "Indexing overview",
+            keywords: ["deprecation", "docs", "awareness"],
+          },
+          {
+            id: "codebase-index",
+            label: "Codebase index",
+            keywords: ["index", "codebase", "progress"],
+          },
+        ],
         component: (
           <ConfigSection>
             <IndexingSettingsSection />
@@ -134,21 +260,30 @@ export const topTabSections: TabSection[] = [
 
 export const bottomTabSections: TabSection[] = [
   {
-    id: "bottom",
+    id: "support",
+    label: "Support",
     tabs: [
       {
-        id: "settings",
-        label: "Settings",
-        component: (
-          <ConfigSection>
-            <UserSettingsSection />
-          </ConfigSection>
-        ),
-        icon: <Cog6ToothIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
-      },
-      {
         id: "help",
-        label: "Help",
+        label: "Help & Docs",
+        keywords: ["help", "docs", "documentation", "support", "faq"],
+        anchors: [
+          {
+            id: "resources",
+            label: "Resources",
+            keywords: ["documentation", "community", "issues"],
+          },
+          {
+            id: "help-tools",
+            label: "Tools",
+            keywords: ["token usage", "session history", "quickstart"],
+          },
+          {
+            id: "keyboard-shortcuts",
+            label: "Keyboard shortcuts",
+            keywords: ["shortcuts", "keys", "commands"],
+          },
+        ],
         component: (
           <ConfigSection>
             <HelpSection />

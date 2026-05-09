@@ -1,7 +1,9 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
+import type { VSCodeBridgeDialogResponse } from "core/agent/contracts/index.js";
 import { FromCoreProtocol } from "core/protocol";
+import { VSCodeBridgeDialog } from "../components/dialogs/VSCodeBridgeDialog";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setConfigLoading, setConfigResult } from "../redux/slices/configSlice";
 import { setLastNonEditSessionEmpty } from "../redux/slices/editState";
@@ -15,11 +17,16 @@ import {
 import {
   addContextItemsAtIndex,
   newSession,
+  setActiveAgentSessionId,
   setHasReasoningEnabled,
   setIsSessionMetadataLoading,
   setMode,
 } from "../redux/slices/sessionSlice";
-import { setTTSActive } from "../redux/slices/uiSlice";
+import {
+  setDialogMessage,
+  setShowDialog,
+  setTTSActive,
+} from "../redux/slices/uiSlice";
 
 import { modelSupportsReasoning } from "core/llm/autodetect";
 import { cancelStream } from "../redux/thunks/cancelStream";
@@ -43,10 +50,15 @@ function ParallelListeners() {
   const selectedProfileId = useAppSelector(
     (store) => store.profiles.selectedProfileId,
   );
+  const showDialog = useAppSelector((store) => store.ui.showDialog);
   const reasoningSettings = useAppSelector(
     (store) => store.ui.reasoningSettings,
   );
   const hasDoneInitialConfigLoad = useRef(false);
+  const pendingBridgeDialogRef = useRef<{
+    id: string;
+    resolve: (response: VSCodeBridgeDialogResponse) => void;
+  } | null>(null);
 
   // Load symbols for chat on any session change
   const sessionId = useAppSelector((state) => state.session.id);
@@ -165,6 +177,20 @@ function ParallelListeners() {
     }
   }, [sessionId]);
 
+  useEffect(() => {
+    if (showDialog || !pendingBridgeDialogRef.current) {
+      return;
+    }
+
+    const pending = pendingBridgeDialogRef.current;
+    pendingBridgeDialogRef.current = null;
+    dispatch(setDialogMessage(undefined));
+    pending.resolve({
+      id: pending.id,
+      confirmed: false,
+    });
+  }, [dispatch, showDialog]);
+
   // ON LOAD
   useEffect(() => {
     // Override persisted state
@@ -232,8 +258,64 @@ function ParallelListeners() {
 
   useWebviewListener("loadAgentSession", async (data) => {
     dispatch(newSession(data.session));
+    dispatch(setActiveAgentSessionId(data.agentSessionId));
     dispatch(setMode("agent"));
   });
+
+  useWebviewListener(
+    "vscode/showBridgeDialog",
+    async (request) => {
+      if (
+        request.kind !== "info" &&
+        request.kind !== "warning" &&
+        request.kind !== "error"
+      ) {
+        const response = await ideMessenger.request(
+          "vscode/showDialog",
+          request,
+        );
+        if (response.status === "error") {
+          return {
+            id: request.id,
+            confirmed: false,
+          };
+        }
+
+        return response.content;
+      }
+
+      if (pendingBridgeDialogRef.current) {
+        pendingBridgeDialogRef.current.resolve({
+          id: pendingBridgeDialogRef.current.id,
+          confirmed: false,
+        });
+        pendingBridgeDialogRef.current = null;
+      }
+
+      return await new Promise((resolve) => {
+        pendingBridgeDialogRef.current = {
+          id: request.id,
+          resolve,
+        };
+
+        dispatch(
+          setDialogMessage(
+            <VSCodeBridgeDialog
+              request={request}
+              onResolve={(response) => {
+                if (pendingBridgeDialogRef.current?.id === request.id) {
+                  pendingBridgeDialogRef.current = null;
+                }
+                resolve(response);
+              }}
+            />,
+          ),
+        );
+        dispatch(setShowDialog(true));
+      });
+    },
+    [dispatch, ideMessenger],
+  );
 
   useWebviewListener("setTTSActive", async (status) => {
     dispatch(setTTSActive(status));

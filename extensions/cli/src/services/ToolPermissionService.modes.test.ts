@@ -63,6 +63,28 @@ describe("ToolPermissionService - Mode Functionality", () => {
       });
     });
 
+    it("should generate coordinator-specific delegation and shell policies", () => {
+      const state = service.initializeSync({ mode: "coordinator" });
+      const policies = state.permissions.policies;
+
+      expect(
+        policies.some((p) => p.tool === "Subagent" && p.permission === "allow"),
+      ).toBe(true);
+      expect(
+        policies.some((p) => p.tool === "Edit" && p.permission === "exclude"),
+      ).toBe(true);
+      expect(
+        policies.some(
+          (p) => p.tool === "Bash(rg*)" && p.permission === "allow",
+        ),
+      ).toBe(true);
+      expect(
+        policies.some(
+          (p) => p.tool === "Bash(git commit*)" && p.permission === "exclude",
+        ),
+      ).toBe(true);
+    });
+
     it("should have mode-specific policy positioning", () => {
       const normalState = service.initializeSync({ mode: "normal" });
       const planState = service.initializeSync({ mode: "plan" });

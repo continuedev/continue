@@ -31,6 +31,7 @@ export function buildCoordinatorWorkerSystemMessage({
     "You are running as a coordinator-managed worker.",
     `Shared scratchpad path: ${scratchpadPath}`,
     "Read it for prior worker findings and append concise updates that will help the coordinator or later workers.",
+    "If the latest worker entry is marked `Status: cancelled`, continue from that summary instead of restarting the task from scratch.",
   ].join("\n");
 
   if (!visibleScratchpad) {

@@ -121,4 +121,50 @@ Content
     const names = result.skills.map((s) => s.name).sort();
     expect(names).toEqual(["Skill One", "Skill Two"]);
   });
+
+  it("parses coordinator-relevant skill metadata from frontmatter", async () => {
+    const skillDir = path.join(
+      tmpDir,
+      ".yutoagentic",
+      "skills",
+      "worker-skill",
+    );
+    fs.mkdirSync(skillDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(skillDir, "SKILL.md"),
+      `---
+name: Worker Skill
+description: Delegated investigation helper
+when_to_use: Use for scoped repository reconnaissance
+context: fork
+agent: Explore
+argument-hint: Include the repo area to inspect
+allowed-tools:
+  - Read
+  - Grep
+paths:
+  - src/**
+  - core/**
+user-invocable: false
+---
+Worker skill body.
+`,
+    );
+
+    const result = await loadMarkdownSkills();
+
+    expect(result.errors).toEqual([]);
+    expect(result.skills).toHaveLength(1);
+    expect(result.skills[0]).toMatchObject({
+      name: "Worker Skill",
+      description: "Delegated investigation helper",
+      whenToUse: "Use for scoped repository reconnaissance",
+      context: "fork",
+      agent: "Explore",
+      argumentHint: "Include the repo area to inspect",
+      allowedTools: ["Read", "Grep"],
+      paths: ["src/**", "core/**"],
+      userInvocable: false,
+    });
+  });
 });

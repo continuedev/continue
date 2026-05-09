@@ -25,14 +25,32 @@ describe("serve bridge contracts", () => {
   it("rejects malformed permission response bodies", () => {
     expect(parsePermissionResponseBody(undefined)).toEqual({
       ok: false,
-      error: "Request body must include string requestId and boolean approved",
+      error:
+        "Request body must include string requestId and either boolean approved or an optional cancellation reason",
     });
 
     expect(
       parsePermissionResponseBody({ requestId: 12, approved: "yes" }),
     ).toEqual({
       ok: false,
-      error: "Request body must include string requestId and boolean approved",
+      error:
+        "Request body must include string requestId and either boolean approved or an optional cancellation reason",
+    });
+  });
+
+  it("parses a cancellation permission response body", () => {
+    const parsed = parsePermissionResponseBody({
+      requestId: "tool-request-2",
+      reason: "dismissed",
+    });
+
+    expect(parsed).toEqual({
+      ok: true,
+      value: {
+        requestId: "tool-request-2",
+        cancelled: true,
+        reason: "dismissed",
+      },
     });
   });
 

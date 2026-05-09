@@ -56,14 +56,14 @@ export const BUILT_IN_FLAGS: FeatureFlagDefinition[] = [
     key: "TURN_LIFECYCLE_HOOKS",
     description:
       "Enable the shared turn lifecycle runner for post-response and turn-end behavior.",
-    defaultValue: false,
+    defaultValue: true,
     allowEnvOverride: true,
   },
   {
     key: "TASK_NOTIFICATIONS",
     description:
       "Enable structured task notifications for shell jobs, subagents, and coordinator flows.",
-    defaultValue: false,
+    defaultValue: true,
     allowEnvOverride: true,
   },
   {
@@ -95,7 +95,7 @@ export const BUILT_IN_FLAGS: FeatureFlagDefinition[] = [
   {
     key: "CLI_STATUSLINE",
     description: "Enable the interactive CLI statusline footer.",
-    defaultValue: false,
+    defaultValue: true,
     allowEnvOverride: true,
   },
   {

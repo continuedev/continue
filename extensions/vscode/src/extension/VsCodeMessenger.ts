@@ -23,6 +23,8 @@ import {
 import * as vscode from "vscode";
 
 import { ApplyManager } from "../apply";
+import { PermissionCallbacks } from "../bridge/PermissionCallbacks";
+import { resolvePendingAgentPermission } from "../bridge/resolvePendingAgentPermission";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { addCurrentSelectionToEdit } from "../quickEdit/AddCurrentSelection";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
@@ -30,6 +32,7 @@ import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
+import { createDialogLaunchers } from "../ui/dialogLaunchers";
 import { handleLLMError } from "../util/errorHandling";
 import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
@@ -37,11 +40,13 @@ import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 import { encodeFullSlug } from "../../../../packages/config-yaml/dist";
-import { showVSCodeBridgeDialog } from "./showVSCodeBridgeDialog";
 import { VsCodeExtension } from "./VsCodeExtension";
 
 type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
   ToWebviewFromCoreProtocol;
+
+const MAX_OPEN_AGENT_PERMISSION_PASSES = 10;
+const WEBVIEW_BRIDGE_DIALOG_TIMEOUT_MS = 5_000;
 
 /**
  * A shared messenger class between Core and Webview
@@ -94,6 +99,32 @@ export class VsCodeMessenger {
     private readonly context: vscode.ExtensionContext,
     private readonly vsCodeExtension: VsCodeExtension,
   ) {
+    const dialogLaunchers = createDialogLaunchers();
+    const backgroundAgentDialogLaunchers = createDialogLaunchers({
+      showBridgeDialog: async (request) => {
+        const prefersWebviewDialog =
+          request.kind === "info" ||
+          request.kind === "warning" ||
+          request.kind === "error";
+
+        if (prefersWebviewDialog) {
+          const webviewResponse = await this.webviewProtocol.request(
+            "vscode/showBridgeDialog",
+            request,
+            false,
+            WEBVIEW_BRIDGE_DIALOG_TIMEOUT_MS,
+          );
+
+          if (webviewResponse) {
+            return webviewResponse;
+          }
+        }
+
+        return dialogLaunchers.showBridgeDialog(request);
+      },
+    });
+    const permissionCallbacks = new PermissionCallbacks();
+
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
       this.ide.openFile(msg.data.filepath);
@@ -125,7 +156,7 @@ export class VsCodeMessenger {
     });
 
     this.onWebview("vscode/showDialog", async ({ data }) => {
-      return showVSCodeBridgeDialog(data);
+      return dialogLaunchers.showBridgeDialog(data);
     });
 
     this.onWebview("acceptDiff", async ({ data: { filepath, streamId } }) => {
@@ -720,7 +751,7 @@ export class VsCodeMessenger {
         }
 
         // Fetch the agent state
-        const agentState =
+        let agentState =
           await configHandler.controlPlaneClient.getAgentState(agentSessionId);
 
         if (!agentState) {
@@ -741,10 +772,54 @@ export class VsCodeMessenger {
           return;
         }
 
+        let permissionPasses = 0;
+        while (agentState.pendingPermission) {
+          if (permissionPasses >= MAX_OPEN_AGENT_PERMISSION_PASSES) {
+            vscode.window.showErrorMessage(
+              "Agent is still waiting on tool approvals after multiple attempts. Resolve the workflow manually and try again.",
+            );
+            return;
+          }
+
+          await resolvePendingAgentPermission({
+            agentSessionId,
+            request: agentState.pendingPermission,
+            controlPlaneClient: configHandler.controlPlaneClient,
+            permissionCallbacks,
+            dialogLaunchers: backgroundAgentDialogLaunchers,
+          });
+
+          const refreshedAgentState =
+            await configHandler.controlPlaneClient.getAgentState(
+              agentSessionId,
+            );
+          if (!refreshedAgentState) {
+            vscode.window.showErrorMessage(
+              "Failed to refresh agent state after responding to a permission request.",
+            );
+            return;
+          }
+
+          if (!refreshedAgentState.session) {
+            console.error(
+              "Refreshed agent state is missing session field. Full response:",
+              refreshedAgentState,
+            );
+            vscode.window.showErrorMessage(
+              "Agent state returned after a permission response but missing session data. This may be a backend issue.",
+            );
+            return;
+          }
+
+          agentState = refreshedAgentState;
+          permissionPasses += 1;
+        }
+
         // For MVP: Simply load the session by sending to webview
         // The webview will dispatch the newSession action with the session data
         this.webviewProtocol.send("loadAgentSession", {
           session: agentState.session,
+          agentSessionId,
         });
 
         vscode.window.showInformationMessage(

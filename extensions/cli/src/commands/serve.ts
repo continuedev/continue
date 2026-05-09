@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import {
+  isVSCodeBridgePermissionCancellation,
   isVSCodeBridgePermissionResponse,
   type VSCodeBridgePermissionResult,
 } from "core/agent/contracts/index.js";
@@ -77,15 +78,32 @@ export function shouldQueueInitialPrompt(
   return !hasConversation;
 }
 
-export function parsePermissionResponseBody(
-  body: unknown,
-):
-  | { ok: true; value: { requestId: string; approved: boolean } }
+export function parsePermissionResponseBody(body: unknown):
+  | {
+      ok: true;
+      value:
+        | { requestId: string; approved: boolean }
+        | { requestId: string; cancelled: true; reason?: string };
+    }
   | { ok: false; error: string } {
-  if (!isVSCodeBridgePermissionResponse(body)) {
+  if (
+    !isVSCodeBridgePermissionResponse(body) &&
+    !isVSCodeBridgePermissionCancellation(body)
+  ) {
     return {
       ok: false,
-      error: "Request body must include string requestId and boolean approved",
+      error:
+        "Request body must include string requestId and either boolean approved or an optional cancellation reason",
+    };
+  }
+
+  if (isVSCodeBridgePermissionResponse(body)) {
+    return {
+      ok: true,
+      value: {
+        requestId: body.requestId,
+        approved: body.approved,
+      },
     };
   }
 
@@ -93,7 +111,8 @@ export function parsePermissionResponseBody(
     ok: true,
     value: {
       requestId: body.requestId,
-      approved: body.approved,
+      cancelled: true,
+      reason: body.reason,
     },
   };
 }
@@ -302,7 +321,8 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       return res.status(400).json({ error: parsed.error });
     }
 
-    const { requestId, approved } = parsed.value;
+    const { requestId } = parsed.value;
+    const approved = "approved" in parsed.value ? parsed.value.approved : false;
 
     if (!state.pendingPermission) {
       return res.status(400).json({ error: "No pending permission request" });
@@ -325,10 +345,20 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     // Clear pending permission state
     state.pendingPermission = null;
 
-    const response: VSCodeBridgePermissionResult = {
-      success: true,
-      approved,
-    };
+    const response: VSCodeBridgePermissionResult =
+      "approved" in parsed.value
+        ? {
+            success: true,
+            requestId,
+            approved,
+          }
+        : {
+            success: false,
+            requestId,
+            approved: false,
+            cancelled: true,
+            reason: parsed.value.reason,
+          };
 
     res.json(response);
   });

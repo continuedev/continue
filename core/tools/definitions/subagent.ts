@@ -31,6 +31,12 @@ export const subagentTool: Tool = {
           description:
             "Optional configured subagent model name/title to use. Falls back to the selected subagent model.",
         },
+        profile: {
+          type: "string",
+          description:
+            "Optional execution profile. Use 'coordinator-worker' when the worker should participate in a shared coordinator scratchpad.",
+          enum: ["explore", "verify", "coordinator-worker"],
+        },
         maxTurns: {
           type: "number",
           description:
@@ -44,8 +50,12 @@ export const subagentTool: Tool = {
     prefix: `To run a focused nested agent, use the ${BuiltInToolNames.Subagent} tool. For example:`,
     exampleArgs: [
       ["description", "Explore auth flow"],
-      ["prompt", "Trace the authentication flow from login form to token storage and summarize the owning files."],
+      [
+        "prompt",
+        "Trace the authentication flow from login form to token storage and summarize the owning files.",
+      ],
       ["subagent_name", "Explore"],
+      ["profile", "coordinator-worker"],
     ],
   },
   toolCallIcon: "Squares2X2Icon",
