@@ -1,4 +1,6 @@
-import { act, screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
+import { BackgroundModeView } from "../../../components/BackgroundMode/BackgroundModeView";
+import { EditOutcomeToolbar } from "../../../components/mainInput/Lump/LumpToolbar/EditOutcomeToolbar";
 import { TabBar } from "../../../components/TabBar/TabBar";
 import { MockIdeMessenger } from "../../../context/MockIdeMessenger";
 import { updateConfig } from "../../../redux/slices/configSlice";
@@ -126,6 +128,239 @@ test("should render pending edits above the composer", async () => {
   expect(screen.getByText("Keep")).toBeInTheDocument();
 });
 
+test("should render edit outcome review copy and in-flight keep feedback", async () => {
+  const initialState = getEmptyRootState();
+  initialState.editModeState.applyState = {
+    streamId: "edit-apply-1",
+    status: "done",
+    filepath: "/workspace/src/refactor.ts",
+    numDiffs: 2,
+  };
+  initialState.editModeState.codeToEdit = [
+    {
+      filepath: "/workspace/src/refactor.ts",
+      contents: "const value = 1;",
+    },
+  ];
+
+  const { user } = await renderWithProviders(<EditOutcomeToolbar />, {
+    store: createMockStore(initialState),
+  });
+
+  expect(screen.getByTestId("edit-outcome-toolbar")).toHaveTextContent(
+    "Review edit outcome",
+  );
+  expect(screen.getByTestId("edit-outcome-diff-count")).toHaveTextContent(
+    "2 diffs",
+  );
+  expect(screen.getByTestId("edit-outcome-target")).toHaveTextContent(
+    "refactor.ts",
+  );
+
+  await user.click(screen.getByText("Keep"));
+
+  expect(screen.getByText("Keeping...")).toBeInTheDocument();
+});
+
+test("should render background inbox state inside the main chat shell", async () => {
+  const initialState = getEmptyRootState();
+  const store = createMockStore(initialState);
+  const mockIdeMessenger = new MockIdeMessenger();
+
+  mockIdeMessenger.responses["listBackgroundAgents"] = {
+    agents: [
+      {
+        id: "agent-1",
+        name: "Refactor auth flow",
+        status: "running",
+        repoUrl: "https://github.com/example/yuto-code",
+        pullRequestUrl: "https://github.com/example/yuto-code/pull/42",
+        pullRequestStatus: "open",
+        createdAt: "2026-05-09T00:00:00.000Z",
+        metadata: {
+          github_repo: "https://github.com/example/yuto-code",
+          source: "chat",
+          createdBySlug: "fran",
+        },
+      },
+    ],
+    totalCount: 1,
+  };
+  mockIdeMessenger.responseHandlers.getRepoName = async () =>
+    "https://github.com/example/yuto-code";
+
+  await renderWithProviders(<Chat />, {
+    store,
+    mockIdeMessenger,
+  });
+
+  expect(
+    await screen.findByTestId("background-inbox-panel"),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Background inbox")).toBeInTheDocument();
+  expect(screen.getByText("Refactor auth flow")).toBeInTheDocument();
+  expect(screen.getByText("Current workspace")).toBeInTheDocument();
+  expect(screen.getByTestId("background-inbox-open-local-0")).toHaveTextContent(
+    "Open locally",
+  );
+  expect(screen.getByTestId("background-inbox-provenance-0")).toHaveTextContent(
+    "PR open",
+  );
+  expect(screen.getByTestId("background-inbox-provenance-0")).toHaveTextContent(
+    "Source chat",
+  );
+  expect(screen.getByTestId("background-inbox-provenance-0")).toHaveTextContent(
+    "By fran",
+  );
+  expect(screen.getByTestId("background-inbox-agent-0")).toBeInTheDocument();
+});
+
+test("should explain takeover when a background task belongs to another repo", async () => {
+  const store = createMockStore(getEmptyRootState());
+  const mockIdeMessenger = new MockIdeMessenger();
+
+  mockIdeMessenger.responses["listBackgroundAgents"] = {
+    agents: [
+      {
+        id: "agent-2",
+        name: "Review backend migration",
+        status: "pending",
+        repoUrl: "https://github.com/example/backend",
+        createdAt: "2026-05-09T00:00:00.000Z",
+        metadata: {
+          github_repo: "https://github.com/example/backend",
+        },
+      },
+    ],
+    totalCount: 1,
+  };
+  mockIdeMessenger.responseHandlers.getRepoName = async () =>
+    "https://github.com/example/yuto-code";
+
+  await renderWithProviders(<Chat />, {
+    store,
+    mockIdeMessenger,
+  });
+
+  expect(
+    await screen.findByTestId("background-inbox-panel"),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Other repo")).toBeInTheDocument();
+  expect(screen.getByTestId("background-inbox-agent-0")).toHaveTextContent(
+    "Open backend locally to take over.",
+  );
+  expect(screen.getByTestId("background-inbox-open-local-0")).toBeDisabled();
+});
+
+test("should show compact GitHub setup guidance for background tasks", async () => {
+  const store = createMockStore(getEmptyRootState());
+  const mockIdeMessenger = new MockIdeMessenger();
+
+  mockIdeMessenger.responseHandlers.listBackgroundAgents = async () => {
+    throw new Error("GitHub token missing");
+  };
+
+  await renderWithProviders(<Chat />, {
+    store,
+    mockIdeMessenger,
+  });
+
+  expect(
+    await screen.findByTestId("background-inbox-panel"),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Connect GitHub")).toBeInTheDocument();
+  expect(
+    screen.getByTestId("background-inbox-connect-github"),
+  ).toBeInTheDocument();
+});
+
+test("should render full background mode with explicit handoff actions and provenance", async () => {
+  const mockIdeMessenger = new MockIdeMessenger();
+
+  mockIdeMessenger.responses["listBackgroundAgents"] = {
+    agents: [
+      {
+        id: "agent-full-1",
+        name: "Ship release branch",
+        status: "running",
+        repoUrl: "https://github.com/example/yuto-code",
+        pullRequestUrl: "https://github.com/example/yuto-code/pull/84",
+        pullRequestStatus: "open",
+        createdAt: "2026-05-10T00:00:00.000Z",
+        metadata: {
+          github_repo: "https://github.com/example/yuto-code",
+          source: "background",
+          createdBySlug: "fran",
+        },
+      },
+    ],
+    totalCount: 1,
+  };
+  mockIdeMessenger.responseHandlers.getRepoName = async () =>
+    "https://github.com/example/yuto-code";
+
+  await renderWithProviders(<BackgroundModeView />, {
+    mockIdeMessenger,
+  });
+
+  expect(
+    await screen.findByTestId("background-full-summary"),
+  ).toBeInTheDocument();
+  expect(screen.getByTestId("background-full-summary")).toHaveTextContent(
+    "Background inbox",
+  );
+  expect(
+    screen.getByTestId("background-full-summary-workspace-count"),
+  ).toHaveTextContent("1 ready here");
+  expect(
+    await screen.findByTestId("background-full-agent-0"),
+  ).toBeInTheDocument();
+  expect(screen.getByTestId("background-full-agent-0")).toHaveTextContent(
+    "Ship release branch",
+  );
+  expect(screen.getByTestId("background-full-agent-0")).toHaveTextContent(
+    "Current workspace",
+  );
+  expect(screen.getByTestId("background-full-view-task-0")).toHaveTextContent(
+    "View task",
+  );
+  expect(screen.getByTestId("background-full-open-local-0")).toHaveTextContent(
+    "Open locally",
+  );
+  expect(screen.getByTestId("background-full-provenance-0")).toHaveTextContent(
+    "PR open",
+  );
+  expect(screen.getByTestId("background-full-provenance-0")).toHaveTextContent(
+    "Source background",
+  );
+  expect(screen.getByTestId("background-full-provenance-0")).toHaveTextContent(
+    "By fran",
+  );
+});
+
+test("should show full background inbox GitHub setup guidance", async () => {
+  const mockIdeMessenger = new MockIdeMessenger();
+
+  mockIdeMessenger.responseHandlers.listBackgroundAgents = async () => {
+    throw new Error("GitHub token missing");
+  };
+
+  await renderWithProviders(<BackgroundModeView />, {
+    mockIdeMessenger,
+  });
+
+  expect(
+    await screen.findByTestId("background-full-setup-panel"),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Background inbox")).toBeInTheDocument();
+  expect(
+    screen.getByText(/Connect GitHub to track cloud background tasks/),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByTestId("background-full-connect-github"),
+  ).toHaveTextContent("Connect GitHub");
+});
+
 test("should render batch pending edit actions for multiple files", async () => {
   const initialState = getEmptyRootState();
   initialState.session.codeBlockApplyStates.states = [
@@ -144,7 +379,7 @@ test("should render batch pending edit actions for multiple files", async () => 
   ];
 
   const store = createMockStore(initialState);
-  await renderWithProviders(<Chat />, { store });
+  const { user } = await renderWithProviders(<Chat />, { store });
 
   expect(screen.getByTestId("pending-apply-summary")).toHaveTextContent(
     "2 files",
@@ -161,6 +396,101 @@ test("should render batch pending edit actions for multiple files", async () => 
   expect(
     screen.getByTestId("pending-apply-file-actions-1"),
   ).toBeInTheDocument();
+
+  await user.click(screen.getByText("Keep all"));
+
+  expect(screen.getByText("Keeping all...")).toBeInTheDocument();
+  expect(
+    within(screen.getByTestId("pending-apply-batch-actions")).getByTestId(
+      "edit-accept-button",
+    ),
+  ).toBeDisabled();
+  expect(
+    within(screen.getByTestId("pending-apply-batch-actions")).getByTestId(
+      "edit-reject-button",
+    ),
+  ).toBeDisabled();
+});
+
+test("should collapse dense pending edit batches until expanded", async () => {
+  const initialState = getEmptyRootState();
+  initialState.session.codeBlockApplyStates.states = [
+    {
+      streamId: "apply-1",
+      status: "done",
+      filepath: "/workspace/src/auth/first.ts",
+      toolCallId: "tool-call-1",
+    },
+    {
+      streamId: "apply-2",
+      status: "done",
+      filepath: "/workspace/src/auth/second.ts",
+      toolCallId: "tool-call-2",
+    },
+    {
+      streamId: "apply-3",
+      status: "done",
+      filepath: "/workspace/src/data/third.ts",
+      toolCallId: "tool-call-3",
+    },
+    {
+      streamId: "apply-4",
+      status: "done",
+      filepath: "/workspace/src/data/fourth.ts",
+      toolCallId: "tool-call-4",
+    },
+    {
+      streamId: "apply-5",
+      status: "done",
+      filepath: "/workspace/src/ui/fifth.ts",
+      toolCallId: "tool-call-5",
+    },
+  ];
+
+  const { user } = await renderWithProviders(<Chat />, {
+    store: createMockStore(initialState),
+  });
+
+  expect(screen.getByTestId("pending-apply-visible-count")).toHaveTextContent(
+    "Showing 3 of 5 files",
+  );
+  expect(screen.getByTestId("pending-apply-overflow-toggle")).toHaveTextContent(
+    "Show 2 more files",
+  );
+  expect(screen.getByTestId("pending-apply-file-path-0")).toHaveTextContent(
+    "src/auth",
+  );
+  expect(screen.getByTestId("pending-apply-file-row-0")).toHaveTextContent(
+    "first.ts",
+  );
+  expect(screen.getByTestId("pending-apply-file-row-2")).toHaveTextContent(
+    "third.ts",
+  );
+  expect(screen.getByTestId("pending-apply-hidden-preview")).toHaveTextContent(
+    "Hidden until expanded",
+  );
+  expect(screen.getByTestId("pending-apply-hidden-group-0")).toHaveTextContent(
+    "src/data",
+  );
+  expect(screen.getByTestId("pending-apply-hidden-group-1")).toHaveTextContent(
+    "src/ui",
+  );
+  expect(screen.queryByText("fourth.ts")).not.toBeInTheDocument();
+  expect(screen.queryByText("fifth.ts")).not.toBeInTheDocument();
+
+  await user.click(screen.getByTestId("pending-apply-overflow-toggle"));
+
+  expect(screen.getByTestId("pending-apply-visible-count")).toHaveTextContent(
+    "Showing all 5 files",
+  );
+  expect(screen.getByTestId("pending-apply-overflow-toggle")).toHaveTextContent(
+    "Show fewer files",
+  );
+  expect(
+    screen.queryByTestId("pending-apply-hidden-preview"),
+  ).not.toBeInTheDocument();
+  expect(screen.getByText("fourth.ts")).toBeInTheDocument();
+  expect(screen.getByText("fifth.ts")).toBeInTheDocument();
 });
 
 test("should be able to toggle modes", async () => {
@@ -230,6 +560,22 @@ test("should render a compact chat header and switcher when session tabs are ena
   };
   initialState.session.id = "session-current";
   initialState.session.title = "Alpha Chat";
+  initialState.session.allSessionMetadata = [
+    {
+      sessionId: "session-current",
+      title: "Alpha Chat",
+      dateCreated: "2026-05-09T00:00:00.000Z",
+      workspaceDirectory: "/workspace/alpha",
+      messageCount: 12,
+    },
+    {
+      sessionId: "session-review",
+      title: "Draft Review",
+      dateCreated: "2026-05-09T01:00:00.000Z",
+      workspaceDirectory: "/workspace/backend",
+      messageCount: 3,
+    },
+  ];
   initialState.tabs.tabs = [
     {
       id: "tab-1",
@@ -241,6 +587,7 @@ test("should render a compact chat header and switcher when session tabs are ena
       id: "tab-2",
       title: "Draft Review",
       isActive: false,
+      sessionId: "session-review",
     },
   ];
 
@@ -265,16 +612,376 @@ test("should render a compact chat header and switcher when session tabs are ena
   await user.click(screen.getByLabelText("Open chat switcher"));
   expect(screen.getByLabelText("Switch to Alpha Chat")).toBeInTheDocument();
   expect(screen.getByLabelText("Switch to Draft Review")).toBeInTheDocument();
+  expect(screen.getByText("12 messages")).toBeInTheDocument();
+  expect(screen.getByText("3 messages")).toBeInTheDocument();
+  expect(screen.getByText("2 chats")).toBeInTheDocument();
 
-  await user.type(screen.getByTestId("chat-switcher-search"), "Draft");
+  await user.type(screen.getByTestId("chat-switcher-search"), "backend");
 
   expect(
     screen.queryByLabelText("Switch to Alpha Chat"),
   ).not.toBeInTheDocument();
   expect(screen.getByLabelText("Switch to Draft Review")).toBeInTheDocument();
+  expect(screen.getByTestId("chat-switcher-result-count")).toHaveTextContent(
+    "Showing 1 of 2 chats",
+  );
   await user.click(screen.getByLabelText("Switch to Draft Review"));
 
   expect(screen.getByText("Draft Review")).toBeInTheDocument();
+});
+
+test("should collapse and rank dense switcher results", async () => {
+  const initialState = getEmptyRootState();
+  initialState.session.id = "session-active";
+  initialState.session.title = "Alpha Chat";
+  initialState.session.allSessionMetadata = [
+    {
+      sessionId: "session-active",
+      title: "Alpha Chat",
+      dateCreated: "2026-05-09T00:00:00.000Z",
+      workspaceDirectory: "/workspace/alpha",
+      messageCount: 2,
+    },
+    {
+      sessionId: "session-2",
+      title: "Sprint Planning",
+      dateCreated: "2026-05-09T07:00:00.000Z",
+      workspaceDirectory: "/workspace/plans",
+      messageCount: 11,
+    },
+    {
+      sessionId: "session-3",
+      title: "Bug Bash",
+      dateCreated: "2026-05-09T06:00:00.000Z",
+      workspaceDirectory: "/workspace/bugs",
+      messageCount: 9,
+    },
+    {
+      sessionId: "session-4",
+      title: "Backend Review",
+      dateCreated: "2026-05-09T05:00:00.000Z",
+      workspaceDirectory: "/workspace/reviews",
+      messageCount: 7,
+    },
+    {
+      sessionId: "session-5",
+      title: "Daily Standup",
+      dateCreated: "2026-05-09T04:00:00.000Z",
+      workspaceDirectory: "/workspace/backend",
+      messageCount: 5,
+    },
+    {
+      sessionId: "session-6",
+      title: "Design Notes",
+      dateCreated: "2026-05-09T03:00:00.000Z",
+      workspaceDirectory: "/workspace/design",
+      messageCount: 4,
+    },
+    {
+      sessionId: "session-7",
+      title: "Archive Chat",
+      dateCreated: "2026-05-09T02:00:00.000Z",
+      workspaceDirectory: "/workspace/archive",
+      messageCount: 3,
+    },
+    {
+      sessionId: "session-8",
+      title: "Scratchpad",
+      dateCreated: "2026-05-09T01:00:00.000Z",
+      workspaceDirectory: "/workspace/scratch",
+      messageCount: 1,
+    },
+  ];
+  initialState.tabs.tabs = [
+    {
+      id: "tab-2",
+      title: "Sprint Planning",
+      isActive: false,
+      sessionId: "session-2",
+    },
+    {
+      id: "tab-3",
+      title: "Bug Bash",
+      isActive: false,
+      sessionId: "session-3",
+    },
+    {
+      id: "tab-4",
+      title: "Backend Review",
+      isActive: false,
+      sessionId: "session-4",
+    },
+    {
+      id: "tab-5",
+      title: "Daily Standup",
+      isActive: false,
+      sessionId: "session-5",
+    },
+    {
+      id: "tab-6",
+      title: "Design Notes",
+      isActive: false,
+      sessionId: "session-6",
+    },
+    {
+      id: "tab-7",
+      title: "Archive Chat",
+      isActive: false,
+      sessionId: "session-7",
+    },
+    {
+      id: "tab-8",
+      title: "Scratchpad",
+      isActive: false,
+      sessionId: "session-8",
+    },
+    {
+      id: "tab-1",
+      title: "Alpha Chat",
+      isActive: true,
+      sessionId: "session-active",
+    },
+  ];
+
+  const { user } = await renderWithProviders(<TabBar />, {
+    store: createMockStore(initialState),
+  });
+
+  await user.click(screen.getByLabelText("Open chat switcher"));
+
+  const switcherButtons = screen.getAllByRole("button", {
+    name: /Switch to /,
+  });
+  expect(switcherButtons[0]).toHaveAttribute(
+    "aria-label",
+    "Switch to Alpha Chat",
+  );
+  expect(screen.getByTestId("chat-switcher-result-count")).toHaveTextContent(
+    "Showing 6 of 8 chats",
+  );
+  expect(screen.getByTestId("chat-switcher-overflow-toggle")).toHaveTextContent(
+    "Show 2 more chats",
+  );
+  expect(
+    screen.queryByLabelText("Switch to Archive Chat"),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByLabelText("Switch to Scratchpad"),
+  ).not.toBeInTheDocument();
+
+  await user.click(screen.getByTestId("chat-switcher-overflow-toggle"));
+
+  expect(screen.getByLabelText("Switch to Archive Chat")).toBeInTheDocument();
+  expect(screen.getByLabelText("Switch to Scratchpad")).toBeInTheDocument();
+  expect(screen.getByTestId("chat-switcher-overflow-toggle")).toHaveTextContent(
+    "Show fewer chats",
+  );
+
+  await user.type(screen.getByTestId("chat-switcher-search"), "backend");
+
+  const rankedFilteredButtons = screen.getAllByRole("button", {
+    name: /Switch to /,
+  });
+  expect(rankedFilteredButtons[0]).toHaveAttribute(
+    "aria-label",
+    "Switch to Backend Review",
+  );
+  expect(rankedFilteredButtons[1]).toHaveAttribute(
+    "aria-label",
+    "Switch to Daily Standup",
+  );
+  expect(screen.getByTestId("chat-switcher-result-count")).toHaveTextContent(
+    "Showing 2 of 8 chats",
+  );
+});
+
+test("should support keyboard navigation in the compact chat switcher", async () => {
+  const initialState = getEmptyRootState();
+  initialState.session.id = "session-current";
+  initialState.session.title = "Alpha Chat";
+  initialState.session.allSessionMetadata = [
+    {
+      sessionId: "session-current",
+      title: "Alpha Chat",
+      dateCreated: "2026-05-09T00:00:00.000Z",
+      workspaceDirectory: "/workspace/alpha",
+      messageCount: 12,
+    },
+    {
+      sessionId: "session-review",
+      title: "Draft Review",
+      dateCreated: "2026-05-09T01:00:00.000Z",
+      workspaceDirectory: "/workspace/backend",
+      messageCount: 3,
+    },
+  ];
+  initialState.tabs.tabs = [
+    {
+      id: "tab-1",
+      title: "Alpha Chat",
+      isActive: true,
+      sessionId: "session-current",
+    },
+    {
+      id: "tab-2",
+      title: "Draft Review",
+      isActive: false,
+      sessionId: "session-review",
+    },
+  ];
+
+  const { user } = await renderWithProviders(<TabBar />, {
+    store: createMockStore(initialState),
+  });
+
+  await user.click(screen.getByLabelText("Open chat switcher"));
+  expect(screen.getByTestId("chat-switcher-search")).toHaveFocus();
+
+  await user.keyboard("{ArrowDown}");
+  expect(screen.getByLabelText("Switch to Alpha Chat")).toHaveFocus();
+
+  await user.keyboard("{ArrowDown}");
+  expect(screen.getByLabelText("Switch to Draft Review")).toHaveFocus();
+
+  await user.keyboard("{Enter}");
+  expect(screen.queryByTestId("chat-switcher-search")).not.toBeInTheDocument();
+  expect(screen.getByText("Draft Review")).toBeInTheDocument();
+
+  await user.click(screen.getByLabelText("Open chat switcher"));
+  expect(screen.getByTestId("chat-switcher-search")).toHaveFocus();
+
+  await user.keyboard("{Escape}");
+  expect(screen.queryByTestId("chat-switcher-search")).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Open chat switcher")).toHaveFocus();
+});
+
+test("should open the compact chat switcher from the header with ArrowDown", async () => {
+  const initialState = getEmptyRootState();
+  initialState.session.id = "session-current";
+  initialState.session.title = "Alpha Chat";
+  initialState.session.allSessionMetadata = [
+    {
+      sessionId: "session-current",
+      title: "Alpha Chat",
+      dateCreated: "2026-05-09T00:00:00.000Z",
+      workspaceDirectory: "/workspace/alpha",
+      messageCount: 12,
+    },
+    {
+      sessionId: "session-review",
+      title: "Draft Review",
+      dateCreated: "2026-05-09T01:00:00.000Z",
+      workspaceDirectory: "/workspace/backend",
+      messageCount: 3,
+    },
+  ];
+  initialState.tabs.tabs = [
+    {
+      id: "tab-1",
+      title: "Alpha Chat",
+      isActive: true,
+      sessionId: "session-current",
+    },
+    {
+      id: "tab-2",
+      title: "Draft Review",
+      isActive: false,
+      sessionId: "session-review",
+    },
+  ];
+
+  const { user } = await renderWithProviders(<TabBar />, {
+    store: createMockStore(initialState),
+  });
+
+  screen.getByLabelText("Open chat switcher").focus();
+  await user.keyboard("{ArrowDown}");
+
+  expect(screen.getByTestId("chat-switcher-search")).toBeInTheDocument();
+  expect(screen.getByTestId("chat-switcher-search")).toHaveFocus();
+});
+
+test("should switch to the top visible chat when pressing Enter in switcher search", async () => {
+  const initialState = getEmptyRootState();
+  initialState.session.id = "session-current";
+  initialState.session.title = "Alpha Chat";
+  initialState.session.allSessionMetadata = [
+    {
+      sessionId: "session-current",
+      title: "Alpha Chat",
+      dateCreated: "2026-05-09T00:00:00.000Z",
+      workspaceDirectory: "/workspace/alpha",
+      messageCount: 12,
+    },
+    {
+      sessionId: "session-review",
+      title: "Draft Review",
+      dateCreated: "2026-05-09T01:00:00.000Z",
+      workspaceDirectory: "/workspace/backend",
+      messageCount: 3,
+    },
+  ];
+  initialState.tabs.tabs = [
+    {
+      id: "tab-1",
+      title: "Alpha Chat",
+      isActive: true,
+      sessionId: "session-current",
+    },
+    {
+      id: "tab-2",
+      title: "Draft Review",
+      isActive: false,
+      sessionId: "session-review",
+    },
+  ];
+
+  const { user } = await renderWithProviders(<TabBar />, {
+    store: createMockStore(initialState),
+  });
+
+  await user.click(screen.getByLabelText("Open chat switcher"));
+  await user.type(screen.getByTestId("chat-switcher-search"), "backend");
+  await user.keyboard("{Enter}");
+
+  expect(screen.queryByTestId("chat-switcher-search")).not.toBeInTheDocument();
+  expect(screen.getByText("Draft Review")).toBeInTheDocument();
+});
+
+test("should keep the switcher open when Enter is pressed with no matching chats", async () => {
+  const initialState = getEmptyRootState();
+  initialState.session.id = "session-current";
+  initialState.session.title = "Alpha Chat";
+  initialState.session.allSessionMetadata = [
+    {
+      sessionId: "session-current",
+      title: "Alpha Chat",
+      dateCreated: "2026-05-09T00:00:00.000Z",
+      workspaceDirectory: "/workspace/alpha",
+      messageCount: 12,
+    },
+  ];
+  initialState.tabs.tabs = [
+    {
+      id: "tab-1",
+      title: "Alpha Chat",
+      isActive: true,
+      sessionId: "session-current",
+    },
+  ];
+
+  const { user } = await renderWithProviders(<TabBar />, {
+    store: createMockStore(initialState),
+  });
+
+  await user.click(screen.getByLabelText("Open chat switcher"));
+  await user.type(screen.getByTestId("chat-switcher-search"), "missing");
+  await user.keyboard("{Enter}");
+
+  expect(screen.getByTestId("chat-switcher-search")).toBeInTheDocument();
+  expect(screen.getByTestId("chat-switcher-empty-state")).toHaveTextContent(
+    "No matching chats",
+  );
 });
 
 test("should render a remote badge in the compact chat header", async () => {
@@ -300,12 +1007,20 @@ test("should render a remote badge in the compact chat header", async () => {
     },
   ];
 
-  await renderWithProviders(<TabBar />, {
+  const { user } = await renderWithProviders(<TabBar />, {
     store: createMockStore(initialState),
   });
 
   expect(screen.getByTestId("chat-header-status-remote")).toHaveTextContent(
     "Remote",
+  );
+  expect(screen.getByTestId("chat-header-provenance")).toHaveTextContent(
+    "Cloud session | remote-123",
+  );
+
+  await user.click(screen.getByLabelText("Open chat switcher"));
+  expect(screen.getByLabelText("Switch to Remote Review")).toHaveTextContent(
+    "Cloud session | remote-123",
   );
 });
 

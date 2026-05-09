@@ -158,20 +158,22 @@ export const subagentToolImpl: ToolImpl = async (args, extras) => {
     subagentModel.toolOverrides,
   ).tools;
 
-  const scratchpadPath =
-    profile === "coordinator-worker" && parentSessionId
-      ? getCoordinatorScratchpadPath(getContinueGlobalPath(), parentSessionId)
-      : undefined;
+  let scratchpadPath: string | undefined;
+  let coordinatorInstructions: string | undefined;
 
-  const coordinatorInstructions = scratchpadPath
-    ? buildCoordinatorWorkerSystemMessage({
+  if (profile === "coordinator-worker" && parentSessionId) {
+    scratchpadPath = getCoordinatorScratchpadPath(
+      getContinueGlobalPath(),
+      parentSessionId,
+    );
+    coordinatorInstructions = buildCoordinatorWorkerSystemMessage({
+      scratchpadPath,
+      scratchpadContent: await readWorkerScratchpad(
         scratchpadPath,
-        scratchpadContent: await readWorkerScratchpad(
-          scratchpadPath,
-          parentSessionId,
-        ),
-      })
-    : undefined;
+        parentSessionId,
+      ),
+    });
+  }
 
   const systemMessage = buildChildSystemMessage({
     baseSystemMessage:

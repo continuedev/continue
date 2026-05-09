@@ -46,6 +46,7 @@ import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
 import { useStore } from "react-redux";
+import { AgentsList } from "../../components/BackgroundMode/AgentsList";
 import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundModeView";
 import { CliInstallBanner } from "../../components/CliInstallBanner";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
@@ -565,6 +566,11 @@ export function Chat() {
           </div>
           <FatalErrorIndicator />
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
+          {mode !== "background" && !(mode === "agent" && agentSessionId) && (
+            <div className="pb-2">
+              <AgentsList isCreatingAgent={isCreatingAgent} variant="compact" />
+            </div>
+          )}
           {mode === "background" ? (
             <BackgroundModeView isCreatingAgent={isCreatingAgent} />
           ) : mode === "agent" && agentSessionId ? (

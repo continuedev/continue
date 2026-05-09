@@ -1,22 +1,75 @@
 # VS Code Extension UI Roadmap
 
-Updated: 2026-05-09
+Updated: 2026-05-10
 
 ## Current Status
 
+## Summary Tables
+
+### Delivered Areas
+
+| Area                         | Status      | Delivered in repo                                                                                                                                                      | Remaining                                                 |
+| ---------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Settings redesign            | Done        | Dense left rail, grouped panels, subsection search/jump, `Tools & MCPs` refresh                                                                                        | None in this roadmap slice                                |
+| Header and switcher          | In progress | Compact header, metadata-aware switcher, overflow handling, keyboard navigation, ArrowDown-to-open header flow, Enter-to-switch search flow, remote provenance         | Final compact-header interaction polish                   |
+| Composer command bar         | In progress | Segmented mode control, runtime selector for local/cloud profiles, inline config/profile selection                                                                     | CLI runtime target, tighter command-bar hierarchy         |
+| Pending edits rail           | In progress | Dedicated rail, Keep/Undo copy, batch actions, dense-batch collapse, hidden-group preview, in-flight action feedback, outcome review copy, parent-path context         | Final visual hierarchy polish                             |
+| Background task surfaces     | In progress | Compact inbox in chat shell, full list parity, explicit View task/Open locally actions, provenance chips, unified setup guidance, full-mode handoff summary            | Final empty/loading polish and broader queue controls     |
+| Tool activity and transcript | In progress | Multi-call tool activity now stays grouped during active runs, with grouped status summaries, keyboard-toggleable headers, and keyboard-accessible simple result cards | Transcript density, tool header chrome, transition polish |
+
+### Phase Tracker
+
+| Phase                                        | Status      | Landed                                                                                                                                                                 | Remaining                                                      |
+| -------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Phase 0: Audit and inventory                 | Not started | None                                                                                                                                                                   | Screenshot board, component map                                |
+| Phase 1: Shell and header refactor           | In progress | Compact header, search, ranking, overflow, keyboard navigation, ArrowDown-to-open header flow, Enter-to-switch search flow, remote provenance                          | Final compact-header interaction polish                        |
+| Phase 2: Composer command bar                | In progress | Segmented mode control, local/cloud runtime selector, inline assistant/profile selector                                                                                | CLI runtime target, pending-work integration, hierarchy polish |
+| Phase 3: Pending edits rail                  | In progress | Rail above composer, per-file actions, batch actions, dense-batch collapse, hidden-group preview, in-flight Keep/Undo feedback, outcome review copy                    | Final visual hierarchy polish                                  |
+| Phase 4: Background and cloud task inbox     | In progress | Compact inbox, full-list parity, provenance badges, explicit handoff actions, shared setup guidance, full-mode handoff summary                                         | Final empty/loading polish and broader queue controls          |
+| Phase 5: Tool activity and transcript polish | In progress | Multi-call tool activity now stays grouped during active runs, with grouped status summaries, keyboard-toggleable headers, and keyboard-accessible simple result cards | Transcript density, tool header chrome, transition polish      |
+| Phase 6: VS Code host integration and polish | Not started | None                                                                                                                                                                   | Host sizing, clipping, and theme polish                        |
+
+### Immediate Next Slice Table
+
+| Slice                    | Status  | Notes                                                                       |
+| ------------------------ | ------- | --------------------------------------------------------------------------- |
+| Background-task handoff  | Done    | Local takeover, provenance, inbox actions, and full-list parity have landed |
+| Pending-edit hierarchy   | Done    | Dense multi-file batch handling and review-rail foundations have landed     |
+| CLI-aware runtime target | Blocked | Backing runtime state does not exist yet                                    |
+
 Completed in the repo:
 
-- the config surface now uses a denser left rail with grouped sections and search
-- shared settings panels are in place for grouped settings content
-- the `Tools & MCPs` page now follows the same grouped-panel pattern as the rest of settings
-- settings search can jump directly to subsection anchors across tabs
-- the chat surface now has a compact session header and dropdown switcher prototype when session tabs are enabled
-- the compact chat header now surfaces remote, background, and live-agent state
-- the compact chat switcher now supports inline search for faster multi-chat filtering
-- the composer now has a first command-bar prototype via a segmented mode control, runtime selector, and inline config/profile selection
-- pending edits now render in a dedicated rail above the composer instead of only replacing the idle toolbar
-- the pending edit actions now use `Keep` and `Undo` copy on both the rail and edit outcome surfaces
-- the pending edit rail now includes summary badges and top-level batch actions for multi-file edit runs
+- [x] the config surface now uses a denser left rail with grouped sections and search
+- [x] shared settings panels are in place for grouped settings content
+- [x] the `Tools & MCPs` page now follows the same grouped-panel pattern as the rest of settings
+- [x] settings search can jump directly to subsection anchors across tabs
+- [x] the chat surface now has a compact session header and dropdown switcher prototype when session tabs are enabled
+- [x] the compact chat header now surfaces remote, background, and live-agent state
+- [x] the compact chat switcher now supports inline search for faster multi-chat filtering
+- [x] the compact chat switcher now surfaces workspace and message-count metadata for saved sessions
+- [x] the compact chat switcher now ranks results by active state, query quality, and recency and collapses dense lists behind a show-more affordance
+- [x] the compact chat switcher now supports keyboard-first navigation across search and result rows, including Escape-to-close handoff back to the header
+- [x] pressing ArrowDown on the compact header now opens the switcher and moves keyboard focus into search
+- [x] the compact chat switcher now supports Enter-to-switch directly from the search input when results are visible
+- [x] the compact chat header and switcher now surface cloud-session provenance for remote sessions using the existing remote session identifiers
+- [x] multi-call tool activity now stays grouped during active runs instead of splitting into separate transcript cards mid-stream
+- [x] grouped tool activity headers now summarize mixed call status so long runs stay scannable without expanding every card
+- [x] grouped tool activity headers are now keyboard-toggleable instead of click-only
+- [x] simple multi-result tool cards are now keyboard-toggleable and their chevron icon no longer double-triggers header toggles
+- [x] the composer now has a first command-bar prototype via a segmented mode control, runtime selector, and inline config/profile selection
+- [x] background task state now surfaces in a compact inbox inside the main chat shell instead of only inside background mode
+- [x] the compact background inbox now distinguishes current-workspace takeover from other-repo tasks and shows in-shell GitHub setup guidance when background tasks are unavailable
+- [x] the compact background inbox now surfaces existing cloud-task provenance such as PR state, source, and creator when that metadata is available
+- [x] the full background task list now uses the same explicit View task/Open locally actions and provenance badges as the compact inbox
+- [x] background setup guidance now comes from the shared `AgentsList` state owner in both compact and full background surfaces
+- [x] the full background view now includes a stronger inbox summary for current-workspace handoff before the task list
+- [x] pending edits now render in a dedicated rail above the composer instead of only replacing the idle toolbar
+- [x] the pending edit actions now use `Keep` and `Undo` copy on both the rail and edit outcome surfaces
+- [x] the pending edit rail now includes summary badges and top-level batch actions for multi-file edit runs
+- [x] the pending edit rail now collapses dense multi-file batches by default and surfaces parent-path context for each file row
+- [x] the collapsed pending edit rail now previews hidden file groups before expansion so dense batches stay legible
+- [x] shared Keep/Undo actions now show visible in-flight feedback and temporarily disable duplicate actions while the post-action transition settles
+- [x] the edit outcome surface now uses the same review framing and target summary language as the pending rail
 
 Primary files touched by that work:
 
@@ -32,10 +85,11 @@ Primary files touched by that work:
 - `gui/src/components/mainInput/RuntimeTargetSelect.tsx`
 - `gui/src/components/mainInput/Lump/LumpToolbar/BlockSettingsTopToolbar.tsx`
 - `gui/src/components/mainInput/Lump/LumpToolbar/PendingApplyStatesToolbar.tsx`
+- `gui/src/components/BackgroundMode/AgentsList.tsx`
 - `gui/src/pages/gui/Chat.tsx`
 - `gui/src/pages/gui/chat-tests/Chat.test.tsx`
 
-This starts the chat-shell refactor, but it does not yet deliver richer switcher overflow, a dedicated CLI runtime target, or the final rail polish for dense edit batches.
+This starts the chat-shell refactor, but it does not yet deliver a dedicated CLI runtime target or the final rail polish for dense edit batches.
 
 ## Goal
 
@@ -95,9 +149,9 @@ The current product has the right primitives but not the right composition.
 Primary gaps:
 
 - The main control surface is split between `Layout`, `Chat`, `ModeSelect`, the toolbar under the input, and separate pages.
-- The session header is now more compact and exposes remote/background/live state with inline search, but it still needs overflow behavior and richer switcher polish.
-- Background tasks are isolated in a dedicated mode, instead of feeling adjacent to live chats and agent handoff.
-- Pending apply states are now surfaced above the composer with batch actions and summary badges, but the rail still needs tighter final visual hierarchy and polish.
+- The session header is now more compact and exposes remote/background/live state with inline search, ranked metadata-aware results, dense-list overflow handling, keyboard-first switcher navigation, Enter-to-switch search behavior, and basic cloud-session provenance, but it still needs final compact-header polish.
+- Background tasks now surface in the main shell and full background view with current-workspace handoff, shared setup guidance, and basic cloud provenance, but empty/loading polish and broader queue controls are still limited.
+- Pending apply states are now surfaced above the composer with batch actions, dense-batch collapsing, summary badges, collapsed hidden-group previews, visible in-flight Keep/Undo feedback, and matching outcome review copy, but the rail still needs tighter final visual hierarchy polish.
 - Runtime source is now selectable for the available local and cloud-backed profiles, but it still does not expose a dedicated CLI target or deeper runtime details.
 - The composer footer is denser than before and now includes config/profile selection, but it still does not function as one fully unified command bar with runtime selection, pending-work state, and send intent in one place.
 - The layout hierarchy is flat. Copilot-like products work because the header, transcript, composer, and pending-work rail each have clear responsibility.
@@ -285,9 +339,9 @@ If implementation continues immediately, the next slice should be a shell-first 
 
 Sequence:
 
-1. Merge background-agent inbox status more directly into the main chat shell instead of isolating it behind a separate screen.
-2. Tighten switcher overflow behavior and richer per-session metadata in the compact header.
-3. Extend runtime selection beyond local/cloud profile switching into a dedicated CLI-aware target model.
+- [x] Tighten background-task handoff so local takeover, cloud provenance, and inbox actions feel native to the chat shell.
+- [x] Tighten pending-edit hierarchy and dense multi-file batch polish above the composer.
+- [ ] Extend runtime selection beyond local/cloud profile switching into a dedicated CLI-aware target model.
 
 Primary files for that slice:
 
@@ -332,11 +386,17 @@ Outcome:
 
 Status:
 
-- in progress
-- `TabBar` has already been refactored into a compact header plus dropdown switcher
-- remote, background, and live-agent state now surface in the compact header
-- the switcher now supports inline filtering for faster chat lookup
-- remaining work is richer session metadata, overflow behavior, and switcher polish
+- [ ] in progress
+- [x] `TabBar` has already been refactored into a compact header plus dropdown switcher
+- [x] remote, background, and live-agent state now surface in the compact header
+- [x] the switcher now supports inline filtering for faster chat lookup
+- [x] saved-session rows now surface workspace and message-count metadata in the switcher
+- [x] dense-list overflow handling and query-aware ranking are now in place for the switcher
+- [x] keyboard-first navigation is now in place for search, result traversal, selection, and Escape-to-close in the switcher
+- [x] pressing ArrowDown on the compact header now opens the switcher and moves keyboard focus into search
+- [x] pressing Enter in the switcher search now activates the top visible result without forcing arrow-key traversal first
+- [x] remote sessions now surface a lightweight cloud-session provenance label in the compact header and switcher
+- [ ] remaining work is final compact-header interaction polish outside the landed search and switcher flow
 
 Primary changes:
 
@@ -369,11 +429,11 @@ Outcome:
 
 Status:
 
-- in progress
-- `ModeSelect` now renders as a segmented control instead of a dropdown
-- the input toolbar now exposes a real runtime selector for available local and cloud-backed profiles
-- the existing assistant/profile selector is now surfaced directly in the composer command bar
-- remaining work is to extend runtime selection to dedicated CLI targets, integrate pending-work state, and tighten the overall hierarchy
+- [ ] in progress
+- [x] `ModeSelect` now renders as a segmented control instead of a dropdown
+- [x] the input toolbar now exposes a real runtime selector for available local and cloud-backed profiles
+- [x] the existing assistant/profile selector is now surfaced directly in the composer command bar
+- [ ] remaining work is to extend runtime selection to dedicated CLI targets, integrate pending-work state, and tighten the overall hierarchy
 
 Primary changes:
 
@@ -409,12 +469,16 @@ Outcome:
 
 Status:
 
-- in progress
-- pending apply states now render in `Chat` above the composer instead of displacing the idle lump toolbar
-- `PendingApplyStatesToolbar` now emphasizes file rows first, with actions aligned to each pending file
-- `AcceptRejectDiffButtons` now uses `Keep` and `Undo` copy while preserving the existing internal accept/reject protocol
-- the rail now includes summary badges and top-level batch actions for multi-file edit runs
-- remaining work is to tighten the visual hierarchy further and polish dense multi-file batches
+- [ ] in progress
+- [x] pending apply states now render in `Chat` above the composer instead of displacing the idle lump toolbar
+- [x] `PendingApplyStatesToolbar` now emphasizes file rows first, with actions aligned to each pending file
+- [x] `AcceptRejectDiffButtons` now uses `Keep` and `Undo` copy while preserving the existing internal accept/reject protocol
+- [x] the rail now includes summary badges and top-level batch actions for multi-file edit runs
+- [x] dense multi-file batches now collapse by default and surface parent-path context in each file row
+- [x] the collapsed rail now previews hidden file groups so the expanded/collapsed review flow is easier to scan
+- [x] shared Keep/Undo actions now show visible in-flight feedback while the post-action transition settles
+- [x] the edit outcome surface now uses matching review copy and target context so the post-action flow stays consistent
+- [ ] remaining work is to tighten the visual hierarchy further across the rail and outcome surfaces
 
 Primary changes:
 
@@ -444,6 +508,17 @@ Outcome:
 
 - merge background-agent flows into the same overall chat product language
 
+Status:
+
+- [ ] in progress
+- [x] background task state now surfaces in a compact inbox inside `Chat`, not only inside `BackgroundModeView`
+- [x] `AgentsList` now supports a denser shell-friendly inbox presentation for active tasks
+- [x] the shell inbox now distinguishes current-workspace takeover from other-repo tasks and shows GitHub setup guidance when loading background agents fails for auth/setup reasons
+- [x] the shell inbox now surfaces available provenance such as PR state, source, and creator when the background-agent payload includes it
+- [x] the full background task list now mirrors the compact inbox with explicit View task/Open locally actions and provenance badges
+- [x] setup and handoff treatment now share the same `AgentsList` state owner across chat and background surfaces
+- [ ] remaining work is final empty/loading polish and broader queue controls across the background inbox
+
 Primary changes:
 
 - redesign `BackgroundModeView` and `AgentsList`
@@ -471,6 +546,15 @@ Effort:
 Outcome:
 
 - align tool activity cards and transcript density with the new shell
+
+Status:
+
+- [ ] in progress
+- [x] multi-call tool activity now stays grouped during active runs instead of splitting into separate transcript cards mid-stream
+- [x] grouped tool activity headers now summarize mixed call status so long runs stay scannable without expanding every card
+- [x] grouped tool activity headers are now keyboard-toggleable instead of click-only
+- [x] simple multi-result tool cards are now keyboard-toggleable and their chevron icon no longer double-triggers header toggles
+- [ ] remaining work is to reduce transcript wrapper noise, tighten tool headers, and improve transitions around tool activity
 
 Primary changes:
 

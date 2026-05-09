@@ -8,6 +8,7 @@ interface ToggleWithIconProps {
   onClick?: () => void;
   className?: string;
   isClickable?: boolean;
+  testId?: string;
 }
 
 export function ToggleWithIcon({
@@ -17,11 +18,14 @@ export function ToggleWithIcon({
   onClick,
   className = "",
   isClickable = false,
+  testId,
 }: ToggleWithIconProps) {
   const [isHovered, setIsHovered] = useState(false);
   const showChevron = isToggleable && (isHovered || open);
 
-  function handleClick() {
+  function handleClick(event: React.MouseEvent<HTMLDivElement>) {
+    event.stopPropagation();
+
     if ((isToggleable || isClickable) && onClick) {
       onClick();
     }
@@ -48,6 +52,7 @@ export function ToggleWithIcon({
   return (
     <div
       className={`flex h-4 w-4 flex-shrink-0 flex-col items-center justify-center ${className}`}
+      data-testid={testId}
       onClick={isToggleable || isClickable ? handleClick : undefined}
       onMouseEnter={isToggleable ? () => setIsHovered(true) : undefined}
       onMouseLeave={isToggleable ? () => setIsHovered(false) : undefined}

@@ -44,6 +44,17 @@ export function SimpleToolCallUI({
     }
   }
 
+  function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (!isClickable) {
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleClick();
+    }
+  }
+
   return (
     <div className="mt-1 flex flex-col px-4">
       <div className="flex min-w-0 flex-row items-center justify-between gap-2">
@@ -52,13 +63,19 @@ export function SimpleToolCallUI({
             isClickable ? "cursor-pointer hover:brightness-125" : ""
           }`}
           onClick={isClickable ? handleClick : undefined}
+          onKeyDown={handleKeyDown}
           data-testid="context-items-peek"
+          role={isClickable ? "button" : undefined}
+          tabIndex={isClickable ? 0 : undefined}
+          aria-expanded={isToggleable ? shouldShowContent : undefined}
         >
           <ToggleWithIcon
             icon={Icon}
             isToggleable={isToggleable}
             open={shouldShowContent}
             isClickable={isSingleItem}
+            onClick={handleClick}
+            testId="simple-tool-call-toggle"
           />
           <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
         </div>
@@ -70,6 +87,7 @@ export function SimpleToolCallUI({
 
       {isToggleable && (
         <div
+          data-testid="simple-tool-call-body"
           className={`mt-2 overflow-y-auto transition-all duration-300 ease-in-out ${
             shouldShowContent ? "max-h-[50vh] opacity-100" : "max-h-0 opacity-0"
           }`}

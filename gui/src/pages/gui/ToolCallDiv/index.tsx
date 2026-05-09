@@ -27,11 +27,7 @@ export function ToolCallDiv({
 
   if (!toolCallStates?.length) return null;
 
-  const isStreamingComplete = toolCallStates.every(
-    (toolCall) => toolCall.status !== "generating",
-  );
-
-  const shouldShowGroupedUI = toolCallStates.length > 1 && isStreamingComplete;
+  const shouldShowGroupedUI = toolCallStates.length > 1;
   const activeCalls = toolCallStates.filter(
     (call) => call.status !== "canceled",
   );
@@ -115,6 +111,7 @@ export function ToolCallDiv({
           onToggle={() => setOpen(!open)}
         />
         <div
+          data-testid="grouped-tool-call-body"
           className={`overflow-y-auto transition-all duration-300 ease-in-out ${
             open ? "max-h-[50vh] opacity-100" : "max-h-0 opacity-0"
           }`}

@@ -1,6 +1,6 @@
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
-import { useContext } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAppDispatch } from "../redux/hooks";
 import { cancelToolCall } from "../redux/slices/sessionSlice";
@@ -28,7 +28,27 @@ export default function AcceptRejectAllButtons({
   );
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
+  const [pendingOutcome, setPendingOutcome] =
+    useState<AcceptOrRejectOutcome | null>(null);
+  const resetPendingOutcomeTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetPendingOutcomeTimeoutRef.current) {
+        clearTimeout(resetPendingOutcomeTimeoutRef.current);
+      }
+    };
+  }, []);
+
   async function handleAcceptOrReject(status: AcceptOrRejectOutcome) {
+    if (pendingOutcome || pendingApplyStates.length === 0) {
+      return;
+    }
+
+    setPendingOutcome(status);
+
     // For reject operations, cancel all tool calls associated with pending apply states
     if (status === "rejectDiff") {
       for (const applyState of pendingApplyStates) {
@@ -51,15 +71,39 @@ export default function AcceptRejectAllButtons({
     }
 
     if (onAcceptOrReject) {
-      onAcceptOrReject(status);
+      await onAcceptOrReject(status);
     }
+
+    if (resetPendingOutcomeTimeoutRef.current) {
+      clearTimeout(resetPendingOutcomeTimeoutRef.current);
+    }
+
+    resetPendingOutcomeTimeoutRef.current = setTimeout(() => {
+      setPendingOutcome(null);
+      resetPendingOutcomeTimeoutRef.current = null;
+    }, 1500);
   }
 
   const rejectShortcut = `${getMetaKeyLabel()}⇧⌫`;
   const acceptShortcut = `${getMetaKeyLabel()}⇧⏎`;
   const isBatchAction = pendingApplyStates.length > 1;
-  const undoLabel = isBatchAction ? "Undo all" : "Undo";
-  const keepLabel = isBatchAction ? "Keep all" : "Keep";
+  const isUndoPending = pendingOutcome === "rejectDiff";
+  const isKeepPending = pendingOutcome === "acceptDiff";
+  const isPending = pendingOutcome !== null;
+  const undoLabel = isBatchAction
+    ? isUndoPending
+      ? "Undoing all..."
+      : "Undo all"
+    : isUndoPending
+      ? "Undoing..."
+      : "Undo";
+  const keepLabel = isBatchAction
+    ? isKeepPending
+      ? "Keeping all..."
+      : "Keep all"
+    : isKeepPending
+      ? "Keeping..."
+      : "Keep";
 
   return (
     <div
@@ -71,9 +115,15 @@ export default function AcceptRejectAllButtons({
     >
       <ToolTip content={`${undoLabel} (${rejectShortcut})`}>
         <button
-          className="text-foreground flex cursor-pointer flex-row flex-wrap justify-center gap-1 border-none bg-transparent p-0 text-xs opacity-80 hover:opacity-100 hover:brightness-125"
+          className={cn(
+            "text-foreground flex flex-row flex-wrap justify-center gap-1 border-none bg-transparent p-0 text-xs opacity-80",
+            isPending
+              ? "cursor-not-allowed"
+              : "cursor-pointer hover:opacity-100 hover:brightness-125",
+          )}
           onClick={() => handleAcceptOrReject("rejectDiff")}
           data-testid="edit-reject-button"
+          disabled={isPending}
         >
           <div className="flex flex-row items-center gap-1">
             <XMarkIcon className="text-error h-4 w-4" />
@@ -87,9 +137,15 @@ export default function AcceptRejectAllButtons({
 
       <ToolTip content={`${keepLabel} (${acceptShortcut})`}>
         <button
-          className="text-foreground flex cursor-pointer flex-row flex-wrap justify-center gap-1 border-none bg-transparent p-0 text-xs opacity-80 hover:opacity-100 hover:brightness-125"
+          className={cn(
+            "text-foreground flex flex-row flex-wrap justify-center gap-1 border-none bg-transparent p-0 text-xs opacity-80",
+            isPending
+              ? "cursor-not-allowed"
+              : "cursor-pointer hover:opacity-100 hover:brightness-125",
+          )}
           onClick={() => handleAcceptOrReject("acceptDiff")}
           data-testid="edit-accept-button"
+          disabled={isPending}
         >
           <div className="flex flex-row items-center gap-1">
             <CheckIcon className="text-success h-4 w-4" />
