@@ -278,18 +278,18 @@
         ]
       }
     ],
-"global": {
-    "anchors": [
-      {
-        "anchor": "Start Here",
-        "href": "/",
-        "icon": "rocket"
-      },
-      {
-        "anchor": "About Us",
-        "href": "https://continue.dev/about-us",
-        "icon": "book-open"
-      },
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Start Here",
+          "href": "/",
+          "icon": "rocket"
+        },
+        {
+          "anchor": "About Us",
+          "href": "https://continue.dev/about-us",
+          "icon": "book-open"
+        },
         {
           "anchor": "Blog",
           "href": "https://continue.dev/blog",
