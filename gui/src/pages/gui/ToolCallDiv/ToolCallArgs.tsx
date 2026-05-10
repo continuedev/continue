@@ -13,6 +13,7 @@ export const ArgsToggleIcon = ({
   return (
     <ToolbarButtonWithTooltip
       tooltipContent={isShowing ? "Hide args" : "Show args"}
+      ariaLabel={isShowing ? "Hide args" : "Show args"}
       onClick={() => {
         setIsShowing(!isShowing);
       }}

@@ -562,7 +562,7 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
         <button
           ref={switcherToggleButtonRef}
           type="button"
-          className="hover:bg-vsc-input-background/60 flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-solid border-transparent px-2 py-2 text-left"
+          className="hover:bg-vsc-input-background/60 flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-solid border-transparent px-2 py-2 text-left focus-visible:border-[color:var(--vscode-focusBorder)]"
           onClick={() => setIsSwitcherOpen((current) => !current)}
           onKeyDown={handleSwitcherToggleKeyDown}
           aria-expanded={isSwitcherOpen}
@@ -704,8 +704,14 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
                             }
                           }}
                         >
-                          <div className="bg-vsc-input-background text-description-muted flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-[10px] font-medium">
-                            {tab.isActive ? "A" : "C"}
+                          <div
+                            className={`flex h-5 min-w-5 items-center justify-center rounded-md text-[10px] font-bold ${
+                              tab.isActive
+                                ? "text-[color:var(--vscode-textLink-foreground)]"
+                                : "bg-vsc-input-background text-description-muted"
+                            }`}
+                          >
+                            {tab.isActive ? "●" : "○"}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">

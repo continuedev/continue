@@ -72,6 +72,12 @@ describe("ToolCallDiv", () => {
       "Generating 2 actions",
     );
     expect(
+      screen.getByTestId("grouped-tool-call-container").className,
+    ).toContain("px-2.5");
+    expect(screen.getByTestId("grouped-tool-call-row-0").className).toContain(
+      "pl-4",
+    );
+    expect(
       screen.getByTestId("tool-call-display-tool-call-1"),
     ).toBeInTheDocument();
     expect(
@@ -123,6 +129,14 @@ describe("ToolCallDiv", () => {
     const groupedHeader = screen.getByTestId("performing-actions");
     groupedHeader.focus();
 
+    expect(groupedHeader).toHaveAttribute(
+      "aria-label",
+      "Toggle grouped tool activity",
+    );
+    expect(groupedHeader).toHaveAttribute(
+      "aria-controls",
+      "grouped-tool-call-body",
+    );
     expect(groupedHeader).toHaveAttribute("aria-expanded", "true");
 
     await user.keyboard("{Enter}");

@@ -163,7 +163,7 @@ export class VsCodeWebviewProtocol
       }
     };
 
-    this._webviewListener = this._webview.onDidReceiveMessage(handleMessage);
+    this._webviewListener = webView.onDidReceiveMessage(handleMessage);
   }
 
   constructor() {}

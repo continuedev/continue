@@ -91,6 +91,11 @@ describe("SimpleToolCallUI", () => {
     const header = screen.getByTestId("context-items-peek");
     header.focus();
 
+    expect(header).toHaveAttribute("aria-label", "Toggle Custom Tool results");
+    expect(header).toHaveAttribute(
+      "aria-controls",
+      "simple-tool-call-body-tool-call-1",
+    );
     expect(header).toHaveAttribute("aria-expanded", "false");
 
     await user.keyboard("{Enter}");

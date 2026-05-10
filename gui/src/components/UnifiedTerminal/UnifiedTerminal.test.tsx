@@ -1,5 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import { ToolCallState } from "core";
+import { MockIdeMessenger } from "../../context/MockIdeMessenger";
 import { renderWithProviders } from "../../util/test/render";
 import { UnifiedTerminalCommand } from "./UnifiedTerminal";
 
@@ -135,6 +136,35 @@ describe("UnifiedTerminalCommand", () => {
     }
   });
 
+  test("lets keyboard users expand and collapse terminal output", async () => {
+    const { user, container } = await renderWithProviders(
+      <UnifiedTerminalCommand
+        command={MOCK_COMMAND}
+        output={MOCK_OUTPUT}
+        status="completed"
+      />,
+    );
+
+    const header = screen.getByTestId("terminal-toggle-header");
+    header.focus();
+
+    expect(header).toHaveAttribute("aria-expanded", "true");
+
+    await user.keyboard("{Enter}");
+
+    await waitFor(() => {
+      expect(container.textContent).not.toMatch(/Test 1 passed/);
+    });
+    expect(header).toHaveAttribute("aria-expanded", "false");
+
+    await user.keyboard(" ");
+
+    await waitFor(() => {
+      expect(container.textContent).toMatch(/Test 1 passed/);
+    });
+    expect(header).toHaveAttribute("aria-expanded", "true");
+  });
+
   test("shows collapsible output for long content", async () => {
     const { user, container } = await renderWithProviders(
       <UnifiedTerminalCommand
@@ -229,6 +259,33 @@ describe("UnifiedTerminalCommand", () => {
 
     // Should show "Run" text (may be hidden on small screens)
     expect(container.textContent).toMatch(/Run/);
+
+    expect(
+      screen.getByRole("button", { name: "Copy Code" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Run in terminal" }),
+    ).toBeInTheDocument();
+  });
+
+  test("runs the command when the run in terminal button is activated", async () => {
+    const mockIdeMessenger = new MockIdeMessenger();
+    const postSpy = vi.spyOn(mockIdeMessenger, "post");
+
+    await renderWithProviders(
+      <UnifiedTerminalCommand
+        command={`${MOCK_COMMAND} --watch`}
+        output={MOCK_OUTPUT}
+        status="completed"
+      />,
+      { mockIdeMessenger },
+    );
+
+    await screen.getByRole("button", { name: "Run in terminal" }).click();
+
+    expect(postSpy).toHaveBeenCalledWith("runCommand", {
+      command: `${MOCK_COMMAND} --watch`,
+    });
   });
 
   test("handles move to background action", async () => {

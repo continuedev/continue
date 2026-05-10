@@ -100,7 +100,9 @@ describe("CliInstallBanner", () => {
       );
 
       await waitFor(() => {
-        expect(subprocessSpy).toHaveBeenCalledWith("which yt");
+        expect(subprocessSpy).toHaveBeenCalledWith(
+          "which yt 2>/dev/null || true",
+        );
       });
     });
 
@@ -119,7 +121,9 @@ describe("CliInstallBanner", () => {
       );
 
       await waitFor(() => {
-        expect(subprocessSpy).toHaveBeenCalledWith("which yt");
+        expect(subprocessSpy).toHaveBeenCalledWith(
+          "which yt 2>/dev/null || true",
+        );
       });
     });
 
@@ -138,7 +142,9 @@ describe("CliInstallBanner", () => {
       );
 
       await waitFor(() => {
-        expect(subprocessSpy).toHaveBeenCalledWith("where yt");
+        expect(subprocessSpy).toHaveBeenCalledWith(
+          "where yt 2>nul || exit /b 0",
+        );
       });
     });
 

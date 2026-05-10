@@ -36,7 +36,7 @@ const LayoutTopDiv = styled(CustomScrollbarDiv)`
 const GridDiv = styled.div`
   display: grid;
   grid-template-rows: 1fr auto;
-  height: 100vh;
+  height: 100%;
   overflow-x: visible;
 `;
 

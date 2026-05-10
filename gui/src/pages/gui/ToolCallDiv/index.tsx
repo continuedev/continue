@@ -77,7 +77,7 @@ export function ToolCallDiv({
       functionName === BuiltInToolNames.RunTerminalCommand
     ) {
       return (
-        <div className="flex flex-col px-1">
+        <div className="flex flex-col px-0.5">
           <FunctionSpecificToolCallDiv
             toolCallState={toolCallState}
             historyIndex={historyIndex}
@@ -103,7 +103,10 @@ export function ToolCallDiv({
 
   if (shouldShowGroupedUI) {
     return (
-      <div className="border-border rounded-lg border px-4 py-3 pb-0">
+      <div
+        className="border-border fade-in-span rounded-lg border px-2.5 py-1.5 pb-0 transition-opacity duration-200"
+        data-testid="grouped-tool-call-container"
+      >
         <GroupedToolCallHeader
           toolCallStates={toolCallStates}
           activeCalls={pendingCalls.length > 0 ? pendingCalls : activeCalls}
@@ -116,8 +119,12 @@ export function ToolCallDiv({
             open ? "max-h-[50vh] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
-          {toolCallStates.map((toolCallState) => (
-            <div className="py-1 pl-6" key={toolCallState.toolCallId}>
+          {toolCallStates.map((toolCallState, index) => (
+            <div
+              className="py-0.5 pl-4"
+              data-testid={`grouped-tool-call-row-${index}`}
+              key={toolCallState.toolCallId}
+            >
               {renderToolCall(toolCallState)}
             </div>
           ))}
@@ -127,7 +134,7 @@ export function ToolCallDiv({
   }
 
   return toolCallStates.map((toolCallState) => (
-    <div className="py-1" key={toolCallState.toolCallId}>
+    <div className="fade-in-span py-0.5" key={toolCallState.toolCallId}>
       {renderToolCall(toolCallState)}
     </div>
   ));

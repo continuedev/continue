@@ -28,6 +28,9 @@ export function ToolTruncateHistoryIcon({
   return (
     <ToolbarButtonWithTooltip
       tooltipContent={isStreaming ? "" : "Trim chat to this message"}
+      ariaLabel="Trim chat to this message"
+      disabled={isStreaming}
+      data-testid="tool-truncate-history-button"
       onClick={() => {
         if (isStreaming) {
           return;

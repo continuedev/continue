@@ -110,6 +110,7 @@ export function GroupedToolCallHeader({
   onToggle,
 }: GroupedToolCallHeaderProps) {
   const statusSummary = getGroupStatusSummary(toolCallStates);
+  const bodyId = "grouped-tool-call-body";
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Enter" || event.key === " ") {
@@ -119,7 +120,7 @@ export function GroupedToolCallHeader({
   };
 
   return (
-    <div className="mb-2">
+    <div className="mb-1">
       <div
         className="text-description flex cursor-pointer items-center gap-1.5 transition-colors duration-200 ease-in-out hover:brightness-125"
         data-testid="performing-actions"
@@ -128,6 +129,8 @@ export function GroupedToolCallHeader({
         role="button"
         tabIndex={0}
         aria-expanded={open}
+        aria-controls={bodyId}
+        aria-label="Toggle grouped tool activity"
       >
         <ToggleWithIcon
           isToggleable
@@ -141,7 +144,7 @@ export function GroupedToolCallHeader({
       </div>
       {statusSummary.length > 0 && (
         <div
-          className="mt-2 flex flex-wrap items-center gap-1.5 pl-6"
+          className="mt-1 flex flex-wrap items-center gap-1.5 pl-4"
           data-testid="grouped-tool-call-status-summary"
         >
           {statusSummary.map((status) => (

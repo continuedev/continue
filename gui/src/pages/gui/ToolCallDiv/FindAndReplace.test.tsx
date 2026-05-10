@@ -31,7 +31,7 @@ vi.mock("react", async () => {
   const actual = await vi.importActual("react");
   return {
     ...actual,
-    useContext: () => ({ post: vi.fn() }),
+    useContext: () => ({ post: mockPost }),
   };
 });
 
@@ -61,7 +61,12 @@ describe("FindAndReplaceDisplay", () => {
 
   const mockToolCallState = {
     status: "done" as const,
-    output: null,
+    output: [
+      {
+        name: "Edit output",
+        content: "output content",
+      },
+    ],
   };
 
   const mockConfig = {
@@ -119,6 +124,22 @@ describe("FindAndReplaceDisplay", () => {
       expect(screen.getByText("file.ts")).toBeInTheDocument();
     });
 
+    it("should let keyboard users open the edit output from the status icon", () => {
+      render(<FindAndReplaceDisplay {...defaultProps} />);
+
+      const statusButton = screen.getByRole("button", {
+        name: "Show edit output",
+      });
+
+      expect(statusButton).toBeInTheDocument();
+      fireEvent.keyDown(statusButton, { key: "Enter" });
+
+      expect(mockPost).toHaveBeenCalledWith("showVirtualFile", {
+        name: "Edit output",
+        content: "output content",
+      });
+    });
+
     it("should display file name from relativeFilePath when no fileUri", () => {
       render(
         <FindAndReplaceDisplay
@@ -156,6 +177,30 @@ describe("FindAndReplaceDisplay", () => {
       // Should show diff content when expanded
       expect(screen.getByText("-")).toBeInTheDocument();
       expect(screen.getByText("+")).toBeInTheDocument();
+    });
+
+    it("should let keyboard users toggle the diff header", () => {
+      render(<FindAndReplaceDisplay {...defaultProps} />);
+
+      const header = screen.getByTestId("find-and-replace-header");
+      header.focus();
+
+      expect(header).toHaveAttribute(
+        "aria-label",
+        "Toggle edit diff for test/file.ts",
+      );
+      expect(header).toHaveAttribute("aria-expanded", "false");
+
+      fireEvent.keyDown(header, { key: "Enter" });
+
+      expect(header).toHaveAttribute("aria-expanded", "true");
+      expect(screen.getByText("-")).toBeInTheDocument();
+      expect(screen.getByText("+")).toBeInTheDocument();
+
+      fireEvent.keyDown(header, { key: " " });
+
+      expect(header).toHaveAttribute("aria-expanded", "false");
+      expect(screen.queryByText("-")).not.toBeInTheDocument();
     });
 
     it("should show content when tool call status is 'generated'", () => {

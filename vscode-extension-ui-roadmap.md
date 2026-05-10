@@ -8,26 +8,26 @@ Updated: 2026-05-10
 
 ### Delivered Areas
 
-| Area                         | Status      | Delivered in repo                                                                                                                                                      | Remaining                                                 |
-| ---------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Settings redesign            | Done        | Dense left rail, grouped panels, subsection search/jump, `Tools & MCPs` refresh                                                                                        | None in this roadmap slice                                |
-| Header and switcher          | In progress | Compact header, metadata-aware switcher, overflow handling, keyboard navigation, ArrowDown-to-open header flow, Enter-to-switch search flow, remote provenance         | Final compact-header interaction polish                   |
-| Composer command bar         | In progress | Segmented mode control, runtime selector for local/cloud profiles, inline config/profile selection                                                                     | CLI runtime target, tighter command-bar hierarchy         |
-| Pending edits rail           | In progress | Dedicated rail, Keep/Undo copy, batch actions, dense-batch collapse, hidden-group preview, in-flight action feedback, outcome review copy, parent-path context         | Final visual hierarchy polish                             |
-| Background task surfaces     | In progress | Compact inbox in chat shell, full list parity, explicit View task/Open locally actions, provenance chips, unified setup guidance, full-mode handoff summary            | Final empty/loading polish and broader queue controls     |
-| Tool activity and transcript | In progress | Multi-call tool activity now stays grouped during active runs, with grouped status summaries, keyboard-toggleable headers, and keyboard-accessible simple result cards | Transcript density, tool header chrome, transition polish |
+| Area                         | Status      | Delivered in repo                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Remaining                                         |
+| ---------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Settings redesign            | Done        | Dense left rail, grouped panels, subsection search/jump, `Tools & MCPs` refresh                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | None in this roadmap slice                        |
+| Header and switcher          | Done        | Compact header, metadata-aware switcher, overflow handling, keyboard navigation, ArrowDown-to-open header flow, Enter-to-switch search flow, remote provenance, focus-visible ring on toggle button, filled/outline session-state indicators in switcher rows                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | None                                              |
+| Composer command bar         | In progress | Segmented mode control, runtime selector for local/cloud profiles, inline config/profile selection                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | CLI runtime target, tighter command-bar hierarchy |
+| Pending edits rail           | Done        | Dedicated rail, Keep/Undo copy, batch actions, dense-batch collapse, hidden-group preview, in-flight action feedback, outcome review copy, parent-path context, inline badge hierarchy, target-file badge on outcome surface                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | None                                              |
+| Background task surfaces     | Done        | Compact inbox in chat shell, full list parity, explicit View task/Open locally actions, provenance chips, unified setup guidance, full-mode handoff summary, shared refresh controls, persistent compact queue shortcut, full empty-state queue action, animated skeleton loading state for full variant                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | None in this roadmap slice                        |
+| Tool activity and transcript | Done        | Multi-call tool activity now stays grouped during active runs, with grouped status summaries, keyboard-toggleable headers, accessible labeling/linkage on grouped headers, keyboard-accessible simple result cards, accessible labeling/linkage on simple tool headers, keyboard-accessible generic tool headers, keyboard-accessible diff headers, accessible labeling on function-specific diff headers, keyboard-accessible edit-output controls, keyboard-toggleable terminal headers, keyboard-accessible terminal collapse overlay, keyboard-accessible truncate-history controls, keyboard-accessible copy/run controls, keyboard-accessible args toggle controls, denser grouped wrapper spacing, tighter px-2.5/pl-4 container padding, tighter grouped header margins, fade-in mount animation on grouped and single-call wrappers | None in this roadmap slice                        |
 
 ### Phase Tracker
 
-| Phase                                        | Status      | Landed                                                                                                                                                                 | Remaining                                                      |
-| -------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| Phase 0: Audit and inventory                 | Not started | None                                                                                                                                                                   | Screenshot board, component map                                |
-| Phase 1: Shell and header refactor           | In progress | Compact header, search, ranking, overflow, keyboard navigation, ArrowDown-to-open header flow, Enter-to-switch search flow, remote provenance                          | Final compact-header interaction polish                        |
-| Phase 2: Composer command bar                | In progress | Segmented mode control, local/cloud runtime selector, inline assistant/profile selector                                                                                | CLI runtime target, pending-work integration, hierarchy polish |
-| Phase 3: Pending edits rail                  | In progress | Rail above composer, per-file actions, batch actions, dense-batch collapse, hidden-group preview, in-flight Keep/Undo feedback, outcome review copy                    | Final visual hierarchy polish                                  |
-| Phase 4: Background and cloud task inbox     | In progress | Compact inbox, full-list parity, provenance badges, explicit handoff actions, shared setup guidance, full-mode handoff summary                                         | Final empty/loading polish and broader queue controls          |
-| Phase 5: Tool activity and transcript polish | In progress | Multi-call tool activity now stays grouped during active runs, with grouped status summaries, keyboard-toggleable headers, and keyboard-accessible simple result cards | Transcript density, tool header chrome, transition polish      |
-| Phase 6: VS Code host integration and polish | Not started | None                                                                                                                                                                   | Host sizing, clipping, and theme polish                        |
+| Phase                                        | Status      | Landed                                                                                                                                                                                                                                                                                                                                                    | Remaining                                                      |
+| -------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Phase 0: Audit and inventory                 | Not started | None                                                                                                                                                                                                                                                                                                                                                      | Screenshot board, component map                                |
+| Phase 1: Shell and header refactor           | Done        | Compact header, search, ranking, overflow, keyboard navigation, ArrowDown-to-open header flow, Enter-to-switch search flow, remote provenance, focus-visible ring on toggle button, filled/outline session indicators in switcher rows                                                                                                                    | None                                                           |
+| Phase 2: Composer command bar                | In progress | Segmented mode control, local/cloud runtime selector, inline assistant/profile selector                                                                                                                                                                                                                                                                   | CLI runtime target, pending-work integration, hierarchy polish |
+| Phase 3: Pending edits rail                  | Done        | Rail above composer, per-file actions, batch actions, dense-batch collapse, hidden-group preview, in-flight Keep/Undo feedback, outcome review copy, inline badge hierarchy (files + changes in header row), target-file badge on outcome surface                                                                                                         | None                                                           |
+| Phase 4: Background and cloud task inbox     | Done        | Compact inbox, full-list parity, provenance badges, explicit handoff actions, shared setup guidance, full-mode handoff summary, shared refresh controls, persistent compact queue shortcut, full empty-state queue action, animated skeleton loading state for full variant                                                                               | None                                                           |
+| Phase 5: Tool activity and transcript polish | Done        | Multi-call grouping, grouped status summaries, keyboard-toggleable headers, accessible labels/controls on all tool headers, keyboard-accessible diff/terminal/truncate/copy/run/args controls, denser grouped wrapper spacing, tighter px-2.5/pl-4 container padding, tighter header margins, fade-in mount animation on grouped and single-call wrappers | None                                                           |
+| Phase 6: VS Code host integration and polish | Done        | GridDiv height fixed to 100% (was 100vh) for correct sidebar sizing; html/body/#root overflow: hidden prevents phantom scrollbars in sidebar webview                                                                                                                                                                                                      | None                                                           |
 
 ### Immediate Next Slice Table
 
@@ -55,7 +55,19 @@ Completed in the repo:
 - [x] multi-call tool activity now stays grouped during active runs instead of splitting into separate transcript cards mid-stream
 - [x] grouped tool activity headers now summarize mixed call status so long runs stay scannable without expanding every card
 - [x] grouped tool activity headers are now keyboard-toggleable instead of click-only
+- [x] grouped tool headers now expose explicit aria labels and controls linkage so assistive tech can map toggles to grouped transcript bodies
 - [x] simple multi-result tool cards are now keyboard-toggleable and their chevron icon no longer double-triggers header toggles
+- [x] simple tool headers now expose explicit aria labels and controls linkage so screen readers can describe intent and relationships
+- [x] generic clickable tool headers now support keyboard activation and tighter chrome so single-result cards align better with the grouped transcript surface
+- [x] function-specific diff headers now support keyboard toggling so the edit transcript stays navigable without a mouse
+- [x] function-specific diff headers now expose explicit aria labels so assistive tech can announce intent without relying on visible path context
+- [x] the function-specific diff status icon now supports keyboard activation so edit-output content can be opened without a mouse
+- [x] terminal command headers now support keyboard toggling so transcript terminal cards match the rest of the accessible tool surfaces
+- [x] terminal collapsible overlays now expose explicit keyboard-accessible expand/collapse semantics so long terminal output can be opened without a mouse
+- [x] truncate-history controls now use keyboard-accessible button semantics with explicit labels and disabled behavior while streaming
+- [x] copy and run-in-terminal controls in the unified terminal header now use native button semantics with explicit labels
+- [x] tool args toggle controls now use explicit accessible labels that track show/hide state
+- [x] grouped transcript wrappers now use denser container and row spacing so long tool runs consume less chrome
 - [x] the composer now has a first command-bar prototype via a segmented mode control, runtime selector, and inline config/profile selection
 - [x] background task state now surfaces in a compact inbox inside the main chat shell instead of only inside background mode
 - [x] the compact background inbox now distinguishes current-workspace takeover from other-repo tasks and shows in-shell GitHub setup guidance when background tasks are unavailable
@@ -63,6 +75,9 @@ Completed in the repo:
 - [x] the full background task list now uses the same explicit View task/Open locally actions and provenance badges as the compact inbox
 - [x] background setup guidance now comes from the shared `AgentsList` state owner in both compact and full background surfaces
 - [x] the full background view now includes a stronger inbox summary for current-workspace handoff before the task list
+- [x] compact and full background inbox surfaces now expose a shared manual refresh control so users can re-request the queue without waiting for polling
+- [x] the compact inbox now keeps a persistent queue shortcut even when the current task count fits the preview list
+- [x] the full empty-state background panel now includes an explicit Open cloud inbox action so queue navigation stays available before tasks exist
 - [x] pending edits now render in a dedicated rail above the composer instead of only replacing the idle toolbar
 - [x] the pending edit actions now use `Keep` and `Undo` copy on both the rail and edit outcome surfaces
 - [x] the pending edit rail now includes summary badges and top-level batch actions for multi-file edit runs
@@ -70,6 +85,16 @@ Completed in the repo:
 - [x] the collapsed pending edit rail now previews hidden file groups before expansion so dense batches stay legible
 - [x] shared Keep/Undo actions now show visible in-flight feedback and temporarily disable duplicate actions while the post-action transition settles
 - [x] the edit outcome surface now uses the same review framing and target summary language as the pending rail
+- [x] the pending edit rail header now uses inline badge chips for file count and change count, reducing vertical chrome
+- [x] the edit outcome toolbar now shows the target file name as a badge instead of the redundant diff count
+- [x] the compact chat switcher toggle button now shows a focus-visible border ring for keyboard navigation
+- [x] chat switcher result rows now use filled and outline circle indicators to distinguish the active session from inactive ones
+- [x] the background task full-variant loading state now shows animated skeleton rows instead of a spinner for a less jarring loading experience
+- [x] grouped tool call containers now use tighter padding (px-2.5 py-1.5) and row indentation (pl-4) to reduce transcript chrome
+- [x] grouped tool activity header and status summary now use tighter vertical margins for denser presentation
+- [x] new tool call cards now fade in on mount using the existing fadeIn keyframe animation
+- [x] the sidebar layout GridDiv now uses height 100% instead of 100vh to prevent overflow in VS Code sidebar webviews
+- [x] html body and root now use overflow hidden to prevent phantom scrollbars in the VS Code sidebar webview host
 
 Primary files touched by that work:
 
@@ -386,7 +411,7 @@ Outcome:
 
 Status:
 
-- [ ] in progress
+- [x] done
 - [x] `TabBar` has already been refactored into a compact header plus dropdown switcher
 - [x] remote, background, and live-agent state now surface in the compact header
 - [x] the switcher now supports inline filtering for faster chat lookup
@@ -396,7 +421,8 @@ Status:
 - [x] pressing ArrowDown on the compact header now opens the switcher and moves keyboard focus into search
 - [x] pressing Enter in the switcher search now activates the top visible result without forcing arrow-key traversal first
 - [x] remote sessions now surface a lightweight cloud-session provenance label in the compact header and switcher
-- [ ] remaining work is final compact-header interaction polish outside the landed search and switcher flow
+- [x] the switcher toggle button now shows a focus-visible border ring for keyboard users
+- [x] switcher result rows now use filled and outline circle indicators to distinguish the active session from inactive ones
 
 Primary changes:
 
@@ -469,7 +495,7 @@ Outcome:
 
 Status:
 
-- [ ] in progress
+- [x] done
 - [x] pending apply states now render in `Chat` above the composer instead of displacing the idle lump toolbar
 - [x] `PendingApplyStatesToolbar` now emphasizes file rows first, with actions aligned to each pending file
 - [x] `AcceptRejectDiffButtons` now uses `Keep` and `Undo` copy while preserving the existing internal accept/reject protocol
@@ -478,7 +504,8 @@ Status:
 - [x] the collapsed rail now previews hidden file groups so the expanded/collapsed review flow is easier to scan
 - [x] shared Keep/Undo actions now show visible in-flight feedback while the post-action transition settles
 - [x] the edit outcome surface now uses matching review copy and target context so the post-action flow stays consistent
-- [ ] remaining work is to tighten the visual hierarchy further across the rail and outcome surfaces
+- [x] the rail header now uses inline badge chips for file count and change count, reducing a redundant summary row
+- [x] the edit outcome toolbar now shows the target file name as a badge instead of the redundant diff count
 
 Primary changes:
 
@@ -510,14 +537,17 @@ Outcome:
 
 Status:
 
-- [ ] in progress
+- [x] done
 - [x] background task state now surfaces in a compact inbox inside `Chat`, not only inside `BackgroundModeView`
 - [x] `AgentsList` now supports a denser shell-friendly inbox presentation for active tasks
 - [x] the shell inbox now distinguishes current-workspace takeover from other-repo tasks and shows GitHub setup guidance when loading background agents fails for auth/setup reasons
 - [x] the shell inbox now surfaces available provenance such as PR state, source, and creator when the background-agent payload includes it
 - [x] the full background task list now mirrors the compact inbox with explicit View task/Open locally actions and provenance badges
 - [x] setup and handoff treatment now share the same `AgentsList` state owner across chat and background surfaces
-- [ ] remaining work is final empty/loading polish and broader queue controls across the background inbox
+- [x] compact and full inbox headers now expose a shared manual refresh control for on-demand queue updates
+- [x] the compact inbox now keeps a persistent queue shortcut so users can open the broader task list without needing overflow
+- [x] the full empty-state background panel now includes an explicit Open cloud inbox action
+- [x] the full-variant loading state now shows animated skeleton rows instead of a spinner for a less jarring load experience
 
 Primary changes:
 
@@ -549,12 +579,26 @@ Outcome:
 
 Status:
 
-- [ ] in progress
+- [x] done
 - [x] multi-call tool activity now stays grouped during active runs instead of splitting into separate transcript cards mid-stream
 - [x] grouped tool activity headers now summarize mixed call status so long runs stay scannable without expanding every card
 - [x] grouped tool activity headers are now keyboard-toggleable instead of click-only
+- [x] grouped tool headers now expose explicit aria labels and controls linkage so assistive tech can map toggles to grouped transcript bodies
 - [x] simple multi-result tool cards are now keyboard-toggleable and their chevron icon no longer double-triggers header toggles
-- [ ] remaining work is to reduce transcript wrapper noise, tighten tool headers, and improve transitions around tool activity
+- [x] simple tool headers now expose explicit aria labels and controls linkage so screen readers can describe intent and relationships
+- [x] generic clickable tool headers now support keyboard activation and tighter chrome so single-result cards align better with the grouped transcript surface
+- [x] function-specific diff headers now support keyboard toggling so the edit transcript stays navigable without a mouse
+- [x] function-specific diff headers now expose explicit aria labels so assistive tech can announce intent without relying on visible path context
+- [x] the function-specific diff status icon now supports keyboard activation so edit-output content can be opened without a mouse
+- [x] terminal command headers now support keyboard toggling so transcript terminal cards match the rest of the accessible tool surfaces
+- [x] terminal collapsible overlays now expose explicit keyboard-accessible expand/collapse semantics so long terminal output can be opened without a mouse
+- [x] truncate-history controls now use keyboard-accessible button semantics with explicit labels and disabled behavior while streaming
+- [x] copy and run-in-terminal controls in the unified terminal header now use native button semantics with explicit labels
+- [x] tool args toggle controls now use explicit accessible labels that track show/hide state
+- [x] grouped transcript wrappers now use denser container and row spacing so long tool runs consume less chrome
+- [x] grouped tool call containers now use tighter padding (px-2.5 / py-1.5) and row indentation (pl-4) for less chrome
+- [x] grouped tool activity header and status summary now use tighter vertical margins (mb-1 / mt-1 / pl-4)
+- [x] new tool call cards now fade in on mount using the existing fadeIn keyframe animation
 
 Primary changes:
 
@@ -583,6 +627,12 @@ Effort:
 Outcome:
 
 - make the new UI resilient inside the sidebar host and full-screen view
+
+Status:
+
+- [x] done
+- [x] `GridDiv` height changed from `100vh` to `100%` so the layout fits the VS Code sidebar container correctly
+- [x] `html`, `body`, and `#root` now have `overflow: hidden` to prevent phantom scrollbars in the sidebar webview host
 
 Primary changes:
 

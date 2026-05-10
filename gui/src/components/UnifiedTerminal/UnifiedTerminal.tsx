@@ -407,6 +407,19 @@ export function UnifiedTerminalCommand({
     }
   };
 
+  const handleTerminalToggle = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const handleTerminalHeaderKeyDown = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleTerminalToggle();
+    }
+  };
+
   // Create combined content for copying (command + output)
   const copyContent = useMemo(() => {
     let content = command;
@@ -432,9 +445,17 @@ export function UnifiedTerminalCommand({
           }`}
           style={{ fontSize: `${getFontSize() - 2}px` }}
         >
-          <div className="flex max-w-[50%] flex-row items-center">
+          <div
+            className="flex max-w-[50%] cursor-pointer flex-row items-center"
+            onClick={handleTerminalToggle}
+            onKeyDown={handleTerminalHeaderKeyDown}
+            data-testid="terminal-toggle-header"
+            role="button"
+            tabIndex={0}
+            aria-expanded={isExpanded}
+            aria-label="Toggle terminal output"
+          >
             <ChevronDownIcon
-              onClick={() => setIsExpanded(!isExpanded)}
               className={`text-description h-3.5 w-3.5 flex-shrink-0 cursor-pointer hover:brightness-125 ${
                 isExpanded ? "rotate-0" : "-rotate-90"
               }`}

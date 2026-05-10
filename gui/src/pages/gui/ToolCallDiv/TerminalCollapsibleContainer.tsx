@@ -18,6 +18,17 @@ export function TerminalCollapsibleContainer({
 }: TerminalCollapsibleContainerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  function toggleExpanded() {
+    setIsExpanded((prev) => !prev);
+  }
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      toggleExpanded();
+    }
+  }
+
   if (!collapsible) {
     return <div className={className}>{collapsedContent}</div>;
   }
@@ -39,9 +50,16 @@ export function TerminalCollapsibleContainer({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            setIsExpanded(!isExpanded);
+            toggleExpanded();
           }}
+          onKeyDown={handleKeyDown}
           className="absolute inset-0 z-20 cursor-pointer"
+          role="button"
+          tabIndex={0}
+          aria-expanded={isExpanded}
+          aria-label={
+            isExpanded ? "Collapse terminal output" : "Expand terminal output"
+          }
         />
       )}
 

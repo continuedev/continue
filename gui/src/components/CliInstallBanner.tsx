@@ -60,8 +60,11 @@ export function CliInstallBanner({
     const checkCliInstallation = async () => {
       try {
         const platform = getPlatform();
-        // Use 'which' on mac/linux, 'where' on windows
-        const command = platform === "windows" ? "where yt" : "which yt";
+        // Probe for the CLI without surfacing a missing-binary error through the webview subprocess channel.
+        const command =
+          platform === "windows"
+            ? "where yt 2>nul || exit /b 0"
+            : "which yt 2>/dev/null || true";
 
         const [stdout, stderr] = await ideMessenger.ide.subprocess(command);
 

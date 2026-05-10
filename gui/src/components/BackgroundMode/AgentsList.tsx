@@ -1,7 +1,7 @@
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { formatRelativeTimeAgo } from "core/util/format";
 import { normalizeRepoUrl } from "core/util/repoUrl";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
@@ -46,94 +46,104 @@ export function AgentsList({
   const [totalCount, setTotalCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    async function fetchWorkspaceRepos() {
-      if (!agents || agents.length === 0) {
-        setWorkspaces([]);
-        return;
-      }
-
-      const workspaceDirs = await ideMessenger.request(
-        "getWorkspaceDirs",
-        undefined,
-      );
-
-      if (workspaceDirs.status !== "success" || !workspaceDirs.content) {
-        return;
-      }
-
-      const workspaceInfos: WorkspaceInfo[] = [];
-      for (const dir of workspaceDirs.content) {
-        try {
-          const repoNameResult = await ideMessenger.request("getRepoName", {
-            dir,
-          });
-          if (repoNameResult.status === "success" && repoNameResult.content) {
-            const normalizedUrl = normalizeRepoUrl(repoNameResult.content);
-            if (normalizedUrl) {
-              const workspaceName = dir.split("/").pop() || dir;
-              workspaceInfos.push({
-                repoUrl: normalizedUrl,
-                workspaceDir: dir,
-                workspaceName,
-              });
-            }
-          }
-        } catch {
-          // Some environments do not expose repository metadata.
-        }
-      }
-
-      setWorkspaces(workspaceInfos);
+  const fetchWorkspaceRepos = useCallback(async () => {
+    if (!agents || agents.length === 0) {
+      setWorkspaces([]);
+      return;
     }
 
-    void fetchWorkspaceRepos();
+    const workspaceDirs = await ideMessenger.request(
+      "getWorkspaceDirs",
+      undefined,
+    );
+
+    if (workspaceDirs.status !== "success" || !workspaceDirs.content) {
+      return;
+    }
+
+    const workspaceInfos: WorkspaceInfo[] = [];
+    for (const dir of workspaceDirs.content) {
+      try {
+        const repoNameResult = await ideMessenger.request("getRepoName", {
+          dir,
+        });
+        if (repoNameResult.status === "success" && repoNameResult.content) {
+          const normalizedUrl = normalizeRepoUrl(repoNameResult.content);
+          if (normalizedUrl) {
+            const workspaceName = dir.split("/").pop() || dir;
+            workspaceInfos.push({
+              repoUrl: normalizedUrl,
+              workspaceDir: dir,
+              workspaceName,
+            });
+          }
+        }
+      } catch {
+        // Some environments do not expose repository metadata.
+      }
+    }
+
+    setWorkspaces(workspaceInfos);
   }, [agents, ideMessenger]);
 
   useEffect(() => {
-    async function fetchAgents() {
-      if (!session) {
-        setAgents([]);
-        setTotalCount(0);
-        return;
-      }
+    void fetchWorkspaceRepos();
+  }, [fetchWorkspaceRepos]);
 
-      try {
-        const organizationId =
-          currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
-        const result = await ideMessenger.request("listBackgroundAgents", {
-          organizationId,
-          limit: 5,
-        });
-
-        if ("status" in result && result.status === "success") {
-          const content = result.content as {
-            agents: Agent[];
-            totalCount: number;
-          };
-          setAgents(content.agents || []);
-          setTotalCount(content.totalCount || 0);
-          setError(null);
-        } else if ("error" in result) {
-          setError(result.error);
-          setAgents([]);
-          setTotalCount(0);
-        } else {
-          setAgents([]);
-          setTotalCount(0);
-        }
-      } catch (err: any) {
-        const errorMessage = err.message || "Failed to load agents";
-        if (!isGitHubSetupError(errorMessage)) {
-          console.error("Failed to fetch agents:", err);
-        }
-        setError(errorMessage);
-        setAgents([]);
-        setTotalCount(0);
-      }
+  const fetchAgents = useCallback(async () => {
+    if (!session) {
+      setAgents([]);
+      setTotalCount(0);
+      return;
     }
 
+    try {
+      const organizationId =
+        currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
+      const result = await ideMessenger.request("listBackgroundAgents", {
+        organizationId,
+        limit: 5,
+      });
+
+      if ("status" in result && result.status === "success") {
+        const content = result.content as {
+          agents: Agent[];
+          totalCount: number;
+        };
+        setAgents(content.agents || []);
+        setTotalCount(content.totalCount || 0);
+        setError(null);
+      } else if ("error" in result) {
+        setError(result.error);
+        setAgents([]);
+        setTotalCount(0);
+      } else {
+        setAgents([]);
+        setTotalCount(0);
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || "Failed to load agents";
+      if (!isGitHubSetupError(errorMessage)) {
+        console.error("Failed to fetch agents:", err);
+      }
+      setError(errorMessage);
+      setAgents([]);
+      setTotalCount(0);
+    }
+  }, [session, currentOrg, ideMessenger]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchAgents();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [fetchAgents]);
+
+  useEffect(() => {
     void fetchAgents();
 
     // Poll for updates every 10 seconds
@@ -142,7 +152,7 @@ export function AgentsList({
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [session, ideMessenger, currentOrg, isCreatingAgent]);
+  }, [fetchAgents, isCreatingAgent]);
 
   const getMatchingWorkspace = (agent: Agent): WorkspaceInfo | undefined => {
     // Get all possible agent repo URLs (both repoUrl and metadata.github_repo)
@@ -240,6 +250,34 @@ export function AgentsList({
     });
   };
 
+  const handleOpenAgentQueue = () => {
+    ideMessenger.post("controlPlane/openUrl", {
+      path: "agents",
+    });
+  };
+
+  const refreshButton = (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="my-0 px-2 py-1 text-xs"
+      data-testid={
+        variant === "compact"
+          ? "background-inbox-refresh"
+          : "background-full-refresh"
+      }
+      disabled={isRefreshing}
+      onClick={() => void handleRefresh()}
+    >
+      <span className="flex items-center gap-1">
+        <ArrowPathIcon
+          className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+        />
+        {isRefreshing ? "Refreshing..." : "Refresh"}
+      </span>
+    </Button>
+  );
+
   if (error) {
     if (isGitHubSetupError(error)) {
       return (
@@ -260,18 +298,21 @@ export function AgentsList({
                   : "Connect GitHub to track cloud background tasks and take them over locally."}
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              data-testid={
-                variant === "compact"
-                  ? "background-inbox-connect-github"
-                  : "background-full-connect-github"
-              }
-              onClick={handleOpenGitHubSettings}
-            >
-              Connect GitHub
-            </Button>
+            <div className="flex items-center gap-2">
+              {refreshButton}
+              <Button
+                variant="outline"
+                size="sm"
+                data-testid={
+                  variant === "compact"
+                    ? "background-inbox-connect-github"
+                    : "background-full-connect-github"
+                }
+                onClick={handleOpenGitHubSettings}
+              >
+                Connect GitHub
+              </Button>
+            </div>
           </div>
         </div>
       );
@@ -283,8 +324,11 @@ export function AgentsList({
           className="border-command-border bg-vsc-editor-background mx-2 rounded-xl border border-solid px-3 py-3"
           data-testid="background-inbox-panel"
         >
-          <div className="text-error text-sm">
-            Error loading background tasks
+          <div className="flex items-start justify-between gap-3">
+            <div className="text-error text-sm">
+              Error loading background tasks
+            </div>
+            {refreshButton}
           </div>
         </div>
       );
@@ -295,9 +339,14 @@ export function AgentsList({
         className="border-command-border bg-vsc-editor-background mx-2 rounded-xl border border-solid px-3 py-3"
         data-testid="background-full-error-panel"
       >
-        <div className="text-sm font-semibold">Background inbox</div>
-        <div className="text-error mt-1 text-sm">
-          Error loading background tasks
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold">Background inbox</div>
+            <div className="text-error mt-1 text-sm">
+              Error loading background tasks
+            </div>
+          </div>
+          {refreshButton}
         </div>
       </div>
     );
@@ -321,21 +370,40 @@ export function AgentsList({
             : "background-full-loading-panel"
         }
       >
-        <div className="flex items-center gap-2">
-          <ArrowPathIcon className="text-description-muted h-4 w-4 animate-spin" />
-          {variant === "compact" ? (
-            <span className="text-description-muted text-sm">
-              Loading background tasks...
-            </span>
-          ) : (
-            <div>
-              <div className="text-sm font-medium">Background inbox</div>
-              <div className="text-description-muted text-xs">
+        {variant === "compact" ? (
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <ArrowPathIcon className="text-description-muted h-4 w-4 animate-spin" />
+              <span className="text-description-muted text-sm">
                 Loading background tasks...
-              </div>
+              </span>
             </div>
-          )}
-        </div>
+            {refreshButton}
+          </div>
+        ) : (
+          <div>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-medium">Background inbox</div>
+                <div className="text-description-muted text-xs">
+                  Loading background tasks...
+                </div>
+              </div>
+              {refreshButton}
+            </div>
+            <div className="flex flex-col gap-2" aria-hidden="true">
+              {[1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="bg-vsc-input-background/60 animate-pulse rounded-lg px-3 py-2"
+                >
+                  <div className="bg-vsc-input-background mb-1.5 h-3 w-2/5 rounded-full" />
+                  <div className="bg-vsc-input-background h-2.5 w-3/5 rounded-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -351,14 +419,17 @@ export function AgentsList({
           className="border-command-border bg-vsc-editor-background mx-2 rounded-xl border border-solid px-3 py-3"
           data-testid="background-inbox-panel"
         >
-          <div className="flex items-center gap-2">
-            <ArrowPathIcon className="text-description-muted h-4 w-4 animate-spin" />
-            <div>
-              <div className="text-sm font-medium">Background inbox</div>
-              <div className="text-description-muted text-xs">
-                Creating your task. It will appear here shortly.
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <ArrowPathIcon className="text-description-muted h-4 w-4 animate-spin" />
+              <div>
+                <div className="text-sm font-medium">Background inbox</div>
+                <div className="text-description-muted text-xs">
+                  Creating your task. It will appear here shortly.
+                </div>
               </div>
             </div>
+            {refreshButton}
           </div>
         </div>
       );
@@ -369,15 +440,34 @@ export function AgentsList({
         className="border-command-border bg-vsc-editor-background mx-2 rounded-xl border border-solid px-3 py-3"
         data-testid="background-full-empty-panel"
       >
-        <div className="text-sm font-semibold">Background inbox</div>
-        <div className="text-description-muted mt-1 text-sm">
-          No background tasks yet. Submit a message above to create one.
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold">Background inbox</div>
+            <div className="text-description-muted mt-1 text-sm">
+              No background tasks yet. Submit a message above to create one.
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {refreshButton}
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="background-full-open-queue-empty"
+              onClick={handleOpenAgentQueue}
+            >
+              Open cloud inbox
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   const visibleAgents = variant === "compact" ? agents.slice(0, 3) : agents;
+  const compactQueueButtonLabel =
+    totalCount > visibleAgents.length
+      ? `See all ${totalCount} tasks →`
+      : "Open inbox";
   const currentWorkspaceTaskCount = agents.filter((agent) =>
     Boolean(getMatchingWorkspace(agent)),
   ).length;
@@ -399,9 +489,12 @@ export function AgentsList({
               Track running agent tasks without leaving the current chat.
             </div>
           </div>
-          <span className="bg-vsc-input-background text-description rounded-full px-2 py-0.5 text-[11px] font-medium">
-            {totalCount} {totalCount === 1 ? "task" : "tasks"}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="bg-vsc-input-background text-description rounded-full px-2 py-0.5 text-[11px] font-medium">
+              {totalCount} {totalCount === 1 ? "task" : "tasks"}
+            </span>
+            {refreshButton}
+          </div>
         </div>
 
         <div className="flex flex-col gap-1 p-2">
@@ -498,21 +591,16 @@ export function AgentsList({
             );
           })}
 
-          {totalCount > visibleAgents.length && (
-            <div className="pt-1">
-              <Button
-                onClick={() => {
-                  ideMessenger.post("controlPlane/openUrl", {
-                    path: "agents",
-                  });
-                }}
-                variant="ghost"
-                className="text-link my-0 w-full py-0 text-center text-sm font-medium hover:underline"
-              >
-                See all {totalCount} tasks →
-              </Button>
-            </div>
-          )}
+          <div className="pt-1">
+            <Button
+              onClick={handleOpenAgentQueue}
+              variant="ghost"
+              data-testid="background-inbox-open-queue"
+              className="text-link my-0 w-full py-0 text-center text-sm font-medium hover:underline"
+            >
+              {compactQueueButtonLabel}
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -532,9 +620,12 @@ export function AgentsList({
               when you are ready.
             </div>
           </div>
-          <span className="bg-vsc-input-background text-description rounded-full px-2 py-0.5 text-[11px] font-medium">
-            {totalCount} {totalCount === 1 ? "task" : "tasks"}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="bg-vsc-input-background text-description rounded-full px-2 py-0.5 text-[11px] font-medium">
+              {totalCount} {totalCount === 1 ? "task" : "tasks"}
+            </span>
+            {refreshButton}
+          </div>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span

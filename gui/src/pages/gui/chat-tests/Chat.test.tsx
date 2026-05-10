@@ -151,7 +151,7 @@ test("should render edit outcome review copy and in-flight keep feedback", async
     "Review edit outcome",
   );
   expect(screen.getByTestId("edit-outcome-diff-count")).toHaveTextContent(
-    "2 diffs",
+    "refactor.ts",
   );
   expect(screen.getByTestId("edit-outcome-target")).toHaveTextContent(
     "refactor.ts",
@@ -213,6 +213,89 @@ test("should render background inbox state inside the main chat shell", async ()
     "By fran",
   );
   expect(screen.getByTestId("background-inbox-agent-0")).toBeInTheDocument();
+  expect(screen.getByTestId("background-inbox-refresh")).toHaveTextContent(
+    "Refresh",
+  );
+  expect(screen.getByTestId("background-inbox-open-queue")).toHaveTextContent(
+    "Open inbox",
+  );
+});
+
+test("should open the full background queue from the compact inbox", async () => {
+  const store = createMockStore(getEmptyRootState());
+  const mockIdeMessenger = new MockIdeMessenger();
+  const postSpy = vi.spyOn(mockIdeMessenger, "post");
+
+  mockIdeMessenger.responses["listBackgroundAgents"] = {
+    agents: [
+      {
+        id: "agent-queue-1",
+        name: "Queue task",
+        status: "running",
+        repoUrl: "https://github.com/example/yuto-code",
+        createdAt: "2026-05-09T00:00:00.000Z",
+        metadata: {
+          github_repo: "https://github.com/example/yuto-code",
+        },
+      },
+    ],
+    totalCount: 1,
+  };
+  mockIdeMessenger.responseHandlers.getRepoName = async () =>
+    "https://github.com/example/yuto-code";
+
+  const { user } = await renderWithProviders(<Chat />, {
+    store,
+    mockIdeMessenger,
+  });
+
+  await screen.findByTestId("background-inbox-panel");
+  await user.click(screen.getByTestId("background-inbox-open-queue"));
+
+  expect(postSpy).toHaveBeenCalledWith("controlPlane/openUrl", {
+    path: "agents",
+  });
+});
+
+test("should refresh the compact background inbox on demand", async () => {
+  const store = createMockStore(getEmptyRootState());
+  const mockIdeMessenger = new MockIdeMessenger();
+  let listBackgroundAgentsCalls = 0;
+
+  mockIdeMessenger.responseHandlers.listBackgroundAgents = async () => {
+    listBackgroundAgentsCalls += 1;
+    return {
+      agents: [
+        {
+          id: "agent-refresh-1",
+          name: "Refresh auth flow",
+          status: "running",
+          repoUrl: "https://github.com/example/yuto-code",
+          createdAt: "2026-05-09T00:00:00.000Z",
+          metadata: {
+            github_repo: "https://github.com/example/yuto-code",
+          },
+        },
+      ],
+      totalCount: 1,
+    };
+  };
+  mockIdeMessenger.responseHandlers.getRepoName = async () =>
+    "https://github.com/example/yuto-code";
+
+  const { user } = await renderWithProviders(<Chat />, {
+    store,
+    mockIdeMessenger,
+  });
+
+  await screen.findByTestId("background-inbox-panel");
+  expect(listBackgroundAgentsCalls).toBe(1);
+
+  await user.click(screen.getByTestId("background-inbox-refresh"));
+
+  await waitFor(() => {
+    expect(listBackgroundAgentsCalls).toBe(2);
+  });
 });
 
 test("should explain takeover when a background task belongs to another repo", async () => {
@@ -336,6 +419,9 @@ test("should render full background mode with explicit handoff actions and prove
   expect(screen.getByTestId("background-full-provenance-0")).toHaveTextContent(
     "By fran",
   );
+  expect(screen.getByTestId("background-full-refresh")).toHaveTextContent(
+    "Refresh",
+  );
 });
 
 test("should show full background inbox GitHub setup guidance", async () => {
@@ -359,6 +445,30 @@ test("should show full background inbox GitHub setup guidance", async () => {
   expect(
     screen.getByTestId("background-full-connect-github"),
   ).toHaveTextContent("Connect GitHub");
+});
+
+test("should open the cloud inbox from the full empty background panel", async () => {
+  const mockIdeMessenger = new MockIdeMessenger();
+  const postSpy = vi.spyOn(mockIdeMessenger, "post");
+
+  mockIdeMessenger.responses["listBackgroundAgents"] = {
+    agents: [],
+    totalCount: 0,
+  };
+
+  const { user } = await renderWithProviders(<BackgroundModeView />, {
+    mockIdeMessenger,
+  });
+
+  expect(
+    await screen.findByTestId("background-full-empty-panel"),
+  ).toBeInTheDocument();
+
+  await user.click(screen.getByTestId("background-full-open-queue-empty"));
+
+  expect(postSpy).toHaveBeenCalledWith("controlPlane/openUrl", {
+    path: "agents",
+  });
 });
 
 test("should render batch pending edit actions for multiple files", async () => {
@@ -385,7 +495,7 @@ test("should render batch pending edit actions for multiple files", async () => 
     "2 files",
   );
   expect(screen.getByTestId("pending-apply-summary")).toHaveTextContent(
-    "2 pending changes",
+    "2 changes",
   );
   expect(screen.getByTestId("pending-apply-batch-actions")).toBeInTheDocument();
   expect(screen.getByText("Keep all")).toBeInTheDocument();

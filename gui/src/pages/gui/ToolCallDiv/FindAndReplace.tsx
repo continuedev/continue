@@ -103,6 +103,11 @@ export function FindAndReplaceDisplay({
   );
   const showContent = isExpanded ?? toolCallState?.status === "generated";
   const config = useAppSelector((state) => state.config.config);
+  const headerLabel = relativeFilePath
+    ? `Toggle edit diff for ${relativeFilePath}`
+    : fileUri
+      ? `Toggle edit diff for ${fileUri}`
+      : "Toggle edit diff";
 
   const displayName = useMemo(() => {
     if (fileUri) {
@@ -197,6 +202,23 @@ export function FindAndReplaceDisplay({
               });
             }
           }}
+          onKeyDown={(e) => {
+            if (!toolCallState.output) {
+              return;
+            }
+
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              e.stopPropagation();
+              ideMessenger.post("showVirtualFile", {
+                name: "Edit output",
+                content: renderContextItems(toolCallState.output),
+              });
+            }
+          }}
+          role={toolCallState.output ? "button" : undefined}
+          tabIndex={toolCallState.output ? 0 : undefined}
+          aria-label={toolCallState.output ? "Show edit output" : undefined}
         >
           {getStatusIcon(status)}
         </div>
@@ -204,16 +226,33 @@ export function FindAndReplaceDisplay({
     }
   }, [toolCallState?.status, toolCallState?.output]);
 
+  function handleToggle() {
+    setIsExpanded(!showContent);
+  }
+
+  function handleHeaderKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleToggle();
+    }
+  }
+
   // Unified container component that always renders the same structure
   const renderContainer = (content: React.ReactNode) => (
     <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor mx-2 my-1 flex min-w-0 flex-col outline outline-1">
       <div
-        className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex cursor-pointer items-center justify-between gap-3 px-1.5 py-1 ${showContent ? "rounded-t-default border-command-border border-b" : "rounded-default"}`}
-        onClick={() => {
-          setIsExpanded(!showContent);
-        }}
+        className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex items-center justify-between gap-3 px-1.5 py-1 ${showContent ? "rounded-t-default border-command-border border-b" : "rounded-default"}`}
       >
-        <div className="flex min-w-0 flex-1 flex-row items-center gap-2 text-xs">
+        <div
+          className="flex min-w-0 flex-1 cursor-pointer flex-row items-center gap-2 text-xs"
+          onClick={handleToggle}
+          onKeyDown={handleHeaderKeyDown}
+          data-testid="find-and-replace-header"
+          role="button"
+          tabIndex={0}
+          aria-expanded={showContent}
+          aria-label={headerLabel}
+        >
           <div className="flex min-w-0 flex-row items-center">
             {statusIcon}
             <ChevronDownIcon

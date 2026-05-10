@@ -38,10 +38,11 @@ export function EditOutcomeToolbar() {
 
       <div className="flex items-center gap-2">
         <span
-          className="bg-vsc-input-background text-description rounded-full px-2 py-0.5 text-[11px] font-medium"
+          className="bg-vsc-input-background text-description max-w-[8rem] truncate rounded-full px-2 py-0.5 text-[11px] font-medium"
           data-testid="edit-outcome-diff-count"
+          title={editTargetLabel}
         >
-          {diffCountLabel}
+          {editTargetLabel}
         </span>
         <AcceptRejectDiffButtons
           applyStates={[editApplyState]}

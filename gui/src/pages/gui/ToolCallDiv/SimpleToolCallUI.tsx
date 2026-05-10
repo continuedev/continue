@@ -35,6 +35,11 @@ export function SimpleToolCallUI({
   const isSingleItem = shownContextItems.length === 1;
   const shouldShowContent = isToggleable ? open : false;
   const isClickable = isToggleable || isSingleItem;
+  const toolLabel =
+    tool?.displayTitle ??
+    toolCallState.toolCall.function?.name ??
+    "tool result";
+  const bodyId = `simple-tool-call-body-${toolCallState.toolCallId ?? historyIndex}`;
 
   function handleClick() {
     if (isToggleable) {
@@ -68,6 +73,14 @@ export function SimpleToolCallUI({
           role={isClickable ? "button" : undefined}
           tabIndex={isClickable ? 0 : undefined}
           aria-expanded={isToggleable ? shouldShowContent : undefined}
+          aria-controls={isToggleable ? bodyId : undefined}
+          aria-label={
+            isToggleable
+              ? `Toggle ${toolLabel} results`
+              : isSingleItem
+                ? `Open ${toolLabel} result`
+                : undefined
+          }
         >
           <ToggleWithIcon
             icon={Icon}
@@ -88,6 +101,7 @@ export function SimpleToolCallUI({
       {isToggleable && (
         <div
           data-testid="simple-tool-call-body"
+          id={bodyId}
           className={`mt-2 overflow-y-auto transition-all duration-300 ease-in-out ${
             shouldShowContent ? "max-h-[50vh] opacity-100" : "max-h-0 opacity-0"
           }`}

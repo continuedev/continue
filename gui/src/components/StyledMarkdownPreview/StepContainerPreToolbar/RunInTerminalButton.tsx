@@ -18,7 +18,9 @@ export function RunInTerminalButton({ command }: RunInTerminalButtonProps) {
   }
 
   return (
-    <div
+    <button
+      type="button"
+      aria-label="Run in terminal"
       className={`text-lightgray flex items-center border-none bg-transparent text-xs text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
       onClick={runInTerminal}
     >
@@ -31,6 +33,6 @@ export function RunInTerminalButton({ command }: RunInTerminalButtonProps) {
           <span className="text-lightgray max-sm:hidden">Run</span>
         </>
       </div>
-    </div>
+    </button>
   );
 }
