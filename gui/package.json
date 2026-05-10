@@ -16,8 +16,6 @@
     "lint": "eslint --ext ts"
   },
   "dependencies": {
-    "@yutoagentic/config-yaml": "file:../packages/config-yaml",
-    "@yutoagentic/terminal-security": "file:../packages/terminal-security",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.0.18",
     "@modelcontextprotocol/ext-apps": "^1.0.1",
@@ -40,6 +38,8 @@
     "@tiptap/suggestion": "^2.1.13",
     "@types/diff": "^7.0.2",
     "@types/uuid": "^10.0.0",
+    "@yutoagentic/config-yaml": "file:../packages/config-yaml",
+    "@yutoagentic/terminal-security": "file:../packages/terminal-security",
     "anser": "^2.3.2",
     "clsx": "^2.1.1",
     "core": "file:../core",
@@ -72,6 +72,7 @@
     "redux-thunk": "^3.1.0",
     "rehype-highlight": "^7.0.0",
     "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
     "rehype-wrap-all": "^1.1.0",
     "remark-math": "^6.0.0",
     "reselect": "^5.1.1",

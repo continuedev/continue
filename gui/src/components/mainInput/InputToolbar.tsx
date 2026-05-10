@@ -87,11 +87,9 @@ function InputToolbar(props: InputToolbarProps) {
       >
         <div className="xs:gap-1.5 flex flex-row items-center gap-1">
           {!isInEdit && (
-            <ToolTip place="top" content="Select Mode">
-              <HoverItem className="!p-0">
-                <ModeSelect />
-              </HoverItem>
-            </ToolTip>
+            <HoverItem className="!p-0">
+              <ModeSelect />
+            </HoverItem>
           )}
           {!isInEdit && (
             <ToolTip place="top" content="Select runtime target">

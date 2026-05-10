@@ -1,10 +1,10 @@
 import {
+  ChevronUpIcon,
   ExclamationTriangleIcon,
-  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
 import { isRecommendedAgentModel } from "core/llm/toolSupport";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../context/Auth";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
@@ -28,6 +28,8 @@ export function ModeSelect() {
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const { selectedProfile } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const isGoodAtAgentMode = useMemo(() => {
     if (!selectedModel) {
@@ -51,12 +53,10 @@ export function ModeSelect() {
     } else if (mode === "plan") {
       dispatch(setMode("agent"));
     } else if (mode === "agent") {
-      // Skip background mode if local agent is selected
       dispatch(setMode(isLocalAgent ? "chat" : "background"));
     } else {
       dispatch(setMode("chat"));
     }
-    // Only focus main editor if another one doesn't already have focus
     if (!document.activeElement?.classList?.contains("ProseMirror")) {
       mainEditor?.commands.focus();
     }
@@ -64,12 +64,10 @@ export function ModeSelect() {
 
   const selectMode = useCallback(
     (newMode: MessageModes) => {
-      if (newMode === mode) {
-        return;
+      if (newMode !== mode) {
+        dispatch(setMode(newMode));
       }
-
-      dispatch(setMode(newMode));
-
+      setIsOpen(false);
       mainEditor?.commands.focus();
     },
     [mode, mainEditor],
@@ -81,11 +79,14 @@ export function ModeSelect() {
         e.preventDefault();
         void cycleMode();
       }
+      if (e.key === "Escape" && isOpen) {
+        setIsOpen(false);
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [cycleMode]);
+  }, [cycleMode, isOpen]);
 
   // Auto-switch from background mode when local agent is selected
   useEffect(() => {
@@ -93,6 +94,18 @@ export function ModeSelect() {
       dispatch(setMode("agent"));
     }
   }, [mode, isLocalAgent, dispatch]);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!isOpen) return;
+    const handlePointerDown = (e: MouseEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [isOpen]);
 
   const modeOptions: ModeOption[] = useMemo(() => {
     return [
@@ -128,64 +141,76 @@ export function ModeSelect() {
     ];
   }, [isGoodAtAgentMode, isLocalAgent]);
 
+  const activeOption =
+    modeOptions.find((o) => o.value === mode) ?? modeOptions[0];
+
   return (
     <div
+      ref={containerRef}
+      className="relative"
       data-testid="mode-select-button"
-      className="bg-vsc-input-background flex items-center rounded-xl border border-solid border-transparent p-0.5"
     >
-      {modeOptions.map((option) => {
-        const button = (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => selectMode(option.value)}
-            disabled={option.disabled}
-            className={cn(
-              "inline-flex h-7 items-center gap-1 rounded-lg border-none px-2 text-xs transition-colors",
-              mode === option.value
-                ? "bg-vsc-editor-background text-vsc-foreground shadow-sm"
-                : "text-description hover:bg-vsc-input-background/70 hover:text-vsc-foreground bg-transparent",
-              option.disabled &&
-                "hover:text-description cursor-not-allowed opacity-50 hover:bg-transparent",
-            )}
-            aria-pressed={mode === option.value}
-            aria-label={`Switch to ${option.label} mode`}
-          >
-            <ModeIcon mode={option.value} />
-            <span className="hidden sm:inline">{option.label}</span>
-            {option.warning && (
-              <ExclamationTriangleIcon className="text-warning h-3 w-3" />
-            )}
-            {option.disabled && (
-              <ExclamationTriangleIcon className="text-warning h-3 w-3" />
-            )}
-          </button>
-        );
-
-        return (
-          <ToolTip
-            key={option.value}
-            style={{
-              zIndex: 200001,
-            }}
-            content={option.warning ?? option.description}
-          >
-            <div className="flex items-center">{button}</div>
-          </ToolTip>
-        );
-      })}
-
       <ToolTip
-        style={{
-          zIndex: 200001,
-        }}
-        content={`${metaKeyLabel} . for next mode`}
+        style={{ zIndex: 200001 }}
+        content={`${metaKeyLabel} . to cycle modes`}
       >
-        <div className="text-description-muted hidden items-center gap-1 px-1.5 lg:flex">
-          <InformationCircleIcon className="h-3 w-3" />
-          <span className="text-[10px] font-medium">{metaKeyLabel} .</span>
-        </div>
+        <button
+          type="button"
+          onClick={() => setIsOpen((prev) => !prev)}
+          aria-expanded={isOpen}
+          aria-haspopup="menu"
+          aria-label={`Mode: ${activeOption.label}. Click to change.`}
+          className={cn(
+            "inline-flex h-7 items-center gap-1.5 rounded-lg border border-solid border-transparent px-2 text-xs transition-colors",
+            "hover:bg-vsc-input-background/70 hover:text-vsc-foreground text-description",
+            isOpen && "bg-vsc-input-background/70 text-vsc-foreground",
+          )}
+        >
+          <ModeIcon mode={mode} />
+          <span className="hidden sm:inline">{activeOption.label}</span>
+          {activeOption.warning && (
+            <ExclamationTriangleIcon className="text-warning h-3 w-3" />
+          )}
+          <ChevronUpIcon
+            className={cn(
+              "h-3 w-3 transition-transform duration-150",
+              isOpen ? "rotate-180" : "rotate-0",
+            )}
+          />
+        </button>
       </ToolTip>
+
+      {isOpen && (
+        <div
+          role="menu"
+          className="border-command-border bg-vsc-editor-background absolute bottom-full left-0 z-[200002] mb-1 min-w-[10rem] overflow-hidden rounded-xl border border-solid shadow-lg"
+        >
+          {modeOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="menuitem"
+              disabled={option.disabled}
+              onClick={() => selectMode(option.value)}
+              className={cn(
+                "flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs transition-colors",
+                mode === option.value
+                  ? "bg-vsc-input-background/80 text-vsc-foreground font-medium"
+                  : "text-description hover:bg-vsc-input-background/60 hover:text-vsc-foreground",
+                option.disabled &&
+                  "cursor-not-allowed opacity-40 hover:bg-transparent hover:text-inherit",
+              )}
+              aria-current={mode === option.value ? "true" : undefined}
+            >
+              <ModeIcon mode={option.value} />
+              <span className="flex-1">{option.label}</span>
+              {(option.warning || option.disabled) && (
+                <ExclamationTriangleIcon className="text-warning h-3 w-3 flex-shrink-0" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

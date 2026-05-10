@@ -1,6 +1,6 @@
 import { ChatHistoryItem } from "core";
 import { renderChatMessage, stripImages } from "core/util/messageContent";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
@@ -74,6 +74,28 @@ export default function StepContainer(props: StepContainerProps) {
     );
   }
 
+  // Extract <think>...</think> blocks that weren't stripped during streaming
+  // (fallback for models that embed thinking in message content rather than via reasoning_content)
+  const rawContent = useMemo(
+    () => stripImages(props.item.message.content),
+    [props.item.message.content],
+  );
+
+  const { inlineThinking, displayContent } = useMemo(() => {
+    // Don't double-process if the streaming handler already populated item.reasoning
+    if (props.item.reasoning?.text?.trim()) {
+      return { inlineThinking: null, displayContent: rawContent };
+    }
+    const match = rawContent.match(/^\s*<think>([\s\S]*?)<\/think>([\s\S]*)$/);
+    if (match) {
+      return {
+        inlineThinking: match[1].trim(),
+        displayContent: match[2].trim(),
+      };
+    }
+    return { inlineThinking: null, displayContent: rawContent };
+  }, [rawContent, props.item.reasoning]);
+
   return (
     <div>
       <div
@@ -85,18 +107,20 @@ export default function StepContainer(props: StepContainerProps) {
           </pre>
         ) : (
           <>
-            {props.item.reasoning?.text?.trim() && (
+            {(props.item.reasoning?.text?.trim() || inlineThinking) && (
               <ThinkingBlockPeek
-                content={props.item.reasoning.text}
+                content={props.item.reasoning?.text ?? inlineThinking ?? ""}
                 index={props.index}
                 prevItem={props.index > 0 ? props.item : null}
-                inProgress={!props.item.reasoning?.endAt}
+                inProgress={
+                  inlineThinking ? false : !props.item.reasoning?.endAt
+                }
               />
             )}
 
             <StyledMarkdownPreview
               isRenderingInStepContainer
-              source={stripImages(props.item.message.content)}
+              source={displayContent}
               itemIndex={props.index}
             />
           </>

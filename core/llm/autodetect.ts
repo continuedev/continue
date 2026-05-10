@@ -229,6 +229,10 @@ function modelSupportsReasoning(
   if (model.model.includes("grok-4")) {
     return true;
   }
+  // Qwen3 thinking models (qwen3, qwq)
+  if (model.model.toLowerCase().includes("qwq") || /qwen3/i.test(model.model)) {
+    return true;
+  }
 
   return false;
 }

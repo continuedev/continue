@@ -2,6 +2,7 @@ import { ctxItemToRifWithContents } from "core/commands/util";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
 import remarkMath from "remark-math";
 import styled from "styled-components";
 import { visit } from "unist-util-visit";
@@ -225,6 +226,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const codeblockStreamIds = useRef<string[]>([]);
 
   const [reactContent, setMarkdownSource] = useRemark({
+    remarkToRehypeOptions: { allowDangerousHtml: true },
     remarkPlugins: [
       remarkTables,
       [
@@ -259,6 +261,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       },
     ],
     rehypePlugins: [
+      rehypeRaw as any,
       rehypeKatex as any,
       {},
       rehypeHighlightPlugin(),
@@ -367,6 +370,25 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             />
           );
         },
+        details: ({ children, ...rest }: any) => (
+          <details
+            {...rest}
+            className="border-command-border bg-vsc-editor-background/40 [&>*:not(summary)]:border-command-border my-2 overflow-hidden rounded-lg border border-solid [&>*:not(summary)]:border-t [&>*:not(summary)]:border-solid [&>*:not(summary)]:px-3 [&>*:not(summary)]:py-2"
+          >
+            {children}
+          </details>
+        ),
+        summary: ({ children, ...rest }: any) => (
+          <summary
+            {...rest}
+            className="text-description hover:bg-vsc-input-background/60 flex cursor-pointer select-none list-none items-center gap-1 px-3 py-2 text-xs font-medium [&::-webkit-details-marker]:hidden"
+          >
+            <span className="details-marker mr-1 text-[0.6rem] transition-transform [[open]_&]:rotate-90">
+              &#9654;
+            </span>
+            {children}
+          </summary>
+        ),
       },
     },
   });

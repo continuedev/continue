@@ -33,7 +33,7 @@ export function TabGroup({
       {showTopDivider && <Divider />}
 
       {label && (
-        <div className="text-description-muted mb-1.5 ml-2 hidden text-[11px] font-semibold uppercase tracking-[0.08em] md:block md:pt-1">
+        <div className="text-description-muted mb-1.5 ml-2 hidden text-[11px] font-semibold uppercase tracking-[0.08em] lg:block lg:pt-1">
           {label}
         </div>
       )}

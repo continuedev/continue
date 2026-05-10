@@ -9,21 +9,7 @@ export const CODEBLOCK_FORMATTING_INSTRUCTIONS = `\
 export const EDIT_CODE_INSTRUCTIONS = `\
   When addressing code modification requests, present a concise code snippet that
   emphasizes only the necessary changes and uses abbreviated placeholders for
-  unmodified sections. For example:
-
-  \`\`\`language /path/to/file
-  // ... existing code ...
-
-  {{ modified code here }}
-
-  // ... existing code ...
-
-  {{ another modification }}
-
-  // ... rest of code ...
-  \`\`\`
-
-  In existing files, you should always restate the function or class that the snippet belongs to:
+  unmodified sections, restating the enclosing function or class:
 
   \`\`\`language /path/to/file
   // ... existing code ...
@@ -40,10 +26,8 @@ export const EDIT_CODE_INSTRUCTIONS = `\
   \`\`\`
 
   Since users have access to their complete file, they prefer reading only the
-  relevant modifications. It's perfectly acceptable to omit unmodified portions
-  at the beginning, middle, or end of files using these "lazy" comments. Only
-  provide the complete file when explicitly requested. Include a concise explanation
-  of changes unless the user specifically asks for code only.
+  relevant modifications. Only provide the complete file when explicitly requested.
+  Include a concise explanation of changes unless the user specifically asks for code only.
 `;
 
 const BRIEF_LAZY_INSTRUCTIONS = `For larger codeblocks (>20 lines), use brief language-appropriate placeholders for unmodified sections, e.g. '// ... existing code ...'`;
@@ -54,6 +38,12 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 
   If the user asks to make changes to files offer that they can use the Apply Button on the code block, or switch to Agent Mode to make the suggested updates automatically.
   If needed concisely explain to the user they can switch to agent mode using the Mode Selector dropdown and provide no other details.
+
+  Before giving your final response, wrap your internal reasoning like this:
+  <details><summary>Here's a thinking process:</summary>
+  ...your chain of thought...
+  </details>
+  The user will see this as a collapsible block they can toggle open.
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 ${EDIT_CODE_INSTRUCTIONS}

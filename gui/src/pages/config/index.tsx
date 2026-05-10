@@ -175,8 +175,8 @@ function ConfigPage() {
 
   return (
     <div className="flex h-full flex-row overflow-hidden">
-      <div className="bg-vsc-background border-r-border flex w-14 flex-shrink-0 flex-col border-b-0 border-l-0 border-r border-t-0 border-solid md:w-72">
-        <div className="flex items-center gap-2 px-2 py-3 md:px-3">
+      <div className="bg-vsc-background border-r-border flex w-14 flex-shrink-0 flex-col border-b-0 border-l-0 border-r border-t-0 border-solid lg:w-60">
+        <div className="flex items-center gap-2 px-2 py-3 lg:px-3">
           <button
             type="button"
             className="text-description hover:bg-vsc-input-background inline-flex h-8 w-8 items-center justify-center rounded-lg border-none bg-transparent p-0"
@@ -185,7 +185,7 @@ function ConfigPage() {
           >
             <ArrowLeftIcon className="h-4 w-4" />
           </button>
-          <div className="hidden min-w-0 flex-1 md:block">
+          <div className="hidden min-w-0 flex-1 lg:block">
             <div className="truncate text-sm font-semibold">Settings</div>
             <div className="text-description-muted truncate text-xs">
               General, agents, tools, and workspace behavior
@@ -193,21 +193,21 @@ function ConfigPage() {
           </div>
         </div>
 
-        <div className="px-2 pb-2 md:px-3">
+        <div className="px-2 pb-2 lg:px-3">
           <div className="bg-vsc-input-background/60 rounded-xl border border-solid border-transparent p-1">
             <AccountDropdown />
           </div>
         </div>
 
         {shouldRenderOrgInfo && (
-          <div className="px-2 pb-2 md:px-3">
+          <div className="px-2 pb-2 lg:px-3">
             <div className="bg-vsc-input-background/60 rounded-xl border border-solid border-transparent p-1">
               <AssistantAndOrgListbox variant="sidebar" />
             </div>
           </div>
         )}
 
-        <div className="relative px-2 pb-3 md:px-3">
+        <div className="relative px-2 pb-3 lg:px-3">
           <MagnifyingGlassIcon className="text-description-muted pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2" />
           <input
             type="text"
@@ -223,7 +223,7 @@ function ConfigPage() {
             className="bg-vsc-input-background text-vsc-foreground focus:border-border w-full rounded-lg border border-solid border-transparent py-2 pl-9 pr-3 text-sm outline-none"
           />
           {filteredSearchTargets.length > 0 && (
-            <div className="bg-vsc-editor-background border-command-border absolute left-2 right-2 top-full z-10 mt-2 overflow-hidden rounded-xl border border-solid shadow-lg md:left-3 md:right-3">
+            <div className="bg-vsc-editor-background border-command-border absolute left-2 right-2 top-full z-10 mt-2 overflow-hidden rounded-xl border border-solid shadow-lg lg:left-3 lg:right-3">
               {filteredSearchTargets.map((target) => (
                 <button
                   key={target.key}
@@ -242,7 +242,7 @@ function ConfigPage() {
           )}
         </div>
 
-        <div className="border-r-border flex min-h-0 flex-1 flex-col overflow-hidden border-b-0 border-l-0 border-r-0 border-t border-solid px-2 pb-2 text-xs md:px-3">
+        <div className="border-r-border flex min-h-0 flex-1 flex-col overflow-hidden border-b-0 border-l-0 border-r-0 border-t border-solid px-2 pb-2 text-xs lg:px-3">
           <div className="thin-scrollbar flex-1 overflow-y-auto pt-2">
             {filteredTopTabSections.map((section) => (
               <TabGroup
@@ -300,7 +300,7 @@ function ConfigPage() {
           ref={contentRef}
           className="thin-scrollbar relative hidden flex-1 overflow-y-auto sm:block"
         >
-          <div className="mx-auto w-full max-w-5xl space-y-8 px-6 py-6">
+          <div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-5 lg:px-6 lg:py-6">
             {allTabs.find((tab) => tab.id === activeTab)?.component}
           </div>
           <CliInstallBanner permanentDismissal={true} />
