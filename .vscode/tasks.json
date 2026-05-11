@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "options": {
     "env": {
-      "PATH": "/home/fran/.nvm/versions/node/v20.20.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"
+      "PATH": "C:\\Program Files\\nodejs\\;C:\\Windows\\System32;C:\\Windows;C:\\Users\\verf\\AppData\\Roaming\\npm"
     }
   },
   "tasks": [
@@ -27,7 +27,7 @@
     {
       "label": "tsc:watch:gui-task",
       "type": "shell",
-      "command": "/home/fran/.nvm/versions/node/v20.20.1/bin/node",
+      "command": "C:\\Program Files\\nodejs\\node.exe",
       "args": [
         "./node_modules/typescript/bin/tsc",
         "--project",
@@ -47,7 +47,7 @@
     {
       "label": "tsc:watch:vscode-task",
       "type": "shell",
-      "command": "/home/fran/.nvm/versions/node/v20.20.1/bin/node",
+      "command": "C:\\Program Files\\nodejs\\node.exe",
       "args": [
         "./node_modules/typescript/bin/tsc",
         "--project",
@@ -67,7 +67,7 @@
     {
       "label": "tsc:watch:core-task",
       "type": "shell",
-      "command": "/home/fran/.nvm/versions/node/v20.20.1/bin/node",
+      "command": "C:\\Program Files\\nodejs\\node.exe",
       "args": [
         "./node_modules/typescript/bin/tsc",
         "--project",
@@ -87,7 +87,7 @@
     {
       "label": "tsc:watch:binary-task",
       "type": "shell",
-      "command": "/home/fran/.nvm/versions/node/v20.20.1/bin/node",
+      "command": "C:\\Program Files\\nodejs\\node.exe",
       "args": [
         "./node_modules/typescript/bin/tsc",
         "--project",
@@ -229,16 +229,16 @@
     {
       "label": "gui:dev",
       "type": "shell",
-      "command": "/home/fran/.nvm/versions/node/v20.20.1/bin/node",
+      "command": "C:\\Program Files\\nodejs\\npm.cmd",
       "options": {
         "cwd": "${workspaceFolder}/gui",
         "env": {
           "CHOKIDAR_USEPOLLING": "1",
-          "CHOKIDAR_INTERVAL": "500"
+          "CHOKIDAR_INTERVAL": "500",
+          "PATH": "C:\\Program Files\\nodejs\\;C:\\Windows\\System32;C:\\Windows;C:\\Users\\verf\\AppData\\Roaming\\npm"
         }
       },
       "args": [
-        "/home/fran/.nvm/versions/node/v20.20.1/lib/node_modules/npm/bin/npm-cli.js",
         "run",
         "dev"
       ],
@@ -379,7 +379,13 @@
     {
       "label": "yutoagentic-packages:build",
       "type": "shell",
-      "command": "node ./scripts/build-packages.js",
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "args": ["./scripts/build-packages.js"],
+      "options": {
+        "env": {
+          "PATH": "C:\\Program Files\\nodejs\\;C:\\Windows\\System32;C:\\Windows;C:\\Users\\verf\\AppData\\Roaming\\npm"
+        }
+      },
       "problemMatcher": [],
       "presentation": {
         "group": "build-tasks",

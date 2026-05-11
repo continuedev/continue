@@ -1,18 +1,26 @@
 import {
-  ChevronUpIcon,
+  ChevronDownIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
 import { isRecommendedAgentModel } from "core/llm/toolSupport";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useAuth } from "../../context/Auth";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
 import { getMetaKeyLabel } from "../../util";
 import { cn } from "../../util/cn";
-import { ToolTip } from "../gui/Tooltip";
 import { useMainEditor } from "../mainInput/TipTapEditor";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+  useFontSize,
+} from "../ui";
+import { Divider } from "../ui/Divider";
 import { ModeIcon } from "./ModeIcon";
 
 interface ModeOption {
@@ -28,8 +36,7 @@ export function ModeSelect() {
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const { selectedProfile } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const tinyFont = useFontSize(-4);
 
   const isGoodAtAgentMode = useMemo(() => {
     if (!selectedModel) {
@@ -67,7 +74,6 @@ export function ModeSelect() {
       if (newMode !== mode) {
         dispatch(setMode(newMode));
       }
-      setIsOpen(false);
       mainEditor?.commands.focus();
     },
     [mode, mainEditor],
@@ -79,14 +85,11 @@ export function ModeSelect() {
         e.preventDefault();
         void cycleMode();
       }
-      if (e.key === "Escape" && isOpen) {
-        setIsOpen(false);
-      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [cycleMode, isOpen]);
+  }, [cycleMode]);
 
   // Auto-switch from background mode when local agent is selected
   useEffect(() => {
@@ -94,18 +97,6 @@ export function ModeSelect() {
       dispatch(setMode("agent"));
     }
   }, [mode, isLocalAgent, dispatch]);
-
-  // Close on outside click
-  useEffect(() => {
-    if (!isOpen) return;
-    const handlePointerDown = (e: MouseEvent) => {
-      if (!containerRef.current?.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [isOpen]);
 
   const modeOptions: ModeOption[] = useMemo(() => {
     return [
@@ -145,72 +136,61 @@ export function ModeSelect() {
     modeOptions.find((o) => o.value === mode) ?? modeOptions[0];
 
   return (
-    <div
-      ref={containerRef}
-      className="relative"
-      data-testid="mode-select-button"
-    >
-      <ToolTip
-        style={{ zIndex: 200001 }}
-        content={`${metaKeyLabel} . to cycle modes`}
-      >
-        <button
-          type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
-          aria-expanded={isOpen}
-          aria-haspopup="menu"
-          aria-label={`Mode: ${activeOption.label}. Click to change.`}
-          className={cn(
-            "inline-flex h-7 items-center gap-1.5 rounded-lg border border-solid border-transparent px-2 text-xs transition-colors",
-            "hover:bg-vsc-input-background/70 hover:text-vsc-foreground text-description",
-            isOpen && "bg-vsc-input-background/70 text-vsc-foreground",
-          )}
-        >
+    <Listbox value={mode} onChange={selectMode}>
+      <div className="relative flex" data-testid="mode-select-button">
+        <ListboxButton className="text-description h-[18px] gap-1 border-none">
           <ModeIcon mode={mode} />
-          <span className="hidden sm:inline">{activeOption.label}</span>
+          <span className="line-clamp-1 break-all hidden sm:inline hover:brightness-110">
+            {activeOption.label}
+          </span>
           {activeOption.warning && (
-            <ExclamationTriangleIcon className="text-warning h-3 w-3" />
+            <ExclamationTriangleIcon className="text-warning h-3 w-3 flex-shrink-0" />
           )}
-          <ChevronUpIcon
-            className={cn(
-              "h-3 w-3 transition-transform duration-150",
-              isOpen ? "rotate-180" : "rotate-0",
-            )}
+          <ChevronDownIcon
+            className="hidden h-2 w-2 flex-shrink-0 hover:brightness-110 min-[200px]:flex"
+            aria-hidden="true"
           />
-        </button>
-      </ToolTip>
+        </ListboxButton>
+        <Transition>
+          <ListboxOptions className="min-w-[160px]">
+            <div className="flex items-center justify-between px-1.5 py-1">
+              <span className="text-description text-xs font-medium">Mode</span>
+            </div>
 
-      {isOpen && (
-        <div
-          role="menu"
-          className="border-command-border bg-vsc-editor-background absolute bottom-full left-0 z-[200002] mb-1 min-w-[10rem] overflow-hidden rounded-xl border border-solid shadow-lg"
-        >
-          {modeOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              role="menuitem"
-              disabled={option.disabled}
-              onClick={() => selectMode(option.value)}
-              className={cn(
-                "flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs transition-colors",
-                mode === option.value
-                  ? "bg-vsc-input-background/80 text-vsc-foreground font-medium"
-                  : "text-description hover:bg-vsc-input-background/60 hover:text-vsc-foreground",
-                option.disabled &&
-                  "cursor-not-allowed opacity-40 hover:bg-transparent hover:text-inherit",
-              )}
-              aria-current={mode === option.value ? "true" : undefined}
-            >
-              <ModeIcon mode={option.value} />
-              <span className="flex-1">{option.label}</span>
-              {(option.warning || option.disabled) && (
-                <ExclamationTriangleIcon className="text-warning h-3 w-3 flex-shrink-0" />
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+            <div className="no-scrollbar overflow-y-auto">
+              {modeOptions.map((option) => (
+                <ListboxOption
+                  key={option.value}
+                  value={option.value}
+                  disabled={option.disabled}
+                  className={cn(
+                    mode === option.value
+                      ? "bg-list-active text-list-active-foreground"
+                      : "",
+                  )}
+                >
+                  <div className="flex w-full items-center justify-between gap-5">
+                    <div className="flex items-center gap-2 py-0.5">
+                      <ModeIcon mode={option.value} />
+                      <span className="line-clamp-1">{option.label}</span>
+                    </div>
+                    {(option.warning || option.disabled) && (
+                      <ExclamationTriangleIcon className="text-warning h-3 w-3 flex-shrink-0" />
+                    )}
+                  </div>
+                </ListboxOption>
+              ))}
+            </div>
+
+            <Divider className="!my-0" />
+            <div className="text-description flex items-center justify-start p-2">
+              <span className="block" style={{ fontSize: tinyFont }}>
+                <code>{metaKeyLabel} .</code> to cycle mode
+              </span>
+            </div>
+          </ListboxOptions>
+        </Transition>
+      </div>
+    </Listbox>
   );
 }
