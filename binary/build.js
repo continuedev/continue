@@ -1,8 +1,34 @@
 const esbuild = require("esbuild");
 const fs = require("fs");
 const path = require("path");
-const ncp = require("ncp").ncp;
-const { rimrafSync } = require("rimraf");
+let ncp;
+try {
+  ncp = require("ncp").ncp;
+} catch {
+  ncp = (source, destination, optionsOrCallback, maybeCallback) => {
+    const options =
+      typeof optionsOrCallback === "function" ? {} : optionsOrCallback || {};
+    const callback =
+      typeof optionsOrCallback === "function"
+        ? optionsOrCallback
+        : maybeCallback;
+
+    fs.cp(
+      source,
+      destination,
+      {
+        recursive: true,
+        force: true,
+        dereference: !!options.dereference,
+      },
+      callback,
+    );
+  };
+}
+const rimrafLib = require("rimraf");
+const rimrafSync =
+  rimrafLib.rimrafSync ||
+  ((targetPath) => fs.rmSync(targetPath, { recursive: true, force: true }));
 const { validateFilesPresent } = require("../scripts/util");
 const { ALL_TARGETS, TARGET_TO_LANCEDB } = require("./utils/targets");
 const { fork } = require("child_process");

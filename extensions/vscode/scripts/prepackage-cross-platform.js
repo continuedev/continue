@@ -7,7 +7,10 @@
 const fs = require("fs");
 const path = require("path");
 
-const { rimrafSync } = require("rimraf");
+const rimrafLib = require("rimraf");
+const rimrafSync =
+  rimrafLib.rimrafSync ||
+  ((targetPath) => fs.rmSync(targetPath, { recursive: true, force: true }));
 
 const {
   validateFilesPresent,

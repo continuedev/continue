@@ -1,10 +1,18 @@
 const fs = require("fs");
 const path = require("path");
-const { rimrafSync } = require("rimraf");
+const rimrafLib = require("rimraf");
+const rimrafSync =
+  rimrafLib.rimrafSync ||
+  ((targetPath) => fs.rmSync(targetPath, { recursive: true, force: true }));
 const tar = require("tar");
 const { RIPGREP_VERSION, TARGET_TO_RIPGREP_RELEASE } = require("./targets");
 const AdmZip = require("adm-zip");
-const { ProxyAgent } = require("undici");
+let ProxyAgent;
+try {
+  ({ ProxyAgent } = require("undici"));
+} catch {
+  ProxyAgent = undefined;
+}
 
 const RIPGREP_BASE_URL = `https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}`;
 
@@ -19,12 +27,16 @@ async function downloadFile(url, destPath) {
   // Use the built-in fetch API instead of node-fetch
   // Use proxy if set in environment variables
   const proxy = process.env.https_proxy || process.env.HTTPS_PROXY;
-  const agent = proxy ? new ProxyAgent(proxy) : undefined;
+  const agent = proxy && ProxyAgent ? new ProxyAgent(proxy) : undefined;
 
-  const response = await fetch(url, {
+  const requestOptions = {
     redirect: "follow", // Automatically follow redirects
-    dispatcher: agent,
-  });
+  };
+  if (agent) {
+    requestOptions.dispatcher = agent;
+  }
+
+  const response = await fetch(url, requestOptions);
 
   if (!response.ok) {
     throw new Error(`Failed to download file, status code: ${response.status}`);

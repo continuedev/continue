@@ -14,7 +14,7 @@
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
   "dependencies": {
-    "@yutoagentic/config-yaml": "^1.38.0",
+    "@yutoagentic/config-yaml": "file:../config-yaml",
     "@openapitools/openapi-generator-cli": "^2.31.0",
     "express": "^4.22.0",
     "swagger-ui-express": "^5.0.0"

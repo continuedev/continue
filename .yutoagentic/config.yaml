@@ -4,4 +4,4 @@ models:
     model: Qwen/Qwen3.6-35B-A3B
     apiBase: http://192.168.1.112:8001/v1
     apiKey: dummy
-    # capabilities: [tool_use]   # remove this line if present
+    capabilities: [tool_use]

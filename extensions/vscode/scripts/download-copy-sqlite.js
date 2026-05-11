@@ -2,8 +2,16 @@ const { fork } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-const { ProxyAgent } = require("undici");
-const { rimrafSync } = require("rimraf");
+let ProxyAgent;
+try {
+  ({ ProxyAgent } = require("undici"));
+} catch {
+  ProxyAgent = undefined;
+}
+const rimrafLib = require("rimraf");
+const rimrafSync =
+  rimrafLib.rimrafSync ||
+  ((targetPath) => fs.rmSync(targetPath, { recursive: true, force: true }));
 
 const { execCmdSync } = require("../../../scripts/util");
 
@@ -15,12 +23,16 @@ const { execCmdSync } = require("../../../scripts/util");
 async function downloadFile(url, outputPath) {
   // Use proxy if set in environment variables
   const proxy = process.env.https_proxy || process.env.HTTPS_PROXY;
-  const agent = proxy ? new ProxyAgent(proxy) : undefined;
+  const agent = proxy && ProxyAgent ? new ProxyAgent(proxy) : undefined;
 
-  const response = await fetch(url, {
+  const requestOptions = {
     redirect: "follow", // Automatically follow redirects
-    dispatcher: agent,
-  });
+  };
+  if (agent) {
+    requestOptions.dispatcher = agent;
+  }
+
+  const response = await fetch(url, requestOptions);
 
   if (!response.ok) {
     throw new Error(`Failed to download file, status code: ${response.status}`);

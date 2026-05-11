@@ -23,7 +23,7 @@
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
   "dependencies": {
-    "@yutoagentic/config-types": "^1.0.14",
+    "@yutoagentic/config-types": "file:../config-types",
     "yaml": "^2.8.2",
     "zod": "^3.25.76"
   },
