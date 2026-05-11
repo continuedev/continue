@@ -964,6 +964,11 @@ export abstract class BaseLLM implements ILLM {
   ) {
     let completion = "";
     for await (const message of this.streamChat(messages, signal, options)) {
+      // Skip thinking/reasoning messages so the returned completion only
+      // contains the visible assistant response, not internal reasoning text.
+      if (message.role === "thinking") {
+        continue;
+      }
       completion += renderChatMessage(message);
     }
     return { role: "assistant" as const, content: completion };
