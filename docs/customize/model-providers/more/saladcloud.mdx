@@ -7,7 +7,7 @@ You can get an API key from the [SaladCloud portal](https://portal.salad.com/api
 
 ## Available Models
 
-Available models can be found on the [SaladCloud AI Gateway pricing page](https://docs.salad.com/ai-gateway/reference/pricing)
+Available models can be found on the [SaladCloud AI Gateway pricing page](https://docs.salad.com/ai-gateway/reference/pricing). Continue includes presets for the Qwen models currently returned by SaladCloud's `/v1/models` endpoint: `qwen3.6-35b-a3b`, `qwen3.6-27b`, and `qwen3.5-9b`.
 
 ## Chat Model
 
@@ -40,6 +40,13 @@ Available models can be found on the [SaladCloud AI Gateway pricing page](https:
   ```
   </Tab>
 </Tabs>
+
+<Note>
+  Continue disables Qwen thinking output by default with
+  `chat_template_kwargs.enable_thinking: false`. To enable thinking, add
+  `requestOptions.extraBodyProperties.chat_template_kwargs.enable_thinking` and
+  set it to `true` in your model configuration.
+</Note>
 
 ## Embeddings Model
 

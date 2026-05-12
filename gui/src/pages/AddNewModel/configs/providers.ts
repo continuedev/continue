@@ -1020,7 +1020,6 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.saladQwen36_35bA3B,
       models.saladQwen36_27b,
       models.saladQwen35_9b,
-      models.saladGemma4_26bA4B,
     ],
     apiKeyUrl: "https://portal.salad.com/api-key",
   },
