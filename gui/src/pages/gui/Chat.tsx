@@ -16,6 +16,7 @@ import {
 import { ErrorBoundary } from "react-error-boundary";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground } from "../../components";
+import { AssistantAndOrgListbox } from "../../components/AssistantAndOrgListbox";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
@@ -23,7 +24,6 @@ import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/Thinkin
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { useOnboardingCard } from "../../components/OnboardingCard";
 import StepContainer from "../../components/StepContainer";
-import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -491,12 +491,9 @@ export function Chat() {
 
   return (
     <>
-      {!!showSessionTabs && !isInEdit && <TabBar ref={tabsRef} />}
-      {widget}
-
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} flex-1`}
       >
         {highlights}
         {history
@@ -562,6 +559,9 @@ export function Chat() {
                   <span className="text-xs">Last Session</span>
                 </NewSessionButton>
               )}
+            </div>
+            <div className="bg-vsc-input-background rounded-xl px-2">
+              <AssistantAndOrgListbox variant="lump" />
             </div>
           </div>
           <FatalErrorIndicator />

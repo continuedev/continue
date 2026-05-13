@@ -7,7 +7,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AssistantAndOrgListbox } from "../../components/AssistantAndOrgListbox";
 import { CliInstallBanner } from "../../components/CliInstallBanner";
-import Alert from "../../components/gui/Alert";
 import { Divider } from "../../components/ui/Divider";
 import { TabGroup } from "../../components/ui/TabGroup";
 import { useAuth } from "../../context/Auth";
@@ -174,12 +173,12 @@ function ConfigPage() {
   }, [activeSection, activeTab]);
 
   return (
-    <div className="flex h-full flex-row overflow-hidden">
+    <div className="flex h-[100vh] flex-row overflow-hidden">
       <div className="bg-vsc-background border-r-border flex w-14 flex-shrink-0 flex-col border-b-0 border-l-0 border-r border-t-0 border-solid lg:w-60">
-        <div className="flex items-center gap-2 px-2 py-3 lg:px-3">
+        <div className="items-left flex gap-2 px-2 py-3 lg:px-3">
           <button
             type="button"
-            className="text-description hover:bg-vsc-input-background inline-flex h-8 w-8 items-center justify-center rounded-lg border-none bg-transparent p-0"
+            className="text-description hover:bg-vsc-input-background items-left inline-flex h-8 w-8 justify-center rounded-lg border-none bg-transparent p-0"
             onClick={() => navigate("/")}
             aria-label="Back to chat"
           >
@@ -207,7 +206,7 @@ function ConfigPage() {
           </div>
         )}
 
-        <div className="relative px-2 pb-3 lg:px-3">
+        <div className="relative hidden px-2 pb-3 lg:block lg:px-3">
           <MagnifyingGlassIcon className="text-description-muted pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2" />
           <input
             type="text"
@@ -229,7 +228,7 @@ function ConfigPage() {
                   key={target.key}
                   type="button"
                   data-testid={`config-search-target-${target.tabId}-${target.anchorId ?? "tab"}`}
-                  className="hover:bg-vsc-input-background/60 flex w-full flex-col items-start border-none bg-transparent px-3 py-2 text-left"
+                  className="hover:bg-vsc-input-background/60 flex w-auto flex-col items-start border-none bg-transparent px-3 py-2 text-left"
                   onClick={() => handleSearchTargetSelect(target)}
                 >
                   <span className="text-sm font-medium">{target.label}</span>
@@ -284,23 +283,11 @@ function ConfigPage() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="block px-4 py-4 sm:hidden">
-          <Alert type="warning" className="max-w-md">
-            <div className="flex flex-col">
-              <div className="font-medium">Screen width too small</div>
-              <div className="text-description mt-1 text-sm">
-                To view settings, please expand the sidebar by dragging the
-                left/right border
-              </div>
-            </div>
-          </Alert>
-        </div>
-
         <div
           ref={contentRef}
-          className="thin-scrollbar relative hidden flex-1 overflow-y-auto sm:block"
+          className="thin-scrollbar relative flex-1 overflow-y-auto"
         >
-          <div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-5 lg:px-6 lg:py-6">
+          <div className="mx-auto w-auto max-w-5xl space-y-8 px-4 py-5 lg:px-6 lg:py-6">
             {allTabs.find((tab) => tab.id === activeTab)?.component}
           </div>
           <CliInstallBanner permanentDismissal={true} />

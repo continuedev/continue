@@ -16,6 +16,7 @@ import { renderChatMessage } from "core/util/messageContent";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import ThinkingBlockPeek from "../mainInput/belowMainInput/ThinkingBlockPeek";
 import { AgentSessionStatus, AgentStatusBar } from "./AgentStatusBar";
 import { AgentToolCallItem } from "./AgentToolCallItem";
 
@@ -272,14 +273,13 @@ export function AgentChatView({ sessionId, onSessionEnd }: AgentChatViewProps) {
 
           if (group.kind === "thinking") {
             return (
-              <details key={i} className="text-xs text-zinc-500">
-                <summary className="cursor-pointer select-none">
-                  Thinking…
-                </summary>
-                <pre className="mt-1 whitespace-pre-wrap break-all pl-2">
-                  {group.content}
-                </pre>
-              </details>
+              <ThinkingBlockPeek
+                key={i}
+                content={group.content}
+                index={i}
+                prevItem={null}
+                inProgress={isActive && i === groups.length - 1}
+              />
             );
           }
 

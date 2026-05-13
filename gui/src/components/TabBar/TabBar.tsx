@@ -562,7 +562,7 @@ export const TabBar = React.forwardRef<HTMLDivElement>((_, ref) => {
         <button
           ref={switcherToggleButtonRef}
           type="button"
-          className="hover:bg-vsc-input-background/60 flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-solid border-transparent px-2 py-2 text-left focus-visible:border-[color:var(--vscode-focusBorder)]"
+          className="hover:bg-vsc-input-background/60 flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-solid border-transparent bg-transparent px-2 py-2 text-left focus-visible:border-[color:var(--vscode-focusBorder)]"
           onClick={() => setIsSwitcherOpen((current) => !current)}
           onKeyDown={handleSwitcherToggleKeyDown}
           aria-expanded={isSwitcherOpen}

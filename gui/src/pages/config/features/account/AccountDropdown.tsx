@@ -28,14 +28,14 @@ export function AccountDropdown() {
 
   if (!session) {
     return (
-      <ToolTip content="Log in" className="text-xs md:!hidden">
+      <ToolTip content="Log in" className="text-xs lg:!hidden">
         <Button
           variant="ghost"
-          className="text-description flex w-full flex-row items-center gap-2 px-2 py-1.5"
+          className="text-description flex w-full flex-row items-center justify-center gap-2 px-2 py-1.5 lg:justify-start"
           onClick={() => login(false)}
         >
           <UserCircleIconOutline className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
-          <span className="text-description hidden text-xs md:block">
+          <span className="text-description hidden text-xs lg:block">
             Log in
           </span>
         </Button>
@@ -49,12 +49,12 @@ export function AccountDropdown() {
         {({ open }) => (
           <>
             <ListboxButton
-              className={`text-description w-full justify-start gap-1 border-none px-2 py-1.5 ${
+              className={`text-description w-full justify-center gap-1 border-none px-2 py-1.5 lg:justify-start ${
                 open ? "bg-input" : "hover:bg-input bg-inherit"
               }`}
             >
               <UserCircleIconSolid className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
-              <div className="ml-1 flex min-w-0 flex-1 flex-col items-start overflow-hidden">
+              <div className="ml-1 hidden min-w-0 flex-1 flex-col items-start overflow-hidden lg:flex">
                 <span className="w-full truncate text-xs font-medium hover:brightness-110">
                   {session.account.label}
                 </span>
