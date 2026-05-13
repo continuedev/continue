@@ -32,7 +32,11 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
   } else {
     // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
     const userShell = process.env.SHELL || "/bin/bash";
-    return { shell: userShell, args: ["-l", "-c", command] };
+    // csh and tcsh do not accept -l as a flag, so skip the login flag for them.
+    const shellName = userShell.split("/").pop() || "";
+    const loginArgs =
+      shellName === "csh" || shellName === "tcsh" ? [] : ["-l"];
+    return { shell: userShell, args: [...loginArgs, "-c", command] };
   }
 }
 

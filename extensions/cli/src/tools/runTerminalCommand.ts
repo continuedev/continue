@@ -77,13 +77,26 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
     const wslShell = process.env.SHELL || "/bin/bash";
     return {
       shell: wslShell,
-      args: ["-l", "-c", command],
+      args: [...getLoginShellArgs(wslShell), "-c", command],
     };
   }
 
   // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
   const userShell = process.env.SHELL || "/bin/bash";
-  return { shell: userShell, args: ["-l", "-c", command] };
+  return {
+    shell: userShell,
+    args: [...getLoginShellArgs(userShell), "-c", command],
+  };
+}
+
+// csh and tcsh do not accept -l as a flag, so skip the login flag for them.
+// They automatically source ~/.cshrc / ~/.tcshrc on every invocation anyway.
+function getLoginShellArgs(shellPath: string): string[] {
+  const shellName = shellPath.split("/").pop() || "";
+  if (shellName === "csh" || shellName === "tcsh") {
+    return [];
+  }
+  return ["-l"];
 }
 
 export function runCommandInBackground(command: string): {
