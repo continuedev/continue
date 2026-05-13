@@ -618,11 +618,23 @@ export async function getControlPlaneSessionInfo(
       WorkOsAuthProvider.useOnboardingUri = true;
     }
     await WorkOsAuthProvider.hasAttemptedRefresh;
-    const session = await authentication.getSession(
-      controlPlaneEnv.AUTH_TYPE,
-      [],
-      silent ? { silent: true } : { createIfNone: true },
-    );
+    let session: vscode.AuthenticationSession | undefined;
+    try {
+      session = await authentication.getSession(
+        controlPlaneEnv.AUTH_TYPE,
+        [],
+        silent ? { silent: true } : { createIfNone: true },
+      );
+    } catch (e: any) {
+      // User dismissed the login dialog — not an error
+      if (
+        typeof e?.message === "string" &&
+        e.message.includes("did not consent")
+      ) {
+        return undefined;
+      }
+      throw e;
+    }
     if (!session) {
       return undefined;
     }

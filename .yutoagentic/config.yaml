@@ -6,6 +6,8 @@ models:
     apiKey: dummy
     capabilities: [tool_use]
     useLegacyCompletionsEndpoint: false
+    completionOptions:
+      reasoning: false
     requestOptions:
       noProxy:
         - "192.168.1.112"

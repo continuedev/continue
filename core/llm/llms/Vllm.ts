@@ -1,4 +1,5 @@
-import { Chunk, LLMOptions } from "../../index.js";
+import { ChatCompletionCreateParams } from "openai/resources/chat/completions";
+import { Chunk, CompletionOptions, LLMOptions } from "../../index.js";
 
 import OpenAI from "./OpenAI.js";
 
@@ -39,6 +40,20 @@ class Vllm extends OpenAI {
 
   supportsFim(): boolean {
     return false;
+  }
+
+  protected modifyChatBody(
+    body: ChatCompletionCreateParams,
+    options?: CompletionOptions,
+  ): ChatCompletionCreateParams {
+    body = super.modifyChatBody(body, options);
+    // Qwen3 (and other thinking models) served via vLLM default to
+    // enable_thinking=True, producing very long reasoning chains that can
+    // timeout when the server is under load.  Mirror the session reasoning
+    // toggle: disable thinking unless the caller explicitly enables it.
+    const enableThinking = options?.reasoning === true;
+    (body as any).chat_template_kwargs = { enable_thinking: enableThinking };
+    return body;
   }
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {

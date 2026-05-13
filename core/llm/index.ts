@@ -40,6 +40,7 @@ import { isOllamaInstalled } from "../util/ollamaHelper.js";
 import { TokensBatchingService } from "../util/TokensBatchingService.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 
+import { applyToolOverrides } from "../tools/applyToolOverrides.js";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -67,7 +68,6 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
-import { applyToolOverrides } from "../tools/applyToolOverrides.js";
 
 export class LLMError extends Error {
   constructor(
@@ -988,6 +988,7 @@ export abstract class BaseLLM implements ILLM {
 
   protected modifyChatBody(
     body: ChatCompletionCreateParams,
+    _options?: CompletionOptions,
   ): ChatCompletionCreateParams {
     return body;
   }
@@ -1215,7 +1216,7 @@ export abstract class BaseLLM implements ILLM {
             includeReasoningDetailsField: this.supportsReasoningDetailsField,
             includeReasoningContentField: this.supportsReasoningContentField,
           });
-          body = this.modifyChatBody(body);
+          body = this.modifyChatBody(body, completionOptions);
 
           if (logEnabled) {
             interaction?.logItem({

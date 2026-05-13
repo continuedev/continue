@@ -47,6 +47,7 @@ class Inception extends OpenAI {
 
   protected modifyChatBody(
     body: ChatCompletionCreateParams,
+    _options?: CompletionOptions,
   ): ChatCompletionCreateParams {
     const hasNextEditCapability = this.capabilities?.nextEdit ?? false;
 

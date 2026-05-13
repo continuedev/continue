@@ -2,7 +2,7 @@ import { ChatCompletionCreateParams } from "openai/resources/index";
 
 import { OPENROUTER_HEADERS } from "@yutoagentic/openai-adapters";
 
-import { LLMOptions } from "../../index.js";
+import { CompletionOptions, LLMOptions } from "../../index.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
 
 import OpenAI from "./OpenAI.js";
@@ -110,8 +110,9 @@ class OpenRouter extends OpenAI {
 
   protected modifyChatBody(
     body: ChatCompletionCreateParams,
+    options?: CompletionOptions,
   ): ChatCompletionCreateParams {
-    body = super.modifyChatBody(body);
+    body = super.modifyChatBody(body, options);
 
     if (this.isGeminiModel(body.model)) {
       body = this.addGeminiThoughtSignatures(body);

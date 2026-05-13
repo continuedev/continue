@@ -1,10 +1,6 @@
 {
   "version": "2.0.0",
-  "options": {
-    "env": {
-      "PATH": "C:\\Program Files\\nodejs\\;C:\\Windows\\System32;C:\\Windows;C:\\Users\\verf\\AppData\\Roaming\\npm"
-    }
-  },
+  "options": {},
   "tasks": [
     {
       "label": "tsc:watch",
@@ -27,7 +23,7 @@
     {
       "label": "tsc:watch:gui-task",
       "type": "shell",
-      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "command": "node",
       "args": [
         "./node_modules/typescript/bin/tsc",
         "--project",
@@ -37,7 +33,9 @@
         "--pretty"
       ],
       "isBackground": true,
-      "problemMatcher": ["$tsc-watch"],
+      "problemMatcher": [
+        "$tsc-watch"
+      ],
       "presentation": {
         "group": "dev-watchers",
         "panel": "dedicated",
@@ -47,7 +45,7 @@
     {
       "label": "tsc:watch:vscode-task",
       "type": "shell",
-      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "command": "node",
       "args": [
         "./node_modules/typescript/bin/tsc",
         "--project",
@@ -57,7 +55,9 @@
         "--pretty"
       ],
       "isBackground": true,
-      "problemMatcher": ["$tsc-watch"],
+      "problemMatcher": [
+        "$tsc-watch"
+      ],
       "presentation": {
         "group": "dev-watchers",
         "panel": "dedicated",
@@ -67,7 +67,7 @@
     {
       "label": "tsc:watch:core-task",
       "type": "shell",
-      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "command": "node",
       "args": [
         "./node_modules/typescript/bin/tsc",
         "--project",
@@ -77,7 +77,9 @@
         "--pretty"
       ],
       "isBackground": true,
-      "problemMatcher": ["$tsc-watch"],
+      "problemMatcher": [
+        "$tsc-watch"
+      ],
       "presentation": {
         "group": "dev-watchers",
         "panel": "dedicated",
@@ -87,7 +89,7 @@
     {
       "label": "tsc:watch:binary-task",
       "type": "shell",
-      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "command": "node",
       "args": [
         "./node_modules/typescript/bin/tsc",
         "--project",
@@ -97,7 +99,9 @@
         "--pretty"
       ],
       "isBackground": true,
-      "problemMatcher": ["$tsc-watch"],
+      "problemMatcher": [
+        "$tsc-watch"
+      ],
       "presentation": {
         "group": "dev-watchers",
         "panel": "dedicated",
@@ -120,7 +124,9 @@
     },
     {
       "label": "vscode-extension:esbuild-notify",
-      "dependsOn": ["vscode-extension:esbuild"],
+      "dependsOn": [
+        "vscode-extension:esbuild"
+      ],
       "type": "npm",
       "script": "esbuild-notify",
       "path": "extensions/vscode",
@@ -135,7 +141,9 @@
     },
     {
       "label": "vscode-extension:esbuild",
-      "dependsOn": ["vscode-extension:yutoagentic-ui:build"],
+      "dependsOn": [
+        "vscode-extension:yutoagentic-ui:build"
+      ],
       "type": "npm",
       "script": "esbuild-watch",
       "path": "extensions/vscode",
@@ -167,7 +175,9 @@
     },
     {
       "label": "vscode-extension:package",
-      "dependsOn": ["vscode-extension:esbuild"],
+      "dependsOn": [
+        "vscode-extension:esbuild"
+      ],
       "type": "npm",
       "script": "package",
       "path": "extensions/vscode",
@@ -195,8 +205,12 @@
       "label": "vscode-extension:yutoagentic-ui:build",
       "type": "shell",
       "command": "node",
-      "args": ["scripts/prepackage.js"],
-      "problemMatcher": ["$tsc"],
+      "args": [
+        "scripts/prepackage.js"
+      ],
+      "problemMatcher": [
+        "$tsc"
+      ],
       "presentation": {
         "group": "build-tasks",
         "panel": "shared",
@@ -229,13 +243,12 @@
     {
       "label": "gui:dev",
       "type": "shell",
-      "command": "C:\\Program Files\\nodejs\\npm.cmd",
+      "command": "npm",
       "options": {
         "cwd": "${workspaceFolder}/gui",
         "env": {
           "CHOKIDAR_USEPOLLING": "1",
-          "CHOKIDAR_INTERVAL": "500",
-          "PATH": "C:\\Program Files\\nodejs\\;C:\\Windows\\System32;C:\\Windows;C:\\Users\\verf\\AppData\\Roaming\\npm"
+          "CHOKIDAR_INTERVAL": "500"
         }
       },
       "args": [
@@ -275,7 +288,10 @@
       "label": "binary:esbuild",
       "type": "shell",
       "command": "npm",
-      "args": ["run", "esbuild"],
+      "args": [
+        "run",
+        "esbuild"
+      ],
       "problemMatcher": [],
       "presentation": {
         "group": "build-tasks",
@@ -290,7 +306,12 @@
       "label": "docs:start",
       "type": "shell",
       "command": "npm",
-      "args": ["run", "start", "--", "--no-open"],
+      "args": [
+        "run",
+        "start",
+        "--",
+        "--no-open"
+      ],
       "problemMatcher": [],
       "presentation": {
         "group": "docs",
@@ -305,7 +326,9 @@
       "label": "clean",
       "type": "shell",
       "command": "node",
-      "args": ["${workspaceFolder}/scripts/uninstall.js"],
+      "args": [
+        "${workspaceFolder}/scripts/uninstall.js"
+      ],
       "problemMatcher": [],
       "presentation": {
         "group": "maintenance",
@@ -317,7 +340,9 @@
       "label": "refresh-dependencies:core",
       "type": "shell",
       "command": "npm",
-      "args": ["install"],
+      "args": [
+        "install"
+      ],
       "problemMatcher": [],
       "options": {
         "cwd": "${workspaceFolder}/core"
@@ -333,7 +358,9 @@
       "label": "refresh-dependencies:vscode",
       "type": "shell",
       "command": "npm",
-      "args": ["install"],
+      "args": [
+        "install"
+      ],
       "problemMatcher": [],
       "options": {
         "cwd": "${workspaceFolder}/extensions/vscode"
@@ -349,7 +376,9 @@
       "label": "refresh-dependencies:gui",
       "type": "shell",
       "command": "npm",
-      "args": ["install"],
+      "args": [
+        "install"
+      ],
       "problemMatcher": [],
       "options": {
         "cwd": "${workspaceFolder}/gui"
@@ -379,13 +408,11 @@
     {
       "label": "yutoagentic-packages:build",
       "type": "shell",
-      "command": "C:\\Program Files\\nodejs\\node.exe",
-      "args": ["./scripts/build-packages.js"],
-      "options": {
-        "env": {
-          "PATH": "C:\\Program Files\\nodejs\\;C:\\Windows\\System32;C:\\Windows;C:\\Users\\verf\\AppData\\Roaming\\npm"
-        }
-      },
+      "command": "node",
+      "args": [
+        "./scripts/build-packages.js"
+      ],
+      "options": {},
       "problemMatcher": [],
       "presentation": {
         "group": "build-tasks",
@@ -397,10 +424,15 @@
     },
     {
       "label": "vscode-extension:build-with-packages",
-      "dependsOn": ["yutoagentic-packages:build", "vscode-extension:build"],
+      "dependsOn": [
+        "yutoagentic-packages:build",
+        "vscode-extension:build"
+      ],
       "type": "shell",
       "command": "echo",
-      "args": ["Build with packages completed"],
+      "args": [
+        "Build with packages completed"
+      ],
       "problemMatcher": [],
       "dependsOrder": "sequence",
       "runOptions": {
@@ -428,7 +460,9 @@
         "showReuseMessage": true,
         "clear": false
       },
-      "problemMatcher": ["$tsc"],
+      "problemMatcher": [
+        "$tsc"
+      ],
       "options": {
         "cwd": "${workspaceFolder}/extensions/cli"
       }
@@ -437,7 +471,12 @@
       "label": "cli:build-no-minify",
       "type": "shell",
       "command": "npm",
-      "args": ["run", "build:bundle", "--", "--no-minify"],
+      "args": [
+        "run",
+        "build:bundle",
+        "--",
+        "--no-minify"
+      ],
       "group": "build",
       "presentation": {
         "echo": true,
@@ -448,7 +487,9 @@
         "clear": false,
         "close": true
       },
-      "problemMatcher": ["$tsc"],
+      "problemMatcher": [
+        "$tsc"
+      ],
       "options": {
         "cwd": "${workspaceFolder}/extensions/cli"
       }
@@ -499,11 +540,16 @@
     },
     {
       "label": "cli:build-and-watch-logs",
-      "dependsOn": ["cli:build-no-minify", "watch-logs"],
+      "dependsOn": [
+        "cli:build-no-minify",
+        "watch-logs"
+      ],
       "dependsOrder": "sequence",
       "type": "shell",
       "command": "echo",
-      "args": ["Build and watch logs completed"],
+      "args": [
+        "Build and watch logs completed"
+      ],
       "presentation": {
         "group": "build-tasks",
         "panel": "shared",
