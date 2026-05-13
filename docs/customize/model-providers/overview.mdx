@@ -59,6 +59,33 @@ Beyond the top-level providers, Continue supports many other options:
 | [Sagemaker](/customize/model-providers/more/sagemaker) | AWS machine learning platform         |
 | [Nebius](/customize/model-providers/more/nebius)       | Cloud-based machine learning platform |
 
+## Dynamic Model Fetching
+
+When you add a model through the Continue UI, the model list for your selected provider is fetched dynamically so you always see up-to-date options.
+
+### How it works per provider
+
+| Provider | Behavior | Requires API Key |
+|---|---|---|
+| **Ollama** | Auto-loads on provider selection — scrapes the [Ollama library](https://ollama.com/library) including model icons and tool support | No |
+| **OpenRouter** | Auto-loads on provider selection — hits the OpenRouter public API | No |
+| **Anthropic** | Refresh button appears after you enter an API key — calls `/v1/models` | Yes |
+| **Gemini** | Refresh button appears after you enter an API key — calls `v1beta/models` | Yes |
+| **Others** | Refresh button appears after you enter an API key — uses the provider's model list API | Depends on provider |
+
+### What information is fetched
+
+For each model, Continue retrieves:
+- **Context length** — the maximum input tokens the model supports
+- **Max tokens** — the maximum output tokens the model can generate
+- **Tool support** — whether the model supports function/tool calling
+
+These values are written to your `config.yaml` automatically when you add the model, so Continue can use them without making additional API calls.
+
+### Model deduplication
+
+Fetched models are merged with Continue's built-in hardcoded model list. If the same model appears in both, the hardcoded entry takes precedence (since it contains curated defaults).
+
 ## How to Choose a Model Provider
 
 When selecting a model provider, consider:
