@@ -10,7 +10,11 @@ import {
 } from "../../agent/coordinator/WorkerScratchpad";
 import { isAbortError } from "../../util/isAbortError";
 import { getContinueGlobalPath } from "../../util/paths";
-import { appendMailboxMessage } from "../../util/teamMailboxStore";
+import {
+  appendMailboxMessage,
+  takeUnreadMailboxMessages,
+  type TeamMailboxMessage,
+} from "../../util/teamMailboxStore";
 import {
   finishTeamMemberRun,
   getActiveTeam,
@@ -103,6 +107,53 @@ function buildChildSystemMessage(args: {
   );
 
   return segments.length > 0 ? segments.join("\n\n") : undefined;
+}
+
+function formatMailboxHandoffMessage(message: TeamMailboxMessage): string {
+  const summary = message.summary ? ` -- ${message.summary}` : "";
+  return [
+    `- [${message.kind}] ${message.from} @ ${message.timestamp}${summary}`,
+    message.text,
+  ].join("\n");
+}
+
+function buildMailboxHandoffPrompt(args: {
+  prompt: string;
+  teamName: string;
+  teammateName: string;
+  mailboxMessages: TeamMailboxMessage[];
+}): string {
+  if (args.mailboxMessages.length === 0) {
+    return args.prompt;
+  }
+
+  return [
+    args.prompt,
+    "",
+    `Mailbox handoff for ${args.teammateName} in team ${args.teamName}:`,
+    ...args.mailboxMessages.map(formatMailboxHandoffMessage),
+    "",
+    "Use the mailbox handoff items above as part of the delegated task.",
+  ].join("\n");
+}
+
+function buildMailboxHandoffContextItem(args: {
+  teamName: string;
+  teammateName: string;
+  mailboxMessages: TeamMailboxMessage[];
+}): ContextItem | null {
+  if (args.mailboxMessages.length === 0) {
+    return null;
+  }
+
+  return {
+    name: "Mailbox Handoff",
+    description: `${args.mailboxMessages.length} claimed message(s) for ${args.teammateName}`,
+    content: [
+      `Consumed ${args.mailboxMessages.length} mailbox handoff message(s) for ${args.teammateName} in team ${args.teamName}:`,
+      ...args.mailboxMessages.map(formatMailboxHandoffMessage),
+    ].join("\n"),
+  };
 }
 
 function optionalText(value: unknown): string | undefined {
@@ -316,6 +367,34 @@ export const subagentToolImpl: ToolImpl = async (args, extras) => {
     });
   }
 
+  const mailboxHandoffMessages = teamContext
+    ? await takeUnreadMailboxMessages(
+        teamContext.sessionId,
+        teamContext.team.teamName,
+        teamContext.teammateName,
+        {
+          kinds: ["prompt", "control"],
+          readSource: "subagent",
+          readBy: teamContext.teammateName,
+        },
+      )
+    : [];
+  const resolvedPrompt = teamContext
+    ? buildMailboxHandoffPrompt({
+        prompt,
+        teamName: teamContext.team.teamName,
+        teammateName: teamContext.teammateName,
+        mailboxMessages: mailboxHandoffMessages,
+      })
+    : prompt;
+  const mailboxHandoffContextItem = teamContext
+    ? buildMailboxHandoffContextItem({
+        teamName: teamContext.team.teamName,
+        teammateName: teamContext.teammateName,
+        mailboxMessages: mailboxHandoffMessages,
+      })
+    : null;
+
   let scratchpadPath: string | undefined;
   let coordinatorInstructions: string | undefined;
 
@@ -344,7 +423,7 @@ export const subagentToolImpl: ToolImpl = async (args, extras) => {
   const { runAgent } = await import("../../agent/AgentRunner");
   try {
     const result = await runAgent({
-      prompt,
+      prompt: resolvedPrompt,
       llm: subagentModel,
       tools: overriddenTools,
       toolExtras: {
@@ -389,7 +468,9 @@ export const subagentToolImpl: ToolImpl = async (args, extras) => {
       });
     }
 
-    return summary;
+    return mailboxHandoffContextItem
+      ? [mailboxHandoffContextItem, ...summary]
+      : summary;
   } catch (error) {
     if (teamContext) {
       const message = error instanceof Error ? error.message : String(error);

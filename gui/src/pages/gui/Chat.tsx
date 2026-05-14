@@ -62,6 +62,7 @@ import { cancelStream } from "../../redux/thunks/cancelStream";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
+import { TeamCoordinationPanel } from "./TeamCoordinationPanel";
 import { useAutoScroll } from "./useAutoScroll";
 
 // Helper function to find the index of the latest conversation summary
@@ -570,6 +571,9 @@ export function Chat() {
             <div className="pb-2">
               <AgentsList isCreatingAgent={isCreatingAgent} variant="compact" />
             </div>
+          )}
+          {mode !== "background" && !(mode === "agent" && agentSessionId) && (
+            <TeamCoordinationPanel />
           )}
           {mode === "background" ? (
             <BackgroundModeView isCreatingAgent={isCreatingAgent} />

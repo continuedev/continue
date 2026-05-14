@@ -35,6 +35,23 @@ export const teamMailboxTool: Tool = {
           description:
             "Whether to mark unread messages as read while fetching them.",
         },
+        message_ids: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+          description:
+            "Optional specific mailbox message ids to fetch or mark read.",
+        },
+        read_source: {
+          type: "string",
+          description:
+            "Optional provenance label to store when mark_read is true.",
+        },
+        read_by: {
+          type: "string",
+          description: "Optional actor label to store when mark_read is true.",
+        },
         max_messages: {
           type: "number",
           description: "Maximum number of messages to return. Defaults to 10.",

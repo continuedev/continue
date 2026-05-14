@@ -53,11 +53,13 @@ function buildContextItem(
   name: string,
   description: string,
   content: string,
+  metadata?: Record<string, unknown>,
 ): ContextItem {
   return {
     name,
     description,
     content,
+    metadata,
   };
 }
 
@@ -87,6 +89,61 @@ function normalizeMaxMessages(value: unknown): number {
     return 10;
   }
   return Math.floor(value);
+}
+
+function normalizeMessageIds(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const ids = value
+    .filter((id): id is string => typeof id === "string")
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
+
+  return ids.length > 0 ? Array.from(new Set(ids)) : undefined;
+}
+
+function filterMailboxMessages(
+  messages: TeamMailboxMessage[],
+  options?: {
+    ids?: string[];
+  },
+): TeamMailboxMessage[] {
+  if (!options?.ids || options.ids.length === 0) {
+    return messages;
+  }
+
+  const ids = new Set(options.ids);
+  return messages.filter((message) => ids.has(message.id));
+}
+
+function buildTeamMailboxMetadata(args: {
+  teamName: string;
+  mailboxOwner: string;
+  messages: TeamMailboxMessage[];
+  visibleMessages: TeamMailboxMessage[];
+}): Record<string, unknown> {
+  return {
+    teamName: args.teamName,
+    mailboxOwner: args.mailboxOwner,
+    totalMessages: args.messages.length,
+    unreadCount: args.messages.filter((message) => !message.read).length,
+    truncated: args.messages.length > args.visibleMessages.length,
+    messages: args.visibleMessages.map((message) => ({
+      id: message.id,
+      from: message.from,
+      text: message.text,
+      timestamp: message.timestamp,
+      summary: message.summary,
+      kind: message.kind,
+      read: message.read,
+      readAt: message.readAt,
+      readSource: message.readSource,
+      readBy: message.readBy,
+      metadata: message.metadata,
+    })),
+  };
 }
 
 export const teamCreateImpl: ToolImpl = async (args, extras) => {
@@ -174,12 +231,27 @@ export const teamMailboxImpl: ToolImpl = async (args, extras) => {
   const unreadOnly = args?.unread_only === true;
   const markRead = args?.mark_read === true;
   const maxMessages = normalizeMaxMessages(args?.max_messages);
+  const messageIds = normalizeMessageIds(args?.message_ids);
 
   const messages = markRead
-    ? await takeUnreadMailboxMessages(sessionId, team.teamName, mailboxOwner)
+    ? await takeUnreadMailboxMessages(sessionId, team.teamName, mailboxOwner, {
+        ids: messageIds,
+        readSource: optionalText(args?.read_source) ?? "team_mailbox",
+        readBy: optionalText(args?.read_by) ?? mailboxOwner,
+      })
     : unreadOnly
-      ? await readUnreadMailboxMessages(sessionId, team.teamName, mailboxOwner)
-      : await readMailbox(sessionId, team.teamName, mailboxOwner);
+      ? await readUnreadMailboxMessages(
+          sessionId,
+          team.teamName,
+          mailboxOwner,
+          {
+            ids: messageIds,
+          },
+        )
+      : filterMailboxMessages(
+          await readMailbox(sessionId, team.teamName, mailboxOwner),
+          { ids: messageIds },
+        );
 
   if (messages.length === 0) {
     return [
@@ -187,6 +259,12 @@ export const teamMailboxImpl: ToolImpl = async (args, extras) => {
         "Team Mailbox",
         `Mailbox ${mailboxOwner}`,
         `Mailbox for ${mailboxOwner} in ${team.teamName} is empty.`,
+        buildTeamMailboxMetadata({
+          teamName: team.teamName,
+          mailboxOwner,
+          messages: [],
+          visibleMessages: [],
+        }),
       ),
     ];
   }
@@ -216,6 +294,12 @@ export const teamMailboxImpl: ToolImpl = async (args, extras) => {
       "Team Mailbox",
       `Mailbox ${mailboxOwner}`,
       lines.join("\n"),
+      buildTeamMailboxMetadata({
+        teamName: team.teamName,
+        mailboxOwner,
+        messages,
+        visibleMessages,
+      }),
     ),
   ];
 };

@@ -1,6 +1,12 @@
+import { useContext } from "react";
+
 import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { EditOperation } from "core/tools/definitions/multiEdit";
+
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useAppSelector } from "../../../redux/hooks";
+
 import { CoordinationToolCallSummary } from "./CoordinationToolCallSummary";
 import { CreateFile } from "./CreateFile";
 import { EditFile } from "./EditFile";
@@ -17,6 +23,8 @@ function FunctionSpecificToolCallDiv({
   const args = toolCallState.parsedArgs;
   const processedArgs = toolCallState.processedArgs;
   const toolCall = toolCallState.toolCall;
+  const ideMessenger = useContext(IdeMessengerContext);
+  const sessionId = useAppSelector((state) => state.session.id);
 
   switch (toolCall.function?.name) {
     case BuiltInToolNames.CreateNewFile:
@@ -83,7 +91,13 @@ function FunctionSpecificToolCallDiv({
     case BuiltInToolNames.TeamStatus:
     case BuiltInToolNames.TeamMailbox:
     case BuiltInToolNames.SendMessage:
-      return <CoordinationToolCallSummary toolCallState={toolCallState} />;
+      return (
+        <CoordinationToolCallSummary
+          toolCallState={toolCallState}
+          ideMessenger={ideMessenger}
+          sessionId={sessionId}
+        />
+      );
     default:
       return null;
   }

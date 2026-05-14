@@ -80,6 +80,21 @@ describe("team tools", () => {
     expect(mailbox[0]?.content).toContain(
       "Inspect the auth flow and summarize the owning files.",
     );
+    expect(mailbox[0]?.metadata).toEqual(
+      expect.objectContaining({
+        mailboxOwner: "reviewer",
+        unreadCount: 0,
+        totalMessages: 1,
+        messages: [
+          expect.objectContaining({
+            read: true,
+            readSource: "team_mailbox",
+            readBy: "reviewer",
+            kind: "prompt",
+          }),
+        ],
+      }),
+    );
 
     const afterReadStatus = await teamStatusImpl(
       {

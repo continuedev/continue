@@ -362,6 +362,7 @@ declare global {
     icon?: string;
     uri?: ContextItemUri;
     hidden?: boolean;
+    metadata?: Record<string, unknown>;
   }
   
   export interface ContextItemWithId extends ContextItem {

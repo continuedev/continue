@@ -8,6 +8,21 @@ import {
 
 export type TeamMailboxMessageKind = "prompt" | "message" | "control";
 
+interface MailboxMessageFilter {
+  kinds?: TeamMailboxMessageKind[];
+  ids?: string[];
+}
+
+interface MailboxReadProvenance {
+  readAt?: string;
+  readSource?: string;
+  readBy?: string;
+}
+
+interface TakeMailboxMessagesOptions
+  extends MailboxMessageFilter,
+    MailboxReadProvenance {}
+
 export interface TeamMailboxMessage {
   id: string;
   from: string;
@@ -17,6 +32,9 @@ export interface TeamMailboxMessage {
   read: boolean;
   kind: TeamMailboxMessageKind;
   metadata?: Record<string, unknown>;
+  readAt?: string;
+  readSource?: string;
+  readBy?: string;
 }
 
 interface TeamMailboxState {
@@ -76,6 +94,28 @@ function getMailboxMessages(
   return state.teams[teamName]?.[memberName] ?? [];
 }
 
+function getMailboxFilters(options?: MailboxMessageFilter): {
+  kinds?: Set<TeamMailboxMessageKind>;
+  ids?: Set<string>;
+} {
+  return {
+    kinds:
+      options?.kinds && options.kinds.length > 0
+        ? new Set(options.kinds)
+        : undefined,
+    ids:
+      options?.ids && options.ids.length > 0 ? new Set(options.ids) : undefined,
+  };
+}
+
+function matchesMailboxFilters(
+  message: TeamMailboxMessage,
+  options?: MailboxMessageFilter,
+): boolean {
+  const { kinds, ids } = getMailboxFilters(options);
+  return (!kinds || kinds.has(message.kind)) && (!ids || ids.has(message.id));
+}
+
 export async function readMailbox(
   sessionId: string,
   teamName: string,
@@ -129,15 +169,19 @@ export async function readUnreadMailboxMessages(
   sessionId: string,
   teamName: string,
   memberName: string,
+  options?: MailboxMessageFilter,
 ): Promise<TeamMailboxMessage[]> {
   const messages = await readMailbox(sessionId, teamName, memberName);
-  return messages.filter((message) => !message.read);
+  return messages.filter(
+    (message) => !message.read && matchesMailboxFilters(message, options),
+  );
 }
 
 export async function takeUnreadMailboxMessages(
   sessionId: string,
   teamName: string,
   memberName: string,
+  options?: TakeMailboxMessagesOptions,
 ): Promise<TeamMailboxMessage[]> {
   const normalizedSessionId = requireSessionId(sessionId);
   const normalizedTeamName = normalizeName(teamName, "teamName");
@@ -148,15 +192,26 @@ export async function takeUnreadMailboxMessages(
     normalizedTeamName,
     normalizedMemberName,
   );
-  const unread = currentMessages.filter((message) => !message.read);
+  const unread = currentMessages.filter(
+    (message) => !message.read && matchesMailboxFilters(message, options),
+  );
 
   if (unread.length === 0) {
     return [];
   }
 
   const unreadIds = new Set(unread.map((message) => message.id));
+  const readAt = options?.readAt ?? new Date().toISOString();
   const nextMessages = currentMessages.map((message) =>
-    unreadIds.has(message.id) ? { ...message, read: true } : message,
+    unreadIds.has(message.id)
+      ? {
+          ...message,
+          read: true,
+          readAt,
+          readSource: options?.readSource,
+          readBy: options?.readBy,
+        }
+      : message,
   );
 
   await saveMailboxState(normalizedSessionId, {
@@ -169,7 +224,7 @@ export async function takeUnreadMailboxMessages(
     },
   });
 
-  return unread;
+  return nextMessages.filter((message) => unreadIds.has(message.id));
 }
 
 export async function getUnreadMailboxCounts(

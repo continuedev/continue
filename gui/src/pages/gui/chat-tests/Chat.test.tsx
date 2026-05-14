@@ -1,4 +1,5 @@
 import { act, screen, waitFor, within } from "@testing-library/react";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { BackgroundModeView } from "../../../components/BackgroundMode/BackgroundModeView";
 import { EditOutcomeToolbar } from "../../../components/mainInput/Lump/LumpToolbar/EditOutcomeToolbar";
 import { TabBar } from "../../../components/TabBar/TabBar";
@@ -22,6 +23,53 @@ test("should render input box", async () => {
   await getElementByTestId("continue-input-box-main-editor-input");
   await getElementByTestId("runtime-target-pill");
   expect(screen.getAllByTestId("assistant-select-button")).toHaveLength(1);
+});
+
+test("should render the team coordination panel when the session has an active team", async () => {
+  const initialState = getEmptyRootState();
+  initialState.session.id = "session-current";
+
+  const mockIdeMessenger = new MockIdeMessenger();
+  mockIdeMessenger.responseHandlers["tools/call"] = vi.fn(async (data: any) => {
+    const functionName = data.toolCall.function.name;
+
+    if (functionName === BuiltInToolNames.TeamStatus) {
+      return {
+        contextItems: [
+          {
+            name: "Team Status",
+            description: "Team Coordination",
+            content:
+              "Team Coordination\nLead: team-lead\nMembers:\n- team-lead: idle\n- investigator: running, unread=1",
+          },
+        ],
+        errorMessage: undefined,
+      };
+    }
+
+    return {
+      contextItems: [
+        {
+          name: "Team Mailbox",
+          description: "Mailbox team-lead",
+          content:
+            "Mailbox for team-lead in Coordination (1 message(s)):\n- [message] investigator @ 2026-05-14T00:00:00.000Z\nMapped the owning files.",
+        },
+      ],
+      errorMessage: undefined,
+    };
+  });
+
+  await renderWithProviders(<Chat />, {
+    store: createMockStore(initialState, mockIdeMessenger),
+    mockIdeMessenger,
+  });
+
+  await waitFor(() => {
+    expect(screen.getByTestId("team-coordination-panel")).toBeInTheDocument();
+  });
+  expect(screen.getByText("Team coordination")).toBeInTheDocument();
+  expect(screen.getByText("Mailbox")).toBeInTheDocument();
 });
 
 test("should switch runtime target from local to cloud", async () => {
