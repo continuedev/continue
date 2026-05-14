@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-      
+
       - name: Check if author is in tier list
         id: check-author
         run: |
@@ -29,39 +29,39 @@ jobs:
             "RomneyDa"
             "Patrick-Erichsen"
           )
-          
+
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
           SHOULD_LABEL="false"
-          
+
           for user in "${USERS[@]}"; do
             if [[ "$PR_AUTHOR" == "$user" ]]; then
               SHOULD_LABEL="true"
               break
             fi
           done
-          
+
           echo "should_label=$SHOULD_LABEL" >> $GITHUB_OUTPUT
-      
+
       - name: Determine and apply tier label
         if: steps.check-author.outputs.should_label == 'true'
         uses: actions/github-script@v8
         with:
           script: |
             const pr = context.payload.pull_request;
-            
+
             // Check if PR already has a tier label
             const existingLabels = pr.labels.map(l => l.name);
             if (existingLabels.some(label => label.match(/^tier [1-3]$/))) {
               console.log('PR already has a tier label, skipping');
               return;
             }
-            
+
             // Function to extract conventional commit prefix
             function getConventionalPrefix(title) {
               const match = title.match(/^([a-z]+)(\s|$|:)/);
               return match ? match[1] : '';
             }
-            
+
             // Function to determine tier
             function determineTier(pr) {
               const additions = pr.additions;
@@ -102,9 +102,9 @@ jobs:
               // Tier 3: Smaller improvements
               return 'tier 3';
             }
-            
+
             const tier = determineTier(pr);
-            
+
             if (tier) {
               console.log(`Assigning ${tier} label to PR #${pr.number}`);
               console.log(`Title: ${pr.title}`);

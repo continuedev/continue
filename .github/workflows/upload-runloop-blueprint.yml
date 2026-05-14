@@ -6,8 +6,8 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/runloop-blueprint-template.json'
-      - '.github/workflows/runloop-blueprint-staging-template.json'
+      - ".github/workflows/runloop-blueprint-template.json"
+      - ".github/workflows/runloop-blueprint-staging-template.json"
 
 permissions:
   contents: read

@@ -227,9 +227,8 @@ models:
         execSync("git checkout -b test-branch", { stdio: "ignore" });
 
         // Test the formatting function
-        const { getResponsiveRepoText } = await import(
-          "../ui/hooks/useTUIChatHooks.js"
-        );
+        const { getResponsiveRepoText } =
+          await import("../ui/hooks/useTUIChatHooks.js");
         const repoText = getResponsiveRepoText();
 
         // Should include both repo and branch

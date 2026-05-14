@@ -47,9 +47,8 @@ export function getRangeInFileWithContents(
         new vscode.Position(0, 0),
         new vscode.Position(
           editor.document.lineCount - 1,
-          editor.document.lineAt(
-            editor.document.lineCount - 1,
-          ).range.end.character,
+          editor.document.lineAt(editor.document.lineCount - 1).range.end
+            .character,
         ),
       );
     }

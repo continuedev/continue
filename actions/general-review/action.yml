@@ -121,7 +121,7 @@ runs:
       run: |
         # Create directory for scripts
         mkdir -p .continue-action-scripts
-        
+
         # Check if we're running in the Continue repo itself (scripts exist locally)
         if [ -f "actions/general-review/scripts/buildPrompt.js" ] && [ -f "actions/general-review/scripts/writeMarkdown.js" ]; then
           echo "Running in Continue repo - using local scripts from current checkout"
@@ -139,18 +139,18 @@ runs:
           curl -sSL https://raw.githubusercontent.com/continuedev/continue/main/actions/general-review/scripts/writeMarkdown.js \
             -o .continue-action-scripts/writeMarkdown.js
         fi
-        
+
         # Verify scripts exist
         if [ ! -f .continue-action-scripts/buildPrompt.js ]; then
           echo "Error: buildPrompt.js not found"
           exit 1
         fi
-        
+
         if [ ! -f .continue-action-scripts/writeMarkdown.js ]; then
           echo "Error: writeMarkdown.js not found"
           exit 1
         fi
-        
+
         echo "Scripts ready:"
         ls -lh .continue-action-scripts/
 

@@ -14,9 +14,8 @@ export const exitTool: Tool = {
   readonly: false,
   isBuiltIn: true,
   run: async (): Promise<string> => {
-    const { gracefulExit, updateAgentMetadata } = await import(
-      "../util/exit.js"
-    );
+    const { gracefulExit, updateAgentMetadata } =
+      await import("../util/exit.js");
 
     // Mark agent as complete before exiting
     try {

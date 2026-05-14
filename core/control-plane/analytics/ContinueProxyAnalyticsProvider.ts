@@ -8,9 +8,7 @@ import {
   IAnalyticsProvider,
 } from "./IAnalyticsProvider.js";
 
-export default class ContinueProxyAnalyticsProvider
-  implements IAnalyticsProvider
-{
+export default class ContinueProxyAnalyticsProvider implements IAnalyticsProvider {
   uniqueId?: string;
   controlPlaneProxyInfo?: ControlPlaneProxyInfo;
 

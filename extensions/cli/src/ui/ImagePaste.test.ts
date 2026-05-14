@@ -61,9 +61,8 @@ describe("Image Pasting Functionality", () => {
 
   describe("Message Formatting with Images", () => {
     it("should format message with images correctly", async () => {
-      const { formatMessageWithFiles } = await import(
-        "./hooks/useChat.helpers.js"
-      );
+      const { formatMessageWithFiles } =
+        await import("./hooks/useChat.helpers.js");
 
       const message = "Here is an image: [Image #1] and some text";
       const attachedFiles: Array<{ path: string; content: string }> = [];
@@ -97,9 +96,8 @@ describe("Image Pasting Functionality", () => {
     });
 
     it("should handle message with only text (no images)", async () => {
-      const { formatMessageWithFiles } = await import(
-        "./hooks/useChat.helpers.js"
-      );
+      const { formatMessageWithFiles } =
+        await import("./hooks/useChat.helpers.js");
 
       const message = "Just text, no images";
       const attachedFiles: Array<{ path: string; content: string }> = [];
@@ -111,9 +109,8 @@ describe("Image Pasting Functionality", () => {
     });
 
     it("should handle multiple images in message", async () => {
-      const { formatMessageWithFiles } = await import(
-        "./hooks/useChat.helpers.js"
-      );
+      const { formatMessageWithFiles } =
+        await import("./hooks/useChat.helpers.js");
 
       const message = "First [Image #1] then text [Image #2] end";
       const attachedFiles: Array<{ path: string; content: string }> = [];

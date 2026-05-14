@@ -150,4 +150,3 @@ jobs:
         run: |
           cd extensions/vscode
           npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../vsix-artifacts/*.vsix
-

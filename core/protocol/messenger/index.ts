@@ -51,8 +51,7 @@ export interface IMessenger<
 export class InProcessMessenger<
   ToProtocol extends IProtocol,
   FromProtocol extends IProtocol,
-> implements IMessenger<ToProtocol, FromProtocol>
-{
+> implements IMessenger<ToProtocol, FromProtocol> {
   // Listeners for the entity that owns this messenger (right now, always Core)
   protected myTypeListeners = new Map<
     keyof ToProtocol,

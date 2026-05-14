@@ -533,9 +533,8 @@ describe("Agent file Integration Tests", () => {
       });
 
       // mergeUnrolledAssistants would combine this with base config prompts
-      const { mergeUnrolledAssistants } = await import(
-        "@continuedev/config-yaml"
-      );
+      const { mergeUnrolledAssistants } =
+        await import("@continuedev/config-yaml");
       const baseConfig = {
         name: "original",
         version: "1.0.0",

@@ -9,9 +9,10 @@ import { IMessenger } from "../../../core/protocol/messenger";
 
 import { handleLLMError } from "./util/errorHandling";
 
-export class VsCodeWebviewProtocol
-  implements IMessenger<FromWebviewProtocol, ToWebviewProtocol>
-{
+export class VsCodeWebviewProtocol implements IMessenger<
+  FromWebviewProtocol,
+  ToWebviewProtocol
+> {
   listeners = new Map<
     keyof FromWebviewProtocol,
     ((message: Message) => any)[]

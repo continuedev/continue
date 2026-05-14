@@ -66,9 +66,8 @@ export function runTest(
     describe(`[${testMode.toUpperCase()} MODE]`, () => {
       it(name, async () => {
         // Import mocks from Vitest setup
-        const { useServices, useService } = await import(
-          "../../hooks/useService.js"
-        );
+        const { useServices, useService } =
+          await import("../../hooks/useService.js");
         const mockUseServices = useServices as any;
         const mockUseService = useService as any;
 
@@ -210,9 +209,8 @@ export function runTestSuite(
       const originalDescribe = (global as any).describe;
 
       beforeAll(async () => {
-        const { useServices, useService } = await import(
-          "../../hooks/useService.js"
-        );
+        const { useServices, useService } =
+          await import("../../hooks/useService.js");
         const mockUseServices = useServices as any;
         const mockUseService = useService as any;
 

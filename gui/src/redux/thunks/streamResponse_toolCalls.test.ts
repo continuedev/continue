@@ -1998,7 +1998,7 @@ describe("streamResponseThunk - tool calls", () => {
       const requestSpy = vi.spyOn(mockIdeMessenger, "request");
 
       // Execute thunk
-      await mockStore.dispatch(
+      (await mockStore.dispatch(
         streamResponseThunk({
           editorState: mockEditorState,
           modifiers: mockModifiers,
@@ -2012,7 +2012,7 @@ describe("streamResponseThunk - tool calls", () => {
             basePolicy: "allowedWithoutPermission",
             parsedArgs: { command: "echo hello" },
           }),
-        );
+        ));
 
       // Verify tool wasn't auto-executed (policy changed to require permission)
       expect(requestSpy).not.toHaveBeenCalledWith(
@@ -2097,7 +2097,7 @@ describe("streamResponseThunk - tool calls", () => {
       mockIdeMessenger.llmStreamChat = mockChat;
 
       // Execute thunk
-      await mockStore.dispatch(
+      (await mockStore.dispatch(
         streamResponseThunk({
           editorState: mockEditorState,
           modifiers: mockModifiers,
@@ -2111,7 +2111,7 @@ describe("streamResponseThunk - tool calls", () => {
             basePolicy: "allowedWithPermission",
             parsedArgs: { command: "ls" },
           }),
-        );
+        ));
 
       // Tool should NOT be executed since it's disabled by policy
       expect(requestSpy).not.toHaveBeenCalledWith(

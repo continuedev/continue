@@ -228,9 +228,8 @@ async function handleAutoCompaction(
   isHeadless: boolean,
   format?: "json",
 ): Promise<number | null> {
-  const { handleAutoCompaction: coreAutoCompaction } = await import(
-    "../stream/streamChatResponse.autoCompaction.js"
-  );
+  const { handleAutoCompaction: coreAutoCompaction } =
+    await import("../stream/streamChatResponse.autoCompaction.js");
 
   // Custom callbacks for headless mode console output
   const callbacks = {
@@ -477,9 +476,8 @@ async function runHeadlessMode(
   }
 
   // Handle additional prompts from --prompt flags
-  const { processAndCombinePrompts } = await import(
-    "../util/promptProcessor.js"
-  );
+  const { processAndCombinePrompts } =
+    await import("../util/promptProcessor.js");
   const agentFileState = await serviceContainer.get<AgentFileServiceState>(
     SERVICE_NAMES.AGENT_FILE,
   );

@@ -21,4 +21,3 @@ cowCopyTargets:
 regularCopyTargets:
   - .env
   - core/.env
-

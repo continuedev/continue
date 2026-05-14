@@ -456,9 +456,8 @@ program.on("command:*", () => {
 export async function runCli(): Promise<void> {
   // Handle internal worker subprocess for cn review
   if (process.argv.includes("--internal-review-worker")) {
-    const { runReviewWorker } = await import(
-      "./commands/review/reviewWorker.js"
-    );
+    const { runReviewWorker } =
+      await import("./commands/review/reviewWorker.js");
     await runReviewWorker();
     return;
   }
