@@ -24,9 +24,14 @@ import { checkBackgroundJobTool } from "./checkBackgroundJob.js";
 import { configTool } from "./configTool.js";
 import {
   coreFileGlobSearchTool,
+  coreGitTool,
   coreGithubTool,
+  coreGrepSearchTool,
+  coreListMcpResourcesTool,
   coreLsTool,
+  coreMcpAuthTool,
   coreReadFileTool,
+  coreReadMcpResourceTool,
   coreSearchWebTool,
   coreSendMessageTool,
   coreSleepTool,
@@ -36,18 +41,14 @@ import {
   coreTaskOutputTool,
   coreTaskStopTool,
   coreTaskUpdateTool,
+  coreToolSearchTool,
   coreTodoWriteTool,
   coreViewDiffTool,
 } from "./coreToolBridge.js";
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
-import { gitTool } from "./git.js";
-import { grepTool } from "./grep.js";
-import { listMcpResourcesTool } from "./listMcpResources.js";
-import { mcpAuthTool } from "./mcpAuth.js";
 import { multiEditTool } from "./multiEdit.js";
-import { readMcpResourceTool } from "./readMcpResource.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
@@ -60,7 +61,6 @@ import {
   isBetaSubagentToolEnabled,
   isBetaUploadArtifactToolEnabled,
 } from "./toolsConfig.js";
-import { toolSearchTool } from "./toolSearch.js";
 import {
   type Tool,
   type ToolCall,
@@ -91,9 +91,14 @@ function getAgentIdFromArgs(): string | undefined {
 const BASE_BUILTIN_TOOLS: Tool[] = [
   // ── Core-backed tools ──────────────────────────────────────────────────────
   coreFileGlobSearchTool,
+  coreGitTool,
   coreGithubTool,
+  coreGrepSearchTool,
+  coreListMcpResourcesTool,
   coreLsTool,
+  coreMcpAuthTool,
   coreReadFileTool,
+  coreReadMcpResourceTool,
   coreSearchWebTool,
   coreSendMessageTool,
   coreSleepTool,
@@ -103,22 +108,17 @@ const BASE_BUILTIN_TOOLS: Tool[] = [
   coreTaskOutputTool,
   coreTaskStopTool,
   coreTaskUpdateTool,
+  coreToolSearchTool,
   coreTodoWriteTool,
   coreViewDiffTool,
   // ── CLI-specific tools ─────────────────────────────────────────────────────
   writeFileTool,
-  gitTool,
-  grepTool,
   runTerminalCommandTool,
   fetchTool,
-  toolSearchTool,
   teamCreateTool,
   teamDeleteTool,
   teamStatusTool,
   configTool,
-  listMcpResourcesTool,
-  readMcpResourceTool,
-  mcpAuthTool,
   writeChecklistTool,
   checkBackgroundJobTool,
   askQuestionTool,

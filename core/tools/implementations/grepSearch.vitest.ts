@@ -75,4 +75,63 @@ describe("grepSearchImpl", () => {
     );
     expect(result[0]?.content).toContain("Original query: (");
   });
+
+  it("supports files_with_matches mode with pagination", async () => {
+    const result = await grepSearchImpl(
+      {
+        query: "todo",
+        outputMode: "files_with_matches",
+        headLimit: 1,
+        offset: 1,
+      },
+      createExtras("./src/todo.ts\n./src/task.ts\n./src/plan.ts\n"),
+    );
+
+    expect(result).toEqual([
+      {
+        name: "Search results",
+        description: "Files with matches from grep search",
+        content: "./src/task.ts",
+      },
+    ]);
+  });
+
+  it("supports count mode", async () => {
+    const result = await grepSearchImpl(
+      { query: "todo", outputMode: "count" },
+      createExtras("./src/todo.ts:2\n./src/task.ts:1\n"),
+    );
+
+    expect(result).toEqual([
+      {
+        name: "Search results",
+        description: "Match counts from grep search",
+        content: "./src/todo.ts:2\n./src/task.ts:1",
+      },
+    ]);
+  });
+
+  it("accepts CLI-compatible aliases for query and mode args", async () => {
+    const getSearchResults = vi.fn().mockResolvedValue("./src/todo.ts\n");
+    const extras = createExtras(getSearchResults);
+
+    await grepSearchImpl(
+      {
+        pattern: "todo",
+        glob: "src/**",
+        output_mode: "files_with_matches",
+        case_insensitive: true,
+      },
+      extras,
+    );
+
+    expect(getSearchResults).toHaveBeenCalledWith(
+      "todo",
+      expect.objectContaining({
+        includePattern: "src/**",
+        caseSensitive: false,
+        outputMode: "files_with_matches",
+      }),
+    );
+  });
 });

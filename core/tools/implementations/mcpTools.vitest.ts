@@ -25,8 +25,8 @@ import {
   readMcpResourceImpl,
 } from "./mcpTools";
 
-function createExtras(): ToolExtras {
-  return {
+function createExtras(runtime?: any): ToolExtras {
+  const extras = {
     ide: {} as any,
     llm: {} as any,
     fetch: (() => {
@@ -34,7 +34,13 @@ function createExtras(): ToolExtras {
     }) as any,
     tool: {} as any,
     config: {} as any,
-  } as ToolExtras;
+  } as ToolExtras & { mcpRuntime?: any };
+
+  if (runtime) {
+    extras.mcpRuntime = runtime;
+  }
+
+  return extras as ToolExtras;
 }
 
 describe("mcp tools", () => {
@@ -128,5 +134,55 @@ describe("mcp tools", () => {
     expect(result[0]?.content).toBe(
       "GitHub Cloud: status=connected tools=2 prompts=1 resources=1 protected_resource=true infos=oauth configured",
     );
+  });
+
+  it("prefers runtime adapter for auth and resources when provided", async () => {
+    const runtime = {
+      getAuthStatuses: vi.fn().mockResolvedValue([
+        {
+          name: "CLI MCP",
+          id: "cli-mcp",
+          status: "connected",
+          tools: 3,
+          prompts: 1,
+          resources: 2,
+          protectedResource: false,
+          errors: [],
+          infos: ["oauth configured"],
+        },
+      ]),
+      listResources: vi
+        .fn()
+        .mockResolvedValue([
+          { server: "CLI MCP", uri: "repo://issues", name: "Issues" },
+        ]),
+    };
+
+    const authResult = await mcpAuthImpl({}, createExtras(runtime));
+    const listResult = await listMcpResourcesImpl({}, createExtras(runtime));
+
+    expect(authResult[0]?.content).toBe(
+      "CLI MCP: status=connected tools=3 prompts=1 resources=2 protected_resource=false infos=oauth configured",
+    );
+    expect(listResult[0]?.content).toBe("CLI MCP: repo://issues (Issues)");
+    expect(mockGetStatuses).not.toHaveBeenCalled();
+  });
+
+  it("prefers runtime adapter for read_mcp_resource when provided", async () => {
+    const runtime = {
+      readResource: vi.fn().mockResolvedValue("Runtime body"),
+    };
+
+    const result = await readMcpResourceImpl(
+      { uri: "repo://issues", server: "CLI MCP" },
+      createExtras(runtime),
+    );
+
+    expect(runtime.readResource).toHaveBeenCalledWith(
+      "repo://issues",
+      "CLI MCP",
+    );
+    expect(result[0]?.content).toBe("Runtime body");
+    expect(mockGetConnection).not.toHaveBeenCalled();
   });
 });

@@ -599,7 +599,19 @@ class VsCodeIde implements IDE {
     }
     const maxResults = options?.maxResults;
     const contextLines = options?.contextLines ?? 2;
+    const outputMode = options?.outputMode ?? "content";
     const results: string[] = [];
+
+    const modeArgs: string[] =
+      outputMode === "files_with_matches"
+        ? ["--files-with-matches"]
+        : outputMode === "count"
+          ? ["--count"]
+          : [
+              "-C",
+              String(contextLines),
+              "--heading", // Only show filepath once per result
+            ];
 
     for (const dir of await this.getWorkspaceDirs()) {
       const dirResults = await this.runRipgrepQuery(dir, [
@@ -608,9 +620,7 @@ class VsCodeIde implements IDE {
         ".yutoagenticignore",
         "--ignore-file",
         ".gitignore",
-        "-C",
-        String(contextLines),
-        "--heading", // Only show filepath once per result
+        ...modeArgs,
         // Use a single glob with all default ignores
         "--glob",
         defaultIgnoresGlob,
@@ -627,6 +637,14 @@ class VsCodeIde implements IDE {
 
     const allResults = results.join("\n");
     if (maxResults) {
+      if (outputMode === "files_with_matches" || outputMode === "count") {
+        return allResults
+          .split("\n")
+          .filter(Boolean)
+          .slice(0, maxResults)
+          .join("\n");
+      }
+
       // In case of multiple workspaces, do max results per workspace and then truncate to maxResults
       // Will prioritize first workspace results, fine for now
       // Results are separated by either ./ or --

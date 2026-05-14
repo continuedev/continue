@@ -2,9 +2,39 @@ import { MCPServerStatus, ToolExtras } from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import { ToolImpl } from ".";
 
+type RuntimeAuthStatus = {
+  name: string;
+  id?: string;
+  status: string;
+  tools: number;
+  prompts: number;
+  resources: number;
+  protectedResource?: boolean;
+  errors?: string[];
+  infos?: string[];
+};
+
+type RuntimeResource = {
+  server: string;
+  uri: string;
+  name?: string;
+};
+
+type McpRuntimeAdapter = {
+  getAuthStatuses?: (server?: string) => Promise<RuntimeAuthStatus[]>;
+  listResources?: (server?: string) => Promise<RuntimeResource[]>;
+  readResource?: (uri: string, server?: string) => Promise<string | null>;
+};
+
 function optionalText(value: unknown): string | undefined {
   const trimmed = typeof value === "string" ? value.trim() : "";
   return trimmed ? trimmed : undefined;
+}
+
+function getMcpRuntimeAdapter(
+  extras: ToolExtras,
+): McpRuntimeAdapter | undefined {
+  return (extras as any).mcpRuntime as McpRuntimeAdapter | undefined;
 }
 
 function matchesServer(status: MCPServerStatus, server?: string): boolean {
@@ -22,12 +52,30 @@ function getMatchingStatuses(server?: string): MCPServerStatus[] {
 }
 
 function formatStatusLine(status: MCPServerStatus): string {
+  const toolCount = status.tools.length;
+  const promptCount = status.prompts.length;
+  const resourceCount = status.resources.length;
+  const isProtectedResource = status.isProtectedResource;
+
   const errors =
     status.errors.length > 0 ? ` errors=${status.errors.join(" | ")}` : "";
   const infos =
     status.infos.length > 0 ? ` infos=${status.infos.join(" | ")}` : "";
 
-  return `${status.name}: status=${status.status} tools=${status.tools.length} prompts=${status.prompts.length} resources=${status.resources.length} protected_resource=${status.isProtectedResource}${errors}${infos}`;
+  return `${status.name}: status=${status.status} tools=${toolCount} prompts=${promptCount} resources=${resourceCount} protected_resource=${isProtectedResource}${errors}${infos}`;
+}
+
+function formatRuntimeStatusLine(status: RuntimeAuthStatus): string {
+  const errors =
+    (status.errors ?? []).length > 0
+      ? ` errors=${(status.errors ?? []).join(" | ")}`
+      : "";
+  const infos =
+    (status.infos ?? []).length > 0
+      ? ` infos=${(status.infos ?? []).join(" | ")}`
+      : "";
+
+  return `${status.name}: status=${status.status} tools=${status.tools} prompts=${status.prompts} resources=${status.resources} protected_resource=${status.protectedResource ?? false}${errors}${infos}`;
 }
 
 async function readResourceContents(
@@ -68,8 +116,44 @@ async function readResourceContents(
   return textContents.join("\n\n");
 }
 
-export const listMcpResourcesImpl: ToolImpl = async (args) => {
+export const listMcpResourcesImpl: ToolImpl = async (args, extras) => {
   const server = optionalText(args?.server);
+  const runtime = getMcpRuntimeAdapter(extras);
+
+  if (runtime?.listResources) {
+    if (runtime.getAuthStatuses) {
+      const statuses = await runtime.getAuthStatuses(server);
+      if (statuses.length === 0) {
+        return [
+          {
+            name: "MCP Resources",
+            description: "No matching MCP servers",
+            content: server
+              ? `No MCP server named ${server}.`
+              : "No MCP servers configured.",
+          },
+        ];
+      }
+    }
+
+    const resources = await runtime.listResources(server);
+    return [
+      {
+        name: "MCP Resources",
+        description: `${resources.length} resource(s)`,
+        content:
+          resources.length === 0
+            ? "No MCP resources found."
+            : resources
+                .map(
+                  (resource) =>
+                    `${resource.server}: ${resource.uri}${resource.name ? ` (${resource.name})` : ""}`,
+                )
+                .join("\n"),
+      },
+    ];
+  }
+
   const statuses = getMatchingStatuses(server);
 
   if (statuses.length === 0) {
@@ -109,6 +193,21 @@ export const readMcpResourceImpl: ToolImpl = async (args, extras) => {
     throw new Error("uri is required");
   }
 
+  const runtime = getMcpRuntimeAdapter(extras);
+  if (runtime?.readResource) {
+    const resource = await runtime.readResource(
+      uri,
+      optionalText(args?.server),
+    );
+    return [
+      {
+        name: "MCP Resource",
+        description: uri,
+        content: resource ?? `MCP resource not found: ${uri}`,
+      },
+    ];
+  }
+
   return [
     {
       name: "MCP Resource",
@@ -122,8 +221,35 @@ export const readMcpResourceImpl: ToolImpl = async (args, extras) => {
   ];
 };
 
-export const mcpAuthImpl: ToolImpl = async (args) => {
+export const mcpAuthImpl: ToolImpl = async (args, extras) => {
   const server = optionalText(args?.server);
+  const runtime = getMcpRuntimeAdapter(extras);
+
+  if (runtime?.getAuthStatuses) {
+    const statuses = await runtime.getAuthStatuses(server);
+    if (statuses.length === 0) {
+      return [
+        {
+          name: "MCP Auth",
+          description: "No matching MCP servers",
+          content: server
+            ? `No MCP server named ${server}.`
+            : "No MCP servers configured.",
+        },
+      ];
+    }
+
+    return [
+      {
+        name: "MCP Auth",
+        description: `${statuses.length} server(s)`,
+        content: statuses
+          .map((status) => formatRuntimeStatusLine(status))
+          .join("\n"),
+      },
+    ];
+  }
+
   const statuses = getMatchingStatuses(server);
 
   if (statuses.length === 0) {

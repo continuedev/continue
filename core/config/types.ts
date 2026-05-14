@@ -905,6 +905,7 @@ declare global {
     ide: IDE;
     llm: ILLM;
     fetch: FetchFunction;
+    swarmBackend?: import("../agent/coordinator/ISwarmBackend").ISwarmBackend;
   }
   
   export interface Tool {

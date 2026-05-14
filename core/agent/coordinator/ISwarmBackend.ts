@@ -22,8 +22,16 @@ export interface SwarmAgentConfig {
   backend?: string;
   /** Optional model identifier to use for this agent */
   model?: string;
+  /** Optional subagent type/name for runtime metadata. */
+  agentType?: string;
+  /** Optional short description associated with this delegated run. */
+  description?: string;
   /** Optional per-agent system prompt */
   agentSystemPrompt?: string;
+  /** Optional execution profile for the worker. */
+  profile?: "explore" | "verify" | "coordinator-worker";
+  /** Optional parent session id used for coordinator scratchpad continuity. */
+  parentSessionId?: string;
 }
 
 export interface SwarmSpawnResult {

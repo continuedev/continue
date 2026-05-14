@@ -13,7 +13,7 @@ export const grepSearchTool: Tool = {
   function: {
     name: BuiltInToolNames.GrepSearch,
     description:
-      "Performs a regular expression (regex) search over the repository using ripgrep. Prefer this over shelling out to grep or rg. Supports include globs, case-sensitive search, multiline matching, and configurable context lines. Output may be truncated, so use targeted queries.",
+      "Performs a regular expression (regex) search over the repository using ripgrep. Prefer this over shelling out to grep or rg. Supports include globs, case-sensitive search, multiline matching, configurable context lines, alternate output modes, and optional line pagination. Output may be truncated, so use targeted queries.",
     parameters: {
       type: "object",
       required: ["query"],
@@ -52,6 +52,22 @@ export const grepSearchTool: Tool = {
           type: "boolean",
           description:
             "Return one context item per file instead of a single combined result block.",
+        },
+        outputMode: {
+          type: "string",
+          description:
+            "Output mode: 'content' (default), 'files_with_matches', or 'count'.",
+          enum: ["content", "files_with_matches", "count"],
+        },
+        headLimit: {
+          type: "number",
+          description:
+            "Optional max number of output lines to return. Use 0 for no limit.",
+        },
+        offset: {
+          type: "number",
+          description:
+            "Optional number of output lines to skip before returning results.",
         },
       },
     },

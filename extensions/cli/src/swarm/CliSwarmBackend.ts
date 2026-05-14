@@ -38,8 +38,11 @@ export class CliSwarmBackend implements ISwarmBackend {
       teamName: config.teamName,
       backend: resolveBackend(config),
       model: config.model,
+      agentType: config.agentType,
+      description: config.description,
       agentSystemPrompt: config.agentSystemPrompt,
-      parentSessionId: getCurrentSession().sessionId,
+      profile: config.profile,
+      parentSessionId: config.parentSessionId ?? getCurrentSession().sessionId,
     };
 
     const result = await spawnSwarmTeammate({

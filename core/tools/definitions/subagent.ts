@@ -41,6 +41,12 @@ export const subagentTool: Tool = {
           description:
             "Optional teammate identity to record for this subagent run. Defaults to the selected subagent name when running in a team.",
         },
+        backend: {
+          type: "string",
+          description:
+            "Optional execution backend. Use 'in-process' (default) for inline execution, or 'process'/'tmux' when a host-provided swarm backend is available.",
+          enum: ["in-process", "process", "tmux"],
+        },
         profile: {
           type: "string",
           description:
@@ -67,6 +73,7 @@ export const subagentTool: Tool = {
       ["subagent_name", "Explore"],
       ["team_name", "Coordination"],
       ["teammate_name", "investigator"],
+      ["backend", "in-process"],
       ["profile", "coordinator-worker"],
     ],
   },

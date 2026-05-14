@@ -4,9 +4,14 @@ import { askQuestionTool } from "./askQuestion.js";
 import { configTool } from "./configTool.js";
 import {
   coreFileGlobSearchTool,
+  coreGitTool,
   coreGithubTool,
+  coreGrepSearchTool,
+  coreListMcpResourcesTool,
   coreLsTool,
+  coreMcpAuthTool,
   coreReadFileTool,
+  coreReadMcpResourceTool,
   coreSearchWebTool,
   coreSendMessageTool,
   coreSleepTool,
@@ -16,18 +21,14 @@ import {
   coreTaskOutputTool,
   coreTaskStopTool,
   coreTaskUpdateTool,
+  coreToolSearchTool,
   coreTodoWriteTool,
   coreViewDiffTool,
 } from "./coreToolBridge.js";
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
-import { gitTool } from "./git.js";
-import { grepTool } from "./grep.js";
-import { listMcpResourcesTool } from "./listMcpResources.js";
-import { mcpAuthTool } from "./mcpAuth.js";
 import { multiEditTool } from "./multiEdit.js";
-import { readMcpResourceTool } from "./readMcpResource.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
@@ -36,7 +37,6 @@ import { statusTool } from "./status.js";
 import { teamCreateTool } from "./teamCreate.js";
 import { teamDeleteTool } from "./teamDelete.js";
 import { teamStatusTool } from "./teamStatus.js";
-import { toolSearchTool } from "./toolSearch.js";
 import { uploadArtifactTool } from "./uploadArtifact.js";
 import { writeChecklistTool } from "./writeChecklist.js";
 import { writeFileTool } from "./writeFile.js";
@@ -45,9 +45,14 @@ import { writeFileTool } from "./writeFile.js";
 export const ALL_BUILT_IN_TOOLS = [
   // ── Core-backed tools (delegate to core/tools via CliIde) ──────────────────
   coreFileGlobSearchTool,
+  coreGitTool,
   coreGithubTool,
+  coreGrepSearchTool,
+  coreListMcpResourcesTool,
   coreLsTool,
+  coreMcpAuthTool,
   coreReadFileTool,
+  coreReadMcpResourceTool,
   coreSearchWebTool,
   coreSendMessageTool,
   coreSleepTool,
@@ -57,6 +62,7 @@ export const ALL_BUILT_IN_TOOLS = [
   coreTaskOutputTool,
   coreTaskStopTool,
   coreTaskUpdateTool,
+  coreToolSearchTool,
   coreTodoWriteTool,
   coreViewDiffTool,
 
@@ -66,12 +72,7 @@ export const ALL_BUILT_IN_TOOLS = [
   editTool,
   exitTool,
   fetchTool,
-  gitTool,
-  grepTool,
-  listMcpResourcesTool,
-  mcpAuthTool,
   multiEditTool,
-  readMcpResourceTool,
   reportFailureTool,
   runTerminalCommandTool,
   searchCodeTool,
@@ -81,7 +82,6 @@ export const ALL_BUILT_IN_TOOLS = [
   teamCreateTool,
   teamDeleteTool,
   teamStatusTool,
-  toolSearchTool,
   uploadArtifactTool,
   writeChecklistTool,
   writeFileTool,

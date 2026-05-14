@@ -186,14 +186,21 @@ export class CliIde implements IDE {
     options?: GrepSearchOptions,
   ): Promise<string> {
     const contextLines = options?.contextLines ?? 2;
+    const outputMode = options?.outputMode ?? "content";
+
+    const modeArgs: string[] =
+      outputMode === "files_with_matches"
+        ? ["--files-with-matches"]
+        : outputMode === "count"
+          ? ["--count"]
+          : ["-C", String(contextLines), "--heading"];
+
     const args = [
       "rg",
       ...(options?.caseSensitive ? [] : ["-i"]),
       "--ignore-file",
       ".gitignore",
-      "-C",
-      String(contextLines),
-      "--heading",
+      ...modeArgs,
       ...(options?.includePattern ? ["--glob", options.includePattern] : []),
       ...(options?.multiline ? ["-U", "--multiline-dotall"] : []),
       ...(options?.maxResults ? ["-m", String(options.maxResults)] : []),

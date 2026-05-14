@@ -16,6 +16,7 @@ import { getBaseToolDefinitions } from "core/tools/index.js";
 import type { ContextItem, Tool as CoreTool, ToolExtras } from "core/index.js";
 
 import { CliIde } from "../CliIde.js";
+import { services } from "../services/index.js";
 import type { Tool, ToolRunContext } from "./types.js";
 
 // ── Shared CliIde instance ────────────────────────────────────────────────────
@@ -93,6 +94,68 @@ function buildToolExtras(coreTool: CoreTool, toolCallId?: string): ToolExtras {
   };
 }
 
+function toCoreToolShape(tool: Tool): CoreTool {
+  return {
+    type: "function",
+    displayTitle: tool.displayName,
+    wouldLikeTo: tool.description,
+    isCurrently: tool.description,
+    hasAlready: tool.description,
+    readonly: Boolean(tool.readonly),
+    isInstant: true,
+    group: tool.isBuiltIn ? "Built-In" : "MCP",
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.parameters as any,
+    },
+  };
+}
+
+function buildCliMcpRuntimeAdapter() {
+  return {
+    getAuthStatuses: async (server?: string) => {
+      const state = services.mcp.getState();
+      const resources = await services.mcp.listResources();
+      const countsByServer = new Map<string, number>();
+      for (const resource of resources) {
+        countsByServer.set(
+          resource.server,
+          (countsByServer.get(resource.server) ?? 0) + 1,
+        );
+      }
+
+      const connections = server
+        ? state.connections.filter(
+            (connection) => connection.config.name === server,
+          )
+        : state.connections;
+
+      return connections.map((connection) => ({
+        name: connection.config.name,
+        id: connection.config.name,
+        status: connection.status,
+        tools: connection.tools.length,
+        prompts: connection.prompts.length,
+        resources: countsByServer.get(connection.config.name) ?? 0,
+        protectedResource: false,
+        errors: connection.error ? [connection.error] : [],
+        infos: connection.warnings,
+      }));
+    },
+    listResources: async (server?: string) => {
+      return await services.mcp.listResources(server);
+    },
+    readResource: async (uri: string, server?: string) => {
+      return await services.mcp.readResource(uri, server);
+    },
+  };
+}
+
+type CoreCliToolOverrides = Partial<Pick<Tool, "readonly" | "preprocess">> & {
+  extendExtras?: (extras: ToolExtras) => Promise<void> | void;
+};
+
 // ── Factory ───────────────────────────────────────────────────────────────────
 
 /**
@@ -101,8 +164,9 @@ function buildToolExtras(coreTool: CoreTool, toolCallId?: string): ToolExtras {
  */
 function makeCoreCliTool(
   coreToolName: BuiltInToolNames,
-  overrides?: Partial<Pick<Tool, "readonly" | "preprocess">>,
+  overrides?: CoreCliToolOverrides,
 ): Tool {
+  const { extendExtras, ...toolOverrides } = overrides ?? {};
   const coreDef = getCoreToolDefMap().get(coreToolName);
   if (!coreDef) {
     throw new Error(
@@ -120,9 +184,12 @@ function makeCoreCliTool(
     }) as any,
     isBuiltIn: true,
     readonly: coreDef.readonly ?? false,
-    ...overrides,
+    ...toolOverrides,
     run: async (args: any, context?: ToolRunContext): Promise<string> => {
       const extras = buildToolExtras(coreDef, context?.toolCallId);
+      if (extendExtras) {
+        await extendExtras(extras);
+      }
       const contextItems = await callBuiltInTool(coreToolName, args, extras);
       return contextItemsToString(contextItems);
     },
@@ -153,6 +220,53 @@ export const coreGithubTool = makeCoreCliTool(BuiltInToolNames.GitHub, {
   readonly: true,
 });
 
+/** Inspect repository state with safe git actions. */
+export const coreGitTool = makeCoreCliTool(BuiltInToolNames.Git, {
+  readonly: true,
+});
+
+/** Search available tools by keyword or exact selection. */
+export const coreToolSearchTool = makeCoreCliTool(BuiltInToolNames.ToolSearch, {
+  readonly: true,
+  extendExtras: async (extras) => {
+    const { getAllAvailableTools } = await import("./index.js");
+    const cliTools = await getAllAvailableTools(!process.stdout.isTTY);
+    (extras as any).availableTools = cliTools.map((tool: Tool) =>
+      toCoreToolShape(tool),
+    );
+  },
+});
+
+/** List resources exposed by connected MCP servers. */
+export const coreListMcpResourcesTool = makeCoreCliTool(
+  BuiltInToolNames.ListMcpResources,
+  {
+    readonly: true,
+    extendExtras: (extras) => {
+      (extras as any).mcpRuntime = buildCliMcpRuntimeAdapter();
+    },
+  },
+);
+
+/** Read a resource exposed by an MCP server. */
+export const coreReadMcpResourceTool = makeCoreCliTool(
+  BuiltInToolNames.ReadMcpResource,
+  {
+    readonly: true,
+    extendExtras: (extras) => {
+      (extras as any).mcpRuntime = buildCliMcpRuntimeAdapter();
+    },
+  },
+);
+
+/** Inspect MCP auth and connection state for configured servers. */
+export const coreMcpAuthTool = makeCoreCliTool(BuiltInToolNames.McpAuth, {
+  readonly: true,
+  extendExtras: (extras) => {
+    (extras as any).mcpRuntime = buildCliMcpRuntimeAdapter();
+  },
+});
+
 /** Read a file from the workspace. */
 export const coreReadFileTool = makeCoreCliTool(BuiltInToolNames.ReadFile, {
   readonly: true,
@@ -163,6 +277,11 @@ export const coreFileGlobSearchTool = makeCoreCliTool(
   BuiltInToolNames.FileGlobSearch,
   { readonly: true },
 );
+
+/** Search file contents with ripgrep. */
+export const coreGrepSearchTool = makeCoreCliTool(BuiltInToolNames.GrepSearch, {
+  readonly: true,
+});
 
 /** List directory contents. */
 export const coreLsTool = makeCoreCliTool(BuiltInToolNames.LSTool, {

@@ -27,6 +27,7 @@ import { applyToolOverrides } from "../applyToolOverrides";
 
 const DEFAULT_SUBAGENT_MAX_TURNS = 25;
 type SubagentProfile = "explore" | "verify" | "coordinator-worker";
+type SubagentBackend = "in-process" | "process" | "tmux";
 
 function getSubagentProfile(args: unknown): SubagentProfile | undefined {
   const profile =
@@ -43,6 +44,31 @@ function getSubagentProfile(args: unknown): SubagentProfile | undefined {
   }
 
   return undefined;
+}
+
+function getSubagentBackend(args: unknown): SubagentBackend {
+  const backend =
+    typeof (args as { backend?: unknown } | undefined)?.backend === "string"
+      ? (args as { backend: string }).backend.trim()
+      : "";
+
+  if (backend === "process" || backend === "tmux") {
+    return backend;
+  }
+
+  return "in-process";
+}
+
+function formatSwarmAgentId(agentName: string, teamName: string): string {
+  const normalize = (value: string): string =>
+    value
+      .trim()
+      .replace(/[^a-zA-Z0-9-]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .toLowerCase();
+
+  return `${normalize(agentName)}@${normalize(teamName)}`;
 }
 
 function findSubagentModel(
@@ -290,6 +316,7 @@ export const subagentToolImpl: ToolImpl = async (args, extras) => {
     typeof args?.maxTurns === "number"
       ? args.maxTurns
       : DEFAULT_SUBAGENT_MAX_TURNS;
+  const backend = getSubagentBackend(args);
   const description = optionalText(args?.description);
   const profile = getSubagentProfile(args);
   const parentSessionId =
@@ -357,11 +384,36 @@ export const subagentToolImpl: ToolImpl = async (args, extras) => {
     subagentModelName: subagentModel.model,
   });
 
+  const subagentIdentity =
+    requestedName ?? subagentModel.title ?? subagentModel.model;
+
+  if (backend !== "in-process" && !extras.swarmBackend) {
+    return [
+      {
+        name: "Subagent Result",
+        description: "Missing swarm backend",
+        content: `Requested backend "${backend}", but this runtime does not provide a swarm backend. Retry with backend="in-process".`,
+      },
+    ];
+  }
+
+  if (backend !== "in-process" && !teamContext) {
+    return [
+      {
+        name: "Subagent Result",
+        description: "Missing team context",
+        content:
+          `Backend "${backend}" requires an active team and teammate identity. ` +
+          "Provide team_name and teammate_name (or create an active team first).",
+      },
+    ];
+  }
+
   if (teamContext) {
     await startTeamMemberRun(teamContext.sessionId, {
       teamName: teamContext.team.teamName,
       teammateName: teamContext.teammateName,
-      subagentName: requestedName ?? subagentModel.title ?? subagentModel.model,
+      subagentName: subagentIdentity,
       description,
       prompt,
     });
@@ -420,8 +472,41 @@ export const subagentToolImpl: ToolImpl = async (args, extras) => {
     coordinatorInstructions,
   });
 
-  const { runAgent } = await import("../../agent/AgentRunner");
   try {
+    if (backend !== "in-process") {
+      // Early guards above guarantee these are present for non in-process backends.
+      const swarmBackend = extras.swarmBackend!;
+      const delegatedTeamContext = teamContext!;
+      const spawnResult = await swarmBackend.spawnAgent({
+        agentId: formatSwarmAgentId(
+          delegatedTeamContext.teammateName,
+          delegatedTeamContext.team.teamName,
+        ),
+        agentName: delegatedTeamContext.teammateName,
+        teamName: delegatedTeamContext.team.teamName,
+        prompt: resolvedPrompt,
+        backend,
+        model: subagentModel.model,
+        agentType: subagentIdentity,
+        description,
+        agentSystemPrompt: systemMessage,
+        profile,
+        parentSessionId,
+      });
+
+      const spawnedResult: ContextItem = {
+        name: "Subagent Result",
+        description: `backend=${backend}; status=${spawnResult.status}`,
+        content:
+          `Delegated subagent task: ${prompt}\n\n` + `${spawnResult.summary}`,
+      };
+
+      return mailboxHandoffContextItem
+        ? [mailboxHandoffContextItem, spawnedResult]
+        : [spawnedResult];
+    }
+
+    const { runAgent } = await import("../../agent/AgentRunner");
     const result = await runAgent({
       prompt: resolvedPrompt,
       llm: subagentModel,

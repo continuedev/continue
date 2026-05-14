@@ -319,4 +319,239 @@ describe("subagentToolImpl", () => {
     expect(unread).toHaveLength(1);
     expect(unread[0]?.kind).toBe("message");
   });
+
+  it("delegates to a swarm backend when backend is process", async () => {
+    await createTeam("parent-session", {
+      teamName: "Coordination",
+      description: "Coordinate nested workers",
+    });
+
+    const spawnAgent = vi.fn().mockResolvedValue({
+      status: "spawned",
+      summary: "Spawned background teammate investigator.",
+    });
+
+    const extras = createExtras();
+    (extras as ToolExtras & { swarmBackend: any }).swarmBackend = {
+      spawnAgent,
+      stopAgent: vi.fn(),
+      getAgentStatus: vi.fn(),
+    };
+
+    const result = await subagentToolImpl(
+      {
+        prompt: "Investigate the worker launch path",
+        subagent_name: "Coordinator Worker",
+        team_name: "Coordination",
+        teammate_name: "investigator",
+        backend: "process",
+      },
+      extras,
+    );
+
+    expect(spawnAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        backend: "process",
+        teamName: "Coordination",
+        agentName: "investigator",
+        parentSessionId: "parent-session",
+        agentType: "Coordinator Worker",
+      }),
+    );
+    expect(mockRunAgent).not.toHaveBeenCalled();
+    expect(result[0]?.description).toContain("backend=process");
+    expect(result[0]?.content).toContain("Delegated subagent task");
+  });
+
+  it("does not mark teammate as running when swarm backend is unavailable", async () => {
+    await createTeam("parent-session", {
+      teamName: "Coordination",
+      description: "Coordinate nested workers",
+    });
+
+    const extras = createExtras();
+
+    const result = await subagentToolImpl(
+      {
+        prompt: "Investigate the worker launch path",
+        subagent_name: "Coordinator Worker",
+        team_name: "Coordination",
+        teammate_name: "investigator",
+        backend: "process",
+      },
+      extras,
+    );
+
+    const team = await getActiveTeam("parent-session");
+    expect(result[0]?.description).toContain("Missing swarm backend");
+    expect(
+      team?.members.find((member) => member.name === "investigator"),
+    ).toBeUndefined();
+  });
+
+  it("delegates to a swarm backend when backend is tmux", async () => {
+    await createTeam("parent-session", {
+      teamName: "Coordination",
+      description: "Coordinate nested workers",
+    });
+
+    const spawnAgent = vi.fn().mockResolvedValue({
+      status: "spawned",
+      summary: "Spawned tmux teammate investigator in yt-swarm:%12.",
+    });
+
+    const extras = createExtras();
+    (extras as ToolExtras & { swarmBackend: any }).swarmBackend = {
+      spawnAgent,
+      stopAgent: vi.fn(),
+      getAgentStatus: vi.fn(),
+    };
+
+    const result = await subagentToolImpl(
+      {
+        description: "Investigate the worker launch path",
+        prompt: "Investigate the worker launch path",
+        subagent_name: "Coordinator Worker",
+        team_name: "Coordination",
+        teammate_name: "investigator",
+        backend: "tmux",
+      },
+      extras,
+    );
+
+    expect(spawnAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        backend: "tmux",
+        teamName: "Coordination",
+        agentName: "investigator",
+        parentSessionId: "parent-session",
+        agentType: "Coordinator Worker",
+        description: "Investigate the worker launch path",
+      }),
+    );
+    expect(mockRunAgent).not.toHaveBeenCalled();
+    expect(result[0]?.description).toContain("backend=tmux");
+    expect(result[0]?.content).toContain("Delegated subagent task");
+  });
+
+  it("requires active team context for process/tmux backend delegation", async () => {
+    const spawnAgent = vi.fn().mockResolvedValue({
+      status: "spawned",
+      summary: "Spawned background teammate investigator.",
+    });
+
+    const extras = createExtras();
+    (extras as ToolExtras & { swarmBackend: any }).swarmBackend = {
+      spawnAgent,
+      stopAgent: vi.fn(),
+      getAgentStatus: vi.fn(),
+    };
+
+    const result = await subagentToolImpl(
+      {
+        prompt: "Investigate the worker launch path",
+        subagent_name: "Coordinator Worker",
+        backend: "process",
+      },
+      extras,
+    );
+
+    expect(result[0]?.description).toContain("Missing team context");
+    expect(spawnAgent).not.toHaveBeenCalled();
+  });
+
+  it("claims prompt/control mailbox handoff items before backend delegation", async () => {
+    await createTeam("parent-session", {
+      teamName: "Coordination",
+      description: "Coordinate nested workers",
+    });
+
+    await appendMailboxMessage("parent-session", {
+      teamName: "Coordination",
+      memberName: "investigator",
+      message: {
+        from: "team-lead",
+        text: "Follow the queued handoff instructions.",
+        summary: "Delegation handoff",
+        timestamp: "2026-05-14T00:00:00.000Z",
+        kind: "prompt",
+      },
+    });
+    await appendMailboxMessage("parent-session", {
+      teamName: "Coordination",
+      memberName: "investigator",
+      message: {
+        from: "coordinator",
+        text: "Prioritize changed files first.",
+        timestamp: "2026-05-14T00:01:00.000Z",
+        kind: "control",
+      },
+    });
+    await appendMailboxMessage("parent-session", {
+      teamName: "Coordination",
+      memberName: "investigator",
+      message: {
+        from: "reviewer",
+        text: "I already reviewed the middleware branch.",
+        timestamp: "2026-05-14T00:02:00.000Z",
+        kind: "message",
+      },
+    });
+
+    const spawnAgent = vi.fn().mockResolvedValue({
+      status: "queued",
+      summary: "Queued a new mailbox task for investigator.",
+    });
+
+    const extras = createExtras();
+    (extras as ToolExtras & { swarmBackend: any }).swarmBackend = {
+      spawnAgent,
+      stopAgent: vi.fn(),
+      getAgentStatus: vi.fn(),
+    };
+
+    const result = await subagentToolImpl(
+      {
+        prompt: "Map the implementation and summarize the owning files.",
+        subagent_name: "Coordinator Worker",
+        team_name: "Coordination",
+        teammate_name: "investigator",
+        backend: "process",
+      },
+      extras,
+    );
+
+    expect(spawnAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining(
+          "Mailbox handoff for investigator in team Coordination:",
+        ),
+      }),
+    );
+
+    const [{ prompt: delegatedPrompt }] = spawnAgent.mock.calls[0] ?? [];
+    expect(delegatedPrompt).toContain(
+      "Follow the queued handoff instructions.",
+    );
+    expect(delegatedPrompt).toContain("Prioritize changed files first.");
+    expect(delegatedPrompt).not.toContain(
+      "I already reviewed the middleware branch.",
+    );
+
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        name: "Mailbox Handoff",
+        description: "2 claimed message(s) for investigator",
+      }),
+    );
+    expect(result[1]?.description).toContain("status=queued");
+
+    const unread = await readUnreadMailboxMessages(
+      "parent-session",
+      "Coordination",
+      "investigator",
+    );
+    expect(unread).toHaveLength(1);
+    expect(unread[0]?.kind).toBe("message");
+  });
 });

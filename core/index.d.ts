@@ -791,6 +791,8 @@ export interface GrepSearchOptions {
   contextLines?: number;
   /** Enable multiline matching across newlines (ripgrep -U). Default: false */
   multiline?: boolean;
+  /** Output mode for ripgrep. Default: "content". */
+  outputMode?: "content" | "files_with_matches" | "count";
 }
 
 export interface Thread {
@@ -1149,6 +1151,8 @@ export interface ToolExtras {
     sessionId: string,
     questions: import("./tools/definitions/askUserQuestion").AskUserQuestion[],
   ) => Promise<Record<string, string>>;
+  /** Optional host-provided swarm backend for process/tmux subagent delegation. */
+  swarmBackend?: import("./agent/coordinator/ISwarmBackend").ISwarmBackend;
 }
 
 export interface McpToolMeta {
