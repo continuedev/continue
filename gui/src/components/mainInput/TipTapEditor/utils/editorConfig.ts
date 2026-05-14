@@ -89,6 +89,7 @@ export function createEditorConfig(options: {
   const { getSubmenuContextItems } = useSubmenuContextProviders();
   const defaultModel = useAppSelector(selectSelectedChatModel);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
+  const mode = useAppSelector((state) => state.session.mode);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const historyLength = useAppSelector((store) => store.session.history.length);
   const codeToEdit = useAppSelector((store) => store.editModeState.codeToEdit);
@@ -99,6 +100,7 @@ export function createEditorConfig(options: {
   const inDropdownRef = useRef(false);
   const defaultModelRef = useUpdatingRef(defaultModel);
   const isStreamingRef = useUpdatingRef(isStreaming);
+  const modeRef = useUpdatingRef(mode);
   const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(
     props.availableContextProviders,
@@ -270,7 +272,7 @@ export function createEditorConfig(options: {
               // If you press cmd+backspace wanting to cancel,
               // but are inside of a text box, it shouldn't
               // delete the text
-              if (isStreamingRef.current) {
+              if (isStreamingRef.current && modeRef.current !== "agent") {
                 return true;
               }
               return false;
@@ -398,7 +400,10 @@ export function createEditorConfig(options: {
     if (!editor) {
       return;
     }
-    if (isStreamingRef.current || (codeToEdit.length === 0 && isInEdit)) {
+    if (
+      (isStreamingRef.current && modeRef.current !== "agent") ||
+      (codeToEdit.length === 0 && isInEdit)
+    ) {
       return;
     }
 

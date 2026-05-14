@@ -710,6 +710,104 @@ test("should send a message and receive a response", async () => {
   await getElementByText(CONTENT);
 });
 
+test("should allow sending in agent mode when streaming flag is set", async () => {
+  const initialState = getEmptyRootState();
+  initialState.session.mode = "agent";
+  initialState.session.isStreaming = true;
+
+  const store = createMockStore(initialState);
+  const { ideMessenger } = await renderWithProviders(<Chat />, {
+    store,
+  });
+
+  await act(async () => {
+    addAndSelectMockLlm(store, ideMessenger);
+  });
+
+  const requestSpy = vi.spyOn(ideMessenger, "request");
+
+  const sendButton = await getElementByTestId("submit-input-button");
+  expect(sendButton).not.toBeDisabled();
+
+  const INPUT = "Please continue in agent mode";
+
+  await sendInputWithMockedResponse(ideMessenger, INPUT, [
+    { role: "assistant", content: "This is a test" },
+  ]);
+
+  await waitFor(() => {
+    expect(
+      requestSpy.mock.calls.some(
+        ([messageType]) => messageType === "agent/run",
+      ),
+    ).toBe(true);
+  });
+});
+
+test("should fall back to chat streaming when agent/run returns an error status", async () => {
+  const { ideMessenger, store } = await renderWithProviders(<Chat />);
+
+  await act(async () => {
+    addAndSelectMockLlm(store, ideMessenger);
+  });
+
+  const originalRequest = ideMessenger.request.bind(ideMessenger);
+  vi.spyOn(ideMessenger, "request").mockImplementation(
+    async (messageType, data) => {
+      if (messageType === "agent/run") {
+        return {
+          status: "error",
+          error: "agent unavailable",
+          done: true,
+        } as any;
+      }
+
+      return originalRequest(messageType as any, data as any);
+    },
+  );
+
+  const CONTENT = "Fallback response";
+  const INPUT = "Please help with this";
+
+  await sendInputWithMockedResponse(ideMessenger, INPUT, [
+    { role: "assistant", content: CONTENT },
+  ]);
+
+  await getElementByText(CONTENT);
+});
+
+test("should fall back to chat streaming when agent/run success payload is missing sessionId", async () => {
+  const { ideMessenger, store } = await renderWithProviders(<Chat />);
+
+  await act(async () => {
+    addAndSelectMockLlm(store, ideMessenger);
+  });
+
+  const originalRequest = ideMessenger.request.bind(ideMessenger);
+  vi.spyOn(ideMessenger, "request").mockImplementation(
+    async (messageType, data) => {
+      if (messageType === "agent/run") {
+        return {
+          status: "success",
+          content: {},
+          done: true,
+        } as any;
+      }
+
+      return originalRequest(messageType as any, data as any);
+    },
+  );
+
+  const CONTENT = "Fallback after missing session id";
+  const INPUT = "Please run in agent mode";
+
+  await sendInputWithMockedResponse(ideMessenger, INPUT, [
+    { role: "assistant", content: CONTENT },
+  ]);
+
+  await getElementByText(CONTENT);
+});
+
 test("should render a compact chat header and switcher when session tabs are enabled", async () => {
   const initialState = getEmptyRootState();
   initialState.config.config.ui = {

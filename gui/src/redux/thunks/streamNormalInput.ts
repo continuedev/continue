@@ -69,6 +69,21 @@ function buildReasoningCompletionOptions(
   return reasoningOptions;
 }
 
+function shouldRetryWithSystemMessageTools(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("error parsing tool call") ||
+    message.includes("invalid tool call") ||
+    (message.includes("tool") &&
+      message.includes("call") &&
+      message.includes("parse"))
+  );
+}
+
 export const streamNormalInput = createAsyncThunk<
   void,
   {
@@ -109,184 +124,218 @@ export const streamNormalInput = createAsyncThunk<
       }
     }
 
-    // Use the centralized selector to determine if system message tools should be used
-    const useNativeTools = state.config.config.experimental
+    const streamAborter = state.session.streamAborter;
+    const shouldAttemptNativeTools = state.config.config.experimental
       ?.onlyUseSystemMessageTools
       ? false
       : modelSupportsNativeTools(selectedChatModel);
-    const systemToolsFramework = !useNativeTools
-      ? new SystemMessageToolCodeblocksFramework()
-      : undefined;
-
-    // Construct completion options
-    let completionOptions: LLMFullCompletionOptions = {};
-    if (useNativeTools && activeTools.length > 0) {
-      completionOptions = {
-        tools: activeTools,
-      };
-    }
-
-    completionOptions = buildReasoningCompletionOptions(
-      completionOptions,
-      state.session.hasReasoningEnabled,
-      selectedChatModel,
-    );
-
-    // Construct messages (excluding system message)
-    const baseSystemMessage = getBaseSystemMessage(
-      state.session.mode,
-      selectedChatModel,
-      activeTools,
-    );
-
-    const systemMessage = systemToolsFramework
-      ? addSystemMessageToolsToSystemMessage(
-          systemToolsFramework,
-          baseSystemMessage,
-          activeTools,
-        )
-      : baseSystemMessage;
-
-    const withoutMessageIds = state.session.history.map((item) => {
-      const { id, ...messageWithoutId } = item.message;
-      return { ...item, message: messageWithoutId };
-    });
-
-    const { messages, appliedRules, appliedRuleIndex } = constructMessages(
-      withoutMessageIds,
-      systemMessage,
-      state.config.config.rules,
-      state.ui.ruleSettings,
-      systemToolsFramework,
-    );
-
-    // TODO parallel tool calls will cause issues with this
-    // because there will be multiple tool messages, so which one should have applied rules?
-    dispatch(
-      setAppliedRulesAtIndex({
-        index: appliedRuleIndex,
-        appliedRules: appliedRules,
-      }),
-    );
-
-    dispatch(setActive());
-    dispatch(setInlineErrorMessage(undefined));
-
-    const precompiledRes = await extra.ideMessenger.request("llm/compileChat", {
-      messages,
-      options: completionOptions,
-    });
-
-    if (precompiledRes.status === "error") {
-      if (precompiledRes.error.includes("Not enough context")) {
-        dispatch(setInlineErrorMessage("out-of-context"));
-        dispatch(setInactive());
-        return;
-      } else {
-        throw new Error(precompiledRes.error);
-      }
-    }
-
-    const { compiledChatMessages, didPrune, contextPercentage } =
-      precompiledRes.content;
-
-    dispatch(setIsPruned(didPrune));
-    dispatch(setContextPercentage(contextPercentage));
+    let useNativeTools = shouldAttemptNativeTools;
+    const maxStreamAttempts =
+      shouldAttemptNativeTools && activeTools.length > 0 ? 2 : 1;
 
     const start = Date.now();
-    const streamAborter = state.session.streamAborter;
-    try {
-      let gen = extra.ideMessenger.llmStreamChat(
-        {
-          completionOptions,
-          title: selectedChatModel.title,
-          messages: compiledChatMessages,
-          legacySlashCommandData,
-          messageOptions: { precompiled: true },
-        },
-        streamAborter.signal,
+
+    for (let attempt = 0; attempt < maxStreamAttempts; attempt++) {
+      const currentState = getState();
+      const systemToolsFramework = !useNativeTools
+        ? new SystemMessageToolCodeblocksFramework()
+        : undefined;
+
+      // Construct completion options
+      let completionOptions: LLMFullCompletionOptions = {};
+      if (useNativeTools && activeTools.length > 0) {
+        completionOptions = {
+          tools: activeTools,
+        };
+      }
+
+      completionOptions = buildReasoningCompletionOptions(
+        completionOptions,
+        currentState.session.hasReasoningEnabled,
+        selectedChatModel,
       );
-      if (systemToolsFramework && activeTools.length > 0) {
-        gen = interceptSystemToolCalls(
-          gen,
-          streamAborter,
-          systemToolsFramework,
-        );
-      }
 
-      let next = await gen.next();
-      while (!next.done) {
-        if (!getState().session.isStreaming) {
-          dispatch(abortStream());
-          break;
-        }
+      // Construct messages (excluding system message)
+      const baseSystemMessage = getBaseSystemMessage(
+        currentState.session.mode,
+        selectedChatModel,
+        activeTools,
+      );
 
-        dispatch(streamUpdate(next.value));
-        next = await gen.next();
-      }
+      const systemMessage = systemToolsFramework
+        ? addSystemMessageToolsToSystemMessage(
+            systemToolsFramework,
+            baseSystemMessage,
+            activeTools,
+          )
+        : baseSystemMessage;
 
-      // Attach prompt log and end thinking for reasoning models
-      if (next.done && next.value) {
-        dispatch(addPromptCompletionPair([next.value]));
-
-        try {
-          extra.ideMessenger.post("devdata/log", {
-            name: "chatInteraction",
-            data: {
-              prompt: next.value.prompt,
-              completion: next.value.completion,
-              modelProvider: selectedChatModel.underlyingProviderName,
-              modelName: selectedChatModel.title,
-              modelTitle: selectedChatModel.title,
-              sessionId: state.session.id,
-              ...(!!activeTools.length && {
-                tools: activeTools.map((tool) => tool.function.name),
-              }),
-              ...(appliedRules.length > 0 && {
-                rules: appliedRules.map((rule) => ({
-                  id: getRuleId(rule),
-                  slug: rule.slug,
-                })),
-              }),
-            },
-          });
-        } catch (e) {
-          console.error("Failed to send dev data interaction log", e);
-        }
-      }
-    } catch (e) {
-      const toolCallsToCancel = selectCurrentToolCalls(getState());
-      posthog.capture("stream_premature_close_error", {
-        duration: (Date.now() - start) / 1000,
-        model: selectedChatModel.model,
-        provider: selectedChatModel.underlyingProviderName,
-        context: legacySlashCommandData ? "slash_command" : "regular_chat",
-        ...(legacySlashCommandData && {
-          command: legacySlashCommandData.command.name,
-        }),
+      const withoutMessageIds = currentState.session.history.map((item) => {
+        const { id, ...messageWithoutId } = item.message;
+        return { ...item, message: messageWithoutId };
       });
-      if (
-        toolCallsToCancel.length > 0 &&
-        e instanceof Error &&
-        e.message.toLowerCase().includes("premature close")
-      ) {
-        for (const tc of toolCallsToCancel) {
-          dispatch(
-            errorToolCall({
-              toolCallId: tc.toolCallId,
-              output: [
-                {
-                  name: "Tool Call Error",
-                  description: "Premature Close",
-                  content: `"Premature Close" error: this tool call was aborted mid-stream because the arguments took too long to stream or there were network issues. Please re-attempt by breaking the operation into smaller chunks or trying something else`,
-                  icon: "problems",
-                },
-              ],
-            }),
+
+      const { messages, appliedRules, appliedRuleIndex } = constructMessages(
+        withoutMessageIds,
+        systemMessage,
+        currentState.config.config.rules,
+        currentState.ui.ruleSettings,
+        systemToolsFramework,
+      );
+
+      // TODO parallel tool calls will cause issues with this
+      // because there will be multiple tool messages, so which one should have applied rules?
+      dispatch(
+        setAppliedRulesAtIndex({
+          index: appliedRuleIndex,
+          appliedRules: appliedRules,
+        }),
+      );
+
+      if (attempt === 0) {
+        dispatch(setActive());
+        dispatch(setInlineErrorMessage(undefined));
+      }
+
+      const precompiledRes = await extra.ideMessenger.request(
+        "llm/compileChat",
+        {
+          messages,
+          options: completionOptions,
+        },
+      );
+
+      if (precompiledRes.status === "error") {
+        if (precompiledRes.error.includes("Not enough context")) {
+          dispatch(setInlineErrorMessage("out-of-context"));
+          dispatch(setInactive());
+          return;
+        } else {
+          throw new Error(precompiledRes.error);
+        }
+      }
+
+      const { compiledChatMessages, didPrune, contextPercentage } =
+        precompiledRes.content;
+
+      dispatch(setIsPruned(didPrune));
+      dispatch(setContextPercentage(contextPercentage));
+
+      let receivedStreamChunk = false;
+      try {
+        let gen = extra.ideMessenger.llmStreamChat(
+          {
+            completionOptions,
+            title: selectedChatModel.title,
+            messages: compiledChatMessages,
+            legacySlashCommandData,
+            messageOptions: { precompiled: true },
+          },
+          streamAborter.signal,
+        );
+        if (systemToolsFramework && activeTools.length > 0) {
+          gen = interceptSystemToolCalls(
+            gen,
+            streamAborter,
+            systemToolsFramework,
           );
         }
-      } else {
-        throw e;
+
+        let next = await gen.next();
+        while (!next.done) {
+          receivedStreamChunk = true;
+          if (!getState().session.isStreaming) {
+            dispatch(abortStream());
+            break;
+          }
+
+          dispatch(streamUpdate(next.value));
+          next = await gen.next();
+        }
+
+        // Attach prompt log and end thinking for reasoning models
+        if (next.done && next.value) {
+          dispatch(addPromptCompletionPair([next.value]));
+
+          try {
+            extra.ideMessenger.post("devdata/log", {
+              name: "chatInteraction",
+              data: {
+                prompt: next.value.prompt,
+                completion: next.value.completion,
+                modelProvider: selectedChatModel.underlyingProviderName,
+                modelName: selectedChatModel.title,
+                modelTitle: selectedChatModel.title,
+                sessionId: currentState.session.id,
+                ...(!!activeTools.length && {
+                  tools: activeTools.map((tool) => tool.function.name),
+                }),
+                ...(appliedRules.length > 0 && {
+                  rules: appliedRules.map((rule) => ({
+                    id: getRuleId(rule),
+                    slug: rule.slug,
+                  })),
+                }),
+              },
+            });
+          } catch (e) {
+            console.error("Failed to send dev data interaction log", e);
+          }
+        }
+
+        break;
+      } catch (e) {
+        const shouldRetryWithFallback =
+          useNativeTools &&
+          activeTools.length > 0 &&
+          !receivedStreamChunk &&
+          attempt + 1 < maxStreamAttempts &&
+          shouldRetryWithSystemMessageTools(e);
+
+        if (shouldRetryWithFallback) {
+          console.warn(
+            "Native tool-calling failed, retrying with system-message tools",
+            e,
+          );
+          useNativeTools = false;
+          continue;
+        }
+
+        const toolCallsToCancel = selectCurrentToolCalls(getState());
+        posthog.capture("stream_premature_close_error", {
+          duration: (Date.now() - start) / 1000,
+          model: selectedChatModel.model,
+          provider: selectedChatModel.underlyingProviderName,
+          context: legacySlashCommandData ? "slash_command" : "regular_chat",
+          ...(legacySlashCommandData && {
+            command: legacySlashCommandData.command.name,
+          }),
+        });
+        if (
+          toolCallsToCancel.length > 0 &&
+          e instanceof Error &&
+          e.message.toLowerCase().includes("premature close")
+        ) {
+          for (const tc of toolCallsToCancel) {
+            dispatch(
+              errorToolCall({
+                toolCallId: tc.toolCallId,
+                output: [
+                  {
+                    name: "Tool Call Error",
+                    description: "Premature Close",
+                    content: `"Premature Close" error: this tool call was aborted mid-stream because the arguments took too long to stream or there were network issues. Please re-attempt by breaking the operation into smaller chunks or trying something else`,
+                    icon: "problems",
+                  },
+                ],
+              }),
+            );
+          }
+        } else {
+          throw e;
+        }
+
+        break;
       }
     }
 

@@ -69,6 +69,8 @@ export const DEFAULT_PLAN_SYSTEM_MESSAGE = `\
 <important_rules>
   You are in plan mode, in which you help the user understand and construct a plan.
   Only use read-only tools. Do not use any tools that would write to non-temporary files.
+  Some mutating tools (for example terminal commands that change files or create commits) may be unavailable in this mode.
+  If the user requests a blocked action, explain that the current mode/tool policy is restricting it. Do not say you permanently lack shell or git capabilities.
   If the user wants to make changes, offer that they can switch to Agent mode to give you access to write tools to make the suggested updates.
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}

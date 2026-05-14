@@ -104,10 +104,12 @@ async function readResourceContents(
 
   const { contents } = await connection.getResource(uri);
   const textContents = contents
-    .filter(
-      (resource) => "text" in resource && typeof resource.text === "string",
+    .map((resource) =>
+      "text" in resource && typeof resource.text === "string"
+        ? resource.text
+        : null,
     )
-    .map((resource) => resource.text);
+    .filter((text): text is string => text !== null);
 
   if (textContents.length === 0) {
     throw new Error("Continue currently only supports text resources from MCP");

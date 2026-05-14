@@ -54,8 +54,10 @@ function TipTapEditorInner(props: TipTapEditorProps) {
 
   const defaultModel = useAppSelector(selectSelectedChatModel);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
+  const mode = useAppSelector((state) => state.session.mode);
   const historyLength = useAppSelector((store) => store.session.history.length);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
+  const isSendDisabled = isStreaming && mode !== "agent";
 
   const { editor, onEnter } = createEditorConfig({
     props,
@@ -296,7 +298,7 @@ function TipTapEditorInner(props: TipTapEditorProps) {
               }
             });
           }}
-          disabled={isStreaming}
+          disabled={isSendDisabled}
         />
       </div>
 

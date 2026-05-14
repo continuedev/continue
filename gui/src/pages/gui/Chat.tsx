@@ -194,41 +194,100 @@ export function Chat() {
       if (currentMode === "agent" && !isCurrentlyInEdit) {
         const defaultContextProviders =
           stateSnapshot.config.config.experimental?.defaultContext ?? [];
+        const AGENT_SUBMIT_TIMEOUT_MS = 15_000;
 
         void (async () => {
-          const { content } = await resolveEditorContent({
-            editorState,
-            modifiers,
-            ideMessenger,
-            defaultContextProviders,
-            availableSlashCommands: stateSnapshot.config.config.slashCommands,
-            dispatch,
-            getState: () => reduxStore.getState(),
-          });
-
-          const promptText = stripImages(content);
-          if (!promptText.trim()) return;
-
-          try {
-            const res = await ideMessenger.request("agent/run", {
-              prompt: promptText,
-            });
-            if (res.status === "success") {
-              dispatch(setActiveAgentSessionId(res.content.sessionId));
-              if (editorToClearOnSend) {
-                editorToClearOnSend.commands.clearContent();
-              }
-            }
-          } catch (err) {
-            console.error("[Yuto] agent/run failed:", err);
-            // In standalone browser mode (MockIdeMessenger), agent/run may be
-            // unavailable. Fall back to normal chat streaming so Enter still works.
+          const fallbackToStandardStreaming = () => {
             void dispatch(
               streamResponseThunk({ editorState, modifiers, index }),
             );
             if (editorToClearOnSend) {
               editorToClearOnSend.commands.clearContent();
             }
+          };
+
+          const withTimeout = async <T,>(
+            promise: Promise<T>,
+            timeoutMs: number,
+            label: string,
+          ): Promise<T> => {
+            let timeoutId: ReturnType<typeof setTimeout> | undefined;
+            try {
+              return await Promise.race([
+                promise,
+                new Promise<T>((_, reject) => {
+                  timeoutId = setTimeout(() => {
+                    reject(
+                      new Error(
+                        `Timed out after ${timeoutMs}ms while waiting for ${label}`,
+                      ),
+                    );
+                  }, timeoutMs);
+                }),
+              ]);
+            } finally {
+              if (timeoutId) {
+                clearTimeout(timeoutId);
+              }
+            }
+          };
+
+          try {
+            const { content } = await withTimeout(
+              resolveEditorContent({
+                editorState,
+                modifiers,
+                ideMessenger,
+                defaultContextProviders,
+                availableSlashCommands:
+                  stateSnapshot.config.config.slashCommands,
+                dispatch,
+                getState: () => reduxStore.getState(),
+              }),
+              AGENT_SUBMIT_TIMEOUT_MS,
+              "context resolution",
+            );
+
+            const promptText = stripImages(content);
+            if (!promptText.trim()) {
+              console.error(
+                "[Yuto] agent/run skipped because resolved prompt was empty; falling back to chat streaming",
+              );
+              fallbackToStandardStreaming();
+              return;
+            }
+
+            const res = await withTimeout(
+              ideMessenger.request("agent/run", {
+                prompt: promptText,
+              }),
+              AGENT_SUBMIT_TIMEOUT_MS,
+              "agent/run",
+            );
+
+            if (res.status === "success" && res.content?.sessionId) {
+              dispatch(setActiveAgentSessionId(res.content.sessionId));
+              if (editorToClearOnSend) {
+                editorToClearOnSend.commands.clearContent();
+              }
+            } else {
+              if (res.status === "success") {
+                console.error(
+                  "[Yuto] agent/run returned success without sessionId",
+                );
+              } else {
+                console.error(
+                  "[Yuto] agent/run returned error status:",
+                  res.error,
+                );
+              }
+              // Fall back to normal chat streaming instead of silently dropping submit.
+              fallbackToStandardStreaming();
+            }
+          } catch (err) {
+            console.error("[Yuto] agent mode submit failed:", err);
+            // Any failure in agent-mode submit path should degrade gracefully to normal chat.
+            fallbackToStandardStreaming();
           }
         })();
         return;

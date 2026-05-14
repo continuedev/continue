@@ -570,6 +570,20 @@ describe("isRecommendedAgentModel", () => {
     });
   });
 
+  describe("Qwen models", () => {
+    it("should return true for Qwen 3.5+ and common Qwen3 naming variants", () => {
+      expect(isRecommendedAgentModel("qwen3.6")).toBe(true);
+      expect(isRecommendedAgentModel("qwen3:6b")).toBe(true);
+      expect(isRecommendedAgentModel("qwen3-32b")).toBe(true);
+      expect(isRecommendedAgentModel("qwen/qwen3-coder-30b")).toBe(true);
+    });
+
+    it("should return false for older Qwen generations", () => {
+      expect(isRecommendedAgentModel("qwen2.5-7b")).toBe(false);
+      expect(isRecommendedAgentModel("qwen-2-7b")).toBe(false);
+    });
+  });
+
   describe("case insensitivity", () => {
     it("should handle uppercase model names", () => {
       expect(isRecommendedAgentModel("GEMINI-3.1-PRO-PREVIEW")).toBe(true);
