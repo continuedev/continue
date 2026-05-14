@@ -16,8 +16,10 @@
     "noEmitOnError": false,
     "types": ["node", "jest"],
     "outDir": "dist",
+    "rootDir": "src",
     "declaration": true,
     "sourceMap": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["dist"]
 }
