@@ -618,7 +618,7 @@ export async function getControlPlaneSessionInfo(
       WorkOsAuthProvider.useOnboardingUri = true;
     }
     await WorkOsAuthProvider.hasAttemptedRefresh;
-    let session: vscode.AuthenticationSession | undefined;
+    let session: AuthenticationSession | undefined;
     try {
       session = await authentication.getSession(
         controlPlaneEnv.AUTH_TYPE,

@@ -31,6 +31,16 @@ export const subagentTool: Tool = {
           description:
             "Optional configured subagent model name/title to use. Falls back to the selected subagent model.",
         },
+        team_name: {
+          type: "string",
+          description:
+            "Optional team name for session-scoped teammate coordination. Defaults to the active session team when one exists.",
+        },
+        teammate_name: {
+          type: "string",
+          description:
+            "Optional teammate identity to record for this subagent run. Defaults to the selected subagent name when running in a team.",
+        },
         profile: {
           type: "string",
           description:
@@ -55,6 +65,8 @@ export const subagentTool: Tool = {
         "Trace the authentication flow from login form to token storage and summarize the owning files.",
       ],
       ["subagent_name", "Explore"],
+      ["team_name", "Coordination"],
+      ["teammate_name", "investigator"],
       ["profile", "coordinator-worker"],
     ],
   },

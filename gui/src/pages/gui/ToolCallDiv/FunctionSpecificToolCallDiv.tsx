@@ -1,6 +1,7 @@
 import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { EditOperation } from "core/tools/definitions/multiEdit";
+import { CoordinationToolCallSummary } from "./CoordinationToolCallSummary";
 import { CreateFile } from "./CreateFile";
 import { EditFile } from "./EditFile";
 import { FindAndReplaceDisplay } from "./FindAndReplace";
@@ -74,6 +75,15 @@ function FunctionSpecificToolCallDiv({
           toolCallId={toolCall.id}
         />
       );
+    case BuiltInToolNames.Subagent:
+    case BuiltInToolNames.Config:
+    case BuiltInToolNames.Status:
+    case BuiltInToolNames.TeamCreate:
+    case BuiltInToolNames.TeamDelete:
+    case BuiltInToolNames.TeamStatus:
+    case BuiltInToolNames.TeamMailbox:
+    case BuiltInToolNames.SendMessage:
+      return <CoordinationToolCallSummary toolCallState={toolCallState} />;
     default:
       return null;
   }

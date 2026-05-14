@@ -4,6 +4,7 @@ import { BuiltInToolNames } from "core/tools/builtIn";
 import { useState } from "react";
 import { useAppSelector } from "../../../redux/hooks";
 import { RootState } from "../../../redux/store";
+import { isCoordinationSummaryTool } from "./CoordinationToolCallSummary";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
 import { McpAppRenderer } from "./MCPAppRenderer";
@@ -42,6 +43,37 @@ export function ToolCallDiv({
       functionName && tool?.toolCallIcon
         ? getIconByName(tool.toolCallIcon)
         : undefined;
+    const isCompactFunctionSpecificTool =
+      functionName === BuiltInToolNames.SingleFindAndReplace ||
+      functionName === BuiltInToolNames.MultiEdit ||
+      functionName === BuiltInToolNames.RunTerminalCommand;
+
+    if (isCompactFunctionSpecificTool) {
+      return (
+        <div className="flex flex-col px-0.5">
+          <FunctionSpecificToolCallDiv
+            toolCallState={toolCallState}
+            historyIndex={historyIndex}
+          />
+        </div>
+      );
+    }
+
+    if (isCoordinationSummaryTool(functionName)) {
+      return (
+        <ToolCallDisplay
+          icon={getStatusIcon(toolCallState.status)}
+          tool={tool}
+          toolCallState={toolCallState}
+          historyIndex={historyIndex}
+        >
+          <FunctionSpecificToolCallDiv
+            toolCallState={toolCallState}
+            historyIndex={historyIndex}
+          />
+        </ToolCallDisplay>
+      );
+    }
 
     if (toolCallState.mcpUiState) {
       return (
@@ -64,25 +96,6 @@ export function ToolCallDiv({
           icon={toolCallState.status === "generated" ? ArrowRightIcon : icon}
           historyIndex={historyIndex}
         />
-      );
-    }
-
-    // Trying this out while it's an experimental feature
-    // Obviously missing the truncate and args buttons
-    // All the info from args is displayed here
-    // But we'd need a nicer place to put the truncate button and the X icon when tool call fails
-    if (
-      functionName === BuiltInToolNames.SingleFindAndReplace ||
-      functionName === BuiltInToolNames.MultiEdit ||
-      functionName === BuiltInToolNames.RunTerminalCommand
-    ) {
-      return (
-        <div className="flex flex-col px-0.5">
-          <FunctionSpecificToolCallDiv
-            toolCallState={toolCallState}
-            historyIndex={historyIndex}
-          />
-        </div>
       );
     }
 

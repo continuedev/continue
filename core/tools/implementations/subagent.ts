@@ -10,6 +10,15 @@ import {
 } from "../../agent/coordinator/WorkerScratchpad";
 import { isAbortError } from "../../util/isAbortError";
 import { getContinueGlobalPath } from "../../util/paths";
+import { appendMailboxMessage } from "../../util/teamMailboxStore";
+import {
+  finishTeamMemberRun,
+  getActiveTeam,
+  TEAM_LEAD_NAME,
+  upsertTeamMember,
+  type TeamRecord,
+  startTeamMemberRun,
+} from "../../util/teamStore";
 import { applyToolOverrides } from "../applyToolOverrides";
 
 const DEFAULT_SUBAGENT_MAX_TURNS = 25;
@@ -96,6 +105,130 @@ function buildChildSystemMessage(args: {
   return segments.length > 0 ? segments.join("\n\n") : undefined;
 }
 
+function optionalText(value: unknown): string | undefined {
+  const trimmed = typeof value === "string" ? value.trim() : "";
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function getTeammateIdentity(args: {
+  explicitName?: string;
+  requestedName?: string;
+  subagentModelTitle?: string;
+  subagentModelName?: string;
+}): string | undefined {
+  return (
+    optionalText(args.explicitName) ??
+    optionalText(args.requestedName) ??
+    optionalText(args.subagentModelTitle) ??
+    optionalText(args.subagentModelName)
+  );
+}
+
+function getResultStatus(
+  stopReason: string,
+): "completed" | "failed" | "cancelled" {
+  if (stopReason === "aborted") {
+    return "cancelled";
+  }
+
+  if (stopReason === "error" || stopReason === "error_limit") {
+    return "failed";
+  }
+
+  return "completed";
+}
+
+async function resolveTeamContext(args: {
+  sessionId?: string;
+  requestedTeamName?: string;
+  requestedTeammateName?: string;
+  requestedSubagentName?: string;
+  subagentModelTitle?: string;
+  subagentModelName?: string;
+}): Promise<
+  | {
+      sessionId: string;
+      team: TeamRecord;
+      teammateName: string;
+    }
+  | undefined
+> {
+  if (!args.sessionId) {
+    return undefined;
+  }
+
+  const activeTeam = await getActiveTeam(args.sessionId);
+  const explicitTeamName = optionalText(args.requestedTeamName);
+
+  if (!activeTeam) {
+    if (explicitTeamName) {
+      throw new Error(
+        `No active team exists for this session, so subagent could not join team \"${explicitTeamName}\".`,
+      );
+    }
+
+    return undefined;
+  }
+
+  if (explicitTeamName && activeTeam.teamName !== explicitTeamName) {
+    throw new Error(
+      `Active team is \"${activeTeam.teamName}\", not \"${explicitTeamName}\".`,
+    );
+  }
+
+  const teammateName = getTeammateIdentity({
+    explicitName: args.requestedTeammateName,
+    requestedName: args.requestedSubagentName,
+    subagentModelTitle: args.subagentModelTitle,
+    subagentModelName: args.subagentModelName,
+  });
+
+  if (!teammateName) {
+    return undefined;
+  }
+
+  return {
+    sessionId: args.sessionId,
+    team: activeTeam,
+    teammateName,
+  };
+}
+
+async function sendLeadMailboxUpdate(args: {
+  sessionId: string;
+  team: TeamRecord;
+  teammateName: string;
+  description?: string;
+  text: string;
+  status: "completed" | "failed" | "cancelled";
+}): Promise<void> {
+  if (args.team.leadName === args.teammateName) {
+    return;
+  }
+
+  await upsertTeamMember(
+    args.sessionId,
+    args.team.teamName,
+    args.teammateName,
+    {},
+  );
+  await appendMailboxMessage(args.sessionId, {
+    teamName: args.team.teamName,
+    memberName: args.team.leadName || TEAM_LEAD_NAME,
+    message: {
+      from: args.teammateName,
+      text: args.text,
+      summary: args.description ?? `${args.teammateName} ${args.status}`,
+      timestamp: new Date().toISOString(),
+      kind: "message",
+      metadata: {
+        source: "subagent",
+        status: args.status,
+      },
+    },
+  });
+}
+
 export const subagentToolImpl: ToolImpl = async (args, extras) => {
   const prompt = typeof args?.prompt === "string" ? args.prompt.trim() : "";
   const requestedName =
@@ -106,8 +239,10 @@ export const subagentToolImpl: ToolImpl = async (args, extras) => {
     typeof args?.maxTurns === "number"
       ? args.maxTurns
       : DEFAULT_SUBAGENT_MAX_TURNS;
+  const description = optionalText(args?.description);
   const profile = getSubagentProfile(args);
-  const parentSessionId = (extras as any)._agentSessionId as string | undefined;
+  const parentSessionId =
+    extras.sessionId ?? ((extras as any)._agentSessionId as string | undefined);
 
   if (!prompt) {
     return [
@@ -157,6 +292,29 @@ export const subagentToolImpl: ToolImpl = async (args, extras) => {
     extras.config.tools,
     subagentModel.toolOverrides,
   ).tools;
+  const { _agentSessionId: _ignoredLegacySessionId, ...childToolExtras } =
+    extras as typeof extras & {
+      _agentSessionId?: string;
+    };
+
+  const teamContext = await resolveTeamContext({
+    sessionId: parentSessionId,
+    requestedTeamName: args?.team_name,
+    requestedTeammateName: args?.teammate_name,
+    requestedSubagentName: requestedName,
+    subagentModelTitle: subagentModel.title,
+    subagentModelName: subagentModel.model,
+  });
+
+  if (teamContext) {
+    await startTeamMemberRun(teamContext.sessionId, {
+      teamName: teamContext.team.teamName,
+      teammateName: teamContext.teammateName,
+      subagentName: requestedName ?? subagentModel.title ?? subagentModel.model,
+      description,
+      prompt,
+    });
+  }
 
   let scratchpadPath: string | undefined;
   let coordinatorInstructions: string | undefined;
@@ -190,7 +348,8 @@ export const subagentToolImpl: ToolImpl = async (args, extras) => {
       llm: subagentModel,
       tools: overriddenTools,
       toolExtras: {
-        ...extras,
+        ...childToolExtras,
+        sessionId: parentSessionId,
         llm: subagentModel,
         config: subagentConfig,
       },
@@ -200,19 +359,57 @@ export const subagentToolImpl: ToolImpl = async (args, extras) => {
     });
 
     const summary = summarizeSubagentResult(prompt, result);
+    const resultText = summary[0]?.content ?? "Subagent completed.";
+    const resultStatus = getResultStatus(result.stopReason);
+
+    if (teamContext) {
+      await finishTeamMemberRun(teamContext.sessionId, {
+        teamName: teamContext.team.teamName,
+        teammateName: teamContext.teammateName,
+        status: resultStatus,
+        result: resultText,
+      });
+      await sendLeadMailboxUpdate({
+        sessionId: teamContext.sessionId,
+        team: teamContext.team,
+        teammateName: teamContext.teammateName,
+        description,
+        text: resultText,
+        status: resultStatus,
+      });
+    }
 
     if (scratchpadPath && parentSessionId) {
       await appendWorkerScratchpadEntry(scratchpadPath, parentSessionId, {
         agentName: subagentModel.title || subagentModel.model,
         prompt,
-        response: summary[0]?.content ?? "Subagent completed.",
-        status: result.stopReason === "aborted" ? "cancelled" : "completed",
+        response: resultText,
+        status: resultStatus,
         profile,
       });
     }
 
     return summary;
   } catch (error) {
+    if (teamContext) {
+      const message = error instanceof Error ? error.message : String(error);
+      const status = isAbortError(error) ? "cancelled" : "failed";
+      await finishTeamMemberRun(teamContext.sessionId, {
+        teamName: teamContext.team.teamName,
+        teammateName: teamContext.teammateName,
+        status,
+        result: message,
+      });
+      await sendLeadMailboxUpdate({
+        sessionId: teamContext.sessionId,
+        team: teamContext.team,
+        teammateName: teamContext.teammateName,
+        description,
+        text: message,
+        status,
+      });
+    }
+
     if (scratchpadPath && parentSessionId) {
       const message = error instanceof Error ? error.message : String(error);
       await appendWorkerScratchpadEntry(scratchpadPath, parentSessionId, {

@@ -20,7 +20,7 @@ import {
   ToolResultChatMessage,
 } from "..";
 import { callTool } from "../tools/callTool";
-import { ToolExtras } from ".."
+import { ToolExtras } from "..";
 import {
   createDenialTrackingState,
   DenialTrackingState,
@@ -64,7 +64,12 @@ export type AgentRunEvent =
   | { type: "turn_start"; turn: number; messages: ChatMessage[] }
   | { type: "chunk"; delta: ChatMessage }
   | { type: "tool_start"; toolCall: ToolCall; toolName: string }
-  | { type: "tool_result"; toolCall: ToolCall; output: ContextItem[]; error?: string }
+  | {
+      type: "tool_result";
+      toolCall: ToolCall;
+      output: ContextItem[];
+      error?: string;
+    }
   | { type: "done"; stopReason: AgentStopReason; totalTurns: number };
 
 export type AgentRunConfig = {
@@ -219,11 +224,7 @@ async function executeBatch(
 
   if (batch.concurrent) {
     // Chunk into MAX_CONCURRENT_TOOLS-sized groups to avoid overwhelming the system
-    for (
-      let i = 0;
-      i < batch.calls.length;
-      i += MAX_CONCURRENT_TOOLS
-    ) {
+    for (let i = 0; i < batch.calls.length; i += MAX_CONCURRENT_TOOLS) {
       const chunk = batch.calls.slice(i, i + MAX_CONCURRENT_TOOLS);
       const results = await Promise.all(
         chunk.map((call) => executeOneToolCall(call, tools, extras, onEvent)),
@@ -251,7 +252,9 @@ async function executeBatch(
  * Run the agent loop autonomously until a stop condition is met.
  * Returns the full message history and a stop reason.
  */
-export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> {
+export async function runAgent(
+  config: AgentRunConfig,
+): Promise<AgentRunResult> {
   const {
     prompt,
     llm,
@@ -275,10 +278,7 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
   let smState: SessionMemoryState | null =
     sessionMemoryConfig === false
       ? null
-      : createSessionMemoryState(
-          sessionId,
-          sessionMemoryConfig ?? undefined,
-        );
+      : createSessionMemoryState(sessionId, sessionMemoryConfig ?? undefined);
 
   // Build initial message history
   const messages: ChatMessage[] = [
@@ -293,6 +293,10 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
   let consecutiveToolErrors = 0;
   let turn = 0;
   let stopReason: AgentStopReason = "done";
+  const toolExtrasWithSession: Omit<ToolExtras, "tool" | "toolCallId"> = {
+    ...toolExtras,
+    sessionId: toolExtras.sessionId ?? sessionId,
+  };
 
   try {
     while (turn < maxTurns) {
@@ -340,11 +344,9 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
         toolCalls: [],
       };
 
-      const stream = llm.streamChat(
-        messages,
-        abortController.signal,
-        { tools },
-      );
+      const stream = llm.streamChat(messages, abortController.signal, {
+        tools,
+      });
 
       for await (const chunk of stream) {
         if (abortController.signal.aborted) {
@@ -374,7 +376,11 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
               (tc) => tc.id === delta.id,
             );
             if (!existing) {
-              existing = { id: delta.id, type: "function", function: { name: "", arguments: "" } };
+              existing = {
+                id: delta.id,
+                type: "function",
+                function: { name: "", arguments: "" },
+              };
               accumulated.toolCalls!.push(existing);
             }
             if (delta.function?.name) {
@@ -420,7 +426,12 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
           stopReason = "aborted";
           break;
         }
-        const batchResult = await executeBatch(batch, tools, toolExtras, onEvent);
+        const batchResult = await executeBatch(
+          batch,
+          tools,
+          toolExtrasWithSession,
+          onEvent,
+        );
         toolResultMessages.push(...batchResult.messages);
         batchErrors = batchErrors.concat(batchResult.errors);
       }
@@ -462,7 +473,11 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
   }
 
   const finalStatus: TaskStatus =
-    stopReason === "done" ? "completed" : stopReason === "aborted" ? "killed" : "failed";
+    stopReason === "done"
+      ? "completed"
+      : stopReason === "aborted"
+        ? "killed"
+        : "failed";
 
   task = transitionTask(task, finalStatus);
 

@@ -1,14 +1,32 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { fireTeammateIdle } from "../hooks/fireHook.js";
 import { services } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
+import { spawnSwarmTeammate } from "../swarm/spawn.js";
 import { executeSubAgent } from "../subagent/executor.js";
 import { getAgentNames, getSubagent } from "../subagent/get-agents.js";
+import {
+  finishTeamMemberRun,
+  getActiveTeam,
+  startTeamMemberRun,
+} from "../util/teamStore.js";
 
 import { subagentTool } from "./subagent.js";
 
+vi.mock("../hooks/fireHook.js", () => ({
+  fireTeammateIdle: vi.fn().mockResolvedValue({ blocked: false, results: [] }),
+}));
+vi.mock("../swarm/spawn.js", () => ({
+  spawnSwarmTeammate: vi.fn(),
+}));
 vi.mock("../subagent/get-agents.js");
 vi.mock("../subagent/executor.js");
+vi.mock("../util/teamStore.js", () => ({
+  getActiveTeam: vi.fn().mockResolvedValue(null),
+  startTeamMemberRun: vi.fn().mockResolvedValue(undefined),
+  finishTeamMemberRun: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock("../services/ServiceContainer.js", () => ({
   serviceContainer: {
     get: vi.fn(),
@@ -220,5 +238,92 @@ describe("subagentTool", () => {
       "Subagent execution was cancelled before completion.",
     );
     expect(result).toContain("status: cancelled");
+  });
+
+  it("records teammate lifecycle when a team is active", async () => {
+    vi.mocked(getAgentNames).mockReturnValue(["code-agent"]);
+    vi.mocked(getSubagent).mockReturnValue({
+      model: { name: "test-model" },
+    } as any);
+    vi.mocked(getActiveTeam).mockResolvedValue({
+      teamName: "refactor-squad",
+      members: [],
+    } as any);
+    vi.mocked(executeSubAgent).mockResolvedValue({
+      success: true,
+      status: "completed",
+      response: "done",
+    } as any);
+
+    const tool = await subagentTool();
+
+    await tool.run(
+      {
+        description: "Inspect files",
+        prompt: "Map the implementation",
+        subagent_name: "code-agent",
+        teammate_name: "investigator",
+      },
+      { toolCallId: "tool-call-id", parallelToolCallCount: 1 },
+    );
+
+    expect(startTeamMemberRun).toHaveBeenCalledWith({
+      teamName: "refactor-squad",
+      teammateName: "investigator",
+      subagentName: "code-agent",
+      description: "Inspect files",
+      prompt: "Map the implementation",
+    });
+    expect(finishTeamMemberRun).toHaveBeenCalledWith({
+      teamName: "refactor-squad",
+      teammateName: "investigator",
+      status: "completed",
+      result: "done",
+    });
+    expect(fireTeammateIdle).toHaveBeenCalledWith(
+      "investigator",
+      "refactor-squad",
+    );
+  });
+
+  it("spawns a persistent process worker when backend=process", async () => {
+    vi.mocked(getAgentNames).mockReturnValue(["code-agent"]);
+    vi.mocked(getSubagent).mockReturnValue({
+      model: {
+        name: "test-model",
+        chatOptions: {
+          baseSystemMessage: "Investigate only the requested files.",
+        },
+      },
+    } as any);
+    vi.mocked(getActiveTeam).mockResolvedValue({
+      teamName: "refactor-squad",
+      members: [],
+    } as any);
+    vi.mocked(spawnSwarmTeammate).mockResolvedValue({
+      status: "spawned",
+      backend: "process",
+      jobId: "bg-1",
+      summary: "Spawned background teammate investigator (job bg-1).",
+    } as any);
+
+    const tool = await subagentTool();
+
+    const result = await tool.run(
+      {
+        description: "Inspect files",
+        prompt: "Map the implementation",
+        subagent_name: "code-agent",
+        teammate_name: "investigator",
+        backend: "process",
+      },
+      { toolCallId: "tool-call-id", parallelToolCallCount: 1 },
+    );
+
+    expect(spawnSwarmTeammate).toHaveBeenCalledTimes(1);
+    expect(executeSubAgent).not.toHaveBeenCalled();
+    expect(result).toContain("Spawned background teammate investigator");
+    expect(result).toContain("backend: process");
+    expect(result).toContain("job_id: bg-1");
   });
 });

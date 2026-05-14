@@ -33,7 +33,7 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
   const displayName = toolName ? getToolDisplayName(toolName) : "Tool";
 
   // Handle Checklist specially with styled display
-  if (toolName === "Checklist") {
+  if (toolName === "Checklist" || toolName === "TodoWrite") {
     return (
       <Box flexDirection="column">
         <Box marginBottom={1}>

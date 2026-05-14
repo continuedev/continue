@@ -9,10 +9,18 @@ import { BuiltInToolNames } from "./builtIn";
 import { codebaseToolImpl } from "./implementations/codebaseTool";
 import { createNewFileImpl } from "./implementations/createNewFile";
 import { createRuleBlockImpl } from "./implementations/createRuleBlock";
+import { configToolImpl, statusToolImpl } from "./implementations/configStatus";
 import { fetchUrlContentImpl } from "./implementations/fetchUrlContent";
 import { fileGlobSearchImpl } from "./implementations/globSearch";
+import { gitToolImpl } from "./implementations/git";
 import { grepSearchImpl } from "./implementations/grepSearch";
+import { githubToolImpl } from "./implementations/github";
 import { lsToolImpl } from "./implementations/lsTool";
+import {
+  listMcpResourcesImpl,
+  mcpAuthImpl,
+  readMcpResourceImpl,
+} from "./implementations/mcpTools";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
 
@@ -28,6 +36,22 @@ import { searchWebImpl } from "./implementations/searchWeb";
 import { skillToolImpl } from "./implementations/skill";
 import { sleepToolImpl } from "./implementations/sleep";
 import { subagentToolImpl } from "./implementations/subagent";
+import {
+  taskCreateImpl,
+  taskGetImpl,
+  taskListImpl,
+  taskOutputImpl,
+  taskStopImpl,
+  taskUpdateImpl,
+} from "./implementations/taskTools";
+import {
+  sendMessageImpl,
+  teamCreateImpl,
+  teamDeleteImpl,
+  teamMailboxImpl,
+  teamStatusImpl,
+} from "./implementations/teamTools";
+import { todoWriteImpl } from "./implementations/todoWrite";
 import { viewDiffImpl } from "./implementations/viewDiff";
 import { viewRepoMapImpl } from "./implementations/viewRepoMap";
 import { viewSubdirectoryImpl } from "./implementations/viewSubdirectory";
@@ -242,27 +266,48 @@ export async function callBuiltInTool(
       return await exitWorktreeImpl(args, extras);
     case BuiltInToolNames.ToolSearch:
       return await toolSearchImpl(args, extras);
+    case BuiltInToolNames.Git:
+      return await gitToolImpl(args, extras);
+    case BuiltInToolNames.GitHub:
+      return await githubToolImpl(args, extras);
+    case BuiltInToolNames.ListMcpResources:
+      return await listMcpResourcesImpl(args, extras);
+    case BuiltInToolNames.ReadMcpResource:
+      return await readMcpResourceImpl(args, extras);
+    case BuiltInToolNames.McpAuth:
+      return await mcpAuthImpl(args, extras);
     case BuiltInToolNames.ViewRepoMap:
       return await viewRepoMapImpl(args, extras);
     case BuiltInToolNames.ViewSubdirectory:
       return await viewSubdirectoryImpl(args, extras);
-    case BuiltInToolNames.TodoWrite: {
-      // The todo list is managed client-side; the core just validates and echoes back.
-      const todos = args.todos ?? [];
-      const summary = todos
-        .map(
-          (t: { id: string; content: string; status: string; priority: string }) =>
-            `[${t.status}] (${t.priority}) ${t.content}`,
-        )
-        .join("\n");
-      return [
-        {
-          name: "Todo List",
-          description: "Updated todo list",
-          content: summary || "(empty todo list)",
-        },
-      ];
-    }
+    case BuiltInToolNames.TodoWrite:
+      return await todoWriteImpl(args, extras);
+    case BuiltInToolNames.TaskCreate:
+      return await taskCreateImpl(args, extras);
+    case BuiltInToolNames.TaskGet:
+      return await taskGetImpl(args, extras);
+    case BuiltInToolNames.TaskList:
+      return await taskListImpl(args, extras);
+    case BuiltInToolNames.TaskOutput:
+      return await taskOutputImpl(args, extras);
+    case BuiltInToolNames.TaskStop:
+      return await taskStopImpl(args, extras);
+    case BuiltInToolNames.TaskUpdate:
+      return await taskUpdateImpl(args, extras);
+    case BuiltInToolNames.TeamCreate:
+      return await teamCreateImpl(args, extras);
+    case BuiltInToolNames.TeamDelete:
+      return await teamDeleteImpl(args, extras);
+    case BuiltInToolNames.TeamStatus:
+      return await teamStatusImpl(args, extras);
+    case BuiltInToolNames.TeamMailbox:
+      return await teamMailboxImpl(args, extras);
+    case BuiltInToolNames.SendMessage:
+      return await sendMessageImpl(args, extras);
+    case BuiltInToolNames.Config:
+      return await configToolImpl(args, extras);
+    case BuiltInToolNames.Status:
+      return await statusToolImpl(args, extras);
     case BuiltInToolNames.AskUserQuestion: {
       const questions: import("./definitions/askUserQuestion").AskUserQuestion[] =
         args.questions ?? [];
@@ -512,7 +557,9 @@ export async function callToolsBatched(
         const chunk = batch.calls.slice(i, i + MAX_CONCURRENT_TOOL_CALLS);
         const chunkResults = await Promise.all(
           chunk.map(async (tc) => {
-            const tool = tools.find((t) => t.function.name === tc.function.name);
+            const tool = tools.find(
+              (t) => t.function.name === tc.function.name,
+            );
             if (!tool) {
               return {
                 toolCallId: tc.id,
@@ -525,7 +572,10 @@ export async function callToolsBatched(
               tool,
               toolCallId: tc.id,
             });
-            return { toolCallId: tc.id, ...result } satisfies ToolCallBatchResult;
+            return {
+              toolCallId: tc.id,
+              ...result,
+            } satisfies ToolCallBatchResult;
           }),
         );
         results.push(...chunkResults);

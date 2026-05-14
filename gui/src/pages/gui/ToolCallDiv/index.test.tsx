@@ -1,5 +1,6 @@
 import { screen } from "@testing-library/react";
 import { ToolCallState } from "core";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { describe, expect, it, vi } from "vitest";
 import {
   createMockStore,
@@ -37,6 +38,7 @@ vi.mock("./MCPAppRenderer", () => ({
 function createToolCallState(
   toolCallId: string,
   status: ToolCallState["status"],
+  functionName = "customTool",
 ): ToolCallState {
   return {
     toolCallId,
@@ -45,7 +47,7 @@ function createToolCallState(
       id: toolCallId,
       type: "function",
       function: {
-        name: "customTool",
+        name: functionName,
         arguments: "{}",
       },
     },
@@ -181,5 +183,45 @@ describe("ToolCallDiv", () => {
     expect(screen.getByTestId("grouped-tool-call-body").className).toContain(
       "max-h-0",
     );
+  });
+
+  it("should prefer the function-specific renderer for subagent tool calls even when an icon is configured", async () => {
+    const initialState = getEmptyRootState();
+    initialState.config.config.tools = [
+      {
+        function: {
+          name: BuiltInToolNames.Subagent,
+          description: "Run subagent",
+          parameters: {
+            type: "object",
+            properties: {},
+          },
+        },
+        toolCallIcon: "Squares2X2Icon",
+      } as any,
+    ];
+
+    await renderWithProviders(
+      <ToolCallDiv
+        toolCallStates={[
+          createToolCallState(
+            "tool-call-subagent",
+            "calling",
+            BuiltInToolNames.Subagent,
+          ),
+        ]}
+        historyIndex={0}
+      />,
+      {
+        store: createMockStore(initialState),
+      },
+    );
+
+    expect(
+      screen.getByTestId("function-specific-tool-call-tool-call-subagent"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("simple-tool-call-tool-call-subagent"),
+    ).not.toBeInTheDocument();
   });
 });

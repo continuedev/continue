@@ -262,6 +262,141 @@ export class MCPService
     throw new Error(`Tool ${name} not found`);
   }
 
+  public async listResources(serverName?: string): Promise<
+    Array<{
+      server: string;
+      uri: string;
+      name?: string;
+      mimeType?: string;
+      description?: string;
+    }>
+  > {
+    const resources: Array<{
+      server: string;
+      uri: string;
+      name?: string;
+      mimeType?: string;
+      description?: string;
+    }> = [];
+
+    for (const connection of this.connections.values()) {
+      if (connection.status !== "connected" || !connection.client) {
+        continue;
+      }
+
+      const currentServerName = connection.config?.name;
+      if (!currentServerName) {
+        continue;
+      }
+
+      if (serverName && currentServerName !== serverName) {
+        continue;
+      }
+
+      try {
+        const result = await this.withTokenRefresh(
+          currentServerName,
+          async () => {
+            const conn = this.connections.get(currentServerName);
+            if (!conn?.client) {
+              throw new Error(`Client for ${currentServerName} not available`);
+            }
+
+            return await (conn.client as any).listResources();
+          },
+        );
+
+        for (const resource of result?.resources ?? []) {
+          resources.push({
+            server: currentServerName,
+            uri: resource.uri,
+            name: resource.name,
+            mimeType: resource.mimeType,
+            description: resource.description,
+          });
+        }
+      } catch (error) {
+        logger.debug("Failed to list MCP resources", {
+          serverName: currentServerName,
+          error: getErrorString(error),
+        });
+      }
+    }
+
+    return resources;
+  }
+
+  public async readResource(
+    uri: string,
+    serverName?: string,
+  ): Promise<string | null> {
+    const connectionsToCheck = Array.from(this.connections.values()).filter(
+      (connection) => {
+        if (connection.status !== "connected" || !connection.client) {
+          return false;
+        }
+
+        if (serverName) {
+          return connection.config?.name === serverName;
+        }
+
+        return true;
+      },
+    );
+
+    for (const connection of connectionsToCheck) {
+      const currentServerName = connection.config?.name;
+      if (!currentServerName) {
+        continue;
+      }
+
+      try {
+        const result = await this.withTokenRefresh(
+          currentServerName,
+          async () => {
+            const conn = this.connections.get(currentServerName);
+            if (!conn?.client) {
+              throw new Error(`Client for ${currentServerName} not available`);
+            }
+
+            return await (conn.client as any).readResource({ uri });
+          },
+        );
+
+        const contents = result?.contents ?? [];
+        if (!Array.isArray(contents) || contents.length === 0) {
+          continue;
+        }
+
+        const rendered = contents
+          .map((content: any) => {
+            if (typeof content?.text === "string") {
+              return content.text;
+            }
+
+            if (typeof content?.blob === "string") {
+              return `[binary:${content.mimeType ?? "unknown"}] ${content.blob}`;
+            }
+
+            return JSON.stringify(content, null, 2);
+          })
+          .join("\n\n");
+
+        if (rendered.trim().length > 0) {
+          return rendered;
+        }
+      } catch (error) {
+        logger.debug("Failed to read MCP resource", {
+          serverName: currentServerName,
+          uri,
+          error: getErrorString(error),
+        });
+      }
+    }
+
+    return null;
+  }
+
   /**
    * Restart all servers
    */

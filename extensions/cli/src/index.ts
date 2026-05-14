@@ -465,6 +465,12 @@ export async function runCli(): Promise<void> {
     return;
   }
 
+  if (process.argv.includes("--internal-teammate-worker")) {
+    const { runSwarmTeammateWorker } = await import("./swarm/worker.js");
+    await runSwarmTeammateWorker();
+    return;
+  }
+
   // Parse arguments and handle errors
   try {
     program.parse();

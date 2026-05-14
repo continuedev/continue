@@ -4,6 +4,8 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ToolExtras } from "../..";
+import { readUnreadMailboxMessages } from "../../util/teamMailboxStore";
+import { createTeam, getActiveTeam } from "../../util/teamStore";
 import { subagentToolImpl } from "./subagent";
 
 const { mockRunAgent } = vi.hoisted(() => ({
@@ -60,6 +62,7 @@ describe("subagentToolImpl", () => {
           ],
         },
       } as any,
+      sessionId: "parent-session",
       _agentSessionId: "parent-session",
     } as ToolExtras & { _agentSessionId: string };
   }
@@ -159,5 +162,67 @@ describe("subagentToolImpl", () => {
       "Subagent was cancelled before producing a final response.",
     );
     expect(scratchpad).toContain("Status: cancelled");
+  });
+
+  it("shares the session-scoped team context with child tools and records teammate results", async () => {
+    mockRunAgent.mockResolvedValue({
+      messages: [{ role: "assistant", content: "Mapped the owning files." }],
+      stopReason: "done",
+      totalTurns: 3,
+    });
+
+    await createTeam("parent-session", {
+      teamName: "Coordination",
+      description: "Coordinate nested workers",
+    });
+
+    const extras = createExtras();
+    const result = await subagentToolImpl(
+      {
+        description: "Investigate the routing layer",
+        prompt: "Trace the subagent tool call path",
+        subagent_name: "Coordinator Worker",
+        teammate_name: "investigator",
+      },
+      extras,
+    );
+
+    expect(mockRunAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        toolExtras: expect.objectContaining({
+          sessionId: "parent-session",
+        }),
+      }),
+    );
+
+    const team = await getActiveTeam("parent-session");
+    expect(team?.members).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "investigator",
+          status: "completed",
+          lastPrompt: "Trace the subagent tool call path",
+        }),
+      ]),
+    );
+
+    const mailbox = await readUnreadMailboxMessages(
+      "parent-session",
+      "Coordination",
+      "team-lead",
+    );
+    expect(mailbox).toHaveLength(1);
+    expect(mailbox[0]).toEqual(
+      expect.objectContaining({
+        from: "investigator",
+        kind: "message",
+        summary: "Investigate the routing layer",
+      }),
+    );
+    expect(mailbox[0]?.metadata).toMatchObject({
+      source: "subagent",
+      status: "completed",
+    });
+    expect(result[0]?.content).toContain("Mapped the owning files.");
   });
 });

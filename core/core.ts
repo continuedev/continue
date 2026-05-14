@@ -1151,8 +1151,8 @@ export class Core {
       return { url };
     });
 
-    on("tools/call", async ({ data: { toolCall } }) =>
-      this.handleToolCall(toolCall),
+    on("tools/call", async ({ data: { toolCall, sessionId } }) =>
+      this.handleToolCall(toolCall, sessionId),
     );
 
     on(
@@ -1293,8 +1293,8 @@ export class Core {
           fetch: (url: string | URL, init?: any) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
           codeBaseIndexer: this.codeBaseIndexer,
-          // Inject session ID so AskUserQuestion can route answers correctly
-          _agentSessionId: sessionId,
+          // Inject session ID so tool-scoped state and AskUserQuestion can route correctly
+          sessionId,
           // Inject question interaction callback: sends questions to the GUI and
           // waits for the agent/questionAnswer reply via a pending Promise.
           onUserInteractionRequest: (sid: string, questions: any) => {
@@ -1372,7 +1372,7 @@ export class Core {
     });
   }
 
-  private async handleToolCall(toolCall: ToolCall) {
+  private async handleToolCall(toolCall: ToolCall, sessionId?: string) {
     const { config } = await this.configHandler.loadConfig();
     if (!config) {
       throw new Error("Config not loaded");
@@ -1406,6 +1406,7 @@ export class Core {
         fetchwithRequestOptions(url, init, config.requestOptions),
       tool,
       toolCallId: toolCall.id,
+      sessionId,
       onPartialOutput,
       codeBaseIndexer: this.codeBaseIndexer,
     });

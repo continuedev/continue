@@ -22,6 +22,7 @@ import type {
   SessionStartSource,
   StopInput,
   TaskCompletedInput,
+  TeammateIdleInput,
   UserPromptSubmitInput,
 } from "./types.js";
 
@@ -224,6 +225,22 @@ export async function fireTaskCompleted(
     task_id: taskId,
     task_subject: taskSubject,
     task_description: taskDescription,
+  };
+
+  return services.hooks.fireEvent(input);
+}
+
+export async function fireTeammateIdle(
+  teammateName: string,
+  teamName: string,
+): Promise<HookEventResult> {
+  if (!isHookServiceReady()) return NOOP_RESULT;
+
+  const input: TeammateIdleInput = {
+    ...getCommonFields(),
+    hook_event_name: "TeammateIdle",
+    teammate_name: teammateName,
+    team_name: teamName,
   };
 
   return services.hooks.fireEvent(input);

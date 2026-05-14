@@ -1129,6 +1129,11 @@ export interface ToolExtras {
   fetch: FetchFunction;
   tool: Tool;
   toolCallId?: string;
+  /**
+   * Stable per-agent-run session identifier for tool-scoped session state.
+   * Present for agent executions; direct one-off tool calls may omit it.
+   */
+  sessionId?: string;
   onPartialOutput?: (params: {
     toolCallId: string;
     contextItems: ContextItem[];

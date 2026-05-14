@@ -25,6 +25,12 @@ export enum BuiltInToolNames {
 
   // Agent todo tracking
   TodoWrite = "todo_write",
+  TaskCreate = "task_create",
+  TaskGet = "task_get",
+  TaskList = "task_list",
+  TaskOutput = "task_output",
+  TaskStop = "task_stop",
+  TaskUpdate = "task_update",
 
   // Agent user interaction
   AskUserQuestion = "ask_user_question",
@@ -54,6 +60,26 @@ export enum BuiltInToolNames {
 
   // Tool discovery
   ToolSearch = "tool_search",
+
+  // Repository helpers
+  Git = "git",
+  GitHub = "github",
+
+  // MCP helpers
+  ListMcpResources = "list_mcp_resources",
+  ReadMcpResource = "read_mcp_resource",
+  McpAuth = "mcp_auth",
+
+  // Team and mailbox helpers
+  TeamCreate = "team_create",
+  TeamDelete = "team_delete",
+  TeamStatus = "team_status",
+  TeamMailbox = "team_mailbox",
+  SendMessage = "send_message",
+
+  // Runtime inspection helpers
+  Config = "config",
+  Status = "status",
 }
 
 export const BUILT_IN_GROUP_NAME = "Built-In";

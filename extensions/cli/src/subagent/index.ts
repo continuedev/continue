@@ -28,6 +28,22 @@ export const SUBAGENT_TOOL_META: Tool = {
           "Optional execution profile for the subagent. Use 'explore' for reconnaissance, 'verify' for review/validation, or 'coordinator-worker' when the worker should participate in a shared coordinator scratchpad.",
         enum: ["explore", "verify", "coordinator-worker"],
       },
+      teammate_name: {
+        type: "string",
+        description:
+          "Optional teammate name when this subagent run should be recorded as part of an active team.",
+      },
+      team_name: {
+        type: "string",
+        description:
+          "Optional active team name when delegating this subagent run inside a created team.",
+      },
+      backend: {
+        type: "string",
+        description:
+          "Optional execution backend. Use 'in-process' for the existing inline worker, 'process' for a persistent background worker, or 'tmux' for a tmux swarm pane.",
+        enum: ["in-process", "process", "tmux"],
+      },
     },
   },
   run: async () => "",
