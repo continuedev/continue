@@ -1,0 +1,65 @@
+# Build environment for the Continue VS Code extension.
+#
+# Usage:
+#   docker build -f Dockerfile.vscode-build -t continue-vscode-builder .
+#   docker run --rm -v "$(pwd)":/workspace continue-vscode-builder
+#
+# The resulting .vsix lands at extensions/vscode/build/continue-{VERSION}.vsix
+# inside the mounted directory (i.e. on your host machine).
+#
+# The .vsix bundles platform-specific native binaries (onnxruntime, LanceDB,
+# SQLite3, ripgrep). By default the build targets the container's own OS and
+# architecture (linux-x64 on a standard amd64 host). To cross-compile, set
+# CONTINUE_VSCODE_TARGET explicitly — the pre-built binaries are fetched from
+# npm for that target rather than compiled locally:
+#
+#   docker run --rm -v "$(pwd)":/workspace \
+#     -e CONTINUE_VSCODE_TARGET=darwin-arm64 \
+#     continue-vscode-builder
+#
+# Supported targets: darwin-arm64  darwin-x64
+#                    linux-arm64   linux-x64
+#                    win32-arm64   win32-x64
+#
+# To build a pre-release instead:
+#   docker run --rm -v "$(pwd)":/workspace -e PRERELEASE=1 continue-vscode-builder
+
+FROM node:20.20.1-bookworm-slim
+
+# Native node-module compilation tools + git (used by some npm postinstalls)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    make \
+    g++ \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Required by the Continue dev setup
+RUN npm install -g vite
+
+# Prevents puppeteer from downloading Chromium during npm install in core/
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+
+WORKDIR /workspace
+
+CMD ["bash", "-euo", "pipefail", "-c", "\
+echo '==> Installing root dependencies...' && \
+npm install && \
+\
+echo '==> Building packages (config-types, fetch, config-yaml, llm-info, ...)...' && \
+node ./scripts/build-packages.js && \
+\
+echo '==> Installing and linking core...' && \
+(cd core && npm install && npm link) && \
+\
+echo '==> Building GUI...' && \
+(cd gui && npm install && npm link @continuedev/core && NODE_OPTIONS='--max-old-space-size=3072' npm run build) && \
+\
+echo '==> Packaging VS Code extension...' && \
+(cd extensions/vscode && npm install && npm link @continuedev/core && \
+  if [ \"${PRERELEASE:-}\" = '1' ]; then npm run package:pre-release; else npm run package; fi) && \
+\
+echo '' && \
+echo 'Done. Extension is at extensions/vscode/build/continue-*.vsix' \
+"]
