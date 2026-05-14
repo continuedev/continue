@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildThinkingTimeline,
   extractThinkingSignals,
+  inferTimelineContext,
 } from "./ThinkingBlockPeek";
 
 describe("ThinkingBlockPeek timeline helpers", () => {
@@ -63,5 +64,25 @@ describe("ThinkingBlockPeek timeline helpers", () => {
     const timeline = buildThinkingTimeline(content, true);
 
     expect(timeline.length).toBeLessThanOrEqual(6);
+  });
+
+  it("infers timeline context from common tooling actions", () => {
+    expect(
+      inferTimelineContext("Read renderer.log and inspect stack trace"),
+    ).toBe("read");
+    expect(
+      inferTimelineContext("Searched for regex patterns in core/llm"),
+    ).toBe("search");
+    expect(inferTimelineContext("Ran npm run build")).toBe("run");
+    expect(inferTimelineContext("Updated Chat.tsx with apply_patch")).toBe(
+      "edit",
+    );
+    expect(inferTimelineContext("Vitest suite passed")).toBe("test");
+    expect(inferTimelineContext("tools/preprocessArgs returned error")).toBe(
+      "tool",
+    );
+    expect(inferTimelineContext("Evaluating options and constraints")).toBe(
+      "plan",
+    );
   });
 });

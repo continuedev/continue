@@ -17,11 +17,42 @@ export async function preprocessToolCalls(
   // Tool call pre-processing
   await Promise.all(
     generatedToolCalls.map(async (tcState) => {
+      const toolName = tcState.toolCall.function.name?.trim();
+      if (!toolName) {
+        posthog.capture("tool_call_outcome", {
+          succeeded: false,
+          toolName: "",
+          errorReason: ContinueErrorReason.Unknown,
+          duration_ms: 0,
+        });
+        dispatch(
+          errorToolCall({
+            toolCallId: tcState.toolCallId,
+          }),
+        );
+        dispatch(
+          updateToolCallOutput({
+            toolCallId: tcState.toolCallId,
+            contextItems: [
+              {
+                icon: "problems",
+                name: "Invalid Tool Call",
+                description: "",
+                content:
+                  "Tool call failed because no tool name was provided by the model. Please retry with a different instruction.",
+                hidden: false,
+              },
+            ],
+          }),
+        );
+        return;
+      }
+
       let errorReason: ContinueErrorReason | undefined = undefined;
       let errorMessage: string | undefined = undefined;
       let preprocessedArgs: Record<string, unknown> | undefined = undefined;
       const result = await ideMessenger.request("tools/preprocessArgs", {
-        toolName: tcState.toolCall.function.name,
+        toolName,
         args: tcState.parsedArgs,
       });
       if (result.status === "success") {
@@ -36,7 +67,7 @@ export async function preprocessToolCalls(
         posthog.capture("tool_call_outcome", {
           // model: , TODO
           succeeded: false,
-          toolName: tcState.toolCall.function.name,
+          toolName,
           errorReason,
           duration_ms: 0, // preprocessing is more or less instantaneous
         });

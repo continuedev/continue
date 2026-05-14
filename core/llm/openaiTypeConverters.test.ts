@@ -1,4 +1,8 @@
-import { toResponsesInput, isItemType } from "./openaiTypeConverters";
+import {
+  isItemType,
+  toChatBody,
+  toResponsesInput,
+} from "./openaiTypeConverters";
 import { ChatMessage } from "..";
 import type {
   EasyInputMessage,
@@ -40,6 +44,62 @@ function getMessagesByRole(items: ResponseInputItem[], role: string) {
 }
 
 describe("openaiTypeConverters", () => {
+  describe("toChatBody", () => {
+    it("drops assistant tool calls that do not include a valid tool name", () => {
+      const messages: ChatMessage[] = [
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "call_missing_name",
+              type: "function",
+              function: {
+                name: "",
+                arguments: "{}",
+              },
+            },
+          ],
+        } as ChatMessage,
+      ];
+
+      const body = toChatBody(messages, {
+        model: "mock-model",
+      } as any);
+
+      const assistantMessage = body.messages[0] as any;
+      expect(assistantMessage.role).toBe("assistant");
+      expect(assistantMessage.tool_calls).toBeUndefined();
+    });
+
+    it("normalizes malformed assistant tool arguments to valid JSON", () => {
+      const messages: ChatMessage[] = [
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "call_bad_args",
+              type: "function",
+              function: {
+                name: "runTerminalCommand",
+                arguments: "{command: 'ls'}",
+              },
+            },
+          ],
+        } as ChatMessage,
+      ];
+
+      const body = toChatBody(messages, {
+        model: "mock-model",
+      } as any);
+
+      const assistantMessage = body.messages[0] as any;
+      expect(assistantMessage.tool_calls).toHaveLength(1);
+      expect(assistantMessage.tool_calls[0].function.arguments).toBe("{}");
+    });
+  });
+
   describe("toResponsesInput", () => {
     describe("tool calls handling - OpenAI Responses API", () => {
       it("should emit function_call items when fc_ ID is in metadata", () => {

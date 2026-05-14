@@ -1,16 +1,18 @@
 // src/components/ThinkingBlockPeek.tsx
 import {
+  BeakerIcon,
   CheckCircleIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   ChevronUpIcon,
+  CodeBracketIcon,
+  CommandLineIcon,
   ClockIcon,
+  DocumentTextIcon,
+  MagnifyingGlassIcon,
+  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
-import {
-  ArrowPathIcon,
-  QueueListIcon,
-  SparklesIcon,
-} from "@heroicons/react/24/solid";
+import { ArrowPathIcon, SparklesIcon } from "@heroicons/react/24/solid";
 import { ChatHistoryItem } from "core";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
@@ -28,12 +30,21 @@ const MarkdownWrapper = styled.div`
 `;
 
 type ThinkingTimelineStatus = "complete" | "active" | "queued";
+type ThinkingTimelineContext =
+  | "read"
+  | "search"
+  | "run"
+  | "edit"
+  | "test"
+  | "tool"
+  | "plan";
 
 export interface ThinkingTimelineItem {
   id: string;
   title: string;
   detail?: string;
   status: ThinkingTimelineStatus;
+  context: ThinkingTimelineContext;
 }
 
 const MAX_TIMELINE_ITEMS = 6;
@@ -108,6 +119,56 @@ export function extractThinkingSignals(content: string): string[] {
   return fromSentences.slice(0, MAX_TIMELINE_ITEMS);
 }
 
+export function inferTimelineContext(signal: string): ThinkingTimelineContext {
+  const normalized = signal.toLowerCase();
+
+  if (
+    /(\btest\b|\bvitest\b|\bjest\b|\bspec\b|assert|coverage)/.test(normalized)
+  ) {
+    return "test";
+  }
+
+  if (
+    /(search|grep|\brg\b|ripgrep|\bfind\b|query|lookup|locat)/.test(normalized)
+  ) {
+    return "search";
+  }
+
+  if (
+    /(\bread\b|review|inspect|\bopen\b|\bcat\b|\.log\b|\.jsonl\b)/.test(
+      normalized,
+    )
+  ) {
+    return "read";
+  }
+
+  if (
+    /(\brun\b|\bran\b|execute|executed|terminal|command|\bnpm\b|\bpnpm\b|\byarn\b|\bnode\b|\bpython\b)/.test(
+      normalized,
+    )
+  ) {
+    return "run";
+  }
+
+  if (
+    /(\bedit\b|update|updated|patch|apply_patch|modify|refactor|implement|rewrite|insert|delete)/.test(
+      normalized,
+    )
+  ) {
+    return "edit";
+  }
+
+  if (
+    /(tool|mcp|function call|preprocessargs|extension host|agent\/run)/.test(
+      normalized,
+    )
+  ) {
+    return "tool";
+  }
+
+  return "plan";
+}
+
 export function buildThinkingTimeline(
   content: string,
   inProgress?: boolean,
@@ -128,11 +189,13 @@ export function buildThinkingTimeline(
     }
 
     const { title, detail } = toTitleAndDetail(signal);
+    const context = inferTimelineContext(signal);
     return {
       id: `timeline-${index}`,
       title,
       detail,
       status,
+      context,
     };
   });
 }
@@ -148,16 +211,54 @@ function buildBreadcrumbs(
   return ["Thinking", shortFocus, inProgress ? "Working" : "Completed"];
 }
 
-function TimelineStatusIcon({ status }: { status: ThinkingTimelineStatus }) {
-  if (status === "complete") {
-    return <CheckCircleIcon className="h-3.5 w-3.5 text-emerald-400" />;
-  }
+function TimelineStepIcon({
+  status,
+  context,
+}: {
+  status: ThinkingTimelineStatus;
+  context: ThinkingTimelineContext;
+}) {
+  const contextIconByType: Record<
+    ThinkingTimelineContext,
+    typeof DocumentTextIcon
+  > = {
+    read: DocumentTextIcon,
+    search: MagnifyingGlassIcon,
+    run: CommandLineIcon,
+    edit: CodeBracketIcon,
+    test: BeakerIcon,
+    tool: WrenchScrewdriverIcon,
+    plan: SparklesIcon,
+  };
 
-  if (status === "active") {
-    return <ArrowPathIcon className="h-3.5 w-3.5 animate-spin text-blue-300" />;
-  }
+  const ContextIcon = contextIconByType[context];
 
-  return <ClockIcon className="h-3.5 w-3.5 text-zinc-400" />;
+  const statusContainerClass =
+    status === "complete"
+      ? "border-emerald-500/40 bg-emerald-500/10"
+      : status === "active"
+        ? "border-blue-400/50 bg-blue-500/10"
+        : "border-command-border/60 bg-vsc-input-background/30";
+
+  const statusBadgeClass =
+    status === "complete"
+      ? "bg-emerald-400"
+      : status === "active"
+        ? "bg-blue-300"
+        : "bg-zinc-500";
+
+  return (
+    <span
+      className={`relative flex h-5 w-5 items-center justify-center rounded-md border border-solid ${statusContainerClass}`}
+    >
+      <ContextIcon
+        className={`h-3 w-3 ${status === "active" ? "animate-pulse" : ""}`}
+      />
+      <span
+        className={`border-vsc-editor-background absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-solid ${statusBadgeClass}`}
+      />
+    </span>
+  );
 }
 
 interface ThinkingBlockPeekProps {
@@ -200,15 +301,6 @@ function ThinkingBlockPeek({
     [timelineItems, inProgress],
   );
 
-  const completedCount = timelineItems.filter(
-    (item) => item.status === "complete",
-  ).length;
-  const progressPercent = Math.round(
-    (completedCount / Math.max(timelineItems.length, 1)) * 100,
-  );
-  const latestSignal =
-    timelineItems[timelineItems.length - 1]?.title ?? "Thinking";
-
   // Auto-open while streaming, collapse when done (like Copilot)
   useEffect(() => {
     if (inProgress) {
@@ -250,31 +342,27 @@ function ThinkingBlockPeek({
         ? `Thought for ${elapsedTime}${tokens ? ` · ${tokens} tokens` : ""}`
         : `Thinking${tokens ? ` · ${tokens} tokens` : ""}`;
 
-  const visibilityLabel = inProgress
-    ? `Live updates · ${timelineItems.length} events`
-    : `${timelineItems.length} events captured`;
+  const statusLine = inProgress
+    ? `${label} · ${timelineItems.length} events`
+    : label;
 
   return (
     <div className="thread-message">
       <div className="mt-1 px-4">
-        <div
-          className="border-command-border bg-vsc-editor-background/40 overflow-hidden rounded-lg border border-solid"
-          data-testid="thinking-block-peek"
-        >
+        <div className="overflow-hidden" data-testid="thinking-block-peek">
           {/* Header row */}
           <button
             type="button"
             aria-expanded={open}
             aria-controls={`thinking-block-content-${index}`}
             onClick={() => setOpen((p) => !p)}
-            className="text-description hover:bg-vsc-input-background/60 flex w-full items-center gap-2 border-none bg-transparent px-3 py-2 text-left text-xs transition-colors"
+            className="text-description hover:bg-vsc-input-background/40 flex w-full items-center gap-2 rounded-md border-none bg-transparent px-2 py-1.5 text-left text-xs transition-colors"
           >
             <SparklesIcon
               className={`h-3.5 w-3.5 flex-shrink-0 transition-opacity ${inProgress ? "animate-pulse opacity-70" : "opacity-50"}`}
             />
             <div className="min-w-0 flex-1">
-              <div className="text-description-muted mb-0.5 flex items-center gap-1 overflow-hidden text-[10px] uppercase tracking-wide">
-                <QueueListIcon className="h-3 w-3 flex-shrink-0" />
+              <div className="text-description-muted mb-0.5 flex items-center gap-1 overflow-hidden text-[10px]">
                 {breadcrumbs.map((crumb, crumbIndex) => (
                   <div
                     key={`${crumb}-${crumbIndex}`}
@@ -287,19 +375,13 @@ function ThinkingBlockPeek({
                   </div>
                 ))}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center">
                 <span className="font-medium">
-                  {label}
+                  {statusLine}
                   {inProgress && <AnimatedEllipsis />}
-                </span>
-                <span className="text-description-muted hidden md:inline">
-                  {visibilityLabel}
                 </span>
               </div>
             </div>
-            <span className="text-description-muted hidden text-[11px] sm:inline">
-              {inProgress ? "Live" : `${progressPercent}%`}
-            </span>
             {open ? (
               <ChevronUpIcon className="h-3.5 w-3.5 flex-shrink-0" />
             ) : (
@@ -310,68 +392,64 @@ function ThinkingBlockPeek({
           {/* Collapsible body */}
           <div
             id={`thinking-block-content-${index}`}
-            className={`border-command-border transition-all duration-200 ease-in-out ${
+            className={`transition-all duration-200 ease-in-out ${
               open
-                ? "max-h-[40vh] opacity-100"
+                ? "max-h-[36vh] opacity-100"
                 : "max-h-0 overflow-hidden opacity-0"
             }`}
           >
             <div
-              className="border-command-border thin-scrollbar max-h-[40vh] overflow-y-auto border-t border-solid px-3 py-2.5"
+              className="thin-scrollbar max-h-[36vh] overflow-y-auto pb-1 pl-6 pr-1 pt-1"
               ref={scrollRef}
             >
-              <div className="border-command-border/70 bg-vsc-input-background/30 mb-3 rounded-md border border-solid px-2.5 py-2">
-                <div className="mb-1.5 flex items-center justify-between">
-                  <span className="text-description text-[11px] font-semibold">
-                    Reasoning Timeline
-                  </span>
-                  <span className="text-description-muted text-[11px]">
-                    {inProgress
-                      ? "Updating now"
-                      : `Completed · ${progressPercent}%`}
-                  </span>
-                </div>
-                <ol className="m-0 list-none space-y-1 p-0">
-                  {timelineItems.map((item, itemIndex) => (
-                    <li key={item.id} className="relative flex gap-2 pl-0.5">
-                      {itemIndex < timelineItems.length - 1 && (
-                        <span className="border-command-border absolute left-[7px] top-4 h-[calc(100%-8px)] border-l border-solid opacity-70" />
-                      )}
-                      <span className="mt-0.5 flex-shrink-0">
-                        <TimelineStatusIcon status={item.status} />
-                      </span>
-                      <div className="min-w-0 pb-1.5">
-                        <p className="text-description m-0 text-xs font-medium">
-                          {item.title}
-                        </p>
-                        {item.detail && (
-                          <p className="text-description-muted m-0 mt-0.5 text-[11px]">
-                            {item.detail}
-                          </p>
+              <ol className="m-0 list-none space-y-1.5 p-0">
+                {timelineItems.map((item, itemIndex) => (
+                  <li key={item.id} className="relative flex gap-2 pl-0.5">
+                    {itemIndex < timelineItems.length - 1 && (
+                      <span className="border-command-border/60 absolute left-[10px] top-5 h-[calc(100%-10px)] border-l border-solid" />
+                    )}
+                    <span className="mt-0.5 flex-shrink-0">
+                      <TimelineStepIcon
+                        status={item.status}
+                        context={item.context}
+                      />
+                    </span>
+                    <div className="min-w-0 pb-1.5">
+                      <p className="text-description m-0 flex items-center gap-1 text-xs font-medium">
+                        {item.title}
+                        {item.status === "active" && (
+                          <ArrowPathIcon className="h-3 w-3 animate-spin text-blue-300" />
                         )}
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-                <p className="text-description-muted border-command-border m-0 mt-1 border-0 border-t border-solid pt-1.5 text-[11px]">
-                  {inProgress
-                    ? `Latest signal: ${latestSignal}`
-                    : `Reasoning finished in ${elapsedTime || "0.0s"}.`}
-                </p>
-              </div>
-
+                        {item.status === "complete" && (
+                          <CheckCircleIcon className="h-3 w-3 text-emerald-400" />
+                        )}
+                        {item.status === "queued" && (
+                          <ClockIcon className="h-3 w-3 text-zinc-400" />
+                        )}
+                      </p>
+                      {item.detail && (
+                        <p className="text-description-muted m-0 mt-0.5 text-[11px] leading-4">
+                          {item.detail}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ol>
               {redactedThinking ? (
-                <p className="text-description m-0 text-xs italic">
+                <p className="text-description m-0 mt-2 text-xs italic">
                   Thinking content redacted due to safety reasons.
                 </p>
               ) : (
-                <MarkdownWrapper>
-                  <StyledMarkdownPreview
-                    isRenderingInStepContainer
-                    source={content}
-                    itemIndex={index}
-                  />
-                </MarkdownWrapper>
+                <div className="border-command-border/40 mt-2 border-0 border-l border-solid pl-3">
+                  <MarkdownWrapper>
+                    <StyledMarkdownPreview
+                      isRenderingInStepContainer
+                      source={content}
+                      itemIndex={index}
+                    />
+                  </MarkdownWrapper>
+                </div>
               )}
             </div>
           </div>

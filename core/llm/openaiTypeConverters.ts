@@ -106,6 +106,65 @@ function appendReasoningFieldsIfSupported(
   }
 }
 
+function normalizeToolArgumentsForOpenAI(argumentsValue: unknown): string {
+  if (typeof argumentsValue === "string") {
+    const trimmed = argumentsValue.trim();
+    if (trimmed.length === 0) {
+      return "{}";
+    }
+
+    try {
+      JSON.parse(trimmed);
+      return trimmed;
+    } catch {
+      // Some model/tool pipelines can emit JS-like object literals instead of JSON.
+      // Fallback to an empty object to avoid hard request failures in strict servers.
+      return "{}";
+    }
+  }
+
+  if (argumentsValue && typeof argumentsValue === "object") {
+    try {
+      return JSON.stringify(argumentsValue);
+    } catch {
+      return "{}";
+    }
+  }
+
+  return "{}";
+}
+
+function sanitizeAssistantToolCallsForOpenAI(
+  toolCalls: AssistantChatMessage["toolCalls"],
+): NonNullable<ChatCompletionAssistantMessageParam["tool_calls"]> {
+  const sanitized: NonNullable<
+    ChatCompletionAssistantMessageParam["tool_calls"]
+  > = [];
+
+  for (let index = 0; index < (toolCalls?.length ?? 0); index++) {
+    const toolCall = toolCalls?.[index];
+    const toolName = toolCall?.function?.name?.trim();
+    if (!toolName) {
+      continue;
+    }
+
+    const toolId = toolCall?.id?.trim() || `call_${index}`;
+
+    sanitized.push({
+      id: toolId,
+      type: "function",
+      function: {
+        name: toolName,
+        arguments: normalizeToolArgumentsForOpenAI(
+          toolCall?.function?.arguments,
+        ),
+      },
+    });
+  }
+
+  return sanitized;
+}
+
 export function toChatMessage(
   message: ChatMessage,
   options: CompletionOptions,
@@ -155,14 +214,12 @@ export function toChatMessage(
 
     // Add tool calls if present
     if (message.toolCalls) {
-      msg.tool_calls = message.toolCalls.map((toolCall) => ({
-        id: toolCall.id!,
-        type: toolCall.type!,
-        function: {
-          name: toolCall.function?.name!,
-          arguments: toolCall.function?.arguments || "{}",
-        },
-      }));
+      const sanitizedToolCalls = sanitizeAssistantToolCallsForOpenAI(
+        message.toolCalls,
+      );
+      if (sanitizedToolCalls.length > 0) {
+        msg.tool_calls = sanitizedToolCalls;
+      }
     }
 
     // Preserving reasoning blocks
