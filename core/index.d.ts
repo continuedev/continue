@@ -798,7 +798,7 @@ export interface Thread {
   id: number;
 }
 
-export type IdeType = "vscode" | "jetbrains";
+export type IdeType = "vscode" | "jetbrains" | "cli";
 
 export interface IdeInfo {
   ideType: IdeType;

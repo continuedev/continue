@@ -22,34 +22,40 @@ import { ALL_BUILT_IN_TOOLS } from "./allBuiltIns.js";
 import { askQuestionTool } from "./askQuestion.js";
 import { checkBackgroundJobTool } from "./checkBackgroundJob.js";
 import { configTool } from "./configTool.js";
+import {
+  coreFileGlobSearchTool,
+  coreGithubTool,
+  coreLsTool,
+  coreReadFileTool,
+  coreSearchWebTool,
+  coreSendMessageTool,
+  coreSleepTool,
+  coreTaskCreateTool,
+  coreTaskGetTool,
+  coreTaskListTool,
+  coreTaskOutputTool,
+  coreTaskStopTool,
+  coreTaskUpdateTool,
+  coreTodoWriteTool,
+  coreViewDiffTool,
+} from "./coreToolBridge.js";
 import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { gitTool } from "./git.js";
 import { grepTool } from "./grep.js";
-import { listFilesTool } from "./listFiles.js";
-import { githubTool } from "./github.js";
 import { listMcpResourcesTool } from "./listMcpResources.js";
 import { mcpAuthTool } from "./mcpAuth.js";
 import { multiEditTool } from "./multiEdit.js";
-import { readFileTool } from "./readFile.js";
 import { readMcpResourceTool } from "./readMcpResource.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
-import { sendMessageTool } from "./sendMessage.js";
 import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
 import { skillsTool } from "./skills.js";
 import { subagentTool } from "./subagent.js";
-import { taskCreateTool } from "./taskCreate.js";
-import { taskGetTool } from "./taskGet.js";
-import { taskListTool } from "./taskList.js";
-import { taskOutputTool } from "./taskOutput.js";
-import { taskStopTool } from "./taskStop.js";
-import { taskUpdateTool } from "./taskUpdate.js";
 import { teamCreateTool } from "./teamCreate.js";
 import { teamDeleteTool } from "./teamDelete.js";
 import { teamStatusTool } from "./teamStatus.js";
-import { todoWriteTool } from "./todoWrite.js";
 import {
   isBetaSubagentToolEnabled,
   isBetaUploadArtifactToolEnabled,
@@ -63,10 +69,7 @@ import {
   ParameterSchema,
   PreprocessedToolCall,
 } from "./types.js";
-import { globTool } from "./glob.js";
-import { sleepTool } from "./sleep.js";
 import { uploadArtifactTool } from "./uploadArtifact.js";
-import { webSearchTool } from "./webSearch.js";
 import { writeChecklistTool } from "./writeChecklist.js";
 import { writeFileTool } from "./writeFile.js";
 
@@ -86,26 +89,29 @@ function getAgentIdFromArgs(): string | undefined {
 
 // Base tools that are always available
 const BASE_BUILTIN_TOOLS: Tool[] = [
-  readFileTool,
+  // ── Core-backed tools ──────────────────────────────────────────────────────
+  coreFileGlobSearchTool,
+  coreGithubTool,
+  coreLsTool,
+  coreReadFileTool,
+  coreSearchWebTool,
+  coreSendMessageTool,
+  coreSleepTool,
+  coreTaskCreateTool,
+  coreTaskGetTool,
+  coreTaskListTool,
+  coreTaskOutputTool,
+  coreTaskStopTool,
+  coreTaskUpdateTool,
+  coreTodoWriteTool,
+  coreViewDiffTool,
+  // ── CLI-specific tools ─────────────────────────────────────────────────────
   writeFileTool,
-  listFilesTool,
-  globTool,
   gitTool,
-  githubTool,
   grepTool,
   runTerminalCommandTool,
   fetchTool,
-  webSearchTool,
-  sleepTool,
-  sendMessageTool,
   toolSearchTool,
-  todoWriteTool,
-  taskCreateTool,
-  taskGetTool,
-  taskListTool,
-  taskOutputTool,
-  taskStopTool,
-  taskUpdateTool,
   teamCreateTool,
   teamDeleteTool,
   teamStatusTool,

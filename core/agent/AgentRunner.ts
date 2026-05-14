@@ -95,6 +95,15 @@ export type AgentRunConfig = {
   onEvent?: (event: AgentRunEvent) => void;
   /** Enable session memory extraction (background notes-file updates) */
   sessionMemory?: Partial<SessionMemoryConfig> | false;
+  /**
+   * Optional custom tool dispatcher. When provided, used instead of core's callTool.
+   * Allows host environments (e.g. CLI) to inject their own tool implementations.
+   */
+  dispatch?: (
+    tool: Tool,
+    toolCall: ToolCall,
+    extras: ToolExtras,
+  ) => Promise<{ errorMessage?: string; contextItems: ContextItem[] }>;
 };
 
 export type AgentRunResult = {
@@ -162,6 +171,7 @@ async function executeOneToolCall(
   tools: Tool[],
   extras: Omit<ToolExtras, "tool" | "toolCallId">,
   onEvent?: AgentRunConfig["onEvent"],
+  dispatch?: AgentRunConfig["dispatch"],
 ): Promise<{ message: ToolResultChatMessage; error?: string }> {
   const tool = resolveTool(tools, toolCall.function.name);
 
@@ -186,7 +196,9 @@ async function executeOneToolCall(
     toolCallId: toolCall.id,
   };
 
-  const result = await callTool(tool, toolCall, fullExtras);
+  const result = dispatch
+    ? await dispatch(tool, toolCall, fullExtras)
+    : await callTool(tool, toolCall, fullExtras);
 
   const outputText = result.errorMessage
     ? `Error: ${result.errorMessage}`
@@ -218,6 +230,7 @@ async function executeBatch(
   tools: Tool[],
   extras: Omit<ToolExtras, "tool" | "toolCallId">,
   onEvent?: AgentRunConfig["onEvent"],
+  dispatch?: AgentRunConfig["dispatch"],
 ): Promise<{ messages: ToolResultChatMessage[]; errors: string[] }> {
   const messages: ToolResultChatMessage[] = [];
   const errors: string[] = [];
@@ -227,7 +240,9 @@ async function executeBatch(
     for (let i = 0; i < batch.calls.length; i += MAX_CONCURRENT_TOOLS) {
       const chunk = batch.calls.slice(i, i + MAX_CONCURRENT_TOOLS);
       const results = await Promise.all(
-        chunk.map((call) => executeOneToolCall(call, tools, extras, onEvent)),
+        chunk.map((call) =>
+          executeOneToolCall(call, tools, extras, onEvent, dispatch),
+        ),
       );
       for (const r of results) {
         messages.push(r.message);
@@ -237,7 +252,13 @@ async function executeBatch(
   } else {
     // Serial execution
     for (const call of batch.calls) {
-      const r = await executeOneToolCall(call, tools, extras, onEvent);
+      const r = await executeOneToolCall(
+        call,
+        tools,
+        extras,
+        onEvent,
+        dispatch,
+      );
       messages.push(r.message);
       if (r.error) errors.push(r.error);
     }
@@ -267,6 +288,7 @@ export async function runAgent(
     abortController = new AbortController(),
     onEvent,
     sessionMemory: sessionMemoryConfig,
+    dispatch,
   } = config;
 
   const sessionId = uuidv4();
@@ -431,6 +453,7 @@ export async function runAgent(
           tools,
           toolExtrasWithSession,
           onEvent,
+          dispatch,
         );
         toolResultMessages.push(...batchResult.messages);
         batchErrors = batchErrors.concat(batchResult.errors);

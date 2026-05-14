@@ -4,15 +4,26 @@
  * ToolPermissionService -> allBuiltIns -> runTerminalCommand -> services/index -> ToolPermissionService
  *
  * When adding a new built-in tool, update both this list and ALL_BUILT_IN_TOOLS in allBuiltIns.ts.
+ *
+ * Tools migrated to core (Phase 2+3) use snake_case names matching BuiltInToolNames:
+ *   - "file_glob_search" (was "Glob")
+ *   - "github" (was "GitHub")
+ *   - "ls" (was "List")
+ *   - "read_file" (was "Read")
+ *   - "search_web" (was "WebSearch")
+ *   - "send_message" (was "SendMessage")
+ *   - "sleep" (was "Sleep")
+ *   - "task_create/get/list/output/stop/update" (were "Task*")
+ *   - "todo_write" (was "TodoWrite")
+ *   - "view_diff" (was "Diff")
  */
 export const BUILT_IN_TOOL_NAMES = [
+  // CLI-specific tools (unchanged names)
   "AskQuestion",
   "Edit",
   "Exit",
   "Fetch",
-  "List",
   "MultiEdit",
-  "Read",
   "ReportFailure",
   "Bash",
   "Search",
@@ -20,7 +31,22 @@ export const BUILT_IN_TOOL_NAMES = [
   "Subagent",
   "Skills",
   "UploadArtifact",
-  "Diff",
   "Checklist",
   "Write",
+  // Core-backed tools (snake_case names from BuiltInToolNames)
+  "file_glob_search",
+  "github",
+  "ls",
+  "read_file",
+  "search_web",
+  "send_message",
+  "sleep",
+  "task_create",
+  "task_get",
+  "task_list",
+  "task_output",
+  "task_stop",
+  "task_update",
+  "todo_write",
+  "view_diff",
 ] as const;
