@@ -42,7 +42,6 @@ type ThinkingTimelineContext =
 export interface ThinkingTimelineItem {
   id: string;
   title: string;
-  detail?: string;
   status: ThinkingTimelineStatus;
   context: ThinkingTimelineContext;
 }
@@ -66,17 +65,6 @@ function normalizeSignalText(input: string): string {
     .replace(/\[(.*?)\]\((.*?)\)/g, "$1")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-function toTitleAndDetail(signal: string): { title: string; detail?: string } {
-  if (signal.length <= 58) {
-    return { title: signal };
-  }
-
-  return {
-    title: `${signal.slice(0, 55).trimEnd()}...`,
-    detail: signal,
-  };
 }
 
 export function extractThinkingSignals(content: string): string[] {
@@ -188,12 +176,10 @@ export function buildThinkingTimeline(
       }
     }
 
-    const { title, detail } = toTitleAndDetail(signal);
     const context = inferTimelineContext(signal);
     return {
       id: `timeline-${index}`,
-      title,
-      detail,
+      title: signal,
       status,
       context,
     };
@@ -415,23 +401,20 @@ function ThinkingBlockPeek({
                       />
                     </span>
                     <div className="min-w-0 pb-1.5">
-                      <p className="text-description m-0 flex items-center gap-1 text-xs font-medium">
-                        {item.title}
+                      <p className="text-description m-0 flex min-w-0 items-center gap-1 text-xs font-medium">
+                        <span className="truncate" title={item.title}>
+                          {item.title}
+                        </span>
                         {item.status === "active" && (
-                          <ArrowPathIcon className="h-3 w-3 animate-spin text-blue-300" />
+                          <ArrowPathIcon className="h-3 w-3 flex-shrink-0 animate-spin text-blue-300" />
                         )}
                         {item.status === "complete" && (
-                          <CheckCircleIcon className="h-3 w-3 text-emerald-400" />
+                          <CheckCircleIcon className="h-3 w-3 flex-shrink-0 text-emerald-400" />
                         )}
                         {item.status === "queued" && (
-                          <ClockIcon className="h-3 w-3 text-zinc-400" />
+                          <ClockIcon className="h-3 w-3 flex-shrink-0 text-zinc-400" />
                         )}
                       </p>
-                      {item.detail && (
-                        <p className="text-description-muted m-0 mt-0.5 text-[11px] leading-4">
-                          {item.detail}
-                        </p>
-                      )}
                     </div>
                   </li>
                 ))}
