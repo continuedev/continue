@@ -4,6 +4,35 @@ When `llm.streamComplete(prompt, signal, options)` is called, the prompt string 
 
 ---
 
+## When is `llm.streamComplete()` called?
+
+There are three call sites in the codebase:
+
+| Call site                                               | `raw`             | Trigger                                                                                                                                           |
+| ------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core/edit/recursiveStream.ts:43`                       | `true`            | Apply/edit when prompt is a string — i.e. a Handlebars `apply` or `edit` template is configured, or the string path is taken in `streamDiffLines` |
+| `core/autocomplete/generation/CompletionStreamer.ts:36` | `true`            | Autocomplete fallback when the model does not support FIM (`llm.supportsFim()` returns `false`)                                                   |
+| `core/commands/slash/built-in-legacy/cmd.ts:22`         | `false` (omitted) | Legacy `/cmd` slash command that generates a shell command                                                                                        |
+
+The `defaultApplyPrompt` (used when no custom `apply` template is configured) returns `ChatMessage[]`, so it goes through `llm.streamChat()` instead and never reaches `streamComplete()`.
+
+---
+
+## Effect of `raw` on prompt templating
+
+Before `_streamComplete()` is called, `streamComplete()` optionally applies `_templatePromptLikeMessages()`:
+
+```ts
+if (!raw) {
+  prompt = this._templatePromptLikeMessages(prompt);
+}
+```
+
+- **`raw: true`** — skips this step. The string reaches `_streamComplete()` unmodified.
+- **`raw: false`** — wraps the string in a single `user` message and applies `templateMessages` if set, formatting it for the model's chat template. Also prevents the legacy completions gate from firing in `OpenAI._streamChat` (see Pattern 2).
+
+---
+
 ## Pattern 1 — Always wraps in a user message → chat endpoint
 
 **Providers:** Anthropic, Gemini, VertexAI, Bedrock, HuggingFaceTGI, Cohere, Together, Replicate, and most others that extend `BaseLLM` directly.
@@ -39,12 +68,20 @@ if (
 
 If all conditions are true, `_legacystreamComplete()` is called, which sends the prompt as a raw string to `POST /v1/completions`. Otherwise the chat endpoint is used.
 
-In practice this legacy path is nearly unreachable for current models:
+### When the gate fires
 
-- All standard GPT model names start with `"gpt"` or `"o"` → `isChatOnlyModel()` returns `true` → gate never fires.
-- `options.raw` alone is not sufficient; the model must also pass the `isChatOnlyModel` check.
+The gate is controlled by `options.raw`. Since `recursiveStream` and `CompletionStreamer` both pass `raw: true`, the gate fires whenever:
 
-`supportsCompletions()` itself returns `false` for Groq, Mistral, DeepSeek, and OpenAI-compatible providers pointing at specific known API bases (Groq, Mistral, NVIDIA, Jan).
+- The model name does **not** start with `gpt` or `o` — meaning `isChatOnlyModel()` returns `false`
+- `supportsCompletions()` returns `true` — i.e. the provider is a generic OpenAI-compatible one not explicitly excluded
+
+**For OpenAI's own models** (`gpt-4o`, `o3`, etc.) this is indeed unreachable: `isChatOnlyModel()` returns `true` and the gate never fires regardless of `raw`.
+
+**For unknown models on OpenAI-compatible providers** (e.g. `qwen2.5-coder`, `gemma3`, any local model served via LM Studio, vLLM, or similar): the gate fires. The prompt reaches the model as a raw string via `POST /v1/completions`. This is problematic for instruction-tuned models that expect chat template tokens, and may fail entirely on inference servers that do not expose a completions endpoint.
+
+**For `cmd.ts`** (`raw: false`): `options.raw` is `false`, so the gate never fires regardless of model name. The chat endpoint is always used.
+
+`supportsCompletions()` itself returns `false` for Groq, Mistral, DeepSeek, and OpenAI-compatible providers pointing at specific known API bases (Groq, Mistral, NVIDIA, Jan), which prevents the gate from firing for those providers.
 
 ---
 
@@ -65,23 +102,27 @@ This is Ollama's non-chat endpoint, separate from its chat endpoint (`/api/chat`
 
 ## Summary
 
-| Provider                                | `streamComplete()` sends prompt as | HTTP endpoint                   |
-| --------------------------------------- | ---------------------------------- | ------------------------------- |
-| Anthropic, Gemini, Bedrock, most others | Single `user` message              | Provider's native chat endpoint |
-| OpenAI / Azure (standard GPT models)    | Single `user` message              | `POST /v1/chat/completions`     |
-| OpenAI / Azure (legacy non-chat models) | Raw string                         | `POST /v1/completions`          |
-| Ollama                                  | Raw string                         | `POST /api/generate`            |
+| Provider                                | `raw`   | `streamComplete()` sends prompt as | HTTP endpoint                        |
+| --------------------------------------- | ------- | ---------------------------------- | ------------------------------------ |
+| Anthropic, Gemini, Bedrock, most others | any     | Single `user` message              | Provider's native chat endpoint      |
+| OpenAI / Azure — `gpt-*` / `o-*` models | any     | Single `user` message              | `POST /v1/chat/completions`          |
+| OpenAI-compatible — unknown model name  | `true`  | Raw string                         | `POST /v1/completions` (problematic) |
+| OpenAI-compatible — unknown model name  | `false` | Single `user` message              | `POST /v1/chat/completions`          |
+| Ollama                                  | any     | Raw string                         | `POST /api/generate`                 |
 
 ---
 
 ## Key source locations
 
-| File                             | Relevance                                                                   |
-| -------------------------------- | --------------------------------------------------------------------------- |
-| `core/llm/llms/OpenAI.ts:423`    | `_streamComplete()` — wraps in user message, delegates to `_streamChat()`   |
-| `core/llm/llms/OpenAI.ts:515`    | `_streamChat()` — gate selecting chat vs legacy completions endpoint        |
-| `core/llm/llms/OpenAI.ts:488`    | `_legacystreamComplete()` — sends raw string to `POST /v1/completions`      |
-| `core/llm/index.ts:126`          | `supportsCompletions()` — which providers/bases support the legacy endpoint |
-| `core/llm/llms/Ollama.ts:417`    | `_streamComplete()` — sends raw string to `POST /api/generate`              |
-| `core/llm/llms/Anthropic.ts:254` | `_streamComplete()` — wraps in user message, no legacy path                 |
-| `core/llm/llms/Gemini.ts:82`     | `_streamComplete()` — wraps in user message, no legacy path                 |
+| File                                                    | Relevance                                                                   |
+| ------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `core/llm/llms/OpenAI.ts:423`                           | `_streamComplete()` — wraps in user message, delegates to `_streamChat()`   |
+| `core/llm/llms/OpenAI.ts:515`                           | `_streamChat()` — gate selecting chat vs legacy completions endpoint        |
+| `core/llm/llms/OpenAI.ts:488`                           | `_legacystreamComplete()` — sends raw string to `POST /v1/completions`      |
+| `core/llm/index.ts:126`                                 | `supportsCompletions()` — which providers/bases support the legacy endpoint |
+| `core/llm/llms/Ollama.ts:417`                           | `_streamComplete()` — sends raw string to `POST /api/generate`              |
+| `core/llm/llms/Anthropic.ts:254`                        | `_streamComplete()` — wraps in user message, no legacy path                 |
+| `core/llm/llms/Gemini.ts:82`                            | `_streamComplete()` — wraps in user message, no legacy path                 |
+| `core/edit/recursiveStream.ts:40`                       | calls `streamComplete` with `raw: true` (string prompt path)                |
+| `core/autocomplete/generation/CompletionStreamer.ts:36` | calls `streamComplete` with `raw: true` (non-FIM autocomplete fallback)     |
+| `core/commands/slash/built-in-legacy/cmd.ts:22`         | calls `streamComplete` without `raw` (defaults to `false`)                  |
