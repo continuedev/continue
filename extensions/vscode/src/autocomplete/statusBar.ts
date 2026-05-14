@@ -48,29 +48,29 @@ const statusBarItemText = (
   error?: boolean,
 ) => {
   if (error) {
-    return "$(alert) Continue (config error)";
+    return "$(alert) yutoagentic (config error)";
   }
 
   let text: string;
   switch (status) {
     case undefined:
       if (loading) {
-        text = "$(loading~spin) Continue";
+        text = "$(loading~spin) yutoagentic";
       } else {
-        text = "Continue";
+        text = "yutoagentic";
       }
       break;
     case StatusBarStatus.Disabled:
-      text = "$(circle-slash) Continue";
+      text = "$(circle-slash) yutoagentic";
       break;
     case StatusBarStatus.Enabled:
-      text = "$(check) Continue";
+      text = "$(check) yutoagentic";
       break;
     case StatusBarStatus.Paused:
-      text = "$(debug-pause) Continue";
+      text = "$(debug-pause) yutoagentic";
       break;
     default:
-      text = "Continue";
+      text = "yutoagentic";
   }
 
   // Append Next Edit indicator if enabled.
