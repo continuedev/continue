@@ -121,6 +121,7 @@ export function Chat() {
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
+  const [isSubmittingInput, setIsSubmittingInput] = useState(false);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -174,6 +175,12 @@ export function Chat() {
     isStreaming,
   );
 
+  useEffect(() => {
+    if (isStreaming || agentSessionId) {
+      setIsSubmittingInput(false);
+    }
+  }, [isStreaming, agentSessionId]);
+
   const sendInput = useCallback(
     (
       editorState: JSONContent,
@@ -189,12 +196,23 @@ export function Chat() {
       const selectedModelByRole =
         stateSnapshot.config.config.selectedModelByRole;
       const currentMode = stateSnapshot.session.mode;
+      const isMainInputSubmit = !!editorToClearOnSend;
+
+      const stopSubmittingIndicator = () => {
+        if (isMainInputSubmit) {
+          setIsSubmittingInput(false);
+        }
+      };
+
+      if (isMainInputSubmit) {
+        setIsSubmittingInput(true);
+      }
 
       // Handle Yuto agent mode: fire agent/run and show the AgentChatView
       if (currentMode === "agent" && !isCurrentlyInEdit) {
         const defaultContextProviders =
           stateSnapshot.config.config.experimental?.defaultContext ?? [];
-        const AGENT_SUBMIT_TIMEOUT_MS = 15_000;
+        const AGENT_SUBMIT_TIMEOUT_MS = 8_000;
 
         void (async () => {
           const fallbackToStandardStreaming = () => {
@@ -204,6 +222,7 @@ export function Chat() {
             if (editorToClearOnSend) {
               editorToClearOnSend.commands.clearContent();
             }
+            stopSubmittingIndicator();
           };
 
           const withTimeout = async <T,>(
@@ -270,6 +289,7 @@ export function Chat() {
               if (editorToClearOnSend) {
                 editorToClearOnSend.commands.clearContent();
               }
+              stopSubmittingIndicator();
             } else {
               if (res.status === "success") {
                 console.error(
@@ -332,11 +352,11 @@ export function Chat() {
             if (editorToClearOnSend) {
               editorToClearOnSend.commands.clearContent();
             }
-
-            setIsCreatingAgent(false);
           } catch (error) {
             console.error("Failed to create background agent:", error);
+          } finally {
             setIsCreatingAgent(false);
+            stopSubmittingIndicator();
           }
         })();
 
@@ -363,10 +383,12 @@ export function Chat() {
         : selectedModelByRole.chat;
 
       if (!model) {
+        stopSubmittingIndicator();
         return;
       }
 
       if (isCurrentlyInEdit && codeToEditSnapshot.length === 0) {
+        stopSubmittingIndicator();
         return;
       }
 
@@ -377,12 +399,14 @@ export function Chat() {
             codeToEdit: codeToEditSnapshot,
           }),
         );
+        stopSubmittingIndicator();
       } else {
         void dispatch(streamResponseThunk({ editorState, modifiers, index }));
 
         if (editorToClearOnSend) {
           editorToClearOnSend.commands.clearContent();
         }
+        stopSubmittingIndicator();
       }
 
       // Increment localstorage counter for popup
@@ -397,7 +421,13 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [dispatch, ideMessenger, reduxStore, setIsCreatingAgent],
+    [
+      dispatch,
+      ideMessenger,
+      reduxStore,
+      setIsCreatingAgent,
+      setIsSubmittingInput,
+    ],
   );
 
   useWebviewListener(
@@ -588,6 +618,7 @@ export function Chat() {
 
         <ContinueInputBox
           isMainInput
+          isSubmitting={isSubmittingInput}
           isLastUserInput={false}
           onEnter={(editorState, modifiers, editor) =>
             sendInput(editorState, modifiers, undefined, editor)

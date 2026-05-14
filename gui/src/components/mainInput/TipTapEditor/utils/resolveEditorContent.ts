@@ -146,63 +146,67 @@ async function gatherContextItems({
   let contextItems: ContextItemWithId[] = [];
 
   const isInAgentMode = getState().session.mode === "agent";
+  const fullInput = stripImages(parts);
 
-  // Process context item attributes
-  for (const item of deduplicatedInputs) {
-    const result = await ideMessenger.request("context/getContextItems", {
-      name: item.provider,
-      query: item.query ?? "",
-      fullInput: stripImages(parts),
-      selectedCode,
-      isInAgentMode,
-    });
-    if (result.status === "success") {
-      contextItems.push(...result.content);
-    }
-  }
-
-  // cmd+enter to use codebase
-  if (
+  const shouldFetchCodebase =
     modifiers.useCodebase &&
-    !deduplicatedInputs.some((item) => item.provider === "codebase")
-  ) {
-    const result = await ideMessenger.request("context/getContextItems", {
-      name: "codebase",
-      query: "",
-      fullInput: stripImages(parts),
-      selectedCode,
-      isInAgentMode,
-    });
+    !deduplicatedInputs.some((item) => item.provider === "codebase");
 
+  const shouldFetchCurrentFile =
+    !modifiers.noContext &&
+    !deduplicatedInputs.some((item) => item.provider === "currentFile");
+
+  const [contextRequestResults, codebaseResult, currentFileResponse] =
+    await Promise.all([
+      Promise.all(
+        deduplicatedInputs.map((item) =>
+          ideMessenger.request("context/getContextItems", {
+            name: item.provider,
+            query: item.query ?? "",
+            fullInput,
+            selectedCode,
+            isInAgentMode,
+          }),
+        ),
+      ),
+      shouldFetchCodebase
+        ? ideMessenger.request("context/getContextItems", {
+            name: "codebase",
+            query: "",
+            fullInput,
+            selectedCode,
+            isInAgentMode,
+          })
+        : Promise.resolve(undefined),
+      shouldFetchCurrentFile
+        ? ideMessenger.request("context/getContextItems", {
+            name: "currentFile",
+            query: "non-mention-usage",
+            fullInput: "",
+            selectedCode: [],
+            isInAgentMode,
+          })
+        : Promise.resolve(undefined),
+    ]);
+
+  contextRequestResults.forEach((result) => {
     if (result.status === "success") {
       contextItems.push(...result.content);
     }
+  });
+
+  if (codebaseResult?.status === "success") {
+    contextItems.push(...codebaseResult.content);
   }
 
-  // noContext modifier adds currently open file if it's not already present
-  if (
-    !modifiers.noContext &&
-    !deduplicatedInputs.some((item) => item.provider === "currentFile")
-  ) {
-    const currentFileResponse = await ideMessenger.request(
-      "context/getContextItems",
-      {
-        name: "currentFile",
-        query: "non-mention-usage",
-        fullInput: "",
-        selectedCode: [],
-        isInAgentMode,
-      },
-    );
-    if (currentFileResponse.status === "success") {
-      const currentFile = currentFileResponse.content[0];
-      if (currentFile?.uri?.value) {
-        currentFile.id = {
-          providerTitle: "file",
-          itemId: currentFile.uri.value,
-        };
-        contextItems.unshift(currentFile);
-      }
+  if (currentFileResponse?.status === "success") {
+    const currentFile = currentFileResponse.content[0];
+    if (currentFile?.uri?.value) {
+      currentFile.id = {
+        providerTitle: "file",
+        itemId: currentFile.uri.value,
+      };
+      contextItems.unshift(currentFile);
     }
   }
 

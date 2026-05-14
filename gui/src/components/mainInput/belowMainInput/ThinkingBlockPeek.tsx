@@ -67,10 +67,75 @@ function normalizeSignalText(input: string): string {
     .trim();
 }
 
+function normalizeDeduplicationKey(input: string): string {
+  return normalizeSignalText(input)
+    .toLowerCase()
+    .replace(/[.:;,!?]+$/, "");
+}
+
+export function dedupeRepeatedThinkingContent(content: string): string {
+  const dedupedLines: string[] = [];
+  const seenNarrativeKeys = new Set<string>();
+  const lines = content.split(/\r?\n/);
+  let inCodeFence = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    if (trimmed.startsWith("```")) {
+      inCodeFence = !inCodeFence;
+      dedupedLines.push(line);
+      continue;
+    }
+
+    if (inCodeFence) {
+      dedupedLines.push(line);
+      continue;
+    }
+
+    if (!trimmed) {
+      if (
+        dedupedLines.length > 0 &&
+        dedupedLines[dedupedLines.length - 1].trim() !== ""
+      ) {
+        dedupedLines.push("");
+      }
+      continue;
+    }
+
+    const normalizedKey = normalizeDeduplicationKey(trimmed);
+    const isStructuredLine =
+      /^[-*+]\s+/.test(trimmed) ||
+      /^\d+[.)]\s+/.test(trimmed) ||
+      /^#{1,6}\s+/.test(trimmed) ||
+      normalizedKey.length >= 24;
+
+    if (isStructuredLine && seenNarrativeKeys.has(normalizedKey)) {
+      continue;
+    }
+
+    if (isStructuredLine) {
+      seenNarrativeKeys.add(normalizedKey);
+    }
+
+    dedupedLines.push(line);
+  }
+
+  while (
+    dedupedLines.length > 0 &&
+    dedupedLines[dedupedLines.length - 1].trim() === ""
+  ) {
+    dedupedLines.pop();
+  }
+
+  return dedupedLines.join("\n").replace(/\n{3,}/g, "\n\n");
+}
+
 export function extractThinkingSignals(content: string): string[] {
+  const dedupedContent = dedupeRepeatedThinkingContent(content);
   const uniqueByLower = new Set<string>();
 
-  const fromLines = content
+  const fromLines = dedupedContent
     .split(/\r?\n/)
     .map(normalizeSignalText)
     .filter(
@@ -92,7 +157,7 @@ export function extractThinkingSignals(content: string): string[] {
     return fromLines.slice(0, MAX_TIMELINE_ITEMS);
   }
 
-  const fromSentences = (content.match(/[^.!?\n]+[.!?]?/g) ?? [])
+  const fromSentences = (dedupedContent.match(/[^.!?\n]+[.!?]?/g) ?? [])
     .map(normalizeSignalText)
     .filter((sentence) => sentence.length >= 12)
     .filter((sentence) => {
@@ -277,9 +342,14 @@ function ThinkingBlockPeek({
     redactedThinking &&
     prevItem.message.redactedThinking;
 
+  const renderedThinkingContent = useMemo(
+    () => dedupeRepeatedThinkingContent(content),
+    [content],
+  );
+
   const timelineItems = useMemo(
-    () => buildThinkingTimeline(content, inProgress),
-    [content, inProgress],
+    () => buildThinkingTimeline(renderedThinkingContent, inProgress),
+    [renderedThinkingContent, inProgress],
   );
 
   const breadcrumbs = useMemo(
@@ -428,7 +498,7 @@ function ThinkingBlockPeek({
                   <MarkdownWrapper>
                     <StyledMarkdownPreview
                       isRenderingInStepContainer
-                      source={content}
+                      source={renderedThinkingContent}
                       itemIndex={index}
                     />
                   </MarkdownWrapper>

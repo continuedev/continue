@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildThinkingTimeline,
+  dedupeRepeatedThinkingContent,
   extractThinkingSignals,
   inferTimelineContext,
 } from "./ThinkingBlockPeek";
@@ -83,6 +84,37 @@ describe("ThinkingBlockPeek timeline helpers", () => {
     );
     expect(inferTimelineContext("Evaluating options and constraints")).toBe(
       "plan",
+    );
+  });
+
+  it("deduplicates repeated planning blocks while preserving new details", () => {
+    const content = `
+The file is 456 lines. I need to extract helpers from it.
+- buildCompletionOptions - building LLM completion options with tools and reasoning
+- buildMessages - constructing system message and chat messages
+- collectTelemetryData - the devdata logging
+
+The file is 456 lines. I need to extract helpers from it.
+- buildCompletionOptions - building LLM completion options with tools and reasoning
+- buildMessages - constructing system message and chat messages
+- collectTelemetryData - the devdata logging
+- executeToolCallPipeline - the post-stream tool call handling (steps 1-4 at the end)
+`;
+
+    const deduped = dedupeRepeatedThinkingContent(content);
+
+    expect(
+      deduped.match(
+        /The file is 456 lines\. I need to extract helpers from it\./g,
+      ),
+    ).toHaveLength(1);
+    expect(
+      deduped.match(
+        /buildCompletionOptions - building LLM completion options/g,
+      ),
+    ).toHaveLength(1);
+    expect(deduped).toContain(
+      "executeToolCallPipeline - the post-stream tool call handling (steps 1-4 at the end)",
     );
   });
 });

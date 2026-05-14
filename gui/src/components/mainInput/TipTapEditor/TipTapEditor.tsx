@@ -37,6 +37,7 @@ export interface TipTapEditorProps {
   toolbarOptions?: ToolbarOptions;
   placeholder?: string;
   historyKey: string;
+  isSubmitting?: boolean;
 
   // TODO: This isn't actually used anywhere in this component, but it appears
   // to be pulled into some of our TipTap extensions.
@@ -57,7 +58,8 @@ function TipTapEditorInner(props: TipTapEditorProps) {
   const mode = useAppSelector((state) => state.session.mode);
   const historyLength = useAppSelector((store) => store.session.history.length);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
-  const isSendDisabled = isStreaming && mode !== "agent";
+  const isSendDisabled =
+    (isStreaming && mode !== "agent") || !!props.isSubmitting;
 
   const { editor, onEnter } = createEditorConfig({
     props,
@@ -332,6 +334,7 @@ const MemoInner = memo(
   TipTapEditorInner,
   (prev, next) =>
     prev.isMainInput === next.isMainInput &&
+    prev.isSubmitting === next.isSubmitting &&
     prev.placeholder === next.placeholder &&
     prev.historyKey === next.historyKey &&
     prev.inputId === next.inputId &&

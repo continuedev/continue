@@ -19,6 +19,7 @@ import { TipTapEditor } from "./TipTapEditor";
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
   isMainInput?: boolean;
+  isSubmitting?: boolean;
   onEnter: (
     editorState: JSONContent,
     modifiers: InputModifiers,
@@ -101,11 +102,26 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           editModeState.applyState.status === "done" ? "Retry" : "Edit",
       } as ToolbarOptions;
     }
+
+    if (props.isMainInput && props.isSubmitting) {
+      return {
+        enterText: "Sending...",
+      } as ToolbarOptions;
+    }
+
     // Stable empty object to avoid re-renders from identity changes
     return {} as ToolbarOptions;
-  }, [isInEdit, editModeState.applyState.status]);
+  }, [
+    isInEdit,
+    editModeState.applyState.status,
+    props.isMainInput,
+    props.isSubmitting,
+  ]);
 
   const { appliedRules = [], contextItems = [] } = props;
+  const showSubmittingState =
+    (isStreaming && (props.isLastUserInput || isInEdit)) ||
+    (!!props.isSubmitting && !!props.isMainInput);
 
   return (
     <div
@@ -115,12 +131,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
       <div className={`relative flex flex-col px-2`}>
         {props.isMainInput && <Lump />}
         <GradientBorder
-          loading={isStreaming && (props.isLastUserInput || isInEdit) ? 1 : 0}
-          borderColor={
-            isStreaming && (props.isLastUserInput || isInEdit)
-              ? undefined
-              : vscBackground
-          }
+          loading={showSubmittingState ? 1 : 0}
+          borderColor={showSubmittingState ? undefined : vscBackground}
           borderRadius={defaultBorderRadius}
         >
           <TipTapEditor
@@ -132,6 +144,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
             availableSlashCommands={filteredSlashCommands}
             historyKey={historyKey}
             toolbarOptions={toolbarOptions}
+            isSubmitting={props.isSubmitting}
             inputId={props.inputId}
           />
         </GradientBorder>
