@@ -119,11 +119,21 @@ export class ConfigService
     const allModels = [...models];
     if (agentFileState?.agentFile?.model) {
       allModels.push(agentFileState.agentFile.model);
+      logger.debug(
+        `ConfigService: Added model from agent file: ${agentFileState.agentFile.model}`,
+      );
+    }
+
+    if (models.length > 0) {
+      logger.debug(
+        `ConfigService: Processing ${models.length} models from CLI options`,
+      );
     }
 
     for (const model of allModels) {
       try {
         packageIdentifiers.push(decodePackageIdentifier(model));
+        logger.debug(`ConfigService: Decoded model identifier: ${model}`);
       } catch (e) {
         logger.warn(`Failed to add model "${model}": ${getErrorString(e)}`);
       }
@@ -141,14 +151,27 @@ export class ConfigService
       ...(agentFileState?.parsedTools?.mcpServers || []),
     ];
 
+    if (mcps.length > 0) {
+      logger.debug(
+        `ConfigService: Processing ${mcps.length} MCP servers from CLI options`,
+      );
+    }
+    if (agentFileState?.parsedTools?.mcpServers?.length) {
+      logger.debug(
+        `ConfigService: Found ${agentFileState.parsedTools.mcpServers.length} MCP servers in agent file`,
+      );
+    }
+
     for (const mcp of allMcps) {
       try {
         if (this.isUrl(mcp)) {
+          logger.debug(`ConfigService: Adding MCP server from URL: ${mcp}`);
           additional.mcpServers!.push({
             name: new URL(mcp).hostname,
             url: mcp,
           });
         } else {
+          logger.debug(`ConfigService: Decoding MCP server identifier: ${mcp}`);
           packageIdentifiers.push(decodePackageIdentifier(mcp));
         }
       } catch (e) {
@@ -161,8 +184,14 @@ export class ConfigService
     agentFileState: AgentFileServiceState | undefined,
     packageIdentifiers: PackageIdentifier[],
   ): void {
+    if (agentFileState?.parsedRules?.length) {
+      logger.debug(
+        `ConfigService: Processing ${agentFileState.parsedRules.length} rules from agent file`,
+      );
+    }
     for (const rule of agentFileState?.parsedRules || []) {
       try {
+        logger.debug(`ConfigService: Decoding agent rule identifier: ${rule}`);
         packageIdentifiers.push(decodePackageIdentifier(rule));
       } catch (e) {
         logger.warn(
@@ -180,11 +209,26 @@ export class ConfigService
   ): void {
     const allRulesAndPrompts = [...rules, ...prompts];
 
+    if (rules.length > 0) {
+      logger.debug(
+        `ConfigService: Processing ${rules.length} rules from CLI options`,
+      );
+    }
+    if (prompts.length > 0) {
+      logger.debug(
+        `ConfigService: Processing ${prompts.length} prompts from CLI options`,
+      );
+    }
+
     for (const item of allRulesAndPrompts) {
       try {
         if (isStringRule(item)) {
+          logger.debug(`ConfigService: Adding string-based rule or prompt`);
           additional.rules!.push(item);
         } else {
+          logger.debug(
+            `ConfigService: Decoding rule or prompt identifier: ${item}`,
+          );
           packageIdentifiers.push(decodePackageIdentifier(item));
         }
       } catch (e) {
@@ -200,6 +244,9 @@ export class ConfigService
     additional: AssistantUnrolled,
   ): void {
     if (agentFileState?.agentFile?.prompt) {
+      logger.debug(
+        `ConfigService: Adding custom prompt from agent file: ${agentFileState.agentFile.name}`,
+      );
       additional.prompts!.push({
         name: `Agent prompt (${agentFileState.agentFile.name})`,
         prompt: agentFileState.agentFile.prompt,
@@ -222,6 +269,9 @@ export class ConfigService
       (m) => !!m && (!m.roles || m.roles.includes("chat")),
     );
     if (!hasChatModel) {
+      logger.debug(
+        "ConfigService: No chat model found in configuration, attempting to add default model",
+      );
       try {
         const modelConfig = await unrollPackageIdentifiersAsConfigYaml(
           [DEFAULT_MODEL_IDENTIFIER],
@@ -234,6 +284,9 @@ export class ConfigService
           throw new Error("Loaded default model contained no model block");
         }
         config.models = [...(config.models || []), defaultModel];
+        logger.debug(
+          `ConfigService: Successfully added default chat model: ${defaultModel.name || "unnamed"}`,
+        );
       } catch (e) {
         if (isHeadless) {
           throw new Error(
@@ -246,6 +299,10 @@ export class ConfigService
           );
         }
       }
+    } else {
+      logger.debug(
+        "ConfigService: Chat model already present in configuration",
+      );
     }
     return config;
   }
@@ -260,10 +317,21 @@ export class ConfigService
       injectedConfigOptions,
       agentFileState,
     } = init;
+
+    logger.debug(
+      `ConfigService: Starting load process for path: ${configPath || "default"}`,
+    );
+
     const { injected, additional } = this.getAdditionalBlocksFromOptions(
       injectedConfigOptions,
       agentFileState,
     );
+
+    if (injected.length > 0) {
+      logger.debug(
+        `ConfigService: Processing ${injected.length} injected package identifiers from CLI options`,
+      );
+    }
 
     const result = await loadConfiguration(
       authConfig,
@@ -274,10 +342,20 @@ export class ConfigService
     );
 
     const loadedConfig = result.config;
+    logger.debug(
+      `ConfigService: Successfully loaded base configuration "${loadedConfig.name || "unnamed"}" from ${result.source.type}`,
+    );
+
     const merged = mergeUnrolledAssistants(loadedConfig, additional);
+    logger.debug(
+      "ConfigService: Merged additional blocks from CLI options into configuration",
+    );
 
     const markdownRules = loadMarkdownRulesWithMetadata();
     if (markdownRules.length > 0) {
+      logger.debug(
+        `ConfigService: Found ${markdownRules.length} local markdown rules to inject`,
+      );
       const existingRuleContents = new Set(
         (merged.rules ?? []).map((r) => (typeof r === "string" ? r : r?.rule)),
       );
@@ -285,6 +363,9 @@ export class ConfigService
         (r) => !existingRuleContents.has(r.rule),
       );
       merged.rules = [...(merged.rules ?? []), ...newRules];
+      logger.debug(
+        `ConfigService: Injected ${newRules.length} new markdown rules after de-duplication`,
+      );
     }
 
     const withModel = await this.addDefaultChatModelIfNone(
@@ -295,7 +376,7 @@ export class ConfigService
     );
 
     // Config URI persistence is now handled by the streamlined loader
-    logger.debug("ConfigService initialized successfully");
+    logger.debug("ConfigService: Final configuration processed and ready");
 
     const state = {
       config: withModel,
@@ -312,8 +393,7 @@ export class ConfigService
   async doInitialize(init: ConfigServiceInit): Promise<ConfigServiceState> {
     const result = await this.loadConfig(init);
 
-    // Config URI persistence is now handled by the streamlined loader
-    logger.debug("ConfigService initialized successfully");
+    logger.debug("ConfigService: Initialized successfully");
 
     return result;
   }
@@ -322,20 +402,20 @@ export class ConfigService
    * Switch to a new configuration
    */
   async switchConfig(init: ConfigServiceInit): Promise<ConfigServiceState> {
-    logger.debug("Switching configuration", {
+    logger.debug("ConfigService: Switching configuration", {
       from: this.currentState.configPath,
       to: init.configPath,
     });
 
     try {
       const state = await this.loadConfig(init);
-      logger.debug("Configuration switched successfully", {
+      logger.debug("ConfigService: Configuration switched successfully", {
         newConfigPath: init.configPath,
       });
 
       return state;
     } catch (error: any) {
-      logger.error("Failed to switch configuration:", error);
+      logger.error("ConfigService: Failed to switch configuration:", error);
       this.emit("error", error);
       throw error;
     }
@@ -351,7 +431,7 @@ export class ConfigService
       throw new Error("No configuration path available for reload");
     }
 
-    logger.debug("Reloading current configuration");
+    logger.debug("ConfigService: Reloading current configuration");
 
     return this.switchConfig({
       ...init,
@@ -364,7 +444,7 @@ export class ConfigService
    * This triggers automatic dependent service reloads via the reactive system
    */
   async updateConfigPath(newConfigPath: string | undefined): Promise<void> {
-    logger.debug("Updating config path", {
+    logger.debug("ConfigService: Updating config path", {
       from: this.currentState.configPath,
       to: newConfigPath,
     });
@@ -402,12 +482,15 @@ export class ConfigService
       await serviceContainer.reload(SERVICE_NAMES.MODEL);
       await serviceContainer.reload(SERVICE_NAMES.MCP);
 
-      logger.debug("Configuration path updated successfully", {
+      logger.debug("ConfigService: Configuration path updated successfully", {
         newConfigPath,
         configName: result.config?.name,
       });
     } catch (error: any) {
-      logger.error("Failed to update configuration path:", error);
+      logger.error(
+        "ConfigService: Failed to update configuration path:",
+        error,
+      );
       this.emit("error", error);
       throw error;
     }

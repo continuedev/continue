@@ -2,11 +2,13 @@ import { PackageIdentifier } from "../interfaces/slugs.js";
 import {
   fillTemplateVariables,
   getTemplateVariables,
-  parseMarkdownRuleOrAssistantUnrolled,
+  parseMarkdownContentOrAssistantUnrolled,
   replaceInputsWithSecrets,
+  unrollBlocks,
 } from "./unroll.js";
+import { ConfigYaml } from "../schemas/index.js";
 
-describe("parseMarkdownRuleOrAssistantUnrolled tests", () => {
+describe("parseMarkdownContentOrAssistantUnrolled tests", () => {
   it("parses valid YAML content as AssistantUnrolled", () => {
     const mockId: PackageIdentifier = {
       uriType: "file",
@@ -21,7 +23,7 @@ models:
     model: modelname
     provider: ollama
 `;
-    const result = parseMarkdownRuleOrAssistantUnrolled(yamlContent, mockId);
+    const result = parseMarkdownContentOrAssistantUnrolled(yamlContent, mockId);
     expect(result).toHaveProperty("name", "Test Agent");
     expect(result).toHaveProperty("version", "1.0.0");
     expect(result.models?.length).toBe(1);
@@ -40,7 +42,7 @@ description: my rule description
 ---
 This is the rule 
 `;
-    const result = parseMarkdownRuleOrAssistantUnrolled(
+    const result = parseMarkdownContentOrAssistantUnrolled(
       markdownContent,
       mockId,
     );
@@ -71,17 +73,20 @@ model: # should be models
     provider: ollama
 `;
     expect(() =>
-      parseMarkdownRuleOrAssistantUnrolled(invalidContent, mockId),
+      parseMarkdownContentOrAssistantUnrolled(invalidContent, mockId),
     ).toThrow();
   });
 
-  it("Every non-YAML file is a rule", () => {
+  it("wraps non-YAML content in a 'rules' array by default when no section hint is provided", () => {
     const mockId: PackageIdentifier = {
       uriType: "file",
       fileUri: "file:///foo/bar",
     };
     const dubiousContent = `This is not \nproper #YAML#`;
-    const result = parseMarkdownRuleOrAssistantUnrolled(dubiousContent, mockId);
+    const result = parseMarkdownContentOrAssistantUnrolled(
+      dubiousContent,
+      mockId,
+    );
     expect(result).toHaveProperty("name");
     expect(result).toHaveProperty("version");
     expect(Array.isArray(result.rules)).toBe(true);
@@ -91,6 +96,27 @@ model: # should be models
     expect(rule).toHaveProperty("name", "foo/bar");
     expect(rule).toHaveProperty("globs", undefined);
     expect(rule).toHaveProperty("rule", dubiousContent);
+  });
+
+  it("wraps non-YAML content in a 'prompts' array when 'prompts' section hint is provided", () => {
+    const mockId: PackageIdentifier = {
+      uriType: "file",
+      fileUri: "file:///foo/bar",
+    };
+    const dubiousContent = `This is not \nproper #YAML#`;
+    const result = parseMarkdownContentOrAssistantUnrolled(
+      dubiousContent,
+      mockId,
+      "prompts",
+    );
+    expect(result).toHaveProperty("name");
+    expect(result).toHaveProperty("version");
+    expect(Array.isArray(result.prompts)).toBe(true);
+    expect(result.prompts).toBeDefined();
+    expect(result.prompts!.length).toBe(1);
+    const prompt = result.prompts![0];
+    expect(prompt).toHaveProperty("name", "foo/bar");
+    expect(prompt).toHaveProperty("prompt", dubiousContent);
   });
 });
 
@@ -274,6 +300,39 @@ data:
     expect(result).not.toContain("inputs.style");
     expect(result).not.toContain("inputs.dbHost");
     expect(result).not.toContain("inputs.dbPassword");
+  });
+  it("handles markdown files in prompts section correctly", async () => {
+    const registry = {
+      getContent: async () => `---
+name: Scotty
+---
+You are Lt. Commander Montgomery Scott (Scotty), a fictional character from the Star Trek franchise, renowned for his engineering skills and for his distinct scottish accent and speaking style.`,
+    };
+
+    const config: ConfigYaml = {
+      name: "Test Assistant",
+      version: "1.0.0",
+      prompts: [
+        {
+          uses: "file://prompts/scotty.md",
+        },
+      ],
+    };
+
+    const result = await unrollBlocks(
+      config,
+      registry as any,
+      undefined,
+      undefined,
+      undefined,
+    );
+
+    expect(result.config?.prompts).toBeDefined();
+    expect(result.config?.prompts?.length).toBe(1);
+    expect(result.config?.prompts?.[0]?.name).toBe("Scotty");
+    expect(result.config?.prompts?.[0]?.prompt).toBe(
+      "You are Lt. Commander Montgomery Scott (Scotty), a fictional character from the Star Trek franchise, renowned for his engineering skills and for his distinct scottish accent and speaking style.",
+    );
   });
 });
 

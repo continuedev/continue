@@ -79,6 +79,22 @@ if (isHeadlessMode) {
 }
 
 /**
+ * Enable console.debug to be routed to the winston logger
+ * This allows capturing debug logs from shared packages like config-yaml
+ */
+export function enableDebugLogging(winstonDebug: (msg: string) => void): void {
+  console.debug = function (message: any, ...optionalParams: any[]) {
+    const formattedMessage =
+      typeof message === "string" ? message : JSON.stringify(message, null, 2);
+    const extra =
+      optionalParams.length > 0
+        ? ` ${optionalParams.map((p) => (typeof p === "string" ? p : JSON.stringify(p))).join(" ")}`
+        : "";
+    winstonDebug(`${formattedMessage}${extra}`);
+  };
+}
+
+/**
  * Configure console for headless mode
  * Since init.ts already blocks everything, this just tracks state
  * and provides the safe output functions

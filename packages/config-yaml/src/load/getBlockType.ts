@@ -14,21 +14,27 @@ export type BlockType = (typeof BLOCK_TYPES)[number];
 export const blockTypeSchema = z.enum(BLOCK_TYPES);
 
 export function getBlockType(block: ConfigYaml): BlockType | undefined {
+  let type: BlockType | undefined;
   if (block.context?.length) {
-    return "context";
+    type = "context";
   } else if (block.models?.length) {
-    return "models";
+    type = "models";
   } else if (block.docs?.length) {
-    return "docs";
+    type = "docs";
   } else if (block.mcpServers?.length) {
-    return "mcpServers";
+    type = "mcpServers";
   } else if (block.data?.length) {
-    return "data";
+    type = "data";
   } else if (block.rules?.length) {
-    return "rules";
+    type = "rules";
   } else if (block.prompts?.length) {
-    return "prompts";
+    type = "prompts";
   } else {
-    return undefined;
+    type = undefined;
   }
+
+  console.debug(
+    `getBlockType: Categorized block "${block.name || "unnamed"}" as type: ${type || "none"}`,
+  );
+  return type;
 }

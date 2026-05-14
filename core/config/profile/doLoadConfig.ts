@@ -343,6 +343,11 @@ export default async function doLoadConfig(options: {
         fatal: false,
         message: `Duplicate (${count}) tools named "${toolName}" detected. Permissions will conflict and usage may be unpredictable`,
       });
+      console.warn(
+        `[Tool] Duplicate tool name found: ${toolName} (${count} times).`,
+      );
+    } else {
+      console.debug(`[Tool] Unique tool name found: ${toolName}.`);
     }
   });
 
@@ -363,6 +368,11 @@ export default async function doLoadConfig(options: {
         fatal: false,
         message: `Duplicate (${count}) rules named "${ruleName}" detected. This may cause unexpected behavior`,
       });
+      console.warn(
+        `[Rule] Duplicate rule name found: ${ruleName} (${count} times).`,
+      );
+    } else {
+      console.debug(`[Rule] Unique rule name found: ${ruleName}.`);
     }
   });
 
