@@ -1,7 +1,7 @@
 import socketIOClient, { Socket } from "socket.io-client";
 
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import { renderChatMessageWithoutThinking } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
 interface IFlowiseApiOptions {
@@ -121,7 +121,7 @@ class Flowise extends BaseLLM {
   ): AsyncGenerator<string> {
     const message: ChatMessage = { role: "user", content: prompt };
     for await (const chunk of this._streamChat([message], signal, options)) {
-      yield renderChatMessage(chunk);
+      yield renderChatMessageWithoutThinking(chunk);
     }
   }
 
