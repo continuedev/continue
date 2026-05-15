@@ -35,7 +35,10 @@ import { isAbortError } from "../util/isAbortError.js";
 import { isLemonadeInstalled } from "../util/lemonadeHelper.js";
 import { Logger } from "../util/Logger.js";
 import mergeJson from "../util/merge.js";
-import { renderChatMessage } from "../util/messageContent.js";
+import {
+  renderChatMessage,
+  renderChatMessageWithoutThinking,
+} from "../util/messageContent.js";
 import { isOllamaInstalled } from "../util/ollamaHelper.js";
 import { TokensBatchingService } from "../util/TokensBatchingService.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
@@ -964,7 +967,7 @@ export abstract class BaseLLM implements ILLM {
   ) {
     let completion = "";
     for await (const message of this.streamChat(messages, signal, options)) {
-      completion += renderChatMessage(message);
+      completion += renderChatMessageWithoutThinking(message);
     }
     return { role: "assistant" as const, content: completion };
   }

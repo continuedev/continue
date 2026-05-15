@@ -1,6 +1,6 @@
 import { streamSse } from "@continuedev/fetch";
 import { ChatMessage, CompletionOptions } from "../../index.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import { renderChatMessageWithoutThinking } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
 export default class Cloudflare extends BaseLLM {
@@ -59,7 +59,7 @@ export default class Cloudflare extends BaseLLM {
       signal,
       options,
     )) {
-      yield renderChatMessage(chunk);
+      yield renderChatMessageWithoutThinking(chunk);
     }
   }
 }
