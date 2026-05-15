@@ -1,6 +1,6 @@
 import { ChatMessage, SlashCommand } from "../../../index.js";
 import { removeQuotesAndEscapes } from "../../../util/index.js";
-import { renderChatMessage } from "../../../util/messageContent.js";
+import { renderChatMessageWithoutThinking } from "../../../util/messageContent.js";
 
 const PROMPT = (
   input: string,
@@ -49,7 +49,7 @@ const DraftIssueCommand: SlashCommand = {
       abortController.signal,
     )) {
       body += chunk.content;
-      yield renderChatMessage(chunk);
+      yield renderChatMessageWithoutThinking(chunk);
     }
 
     const url = `${params.repositoryUrl}/issues/new?title=${encodeURIComponent(
