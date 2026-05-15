@@ -28,6 +28,16 @@ Done. Extension is at extensions/vscode/build/continue-*.vsix
 
 The `.vsix` file is written into `extensions/vscode/build/` in your local directory.
 
+## Tests
+
+Tests run automatically as part of the build: core (Jest + Vitest), GUI (Vitest), VS Code extension (Vitest), and CLI (Vitest). A test failure stops the build before packaging.
+
+To skip tests for a quick package build:
+
+```bash
+docker run --rm -v "$(pwd)":/workspace -e SKIP_TESTS=1 continue-vscode-builder
+```
+
 ## Pre-release build
 
 ```bash
