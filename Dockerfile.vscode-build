@@ -67,7 +67,7 @@ echo '==> Installing and linking core...' && \
 \
 if [ \"${SKIP_TESTS:-}\" != '1' ]; then \
   echo '==> Running core Jest tests...' && \
-  (cd core && npm test) && \
+  (cd core && IGNORE_API_KEY_TESTS=true npm test) && \
   echo '==> Running core Vitest tests...' && \
   (cd core && npm run vitest); \
 fi && \
