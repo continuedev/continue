@@ -1,9 +1,9 @@
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { WrenchScrewdriverIcon } from "@heroicons/react/24/solid";
-import { useEffect, useRef, useState } from "react";
+import { Children, useEffect, useRef, useState } from "react";
 import { AnimatedEllipsis } from "../../components/AnimatedEllipsis";
 
-const AUTO_COLLAPSE_DELAY_MS = 3000;
+const AUTO_COLLAPSE_DELAY_MS = 15000;
 
 interface WorkingGroupBoxProps {
   isActive: boolean;
@@ -20,6 +20,7 @@ export function WorkingGroupBox({
   const [elapsedLabel, setElapsedLabel] = useState<string | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const collapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bodyScrollRef = useRef<HTMLDivElement>(null);
   const prevActive = useRef(isActive);
 
   useEffect(() => {
@@ -55,6 +56,23 @@ export function WorkingGroupBox({
     };
   }, [isActive]);
 
+  useEffect(() => {
+    if (!open || !bodyScrollRef.current) {
+      return;
+    }
+
+    const frameId = requestAnimationFrame(() => {
+      if (!bodyScrollRef.current) {
+        return;
+      }
+      bodyScrollRef.current.scrollTop = bodyScrollRef.current.scrollHeight;
+    });
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, [children, open]);
+
   const actionLabel = actionCount === 1 ? "1 action" : `${actionCount} actions`;
 
   const title = isActive
@@ -62,6 +80,7 @@ export function WorkingGroupBox({
     : elapsedLabel
       ? `Worked for ${elapsedLabel} · ${actionLabel}`
       : actionLabel;
+  const timelineItems = Children.toArray(children);
 
   return (
     <div
@@ -93,13 +112,38 @@ export function WorkingGroupBox({
 
       {/* Collapsible body */}
       <div
+        ref={bodyScrollRef}
         className={`transition-all duration-300 ease-in-out ${
           open
             ? "thin-scrollbar max-h-[45vh] overflow-y-auto opacity-80"
             : "max-h-0 overflow-hidden opacity-0"
         }`}
       >
-        <div className="pb-1">{children}</div>
+        <div className="pb-1">
+          {timelineItems.map((child, index) => {
+            const isLast = index === timelineItems.length - 1;
+
+            return (
+              <div
+                className="relative pb-1 pl-6 pr-1"
+                data-testid={`working-group-box-timeline-item-${index}`}
+                key={`working-group-box-timeline-item-${index}`}
+              >
+                {!isLast && (
+                  <span
+                    aria-hidden="true"
+                    className="border-border/60 pointer-events-none absolute bottom-[-4px] left-[9px] top-5 border-l"
+                  />
+                )}
+                <span
+                  aria-hidden="true"
+                  className="border-command-border bg-vsc-editor-background/90 pointer-events-none absolute left-1 top-3 h-2.5 w-2.5 rounded-full border border-solid"
+                />
+                {child}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
