@@ -80,7 +80,13 @@ export class ContinueGUIWebviewViewProvider
 
     const inDevelopmentMode =
       context?.extensionMode === vscode.ExtensionMode.Development;
-    if (inDevelopmentMode) {
+
+    // Check if we're in a Remote session (WSL, SSH, etc.)
+    const isRemoteSession = !!vscode.env.remoteName;
+
+    // In Remote sessions, always use compiled GUI even in development mode
+    // because the Vite dev server (localhost:5173) is not accessible
+    if (inDevelopmentMode && !isRemoteSession) {
       scriptUri = "http://localhost:5173/src/main.tsx";
       styleMainUri = "http://localhost:5173/src/index.css";
     } else {
@@ -141,7 +147,7 @@ export class ContinueGUIWebviewViewProvider
         <div id="root"></div>
 
         ${
-          inDevelopmentMode
+          inDevelopmentMode && !isRemoteSession
             ? `<script type="module">
           import RefreshRuntime from "http://localhost:5173/@react-refresh"
           RefreshRuntime.injectIntoGlobalHook(window)

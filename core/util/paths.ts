@@ -24,7 +24,30 @@ export function setConfigFilePermissions(filePath: string): void {
   }
 }
 
-const CONTINUE_GLOBAL_DIR = (() => {
+/**
+ * Detects if running in WSL
+ */
+function isRunningInWSL(): boolean {
+  return !!(
+    process.env.WSL_DISTRO_NAME ||
+    process.env.WSL_INTEROP ||
+    (process.platform === "linux" &&
+      fs.existsSync("/proc/version") &&
+      fs
+        .readFileSync("/proc/version", "utf8")
+        .toLowerCase()
+        .includes("microsoft"))
+  );
+}
+
+/**
+ * When running VSCode in Windows with Remote WSL extension,
+ * the config files might be on Windows. This function:
+ * 1. If in WSL, tries to access Windows home via /mnt/c/ first
+ * 2. Falls back to WSL home if Windows config not found
+ * 3. Respects CONTINUE_GLOBAL_DIR env var if set
+ */
+function getContinueGlobalDir(): string {
   const configPath = process.env.CONTINUE_GLOBAL_DIR;
   if (configPath) {
     // Convert relative path to absolute paths based on current working directory
@@ -32,8 +55,26 @@ const CONTINUE_GLOBAL_DIR = (() => {
       ? configPath
       : path.resolve(process.cwd(), configPath);
   }
+
+  const inWSL = isRunningInWSL();
+
+  if (inWSL) {
+    // Try to access Windows home via /mnt/c/ first
+    // This handles the case where VSCode runs on Windows with Remote WSL extension
+    const username = process.env.USERNAME;
+    if (username) {
+      const windowsConfigPath = `/mnt/c/Users/${username}/.continue`;
+      if (fs.existsSync(windowsConfigPath)) {
+        return windowsConfigPath;
+      }
+    }
+  }
+
+  // Fallback to standard home directory
   return path.join(os.homedir(), ".continue");
-})();
+}
+
+const CONTINUE_GLOBAL_DIR = getContinueGlobalDir();
 
 // export const DEFAULT_CONFIG_TS_CONTENTS = `import { Config } from "./types"\n\nexport function modifyConfig(config: Config): Config {
 //   return config;

@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "test": "echo 'No tests to run'",
+    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc"
   },
   "author": "Nate Sesti and Ty Dunn",

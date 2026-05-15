@@ -674,16 +674,14 @@ export class VsCodeMessenger {
 
     /** BOTH CORE AND WEBVIEW **/
     this.onWebviewOrCore("readRangeInFile", async (msg) => {
-      return await vscode.workspace
-        .openTextDocument(msg.data.filepath)
-        .then((document) => {
-          const start = new vscode.Position(0, 0);
-          const end = new vscode.Position(5, 0);
-          const range = new vscode.Range(start, end);
-
-          const contents = document.getText(range);
-          return contents;
-        });
+      const { filepath, range } = msg.data;
+      const document = await vscode.workspace.openTextDocument(filepath);
+      return document.getText(
+        new vscode.Range(
+          new vscode.Position(range.start.line, range.start.character),
+          new vscode.Position(range.end.line, range.end.character),
+        ),
+      );
     });
 
     this.onWebviewOrCore("getIdeSettings", async (msg) => {
@@ -721,6 +719,9 @@ export class VsCodeMessenger {
     });
     this.onWebviewOrCore("runCommand", async (msg) => {
       await ide.runCommand(msg.data.command);
+    });
+    this.onWebviewOrCore("runCommandWithOutput", async (msg) => {
+      return ide.runCommandWithOutput(msg.data.command, msg.data.cwd);
     });
     this.onWebviewOrCore("getSearchResults", async (msg) => {
       return ide.getSearchResults(msg.data.query, msg.data.maxResults);

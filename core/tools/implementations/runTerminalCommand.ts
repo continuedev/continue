@@ -553,16 +553,30 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
     }
   }
 
-  // For remote environments (SSH, WSL, Dev Container, Codespaces, etc.),
-  // delegate to VS Code's integrated terminal which handles remote execution.
-  // Note: output capture and waitForCompletion are not yet supported for remotes.
-  await extras.ide.runCommand(command);
+  // For remote environments, use shell integration for output capture
+  const workspaceDirs = await extras.ide.getWorkspaceDirs();
+  const cwd = workspaceDirs.length > 0 ? workspaceDirs[0] : undefined;
+
+  if (extras.onPartialOutput) {
+    extras.onPartialOutput({
+      toolCallId,
+      contextItems: [
+        {
+          name: "Terminal",
+          description: "Terminal command output",
+          content: "",
+          status: "Running command on remote...",
+        },
+      ],
+    });
+  }
+
+  const output = await extras.ide.runCommandWithOutput(command, cwd);
   return [
     {
       name: "Terminal",
       description: "Terminal command output",
-      content:
-        "Command executed in remote terminal. Output capture is not yet available for remote environments.",
+      content: output || "Command completed (no output captured)",
       status: "Command executed",
     },
   ];

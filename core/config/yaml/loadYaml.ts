@@ -13,6 +13,7 @@ import {
   validateConfigYaml,
 } from "@continuedev/config-yaml";
 import { dirname } from "node:path";
+import { defaultConfigYaml } from "./default";
 
 import {
   ContinueConfig,
@@ -146,6 +147,7 @@ async function loadConfigYaml(options: {
   }
 
   if (config) {
+    config = mergeUnrolledAssistants(defaultConfigYaml, config);
     errors.push(...validateConfigYaml(nonNullifyConfigYaml(config)));
   }
 

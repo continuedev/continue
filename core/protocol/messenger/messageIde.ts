@@ -188,6 +188,10 @@ export class MessageIde implements IDE {
     await this.request("runCommand", { command, options });
   }
 
+  async runCommandWithOutput(command: string, cwd?: string): Promise<string> {
+    return this.request("runCommandWithOutput", { command, cwd });
+  }
+
   async saveFile(fileUri: string): Promise<void> {
     await this.request("saveFile", { filepath: fileUri });
   }
