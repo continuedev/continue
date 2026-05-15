@@ -11,6 +11,22 @@ export function renderChatMessageWithoutThinking(message: ChatMessage): string {
 }
 ```
 
+## Fix coverage — three categories
+
+### Category 1 — Streaming chat, line-oriented output
+
+Callers use `llm.streamChat()` directly; output flows through `streamLines()` in `core/diff/util.ts`. Fixed once at `streamLines()`, covering all three Edit/Apply paths: `streamDiffLines` (main edit), `streamLazyApply` (large-file apply), and `lazy/replace` (fills in unchanged-code placeholders within lazy apply).
+
+### Category 2 — Streaming complete, provider uses Chat API internally
+
+Callers use `llm.streamComplete()`. The concrete providers' `_streamComplete()` implementations call the Chat API under the hood (most modern APIs are chat-only) and convert `ChatMessage` chunks to strings themselves. Fixed at each provider's `_streamComplete()` conversion point.
+
+### Category 3 — Non-streaming chat
+
+Callers use `llm.chat()`, which is just `streamChat()` buffered into a single `{ role: "assistant", content: string }` message. Fixed once at `BaseLLM.chat()` in `core/llm/index.ts`, covering all five utility callers: title generation, repo map summarisation, tool selection, next-edit prediction, and conversation compaction.
+
+---
+
 ## Call site changes
 
 | File                          | Method              | Path fixed                                                        |
