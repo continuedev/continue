@@ -7,7 +7,7 @@ import {
 } from "..";
 import { DEFAULT_MAX_TOKENS } from "../llm/constants";
 import { countTokens } from "../llm/countTokens";
-import { renderChatMessageWithoutThinking } from "../util/messageContent";
+import { renderChatMessage } from "../util/messageContent";
 import { APPLY_UNIQUE_TOKEN } from "./constants.js";
 
 const INFINITE_STREAM_SAFETY = 0.9;
@@ -85,7 +85,7 @@ export async function* recursiveStream(
 
     for await (const chunk of generator) {
       yield chunk;
-      const rendered = renderChatMessageWithoutThinking(chunk);
+      const rendered = renderChatMessage(chunk);
       buffer += rendered;
       totalTokens += countTokens(chunk.content);
 
