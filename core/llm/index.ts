@@ -460,9 +460,11 @@ export abstract class BaseLLM implements ILLM {
         );
       }
     }
-    return new Error(
+    const error = new Error(
       `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
-    );
+    ) as any;
+    error.response = resp;
+    return error;
   }
 
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -543,7 +545,7 @@ export abstract class BaseLLM implements ILLM {
     };
     return withExponentialBackoff<Response>(
       () => customFetch(url, init) as any,
-      5,
+      8,
       0.5,
     );
   }

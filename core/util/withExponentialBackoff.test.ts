@@ -6,7 +6,7 @@ import {
   RETRY_AFTER_HEADER,
 } from "./withExponentialBackoff";
 
-describe.skip("withExponentialBackoff", () => {
+describe("withExponentialBackoff", () => {
   it("should return result when apiCall succeeds on first attempt", async () => {
     // Arrange
     const apiCall = jest.fn().mockResolvedValue("Success");
@@ -112,7 +112,7 @@ describe.skip("withExponentialBackoff", () => {
     // Act & Assert
     await expect(
       withExponentialBackoff(apiCall, maxTries, initialDelaySeconds),
-    ).rejects.toThrow("Failed to make API call after max tries");
+    ).rejects.toThrow(`Failed to make API call after ${maxTries} retries`);
 
     expect(apiCall).toHaveBeenCalledTimes(maxTries);
   });
@@ -135,7 +135,7 @@ describe.skip("withExponentialBackoff", () => {
 
     await expect(
       withExponentialBackoff(apiCall, maxTries, initialDelaySeconds),
-    ).rejects.toThrow("Failed to make API call after max tries");
+    ).rejects.toThrow(`Failed to make API call after ${maxTries} retries`);
 
     expect(apiCall).toHaveBeenCalledTimes(0);
   });
