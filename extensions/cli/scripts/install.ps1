@@ -20,7 +20,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'  # Faster downloads
 
-$script:RequiredNodeVersion = [version]"20.20.1"
+$script:RequiredNodeVersion = [version]"22.22.3"
 $script:PackageName = "@continuedev/cli"
 $script:CliCommand = "cn"
 $script:FnmInstalled = $false
@@ -172,7 +172,7 @@ function Install-Fnm {
             if (Test-Path "$resolvedPath\fnm.exe") {
                 $env:PATH = "$resolvedPath;$env:PATH"
                 Write-Info "Found fnm at: $resolvedPath"
-                
+
                 # Persist fnm to user PATH if not already there
                 $userPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
                 if ($userPath -notlike "*$resolvedPath*") {
@@ -279,7 +279,7 @@ function Install-Cli {
             }
             npm config set prefix $userNpmDir
             $env:PATH = "$userNpmDir;$env:PATH"
-            
+
             # Persist npm global bin to user PATH
             $userPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
             if ($userPath -notlike "*$userNpmDir*") {

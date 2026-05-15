@@ -7,7 +7,8 @@ const fs = require("fs");
 const path = require("path");
 
 const ncp = require("ncp").ncp;
-const { rimrafSync } = require("rimraf");
+const rimrafSync = (dirPath) =>
+  fs.rmSync(dirPath, { recursive: true, force: true });
 
 const { execCmdSync } = require("../../../scripts/util");
 

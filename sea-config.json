@@ -1,0 +1,5 @@
+{
+  "main": "binary/out/index.js",
+  "output": "sea-prep.blob",
+  "disableSentinel": false
+}

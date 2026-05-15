@@ -95,6 +95,7 @@ describe("runTerminalCommandImpl", () => {
       getIdeInfo: mockGetIdeInfo,
       getWorkspaceDirs: mockGetWorkspaceDirs,
       runCommand: mockRunCommand,
+      runCommandWithOutput: vi.fn().mockResolvedValue(""),
       // Add stubs for other required IDE methods
       getIdeSettings: vi.fn(),
       getDiff: vi.fn(),
@@ -146,8 +147,8 @@ describe("runTerminalCommandImpl", () => {
     // This test uses Node to create a command that outputs data incrementally
     const command = `node -e "
       console.log('first output');
-      setTimeout(() => { 
-        console.log('second output'); 
+      setTimeout(() => {
+        console.log('second output');
         console.error('error output');
       }, 50);
     "`;
@@ -191,8 +192,8 @@ describe("runTerminalCommandImpl", () => {
       const fs = require('fs');
       console.log('starting background process with PID: ' + process.pid);
       fs.writeFileSync('${pidFile}', process.pid.toString());
-      setTimeout(() => { 
-        console.log('background process completed'); 
+      setTimeout(() => {
+        console.log('background process completed');
       }, 500);
     "`;
 
@@ -269,10 +270,10 @@ describe("runTerminalCommandImpl", () => {
 
     const result = await runTerminalCommandImpl(args, extras);
 
-    // In remote environments, it should use the IDE's runCommand
-    expect(mockRunCommand).toHaveBeenCalledWith("echo 'test'");
-    expect(result[0].content).toContain("Command executed in remote terminal");
-    expect(result[0].status).toBe("Command executed");
+    // In remote environments, it should use runCommandWithOutput
+    // and report completed (no double-execution via runCommand)
+    expect(mockRunCommand).not.toHaveBeenCalled();
+    expect(result[0].status).toBe("Command completed");
   });
 
   it("should handle errors when executing invalid commands", async () => {
@@ -367,6 +368,7 @@ describe("runTerminalCommandImpl", () => {
         .mockReturnValue(Promise.resolve({ remoteName: "local" })),
       getWorkspaceDirs: mockEmptyWorkspace,
       runCommand: vi.fn(),
+      runCommandWithOutput: vi.fn().mockResolvedValue(""),
       getIdeSettings: vi.fn(),
       getDiff: vi.fn(),
       getClipboardContent: vi.fn(),
@@ -427,6 +429,7 @@ describe("runTerminalCommandImpl", () => {
           .mockReturnValue(Promise.resolve({ remoteName: "local" })),
         getWorkspaceDirs: mockEmptyWorkspace,
         runCommand: vi.fn(),
+        runCommandWithOutput: vi.fn().mockResolvedValue(""),
         getIdeSettings: vi.fn(),
         getDiff: vi.fn(),
         getClipboardContent: vi.fn(),
@@ -615,10 +618,8 @@ describe("runTerminalCommandImpl", () => {
           extras,
         );
 
-        expect(mockRunCommand).toHaveBeenCalledWith("echo test");
-        expect(result[0].content).toContain(
-          "Command executed in remote terminal",
-        );
+        expect(mockRunCommand).not.toHaveBeenCalled();
+        expect(result[0].status).toBe("Command completed");
       });
 
       it("should handle local environment with file URIs", async () => {
@@ -641,10 +642,9 @@ describe("runTerminalCommandImpl", () => {
           extras,
         );
 
-        expect(mockRunCommand).toHaveBeenCalledWith("echo test");
-        expect(result[0].content).toContain(
-          "Command executed in remote terminal",
-        );
+        // Should use runCommandWithOutput, not try to spawn powershell.exe
+        expect(mockRunCommand).not.toHaveBeenCalled();
+        expect(result[0].status).toBe("Command completed");
       });
 
       it("should use ide.runCommand for dev-container environment", async () => {

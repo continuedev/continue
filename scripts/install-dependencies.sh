@@ -48,20 +48,43 @@ npm link @continuedev/core
 NODE_OPTIONS="--max-old-space-size=4096" npm run build
 popd
 
-# VSCode Extension (will also package GUI)
-echo "Installing VSCode extension dependencies..."
-pushd extensions/vscode
-# This does way too many things inline but is the common denominator between many of the scripts
-npm install
-npm link @continuedev/core
-# npm run prepackage # not required since npm run package has prescript of prepackage
-npm run package
-popd
-
-echo "Installing binary dependencies..."
+echo "Installing and compiling binary dependencies (Node SEA)..."
 pushd binary
 npm install
 npm run build
+popd
+
+## --- Ensure ripgrep folders before packaging
+echo "Ensure ripgrep folders before packaging..."
+mkdir -p extensions/vscode/node_modules/@vscode/ripgrep/bin
+mkdir -p extensions/vscode/out/node_modules/@vscode/ripgrep/bin
+
+if command -v rg &> /dev/null; then
+    cp $(which rg) extensions/vscode/node_modules/@vscode/ripgrep/bin/rg
+    cp $(which rg) extensions/vscode/out/node_modules/@vscode/ripgrep/bin/rg
+    chmod +x extensions/vscode/node_modules/@vscode/ripgrep/bin/rg
+    chmod +x extensions/vscode/out/node_modules/@vscode/ripgrep/bin/rg
+fi
+
+# VSCode Extension (will also package GUI)
+echo "Installing VSCode extension dependencies and packaging..."
+pushd extensions/vscode
+npm install
+npm link @continuedev/core
+
+# --- Ensure Ripgrep folders are preserved after NPM installation.
+echo "Ensure Ripgrep folders are preserved after NPM installation..."
+mkdir -p node_modules/@vscode/ripgrep/bin
+mkdir -p out/node_modules/@vscode/ripgrep/bin
+
+if command -v rg &> /dev/null; then
+    cp $(which rg) node_modules/@vscode/ripgrep/bin/rg
+    cp $(which rg) out/node_modules/@vscode/ripgrep/bin/rg
+    chmod +x node_modules/@vscode/ripgrep/bin/rg
+    chmod +x out/node_modules/@vscode/ripgrep/bin/rg
+fi
+
+npm run package
 popd
 
 echo "Installing docs dependencies..."
