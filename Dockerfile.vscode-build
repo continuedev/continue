@@ -23,6 +23,9 @@
 #
 # To build a pre-release instead:
 #   docker run --rm -v "$(pwd)":/workspace -e PRERELEASE=1 continue-vscode-builder
+#
+# To skip tests (e.g. for a quick package build):
+#   docker run --rm -v "$(pwd)":/workspace -e SKIP_TESTS=1 continue-vscode-builder
 
 FROM node:20.20.1-bookworm-slim
 
@@ -60,14 +63,33 @@ echo '==> Building packages (config-types, fetch, config-yaml, llm-info, ...)...
 node ./scripts/build-packages.js && \
 \
 echo '==> Installing and linking core...' && \
-(cd core && npm install && npm link) && \
+(cd core && npm install && npm rebuild && npm link) && \
+\
+if [ \"${SKIP_TESTS:-}\" != '1' ]; then \
+  echo '==> Running core Jest tests...' && \
+  (cd core && npm test) && \
+  echo '==> Running core Vitest tests...' && \
+  (cd core && npm run vitest); \
+fi && \
 \
 echo '==> Building GUI...' && \
 (cd gui && npm install && npm link @continuedev/core && NODE_OPTIONS='--max-old-space-size=3072' npm run build) && \
 \
+if [ \"${SKIP_TESTS:-}\" != '1' ]; then \
+  echo '==> Running GUI tests...' && \
+  (cd gui && npm test); \
+fi && \
+\
 echo '==> Packaging VS Code extension...' && \
 (cd extensions/vscode && npm install && npm link @continuedev/core && \
   if [ \"${PRERELEASE:-}\" = '1' ]; then npm run package:pre-release; else npm run package; fi) && \
+\
+if [ \"${SKIP_TESTS:-}\" != '1' ]; then \
+  echo '==> Running VS Code extension tests...' && \
+  (cd extensions/vscode && npm test) && \
+  echo '==> Running CLI tests...' && \
+  (cd extensions/cli && npm install && npm test); \
+fi && \
 \
 echo '' && \
 echo 'Done. Extension is at extensions/vscode/build/continue-*.vsix' \
