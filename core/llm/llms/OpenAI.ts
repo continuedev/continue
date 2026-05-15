@@ -16,7 +16,10 @@ import {
   LLMOptions,
   Tool,
 } from "../../index.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import {
+  renderChatMessage,
+  renderChatMessageWithoutThinking,
+} from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import {
   fromChatCompletionChunk,
@@ -430,7 +433,7 @@ class OpenAI extends BaseLLM {
       signal,
       options,
     )) {
-      yield renderChatMessage(chunk);
+      yield renderChatMessageWithoutThinking(chunk);
     }
   }
 

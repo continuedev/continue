@@ -17,6 +17,11 @@ export function stripImages(messageContent: MessageContent): string {
     .join("\n");
 }
 
+export function renderChatMessageWithoutThinking(message: ChatMessage): string {
+  if (message.role === "thinking") return "";
+  return renderChatMessage(message);
+}
+
 export function renderChatMessage(message: ChatMessage): string {
   switch (message?.role) {
     case "user":

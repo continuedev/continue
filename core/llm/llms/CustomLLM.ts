@@ -1,5 +1,5 @@
 import { ChatMessage, CompletionOptions, CustomLLM } from "../../index.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import { renderChatMessageWithoutThinking } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
 class CustomLLMClass extends BaseLLM {
@@ -76,7 +76,7 @@ class CustomLLMClass extends BaseLLM {
         if (typeof content === "string") {
           yield content;
         } else {
-          yield renderChatMessage(content);
+          yield renderChatMessageWithoutThinking(content);
         }
       }
     } else {

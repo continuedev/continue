@@ -2,7 +2,10 @@ import { AuthClient, GoogleAuth, JWT, auth } from "google-auth-library";
 
 import { streamResponse, streamSse } from "@continuedev/fetch";
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
-import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import {
+  renderChatMessageWithoutThinking,
+  stripImages,
+} from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
 import { LlmApiRequestType } from "../openaiTypeConverters.js";
@@ -489,7 +492,7 @@ class VertexAI extends BaseLLM {
       signal,
       options,
     )) {
-      yield renderChatMessage(message);
+      yield renderChatMessageWithoutThinking(message);
     }
   }
 

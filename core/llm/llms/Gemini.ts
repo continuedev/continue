@@ -10,7 +10,10 @@ import {
   ToolCallDelta,
 } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
-import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import {
+  renderChatMessageWithoutThinking,
+  stripImages,
+} from "../../util/messageContent.js";
 import { extractBase64FromDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 import { LlmApiRequestType } from "../openaiTypeConverters.js";
@@ -89,7 +92,7 @@ class Gemini extends BaseLLM {
       signal,
       options,
     )) {
-      yield renderChatMessage(message);
+      yield renderChatMessageWithoutThinking(message);
     }
   }
 
