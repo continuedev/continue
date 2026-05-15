@@ -1,5 +1,5 @@
 import { ChatMessage, SlashCommand } from "../../../index.js";
-import { renderChatMessage } from "../../../util/messageContent.js";
+import { renderChatMessageWithoutThinking } from "../../../util/messageContent.js";
 
 const prompt = `
      Review the following code, focusing on Readability, Maintainability, Code Smells, Speed, and Memory Performance. Provide feedback with these guidelines:
@@ -47,7 +47,7 @@ const ReviewMessageCommand: SlashCommand = {
       [{ role: "user", content: content }],
       abortController.signal,
     )) {
-      yield renderChatMessage(chunk);
+      yield renderChatMessageWithoutThinking(chunk);
     }
   },
 };

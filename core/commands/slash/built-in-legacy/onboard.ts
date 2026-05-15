@@ -3,7 +3,7 @@ import ignore from "ignore";
 import type { FileType, IDE, SlashCommand } from "../../..";
 import { getGlobalContinueIgArray } from "../../../indexing/continueignore";
 import { DEFAULT_IGNORE, gitIgArrayFromFile } from "../../../indexing/ignore";
-import { renderChatMessage } from "../../../util/messageContent";
+import { renderChatMessageWithoutThinking } from "../../../util/messageContent";
 import {
   findUriInDirs,
   getUriPathBasename,
@@ -48,7 +48,7 @@ const OnboardSlashCommand: SlashCommand = {
       [{ role: "user", content: prompt }],
       abortController.signal,
     )) {
-      yield renderChatMessage(chunk);
+      yield renderChatMessageWithoutThinking(chunk);
     }
   },
 };

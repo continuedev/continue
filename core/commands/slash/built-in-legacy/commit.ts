@@ -1,5 +1,5 @@
 import { SlashCommand } from "../../../index.js";
-import { renderChatMessage } from "../../../util/messageContent.js";
+import { renderChatMessageWithoutThinking } from "../../../util/messageContent.js";
 
 const CommitMessageCommand: SlashCommand = {
   name: "commit",
@@ -18,7 +18,7 @@ const CommitMessageCommand: SlashCommand = {
       [{ role: "user", content: prompt }],
       abortController.signal,
     )) {
-      yield renderChatMessage(chunk);
+      yield renderChatMessageWithoutThinking(chunk);
     }
   },
 };
