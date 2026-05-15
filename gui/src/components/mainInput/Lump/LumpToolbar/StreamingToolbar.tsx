@@ -4,17 +4,19 @@ import { GeneratingIndicator } from "./GeneratingIndicator";
 interface StreamingToolbarProps {
   onStop: () => void;
   displayText?: string;
+  indicatorText?: string;
 }
 
 export function StreamingToolbar({
   onStop,
   displayText = "Stop",
+  indicatorText = "Generating",
 }: StreamingToolbarProps) {
   const jetbrains = isJetBrains();
 
   return (
     <div className="flex w-full items-center justify-between">
-      <GeneratingIndicator />
+      <GeneratingIndicator text={indicatorText} testId="streaming-indicator" />
       <div
         onClick={onStop}
         className="text-2xs cursor-pointer px-1.5 py-0.5 hover:brightness-125"

@@ -39,6 +39,7 @@ function createToolCallState(
   toolCallId: string,
   status: ToolCallState["status"],
   functionName = "customTool",
+  parsedArgs: Record<string, unknown> = {},
 ): ToolCallState {
   return {
     toolCallId,
@@ -51,7 +52,7 @@ function createToolCallState(
         arguments: "{}",
       },
     },
-    parsedArgs: {},
+    parsedArgs,
     output: [],
   };
 }
@@ -223,5 +224,113 @@ describe("ToolCallDiv", () => {
     expect(
       screen.queryByTestId("simple-tool-call-tool-call-subagent"),
     ).not.toBeInTheDocument();
+  });
+
+  it("should route todo_write tool calls through the function-specific renderer", async () => {
+    const initialState = getEmptyRootState();
+    initialState.config.config.tools = [
+      {
+        function: {
+          name: BuiltInToolNames.TodoWrite,
+          description: "Update todo list",
+          parameters: {
+            type: "object",
+            properties: {},
+          },
+        },
+        toolCallIcon: "QueueListIcon",
+      } as any,
+    ];
+
+    await renderWithProviders(
+      <ToolCallDiv
+        toolCallStates={[
+          createToolCallState(
+            "tool-call-todo",
+            "done",
+            BuiltInToolNames.TodoWrite,
+          ),
+        ]}
+        historyIndex={0}
+      />,
+      {
+        store: createMockStore(initialState),
+      },
+    );
+
+    expect(
+      screen.getByTestId("function-specific-tool-call-tool-call-todo"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("simple-tool-call-tool-call-todo"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("should collapse dense completed read batches into a compact review summary", async () => {
+    const toolCallStates = [
+      createToolCallState(
+        "tool-call-read-1",
+        "done",
+        BuiltInToolNames.ReadFile,
+        { filePath: "/workspace/src/test.js" },
+      ),
+      createToolCallState(
+        "tool-call-read-2",
+        "done",
+        BuiltInToolNames.ReadFile,
+        { filePath: "/workspace/src/test.py" },
+      ),
+      createToolCallState(
+        "tool-call-read-3",
+        "done",
+        BuiltInToolNames.ReadFile,
+        { filePath: "/workspace/src/test.ts" },
+      ),
+      createToolCallState(
+        "tool-call-read-4",
+        "done",
+        BuiltInToolNames.ReadFile,
+        { filePath: "/workspace/src/Calculator.java" },
+      ),
+      createToolCallState(
+        "tool-call-read-5",
+        "done",
+        BuiltInToolNames.ReadFile,
+        { filePath: "/workspace/src/program.cs" },
+      ),
+      createToolCallState(
+        "tool-call-search-1",
+        "done",
+        BuiltInToolNames.GrepSearch,
+      ),
+    ];
+
+    const { user } = await renderWithProviders(
+      <ToolCallDiv toolCallStates={toolCallStates} historyIndex={0} />,
+      {
+        store: createMockStore(getEmptyRootState()),
+      },
+    );
+
+    expect(
+      screen.getByTestId("grouped-tool-call-review-label"),
+    ).toHaveTextContent("Review");
+    expect(
+      screen.getByTestId("grouped-tool-call-review-title"),
+    ).toHaveTextContent("Reviewed workspace context");
+    expect(
+      screen.getByTestId("grouped-tool-call-review-subtitle"),
+    ).toHaveTextContent("6 actions");
+    expect(
+      screen.getByTestId("grouped-tool-call-review-subtitle"),
+    ).toHaveTextContent("read 5 files");
+    expect(screen.getByTestId("grouped-tool-call-body").className).toContain(
+      "max-h-0",
+    );
+
+    await user.click(screen.getByTestId("performing-actions"));
+    expect(screen.getByTestId("grouped-tool-call-body").className).toContain(
+      "max-h-[50vh]",
+    );
   });
 });

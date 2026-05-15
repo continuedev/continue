@@ -155,7 +155,7 @@ test("should switch runtime target from local to cloud", async () => {
   });
 });
 
-test("should render pending edits above the composer", async () => {
+test("should render files menu above the composer for pending edits", async () => {
   const initialState = getEmptyRootState();
   initialState.session.codeBlockApplyStates.states = [
     {
@@ -169,11 +169,295 @@ test("should render pending edits above the composer", async () => {
   const store = createMockStore(initialState);
   await renderWithProviders(<Chat />, { store });
 
-  expect(screen.getByTestId("pending-apply-rail")).toBeInTheDocument();
-  expect(screen.getByText("Pending edits")).toBeInTheDocument();
+  expect(screen.getByTestId("modified-files-menu-header")).toBeInTheDocument();
+  expect(screen.getByText("1 file changed")).toBeInTheDocument();
   expect(screen.getByText("pending.ts")).toBeInTheDocument();
   expect(screen.getByText("Undo")).toBeInTheDocument();
   expect(screen.getByText("Keep")).toBeInTheDocument();
+});
+
+test("should render files menu for closed apply states in current turn", async () => {
+  const initialState = getEmptyRootState();
+  initialState.session.history = [
+    {
+      message: {
+        id: "assistant-apply-1",
+        role: "assistant",
+        content: "",
+        toolCalls: [],
+      },
+      toolCallStates: [
+        {
+          toolCallId: "tool-call-1",
+          status: "done",
+          toolCall: {
+            id: "tool-call-1",
+            type: "function",
+            function: {
+              name: BuiltInToolNames.SingleFindAndReplace,
+              arguments: "{}",
+            },
+          },
+          parsedArgs: {},
+          output: [],
+        },
+      ],
+    },
+  ] as any;
+
+  initialState.session.codeBlockApplyStates.states = [
+    {
+      streamId: "apply-1",
+      status: "closed",
+      filepath: "/workspace/src/closed.ts",
+      toolCallId: "tool-call-1",
+    },
+  ];
+
+  await renderWithProviders(<Chat />, {
+    store: createMockStore(initialState),
+  });
+
+  expect(screen.getByTestId("modified-files-menu-header")).toBeInTheDocument();
+  expect(screen.getByText("1 file changed")).toBeInTheDocument();
+  expect(screen.getByText("closed.ts")).toBeInTheDocument();
+  expect(screen.getByTestId("modified-files-menu-actions")).toBeInTheDocument();
+});
+
+test("should keep files menu visible after follow-up assistant message", async () => {
+  const initialState = getEmptyRootState();
+  initialState.session.history = [
+    {
+      message: {
+        id: "assistant-apply-1",
+        role: "assistant",
+        content: "",
+        toolCalls: [],
+      },
+      toolCallStates: [
+        {
+          toolCallId: "tool-call-1",
+          status: "done",
+          toolCall: {
+            id: "tool-call-1",
+            type: "function",
+            function: {
+              name: BuiltInToolNames.SingleFindAndReplace,
+              arguments: "{}",
+            },
+          },
+          parsedArgs: {},
+          output: [],
+        },
+      ],
+    },
+    {
+      message: {
+        id: "assistant-follow-up",
+        role: "assistant",
+        content: "Edits complete",
+        toolCalls: [],
+      },
+      toolCallStates: [],
+    },
+  ] as any;
+
+  initialState.session.codeBlockApplyStates.states = [
+    {
+      streamId: "apply-1",
+      status: "closed",
+      filepath: "/workspace/src/after-follow-up.ts",
+      toolCallId: "tool-call-1",
+    },
+  ];
+
+  await renderWithProviders(<Chat />, {
+    store: createMockStore(initialState),
+  });
+
+  expect(screen.getByTestId("modified-files-menu-header")).toBeInTheDocument();
+  expect(screen.getByText("1 file changed")).toBeInTheDocument();
+  expect(screen.getByText("after-follow-up.ts")).toBeInTheDocument();
+});
+
+test("should render todo and files menus above the composer", async () => {
+  const initialState = getEmptyRootState();
+  initialState.session.history = [
+    {
+      message: {
+        id: "assistant-1",
+        role: "assistant",
+        content: "",
+        toolCalls: [],
+      },
+      toolCallStates: [
+        {
+          toolCallId: "todo-call-1",
+          status: "done",
+          toolCall: {
+            id: "todo-call-1",
+            type: "function",
+            function: {
+              name: BuiltInToolNames.TodoWrite,
+              arguments: "{}",
+            },
+          },
+          parsedArgs: {
+            todos: [
+              {
+                id: "read-log",
+                content: "Read and analyze startup log file",
+                status: "in_progress",
+                priority: "high",
+              },
+              {
+                id: "explore-gateway",
+                content: "Explore binance-gateway crate structure",
+                status: "pending",
+                priority: "medium",
+              },
+            ],
+          },
+          output: [],
+        },
+        {
+          toolCallId: "tool-call-1",
+          status: "done",
+          toolCall: {
+            id: "tool-call-1",
+            type: "function",
+            function: {
+              name: BuiltInToolNames.SingleFindAndReplace,
+              arguments: "{}",
+            },
+          },
+          parsedArgs: {},
+          output: [],
+        },
+      ],
+    },
+  ] as any;
+
+  initialState.session.codeBlockApplyStates.states = [
+    {
+      streamId: "apply-1",
+      status: "done",
+      filepath: "/workspace/src/pending.ts",
+      toolCallId: "tool-call-1",
+    },
+  ];
+
+  await renderWithProviders(<Chat />, {
+    store: createMockStore(initialState),
+  });
+
+  const todoHeader = screen.getByTestId("todo-list-menu-header");
+  const filesHeader = screen.getByTestId("modified-files-menu-header");
+  const editorInput = screen.getByTestId("editor-input-main");
+  const composerRail = screen.getByTestId("chat-composer-rail");
+  const mainInputAuxSection = screen.getByTestId(
+    "continue-input-box-main-editor-input-aux-content",
+  );
+
+  expect(todoHeader).toHaveTextContent("Todos");
+  expect(filesHeader).toHaveTextContent("file changed");
+  expect(
+    todoHeader.compareDocumentPosition(editorInput) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(
+    filesHeader.compareDocumentPosition(editorInput) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(mainInputAuxSection).toContainElement(todoHeader);
+  expect(mainInputAuxSection).toContainElement(filesHeader);
+  expect(composerRail).toHaveClass("sticky");
+  expect(composerRail).toHaveClass("bottom-0");
+});
+
+test("should keep todos visible and show active todo task while tools are running", async () => {
+  const initialState = getEmptyRootState();
+  initialState.session.history = [
+    {
+      message: {
+        id: "assistant-todo",
+        role: "assistant",
+        content: "",
+        toolCalls: [],
+      },
+      toolCallStates: [
+        {
+          toolCallId: "todo-call-1",
+          status: "done",
+          toolCall: {
+            id: "todo-call-1",
+            type: "function",
+            function: {
+              name: BuiltInToolNames.TodoWrite,
+              arguments: "{}",
+            },
+          },
+          parsedArgs: {
+            todos: [
+              {
+                id: "read-log",
+                content: "Read and analyze startup log file",
+                status: "in_progress",
+                priority: "high",
+              },
+              {
+                id: "explore-gateway",
+                content: "Explore binance-gateway crate structure",
+                status: "pending",
+                priority: "medium",
+              },
+            ],
+          },
+          output: [],
+        },
+      ],
+    },
+    {
+      message: {
+        id: "assistant-running",
+        role: "assistant",
+        content: "",
+        toolCalls: [],
+      },
+      toolCallStates: [
+        {
+          toolCallId: "terminal-call-1",
+          status: "calling",
+          toolCall: {
+            id: "terminal-call-1",
+            type: "function",
+            function: {
+              name: BuiltInToolNames.RunTerminalCommand,
+              arguments: "{}",
+            },
+          },
+          parsedArgs: {
+            command: "npm test",
+          },
+          output: [],
+        },
+      ],
+    },
+  ] as any;
+
+  await renderWithProviders(<Chat />, {
+    store: createMockStore(initialState),
+  });
+
+  expect(screen.getByTestId("todo-list-menu-header")).toHaveTextContent(
+    "Todos",
+  );
+  expect(
+    screen.getByText("Read and analyze startup log file"),
+  ).toBeInTheDocument();
+  expect(screen.getByTestId("streaming-indicator")).toHaveTextContent(
+    "Working on: Read and analyze startup log file",
+  );
 });
 
 test("should render edit outcome review copy and in-flight keep feedback", async () => {
@@ -539,38 +823,31 @@ test("should render batch pending edit actions for multiple files", async () => 
   const store = createMockStore(initialState);
   const { user } = await renderWithProviders(<Chat />, { store });
 
-  expect(screen.getByTestId("pending-apply-summary")).toHaveTextContent(
-    "2 files",
+  expect(screen.getByTestId("modified-files-menu-header")).toHaveTextContent(
+    "2 files changed",
   );
-  expect(screen.getByTestId("pending-apply-summary")).toHaveTextContent(
-    "2 changes",
-  );
-  expect(screen.getByTestId("pending-apply-batch-actions")).toBeInTheDocument();
+  expect(screen.getByTestId("modified-files-menu-actions")).toBeInTheDocument();
   expect(screen.getByText("Keep all")).toBeInTheDocument();
   expect(screen.getByText("Undo all")).toBeInTheDocument();
-  expect(
-    screen.getByTestId("pending-apply-file-actions-0"),
-  ).toBeInTheDocument();
-  expect(
-    screen.getByTestId("pending-apply-file-actions-1"),
-  ).toBeInTheDocument();
+  expect(screen.getByTestId("modified-files-menu-row-0")).toBeInTheDocument();
+  expect(screen.getByTestId("modified-files-menu-row-1")).toBeInTheDocument();
 
   await user.click(screen.getByText("Keep all"));
 
   expect(screen.getByText("Keeping all...")).toBeInTheDocument();
   expect(
-    within(screen.getByTestId("pending-apply-batch-actions")).getByTestId(
+    within(screen.getByTestId("modified-files-menu-actions")).getByTestId(
       "edit-accept-button",
     ),
   ).toBeDisabled();
   expect(
-    within(screen.getByTestId("pending-apply-batch-actions")).getByTestId(
+    within(screen.getByTestId("modified-files-menu-actions")).getByTestId(
       "edit-reject-button",
     ),
   ).toBeDisabled();
 });
 
-test("should collapse dense pending edit batches until expanded", async () => {
+test("should list dense pending edits in the files menu", async () => {
   const initialState = getEmptyRootState();
   initialState.session.codeBlockApplyStates.states = [
     {
@@ -609,46 +886,25 @@ test("should collapse dense pending edit batches until expanded", async () => {
     store: createMockStore(initialState),
   });
 
-  expect(screen.getByTestId("pending-apply-visible-count")).toHaveTextContent(
-    "Showing 3 of 5 files",
+  expect(screen.getByTestId("modified-files-menu-header")).toHaveTextContent(
+    "5 files changed",
   );
-  expect(screen.getByTestId("pending-apply-overflow-toggle")).toHaveTextContent(
-    "Show 2 more files",
-  );
-  expect(screen.getByTestId("pending-apply-file-path-0")).toHaveTextContent(
-    "src/auth",
-  );
-  expect(screen.getByTestId("pending-apply-file-row-0")).toHaveTextContent(
+  expect(screen.getByTestId("modified-files-menu-row-0")).toHaveTextContent(
     "first.ts",
   );
-  expect(screen.getByTestId("pending-apply-file-row-2")).toHaveTextContent(
-    "third.ts",
+  expect(screen.getByTestId("modified-files-menu-row-4")).toHaveTextContent(
+    "fifth.ts",
   );
-  expect(screen.getByTestId("pending-apply-hidden-preview")).toHaveTextContent(
-    "Hidden until expanded",
-  );
-  expect(screen.getByTestId("pending-apply-hidden-group-0")).toHaveTextContent(
-    "src/data",
-  );
-  expect(screen.getByTestId("pending-apply-hidden-group-1")).toHaveTextContent(
-    "src/ui",
-  );
-  expect(screen.queryByText("fourth.ts")).not.toBeInTheDocument();
-  expect(screen.queryByText("fifth.ts")).not.toBeInTheDocument();
-
-  await user.click(screen.getByTestId("pending-apply-overflow-toggle"));
-
-  expect(screen.getByTestId("pending-apply-visible-count")).toHaveTextContent(
-    "Showing all 5 files",
-  );
-  expect(screen.getByTestId("pending-apply-overflow-toggle")).toHaveTextContent(
-    "Show fewer files",
-  );
-  expect(
-    screen.queryByTestId("pending-apply-hidden-preview"),
-  ).not.toBeInTheDocument();
   expect(screen.getByText("fourth.ts")).toBeInTheDocument();
   expect(screen.getByText("fifth.ts")).toBeInTheDocument();
+
+  await user.click(screen.getByTestId("modified-files-menu-header"));
+  expect(screen.getByTestId("modified-files-menu-body")).toHaveClass("max-h-0");
+
+  await user.click(screen.getByTestId("modified-files-menu-header"));
+  expect(screen.getByTestId("modified-files-menu-body")).toHaveClass(
+    "max-h-[40vh]",
+  );
 });
 
 test("should be able to toggle modes", async () => {

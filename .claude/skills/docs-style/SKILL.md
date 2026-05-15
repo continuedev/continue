@@ -32,7 +32,7 @@ description: Style guidelines for writing and updating documentation. Use when w
 - **Examples should feel real** — use realistic file paths, realistic prompts, realistic tasks. Not `> Tell me about the CLI` but `> @tests/auth.test.ts This test started failing after the last migration`.
 - **Examples earn their place** — don't add "Example: Doing X" sections that are just English prompts in a code block. Examples are valuable when they demonstrate non-obvious syntax, flags, piping, or configuration. If the reader could figure it out from the rest of the page, skip the example.
 - **No "Next Steps" sections** — don't end pages with a "Next Steps" or "What's Next?" section with CardGroups linking to other pages. The sidebar navigation already does this. If a link to another page is relevant, put it inline where the context is, not in a generic footer.
-- **Page title = sidebar title** — the `title` in frontmatter should match the sidebar label. Drop `sidebarTitle` unless there's a genuine reason for them to differ. Don't stuff extra context into the page title (e.g., "Continue CLI (cn) Overview" → "Overview").
+- **Page title = sidebar title** — the `title` in frontmatter should match the sidebar label. Drop `sidebarTitle` unless there's a genuine reason for them to differ. Don't stuff extra context into the page title (e.g., "YutoAgentic CLI (yt) Overview" → "Overview").
 - **No subtitle/description in frontmatter** — don't use the `description` field. The opening paragraph of the page should provide whatever context is needed. Metadata subtitles add clutter and duplicate what the prose already says.
 
 ## Headings

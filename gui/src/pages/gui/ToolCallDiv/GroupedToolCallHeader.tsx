@@ -1,5 +1,6 @@
 import { FolderIcon } from "@heroicons/react/24/outline";
 import { ToolCallState } from "core";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { ToggleWithIcon } from "./ToggleWithIcon";
 import { getGroupActionVerb } from "./utils";
 
@@ -19,6 +20,176 @@ type GroupStatusSummary = {
   count: number;
   className: string;
 };
+
+type ReviewBatchSummary = {
+  title: string;
+  subtitle: string;
+};
+
+const READ_ONLY_TOOL_NAMES = new Set(
+  [
+    BuiltInToolNames.ReadFile,
+    BuiltInToolNames.ReadFileRange,
+    BuiltInToolNames.ReadCurrentlyOpenFile,
+    BuiltInToolNames.LSTool,
+    BuiltInToolNames.ViewRepoMap,
+    BuiltInToolNames.ViewSubdirectory,
+    BuiltInToolNames.GrepSearch,
+    BuiltInToolNames.FileGlobSearch,
+    BuiltInToolNames.CodebaseTool,
+    BuiltInToolNames.SearchWeb,
+    BuiltInToolNames.FetchUrlContent,
+    BuiltInToolNames.Git,
+    BuiltInToolNames.GitHub,
+    BuiltInToolNames.Config,
+    BuiltInToolNames.Status,
+    "read_file",
+    "list_dir",
+    "file_search",
+    "grep_search",
+    "semantic_search",
+    "fetch_webpage",
+    "github_text_search",
+    "github_repo",
+    "get_task_output",
+    "get_terminal_output",
+  ].map((name) => name.toLowerCase()),
+);
+
+const READ_FILE_TOOL_NAMES = new Set(
+  [
+    BuiltInToolNames.ReadFile,
+    BuiltInToolNames.ReadFileRange,
+    BuiltInToolNames.ReadCurrentlyOpenFile,
+    "read_file",
+  ].map((name) => name.toLowerCase()),
+);
+
+const SEARCH_TOOL_NAMES = new Set(
+  [
+    BuiltInToolNames.GrepSearch,
+    BuiltInToolNames.FileGlobSearch,
+    BuiltInToolNames.CodebaseTool,
+    BuiltInToolNames.SearchWeb,
+    "file_search",
+    "grep_search",
+    "semantic_search",
+    "github_text_search",
+    "github_repo",
+  ].map((name) => name.toLowerCase()),
+);
+
+function isActionActive(status: ToolCallState["status"]): boolean {
+  return (
+    status === "calling" || status === "generating" || status === "generated"
+  );
+}
+
+function normalizeFunctionName(toolCallState: ToolCallState): string {
+  return (toolCallState.toolCall.function?.name ?? "").toLowerCase();
+}
+
+function parsePathFromArgs(args: unknown): string | null {
+  if (!args || typeof args !== "object") {
+    return null;
+  }
+
+  const candidatePaths = [
+    (args as { filePath?: unknown }).filePath,
+    (args as { filepath?: unknown }).filepath,
+    (args as { path?: unknown }).path,
+    (args as { uri?: unknown }).uri,
+  ];
+
+  for (const candidate of candidatePaths) {
+    if (typeof candidate === "string" && candidate.trim().length > 0) {
+      return candidate.trim();
+    }
+  }
+
+  return null;
+}
+
+function pluralize(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+export function getReviewBatchSummary(
+  toolCallStates: ToolCallState[],
+): ReviewBatchSummary | null {
+  if (toolCallStates.length < 5) {
+    return null;
+  }
+
+  let reviewLikeCount = 0;
+  let searchCount = 0;
+  let inspectCount = 0;
+  let readCount = 0;
+  const uniqueReadTargets = new Set<string>();
+
+  for (const toolCallState of toolCallStates) {
+    const functionName = normalizeFunctionName(toolCallState);
+
+    if (READ_FILE_TOOL_NAMES.has(functionName)) {
+      reviewLikeCount += 1;
+      readCount += 1;
+
+      const readTarget =
+        parsePathFromArgs(toolCallState.processedArgs) ??
+        parsePathFromArgs(toolCallState.parsedArgs);
+
+      if (readTarget) {
+        uniqueReadTargets.add(readTarget.toLowerCase());
+      }
+      continue;
+    }
+
+    if (SEARCH_TOOL_NAMES.has(functionName)) {
+      reviewLikeCount += 1;
+      searchCount += 1;
+      continue;
+    }
+
+    if (READ_ONLY_TOOL_NAMES.has(functionName)) {
+      reviewLikeCount += 1;
+      inspectCount += 1;
+    }
+  }
+
+  const reviewThreshold = Math.max(4, Math.ceil(toolCallStates.length * 0.6));
+  if (reviewLikeCount < reviewThreshold) {
+    return null;
+  }
+
+  const hasActiveStep = toolCallStates.some((toolCallState) =>
+    isActionActive(toolCallState.status),
+  );
+  const resolvedReadCount = uniqueReadTargets.size || readCount;
+  const otherStepCount = toolCallStates.length - reviewLikeCount;
+
+  const detailParts = [pluralize(toolCallStates.length, "action")];
+  if (resolvedReadCount > 0) {
+    detailParts.push(`read ${pluralize(resolvedReadCount, "file")}`);
+  }
+  if (searchCount > 0) {
+    detailParts.push(`ran ${pluralize(searchCount, "search")}`);
+  }
+  if (inspectCount > 0) {
+    detailParts.push(
+      inspectCount === 1
+        ? "inspected repository state"
+        : `inspected repository state ${inspectCount} times`,
+    );
+  }
+  if (otherStepCount > 0) {
+    detailParts.push(`${pluralize(otherStepCount, "other step")}`);
+  }
+
+  return {
+    title: `${hasActiveStep ? "Reviewing" : "Reviewed"} workspace context`,
+    subtitle: detailParts.join(" · "),
+  };
+}
 
 function getGroupStatusSummary(
   toolCallStates: ToolCallState[],
@@ -110,6 +281,7 @@ export function GroupedToolCallHeader({
   onToggle,
 }: GroupedToolCallHeaderProps) {
   const statusSummary = getGroupStatusSummary(toolCallStates);
+  const reviewSummary = getReviewBatchSummary(toolCallStates);
   const bodyId = "grouped-tool-call-body";
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -139,10 +311,37 @@ export function GroupedToolCallHeader({
           onClick={onToggle}
           testId="grouped-tool-call-toggle"
         />
-        {getGroupActionVerb(toolCallStates)} {activeCalls.length}{" "}
-        {activeCalls.length === 1 ? "action" : "actions"}
+        {reviewSummary ? (
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <span
+                className="bg-vsc-input-background rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                data-testid="grouped-tool-call-review-label"
+              >
+                Review
+              </span>
+              <span
+                className="truncate text-xs font-medium"
+                data-testid="grouped-tool-call-review-title"
+              >
+                {reviewSummary.title}
+              </span>
+            </div>
+            <div
+              className="text-description-muted truncate pt-0.5 text-[11px]"
+              data-testid="grouped-tool-call-review-subtitle"
+            >
+              {reviewSummary.subtitle}
+            </div>
+          </div>
+        ) : (
+          <>
+            {getGroupActionVerb(toolCallStates)} {activeCalls.length}{" "}
+            {activeCalls.length === 1 ? "action" : "actions"}
+          </>
+        )}
       </div>
-      {statusSummary.length > 0 && (
+      {statusSummary.length > 0 && !reviewSummary && (
         <div
           className="mt-1 flex flex-wrap items-center gap-1.5 pl-4"
           data-testid="grouped-tool-call-status-summary"

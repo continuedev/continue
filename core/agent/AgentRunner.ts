@@ -1,8 +1,8 @@
 /**
- * AgentRunner — autonomous execution loop for Continue.
+ * AgentRunner — autonomous execution loop for YutoAgentic.
  *
  * Architectural blueprint ported from Marcel (Yuto Code) QueryEngine.ts.
- * Uses Continue's existing callTool / streamChat / ILLM infrastructure.
+ * Uses YutoAgentic's existing callTool / streamChat / ILLM infrastructure.
  *
  * Loop: PLAN → ACT (stream LLM) → PARSE tool calls → VALIDATE →
  *        EXECUTE tools (concurrent read / serial write) → OBSERVE →
@@ -17,10 +17,10 @@ import {
   ILLM,
   Tool,
   ToolCall,
+  ToolExtras,
   ToolResultChatMessage,
 } from "..";
 import { callTool } from "../tools/callTool";
-import { ToolExtras } from "..";
 import {
   createDenialTrackingState,
   DenialTrackingState,
@@ -28,13 +28,7 @@ import {
   recordSuccess,
   shouldFallbackToPrompting,
 } from "../tools/policies/denialTracking";
-import {
-  createTaskStateBase,
-  generateTaskId,
-  TaskStateBase,
-  TaskStatus,
-  transitionTask,
-} from "./TaskState";
+import { analyzeContext } from "../util/contextAnalysis";
 import {
   createSessionMemoryState,
   extractSessionMemory,
@@ -42,8 +36,14 @@ import {
   SessionMemoryState,
   shouldExtractSessionMemory,
 } from "./SessionMemory";
+import {
+  createTaskStateBase,
+  generateTaskId,
+  TaskStateBase,
+  TaskStatus,
+  transitionTask,
+} from "./TaskState";
 import { scheduleAutoDream } from "./autoDream";
-import { analyzeContext } from "../util/contextAnalysis";
 
 // ─── Constants (mirrored from Marcel) ────────────────────────────────────────
 

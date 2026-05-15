@@ -1,6 +1,11 @@
 import { BuiltInToolNames } from "core/tools/builtIn";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import {
+  findLatestTodoToolCallStateInCurrentTurn,
+  getActiveTodoTaskLabel,
+} from "../../../../pages/gui/ToolCallDiv/TodoListMenu";
+import { getStreamingIndicatorText } from "../../../../pages/gui/ToolCallDiv/utils";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import {
   selectFirstPendingToolCall,
@@ -51,6 +56,7 @@ export function LumpToolbar() {
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const isInEdit = useAppSelector((state) => state.session.isInEdit);
+  const history = useAppSelector((state) => state.session.history);
   const jetbrains = isJetBrains();
   const pendingToolCalls = useAppSelector(selectPendingToolCalls);
   const firstPendingToolCall = useAppSelector(selectFirstPendingToolCall);
@@ -67,8 +73,25 @@ export function LumpToolbar() {
   const runningToolCalls = useAppSelector((state) =>
     selectToolCallsByStatus(state, "calling"),
   );
+  const generatingToolCalls = useAppSelector((state) =>
+    selectToolCallsByStatus(state, "generating"),
+  );
   const runningTerminalCalls = runningToolCalls.filter(isTerminalCommand);
   const hasRunningTerminalCommand = runningTerminalCalls.length > 0;
+
+  const latestTodoToolCallState = useMemo(
+    () => findLatestTodoToolCallStateInCurrentTurn(history),
+    [history],
+  );
+  const activeTodoTaskLabel = getActiveTodoTaskLabel(latestTodoToolCallState);
+  const streamingIndicatorText =
+    activeTodoTaskLabel && activeTodoTaskLabel.length > 0
+      ? `Working on: ${activeTodoTaskLabel}`
+      : getStreamingIndicatorText([
+          ...runningToolCalls,
+          ...generatingToolCalls,
+          ...pendingToolCalls,
+        ]);
 
   // Simple handler: stop ALL running terminal commands
   const handleStopAllTerminalCommands = async () => {
@@ -185,13 +208,22 @@ export function LumpToolbar() {
     const count = runningTerminalCalls.length;
     const stopText = `Stop Terminal${count > 1 ? ` (${count})` : ""}`;
     return (
-      <StreamingToolbar onStop={handleStopAction} displayText={stopText} />
+      <StreamingToolbar
+        onStop={handleStopAction}
+        displayText={stopText}
+        indicatorText={streamingIndicatorText}
+      />
     );
   }
 
   // Regular streaming (non-terminal)
   if (isStreaming) {
-    return <StreamingToolbar onStop={() => dispatch(cancelStream())} />;
+    return (
+      <StreamingToolbar
+        onStop={() => dispatch(cancelStream())}
+        indicatorText={streamingIndicatorText}
+      />
+    );
   }
 
   if (pendingToolCalls.length > 0) {

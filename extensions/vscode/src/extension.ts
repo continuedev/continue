@@ -31,7 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
     vscode.window
       .showWarningMessage(
-        "Error activating the Continue extension.",
+        "Error activating the Yuto Agentic extension.",
         "View Logs",
         "Retry",
       )

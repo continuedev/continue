@@ -2,7 +2,7 @@
   "name": "gui",
   "private": true,
   "type": "module",
-  "author": "Continue Dev, Inc",
+  "author": "YutoAgentic Dev, Inc",
   "license": "Apache-2.0",
   "scripts": {
     "dev": "vite",

@@ -2,7 +2,6 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Tool, ToolCallState } from "core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { openContextItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 import { ToolCallDisplay } from "./ToolCallDisplay";
 
 vi.mock(
@@ -68,7 +67,7 @@ describe("ToolCallDisplay", () => {
     vi.clearAllMocks();
   });
 
-  it("should let keyboard users open generic tool results from the header", async () => {
+  it("should let keyboard users toggle the collapsible body", async () => {
     const user = userEvent.setup();
 
     render(
@@ -82,21 +81,20 @@ describe("ToolCallDisplay", () => {
       </ToolCallDisplay>,
     );
 
-    const header = screen.getByRole("button", { name: "Open Custom Tool" });
+    // The header is a button — starts collapsed (status=done, so auto-collapsed)
+    const header = screen.getByTestId("tool-call-display-header");
+    expect(header.tagName).toBe("BUTTON");
+    expect(header).toHaveAttribute("aria-expanded", "false");
+
     header.focus();
-
     await user.keyboard("{Enter}");
-    await user.keyboard(" ");
+    expect(header).toHaveAttribute("aria-expanded", "true");
 
-    expect(openContextItem).toHaveBeenCalledTimes(2);
-    expect(openContextItem).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({ name: "Only result" }),
-      expect.anything(),
-    );
+    await user.keyboard(" ");
+    expect(header).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("should leave generic tool headers non-interactive when there is no output", () => {
+  it("should always show the toggle button regardless of output", () => {
     render(
       <ToolCallDisplay
         tool={mockTool}
@@ -108,11 +106,8 @@ describe("ToolCallDisplay", () => {
       </ToolCallDisplay>,
     );
 
-    expect(screen.getByTestId("tool-call-display-header")).not.toHaveAttribute(
-      "role",
-    );
-    expect(screen.getByTestId("tool-call-display-header")).not.toHaveAttribute(
-      "tabindex",
-    );
+    const header = screen.getByTestId("tool-call-display-header");
+    expect(header.tagName).toBe("BUTTON");
+    expect(header).toHaveAttribute("aria-expanded");
   });
 });

@@ -32,14 +32,14 @@ export function BackgroundModeView({
           <h3 className="mb-2 text-lg font-semibold">Background Agents</h3>
           <p className="text-description mb-4 text-sm">
             Trigger long-running background agents that work on your codebase
-            autonomously. Sign in to Continue to get started.
+            autonomously. Sign in to Yuto Hub to get started.
           </p>
           <button
             onClick={handleSignIn}
             disabled={isLoggingIn}
             className="bg-primary text-primary-foreground hover:bg-primary-hover rounded-lg px-6 py-2 disabled:opacity-50"
           >
-            {isLoggingIn ? "Signing in..." : "Sign In to Continue"}
+            {isLoggingIn ? "Signing in..." : "Sign In to Yuto Hub"}
           </button>
         </div>
       </div>

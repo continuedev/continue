@@ -29,7 +29,7 @@ import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 import { SecretStorage } from "./SecretStorage";
 import { UriEventHandler } from "./uriHandler";
 
-const AUTH_NAME = "Continue";
+const AUTH_NAME = "Yuto Hub Authentication";
 
 const controlPlaneEnv = getControlPlaneEnvSync(true ? "production" : "none");
 
@@ -472,7 +472,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     return await window.withProgress<string>(
       {
         location: ProgressLocation.Notification,
-        title: "Signing in to Continue...",
+        title: "Signing in to Yuto Hub...",
         cancellable: true,
       },
       async (_, token) => {

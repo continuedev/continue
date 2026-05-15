@@ -11,13 +11,13 @@ export default function FeedbackDialog() {
     <div className="mx-auto flex max-w-md flex-col p-6 pt-8">
       <div className="flex items-center gap-2 text-lg font-medium">
         <span>👋</span>
-        <span>Help us improve Continue</span>
+        <span>Help us improve Yuto Agentic</span>
       </div>
 
       <p className="text-foreground text-sm leading-relaxed">
-        We're always working to make Continue better and would love to hear from
-        you. If you're interested in sharing your experience, please enter your
-        details below.
+        We're always working to make Yuto Agentic better and would love to hear
+        from you. If you're interested in sharing your experience, please enter
+        your details below.
       </p>
 
       <form

@@ -12,5 +12,5 @@ export function setupCoreLogging() {
   console.error = logger;
   console.warn = logger;
   console.debug = logger;
-  console.log("[info] Starting Continue core...");
+  console.log("[info] Starting YutoAgentic core...");
 }

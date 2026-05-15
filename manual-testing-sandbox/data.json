@@ -12,7 +12,7 @@
   },
   "employees": [
     {
-      "name": "John Doe",
+      "name": "Employee Alpha",
       "age": 30,
       "position": "Developer",
       "skills": ["JavaScript", "React", "Node.js"],
@@ -23,7 +23,7 @@
       }
     },
     {
-      "name": "Jane Smith",
+      "name": "Employee Beta",
       "age": 25,
       "position": "Designer",
       "skills": ["Photoshop", "Illustrator"],
@@ -34,7 +34,7 @@
       }
     },
     {
-      "name": "Emily Johnson",
+      "name": "Employee Gamma",
       "age": 35,
       "position": "Manager",
       "teamSize": 8,
@@ -45,8 +45,8 @@
         "amount": 120000
       },
       "contact": {
-        "email": "emily.johnson@company.com",
-        "phone": "+1-202-555-0163"
+        "email": "employee.gamma@company.example",
+        "phone": "+1-555-000-0000"
       }
     }
   ],
@@ -55,13 +55,13 @@
       "name": "Project Alpha",
       "deadline": "2023-12-31",
       "budget": 150000,
-      "teamMembers": ["John Doe", "Jane Smith"]
+      "teamMembers": ["Employee Alpha", "Employee Beta"]
     },
     {
       "name": "Project Beta",
       "deadline": "2024-06-30",
       "budget": 200000,
-      "teamMembers": ["Emily Johnson"]
+      "teamMembers": ["Employee Gamma"]
     }
   ],
   "companyStats": {

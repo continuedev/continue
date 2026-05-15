@@ -3,26 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A sample page demonstrating semantic HTML and accessibility features" />
     <title>Sample Page</title>
     <link rel="stylesheet" href="test.css" />
   </head>
 
   <body>
-    <header>
+    <!-- Skip navigation link for accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4">Skip to main content</a>
+    
+    <header role="banner">
       <h1>Welcome to the Sample Page</h1>
-      <nav>
-        <a href="#home">Home</a>
-        <a href="#about">About</a>
-        <a href="#contact">Contact</a>
+      <nav role="navigation" aria-label="Main navigation">
+        <ul>
+          <li><a href="#home">Home</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
       </nav>
     </header>
-    <div class="container">
-      <p>This is a sample paragraph.</p>
-      <ol>
-        <li>Item 1</li>
-        <li>Item 2</li>
-        <li>Item 3</li>
-      </ol>
-    </div>
+    
+    <main id="main-content" role="main">
+      <section aria-labelledby="welcome-heading">
+        <h2 id="welcome-heading">About This Page</h2>
+        <p>This is a sample paragraph demonstrating semantic HTML structure.</p>
+      </section>
+      
+      <section aria-labelledby="features-heading">
+        <h2 id="features-heading">Features</h2>
+        <ol>
+          <li>Item 1</li>
+          <li>Item 2</li>
+          <li>Item 3</li>
+        </ol>
+      </section>
+    </main>
+    
+    <footer role="contentinfo">
+      <p>&copy; 2023 Sample Page. All rights reserved.</p>
+    </footer>
   </body>
 </html>

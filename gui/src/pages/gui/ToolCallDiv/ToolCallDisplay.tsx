@@ -1,10 +1,12 @@
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  WrenchScrewdriverIcon,
+} from "@heroicons/react/24/outline";
 import { Tool, ToolCallState } from "core";
-import { useContext, useMemo } from "react";
-import { openContextItem } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useEffect, useRef, useState } from "react";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
 import { ToolTruncateHistoryIcon } from "./ToolTruncateHistoryIcon";
-import { toolCallStateToContextItems } from "./utils";
 
 interface ToolCallDisplayProps {
   children: React.ReactNode;
@@ -15,68 +17,88 @@ interface ToolCallDisplayProps {
 }
 
 export function ToolCallDisplay({
+  icon,
   tool,
   toolCallState,
   children,
-  icon,
   historyIndex,
 }: ToolCallDisplayProps) {
-  const ideMessenger = useContext(IdeMessengerContext);
-  const shownContextItems = useMemo(() => {
-    const contextItems = toolCallStateToContextItems(toolCallState);
-    return contextItems.filter((item) => !item.hidden);
-  }, [toolCallState]);
+  const isActive =
+    toolCallState.status === "calling" || toolCallState.status === "generating";
 
-  const isClickable = shownContextItems.length > 0;
-  const toolLabel =
-    tool?.displayTitle ??
-    toolCallState.toolCall.function?.name ??
-    "tool result";
+  const [open, setOpen] = useState(isActive);
+  const prevIsActive = useRef(isActive);
 
-  function handleClick() {
-    if (shownContextItems.length > 0) {
-      openContextItem(shownContextItems[0], ideMessenger);
+  // Auto-collapse when the call completes (mirrors ThinkingBlockPeek)
+  useEffect(() => {
+    if (isActive) {
+      setOpen(true);
+    } else if (prevIsActive.current) {
+      setOpen(false);
     }
-  }
+    prevIsActive.current = isActive;
+  }, [isActive]);
 
-  function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
-    if (!isClickable) {
-      return;
-    }
-
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      handleClick();
-    }
-  }
+  const bodyId = `tool-call-display-body-${toolCallState.toolCallId}`;
 
   return (
-    <div className="flex flex-col justify-center gap-1.5 px-3 py-0.5">
-      <div className="flex flex-row items-start justify-between gap-1.5">
-        <div
-          className={`text-description flex min-w-0 flex-row items-center gap-2 text-xs transition-colors duration-200 ease-in-out ${
-            isClickable ? "cursor-pointer hover:brightness-125" : ""
-          }`}
-          onClick={isClickable ? handleClick : undefined}
-          onKeyDown={handleKeyDown}
+    <div className="mt-1 flex flex-col px-4" data-testid="tool-call-display">
+      <div className="flex items-center justify-between gap-2">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={bodyId}
+          onClick={() => setOpen((p) => !p)}
           data-testid="tool-call-display-header"
-          role={isClickable ? "button" : undefined}
-          tabIndex={isClickable ? 0 : undefined}
-          aria-label={isClickable ? `Open ${toolLabel}` : undefined}
+          className="text-description hover:bg-[color:var(--vscode-input-background)]/40 flex min-w-0 flex-1 items-center gap-1.5 rounded-md border-none bg-transparent px-2 py-1.5 text-left text-xs transition-colors"
         >
-          <div className="mt-[1px] h-4 w-4 flex-shrink-0 font-semibold">
-            {icon}
-          </div>
-          {tool?.faviconUrl && (
-            <img src={tool.faviconUrl} alt="" className="h-4 w-4 rounded-sm" />
-          )}
-          <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
-        </div>
+          <span className="mt-[1px] flex h-4 w-4 flex-shrink-0 items-center justify-center">
+            {tool?.faviconUrl ? (
+              <img
+                src={tool.faviconUrl}
+                alt=""
+                className="h-4 w-4 rounded-sm"
+              />
+            ) : icon ? (
+              icon
+            ) : (
+              <WrenchScrewdriverIcon
+                className={`h-4 w-4 ${isActive ? "animate-pulse" : ""}`}
+              />
+            )}
+          </span>
+
+          <span className="min-w-0 flex-1">
+            <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
+          </span>
+
+          <span className="flex-shrink-0 opacity-60">
+            {open ? (
+              <ChevronUpIcon className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronDownIcon className="h-3.5 w-3.5" />
+            )}
+          </span>
+        </button>
+
         {!!toolCallState.output?.length && (
           <ToolTruncateHistoryIcon historyIndex={historyIndex} />
         )}
       </div>
-      <div>{children}</div>
+
+      {/* Collapsible body */}
+      <div
+        id={bodyId}
+        className={`transition-all duration-200 ease-in-out ${
+          open
+            ? "max-h-[50vh] opacity-100"
+            : "max-h-0 overflow-hidden opacity-0"
+        }`}
+      >
+        <div className="thin-scrollbar max-h-[50vh] overflow-y-auto pb-1 pl-5 pr-1 pt-1">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }

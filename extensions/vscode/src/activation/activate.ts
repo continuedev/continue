@@ -20,7 +20,7 @@ async function maybePromptContinueMigration(): Promise<void> {
   }
   void runContinueMigration(detection, async () => {
     const choice = await vscode.window.showInformationMessage(
-      `Found existing Continue config at ${detection.legacyDir}. Copy it to ${detection.newDir} so Yuto Agentic can use it?`,
+      `Found existing Yuto Agentic config at ${detection.legacyDir}. Copy it to ${detection.newDir} so Yuto Agentic can use it?`,
       { modal: false },
       "Copy",
       "Skip",
@@ -49,7 +49,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
     globalContext.update("hasShownUnsupportedPlatformWarning", true);
     void vscode.window.showInformationMessage(
-      `Continue detected that you are using ${platformTarget}. Due to native dependencies, Continue may not be able to start`,
+      `Yuto Agentic detected that you are using ${platformTarget}. Due to native dependencies, Yuto Agentic may not be able to start`,
     );
 
     void Telemetry.capture(

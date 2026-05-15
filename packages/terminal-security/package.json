@@ -1,7 +1,7 @@
 {
   "name": "@yutoagentic/terminal-security",
   "version": "1.0.0",
-  "description": "Terminal command security evaluation for Continue",
+  "description": "Terminal command security evaluation for YutoAgentic.dev",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -11,7 +11,7 @@
     "build": "tsc",
     "clean": "rm -rf dist"
   },
-  "author": "Continue Dev, Inc",
+  "author": "YutoAgentic Dev, Inc",
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^20.11.19",

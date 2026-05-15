@@ -122,7 +122,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
 
   if (
     parsedError.includes(
-      "You have no credits remaining on your Continue account",
+      "You have no credits remaining on your Yuto Agentic account",
     ) ||
     parsedError.includes("You're out of credits!")
   ) {

@@ -1,7 +1,7 @@
 {
   "name": "@yutoagentic/core",
   "version": "1.1.0",
-  "description": "The Continue Core contains functionality that can be shared across web, VS Code, or Node.js",
+  "description": "The YutoAgentic Core contains functionality that can be shared across web, VS Code, or Node.js",
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "vitest": "vitest run",
@@ -11,10 +11,10 @@
     "build:npm": "npm run build && npm run sentry:sourcemaps",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --ext ts --fix",
-    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org continue-xd --project continue ./dist && sentry-cli sourcemaps upload --org continue-xd --project continue ./dist"
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org yutoagentic --project yutoagentic ./dist && sentry-cli sourcemaps upload --org yutoagentic --project yutoagentic ./dist"
   },
   "type": "module",
-  "author": "Continue Dev, Inc",
+  "author": "YutoAgentic Dev, Inc",
   "license": "Apache-2.0",
   "devDependencies": {
     "@babel/preset-env": "^7.24.7",

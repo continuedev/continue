@@ -160,7 +160,7 @@
         },
         "noProxy": {
           "title": "No Proxy",
-          "description": "A list of hostnames for which Continue should not use the proxy specified in requestOptions.proxy",
+          "description": "A list of hostnames for which Yuto Agentic should not use the proxy specified in requestOptions.proxy",
           "type": "array",
           "items": {
             "type": "string"
@@ -248,14 +248,14 @@
             "### Sagemaker\nSagemaker is AWS' machine learning platform.",
             "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.yutoagentic.dev/reference/Model%20Providers/togetherllm)",
             "### Novita AI\n[Novita AI](https://novita.ai?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link) offers an affordable, reliable, and simple inference platform with scalable [LLM APIs](https://novita.ai/docs/model-api/reference/introduction.html), empowering developers to build AI applications. To get started with Novita AI:\n1. Obtain an API key from [here](https://novita.ai/settings/key-management?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.yutoagentic.dev/reference/Model%20Providers/novita)",
-            "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://docs.yutoagentic.dev/reference/Model%20Providers/ollama)",
+            "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Yuto Agentic.\n> [Reference](https://docs.yutoagentic.dev/reference/Model%20Providers/ollama)",
             "### Huggingface TGI\n\n> [Reference](https://docs.yutoagentic.dev/reference/Model%20Providers/huggingfacetgi)",
             "### Huggingface Inference API\n\n> [Reference](https://docs.yutoagentic.dev/reference/Model%20Providers/huggingfaceinferenceapi)",
-            "### Llama.cpp\nllama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:\n\n1. Clone the repository with `git clone https://github.com/ggerganov/llama.cpp`.\n2. `cd llama.cpp`\n3. Run `make` to build the server.\n4. Download the model you'd like to use and place it in the `llama.cpp/models` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))\n5. Run the llama.cpp server with the command below (replacing with the model you downloaded):\n\n```shell\n.\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models/codellama-7b-instruct.Q8_0.gguf\n```\n\nAfter it's up and running, you can start using Continue.\n> [Reference](https://docs.yutoagentic.dev/reference/Model%20Providers/llamacpp)",
+            "### Llama.cpp\nllama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:\n\n1. Clone the repository with `git clone https://github.com/ggerganov/llama.cpp`.\n2. `cd llama.cpp`\n3. Run `make` to build the server.\n4. Download the model you'd like to use and place it in the `llama.cpp/models` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))\n5. Run the llama.cpp server with the command below (replacing with the model you downloaded):\n\n```shell\n.\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models/codellama-7b-instruct.Q8_0.gguf\n```\n\nAfter it's up and running, you can start using Yuto Agentic.\n> [Reference](https://docs.yutoagentic.dev/reference/Model%20Providers/llamacpp)",
             "### Replicate\nReplicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.yutoagentic.dev/reference/Model%20Providers/replicatellm)",
             "### Gemini API\nTo get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.\n> [Reference](https://docs.yutoagentic.dev/reference/Model%20Providers/geminiapi)",
             "### Gemini API on Vertex AI\nTo get started you need to enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up the [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
-            "### LMStudio\nLMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.\n> [Reference](https://docs.yutoagentic.dev/reference/Model%20Providers/lmstudio)",
+            "### LMStudio\nLMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Yuto Agentic.\n> [Reference](https://docs.yutoagentic.dev/reference/Model%20Providers/lmstudio)",
             "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://docs.yutoagentic.dev/reference/Model%20Providers/llamafile)",
             "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
             "### Mistral API on Vertex AI\nTo get started you need to enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up the [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
@@ -266,7 +266,7 @@
             "### Cloudflare Workers AI\n\n[Reference](https://developers.cloudflare.com/workers-ai/)",
             "### Deepseek\n Deepseek's API provides the best pricing for their state-of-the-art Deepseek Coder models. To get started, obtain an API key from [their console](https://platform.deepseek.com/api_keys)",
             "### Azure OpenAI\n Azure OpenAI lets you securely run OpenAI's models on Azure. To get started, follow the steps [here](https://docs.yutoagentic.dev/reference/Model%20Providers/azure)",
-            "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'.\n2. Go to the Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://yutoagentic.dev/docs/reference/Model%20Providers/Msty)",
+            "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'.\n2. Go to the Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Yuto Agentic.\n> [Reference](https://yutoagentic.dev/docs/reference/Model%20Providers/Msty)",
             "### IBM watsonx\nwatsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.",
             "### OpenRouter\nOpenRouter offers a single API to access almost any language model. To get started, obtain an API key from [their console](https://openrouter.ai/settings/keys).",
             "### ClawRouter\nClawRouter is an open-source LLM router that automatically selects the cheapest capable model for each request based on prompt complexity, providing 78-96% cost savings. To get started, run `npx clawrouter` to start the router at localhost:1337. A wallet is auto-generated on first run - fund it with USDC (Solana/Base) to access premium models, or use `blockrun/free` tier without payment.\n> [Reference](https://github.com/BlockRunAI/ClawRouter)",
@@ -416,8 +416,8 @@
         },
         "promptTemplates": {
           "title": "Prompt Templates",
-          "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://docs.yutoagentic.dev/model-setup/configuration#customizing-the-edit-prompt) for an example.",
-          "x-intellij-html-description": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See <a href='https://docs.yutoagentic.dev/model-setup/configuration#customizing-the-edit-prompt'>here</a> for an example.",
+          "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Yuto Agentic) to a string giving the prompt template. See [here](https://docs.yutoagentic.dev/model-setup/configuration#customizing-the-edit-prompt) for an example.",
+          "x-intellij-html-description": "A mapping of prompt template name ('edit' is currently the only one used in Yuto Agentic) to a string giving the prompt template. See <a href='https://docs.yutoagentic.dev/model-setup/configuration#customizing-the-edit-prompt'>here</a> for an example.",
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -1883,12 +1883,12 @@
                 "properties": {
                   "recap": {
                     "type": "boolean",
-                    "markdownDescription": "If recap is set to `true`, Continue will generate a summary of the changes after making the edit.",
-                    "x-intellij-html-description": "If recap is set to <code>true</code>, Continue will generate a summary of the changes after making the edit."
+                    "markdownDescription": "If recap is set to `true`, Yuto Agentic will generate a summary of the changes after making the edit.",
+                    "x-intellij-html-description": "If recap is set to <code>true</code>, Yuto Agentic will generate a summary of the changes after making the edit."
                   },
                   "tokenLimit": {
                     "type": "integer",
-                    "description": "By default, Continue doesn't let you edit extremely large ranges (beyond 1,200 tokens), because the LLM is unlikely to succeed. But if you would like to override this limit with the understanding of possible failure you may do so here."
+                    "description": "By default, Yuto Agentic doesn't let you edit extremely large ranges (beyond 1,200 tokens), because the LLM is unlikely to succeed. But if you would like to override this limit with the understanding of possible failure you may do so here."
                   }
                 }
               }
@@ -2833,15 +2833,15 @@
         },
         "disableIndexing": {
           "title": "Disable Indexing",
-          "markdownDescription": "If set to `true`, Continue will not index the codebase. This is mainly used for debugging purposes.",
-          "x-intellij-html-description": "If set to <code>true</code>, Continue will not index the codebase. This is mainly used for debugging purposes.",
+          "markdownDescription": "If set to `true`, Yuto Agentic will not index the codebase. This is mainly used for debugging purposes.",
+          "x-intellij-html-description": "If set to <code>true</code>, Yuto Agentic will not index the codebase. This is mainly used for debugging purposes.",
           "default": false,
           "type": "boolean"
         },
         "disableSessionTitles": {
           "title": "Disable Session Titles",
-          "markdownDescription": "If set to `true`, Continue will not make extra requests to the LLM to generate a summary title of each session.",
-          "x-intellij-html-description": "If set to <code>true</code>, Continue will not make extra requests to the LLM to generate a summary title of each session.",
+          "markdownDescription": "If set to `true`, Yuto Agentic will not make extra requests to the LLM to generate a summary title of each session.",
+          "x-intellij-html-description": "If set to <code>true</code>, Yuto Agentic will not make extra requests to the LLM to generate a summary title of each session.",
           "default": false,
           "type": "boolean"
         },
@@ -3213,8 +3213,8 @@
         },
         "tabAutocompleteModel": {
           "title": "Tab Autocomplete Model",
-          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using qwen2.5-coder:1.5b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
-          "x-intellij-html-description": "The model used for tab autocompletion. If undefined, Continue will default to using qwen2.5-coder:1.5b on a local Ollama instance.<br><br><i>IMPORTANT</i>:<br><br>If you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
+          "markdownDescription": "The model used for tab autocompletion. If undefined, Yuto Agentic will default to using qwen2.5-coder:1.5b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
+          "x-intellij-html-description": "The model used for tab autocompletion. If undefined, Yuto Agentic will default to using qwen2.5-coder:1.5b on a local Ollama instance.<br><br><i>IMPORTANT</i>:<br><br>If you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
           "default": {
             "title": "Tab Autocomplete Model",
             "provider": "ollama",
@@ -3269,7 +3269,7 @@
             },
             "multilineCompletions": {
               "enum": ["always", "never", "auto"],
-              "description": "If set to true, Continue will only complete a single line at a time."
+              "description": "If set to true, Yuto Agentic will only complete a single line at a time."
             },
             "useCache": {
               "type": "boolean",
@@ -3277,7 +3277,7 @@
             },
             "onlyMyCode": {
               "type": "boolean",
-              "description": "If set to true, Continue will not include any snippets from go to definition unless they are within your repository"
+              "description": "If set to true, Yuto Agentic will not include any snippets from go to definition unless they are within your repository"
             },
             "disableInFiles": {
               "description": "A list of files / glob patterns in which to disable tab autocomplete. For example, *.csv if you'd like to disable autocomplete in .csv files.",

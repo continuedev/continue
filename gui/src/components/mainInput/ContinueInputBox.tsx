@@ -5,7 +5,7 @@ import {
   RuleMetadata,
   SlashCommandSource,
 } from "core";
-import { memo, useMemo } from "react";
+import { memo, type ReactNode, useMemo } from "react";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useAppSelector } from "../../redux/hooks";
 import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
@@ -13,7 +13,6 @@ import { ContextItemsPeek } from "./belowMainInput/ContextItemsPeek";
 import { RulesPeek } from "./belowMainInput/RulesPeek";
 import { GradientBorder } from "./GradientBorder";
 import { ToolbarOptions } from "./InputToolbar";
-import { Lump } from "./Lump";
 import { TipTapEditor } from "./TipTapEditor";
 
 interface ContinueInputBoxProps {
@@ -29,6 +28,7 @@ interface ContinueInputBoxProps {
   contextItems?: ContextItemWithId[];
   appliedRules?: RuleMetadata[];
   hidden?: boolean;
+  mainInputAuxContent?: ReactNode;
   inputId: string; // used to keep track of things per input in redux
 }
 
@@ -129,11 +129,20 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
       data-testid={`continue-input-box-${props.inputId}`}
     >
       <div className={`relative flex flex-col px-2`}>
-        {props.isMainInput && <Lump />}
+        {/* {props.isMainInput && <Lump />} */}
+        {props.isMainInput && props.mainInputAuxContent && (
+          <div data-testid={`continue-input-box-${props.inputId}-aux-content`}>
+            {props.mainInputAuxContent}
+          </div>
+        )}
         <GradientBorder
           loading={showSubmittingState ? 1 : 0}
           borderColor={showSubmittingState ? undefined : vscBackground}
-          borderRadius={defaultBorderRadius}
+          borderRadius={
+            props.isMainInput && props.mainInputAuxContent
+              ? `0 0 ${defaultBorderRadius} ${defaultBorderRadius}`
+              : defaultBorderRadius
+          }
         >
           <TipTapEditor
             editorState={props.editorState}

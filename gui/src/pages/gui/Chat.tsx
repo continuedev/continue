@@ -30,6 +30,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   selectDoneApplyStates,
   selectPendingToolCalls,
+  selectVisibleApplyStates,
 } from "../../redux/selectors/selectToolCalls";
 import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
 import {
@@ -54,7 +55,6 @@ import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import { AgentChatView } from "../../components/Agent/AgentChatView";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
-import { PendingApplyStatesToolbar } from "../../components/mainInput/Lump/LumpToolbar/PendingApplyStatesToolbar";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
@@ -63,7 +63,13 @@ import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { TeamCoordinationPanel } from "./TeamCoordinationPanel";
+import { ModifiedFilesMenu } from "./ToolCallDiv/ModifiedFilesMenu";
+import {
+  findLatestTodoToolCallStateInCurrentTurn,
+  TodoListMenu,
+} from "./ToolCallDiv/TodoListMenu";
 import { useAutoScroll } from "./useAutoScroll";
+import { WorkingGroupBox } from "./WorkingGroupBox";
 
 // Helper function to find the index of the latest conversation summary
 function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
@@ -126,7 +132,11 @@ export function Chat() {
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
   const history = useAppSelector((state) => state.session.history);
-  const pendingApplyStates = useAppSelector(selectDoneApplyStates);
+  const visibleApplyStates = useAppSelector(selectVisibleApplyStates);
+  const latestTodoToolCallState = useMemo(
+    () => findLatestTodoToolCallStateInCurrentTurn(history),
+    [history],
+  );
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );
@@ -577,60 +587,170 @@ export function Chat() {
     [sendInput, isLastUserInput, history, stepsOpen, isStreaming],
   );
 
-  const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
+  const showScrollbar = showChatScrollbar ?? window.innerHeight < 5000;
+
+  // Group consecutive thinking + tool-call items under a single WorkingGroupBox.
+  // Pure-text assistant messages and user messages render individually.
+  const renderGroups = useMemo(() => {
+    type WorkingRun = {
+      kind: "working";
+      items: ChatHistoryItemWithMessageId[];
+      indices: number[];
+    };
+    type SingleRun = {
+      kind: "single";
+      item: ChatHistoryItemWithMessageId;
+      filteredIndex: number;
+    };
+    type RenderGroup = WorkingRun | SingleRun;
+
+    const filteredHistory = history.filter(
+      (item) => item.message.role !== "system",
+    );
+    const groups: RenderGroup[] = [];
+    let gi = 0;
+    while (gi < filteredHistory.length) {
+      const item = filteredHistory[gi];
+      const role = item.message.role;
+      const isWorking =
+        role === "thinking" ||
+        (role === "assistant" && (item.toolCallStates?.length ?? 0) > 0);
+
+      if (isWorking) {
+        const workItems: ChatHistoryItemWithMessageId[] = [];
+        const indices: number[] = [];
+        while (gi < filteredHistory.length) {
+          const curr = filteredHistory[gi];
+          const currRole = curr.message.role;
+          const currIsPartOfRun =
+            currRole === "thinking" ||
+            currRole === "tool" ||
+            (currRole === "assistant" &&
+              (curr.toolCallStates?.length ?? 0) > 0);
+          if (!currIsPartOfRun) break;
+          // tool messages render as null; keep them in the run but omit from workItems
+          if (currRole !== "tool") {
+            workItems.push(curr);
+            indices.push(gi);
+          }
+          gi++;
+        }
+        if (workItems.length > 0) {
+          groups.push({ kind: "working", items: workItems, indices });
+        }
+      } else {
+        groups.push({ kind: "single", item, filteredIndex: gi });
+        gi++;
+      }
+    }
+    return groups;
+  }, [history]);
+
+  const hasTodoMenu = Boolean(latestTodoToolCallState);
+  const hasFilesMenu = visibleApplyStates.length > 0;
 
   return (
     <>
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} flex-1`}
+        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} min-h-0 flex-1`}
       >
         {highlights}
-        {history
-          .filter((item) => item.message.role !== "system")
-          .map((item, index: number) => (
-            <div
-              key={item.message.id}
-              style={{
-                minHeight: index === history.length - 1 ? "200px" : 0,
-              }}
-            >
-              <ErrorBoundary
-                FallbackComponent={fallbackRender}
-                onReset={() => {
-                  dispatch(newSession());
-                }}
+        {renderGroups.map((group, groupIndex) => {
+          const isLastGroup = groupIndex === renderGroups.length - 1;
+
+          if (group.kind === "single") {
+            const { item, filteredIndex } = group;
+            return (
+              <div
+                key={item.message.id}
+                style={{ minHeight: isLastGroup ? "200px" : 0 }}
               >
-                {renderChatHistoryItem(item, index)}
-              </ErrorBoundary>
-              {index === history.length - 1 && <InlineErrorMessage />}
-            </div>
-          ))}
-      </StepsDiv>
-      <div className={"relative"}>
-        {!isInEdit && pendingApplyStates.length > 0 && (
-          <div className="px-2 pb-2">
-            <PendingApplyStatesToolbar
-              pendingApplyStates={pendingApplyStates}
-            />
-          </div>
-        )}
-
-        <ContinueInputBox
-          isMainInput
-          isSubmitting={isSubmittingInput}
-          isLastUserInput={false}
-          onEnter={(editorState, modifiers, editor) =>
-            sendInput(editorState, modifiers, undefined, editor)
+                <ErrorBoundary
+                  FallbackComponent={fallbackRender}
+                  onReset={() => {
+                    dispatch(newSession());
+                  }}
+                >
+                  {renderChatHistoryItem(item, filteredIndex)}
+                </ErrorBoundary>
+                {isLastGroup && <InlineErrorMessage />}
+              </div>
+            );
           }
-          inputId={MAIN_EDITOR_INPUT_ID}
-        />
 
-        <CliInstallBanner
-          sessionCount={allSessionMetadata.length}
-          sessionThreshold={3}
-          permanentDismissal={true}
-        />
+          // Working group — wrap in collapsible WorkingGroupBox
+          const { items, indices } = group;
+          const isGroupActive = isStreaming && isLastGroup;
+          const actionCount = items.reduce(
+            (acc, it) => acc + (it.toolCallStates?.length ?? 0),
+            0,
+          );
+          return (
+            <div
+              key={`working-group-${indices[0]}`}
+              style={{ minHeight: isLastGroup ? "200px" : 0 }}
+            >
+              <WorkingGroupBox
+                isActive={isGroupActive}
+                actionCount={actionCount}
+              >
+                {items.map((it, localIdx) => (
+                  <ErrorBoundary
+                    key={it.message.id}
+                    FallbackComponent={fallbackRender}
+                    onReset={() => {
+                      dispatch(newSession());
+                    }}
+                  >
+                    {renderChatHistoryItem(it, indices[localIdx])}
+                  </ErrorBoundary>
+                ))}
+              </WorkingGroupBox>
+              {isLastGroup && <InlineErrorMessage />}
+            </div>
+          );
+        })}
+      </StepsDiv>
+      <div className="relative shrink-0">
+        <div
+          className="bg-vsc-input-background sticky bottom-0 z-10 px-2 pt-2"
+          data-testid="chat-composer-rail"
+        >
+          <ContinueInputBox
+            isMainInput
+            isSubmitting={isSubmittingInput}
+            isLastUserInput={false}
+            mainInputAuxContent={
+              !isInEdit && (hasTodoMenu || hasFilesMenu) ? (
+                <>
+                  {hasTodoMenu && latestTodoToolCallState && (
+                    <TodoListMenu
+                      toolCallState={latestTodoToolCallState}
+                      roundedTop={true}
+                    />
+                  )}
+                  {hasFilesMenu && (
+                    <ModifiedFilesMenu
+                      applyStates={visibleApplyStates}
+                      roundedTop={!hasTodoMenu}
+                    />
+                  )}
+                </>
+              ) : undefined
+            }
+            onEnter={(editorState, modifiers, editor) =>
+              sendInput(editorState, modifiers, undefined, editor)
+            }
+            inputId={MAIN_EDITOR_INPUT_ID}
+          />
+
+          <CliInstallBanner
+            sessionCount={allSessionMetadata.length}
+            sessionThreshold={3}
+            permanentDismissal={true}
+          />
+        </div>
 
         <div
           style={{
@@ -651,7 +771,7 @@ export function Chat() {
                 </NewSessionButton>
               )}
             </div>
-            <div className="bg-vsc-input-background rounded-xl px-2">
+            <div className="rounded-xl px-2">
               <AssistantAndOrgListbox variant="lump" />
             </div>
           </div>

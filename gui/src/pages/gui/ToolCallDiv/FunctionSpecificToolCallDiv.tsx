@@ -83,6 +83,8 @@ function FunctionSpecificToolCallDiv({
           toolCallId={toolCall.id}
         />
       );
+    case BuiltInToolNames.TodoWrite:
+      return null;
     case BuiltInToolNames.Subagent:
     case BuiltInToolNames.Config:
     case BuiltInToolNames.Status:

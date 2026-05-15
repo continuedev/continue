@@ -2,12 +2,7 @@ models:
   - name: Qwen vLLM
     provider: vllm
     model: Qwen/Qwen3.6-35B-A3B
-    apiBase: http://192.168.1.112:8001/v1
-    apiKey: dummy
+    apiBase: https://llm.blockanalyzer.io/v1
+    apiKey: 0a29b8c83bae5258e7b639bb82a2864c450a3b7fa0d2bf60c53fbde77d8c7aed
     capabilities: [tool_use]
     useLegacyCompletionsEndpoint: false
-    completionOptions:
-      reasoning: false
-    requestOptions:
-      noProxy:
-        - "192.168.1.112"

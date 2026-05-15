@@ -1,12 +1,12 @@
 openapi: 3.0.0
 info:
-  title: Continue Hub IDE API
+  title: YutoAgentic Hub IDE API
   description: |
-    API for Continue IDE to fetch assistants and other related information.
-    These endpoints are primarily used by the Continue IDE extensions for VS Code and JetBrains.
+    API for YutoAgentic IDE to fetch assistants and other related information.
+    These endpoints are primarily used by the YutoAgentic IDE extensions for VS Code and JetBrains.
   version: 1.0.0
   contact:
-    name: Continue Dev Team
+    name: YutoAgentic Dev Team
     url: https://yutoagentic.dev
 servers:
   - url: https://api.yutoagentic.dev

@@ -36,7 +36,7 @@ const vscodeShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd L",
     description:
-      "New Chat / New Chat With Selected Code / Close Continue Sidebar If Chat Already In Focus",
+      "New Chat / New Chat With Selected Code / Close Yuto Agentic Sidebar If Chat Already In Focus",
   },
   {
     shortcut: "cmd backspace",
@@ -49,7 +49,7 @@ const vscodeShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd shift L",
     description:
-      "Focus Current Chat / Add Selected Code To Current Chat / Close Continue Sidebar If Chat Already In Focus",
+      "Focus Current Chat / Add Selected Code To Current Chat / Close Yuto Agentic Sidebar If Chat Already In Focus",
   },
   {
     shortcut: "cmd shift R",
@@ -97,7 +97,7 @@ const jetbrainsShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd J",
     description:
-      "New Chat / New Chat With Selected Code / Close Continue Sidebar If Chat Already In Focus",
+      "New Chat / New Chat With Selected Code / Close Yuto Agentic Sidebar If Chat Already In Focus",
   },
   {
     shortcut: "cmd backspace",
@@ -110,7 +110,7 @@ const jetbrainsShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd shift J",
     description:
-      "Focus Current Chat / Add Selected Code To Current Chat / Close Continue Sidebar If Chat Already In Focus",
+      "Focus Current Chat / Add Selected Code To Current Chat / Close Yuto Agentic Sidebar If Chat Already In Focus",
   },
   {
     shortcut: "cmd shift backspace",

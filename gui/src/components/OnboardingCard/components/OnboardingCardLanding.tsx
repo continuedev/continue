@@ -31,7 +31,7 @@ export function OnboardingCardLanding({
         void dispatch(selectFirstHubProfile());
 
         ideMessenger.post("showTutorial", undefined);
-        ideMessenger.post("showToast", ["info", "🎉 Welcome to Continue!"]);
+        ideMessenger.post("showToast", ["info", "🎉 Welcome to Yuto Agentic!"]);
       }
     });
   }
@@ -51,14 +51,14 @@ export function OnboardingCardLanding({
       </div>
 
       <p className="mb-5 mt-0 w-full text-sm">
-        Log in to Continue Hub to get started with AI-powered coding
+        Log in to Yuto Hub to get started with AI-powered coding
       </p>
 
       <Button
         onClick={onGetStarted}
         className="mt-4 grid w-full grid-flow-col items-center gap-2"
       >
-        Log in to Continue Hub
+        Log in to Yuto Hub
       </Button>
 
       <SecondaryButton onClick={onSelectConfigure} className="w-full">

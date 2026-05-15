@@ -66,3 +66,48 @@ export const selectDoneApplyStates = createSelector(
   (store: RootState) => store.session.codeBlockApplyStates.states,
   (states) => states.filter((applyState) => applyState.status === "done"),
 );
+
+function getCurrentTurnToolCallIds(
+  history: RootState["session"]["history"],
+): Set<string> {
+  const ids = new Set<string>();
+
+  for (let i = history.length - 1; i >= 0; i--) {
+    const item = history[i];
+    if (item.message.role === "user") {
+      break;
+    }
+
+    for (const toolCallState of item.toolCallStates ?? []) {
+      ids.add(toolCallState.toolCallId);
+    }
+  }
+
+  return ids;
+}
+
+export const selectVisibleApplyStates = createSelector(
+  [
+    (store: RootState) => store.session.codeBlockApplyStates.states,
+    (store: RootState) => store.session.history,
+  ],
+  (states, history) => {
+    const currentTurnToolCallIds = getCurrentTurnToolCallIds(history);
+
+    // In tests and edge boot states there may be no current tool call context.
+    // In that case, preserve legacy behavior and only surface pending done states.
+    if (currentTurnToolCallIds.size === 0) {
+      return states.filter((applyState) => applyState.status === "done");
+    }
+
+    return states.filter((applyState) => {
+      const isVisibleStatus =
+        applyState.status === "done" || applyState.status === "closed";
+      return (
+        isVisibleStatus &&
+        !!applyState.toolCallId &&
+        currentTurnToolCallIds.has(applyState.toolCallId)
+      );
+    });
+  },
+);

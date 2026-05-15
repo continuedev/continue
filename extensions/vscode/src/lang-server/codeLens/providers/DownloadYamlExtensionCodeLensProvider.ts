@@ -22,7 +22,7 @@ export class DownloadYamlExtensionCodeLensProvider
     const docCodeLens: vscode.CodeLens = {
       range: new vscode.Range(0, 0, 0, 0),
       command: {
-        title: "📖 View Continue Reference",
+        title: "📖 View Yuto Agentic Reference",
         command: "vscode.open",
         arguments: [vscode.Uri.parse("https://docs.yutoagentic.dev/reference")],
       },
@@ -34,7 +34,7 @@ export class DownloadYamlExtensionCodeLensProvider
       const codeLens: vscode.CodeLens = {
         range: new vscode.Range(0, 0, 0, 0),
         command: {
-          title: "Download YAML extension for Intellisense",
+          title: "Download YAML extension for Yuto Agentic Intellisense",
           command: "workbench.extensions.installExtension",
           arguments: ["redhat.vscode-yaml"],
         },

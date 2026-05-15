@@ -203,7 +203,7 @@ export class ConfigHandler {
       } catch (e) {
         errors.push({
           fatal: false,
-          message: `Error loading Continue Hub assistants${e instanceof Error ? ":\n" + e.message : ""}`,
+          message: `Error loading YutoAgentic Hub assistants${e instanceof Error ? ":\n" + e.message : ""}`,
         });
       }
     } else {
@@ -216,7 +216,7 @@ export class ConfigHandler {
     } catch (e) {
       errors.push({
         fatal: true,
-        message: `Error loading local assistants${e instanceof Error ? ":\n" + e.message : ""}`,
+        message: `Error loading local YutoAgentic assistants${e instanceof Error ? ":\n" + e.message : ""}`,
       });
       return {
         orgs: [],
@@ -343,7 +343,7 @@ export class ConfigHandler {
 
   async getLocalProfiles(options: LoadAssistantFilesOptions) {
     /**
-     * Users can define as many local agents as they want in a `.continue/agents` (or previous .continue/assistants) folder
+     * Users can define as many local YutoAgentic agents as they want in a `.continue/agents` (or previous .continue/assistants) folder
      */
 
     // Local customization disabled for on-premise deployments

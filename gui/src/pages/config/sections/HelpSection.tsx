@@ -52,7 +52,7 @@ const vscodeShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd L",
     description:
-      "New Chat / New Chat With Selected Code / Close Continue Sidebar If Chat Already In Focus",
+      "New Chat / New Chat With Selected Code / Close Yuto Agentic Sidebar If Chat Already In Focus",
   },
   {
     shortcut: "cmd backspace",
@@ -65,7 +65,7 @@ const vscodeShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd shift L",
     description:
-      "Focus Current Chat / Add Selected Code To Current Chat / Close Continue Sidebar If Chat Already In Focus",
+      "Focus Current Chat / Add Selected Code To Current Chat / Close Yuto Agentic Sidebar If Chat Already In Focus",
   },
   {
     shortcut: "cmd shift R",
@@ -113,7 +113,7 @@ const jetbrainsShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd J",
     description:
-      "New Chat / New Chat With Selected Code / Close Continue Sidebar If Chat Already In Focus",
+      "New Chat / New Chat With Selected Code / Close Yuto Agentic Sidebar If Chat Already In Focus",
   },
   {
     shortcut: "cmd backspace",
@@ -126,7 +126,7 @@ const jetbrainsShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd shift J",
     description:
-      "Focus Current Chat / Add Selected Code To Current Chat / Close Continue Sidebar If Chat Already In Focus",
+      "Focus Current Chat / Add Selected Code To Current Chat / Close Yuto Agentic Sidebar If Chat Already In Focus",
   },
   {
     shortcut: "cmd shift backspace",
@@ -184,7 +184,7 @@ export function HelpSection() {
         >
           <ConfigRow
             title="Documentation"
-            description="Learn how to configure and use Continue"
+            description="Learn how to configure and use Yuto Agentic, best practices, and troubleshooting tips"
             icon={LinkIcon}
             onClick={() =>
               ideMessenger.post("openUrl", "https://docs.yutoagentic.dev/")
@@ -197,7 +197,7 @@ export function HelpSection() {
             onClick={() =>
               ideMessenger.post(
                 "openUrl",
-                "https://github.com/continuedev/continue/issues/new/choose",
+                "https://github.com/yuto-agentic/issues/new/choose",
               )
             }
           />
@@ -208,7 +208,7 @@ export function HelpSection() {
             onClick={() =>
               ideMessenger.post(
                 "openUrl",
-                "https://github.com/continuedev/continue/discussions",
+                "https://github.com/yuto-agentic/discussions",
               )
             }
           />

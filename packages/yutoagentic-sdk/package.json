@@ -1,7 +1,7 @@
 {
   "name": "@yutoagentic/sdk-generator",
   "version": "0.0.1",
-  "description": "SDK Generator for Continue.dev",
+  "description": "SDK Generator for YutoAgentic.dev",
   "type": "module",
   "scripts": {
     "build": "echo 'No build step needed'",
@@ -11,7 +11,7 @@
     "generate-client:ALL": "npm run generate-client:typescript && npm run generate-client:python",
     "swagger-ui": "node swagger-ui-server.js"
   },
-  "author": "Continue Dev, Inc.",
+  "author": "YutoAgentic Dev, Inc.",
   "license": "Apache-2.0",
   "dependencies": {
     "@yutoagentic/config-yaml": "file:../config-yaml",

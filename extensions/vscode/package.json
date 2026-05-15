@@ -88,14 +88,14 @@
         "yutoagentic.telemetryEnabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [yutoagentic.dev › Telemetry](https://docs.yutoagentic.dev/telemetry).",
+          "markdownDescription": "Yuto Agentic collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [yutoagentic.dev › Telemetry](https://docs.yutoagentic.dev/telemetry).",
           "markdownDeprecationMessage": "This setting is deprecated and will be removed in a later version. Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page.",
           "deprecationMessage": "Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page."
         },
         "yutoagentic.showInlineTip": {
           "type": "boolean",
           "default": true,
-          "description": "Show inline suggestion to use the Continue keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
+          "description": "Show inline suggestion to use the Yuto Agentic keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
         },
         "yutoagentic.disableQuickFix": {
           "type": "boolean",
@@ -110,22 +110,22 @@
         "yutoagentic.enableTabAutocomplete": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [yutoagentic.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.yutoagentic.dev/features/tab-autocomplete)"
+          "markdownDescription": "Enable Yuto Agentic's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [yutoagentic.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.yutoagentic.dev/features/tab-autocomplete)"
         },
         "yutoagentic.enableNextEdit": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's next edit feature. Read our docs to learn about configuration and how to share feedback: [yutoagentic.dev › Features › Autocomplete › Next Edit (experimental)](https://docs.yutoagentic.dev/features/autocomplete/next-edit)"
+          "markdownDescription": "Enable Yuto Agentic's next edit feature. Read our docs to learn about configuration and how to share feedback: [yutoagentic.dev › Features › Autocomplete › Next Edit (experimental)](https://docs.yutoagentic.dev/features/autocomplete/next-edit)"
         },
         "yutoagentic.pauseTabAutocompleteOnBattery": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
+          "markdownDescription": "Pause Yuto Agentic's tab autocomplete feature when your battery is low."
         },
         "yutoagentic.pauseCodebaseIndexOnStart": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Pause Continue's codebase index on start."
+          "markdownDescription": "Pause Yuto Agentic's codebase index on start."
         },
         "yutoagentic.enableConsole": {
           "type": "boolean",
@@ -331,7 +331,7 @@
       {
         "command": "yutoagentic.focusContinueInput",
         "category": "Yuto Agentic",
-        "title": "Focus Continue Chat",
+        "title": "Focus Yuto Agentic Chat",
         "group": "Yuto Agentic"
       },
       {

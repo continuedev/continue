@@ -1,4 +1,4 @@
-name: Continue Agents
+name:  YutoAgentic Agents
 
 on:
   workflow_call:
@@ -6,7 +6,7 @@ on:
       agents-path:
         description: 'Path to agents folder'
         required: false
-        default: '.continue/agents'
+        default: '.yutoagentic/agents'
         type: string
     secrets:
       ANTHROPIC_API_KEY:
@@ -62,7 +62,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Continue CLI
+      - name: Install YutoAgentic CLI
         run: npm i -g @yutoagentic/cli
 
       - name: Extract agent name
@@ -82,7 +82,7 @@ jobs:
             const { data: check } = await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              name: `Continue: ${process.env.AGENT_NAME}`,
+              name: `YutoAgentic: ${process.env.AGENT_NAME}`,
               head_sha: context.sha,
               status: 'in_progress',
               started_at: new Date().toISOString(),
@@ -170,9 +170,9 @@ jobs:
               conclusion: success ? 'success' : 'failure',
               completed_at: new Date().toISOString(),
               output: {
-                title: success ? 'Agent completed' : 'Agent failed',
+                title: success ? 'YutoAgentic Agent completed' : 'YutoAgentic Agent failed',
                 summary: success
-                  ? `Agent completed successfully.\n\n<details><summary>Output</summary>\n\n\`\`\`\n${output.slice(0, 60000)}\n\`\`\`\n</details>`
-                  : `Agent failed.\n\n\`\`\`\n${error.slice(0, 60000)}\n\`\`\``,
+                  ? `YutoAgentic Agent completed successfully.\n\n<details><summary>Output</summary>\n\n\`\`\`\n${output.slice(0, 60000)}\n\`\`\`\n</details>`
+                  : `YutoAgentic Agent failed.\n\n\`\`\`\n${error.slice(0, 60000)}\n\`\`\``,
               },
             });

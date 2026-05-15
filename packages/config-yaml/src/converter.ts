@@ -185,7 +185,7 @@ export function convertJsonToYamlConfig(configJson: ConfigJson): ConfigYaml {
   const docs = configJson.docs?.map(convertDoc);
 
   const configYaml: ConfigYaml = {
-    name: "Continue Config",
+    name: "YutoAgentic Config",
     version: "0.0.1",
     models,
     context,

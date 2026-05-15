@@ -23,8 +23,15 @@ module.exports = {
       "4xl": "1180px",
     },
     extend: {
+      keyframes: {
+        wave: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-0.75rem)" }, // Adjust height of the wave here
+        },
+      },
       animation: {
         "spin-slow": "spin 6s linear infinite",
+        wave: "wave 1.2s ease-in-out infinite",
       },
       borderRadius: {
         default: "0.5rem",

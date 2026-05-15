@@ -1,18 +1,6 @@
 // src/components/ThinkingBlockPeek.tsx
-import {
-  BeakerIcon,
-  CheckCircleIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  ChevronUpIcon,
-  CodeBracketIcon,
-  CommandLineIcon,
-  ClockIcon,
-  DocumentTextIcon,
-  MagnifyingGlassIcon,
-  WrenchScrewdriverIcon,
-} from "@heroicons/react/24/outline";
-import { ArrowPathIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
+import { SparklesIcon } from "@heroicons/react/24/solid";
 import { ChatHistoryItem } from "core";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
@@ -251,67 +239,6 @@ export function buildThinkingTimeline(
   });
 }
 
-function buildBreadcrumbs(
-  timelineItems: ThinkingTimelineItem[],
-  inProgress?: boolean,
-): string[] {
-  const focus = timelineItems[0]?.title ?? "Reasoning";
-  const shortFocus =
-    focus.length > 24 ? `${focus.slice(0, 21).trimEnd()}...` : focus;
-
-  return ["Thinking", shortFocus, inProgress ? "Working" : "Completed"];
-}
-
-function TimelineStepIcon({
-  status,
-  context,
-}: {
-  status: ThinkingTimelineStatus;
-  context: ThinkingTimelineContext;
-}) {
-  const contextIconByType: Record<
-    ThinkingTimelineContext,
-    typeof DocumentTextIcon
-  > = {
-    read: DocumentTextIcon,
-    search: MagnifyingGlassIcon,
-    run: CommandLineIcon,
-    edit: CodeBracketIcon,
-    test: BeakerIcon,
-    tool: WrenchScrewdriverIcon,
-    plan: SparklesIcon,
-  };
-
-  const ContextIcon = contextIconByType[context];
-
-  const statusContainerClass =
-    status === "complete"
-      ? "border-emerald-500/40 bg-emerald-500/10"
-      : status === "active"
-        ? "border-blue-400/50 bg-blue-500/10"
-        : "border-command-border/60 bg-vsc-input-background/30";
-
-  const statusBadgeClass =
-    status === "complete"
-      ? "bg-emerald-400"
-      : status === "active"
-        ? "bg-blue-300"
-        : "bg-zinc-500";
-
-  return (
-    <span
-      className={`relative flex h-5 w-5 items-center justify-center rounded-md border border-solid ${statusContainerClass}`}
-    >
-      <ContextIcon
-        className={`h-3 w-3 ${status === "active" ? "animate-pulse" : ""}`}
-      />
-      <span
-        className={`border-vsc-editor-background absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-solid ${statusBadgeClass}`}
-      />
-    </span>
-  );
-}
-
 interface ThinkingBlockPeekProps {
   content: string;
   redactedThinking?: string;
@@ -351,11 +278,7 @@ function ThinkingBlockPeek({
     () => buildThinkingTimeline(renderedThinkingContent, inProgress),
     [renderedThinkingContent, inProgress],
   );
-
-  const breadcrumbs = useMemo(
-    () => buildBreadcrumbs(timelineItems, inProgress),
-    [timelineItems, inProgress],
-  );
+  const latestSignal = timelineItems[timelineItems.length - 1]?.title;
 
   // Auto-open while streaming, collapse when done (like Copilot)
   useEffect(() => {
@@ -398,9 +321,7 @@ function ThinkingBlockPeek({
         ? `Thought for ${elapsedTime}${tokens ? ` · ${tokens} tokens` : ""}`
         : `Thinking${tokens ? ` · ${tokens} tokens` : ""}`;
 
-  const statusLine = inProgress
-    ? `${label} · ${timelineItems.length} events`
-    : label;
+  const statusLine = label;
 
   return (
     <div className="thread-message">
@@ -415,33 +336,27 @@ function ThinkingBlockPeek({
             className="text-description hover:bg-vsc-input-background/40 flex w-full items-center gap-2 rounded-md border-none bg-transparent px-2 py-1.5 text-left text-xs transition-colors"
           >
             <SparklesIcon
-              className={`h-3.5 w-3.5 flex-shrink-0 transition-opacity ${inProgress ? "animate-pulse opacity-70" : "opacity-50"}`}
+              className={`h-3.5 w-3.5 flex-shrink-0 ${
+                inProgress ? "animate-pulse opacity-75" : "opacity-60"
+              }`}
             />
+
             <div className="min-w-0 flex-1">
-              <div className="text-description-muted mb-0.5 flex items-center gap-1 overflow-hidden text-[10px]">
-                {breadcrumbs.map((crumb, crumbIndex) => (
-                  <div
-                    key={`${crumb}-${crumbIndex}`}
-                    className="flex min-w-0 items-center gap-1"
-                  >
-                    {crumbIndex > 0 && (
-                      <ChevronRightIcon className="h-3 w-3 flex-shrink-0" />
-                    )}
-                    <span className="truncate">{crumb}</span>
-                  </div>
-                ))}
+              <div className="font-medium">
+                {statusLine}
+                {inProgress && <AnimatedEllipsis />}
               </div>
-              <div className="flex items-center">
-                <span className="font-medium">
-                  {statusLine}
-                  {inProgress && <AnimatedEllipsis />}
-                </span>
-              </div>
+              {inProgress && latestSignal && (
+                <div className="text-description-muted mt-0.5 truncate text-[10px]">
+                  {latestSignal}
+                </div>
+              )}
             </div>
+
             {open ? (
-              <ChevronUpIcon className="h-3.5 w-3.5 flex-shrink-0" />
+              <ChevronUpIcon className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
             ) : (
-              <ChevronDownIcon className="h-3.5 w-3.5 flex-shrink-0" />
+              <ChevronDownIcon className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
             )}
           </button>
 
@@ -458,43 +373,12 @@ function ThinkingBlockPeek({
               className="thin-scrollbar max-h-[36vh] overflow-y-auto pb-1 pl-6 pr-1 pt-1"
               ref={scrollRef}
             >
-              <ol className="m-0 list-none space-y-1.5 p-0">
-                {timelineItems.map((item, itemIndex) => (
-                  <li key={item.id} className="relative flex gap-2 pl-0.5">
-                    {itemIndex < timelineItems.length - 1 && (
-                      <span className="border-command-border/60 absolute left-[10px] top-5 h-[calc(100%-10px)] border-l border-solid" />
-                    )}
-                    <span className="mt-0.5 flex-shrink-0">
-                      <TimelineStepIcon
-                        status={item.status}
-                        context={item.context}
-                      />
-                    </span>
-                    <div className="min-w-0 pb-1.5">
-                      <p className="text-description m-0 flex min-w-0 items-center gap-1 text-xs font-medium">
-                        <span className="truncate" title={item.title}>
-                          {item.title}
-                        </span>
-                        {item.status === "active" && (
-                          <ArrowPathIcon className="h-3 w-3 flex-shrink-0 animate-spin text-blue-300" />
-                        )}
-                        {item.status === "complete" && (
-                          <CheckCircleIcon className="h-3 w-3 flex-shrink-0 text-emerald-400" />
-                        )}
-                        {item.status === "queued" && (
-                          <ClockIcon className="h-3 w-3 flex-shrink-0 text-zinc-400" />
-                        )}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
               {redactedThinking ? (
                 <p className="text-description m-0 mt-2 text-xs italic">
                   Thinking content redacted due to safety reasons.
                 </p>
               ) : (
-                <div className="border-command-border/40 mt-2 border-0 border-l border-solid pl-3">
+                <div className="mt-1">
                   <MarkdownWrapper>
                     <StyledMarkdownPreview
                       isRenderingInStepContainer

@@ -237,7 +237,7 @@ export function AssistantAndOrgListbox({
                   }}
                   variant="ghost"
                   size="sm"
-                  className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
+                  className="text-description my-0 w-full justify-start py-1.5 pl-1 text-left"
                 >
                   <div className="flex w-full items-center">
                     <ArrowPathIcon

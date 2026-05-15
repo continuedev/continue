@@ -1,12 +1,15 @@
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppSelector } from "../../../redux/hooks";
 import { RootState } from "../../../redux/store";
 import { isCoordinationSummaryTool } from "./CoordinationToolCallSummary";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
-import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
+import {
+  getReviewBatchSummary,
+  GroupedToolCallHeader,
+} from "./GroupedToolCallHeader";
 import { McpAppRenderer } from "./MCPAppRenderer";
 import { SimpleToolCallUI } from "./SimpleToolCallUI";
 import { ToolCallDisplay } from "./ToolCallDisplay";
@@ -21,7 +24,22 @@ export function ToolCallDiv({
   toolCallStates,
   historyIndex,
 }: ToolCallDivProps) {
-  const [open, setOpen] = useState(true);
+  const reviewSummary = useMemo(
+    () => getReviewBatchSummary(toolCallStates),
+    [toolCallStates],
+  );
+  const hasActiveGroupedCall = toolCallStates.some(
+    (toolCallState) =>
+      toolCallState.status === "calling" ||
+      toolCallState.status === "generating" ||
+      toolCallState.status === "generated",
+  );
+  const isDenseBatch = toolCallStates.length >= 6;
+  const isDenseCompletedBatch = isDenseBatch && !hasActiveGroupedCall;
+  const shouldStartCollapsed =
+    !hasActiveGroupedCall && (Boolean(reviewSummary) || isDenseBatch);
+  const [open, setOpen] = useState(!shouldStartCollapsed);
+  const previousHasActiveGroupedCall = useRef(hasActiveGroupedCall);
   const availableTools = useAppSelector(
     (state: RootState) => state.config.config.tools,
   );
@@ -33,6 +51,19 @@ export function ToolCallDiv({
     (call) => call.status !== "canceled",
   );
   const pendingCalls = toolCallStates.filter((call) => call.status !== "done");
+
+  useEffect(() => {
+    if (hasActiveGroupedCall) {
+      setOpen(true);
+    } else if (
+      previousHasActiveGroupedCall.current &&
+      (Boolean(reviewSummary) || isDenseCompletedBatch)
+    ) {
+      setOpen(false);
+    }
+
+    previousHasActiveGroupedCall.current = hasActiveGroupedCall;
+  }, [hasActiveGroupedCall, reviewSummary, isDenseCompletedBatch]);
 
   const renderToolCall = (toolCallState: ToolCallState) => {
     const tool = availableTools.find(
@@ -46,7 +77,8 @@ export function ToolCallDiv({
     const isCompactFunctionSpecificTool =
       functionName === BuiltInToolNames.SingleFindAndReplace ||
       functionName === BuiltInToolNames.MultiEdit ||
-      functionName === BuiltInToolNames.RunTerminalCommand;
+      functionName === BuiltInToolNames.RunTerminalCommand ||
+      functionName === BuiltInToolNames.TodoWrite;
 
     if (isCompactFunctionSpecificTool) {
       return (
@@ -117,7 +149,9 @@ export function ToolCallDiv({
   if (shouldShowGroupedUI) {
     return (
       <div
-        className="border-border fade-in-span rounded-lg border px-2.5 py-1.5 pb-0 transition-opacity duration-200"
+        className={`border-border fade-in-span rounded-lg border px-2.5 py-1.5 pb-0 transition-opacity duration-200 ${
+          reviewSummary ? "bg-vsc-editor-background/35" : ""
+        }`}
         data-testid="grouped-tool-call-container"
       >
         <GroupedToolCallHeader

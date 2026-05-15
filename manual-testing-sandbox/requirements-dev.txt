@@ -1,0 +1,29 @@
+# Testing
+pytest>=6.2.5
+pytest-cov>=3.0.0
+pytest-asyncio>=0.18.0
+
+# Logging and Debugging
+loguru>=0.5.3
+
+# Web development (development server)
+flask>=2.0.2
+# django>=4.2.27  # Uncomment if using Django instead
+
+# HTTP clients
+httpx>=0.19.0
+aiohttp>=3.7.4
+
+# Jupyter
+jupyter>=1.0.0
+ipython>=7.25.0
+
+# Code quality
+flake8>=4.0.0
+black>=21.7b0
+isort>=5.9.3
+mypy>=0.910
+
+# Type stubs
+types-requests>=2.26.0
+types-PyYAML>=5.4.0

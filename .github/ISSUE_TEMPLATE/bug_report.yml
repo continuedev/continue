@@ -11,13 +11,13 @@ body:
     attributes:
       label: Before submitting your bug report
       options:
-        - label: I've tried using the "Ask AI" feature on the [Continue docs site](https://docs.yutoagentic.dev/) to see if the docs have an answer
+        - label: I've tried using the "Ask AI" feature on the [YutoAgentic docs site](https://docs.yutoagentic.dev/) to see if the docs have an answer
           required: false
         - label: I'm not able to find a related conversation on [GitHub discussions](https://github.com/continuedev/continue/discussions) that reports the same bug
           required: false
         - label: I'm not able to find an [open issue](https://github.com/continuedev/continue/issues?q=is%3Aopen+is%3Aissue) that reports the same bug
           required: false
-        - label: I've seen the [troubleshooting guide](https://docs.yutoagentic.dev/troubleshooting) on the Continue Docs
+        - label: I've seen the [troubleshooting guide](https://docs.yutoagentic.dev/troubleshooting) on the YutoAgentic Docs
           required: false
   - type: textarea
     attributes:
@@ -26,20 +26,20 @@ body:
         Feel free to omit any info that is not relevant to your issue.
 
         - **OS**: macOS
-        - **Continue version**: v0.9.4
+        - **YutoAgentic version**: v0.9.4
         - **IDE version**:  VSCode 1.85.1
         - Model: Claude Sonnet 4.5
         - Agent configuration
       value: |
         - OS:
-        - Continue version:
+        - YutoAgentic version:
         - IDE version:
         - Model:
         - config:
           ```yaml
 
           ```
-          OR link to agent in Continue hub:
+          OR link to agent in YutoAgentic hub:
       render: Markdown
     validations:
       required: false
@@ -68,5 +68,5 @@ body:
     attributes:
       label: Log output
       description: |
-        Please refer to the [troubleshooting guide](https://docs.yutoagentic.dev/troubleshooting) in the Continue Docs for instructions on obtaining the logs. Copy either the relevant lines or the last 100 lines or so.
+        Please refer to the [troubleshooting guide](https://docs.yutoagentic.dev/troubleshooting) in the YutoAgentic Docs for instructions on obtaining the logs. Copy either the relevant lines or the last 100 lines or so.
       render: Shell

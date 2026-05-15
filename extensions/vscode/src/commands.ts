@@ -848,7 +848,7 @@ const getCommandsMap: (
       // Create the full screen panel
       let panel = vscode.window.createWebviewPanel(
         "yutoagentic.yutoagenticGUIView",
-        "Continue",
+        "Yuto ",
         vscode.ViewColumn.One,
         {
           retainContextWhenHidden: true,

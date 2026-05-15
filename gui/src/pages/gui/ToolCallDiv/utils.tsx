@@ -56,6 +56,30 @@ export function getGroupActionVerb(toolCallStates: ToolCallState[]): string {
   return "Performing";
 }
 
+export function getStreamingIndicatorText(
+  toolCallStates: ToolCallState[],
+): string {
+  if (toolCallStates.length === 0) {
+    return "Generating";
+  }
+
+  const activeToolCalls = toolCallStates.filter(
+    (toolCallState) =>
+      toolCallState.status === "calling" ||
+      toolCallState.status === "generating" ||
+      toolCallState.status === "generated",
+  );
+
+  if (activeToolCalls.length === 0) {
+    return "Generating";
+  }
+
+  const actionVerb = getGroupActionVerb(activeToolCalls);
+  const actionLabel = activeToolCalls.length === 1 ? "action" : "actions";
+
+  return `${actionVerb} ${activeToolCalls.length} ${actionLabel}`;
+}
+
 type IconName = keyof typeof Icons;
 
 type Icon = ComponentType<SVGProps<SVGSVGElement>> | undefined;

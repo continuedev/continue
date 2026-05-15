@@ -73,7 +73,7 @@ export function getAnthropicHeaders(
   // Warn if Azure endpoint is used with Anthropic-style key
   if (isAzure && apiKey.startsWith("sk-ant-")) {
     console.warn(
-      "[Continue] Azure endpoint detected but API key appears to be a standard Anthropic key (sk-ant-*). " +
+      "[YutoAgentic] Azure endpoint detected but API key appears to be a standard Anthropic key (sk-ant-*). " +
         "Azure endpoints require Azure API keys from your AI Foundry resource.",
     );
   }

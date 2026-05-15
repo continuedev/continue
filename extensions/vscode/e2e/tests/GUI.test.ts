@@ -298,7 +298,7 @@ describe.skip("GUI Test", () => {
       );
 
       expect(await statusMessage.getText()).contain(
-        "Continue viewed the git diff",
+        "Yuto Agentic viewed the git diff",
       );
     }).timeout(DEFAULT_TIMEOUT.MD * 100);
 

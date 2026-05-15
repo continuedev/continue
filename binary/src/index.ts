@@ -12,14 +12,14 @@ import { setupCoreLogging } from "./logging";
 import { TcpMessenger } from "./TcpMessenger";
 
 const logFilePath = getCoreLogsPath();
-fs.appendFileSync(logFilePath, "[info] Starting Continue core...\n");
+fs.appendFileSync(logFilePath, "[info] Starting YutoAgentic core...\n");
 
 const program = new Command();
 
 program.action(async () => {
   try {
     let messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>;
-    if (process.env.CONTINUE_DEVELOPMENT === "true") {
+    if (process.env.YUTOAGENTIC_DEVELOPMENT === "true") {
       messenger = new TcpMessenger<ToCoreProtocol, FromCoreProtocol>();
       console.log("[binary] Waiting for connection");
       await (

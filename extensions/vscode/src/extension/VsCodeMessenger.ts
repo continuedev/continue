@@ -534,7 +534,7 @@ export class VsCodeMessenger {
           errorMessage.includes("GitHub App")
         ) {
           const selection = await vscode.window.showErrorMessage(
-            "Background agents need GitHub access. Please connect your GitHub account to Continue.",
+            "Background agents need GitHub access. Please connect your GitHub account to Yuto Hub.",
             "Connect GitHub",
             "Cancel",
           );
@@ -684,7 +684,7 @@ export class VsCodeMessenger {
                   const workspacePath =
                     vscode.Uri.parse(matchingWorkspace).fsPath;
                   // Sanitize agentSessionId to prevent command injection
-                  const stashMessage = `Continue: Stashed before opening agent ${agentSessionId}`;
+                  const stashMessage = `Yuto Agentic: Stashed before opening agent ${agentSessionId}`;
                   await this.ide.subprocess(
                     `git stash push -m ${sanitizeShellArgument(stashMessage)}`,
                     workspacePath,

@@ -1,7 +1,7 @@
 {
   "name": "@yutoagentic/config-yaml",
   "version": "1.23.0",
-  "description": "",
+  "description": "YutoAgentic Config YAML package - core configuration utilities for YutoAgentic.dev",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -20,7 +20,7 @@
     "build": "tsc",
     "generate-schema": "tsc && node dist/scripts/generateJsonSchema.js"
   },
-  "author": "Continue Dev, Inc.",
+  "author": "YutoAgentic Dev, Inc.",
   "license": "Apache-2.0",
   "dependencies": {
     "@yutoagentic/config-types": "file:../config-types",

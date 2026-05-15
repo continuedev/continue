@@ -1,7 +1,7 @@
 {
   "name": "@yutoagentic/hub",
   "version": "0.0.7",
-  "description": "",
+  "description": "YutoAgentic Hub package - core backend services for YutoAgentic.dev",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -9,7 +9,7 @@
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests",
     "build": "tsc"
   },
-  "author": "Continue Dev, Inc.",
+  "author": "YutoAgentic Dev, Inc.",
   "license": "Apache-2.0",
   "dependencies": {
     "@yutoagentic/config-yaml": "file:../config-yaml",

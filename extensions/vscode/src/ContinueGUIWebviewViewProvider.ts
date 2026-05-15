@@ -140,7 +140,7 @@ export class ContinueGUIWebviewViewProvider
         <script>const vscode = acquireVsCodeApi();</script>
         <link href="${styleMainUri}" rel="stylesheet">
 
-        <title>Continue</title>
+        <title>Yuto Agentic</title>
       </head>
       <body>
         <div id="root"></div>

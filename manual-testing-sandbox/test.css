@@ -1,36 +1,135 @@
+/* CSS Custom Properties */
+:root {
+  /* Colors */
+  --color-primary: #007bff;
+  --color-primary-hover: #0056b3;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-background: #ffffff;
+  --color-heading: #000000;
+
+  /* Typography */
+  --font-family: Arial, sans-serif;
+  --font-size-base: 16px;
+  --font-size-h1: 24px;
+
+  /* Spacing */
+  --spacing-base: 20px;
+  --spacing-sm: 10px;
+  --spacing-lg: 30px;
+
+  /* Border */
+  --border-radius: 5px;
+
+  /* Layout */
+  --max-width: 1200px;
+}
+
+/* Base styles */
 body {
-  font-family: Arial, sans-serif;
-  font-size: 16px;
-  color: #333333;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
 }
 
+/* Headings */
 h1 {
-  font-size: 24px;
+  font-size: var(--font-size-h1);
   font-weight: bold;
-  color: #000000;
+  color: var(--color-heading);
+  margin-bottom: var(--spacing-base);
 }
 
+/* Links */
 a {
   text-decoration: none;
-  color: #007bff;
+  color: var(--color-primary);
+  transition: color 0.2s ease;
 }
 
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+/* Layout */
 .container {
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--max-width);
   margin: 0 auto;
-  padding: 20px;
+  padding: var(--spacing-base);
 }
 
+/* Buttons */
 .button {
   display: inline-block;
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: #ffffff;
-  border-radius: 5px;
+  padding: var(--spacing-sm) var(--spacing-base);
+  background-color: var(--color-primary);
+  color: var(--color-background);
+  border-radius: var(--border-radius);
   text-decoration: none;
+  transition: background-color 0.2s ease;
+  border: none;
+  cursor: pointer;
 }
 
 .button:hover {
-  background-color: #0056b3;
+  background-color: var(--color-primary-hover);
+}
+
+/* Accessibility: Screen reader only class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only:focus {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  width: auto;
+  height: auto;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  z-index: 1000;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  :root {
+    --font-size-h1: 1.25rem; /* 20px at 16px base */
+    --spacing-base: 0.9375rem; /* 15px at 16px base */
+  }
+
+  .container {
+    padding: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --font-size-h1: 1.125rem; /* 18px at 16px base */
+    --spacing-base: 0.625rem; /* 10px at 16px base */
+  }
+}
+
+/* Print styles */
+@media print {
+  .button {
+    background-color: transparent;
+    color: var(--color-text);
+    border: 1px solid var(--color-text);
+  }
 }
