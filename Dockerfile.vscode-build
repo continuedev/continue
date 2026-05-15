@@ -44,6 +44,15 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true
 WORKDIR /workspace
 
 CMD ["bash", "-euo", "pipefail", "-c", "\
+echo '==> Clearing previous build outputs...' && \
+rm -rf gui/dist \
+        packages/config-types/dist \
+        packages/terminal-security/dist \
+        packages/fetch/dist \
+        packages/config-yaml/dist \
+        packages/llm-info/dist \
+        packages/openai-adapters/dist && \
+\
 echo '==> Installing root dependencies...' && \
 npm install && \
 \
