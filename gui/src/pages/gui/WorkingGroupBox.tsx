@@ -1,19 +1,21 @@
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { WrenchScrewdriverIcon } from "@heroicons/react/24/solid";
 import { Children, useEffect, useRef, useState } from "react";
 import { AnimatedEllipsis } from "../../components/AnimatedEllipsis";
 
-const AUTO_COLLAPSE_DELAY_MS = 15000;
+const AUTO_COLLAPSE_DELAY_MS = 10000;
 
 interface WorkingGroupBoxProps {
   isActive: boolean;
   actionCount: number;
+  collapsedSummary?: string;
   children: React.ReactNode;
 }
 
 export function WorkingGroupBox({
   isActive,
   actionCount,
+  collapsedSummary,
   children,
 }: WorkingGroupBoxProps) {
   const [open, setOpen] = useState(true);
@@ -80,6 +82,8 @@ export function WorkingGroupBox({
     : elapsedLabel
       ? `Worked for ${elapsedLabel} · ${actionLabel}`
       : actionLabel;
+  const headerTitle =
+    !open && collapsedSummary ? `${title} · ${collapsedSummary}` : title;
   const timelineItems = Children.toArray(children);
 
   return (
@@ -99,15 +103,27 @@ export function WorkingGroupBox({
             isActive ? "animate-pulse opacity-75" : "opacity-60"
           }`}
         />
-        <span className="wave min-w-0 flex-1 font-medium">
-          {title}
-          {isActive && <AnimatedEllipsis />}
+        <span className="min-w-0 font-medium">
+          <span
+            className={`inline-flex max-w-full items-center gap-1 ${
+              isActive ? "animate-wave text-link" : "text-description"
+            }`}
+          >
+            <span className="truncate">{headerTitle}</span>
+            {isActive && <AnimatedEllipsis />}
+            {open ? (
+              <ChevronDownIcon
+                data-testid="working-group-box-chevron-down"
+                className="h-3.5 w-3.5 flex-shrink-0 opacity-60"
+              />
+            ) : (
+              <ChevronRightIcon
+                data-testid="working-group-box-chevron-right"
+                className="h-3.5 w-3.5 flex-shrink-0 opacity-60"
+              />
+            )}
+          </span>
         </span>
-        {open ? (
-          <ChevronUpIcon className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
-        ) : (
-          <ChevronDownIcon className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
-        )}
       </button>
 
       {/* Collapsible body */}
@@ -119,9 +135,10 @@ export function WorkingGroupBox({
             : "max-h-0 overflow-hidden opacity-0"
         }`}
       >
-        <div className="pb-1">
+        <div className="relative pb-1">
           {timelineItems.map((child, index) => {
-            const isLast = index === timelineItems.length - 1;
+            const hasPrev = index > 0;
+            const hasNext = index < timelineItems.length - 1;
 
             return (
               <div
@@ -129,10 +146,18 @@ export function WorkingGroupBox({
                 data-testid={`working-group-box-timeline-item-${index}`}
                 key={`working-group-box-timeline-item-${index}`}
               >
-                {!isLast && (
+                {hasPrev && (
                   <span
                     aria-hidden="true"
-                    className="border-border/60 pointer-events-none absolute bottom-[-4px] left-[9px] top-5 border-l"
+                    data-testid="working-group-box-timeline-connector"
+                    className="bg-[color:var(--vscode-descriptionForeground)]/55 pointer-events-none absolute left-[9px] top-0 h-[17px] w-px"
+                  />
+                )}
+                {hasNext && (
+                  <span
+                    aria-hidden="true"
+                    data-testid="working-group-box-timeline-connector"
+                    className="bg-[color:var(--vscode-descriptionForeground)]/55 pointer-events-none absolute bottom-0 left-[9px] top-[17px] w-px"
                   />
                 )}
                 <span

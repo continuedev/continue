@@ -1,5 +1,6 @@
 import { ToolCallState } from "core";
 import { UnifiedTerminalCommand } from "../../../components/UnifiedTerminal/UnifiedTerminal";
+import { useAppSelector } from "../../../redux/hooks";
 
 interface RunTerminalCommandToolCallProps {
   command: string;
@@ -8,6 +9,8 @@ interface RunTerminalCommandToolCallProps {
 }
 
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
+  const isAgentMode = useAppSelector((state) => state.session.mode === "agent");
+
   // For errored status, show any output (error messages)
   // Otherwise look for terminal output specifically
   const isErrored = props.toolCallState.status === "errored";
@@ -38,6 +41,8 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
       statusMessage={statusMessage}
       toolCallState={props.toolCallState}
       toolCallId={props.toolCallId}
+      startCollapsed={isAgentMode}
+      hideRunInTerminalButton={isAgentMode}
     />
   );
 }

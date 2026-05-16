@@ -58,6 +58,7 @@ const saveSubsetFilters = [
     "toolGroupSettings",
     "ruleSettings",
     "reasoningSettings",
+    "quickPermissionMode",
   ]),
   createFilter("indexing", []),
   createFilter("tabs", ["tabs"]),

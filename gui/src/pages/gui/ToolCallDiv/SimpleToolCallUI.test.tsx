@@ -134,4 +134,26 @@ describe("SimpleToolCallUI", () => {
       "max-h-[50vh]",
     );
   });
+
+  it("renders a down chevron only in the expanded state", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <SimpleToolCallUI
+        toolCallState={createToolCallState()}
+        tool={mockTool}
+        historyIndex={0}
+      />,
+    );
+
+    expect(
+      screen.queryByTestId("simple-tool-call-chevron-down"),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId("context-items-peek"));
+
+    expect(
+      screen.getByTestId("simple-tool-call-chevron-down"),
+    ).toBeInTheDocument();
+  });
 });

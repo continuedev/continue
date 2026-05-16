@@ -1,5 +1,5 @@
 // src/components/ThinkingBlockPeek.tsx
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { SparklesIcon } from "@heroicons/react/24/solid";
 import { ChatHistoryItem } from "core";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -41,6 +41,8 @@ const DEFAULT_TIMELINE_LABELS = [
   "Evaluating options and constraints",
   "Preparing the response",
 ];
+
+const THINKING_AUTO_COLLAPSE_DELAY_MS = 5000;
 
 function normalizeSignalText(input: string): string {
   return input
@@ -257,10 +259,10 @@ function ThinkingBlockPeek({
   inProgress,
   tokens,
 }: ThinkingBlockPeekProps) {
-  const [open, setOpen] = useState(!!inProgress);
+  const [open, setOpen] = useState(true);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState<string>("");
-  const prevInProgress = useRef(!!inProgress);
+  const collapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const duplicateRedactedThinkingBlock =
@@ -280,15 +282,26 @@ function ThinkingBlockPeek({
   );
   const latestSignal = timelineItems[timelineItems.length - 1]?.title;
 
-  // Auto-open while streaming, collapse when done (like Copilot)
+  // Start expanded and collapse a few seconds after thinking settles.
   useEffect(() => {
+    if (collapseTimerRef.current) {
+      clearTimeout(collapseTimerRef.current);
+      collapseTimerRef.current = null;
+    }
+
     if (inProgress) {
       setOpen(true);
-    } else if (prevInProgress.current) {
-      // Was streaming, just finished → collapse
-      setOpen(false);
+    } else {
+      collapseTimerRef.current = setTimeout(() => {
+        setOpen(false);
+      }, THINKING_AUTO_COLLAPSE_DELAY_MS);
     }
-    prevInProgress.current = !!inProgress;
+
+    return () => {
+      if (collapseTimerRef.current) {
+        clearTimeout(collapseTimerRef.current);
+      }
+    };
   }, [inProgress]);
 
   useEffect(() => {
@@ -322,6 +335,8 @@ function ThinkingBlockPeek({
         : `Thinking${tokens ? ` · ${tokens} tokens` : ""}`;
 
   const statusLine = label;
+  const headerTitle =
+    !open && latestSignal ? `${statusLine} · ${latestSignal}` : statusLine;
 
   return (
     <div className="thread-message">
@@ -343,21 +358,28 @@ function ThinkingBlockPeek({
 
             <div className="min-w-0 flex-1">
               <div className="font-medium">
-                {statusLine}
-                {inProgress && <AnimatedEllipsis />}
+                <span className="inline-flex max-w-full items-center gap-1">
+                  <span className="truncate">{headerTitle}</span>
+                  {inProgress && <AnimatedEllipsis />}
+                  {open ? (
+                    <ChevronDownIcon
+                      data-testid="thinking-block-chevron-down"
+                      className="h-3.5 w-3.5 flex-shrink-0 opacity-60"
+                    />
+                  ) : (
+                    <ChevronRightIcon
+                      data-testid="thinking-block-chevron-right"
+                      className="h-3.5 w-3.5 flex-shrink-0 opacity-60"
+                    />
+                  )}
+                </span>
               </div>
-              {inProgress && latestSignal && (
+              {open && inProgress && latestSignal && (
                 <div className="text-description-muted mt-0.5 truncate text-[10px]">
                   {latestSignal}
                 </div>
               )}
             </div>
-
-            {open ? (
-              <ChevronUpIcon className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
-            ) : (
-              <ChevronDownIcon className="h-3.5 w-3.5 flex-shrink-0 opacity-60" />
-            )}
           </button>
 
           {/* Collapsible body */}

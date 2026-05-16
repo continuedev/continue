@@ -268,6 +268,47 @@ describe("UnifiedTerminalCommand", () => {
     ).toBeInTheDocument();
   });
 
+  test("can hide run in terminal button", async () => {
+    const { container } = await renderWithProviders(
+      <UnifiedTerminalCommand
+        command={MOCK_COMMAND}
+        output={MOCK_OUTPUT}
+        status="completed"
+        hideRunInTerminalButton
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "Run in terminal" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Copy Code" }),
+    ).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/\bRun\b/);
+  });
+
+  test("can start collapsed", async () => {
+    const { user, container } = await renderWithProviders(
+      <UnifiedTerminalCommand
+        command={MOCK_COMMAND}
+        output={MOCK_OUTPUT}
+        status="completed"
+        startCollapsed
+      />,
+    );
+
+    const header = screen.getByTestId("terminal-toggle-header");
+    expect(header).toHaveAttribute("aria-expanded", "false");
+    expect(container.textContent).not.toMatch(/Test 1 passed/);
+
+    await user.click(header);
+
+    await waitFor(() => {
+      expect(container.textContent).toMatch(/Test 1 passed/);
+    });
+    expect(header).toHaveAttribute("aria-expanded", "true");
+  });
+
   test("runs the command when the run in terminal button is activated", async () => {
     const mockIdeMessenger = new MockIdeMessenger();
     const postSpy = vi.spyOn(mockIdeMessenger, "post");

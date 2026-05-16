@@ -686,6 +686,30 @@ export function Chat() {
             (acc, it) => acc + (it.toolCallStates?.length ?? 0),
             0,
           );
+          const collapsedSummary = (() => {
+            for (let i = items.length - 1; i >= 0; i--) {
+              const message = items[i].message;
+              if (message.role !== "assistant") {
+                continue;
+              }
+
+              const summaryText = stripImages(renderChatMessage(message) ?? "")
+                .replace(/\s+/g, " ")
+                .trim();
+
+              if (!summaryText) {
+                continue;
+              }
+
+              const maxLength = 80;
+              return summaryText.length > maxLength
+                ? `${summaryText.slice(0, maxLength - 3)}...`
+                : summaryText;
+            }
+
+            return undefined;
+          })();
+
           return (
             <div
               key={`working-group-${indices[0]}`}
@@ -694,6 +718,7 @@ export function Chat() {
               <WorkingGroupBox
                 isActive={isGroupActive}
                 actionCount={actionCount}
+                collapsedSummary={collapsedSummary}
               >
                 {items.map((it, localIdx) => (
                   <ErrorBoundary

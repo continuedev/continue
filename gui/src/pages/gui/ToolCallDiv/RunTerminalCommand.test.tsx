@@ -1,7 +1,18 @@
-import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { RunTerminalCommand } from "./RunTerminalCommand";
 import { ToolCallState } from "core";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { RunTerminalCommand } from "./RunTerminalCommand";
+
+let mockMode: "chat" | "agent" = "chat";
+
+vi.mock("../../../redux/hooks", () => ({
+  useAppSelector: (selector: any) =>
+    selector({
+      session: {
+        mode: mockMode,
+      },
+    }),
+}));
 
 // Mock the UnifiedTerminalCommand component since it requires Redux
 vi.mock("../../../components/UnifiedTerminal/UnifiedTerminal", () => ({
@@ -12,17 +23,25 @@ vi.mock("../../../components/UnifiedTerminal/UnifiedTerminal", () => ({
     statusMessage,
     toolCallState,
     toolCallId,
+    startCollapsed,
+    hideRunInTerminalButton,
   }: any) => (
     <div data-testid="unified-terminal">
       <div data-testid="command">{command}</div>
       <div data-testid="output">{output}</div>
       <div data-testid="status">{status}</div>
       <div data-testid="status-message">{statusMessage}</div>
+      <div data-testid="start-collapsed">{String(startCollapsed)}</div>
+      <div data-testid="hide-run-button">{String(hideRunInTerminalButton)}</div>
     </div>
   ),
 }));
 
 describe("RunTerminalCommand", () => {
+  beforeEach(() => {
+    mockMode = "chat";
+  });
+
   it("should display error message when tool call is errored", () => {
     const erroredToolCallState: ToolCallState = {
       toolCallId: "test-id",
@@ -272,5 +291,35 @@ describe("RunTerminalCommand", () => {
     // Status should be failed for errored state
     const statusElement = screen.getByTestId("status");
     expect(statusElement.textContent).toBe("failed");
+  });
+
+  it("should pass collapse and run-button flags in agent mode", () => {
+    mockMode = "agent";
+
+    const toolCallState: ToolCallState = {
+      toolCallId: "test-id",
+      toolCall: {
+        id: "test-id",
+        type: "function",
+        function: {
+          name: "runTerminalCommand",
+          arguments: JSON.stringify({ command: "echo hello" }),
+        },
+      },
+      status: "done",
+      parsedArgs: { command: "echo hello" },
+      output: [],
+    };
+
+    render(
+      <RunTerminalCommand
+        command="echo hello"
+        toolCallState={toolCallState}
+        toolCallId="test-id"
+      />,
+    );
+
+    expect(screen.getByTestId("start-collapsed").textContent).toBe("true");
+    expect(screen.getByTestId("hide-run-button").textContent).toBe("true");
   });
 });

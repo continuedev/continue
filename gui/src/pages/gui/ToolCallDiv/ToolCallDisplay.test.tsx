@@ -110,4 +110,29 @@ describe("ToolCallDisplay", () => {
     expect(header.tagName).toBe("BUTTON");
     expect(header).toHaveAttribute("aria-expanded");
   });
+
+  it("shows a down chevron only when expanded", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ToolCallDisplay
+        tool={mockTool}
+        toolCallState={createToolCallState()}
+        historyIndex={0}
+        icon={<div data-testid="tool-status-icon" />}
+      >
+        <div data-testid="tool-call-body">Body</div>
+      </ToolCallDisplay>,
+    );
+
+    expect(
+      screen.queryByTestId("tool-call-display-chevron-down"),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId("tool-call-display-header"));
+
+    expect(
+      screen.getByTestId("tool-call-display-chevron-down"),
+    ).toBeInTheDocument();
+  });
 });

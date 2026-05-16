@@ -1,5 +1,5 @@
-import { ToolPolicy } from "@yutoagentic/terminal-security";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { ToolPolicy } from "@yutoagentic/terminal-security";
 import { RuleWithSource, Tool } from "core";
 import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import {
@@ -11,6 +11,7 @@ import { getLocalStorage, LocalStorageKey } from "../../util/localStorage";
 export type RulePolicy = "on" | "off";
 
 export type ToolGroupPolicy = "include" | "exclude";
+export type QuickPermissionMode = "default" | "bypass" | "restrict";
 
 export type ToolPolicies = { [toolName: string]: ToolPolicy };
 export type RulePolicies = { [ruleName: string]: RulePolicy };
@@ -29,6 +30,7 @@ type UIState = {
   ruleSettings: RulePolicies;
   reasoningSettings: ReasoningSettings;
   ttsActive: boolean;
+  quickPermissionMode: QuickPermissionMode;
 };
 
 export const DEFAULT_TOOL_SETTING: ToolPolicy = "allowedWithPermission";
@@ -49,6 +51,7 @@ export const DEFAULT_UI_SLICE: UIState = {
   },
   ruleSettings: {},
   reasoningSettings: {},
+  quickPermissionMode: "default",
 };
 
 export const uiSlice = createSlice({
@@ -149,6 +152,12 @@ export const uiSlice = createSlice({
       state.reasoningSettings[action.payload.modelTitle] =
         action.payload.enabled;
     },
+    setQuickPermissionMode: (
+      state,
+      action: PayloadAction<QuickPermissionMode>,
+    ) => {
+      state.quickPermissionMode = action.payload;
+    },
   },
 });
 
@@ -166,6 +175,7 @@ export const {
   toggleRuleSetting,
   setTTSActive,
   setReasoningSetting,
+  setQuickPermissionMode,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

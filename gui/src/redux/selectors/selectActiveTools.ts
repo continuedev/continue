@@ -3,6 +3,7 @@ import { Tool } from "core";
 import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import { DEFAULT_TOOL_SETTING } from "../slices/uiSlice";
 import { RootState } from "../store";
+import { applyQuickPermissionModeToToolPolicy } from "../util/quickPermissionMode";
 
 export const selectActiveTools = createSelector(
   [
@@ -10,16 +11,22 @@ export const selectActiveTools = createSelector(
     (store: RootState) => store.config.config.tools,
     (store: RootState) => store.ui.toolSettings,
     (store: RootState) => store.ui.toolGroupSettings,
+    (store: RootState) => store.ui.quickPermissionMode,
   ],
-  (mode, tools, policies, groupPolicies): Tool[] => {
+  (mode, tools, policies, groupPolicies, quickPermissionMode): Tool[] => {
     if (mode === "chat") {
       return [];
     } else {
       const enabledTools = tools.filter((tool) => {
-        const toolPolicy =
+        const baseToolPolicy =
           policies[tool.function.name] ??
           tool.defaultToolPolicy ??
           DEFAULT_TOOL_SETTING;
+        const toolPolicy = applyQuickPermissionModeToToolPolicy(
+          baseToolPolicy,
+          tool,
+          quickPermissionMode,
+        );
         return (
           toolPolicy !== "disabled" && groupPolicies[tool.group] !== "exclude"
         );

@@ -2,7 +2,7 @@ import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import Anser, { AnserJsonEntry } from "anser";
 import { ToolCallState } from "core";
 import { escapeCarriageReturn } from "escape-carriage";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { useAppDispatch } from "../../redux/hooks";
 import { moveTerminalProcessToBackground } from "../../redux/thunks/moveTerminalProcessToBackground";
@@ -333,6 +333,8 @@ interface UnifiedTerminalCommandProps {
   toolCallState?: ToolCallState;
   toolCallId?: string;
   displayLines?: number;
+  startCollapsed?: boolean;
+  hideRunInTerminalButton?: boolean;
 }
 
 export function UnifiedTerminalCommand({
@@ -343,10 +345,16 @@ export function UnifiedTerminalCommand({
   toolCallState,
   toolCallId,
   displayLines = 15,
+  startCollapsed = false,
+  hideRunInTerminalButton = false,
 }: UnifiedTerminalCommandProps) {
   const dispatch = useAppDispatch();
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(!startCollapsed);
   const [outputExpanded, setOutputExpanded] = useState(false);
+
+  useEffect(() => {
+    setIsExpanded(!startCollapsed);
+  }, [startCollapsed]);
 
   // Determine running state
   const isRunning = toolCallState?.status === "calling" || status === "running";
@@ -467,7 +475,9 @@ export function UnifiedTerminalCommand({
             {!isRunning && (
               <div className="xs:flex hidden items-center gap-2.5">
                 <CopyButton text={copyContent} />
-                <RunInTerminalButton command={command} />
+                {!hideRunInTerminalButton && (
+                  <RunInTerminalButton command={command} />
+                )}
               </div>
             )}
           </div>

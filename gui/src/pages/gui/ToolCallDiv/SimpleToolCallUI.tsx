@@ -1,6 +1,5 @@
 import {
   ChevronDownIcon,
-  ChevronUpIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { Tool, ToolCallState } from "core";
@@ -108,7 +107,7 @@ export function SimpleToolCallUI({
             isClickable
               ? "hover:bg-[color:var(--vscode-input-background)]/40 cursor-pointer"
               : "cursor-default"
-          }`}
+          } ${isActive ? "bg-[color:var(--vscode-input-background)]/35" : ""}`}
           onClick={isClickable ? handleClick : undefined}
           onKeyDown={handleKeyDown}
           data-testid="context-items-peek"
@@ -139,13 +138,14 @@ export function SimpleToolCallUI({
           {isToggleable && (
             <span
               data-testid="simple-tool-call-toggle"
-              className="flex-shrink-0 opacity-60"
+              className="flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center opacity-60"
             >
               {open ? (
-                <ChevronUpIcon className="h-3.5 w-3.5" />
-              ) : (
-                <ChevronDownIcon className="h-3.5 w-3.5" />
-              )}
+                <ChevronDownIcon
+                  data-testid="simple-tool-call-chevron-down"
+                  className="h-3.5 w-3.5"
+                />
+              ) : null}
             </span>
           )}
         </div>

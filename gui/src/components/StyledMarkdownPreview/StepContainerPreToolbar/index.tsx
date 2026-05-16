@@ -58,7 +58,8 @@ export function StepContainerPreToolbar({
 }: StepContainerPreToolbarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((state) => state.session.history);
-  const [isExpanded, setIsExpanded] = useState(expanded ?? true);
+  const isAgentMode = useAppSelector((state) => state.session.mode === "agent");
+  const [isExpanded, setIsExpanded] = useState(expanded ?? !isAgentMode);
 
   const [relativeFilepathUri, setRelativeFilepathUri] = useState<string | null>(
     null,
@@ -156,6 +157,10 @@ export function StepContainerPreToolbar({
     };
     void getRelativeFilepathUri();
   }, [relativeFilepath, ideMessenger.ide]);
+
+  useEffect(() => {
+    setIsExpanded(expanded ?? !isAgentMode);
+  }, [expanded, isAgentMode]);
 
   async function getFileUriToApplyTo() {
     // If we've already resolved a file URI (from clicking apply), use that
@@ -263,7 +268,9 @@ export function StepContainerPreToolbar({
     }
 
     if (isTerminalCodeBlock(language, codeBlockContent)) {
-      return <RunInTerminalButton command={codeBlockContent} />;
+      return isAgentMode ? null : (
+        <RunInTerminalButton command={codeBlockContent} />
+      );
     }
 
     if (isLoadingFileExists) {
@@ -273,7 +280,7 @@ export function StepContainerPreToolbar({
     if (fileExists || !relativeFilepath) {
       return (
         <ApplyActions
-          disableManualApply={disableManualApply}
+          disableManualApply={disableManualApply || isAgentMode}
           applyState={toolCallApplyState ?? applyState}
           onClickApply={onClickApply}
           onClickAccept={() => handleDiffAction("accept")}
