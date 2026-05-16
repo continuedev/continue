@@ -1,4 +1,5 @@
 import { ConfigResult } from "@continuedev/config-yaml";
+import * as YAML from "yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, ILLMLogger } from "../../index.js";
@@ -9,6 +10,26 @@ import { localPathToUri } from "../../util/pathToUri.js";
 import { getUriPathBasename } from "../../util/uri.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
+
+function getDisplayTitle(overrideAssistantFile?: {
+  path: string;
+  content: string;
+}) {
+  if (!overrideAssistantFile?.path) {
+    return "Local Config";
+  }
+
+  try {
+    const parsed = YAML.parse(overrideAssistantFile.content);
+    if (typeof parsed?.name === "string" && parsed.name.trim()) {
+      return parsed.name;
+    }
+  } catch {
+    // Invalid YAML is handled during config loading; keep the selector usable.
+  }
+
+  return getUriPathBasename(overrideAssistantFile.path);
+}
 
 export default class LocalProfileLoader implements IProfileLoader {
   static ID = "local";
@@ -32,9 +53,7 @@ export default class LocalProfileLoader implements IProfileLoader {
         versionSlug: "",
       },
       iconUrl: "",
-      title: overrideAssistantFile?.path
-        ? getUriPathBasename(overrideAssistantFile.path)
-        : "Local Config",
+      title: getDisplayTitle(overrideAssistantFile),
       errors: undefined,
       uri:
         overrideAssistantFile?.path ??

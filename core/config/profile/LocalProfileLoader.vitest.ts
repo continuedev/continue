@@ -49,6 +49,38 @@ describe("LocalProfileLoader", () => {
     );
   });
 
+  it("should initialize override file title from config name", () => {
+    const overrideFile = {
+      path: "file:///workspace/.continue/agents/example.yaml",
+      content: "name: My Custom Config\nversion: 1.0.0\nschema: v1\n",
+    };
+
+    const loader = new LocalProfileLoader(
+      testIde,
+      controlPlaneClient,
+      llmLogger,
+      overrideFile,
+    );
+
+    expect(loader.description.title).toBe("My Custom Config");
+  });
+
+  it("should fall back to filename when override file has no config name", () => {
+    const overrideFile = {
+      path: "file:///workspace/.continue/agents/example.yaml",
+      content: "version: 1.0.0\nschema: v1\n",
+    };
+
+    const loader = new LocalProfileLoader(
+      testIde,
+      controlPlaneClient,
+      llmLogger,
+      overrideFile,
+    );
+
+    expect(loader.description.title).toBe("example.yaml");
+  });
+
   it("should not include content in packageIdentifier when no override file", async () => {
     const loader = new LocalProfileLoader(
       testIde,
