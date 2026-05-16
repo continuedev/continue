@@ -858,15 +858,22 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     expect(result).toBe("allowedWithPermission");
   });
 
-  it("does not pass login-shell flag to csh-family shells", () => {
-    const previousShell = process.env.SHELL;
-    process.env.SHELL = "/bin/tcsh";
-    try {
-      const { shell, args } = getShellCommand("pwd");
-      expect(shell).toBe("/bin/tcsh");
-      expect(args).toEqual(["-c", "pwd"]);
-    } finally {
-      process.env.SHELL = previousShell;
-    }
-  });
+  it.runIf(process.platform !== "win32")(
+    "does not pass login-shell flag to csh-family shells",
+    () => {
+      const previousShell = process.env.SHELL;
+      process.env.SHELL = "/bin/tcsh";
+      try {
+        const { shell, args } = getShellCommand("pwd");
+        expect(shell).toBe("/bin/tcsh");
+        expect(args).toEqual(["-c", "pwd"]);
+      } finally {
+        if (previousShell === undefined) {
+          delete process.env.SHELL;
+        } else {
+          process.env.SHELL = previousShell;
+        }
+      }
+    },
+  );
 });
