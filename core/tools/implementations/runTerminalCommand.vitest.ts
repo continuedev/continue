@@ -15,7 +15,7 @@ import {
 import { IDE, ToolExtras } from "../..";
 import * as processTerminalStates from "../../util/processTerminalStates";
 import { runTerminalCommandTool } from "../definitions/runTerminalCommand";
-import { runTerminalCommandImpl } from "./runTerminalCommand";
+import { getShellCommand, runTerminalCommandImpl } from "./runTerminalCommand";
 
 // We're using real child processes, so ensure these aren't mocked
 vi.unmock("node:child_process");
@@ -856,5 +856,17 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     );
 
     expect(result).toBe("allowedWithPermission");
+  });
+
+  it("does not pass login-shell flag to csh-family shells", () => {
+    const previousShell = process.env.SHELL;
+    process.env.SHELL = "/bin/tcsh";
+    try {
+      const { shell, args } = getShellCommand("pwd");
+      expect(shell).toBe("/bin/tcsh");
+      expect(args).toEqual(["-c", "pwd"]);
+    } finally {
+      process.env.SHELL = previousShell;
+    }
   });
 });

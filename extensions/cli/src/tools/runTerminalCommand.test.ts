@@ -1,4 +1,5 @@
 import {
+  getShellCommand,
   isRunningInWsl,
   runTerminalCommandTool,
 } from "./runTerminalCommand.js";
@@ -120,5 +121,19 @@ describe("runTerminalCommandTool", () => {
         expect(isRunningInWsl()).toBe(false);
       });
     }
+  });
+
+  describe("shell selection", () => {
+    it("does not pass login-shell flag to csh-family shells", () => {
+      const previousShell = process.env.SHELL;
+      process.env.SHELL = "/bin/tcsh";
+      try {
+        const { shell, args } = getShellCommand("pwd");
+        expect(shell).toBe("/bin/tcsh");
+        expect(args).toEqual(["-c", "pwd"]);
+      } finally {
+        process.env.SHELL = previousShell;
+      }
+    });
   });
 });
