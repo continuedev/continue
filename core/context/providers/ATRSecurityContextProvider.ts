@@ -1,3 +1,6 @@
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+
 import {
   ContextItem,
   ContextProviderDescription,
@@ -48,15 +51,19 @@ async function getEngine(): Promise<any> {
   if (!enginePromise) {
     enginePromise = (async () => {
       try {
-        const mod = await import("agent-threat-rules");
+        // `agent-threat-rules` is an optional dependency that is not in
+        // `core/package.json`. Use a variable for the module name so the
+        // TypeScript compiler does not try to resolve the package at build
+        // time (TS2307); the actual import still happens at runtime, and
+        // the surrounding try/catch handles the not-installed case.
+        const moduleName: string = "agent-threat-rules";
+        const mod: any = await import(moduleName);
         const ATREngine = mod.ATREngine;
         const loadRulesFromDirectory = mod.loadRulesFromDirectory;
 
         // Resolve the bundled rules directory from the npm package.
-        const { createRequire } = await import("node:module");
         const requireFn = createRequire(import.meta.url);
         const pkgPath = requireFn.resolve("agent-threat-rules/package.json");
-        const { dirname, join } = await import("node:path");
         const rulesDir = join(dirname(pkgPath), "rules");
 
         const rules = await loadRulesFromDirectory(rulesDir);
