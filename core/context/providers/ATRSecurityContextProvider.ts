@@ -62,7 +62,20 @@ async function getEngine(): Promise<any> {
         const loadRulesFromDirectory = mod.loadRulesFromDirectory;
 
         // Resolve the bundled rules directory from the npm package.
-        const requireFn = createRequire(import.meta.url);
+        // `import.meta.url` is only valid under ES2020+ module targets. This
+        // file is referenced (via project references) by binary/ and
+        // extensions/vscode/, both of which type-check under older module
+        // targets and would reject a direct `import.meta` access here. Defer
+        // the access through `Function` so tsc only sees a string literal,
+        // and fall back to `__filename` when running under CommonJS.
+        const metaUrl: string = (() => {
+          try {
+            return new Function("return import.meta.url")();
+          } catch {
+            return typeof __filename !== "undefined" ? __filename : "";
+          }
+        })();
+        const requireFn = createRequire(metaUrl);
         const pkgPath = requireFn.resolve("agent-threat-rules/package.json");
         const rulesDir = join(dirname(pkgPath), "rules");
 
