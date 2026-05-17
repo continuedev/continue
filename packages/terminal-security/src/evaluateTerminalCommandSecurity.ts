@@ -19,6 +19,11 @@ interface CommentToken {
 
 type ParsedToken = string | ShellOperator | GlobPattern | CommentToken;
 
+interface CommandSubstitutionScan {
+  hasSubstitution: boolean;
+  commands: string[];
+}
+
 /**
  * Evaluates the security policy for a terminal command.
  *
@@ -244,9 +249,9 @@ function evaluateTokens(
 
   // Also check for command substitution in the original command
   // (shell-quote doesn't parse these as separate tokens)
-  if (hasCommandSubstitution(originalCommand)) {
-    const substitutedCommands = extractSubstitutedCommands(originalCommand);
-    for (const subCmd of substitutedCommands) {
+  const commandSubstitutions = scanCommandSubstitutions(originalCommand);
+  if (commandSubstitutions.hasSubstitution) {
+    for (const subCmd of commandSubstitutions.commands) {
       const nestedPolicy = evaluateTerminalCommandSecurity(basePolicy, subCmd);
       mostRestrictivePolicy = getMostRestrictive(
         mostRestrictivePolicy,
@@ -1095,68 +1100,131 @@ function isSafeCommand(baseCommand: string, args: string[]): boolean {
 }
 
 /**
- * Checks for command substitution patterns
+ * Scans shell text for command substitution syntax that can execute nested
+ * commands. Single-quoted text is literal shell text, while substitutions
+ * remain active in double-quoted text.
  */
-function hasCommandSubstitution(command: string): boolean {
-  // Backticks
-  if (command.includes("`")) {
-    return true;
-  }
-
-  // $() substitution
-  if (command.includes("$(")) {
-    return true;
-  }
-
-  // Process substitution <() or >()
-  if (command.match(/<\(|>\(/)) {
-    return true;
-  }
-
-  return false;
-}
-
-/**
- * Extracts commands from substitution patterns
- */
-function extractSubstitutedCommands(command: string): string[] {
+function scanCommandSubstitutions(command: string): CommandSubstitutionScan {
   const commands: string[] = [];
+  let hasSubstitution = false;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
 
-  // Extract from backticks
-  const backtickMatches = command.match(/`([^`]+)`/g);
-  if (backtickMatches) {
-    commands.push(...backtickMatches.map((m) => m.slice(1, -1)));
-  }
+  for (let idx = 0; idx < command.length; idx++) {
+    const char = command[idx];
+    const nextChar = command[idx + 1];
 
-  // Extract from $() - handle nested parentheses
-  let idx = 0;
-  while (idx < command.length) {
-    const dollarParen = command.indexOf("$(", idx);
-    if (dollarParen === -1) break;
-
-    // Find matching closing parenthesis
-    let depth = 1;
-    let endIdx = dollarParen + 2;
-    while (endIdx < command.length && depth > 0) {
-      if (command[endIdx] === "(") depth++;
-      else if (command[endIdx] === ")") depth--;
-      endIdx++;
+    if (!inSingleQuote && char === "\\") {
+      idx++;
+      continue;
     }
 
-    if (depth === 0) {
-      // Extract the command inside $()
-      const extracted = command.slice(dollarParen + 2, endIdx - 1);
-      commands.push(extracted);
-      // Also check for nested substitutions within this command
-      if (extracted.includes("$(") || extracted.includes("`")) {
-        commands.push(...extractSubstitutedCommands(extracted));
+    if (!inDoubleQuote && char === "'") {
+      inSingleQuote = !inSingleQuote;
+      continue;
+    }
+
+    if (!inSingleQuote && char === '"') {
+      inDoubleQuote = !inDoubleQuote;
+      continue;
+    }
+
+    if (inSingleQuote) {
+      continue;
+    }
+
+    if (char === "`") {
+      hasSubstitution = true;
+      const endIdx = findClosingBacktick(command, idx + 1);
+      if (endIdx !== -1) {
+        commands.push(command.slice(idx + 1, endIdx));
+        idx = endIdx;
+      }
+      continue;
+    }
+
+    if (
+      (char === "$" || (!inDoubleQuote && (char === "<" || char === ">"))) &&
+      nextChar === "("
+    ) {
+      hasSubstitution = true;
+      const endIdx = findClosingParen(command, idx + 2);
+      if (endIdx !== -1) {
+        commands.push(command.slice(idx + 2, endIdx));
+        idx = endIdx;
       }
     }
-
-    idx = endIdx;
   }
 
-  return commands;
+  return { hasSubstitution, commands };
+}
+
+function findClosingBacktick(command: string, startIdx: number): number {
+  for (let idx = startIdx; idx < command.length; idx++) {
+    if (command[idx] === "\\") {
+      idx++;
+      continue;
+    }
+    if (command[idx] === "`") {
+      return idx;
+    }
+  }
+
+  return -1;
+}
+
+function findClosingParen(command: string, startIdx: number): number {
+  let depth = 1;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+
+  for (let idx = startIdx; idx < command.length; idx++) {
+    const char = command[idx];
+    const nextChar = command[idx + 1];
+
+    if (!inSingleQuote && char === "\\") {
+      idx++;
+      continue;
+    }
+
+    if (!inDoubleQuote && char === "'") {
+      inSingleQuote = !inSingleQuote;
+      continue;
+    }
+
+    if (!inSingleQuote && char === '"') {
+      inDoubleQuote = !inDoubleQuote;
+      continue;
+    }
+
+    if (inSingleQuote) {
+      continue;
+    }
+
+    if (
+      (char === "$" || (!inDoubleQuote && (char === "<" || char === ">"))) &&
+      nextChar === "("
+    ) {
+      depth++;
+      idx++;
+      continue;
+    }
+
+    if (inDoubleQuote) {
+      continue;
+    }
+
+    if (char === "(") {
+      depth++;
+    } else if (char === ")") {
+      depth--;
+      if (depth === 0) {
+        return idx;
+      }
+    }
+  }
+
+  return -1;
 }
 
 /**
