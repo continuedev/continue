@@ -64,6 +64,11 @@ async function getEngine(): Promise<any> {
         await engine.loadRules();
         return engine;
       } catch (err) {
+        // Clear the cached rejection so a later invocation can retry after
+        // a transient failure (network blip during dynamic import, or the
+        // dependency being installed mid-session). Without this, one failure
+        // pinned the provider into a permanent error state.
+        enginePromise = null;
         throw new Error(
           "Optional dependency 'agent-threat-rules' is not installed or failed to load. " +
             "Install it with: npm install agent-threat-rules",
@@ -101,7 +106,10 @@ class ATRSecurityContextProvider extends BaseContextProvider {
     }
 
     const file = await extras.ide.getCurrentFile();
-    if (!file || !file.contents) {
+    if (!file || typeof file.contents !== "string") {
+      // An empty open file is a valid scan target (zero matches is a useful
+      // signal in itself). Only treat the case where no file is open, or the
+      // IDE returned a non-string contents value, as "no file to scan."
       return [
         {
           description: "ATR scan",
@@ -118,8 +126,7 @@ class ATRSecurityContextProvider extends BaseContextProvider {
     });
 
     const highSeverity = matches.filter(
-      (m) =>
-        m?.rule?.severity === "critical" || m?.rule?.severity === "high",
+      (m) => m?.rule?.severity === "critical" || m?.rule?.severity === "high",
     );
 
     if (highSeverity.length === 0) {
