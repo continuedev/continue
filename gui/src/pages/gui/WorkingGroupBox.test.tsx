@@ -59,7 +59,7 @@ describe("WorkingGroupBox", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders a visible connector between multiple timeline items", () => {
+  it("does not render timeline rail visuals between action rows", () => {
     render(
       <WorkingGroupBox isActive={false} actionCount={2}>
         <div>first tool call</div>
@@ -68,7 +68,19 @@ describe("WorkingGroupBox", () => {
     );
 
     expect(
-      screen.getAllByTestId("working-group-box-timeline-connector").length,
-    ).toBeGreaterThan(0);
+      screen.queryByTestId("working-group-box-timeline-rail"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("also omits timeline rail visuals for a single action row", () => {
+    render(
+      <WorkingGroupBox isActive={false} actionCount={1}>
+        <div>single tool call</div>
+      </WorkingGroupBox>,
+    );
+
+    expect(
+      screen.queryByTestId("working-group-box-timeline-rail"),
+    ).not.toBeInTheDocument();
   });
 });

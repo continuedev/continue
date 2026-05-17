@@ -147,7 +147,7 @@ export function PermissionModeSelect() {
         <ListboxButton
           data-testid="permission-mode-pill"
           aria-label="Select permission mode"
-          className="text-description h-7 gap-1 rounded-xl border-transparent px-2 text-[11px] font-medium"
+          className="text-description hover:bg-vsc-input-background h-7 gap-1 rounded-xl border-transparent px-2 text-[11px] font-medium transition-colors hover:brightness-125"
         >
           <span
             className={cn(

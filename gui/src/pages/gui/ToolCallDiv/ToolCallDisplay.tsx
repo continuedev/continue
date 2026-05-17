@@ -5,7 +5,6 @@ import {
 import { Tool, ToolCallState } from "core";
 import { useEffect, useRef, useState } from "react";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
-import { ToolTruncateHistoryIcon } from "./ToolTruncateHistoryIcon";
 
 interface ToolCallDisplayProps {
   children: React.ReactNode;
@@ -38,11 +37,11 @@ export function ToolCallDisplay({
     prevIsActive.current = isActive;
   }, [isActive]);
 
-  const bodyId = `tool-call-display-body-${toolCallState.toolCallId}`;
+  const bodyId = `tool-call-display-body-${toolCallState.toolCallId ?? historyIndex}`;
 
   return (
     <div className="mt-1 flex flex-col px-4" data-testid="tool-call-display">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
         <button
           type="button"
           aria-expanded={open}
@@ -82,10 +81,6 @@ export function ToolCallDisplay({
             ) : null}
           </span>
         </button>
-
-        {!!toolCallState.output?.length && (
-          <ToolTruncateHistoryIcon historyIndex={historyIndex} />
-        )}
       </div>
 
       {/* Collapsible body */}

@@ -20,17 +20,22 @@ export function SelectedAssistantButton({
 
   const isSidebar = variant === "sidebar";
   const iconSize = isSidebar ? "h-4 w-4" : "h-3 w-3";
-  const buttonPadding = isSidebar ? "px-2 py-1.5" : "px-0 py-0.5";
+  const buttonPadding = isSidebar ? "px-2 py-1.5" : "h-7 px-2";
   const buttonStyle = isSidebar ? {} : { fontSize: fontSize(-3) };
+  const hoverClass = isSidebar
+    ? "hover:brightness-110"
+    : "hover:bg-vsc-input-background hover:brightness-125";
+  const layoutClass = isSidebar ? "w-full justify-start" : "gap-1";
+  const shapeClass = isSidebar ? "" : "rounded-xl";
 
   return (
     <ListboxButton
       data-testid="assistant-select-button"
-      className={`text-description overflow-hidden border-none bg-transparent hover:brightness-110 ${isSidebar ? "w-full justify-start" : "gap-1.5"} ${buttonPadding}`}
+      className={`text-description overflow-hidden border-none bg-transparent transition-colors ${hoverClass} ${shapeClass} ${layoutClass} ${buttonPadding}`}
       style={buttonStyle}
     >
       <div
-        className={`flex flex-row items-center ${isSidebar ? "w-full justify-between" : "gap-1.5"}`}
+        className={`flex flex-row items-center ${isSidebar ? "w-full justify-between" : "gap-1"}`}
       >
         <div className="flex min-w-0 flex-1 flex-row items-center gap-2">
           {selectedProfile === null ? (

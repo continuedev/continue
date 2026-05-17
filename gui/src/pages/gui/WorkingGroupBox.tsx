@@ -137,33 +137,12 @@ export function WorkingGroupBox({
       >
         <div className="relative pb-1">
           {timelineItems.map((child, index) => {
-            const hasPrev = index > 0;
-            const hasNext = index < timelineItems.length - 1;
-
             return (
               <div
-                className="relative pb-1 pl-6 pr-1"
+                className="relative px-1 pb-1"
                 data-testid={`working-group-box-timeline-item-${index}`}
                 key={`working-group-box-timeline-item-${index}`}
               >
-                {hasPrev && (
-                  <span
-                    aria-hidden="true"
-                    data-testid="working-group-box-timeline-connector"
-                    className="bg-[color:var(--vscode-descriptionForeground)]/55 pointer-events-none absolute left-[9px] top-0 h-[17px] w-px"
-                  />
-                )}
-                {hasNext && (
-                  <span
-                    aria-hidden="true"
-                    data-testid="working-group-box-timeline-connector"
-                    className="bg-[color:var(--vscode-descriptionForeground)]/55 pointer-events-none absolute bottom-0 left-[9px] top-[17px] w-px"
-                  />
-                )}
-                <span
-                  aria-hidden="true"
-                  className="border-command-border bg-vsc-editor-background/90 pointer-events-none absolute left-1 top-3 h-2.5 w-2.5 rounded-full border border-solid"
-                />
                 {child}
               </div>
             );

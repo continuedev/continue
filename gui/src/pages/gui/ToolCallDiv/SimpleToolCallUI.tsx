@@ -17,7 +17,6 @@ import {
 } from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { ToolCallStatusMessage } from "./ToolCallStatusMessage";
-import { ToolTruncateHistoryIcon } from "./ToolTruncateHistoryIcon";
 import { toolCallStateToContextItems } from "./utils";
 
 function getStatusIconClass(status: ToolCallState["status"]): string {
@@ -101,7 +100,7 @@ export function SimpleToolCallUI({
 
   return (
     <div className="mt-1 flex flex-col px-4">
-      <div className="flex min-w-0 flex-row items-center justify-between gap-2">
+      <div className="flex min-w-0 flex-row items-center gap-2">
         <div
           className={`text-description flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-2 py-1.5 text-xs transition-colors duration-200 ease-in-out ${
             isClickable
@@ -149,10 +148,6 @@ export function SimpleToolCallUI({
             </span>
           )}
         </div>
-
-        {!!toolCallState.output?.length && (
-          <ToolTruncateHistoryIcon historyIndex={historyIndex} />
-        )}
       </div>
 
       {/* Collapsible body */}

@@ -19,7 +19,6 @@ import { Button, lightGray, vscBackground } from "../../components";
 import { AssistantAndOrgListbox } from "../../components/AssistantAndOrgListbox";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
-import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
 import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/ThinkingBlockPeek";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { useOnboardingCard } from "../../components/OnboardingCard";
@@ -54,7 +53,10 @@ import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 
 import { AgentChatView } from "../../components/Agent/AgentChatView";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
+import { ToolTip } from "../../components/gui/Tooltip";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
+import HoverItem from "../../components/mainInput/InputToolbar/HoverItem";
+import { PermissionModeSelect } from "../../components/mainInput/PermissionModeSelect";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
@@ -782,22 +784,38 @@ export function Chat() {
             pointerEvents: isStreaming ? "none" : "auto",
           }}
         >
-          <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
+          <div className="flex flex-row items-center justify-start gap-1 pb-1 pl-0.5 pr-2">
             <div className="xs:inline hidden">
               {history.length === 0 && lastSessionId && !isInEdit && (
-                <NewSessionButton
-                  onClick={async () => {
-                    await dispatch(loadLastSession());
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <ArrowLeftIcon className="h-3 w-3" />
-                  <span className="text-xs">Last Session</span>
-                </NewSessionButton>
+                <ToolTip place="top" content="Load last session">
+                  <HoverItem className="rounded-xl !p-0">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await dispatch(loadLastSession());
+                      }}
+                      className="text-description border-border bg-vsc-input-background hover:bg-vsc-input-background flex h-7 items-center gap-1 rounded-xl border border-solid px-2 text-[11px] font-medium transition-colors hover:brightness-125"
+                    >
+                      <ArrowLeftIcon className="h-3 w-3" />
+                      <span>Last Session</span>
+                    </button>
+                  </HoverItem>
+                </ToolTip>
               )}
             </div>
-            <div className="rounded-xl px-2">
-              <AssistantAndOrgListbox variant="lump" />
+            <div>
+              <ToolTip place="top" content="Assistant and config">
+                <HoverItem className="rounded-xl !p-0">
+                  <AssistantAndOrgListbox variant="lump" />
+                </HoverItem>
+              </ToolTip>
+            </div>
+            <div className="hidden items-center sm:flex">
+              <ToolTip place="top" content="Permission mode">
+                <HoverItem className="rounded-xl !p-0">
+                  <PermissionModeSelect />
+                </HoverItem>
+              </ToolTip>
             </div>
           </div>
           <FatalErrorIndicator />
