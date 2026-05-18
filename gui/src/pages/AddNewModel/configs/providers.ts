@@ -795,6 +795,38 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://console.x.ai/",
   },
+  atomicChat: {
+    title: "Atomic Chat",
+    provider: "atomic-chat",
+    description: "Local LLMs via the Atomic Chat desktop app",
+    longDescription:
+      "Atomic Chat runs models on your machine and serves them through an OpenAI-compatible API (default `http://127.0.0.1:1337/v1`).\n\n1. Download from [atomic.chat](https://atomic.chat/) and open the app\n2. Load a model so the local API is running\n3. Add Atomic Chat in Continue and choose a model from the list\n\nModel ids must match those returned by `GET /v1/models`.",
+    icon: "ollama.png",
+    tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
+    params: {
+      apiBase: "http://127.0.0.1:1337/v1/",
+    },
+    packages: [
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "Atomic Chat",
+        },
+      },
+      ...openSourceModels,
+    ],
+    collectInputFor: [
+      ...completionParamsInputsConfigs,
+      {
+        ...apiBaseInput,
+        defaultValue: "http://127.0.0.1:1337/v1/",
+        required: true,
+      },
+    ],
+    downloadUrl: "https://atomic.chat/",
+    refPage: "atomic-chat",
+  },
   lemonade: {
     title: "Lemonade",
     provider: "lemonade",
