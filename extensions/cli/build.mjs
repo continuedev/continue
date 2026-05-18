@@ -64,6 +64,10 @@ try {
         __dirname,
         "../../packages/config-types/dist/index.js",
       ),
+      "@yutoagentic/sdk": resolve(
+        __dirname,
+        "../../packages/yutoagentic-sdk/typescript",
+      ),
       core: resolve(__dirname, "../../core"),
       "@yutoagentic/fetch": resolve(
         __dirname,

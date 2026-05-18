@@ -249,9 +249,9 @@ function ModelSelect() {
         <ListboxButton
           data-testid="model-select-button"
           ref={buttonRef}
-          className="text-description h-[18px] gap-1 border-none"
+          className="text-description h-[18px] gap-1 border-none p-3"
         >
-          <span className="line-clamp-1 break-all hover:brightness-110">
+          <span className="line-clamp-1 break-all text-[12px] hover:brightness-110">
             {modelSelectTitle(selectedModel) || "Select model"}
           </span>
           <ChevronDownIcon

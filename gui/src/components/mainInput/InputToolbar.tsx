@@ -85,13 +85,13 @@ function InputToolbar(props: InputToolbarProps) {
       >
         <div className="xs:gap-1.5 flex flex-row items-center gap-1">
           {!isInEdit && (
-            <HoverItem className="!p-0 hover:brightness-110">
+            <HoverItem className="!p-0 hover:brightness-150">
               <ModeSelect />
             </HoverItem>
           )}
 
           <ToolTip place="top" content="Select Model">
-            <HoverItem className="!p-0 hover:brightness-110">
+            <HoverItem className="!p-0 hover:brightness-150">
               <ModelSelect />
             </HoverItem>
           </ToolTip>
@@ -223,8 +223,9 @@ function InputToolbar(props: InputToolbarProps) {
           )}
           <ToolTip place="top" content="Send (⏎)">
             <Button
-              variant={props.isMainInput ? "primary" : "secondary"}
+              variant="outline"
               size="sm"
+              className="my-0 h-5 w-5 rounded-full p-0"
               data-testid="submit-input-button"
               onClick={async (e) => {
                 if (props.onEnter) {
@@ -238,10 +239,16 @@ function InputToolbar(props: InputToolbarProps) {
               }}
               disabled={isEnterDisabled}
             >
-              <span className="hidden md:inline">
-                ⏎ {props.toolbarOptions?.enterText ?? "Enter"}
-              </span>
-              <span className="md:hidden">⏎</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                fill="currentColor"
+                className="bi bi-arrow-up-circle-fill"
+                viewBox="0 0 16 16"
+              >
+                <path d="M16 8A8 8 0 1 0 0 8a8 8 0 0 0 16 0m-7.5 3.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707z" />
+              </svg>
             </Button>
           </ToolTip>
         </div>

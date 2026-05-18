@@ -5,6 +5,7 @@ import {
 import { MessageModes } from "core";
 import { isRecommendedAgentModel } from "core/llm/toolSupport";
 import { useCallback, useEffect, useMemo } from "react";
+import { ToolTip } from "../../components/gui/Tooltip";
 import { useAuth } from "../../context/Auth";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
@@ -138,19 +139,21 @@ export function ModeSelect() {
   return (
     <Listbox value={mode} onChange={selectMode}>
       <div className="relative flex" data-testid="mode-select-button">
-        <ListboxButton className="text-description h-[18px] gap-1 border-none">
-          <ModeIcon mode={mode} />
-          <span className="line-clamp-1 break-all hidden sm:inline hover:brightness-110">
-            {activeOption.label}
-          </span>
-          {activeOption.warning && (
-            <ExclamationTriangleIcon className="text-warning h-3 w-3 flex-shrink-0" />
-          )}
-          <ChevronDownIcon
-            className="hidden h-2 w-2 flex-shrink-0 hover:brightness-110 min-[200px]:flex"
-            aria-hidden="true"
-          />
-        </ListboxButton>
+        <ToolTip place="top" content="Select mode">
+          <ListboxButton className="text-description h-[18px] gap-1 border-none p-3">
+            <ModeIcon mode={mode} />
+            <span className="line-clamp-1 hidden break-all text-[12px] hover:brightness-110 sm:inline">
+              {activeOption.label}
+            </span>
+            {activeOption.warning && (
+              <ExclamationTriangleIcon className="text-warning h-3 w-3 flex-shrink-0" />
+            )}
+            <ChevronDownIcon
+              className="hidden h-2 w-2 flex-shrink-0 hover:brightness-110 min-[200px]:flex"
+              aria-hidden="true"
+            />
+          </ListboxButton>
+        </ToolTip>
         <Transition>
           <ListboxOptions className="min-w-[160px]">
             <div className="flex items-center justify-between px-1.5 py-1">

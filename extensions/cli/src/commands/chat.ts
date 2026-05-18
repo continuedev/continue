@@ -1,7 +1,7 @@
 import { ModelConfig } from "@yutoagentic/config-yaml";
 import { BaseLlmApi } from "@yutoagentic/openai-adapters";
 import chalk from "chalk";
-import { ChatHistoryItem, Session } from "core";
+import type { ChatHistoryItem, Session } from "core";
 import { ChatDescriber } from "core/util/chatDescriber.js";
 
 import { compactChatHistory, findCompactionIndex } from "../compaction.js";

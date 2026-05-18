@@ -54,7 +54,7 @@
   "devDependencies": {
     "@yutoagentic/config-yaml": "file:../../packages/config-yaml",
     "@yutoagentic/openai-adapters": "file:../../packages/openai-adapters",
-    "@yutoagentic/sdk": "^0.0.13",
+    "@yutoagentic/sdk": "file:../../packages/yutoagentic-sdk/typescript",
     "@yutoagentic/terminal-security": "file:../../packages/terminal-security",
     "@modelcontextprotocol/sdk": "^1.24.0",
     "@opentelemetry/api": "^1.9.0",

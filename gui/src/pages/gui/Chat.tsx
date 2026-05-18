@@ -741,7 +741,7 @@ export function Chat() {
       </StepsDiv>
       <div className="relative shrink-0">
         <div
-          className="bg-vsc-input-background sticky bottom-0 z-10 px-2 pt-2"
+          className="bg-vsc-input-background sticky bottom-0 z-10 px-1 pt-1"
           data-testid="chat-composer-rail"
         >
           <ContinueInputBox
@@ -784,7 +784,7 @@ export function Chat() {
             pointerEvents: isStreaming ? "none" : "auto",
           }}
         >
-          <div className="flex flex-row items-center justify-start gap-1 pb-1 pl-0.5 pr-2">
+          <div className="flex flex-row items-center justify-start gap-1 pb-0 pl-3.5 pr-1 pt-1">
             <div className="xs:inline hidden">
               {history.length === 0 && lastSessionId && !isInEdit && (
                 <ToolTip place="top" content="Load last session">
@@ -794,7 +794,7 @@ export function Chat() {
                       onClick={async () => {
                         await dispatch(loadLastSession());
                       }}
-                      className="text-description border-border bg-vsc-input-background hover:bg-vsc-input-background flex h-7 items-center gap-1 rounded-xl border border-solid px-2 text-[11px] font-medium transition-colors hover:brightness-125"
+                      className="text-description border-border bg-vsc-input-background hover:bg-vsc-input-background flex h-7 cursor-pointer items-center gap-1 rounded-lg border border-none px-2 text-[11px] font-medium transition-colors hover:brightness-150"
                     >
                       <ArrowLeftIcon className="h-3 w-3" />
                       <span>Last Session</span>

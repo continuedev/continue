@@ -16,7 +16,7 @@ import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { promisify } from "util";
 
-import {
+import type {
   DocumentSymbol,
   FileStatsMap,
   FileType,
@@ -27,8 +27,8 @@ import {
   IndexTag,
   Location,
   Problem,
-  RangeInFile,
   Range,
+  RangeInFile,
   SignatureHelp,
   Thread,
 } from "core";

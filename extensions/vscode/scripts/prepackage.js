@@ -114,6 +114,32 @@ function ensureRipgrepBinaryPresent(exeSuffix) {
   console.log(`[info] Restored ripgrep binary at ${rgPath}`);
 }
 
+function getLatestMtimeMs(targetPath) {
+  if (!fs.existsSync(targetPath)) {
+    return 0;
+  }
+
+  const stat = fs.statSync(targetPath);
+  if (stat.isFile()) {
+    return stat.mtimeMs;
+  }
+
+  let latest = stat.mtimeMs;
+  for (const entry of fs.readdirSync(targetPath, { withFileTypes: true })) {
+    // Skip dependency/output folders to avoid unnecessary traversal.
+    if (entry.name === "node_modules" || entry.name === "dist") {
+      continue;
+    }
+    const childPath = path.join(targetPath, entry.name);
+    const childLatest = getLatestMtimeMs(childPath);
+    if (childLatest > latest) {
+      latest = childLatest;
+    }
+  }
+
+  return latest;
+}
+
 void (async () => {
   const startTime = Date.now();
   console.log(
@@ -137,10 +163,32 @@ void (async () => {
   const guiIndexJsPath = path.join("dist", "assets", "index.js");
   const guiIndexCssPath = path.join("dist", "assets", "index.css");
 
-  // Some flows leave gui/dist present but without a built Vite bundle.
-  // Ensure required assets exist before copying to extensions.
-  if (!fs.existsSync(guiIndexJsPath) || !fs.existsSync(guiIndexCssPath)) {
-    console.log("[info] GUI dist assets missing, running gui build...");
+  const hasGuiDistAssets =
+    fs.existsSync(guiIndexJsPath) && fs.existsSync(guiIndexCssPath);
+
+  const latestGuiSourceMtime = Math.max(
+    getLatestMtimeMs("src"),
+    getLatestMtimeMs("index.html"),
+    getLatestMtimeMs("indexConsole.html"),
+    getLatestMtimeMs("vite.config.ts"),
+    getLatestMtimeMs("tailwind.config.cjs"),
+    getLatestMtimeMs("postcss.config.cjs"),
+    getLatestMtimeMs("tsconfig.json"),
+  );
+
+  const distIndexJsMtime = hasGuiDistAssets
+    ? fs.statSync(guiIndexJsPath).mtimeMs
+    : 0;
+  const distIndexCssMtime = hasGuiDistAssets
+    ? fs.statSync(guiIndexCssPath).mtimeMs
+    : 0;
+  const earliestDistAssetMtime = Math.min(distIndexJsMtime, distIndexCssMtime);
+
+  // Some flows leave gui/dist present but stale (e.g. after running vite dev).
+  // Rebuild when dist is missing or older than source files.
+  if (!hasGuiDistAssets || earliestDistAssetMtime < latestGuiSourceMtime) {
+    const reason = !hasGuiDistAssets ? "missing" : "stale";
+    console.log(`[info] GUI dist assets are ${reason}, running gui build...`);
     execCmdSync("npm run build");
   }
 

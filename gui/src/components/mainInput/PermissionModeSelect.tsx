@@ -62,7 +62,7 @@ const PERMISSION_PRESET_OPTIONS: PermissionPresetOption[] = [
   },
   {
     id: "autopilot",
-    label: "Autopilot (Preview)",
+    label: "Autopilot",
     description: "Agent mode with bypass approvals and codebase wiring.",
     quickPermissionMode: "bypass",
     codebaseToolCallingOnly: true,
@@ -147,7 +147,7 @@ export function PermissionModeSelect() {
         <ListboxButton
           data-testid="permission-mode-pill"
           aria-label="Select permission mode"
-          className="text-description hover:bg-vsc-input-background h-7 gap-1 rounded-xl border-transparent px-2 text-[11px] font-medium transition-colors hover:brightness-125"
+          className="text-description hover:bg-vsc-input-background h-7 gap-1 rounded-xl border-transparent px-2 text-[11px] font-medium transition-colors hover:brightness-150"
         >
           <span
             className={cn(
@@ -156,7 +156,7 @@ export function PermissionModeSelect() {
             )}
           />
           <ActiveIcon className="text-description-muted h-3 w-3" />
-          <span>{activePreset.label}</span>
+          <span className="text-[12px] font-medium">{activePreset.label}</span>
           <ChevronDownIcon className="text-description-muted h-3 w-3" />
         </ListboxButton>
 
@@ -188,7 +188,10 @@ export function PermissionModeSelect() {
                     <div className="flex items-center gap-2">
                       <OptionIcon className="h-3.5 w-3.5" />
                       <span
-                        className={cn("text-sm", isSelected && "font-semibold")}
+                        className={cn(
+                          "text-[12px]",
+                          isSelected && "font-semibold",
+                        )}
                       >
                         {option.label}
                       </span>

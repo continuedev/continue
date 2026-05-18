@@ -24,7 +24,7 @@ export function SelectedAssistantButton({
   const buttonStyle = isSidebar ? {} : { fontSize: fontSize(-3) };
   const hoverClass = isSidebar
     ? "hover:brightness-110"
-    : "hover:bg-vsc-input-background hover:brightness-125";
+    : "hover:bg-vsc-input-background hover:brightness-150";
   const layoutClass = isSidebar ? "w-full justify-start" : "gap-1";
   const shapeClass = isSidebar ? "" : "rounded-xl";
 

@@ -21,19 +21,19 @@ export const InputBoxDiv = styled.div<{}>`
   color: ${vscForeground};
 
   border: 1px solid ${vscCommandCenterInactiveBorder};
-  transition: border-color 0.15s ease-in-out;
+  outline: 1px solid transparent;
+  outline-offset: 0;
+  transition:
+    border-color 0.15s ease-in-out,
+    outline-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
   &:focus-within {
     border: 1px solid ${vscCommandCenterActiveBorder};
+    outline-color: ${vscInputBorderFocus};
+    box-shadow: 0 0 0 2px ${vscInputBorderFocus}33;
   }
 
-  outline: none;
   font-size: ${getFontSize()}px;
-
-  &:focus {
-    outline: none;
-
-    border: 0.5px solid ${vscInputBorderFocus};
-  }
 
   &::placeholder {
     color: ${lightGray}cc;
