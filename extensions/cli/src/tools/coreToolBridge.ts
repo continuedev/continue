@@ -10,10 +10,12 @@
  * runTerminalCommand, subagent, …) keep their CLI-specific implementations.
  */
 
-import { callBuiltInTool } from "core/tools/callTool.js";
-import { BuiltInToolNames } from "core/tools/builtIn.js";
-import { getBaseToolDefinitions } from "core/tools/index.js";
 import type { ContextItem, Tool as CoreTool, ToolExtras } from "core/index.js";
+import { BuiltInToolNames } from "core/tools/builtIn.js";
+import { callBuiltInTool } from "core/tools/callTool.js";
+import { grepSearchTool } from "core/tools/definitions/grepSearch.js";
+import { searchWebTool } from "core/tools/definitions/searchWeb.js";
+import { getBaseToolDefinitions } from "core/tools/index.js";
 
 import { CliIde } from "../CliIde.js";
 import { services } from "../services/index.js";
@@ -72,6 +74,11 @@ function getCoreToolDefMap(): Map<string, CoreTool> {
     for (const def of getBaseToolDefinitions()) {
       _coreToolDefMap.set(def.function.name, def);
     }
+
+    // search_web and grep_search are config-dependent in core and therefore
+    // not part of getBaseToolDefinitions(); add them explicitly for CLI bridge.
+    _coreToolDefMap.set(searchWebTool.function.name, searchWebTool);
+    _coreToolDefMap.set(grepSearchTool.function.name, grepSearchTool);
   }
   return _coreToolDefMap;
 }
@@ -169,9 +176,24 @@ function makeCoreCliTool(
   const { extendExtras, ...toolOverrides } = overrides ?? {};
   const coreDef = getCoreToolDefMap().get(coreToolName);
   if (!coreDef) {
-    throw new Error(
-      `coreToolBridge: no definition found for "${coreToolName}"`,
-    );
+    const unavailableToolError = `coreToolBridge: core tool "${coreToolName}" is unavailable in this core build`;
+    console.warn(unavailableToolError);
+
+    return {
+      name: coreToolName,
+      displayName: coreToolName,
+      description: unavailableToolError,
+      parameters: {
+        type: "object",
+        properties: {},
+      } as any,
+      isBuiltIn: true,
+      readonly: true,
+      ...toolOverrides,
+      run: async (): Promise<string> => {
+        throw new Error(unavailableToolError);
+      },
+    };
   }
 
   return {

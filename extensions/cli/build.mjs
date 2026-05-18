@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 
 import * as esbuild from "esbuild";
-import { chmodSync, copyFileSync, writeFileSync } from "fs";
+import {
+  chmodSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  writeFileSync,
+} from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
@@ -86,7 +92,11 @@ try {
     // Add banner to create require for CommonJS packages
     banner: {
       js: `import { createRequire as __createRequire } from 'module';
-const require = __createRequire(import.meta.url);`,
+    import { fileURLToPath as __fileURLToPath } from 'url';
+    import { dirname as __pathDirname } from 'path';
+    const require = __createRequire(import.meta.url);
+    const __filename = __fileURLToPath(import.meta.url);
+    const __dirname = __pathDirname(__filename);`,
     },
   });
 
@@ -110,6 +120,64 @@ const require = __createRequire(import.meta.url);`,
     console.log("✓ Copied xhr-sync-worker.js");
   } catch (error) {
     console.warn("Warning: Could not copy xhr-sync-worker.js:", error.message);
+  }
+
+  // Ensure sqlite native binding is where bundled bindings lookup expects it.
+  const sqliteBinaryCandidates = [
+    resolve(__dirname, "node_modules/sqlite3/build/Release/node_sqlite3.node"),
+    resolve(
+      __dirname,
+      "../../core/node_modules/sqlite3/build/Release/node_sqlite3.node",
+    ),
+    resolve(
+      __dirname,
+      "../../binary/bin/win32-x64/build/Release/node_sqlite3.node",
+    ),
+  ];
+  const sqliteBinarySource = sqliteBinaryCandidates.find((candidate) =>
+    existsSync(candidate),
+  );
+  if (sqliteBinarySource) {
+    const sqliteBuildDir = resolve(__dirname, "build/Release");
+    const sqliteBuildBinary = resolve(sqliteBuildDir, "node_sqlite3.node");
+    const sqliteRootBinary = resolve(__dirname, "build/node_sqlite3.node");
+
+    const copySqliteBinary = (destination) => {
+      try {
+        copyFileSync(sqliteBinarySource, destination);
+        return true;
+      } catch (error) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "code" in error &&
+          ["EBUSY", "EPERM", "EACCES"].includes(error.code)
+        ) {
+          if (existsSync(destination)) {
+            console.warn(
+              `Warning: Could not refresh ${destination} (${error.code}); using existing file.`,
+            );
+            return true;
+          }
+          console.warn(
+            `Warning: Could not copy sqlite binary to ${destination} (${error.code}).`,
+          );
+          return false;
+        }
+        throw error;
+      }
+    };
+
+    mkdirSync(sqliteBuildDir, { recursive: true });
+    const copiedBuildBinary = copySqliteBinary(sqliteBuildBinary);
+    const copiedRootBinary = copySqliteBinary(sqliteRootBinary);
+    if (copiedBuildBinary || copiedRootBinary) {
+      console.log("✓ Prepared node_sqlite3.node");
+    }
+  } else {
+    console.warn(
+      "Warning: Could not find node_sqlite3.node in known locations. CLI may fail at runtime.",
+    );
   }
 
   // Make the wrapper script executable
