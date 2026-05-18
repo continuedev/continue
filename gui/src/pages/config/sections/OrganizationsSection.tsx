@@ -7,6 +7,7 @@ import { Button, Card, Divider } from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { ConfigHeader } from "../components/ConfigHeader";
+import { useTranslation } from "react-i18next";
 
 function getOrgIcon(org: { name: string; iconUrl?: string | null }) {
   if (org.iconUrl) {
@@ -24,6 +25,7 @@ function getOrgIcon(org: { name: string; iconUrl?: string | null }) {
 }
 
 export function OrganizationsSection() {
+  const { t } = useTranslation();
   const { organizations, session } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -53,13 +55,14 @@ export function OrganizationsSection() {
       <>
         <div className="mb-8 flex items-center justify-between">
           <div className="flex flex-col">
-            <h2 className="mb-0 text-xl font-semibold">Organizations</h2>
+            <h2 className="mb-0 text-xl font-semibold">
+              {t("OrganizationsSection.Organizations")}
+            </h2>
           </div>
         </div>
         <Card>
           <div className="text-description py-8 text-center text-sm">
-            Organizations are only available with cloud accounts. Sign in to
-            manage organizations.
+            {t("OrganizationsSection.OrganizationsCloudOnly")}
           </div>
         </Card>
       </>
@@ -69,9 +72,9 @@ export function OrganizationsSection() {
   return (
     <>
       <ConfigHeader
-        title="Organizations"
+        title={t("OrganizationsSection.Organizations")}
         onAddClick={handleAddOrganization}
-        addButtonTooltip="Add organization"
+        addButtonTooltip={t("OrganizationsSection.AddOrganization")}
       />
 
       <Card>

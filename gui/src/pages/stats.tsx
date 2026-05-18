@@ -7,6 +7,7 @@ import { CopyIconButton } from "../components/gui/CopyIconButton";
 import { PageHeader } from "../components/PageHeader";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
+import { useTranslation } from "react-i18next";
 
 const Th = styled.th`
   padding: 0.5rem;
@@ -35,6 +36,7 @@ function generateTable(data: unknown[][]) {
 
 function Stats() {
   useNavigationListener();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -65,14 +67,26 @@ function Stats() {
         backgroundColor: vscBackground,
       }}
     >
-      <PageHeader title="More" onTitleClick={() => navigate(-1)} showBorder />
+      <PageHeader
+        title={t("stats.more")}
+        onTitleClick={() => navigate(-1)}
+        showBorder
+      />
 
       <div className="p-2">
         <div className="flex items-center gap-2">
-          <h2 className="ml-2">Tokens per Day</h2>
+          <h2 className="ml-2">{t("stats.tokensPerDay")}</h2>
           <CopyIconButton
             text={generateTable(
-              ([["Day", "Generated Tokens", "Prompt Tokens"]] as any).concat(
+              (
+                [
+                  [
+                    t("stats.day"),
+                    t("stats.generatedTokens"),
+                    t("stats.promptTokens"),
+                  ],
+                ] as any
+              ).concat(
                 days.map((day) => [
                   day.day,
                   day.generatedTokens,
@@ -85,9 +99,9 @@ function Stats() {
         <table className="w-full border-collapse">
           <thead>
             <Tr>
-              <Th>Day</Th>
-              <Th>Generated Tokens</Th>
-              <Th>Prompt Tokens</Th>
+              <Th>{t("stats.day")}</Th>
+              <Th>{t("stats.generatedTokens")}</Th>
+              <Th>{t("stats.promptTokens")}</Th>
             </Tr>
           </thead>
           <tbody>
@@ -102,10 +116,18 @@ function Stats() {
         </table>
 
         <div className="flex items-center gap-2">
-          <h2 className="ml-2">Tokens per Model</h2>
+          <h2 className="ml-2">{t("stats.tokensPerModel")}</h2>
           <CopyIconButton
             text={generateTable(
-              ([["Model", "Generated Tokens", "Prompt Tokens"]] as any).concat(
+              (
+                [
+                  [
+                    t("stats.model"),
+                    t("stats.generatedTokens"),
+                    t("stats.promptTokens"),
+                  ],
+                ] as any
+              ).concat(
                 models.map((model) => [
                   model.model,
                   model.generatedTokens.toLocaleString(),
@@ -118,9 +140,9 @@ function Stats() {
         <table className="w-full border-collapse">
           <thead>
             <Tr>
-              <Th>Model</Th>
-              <Th>Generated Tokens</Th>
-              <Th>Prompt Tokens</Th>
+              <Th>{t("stats.model")}</Th>
+              <Th>{t("stats.generatedTokens")}</Th>
+              <Th>{t("stats.promptTokens")}</Th>
             </Tr>
           </thead>
           <tbody>

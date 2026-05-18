@@ -6,6 +6,7 @@ import { useMainEditor } from "../../../components/mainInput/TipTapEditor";
 import { ToolbarButtonWithTooltip } from "../../../components/StyledMarkdownPreview/StepContainerPreToolbar/ToolbarButtonWithTooltip";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { truncateHistoryToMessage } from "../../../redux/slices/sessionSlice";
+import i18n from "../../../locales/i18n";
 
 export function ToolTruncateHistoryIcon({
   historyIndex,
@@ -27,7 +28,9 @@ export function ToolTruncateHistoryIcon({
 
   return (
     <ToolbarButtonWithTooltip
-      tooltipContent={isStreaming ? "" : "Trim chat to this message"}
+      tooltipContent={
+        isStreaming ? "" : i18n.t("ToolTruncateHistoryIcon.TrimChat")
+      }
       onClick={() => {
         if (isStreaming) {
           return;

@@ -5,6 +5,7 @@ import { PersistGate } from "redux-persist/integration/react";
 import App from "./App";
 import "./index.css";
 import { persistor, store } from "./redux/store";
+import "./locales/i18n";
 
 (async () => {
   const container = document.getElementById("root") as HTMLElement;

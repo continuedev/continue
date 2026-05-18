@@ -8,6 +8,7 @@ import {
 import { ComponentType, SVGProps } from "react";
 import { vscButtonBackground } from "../../../components";
 import Spinner from "../../../components/gui/Spinner";
+import i18n from "../../../locales/i18n";
 
 // Helper function to determine the intro verb based on tool call status
 export function getStatusIntro(
@@ -20,14 +21,14 @@ export function getStatusIntro(
 
   switch (status) {
     case "generating":
-      return "will";
+      return i18n.t("ToolCallDiv.utils.will");
     case "generated":
-      return "wants to";
+      return i18n.t("ToolCallDiv.utils.wantsTo");
     case "calling":
-      return "is";
+      return i18n.t("ToolCallDiv.utils.is");
     case "canceled":
     case "errored":
-      return "tried to";
+      return i18n.t("ToolCallDiv.utils.triedTo");
     default:
       return "";
   }
@@ -35,25 +36,26 @@ export function getStatusIntro(
 
 // Helper function to get the appropriate verb for group actions
 export function getGroupActionVerb(toolCallStates: ToolCallState[]): string {
-  if (toolCallStates.length === 0) return "Performing";
+  if (toolCallStates.length === 0)
+    return i18n.t("ToolCallDiv.utils.performing");
 
   // Get the most "active" status from all tool calls
   const statuses = toolCallStates.map((state) => state.status);
 
   // Priority order: calling > generating > generated > done > errored/canceled
   if (statuses.includes("calling")) {
-    return "Performing";
+    return i18n.t("ToolCallDiv.utils.performing");
   } else if (statuses.includes("generating")) {
-    return "Generating";
+    return i18n.t("ToolCallDiv.utils.generating");
   } else if (statuses.includes("generated")) {
-    return "Pending";
+    return i18n.t("ToolCallDiv.utils.pending");
   } else if (statuses.some((s) => s === "done")) {
-    return "Performed";
+    return i18n.t("ToolCallDiv.utils.performed");
   } else if (statuses.some((s) => s === "errored" || s === "canceled")) {
-    return "Attempted";
+    return i18n.t("ToolCallDiv.utils.attempted");
   }
 
-  return "Performing";
+  return i18n.t("ToolCallDiv.utils.performing");
 }
 
 type IconName = keyof typeof Icons;

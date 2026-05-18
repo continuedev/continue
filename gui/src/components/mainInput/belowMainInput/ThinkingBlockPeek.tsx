@@ -8,6 +8,7 @@ import styled from "styled-components";
 import { AnimatedEllipsis } from "../../AnimatedEllipsis";
 import StyledMarkdownPreview from "../../StyledMarkdownPreview";
 import { Button } from "../../ui";
+import { useTranslation } from "react-i18next";
 
 const MarkdownWrapper = styled.div`
   & > div > *:first-child {
@@ -33,6 +34,7 @@ function ThinkingBlockPeek({
   inProgress,
   tokens,
 }: ThinkingBlockPeekProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState<string>("");
@@ -50,7 +52,8 @@ function ThinkingBlockPeek({
     } else if (startTime) {
       const endTime = Date.now();
       const diff = endTime - startTime;
-      const diffString = `${(diff / 1000).toFixed(1)}s`;
+      const diffString =
+        `${(diff / 1000).toFixed(1)}` + t("ThinkingBlockPeek.S");
       setElapsedTime(diffString);
     }
   }, [inProgress]);
@@ -69,14 +72,18 @@ function ThinkingBlockPeek({
           >
             {inProgress ? (
               <span>
-                {redactedThinking ? "Redacted Thinking" : "Thinking"}
+                {redactedThinking
+                  ? t("ThinkingBlockPeek.RedactedThinking")
+                  : t("ThinkingBlockPeek.Thinking")}
                 <AnimatedEllipsis />
               </span>
             ) : redactedThinking ? (
-              "Redacted Thinking"
+              t("ThinkingBlockPeek.RedactedThinking")
             ) : (
-              "Thought" +
-              (elapsedTime ? ` for ${elapsedTime}` : "") +
+              t("ThinkingBlockPeek.Thought") +
+              (elapsedTime
+                ? t("ThinkingBlockPeek.ThoughtFor") + ` ${elapsedTime}`
+                : "") +
               (tokens ? ` (${tokens} tokens)` : "")
             )}
             {open ? (
@@ -94,7 +101,7 @@ function ThinkingBlockPeek({
         >
           {redactedThinking ? (
             <div className="text-description pl-5 text-xs italic">
-              Thinking content redacted due to safety reasons.
+              {t("ThinkingBlockPeek.SafetyReasons")}
             </div>
           ) : (
             <MarkdownWrapper>

@@ -5,6 +5,7 @@ import { ReactNode } from "react";
 import { ToolTip } from "../../../components/gui/Tooltip";
 import { Button } from "../../../components/ui";
 import ModelRoleSelector from "./ModelRoleSelector";
+import { useTranslation } from "react-i18next";
 
 interface ModelRoleRowProps {
   role: ModelRole;
@@ -29,6 +30,7 @@ export function ModelRoleRow({
   setupURL,
   shortcut,
 }: ModelRoleRowProps) {
+  const { t } = useTranslation();
   return (
     <div className="py-6 first:pt-0 last:pb-0">
       <div className="mb-2">
@@ -51,7 +53,7 @@ export function ModelRoleRow({
           />
         </div>
         {selectedModel && (
-          <ToolTip content="Configure">
+          <ToolTip content={t("ModelRoleRow.Configure")}>
             <Button
               variant="ghost"
               size="sm"

@@ -17,6 +17,7 @@ import { isJetBrains } from "../../../util";
 import { ROUTES } from "../../../util/navigation";
 import { ConfigHeader } from "../components/ConfigHeader";
 import { ConfigRow } from "../components/ConfigRow";
+import { useTranslation } from "react-i18next";
 
 interface KeyboardShortcutProps {
   shortcut: string;
@@ -147,6 +148,7 @@ const jetbrainsShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
 ];
 
 export function HelpSection() {
+  const { t } = useTranslation();
   const ideMessenger = useContext(IdeMessengerContext);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -172,16 +174,18 @@ export function HelpSection() {
 
   return (
     <div className="flex flex-col">
-      <ConfigHeader title="Help Center" />
+      <ConfigHeader title={t("HelpSection.HelpCenter")} />
       <div className="space-y-6">
         {/* Resources */}
         <div>
-          <h3 className="mb-3 text-base font-medium">Resources</h3>
+          <h3 className="mb-3 text-base font-medium">
+            {t("HelpSection.Resources")}
+          </h3>
           <Card className="!p-0">
             <div className="flex flex-col">
               <ConfigRow
-                title="Documentation"
-                description="Learn how to configure and use Continue"
+                title={t("HelpSection.Documentation")}
+                description={t("HelpSection.LearnHowToConfigureAndUseContinue")}
                 icon={LinkIcon}
                 onClick={() =>
                   ideMessenger.post("openUrl", "https://docs.continue.dev/")
@@ -189,8 +193,8 @@ export function HelpSection() {
               />
 
               <ConfigRow
-                title="Have an issue?"
-                description="Let us know on GitHub and we'll do our best to resolve it"
+                title={t("HelpSection.HaveAnIssue")}
+                description={t("HelpSection.LetUsKnowOnGitHub")}
                 icon={LinkIcon}
                 onClick={() =>
                   ideMessenger.post(
@@ -201,8 +205,8 @@ export function HelpSection() {
               />
 
               <ConfigRow
-                title="Join the community!"
-                description="Join us on GitHub Discussions to stay up-to-date on the latest developments"
+                title={t("HelpSection.JoinTheCommunity")}
+                description={t("HelpSection.JoinUsOnGitHubDiscussions")}
                 icon={LinkIcon}
                 onClick={() =>
                   ideMessenger.post(
@@ -217,12 +221,14 @@ export function HelpSection() {
 
         {/* Tools */}
         <div>
-          <h3 className="mb-3 text-base font-medium">Tools</h3>
+          <h3 className="mb-3 text-base font-medium">
+            {t("HelpSection.Tools")}
+          </h3>
           <Card className="!p-0">
             <div className="flex flex-col">
               <ConfigRow
-                title="Token usage"
-                description="Daily token usage across models"
+                title={t("HelpSection.TokenUsage")}
+                description={t("HelpSection.DailyTokenUsageAcrossModels")}
                 icon={TableCellsIcon}
                 onClick={() => navigate(ROUTES.STATS)}
               />
@@ -230,16 +236,18 @@ export function HelpSection() {
               {currentSession.history.length > 0 &&
                 !currentSession.isStreaming && (
                   <ConfigRow
-                    title="View current session history"
-                    description="Open the current chat session file for troubleshooting"
+                    title={t("HelpSection.ViewCurrentSessionHistory")}
+                    description={t("HelpSection.OpenTheCurrentChatSessionFile")}
                     icon={NumberedListIcon}
                     onClick={handleViewSessionData}
                   />
                 )}
 
               <ConfigRow
-                title="Quickstart"
-                description="Reopen the quickstart and tutorial file"
+                title={t("HelpSection.Quickstart")}
+                description={t(
+                  "HelpSection.ReopenTheQuickstartAndTutorialFile",
+                )}
                 icon={DocumentArrowUpIcon}
                 onClick={async () => {
                   navigate("/");
@@ -262,8 +270,8 @@ export function HelpSection() {
 
               {process.env.NODE_ENV === "development" && (
                 <ConfigRow
-                  title="Theme Test Page"
-                  description="Development page for testing themes"
+                  title={t("HelpSection.ThemeTestPage")}
+                  description={t("HelpSection.DevelopmentPageForTestingThemes")}
                   icon={PaintBrushIcon}
                   onClick={async () => {
                     navigate(ROUTES.THEME);
@@ -276,7 +284,9 @@ export function HelpSection() {
 
         {/* Keyboard Shortcuts */}
         <div>
-          <h3 className="mb-3 text-base font-medium">Keyboard Shortcuts</h3>
+          <h3 className="mb-3 text-base font-medium">
+            {t("HelpSection.KeyboardShortcuts")}
+          </h3>
           <Card className="!p-0">
             <div className="overflow-hidden rounded-md border border-gray-600">
               {shortcuts.map((shortcut, i) => {
@@ -284,7 +294,7 @@ export function HelpSection() {
                   <KeyboardShortcut
                     key={i}
                     shortcut={shortcut.shortcut}
-                    description={shortcut.description}
+                    description={t(`KeyboardShortcuts.${shortcut.description}`)}
                     isEven={i % 2 === 0}
                   />
                 );

@@ -1,5 +1,6 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface CollapsibleContainerProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ export function CollapsibleContainer({
   className = "",
   collapsible = false,
 }: CollapsibleContainerProps) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
 
   // If not collapsible, just render children without any collapsible behavior
@@ -33,7 +35,11 @@ export function CollapsibleContainer({
             onClick={() => setIsExpanded(true)}
             className="group flex h-full cursor-pointer items-end justify-center pb-2"
           >
-            <span title="Expand to show full content">
+            <span
+              title={t(
+                "StepContainerPreToolbar.CollapsibleContainer.expandToFullContent",
+              )}
+            >
               <ChevronDownIcon className="text-lightgray group-hover:text-foreground h-4 w-4" />
             </span>
           </div>
@@ -45,7 +51,11 @@ export function CollapsibleContainer({
           onClick={() => setIsExpanded(false)}
           className="group mt-2 flex cursor-pointer justify-center"
         >
-          <span title="Collapse to compact view">
+          <span
+            title={t(
+              "StepContainerPreToolbar.CollapsibleContainer.collapseToCompactView",
+            )}
+          >
             <ChevronDownIcon className="text-lightgray group-hover:text-foreground h-4 w-4 rotate-180" />
           </span>
         </div>

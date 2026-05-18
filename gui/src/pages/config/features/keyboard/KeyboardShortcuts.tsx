@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import Shortcut from "../../../../components/gui/Shortcut";
 import { isJetBrains } from "../../../../util";
+import { useTranslation } from "react-i18next";
 
 interface KeyboardShortcutProps {
   shortcut: string;
@@ -131,20 +132,23 @@ const jetbrainsShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
 ];
 
 function KeyboardShortcuts() {
+  const { t } = useTranslation();
   const shortcuts = useMemo(() => {
     return isJetBrains() ? jetbrainsShortcuts : vscodeShortcuts;
   }, []);
 
   return (
     <div className="h-full overflow-auto">
-      <h3 className="mb-3 text-xl">Keyboard shortcuts</h3>
+      <h3 className="mb-3 text-xl">
+        {t("KeyboardShortcuts.KeyboardShortcuts")}
+      </h3>
       <div>
         {shortcuts.map((shortcut, i) => {
           return (
             <KeyboardShortcut
               key={i}
               shortcut={shortcut.shortcut}
-              description={shortcut.description}
+              description={t(`KeyboardShortcuts.${shortcut.description}`)}
               isEven={i % 2 === 0}
             />
           );

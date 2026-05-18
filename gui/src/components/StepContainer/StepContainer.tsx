@@ -10,6 +10,7 @@ import StyledMarkdownPreview from "../StyledMarkdownPreview";
 import ConversationSummary from "./ConversationSummary";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
+import { useTranslation } from "react-i18next";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -19,6 +20,7 @@ interface StepContainerProps {
 }
 
 export default function StepContainer(props: StepContainerProps) {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const [isTruncated, setIsTruncated] = useState(false);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
@@ -125,7 +127,7 @@ export default function StepContainer(props: StepContainerProps) {
           <div className="flex items-center">
             <div className="border-border flex-1 border-t border-solid"></div>
             <span className="text-description mx-3 text-xs">
-              Previous Conversation Compacted
+              {t("StepContainer.PreviousCompacted")}
             </span>
             <div className="border-border flex-1 border-t border-solid"></div>
           </div>

@@ -28,6 +28,7 @@ import { Divider } from "../ui/Divider";
 import { AssistantOptions } from "./AssistantOptions";
 import { OrganizationOptions } from "./OrganizationOptions";
 import { SelectedAssistantButton } from "./SelectedAssistantButton";
+import { useTranslation } from "react-i18next";
 
 export interface AssistantAndOrgListboxProps {
   variant: "lump" | "sidebar";
@@ -36,6 +37,7 @@ export interface AssistantAndOrgListboxProps {
 export function AssistantAndOrgListbox({
   variant = "sidebar",
 }: AssistantAndOrgListboxProps) {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const listboxRef = useRef<HTMLDivElement>(null);
@@ -155,7 +157,7 @@ export function AssistantAndOrgListbox({
           >
             <div className="flex items-center justify-between px-1.5 py-1">
               <span className="text-description text-xs font-medium">
-                Configs
+                {t("AssistantAndOrgListbox.Configs")}
               </span>
               <div className="flex items-center gap-0.5">
                 <Button
@@ -193,7 +195,7 @@ export function AssistantAndOrgListbox({
                 <Divider className="!mb-0.5 !mt-0" />
                 <div className="flex items-center justify-between px-1.5 py-1">
                   <span className="text-description text-xs font-medium">
-                    Organizations
+                    {t("AssistantAndOrgListbox.Organizations")}
                   </span>
                   <div className="flex items-center gap-0.5">
                     <Button
@@ -233,7 +235,9 @@ export function AssistantAndOrgListbox({
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
-                    void refreshProfiles("Manual refresh from assistant list");
+                    void refreshProfiles(
+                      t("AssistantAndOrgListbox.ManualRefresh"),
+                    );
                   }}
                   variant="ghost"
                   size="sm"
@@ -246,7 +250,9 @@ export function AssistantAndOrgListbox({
                         configLoading && "animate-spin-slow",
                       )}
                     />
-                    <span className="text-2xs">Reload</span>
+                    <span className="text-2xs">
+                      {t("AssistantAndOrgListbox.Reload")}
+                    </span>
                   </div>
                 </Button>
                 {session ? (
@@ -262,7 +268,9 @@ export function AssistantAndOrgListbox({
                   >
                     <div className="flex w-full items-center">
                       <ArrowRightStartOnRectangleIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0" />
-                      <span className="text-2xs">Log out</span>
+                      <span className="text-2xs">
+                        {t("AssistantAndOrgListbox.Logout")}
+                      </span>
                     </div>
                   </Button>
                 ) : (
@@ -278,7 +286,9 @@ export function AssistantAndOrgListbox({
                   >
                     <div className="flex w-full items-center">
                       <ArrowRightStartOnRectangleIcon className="ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0 rotate-180" />
-                      <span className="text-2xs">Log in</span>
+                      <span className="text-2xs">
+                        {t("AssistantAndOrgListbox.Login")}
+                      </span>
                     </div>
                   </Button>
                 )}
@@ -291,7 +301,8 @@ export function AssistantAndOrgListbox({
             <div>
               <div className="text-description flex items-center justify-start px-2 py-1">
                 <span className="block" style={{ fontSize: tinyFont }}>
-                  <code>{getMetaKeyLabel()} ⇧ '</code> to toggle config
+                  <code>{getMetaKeyLabel()} ⇧ '</code>{" "}
+                  {t("AssistantAndOrgListbox.toggleconfig")}
                 </span>
               </div>
             </div>

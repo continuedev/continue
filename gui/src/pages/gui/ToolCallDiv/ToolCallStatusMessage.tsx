@@ -1,6 +1,7 @@
 import { Tool, ToolCallState } from "core";
 import Mustache from "mustache";
 import { getStatusIntro } from "./utils";
+import { useTranslation } from "react-i18next";
 
 interface ToolCallStatusMessageProps {
   tool: Tool | undefined;
@@ -11,14 +12,27 @@ export function ToolCallStatusMessage({
   tool,
   toolCallState,
 }: ToolCallStatusMessageProps) {
-  if (!tool) return "Agent tool use";
+  const { t } = useTranslation();
+  // Helper function to translate tool names, falling back to the original name if translation is missing.
+  const t_tool = function (name: string) {
+    const key = "ToolCallStatusMessage.tool." + name;
+    const val = t(key);
+    if (key === val) {
+      return name;
+    }
+    return val;
+  };
+
+  if (!tool) return t("ToolCallStatusMessage.AgentToolUse");
 
   const toolName = tool.displayTitle ?? tool.function.name;
-  const defaultToolDescription = `${toolName} tool`;
+  const defaultToolDescription = t("ToolCallStatusMessage.ToolNameTool", {
+    toolName,
+  });
 
   const futureMessage: string = tool.wouldLikeTo
-    ? Mustache.render(tool.wouldLikeTo, toolCallState.parsedArgs)
-    : `use the ${defaultToolDescription}`;
+    ? Mustache.render(t_tool(tool.wouldLikeTo), toolCallState.parsedArgs)
+    : t("ToolCallStatusMessage.UseThe", { defaultToolDescription });
   // TODO go back and replace arg string values and tool names with <code> tags
   // to make them more readable
 
@@ -31,8 +45,8 @@ export function ToolCallStatusMessage({
     (tool.isInstant && toolCallState.status === "calling")
   ) {
     message = tool.hasAlready
-      ? Mustache.render(tool.hasAlready, toolCallState.parsedArgs)
-      : `used the ${defaultToolDescription}`;
+      ? Mustache.render(t_tool(tool.hasAlready), toolCallState.parsedArgs)
+      : t("ToolCallStatusMessage.UsedThe", { defaultToolDescription });
   } else {
     switch (toolCallState.status) {
       case "generating":
@@ -43,8 +57,8 @@ export function ToolCallStatusMessage({
         break;
       case "calling":
         message = tool.isCurrently
-          ? Mustache.render(tool.isCurrently, toolCallState.parsedArgs)
-          : `calling the ${defaultToolDescription}`;
+          ? Mustache.render(t_tool(tool.isCurrently), toolCallState.parsedArgs)
+          : t("ToolCallStatusMessage.CallingThe", { defaultToolDescription });
         break;
       default:
         message = defaultToolDescription;
@@ -56,7 +70,7 @@ export function ToolCallStatusMessage({
       className="text-description line-clamp-4 min-w-0 break-words"
       data-testid="tool-call-title"
     >
-      {`Continue ${intro} ${message}`}
+      {t("ToolCallStatusMessage.ContinueIntroMessage", { intro, message })}
     </div>
   );
 }

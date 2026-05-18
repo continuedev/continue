@@ -59,6 +59,7 @@ import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { useAutoScroll } from "./useAutoScroll";
+import { useTranslation } from "react-i18next";
 
 // Helper function to find the index of the latest conversation summary
 function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
@@ -106,6 +107,7 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
 }
 
 export function Chat() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const reduxStore = useStore<RootState>();
@@ -499,7 +501,7 @@ export function Chat() {
                   className="flex items-center gap-2"
                 >
                   <ArrowLeftIcon className="h-3 w-3" />
-                  <span className="text-xs">Last Session</span>
+                  <span className="text-xs">{t("gui.Chat.LastSession")}</span>
                 </NewSessionButton>
               )}
             </div>

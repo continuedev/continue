@@ -15,6 +15,7 @@ import { GradientBorder } from "./GradientBorder";
 import { ToolbarOptions } from "./InputToolbar";
 import { Lump } from "./Lump";
 import { TipTapEditor } from "./TipTapEditor";
+import { useTranslation } from "react-i18next";
 
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
@@ -53,6 +54,7 @@ const EDIT_ALLOWED_SLASH_COMMAND_SOURCES: SlashCommandSource[] = [
 ];
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
+  const { t } = useTranslation();
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const availableSlashCommands = useAppSelector(
     selectSlashCommandComboBoxInputs,
@@ -88,7 +90,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   }, [availableContextProviders, isInEdit]);
 
   const historyKey = isInEdit ? "edit" : "chat";
-  const placeholder = isInEdit ? "Edit selected code" : undefined;
+  const placeholder = isInEdit ? t("ContinueInputBox.EditSelectedCode") : undefined;
 
   const toolbarOptions: ToolbarOptions = useMemo(() => {
     if (isInEdit) {
@@ -98,7 +100,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         hideUseCodebase: true,
         hideSelectModel: false,
         enterText:
-          editModeState.applyState.status === "done" ? "Retry" : "Edit",
+          editModeState.applyState.status === "done" ? t("ContinueInputBox.Retry") : t("ContinueInputBox.Edit"),
       } as ToolbarOptions;
     }
     // Stable empty object to avoid re-renders from identity changes

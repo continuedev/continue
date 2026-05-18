@@ -1,6 +1,7 @@
 import { CheckIcon, ClipboardIcon } from "@heroicons/react/24/outline";
 import HeaderButtonWithToolTip from "./HeaderButtonWithToolTip";
 import useCopy from "../../hooks/useCopy";
+import { useTranslation } from "react-i18next";
 
 interface CopyIconButtonProps {
   text: string | (() => string);
@@ -17,6 +18,7 @@ export function CopyIconButton({
   clipboardIconClassName = "h-4 w-4 text-gray-400",
   tooltipPlacement = "bottom",
 }: CopyIconButtonProps) {
+  const { t } = useTranslation();
   const { copyText, copied } = useCopy(text);
 
   return (
@@ -24,7 +26,7 @@ export function CopyIconButton({
       <HeaderButtonWithToolTip
         tooltipPlacement={tooltipPlacement}
         tabIndex={tabIndex}
-        text={copied ? "Copied" : "Copy"}
+        text={copied ? t("CopyIconButton.Copied") : t("CopyIconButton.Copy")}
         onClick={copyText}
       >
         {copied ? (

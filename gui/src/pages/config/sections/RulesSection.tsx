@@ -43,6 +43,7 @@ import {
 } from "../../../redux/slices/uiSlice";
 import { fontSize } from "../../../util";
 import { ConfigHeader } from "../components/ConfigHeader";
+import i18n from "../../../locales/i18n";
 
 interface PromptCommandWithSlug extends SlashCommandDescWithSource {
   slug?: string;
@@ -173,9 +174,9 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
     dispatch(
       setDialogMessage(
         <ConfirmationDialog
-          title="Delete Rule"
-          text="Are you sure you want to delete this rule file?"
-          confirmText="Delete"
+          title={i18n.t("RulesSection.DeleteRule")}
+          text={i18n.t("RulesSection.ConfirmDeleteRule")}
+          confirmText={i18n.t("RulesSection.Delete")}
           onConfirm={async () => {
             try {
               await ideMessenger.request("config/deleteRule", {
@@ -223,27 +224,33 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
               </div>
             )}
             <div className="flex flex-row items-start gap-1">
-              <HeaderButtonWithToolTip onClick={onClickExpand} text="Expand">
+              <HeaderButtonWithToolTip
+                onClick={onClickExpand}
+                text={i18n.t("RulesSection.Expand")}
+              >
                 <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
               </HeaderButtonWithToolTip>{" "}
               {rule.source === "default-chat" ||
               rule.source === "default-agent" ? (
                 <HeaderButtonWithToolTip
                   onClick={() => openRule(rule)}
-                  text="View"
+                  text={i18n.t("RulesSection.View")}
                 >
                   <EyeIcon className="h-3 w-3 text-gray-400" />
                 </HeaderButtonWithToolTip>
               ) : (
                 <HeaderButtonWithToolTip
                   onClick={() => openRule(rule)}
-                  text="Edit"
+                  text={i18n.t("RulesSection.Edit")}
                 >
                   <PencilIcon className="h-3 w-3 text-gray-400" />
                 </HeaderButtonWithToolTip>
               )}
               {canDeleteRule && (
-                <HeaderButtonWithToolTip onClick={handleDelete} text="Delete">
+                <HeaderButtonWithToolTip
+                  onClick={handleDelete}
+                  text={i18n.t("RulesSection.Delete")}
+                >
                   <TrashIcon className="h-3 w-3 text-gray-400" />
                 </HeaderButtonWithToolTip>
               )}
@@ -266,7 +273,9 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
             }}
             className="mt-1.5 flex flex-col gap-1"
           >
-            <span className="italic">Applies to files</span>
+            <span className="italic">
+              {i18n.t("RulesSection.AppliesToFiles")}
+            </span>
             <code
               className={`line-clamp-1 px-1 py-0.5 ${isDisabled ? "text-gray-500" : "text-gray-400"}`}
             >
@@ -347,10 +356,10 @@ function PromptsSubSection() {
   return (
     <div>
       <ConfigHeader
-        title="Prompts"
+        title={i18n.t("RulesSection.Prompts")}
         variant="sm"
         onAddClick={handleAddPrompt}
-        addButtonTooltip="Add prompt"
+        addButtonTooltip={i18n.t("RulesSection.AddPrompt")}
       />
 
       {sortedCommands.length > 0 ? (
@@ -369,7 +378,7 @@ function PromptsSubSection() {
         </Card>
       ) : (
         <Card>
-          <EmptyState message="No prompts configured. Click the + button to add your first prompt." />
+          <EmptyState message={i18n.t("RulesSection.NoPromptsConfigured")} />
         </Card>
       )}
     </div>
@@ -421,8 +430,8 @@ function addDefaultSystemMessage(
 
 // Define dropdown options for global rules
 const globalRulesOptions = [
-  { value: "workspace", label: "Current workspace" },
-  { value: "global", label: "Global" },
+  { value: "workspace", label: i18n.t("RulesSection.CurrentWorkspace") },
+  { value: "global", label: i18n.t("RulesSection.Global") },
 ];
 
 function RulesSubSection() {
@@ -503,18 +512,18 @@ function RulesSubSection() {
     <div>
       {isLocal ? (
         <DropdownButton
-          title="Rules"
+          title={i18n.t("RulesSection.Rules")}
           variant="sm"
           options={globalRulesOptions}
           onOptionClick={handleOptionClick}
-          addButtonTooltip="Add rules"
+          addButtonTooltip={i18n.t("RulesSection.AddRules")}
         />
       ) : (
         <ConfigHeader
-          title="Rules"
+          title={i18n.t("RulesSection.Rules")}
           variant="sm"
           onAddClick={() => handleAddRule()}
-          addButtonTooltip="Add rules"
+          addButtonTooltip={i18n.t("RulesSection.AddRules")}
         />
       )}
 
@@ -526,12 +535,12 @@ function RulesSubSection() {
             ))}
             {configLoading && (
               <div className="px-2 py-1.5 text-xs opacity-65">
-                Reloading rules from your config...
+                {i18n.t("RulesSection.ReloadingRules")}
               </div>
             )}
           </div>
         ) : (
-          <EmptyState message="No rules configured. Click the + button to add your first rule." />
+          <EmptyState message={i18n.t("RulesSection.NoRulesConfigured")} />
         )}
       </Card>
     </div>
@@ -541,7 +550,7 @@ function RulesSubSection() {
 export function RulesSection() {
   return (
     <>
-      <ConfigHeader title="Rules" />
+      <ConfigHeader title={i18n.t("RulesSection.Rules")} />
 
       <div className="space-y-6">
         <RulesSubSection />

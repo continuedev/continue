@@ -1,6 +1,7 @@
 import { ArrowLeftEndOnRectangleIcon } from "@heroicons/react/24/outline";
 import { ToolTip } from "../../gui/Tooltip";
 import HoverItem from "../../mainInput/InputToolbar/HoverItem";
+import { useTranslation } from "react-i18next";
 
 /**
  * Button that inserts code at the current cursor position
@@ -10,12 +11,17 @@ interface InsertButtonProps {
 }
 
 export function InsertButton({ onInsert }: InsertButtonProps) {
+  const { t } = useTranslation();
+
   return (
     <HoverItem
       data-tooltip-id="codeblock-insert-button-tooltip"
       className="!p-0"
     >
-      <ToolTip place="top" content="Insert Code">
+      <ToolTip
+        place="top"
+        content={t("StepContainerPreToolbar.InsertButton.insertCode")}
+      >
         <div
           className="text-lightgray flex cursor-pointer items-center border-none bg-transparent text-xs outline-none hover:brightness-125"
           onClick={onInsert}

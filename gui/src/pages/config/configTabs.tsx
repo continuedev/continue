@@ -18,6 +18,7 @@ import { OrganizationsSection } from "./sections/OrganizationsSection";
 import { RulesSection } from "./sections/RulesSection";
 import { ToolsSection } from "./sections/ToolsSection";
 import { UserSettingsSection } from "./sections/UserSettingsSection";
+import i18n from "../../locales/i18n";
 
 interface TabOption {
   id: string;
@@ -34,13 +35,13 @@ interface TabSection {
   className?: string;
 }
 
-export const topTabSections: TabSection[] = [
+export const topTabSections = (): TabSection[] => [
   {
     id: "top",
     tabs: [
       {
         id: "back",
-        label: "Back",
+        label: i18n.t("configTabs.Back"),
         component: <div />,
         icon: <ArrowLeftIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
       },
@@ -52,7 +53,7 @@ export const topTabSections: TabSection[] = [
     tabs: [
       {
         id: "models",
-        label: "Models",
+        label: i18n.t("configTabs.Models"),
         component: (
           <ConfigSection>
             <ModelsSection />
@@ -62,7 +63,7 @@ export const topTabSections: TabSection[] = [
       },
       {
         id: "rules",
-        label: "Rules",
+        label: i18n.t("configTabs.Rules"),
         component: (
           <ConfigSection>
             <RulesSection />
@@ -72,7 +73,7 @@ export const topTabSections: TabSection[] = [
       },
       {
         id: "tools",
-        label: "Tools",
+        label: i18n.t("configTabs.Tools"),
         component: (
           <ConfigSection>
             <ToolsSection />
@@ -90,7 +91,7 @@ export const topTabSections: TabSection[] = [
     tabs: [
       {
         id: "configs",
-        label: "Configs",
+        label: i18n.t("configTabs.Configs"),
         component: (
           <ConfigSection>
             <ConfigsSection />
@@ -100,7 +101,7 @@ export const topTabSections: TabSection[] = [
       },
       {
         id: "organizations",
-        label: "Organizations",
+        label: i18n.t("configTabs.Organizations"),
         component: (
           <ConfigSection>
             <OrganizationsSection />
@@ -118,7 +119,7 @@ export const topTabSections: TabSection[] = [
     tabs: [
       {
         id: "indexing",
-        label: "Indexing",
+        label: i18n.t("configTabs.Indexing"),
         component: (
           <ConfigSection>
             <IndexingSettingsSection />
@@ -132,13 +133,13 @@ export const topTabSections: TabSection[] = [
   },
 ];
 
-export const bottomTabSections: TabSection[] = [
+export const bottomTabSections = (): TabSection[] => [
   {
     id: "bottom",
     tabs: [
       {
         id: "settings",
-        label: "Settings",
+        label: i18n.t("configTabs.Settings"),
         component: (
           <ConfigSection>
             <UserSettingsSection />
@@ -148,7 +149,7 @@ export const bottomTabSections: TabSection[] = [
       },
       {
         id: "help",
-        label: "Help",
+        label: i18n.t("configTabs.Help"),
         component: (
           <ConfigSection>
             <HelpSection />
@@ -163,7 +164,7 @@ export const bottomTabSections: TabSection[] = [
 ];
 
 export const getAllTabs = (): TabOption[] => {
-  return [...topTabSections, ...bottomTabSections].flatMap(
+  return [...topTabSections(), ...bottomTabSections()].flatMap(
     (section) => section.tabs,
   );
 };

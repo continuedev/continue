@@ -13,6 +13,7 @@ import { ConfigHeader } from "../components/ConfigHeader";
 import { UserSetting } from "../components/UserSetting";
 import IndexingProgress from "../features/indexing";
 import { DocsSection } from "./DocsSection";
+import i18n from "../../../locales/i18n";
 
 function CodebaseSubSection() {
   const config = useAppSelector((state) => state.config.config);
@@ -20,14 +21,18 @@ function CodebaseSubSection() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="mb-0 text-sm font-semibold">@codebase index</h3>
+        <h3 className="mb-0 text-sm font-semibold">
+          {i18n.t("IndexingSettingsSection.codebaseIndex")}
+        </h3>
       </div>
 
       <Card>
         <div className="py-2">
           {config.disableIndexing ? (
             <div className="p-1">
-              <p className="text-center font-semibold">Indexing is disabled</p>
+              <p className="text-center font-semibold">
+                {i18n.t("IndexingSettingsSection.indexingDisabled")}
+              </p>
             </div>
           ) : (
             <IndexingProgress />
@@ -57,16 +62,14 @@ function EnableIndexingSetting() {
   return (
     <div className="flex flex-col gap-4">
       <UserSetting
-        title="Enable indexing"
+        title={i18n.t("IndexingSettingsSection.enableIndexing")}
         type="toggle"
         description={
           <div className="text-foreground">
-            Allows indexing of your codebase for search and context
-            understanding.
+            {i18n.t("IndexingSettingsSection.enableIndexingDescription")}
             <br />
             <br />
-            Note that indexing can consume significant system resources,
-            especially on larger codebases.
+            {i18n.t("IndexingSettingsSection.enableIndexingNote")}
           </div>
         }
         value={!disableIndexing}
@@ -83,23 +86,23 @@ export function IndexingSettingsSection() {
 
   return (
     <>
-      <ConfigHeader title="Indexing" />
+      <ConfigHeader title={i18n.t("IndexingSettingsSection.indexing")} />
 
       <Alert type="warning" className="mb-6">
         <div className="space-y-4">
           <div>
             <div className="-mt-0.5 text-sm font-medium">
-              Indexing has been deprecated
+              {i18n.t("IndexingSettingsSection.indexingDeprecated")}
             </div>
             <div className="mt-1 text-xs">
-              Learn how to{" "}
+              {i18n.t("IndexingSettingsSection.learnHowTo")}{" "}
               <a
                 href="https://docs.continue.dev/guides/codebase-documentation-awareness"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-inherit underline hover:brightness-125"
               >
-                make your agent aware of your codebase and documentation
+                {i18n.t("IndexingSettingsSection.makeAgentAware")}
               </a>
             </div>
           </div>

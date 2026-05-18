@@ -12,6 +12,7 @@ import { CONFIG_ROUTES } from "../../util/navigation";
 import { ToolTip } from "../gui/Tooltip";
 import { Button, ListboxOption, useFontSize } from "../ui";
 import { AssistantIcon } from "./AssistantIcon";
+import { useTranslation } from "react-i18next";
 
 interface AssistantOptionProps {
   profile: ProfileDescription;
@@ -24,6 +25,7 @@ export function AssistantOption({
   selected,
   onClick,
 }: AssistantOptionProps) {
+  const { t } = useTranslation();
   const tinyFont = useFontSize(-4);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -61,7 +63,9 @@ export function AssistantOption({
           <span
             className={`line-clamp-1 flex-1 ${selected ? "font-semibold" : ""} ${profile.errors && profile.errors.length > 0 ? "text-error" : ""}`}
           >
-            {profile.title}
+            {profile.title == "Local Config"
+              ? t("AssistantAndOrgListbox.LocalConfig")
+              : profile.title}
           </span>
         </div>
         <div className="flex flex-row items-center gap-1.5">

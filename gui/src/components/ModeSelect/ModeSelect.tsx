@@ -16,8 +16,10 @@ import { ToolTip } from "../gui/Tooltip";
 import { useMainEditor } from "../mainInput/TipTapEditor";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 import { ModeIcon } from "./ModeIcon";
+import { useTranslation } from "react-i18next";
 
 export function ModeSelect() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
@@ -112,12 +114,12 @@ export function ModeSelect() {
           <ModeIcon mode={mode} />
           <span className="hidden sm:block">
             {mode === "chat"
-              ? "Chat"
+              ? t("ModeSelect.Chat")
               : mode === "agent"
-                ? "Agent"
+                ? t("ModeSelect.Agent")
                 : mode === "background"
-                  ? "Background"
-                  : "Plan"}
+                  ? t("ModeSelect.Background")
+                  : t("ModeSelect.Plan")}
           </span>
           <ChevronDownIcon
             className="h-2 w-2 flex-shrink-0"
@@ -128,12 +130,12 @@ export function ModeSelect() {
           <ListboxOption value="chat">
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="chat" />
-              <span className="">Chat</span>
+              <span className="">{t("ModeSelect.Chat")}</span>
               <ToolTip
                 style={{
                   zIndex: 200001,
                 }}
-                content="All tools disabled"
+                content={t("ModeSelect.AllToolsDisabled")}
               >
                 <InformationCircleIcon
                   data-tooltip-id="chat-tip"
@@ -151,12 +153,12 @@ export function ModeSelect() {
           <ListboxOption value="plan" className={"gap-1"}>
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="plan" />
-              <span className="">Plan</span>
+              <span className="">{t("ModeSelect.Plan")}</span>
               <ToolTip
                 style={{
                   zIndex: 200001,
                 }}
-                content="Read-only/MCP tools available"
+                content={t("ModeSelect.Read-only")}
               >
                 <InformationCircleIcon className="h-2.5 w-2.5 flex-shrink-0" />
               </ToolTip>
@@ -170,12 +172,12 @@ export function ModeSelect() {
           <ListboxOption value="agent" className={"gap-1"}>
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="agent" />
-              <span className="">Agent</span>
+              <span className="">{t("ModeSelect.Agent")}</span>
               <ToolTip
                 style={{
                   zIndex: 200001,
                 }}
-                content="All tools available"
+                content={t("ModeSelect.AllToolsAvailable")}
               >
                 <InformationCircleIcon className="h-2.5 w-2.5 flex-shrink-0" />
               </ToolTip>
@@ -193,12 +195,12 @@ export function ModeSelect() {
           >
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="background" />
-              <span className="">Background</span>
+              <span className="">{t("ModeSelect.Background")}</span>
               <ToolTip
                 style={{
                   zIndex: 200001,
                 }}
-                content={"Background mode cannot be used with local agents."}
+                content={t("ModeSelect.BackgroundModeCannot")}
               >
                 <InformationCircleIcon className="h-2.5 w-2.5 flex-shrink-0" />
               </ToolTip>
@@ -212,7 +214,7 @@ export function ModeSelect() {
           </ListboxOption>
 
           <div className="text-description-muted px-2 py-1">
-            {`${metaKeyLabel} . for next mode`}
+            {`${metaKeyLabel} . ` + t("ModeSelect.forNextMode")}
           </div>
         </ListboxOptions>
       </div>

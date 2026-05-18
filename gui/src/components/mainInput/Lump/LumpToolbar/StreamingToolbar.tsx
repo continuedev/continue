@@ -1,5 +1,6 @@
 import { getAltKeyLabel, getMetaKeyLabel, isJetBrains } from "../../../../util";
 import { GeneratingIndicator } from "./GeneratingIndicator";
+import i18n from "i18next";
 
 interface StreamingToolbarProps {
   onStop: () => void;
@@ -8,7 +9,7 @@ interface StreamingToolbarProps {
 
 export function StreamingToolbar({
   onStop,
-  displayText = "Stop",
+  displayText = i18n.t("Lump.StreamingToolbar.Stop"),
 }: StreamingToolbarProps) {
   const jetbrains = isJetBrains();
 

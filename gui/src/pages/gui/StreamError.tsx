@@ -20,6 +20,7 @@ import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { isLocalProfile } from "../../util";
 import { analyzeError } from "../../util/errorAnalysis";
 import { OutOfCreditsDialog } from "./OutOfCreditsDialog";
+import { useTranslation } from "react-i18next";
 
 interface StreamErrorProps {
   error: unknown;
@@ -32,6 +33,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const selectedProfile = useAppSelector(selectSelectedProfile);
   const { session, refreshProfiles } = useAuth();
   const { mainEditor } = useMainEditor();
+  const { t } = useTranslation();
 
   const {
     parsedError,
@@ -62,7 +64,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       onClick={() => ideMessenger.ide.openUrl(apiKeyUrl)}
     >
       <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
-      <span>Check API key</span>
+      <span>{t("StreamError.CheckAPIKey")}</span>
     </GhostButton>
   ) : null;
 
@@ -74,7 +76,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       onClick={() => handleEditModel(selectedModel)}
     >
       <Cog6ToothIcon className="mr-1.5 h-3.5 w-3.5" />
-      <span>View config</span>
+      <span>{t("StreamError.ViewConfig")}</span>
     </GhostButton>
   );
 
@@ -116,7 +118,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       }}
     >
       <ArrowPathIcon className="mr-1.5 h-3.5 w-3.5" />
-      <span>Resubmit last message</span>
+      <span>{t("StreamError.ResubmitLastMessage")}</span>
     </GhostButton>
   );
 
@@ -133,10 +135,10 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     <div className="mb-1 mt-3">
       <div className="m-0 p-0">
         <p className="m-0 mb-2 p-0">
-          There was an error handling the response from{" "}
-          {selectedModel?.title || "the model"}.
+          {t("StreamError.ThereWasAnError")}{" "}
+          {selectedModel?.title || t("StreamError.TheModel")}.
         </p>
-        <p className="m-0 p-0">Please try to submit your message again.</p>
+        <p className="m-0 p-0">{t("StreamError.PleaseTrySubmitAgain")}</p>
         <div className="mt-3">{resubmitButton}</div>
       </div>
     </div>
@@ -147,8 +149,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     errorContent = (
       <div className="flex flex-col gap-2">
         <span>
-          {`This might mean your ${modelTitle} usage has been rate limited
-                by ${providerName}.`}
+          {t("StreamError.MightBeRateLimited", { modelTitle, providerName })}
         </span>
         <div className="flex flex-row flex-wrap justify-start gap-3 py-4">
           {checkKeysButton}
@@ -161,10 +162,10 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   if (statusCode === 404) {
     errorContent = (
       <div className="flex flex-col gap-2">
-        <span>Likely causes:</span>
+        <span>{t("StreamError.LikelyCauses")}</span>
         <ul className="m-0">
           <li>
-            <span>Invalid</span>
+            <span>{t("StreamError.Invalid")}</span>
             <code>apiBase</code>
             {selectedModel && (
               <>
@@ -174,7 +175,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
             )}
           </li>
           <li>
-            <span>Model/deployment not found</span>
+            <span>{t("StreamError.ModelDeploymentNotFound")}</span>
             {selectedModel && (
               <>
                 <span>{` for: `}</span>
@@ -193,13 +194,13 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       <div className="flex flex-col gap-2">
         {session && selectedProfile && !isLocalProfile(selectedProfile) && (
           <div className="flex flex-col gap-1">
-            <span>{`If your hub secret values may have changed, refresh your agents`}</span>
+            <span>{t("StreamError.IfHubSecretValuesChanged")}</span>
             <SecondaryButton onClick={handleRefreshProfiles}>
-              Refresh agent secrets
+              {t("StreamError.RefreshAgentSecrets")}
             </SecondaryButton>
           </div>
         )}
-        <span>{`It's possible that your API key is invalid.`}</span>
+        <span>{t("StreamError.APIKeyMayBeInvalid")}</span>
         <div className="flex flex-row flex-wrap gap-2">
           {checkKeysButton}
           {configButton}
@@ -211,7 +212,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   if (statusCode === 403) {
     errorContent = (
       <div className="flex flex-col gap-2">
-        <span>{`Likely cause: not authorized to access the model deployment.`}</span>
+        <span>{t("StreamError.NotAuthorizedToAccessModel")}</span>
         <div className="flex flex-row flex-wrap gap-2">
           {checkKeysButton}
           {configButton}
@@ -227,10 +228,10 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   ) {
     errorContent = (
       <div className="flex flex-col gap-2">
-        <span>{`Most likely, the provider's server(s) are overloaded and streaming was interrupted. Try again later`}</span>
+        <span>{t("StreamError.ServerOverloadedTryAgain")}</span>
         {selectedModel ? (
           <span>
-            {`Provider: `}
+            {t("StreamError.Provider")}:{" "}
             <code>{selectedModel.underlyingProviderName}</code>
           </span>
         ) : null}
@@ -250,7 +251,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
               onClick={() => ideMessenger.ide.openUrl(helpUrl)}
             >
               <ArrowTopRightOnSquareIcon className="mr-1.5 h-3.5 w-3.5" />
-              <span>View help documentation</span>
+              <span>{t("StreamError.ViewHelpDocumentation")}</span>
             </GhostButton>
           )}
           {apiKeyUrl && (
@@ -259,7 +260,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
               onClick={() => ideMessenger.ide.openUrl(apiKeyUrl)}
             >
               <KeyIcon className="mr-1.5 h-3.5 w-3.5" />
-              <span>Check API key</span>
+              <span>{t("StreamError.CheckAPIKey")}</span>
             </GhostButton>
           )}
           {configButton}
@@ -272,7 +273,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     <div className="flex flex-col gap-4 px-3 pb-3 pt-3">
       {/* Concise error title */}
       <h3 className="text-error m-0 p-0 text-lg font-medium">
-        Error handling model response
+        {t("StreamError.ErrorHandlingModelResponse")}
       </h3>
 
       {errorContent}
@@ -281,7 +282,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       {message && (
         <div className="mb-2">
           <ToggleDiv
-            title="View error output"
+            title={t("StreamError.ViewErrorOutput")}
             testId="error-output-toggle"
             defaultOpen
           >
@@ -296,7 +297,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
                   className="flex items-center"
                 >
                   <ClipboardIcon className="mr-1.5 h-3.5 w-3.5" />
-                  <span>Copy output</span>
+                  <span>{t("StreamError.CopyOutput")}</span>
                 </GhostButton>
 
                 <GhostButton
@@ -306,7 +307,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
                   className="flex items-center"
                 >
                   <ArrowTopRightOnSquareIcon className="mr-1.5 h-4 w-4" />
-                  <span className="text-xs">View Logs</span>
+                  <span className="text-xs">{t("StreamError.ViewLogs")}</span>
                 </GhostButton>
               </div>
             </div>

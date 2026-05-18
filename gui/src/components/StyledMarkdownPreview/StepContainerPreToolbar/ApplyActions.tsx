@@ -5,6 +5,7 @@ import Spinner from "../../gui/Spinner";
 import { ToolTip } from "../../gui/Tooltip";
 import HoverItem from "../../mainInput/InputToolbar/HoverItem";
 import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
+import { useTranslation } from "react-i18next";
 
 interface ApplyActionsProps {
   disableManualApply?: boolean;
@@ -15,6 +16,8 @@ interface ApplyActionsProps {
 }
 
 export function ApplyActions(props: ApplyActionsProps) {
+  const { t } = useTranslation();
+
   function onClickReject() {
     props.onClickReject();
   }
@@ -24,7 +27,7 @@ export function ApplyActions(props: ApplyActionsProps) {
       return (
         <div className="bg-badge flex select-none items-center rounded pl-2 pr-1">
           <span className="text-lightgray inline-flex items-center gap-2 text-center text-xs">
-            Applying
+            {t("StepContainerPreToolbar.ApplyActions.applying")}
             <Spinner />
           </span>
         </div>
@@ -33,14 +36,16 @@ export function ApplyActions(props: ApplyActionsProps) {
       return (
         <div className="bg-badge flex select-none items-center rounded sm:gap-1 md:px-1.5">
           <span className="text-lightgray flex items-center text-center text-xs max-md:hidden">
-            {`${props.applyState?.numDiffs === 1 ? "1 diff" : `${props.applyState?.numDiffs} diffs`}`}
+            {props.applyState?.numDiffs === 1
+              ? t("StepContainerPreToolbar.ApplyActions.1Diff")
+              : `${props.applyState?.numDiffs} ${t("StepContainerPreToolbar.ApplyActions.diffs")}`}
           </span>
 
           <div className="flex items-center">
             <ToolbarButtonWithTooltip
               data-testid="codeblock-toolbar-reject"
               onClick={onClickReject}
-              tooltipContent={`Reject all (${getMetaKeyLabel()}⇧⌫)`}
+              tooltipContent={`${t("StepContainerPreToolbar.ApplyActions.rejectAll")} (${getMetaKeyLabel()}⇧⌫)`}
             >
               <XMarkIcon className="text-error h-3.5 w-3.5 flex-shrink-0 hover:brightness-125" />
             </ToolbarButtonWithTooltip>
@@ -48,7 +53,7 @@ export function ApplyActions(props: ApplyActionsProps) {
             <ToolbarButtonWithTooltip
               data-testid="codeblock-toolbar-accept"
               onClick={props.onClickAccept}
-              tooltipContent={`Accept all (${getMetaKeyLabel()}⇧⏎)`}
+              tooltipContent={`${t("StepContainerPreToolbar.ApplyActions.acceptAll")} (${getMetaKeyLabel()}⇧⏎)`}
             >
               <CheckIcon className="text-success h-3.5 w-3.5 flex-shrink-0 hover:brightness-125" />
             </ToolbarButtonWithTooltip>
@@ -62,7 +67,10 @@ export function ApplyActions(props: ApplyActionsProps) {
       }
 
       return (
-        <ToolTip place="top" content="Apply Code">
+        <ToolTip
+          place="top"
+          content={t("StepContainerPreToolbar.ApplyActions.applyCode")}
+        >
           <HoverItem
             data-tooltip-id="codeblock-apply-code-button-tooltip"
             className="!p-0"
@@ -74,7 +82,10 @@ export function ApplyActions(props: ApplyActionsProps) {
             >
               <div className="text-lightgray flex items-center gap-1">
                 <PlayIcon className="h-3.5 w-3.5" />
-                <span className="xs:inline hidden">Apply</span>
+
+                <span className="xs:inline hidden">
+                  {t("StepContainerPreToolbar.ApplyActions.apply")}
+                </span>
               </div>
             </button>
           </HoverItem>

@@ -16,6 +16,7 @@ import { FeedbackButtons } from "../FeedbackButtons";
 import { GenerateRuleDialog } from "../GenerateRuleDialog";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
+import { useTranslation } from "react-i18next";
 
 export interface ResponseActionsProps {
   isTruncated: boolean;
@@ -34,6 +35,7 @@ export default function ResponseActions({
   onDelete,
   isLast,
 }: ResponseActionsProps) {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const selectedModel = useAppSelector(selectSelectedChatModel);
   const contextPercentage = useAppSelector(
@@ -65,8 +67,8 @@ export default function ResponseActions({
         testId={`compact-button-${index}`}
         text={
           showLabel
-            ? "Summarize conversation to reduce context length"
-            : "Compact conversation"
+            ? t("StepContainer.ResponseActions.SummarizeConversation")
+            : t("StepContainer.ResponseActions.CompactConversation")
         }
         tabIndex={-1}
         onClick={() => compactConversation(index)}
@@ -79,7 +81,7 @@ export default function ResponseActions({
             <span
               className={`text-xs ${buttonColorClass || "text-description-muted"}`}
             >
-              Compact conversation
+              {t("StepContainer.ResponseActions.CompactConversation")}
             </span>
           )}
         </div>
@@ -88,7 +90,7 @@ export default function ResponseActions({
       {isLast && ruleGenerationSupported && (
         <HeaderButtonWithToolTip
           tabIndex={-1}
-          text="Generate rule"
+          text={t("StepContainer.ResponseActions.GenerateRule")}
           onClick={onGenerateRule}
         >
           <PencilSquareIcon className="text-description-muted h-3.5 w-3.5" />
@@ -98,7 +100,7 @@ export default function ResponseActions({
       {isTruncated && (
         <HeaderButtonWithToolTip
           tabIndex={-1}
-          text="Continue generation"
+          text={t("StepContainer.ResponseActions.ContinueGeneration")}
           onClick={onContinueGeneration}
         >
           <BarsArrowDownIcon className="text-description-muted h-3.5 w-3.5" />
@@ -107,7 +109,7 @@ export default function ResponseActions({
 
       <HeaderButtonWithToolTip
         testId={`delete-button-${index}`}
-        text="Delete"
+        text={t("StepContainer.ResponseActions.Delete")}
         tabIndex={-1}
         onClick={onDelete}
       >

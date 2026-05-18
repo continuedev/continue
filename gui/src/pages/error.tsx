@@ -7,12 +7,14 @@ import { Button, SecondaryButton } from "../components";
 import { GithubIcon } from "../components/svg/GithubIcon";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { newSession } from "../redux/slices/sessionSlice";
+import { useTranslation } from "react-i18next";
 
 const ErrorPage: React.FC = () => {
   const error: any = useRouteError();
   console.error(error);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const messenger = useContext(IdeMessengerContext);
   const openUrl = (url: string) => {
@@ -31,7 +33,7 @@ const ErrorPage: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center px-2 py-4 text-center sm:px-8">
-      <h1 className="mb-4 text-3xl font-bold">Oops! Something went wrong</h1>
+      <h1 className="mb-4 text-3xl font-bold">{t("error.header")}</h1>
 
       <code className="whitespace-wrap mx-2 mb-4 max-w-full break-words py-2">
         {error.statusText || error.message}
@@ -53,25 +55,25 @@ const ErrorPage: React.FC = () => {
         ) : (
           <ArrowPathIcon className="h-5 w-5" />
         )}
-        Continue
+        {t("error.continue")}
       </Button>
 
-      <p className="mb-0 mt-6 text-lg">
-        Report the issue on GitHub or Discussions:
-      </p>
+      <p className="mb-0 mt-6 text-lg">{t("error.reportIssue")}</p>
 
       <div className="mt-2 flex flex-row flex-wrap justify-center gap-2">
         <SecondaryButton
           onClick={() => openUrl(GITHUB_LINK)}
           className="flex items-center justify-center space-x-2 rounded-lg px-4 py-2 text-base text-white"
         >
-          <GithubIcon size={20} /> <span className="ml-2">GitHub Issues</span>
+          <GithubIcon size={20} />{" "}
+          <span className="ml-2">{t("error.githubIssues")}</span>
         </SecondaryButton>
         <SecondaryButton
           onClick={() => openUrl(DISCUSSIONS_LINK)}
           className="flex items-center justify-center rounded-lg text-base"
         >
-          <GithubIcon size={20} /> <span className="ml-2">Discussions</span>
+          <GithubIcon size={20} />{" "}
+          <span className="ml-2">{t("error.discussions")}</span>
         </SecondaryButton>
       </div>
     </div>
