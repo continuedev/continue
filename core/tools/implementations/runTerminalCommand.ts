@@ -21,8 +21,42 @@ function getDecodedOutput(data: Buffer): string {
   } else {
     return data.toString();
   }
-} // Simple helper function to use login shell on Unix/macOS and PowerShell on Windows
-function getShellCommand(command: string): { shell: string; args: string[] } {
+}
+
+// Simple helper function to use login shell on Unix/macOS and PowerShell on Windows
+// Detects WSL paths and uses the appropriate WSL shell
+function getShellCommand(
+  command: string,
+  cwd?: string,
+): { shell: string; args: string[] } {
+  // Check if the working directory is in WSL on Intellij
+  const isWslPath =
+    cwd && (cwd.includes("\\wsl.localhost\\") || cwd.includes("\\wsl$\\"));
+
+  if (isWslPath) {
+    // Extract the WSL distribution name from the path
+    // Path format: \\wsl.localhost\UbuntuAny\home\user\project
+    // or: \\wsl$\UbuntuAny\home\user\project
+    let distroName = "Ubuntu"; // Default fallback
+    try {
+      const wslPathSegments = cwd.split(/\\+/);
+      // Find the segment after wsl.localhost or wsl$
+      const wslIndex = wslPathSegments.findIndex(
+        (seg) => seg.includes("wsl.localhost") || seg.includes("wsl$"),
+      );
+      if (wslIndex !== -1 && wslIndex + 1 < wslPathSegments.length) {
+        distroName = wslPathSegments[wslIndex + 1];
+      }
+    } catch {
+      // If parsing fails, use default Ubuntu
+    }
+    // Use wsl.exe to run commands in the specific distribution
+    return {
+      shell: "wsl.exe",
+      args: ["-d", distroName, "-e", "bash", "-c", command],
+    };
+  }
+
   if (process.platform === "win32") {
     // Windows: Use PowerShell
     return {
@@ -52,6 +86,17 @@ import { getBooleanArg, getStringArg } from "../parseArgs";
  * Falls back to home directory or temp directory if no workspace is available.
  */
 function resolveWorkingDirectory(workspaceDirs: string[]): string {
+  // Check for valid existing local paths first (IntelliJ support) so \\wsl$\ or \\wsl.local\ can pass
+  for (const dir of workspaceDirs) {
+    try {
+      if (dir.startsWith("file:////wsl")) {
+        return path.normalize(dir.replace("file://", ""));
+      }
+    } catch {
+      // Ignore errors (e.g. invalid path formats)
+    }
+  }
+
   // Handle file:// URIs (local workspaces)
   const fileWorkspaceDir = workspaceDirs.find((dir) =>
     dir.startsWith("file:/"),
@@ -145,7 +190,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
           }
 
           // Use spawn with color environment
-          const { shell, args } = getShellCommand(command);
+          const { shell, args } = getShellCommand(command, cwd);
           const childProc = childProcess.spawn(shell, args, {
             cwd,
             env: getColorEnv(), // Add enhanced environment for colors
@@ -376,7 +421,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
         try {
           // Use spawn approach for consistency with streaming version
           const { shell: nonStreamingShell, args: nonStreamingArgs } =
-            getShellCommand(command);
+            getShellCommand(command, cwd);
           const output = await new Promise<{ stdout: string; stderr: string }>(
             (resolve, reject) => {
               let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -503,8 +548,10 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
         // but don't attach any listeners other than error
         try {
           // Use spawn with color environment
-          const { shell: detachedShell, args: detachedArgs } =
-            getShellCommand(command);
+          const { shell: detachedShell, args: detachedArgs } = getShellCommand(
+            command,
+            cwd,
+          );
           const childProc = childProcess.spawn(detachedShell, detachedArgs, {
             cwd,
             env: getColorEnv(), // Add color environment

@@ -119,16 +119,82 @@ tasks {
     }
 
     runIde {
-        val openProject = "$projectDir/../../manual-testing-sandbox"
-        argumentProviders += CommandLineArgumentProvider {
-            listOf(openProject, "$openProject/test.kt")
+        val wslKernel = environment("WSL_KERNEL").getOrElse("")
+        val openProject = if (wslKernel.isNotEmpty()) {
+            //If gradle.properties >= 2025.X -- can direct run mount from WSL windows path in Intellij
+            // instead of copy to /tmp -- IE \\wsl?\Ubuntu\mnt\c\Users
+            val pluginVersion = providers.gradleProperty("platformVersion").getOrElse("2024.1")
+            val majorVersion = pluginVersion.split(".").firstOrNull()?.toIntOrNull() ?: 2024
+
+            if (majorVersion >= 2025) {
+                "\\\\wsl$\\$wslKernel\\mnt\\c" + projectDir.absolutePath.replace("C:", "").replace("/extensions/intellij/", "")
+                    .replace("/", "\\") + "\\..\\..\\manual-testing-sandbox"
+            }
+            //For now we must copy the test file to WSL filesystem to be cleaned up at exit
+            else {
+                val wslSourcePath = "/mnt/c" + projectDir.absolutePath.replace("C:", "")
+                    .replace("\\", "/") + "/../../manual-testing-sandbox"
+                val wslDestPath = "/tmp/manual-testing-sandbox"
+                val command = listOf("wsl", "-d", wslKernel, "-e", "cp", "-r", wslSourcePath, wslDestPath)
+                val process = ProcessBuilder(command).start()
+                val exitCode = process.waitFor()
+                if (exitCode != 0) {
+                    throw GradleException(
+                        "Failed to copy $wslSourcePath to $wslKernel:$wslDestPath\" via WSL: ${
+                            process.errorStream.bufferedReader().readText()
+                        }"
+                    )
+                } else {
+                    logger.lifecycle("Successfully copied $wslSourcePath to $wslKernel:$wslDestPath")
+                }
+                "\\\\wsl$\\$wslKernel" + wslDestPath.replace("/", "\\")
+            }
+        } else {
+            "$projectDir/../../manual-testing-sandbox"
         }
+        argumentProviders += CommandLineArgumentProvider {
+            listOf(openProject)
+        }
+        finalizedBy("cleanupAfterRunIde")
     }
 
     test {
         useJUnitPlatform()
         environment("CONTINUE_GLOBAL_DIR", "${rootProject.projectDir}/src/test/kotlin/com/github/continuedev/continueintellijextension/test-continue")
         jvmArgumentProviders += CommandLineArgumentProvider { listOf("-Dide.browser.jcef.sandbox.enable=false") }
+    }
+}
+
+tasks.register("cleanupAfterRunIde") {
+    doLast {
+        val pluginVersion = providers.gradleProperty("platformVersion").getOrElse("2024.1")
+        val majorVersion = pluginVersion.split(".").firstOrNull()?.toIntOrNull() ?: 2024
+        //cleanup the temp file created in runIde if WSL test was used
+        if (majorVersion < 2025) {
+            val wslKernel = environment("WSL_KERNEL").getOrElse("")
+            if (wslKernel.isNotEmpty()) {
+                val wslDestPath = "/tmp/manual-testing-sandbox"
+                logger.lifecycle("Cleaning up WSL temp file: $wslDestPath in $wslKernel")
+                val command = listOf("wsl", "-d", wslKernel, "-e", "rm", "-rf", wslDestPath)
+                try {
+                    val process = ProcessBuilder(command).start()
+                    val exitCode = process.waitFor()
+                    if (exitCode != 0) {
+                        logger.lifecycle(
+                            "Warning: Failed to cleanup WSL temp file: ${
+                                process.errorStream.bufferedReader().readText()
+                            }"
+                        )
+                    } else {
+                        logger.lifecycle("Successfully cleaned up $wslDestPath")
+                    }
+                } catch (e: Exception) {
+                    logger.lifecycle("Error during cleanup: ${e.message}")
+                }
+
+            }
+            logger.lifecycle("IDE stopped. Performing cleanup...")
+        }
     }
 }
 
