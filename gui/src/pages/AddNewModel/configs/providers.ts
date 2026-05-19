@@ -814,7 +814,6 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
           title: "Atomic Chat",
         },
       },
-      ...openSourceModels,
     ],
     collectInputFor: [
       ...completionParamsInputsConfigs,

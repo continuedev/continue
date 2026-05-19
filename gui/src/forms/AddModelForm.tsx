@@ -29,6 +29,7 @@ const MODEL_PROVIDERS_URL =
   "https://docs.continue.dev/customize/model-providers";
 const CODESTRAL_URL = "https://console.mistral.ai/codestral";
 const CONTINUE_SETUP_URL = "https://docs.continue.dev/setup/overview";
+const LOCAL_DYNAMIC_MODEL_PROVIDERS = ["atomic-chat"];
 
 export function AddModelForm({ onDone }: AddModelFormProps) {
   const [selectedProvider, setSelectedProvider] = useState<ProviderInfo>(
@@ -57,7 +58,10 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
   const handleFetchModels = useCallback(async () => {
     const apiKey = formMethods.watch("apiKey");
     const apiBase = formMethods.watch("apiBase");
-    if (!apiKey) return;
+    const isLocalDynamic = LOCAL_DYNAMIC_MODEL_PROVIDERS.includes(
+      selectedProvider.provider,
+    );
+    if (!apiKey && !isLocalDynamic) return;
 
     const providerAtFetchTime = selectedProvider.provider;
     setIsFetchingModels(true);
@@ -65,18 +69,29 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
       const models = await fetchProviderModels(
         ideMessenger,
         providerAtFetchTime,
-        apiKey,
-        apiBase,
+        apiKey || undefined,
+        apiBase || selectedProvider.params?.apiBase,
       );
-      setFetchedModelsList((prev) =>
-        selectedProvider.provider === providerAtFetchTime ? models : prev,
-      );
+      if (selectedProvider.provider === providerAtFetchTime) {
+        setFetchedModelsList(models);
+        if (isLocalDynamic && models.length > 0) {
+          setSelectedModel((current) =>
+            current.params.model === "AUTODETECT" ? models[0] : current,
+          );
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch models:", error);
     } finally {
       setIsFetchingModels(false);
     }
   }, [ideMessenger, selectedProvider, formMethods]);
+
+  useEffect(() => {
+    if (LOCAL_DYNAMIC_MODEL_PROVIDERS.includes(selectedProvider.provider)) {
+      void handleFetchModels();
+    }
+  }, [selectedProvider.provider, handleFetchModels]);
 
   const popularProviderTitles = [
     providers["openai"]?.title || "",
@@ -108,6 +123,10 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
       : selectedProvider.apiKeyUrl;
 
   function isDisabled() {
+    if (selectedProvider.provider === "atomic-chat") {
+      return selectedModel.params.model === "AUTODETECT";
+    }
+
     if (selectedProvider.downloadUrl) {
       return false;
     }
@@ -123,7 +142,11 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
   }
 
   useEffect(() => {
-    setSelectedModel(selectedProvider.packages[0]);
+    const defaultModel =
+      selectedProvider.packages.find(
+        (pkg) => pkg.params.model !== "AUTODETECT",
+      ) ?? selectedProvider.packages[0];
+    setSelectedModel(defaultModel);
     if (!selectedProvider.tags?.includes(ModelProviderTags.RequiresApiKey)) {
       formMethods.setValue("apiKey", "");
     }
@@ -241,10 +264,13 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                   type="button"
                   title="Use entered API key to fetch available models"
                   className={`cursor-pointer border-none bg-transparent p-0 ${
-                    apiKeyValue &&
-                    apiKeyValue.length > 0 &&
-                    selectedProvider.provider !== "ollama" &&
-                    selectedProvider.provider !== "openrouter"
+                    (apiKeyValue &&
+                      apiKeyValue.length > 0 &&
+                      selectedProvider.provider !== "ollama" &&
+                      selectedProvider.provider !== "openrouter") ||
+                    LOCAL_DYNAMIC_MODEL_PROVIDERS.includes(
+                      selectedProvider.provider,
+                    )
                       ? `text-description-muted hover:text-foreground`
                       : "invisible"
                   }`}
