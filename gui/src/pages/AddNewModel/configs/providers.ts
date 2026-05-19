@@ -801,7 +801,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     description: "Local LLMs via the Atomic Chat desktop app",
     longDescription:
       "Atomic Chat runs models on your machine and serves them through an OpenAI-compatible API (default `http://127.0.0.1:1337/v1`).\n\n1. Download from [atomic.chat](https://atomic.chat/) and open the app\n2. Load a model so the local API is running\n3. Add Atomic Chat in Continue and choose a model from the list\n\nModel ids must match those returned by `GET /v1/models`.",
-    icon: "ollama.png",
+    icon: "atomic-chat.png",
     tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     params: {
       apiBase: "http://127.0.0.1:1337/v1/",
