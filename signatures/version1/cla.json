@@ -2471,6 +2471,14 @@
       "created_at": "2026-05-19T09:42:49Z",
       "repoId": 644686905,
       "pullRequestNo": 12427
+    },
+    {
+      "name": "yanalialiuk",
+      "id": 193742981,
+      "comment_id": 4486797209,
+      "created_at": "2026-05-19T10:24:12Z",
+      "repoId": 644686905,
+      "pullRequestNo": 12438
     }
   ]
 }
