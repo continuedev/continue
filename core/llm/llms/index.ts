@@ -50,6 +50,7 @@ import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
 import OpenRouter from "./OpenRouter";
+import OrcaRouter from "./OrcaRouter";
 import ClawRouter from "./ClawRouter";
 import OVHcloud from "./OVHcloud";
 import { Relace } from "./Relace";
@@ -112,6 +113,7 @@ export const LLMClasses = [
   Azure,
   WatsonX,
   OpenRouter,
+  OrcaRouter,
   ClawRouter,
   Nvidia,
   Vllm,

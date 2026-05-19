@@ -399,6 +399,57 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    orcarouter: (model) => {
+      // OrcaRouter routes to various upstream providers via prefixed model names
+      // like openai/gpt-5, anthropic/claude-opus-4.7, deepseek/deepseek-v4-pro
+      const lower = model.toLowerCase();
+
+      // orcarouter/auto and other named routers - assume tool support
+      // (router pool should be configured to only include tool-capable upstreams
+      // when used with agent mode; see docs caveat)
+      if (lower.startsWith("orcarouter/")) {
+        return true;
+      }
+
+      // Explicit skip: image-generation models that occasionally appear in chat
+      // routing pools (e.g. google/gemini-2.5-flash-image) — they reject tool calls
+      if (
+        lower.includes("-image") ||
+        lower.includes("imagen") ||
+        lower.includes("dall-e")
+      ) {
+        return false;
+      }
+
+      // Tool-supporting model name patterns across upstream vendors
+      const toolSupportingPatterns = [
+        "claude",
+        "sonnet",
+        "opus",
+        "haiku",
+        "gemini",
+        "command-r",
+        "mistral",
+        "mixtral",
+        "llama-3.1",
+        "llama-3.2",
+        "llama-3.3",
+        "llama-4",
+        "qwen3",
+        "qwen-2.5",
+        "deepseek",
+        "kimi",
+        "glm-4",
+        "minimax",
+      ];
+
+      return (
+        toolSupportingPatterns.some((pattern) => lower.includes(pattern)) ||
+        !!lower.match(/gpt-[4-9]/) ||
+        !!lower.match(/\bo[1-9]\b/) ||
+        !!lower.match(/grok-[3-9]/)
+      );
+    },
     clawrouter: (model) => {
       // ClawRouter routes to various providers, so we check common tool-supporting patterns
       const lower = model.toLowerCase();
