@@ -2,7 +2,7 @@ import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/outline";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button, Input, StyledActionButton } from "../components";
 import Alert from "../components/gui/Alert";
@@ -46,6 +46,10 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
     [],
   );
   const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const selectedProviderRef = useRef(selectedProvider.provider);
+  const fetchGenerationRef = useRef(0);
+
+  selectedProviderRef.current = selectedProvider.provider;
 
   useEffect(() => {
     void initializeDynamicModels(ideMessenger);
@@ -53,17 +57,18 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
 
   useEffect(() => {
     setFetchedModelsList([]);
+    fetchGenerationRef.current += 1;
   }, [selectedProvider]);
 
   const handleFetchModels = useCallback(async () => {
     const apiKey = formMethods.watch("apiKey");
     const apiBase = formMethods.watch("apiBase");
-    const isLocalDynamic = LOCAL_DYNAMIC_MODEL_PROVIDERS.includes(
-      selectedProvider.provider,
-    );
+    const providerAtFetchTime = selectedProviderRef.current;
+    const isLocalDynamic =
+      LOCAL_DYNAMIC_MODEL_PROVIDERS.includes(providerAtFetchTime);
     if (!apiKey && !isLocalDynamic) return;
 
-    const providerAtFetchTime = selectedProvider.provider;
+    const fetchGeneration = fetchGenerationRef.current;
     setIsFetchingModels(true);
     try {
       const models = await fetchProviderModels(
@@ -72,13 +77,17 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
         apiKey || undefined,
         apiBase || selectedProvider.params?.apiBase,
       );
-      if (selectedProvider.provider === providerAtFetchTime) {
-        setFetchedModelsList(models);
-        if (isLocalDynamic && models.length > 0) {
-          setSelectedModel((current) =>
-            current.params.model === "AUTODETECT" ? models[0] : current,
-          );
-        }
+      if (
+        fetchGenerationRef.current !== fetchGeneration ||
+        selectedProviderRef.current !== providerAtFetchTime
+      ) {
+        return;
+      }
+      setFetchedModelsList(models);
+      if (isLocalDynamic && models.length > 0) {
+        setSelectedModel((current) =>
+          current.params.model === "AUTODETECT" ? models[0] : current,
+        );
       }
     } catch (error) {
       console.error("Failed to fetch models:", error);
