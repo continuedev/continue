@@ -20,14 +20,19 @@ export class OrcaRouterApi extends OpenAIApi {
     super({
       ...config,
       apiBase: config.apiBase ?? "https://api.orcarouter.ai/v1/",
-      requestOptions: {
-        ...config.requestOptions,
-        headers: {
-          ...ORCAROUTER_HEADERS,
-          ...config.requestOptions?.headers,
-        },
-      },
     });
+  }
+
+  /**
+   * Override headers to include OrcaRouter attribution headers so the
+   * upstream router can identify Continue traffic and apply per-client
+   * analytics / routing decisions.
+   */
+  protected override getHeaders(): Record<string, string> {
+    return {
+      ...super.getHeaders(),
+      ...ORCAROUTER_HEADERS,
+    };
   }
 
   private isAnthropicModel(model?: string): boolean {
