@@ -310,6 +310,49 @@ describe("MCPConnection", () => {
       expect(mockConnect).toHaveBeenCalled();
     });
 
+    it("should reconnect and retry SSE tool calls after stale session errors", async () => {
+      const conn = new MCPConnection({
+        name: "test-mcp",
+        id: "test-id",
+        type: "sse",
+        url: "http://test.com/events",
+      });
+      conn.status = "connected";
+
+      const mockCallTool = vi
+        .spyOn(Client.prototype, "callTool")
+        .mockRejectedValueOnce(new Error("Invalid session ID"))
+        .mockResolvedValueOnce({ content: [], isError: false } as any);
+      const mockReconnect = vi
+        .spyOn(conn, "connectClient")
+        .mockImplementation(async () => {
+          conn.status = "connected";
+        });
+
+      const result = await conn.callTool({ name: "test-tool" } as any);
+
+      expect(result).toEqual({ content: [], isError: false });
+      expect(mockReconnect).toHaveBeenCalledWith(true, expect.any(AbortSignal));
+      expect(mockCallTool).toHaveBeenCalledTimes(2);
+    });
+
+    it("should not retry non-SSE tool calls after stale session errors", async () => {
+      const conn = new MCPConnection(options);
+      conn.status = "connected";
+
+      const mockCallTool = vi
+        .spyOn(Client.prototype, "callTool")
+        .mockRejectedValue(new Error("Invalid session ID"));
+      const mockReconnect = vi.spyOn(conn, "connectClient");
+
+      await expect(conn.callTool({ name: "test-tool" } as any)).rejects.toThrow(
+        "Invalid session ID",
+      );
+
+      expect(mockReconnect).not.toHaveBeenCalled();
+      expect(mockCallTool).toHaveBeenCalledTimes(1);
+    });
+
     it.skip("should include stderr output in error message when stdio command fails", async () => {
       // Clear any existing mocks to ensure we get real behavior
       vi.restoreAllMocks();

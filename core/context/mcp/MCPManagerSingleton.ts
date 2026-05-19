@@ -196,7 +196,7 @@ export class MCPManagerSingleton {
         `Error getting prompt: MCP Connection ${serverName} not found`,
       );
     }
-    return await connection.client.getPrompt({
+    return await connection.getPrompt({
       name: promptName,
       arguments: args,
     });
