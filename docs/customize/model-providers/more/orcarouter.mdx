@@ -1,0 +1,195 @@
+---
+title: "How to Configure OrcaRouter with Continue"
+sidebarTitle: "OrcaRouter"
+---
+
+<Info>
+  [OrcaRouter](https://www.orcarouter.ai) is an OpenAI-compatible API gateway that aggregates ~120 chat models from OpenAI, Anthropic, Google, DeepSeek, xAI, Qwen, Kimi, MiniMax, Z-AI, and other vendors behind a single `sk-orca-` key.
+</Info>
+
+<Tip>
+  Sign up at [orcarouter.ai](https://www.orcarouter.ai) and obtain an API key from your [console](https://www.orcarouter.ai/console).
+</Tip>
+
+## Quickstart
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: OrcaRouter Auto
+      provider: orcarouter
+      model: orcarouter/auto
+      apiBase: https://api.orcarouter.ai/v1/
+      apiKey: sk-orca-xxxxxxxxxxxxxxxxxx
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "OrcaRouter Auto",
+        "provider": "orcarouter",
+        "model": "orcarouter/auto",
+        "apiBase": "https://api.orcarouter.ai/v1/",
+        "apiKey": "sk-orca-xxxxxxxxxxxxxxxxxx"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+`orcarouter/auto` is a virtual model that adaptively routes each request to a candidate upstream based on a configurable strategy (cheapest / balanced / quality / contextual bandit / difficulty-gated). Routing pools and reward weights are tunable from the [console](https://www.orcarouter.ai/console/routing) without changing client code.
+
+## Pinning a specific model
+
+You can pin any model from the [OrcaRouter catalog](https://www.orcarouter.ai/models) by passing its full ID:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude Opus 4.7
+      provider: orcarouter
+      model: anthropic/claude-opus-4.7
+      apiBase: https://api.orcarouter.ai/v1/
+      apiKey: ${{ secrets.ORCAROUTER_API_KEY }}
+
+    - name: GPT-5.5
+      provider: orcarouter
+      model: openai/gpt-5.5
+      apiBase: https://api.orcarouter.ai/v1/
+      apiKey: ${{ secrets.ORCAROUTER_API_KEY }}
+
+    - name: DeepSeek V4 Pro
+      provider: orcarouter
+      model: deepseek/deepseek-v4-pro
+      apiBase: https://api.orcarouter.ai/v1/
+      apiKey: ${{ secrets.ORCAROUTER_API_KEY }}
+  ```
+  </Tab>
+</Tabs>
+
+## Reasoning controls
+
+OrcaRouter passes vendor-native reasoning controls through to the upstream:
+
+### OpenAI / Grok / Gemini / Qwen reasoning families
+
+Use the flat `reasoning_effort` field via `requestOptions.extraBodyProperties`:
+
+```yaml title="config.yaml"
+models:
+  - name: GPT-5.5 (High Reasoning)
+    provider: orcarouter
+    model: openai/gpt-5.5
+    apiBase: https://api.orcarouter.ai/v1/
+    apiKey: ${{ secrets.ORCAROUTER_API_KEY }}
+    requestOptions:
+      extraBodyProperties:
+        reasoning_effort: high   # "minimal" | "low" | "medium" | "high"
+```
+
+### Gemini reasoning caveat
+
+Some Gemini models (including `gemini-3-flash-preview`) are reasoning models that spend most of their `completion_tokens` budget on internal reasoning before producing the final reply. The streaming response stays silent for several seconds during that period, which can look like the chat is blank or stuck.
+
+For fast responses, pass `reasoning_effort: "minimal"`:
+
+```yaml title="config.yaml"
+models:
+  - name: Gemini 3 Flash (Fast)
+    provider: orcarouter
+    model: google/gemini-3-flash-preview
+    apiBase: https://api.orcarouter.ai/v1/
+    apiKey: ${{ secrets.ORCAROUTER_API_KEY }}
+    requestOptions:
+      extraBodyProperties:
+        reasoning_effort: minimal
+```
+
+### Anthropic Claude (thinking block)
+
+Anthropic reasoning models use a native `thinking` block:
+
+```yaml title="config.yaml"
+models:
+  - name: Claude Opus 4.7 (Thinking)
+    provider: orcarouter
+    model: anthropic/claude-opus-4.7
+    apiBase: https://api.orcarouter.ai/v1/
+    apiKey: ${{ secrets.ORCAROUTER_API_KEY }}
+    requestOptions:
+      extraBodyProperties:
+        thinking:
+          type: enabled
+          budget_tokens: 2000     # >= 1024, must be < max_tokens
+```
+
+<Note>
+  Anthropic reasoning models (e.g. `claude-opus-4.7`) reject `temperature` and `top_k`. Omit them from `completionOptions` when targeting these models.
+</Note>
+
+## Fallback chain
+
+When the primary upstream fails, OrcaRouter can fall back to a configured list using the `extra_body` field:
+
+```yaml title="config.yaml"
+models:
+  - name: OrcaRouter Auto with Fallback
+    provider: orcarouter
+    model: orcarouter/auto
+    apiBase: https://api.orcarouter.ai/v1/
+    apiKey: ${{ secrets.ORCAROUTER_API_KEY }}
+    requestOptions:
+      extraBodyProperties:
+        extra_body:
+          models: [deepseek/deepseek-v4-pro]
+          route: fallback
+```
+
+## Agent / tool-calling caveat
+
+The default `orcarouter/auto` pool may include models that do not support function calling. If you use Continue's Agent mode (which sends a `tools` field), pin a specific tool-capable model like `anthropic/claude-opus-4.7` or `openai/gpt-5.5`, or adjust the AUTO routing pool from the [console](https://www.orcarouter.ai/console/routing) to only include tool-capable upstreams.
+
+```yaml title="config.yaml"
+models:
+  - name: Claude Opus 4.7 (for Agent)
+    provider: orcarouter
+    model: anthropic/claude-opus-4.7
+    apiBase: https://api.orcarouter.ai/v1/
+    apiKey: ${{ secrets.ORCAROUTER_API_KEY }}
+    capabilities:
+      - tool_use
+    roles:
+      - chat
+      - edit
+```
+
+## Prompt caching
+
+For Anthropic Claude models, Continue automatically injects `cache_control: { type: "ephemeral" }` on the system message and the last two user turns when `cacheBehavior` or `promptCaching` is enabled:
+
+```yaml title="config.yaml"
+models:
+  - name: Claude Opus 4.7 (Cached)
+    provider: orcarouter
+    model: anthropic/claude-opus-4.7
+    apiBase: https://api.orcarouter.ai/v1/
+    apiKey: ${{ secrets.ORCAROUTER_API_KEY }}
+    cacheBehavior:
+      cacheSystemMessage: true
+      cacheConversation: true
+```
+
+## See also
+
+- [Full model catalog](https://www.orcarouter.ai/models)
+- [Routing configuration console](https://www.orcarouter.ai/console/routing)
+- [API documentation](https://docs.orcarouter.ai)
