@@ -121,18 +121,19 @@ tasks {
     runIde {
         val wslKernel = environment("WSL_KERNEL").getOrElse("")
         val openProject = if (wslKernel.isNotEmpty()) {
+            val currentDrive = projectDir.absolutePath.first().lowercase()
             //If gradle.properties >= 2025.X -- can direct run mount from WSL windows path in Intellij
             // instead of copy to /tmp -- IE \\wsl?\Ubuntu\mnt\c\Users
             val pluginVersion = providers.gradleProperty("platformVersion").getOrElse("2024.1")
             val majorVersion = pluginVersion.split(".").firstOrNull()?.toIntOrNull() ?: 2024
 
             if (majorVersion >= 2025) {
-                "\\\\wsl$\\$wslKernel\\mnt\\c" + projectDir.absolutePath.replace("C:", "").replace("/extensions/intellij/", "")
+                "\\\\wsl$\\$wslKernel\\mnt\\$currentDrive" + projectDir.absolutePath.substring(2).replace("/extensions/intellij/", "")
                     .replace("/", "\\") + "\\..\\..\\manual-testing-sandbox"
             }
             //For now we must copy the test file to WSL filesystem to be cleaned up at exit
             else {
-                val wslSourcePath = "/mnt/c" + projectDir.absolutePath.replace("C:", "")
+                val wslSourcePath = "/mnt/$currentDrive" + projectDir.absolutePath.substring(2)
                     .replace("\\", "/") + "/../../manual-testing-sandbox"
                 val wslDestPath = "/tmp/manual-testing-sandbox"
                 val command = listOf("wsl", "-d", wslKernel, "-e", "cp", "-r", wslSourcePath, wslDestPath)
