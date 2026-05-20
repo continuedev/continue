@@ -120,19 +120,27 @@ tasks {
 
     runIde {
         val wslKernel = environment("WSL_KERNEL").getOrElse("")
+        val pluginVersion = providers.gradleProperty("platformVersion").getOrElse("2024.1")
+        val majorVersion = pluginVersion.split(".").firstOrNull()?.toIntOrNull() ?: 2024
+        val currentDrive = projectDir.absolutePath.first().lowercase()
+
         val openProject = if (wslKernel.isNotEmpty()) {
-            val currentDrive = projectDir.absolutePath.first().lowercase()
             //If gradle.properties >= 2025.X -- can direct run mount from WSL windows path in Intellij
             // instead of copy to /tmp -- IE \\wsl?\Ubuntu\mnt\c\Users
-            val pluginVersion = providers.gradleProperty("platformVersion").getOrElse("2024.1")
-            val majorVersion = pluginVersion.split(".").firstOrNull()?.toIntOrNull() ?: 2024
-
             if (majorVersion >= 2025) {
                 "\\\\wsl$\\$wslKernel\\mnt\\$currentDrive" + projectDir.absolutePath.substring(2).replace("/extensions/intellij/", "")
                     .replace("/", "\\") + "\\..\\..\\manual-testing-sandbox"
             }
             //For now we must copy the test file to WSL filesystem to be cleaned up at exit
             else {
+                "\\\\wsl$\\$wslKernel\\tmp\\manual-testing-sandbox"
+            }
+        } else {
+            "$projectDir/../../manual-testing-sandbox"
+        }
+
+        doFirst {
+            if (wslKernel.isNotEmpty() && majorVersion < 2025) {
                 val wslSourcePath = "/mnt/$currentDrive" + projectDir.absolutePath.substring(2)
                     .replace("\\", "/") + "/../../manual-testing-sandbox"
                 val wslDestPath = "/tmp/manual-testing-sandbox"
@@ -148,13 +156,10 @@ tasks {
                 } else {
                     logger.lifecycle("Successfully copied $wslSourcePath to $wslKernel:$wslDestPath")
                 }
-                "\\\\wsl$\\$wslKernel" + wslDestPath.replace("/", "\\")
             }
-        } else {
-            "$projectDir/../../manual-testing-sandbox"
         }
         argumentProviders += CommandLineArgumentProvider {
-            listOf(openProject)
+            listOf(openProject, "$openProject/test.kt")
         }
         finalizedBy("cleanupAfterRunIde")
     }
