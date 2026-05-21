@@ -17,6 +17,8 @@ export function InsertButton({ onInsert }: InsertButtonProps) {
     >
       <ToolTip place="top" content="Insert Code">
         <div
+          role="button"
+          aria-label="Insert at cursor"
           className="text-lightgray flex cursor-pointer items-center border-none bg-transparent text-xs outline-none hover:brightness-125"
           onClick={onInsert}
         >

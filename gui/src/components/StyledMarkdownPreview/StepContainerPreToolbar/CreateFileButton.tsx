@@ -13,6 +13,7 @@ export function CreateFileButton({ onClick }: CreateFileButtonProps) {
       <HoverItem className="!p-0">
         <button
           data-testid="codeblock-toolbar-create"
+          aria-label="Create file with code"
           className={`text-lightgray flex items-center border-none bg-transparent pl-0 text-xs text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
           onClick={onClick}
         >

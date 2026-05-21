@@ -39,6 +39,7 @@ export function ApplyActions(props: ApplyActionsProps) {
           <div className="flex items-center">
             <ToolbarButtonWithTooltip
               data-testid="codeblock-toolbar-reject"
+              aria-label="Reject all diffs"
               onClick={onClickReject}
               tooltipContent={`Reject all (${getMetaKeyLabel()}⇧⌫)`}
             >
@@ -47,6 +48,7 @@ export function ApplyActions(props: ApplyActionsProps) {
 
             <ToolbarButtonWithTooltip
               data-testid="codeblock-toolbar-accept"
+              aria-label="Accept all diffs"
               onClick={props.onClickAccept}
               tooltipContent={`Accept all (${getMetaKeyLabel()}⇧⏎)`}
             >
@@ -69,6 +71,7 @@ export function ApplyActions(props: ApplyActionsProps) {
           >
             <button
               data-testid="codeblock-toolbar-apply"
+              aria-label="Apply changes"
               className="text-lightgray flex cursor-pointer items-center border-none bg-transparent pl-0 text-xs outline-none hover:brightness-125"
               onClick={props.onClickApply}
             >

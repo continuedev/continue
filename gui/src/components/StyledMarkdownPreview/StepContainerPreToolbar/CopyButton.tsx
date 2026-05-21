@@ -14,6 +14,8 @@ export function CopyButton({ text }: CopyButtonProps) {
     <ToolTip place="top" content="Copy Code">
       <HoverItem className="!p-0">
         <div
+          role="button"
+          aria-label={copied ? "Code copied" : "Copy code block"}
           className="text-lightgray flex cursor-pointer items-center border-none bg-transparent text-xs outline-none hover:brightness-125"
           onClick={copyText}
         >

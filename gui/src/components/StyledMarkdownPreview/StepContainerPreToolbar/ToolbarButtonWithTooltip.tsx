@@ -6,6 +6,7 @@ interface ToolbarButtonWithTooltipProps {
   children: ReactNode;
   tooltipContent: string;
   "data-testid"?: string;
+  "aria-label"?: string;
 }
 
 export function ToolbarButtonWithTooltip({
@@ -13,10 +14,13 @@ export function ToolbarButtonWithTooltip({
   children,
   tooltipContent,
   "data-testid": testId,
+  "aria-label": ariaLabel,
 }: ToolbarButtonWithTooltipProps) {
   return (
     <ToolTip place="top" content={tooltipContent}>
       <div
+        role="button"
+        aria-label={ariaLabel ?? tooltipContent}
         onClick={(e) => {
           e.stopPropagation();
           onClick();
