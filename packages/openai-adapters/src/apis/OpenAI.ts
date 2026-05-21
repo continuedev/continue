@@ -32,6 +32,10 @@ import {
   toResponsesParams,
 } from "./openaiResponses.js";
 
+function toOpenAISdkTimeout(timeoutSeconds?: number): number | undefined {
+  return timeoutSeconds === undefined ? undefined : timeoutSeconds * 1000;
+}
+
 export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
   apiBase: string = "https://api.openai.com/v1/";
@@ -45,7 +49,7 @@ export class OpenAIApi implements BaseLlmApi {
       apiKey: config.apiKey ?? "",
       baseURL: this.apiBase,
       fetch: customFetch(config.requestOptions),
-      timeout: config?.requestOptions?.timeout || undefined,
+      timeout: toOpenAISdkTimeout(config?.requestOptions?.timeout),
     });
   }
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
