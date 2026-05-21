@@ -456,7 +456,7 @@ export abstract class BaseLLM implements ILLM {
         );
       } else {
         return new Error(
-          "You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the the Codestral API by setting 'apiBase' to 'https://codestral.mistral.ai/v1' in config.json.",
+          "You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the Codestral API by setting 'apiBase' to 'https://codestral.mistral.ai/v1' in config.json.",
         );
       }
     }

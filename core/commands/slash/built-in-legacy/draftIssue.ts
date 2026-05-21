@@ -7,7 +7,7 @@ const PROMPT = (
   title: string,
 ) => `You will be asked to generate the body of a GitHub issue given a user request. You should follow these rules:
 - Be descriptive but do not make up details
-- If the the user request includes any code snippets that are relevant, reference them in code blocks
+- If the user request includes any code snippets that are relevant, reference them in code blocks
 - Describe step by step how to reproduce the problem
 - Describe the ideal solution to the problem
 - Describe the expected behavior after the issue has been resolved
