@@ -39,6 +39,8 @@ Each `.yaml` or `.yml` file is loaded as a separate local profile and appears in
 
 Local profile files use the same YAML schema as `config.yaml`.
 
+Example (global/user-level `~/.continue/` directory):
+
 ```text
 .continue/
 |-- config.yaml
@@ -53,11 +55,11 @@ Local profile files use the same YAML schema as `config.yaml`.
 
 Continue also discovers YAML profiles from these local directories:
 
-- `.continue/configs/`
-- `.continue/agents/`
-- `.continue/assistants/`
+ - `<workspace>/.continue/configs/` or `~/.continue/configs/` (`%USERPROFILE%\.continue\configs\` on Windows for global profiles)
+ - `<workspace>/.continue/agents/` or `~/.continue/agents/` (`%USERPROFILE%\.continue\agents\` on Windows for global profiles)
+ - `<workspace>/.continue/assistants/` or `~/.continue/assistants/` (`%USERPROFILE%\.continue\assistants\` on Windows for global profiles)
 
-Use `.continue/configs/` for general local config profiles. The `.continue/agents/` and `.continue/assistants/` directories are supported alongside it for existing local agent and assistant profiles. These directories can be placed in your workspace or in your global Continue directory. On Windows, use `%USERPROFILE%\.continue\configs\`, `%USERPROFILE%\.continue\agents\`, or `%USERPROFILE%\.continue\assistants\` for global profiles.
+Use `.continue/configs/` for general local config profiles. The `.continue/agents/` and `.continue/assistants/` directories are supported alongside it for existing local agent and assistant profiles in either workspace-local or global Continue directories.
 
 ## Legacy Configuration Methods (Deprecated)
 
