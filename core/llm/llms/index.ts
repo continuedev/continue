@@ -11,6 +11,7 @@ import { renderTemplatedString } from "../../util/handlebars/renderTemplatedStri
 import { BaseLLM } from "../index";
 import Anthropic from "./Anthropic";
 import Asksage from "./Asksage";
+import Auxen from "./Auxen";
 import Azure from "./Azure";
 import Bedrock from "./Bedrock";
 import BedrockImport from "./BedrockImport";
@@ -120,6 +121,7 @@ export const LLMClasses = [
   TestLLM,
   Cerebras,
   Asksage,
+  Auxen,
   Nebius,
   Nous,
   Venice,
