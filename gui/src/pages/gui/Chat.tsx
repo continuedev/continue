@@ -6,6 +6,7 @@ import { Editor, JSONContent } from "@tiptap/react";
 import { ChatHistoryItem, InputModifiers } from "core";
 import { renderChatMessage } from "core/util/messageContent";
 import {
+  memo,
   useCallback,
   useContext,
   useEffect,
@@ -85,6 +86,119 @@ const StepsDiv = styled.div`
 
 export const MAIN_EDITOR_INPUT_ID = "main-editor-input";
 
+interface HistoryItemRenderProps {
+  item: ChatHistoryItemWithMessageId;
+  index: number;
+  isLast: boolean;
+  latestSummaryIndex: number;
+  sendInput: (
+    editorState: JSONContent,
+    modifiers: InputModifiers,
+    index?: number,
+  ) => void;
+  isLastUserInputIndex: number;
+  isStreaming: boolean;
+  prevItem: ChatHistoryItemWithMessageId | null;
+}
+
+const MemoizedHistoryItem = memo(function MemoizedHistoryItem({
+  item,
+  index,
+  isLast,
+  latestSummaryIndex,
+  sendInput,
+  isLastUserInputIndex,
+  isStreaming,
+  prevItem,
+}: HistoryItemRenderProps) {
+  const { message, editorState, contextItems, appliedRules, toolCallStates } =
+    item;
+  const isBeforeLatestSummary =
+    latestSummaryIndex !== -1 && index < latestSummaryIndex;
+
+  if (message.role === "user") {
+    return (
+      <ContinueInputBox
+        onEnter={(editorState, modifiers) =>
+          sendInput(editorState, modifiers, index)
+        }
+        isLastUserInput={index === isLastUserInputIndex}
+        isMainInput={false}
+        editorState={editorState ?? message.content}
+        contextItems={contextItems}
+        appliedRules={appliedRules}
+        inputId={message.id}
+      />
+    );
+  }
+
+  if (message.role === "tool") {
+    return null;
+  }
+
+  if (message.role === "assistant") {
+    return (
+      <>
+        <div className="thread-message">
+          <TimelineItem
+            item={item}
+            iconElement={<ChatBubbleOvalLeftIcon width="16px" height="16px" />}
+            open={true}
+            onToggle={() => {}}
+          >
+            <StepContainer
+              index={index}
+              isLast={isLast}
+              item={item}
+              latestSummaryIndex={latestSummaryIndex}
+            />
+          </TimelineItem>
+        </div>
+        {toolCallStates && (
+          <ToolCallDiv toolCallStates={toolCallStates} historyIndex={index} />
+        )}
+      </>
+    );
+  }
+
+  if (message.role === "thinking") {
+    const thinkingContent = renderChatMessage(message);
+    if (!thinkingContent?.trim()) {
+      return null;
+    }
+    return (
+      <div className={isBeforeLatestSummary ? "opacity-50" : ""}>
+        <ThinkingBlockPeek
+          content={thinkingContent}
+          redactedThinking={message.redactedThinking}
+          index={index}
+          prevItem={prevItem}
+          inProgress={isLast && isStreaming}
+          signature={message.signature}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="thread-message">
+      <TimelineItem
+        item={item}
+        iconElement={<ChatBubbleOvalLeftIcon width="16px" height="16px" />}
+        open={true}
+        onToggle={() => {}}
+      >
+        <StepContainer
+          index={index}
+          isLast={isLast}
+          item={item}
+          latestSummaryIndex={latestSummaryIndex}
+        />
+      </TimelineItem>
+    </div>
+  );
+});
+
 function fallbackRender({ error, resetErrorBoundary }: any) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
 
@@ -114,7 +228,6 @@ export function Chat() {
     (store) => store.config.config.ui?.showSessionTabs,
   );
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
-  const [stepsOpen] = useState<(boolean | undefined)[]>([]);
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
@@ -312,127 +425,16 @@ export function Chat() {
     [dispatch],
   );
 
-  const isLastUserInput = useCallback(
-    (index: number): boolean => {
-      return !history
-        .slice(index + 1)
-        .some((entry) => entry.message.role === "user");
-    },
+  const lastUserInputIndex = useMemo(() => {
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].message.role === "user") return i;
+    }
+    return -1;
+  }, [history.length]);
+
+  const latestSummaryIndex = useMemo(
+    () => findLatestSummaryIndex(history),
     [history],
-  );
-
-  const renderChatHistoryItem = useCallback(
-    (item: ChatHistoryItemWithMessageId, index: number) => {
-      const {
-        message,
-        editorState,
-        contextItems,
-        appliedRules,
-        toolCallStates,
-      } = item;
-
-      // Calculate once for the entire function
-      const latestSummaryIndex = findLatestSummaryIndex(history);
-      const isBeforeLatestSummary =
-        latestSummaryIndex !== -1 && index < latestSummaryIndex;
-
-      if (message.role === "user") {
-        return (
-          <ContinueInputBox
-            onEnter={(editorState, modifiers) =>
-              sendInput(editorState, modifiers, index)
-            }
-            isLastUserInput={isLastUserInput(index)}
-            isMainInput={false}
-            editorState={editorState ?? item.message.content}
-            contextItems={contextItems}
-            appliedRules={appliedRules}
-            inputId={message.id}
-          />
-        );
-      }
-
-      if (message.role === "tool") {
-        return null;
-      }
-
-      if (message.role === "assistant") {
-        return (
-          <>
-            {/* Always render assistant content through normal path */}
-            <div className="thread-message">
-              <TimelineItem
-                item={item}
-                iconElement={
-                  <ChatBubbleOvalLeftIcon width="16px" height="16px" />
-                }
-                open={
-                  typeof stepsOpen[index] === "undefined"
-                    ? true
-                    : stepsOpen[index]!
-                }
-                onToggle={() => {}}
-              >
-                <StepContainer
-                  index={index}
-                  isLast={index === history.length - 1}
-                  item={item}
-                  latestSummaryIndex={latestSummaryIndex}
-                />
-              </TimelineItem>
-            </div>
-
-            {toolCallStates && (
-              <ToolCallDiv
-                toolCallStates={toolCallStates}
-                historyIndex={index}
-              />
-            )}
-          </>
-        );
-      }
-
-      if (message.role === "thinking") {
-        const thinkingContent = renderChatMessage(message);
-        if (!thinkingContent?.trim()) {
-          return null;
-        }
-        return (
-          <div className={isBeforeLatestSummary ? "opacity-50" : ""}>
-            <ThinkingBlockPeek
-              content={thinkingContent}
-              redactedThinking={message.redactedThinking}
-              index={index}
-              prevItem={index > 0 ? history[index - 1] : null}
-              inProgress={index === history.length - 1 && isStreaming}
-              signature={message.signature}
-            />
-          </div>
-        );
-      }
-
-      // Default case - regular assistant message
-      return (
-        <div className="thread-message">
-          <TimelineItem
-            item={item}
-            iconElement={<ChatBubbleOvalLeftIcon width="16px" height="16px" />}
-            open={
-              typeof stepsOpen[index] === "undefined" ? true : stepsOpen[index]!
-            }
-            onToggle={() => {}}
-          >
-            <StepContainer
-              index={index}
-              isLast={index === history.length - 1}
-              item={item}
-              latestSummaryIndex={latestSummaryIndex}
-            />
-          </TimelineItem>
-        </div>
-      );
-    },
-    [sendInput, isLastUserInput, history, stepsOpen, isStreaming],
   );
 
   const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
@@ -462,7 +464,16 @@ export function Chat() {
                   dispatch(newSession());
                 }}
               >
-                {renderChatHistoryItem(item, index)}
+                <MemoizedHistoryItem
+                  item={item}
+                  index={index}
+                  isLast={index === history.length - 1}
+                  latestSummaryIndex={latestSummaryIndex}
+                  sendInput={sendInput}
+                  isLastUserInputIndex={lastUserInputIndex}
+                  isStreaming={isStreaming}
+                  prevItem={index > 0 ? history[index - 1] : null}
+                />
               </ErrorBoundary>
               {index === history.length - 1 && <InlineErrorMessage />}
             </div>

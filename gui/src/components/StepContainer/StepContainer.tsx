@@ -1,6 +1,6 @@
 import { ChatHistoryItem } from "core";
 import { renderChatMessage, stripImages } from "core/util/messageContent";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
@@ -18,7 +18,7 @@ interface StepContainerProps {
   latestSummaryIndex?: number;
 }
 
-export default function StepContainer(props: StepContainerProps) {
+function StepContainer(props: StepContainerProps) {
   const dispatch = useDispatch();
   const [isTruncated, setIsTruncated] = useState(false);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
@@ -137,3 +137,5 @@ export default function StepContainer(props: StepContainerProps) {
     </div>
   );
 }
+
+export default memo(StepContainer);
