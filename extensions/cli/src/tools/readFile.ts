@@ -193,19 +193,19 @@ export const readFileTool: Tool = {
       // nextOffset=offset, which produces an infinite pagination loop.
       const limit = Math.max(1, args.limit ?? DEFAULT_LIMIT);
 
-      // Divide limit and byte cap by parallel tool call count to avoid
-      // context overflow when multiple tools run concurrently
+      // Divide the byte cap by parallel tool call count to avoid context
+      // overflow when multiple tools run concurrently.  The line limit is NOT
+      // divided: it is a per-call value supplied by the caller, so splitting it
+      // across parallel calls would silently under-deliver and could produce
+      // effectiveLimit=0 when limit < parallelCount (infinite pagination loop).
       const parallelCount = context?.parallelToolCallCount ?? 1;
-      // Ensure effectiveLimit is at least 1 even after integer division
-      // (e.g. limit=1 with parallelCount=4 would floor to 0 without the clamp).
-      const effectiveLimit = Math.max(1, Math.floor(limit / parallelCount));
       const effectiveMaxBytes = Math.floor(MAX_BYTES / parallelCount);
 
       // Stream the file — never loads more than one OS chunk + output window
       const { outputLines, linesRead, cut, more } = await streamReadWindow(
         realPath,
         offset,
-        effectiveLimit,
+        limit,
         effectiveMaxBytes,
       );
 
