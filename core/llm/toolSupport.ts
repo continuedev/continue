@@ -14,8 +14,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         }
       } catch (e) {}
 
-      return ["claude", "gpt-4", "o3", "gemini", "gemma"].some((part) =>
-        model.toLowerCase().startsWith(part),
+      const lower = model.toLowerCase();
+      return (
+        lower.startsWith("claude") ||
+        !!lower.match(/^gpt-[4-9]/) ||
+        !!lower.match(/^o[1-9]/) ||
+        lower.startsWith("gemini") ||
+        lower.startsWith("gemma")
       );
     },
     anthropic: (model) => {
@@ -29,28 +34,16 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     azure: (model) => {
       const lower = model.toLowerCase();
-      if (
-        lower.startsWith("gpt-4") ||
-        lower.startsWith("gpt-5") ||
-        lower.startsWith("gpt-4.1") ||
-        lower.startsWith("o1") ||
-        lower.startsWith("o3") ||
-        lower.startsWith("o4")
-      )
-        return true;
+      if (lower.match(/^gpt-[4-9]/) || lower.match(/^o[1-9]/)) return true;
       return false;
     },
     openai: (model) => {
       const lower = model.toLowerCase();
       // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling
       if (
-        lower.startsWith("gpt-4") ||
-        lower.startsWith("gpt-5") ||
-        lower.startsWith("o1") ||
-        lower.startsWith("o3") ||
-        lower.startsWith("o4") ||
-        lower.startsWith("codex") ||
-        lower.startsWith("gpt-4.1")
+        lower.match(/^gpt-[4-9]/) ||
+        lower.match(/^o[1-9]/) ||
+        lower.startsWith("codex")
       ) {
         return true;
       }
@@ -107,8 +100,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     xAI: (model) => {
       const lowerCaseModel = model.toLowerCase();
-      return ["grok-3", "grok-4", "grok-4-1", "grok-code"].some((val) =>
-        lowerCaseModel.includes(val),
+      return (
+        !!lowerCaseModel.match(/grok-[3-9]/) ||
+        lowerCaseModel.includes("grok-code")
       );
     },
     bedrock: (model) => {
@@ -276,6 +270,10 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    inception: (model) => {
+      const lower = model.toLowerCase();
+      return lower.startsWith("mercury-2");
+    },
     deepseek: (model) => {
       // https://api-docs.deepseek.com/quick_start/pricing
       // https://api-docs.deepseek.com/guides/function_calling
@@ -318,27 +316,27 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         return false;
       }
 
+      const baseModel = model
+        .toLowerCase()
+        .replace(/:(free|extended|beta)$/, "");
+
       if (
         ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
-          (part) => model.toLowerCase().includes(part),
+          (part) => baseModel.includes(part),
         )
       ) {
         return false;
       }
 
       const supportedPrefixes = [
-        "openai/gpt-3.5",
-        "openai/gpt-4",
-        "openai/gpt-5",
-        "openai/o1",
-        "openai/o3",
-        "openai/o4",
+        "openai/gpt-",
         "openai/codex",
-        "openai/gpt-oss",
         "anthropic/claude",
         "microsoft/phi-3",
         "google/gemini-flash-1.5",
         "google/gemini-2",
+        "google/gemini-3",
+        "google/gemma-4",
         "google/gemini-pro",
         "x-ai/grok",
         "qwen/qwen3",
@@ -366,9 +364,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "zai-org/glm",
       ];
       for (const prefix of supportedPrefixes) {
-        if (model.toLowerCase().startsWith(prefix)) {
+        if (baseModel.startsWith(prefix)) {
           return true;
         }
+      }
+
+      // OpenAI o-series (o1, o3, o4, ...)
+      if (baseModel.match(/^openai\/o[1-9]/)) {
+        return true;
       }
 
       const specificModels = [
@@ -382,23 +385,57 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "moonshotai/kimi-k2",
       ];
       for (const specificModel of specificModels) {
-        if (model.toLowerCase() === specificModel) {
+        if (baseModel === specificModel) {
           return true;
         }
       }
 
       const supportedContains = ["llama-3.1"];
       for (const contained of supportedContains) {
-        if (model.toLowerCase().includes(contained)) {
+        if (baseModel.includes(contained)) {
           return true;
         }
       }
 
       return false;
     },
+    clawrouter: (model) => {
+      // ClawRouter routes to various providers, so we check common tool-supporting patterns
+      const lower = model.toLowerCase();
+
+      // blockrun/* models are routing aliases - assume tool support
+      if (lower.startsWith("blockrun/")) {
+        return true;
+      }
+
+      // Check for common tool-supporting model patterns
+      const toolSupportingPatterns = [
+        "claude",
+        "sonnet",
+        "opus",
+        "haiku",
+        "gemini",
+        "command-r",
+        "mistral",
+        "mixtral",
+        "llama-3.1",
+        "llama-3.2",
+        "llama-3.3",
+        "llama-4",
+        "qwen3",
+        "qwen-2.5",
+        "deepseek",
+      ];
+
+      return (
+        toolSupportingPatterns.some((pattern) => lower.includes(pattern)) ||
+        !!lower.match(/gpt-[4-9]/) ||
+        !!lower.match(/\bo[1-9]\b/)
+      );
+    },
     zAI: (model) => {
       const lower = model.toLowerCase();
-      return lower.startsWith("glm-4") || lower.startsWith("glm-5");
+      return !!lower.match(/^glm-[4-9]/);
     },
     moonshot: (model) => {
       // support moonshot models
@@ -478,14 +515,14 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/deepseek/, /r1|reasoner/],
     [/gemini/, /2\.5/, /pro/],
     [/gemini/, /3\.1-pro|3-flash-preview/],
-    [/gpt/, /-5|5\.1|5\.2/],
+    [/gpt-[5-9]/],
     [/gpt-4\.1/],
     [/codex/],
-    [/claude/, /sonnet/, /3\.7|3-7|-4/],
-    [/claude/, /opus/, /-4/],
+    [/claude/, /sonnet/, /3\.7|3-7|(?<!\d)-[4-9]/],
+    [/claude/, /opus/, /(?<!\d)-[4-9]/],
     [/grok-code/],
-    [/grok-4-1|grok-4\.1/],
-    [/claude/, /4-5/],
+    [/grok-[4-9][\.-]\d/],
+    [/claude/, /[4-9]-[5-9]/],
   ];
   for (const combo of recs) {
     if (combo.every((regex) => modelName.toLowerCase().match(regex))) {

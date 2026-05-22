@@ -28,8 +28,10 @@ class LoggerClass {
               }),
             ]
           : []),
-        // Normal console.log behavior
-        new winston.transports.Console(),
+        // Use stderr to avoid corrupting IPC stdout stream in the binary
+        new winston.transports.Console({
+          stderrLevels: ["error", "warn", "info", "debug"],
+        }),
       ],
     });
   }

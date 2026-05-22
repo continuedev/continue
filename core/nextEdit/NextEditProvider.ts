@@ -153,7 +153,7 @@ export class NextEditProvider {
       llm.completionOptions.temperature = 0.01;
     }
 
-    if (llm instanceof OpenAI) {
+    if (llm instanceof OpenAI && llm.providerName !== "openrouter") {
       llm.useLegacyCompletionsEndpoint = true;
     }
     // TODO: Resolve import error with TRIAL_FIM_MODEL

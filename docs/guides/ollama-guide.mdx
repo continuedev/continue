@@ -272,6 +272,10 @@ To get the best performance from Ollama:
 
 ### Common Configuration Problems
 
+#### "Model requires more system memory to run"
+
+Continue may use a higher default context length than other tools. Reduce `contextLength` in your config (e.g., to 2048), or try a smaller model. See [Ollama provider troubleshooting](/customize/model-providers/top-level/ollama#troubleshooting) for details.
+
 #### "404 model not found, try pulling it first"
 
 This error occurs when the model isn't installed locally:

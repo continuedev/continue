@@ -205,15 +205,15 @@ describe("mergeUnrolledAssistants", () => {
     expect(result.models?.[0]?.model).toBe("gpt-4");
   });
 
-  it("should deduplicate context by provider", () => {
+  it("should deduplicate context by name when present", () => {
     const base = createBaseConfig();
     const incoming: AssistantUnrolled = {
       name: "Incoming Assistant",
       version: "1.1.0",
       context: [
         {
-          name: "file-context", // Different name but same provider
-          provider: "file", // Same provider as base
+          name: "file-context",
+          provider: "file",
         },
         {
           name: "terminal",
@@ -224,14 +224,60 @@ describe("mergeUnrolledAssistants", () => {
 
     const result = mergeUnrolledAssistants(base, incoming);
 
-    // Should only have 2 context providers (incoming file and incoming terminal)
-    expect(result.context).toHaveLength(2);
+    // Base has unnamed file provider, incoming has named "file-context" — different keys, both kept
+    expect(result.context).toHaveLength(3);
     expect(result.context?.map((c) => c?.provider)).toEqual([
       "file",
       "terminal",
+      "file",
     ]);
-    // Should keep the incoming version of file provider (base version filtered as duplicate)
-    expect(result.context?.[0]?.name).toBe("file-context");
+  });
+
+  it("should keep multiple context providers of the same type with different params.title", () => {
+    const base: AssistantUnrolled = {
+      name: "Base Assistant",
+      version: "1.0.0",
+    };
+    const incoming: AssistantUnrolled = {
+      name: "Incoming Assistant",
+      version: "1.1.0",
+      context: [
+        {
+          provider: "http",
+          params: {
+            url: "http://localhost:5000/context",
+            title: "http-provider-5000",
+            displayTitle: "HTTP Provider 5000",
+          },
+        },
+        {
+          provider: "http",
+          params: {
+            url: "http://localhost:5001/context",
+            title: "http-provider-5001",
+            displayTitle: "HTTP Provider 5001",
+          },
+        },
+        {
+          provider: "http",
+          params: {
+            url: "http://localhost:5002/context",
+            title: "http-provider-5002",
+            displayTitle: "HTTP Provider 5002",
+          },
+        },
+      ],
+    };
+
+    const result = mergeUnrolledAssistants(base, incoming);
+
+    // All three HTTP providers should be kept since they have different params.title
+    expect(result.context).toHaveLength(3);
+    expect(result.context?.map((c) => c?.params?.title)).toEqual([
+      "http-provider-5000",
+      "http-provider-5001",
+      "http-provider-5002",
+    ]);
   });
 
   it("should deduplicate rules by name", () => {

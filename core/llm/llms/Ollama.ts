@@ -161,13 +161,24 @@ class Ollama extends BaseLLM implements ModelInstaller {
   private static modelsBeingInstalledMutex = new Mutex();
 
   private fimSupported: boolean = false;
-  private templateSupportsTools: boolean | undefined = undefined;
+
+  private modelInfoPromise: Promise<void> | undefined = undefined;
+  private explicitContextLength: boolean;
+
   constructor(options: LLMOptions) {
     super(options);
+    this.explicitContextLength = options.contextLength !== undefined;
+  }
 
-    if (options.model === "AUTODETECT") {
-      return;
+  private ensureModelInfo(): Promise<void> {
+    if (this.modelInfoPromise) {
+      return this.modelInfoPromise;
     }
+
+    if (this.model === "AUTODETECT") {
+      return Promise.resolve();
+    }
+
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -176,7 +187,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
       headers.Authorization = `Bearer ${this.apiKey}`;
     }
 
-    this.fetch(this.getEndpoint("api/show"), {
+    this.modelInfoPromise = this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
       headers: headers,
       body: JSON.stringify({ name: this._getModel() }),
@@ -194,15 +205,16 @@ class Ollama extends BaseLLM implements ModelInstaller {
           const params = [];
           for (const line of body.parameters.split("\n")) {
             let parts = line.match(/^(\S+)\s+((?:".*")|\S+)$/);
-            if (parts.length < 2) {
+            if (!parts || parts.length < 2) {
               continue;
             }
             let key = parts[1];
             let value = parts[2];
             switch (key) {
               case "num_ctx":
-                this._contextLength =
-                  options.contextLength ?? Number.parseInt(value);
+                if (!this.explicitContextLength) {
+                  this._contextLength = Number.parseInt(value);
+                }
                 break;
               case "stop":
                 if (!this.completionOptions.stop) {
@@ -228,15 +240,12 @@ class Ollama extends BaseLLM implements ModelInstaller {
          * it's a good indication the model supports FIM.
          */
         this.fimSupported = !!body?.template?.includes(".Suffix");
-
-        // Check if model template supports tool calling (same pattern as .Suffix above)
-        if (body?.template) {
-          this.templateSupportsTools = body.template.includes(".Tools");
-        }
       })
       .catch((e) => {
         // console.warn("Error calling the Ollama /api/show endpoint: ", e);
       });
+
+    return this.modelInfoPromise;
   }
 
   // Map of "continue model name" to Ollama actual model name
@@ -410,6 +419,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
+    await this.ensureModelInfo();
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -488,6 +498,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    await this.ensureModelInfo();
     const ollamaMessages = this._reorderMessagesForToolCompat(
       messages.map(this._convertToOllamaMessage),
     );
@@ -500,12 +511,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
       stream: options.stream,
       // format: options.format, // Not currently in base completion options
     };
-    // Only include tools with user messages, and only if the template supports them
-    if (
-      options.tools?.length &&
-      ollamaMessages.at(-1)?.role === "user" &&
-      this.templateSupportsTools !== false
-    ) {
+    if (options.tools?.length && ollamaMessages.at(-1)?.role === "user") {
       chatOptions.tools = options.tools.map((tool) => ({
         type: "function",
         function: {
@@ -582,7 +588,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
           ? { role: "thinking", content: thinking }
           : null;
 
-        if (thinkingMessage && !content) {
+        if (thinkingMessage && !content && !toolCalls?.length) {
           // When Streaming you can't have both thinking and content
           return [thinkingMessage];
         }
@@ -654,6 +660,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
+    await this.ensureModelInfo();
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };

@@ -13,11 +13,22 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "mintlify": "^4.2.3"
+    "mintlify": "^4.2.454"
   },
   "dependencies": {
     "@c15t/react": "^1.8.5",
-    "axios": "^1.13.5",
-    "tar-fs": "^3.1.1"
+    "axios": "^1.13.6",
+    "tar-fs": "^3.1.2"
+  },
+  "overrides": {
+    "express": "^4.21.2",
+    "qs": "^6.14.2",
+    "tar": "^7.5.13",
+    "js-yaml": "^4.1.1",
+    "lodash": "^4.17.23",
+    "zod": "^3.24.0",
+    "axios": "^1.13.6",
+    "@orpc/openapi": "^1.13.11",
+    "kysely": "^0.28.14"
   }
 }

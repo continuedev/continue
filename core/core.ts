@@ -17,6 +17,7 @@ import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Lemonade from "./llm/llms/Lemonade";
+import { fetchModels } from "./llm/fetchModels";
 import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
@@ -378,8 +379,21 @@ export class Core {
       void DataLogger.getInstance().logDevData(msg.data);
     });
 
-    on("config/addModel", (msg) => {
+    on("config/addModel", async (msg) => {
       const model = msg.data.model;
+      const { config } = await this.configHandler.loadConfig();
+      const allModels = Object.values(config?.modelsByRole ?? {}).flat();
+      const existing = allModels.find(
+        (m) => m.providerName === model.provider && m.model === model.model,
+      );
+      if (existing) {
+        void this.ide.showToast(
+          "warning",
+          "Model already exists in config. Update the API key in the config file.",
+        );
+        await this.configHandler.openConfigProfile();
+        return;
+      }
       addModel(model, msg.data.role);
       void this.configHandler.reloadConfig(
         "Model added (config/addModel message)",
@@ -1213,6 +1227,19 @@ export class Core {
     on("mdm/setLicenseKey", ({ data: { licenseKey } }) => {
       const isValid = setMdmLicenseKey(licenseKey);
       return isValid;
+    });
+
+    on("models/fetch", async (msg) => {
+      try {
+        return await fetchModels(
+          msg.data.provider,
+          msg.data.apiKey,
+          msg.data.apiBase,
+        );
+      } catch (error: any) {
+        void this.ide.showToast("error", error.message);
+        return [];
+      }
     });
   }
 

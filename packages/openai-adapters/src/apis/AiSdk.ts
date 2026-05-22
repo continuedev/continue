@@ -41,6 +41,11 @@ const PROVIDER_MAP: Record<string, AiSdkProviderCreator> = {
       ...options,
       baseURL: options.baseURL ?? "https://openrouter.ai/api/v1/",
     }),
+  clawrouter: (options) =>
+    createOpenAI({
+      ...options,
+      baseURL: options.baseURL ?? "http://localhost:1337/v1/",
+    }),
 };
 
 export class AiSdkApi implements BaseLlmApi {

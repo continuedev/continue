@@ -602,69 +602,80 @@ export class NextEditWindowManager {
    */
   private setupListeners() {
     // Theme change listener.
-    vscode.workspace.onDidChangeConfiguration(async (e) => {
-      if (
-        e.affectsConfiguration("workbench.colorTheme") ||
-        e.affectsConfiguration("editor.fontSize") ||
-        e.affectsConfiguration("editor.fontFamily") ||
-        e.affectsConfiguration("window.autoDetectColorScheme") ||
-        e.affectsConfiguration("window.autoDetectHighContrast") ||
-        e.affectsConfiguration("workbench.preferredDarkColorTheme") ||
-        e.affectsConfiguration("workbench.preferredLightColorTheme") ||
-        e.affectsConfiguration("workbench.preferredHighContrastColorTheme") ||
-        e.affectsConfiguration("workbench.preferredHighContrastLightColorTheme")
-      ) {
+    this.disposables.push(
+      vscode.workspace.onDidChangeConfiguration(async (e) => {
+        if (
+          e.affectsConfiguration("workbench.colorTheme") ||
+          e.affectsConfiguration("editor.fontSize") ||
+          e.affectsConfiguration("editor.fontFamily") ||
+          e.affectsConfiguration("window.autoDetectColorScheme") ||
+          e.affectsConfiguration("window.autoDetectHighContrast") ||
+          e.affectsConfiguration("workbench.preferredDarkColorTheme") ||
+          e.affectsConfiguration("workbench.preferredLightColorTheme") ||
+          e.affectsConfiguration("workbench.preferredHighContrastColorTheme") ||
+          e.affectsConfiguration(
+            "workbench.preferredHighContrastLightColorTheme",
+          )
+        ) {
+          this.theme = getThemeString();
+          await this.codeRenderer.setTheme(this.theme);
+          console.debug(
+            "Theme updated:",
+            this.theme ? "Theme exists" : "Theme is undefined",
+          );
+          const editorConfig = vscode.workspace.getConfiguration("editor");
+          this.fontSize = editorConfig.get<number>("fontSize") ?? 14;
+          this.fontFamily =
+            editorConfig.get<string>("fontFamily") ?? "monospace";
+        }
+      }),
+    );
+
+    // Listen for active color theme changes.
+    this.disposables.push(
+      vscode.window.onDidChangeActiveColorTheme(async () => {
         this.theme = getThemeString();
         await this.codeRenderer.setTheme(this.theme);
         console.debug(
-          "Theme updated:",
+          "Active theme changed:",
           this.theme ? "Theme exists" : "Theme is undefined",
         );
-        const editorConfig = vscode.workspace.getConfiguration("editor");
-        this.fontSize = editorConfig.get<number>("fontSize") ?? 14;
-        this.fontFamily = editorConfig.get<string>("fontFamily") ?? "monospace";
-      }
-    });
-
-    // Listen for active color theme changes.
-    vscode.window.onDidChangeActiveColorTheme(async () => {
-      this.theme = getThemeString();
-      await this.codeRenderer.setTheme(this.theme);
-      console.debug(
-        "Active theme changed:",
-        this.theme ? "Theme exists" : "Theme is undefined",
-      );
-    });
+      }),
+    );
 
     // Listen for editor changes to clean up decorations when editor closes.
-    vscode.window.onDidChangeVisibleTextEditors(async () => {
-      // If our active editor is no longer visible, clear decorations.
-      if (
-        this.activeEditor &&
-        !vscode.window.visibleTextEditors.includes(this.activeEditor)
-      ) {
-        if (this.mostRecentCompletionId) {
-          this.loggingService.cancelRejectionTimeout(
-            this.mostRecentCompletionId,
-          );
+    this.disposables.push(
+      vscode.window.onDidChangeVisibleTextEditors(async () => {
+        // If our active editor is no longer visible, clear decorations.
+        if (
+          this.activeEditor &&
+          !vscode.window.visibleTextEditors.includes(this.activeEditor)
+        ) {
+          if (this.mostRecentCompletionId) {
+            this.loggingService.cancelRejectionTimeout(
+              this.mostRecentCompletionId,
+            );
+          }
+          await this.hideAllNextEditWindows();
         }
-        await this.hideAllNextEditWindows();
-      }
-    });
+      }),
+    );
 
     // Listen for selection changes to hide tooltip when cursor moves.
-    vscode.window.onDidChangeTextEditorSelection(async (e) => {
-      // If the selection changed in our active editor, hide the tooltip.
-      if (this.activeEditor && e.textEditor === this.activeEditor) {
-        // If the cursor moved because of something other than accepting next edit, stop logging it.
-        if (!this.accepted && this.mostRecentCompletionId) {
-          this.loggingService.cancelRejectionTimeout(
-            this.mostRecentCompletionId,
-          );
+    this.disposables.push(
+      vscode.window.onDidChangeTextEditorSelection(async (e) => {
+        // If the selection changed in our active editor, hide the tooltip.
+        if (this.activeEditor && e.textEditor === this.activeEditor) {
+          // If the cursor moved because of something other than accepting next edit, stop logging it.
+          if (!this.accepted && this.mostRecentCompletionId) {
+            this.loggingService.cancelRejectionTimeout(
+              this.mostRecentCompletionId,
+            );
+          }
+          await this.hideAllNextEditWindows();
         }
-        await this.hideAllNextEditWindows();
-      }
-    });
+      }),
+    );
   }
 
   private shouldRenderTip(uri: vscode.Uri): boolean {

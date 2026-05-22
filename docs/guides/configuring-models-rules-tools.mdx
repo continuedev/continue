@@ -95,17 +95,19 @@ On Mission Control, you can configure secrets when adding a model or MCP server.
 
 This will use mustache notation to pass the secret, eg `${{ secrets.SECRET_NAME }}`
 
-When configuring a local model or MCP server, you can use the same mustache notation for secrets which read from:
+When configuring a local model or MCP server, you can use the same mustache notation for secrets which are resolved from these sources in order:
 
 <Columns cols={2}>
+<Card title="Workspace" icon="folder-open">
+`.env` file at your project root, or in `<workspace-root>/.continue/.env`
+</Card>
+
 <Card title="Global" icon="globe">
 `.env` file in `~/.continue/.env`
 </Card>
-
-<Card title="Workspace" icon="folder-open">
-`.env` file at your project root
-</Card>
 </Columns>
+
+See [Managing Local Secrets and Environment Variables](/faqs#managing-local-secrets-and-environment-variables) for full details on secret resolution and IDE vs CLI differences.
 
 <Info>
 **When to use `secrets.` vs `inputs.`**

@@ -64,7 +64,7 @@
     "react-remark": "^2.1.0",
     "react-router-dom": "^6.30.3",
     "react-switch": "^7.0.0",
-    "react-syntax-highlighter": "^15.5.0",
+    "react-syntax-highlighter": "^16.1.1",
     "react-tooltip": "^5.18.0",
     "redux-logger": "^3.0.6",
     "redux-persist": "^6.0.0",
@@ -85,7 +85,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@swc/cli": "^0.3.14",
+    "@swc/cli": "^0.8.0",
     "@swc/core": "^1.7.26",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.4",
@@ -103,8 +103,8 @@
     "@types/redux-logger": "^3.0.13",
     "@types/styled-components": "^5.1.26",
     "@vitejs/plugin-react-swc": "^3.9.0",
-    "@vitest/coverage-v8": "^2.1.3",
-    "@vitest/ui": "^2.1.3",
+    "@vitest/coverage-v8": "^3.1.0",
+    "@vitest/ui": "^3.1.0",
     "autoprefixer": "^10.4.13",
     "eslint": "^8",
     "eslint-plugin-no-barrel-files": "^1.2.1",
@@ -115,7 +115,7 @@
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.16.0",
     "vite": "^6.3.4",
-    "vitest": "^2.1.3"
+    "vitest": "^3.1.0"
   },
   "engine-strict": true,
   "engines": {

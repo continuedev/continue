@@ -26,7 +26,7 @@ object UriUtils {
         // Handle Windows file paths with authority component
         if (uriStr.startsWith("file://") && !uriStr.startsWith("file:///")) {
             val path = uriStr.substringAfter("file://")
-            return URI("file:///$path")
+            return URI("file", "", "/$path", null)
         }
 
         return try {

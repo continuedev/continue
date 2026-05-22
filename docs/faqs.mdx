@@ -270,59 +270,44 @@ If you're getting parse errors with remote Ollama:
 
 For running Continue completely offline without internet access, see the [Running Continue Without Internet guide](/guides/running-continue-without-internet).
 
-Continue supports multiple methods for managing secrets locally, searched in this order:
+#### How to reference secrets in config.yaml
 
-1. **Workspace `.env` files**: Place a `.env` file in your workspace root directory
-2. **Workspace Continue folder**: Place a `.env` file in `<workspace-root>/.continue/.env`  
-3. **Global `.env` file**: Place a `.env` file in `~/.continue/.env` for user-wide secrets
-4. **Process environment variables**: Use standard system environment variables
+Use the `${{ secrets.SECRET_NAME }}` syntax anywhere in your `config.yaml`:
 
-#### Creating `.env` files
-
-Create a `.env` file in one of these locations:
-- **Per-workspace**: `<workspace-root>/.env` or `<workspace-root>/.continue/.env`
-- **Global**: `~/.continue/.env`
-
-Example `.env` file:
-```
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-CUSTOM_API_URL=https://api.example.com
-```
-
-#### Using secrets in config.yaml
-
-Reference your local secrets using the `secrets` namespace:
 ```yaml
 models:
   - provider: openai
     apiKey: ${{ secrets.OPENAI_API_KEY }}
 ```
 
-#### Mission Control-managed secrets
+#### Where secrets are resolved from
 
-For centralized team secret management, use `${{ inputs.SECRET_NAME }}` syntax in your config.yaml and manage them at [https://continue.dev/settings/secrets](https://continue.dev/settings/secrets):
-```yaml
-models:
-  - provider: openai
-    apiKey: ${{ inputs.OPENAI_API_KEY }}
+When Continue encounters `${{ secrets.X }}`, it searches these sources **in order**:
+
+1. **Workspace `.env` file**: `<workspace-root>/.env`
+2. **Workspace Continue `.env` file**: `<workspace-root>/.continue/.env`
+3. **Global `.env` file**: `~/.continue/.env`
+4. **Process environment variables**: Standard system environment variables
+
+<Warning>
+**IDE extensions (VS Code, JetBrains) cannot read your shell environment variables.** Setting `export OPENAI_API_KEY=...` in your terminal will not make the key available to Continue running inside your IDE. You must use a `.env` file instead.
+
+Process environment variables (source 4) only work with the [Continue CLI](/cli/configuration), where you can pass them directly: `export OPENAI_API_KEY=sk-... && cn`
+</Warning>
+
+#### Creating `.env` files
+
+Create a `.env` file in one of the locations above. Use standard dotenv format:
+
+```
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+CUSTOM_API_URL=https://api.example.com
 ```
 
-#### Important notes
-
-- **Never commit `.env` files** to version control - add them to `.gitignore`
-- The `.env` file uses standard dotenv format (KEY=value, no quotes needed)
-- Secrets are loaded when Continue starts, so restart your IDE after changes
-- Local `.env` files take precedence over Hub secrets when both exist
-
-#### Troubleshooting secrets
-
-If your API keys aren't being recognized:
-1. Check the `.env` file is in the correct location
-2. Ensure there are no quotes around values in the `.env` file
-3. Restart your IDE after adding/changing secrets
-4. Verify the variable name matches exactly (case-sensitive)
-5. Check that your `.env` file has proper line endings (LF, not CRLF on Windows)
+- **Never commit `.env` files** to version control — add them to `.gitignore`
+- No quotes around values
+- Restart your IDE after adding or changing secrets
 
 ### Using Model Addons Locally
 
