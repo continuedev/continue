@@ -26,13 +26,17 @@ const MAX_BYTES = 50 * 1024;
 // Per-line truncation guard against pathological lines (minified code, generated files)
 const MAX_LINE_LENGTH = 2000;
 const DEFAULT_LIMIT = 2000;
+const MIN_LIMIT = 200;
 
 export const readFileImpl: ToolImpl = async (args, extras) => {
   const filepath = getStringArg(args, "filepath");
   // offset is 1-based line number to start from (default: beginning of file)
   const offset = getOptionalNumberArg(args, "offset") ?? 1;
   // limit is max lines to return in this read (default: 2000)
-  const limit = getOptionalNumberArg(args, "limit") ?? DEFAULT_LIMIT;
+  const limit = Math.max(
+    MIN_LIMIT,
+    getOptionalNumberArg(args, "limit") ?? DEFAULT_LIMIT,
+  );
 
   // Resolve the path first to get the actual path for security check
   const resolvedPath = await resolveInputPath(extras.ide, filepath);
@@ -50,7 +54,9 @@ export const readFileImpl: ToolImpl = async (args, extras) => {
   // readRangeInFile fetches ONLY this window from the IDE — the full file
   // is never loaded into this process's memory.
   const startLine = Math.max(0, offset - 1); // 0-based, inclusive
-  const endLine = startLine + limit - 1; // 0-based, inclusive
+  // Request limit+1 lines (N+1 pattern) so we can detect EOF unambiguously:
+  // if the IDE returns > limit lines, there is more content beyond the window.
+  const endLine = startLine + limit; // 0-based, inclusive (one extra sentinel line)
 
   const rangeContent = await extras.ide.readRangeInFile(resolvedPath.uri, {
     start: { line: startLine, character: 0 },
@@ -61,7 +67,11 @@ export const readFileImpl: ToolImpl = async (args, extras) => {
   // rangeContent is now only the requested window — O(limit) not O(file size).
   // Apply the 50 KB byte cap as a secondary guard against very wide lines
   // or a caller supplying an extremely large limit.
-  const rawLines = rangeContent.split("\n");
+  // Trim to limit before processing — the (limit+1)th line is only a sentinel
+  // to detect EOF, not part of the output.
+  const allLines = rangeContent.split("\n");
+  const hasMore = allLines.length > limit;
+  const rawLines = allLines.slice(0, limit);
   const outputLines: string[] = [];
   let byteCount = 0;
   let cut = false;
@@ -86,9 +96,9 @@ export const readFileImpl: ToolImpl = async (args, extras) => {
   const linesRead = outputLines.length;
   // next 1-based offset for the caller to continue pagination
   const nextOffset = offset + linesRead;
-  // more=true when byte cap cut the window short OR the IDE returned a full
-  // window (meaning there may be more lines beyond endLine)
-  const more = cut || rawLines.length >= limit;
+  // more=true when byte cap cut the window short OR the IDE returned the
+  // sentinel (limit+1)th line, confirming content exists beyond the window.
+  const more = cut || hasMore;
 
   // Prepend 1-based line numbers so the LLM can reference exact lines
   // and copy the nextOffset value directly for the follow-up call

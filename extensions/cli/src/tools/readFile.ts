@@ -24,6 +24,7 @@ const MAX_BYTES = 50 * 1024;
 // Per-line truncation guard against pathological lines (minified code, generated files)
 const MAX_LINE_LENGTH = 2000;
 const DEFAULT_LIMIT = 2000;
+const MIN_LIMIT = 200;
 
 /**
  * Stream the file line-by-line, collecting only the requested window.
@@ -75,10 +76,9 @@ function streamReadWindow(
         return;
       }
 
-      // Stop if we have already collected the requested number of lines
-      if (outputLines.length >= effectiveLimit) {
-        // more=true: there are lines beyond our window
-        cut = false;
+      // N+1 sentinel: if we've collected one line beyond the requested limit,
+      // we know there are more lines in the file — don't add it to output.
+      if (outputLines.length >= effectiveLimit + 1) {
         stopStream();
         return;
       }
@@ -104,13 +104,12 @@ function streamReadWindow(
     });
 
     rl.on("close", () => {
-      const linesRead = outputLines.length;
-      // more=true if: byte cap fired (cut) OR we stopped at the line limit
-      // and there were still lines left in the file after our window.
-      // globalLineCount > offset - 1 + linesRead means we saw at least one
-      // line beyond our output window.
-      const more = cut || globalLineCount >= offset + effectiveLimit - 1;
-      resolve({ outputLines, linesRead, cut, more });
+      // N+1 pattern: if we collected more than effectiveLimit lines, there are
+      // more lines in the file. Trim the sentinel line before returning.
+      const more = cut || outputLines.length > effectiveLimit;
+      const trimmedLines = outputLines.slice(0, effectiveLimit);
+      const linesRead = trimmedLines.length;
+      resolve({ outputLines: trimmedLines, linesRead, cut, more });
     });
 
     rl.on("error", reject);
@@ -191,7 +190,7 @@ export const readFileTool: Tool = {
       // Clamp limit to ≥ 1: limit=0 would make effectiveLimit collapse to 0,
       // causing the stream to immediately stop with linesRead=0 and
       // nextOffset=offset, which produces an infinite pagination loop.
-      const limit = Math.max(1, args.limit ?? DEFAULT_LIMIT);
+      const limit = Math.max(MIN_LIMIT, args.limit ?? DEFAULT_LIMIT);
 
       // Divide the byte cap by parallel tool call count to avoid context
       // overflow when multiple tools run concurrently.  The line limit is NOT
