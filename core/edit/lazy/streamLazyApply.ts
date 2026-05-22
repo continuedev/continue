@@ -19,10 +19,6 @@ export async function* streamLazyApply(
   abortController: AbortController,
 ): AsyncGenerator<DiffLine> {
   const promptFactory = lazyApplyPromptForModel(llm.model, llm.providerName);
-  if (!promptFactory) {
-    throw new Error(`Lazy apply not supported for model ${llm.model}`);
-  }
-
   const promptMessages = promptFactory(oldCode, filename, newCode);
   const lazyCompletion = llm.streamChat(promptMessages, abortController.signal);
 
