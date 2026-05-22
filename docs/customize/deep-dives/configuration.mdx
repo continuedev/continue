@@ -28,6 +28,25 @@ When editing this file, you can see the available options suggested as you type,
 
 See the full reference for `config.yaml` [here](/reference).
 
+### Local configuration profiles
+
+Use `.continue/configs/` to define additional local YAML config profiles. Continue searches for YAML files in both workspace and user-level folders:
+
+- `<workspace>/.continue/configs/*.yaml`
+- `<workspace>/.continue/configs/*.yml`
+- `~/.continue/configs/*.yaml` (MacOS / Linux)
+- `%USERPROFILE%\.continue\configs\*.yaml` (Windows)
+
+Each file is loaded as a separate local config profile and appears in the config selector. Creating or deleting a file in `.continue/configs/` refreshes the list of local profiles. Saving a config file reloads Continue with the updated settings.
+
+Use the local config folders for different types of local definitions:
+
+| Folder | Purpose |
+| --- | --- |
+| `.continue/configs/` | General local config profiles |
+| `.continue/agents/` | Agent definitions |
+| `.continue/assistants/` | Legacy assistant definitions |
+
 ## Legacy Configuration Methods (Deprecated)
 
 <Info>
