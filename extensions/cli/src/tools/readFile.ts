@@ -185,13 +185,20 @@ export const readFileTool: Tool = {
       }
       const realPath = fs.realpathSync(filepath);
 
-      const offset = args.offset ?? 1;
-      const limit = args.limit ?? DEFAULT_LIMIT;
+      // Clamp offset to ≥ 1: offset=0 or negative would break 1-based line
+      // numbering and make nextOffset non-advancing (infinite pagination loop).
+      const offset = Math.max(1, args.offset ?? 1);
+      // Clamp limit to ≥ 1: limit=0 would make effectiveLimit collapse to 0,
+      // causing the stream to immediately stop with linesRead=0 and
+      // nextOffset=offset, which produces an infinite pagination loop.
+      const limit = Math.max(1, args.limit ?? DEFAULT_LIMIT);
 
       // Divide limit and byte cap by parallel tool call count to avoid
       // context overflow when multiple tools run concurrently
       const parallelCount = context?.parallelToolCallCount ?? 1;
-      const effectiveLimit = Math.floor(limit / parallelCount);
+      // Ensure effectiveLimit is at least 1 even after integer division
+      // (e.g. limit=1 with parallelCount=4 would floor to 0 without the clamp).
+      const effectiveLimit = Math.max(1, Math.floor(limit / parallelCount));
       const effectiveMaxBytes = Math.floor(MAX_BYTES / parallelCount);
 
       // Stream the file — never loads more than one OS chunk + output window
