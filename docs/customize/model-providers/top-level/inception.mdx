@@ -22,9 +22,9 @@ sidebarTitle: "Inception"
   schema: v1
 
   models:
-    - name: <MODEL_NAME>
+    - name: Mercury 2
       provider: inception
-      model: <MODEL_ID>
+      model: mercury-2
       apiKey: <INCEPTION_API_KEY>
   ```
   </Tab>
@@ -33,9 +33,9 @@ sidebarTitle: "Inception"
   {
     "models": [
       {
-        "title": "<MODEL_NAME>",
+        "title": "Mercury 2",
         "provider": "inception",
-        "model": "<MODEL_ID>",
+        "model": "mercury-2",
         "apiKey": "<INCEPTION_API_KEY>"
       }
     ]
@@ -43,6 +43,16 @@ sidebarTitle: "Inception"
   ```
   </Tab>
 </Tabs>
+
+## Available models
+
+| Model | Context length | Recommended use |
+| --- | --- | --- |
+| `mercury-2` | 128k | Chat with tool calling and structured outputs |
+| `mercury-edit-2` | 32k | Autocomplete, apply edit, and next edit suggestions |
+| `mercury-coder-small` | 32k | Coding tasks |
+
+`mercury-2` supports tool calling in Continue.
 
 <Info>
   **Check out a more advanced configuration [here](https://continue.dev/inceptionlabs/mercury-coder?view=config)**
