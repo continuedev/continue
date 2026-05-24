@@ -175,5 +175,14 @@ mcpServers:
       - "@modelcontextprotocol/server-github"
     env:
       GITHUB_PERSONAL_ACCESS_TOKEN: ${{ secrets.GITHUB_PERSONAL_ACCESS_TOKEN }}
+  - name: Pictify
+    command: npx
+    args:
+      - "-y"
+      - "@pictify/mcp-server"
+    env:
+      PICTIFY_API_KEY: ${{ secrets.PICTIFY_API_KEY }}
 # ...
 ```
+
+The Pictify MCP server lets the agent render images, GIFs, and PDFs from HTML, URLs, or reusable templates — useful when a chat turn needs to produce a publish-ready file (OG image, social card, invoice, certificate) rather than just describing one. See [`@pictify/mcp-server`](https://github.com/pictify-io/mcp) for the full tool list.
