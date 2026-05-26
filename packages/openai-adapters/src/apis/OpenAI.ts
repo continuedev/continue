@@ -32,11 +32,15 @@ import {
   toResponsesParams,
 } from "./openaiResponses.js";
 
+type OpenAIApiConfig = z.infer<typeof OpenAIConfigSchema> & {
+  defaultHeaders?: Record<string, string>;
+};
+
 export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
   apiBase: string = "https://api.openai.com/v1/";
 
-  constructor(protected config: z.infer<typeof OpenAIConfigSchema>) {
+  constructor(protected config: OpenAIApiConfig) {
     this.apiBase = config.apiBase ?? this.apiBase;
 
     // Always create the original OpenAI client for fallback
@@ -46,6 +50,7 @@ export class OpenAIApi implements BaseLlmApi {
       baseURL: this.apiBase,
       fetch: customFetch(config.requestOptions),
       timeout: config?.requestOptions?.timeout || undefined,
+      defaultHeaders: config.defaultHeaders,
     });
   }
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
@@ -123,6 +128,7 @@ export class OpenAIApi implements BaseLlmApi {
       Accept: "application/json",
       "x-api-key": this.config.apiKey ?? "",
       Authorization: `Bearer ${this.config.apiKey}`,
+      ...this.config.defaultHeaders,
     };
   }
 

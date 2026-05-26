@@ -1,4 +1,6 @@
-import { LLMOptions } from "../../index.js";
+import { PERPLEXITY_INTEGRATION_HEADERS } from "@continuedev/openai-adapters";
+
+import type { LLMOptions } from "../../index.js";
 
 import OpenAI from "./OpenAI.js";
 
@@ -18,6 +20,13 @@ class Perplexity extends OpenAI {
     apiBase: "https://api.perplexity.ai/",
     model: "sonar",
   };
+
+  protected _getHeaders() {
+    return {
+      ...super._getHeaders(),
+      ...PERPLEXITY_INTEGRATION_HEADERS,
+    };
+  }
 }
 
 export default Perplexity;

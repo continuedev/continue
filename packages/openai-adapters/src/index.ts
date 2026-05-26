@@ -23,6 +23,7 @@ import { RelaceApi } from "./apis/Relace.js";
 import { VertexAIApi } from "./apis/VertexAI.js";
 import { WatsonXApi } from "./apis/WatsonX.js";
 import { BaseLlmApi } from "./apis/base.js";
+import { PERPLEXITY_INTEGRATION_HEADERS } from "./integrationHeaders.js";
 import { LLMConfig, OpenAIConfigSchema } from "./types.js";
 import { appendPathToUrlIfNotPresent } from "./util/appendPathToUrl.js";
 
@@ -31,10 +32,12 @@ dotenv.config();
 function openAICompatible(
   apiBase: string,
   config: z.infer<typeof OpenAIConfigSchema>,
+  defaultHeaders?: Record<string, string>,
 ): OpenAIApi {
   return new OpenAIApi({
     ...config,
     apiBase: config.apiBase ?? apiBase,
+    defaultHeaders,
   });
 }
 
@@ -144,7 +147,11 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "groq":
       return openAICompatible("https://api.groq.com/openai/v1/", config);
     case "perplexity":
-      return openAICompatible("https://api.perplexity.ai/", config);
+      return openAICompatible(
+        "https://api.perplexity.ai/",
+        config,
+        PERPLEXITY_INTEGRATION_HEADERS,
+      );
     case "minimax":
       return new MiniMaxApi(config);
     case "sambanova":
@@ -227,6 +234,10 @@ export {
 // export
 export { AiSdkApi } from "./apis/AiSdk.js";
 export type { BaseLlmApi } from "./apis/base.js";
+export {
+  PERPLEXITY_INTEGRATION_HEADER,
+  PERPLEXITY_INTEGRATION_HEADERS,
+} from "./integrationHeaders.js";
 export type {
   AiSdkConfig,
   AskSageResponse,
