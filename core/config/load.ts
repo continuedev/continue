@@ -233,7 +233,7 @@ export function isContextProviderWithParams(
 }
 
 /** Only difference between intermediate and final configs is the `models` array */
-async function intermediateToFinalConfig({
+export async function intermediateToFinalConfig({
   config,
   ide,
   ideSettings,
@@ -372,15 +372,75 @@ async function intermediateToFinalConfig({
             llmLogger,
             config.completionOptions,
           );
-          if (llm) {
-            if (llm.providerName === "free-trial") {
-              warnAboutFreeTrial = true;
-            } else {
-              tabAutocompleteModels.push(llm);
+          if (!llm) {
+            return;
+          }
+
+          if (llm.model === "AUTODETECT") {
+            try {
+              const modelNames = await llm.listModels();
+              const detectedModels = await Promise.all(
+                modelNames.map(async (modelName) => {
+                  return await llmFromDescription(
+                    {
+                      ...desc,
+                      model: modelName,
+                      title: modelName,
+                      isFromAutoDetect: true,
+                    },
+                    ide.readFile.bind(ide),
+                    getUriFromPath,
+                    uniqueId,
+                    ideSettings,
+                    llmLogger,
+                    copyOf(config.completionOptions),
+                  );
+                }),
+              );
+              for (const expandedLlm of detectedModels.filter(
+                (x) => typeof x !== "undefined",
+              ) as BaseLLM[]) {
+                if (expandedLlm.providerName === "free-trial") {
+                  warnAboutFreeTrial = true;
+                } else {
+                  tabAutocompleteModels.push(expandedLlm);
+                }
+              }
+            } catch (e) {
+              console.warn("Error listing models: ", e);
             }
+          } else if (llm.providerName === "free-trial") {
+            warnAboutFreeTrial = true;
+          } else {
+            tabAutocompleteModels.push(llm);
           }
         } else {
-          tabAutocompleteModels.push(new CustomLLMClass(desc));
+          const llm = new CustomLLMClass({
+            ...desc,
+            options: { ...desc.options, logger: llmLogger } as any,
+          });
+          if (llm.model === "AUTODETECT") {
+            try {
+              const modelNames = await llm.listModels();
+              const expanded = modelNames.map(
+                (modelName) =>
+                  new CustomLLMClass({
+                    ...desc,
+                    options: {
+                      ...desc.options,
+                      model: modelName,
+                      logger: llmLogger,
+                      isFromAutoDetect: true,
+                    },
+                  }),
+              );
+              tabAutocompleteModels.push(...expanded);
+            } catch (e) {
+              console.warn("Error listing models: ", e);
+            }
+          } else {
+            tabAutocompleteModels.push(llm);
+          }
         }
       }),
     );
