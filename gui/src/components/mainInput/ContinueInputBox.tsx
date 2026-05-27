@@ -90,7 +90,9 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   }, [availableContextProviders, isInEdit]);
 
   const historyKey = isInEdit ? "edit" : "chat";
-  const placeholder = isInEdit ? t("ContinueInputBox.EditSelectedCode") : undefined;
+  const placeholder = isInEdit
+    ? t("ContinueInputBox.EditSelectedCode")
+    : undefined;
 
   const toolbarOptions: ToolbarOptions = useMemo(() => {
     if (isInEdit) {
@@ -100,7 +102,9 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         hideUseCodebase: true,
         hideSelectModel: false,
         enterText:
-          editModeState.applyState.status === "done" ? t("ContinueInputBox.Retry") : t("ContinueInputBox.Edit"),
+          editModeState.applyState.status === "done"
+            ? t("ContinueInputBox.Retry")
+            : t("ContinueInputBox.Edit"),
       } as ToolbarOptions;
     }
     // Stable empty object to avoid re-renders from identity changes
