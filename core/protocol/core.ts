@@ -351,4 +351,17 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "process/isBackgrounded": [{ toolCallId: string }, boolean];
   "process/killTerminalProcess": [{ toolCallId: string }, void];
   "mdm/setLicenseKey": [{ licenseKey: string }, boolean];
+  "models/fetch": [
+    { provider: string; apiKey?: string; apiBase?: string },
+    {
+      name: string;
+      modelId?: string;
+      description?: string;
+      icon?: string;
+      popular?: boolean;
+      contextLength?: number;
+      maxTokens?: number;
+      supportsTools?: boolean;
+    }[],
+  ];
 };

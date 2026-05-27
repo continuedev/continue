@@ -17,6 +17,7 @@ import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Lemonade from "./llm/llms/Lemonade";
+import { fetchModels } from "./llm/fetchModels";
 import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
@@ -1226,6 +1227,19 @@ export class Core {
     on("mdm/setLicenseKey", ({ data: { licenseKey } }) => {
       const isValid = setMdmLicenseKey(licenseKey);
       return isValid;
+    });
+
+    on("models/fetch", async (msg) => {
+      try {
+        return await fetchModels(
+          msg.data.provider,
+          msg.data.apiKey,
+          msg.data.apiBase,
+        );
+      } catch (error: any) {
+        void this.ide.showToast("error", error.message);
+        return [];
+      }
     });
   }
 

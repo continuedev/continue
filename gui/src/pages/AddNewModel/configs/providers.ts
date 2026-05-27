@@ -3,7 +3,6 @@ import { ModelProviderTags } from "../../../components/modelSelection/utils";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
-import { getOpenRouterModelsList } from "./openRouterModel";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -28,6 +27,7 @@ export interface ProviderInfo {
   longDescription?: string;
   tags?: ModelProviderTags[];
   packages: ModelPackage[];
+  popularPackages?: ModelPackage[];
   params?: any;
   collectInputFor?: InputDescriptor[];
   refPage?: string;
@@ -41,38 +41,9 @@ const openSourceModels = Object.values(models).filter(
   ({ isOpenSource }) => isOpenSource,
 );
 
-// Initialize OpenRouter models placeholder with a loading placeholder
-const OPENROUTER_LOADING_PLACEHOLDER: ModelPackage = {
-  title: "Loading models...",
-  description: "Fetching available models from OpenRouter",
-  params: {
-    model: "placeholder",
-    contextLength: 0,
-  },
-  isOpenSource: false,
-};
-
-let openRouterModelsList: ModelPackage[] = [OPENROUTER_LOADING_PLACEHOLDER];
-
-/**
- * Initialize OpenRouter models by fetching from the API
- * This should be called once when the component mounts
- */
-export async function initializeOpenRouterModels() {
-  try {
-    const models = await getOpenRouterModelsList();
-    if (models.length > 0) {
-      openRouterModelsList = models;
-      // Update the providers object with the fetched models
-      if (providers.openrouter) {
-        providers.openrouter.packages = openRouterModelsList;
-      }
-    }
-  } catch (error) {
-    console.error("Failed to initialize OpenRouter models:", error);
-    // Keep placeholder on error so the UI doesn't break
-  }
-}
+export const ollamaStaticModels = Object.values(models).filter(
+  ({ providerOptions }) => providerOptions?.includes("ollama"),
+);
 
 export const apiBaseInput: InputDescriptor = {
   inputType: "text",
@@ -145,12 +116,15 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
   openai: {
     title: "OpenAI",
     provider: "openai",
-    description: "Use gpt-5.1, gpt-5, gpt-4, or any other OpenAI model",
+    description: "Use gpt-5.4, gpt-5, or any other OpenAI model",
     longDescription:
-      "Use gpt-5.1, gpt-5, gpt-4, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
+      "Use gpt-5.4, gpt-5, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
     icon: "openai.png",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
+      models.gpt5_4Pro,
+      models.gpt5_4,
+      models.gpt5_4Mini,
       models.gpt5_2,
       models.gpt5_1,
       models.gpt5,
@@ -240,7 +214,14 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       },
       ...completionParamsInputsConfigs,
     ],
-    packages: openRouterModelsList,
+    packages: [
+      {
+        title: "Loading models...",
+        description: "Fetching available models from OpenRouter",
+        params: { model: "placeholder" },
+        isOpenSource: false,
+      },
+    ],
   },
 
   moonshot: {
@@ -502,7 +483,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
           title: "Ollama",
         },
       },
-      ...openSourceModels,
+      ...ollamaStaticModels,
     ],
     collectInputFor: [
       ...completionParamsInputsConfigs,
@@ -608,6 +589,28 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       },
     ],
     apiKeyUrl: "https://platform.minimax.io",
+  },
+  inception: {
+    title: "Inception Labs",
+    provider: "inception",
+    icon: "inception.png",
+    description:
+      "Inception Labs provides Mercury 2, a fast diffusion model with 128k context and tool calling.",
+    longDescription:
+      "To get started with Inception Labs, obtain an API key from the [Inception Labs platform](https://platform.inceptionlabs.ai/). Mercury 2 is OpenAI-compatible and supports chat, tool calling, and structured outputs.",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Inception Labs API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [models.mercury2],
+    apiKeyUrl: "https://platform.inceptionlabs.ai/",
   },
   deepseek: {
     title: "DeepSeek",

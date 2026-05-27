@@ -4,6 +4,7 @@ import { Bedrock } from "./providers/bedrock.js";
 import { Cohere } from "./providers/cohere.js";
 import { CometAPI } from "./providers/cometapi.js";
 import { Gemini } from "./providers/gemini.js";
+import { Inception } from "./providers/inception.js";
 import { MiniMax } from "./providers/minimax.js";
 import { Mistral } from "./providers/mistral.js";
 import { Ollama } from "./providers/ollama.js";
@@ -26,6 +27,7 @@ export const allModelProviders: ModelProvider[] = [
   Bedrock,
   Cohere,
   CometAPI,
+  Inception,
   MiniMax,
   xAI,
   zAI,
