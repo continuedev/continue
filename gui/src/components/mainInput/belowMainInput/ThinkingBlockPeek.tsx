@@ -56,7 +56,7 @@ function ThinkingBlockPeek({
         `${(diff / 1000).toFixed(1)}` + t("ThinkingBlockPeek.S");
       setElapsedTime(diffString);
     }
-  }, [inProgress, t]);
+  }, [inProgress]);
 
   return duplicateRedactedThinkingBlock ? null : (
     <div className="thread-message">
