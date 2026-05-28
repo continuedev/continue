@@ -227,10 +227,8 @@ export function createEditorConfig(options: {
         },
       }),
       Placeholder.configure({
-        placeholder: getPlaceholderText(
-          props.placeholder,
-          historyLengthRef.current,
-        ),
+        placeholder: ({ editor }) =>
+          getPlaceholderText(props.placeholder, historyLengthRef.current),
       }),
       Paragraph.extend({
         addKeyboardShortcuts() {

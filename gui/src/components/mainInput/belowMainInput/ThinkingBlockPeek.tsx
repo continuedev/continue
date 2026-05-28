@@ -56,7 +56,7 @@ function ThinkingBlockPeek({
         `${(diff / 1000).toFixed(1)}` + t("ThinkingBlockPeek.S");
       setElapsedTime(diffString);
     }
-  }, [inProgress]);
+  }, [inProgress, t]);
 
   return duplicateRedactedThinkingBlock ? null : (
     <div className="thread-message">
@@ -84,7 +84,7 @@ function ThinkingBlockPeek({
               (elapsedTime
                 ? t("ThinkingBlockPeek.ThoughtFor") + ` ${elapsedTime}`
                 : "") +
-              (tokens ? ` (${tokens} tokens)` : "")
+              (tokens ? t("ThinkingBlockPeek.Tokens", { tokens }) : "")
             )}
             {open ? (
               <ChevronUpIcon className="h-3 w-3" />

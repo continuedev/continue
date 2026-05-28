@@ -38,6 +38,7 @@
   "ThinkingBlockPeek.ThoughtFor": " for",
   "ThinkingBlockPeek.S": "s",
   "ThinkingBlockPeek.SafetyReasons": "Thinking content redacted due to safety reasons.",
+  "ThinkingBlockPeek.Tokens": " ({{tokens}} tokens)",
 
   "ModeSelect.Chat": "Chat",
   "ModeSelect.Agent": "Agent",

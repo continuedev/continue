@@ -38,6 +38,7 @@
   "ThinkingBlockPeek.ThoughtFor": "，用时",
   "ThinkingBlockPeek.S": "秒",
   "ThinkingBlockPeek.SafetyReasons": "因安全原因，思考内容已隐藏。",
+  "ThinkingBlockPeek.Tokens": " ({{tokens}} tokens)",
 
   "ModeSelect.Chat": "对话（Chat）",
   "ModeSelect.Agent": "智能体（Agent）",

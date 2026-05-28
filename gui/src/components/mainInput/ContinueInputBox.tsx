@@ -109,7 +109,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
     }
     // Stable empty object to avoid re-renders from identity changes
     return {} as ToolbarOptions;
-  }, [isInEdit, editModeState.applyState.status]);
+  }, [isInEdit, editModeState.applyState.status, t]);
 
   const { appliedRules = [], contextItems = [] } = props;
 

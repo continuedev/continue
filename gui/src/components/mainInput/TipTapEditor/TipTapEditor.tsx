@@ -23,6 +23,7 @@ import "./TipTapEditor.css";
 import { createEditorConfig, getPlaceholderText } from "./utils/editorConfig";
 import { handleImageFile } from "./utils/imageUtils";
 import { useEditorEventHandlers } from "./utils/keyHandlers";
+import { useTranslation } from "react-i18next";
 
 export interface TipTapEditorProps {
   availableContextProviders: ContextProviderDescription[];
@@ -46,6 +47,7 @@ export interface TipTapEditorProps {
 export const TIPPY_DIV_ID = "tippy-js-div";
 
 function TipTapEditorInner(props: TipTapEditorProps) {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const mainEditorContext = useMainEditor();
 
@@ -93,7 +95,7 @@ function TipTapEditorInner(props: TipTapEditorProps) {
       placeholderExt.options["placeholder"] = placeholder;
       editor.view.dispatch(editor.state.tr);
     }
-  }, [editor, props.placeholder, historyLength]);
+  }, [editor, props.placeholder, historyLength, t]);
 
   useEffect(() => {
     if (props.isMainInput) {

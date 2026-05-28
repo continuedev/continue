@@ -221,7 +221,7 @@ function InputToolbar(props: InputToolbarProps) {
               }}
             >
               <span>
-                <i>Esc</i> {t("InputToolbar.ActiveFile")}
+                <i>Esc</i> {t("InputToolbar.ExitEdit")}
               </span>
             </HoverItem>
           )}
