@@ -192,6 +192,7 @@ const baseModelFields = {
   promptTemplates: promptTemplatesSchema.optional(),
   useLegacyCompletionsEndpoint: z.boolean().optional(),
   useResponsesApi: z.boolean().optional(),
+  customReasoningFields: z.array(z.string()).optional(),
   env: z
     .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
     .optional(),

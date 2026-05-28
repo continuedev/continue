@@ -652,6 +652,8 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     sourceFile: llm.sourceFile,
     isFromAutoDetect: llm.isFromAutoDetect,
     toolOverrides: llm.toolOverrides,
+    customReasoningFields:
+      llm.customReasoningFields ?? (llm as any).options?.customReasoningFields,
   };
 }
 

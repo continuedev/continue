@@ -83,6 +83,7 @@ export function addModel(
         contextLength: model.contextLength,
         maxStopWords: model.maxStopWords,
         defaultCompletionOptions: model.completionOptions,
+        customReasoningFields: model.customReasoningFields,
         ...(capabilities.length > 0 ? { capabilities } : {}),
       };
       config.models.push(desc);

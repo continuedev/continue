@@ -315,7 +315,7 @@ class WatsonX extends BaseLLM {
     for await (const value of streamSse(response)) {
       const message = fromChatCompletionChunk(
         value,
-        this._llmOptions?.customReasoningFields,
+        this.options?.customReasoningFields,
       );
       if (!!message) {
         if (

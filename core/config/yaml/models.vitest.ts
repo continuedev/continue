@@ -173,6 +173,27 @@ describe("llmsFromModelConfig requestOptions merging", () => {
     expect(llm.requestOptions).toEqual(model.requestOptions);
   });
 
+  it("should preserve custom reasoning fields from model config", async () => {
+    const model: ModelConfig = {
+      name: "test-openai",
+      provider: "openai",
+      model: "gpt-4",
+      customReasoningFields: ["my_custom_thinking_key"],
+    };
+
+    const result = await llmsFromModelConfig({
+      model,
+      uniqueId: "test-id",
+      llmLogger: mockLLMLogger,
+      config: mockConfig,
+    });
+
+    expect(result).toHaveLength(1);
+    expect((result[0] as any).customReasoningFields).toEqual([
+      "my_custom_thinking_key",
+    ]);
+  });
+
   it("should handle empty headers correctly in merge", async () => {
     const model: ModelConfig = {
       name: "test-openai",

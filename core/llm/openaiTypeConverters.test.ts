@@ -1,4 +1,9 @@
-import { toResponsesInput, isItemType } from "./openaiTypeConverters";
+import {
+  fromChatCompletionChunk,
+  fromChatResponse,
+  toResponsesInput,
+  isItemType,
+} from "./openaiTypeConverters";
 import { ChatMessage } from "..";
 import type {
   EasyInputMessage,
@@ -40,6 +45,61 @@ function getMessagesByRole(items: ResponseInputItem[], role: string) {
 }
 
 describe("openaiTypeConverters", () => {
+  describe("custom reasoning fields", () => {
+    it("should convert a custom streaming delta field to a thinking message", () => {
+      const chunk = {
+        choices: [
+          {
+            delta: {
+              my_custom_thinking_key: "checking constraints",
+              content: "should not render as chat text",
+            },
+          },
+        ],
+      };
+
+      const result = fromChatCompletionChunk(chunk as any, [
+        "my_custom_thinking_key",
+      ]);
+
+      expect(result).toEqual({
+        role: "thinking",
+        content: "checking constraints",
+        signature: undefined,
+        reasoning_details: undefined,
+      });
+    });
+
+    it("should convert a custom non-streaming message field to a thinking message", () => {
+      const response = {
+        choices: [
+          {
+            message: {
+              role: "assistant",
+              my_custom_thinking_key: "planning answer",
+              content: "final answer",
+            },
+          },
+        ],
+      };
+
+      const result = fromChatResponse(response as any, [
+        "my_custom_thinking_key",
+      ]);
+
+      expect(result).toEqual([
+        {
+          role: "thinking",
+          content: "planning answer",
+        },
+        {
+          role: "assistant",
+          content: "final answer",
+        },
+      ]);
+    });
+  });
+
   describe("toResponsesInput", () => {
     describe("tool calls handling - OpenAI Responses API", () => {
       it("should emit function_call items when fc_ ID is in metadata", () => {

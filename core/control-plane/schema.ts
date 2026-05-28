@@ -68,6 +68,7 @@ const modelDescriptionSchema = z.object({
       stream: z.boolean().optional(),
     })
     .optional(),
+  customReasoningFields: z.array(z.string()).optional(),
   systemMessage: z.string().optional(),
   requestOptions: z
     .object({

@@ -210,6 +210,10 @@ export abstract class BaseLLM implements ILLM {
 
   protected openaiAdapter?: BaseLlmApi;
 
+  public get options(): LLMOptions {
+    return this._llmOptions;
+  }
+
   constructor(_options: LLMOptions) {
     this._llmOptions = _options;
     this.lastRequestId = undefined;
@@ -645,7 +649,7 @@ export abstract class BaseLLM implements ILLM {
           }
           const result = fromChatCompletionChunk(
             chunk,
-            this._llmOptions?.customReasoningFields,
+            this.options?.customReasoningFields,
           );
           if (result) {
             const content = renderChatMessage(result);
@@ -1070,7 +1074,7 @@ export abstract class BaseLLM implements ILLM {
       }
       const chatChunk = fromChatCompletionChunk(
         chunk as any,
-        this._llmOptions?.customReasoningFields,
+        this.options?.customReasoningFields,
       );
       if (chatChunk) {
         yield chatChunk;
@@ -1092,7 +1096,7 @@ export abstract class BaseLLM implements ILLM {
     this.lastRequestId = response.id ?? this.lastRequestId;
     const messages = fromChatResponse(
       response as any,
-      this._llmOptions?.customReasoningFields,
+      this.options?.customReasoningFields,
     );
     for (const msg of messages) {
       yield msg;
