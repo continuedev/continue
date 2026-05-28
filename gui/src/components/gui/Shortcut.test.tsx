@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as util from "../../util";
 import { Platform } from "../../util";
 import Shortcut from "./Shortcut";
+import i18n from "../../locales/i18n";
 
 vi.mock("../../util", () => ({
   ...vi.importActual("../../util"),
@@ -66,7 +67,7 @@ describe("Shortcut component", () => {
           vi.mocked(util.getPlatform).mockReturnValue(platform);
           const { container } = render(<Shortcut>{deleteKey}</Shortcut>);
           const kbdElement = container.querySelector("kbd");
-          const expectedText = platform === "mac" ? "Delete ⌫" : "Backspace ⌫";
+          const expectedText = platform === "mac" ? i18n.t("Shortcut.Delete ⌫") : i18n.t("Shortcut.Backspace ⌫");
           expect(kbdElement?.textContent).toBe(expectedText);
           expect(kbdElement).toHaveClass("keyboard-key-special");
         });
@@ -77,12 +78,12 @@ describe("Shortcut component", () => {
   describe("Invalid input handling", () => {
     it("should render error for empty shortcut string", () => {
       const { container } = render(<Shortcut>{""}</Shortcut>);
-      expect(container.textContent).toBe("Error: Invalid shortcut key");
+      expect(container.textContent).toBe(i18n.t("Shortcut.Error: Invalid shortcut key"));
     });
 
     it("should render error for null input", () => {
       const { container } = render(<Shortcut>{null as any}</Shortcut>);
-      expect(container.textContent).toBe("Error: Invalid shortcut key");
+      expect(container.textContent).toBe(i18n.t("Shortcut.Error: Invalid shortcut key"));
     });
 
     it("should gracefully handle invalid formatted input", () => {
