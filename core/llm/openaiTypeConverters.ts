@@ -287,7 +287,10 @@ export function toFimBody(
   } as any;
 }
 
-export function fromChatResponse(response: ChatCompletion): ChatMessage[] {
+export function fromChatResponse(
+  response: ChatCompletion,
+  customFields?: string[],
+): ChatMessage[] {
   const messages: ChatMessage[] = [];
   const message = response.choices[0].message as ChatCompletionMessage & {
     reasoning?: string;
@@ -298,11 +301,16 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage[] {
     }[];
   };
 
+  const customContent = customFields
+    ?.map((f) => (message as any)?.[f])
+    .find((v) => typeof v === "string" && v.length > 0);
+
   // Check for reasoning content first (similar to fromChatCompletionChunk)
-  if (message.reasoning_content || message.reasoning) {
+  if (message.reasoning_content || message.reasoning || customContent) {
     const thinkingMessage: ChatMessage = {
       role: "thinking",
-      content: (message as any).reasoning_content || (message as any).reasoning,
+      content:
+        customContent || message.reasoning_content || message.reasoning || "",
     };
 
     // Preserve reasoning_details if present
@@ -346,6 +354,7 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage[] {
 
 export function fromChatCompletionChunk(
   chunk: ChatCompletionChunk,
+  customFields?: string[],
 ): ChatMessage | undefined {
   const delta = chunk.choices?.[0]?.delta as
     | (ChatCompletionChunk.Choice.Delta & {
@@ -357,7 +366,25 @@ export function fromChatCompletionChunk(
       })
     | undefined;
 
-  if (delta?.content) {
+  const customContent = customFields
+    ?.map((f) => (delta as any)?.[f])
+    .find((v) => typeof v === "string" && v.length > 0);
+
+  if (
+    delta?.reasoning_content ||
+    delta?.reasoning ||
+    delta?.reasoning_details?.length ||
+    customContent
+  ) {
+    const message: ThinkingChatMessage = {
+      role: "thinking",
+      content:
+        customContent || delta?.reasoning_content || delta?.reasoning || "",
+      signature: delta?.reasoning_details?.[0]?.signature,
+      reasoning_details: delta?.reasoning_details as any[],
+    };
+    return message;
+  } else if (delta?.content) {
     return {
       role: "assistant",
       content: delta.content,
@@ -381,18 +408,6 @@ export function fromChatCompletionChunk(
         toolCalls,
       };
     }
-  } else if (
-    delta?.reasoning_content ||
-    delta?.reasoning ||
-    delta?.reasoning_details?.length
-  ) {
-    const message: ThinkingChatMessage = {
-      role: "thinking",
-      content: delta.reasoning_content || delta.reasoning || "",
-      signature: delta?.reasoning_details?.[0]?.signature,
-      reasoning_details: delta?.reasoning_details as any[],
-    };
-    return message;
   }
 
   return undefined;

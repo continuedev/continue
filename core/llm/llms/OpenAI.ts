@@ -560,7 +560,10 @@ class OpenAI extends BaseLLM {
     }
 
     for await (const value of streamSse(response)) {
-      const chunk = fromChatCompletionChunk(value);
+      const chunk = fromChatCompletionChunk(
+        value,
+        this._llmOptions?.customReasoningFields,
+      );
       if (chunk) {
         yield chunk;
       }
