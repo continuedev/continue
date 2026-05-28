@@ -15,7 +15,7 @@ import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
-import { countTokens } from "./llm/countTokens";
+import { countTokens, getAvailableInputTokens } from "./llm/countTokens";
 import Lemonade from "./llm/llms/Lemonade";
 import { fetchModels } from "./llm/fetchModels";
 import Ollama from "./llm/llms/Ollama";
@@ -1296,12 +1296,12 @@ export class Core {
     }
 
     const tokens = countTokens(item.content, llm.model);
+    const availableTokens = getAvailableInputTokens(
+      llm.contextLength,
+      llm.completionOptions!.maxTokens!,
+    );
 
-    if (tokens > llm.contextLength - llm.completionOptions!.maxTokens!) {
-      return true;
-    }
-
-    return false;
+    return tokens > availableTokens;
   }
 
   private handleAddAutocompleteModel(
