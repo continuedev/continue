@@ -256,7 +256,7 @@ describe("processStreamingResponse - content preservation", () => {
     expect(result.finalContent).toBe("Hello world!");
   });
 
-  it("routes gpt-5 models through responsesStream and preserves streaming tool updates", async () => {
+  it("routes gpt-5 models through chatCompletionStream and preserves streaming tool updates", async () => {
     const gpt5Chunks: ChatCompletionChunk[] = [
       {
         id: "resp_gpt5",
@@ -348,12 +348,12 @@ describe("processStreamingResponse - content preservation", () => {
     ];
 
     const responsesStream = vi.fn().mockImplementation(async function* () {
+      throw new Error("responsesStream should stay adapter-owned in CLI");
+    });
+    const chatCompletionStream = vi.fn().mockImplementation(async function* () {
       for (const chunk of gpt5Chunks) {
         yield chunk;
       }
-    });
-    const chatCompletionStream = vi.fn().mockImplementation(async function* () {
-      throw new Error("chatCompletionStream should not be used for gpt-5");
     });
 
     mockLlmApi = {
@@ -374,8 +374,8 @@ describe("processStreamingResponse - content preservation", () => {
       systemMessage: "You are a helpful assistant.",
     });
 
-    expect(responsesStream).toHaveBeenCalledTimes(1);
-    expect(chatCompletionStream).not.toHaveBeenCalled();
+    expect(chatCompletionStream).toHaveBeenCalledTimes(1);
+    expect(responsesStream).not.toHaveBeenCalled();
     expect(result.content).toBe("Analyzing repository…");
     expect(result.toolCalls).toHaveLength(1);
     expect(result.toolCalls[0]).toMatchObject({

@@ -1,6 +1,10 @@
+import { BaseLlmApi } from "@continuedev/openai-adapters";
 import { vi } from "vitest";
 
-import { ExponentialBackoffOptions } from "./exponentialBackoff.js";
+import {
+  chatCompletionStreamWithBackoff,
+  ExponentialBackoffOptions,
+} from "./exponentialBackoff.js";
 
 // Since the functions are not exported, we need to recreate them for testing
 function isRetryableError(error: any): boolean {
@@ -69,6 +73,43 @@ function calculateDelay(
 }
 
 describe("exponentialBackoff utilities", () => {
+  describe("chatCompletionStreamWithBackoff", () => {
+    it("delegates response-capable model routing to chatCompletionStream", async () => {
+      const abortController = new AbortController();
+      const chatCompletionStream = vi
+        .fn()
+        .mockImplementation(async function* () {
+          yield { choices: [{ delta: { content: "chat path" } }] };
+        });
+      const responsesStream = vi.fn().mockImplementation(async function* () {
+        yield { choices: [{ delta: { content: "responses path" } }] };
+      });
+      const llmApi = {
+        chatCompletionStream,
+        responsesStream,
+      } as unknown as BaseLlmApi;
+
+      const stream = await chatCompletionStreamWithBackoff(
+        llmApi,
+        {
+          model: "gpt-5",
+          messages: [{ role: "user", content: "hello" }],
+          stream: true,
+        },
+        abortController.signal,
+      );
+
+      const chunks = [];
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+
+      expect(chatCompletionStream).toHaveBeenCalledTimes(1);
+      expect(responsesStream).not.toHaveBeenCalled();
+      expect(chunks[0].choices[0].delta.content).toBe("chat path");
+    });
+  });
+
   describe("isRetryableError", () => {
     it("should return true for network connection errors", () => {
       const error = { code: "ECONNRESET" };
