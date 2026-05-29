@@ -15,7 +15,9 @@ export function parsePromptFile(path: string, content: string) {
   const version = preamble.version ?? 2;
 
   let systemMessage: string | undefined = undefined;
-  if (prompt.includes("<system>")) {
+  // Require both tags: a `<system>` with no matching `</system>` would make
+  // `split("</system>")[1]` undefined and crash on `.trim()`.
+  if (prompt.includes("<system>") && prompt.includes("</system>")) {
     systemMessage = prompt.split("<system>")[1].split("</system>")[0].trim();
     prompt = prompt.split("</system>")[1].trim();
   }
