@@ -72,6 +72,17 @@ Then restart Continue or reload your workspace so the MCP server is discovered.
   `bilig-workpaper-mcp` command.
 </Info>
 
+You can also verify the same agent-facing tool surface outside Continue before
+adding it to a workspace:
+
+```bash
+npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --json
+```
+
+The evaluator lists the MCP tools, edits an input cell, recalculates dependent
+formulas, exports the WorkPaper JSON, restarts the workbook, and checks that the
+readback still matches.
+
 ## Try a Verified Formula Readback
 
 Use prompts that ask the agent to show the write, recalculation, and readback in
