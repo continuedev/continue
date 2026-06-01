@@ -2699,10 +2699,22 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["sambanova"],
     isOpenSource: true,
   },
+  minimaxM3: {
+    title: "MiniMax M3",
+    description:
+      "Latest flagship model with a 512K context window, 128K max output, and image input support.",
+    params: {
+      title: "MiniMax M3",
+      model: "MiniMax-M3",
+      contextLength: 524_288,
+    },
+    providerOptions: ["minimax"],
+    isOpenSource: false,
+  },
   minimaxM27: {
     title: "MiniMax M2.7",
     description:
-      "Latest flagship model with enhanced reasoning and coding capabilities. 204K context window.",
+      "Previous flagship model with enhanced reasoning and coding capabilities. 204K context window.",
     params: {
       title: "MiniMax M2.7",
       model: "MiniMax-M2.7",
@@ -2718,30 +2730,6 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "MiniMax M2.7 Highspeed",
       model: "MiniMax-M2.7-highspeed",
-      contextLength: 204_800,
-    },
-    providerOptions: ["minimax"],
-    isOpenSource: false,
-  },
-  minimaxM25: {
-    title: "MiniMax M2.5",
-    description:
-      "Peak performance with ultimate value. Excels at complex reasoning, code generation, and multi-step tasks with a 204K context window.",
-    params: {
-      title: "MiniMax M2.5",
-      model: "MiniMax-M2.5",
-      contextLength: 204_800,
-    },
-    providerOptions: ["minimax"],
-    isOpenSource: false,
-  },
-  minimaxM25Highspeed: {
-    title: "MiniMax M2.5 Highspeed",
-    description:
-      "Same performance as M2.5, faster and more agile for latency-sensitive tasks with a 204K context window.",
-    params: {
-      title: "MiniMax M2.5 Highspeed",
-      model: "MiniMax-M2.5-highspeed",
       contextLength: 204_800,
     },
     providerOptions: ["minimax"],
