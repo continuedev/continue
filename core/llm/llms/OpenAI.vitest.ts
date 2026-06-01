@@ -395,6 +395,101 @@ describe("OpenAI", () => {
     });
   });
 
+  test("should include extraBodyProperties from requestOptions in request", async () => {
+    const openai = new OpenAI({
+      apiKey: "test-api-key",
+      model: "gpt-4",
+      apiBase: "https://api.openai.com/v1/",
+      requestOptions: {
+        extraBodyProperties: {
+          reasoning: { exclude: true },
+          custom_field: "test_value",
+        },
+      },
+      completionOptions: {
+        model: "gpt-4",
+        maxTokens: 100,
+      },
+    });
+
+    await runLlmTest({
+      llm: openai,
+      methodToTest: "streamChat",
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+      ],
+      expectedRequest: {
+        url: "https://api.openai.com/v1/chat/completions",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-api-key",
+          "api-key": "test-api-key",
+        },
+        body: {
+          model: "gpt-4",
+          messages: [{ role: "user", content: "hello" }],
+          stream: true,
+          max_tokens: 100,
+          reasoning: { exclude: true },
+          custom_field: "test_value",
+        },
+      },
+      mockStream: [{ choices: [{ delta: { content: "Hello" } }] }],
+    });
+  });
+
+  test("should include extraBodyProperties in legacy completions endpoint", async () => {
+    // Legacy completions endpoint is used by autocomplete when the model
+    // is NOT a chat-only model (e.g., OpenRouter with DeepSeek, etc.)
+    const openai = new OpenAI({
+      apiKey: "test-api-key",
+      model: "text-davinci-002",
+      apiBase: "https://api.openai.com/v1/",
+      requestOptions: {
+        extraBodyProperties: {
+          reasoning: { exclude: true },
+        },
+      },
+      completionOptions: {
+        model: "text-davinci-002",
+        maxTokens: 100,
+      },
+    });
+
+    await runLlmTest({
+      llm: openai,
+      methodToTest: "streamChat",
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+      ],
+      expectedRequest: {
+        url: "https://api.openai.com/v1/completions",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-api-key",
+          "api-key": "test-api-key",
+        },
+        body: {
+          model: "text-davinci-002",
+          prompt: "hello",
+          stream: true,
+          max_tokens: 100,
+          reasoning: { exclude: true },
+        },
+      },
+      mockStream: [
+        {
+          choices: [{ text: "Hello", finish_reason: "stop" }],
+          model: "text-davinci-002",
+        },
+      ],
+    });
+  });
+
   test("should handle embeddings", async () => {
     const openai = new OpenAI({
       apiKey: "test-api-key",

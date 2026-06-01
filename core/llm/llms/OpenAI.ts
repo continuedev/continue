@@ -249,7 +249,7 @@ class OpenAI extends BaseLLM {
   }
 
   protected extraBodyProperties(): Record<string, any> {
-    return {};
+    return this.requestOptions?.extraBodyProperties ?? {};
   }
 
   protected getMaxStopWords(): number {

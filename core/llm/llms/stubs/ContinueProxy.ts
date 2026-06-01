@@ -71,6 +71,7 @@ class ContinueProxy extends OpenAI {
     };
     return {
       continueProperties,
+      ...super.extraBodyProperties(),
     };
   }
 
