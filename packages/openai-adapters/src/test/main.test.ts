@@ -254,6 +254,25 @@ describe("Configuration", () => {
     );
   });
 
+  it("should configure Forge OpenAI client with correct apiBase and apiKey", () => {
+    const forge = constructLlmApi({
+      provider: "forge",
+      apiKey: "sk-xxx",
+    });
+
+    expect((forge as OpenAIApi).openai.baseURL).toBe(
+      "https://api.voxell.ai/v1/",
+    );
+    expect((forge as OpenAIApi).openai.apiKey).toBe("sk-xxx");
+
+    const forge2 = constructLlmApi({
+      provider: "forge",
+      apiKey: "sk-xxx",
+      apiBase: "https://api.example.com",
+    });
+    expect((forge2 as OpenAIApi).openai.baseURL).toBe("https://api.example.com");
+  });
+
   it("should configure Azure OpenAI client with root URL and trailing slash", () => {
     const azure = constructLlmApi({
       provider: "azure",

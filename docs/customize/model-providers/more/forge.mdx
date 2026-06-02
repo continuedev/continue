@@ -1,0 +1,45 @@
+---
+title: "Forge"
+description: "Configure Forge with Continue to use OpenAI-compatible text embeddings from Voxell"
+---
+
+[Forge](https://voxell.ai) is an OpenAI-compatible embeddings API from Voxell. It is embeddings-only and exposes models at multiple dimensionalities: `forge-turbo` (1024d), `forge-pro` (2560d, default), and `forge-ultra-4k` (4096d). OpenAI model aliases are also accepted, and the `dimensions` parameter is supported.
+
+<Info>
+  You can get an API key from [voxell.ai](https://voxell.ai).
+</Info>
+
+## Embeddings Model
+
+We recommend configuring **forge-pro** as your embeddings model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Forge Pro
+        provider: forge
+        model: forge-pro
+        apiKey: <YOUR_FORGE_API_KEY>
+        roles:
+          - embed
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "embeddingsProvider": {
+        "provider": "forge",
+        "model": "forge-pro",
+        "apiKey": "<YOUR_FORGE_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Forge.ts)
