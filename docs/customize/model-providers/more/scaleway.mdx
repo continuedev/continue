@@ -1,6 +1,6 @@
 ---
 title: "Scaleway"
-description: "Configure Scaleway Generative APIs with Continue to access AI models hosted in European data centers, offering low latency, data privacy, and EU AI Act compliance with models like Qwen2.5-Coder and BGE-Multilingual-Gemma2"
+description: "Configure Scaleway Generative APIs with Continue to access AI models hosted in European data centers, offering low latency, data privacy, and EU AI Act compliance with models like Qwen3.5-397b, Gemma-4-26b"
 ---
 
 <Info>
@@ -14,7 +14,7 @@ description: "Configure Scaleway Generative APIs with Continue to access AI mode
 
 ## Chat Model
 
-We recommend configuring **Qwen2.5-Coder-32B-Instruct** as your chat model.
+We recommend configuring **Qwen3.6-35b-a3b** as your chat model.
 [Click here](https://www.scaleway.com/en/docs/ai-data/generative-apis/reference-content/supported-models/) to see the list of available chat models.
 
 <Tabs>
@@ -25,9 +25,9 @@ We recommend configuring **Qwen2.5-Coder-32B-Instruct** as your chat model.
     schema: v1
 
     models:
-      - name: Qwen2.5-Coder-32B-Instruct
+      - name: Qwen3.6-35b-a3b
         provider: scaleway
-        model: qwen2.5-coder-32b-instruct
+        model: Qwen3.6-35b-a3b
         apiKey: <YOUR_SCALEWAY_API_KEY>
     ```
     </Tab>
@@ -36,9 +36,9 @@ We recommend configuring **Qwen2.5-Coder-32B-Instruct** as your chat model.
     {
       "models": [
         {
-          "title": "Qwen2.5-Coder-32B-Instruct",
+          "title": "Qwen3.6-35b-a3b",
           "provider": "scaleway",
-          "model": "qwen2.5-coder-32b-instruct",
+          "model": "Qwen3.6-35b-a3b",
           "apiKey": "<YOUR_SCALEWAY_API_KEY>"
         }
       ]
