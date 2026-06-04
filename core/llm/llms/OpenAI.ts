@@ -20,6 +20,7 @@ import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import {
   fromChatCompletionChunk,
+  fromChatResponse,
   fromResponsesChunk,
   LlmApiRequestType,
   toChatBody,
@@ -555,7 +556,12 @@ class OpenAI extends BaseLLM {
         return; // Aborted by user
       }
       const data = await response.json();
-      yield data.choices[0].message;
+      for (const message of fromChatResponse(
+        data,
+        this.options?.customReasoningFields,
+      )) {
+        yield message;
+      }
       return;
     }
 

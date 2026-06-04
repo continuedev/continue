@@ -1,1 +1,9 @@
-{}
+{
+  "files": [],
+  "references": [
+    { "path": "./binary/tsconfig.json" },
+    { "path": "./core/tsconfig.json" },
+    { "path": "./extensions/vscode/tsconfig.json" },
+    { "path": "./gui/tsconfig.json" }
+  ]
+}
