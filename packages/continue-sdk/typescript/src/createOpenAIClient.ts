@@ -35,6 +35,51 @@ interface OpenAIClientOptions extends Record<string, any> {
   baseURL?: string;
 }
 
+export function addContinuePropertiesToBody(
+  bodyString: string,
+  assistantModels: AssistantUnrolled["models"],
+  organizationId?: string | null,
+): string {
+  let body: Record<string, any>;
+
+  try {
+    body = JSON.parse(bodyString);
+  } catch {
+    return bodyString;
+  }
+
+  const modelName = body.model;
+
+  // Look up the model in the assistant's models
+  const modelConfig = assistantModels?.find(
+    (m) => m?.model === modelName || m?.model.endsWith(modelName),
+  );
+
+  if (!modelConfig) {
+    throw new Error(`Model ${modelName} not found in assistant configuration`);
+  }
+
+  if (
+    !("apiKeyLocation" in modelConfig) &&
+    !("envSecretLocations" in modelConfig)
+  ) {
+    throw new Error(
+      `Model ${modelName} does not have an apiKeyLocation or envSecretLocations defined`,
+    );
+  }
+
+  const continueProperties: ContinueProperties = {
+    apiKeyLocation: modelConfig.apiKeyLocation,
+    envSecretLocations: modelConfig.envSecretLocations,
+    orgScopeId: organizationId ?? null,
+  };
+
+  return JSON.stringify({
+    ...body,
+    continueProperties,
+  });
+}
+
 /**
  * Create and configure an OpenAI client that uses Continue Hub for authentication
  *
@@ -54,46 +99,16 @@ export function createOpenAIClient({
       // Clone the init object to avoid modifying the original
       const modifiedInit = init ? { ...init } : {};
 
-      if (init?.method === "POST" && init?.body) {
-        try {
-          const body = JSON.parse(init.body as string);
-
-          const modelName = body.model;
-
-          // Look up the model in the assistant's models
-          const modelConfig = assistantModels?.find(
-            (m) => m?.model === modelName || m?.model.endsWith(modelName),
-          );
-
-          if (!modelConfig) {
-            throw new Error(
-              `Model ${modelName} not found in assistant configuration`,
-            );
-          }
-
-          if (
-            !("apiKeyLocation" in modelConfig) &&
-            !("envSecretLocations" in modelConfig)
-          ) {
-            throw new Error(
-              `Model ${modelName} does not have an apiKeyLocation or envSecretLocations defined`,
-            );
-          }
-
-          const continueProperties: ContinueProperties = {
-            apiKeyLocation: modelConfig.apiKeyLocation,
-            envSecretLocations: modelConfig.envSecretLocations,
-            orgScopeId: organizationId ?? null,
-          };
-
-          // Update the request with the modified body
-          modifiedInit.body = JSON.stringify({
-            ...body,
-            continueProperties,
-          });
-        } catch (e) {
-          // If parsing fails, proceed with the original body
-        }
+      if (
+        init?.method === "POST" &&
+        init?.body &&
+        typeof init.body === "string"
+      ) {
+        modifiedInit.body = addContinuePropertiesToBody(
+          init.body,
+          assistantModels,
+          organizationId,
+        );
       }
 
       // Using node-fetch explicitly, otherwise `fetch` has shadowing issues
