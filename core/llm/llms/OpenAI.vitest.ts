@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { ILLM } from "../../index.js";
+import { ChatMessage, ILLM } from "../../index.js";
 import OpenAI from "./OpenAI.js";
 
 interface LlmTestCase {
@@ -167,6 +167,56 @@ describe("OpenAI", () => {
         { choices: [{ delta: { content: "Hello" } }] },
         { choices: [{ delta: { content: " world" } }] },
       ],
+    });
+  });
+
+  test("streamChat should parse custom reasoning fields when stream is false", async () => {
+    const openai = new OpenAI({
+      apiKey: "test-api-key",
+      model: "gpt-4",
+      apiBase: "https://api.openai.com/v1/",
+      customReasoningFields: ["my_custom_thinking_key"],
+    });
+    const mockFetch = setupMockFetch({
+      choices: [
+        {
+          message: {
+            role: "assistant",
+            my_custom_thinking_key: "checking constraints",
+            content: "final answer",
+          },
+        },
+      ],
+    });
+    (openai as any).fetch = mockFetch;
+    (openai as any).useOpenAIAdapterFor = [];
+
+    const messages: ChatMessage[] = [];
+    for await (const message of openai.streamChat(
+      [{ role: "user", content: "hello" }],
+      new AbortController().signal,
+      { stream: false },
+    )) {
+      messages.push(message);
+    }
+
+    expect(messages).toEqual([
+      {
+        role: "thinking",
+        content: "checking constraints",
+      },
+      {
+        role: "assistant",
+        content: "final answer",
+      },
+    ]);
+
+    const [, options] = mockFetch.mock.calls[0];
+    expect(JSON.parse(options.body as string)).toEqual({
+      model: "gpt-4",
+      messages: [{ role: "user", content: "hello" }],
+      stream: false,
+      max_tokens: 2048,
     });
   });
 

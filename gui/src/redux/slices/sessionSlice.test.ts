@@ -133,6 +133,36 @@ describe("sessionSlice streamUpdate", () => {
       );
       expect(newState.history[1].message.id).toBe("mock-uuid-1");
     });
+
+    it("should keep explicit thinking stream chunks separate from assistant text", () => {
+      const initialState = createInitialState();
+      const action = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "thinking" as const,
+            content: "checking custom reasoning field",
+          },
+          {
+            role: "assistant" as const,
+            content: "Final answer.",
+          },
+        ],
+      };
+
+      const newState = sessionSlice.reducer(initialState, action);
+
+      expect(newState.history).toHaveLength(3);
+      expect(newState.history[1].message.role).toBe("thinking");
+      expect(newState.history[1].message.content).toBe(
+        "checking custom reasoning field",
+      );
+      expect(newState.history[2].message.role).toBe("assistant");
+      expect(newState.history[2].message.content).toBe("Final answer.");
+      expect(newState.history[2].message.content).not.toContain(
+        "checking custom reasoning field",
+      );
+    });
   });
 
   describe("Tool Call With Response", () => {
