@@ -3014,6 +3014,47 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "cometapi.png",
     isOpenSource: false,
   },
+
+  // AGIone models
+  agioneGpt55: {
+    title: "GPT-5.5",
+    description: "GPT-5.5 via AGIone's OpenAI-compatible API.",
+    params: {
+      model: "openai/GPT-5.5/c6fbe",
+      contextLength: 128_000,
+      title: "GPT-5.5",
+      apiKey: "",
+    },
+    providerOptions: ["agione"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  agioneClaudeOpus47: {
+    title: "Claude Opus 4.7",
+    description: "Claude Opus 4.7 via AGIone's OpenAI-compatible API.",
+    params: {
+      model: "anthropic/Claude-opus-4.7/a4d5d",
+      contextLength: 200_000,
+      title: "Claude Opus 4.7",
+      apiKey: "",
+    },
+    providerOptions: ["agione"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  agioneDeepseekV32: {
+    title: "DeepSeek V3.2",
+    description: "DeepSeek V3.2 via AGIone's OpenAI-compatible API.",
+    params: {
+      model: "deepseek/deepseek-v3.2/0000n",
+      contextLength: 128_000,
+      title: "DeepSeek V3.2",
+      apiKey: "",
+    },
+    providerOptions: ["agione"],
+    icon: "deepseek.png",
+    isOpenSource: false,
+  },
   asksageclaude35Sonnet: {
     title: "Claude 3.5 Sonnet",
     description:
