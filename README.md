@@ -58,14 +58,6 @@ We hope this codebase continues to serve as a foundation for others.
   <img src="https://contrib.rocks/image?repo=continuedev/continue&max=500" />
 </a>
 
-## Checks
-
-In late 2025, we scaled up our internal software factory and ran into quality control problems. As our team leaned harder into coding agents, we stopped worrying about writing code and started worrying about trusting it. PRs got bigger and faster than our review bandwidth. We kept re-checking the same things: security basics, docs staying in sync, metrics not silently breaking. AI slop sneaking through. The anxiety wasn't "can I read every line" but "did I miss the one thing that matters."
-
-So we invented Checks: small, single-purpose agents, each one just a markdown file that defines a code quality standard, which run locally before `git push` and on every PR as a GitHub status check. Green if the code looks good, red with a suggested diff if not. No unsolicited opinions. Just, does this PR violate something you've already decided matters?
-
-You can learn more about Checks in the [continuedev/checks](https://github.com/continuedev/checks) repository.
-
 ## License
 
 Apache 2.0 © 2023-2026 Continue Dev, Inc.
