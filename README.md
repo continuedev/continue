@@ -52,11 +52,9 @@ What we built together pushed the boundaries of what AI developer tooling could 
 
 We hope this codebase continues to serve as a foundation for others.
 
-<p align="center">
-  <a href="https://github.com/continuedev/continue/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=continuedev/continue&max=500" />
-  </a>
-</p>
+<a href="https://github.com/continuedev/continue/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=continuedev/continue&max=500" />
+</a>
 
 ## Checks
 
