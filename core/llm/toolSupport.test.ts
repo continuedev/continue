@@ -43,6 +43,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     it("should return true for Gemma models", () => {
       expect(supportsFn("gemma")).toBe(true);
       expect(supportsFn("gemma3")).toBe(true);
+      expect(supportsFn("gemma4")).toBe(true);
     });
 
     it("should return undefined for unsupported models", () => {
@@ -54,6 +55,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("GPT-4-turbo")).toBe(true);
       expect(supportsFn("O3-preview")).toBe(true);
       expect(supportsFn("Gemma3")).toBe(true);
+      expect(supportsFn("Gemma4")).toBe(true);
     });
   });
 

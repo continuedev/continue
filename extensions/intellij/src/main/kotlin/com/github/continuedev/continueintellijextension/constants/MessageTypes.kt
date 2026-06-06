@@ -153,7 +153,8 @@ class MessageTypes {
             "isItemTooBig",
             "process/markAsBackgrounded",
             "process/isBackgrounded",
-            "process/killTerminalProcess"
+            "process/killTerminalProcess",
+            "models/fetch"
         )
     }
 }

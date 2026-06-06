@@ -70,14 +70,20 @@ export function addModel(
         config.models = [];
       }
 
+      const capabilities: string[] = [];
+      if (model.capabilities?.tools) capabilities.push("tool_use");
+      if (model.capabilities?.uploadImage) capabilities.push("image_input");
+
       const desc: ModelConfig = {
         name: model.title,
         provider: model.provider,
         model: model.model,
         apiKey: model.apiKey,
         apiBase: model.apiBase,
+        contextLength: model.contextLength,
         maxStopWords: model.maxStopWords,
         defaultCompletionOptions: model.completionOptions,
+        ...(capabilities.length > 0 ? { capabilities } : {}),
       };
       config.models.push(desc);
       return config;

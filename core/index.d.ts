@@ -1717,6 +1717,7 @@ export interface JSONModelDescription {
   maxStopWords?: number;
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
+  capabilities?: ModelCapability;
   systemMessage?: string;
   requestOptions?: RequestOptions;
   cacheBehavior?: CacheBehavior;

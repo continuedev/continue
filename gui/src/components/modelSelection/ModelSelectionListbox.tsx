@@ -20,6 +20,7 @@ interface ModelSelectionListboxProps {
   setSelectedProvider: (val: DisplayInfo) => void;
   topOptions?: DisplayInfo[];
   otherOptions?: DisplayInfo[];
+  otherOptionsLabel?: string;
   searchPlaceholder?: string;
 }
 
@@ -55,6 +56,7 @@ function ModelSelectionListbox({
   setSelectedProvider,
   topOptions = [],
   otherOptions = [],
+  otherOptionsLabel = "Additional providers",
   searchPlaceholder = "Search models...",
 }: ModelSelectionListboxProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -197,7 +199,7 @@ function ModelSelectionListbox({
                   {filteredOtherOptions.length > 0 && (
                     <div className="py-1">
                       <div className="text-description-muted px-3 py-1 text-xs font-medium uppercase tracking-wider">
-                        Additional providers
+                        {otherOptionsLabel}
                       </div>
                       {filteredOtherOptions.map((option, index) => (
                         <ListboxOption
