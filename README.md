@@ -22,7 +22,7 @@ Continue is a coding agent available as a [CLI](#cli), [VS Code extension](#vs-c
 
 ## Documentation
 
-To learn how to configure Continue, how it works, and how you can customize it further, check out the [Continue Docs](https://docs.continue.dev).
+To learn how to configure Continue, how it works, and how to customize it, check out the [Continue Docs](https://docs.continue.dev).
 
 ## Final 2.0.0 Release
 
