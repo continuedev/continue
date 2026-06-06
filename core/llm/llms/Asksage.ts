@@ -60,7 +60,7 @@ class Asksage extends BaseLLM {
   static providerName = "askSage";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: DEFAULT_API_URL,
-    model: "gpt-4o",
+    model: "gpt-4.1",
   };
 
   private sessionTokenPromise: Promise<string> | null = null;
