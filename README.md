@@ -16,13 +16,13 @@
 
 <p></p>
 
-**Source-controlled AI checks, enforceable in CI**
+**🤖 Source-controlled AI checks, enforceable in CI**
 
 </div>
 
 ![Banner](media/github-readme.png)
 
-## Getting started
+## 🚀 Getting started
 
 Paste this into your coding agent of choice:
 
@@ -30,7 +30,7 @@ Paste this into your coding agent of choice:
 Help me write checks for this codebase: https://continue.dev/walkthrough
 ```
 
-## How it works
+## ⚙️ How it works
 
 Continue runs agents on every pull request as GitHub status checks. Each agent is a markdown file in your repo at `.continue/checks/`. Green if the code looks good, red with a suggested diff if not. Here is an example that performs a security review:
 
@@ -45,17 +45,17 @@ Review this PR and check that:
   - Error responses use the standard error format
 ```
 
-## Install CLI
+## 📦 Install CLI
 
 AI checks are powered by the open-source Continue CLI (`cn`).
 
-**macOS / Linux:**
+**🍎 macOS / 🐧 Linux:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/continuedev/continue/main/extensions/cli/scripts/install.sh | bash
 ```
 
-**Windows (PowerShell):**
+**🪟 Windows (PowerShell):**
 
 ```powershell
 irm https://raw.githubusercontent.com/continuedev/continue/main/extensions/cli/scripts/install.ps1 | iex
@@ -73,13 +73,13 @@ Then run:
 cn
 ```
 
-Looking for the VS Code extension? [See here](extensions/vscode/README.md).
+💡 Looking for the VS Code extension? [See here](extensions/vscode/README.md).
 
-## Contributing
+## 🤝 Contributing
 
 Read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md), and
 join the [GitHub Discussions](https://github.com/continuedev/continue/discussions).
 
-## License
+## 📄 License
 
 [Apache 2.0 © 2023-2024 Continue Dev, Inc.](./LICENSE)
