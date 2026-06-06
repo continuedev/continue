@@ -46,11 +46,17 @@ This included removing anonymous telemetry, pulling out authentication, squashin
 
 ## Contributors
 
-Thank you to the entire Continue community for helping us create a pioneering coding agent. What we built together pushed the boundaries of what AI developer tooling could be. We hope this codebase continues to serve as a foundation for others.
+Thank you to the entire Continue community for helping us create a pioneering coding agent. 
 
-<a href="https://github.com/continuedev/continue/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=continuedev/continue&max=500" />
-</a>
+What we built together pushed the boundaries of what AI developer tooling could be. 
+
+We hope this codebase continues to serve as a foundation for others.
+
+<p align="center">
+  <a href="https://github.com/continuedev/continue/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=continuedev/continue&max=500" />
+  </a>
+</p>
 
 ## Checks
 
