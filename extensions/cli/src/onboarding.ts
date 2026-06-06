@@ -56,7 +56,12 @@ export async function runOnboardingFlow(
     return false;
   }
 
-  // Step 2: Check for CONTINUE_USE_BEDROCK environment variable first (before test env check)
+  // Step 2: Existing local config means the user is already configured
+  if (fs.existsSync(CONFIG_PATH)) {
+    return false;
+  }
+
+  // Step 3: Check for CONTINUE_USE_BEDROCK environment variable first (before test env check)
   if (process.env.CONTINUE_USE_BEDROCK === "1") {
     console.log(
       chalk.blue("✓ Using AWS Bedrock (CONTINUE_USE_BEDROCK detected)"),
@@ -64,7 +69,7 @@ export async function runOnboardingFlow(
     return true;
   }
 
-  // Step 3: Check if we're in a test/CI environment - if so, skip interactive prompts
+  // Step 4: Check if we're in a test/CI environment - if so, skip interactive prompts
   const isTestEnv =
     process.env.NODE_ENV === "test" ||
     process.env.CI === "true" ||
@@ -85,7 +90,7 @@ export async function runOnboardingFlow(
     return false;
   }
 
-  // Step 4: Present user with two options
+  // Step 5: Present user with two options
   console.log(chalk.yellow("How do you want to get started?"));
   console.log(chalk.white("1. ⏩ Log in with Continue"));
   console.log(chalk.white("2. 🔑 Enter your Anthropic API key"));
@@ -156,6 +161,12 @@ export async function initializeWithOnboarding(
         `Failed to load config from "${configPath}": ${errorMessage}`,
       );
     }
+
+    if (firstTime && configPath) {
+      await markOnboardingComplete();
+    }
+
+    return;
   }
 
   if (!firstTime) return;
