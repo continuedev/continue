@@ -14,6 +14,7 @@ import {
   showSuggestion as showSuggestionInEditor,
 } from "../suggestions";
 
+import { collectGitDiffsWithCli, splitGitDiff } from "./gitDiffFallback";
 import { getUniqueId, openEditorAndRevealRange } from "./vscode";
 
 import type { Range, Thread } from "core";
@@ -604,37 +605,37 @@ export class VsCodeIdeUtils {
     return repo?.state?.HEAD?.name || "NONE";
   }
 
-  private splitDiff(diffString: string): string[] {
-    const fileDiffHeaderRegex = /(?=diff --git a\/.* b\/.*)/;
-
-    const diffs = diffString.split(fileDiffHeaderRegex);
-
-    if (diffs[0].trim() === "") {
-      diffs.shift();
-    }
-
-    return diffs;
-  }
-
   async getDiff(includeUnstaged: boolean): Promise<string[]> {
-    const diffs: string[] = [];
-
+    const apiDiffs: string[] = [];
     const repos = this._getRepositories();
 
     try {
       if (repos) {
         for (const repo of repos) {
-          const staged = await repo.diff(true);
-
-          diffs.push(staged);
+          apiDiffs.push(await repo.diff(true));
           if (includeUnstaged) {
-            const unstaged = await repo.diff(false);
-            diffs.push(unstaged);
+            apiDiffs.push(await repo.diff(false));
           }
         }
       }
 
-      return diffs.flatMap((diff) => this.splitDiff(diff));
+      const parsedApiDiffs = apiDiffs.flatMap((diff) => splitGitDiff(diff));
+      if (parsedApiDiffs.length > 0) {
+        return parsedApiDiffs;
+      }
+
+      const candidateDirs = Array.from(
+        new Set([
+          ...(repos?.map((repo) => repo.rootUri.fsPath) ?? []),
+          ...this.getWorkspaceDirectories().map((dir) => dir.fsPath),
+        ]),
+      );
+
+      return await collectGitDiffsWithCli(
+        candidateDirs,
+        includeUnstaged,
+        asyncExec,
+      );
     } catch (e) {
       console.error(e);
       return [];
