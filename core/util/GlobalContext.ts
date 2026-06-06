@@ -1,6 +1,10 @@
 import fs from "node:fs";
 
-import { ModelRole } from "@continuedev/config-yaml";
+import {
+  AssistantUnrolled,
+  ConfigResult,
+  ModelRole,
+} from "@continuedev/config-yaml";
 import {
   OAuthClientInformationFull,
   OAuthTokens,
@@ -19,6 +23,22 @@ export type GlobalContextModelSelections = Partial<
   Record<ModelRole, string | null>
 >;
 
+export type CachedHubAssistant = {
+  configResult: ConfigResult<AssistantUnrolled>;
+  ownerSlug: string;
+  packageSlug: string;
+  iconUrl: string;
+  rawYaml: string;
+};
+
+export type CachedHubOrganization = {
+  id: string;
+  iconUrl: string;
+  name: string;
+  slug: string | undefined;
+  profiles: CachedHubAssistant[];
+};
+
 export type GlobalContextType = {
   indexingPaused: boolean;
   lastSelectedProfileForWorkspace: {
@@ -27,6 +47,7 @@ export type GlobalContextType = {
   lastSelectedOrgIdForWorkspace: {
     [workspaceIdentifier: string]: string | null;
   };
+  cachedHubOrganizations: CachedHubOrganization[];
   selectedModelsByProfileId: {
     [profileId: string]: GlobalContextModelSelections;
   };
