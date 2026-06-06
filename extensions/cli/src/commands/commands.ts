@@ -82,6 +82,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
+    name: "guide",
+    description: "Turn a rough idea into a structured build plan",
+    category: "system",
+  },
+  {
     name: "compact",
     description: "Summarize chat history into a compact form",
     category: "system",

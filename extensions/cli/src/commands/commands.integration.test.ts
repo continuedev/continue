@@ -28,6 +28,7 @@ describe("Slash Commands Integration", () => {
       expect(commandNames).toContain("login");
       expect(commandNames).toContain("logout");
       expect(commandNames).toContain("whoami");
+      expect(commandNames).toContain("guide");
 
       expect(commandNames).toContain("model");
       expect(commandNames).toContain("config");
@@ -50,6 +51,7 @@ describe("Slash Commands Integration", () => {
           "login",
           "logout",
           "whoami",
+          "guide",
           "model",
           "config",
         ].includes(cmd.name),

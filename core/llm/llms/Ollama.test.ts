@@ -127,6 +127,63 @@ describe("Ollama", () => {
     });
   });
 
+  describe("_streamChat tool support gating", () => {
+    let ollama: Ollama;
+
+    beforeEach(() => {
+      ollama = createOllama();
+      (ollama as any).modelInfoPromise = Promise.resolve();
+      (ollama as any).getEndpoint = jest.fn((path: string) => path);
+      (ollama as any)._getModel = jest.fn(() => "test-model");
+    });
+
+    it("does not attach tools when the template does not advertise support", async () => {
+      (ollama as any).templateSupportsTools = false;
+      (ollama.fetch as jest.Mock).mockResolvedValue({
+        status: 200,
+        json: async () => ({
+          message: { role: "assistant", content: "done" },
+          done: true,
+          done_reason: "stop",
+          total_duration: 0,
+          load_duration: 0,
+          prompt_eval_count: 0,
+          prompt_eval_duration: 0,
+          eval_count: 0,
+          eval_duration: 0,
+          context: [],
+        }),
+      });
+
+      const generator = (ollama as any)._streamChat(
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+        {
+          stream: false,
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "get_weather",
+                description: "Get weather",
+                parameters: { type: "object", properties: {} },
+              },
+            },
+          ],
+        },
+      );
+
+      const messages = [];
+      for await (const message of generator) {
+        messages.push(message);
+      }
+
+      expect(messages).toHaveLength(1);
+      const request = (ollama.fetch as jest.Mock).mock.calls[0][1];
+      expect(JSON.parse(request.body)).not.toHaveProperty("tools");
+    });
+  });
+
   describe("_reorderMessagesForToolCompat", () => {
     let ollama: Ollama;
 

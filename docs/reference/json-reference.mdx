@@ -399,6 +399,25 @@ config.json
 }
 ```
 
+### `/guide`
+
+The guide slash command helps a user turn a rough idea into a more actionable build plan. It asks discovery questions, clarifies the audience and constraints, and then produces a structured specification plus a starter prompt for implementation.
+
+config.json
+
+```json
+{
+  "slashCommands": [
+    {
+      "name": "guide",
+      "description": "Turn a rough idea into a structured build plan"
+    }
+  ]
+}
+```
+
+Example: `/guide build a portfolio site for junior developers`
+
 Example:
 
 config.json
@@ -480,7 +499,6 @@ Several experimental config parameters are available, as described below:
 - `defaultContext`: Defines the default context for the LLM. Uses the same format as `contextProviders` but includes an additional `query` property to specify custom query parameters.=
 
 - `modelRoles`:
-
   - `inlineEdit`: Model title for inline edits.
   - `applyCodeBlock`: Model title for applying code blocks.
   - `repoMapFileSelection`: Model title for repo map selections.
@@ -521,18 +539,15 @@ Some deprecated `config.json` settings are no longer stored in config and have b
 - `disableSessionTitles`/`ui.getChatTitles`: This value will be migrated to the safest merged value (`true` if either are `true`). `getChatTitles` takes precedence if set to false
 
 - `tabAutocompleteOptions`
-
   - `useCache`: This value will override during migration.
   - `disableInFiles`: This value will be migrated to the safest merged value (arrays of file matches merged/deduplicated)
   - `multilineCompletions`: This value will override during migration.
 
 - `experimental`
-
   - `useChromiumForDocsCrawling`: This value will override during migration.
   - `readResponseTTS`: This value will override during migration.
 
 - `ui` - all will override during migration
-
   - `codeBlockToolbarPosition`
   - `fontSize`
   - `codeWrap`

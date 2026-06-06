@@ -136,6 +136,20 @@ describe("slashCommands", () => {
       expect(result?.exit).toBeUndefined();
     });
 
+    it("should handle /guide command", async () => {
+      const result = await handleSlashCommands(
+        "/guide Build a portfolio site for junior developers",
+        mockAssistant,
+      );
+
+      expect(result).toBeDefined();
+      expect(result?.newInput).toContain("Continue Guide Mode");
+      expect(result?.newInput).toContain(
+        "Build a portfolio site for junior developers",
+      );
+      expect(result?.output).toBeUndefined();
+    });
+
     it("should handle /info command when not authenticated", async () => {
       const { isAuthenticated } = await import("./auth/workos.js");
       const { services } = await import("./services/index.js");
