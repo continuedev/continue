@@ -40,6 +40,7 @@ import { isOllamaInstalled } from "../util/ollamaHelper.js";
 import { TokensBatchingService } from "../util/TokensBatchingService.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 
+import { applyToolOverrides } from "../tools/applyToolOverrides.js";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -67,7 +68,6 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
-import { applyToolOverrides } from "../tools/applyToolOverrides.js";
 
 export class LLMError extends Error {
   constructor(
@@ -209,6 +209,10 @@ export abstract class BaseLLM implements ILLM {
   private _llmOptions: LLMOptions;
 
   protected openaiAdapter?: BaseLlmApi;
+
+  public get options(): LLMOptions {
+    return this._llmOptions;
+  }
 
   constructor(_options: LLMOptions) {
     this._llmOptions = _options;
@@ -643,7 +647,13 @@ export abstract class BaseLLM implements ILLM {
           if (!this.lastRequestId && typeof (chunk as any).id === "string") {
             this.lastRequestId = (chunk as any).id;
           }
-          const result = fromChatCompletionChunk(chunk);
+          const result = fromChatCompletionChunk(
+            chunk,
+            this.options?.customReasoningFields,
+          );
+          if (result && result.role === "thinking") {
+            continue;
+          }
           if (result) {
             const content = renderChatMessage(result);
             const formattedContent = this._formatChatMessage(result);
@@ -1065,7 +1075,10 @@ export abstract class BaseLLM implements ILLM {
       if (!this.lastRequestId && typeof (chunk as any).id === "string") {
         this.lastRequestId = (chunk as any).id;
       }
-      const chatChunk = fromChatCompletionChunk(chunk as any);
+      const chatChunk = fromChatCompletionChunk(
+        chunk as any,
+        this.options?.customReasoningFields,
+      );
       if (chatChunk) {
         yield chatChunk;
       }
@@ -1084,7 +1097,10 @@ export abstract class BaseLLM implements ILLM {
       signal,
     );
     this.lastRequestId = response.id ?? this.lastRequestId;
-    const messages = fromChatResponse(response as any);
+    const messages = fromChatResponse(
+      response as any,
+      this.options?.customReasoningFields,
+    );
     for (const msg of messages) {
       yield msg;
     }

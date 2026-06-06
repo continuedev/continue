@@ -714,6 +714,9 @@ export interface LLMOptions {
 
   /** Tool overrides for this model */
   toolOverrides?: ToolOverride[];
+
+  /** Custom fields to check for reasoning/thinking content in streaming chunks */
+  customReasoningFields?: string[];
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -1259,6 +1262,9 @@ export interface ModelDescription {
 
   /** Tool overrides for this model */
   toolOverrides?: ToolOverride[];
+
+  /** Custom fields to check for reasoning/thinking content in streaming chunks */
+  customReasoningFields?: string[];
 }
 
 export interface JSONEmbedOptions {
@@ -1742,6 +1748,8 @@ export interface JSONModelDescription {
   useResponsesApi?: boolean;
   deploymentId?: string;
   isFromAutoDetect?: boolean;
+  /** Custom fields to check for reasoning/thinking content in streaming chunks */
+  customReasoningFields?: string[];
 }
 
 // config.json

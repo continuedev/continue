@@ -313,7 +313,10 @@ class WatsonX extends BaseLLM {
     let accumulatedArgs = "";
 
     for await (const value of streamSse(response)) {
-      const message = fromChatCompletionChunk(value);
+      const message = fromChatCompletionChunk(
+        value,
+        this.options?.customReasoningFields,
+      );
       if (!!message) {
         if (
           (message as AssistantChatMessage)?.toolCalls &&

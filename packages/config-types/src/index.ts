@@ -88,6 +88,7 @@ export const modelDescriptionSchema = z.object({
     ])
     .optional(),
   completionOptions: completionOptionsSchema.optional(),
+  customReasoningFields: z.array(z.string()).optional(),
   systemMessage: z.string().optional(),
   requestOptions: z
     .object({

@@ -5,6 +5,8 @@ import { ModelRole } from "./schemas/models.js";
 type ModelYaml = NonNullable<ConfigYaml["models"]>[number];
 type ContextYaml = NonNullable<ConfigYaml["context"]>[number];
 type PromptYaml = NonNullable<ConfigYaml["prompts"]>[number];
+type ModelJson = ConfigJson["models"][number];
+type ContextProviderJson = NonNullable<ConfigJson["contextProviders"]>[number];
 
 function convertModel(
   m: ConfigJson["models"][number],
@@ -19,6 +21,7 @@ function convertModel(
     roles,
     requestOptions: m.requestOptions,
     defaultCompletionOptions: m.completionOptions,
+    customReasoningFields: m.customReasoningFields,
   };
 }
 
@@ -95,7 +98,7 @@ function withFromContextProvider(
 
 function convertContext(configJson: ConfigJson): ContextYaml[] {
   const context: ContextYaml[] =
-    configJson.contextProviders?.map((ctx) => {
+    configJson.contextProviders?.map((ctx: ContextProviderJson) => {
       // ctx providers that weren't given official blocks
       if (
         ["web", "debugger", "issue", "database", "google", "http"].includes(
@@ -151,14 +154,20 @@ function convertDoc(
 
 export function convertJsonToYamlConfig(configJson: ConfigJson): ConfigYaml {
   // models
-  const models = configJson.models.map((m) => convertModel(m, ["chat"]));
-  const autocompleteModels = Array.isArray(configJson.tabAutocompleteModel)
+  const models = configJson.models.map((m: ModelJson) =>
+    convertModel(m, ["chat"]),
+  );
+  const autocompleteModels: ModelJson[] = Array.isArray(
+    configJson.tabAutocompleteModel,
+  )
     ? configJson.tabAutocompleteModel
     : configJson.tabAutocompleteModel
       ? [configJson.tabAutocompleteModel]
       : [];
   models.push(
-    ...autocompleteModels.map((m) => convertModel(m, ["autocomplete"])),
+    ...autocompleteModels.map((m: ModelJson) =>
+      convertModel(m, ["autocomplete"]),
+    ),
   );
 
   if (configJson.embeddingsProvider) {

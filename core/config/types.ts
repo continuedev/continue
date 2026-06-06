@@ -572,6 +572,9 @@ declare global {
   
     // IBM watsonx Options
     deploymentId?: string;
+
+    /** Custom fields to check for reasoning/thinking content in streaming chunks */
+    customReasoningFields?: string[];
   }
   
   type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -960,6 +963,8 @@ declare global {
     promptTemplates?: { [key: string]: string };
     capabilities?: ModelCapability;
     cacheBehavior?: CacheBehavior;
+    /** Custom fields to check for reasoning/thinking content in streaming chunks */
+    customReasoningFields?: string[];
   }
   
   export interface JSONEmbedOptions {
