@@ -6,13 +6,58 @@ Continue runs AI checks on every pull request. Each check is a markdown file in 
 
 <video autoPlay muted loop playsInline className="rounded-xl" src="https://continue.dev/videos/demo.mp4" />
 
-## Quickstart
+## Start Here
 
-1. Go to [continue.dev/check](https://continue.dev/check) to run checks on a pull request.
+New to Continue? Follow these three steps to get up and running.
 
-## How it works
+<Steps>
+  <Step title="Install Continue">
+    Install the Continue extension for [VS Code](/ide-extensions/install) or [JetBrains](/ide-extensions/install).
+  </Step>
+  <Step title="Write your first check">
+    Create a `.md` file in `.continue/checks/` to define what to check. See [Write Your First Check](/checks/quickstart) for a step-by-step guide.
+  </Step>
+  <Step title="Run checks on a PR">
+    Open a pull request to see your checks run automatically. Continue reports each check as a GitHub status — green for pass, red for fail with a suggested fix.
+  </Step>
+</Steps>
 
-You define checks as markdown files in `.continue/checks/`. Each file has a name, a description, and a prompt that tells the AI what to look for.
+## How It Works
+
+<Info>
+**Think of checks as automated code reviewers.** Just like a human reviewer might flag missing tests or security issues, a check does this automatically on every PR.
+</Info>
+
+A check has three parts:
+
+| Part | What it is | Example |
+|------|-----------|---------|
+| **Frontmatter** | Metadata (`name` + `description`) | `name: Security Review` |
+| **Prompt** | Instructions for the AI | "Flag hardcoded secrets..." |
+| **Pass/Fail logic** | When to fail, what to suggest | Fail if API key found |
+
+**The flow:**
+
+```
+Pull Request Opened
+       │
+       ▼
+  Continue reads
+  your .checks/ files
+       │
+       ▼
+  AI reviews the diff
+  against each check
+       │
+       ├── PASS → Green ✅ on GitHub
+       │
+       └── FAIL → Red ❌ on GitHub
+                  + Suggested fix
+```
+
+<Steps>
+  <Step title="Define your check">
+    Create a markdown file in `.continue/checks/` with a name, description, and prompt.
 
 ```markdown .continue/checks/security-review.md
 ---
@@ -31,5 +76,61 @@ Flag as failing if any of these are true:
 
 If none of these issues are found, pass the check.
 ```
+  </Step>
+  <Step title="See the result">
+    When a PR is opened, Continue runs each check and reports the result on GitHub.
 
-When a PR is opened, Continue runs each check against the diff and reports the result as a GitHub status check. If a check fails, it suggests a fix you can accept or reject directly from GitHub.
+    **Pass example:**
+    ```
+    ✅ Security Review — No issues found
+    ```
+
+    **Fail example:**
+    ```
+    ❌ Security Review — Issues found
+    Fix: Remove hardcoded API key on line 23 of src/auth.js
+    [Accept fix] [View details]
+    ```
+  </Step>
+  <Step title="Accept or reject the fix">
+    If a check fails, you can accept the AI-suggested fix directly from GitHub, or dismiss it. Continue learns from your feedback.
+  </Step>
+</Steps>
+
+## Key Concepts
+
+<CardGroup cols={2}>
+  <Card title="Checks are markdown files" icon="file-text">
+    Each check lives in `.continue/checks/` as a `.md` file with frontmatter and a prompt. No extra config needed.
+  </Card>
+  <Card title="Checks run on every PR" icon="github">
+    Once connected to your repo, Continue runs checks automatically on every pull request via GitHub Actions.
+  </Card>
+  <Card title="Pass or fail with fixes" icon="check-circle">
+    Checks either pass (✅) or fail (❌) with an AI-generated fix you can accept right from GitHub.
+  </Card>
+  <Card title="Write checks with AI" icon="sparkles">
+    Use the [`writing-checks` skill](/checks/generating-checks) to have an AI agent generate checks tailored to your codebase.
+  </Card>
+</CardGroup>
+
+## Common Questions
+
+<AccordionGroup>
+  <Accordion title="How do checks run?">
+    Checks run in CI via a GitHub Action that installs the `continue/check` CLI, reads your `.continue/checks/` files, and reports results as GitHub status checks.
+  </Accordion>
+  <Accordion title="What happens when a check fails?">
+    The PR shows a red ❌ status on GitHub. Continue posts a comment with the failing check's name and an AI-generated fix suggestion. You can accept the fix directly or request changes.
+  </Accordion>
+  <Accordion title="Is my code/data private?">
+    By default, code is sent to the AI model you configure. You can self-host models or use providers that don't store data. See [Running Continue Without Internet](/guides/running-continue-without-internet) for offline setups.
+  </Accordion>
+  <Accordion title="What models does Continue use?">
+    Continue works with any model that supports function calling. By default it uses Anthropic's Claude, but you can configure any provider (OpenAI, Ollama, Azure, etc.). See [Model Providers](/customize/model-providers/overview).
+  </Accordion>
+</AccordionGroup>
+
+<Card title="Need help?" icon="life-buoy" href="/faqs">
+  Check the [FAQ page](/faqs) for troubleshooting guides and common questions.
+</Card>

@@ -2,21 +2,34 @@
 title: "Write Your First Check"
 ---
 
-## Generating checks (recommended)
+## Before You Begin
 
-Paste this into Claude Code or any coding agent:
+A check file has two parts:
 
+| Part | What it is |
+|------|-----------|
+| **Frontmatter** | YAML between `---` delimiters — `name` and `description` (required) |
+| **Body** | A prompt that tells the AI what to look for |
+
+Checks live in `.continue/checks/` as `.md` files.
+
+---
+
+## Generate Checks with AI (Recommended)
+
+The easiest way to write checks is to have an AI agent do it for you. Install the [`writing-checks` skill](https://github.com/continuedev/skills?tab=readme-ov-file#writing-checks):
+
+```bash
+npx skills add continuedev/skills --skill writing-checks
 ```
-Help me write checks for this codebase: https://continue.dev/walkthrough
-```
 
-The walkthrough reads your codebase, helps you write your first checks, connects you to Continue, and gets them running on your next PR. It takes a few minutes.
+Then describe what you want to enforce and the agent writes the check file, tailored to your actual frameworks, file structure, and conventions.
 
-If you'd rather set things up manually, keep reading.
+---
 
-## Writing checks manually
+## Write a Check Manually
 
-A check file has two parts: **frontmatter** (YAML between `---` delimiters) with a required `name` and `description`, and a **body** prompt that tells the AI what to look for. Create a `.md` file in `.continue/checks/`:
+Create a `.md` file in `.continue/checks/`:
 
 ```markdown .continue/checks/security-review.md
 ---
@@ -38,11 +51,114 @@ If none of these issues are found, pass the check.
 
 Write concrete pass/fail criteria so the check produces consistent results. See the [reference](/checks/reference) for all available fields.
 
-## Next steps
+---
+
+## Example: Before and After
+
+### Before: No checks
+
+A PR with a hardcoded API key slips through undetected:
+
+```typescript src/auth.ts
+// PR adds this line:
+const API_KEY = "sk-live-abc123xyz";  // ❌ Exposed secret!
+```
+
+No automated review happens. The secret makes it to production.
+
+### After: Security check added
+
+You add a check to `.continue/checks/`:
+
+```markdown .continue/checks/security-review.md
+---
+name: Security Review
+description: Flag hardcoded secrets in source files
+---
+
+Review this pull request for hardcoded secrets.
+
+Flag as failing if you find:
+- API keys, tokens, or passwords in source code
+- Private keys or certificates
+- Database connection strings with credentials
+
+If no secrets are found, pass the check.
+```
+
+Now when the same PR is opened:
+
+| Check | Result |
+|-------|--------|
+| Security Review | ❌ FAIL |
+
+```
+Security Review — Hardcoded secret detected
+
+Found API key on line 12 of src/auth.ts:
+  const API_KEY = "sk-live-abc123xyz"
+
+Suggested fix:
+  const API_KEY = process.env.API_KEY;
+
+[Accept fix] [View details]
+```
+
+---
+
+### Another Example: Test Coverage
+
+### Before: No checks
+
+A PR adds a new function without tests. No one catches it during review.
+
+### After: Test coverage check added
+
+```markdown .continue/checks/test-coverage.md
+---
+name: Test Coverage
+description: Verify new code has corresponding tests
+---
+
+Review this pull request for missing tests.
+
+Flag as failing if:
+- New functions or methods added without corresponding test files
+- Test file exists but has no new test cases for the changed code
+
+Follow the project's existing test naming and structure conventions.
+
+If new code is adequately tested, pass the check.
+```
+
+Now a PR without tests is automatically flagged:
+
+| Check | Result |
+|-------|--------|
+| Test Coverage | ❌ FAIL |
+
+```
+Test Coverage — Missing tests
+
+PR adds src/payment.ts with 3 new functions, but no test file exists.
+Existing test pattern in this project: tests/payment.test.ts
+
+Suggested fix:
+  Create tests/payment.test.ts with test cases for:
+  - processPayment()
+  - refundPayment()
+  - getPaymentStatus()
+
+[Accept fix] [View details]
+```
+
+---
+
+## Next Steps
 
 <CardGroup cols={2}>
   <Card title="Run Locally" icon="terminal" href="/checks/running-locally">
-    Verify your checks before pushing with the `check` CLI.
+    Test your checks before pushing with the `check` CLI.
   </Card>
   <Card title="Run Checks in CI" icon="github" href="/checks/running-in-ci">
     Set up GitHub integration so checks run on every pull request.

@@ -281,6 +281,11 @@
     "global": {
       "anchors": [
         {
+          "anchor": "Start Here",
+          "href": "/",
+          "icon": "rocket"
+        },
+        {
           "anchor": "About Us",
           "href": "https://continue.dev/about-us",
           "icon": "book-open"
