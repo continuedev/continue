@@ -5,7 +5,7 @@ import OpenAI from "./OpenAI.js";
 class LMStudio extends OpenAI {
   static providerName = "lmstudio";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://localhost:1234/v1/",
+    apiBase: "http://127.0.0.1:1234/v1/",
   };
 }
 

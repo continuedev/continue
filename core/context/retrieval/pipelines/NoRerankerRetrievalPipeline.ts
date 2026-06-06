@@ -30,7 +30,7 @@ export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     let embeddingsChunks: Chunk[] = [];
     try {
-      embeddingsChunks = !!config.selectedModelByRole.embed
+      embeddingsChunks = config.selectedModelByRole.embed
         ? await this.retrieveEmbeddings(input, embeddingsNFinal)
         : [];
     } catch (error) {

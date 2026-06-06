@@ -9,6 +9,42 @@ import { IMessenger } from "../../../core/protocol/messenger";
 
 import { handleLLMError } from "./util/errorHandling";
 
+function getFriendlyErrorMessage(error: any): string {
+  let message = error?.message ?? "Unknown error";
+
+  if (error?.cause) {
+    if (error.cause.name === "ConnectTimeoutError") {
+      return `Connection timed out. If you expect it to take a long time to connect, you can increase the timeout in your config by setting "requestOptions": { "timeout": 10000 }. You can find the full config reference here: https://docs.continue.dev/reference/config`;
+    }
+
+    if (error.cause.code === "ECONNREFUSED") {
+      return `Connection was refused. This likely means that there is no server running at the specified URL. If you are running your own server you may need to set the "apiBase" parameter in config.json. For example, you can set up an OpenAI-compatible server like here: https://docs.continue.dev/reference/Model%20Providers/openai#openai-compatible-servers--apis`;
+    }
+
+    message = `The request failed with "${error.cause.name}": ${error.cause.message}. If you're having trouble setting up Continue, please see the troubleshooting guide for help.`;
+  }
+
+  if (message.includes("https://proxy-server")) {
+    const lines = message.split("\n").filter((line: string) => line !== "");
+    const proxyServerMessage = lines[1];
+
+    if (proxyServerMessage) {
+      try {
+        message = JSON.parse(proxyServerMessage).message;
+      } catch {
+        message = proxyServerMessage;
+      }
+    }
+
+    if (message.includes("exceeded")) {
+      message +=
+        " To keep using Continue, you can set up a local model or use your own API key.";
+    }
+  }
+
+  return message;
+}
+
 export class VsCodeWebviewProtocol
   implements IMessenger<FromWebviewProtocol, ToWebviewProtocol>
 {
@@ -89,42 +125,18 @@ export class VsCodeWebviewProtocol
           if (await handleLLMError(e)) {
             // Respond without an error, so the UI doesn't show the error component
             respond({ done: true, status: "error" });
+            return;
           }
-          let message = e.message;
-          respond({ done: true, error: message, status: "error" });
 
+          const message = getFriendlyErrorMessage(e);
           const stringified = JSON.stringify({ msg }, null, 2);
           console.error(
             `Error handling webview message: ${stringified}\n\n${e}`,
           );
 
-          if (
-            stringified.includes("llm/streamChat") ||
-            stringified.includes("chatDescriber/describe")
-          ) {
-            return;
-          }
-
-          if (e.cause) {
-            if (e.cause.name === "ConnectTimeoutError") {
-              message = `Connection timed out. If you expect it to take a long time to connect, you can increase the timeout in your config by setting "requestOptions": { "timeout": 10000 }. You can find the full config reference here: https://docs.continue.dev/reference/config`;
-            } else if (e.cause.code === "ECONNREFUSED") {
-              message = `Connection was refused. This likely means that there is no server running at the specified URL. If you are running your own server you may need to set the "apiBase" parameter in config.json. For example, you can set up an OpenAI-compatible server like here: https://docs.continue.dev/reference/Model%20Providers/openai#openai-compatible-servers--apis`;
-            } else {
-              message = `The request failed with "${e.cause.name}": ${e.cause.message}. If you're having trouble setting up Continue, please see the troubleshooting guide for help.`;
-            }
-          }
+          respond({ done: true, error: message, status: "error" });
 
           if (message.includes("https://proxy-server")) {
-            message = message.split("\n").filter((l: string) => l !== "")[1];
-            try {
-              message = JSON.parse(message).message;
-            } catch {}
-            if (message.includes("exceeded")) {
-              message +=
-                " To keep using Continue, you can set up a local model or use your own API key.";
-            }
-
             vscode.window
               .showInformationMessage(message, "Add API Key", "Use Local Model")
               .then((selection) => {

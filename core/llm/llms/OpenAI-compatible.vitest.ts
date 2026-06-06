@@ -308,7 +308,7 @@ createOpenAISubclassTests(Mimo, {
 
 createOpenAISubclassTests(LMStudio, {
   providerName: "lmstudio",
-  defaultApiBase: "http://localhost:1234/v1/",
+  defaultApiBase: "http://127.0.0.1:1234/v1/",
 });
 
 createOpenAISubclassTests(Cerebras, {
