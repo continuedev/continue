@@ -23,6 +23,7 @@ import Deepseek from "./Deepseek";
 import Docker from "./Docker";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
+import Forge from "./Forge";
 import FunctionNetwork from "./FunctionNetwork";
 import Gemini from "./Gemini";
 import Groq from "./Groq";
@@ -101,6 +102,7 @@ export const LLMClasses = [
   SageMaker,
   DeepInfra,
   Flowise,
+  Forge,
   Groq,
   Fireworks,
   NCompass,

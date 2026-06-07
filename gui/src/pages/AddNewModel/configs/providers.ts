@@ -1271,6 +1271,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  forge: {
+    title: "Forge",
+    provider: "forge",
+    description:
+      "Forge is an OpenAI-compatible embeddings API from Voxell, offering high-dimensional text embedding models.",
+    longDescription:
+      "Forge provides OpenAI-compatible text embeddings. To get started, create an account and get an API key at [voxell.ai](https://voxell.ai). Available models include `forge-turbo` (1024d), `forge-pro` (2560d), and `forge-ultra-4k` (4096d).",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Forge API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://voxell.ai",
+  },
   venice: {
     title: "Venice",
     provider: "venice",
