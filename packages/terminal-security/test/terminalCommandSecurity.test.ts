@@ -990,6 +990,14 @@ describe("evaluateTerminalCommandSecurity", () => {
       );
       expect(result).toBe("allowedWithPermission");
     });
+
+    it("should evaluate critical commands inside process substitution", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "diff <(sudo cat /etc/shadow) expected.txt",
+      );
+      expect(result).toBe("disabled");
+    });
   });
 
   describe("Path Traversal and Directory Navigation", () => {
