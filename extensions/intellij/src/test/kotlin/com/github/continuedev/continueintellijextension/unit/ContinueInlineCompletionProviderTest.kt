@@ -111,7 +111,7 @@ class ContinueInlineCompletionProviderTest : BasePlatformTestCase() {
         myFixture.project.replaceService(
             CompletionService::class.java,
             object : CompletionService {
-                override suspend fun getAutocomplete(uuid: String, url: String, line: Int, column: Int): String? =
+                override suspend fun getAutocomplete(uuid: String, url: String, line: Int, column: Int, fileContents: String?): String? =
                     variant
 
                 override fun acceptAutocomplete(uuid: String?) =

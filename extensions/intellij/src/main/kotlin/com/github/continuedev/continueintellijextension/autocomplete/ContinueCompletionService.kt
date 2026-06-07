@@ -13,8 +13,8 @@ import kotlin.time.Duration.Companion.milliseconds
 @Service(Service.Level.PROJECT)
 class ContinueCompletionService(private val project: Project) : CompletionService {
 
-    override suspend fun getAutocomplete(uuid: String, url: String, line: Int, column: Int): String? {
-        val requestInput = getCompletionInput(uuid, url, line, column)
+    override suspend fun getAutocomplete(uuid: String, url: String, line: Int, column: Int, fileContents: String?): String? {
+        val requestInput = getCompletionInput(uuid, url, line, column, fileContents)
         val modelTimeout = project.service<ProfileInfoService>().fetchModelTimeoutOrNull() ?: 1000.0
         return withTimeoutOrNull(modelTimeout.milliseconds * 3) {
             suspendCancellableCoroutine { continuation ->
@@ -38,13 +38,14 @@ class ContinueCompletionService(private val project: Project) : CompletionServic
         ) {}
     }
 
-    private fun getCompletionInput(uuid: String, filepath: String, line: Int, character: Int): Map<String, *> = mapOf(
+    private fun getCompletionInput(uuid: String, filepath: String, line: Int, character: Int, fileContents: String?): Map<String, *> = mapOf(
         "completionId" to uuid,
         "filepath" to filepath,
         "pos" to mapOf(
             "line" to line,
             "character" to character
         ),
+        "manuallyPassFileContents" to fileContents,
         "clipboardText" to "",
         "recentlyEditedRanges" to emptyList<Any>(),
         "recentlyVisitedRanges" to emptyList<Any>(),

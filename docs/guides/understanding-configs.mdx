@@ -101,6 +101,35 @@ The first time you use Continue, it generates a `config.yaml` with sensible defa
 
 For the complete configuration reference, see our [config.yaml documentation](/reference).
 
+### How to Use Multiple Local Config Profiles
+
+Beyond the single `config.yaml`, you can create multiple local profiles by placing YAML files in these directories:
+
+- `.continue/configs/` — general-purpose local profiles
+- `.continue/agents/` — agent-specific configurations
+- `.continue/assistants/` — assistant configurations (supported for backwards compatibility)
+
+These directories work at both the workspace level (inside your project folder) and the global level (`~/.continue/`). Continue automatically discovers, watches, and loads any YAML files placed there as selectable profiles in your IDE.
+
+**Example:** To create a workspace profile for a specific tech stack:
+
+```bash
+mkdir -p .continue/configs
+```
+
+```yaml title=".continue/configs/frontend.yaml"
+name: Frontend Profile
+version: 0.0.1
+models:
+  - name: Claude
+    provider: anthropic
+    model: claude-sonnet-4-5
+```
+
+The profile appears instantly in your config selector — no restart needed. Commit these files to version control to share profiles with your team.
+
+For more detail, see [How to Use Local Config Profiles](/customize/deep-dives/configuration#how-to-use-local-config-profiles).
+
 ## How to Make the Right Choice
 
 The decision between Hub and Local configs often comes down to your specific needs and constraints. Here's a framework to help you decide:

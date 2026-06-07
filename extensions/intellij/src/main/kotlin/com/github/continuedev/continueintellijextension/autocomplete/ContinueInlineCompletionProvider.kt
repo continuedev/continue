@@ -125,7 +125,8 @@ class ContinueInlineCompletionProvider : InlineCompletionProvider {
                 lastUuid!!,
                 editor.virtualFile.url,
                 editor.caretModel.primaryCaret.logicalPosition.line,
-                editor.caretModel.primaryCaret.logicalPosition.column
+                editor.caretModel.primaryCaret.logicalPosition.column,
+                editor.document.text
             )
             if (variant == null)
                 return InlineCompletionSuggestion.Empty
