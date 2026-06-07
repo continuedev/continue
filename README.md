@@ -16,7 +16,7 @@
 
 ## What is Continue?
 
-> *Note: The `continuedev/continue` repository is no longer actively maintained and is read-only for all users.*
+> _Note: The `continuedev/continue` repository is no longer actively maintained and is read-only for all users._
 
 Continue is a coding agent available as a [CLI](#cli), [VS Code extension](#vs-code), and [JetBrains plugin](#jetbrains).
 
@@ -40,15 +40,15 @@ This included removing anonymous telemetry, pulling out authentication, squashin
 
 ### JetBrains
 
-> *Note: We recommend using the Continue CLI instead of the JetBrains plugin.*
+> _Note: We recommend using the Continue CLI instead of the JetBrains plugin._
 
 [![GitHub Releases](https://img.shields.io/badge/GitHub_Releases-181717?logo=github&logoColor=white)](https://github.com/continuedev/continue/releases) [![View source](https://img.shields.io/badge/View_source-181717?logo=github&logoColor=white)](extensions/intellij)
 
 ## Contributors
 
-Thank you to the entire Continue community for helping us create a pioneering coding agent. 
+Thank you to the entire Continue community for helping us create a pioneering coding agent.
 
-What we built together pushed the boundaries of what AI developer tooling could be. 
+What we built together pushed the boundaries of what AI developer tooling could be.
 
 We hope this codebase continues to serve as a foundation for others.
 
