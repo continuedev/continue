@@ -45,13 +45,8 @@ export const useAutoScroll = (
 
     ref.current.addEventListener("scroll", handleScroll);
 
-    // Observe the container
+    // Observe the container — its scrollHeight changes whenever children grow
     resizeObserver.observe(ref.current);
-
-    // Observe all immediate children
-    Array.from(ref.current.children).forEach((child) => {
-      resizeObserver.observe(child);
-    });
 
     return () => {
       resizeObserver.disconnect();

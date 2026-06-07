@@ -1,5 +1,6 @@
 import { ChatBubbleOvalLeftIcon } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
+import { memo } from "react";
 import styled from "styled-components";
 import { lightGray, vscBackground } from "..";
 import { getFontSize } from "../../util";
@@ -34,7 +35,7 @@ interface TimelineItemProps {
   iconElement?: JSX.Element;
 }
 
-function TimelineItem(props: TimelineItemProps) {
+const TimelineItem = memo(function TimelineItem(props: TimelineItemProps) {
   return props.open ? (
     props.children
   ) : (
@@ -50,10 +51,9 @@ function TimelineItem(props: TimelineItemProps) {
       </CollapseButton>
       <span style={{ color: lightGray }}>
         {props.item.message.role} Message
-        {/* {props.step.error ? props.step.error.title : props.step.name} */}
       </span>
     </CollapsedDiv>
   );
-}
+});
 
 export default TimelineItem;
