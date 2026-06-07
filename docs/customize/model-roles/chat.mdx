@@ -12,6 +12,15 @@ A "chat model" is an LLM that is trained to respond in a conversational format. 
 
 In Continue, these models are used for normal [Chat](../../ide-extensions/chat/quick-start). The selected chat model will also be used for [Edit](../../ide-extensions/edit/quick-start) and [Apply](./apply.mdx) if no `edit` or `apply` models are specified, respectively.
 
+## Adding a Chat Model
+
+When you select a provider in the Continue UI, the available models are loaded dynamically:
+
+- **Ollama** and **OpenRouter** auto-load their model lists when you select the provider — no API key needed.
+- **Anthropic**, **Gemini**, and most other providers show a **refresh button** once you enter your API key. Click it to fetch the live model list from the provider.
+
+Fetched models include context length, max output tokens, and tool support information, which are saved to your `config.yaml` when you add the model. See [Dynamic Model Fetching](../model-providers/overview#dynamic-model-fetching) for full details.
+
 ## Recommended Chat models
 
 <ModelRecommendations role="chat_edit" />
