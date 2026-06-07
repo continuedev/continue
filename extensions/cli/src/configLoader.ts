@@ -60,6 +60,9 @@ export async function loadConfiguration(
     cliConfigPath,
     isHeadless,
   );
+  logger.debug(
+    `Determined configuration source: ${JSON.stringify(configSource)}`,
+  );
 
   // Step 2: Load configuration from the determined source
   const config = await loadFromSource(
@@ -69,11 +72,13 @@ export async function loadConfiguration(
     apiClient,
     injectBlocks,
   );
+  logger.debug(`Successfully loaded configuration from ${configSource.type}`);
 
   // Step 3: Save config URI for session continuity (only for file-based auth)
   if (!isEnvironmentAuthConfig(authConfig) && authConfig !== null) {
     const uri = getUriFromSource(configSource);
     if (uri) {
+      logger.debug(`Persisting configuration URI for session: ${uri}`);
       updateConfigUri(uri);
     }
   }
@@ -237,6 +242,7 @@ async function loadFromCliFlag(
   injectBlocks: PackageIdentifier[],
 ): Promise<AssistantUnrolled> {
   if (isFilePath(configPath)) {
+    logger.debug(`Loading configuration from CLI file path: ${configPath}`);
     // Load local YAML file
     return await loadConfigYaml(
       configPath,
@@ -246,6 +252,9 @@ async function loadFromCliFlag(
       injectBlocks,
     );
   } else {
+    logger.debug(
+      `Loading configuration from CLI assistant slug: ${configPath}`,
+    );
     // Load assistant slug
     return await loadAssistantSlug(
       configPath,
@@ -267,6 +276,7 @@ async function loadFromSavedUri(
   apiClient: DefaultApiInterface,
   injectBlocks: PackageIdentifier[],
 ): Promise<AssistantUnrolled> {
+  logger.debug(`Loading configuration from saved URI: ${uri}`);
   const filePath = uriToPath(uri);
   if (filePath) {
     return await loadConfigYaml(
@@ -301,12 +311,16 @@ async function loadUserAssistantWithFallback(
   accessToken: string | null,
   injectBlocks: PackageIdentifier[],
 ): Promise<AssistantUnrolled> {
+  logger.debug("Attempting to load first available user assistant");
   const assistants = await apiClient.listAssistants({
     alwaysUseProxy: "false",
     organizationId: organizationId ?? undefined,
   });
 
   if (assistants.length > 0) {
+    logger.debug(
+      `Found ${assistants.length} user assistants, using the first one: ${assistants[0].name}`,
+    );
     const result = assistants[0].configResult;
     if (!result.config) {
       throw new Error(result.errors?.join("\n") ?? "Failed to load assistant.");
@@ -321,6 +335,9 @@ async function loadUserAssistantWithFallback(
     }
     let apiConfig = result.config as AssistantUnrolled;
     if (injectBlocks.length > 0) {
+      logger.debug(
+        `Injecting ${injectBlocks.length} blocks into user assistant config`,
+      );
       const injectedConfig = await unrollPackageIdentifiersAsConfigYaml(
         injectBlocks,
         accessToken,
@@ -334,6 +351,9 @@ async function loadUserAssistantWithFallback(
   }
 
   // No user assistants, fall back to default agent
+  logger.debug(
+    "No user assistants found, falling back to default configuration",
+  );
   return await loadDefaultConfig(
     organizationId,
     apiClient,
@@ -352,6 +372,7 @@ async function loadLocalConfigYaml(
   injectBlocks: PackageIdentifier[],
 ): Promise<AssistantUnrolled> {
   const defaultConfigPath = path.join(env.continueHome, "config.yaml");
+  logger.debug(`Loading local config.yaml from: ${defaultConfigPath}`);
   return await loadConfigYaml(
     defaultConfigPath,
     accessToken,
@@ -370,6 +391,7 @@ async function loadDefaultConfig(
   accessToken: string | null,
   injectBlocks: PackageIdentifier[],
 ): Promise<AssistantUnrolled> {
+  logger.debug("Loading default continuedev/default-cli-config from remote");
   const resp = await apiClient.getAssistant({
     ownerSlug: "continuedev",
     packageSlug: "default-cli-config",
@@ -401,6 +423,9 @@ export async function unrollPackageIdentifiersAsConfigYaml(
   organizationId: string | null,
   apiClient: DefaultApiInterface,
 ): Promise<AssistantUnrolled> {
+  logger.debug(
+    `Unrolling ${packageIdentifiers.length} package identifiers as config YAML`,
+  );
   const unrollResult = await unrollAssistantFromContent(
     {
       uriType: "file",
@@ -441,6 +466,9 @@ async function unrollAssistantWithConfig(
   apiClient: DefaultApiInterface,
   injectBlocks: PackageIdentifier[],
 ): Promise<AssistantUnrolled> {
+  logger.debug(
+    `Unrolling assistant with config for identifier: ${JSON.stringify(packageIdentifier)}`,
+  );
   const unrollResult = await unrollAssistant(
     packageIdentifier,
     new RegistryClient({

@@ -284,7 +284,7 @@ export async function unrollAssistantFromContent(
   options: UnrollAssistantOptions,
 ): Promise<ConfigResult<AssistantUnrolled>> {
   // Parse string to Zod-validated YAML
-  let parsedYaml = parseMarkdownRuleOrConfigYaml(rawYaml, id);
+  let parsedYaml = parseMarkdownContentOrConfigYaml(rawYaml, id);
 
   // Unroll blocks and convert their secrets to FQSNs
   const {
@@ -417,6 +417,10 @@ export async function unrollBlocks(
       return { section, blocks: null };
     }
 
+    console.debug(
+      `unrollBlocks: Processing section "${section}" with ${assistant[section].length} items`,
+    );
+
     // Process all blocks in this section in parallel
     const blockPromises = assistant[section].map(
       async (unrolledBlock, index) => {
@@ -424,6 +428,9 @@ export async function unrollBlocks(
         if ("uses" in unrolledBlock) {
           try {
             const blockIdentifier = decodePackageIdentifier(unrolledBlock.uses);
+            console.debug(
+              `unrollBlocks: Resolving "uses" block: ${JSON.stringify(unrolledBlock.uses)}`,
+            );
 
             if (
               !isPackageAllowed(
@@ -448,15 +455,22 @@ export async function unrollBlocks(
               blockIdentifier,
               unrolledBlock.with,
               registry,
+              section,
             );
             const block = blockConfigYaml[section]?.[0];
             if (block) {
+              console.debug(
+                `unrollBlocks: Successfully extracted item for "${section}" from resolved block`,
+              );
               return {
                 index,
                 block: mergeOverrides(block, unrolledBlock.override ?? {}),
                 error: null,
               };
             }
+            console.debug(
+              `unrollBlocks: WARNING - Section "${section}" not found in resolved block config`,
+            );
             return { index, block: null, error: null };
           } catch (err) {
             let msg = "";
@@ -514,6 +528,7 @@ export async function unrollBlocks(
                 decodePackageIdentifier(rule.uses),
                 rule.with,
                 registry,
+                "rules",
               );
               const block = blockConfigYaml.rules?.[0];
               return { index, rule: block || null, error: null };
@@ -569,7 +584,7 @@ export async function unrollBlocks(
                 ]),
               },
             );
-            const resolvedBlock = parseMarkdownRuleOrConfigYaml(
+            const resolvedBlock = parseMarkdownContentOrConfigYaml(
               blockConfigYamlWithFQSNs,
               injectBlock,
             );
@@ -731,6 +746,7 @@ export async function resolveBlock(
   id: PackageIdentifier,
   inputs: Record<string, string | undefined> | undefined,
   registry: Registry,
+  sectionHint?: string,
 ): Promise<AssistantUnrolled> {
   // Retrieve block raw yaml
   const rawYaml = await registry.getContent(id);
@@ -764,7 +780,11 @@ export async function resolveBlock(
   }
 
   // Add source slug for mcp servers
-  const parsed = parseMarkdownRuleOrAssistantUnrolled(templatedYaml, id);
+  const parsed = parseMarkdownContentOrAssistantUnrolled(
+    templatedYaml,
+    id,
+    sectionHint,
+  );
   if (
     id.uriType === "slug" &&
     "mcpServers" in parsed &&
@@ -776,24 +796,37 @@ export async function resolveBlock(
   return parsed;
 }
 
-export function parseMarkdownRuleOrAssistantUnrolled(
+export function parseMarkdownContentOrAssistantUnrolled(
   content: string,
   id: PackageIdentifier,
+  sectionHint?: string,
 ): AssistantUnrolled {
-  return parseYamlOrMarkdownRule<AssistantUnrolled>(content, id, parseBlock);
+  return parseYamlOrMarkdownContent<AssistantUnrolled>(
+    content,
+    id,
+    parseBlock,
+    sectionHint,
+  );
 }
 
-function parseMarkdownRuleOrConfigYaml(
+function parseMarkdownContentOrConfigYaml(
   content: string,
   id: PackageIdentifier,
+  sectionHint?: string,
 ): ConfigYaml {
-  return parseYamlOrMarkdownRule<ConfigYaml>(content, id, parseConfigYaml);
+  return parseYamlOrMarkdownContent<ConfigYaml>(
+    content,
+    id,
+    parseConfigYaml,
+    sectionHint,
+  );
 }
 
-function parseYamlOrMarkdownRule<T>(
+function parseYamlOrMarkdownContent<T>(
   content: string,
   id: PackageIdentifier,
   parseYamlFn: (content: string) => T,
+  sectionHint?: string,
 ): T {
   let parsedYaml: T;
   try {
@@ -806,11 +839,33 @@ function parseYamlOrMarkdownRule<T>(
     ) {
       throw yamlError;
     }
-    // If YAML parsing fails, try parsing as markdown rule
+    // If YAML parsing fails, try parsing as markdown rule/prompt
     try {
       const rule = markdownToRule(content, id);
-      // Convert the rule object to the expected format
-      parsedYaml = { name: rule.name, version: "1.0.0", rules: [rule] } as T;
+
+      if (sectionHint === "prompts") {
+        console.debug(
+          `parseYamlOrMarkdownContent: Wrapping markdown in "prompts" for block: ${id.uriType === "file" ? id.fileUri : id.fullSlug.packageSlug}`,
+        );
+        parsedYaml = {
+          name: rule.name,
+          version: "1.0.0",
+          prompts: [
+            {
+              name: rule.name,
+              description: rule.description,
+              prompt: rule.rule,
+              invokable: rule.invokable,
+            },
+          ],
+        } as T;
+      } else {
+        console.debug(
+          `parseYamlOrMarkdownContent: Wrapping markdown in "rules" for block: ${id.uriType === "file" ? id.fileUri : id.fullSlug.packageSlug}`,
+        );
+        // Convert the rule object to the expected format
+        parsedYaml = { name: rule.name, version: "1.0.0", rules: [rule] } as T;
+      }
     } catch (markdownError) {
       // If both fail, throw the original YAML error
       throw yamlError;

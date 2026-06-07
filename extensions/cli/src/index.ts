@@ -257,6 +257,10 @@ addCommonOptions(program)
 
     if (options.verbose) {
       logger.setLevel("debug");
+
+      const { enableDebugLogging } = await import("./init.js");
+      enableDebugLogging((msg) => logger.debug(msg));
+
       const logPath = logger.getLogPath();
       const sessionId = logger.getSessionId();
       // In headless mode, suppress these verbose logs

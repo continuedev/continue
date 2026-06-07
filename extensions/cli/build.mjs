@@ -54,7 +54,7 @@ try {
     alias: {
       "@continuedev/config-yaml": resolve(
         __dirname,
-        "../../packages/config-yaml/dist/index.js",
+        "../../packages/config-yaml",
       ),
       "@continuedev/openai-adapters": resolve(
         __dirname,
