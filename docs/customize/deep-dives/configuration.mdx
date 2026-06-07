@@ -28,6 +28,49 @@ When editing this file, you can see the available options suggested as you type,
 
 See the full reference for `config.yaml` [here](/reference).
 
+## How to Use Local Config Profiles
+
+In addition to the main `config.yaml`, you can create multiple local config profiles by placing YAML files in special subdirectories inside `.continue/`. This works at both the workspace level (inside your project) and the global level (`~/.continue/`).
+
+Continue discovers, watches, and loads YAML files from any of these three directories as selectable profiles:
+
+| Directory | Scope | Purpose |
+|---|---|---|
+| `.continue/agents/` | workspace or `~/.continue/` | Agent-specific configurations |
+| `.continue/assistants/` | workspace or `~/.continue/` | Assistant configurations (legacy name) |
+| `.continue/configs/` | workspace or `~/.continue/` | General local config profiles |
+
+### How to create a local config profile
+
+1. Create the directory if it doesn't exist:
+
+```bash
+# Inside your project (workspace-level)
+mkdir -p .continue/configs
+
+# Or globally
+mkdir -p ~/.continue/configs
+```
+
+2. Add a YAML file with your profile configuration:
+
+```yaml title=".continue/configs/my-profile.yaml"
+name: My Custom Profile
+version: 0.0.1
+models:
+  - name: My Model
+    provider: anthropic
+    model: claude-sonnet-4-5
+```
+
+3. The profile will automatically appear in the config selector in your IDE — no restart needed. Continue watches these directories and reloads when files are added, changed, or deleted.
+
+### Which directory should I use?
+
+All three directories behave identically in terms of discovery and loading. Use `.continue/configs/` for general-purpose profiles, `.continue/agents/` for agent-specific setups, and `.continue/assistants/` if you have existing files there (it is supported for backwards compatibility).
+
+You can version-control workspace-level profiles (`.continue/configs/`, `.continue/agents/`, `.continue/assistants/`) by committing them to your repository, making it easy to share profiles with your team.
+
 ## Legacy Configuration Methods (Deprecated)
 
 <Info>
