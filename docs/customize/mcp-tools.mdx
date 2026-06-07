@@ -18,3 +18,28 @@ These servers make it possible to:
 ## Learn More About MCP servers
 
 Learn more in the [MCP deep dive](/customize/deep-dives/mcp), and view [`mcpServers`](/reference#mcpservers) in the YAML Reference for more details.
+
+## Community MCP Servers
+
+### ApogeoAPI — Geographic data and live exchange rates
+
+[ApogeoAPI MCP](https://github.com/APOGEOAPI/apogeoapi-mcp) gives Continue access to 250+ countries, 5K+ states, 150K+ cities, IP geolocation, and 161 live currency rates.
+
+**Install**:
+1. Get an API key at [apogeoapi.com](https://apogeoapi.com) (free tier: 1,000 req/mo)
+2. Add to your `~/.continue/config.yaml`:
+
+```yaml
+mcpServers:
+  - name: ApogeoAPI
+    command: npx
+    args:
+      - "-y"
+      - "@apogeoapi/mcp"
+    env:
+      APOGEOAPI_KEY: your-api-key-here
+```
+
+**Available tools**: `get_country`, `list_countries`, `search_countries`, `get_states`, `get_cities`, `get_currency_rate`, `geolocate_ip`, `global_search`.
+
+**Docs**: [api.apogeoapi.com/api/docs](https://api.apogeoapi.com/api/docs) | **npm**: [@apogeoapi/mcp](https://www.npmjs.com/package/@apogeoapi/mcp)
