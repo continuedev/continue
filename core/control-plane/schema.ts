@@ -20,6 +20,7 @@ const modelDescriptionSchema = z.object({
     "nebius",
     "siliconflow",
     "tensorix",
+    "orcarouter",
     "scaleway",
     "watsonx",
   ]),

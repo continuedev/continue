@@ -46,6 +46,11 @@ const PROVIDER_MAP: Record<string, AiSdkProviderCreator> = {
       ...options,
       baseURL: options.baseURL ?? "http://localhost:1337/v1/",
     }),
+  orcarouter: (options) =>
+    createOpenAI({
+      ...options,
+      baseURL: options.baseURL ?? "https://api.orcarouter.ai/v1/",
+    }),
 };
 
 export class AiSdkApi implements BaseLlmApi {

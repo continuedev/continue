@@ -18,6 +18,7 @@ import { MockApi } from "./apis/Mock.js";
 import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
 import { OpenRouterApi } from "./apis/OpenRouter.js";
+import { OrcaRouterApi } from "./apis/OrcaRouter.js";
 import { ClawRouterApi } from "./apis/ClawRouter.js";
 import { RelaceApi } from "./apis/Relace.js";
 import { VertexAIApi } from "./apis/VertexAI.js";
@@ -180,6 +181,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.tensorix.ai/v1/", config);
     case "openrouter":
       return new OpenRouterApi(config);
+    case "orcarouter":
+      return new OrcaRouterApi(config);
     case "clawrouter":
       return new ClawRouterApi(config);
     case "llama.cpp":
@@ -244,4 +247,5 @@ export {
 
 export { isResponsesModel } from "./apis/openaiResponses.js";
 export { OPENROUTER_HEADERS } from "./apis/OpenRouter.js";
+export { ORCAROUTER_HEADERS } from "./apis/OrcaRouter.js";
 export { extractBase64FromDataUrl, parseDataUrl } from "./util/url.js";

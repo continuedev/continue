@@ -1315,6 +1315,57 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://api.router.tetrate.ai/",
   },
+  orcarouter: {
+    title: "OrcaRouter",
+    provider: "orcarouter",
+    refPage: "orcarouter",
+    description:
+      "OpenAI-compatible API gateway aggregating ~120 chat models from OpenAI, Anthropic, Google, DeepSeek, xAI, Qwen, Kimi, MiniMax, Z-AI and others with adaptive routing.",
+    longDescription: `[OrcaRouter](https://www.orcarouter.ai) is an OpenAI-compatible API gateway that aggregates ~120 chat models behind a single \`sk-orca-\` key. It also exposes \`orcarouter/auto\`, a virtual model that adaptively routes each request using a configurable strategy (cheapest, balanced, quality, contextual bandit, or difficulty-gated). Routing pools and reward weights are tunable from the [console](https://www.orcarouter.ai/console/routing) without changing client code.
+
+To get started:
+1. Sign up at [orcarouter.ai](https://www.orcarouter.ai)
+2. Create an API key in your [console](https://www.orcarouter.ai/console)
+3. Paste it below
+4. Select a model preset, or use \`orcarouter/auto\` for adaptive routing
+
+For agent / tool-calling workloads, pin a specific tool-capable model (e.g. \`anthropic/claude-opus-4.7\`, \`openai/gpt-5.5\`) instead of \`orcarouter/auto\`, since the AUTO routing pool may include models that don't support function calling.
+
+> [Reference](https://docs.orcarouter.ai) · [Models](https://www.orcarouter.ai/models)`,
+    icon: "orcarouter.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    params: {
+      apiBase: "https://api.orcarouter.ai/v1/",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your OrcaRouter API key (sk-orca-...)",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.orcarouterAuto,
+      models.orcarouterGpt55,
+      models.orcarouterClaudeOpus47,
+      models.orcarouterGemini3Flash,
+      models.orcarouterDeepseekV4Pro,
+      models.orcarouterGrok43,
+      models.orcarouterQwen36Flash,
+      models.orcarouterMinimaxM27,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "OrcaRouter",
+        },
+      },
+    ],
+    apiKeyUrl: "https://www.orcarouter.ai/console",
+  },
   clawrouter: {
     title: "ClawRouter",
     provider: "clawrouter",

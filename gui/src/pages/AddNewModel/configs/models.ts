@@ -2802,6 +2802,107 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: true,
   },
 
+  // OrcaRouter Models
+  orcarouterAuto: {
+    title: "OrcaRouter Auto",
+    description:
+      "Adaptive routing across upstream models with configurable strategy (cheapest / balanced / quality / contextual bandit / difficulty-gated). Routing pools and weights are tunable from the OrcaRouter console.",
+    params: {
+      title: "OrcaRouter Auto",
+      model: "orcarouter/auto",
+      contextLength: 128_000,
+    },
+    icon: "orcarouter.png",
+    providerOptions: ["orcarouter"],
+    isOpenSource: false,
+  },
+  orcarouterGpt55: {
+    title: "OpenAI: GPT-5.5",
+    description: "OpenAI GPT-5.5 routed through OrcaRouter.",
+    params: {
+      title: "OpenAI: GPT-5.5",
+      model: "openai/gpt-5.5",
+      contextLength: 400_000,
+    },
+    icon: "orcarouter.png",
+    providerOptions: ["orcarouter"],
+    isOpenSource: false,
+  },
+  orcarouterClaudeOpus47: {
+    title: "Anthropic: Claude Opus 4.7",
+    description:
+      "Anthropic Claude Opus 4.7 routed through OrcaRouter. Reasoning model — set `requestOptions.extraBodyProperties.thinking` to control thinking budget.",
+    params: {
+      title: "Anthropic: Claude Opus 4.7",
+      model: "anthropic/claude-opus-4.7",
+      contextLength: 200_000,
+    },
+    icon: "orcarouter.png",
+    providerOptions: ["orcarouter"],
+    isOpenSource: false,
+  },
+  orcarouterGemini3Flash: {
+    title: "Google: Gemini 3 Flash Preview",
+    description:
+      "Google Gemini 3 Flash Preview routed through OrcaRouter. Reasoning model — chat may appear blank for several seconds while the model reasons. Set `reasoning_effort: 'minimal'` in `requestOptions.extraBodyProperties` for fast responses.",
+    params: {
+      title: "Google: Gemini 3 Flash",
+      model: "google/gemini-3-flash-preview",
+      contextLength: 1_000_000,
+    },
+    icon: "orcarouter.png",
+    providerOptions: ["orcarouter"],
+    isOpenSource: false,
+  },
+  orcarouterDeepseekV4Pro: {
+    title: "DeepSeek: DeepSeek V4 Pro",
+    description: "DeepSeek V4 Pro routed through OrcaRouter.",
+    params: {
+      title: "DeepSeek: DeepSeek V4 Pro",
+      model: "deepseek/deepseek-v4-pro",
+      contextLength: 128_000,
+    },
+    icon: "orcarouter.png",
+    providerOptions: ["orcarouter"],
+    isOpenSource: true,
+  },
+  orcarouterGrok43: {
+    title: "xAI: Grok 4.3",
+    description: "xAI Grok 4.3 routed through OrcaRouter.",
+    params: {
+      title: "xAI: Grok 4.3",
+      model: "grok/grok-4.3",
+      contextLength: 256_000,
+    },
+    icon: "orcarouter.png",
+    providerOptions: ["orcarouter"],
+    isOpenSource: false,
+  },
+  orcarouterQwen36Flash: {
+    title: "Alibaba: Qwen 3.6 Flash",
+    description: "Alibaba Qwen 3.6 Flash routed through OrcaRouter.",
+    params: {
+      title: "Alibaba: Qwen 3.6 Flash",
+      model: "qwen/qwen3.6-flash",
+      contextLength: 128_000,
+    },
+    icon: "orcarouter.png",
+    providerOptions: ["orcarouter"],
+    isOpenSource: true,
+  },
+  orcarouterMinimaxM27: {
+    title: "MiniMax: MiniMax M2.7",
+    description: "MiniMax M2.7 routed through OrcaRouter.",
+    params: {
+      title: "MiniMax: MiniMax M2.7",
+      model: "minimax/minimax-m2.7",
+      contextLength: 200_000,
+    },
+    icon: "orcarouter.png",
+    providerOptions: ["orcarouter"],
+    isOpenSource: false,
+  },
+
   AUTODETECT: {
     title: "Autodetect",
     description:
