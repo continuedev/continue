@@ -1,0 +1,179 @@
+---
+title: "Formula Workbook Readback with Bilig WorkPaper MCP and Continue"
+description: "Use Continue with Bilig WorkPaper MCP to edit workbook inputs, recalculate formulas, and verify computed JSON readback without Excel UI automation."
+sidebarTitle: "Bilig WorkPaper MCP"
+---
+
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
+<Card title="What You'll Build" icon="table">
+  A Continue agent workflow that connects to Bilig WorkPaper MCP, edits an input
+  cell, recalculates workbook formulas, and checks verified JSON readback instead
+  of driving Excel or trusting stale cached values.
+</Card>
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- Continue installed with **Agent** mode available
+- A model configured for tool use
+- Node.js 22+ installed locally
+- A Bilig WorkPaper MCP endpoint
+
+For all options, first:
+
+<Steps>
+  <Step title="Install Continue CLI">
+    <CLIInstall />
+  </Step>
+
+  <Step title="Check Agent Mode">
+    Open Continue in your IDE or run the CLI:
+
+    ```bash
+    cn
+    ```
+
+    MCP tools are available from Agent mode.
+  </Step>
+</Steps>
+
+<Warning>
+  The hosted Bilig endpoint below is useful for trying the flow with a sample
+  workbook. Use your own Bilig MCP server when working with private workbook
+  files or business data.
+</Warning>
+
+## Configure Bilig WorkPaper MCP
+
+Create a workspace MCP server file:
+
+```yaml title=".continue/mcpServers/bilig-workpaper.yaml"
+name: Bilig WorkPaper
+version: 0.0.1
+schema: v1
+
+mcpServers:
+  - name: Bilig WorkPaper
+    type: streamable-http
+    url: https://bilig.proompteng.ai/mcp
+    connectionTimeout: 30
+```
+
+Then restart Continue or reload your workspace so the MCP server is discovered.
+
+<Info>
+  Continue also supports local stdio MCP servers. If you run Bilig against local
+  WorkPaper files, replace the `streamable-http` block with your local
+  `bilig-workpaper-mcp` command.
+</Info>
+
+You can also verify the same agent-facing tool surface outside Continue before
+adding it to a workspace:
+
+```bash
+npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --json
+```
+
+The evaluator lists the MCP tools, edits an input cell, recalculates dependent
+formulas, exports the WorkPaper JSON, restarts the workbook, and checks that the
+readback still matches.
+
+## Try a Verified Formula Readback
+
+Use prompts that ask the agent to show the write, recalculation, and readback in
+one response. That makes the tool call auditable and avoids hiding the computed
+state behind prose.
+
+<Card title="List Available Tools" icon="list">
+  Confirm Continue can see the MCP server.
+
+**Prompt:**
+
+```text
+List the tools exposed by the Bilig WorkPaper MCP server.
+```
+</Card>
+
+<Card title="Edit an Input Cell" icon="pen-to-square">
+  Change a workbook input and ask for verified output.
+
+**Prompt:**
+
+```text
+Set Inputs!B3 to 0.5 in the Bilig WorkPaper workbook.
+Recalculate the workbook and return the verified readback JSON.
+Include the edited cell, before and after values, and whether persisted readback matched.
+```
+</Card>
+
+<Card title="Explain Formula Impact" icon="calculator">
+  Ask Continue to summarize what changed without losing the proof.
+
+**Prompt:**
+
+```text
+Using the verified Bilig readback, explain which formula outputs changed.
+Keep the JSON proof in the answer and call out any failed checks.
+```
+</Card>
+
+## Where This Pattern Helps
+
+Bilig WorkPaper is useful when a coding agent needs spreadsheet-style business
+logic as a tool contract:
+
+- Pricing and quote approval formulas
+- Payout or commission calculations
+- Import validation workbooks
+- Forecast and scenario models
+- Regression tests for formula-backed workflows
+
+The important part is not just formula evaluation. The agent can write an input,
+recalculate, read computed outputs, and return a compact proof that the persisted
+workbook state still matches the result.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The MCP tools do not appear in Continue">
+    Check that the file is under `.continue/mcpServers/`, includes `name`,
+    `version`, and `schema`, and that you restarted Continue after adding it.
+    MCP tools are available in Agent mode.
+  </Accordion>
+
+  <Accordion title="The hosted endpoint should not see private data">
+    Do not send private workbook data to the hosted sample endpoint. Run your own
+    Bilig WorkPaper MCP server and point Continue at that local or private URL.
+  </Accordion>
+
+  <Accordion title="The model summarizes instead of using tools">
+    Ask for a concrete tool action: set a specific sheet and cell, recalculate,
+    and return the verified readback JSON. Also confirm your selected model
+    supports tool calls.
+  </Accordion>
+</AccordionGroup>
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Bilig on GitHub" icon="github" href="https://github.com/proompteng/bilig">
+    Source code, package links, examples, and WorkPaper docs.
+  </Card>
+
+  <Card title="@bilig/workpaper on npm" icon="box" href="https://www.npmjs.com/package/@bilig/workpaper">
+    Package containing the WorkPaper runtime and MCP command.
+  </Card>
+
+  <Card title="Continue MCP Docs" icon="plug" href="/customize/deep-dives/mcp">
+    Continue's MCP setup and transport reference.
+  </Card>
+
+  <Card title="Browse MCP Cookbooks" icon="book-open" href="/guides/overview">
+    More examples for using MCP servers with Continue.
+  </Card>
+</CardGroup>
