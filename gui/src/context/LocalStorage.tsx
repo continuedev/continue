@@ -3,10 +3,12 @@ import { getLocalStorage } from "../util/localStorage";
 
 interface LocalStorageType {
   fontSize: number;
+  language: string;
 }
 
 const DEFAULT_LOCAL_STORAGE: LocalStorageType = {
   fontSize: 14,
+  language: "en",
 };
 
 const LocalStorageContext = createContext<LocalStorageType>(
@@ -22,10 +24,12 @@ export const LocalStorageProvider: React.FC<{ children: React.ReactNode }> = ({
   const syncWithLocalStorage = () => {
     const isJetbrains = getLocalStorage("ide") === "jetbrains";
     const fontSize = getLocalStorage("fontSize") ?? (isJetbrains ? 15 : 14);
+    const language = getLocalStorage("language") ?? "en";
 
     setValues((prev) => ({
       ...prev,
       fontSize,
+      language,
     }));
   };
 
@@ -37,7 +41,10 @@ export const LocalStorageProvider: React.FC<{ children: React.ReactNode }> = ({
   // Listen for current tab changes using CustomEvent
   useEffect(() => {
     const handleLocalStorageChange = (event: CustomEvent) => {
-      if (event.detail?.key === "fontSize") {
+      if (
+        event.detail?.key === "fontSize" ||
+        event.detail?.key === "language"
+      ) {
         syncWithLocalStorage();
       }
     };

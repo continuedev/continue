@@ -33,6 +33,7 @@ import { updateConfig } from "../../../redux/slices/configSlice";
 import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
 import { ConfigHeader } from "../components/ConfigHeader";
 import { ToolPoliciesGroup } from "../components/ToolPoliciesGroup";
+import i18n from "../../../locales/i18n";
 
 interface MCPServerStatusProps {
   allToolsOff: boolean;
@@ -42,12 +43,12 @@ interface MCPServerStatusProps {
 }
 
 const ServerStatusTooltip: Record<MCPConnectionStatus, string> = {
-  connected: "Active",
-  connecting: "Connecting",
-  "not-connected": "Inactive",
-  disabled: "Off",
-  authenticating: "Authenticating",
-  error: "Error",
+  connected: i18n.t("ToolsSection.StatusActive"),
+  connecting: i18n.t("ToolsSection.StatusConnecting"),
+  "not-connected": i18n.t("ToolsSection.StatusInactive"),
+  disabled: i18n.t("ToolsSection.StatusOff"),
+  authenticating: i18n.t("ToolsSection.StatusAuthenticating"),
+  error: i18n.t("ToolsSection.StatusError"),
 };
 
 const ServerStatusColor: Record<MCPConnectionStatus, string> = {
@@ -204,7 +205,9 @@ function MCPServerPreview({
               </div>
             ) : (
               <div className="text-xs italic text-gray-500">
-                No {title.toLowerCase()} available
+                {i18n.t("ToolsSection.NoItemsAvailable", {
+                  title: title.toLowerCase(),
+                })}
               </div>
             )}
           </div>
@@ -236,10 +239,10 @@ function MCPServerPreview({
               <ToolTip
                 content={
                   server.status === "error"
-                    ? "Authenticate"
+                    ? i18n.t("ToolsSection.Authenticate")
                     : server.status === "authenticating"
-                      ? "Authenticating..."
-                      : "Remove authentication"
+                      ? i18n.t("ToolsSection.Authenticating")
+                      : i18n.t("ToolsSection.RemoveAuthentication")
                 }
               >
                 <Button
@@ -274,7 +277,8 @@ function MCPServerPreview({
                   onClick={onRemoveAuth}
                   className="justify-start gap-x-1.5"
                 >
-                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" /> Logout
+                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" />{" "}
+                  {i18n.t("ToolsSection.Logout")}
                 </ListboxOption>
               )}
 
@@ -295,7 +299,7 @@ function MCPServerPreview({
                     "h-3.5 w-3.5 flex-shrink-0 cursor-pointer text-gray-400 text-inherit hover:brightness-125"
                   }
                 />
-                Edit
+                {i18n.t("ToolsSection.Edit")}
               </ListboxOption>
 
               {server.status === "connected" && (
@@ -305,7 +309,7 @@ function MCPServerPreview({
                   className="justify-start gap-x-1.5"
                 >
                   <StopCircleIcon className="h-4 w-4 flex-shrink-0" />{" "}
-                  Disconnect
+                  {i18n.t("ToolsSection.Disconnect")}
                 </ListboxOption>
               )}
 
@@ -320,7 +324,7 @@ function MCPServerPreview({
                   ) : (
                     <ArrowPathIcon className="h-4 w-4 flex-shrink-0" />
                   )}
-                  Reload
+                  {i18n.t("ToolsSection.Reload")}
                 </ListboxOption>
               )}
             </ListboxOptions>
@@ -333,13 +337,13 @@ function MCPServerPreview({
         <ToolPoliciesGroup
           showIcon={true}
           groupName={server.name}
-          displayName={"Tools"}
+          displayName={i18n.t("ToolsSection.Tools")}
           allToolsOff={allToolsOff}
           duplicateDetection={duplicateDetection}
         />
         {server.prompts.length > 0 && (
           <ResourceRow
-            title="Prompts"
+            title={i18n.t("ToolsSection.Prompts")}
             items={server.prompts}
             icon={
               <CommandLineIcon className="text-description h-4 w-4 flex-shrink-0" />
@@ -350,7 +354,7 @@ function MCPServerPreview({
         {(server.resources.length > 0 ||
           server.resourceTemplates.length > 0) && (
           <ResourceRow
-            title="Resources"
+            title={i18n.t("ToolsSection.Resources")}
             items={[...server.resources, ...server.resourceTemplates]}
             icon={
               <CircleStackIcon className="text-description h-4 w-4 flex-shrink-0" />
@@ -472,16 +476,16 @@ export function ToolsSection() {
 
   const availableToolsMessage =
     mode === "chat"
-      ? "All tools disabled in Chat, switch to Plan or Agent mode to use tools"
+      ? i18n.t("ToolsSection.AllToolsDisabledInChat")
       : mode === "plan"
-        ? "Read-only tools available in Plan mode"
+        ? i18n.t("ToolsSection.ReadOnlyToolsAvailableInPlan")
         : "";
 
   return (
     <>
       <ConfigHeader
-        title="Tools"
-        subtext="Manage MCP servers and tool policies"
+        title={i18n.t("ToolsSection.Tools")}
+        subtext={i18n.t("ToolsSection.ManageMCPServersAndToolPolicies")}
         className="mb-2"
       />
       {!!availableToolsMessage && (
@@ -495,29 +499,30 @@ export function ToolsSection() {
         <ToolPoliciesGroup
           showIcon={false}
           groupName={BUILT_IN_GROUP_NAME}
-          displayName={"Built-in Tools"}
+          displayName={i18n.t("ToolsSection.BuiltInTools")}
           allToolsOff={allToolsOff}
           duplicateDetection={duplicateDetection}
         />
         <ConfigHeader
           className="pr-2"
-          title="MCP Servers"
+          title={i18n.t("ToolsSection.MCPServers")}
           variant="sm"
           onAddClick={handleAddMcpServer}
-          addButtonTooltip="Add MCP server"
+          addButtonTooltip={i18n.t("ToolsSection.AddMCPServer")}
           showAddButton={!disableMcp}
         />
         {disableMcp ? (
           <Card>
-            <EmptyState message="MCP servers are disabled in your organization" />
+            <EmptyState
+              message={i18n.t("ToolsSection.MCPServersDisabledInOrganization")}
+            />
           </Card>
         ) : (
           <>
             {mode === "chat" && (
               <Alert type="info" size="sm">
                 <span className="text-2xs italic">
-                  All MCPs are disabled in Chat, switch to Plan or Agent mode to
-                  use MCPs
+                  {i18n.t("ToolsSection.AllMCPsDisabledInChat")}
                 </span>
               </Alert>
             )}
@@ -533,7 +538,9 @@ export function ToolsSection() {
               ))
             ) : (
               <Card>
-                <EmptyState message="No MCP servers configured. Click the + button to add your first server." />
+                <EmptyState
+                  message={i18n.t("ToolsSection.NoMCPServersConfigured")}
+                />
               </Card>
             )}
           </>

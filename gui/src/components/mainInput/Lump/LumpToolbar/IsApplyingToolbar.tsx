@@ -4,15 +4,20 @@ import { useAppDispatch } from "../../../../redux/hooks";
 import { cancelStream } from "../../../../redux/thunks/cancelStream";
 import { getAltKeyLabel, getMetaKeyLabel } from "../../../../util";
 import { GeneratingIndicator } from "./GeneratingIndicator";
+import { useTranslation } from "react-i18next";
 
 export const IsApplyingToolbar = () => {
+  const { t } = useTranslation();
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
   const jetbrains = window.location.protocol === "jb-api:";
 
   return (
     <div className="flex w-full items-center justify-between">
-      <GeneratingIndicator text="Applying" testId={"notch-applying-text"} />
+      <GeneratingIndicator
+        text={t("Lump.IsApplyingToolbar.Applying")}
+        testId={"notch-applying-text"}
+      />
       <div
         data-testid="notch-applying-cancel-button"
         className="text-description text-2xs cursor-pointer p-0.5 pr-1 hover:brightness-125"
@@ -26,7 +31,8 @@ export const IsApplyingToolbar = () => {
         }}
       >
         {/* JetBrains overrides cmd+backspace, so we have to use another shortcut */}
-        {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()} ⌫ Cancel
+        {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()} ⌫{" "}
+        {t("Lump.IsApplyingToolbar.Cancel")}
       </div>
     </div>
   );

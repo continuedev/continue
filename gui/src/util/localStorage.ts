@@ -10,6 +10,7 @@ type LocalStorageTypes = {
   ide: "vscode" | "jetbrains";
   vsCodeUriScheme: string;
   fontSize: number;
+  language: string;
   [key: `inputHistory_${string}`]: JSONContent[];
   extensionVersion: string;
   showTutorialCard: boolean;

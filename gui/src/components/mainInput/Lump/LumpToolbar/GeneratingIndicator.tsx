@@ -1,7 +1,8 @@
 import { AnimatedEllipsis } from "../../../AnimatedEllipsis";
+import i18n from "i18next";
 
 export function GeneratingIndicator({
-  text = "Generating",
+  text = i18n.t("Lump.GeneratingIndicator.Generating"),
   testId,
 }: {
   text?: string;

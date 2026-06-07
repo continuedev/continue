@@ -21,6 +21,7 @@ import { PendingApplyStatesToolbar } from "./PendingApplyStatesToolbar";
 import { PendingToolCallToolbar } from "./PendingToolCallToolbar";
 import { StreamingToolbar } from "./StreamingToolbar";
 import { TtsActiveToolbar } from "./TtsActiveToolbar";
+import { useTranslation } from "react-i18next";
 
 // Keyboard shortcut detection utilities
 const isExecuteToolCallShortcut = (event: KeyboardEvent) => {
@@ -47,6 +48,7 @@ const isTerminalCommand = (toolCallState: any) => {
 };
 
 export function LumpToolbar() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
@@ -187,7 +189,8 @@ export function LumpToolbar() {
   // Only show terminal streaming for actual terminal commands
   if (hasRunningTerminalCommand) {
     const count = runningTerminalCalls.length;
-    const stopText = `Stop Terminal${count > 1 ? ` (${count})` : ""}`;
+    const stopText =
+      t("Lump.LumpToolbar.StopTerminal") + `${count > 1 ? ` (${count})` : ""}`;
     return (
       <StreamingToolbar onStop={handleStopAction} displayText={stopText} />
     );

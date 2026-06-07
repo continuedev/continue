@@ -4,6 +4,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Tool } from "core";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import ToggleSwitch from "../../../components/gui/Switch";
 import { ToolTip } from "../../../components/gui/Tooltip";
 import { Card } from "../../../components/ui";
@@ -26,6 +27,7 @@ export function ToolPoliciesGroup({
   allToolsOff,
   duplicateDetection,
 }: ToolPoliciesGroupProps) {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -33,7 +35,7 @@ export function ToolPoliciesGroup({
     (state) => state.config.config.tools as Tool[],
   );
   const tools = useMemo(() => {
-    return availableTools.filter((t) => t.group === groupName);
+    return availableTools.filter((tool) => tool.group === groupName);
   }, [availableTools, groupName]);
 
   const toolGroupSettings = useAppSelector(
@@ -84,10 +86,10 @@ export function ToolPoliciesGroup({
         <ToolTip
           content={
             allToolsOff
-              ? "Tools disabled in current mode"
+              ? t("ToolPoliciesGroup.ToolsDisabledInCurrentMode")
               : isGroupEnabled
-                ? `Disable all tools in ${groupName} group`
-                : `Enable all tools in ${groupName} group`
+                ? t("ToolPoliciesGroup.DisableAllToolsInGroup", { groupName })
+                : t("ToolPoliciesGroup.EnableAllToolsInGroup", { groupName })
           }
         >
           <div>

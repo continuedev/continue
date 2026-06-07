@@ -7,6 +7,7 @@ import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppSelector } from "../../../redux/hooks";
 import { ConfigHeader } from "../components/ConfigHeader";
+import i18n from "../../../locales/i18n";
 
 export function ConfigsSection() {
   const { profiles, selectedProfile } = useAuth();
@@ -24,9 +25,9 @@ export function ConfigsSection() {
   return (
     <>
       <ConfigHeader
-        title="Configs"
+        title={i18n.t("ConfigsSection.Configs")}
         onAddClick={handleAddConfig}
-        addButtonTooltip="Add config"
+        addButtonTooltip={i18n.t("ConfigsSection.AddConfig")}
       />
 
       <Card>
@@ -82,7 +83,7 @@ export function ConfigsSection() {
                       )}
                     </div>
                   </div>
-                  <ToolTip content="Open configuration">
+                  <ToolTip content={i18n.t("ConfigsSection.OpenConfiguration")}>
                     <Button
                       onClick={() => handleConfigureAgent(profile.id)}
                       variant="ghost"
@@ -98,7 +99,7 @@ export function ConfigsSection() {
             );
           })
         ) : (
-          <EmptyState message="No agents configured. Click the + button to add your first agent." />
+          <EmptyState message={i18n.t("ConfigsSection.NoAgentsConfigured")} />
         )}
       </Card>
     </>

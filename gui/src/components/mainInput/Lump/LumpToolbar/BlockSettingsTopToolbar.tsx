@@ -22,8 +22,10 @@ import { useAuth } from "../../../../context/Auth";
 import { useCreditStatus } from "../../../../hooks/useCredits";
 import { CONFIG_ROUTES } from "../../../../util/navigation";
 import { AssistantAndOrgListbox } from "../../../AssistantAndOrgListbox";
+import { useTranslation } from "react-i18next";
 
 export function BlockSettingsTopToolbar() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { selectedProfile } = useAuth();
@@ -77,7 +79,10 @@ export function BlockSettingsTopToolbar() {
     <div className="flex flex-1 items-center justify-between gap-3">
       <div className="flex items-center gap-1">
         {shouldShowError && (
-          <ToolTip delayShow={700} content="View configuration errors">
+          <ToolTip
+            delayShow={700}
+            content={t("Lump.BlockSettingsTopToolbar.ViewConfigurationErrors")}
+          >
             <div
               role="button"
               tabIndex={0}
@@ -102,7 +107,11 @@ export function BlockSettingsTopToolbar() {
         {!hasActiveContent && (
           <div className="flex items-center gap-1.5">
             {isUsingFreeTrial && (
-              <ToolTip content="View remaining starter credits">
+              <ToolTip
+                content={t(
+                  "Lump.BlockSettingsTopToolbar.ViewRemainingStarterCredits",
+                )}
+              >
                 <StarterCreditsPopover
                   creditStatus={creditStatus}
                   refreshCreditStatus={refreshCreditStatus}
@@ -114,19 +123,21 @@ export function BlockSettingsTopToolbar() {
               </ToolTip>
             )}
 
-            <ToolTip content="Configure rules">
+            <ToolTip content={t("Lump.BlockSettingsTopToolbar.ConfigureRules")}>
               <HoverItem onClick={handleRulesClick} px={2}>
                 <PencilIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
               </HoverItem>
             </ToolTip>
 
-            <ToolTip content="Configure tools">
+            <ToolTip content={t("Lump.BlockSettingsTopToolbar.ConfigureTools")}>
               <HoverItem onClick={handleToolsClick} px={2}>
                 <WrenchScrewdriverIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
               </HoverItem>
             </ToolTip>
 
-            <ToolTip content="Configure models">
+            <ToolTip
+              content={t("Lump.BlockSettingsTopToolbar.ConfigureModels")}
+            >
               <HoverItem onClick={handleModelsClick} px={2}>
                 <CubeIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
               </HoverItem>
@@ -135,7 +146,10 @@ export function BlockSettingsTopToolbar() {
         )}
       </div>
 
-      <ToolTip place="top" content="Select Config">
+      <ToolTip
+        place="top"
+        content={t("Lump.BlockSettingsTopToolbar.SelectConfig")}
+      >
         <div>
           <AssistantAndOrgListbox variant="lump" />
         </div>

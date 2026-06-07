@@ -17,8 +17,10 @@ import {
 import { Divider } from "../../../../components/ui/Divider";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { useTranslation } from "react-i18next";
 
 export function AccountDropdown() {
+  const { t } = useTranslation();
   const { session, logout, login } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -36,7 +38,7 @@ export function AccountDropdown() {
         >
           <UserCircleIconOutline className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
           <span className="text-description hidden text-xs md:block">
-            Log in
+            {t("AccountDropdown.Login")}
           </span>
         </Button>
       </ToolTip>
@@ -88,14 +90,14 @@ export function AccountDropdown() {
               >
                 <div className="flex items-center gap-2 py-0.5">
                   <Cog6ToothIcon className="h-3.5 w-3.5" />
-                  <span>Manage Account</span>
+                  <span>{t("AccountDropdown.ManageAccount")}</span>
                 </div>
               </ListboxOption>
 
               <ListboxOption onClick={logout} value="logout">
                 <div className="flex items-center gap-2 py-0.5">
                   <ArrowRightStartOnRectangleIcon className="h-3.5 w-3.5" />
-                  <span>Log out</span>
+                  <span>{t("AccountDropdown.Logout")}</span>
                 </div>
               </ListboxOption>
             </ListboxOptions>

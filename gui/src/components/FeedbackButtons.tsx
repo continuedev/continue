@@ -7,12 +7,14 @@ import { useContext, useState } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAppSelector } from "../redux/hooks";
 import HeaderButtonWithToolTip from "./gui/HeaderButtonWithToolTip";
+import { useTranslation } from "react-i18next";
 
 export interface FeedbackButtonsProps {
   item: ChatHistoryItem;
 }
 
 export function FeedbackButtons({ item }: FeedbackButtonsProps) {
+  const { t } = useTranslation();
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
   const ideMessenger = useContext(IdeMessengerContext);
   const sessionId = useAppSelector((store) => store.session.id);
@@ -41,7 +43,7 @@ export function FeedbackButtons({ item }: FeedbackButtonsProps) {
   return (
     <>
       <HeaderButtonWithToolTip
-        text="Helpful"
+        text={t("FeedbackButtons.Helpful")}
         tabIndex={-1}
         onClick={() => sendFeedback(true)}
       >
@@ -50,7 +52,7 @@ export function FeedbackButtons({ item }: FeedbackButtonsProps) {
         />
       </HeaderButtonWithToolTip>
       <HeaderButtonWithToolTip
-        text="Unhelpful"
+        text={t("FeedbackButtons.Unhelpful")}
         tabIndex={-1}
         onClick={() => sendFeedback(false)}
       >

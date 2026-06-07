@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { getFontSize } from "../../../../util";
 import { GeneratingIndicator } from "./GeneratingIndicator";
+import { useTranslation } from "react-i18next";
 
 const Container = styled.div`
   display: flex;
@@ -19,6 +20,7 @@ const StopButton = styled.div`
 `;
 
 export function TtsActiveToolbar() {
+  const { t } = useTranslation();
   const ideMessenger = useContext(IdeMessengerContext);
 
   return (
@@ -30,7 +32,7 @@ export function TtsActiveToolbar() {
           ideMessenger.post("tts/kill", undefined);
         }}
       >
-        ■ Stop TTS
+        ■ {t("Lump.TtsActiveToolbar.StopTTS")}
       </StopButton>
     </Container>
   );

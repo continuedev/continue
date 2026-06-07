@@ -2,16 +2,21 @@ import { CheckIcon, ClipboardIcon } from "@heroicons/react/24/outline";
 import useCopy from "../../../hooks/useCopy";
 import { ToolTip } from "../../gui/Tooltip";
 import HoverItem from "../../mainInput/InputToolbar/HoverItem";
+import { useTranslation } from "react-i18next";
 
 interface CopyButtonProps {
   text: string;
 }
 
 export function CopyButton({ text }: CopyButtonProps) {
+  const { t } = useTranslation();
   const { copyText, copied } = useCopy(text);
 
   return (
-    <ToolTip place="top" content="Copy Code">
+    <ToolTip
+      place="top"
+      content={t("StepContainerPreToolbar.CopyButton.copyCode")}
+    >
       <HoverItem className="!p-0">
         <div
           className="text-lightgray flex cursor-pointer items-center border-none bg-transparent text-xs outline-none hover:brightness-125"

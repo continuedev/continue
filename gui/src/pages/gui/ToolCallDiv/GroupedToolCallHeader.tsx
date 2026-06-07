@@ -2,6 +2,7 @@ import { FolderIcon } from "@heroicons/react/24/outline";
 import { ToolCallState } from "core";
 import { ToggleWithIcon } from "./ToggleWithIcon";
 import { getGroupActionVerb } from "./utils";
+import { useTranslation } from "react-i18next";
 
 interface GroupedToolCallHeaderProps {
   toolCallStates: ToolCallState[];
@@ -16,6 +17,7 @@ export function GroupedToolCallHeader({
   open,
   onToggle,
 }: GroupedToolCallHeaderProps) {
+  const { t } = useTranslation();
   return (
     <div className="mb-2">
       <div
@@ -30,7 +32,9 @@ export function GroupedToolCallHeader({
           onClick={onToggle}
         />
         {getGroupActionVerb(toolCallStates)} {activeCalls.length}{" "}
-        {activeCalls.length === 1 ? "action" : "actions"}
+        {activeCalls.length === 1
+          ? t("GroupedToolCallHeader.action")
+          : t("GroupedToolCallHeader.actions")}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { fontSize } from "../../util";
 import { cn } from "../../util/cn";
 import { ListboxButton } from "../ui";
 import { AssistantIcon } from "./AssistantIcon";
+import { useTranslation } from "react-i18next";
 
 interface SelectedAssistantButtonProps {
   selectedProfile: ProfileDescription | null;
@@ -16,6 +17,7 @@ export function SelectedAssistantButton({
   selectedProfile,
   variant,
 }: SelectedAssistantButtonProps) {
+  const { t } = useTranslation();
   const configLoading = useAppSelector((store) => store.config.loading);
 
   const isSidebar = variant === "sidebar";
@@ -34,7 +36,7 @@ export function SelectedAssistantButton({
       >
         <div className="flex min-w-0 flex-1 flex-row items-center gap-2">
           {selectedProfile === null ? (
-            "Set up config file"
+            t("AssistantAndOrgListbox.SetupConfigfile")
           ) : configLoading ? (
             <span className="text-description flex flex-row items-center">
               <ArrowPathIcon
@@ -43,7 +45,7 @@ export function SelectedAssistantButton({
                   configLoading && "animate-spin-slow",
                 )}
               />
-              Loading
+              {t("AssistantAndOrgListbox.Loading")}
             </span>
           ) : (
             <>
@@ -51,7 +53,9 @@ export function SelectedAssistantButton({
                 <AssistantIcon assistant={selectedProfile} size={iconSize} />
               )}
               <span className={`xs:line-clamp-1 hidden select-none text-xs`}>
-                {selectedProfile.title}
+                {selectedProfile.title == "Local Config"
+                  ? t("AssistantAndOrgListbox.LocalConfig")
+                  : selectedProfile.title}
               </span>
             </>
           )}

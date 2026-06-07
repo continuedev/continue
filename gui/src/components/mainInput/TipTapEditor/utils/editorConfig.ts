@@ -29,6 +29,7 @@ import {
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
 import { handleImageFile } from "./imageUtils";
+import i18n from "i18next";
 
 export function getPlaceholderText(
   placeholder: TipTapEditorProps["placeholder"],
@@ -39,8 +40,8 @@ export function getPlaceholderText(
   }
 
   return historyLength === 0
-    ? "Ask anything, '@' to add context"
-    : "Ask a follow-up";
+    ? i18n.t("TipTapEditor.editorConfig.AskAnything")
+    : i18n.t("TipTapEditor.editorConfig.AskFollowup");
 }
 
 /**
@@ -226,10 +227,8 @@ export function createEditorConfig(options: {
         },
       }),
       Placeholder.configure({
-        placeholder: getPlaceholderText(
-          props.placeholder,
-          historyLengthRef.current,
-        ),
+        placeholder: ({ editor }) =>
+          getPlaceholderText(props.placeholder, historyLengthRef.current),
       }),
       Paragraph.extend({
         addKeyboardShortcuts() {

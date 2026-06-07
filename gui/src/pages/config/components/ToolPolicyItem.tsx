@@ -19,6 +19,7 @@ import {
 import { useFontSize } from "../../../components/ui/font";
 import { useAppSelector } from "../../../redux/hooks";
 import { addTool, setToolPolicy } from "../../../redux/slices/uiSlice";
+import { useTranslation } from "react-i18next";
 
 interface ToolPolicyItemProps {
   tool: Tool;
@@ -28,6 +29,7 @@ interface ToolPolicyItemProps {
 
 export function ToolPolicyItem(props: ToolPolicyItemProps) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const policy = useAppSelector(
     (state) => state.ui.toolSettings[props.tool.function.name],
   );
@@ -88,11 +90,12 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
                     className="flex flex-wrap items-center"
                     content={
                       <p className="m-0 p-0">
-                        <span>Duplicate tool name</span>{" "}
+                        <span>{t("ToolPolicyItem.DuplicateToolName")}</span>{" "}
                         <code>{props.tool.function.name}</code>{" "}
                         <span>
-                          detected. Permissions will conflict and usage may be
-                          unpredictable
+                          {t(
+                            "ToolPolicyItem.DetectedPermissionsConflictWarning",
+                          )}
                         </span>
                       </p>
                     }
@@ -140,22 +143,24 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
                 >
                   <span className="text-xs">
                     {disabled || policy === "disabled"
-                      ? "Excluded"
+                      ? t("ToolPolicyItem.Excluded")
                       : policy === "allowedWithoutPermission"
-                        ? "Automatic"
-                        : "Ask First"}
+                        ? t("ToolPolicyItem.Automatic")
+                        : t("ToolPolicyItem.AskFirst")}
                   </span>
                   <ChevronDownIcon className="h-3 w-3" />
                 </ListboxButton>
                 {!disabled && (
                   <ListboxOptions className="min-w-0">
                     <ListboxOption value="allowedWithoutPermission">
-                      Automatic
+                      {t("ToolPolicyItem.Automatic")}
                     </ListboxOption>
                     <ListboxOption value="allowedWithPermission">
-                      Ask First
+                      {t("ToolPolicyItem.AskFirst")}
                     </ListboxOption>
-                    <ListboxOption value="disabled">Excluded</ListboxOption>
+                    <ListboxOption value="disabled">
+                      {t("ToolPolicyItem.Excluded")}
+                    </ListboxOption>
                   </ListboxOptions>
                 )}
               </div>
@@ -164,28 +169,32 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
         </div>
         <Tooltip id={disabledTooltipId}>
           {mode === "chat"
-            ? "Tool disabled in chat mode"
+            ? t("ToolPolicyItem.ToolDisabledInChatMode")
             : !props.isGroupEnabled
-              ? "Group is turned off"
-              : "Tool disabled in plan mode"}
+              ? t("ToolPolicyItem.GroupIsTurnedOff")
+              : t("ToolPolicyItem.ToolDisabledInPlanMode")}
         </Tooltip>
       </div>
       <div
         className={`flex flex-col overflow-hidden ${isExpanded ? "h-min" : "h-0 opacity-0"} gap-x-1 gap-y-2 pl-2 transition-all`}
       >
-        <span className="text-2xs mt-1.5 font-bold">Description:</span>
+        <span className="text-2xs mt-1.5 font-bold">
+          {t("ToolPolicyItem.Description")}:
+        </span>
         <span className="text-2xs italic">
           {props.tool.function.description}
         </span>
         {parameters ? (
           <>
-            <span className="text-2xs font-bold">Arguments:</span>
+            <span className="text-2xs font-bold">
+              {t("ToolPolicyItem.Arguments")}:
+            </span>
             {parameters.map((param, idx) => (
               <div key={idx} className="text-2xs block">
                 <code className="">{param[0]}</code>
                 <span className="ml-1">{`(${param[1].type ?? "unknown"}):`}</span>
                 <span className="ml-1 italic">
-                  {param[1].description ?? "No description"}
+                  {param[1].description ?? t("ToolPolicyItem.NoDescription")}
                 </span>
               </div>
             ))}

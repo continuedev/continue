@@ -7,6 +7,7 @@ import { useDeleteCompaction } from "../../util/compactConversation";
 import { AnimatedEllipsis } from "../AnimatedEllipsis";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import StyledMarkdownPreview from "../StyledMarkdownPreview";
+import { useTranslation } from "react-i18next";
 
 interface ConversationSummaryProps {
   item: ChatHistoryItem;
@@ -14,6 +15,7 @@ interface ConversationSummaryProps {
 }
 
 export default function ConversationSummary(props: ConversationSummaryProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(true);
   const isLoading = useAppSelector(
     (state) => state.session.compactionLoading[props.index] || false,
@@ -30,7 +32,7 @@ export default function ConversationSummary(props: ConversationSummaryProps) {
       <div className="mx-1.5 mb-4 mt-2">
         <div className="bg-vsc-input-background rounded-md shadow-sm">
           <div className="text-description flex items-center justify-start px-3 py-2 text-xs">
-            <span>Generating conversation summary</span>
+            <span>{t("StepContainer.GeneratingSummary")}</span>
             <AnimatedEllipsis />
           </div>
         </div>
@@ -51,9 +53,11 @@ export default function ConversationSummary(props: ConversationSummaryProps) {
           ) : (
             <ChevronDownIcon className="h-3 w-3" />
           )}
-          <span className="flex-1">Conversation Summary</span>
+          <span className="flex-1">
+            {t("StepContainer.ConversationSummary")}
+          </span>
           <HeaderButtonWithToolTip
-            text="Delete summary"
+            text={t("StepContainer.DeleteSummary")}
             onClick={(e) => {
               e.stopPropagation();
               deleteCompaction(props.index);

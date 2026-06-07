@@ -7,6 +7,7 @@ import {
   getPlatform,
 } from "../../util";
 import "./Shortcut.css";
+import { useTranslation } from "react-i18next";
 
 interface ShortcutProps {
   children: string;
@@ -18,25 +19,34 @@ const metaKeys = ["meta", "⌘", "ctrl", "cmd", "^"];
 const altKeys = ["alt", "option", "opt", "⌥"];
 const modifierKeys = [...metaKeys, ...altKeys];
 
-const getSpecialKeyMap = (platform: string): Record<string, string> => ({
-  uparrow: "UpArrow ↑",
-  downarrow: "DownArrow ↓",
-  leftarrow: "LeftArrow ←",
-  rightarrow: "RightArrow →",
-  enter: "Enter ⏎",
-  esc: "Esc",
-  backspace: platform === "mac" ? "Delete ⌫" : "Backspace ⌫",
-  delete: platform === "mac" ? "Delete ⌫" : "Backspace ⌫",
-  "⌫": platform === "mac" ? "Delete ⌫" : "Backspace ⌫",
+const getSpecialKeyMap = (
+  platform: string,
+  t: (key: string) => string,
+): Record<string, string> => ({
+  uparrow: t("Shortcut.UpArrow ↑"),
+  downarrow: t("Shortcut.DownArrow ↓"),
+  leftarrow: t("Shortcut.LeftArrow ←"),
+  rightarrow: t("Shortcut.RightArrow →"),
+  enter: t("Shortcut.Enter ⏎"),
+  esc: t("Shortcut.Esc"),
+  backspace:
+    platform === "mac" ? t("Shortcut.Delete ⌫") : t("Shortcut.Backspace ⌫"),
+  delete:
+    platform === "mac" ? t("Shortcut.Delete ⌫") : t("Shortcut.Backspace ⌫"),
+  "⌫": platform === "mac" ? t("Shortcut.Delete ⌫") : t("Shortcut.Backspace ⌫"),
 });
 
-const parseShortcut = (shortcut: string, platform: string) => {
+const parseShortcut = (
+  shortcut: string,
+  platform: string,
+  t: (key: string) => string,
+) => {
   if (!shortcut || typeof shortcut !== "string") {
     console.warn("Invalid shortcut provided:", shortcut);
     return [];
   }
 
-  const specialKeyMap = getSpecialKeyMap(platform);
+  const specialKeyMap = getSpecialKeyMap(platform, t);
   return shortcut
     .split(",")
     .map((combo) =>
@@ -61,12 +71,13 @@ const isSingleCharNonModifier = (key: string) =>
   key && key.length === 1 && /^[a-zA-Z0-9]$/.test(key);
 
 const Shortcut: React.FC<ShortcutProps> = ({ children }) => {
+  const { t } = useTranslation();
   const platform = getPlatform();
   if (!children || typeof children !== "string") {
-    return <span>Error: Invalid shortcut key</span>;
+    return <span>{t("Shortcut.Error: Invalid shortcut key")}</span>;
   }
 
-  const shortcuts = parseShortcut(children, platform);
+  const shortcuts = parseShortcut(children, platform, t);
 
   return (
     <>
@@ -89,7 +100,7 @@ const Shortcut: React.FC<ShortcutProps> = ({ children }) => {
                       : `${fontSize - 3}px`,
                 }}
               >
-                {key || "?"}
+                {key || t("Shortcut.?")}
               </kbd>
               {keyIndex < combo.length - 1 && (
                 <span className="separator">+</span>

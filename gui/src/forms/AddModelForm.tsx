@@ -20,6 +20,7 @@ import {
   ProviderInfo,
   providers,
 } from "../pages/AddNewModel/configs/providers";
+import { useTranslation } from "react-i18next";
 
 interface AddModelFormProps {
   onDone: () => void;
@@ -35,6 +36,7 @@ export function AddModelForm({
   onDone,
   hideFreeTrialLimitMessage,
 }: AddModelFormProps) {
+  const { t } = useTranslation();
   const [selectedProvider, setSelectedProvider] = useState<ProviderInfo>(
     providers["openai"]!,
   );
@@ -143,7 +145,7 @@ export function AddModelForm({
     apiKeyValue &&
     apiKeyValue.length > 0 &&
     !apiKeyValue.startsWith("sk-")
-      ? "API key usually starts with sk-"
+      ? t("AddModelForm.ApiKeyUsuallyStartsWithSk")
       : undefined;
 
   function onSubmit() {
@@ -191,11 +193,15 @@ export function AddModelForm({
     <FormProvider {...formMethods}>
       <form onSubmit={formMethods.handleSubmit(onSubmit)}>
         <div className="mx-auto max-w-md p-6">
-          <h1 className="mb-0 text-center text-2xl">Add Chat model</h1>
+          <h1 className="mb-0 text-center text-2xl">
+            {t("AddModelForm.AddChatModel")}
+          </h1>
 
           <div className="my-8 flex flex-col gap-6">
             <div>
-              <label className="block text-sm font-medium">Provider</label>
+              <label className="block text-sm font-medium">
+                {t("AddModelForm.Provider")}
+              </label>
               <ModelSelectionListbox
                 selectedProvider={selectedProvider}
                 setSelectedProvider={(val: DisplayInfo) => {
@@ -208,26 +214,26 @@ export function AddModelForm({
                 }}
                 topOptions={popularProviders}
                 otherOptions={otherProviders}
-                searchPlaceholder="Search providers..."
+                searchPlaceholder={t("AddModelForm.SearchProviders")}
               />
               <span className="text-description-muted mt-1 block text-xs">
-                Don't see your provider?{" "}
+                {t("AddModelForm.DontSeeYourProvider")}{" "}
                 <a
                   className="cursor-pointer text-inherit underline hover:text-inherit"
                   onClick={() =>
                     ideMessenger.post("openUrl", MODEL_PROVIDERS_URL)
                   }
                 >
-                  Click here
+                  {t("AddModelForm.ClickHere")}
                 </a>{" "}
-                to view the full list
+                {t("AddModelForm.ToViewTheFullList")}
               </span>
             </div>
 
             {selectedProvider.downloadUrl && (
               <div>
                 <label className="mb-1 block text-sm font-medium">
-                  Install provider
+                  {t("AddModelForm.InstallProvider")}
                 </label>
                 <StyledActionButton onClick={onClickDownloadProvider}>
                   <p className="text-sm underline">
@@ -240,10 +246,14 @@ export function AddModelForm({
 
             <div>
               <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium">Model</label>
+                <label className="block text-sm font-medium">
+                  {t("AddModelForm.Model")}
+                </label>
                 <button
                   type="button"
-                  title="Use entered API key to fetch available models"
+                  title={t(
+                    "AddModelForm.UseEnteredApiKeyToFetchAvailableModels",
+                  )}
                   className={`cursor-pointer border-none bg-transparent p-0 ${
                     apiKeyValue &&
                     apiKeyValue.length > 0 &&
@@ -310,17 +320,18 @@ export function AddModelForm({
                   }
                   return staticOther;
                 })()}
-                otherOptionsLabel="Additional models"
+                otherOptionsLabel={t("AddModelForm.AdditionalModels")}
               />
             </div>
 
             {selectedModel.params.model.startsWith("codestral") && (
               <div className="my-2">
                 <Alert>
-                  <p className="m-0 text-sm font-bold">Codestral API key</p>
+                  <p className="m-0 text-sm font-bold">
+                    {t("AddModelForm.CodestralApiKey")}
+                  </p>
                   <p className="m-0 mt-1">
-                    Note that codestral requires a different API key from other
-                    Mistral models
+                    {t("AddModelForm.CodestralRequiresDifferentApiKey")}
                   </p>
                 </Alert>
               </div>
@@ -330,7 +341,7 @@ export function AddModelForm({
               <div>
                 <>
                   <label className="mb-1 block text-sm font-medium">
-                    API key
+                    {t("AddModelForm.ApiKey")}
                   </label>
                   <Input
                     id="apiKey"
@@ -338,7 +349,9 @@ export function AddModelForm({
                       apiKeyWarning ? "border-warning w-full" : "w-full"
                     }
                     type="password"
-                    placeholder={`Enter your ${selectedProvider.title} API key`}
+                    placeholder={t("AddModelForm.EnterYourApiKey", {
+                      title: selectedProvider.title,
+                    })}
                     {...formMethods.register("apiKey")}
                   />
                   {apiKeyWarning && (
@@ -358,9 +371,11 @@ export function AddModelForm({
                         }
                       }}
                     >
-                      Click here
+                      {t("AddModelForm.ClickHere")}
                     </a>{" "}
-                    to create a {selectedProvider.title} API key
+                    {t("AddModelForm.ToCreateAApiKey", {
+                      title: selectedProvider.title,
+                    })}
                   </span>
                 </>
               </div>
@@ -396,11 +411,11 @@ export function AddModelForm({
 
           <div className="mt-4 w-full">
             <Button type="submit" className="w-full" disabled={isDisabled()}>
-              Connect
+              {t("AddModelForm.Connect")}
             </Button>
 
             <span className="text-description-muted block w-full text-center text-xs">
-              This will update your{" "}
+              {t("AddModelForm.ThisWillUpdateYour")}{" "}
               <span
                 className="cursor-pointer underline hover:brightness-125"
                 onClick={() =>
@@ -409,7 +424,7 @@ export function AddModelForm({
                   })
                 }
               >
-                config file
+                {t("AddModelForm.ConfigFile")}
               </span>
             </span>
           </div>
