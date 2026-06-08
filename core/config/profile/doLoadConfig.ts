@@ -1,5 +1,6 @@
 import fs from "fs";
 
+import * as YAML from "yaml";
 import {
   AssistantUnrolled,
   ConfigResult,
@@ -115,9 +116,55 @@ export default async function doLoadConfig(options: {
   let configLoadInterrupted = false;
   let configName: string | undefined;
 
+  // Migrate legacy config.json-style tabAutocompleteModel in config.yaml.
+  // The YAML format has no tabAutocompleteModel field; autocomplete models must
+  // appear in the models array with roles: [autocomplete]. If the user wrote
+  // a config.yaml using the JSON-format object style, Zod strips it silently
+  // and autocomplete shows "Setup Autocomplete model" with no error.
+  // We detect and transform it here so the YAML pipeline sees it correctly.
+  let effectivePackageIdentifier = packageIdentifier;
+  if (!overrideConfigYaml && fs.existsSync(configYamlPath)) {
+    try {
+      const rawContent =
+        packageIdentifier.uriType === "file" &&
+        packageIdentifier.content !== undefined
+          ? packageIdentifier.content
+          : fs.readFileSync(configYamlPath, "utf8");
+      const rawParsed = YAML.parse(rawContent) as Record<string, any> | null;
+      if (
+        rawParsed &&
+        rawParsed["tabAutocompleteModel"] !== undefined &&
+        typeof rawParsed["tabAutocompleteModel"] === "object" &&
+        rawParsed["tabAutocompleteModel"] !== null
+      ) {
+        const autocompleteModelEntry = {
+          ...rawParsed["tabAutocompleteModel"],
+          roles: ["autocomplete"],
+        };
+        const transformed: Record<string, any> = {
+          ...rawParsed,
+          models: [...(rawParsed["models"] ?? []), autocompleteModelEntry],
+        };
+        delete transformed["tabAutocompleteModel"];
+        void ide.showToast(
+          "warning",
+          "config.yaml: 'tabAutocompleteModel' is a config.json field. " +
+            "In config.yaml, add 'roles: [autocomplete]' to your model entry instead. " +
+            "See https://docs.continue.dev/features/tab-autocomplete for migration details.",
+        );
+        effectivePackageIdentifier = {
+          ...packageIdentifier,
+          content: YAML.stringify(transformed),
+        };
+      }
+    } catch {
+      // If YAML parsing fails here, let the normal pipeline surface the error
+    }
+  }
+
   const hasPreReadContent =
-    packageIdentifier.uriType === "file" &&
-    packageIdentifier.content !== undefined;
+    effectivePackageIdentifier.uriType === "file" &&
+    effectivePackageIdentifier.content !== undefined;
 
   if (
     overrideConfigYaml ||
@@ -133,7 +180,7 @@ export default async function doLoadConfig(options: {
       overrideConfigYaml,
       controlPlaneClient,
       orgScopeId,
-      packageIdentifier,
+      packageIdentifier: effectivePackageIdentifier,
       workOsAccessToken,
     });
     newConfig = result.config;
