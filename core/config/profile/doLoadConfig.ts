@@ -1,5 +1,6 @@
 import fs from "fs";
 
+import * as YAML from "yaml";
 import {
   AssistantUnrolled,
   ConfigResult,
@@ -70,6 +71,65 @@ async function loadRules(ide: IDE) {
   return { rules, errors };
 }
 
+/**
+ * If the YAML content contains a legacy config.json-style `tabAutocompleteModel`
+ * object, inject it into `models` with `roles: [autocomplete]` and show a
+ * deprecation toast. Returns an updated PackageIdentifier whose `content` field
+ * carries the transformed YAML; the file on disk is never modified.
+ */
+function migrateTabAutocompleteModelInYaml(
+  packageIdentifier: PackageIdentifier,
+  overrideConfigYaml: AssistantUnrolled | undefined,
+  configYamlPath: string,
+  ide: IDE,
+): PackageIdentifier {
+  if (overrideConfigYaml || packageIdentifier.uriType !== "file") {
+    return packageIdentifier;
+  }
+
+  const hasPreReadContent = packageIdentifier.content !== undefined;
+
+  if (!hasPreReadContent && !fs.existsSync(configYamlPath)) {
+    return packageIdentifier;
+  }
+
+  try {
+    const rawContent = hasPreReadContent
+      ? packageIdentifier.content!
+      : fs.readFileSync(configYamlPath, "utf8");
+    const rawParsed = YAML.parse(rawContent) as Record<string, any> | null;
+
+    if (
+      !rawParsed ||
+      typeof rawParsed["tabAutocompleteModel"] !== "object" ||
+      rawParsed["tabAutocompleteModel"] === null ||
+      Array.isArray(rawParsed["tabAutocompleteModel"])
+    ) {
+      return packageIdentifier;
+    }
+
+    const transformed: Record<string, any> = {
+      ...rawParsed,
+      models: [
+        ...(rawParsed["models"] ?? []),
+        { ...rawParsed["tabAutocompleteModel"], roles: ["autocomplete"] },
+      ],
+    };
+    delete transformed["tabAutocompleteModel"];
+
+    void ide.showToast(
+      "warning",
+      "config.yaml: 'tabAutocompleteModel' is a config.json field. " +
+        "In config.yaml, add 'roles: [autocomplete]' to your model entry instead. " +
+        "See https://docs.continue.dev/features/tab-autocomplete for migration details.",
+    );
+
+    return { ...packageIdentifier, content: YAML.stringify(transformed) };
+  } catch {
+    return packageIdentifier;
+  }
+}
+
 export default async function doLoadConfig(options: {
   ide: IDE;
   controlPlaneClient: ControlPlaneClient;
@@ -115,9 +175,16 @@ export default async function doLoadConfig(options: {
   let configLoadInterrupted = false;
   let configName: string | undefined;
 
+  const effectivePackageIdentifier = migrateTabAutocompleteModelInYaml(
+    packageIdentifier,
+    overrideConfigYaml,
+    configYamlPath,
+    ide,
+  );
+
   const hasPreReadContent =
-    packageIdentifier.uriType === "file" &&
-    packageIdentifier.content !== undefined;
+    effectivePackageIdentifier.uriType === "file" &&
+    effectivePackageIdentifier.content !== undefined;
 
   if (
     overrideConfigYaml ||
@@ -133,7 +200,7 @@ export default async function doLoadConfig(options: {
       overrideConfigYaml,
       controlPlaneClient,
       orgScopeId,
-      packageIdentifier,
+      packageIdentifier: effectivePackageIdentifier,
       workOsAccessToken,
     });
     newConfig = result.config;
