@@ -183,3 +183,99 @@ describe("doLoadConfig pre-read content bypass", () => {
     expect(mockLoadJson).toHaveBeenCalled();
   });
 });
+
+describe("doLoadConfig tabAutocompleteModel migration", () => {
+  it("should transform a JSON-style tabAutocompleteModel object into a roles-based model entry", async () => {
+    mockLoadYaml.mockClear();
+    mockLoadJson.mockClear();
+    (mockIde.showToast as ReturnType<typeof vi.fn>).mockClear();
+
+    // Simulate a config.yaml with the legacy config.json-style tabAutocompleteModel
+    const yamlWithLegacyField = [
+      "name: My Config",
+      "version: 1.0.0",
+      "schema: v1",
+      "models:",
+      "  - name: ChatModel",
+      "    provider: openai",
+      "    model: gpt-4",
+      "tabAutocompleteModel:",
+      "  name: Qwen 2.5 Coder",
+      "  provider: openai",
+      "  model: qwen2.5-coder:1.5b",
+      "  apiBase: http://localhost:11434/v1",
+    ].join("\n");
+
+    const packageIdentifier: PackageIdentifier = {
+      uriType: "file",
+      fileUri: "/home/user/.continue/config.yaml",
+      content: yamlWithLegacyField,
+    };
+
+    await doLoadConfig({
+      ide: mockIde,
+      controlPlaneClient: mockControlPlaneClient,
+      llmLogger: mockLlmLogger,
+      profileId: "test-profile",
+      orgScopeId: null,
+      packageIdentifier,
+    });
+
+    expect(mockLoadYaml).toHaveBeenCalled();
+    const calledWith = mockLoadYaml.mock.calls[0][0];
+    const passedContent = calledWith.packageIdentifier.content as string;
+
+    // The transformed content should not contain tabAutocompleteModel
+    expect(passedContent).not.toContain("tabAutocompleteModel");
+
+    // The autocomplete model should have been injected with roles: [autocomplete]
+    expect(passedContent).toContain("qwen2.5-coder:1.5b");
+    expect(passedContent).toContain("autocomplete");
+
+    // A deprecation warning toast should have been shown
+    expect(mockIde.showToast).toHaveBeenCalledWith(
+      "warning",
+      expect.stringContaining("tabAutocompleteModel"),
+    );
+  });
+
+  it("should leave config unchanged when tabAutocompleteModel is absent", async () => {
+    mockLoadYaml.mockClear();
+    (mockIde.showToast as ReturnType<typeof vi.fn>).mockClear();
+
+    const yamlWithoutLegacyField = [
+      "name: My Config",
+      "version: 1.0.0",
+      "schema: v1",
+      "models:",
+      "  - name: ChatModel",
+      "    provider: openai",
+      "    model: gpt-4",
+      "  - name: Qwen 2.5 Coder",
+      "    provider: openai",
+      "    model: qwen2.5-coder:1.5b",
+      "    roles:",
+      "      - autocomplete",
+    ].join("\n");
+
+    const packageIdentifier: PackageIdentifier = {
+      uriType: "file",
+      fileUri: "/home/user/.continue/config.yaml",
+      content: yamlWithoutLegacyField,
+    };
+
+    await doLoadConfig({
+      ide: mockIde,
+      controlPlaneClient: mockControlPlaneClient,
+      llmLogger: mockLlmLogger,
+      profileId: "test-profile",
+      orgScopeId: null,
+      packageIdentifier,
+    });
+
+    const calledWith = mockLoadYaml.mock.calls[0][0];
+    // Content should be passed through unmodified (same object reference)
+    expect(calledWith.packageIdentifier).toBe(packageIdentifier);
+    expect(mockIde.showToast).not.toHaveBeenCalled();
+  });
+});

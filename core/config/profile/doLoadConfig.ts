@@ -122,14 +122,16 @@ export default async function doLoadConfig(options: {
   // a config.yaml using the JSON-format object style, Zod strips it silently
   // and autocomplete shows "Setup Autocomplete model" with no error.
   // We detect and transform it here so the YAML pipeline sees it correctly.
+  const hasPreReadYamlContent =
+    packageIdentifier.uriType === "file" &&
+    packageIdentifier.content !== undefined;
+
   let effectivePackageIdentifier = packageIdentifier;
-  if (!overrideConfigYaml && fs.existsSync(configYamlPath)) {
+  if (!overrideConfigYaml && (hasPreReadYamlContent || fs.existsSync(configYamlPath))) {
     try {
-      const rawContent =
-        packageIdentifier.uriType === "file" &&
-        packageIdentifier.content !== undefined
-          ? packageIdentifier.content
-          : fs.readFileSync(configYamlPath, "utf8");
+      const rawContent = hasPreReadYamlContent
+        ? packageIdentifier.content!
+        : fs.readFileSync(configYamlPath, "utf8");
       const rawParsed = YAML.parse(rawContent) as Record<string, any> | null;
       if (
         rawParsed &&
