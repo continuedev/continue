@@ -104,7 +104,8 @@ function migrateTabAutocompleteModelInYaml(
     if (
       !rawParsed ||
       typeof rawParsed["tabAutocompleteModel"] !== "object" ||
-      rawParsed["tabAutocompleteModel"] === null
+      rawParsed["tabAutocompleteModel"] === null ||
+      Array.isArray(rawParsed["tabAutocompleteModel"])
     ) {
       return packageIdentifier;
     }

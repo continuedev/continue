@@ -278,4 +278,39 @@ describe("doLoadConfig tabAutocompleteModel migration", () => {
     expect(calledWith.packageIdentifier).toBe(packageIdentifier);
     expect(mockIde.showToast).not.toHaveBeenCalled();
   });
+
+  it("should leave config unchanged when tabAutocompleteModel is an array", async () => {
+    mockLoadYaml.mockClear();
+    (mockIde.showToast as ReturnType<typeof vi.fn>).mockClear();
+
+    // An array is typeof "object" but must not be treated as an inline model
+    const yamlWithArray = [
+      "name: My Config",
+      "version: 1.0.0",
+      "schema: v1",
+      "tabAutocompleteModel:",
+      "  - name: Qwen",
+      "    provider: openai",
+      "    model: qwen2.5-coder:1.5b",
+    ].join("\n");
+
+    const packageIdentifier: PackageIdentifier = {
+      uriType: "file",
+      fileUri: "/home/user/.continue/config.yaml",
+      content: yamlWithArray,
+    };
+
+    await doLoadConfig({
+      ide: mockIde,
+      controlPlaneClient: mockControlPlaneClient,
+      llmLogger: mockLlmLogger,
+      profileId: "test-profile",
+      orgScopeId: null,
+      packageIdentifier,
+    });
+
+    const calledWith = mockLoadYaml.mock.calls[0][0];
+    expect(calledWith.packageIdentifier).toBe(packageIdentifier);
+    expect(mockIde.showToast).not.toHaveBeenCalled();
+  });
 });
