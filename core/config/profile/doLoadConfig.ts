@@ -83,13 +83,11 @@ function migrateTabAutocompleteModelInYaml(
   configYamlPath: string,
   ide: IDE,
 ): PackageIdentifier {
-  if (overrideConfigYaml) {
+  if (overrideConfigYaml || packageIdentifier.uriType !== "file") {
     return packageIdentifier;
   }
 
-  const hasPreReadContent =
-    packageIdentifier.uriType === "file" &&
-    packageIdentifier.content !== undefined;
+  const hasPreReadContent = packageIdentifier.content !== undefined;
 
   if (!hasPreReadContent && !fs.existsSync(configYamlPath)) {
     return packageIdentifier;
