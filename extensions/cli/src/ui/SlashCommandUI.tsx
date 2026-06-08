@@ -23,14 +23,12 @@ interface SlashCommandUIProps {
   assistant?: AssistantConfig;
   filter: string;
   selectedIndex: number;
-  isRemoteMode?: boolean;
 }
 
 const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   assistant,
   filter,
   selectedIndex,
-  isRemoteMode = false,
 }) => {
   const [allCommands, setAllCommands] = useState<SlashCommand[]>(
     // Fallback - basic commands without assistant
@@ -49,11 +47,8 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
     let stale = false;
 
     const loadCommands = async () => {
-      if (assistant || isRemoteMode) {
-        const commands = await getAllSlashCommands(
-          assistant || ({} as AssistantConfig),
-          { isRemoteMode },
-        );
+      if (assistant) {
+        const commands = await getAllSlashCommands(assistant);
         if (!stale) {
           setAllCommands(commands);
         }
@@ -65,7 +60,7 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
     return () => {
       stale = true;
     };
-  }, [isRemoteMode, assistant?.prompts, assistant?.rules]);
+  }, [assistant?.prompts, assistant?.rules]);
 
   // Filter commands based on the current filter
   const filteredCommands = allCommands

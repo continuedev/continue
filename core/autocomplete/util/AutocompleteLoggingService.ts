@@ -1,6 +1,6 @@
 import { DataLogger } from "../../data/log";
 import { COUNT_COMPLETION_REJECTED_AFTER } from "../../util/parameters";
-import { Telemetry } from "../../util/posthog";
+
 import { getUriFileExtension } from "../../util/uri";
 
 import { AutocompleteOutcome } from "./types";
@@ -119,14 +119,6 @@ export class AutocompleteLoggingService {
       time: restOfOutcome.time,
       useRecentlyEdited: restOfOutcome.useRecentlyEdited,
       numLines: restOfOutcome.numLines,
-      profileType: restOfOutcome.profileType,
     };
-
-    outcome.enabledStaticContextualization
-      ? void Telemetry.capture("autocomplete", {
-          ...toLog,
-          enabledStaticContextualization: true,
-        })
-      : void Telemetry.capture("autocomplete", toLog);
   }
 }

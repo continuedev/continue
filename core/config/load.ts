@@ -36,7 +36,6 @@ import { getLegacyBuiltInSlashCommandFromDescription } from "../commands/slash/b
 import { convertCustomCommandToSlashCommand } from "../commands/slash/customSlashCommand";
 import { slashCommandFromPromptFile } from "../commands/slash/promptFileSlashCommand";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
-import { useHub } from "../control-plane/env";
 import { BaseLLM } from "../llm";
 import { LLMClasses, llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
@@ -60,7 +59,6 @@ import { localPathToUri } from "../util/pathToUri";
 
 import { loadJsonMcpConfigs } from "../context/mcp/json/loadJsonMcpConfigs";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
-import { PolicySingleton } from "../control-plane/PolicySingleton";
 import { getBaseToolDefinitions, serializeTool } from "../tools";
 import { resolveRelativePathInDir } from "../util/ideUtils";
 import { getWorkspaceRcConfigs } from "./json/loadRcConfigs";
@@ -240,7 +238,6 @@ async function intermediateToFinalConfig({
   ideInfo,
   uniqueId,
   llmLogger,
-  workOsAccessToken,
   loadPromptFiles = true,
 }: {
   config: Config;
@@ -249,7 +246,6 @@ async function intermediateToFinalConfig({
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
-  workOsAccessToken: string | undefined;
   loadPromptFiles?: boolean;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   const errors: ConfigValidationError[] = [];
@@ -346,13 +342,6 @@ async function intermediateToFinalConfig({
     "summarize",
   ]); // Default to chat role if not specified
 
-  // Free trial provider will be completely ignored
-  let warnAboutFreeTrial = false;
-  models = models.filter((model) => model.providerName !== "free-trial");
-  if (models.filter((m) => m.providerName === "free-trial").length) {
-    warnAboutFreeTrial = true;
-  }
-
   // Tab autocomplete model
   const tabAutocompleteModels: BaseLLM[] = [];
   if (config.tabAutocompleteModel) {
@@ -373,11 +362,7 @@ async function intermediateToFinalConfig({
             config.completionOptions,
           );
           if (llm) {
-            if (llm.providerName === "free-trial") {
-              warnAboutFreeTrial = true;
-            } else {
-              tabAutocompleteModels.push(llm);
-            }
+            tabAutocompleteModels.push(llm);
           }
         } else {
           tabAutocompleteModels.push(new CustomLLMClass(desc));
@@ -418,10 +403,7 @@ async function intermediateToFinalConfig({
         return embedConfig;
       }
       const { provider, ...options } = embedConfig;
-      if (provider === "transformers.js" || provider === "free-trial") {
-        if (provider === "free-trial") {
-          warnAboutFreeTrial = true;
-        }
+      if (provider === "transformers.js") {
         return new TransformersJsEmbeddingsProvider();
       } else {
         const cls = LLMClasses.find((c) => c.providerName === provider);
@@ -458,10 +440,6 @@ async function intermediateToFinalConfig({
       return rerankingConfig;
     }
     const { name, params } = config.reranker as RerankerDescription;
-    if (name === "free-trial") {
-      warnAboutFreeTrial = true;
-      return null;
-    }
     if (name === "llm") {
       const llm = models.find((model) => model.title === params?.modelTitle);
       if (!llm) {
@@ -491,14 +469,6 @@ async function intermediateToFinalConfig({
     return null;
   }
   const newReranker = getRerankingILLM(config.reranker);
-
-  if (warnAboutFreeTrial) {
-    errors.push({
-      fatal: false,
-      message:
-        "Model provider 'free-trial' is no longer supported, will be ignored",
-    });
-  }
 
   const continueConfig: ContinueConfig = {
     ...config,
@@ -550,10 +520,7 @@ async function intermediateToFinalConfig({
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
 
-  const orgPolicy = PolicySingleton.getInstance().policy;
-  if (orgPolicy?.policy?.allowMcpServers === false) {
-    await mcpManager.shutdown();
-  } else {
+  {
     const mcpOptions: InternalMcpOptions[] = (
       config.experimental?.modelContextProtocolServers ?? []
     ).map((server, index) => ({
@@ -677,7 +644,6 @@ async function finalToBrowserConfig(
     tools: final.tools.map(serializeTool),
     mcpServerStatuses: final.mcpServerStatuses,
     tabAutocompleteOptions: final.tabAutocompleteOptions,
-    usePlatform: await useHub(ide.getIdeSettings()),
     modelsByRole: Object.fromEntries(
       Object.entries(final.modelsByRole).map(([k, v]) => [
         k,
@@ -828,7 +794,6 @@ async function loadContinueConfigFromJson(
   ideInfo: IdeInfo,
   uniqueId: string,
   llmLogger: ILLMLogger,
-  workOsAccessToken: string | undefined,
   overrideConfigJson: SerializedContinueConfig | undefined,
 ): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceRcConfigs(ide);
@@ -924,7 +889,6 @@ async function loadContinueConfigFromJson(
       ideInfo,
       uniqueId,
       llmLogger,
-      workOsAccessToken,
     });
   return {
     config: finalConfig,

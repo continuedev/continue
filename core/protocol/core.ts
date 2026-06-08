@@ -10,6 +10,7 @@ import {
   AutocompleteInput,
   RecentlyEditedRange,
 } from "../autocomplete/util/types";
+import { ProfileDescription } from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
@@ -44,12 +45,6 @@ import {
 import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types";
 import { GetLspDefinitionsFunction } from "../autocomplete/types";
 import { ConfigHandler } from "../config/ConfigHandler";
-import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
-import {
-  ControlPlaneEnv,
-  ControlPlaneSessionInfo,
-} from "../control-plane/AuthTypes";
-import { CreditStatus, RemoteSessionMetadata } from "../control-plane/client";
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
 import { NextEditOutcome } from "../nextEdit/types";
 import { ContinueErrorReason } from "../util/errors";
@@ -57,7 +52,6 @@ import { ContinueErrorReason } from "../util/errors";
 export enum OnboardingModes {
   API_KEY = "API Key",
   LOCAL = "Local",
-  MODELS_ADD_ON = "Models Add-On",
 }
 
 export interface ListHistoryOptions {
@@ -73,13 +67,9 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   cancelApply: [undefined, void];
 
   // History
-  "history/list": [
-    ListHistoryOptions,
-    (BaseSessionMetadata | RemoteSessionMetadata)[],
-  ];
+  "history/list": [ListHistoryOptions, BaseSessionMetadata[]];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
-  "history/loadRemote": [{ remoteId: string }, Session];
   "history/save": [Session, void];
   "history/share": [{ id: string; outputDir?: string }, void];
   "history/clear": [undefined, void];
@@ -106,8 +96,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
-      organizations: SerializedOrgWithProfiles[];
-      selectedOrgId: string | null;
+      profiles: ProfileDescription[];
     },
   ];
   "config/deleteModel": [{ title: string }, void];
@@ -116,7 +105,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       | undefined
       | {
           reason?: string;
-          selectOrgId?: string;
           selectProfileId?: string;
         }
     ),
@@ -339,14 +327,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
   ];
   "clipboardCache/add": [{ content: string }, void];
-  "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
-  "controlPlane/getEnvironment": [undefined, ControlPlaneEnv];
-  "controlPlane/getCreditStatus": [undefined, CreditStatus | null];
   isItemTooBig: [{ item: ContextItemWithId }, boolean];
-  didChangeControlPlaneSessionInfo: [
-    { sessionInfo: ControlPlaneSessionInfo | undefined },
-    void,
-  ];
   "process/markAsBackgrounded": [{ toolCallId: string }, void];
   "process/isBackgrounded": [{ toolCallId: string }, boolean];
   "process/killTerminalProcess": [{ toolCallId: string }, void];

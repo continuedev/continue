@@ -1,5 +1,5 @@
 import { ILLM } from "core";
-import { EXTENSION_NAME } from "core/control-plane/env";
+import { EXTENSION_NAME } from "core/util/constants";
 import * as vscode from "vscode";
 
 import { Battery } from "../util/battery";

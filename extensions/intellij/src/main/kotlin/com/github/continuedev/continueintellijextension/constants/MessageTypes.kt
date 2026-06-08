@@ -34,8 +34,6 @@ class MessageTypes {
             "getFileStats",
             "insertAtCursor",
             "applyToFile",
-            "getControlPlaneSessionInfo",
-            "logoutOfControlPlane",
             "showToast",
             "openUrl",
             "isWorkspaceRemote",

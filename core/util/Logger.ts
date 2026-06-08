@@ -1,5 +1,4 @@
 import winston from "winston";
-import { captureException } from "./sentry/SentryLogger";
 
 class LoggerClass {
   private static instance: LoggerClass;
@@ -43,10 +42,6 @@ class LoggerClass {
     return LoggerClass.instance;
   }
 
-  private shouldSendToSentry(): boolean {
-    return process.env.NODE_ENV !== "test" && process.env.NODE_ENV !== "e2e";
-  }
-
   public log(message: string, meta?: any): void {
     this.winston.info(message, meta);
   }
@@ -78,10 +73,6 @@ class LoggerClass {
     }
 
     this.winston.error(errorMessage, context);
-
-    if (this.shouldSendToSentry() && error instanceof Error) {
-      captureException(error, context);
-    }
   }
 }
 

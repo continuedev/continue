@@ -9,7 +9,6 @@ import { processCommandFlags } from "../flags/flagProcessor.js";
 import { safeStderr, safeStdout } from "../init.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
-import { sentryService } from "../sentry.js";
 import { initializeServices, services } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import {
@@ -23,7 +22,6 @@ import {
   updateSessionTitle,
 } from "../session.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
-import { posthogService } from "../telemetry/posthogService.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";
 import { gracefulExit } from "../util/exit.js";
@@ -427,12 +425,6 @@ async function processMessage(
       );
     }
 
-    sentryService.captureException(error, {
-      context: "chat_response",
-      isHeadless,
-      chatHistoryLength: services.chatHistory.getHistory().length,
-    });
-
     // In headless mode, re-throw the error to bubble up to main error handler
     // This preserves downstream logic like telemetry cleanup
     if (isHeadless) {
@@ -561,7 +553,6 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
   try {
     // Record session start
     telemetryService.recordSessionStart();
-    await posthogService.capture("sessionStart", {});
 
     // Start active time tracking
     telemetryService.startActiveTime();
@@ -638,11 +629,6 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       // Use headless-aware error logging for non-headless mode
       logging.error(chalk.red(`Fatal error: ${formatError(err)}`));
     }
-
-    sentryService.captureException(err, {
-      context: "chat_command_fatal",
-      headless: options.headless,
-    });
 
     // Stop active time tracking BEFORE graceful exit
     telemetryService.stopActiveTime();

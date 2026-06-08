@@ -50,12 +50,12 @@ export function AssistantOption({
       value={profile.id}
       disabled={hasFatalErrors}
       onClick={!hasFatalErrors ? handleOptionClick : undefined}
-      fontSizeModifier={-2}
+      fontSizeModifier={-4}
       className={`group ${selected ? "bg-list-active text-list-active-foreground" : ""}`}
     >
       <div className="flex w-full items-center justify-between gap-10 py-0.5">
         <div className="flex w-full items-center gap-3">
-          <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center">
+          <div className="flex h-3 w-3 flex-shrink-0 items-center justify-center">
             <AssistantIcon assistant={profile} />
           </div>
           <span

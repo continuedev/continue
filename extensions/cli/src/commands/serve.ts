@@ -3,10 +3,8 @@ import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
-import { posthogService } from "src/telemetry/posthogService.js";
 import { prependPrompt } from "src/util/promptProcessor.js";
 
-import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
 import { runEnvironmentInstallSafe } from "../environment/environmentHandler.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { setAgentId } from "../index.js";
@@ -19,7 +17,6 @@ import {
 } from "../services/index.js";
 import {
   AgentFileServiceState,
-  AuthServiceState,
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
@@ -75,8 +72,6 @@ export function shouldQueueInitialPrompt(
 
 // eslint-disable-next-line max-statements
 export async function serve(prompt?: string, options: ServeOptions = {}) {
-  await posthogService.capture("sessionStart", {});
-
   // Set agent ID for error reporting if provided
   setAgentId(options.id);
 
@@ -124,29 +119,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     model: modelState.model,
   };
 
-  // Organization selection is already handled in initializeServices
-  const authState = await getService<AuthServiceState>(SERVICE_NAMES.AUTH);
-  if (authState.organizationId) {
-    telemetryService.updateOrganization(authState.organizationId);
-  }
-  const accessToken = getAccessToken(authState.authConfig);
-
   // Log configuration information
-  const organizationId = authState.organizationId || "personal";
   const assistantName = config.name;
-  const assistantSlug = getAssistantSlug(authState.authConfig);
   const modelProvider = model.provider;
   const modelName = model.model;
 
   console.log(chalk.blue(`\nConfiguration:`));
-  console.log(chalk.dim(`  Organization: ${organizationId}`));
-  console.log(
-    chalk.dim(
-      `  Assistant: ${assistantName}${
-        assistantSlug ? ` (${assistantSlug})` : ""
-      }`,
-    ),
-  );
+  console.log(chalk.dim(`  Assistant: ${assistantName}`));
   console.log(chalk.dim(`  Model: ${modelProvider}/${modelName}`));
   if (options.config) {
     console.log(chalk.dim(`  Config file: ${options.config}`));
@@ -206,7 +185,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const storageSyncService = services.storageSync;
   let storageSyncActive = await storageSyncService.startFromOptions({
     storageOption: options.id,
-    accessToken,
+    accessToken: null,
     syncSessionHistory,
     getCompleteStateSnapshot: () =>
       getCompleteStateSnapshot(

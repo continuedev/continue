@@ -23,7 +23,7 @@ import { getSystemMessageWithRules } from "../llm/rules/getSystemMessageWithRule
 import { gptEditPrompt } from "../llm/templates/edit";
 import { defaultApplyPrompt } from "../llm/templates/edit/gpt";
 import { findLast } from "../util/findLast";
-import { Telemetry } from "../util/posthog";
+
 import { recursiveStream } from "./recursiveStream";
 
 function constructEditPrompt(
@@ -82,15 +82,6 @@ export async function* streamDiffLines(
   rulesToInclude: RuleWithSource[] | undefined,
 ): AsyncGenerator<DiffLine> {
   const { type, prefix, highlighted, suffix, input, language } = options;
-
-  void Telemetry.capture(
-    "inlineEdit",
-    {
-      model: llm.model,
-      provider: llm.providerName,
-    },
-    true,
-  );
 
   // Strip common indentation for the LLM, then add back after generation
   let oldLines =

@@ -56,8 +56,6 @@ export CONTINUE_API_KEY=your-key-here
 cn -p "your prompt"
 ```
 
-Get an API key from [Continue → Settings → API Keys](https://continue.dev/settings/api-keys).
-
 ### Local API key
 
 If you don't want to use Continue, you can use an Anthropic API key directly. On first launch, `cn` will prompt you to choose between logging in with Continue or entering an Anthropic API key.
@@ -79,10 +77,10 @@ If you don't want to use Continue, you can use an Anthropic API key directly. On
 | `--readonly` | Plan mode — read-only tools only |
 | `--allow <tool>` | Allow a specific tool (repeatable) |
 | `--exclude <tool>` | Exclude a specific tool (repeatable) |
-| `--rule <rule>` | Add a rule — file path, hub slug, or string (repeatable) |
-| `--mcp <slug>` | Add an MCP server from the hub (repeatable) |
-| `--model <slug>` | Add a model from the hub (repeatable) |
-| `--agent <slug>` | Load an agent file from the hub |
+| `--rule <rule>` | Add a rule — file path or string (repeatable) |
+| `--mcp <slug>` | Add an MCP server by slug (repeatable) |
+| `--model <slug>` | Add a model by slug (repeatable) |
+| `--agent <slug>` | Load an agent file by slug |
 | `--verbose` | Enable verbose logging |
 
 Run `cn --help` for the full list.

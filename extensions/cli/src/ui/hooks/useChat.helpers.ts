@@ -8,7 +8,6 @@ import { logger } from "src/util/logger.js";
 
 import { DEFAULT_SESSION_TITLE } from "../../constants/session.js";
 import { loadSession, startNewSession } from "../../session.js";
-import { posthogService } from "../../telemetry/posthogService.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 
 import { processImagePlaceholder } from "./useChat.imageProcessing.js";
@@ -36,9 +35,6 @@ export async function initChatHistory(
  * Handle /config command
  */
 export function handleConfigCommand(onShowConfigSelector: () => void): void {
-  posthogService.capture("useSlashCommand", {
-    name: "config",
-  });
   onShowConfigSelector();
 }
 
@@ -237,13 +233,9 @@ export async function formatMessageWithFiles(
 /**
  * Track telemetry for user message
  */
-export function trackUserMessage(message: string, model?: any): void {
+export function trackUserMessage(message: string, _model?: any): void {
   telemetryService.startActiveTime();
   telemetryService.logUserPrompt(message.length, message);
-  posthogService.capture("chat", {
-    model: model?.name,
-    provider: model?.provider,
-  });
 }
 
 interface HandleSpecialCommandsOptions {

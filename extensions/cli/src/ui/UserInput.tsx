@@ -53,19 +53,17 @@ const SlashCommandsMaybe: React.FC<{
   show,
   inputMode,
   hideNormalUI,
-  isRemoteMode,
+  isRemoteMode: _isRemoteMode,
   assistant,
   filter,
   selectedIndex,
 }) => {
-  if (!show || !inputMode || hideNormalUI || !(isRemoteMode || assistant))
-    return null;
+  if (!show || !inputMode || hideNormalUI || !assistant) return null;
   return (
     <SlashCommandUI
       assistant={assistant}
       filter={filter}
       selectedIndex={selectedIndex}
-      isRemoteMode={isRemoteMode}
     />
   );
 };
@@ -195,17 +193,14 @@ const UserInput: React.FC<UserInputProps> = ({
 
   useEffect(() => {
     const loadCommands = async () => {
-      if (assistant || isRemoteMode) {
-        const commands = await getAllSlashCommands(
-          assistant || ({} as AssistantConfig),
-          { isRemoteMode },
-        );
+      if (assistant) {
+        const commands = await getAllSlashCommands(assistant);
         setSlashCommands(commands);
       }
     };
 
     void loadCommands();
-  }, [isRemoteMode, assistant?.prompts, assistant?.rules]);
+  }, [assistant?.prompts, assistant?.rules]);
 
   // Cycle through permission modes
   const cycleModes = async () => {

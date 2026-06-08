@@ -30,8 +30,7 @@ export function useOnboardingCard(): UseOnboardingCard {
 
   let show: boolean;
 
-  // Always show if we explicitly want to, e.g. passing free trial
-  // and setting up keys
+  // Always show if we explicitly want to, e.g. setting up keys
   if (onboardingCard.show) {
     show = true;
   } else {
@@ -43,7 +42,7 @@ export function useOnboardingCard(): UseOnboardingCard {
     dispatch(
       setOnboardingCard({
         show: true,
-        activeTab: tab ?? OnboardingModes.MODELS_ADD_ON,
+        activeTab: tab ?? OnboardingModes.API_KEY,
       }),
     );
   }

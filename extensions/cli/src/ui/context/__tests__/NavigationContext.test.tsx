@@ -78,7 +78,7 @@ describe("NavigationContext", () => {
           "chat",
           "config",
           "model",
-          "free-trial",
+
           "login",
           "mcp",
         ];
@@ -167,9 +167,12 @@ describe("NavigationContext", () => {
 
       it("closes from any screen back to chat", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
-        const screens: Array<
-          "config" | "model" | "free-trial" | "login" | "mcp"
-        > = ["config", "model", "free-trial", "login", "mcp"];
+        const screens: Array<"config" | "model" | "login" | "mcp"> = [
+          "config",
+          "model",
+          "login",
+          "mcp",
+        ];
 
         screens.forEach((screen) => {
           act(() => {
@@ -205,7 +208,6 @@ describe("NavigationContext", () => {
         expect(result.current.isScreenActive("config")).toBe(false);
         expect(result.current.isScreenActive("model")).toBe(false);
         expect(result.current.isScreenActive("mcp")).toBe(false);
-        expect(result.current.isScreenActive("free-trial")).toBe(false);
         expect(result.current.isScreenActive("login")).toBe(false);
       });
 
@@ -213,14 +215,14 @@ describe("NavigationContext", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
 
         act(() => {
-          result.current.navigateTo("free-trial");
+          result.current.navigateTo("config");
         });
-        expect(result.current.isScreenActive("free-trial")).toBe(true);
+        expect(result.current.isScreenActive("config")).toBe(true);
 
         act(() => {
           result.current.navigateTo("model");
         });
-        expect(result.current.isScreenActive("free-trial")).toBe(false);
+        expect(result.current.isScreenActive("config")).toBe(false);
         expect(result.current.isScreenActive("model")).toBe(true);
 
         act(() => {
@@ -308,21 +310,14 @@ describe("NavigationContext", () => {
         expect(result.current.isScreenActive("chat")).toBe(true);
       });
 
-      it("handles free trial transition flow", () => {
+      it("handles config selection flow", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
 
-        // Show free trial screen
-        act(() => {
-          result.current.navigateTo("free-trial");
-        });
-        expect(result.current.isScreenActive("free-trial")).toBe(true);
-
-        // User might navigate to config from free trial
+        // Navigate to config
         act(() => {
           result.current.navigateTo("config");
         });
         expect(result.current.isScreenActive("config")).toBe(true);
-        expect(result.current.isScreenActive("free-trial")).toBe(false);
 
         // Return to chat
         act(() => {

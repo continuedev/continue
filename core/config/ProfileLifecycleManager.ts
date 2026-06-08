@@ -2,7 +2,6 @@ import {
   ConfigResult,
   ConfigValidationError,
   FullSlug,
-  Policy,
 } from "@continuedev/config-yaml";
 
 import {
@@ -18,7 +17,6 @@ import { IProfileLoader } from "./profile/IProfileLoader.js";
 
 export interface ProfileDescription {
   fullSlug: FullSlug;
-  profileType: "control-plane" | "local" | "platform";
   title: string;
   id: string;
   iconUrl: string;
@@ -26,24 +24,6 @@ export interface ProfileDescription {
   uri: string;
   rawYaml?: string;
 }
-
-export interface OrganizationDescription {
-  id: string;
-  iconUrl: string;
-  name: string;
-  slug: string | undefined; // TODO: This doesn't need to be undefined, just doing while transitioning the backend
-  policy?: Policy;
-}
-
-export type OrgWithProfiles = OrganizationDescription & {
-  profiles: ProfileLifecycleManager[];
-  currentProfile: ProfileLifecycleManager | null;
-};
-
-export type SerializedOrgWithProfiles = OrganizationDescription & {
-  profiles: ProfileDescription[];
-  selectedProfileId: string | null;
-};
 
 export class ProfileLifecycleManager {
   private savedConfigResult: ConfigResult<ContinueConfig> | undefined;
@@ -99,7 +79,6 @@ export class ProfileLifecycleManager {
         try {
           result = await this.profileLoader.doLoadConfig();
         } catch (e) {
-          // Capture config loading system failures to Sentry
           Logger.error(e, {
             context: "profile_config_loading",
           });

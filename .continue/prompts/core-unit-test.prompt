@@ -15,7 +15,7 @@ Use double quotes (or backticks if needed) for strings
 The code being tested is used in IDE extensions, and it:
 - accesses code workspaces through the IDE ("workspace directories")
 - persists extension-related data to the the local machine of the user ("global directory"), and
-- uses configuration via a `ConfigHandler`, which is stored in either the global directory (default) or accessed via a remote "control plane" using the `ControlPlaneClient`
+- uses configuration via a `ConfigHandler`, which is stored in the global directory
 
 Jest testing setup includes
 - @core/test/jest.global-setup.ts initializes a temporary global directory, which is where files that store persisted extension data live.
@@ -25,7 +25,6 @@ Jest testing setup includes
 @core/test/fixtures.ts provides fixtures that should be used in tests to emulate extension behavior
 - import `testIde` for IDE/workspace operations
 - import `testConfigHandler` for any ConfigHandler needs
-- import `testControlPlaneClient` for control plane operations
 - import `ideSettingsPromise` for any IdeSettings needs
 - import `testLLM` for any ILLM/BaseLLM needs. Set the `completion` property to the desired completion, e.g. `testLLM.completion = "Desired completion";`
 

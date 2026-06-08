@@ -18,6 +18,7 @@
   "dependencies": {
     "@c15t/react": "^1.8.5",
     "axios": "^1.13.6",
+    "sharp": "^0.34.5",
     "tar-fs": "^3.1.2"
   },
   "overrides": {

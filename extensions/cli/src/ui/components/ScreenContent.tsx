@@ -8,7 +8,6 @@ import { ConfigSelector } from "../ConfigSelector.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
 import { DiffViewer } from "../DiffViewer.js";
 import { EditMessageSelector } from "../EditMessageSelector.js";
-import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 import type {
   ActivePermissionRequest,
   ActiveQuizQuestion,
@@ -76,7 +75,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   handleModelSelect,
   handleSessionSelect,
   handleExportSession,
-  handleReload,
+  handleReload: _handleReload,
   closeCurrentScreen,
   activePermissionRequest,
   activeQuizQuestion,
@@ -179,11 +178,6 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   // Jobs selector
   if (isScreenActive("jobs")) {
     return <JobsSelector onCancel={closeCurrentScreen} />;
-  }
-
-  // Free trial transition UI
-  if (isScreenActive("free-trial")) {
-    return <FreeTrialTransitionUI onReload={handleReload} />;
   }
 
   // Diff viewer overlay

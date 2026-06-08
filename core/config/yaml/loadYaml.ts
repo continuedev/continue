@@ -23,7 +23,6 @@ import {
   InternalMcpOptions,
 } from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
-import { ControlPlaneClient } from "../../control-plane/client";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { getAllPromptFiles } from "../../promptFiles/getPromptFiles";
 import { GlobalContext } from "../../util/GlobalContext";
@@ -32,8 +31,6 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
 import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
 import { loadJsonMcpConfigs } from "../../context/mcp/json/loadJsonMcpConfigs";
-import { getControlPlaneEnvSync } from "../../control-plane/env";
-import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { getBaseToolDefinitions } from "../../tools";
 import { getCleanUriPath } from "../../util/uri";
 import { loadConfigContextProviders } from "../loadContextProviders";
@@ -48,20 +45,11 @@ import {
 
 async function loadConfigYaml(options: {
   overrideConfigYaml: AssistantUnrolled | undefined;
-  controlPlaneClient: ControlPlaneClient;
-  orgScopeId: string | null;
   ideSettings: IdeSettings;
   ide: IDE;
   packageIdentifier: PackageIdentifier;
 }): Promise<ConfigResult<AssistantUnrolled>> {
-  const {
-    overrideConfigYaml,
-    controlPlaneClient,
-    orgScopeId,
-    ideSettings,
-    ide,
-    packageIdentifier,
-  } = options;
+  const { overrideConfigYaml, ideSettings, ide, packageIdentifier } = options;
 
   // Add local .continue blocks
   // Use "content" field to pass pre-read content directly, avoiding
@@ -82,10 +70,6 @@ async function loadConfigYaml(options: {
     await Promise.all(localBlockPromises)
   ).flat();
 
-  // logger.info(
-  //   `Loading config.yaml from ${JSON.stringify(packageIdentifier)} with root path ${rootPath}`,
-  // );
-
   // Registry client is only used if local blocks are present, but logic same for hub/local assistants
   const getRegistryClient = async () => {
     const rootPath =
@@ -93,9 +77,6 @@ async function loadConfigYaml(options: {
         ? dirname(getCleanUriPath(packageIdentifier.fileUri))
         : undefined;
     return new RegistryClient({
-      accessToken: await controlPlaneClient.getAccessToken(),
-      apiBase: getControlPlaneEnvSync(ideSettings.continueTestEnvironment)
-        .CONTROL_PLANE_URL,
       rootPath,
     });
   };
@@ -111,8 +92,6 @@ async function loadConfigYaml(options: {
         localPackageIdentifiers,
         ide,
         await getRegistryClient(),
-        orgScopeId,
-        controlPlaneClient,
       );
       if (unrolledLocal.errors) {
         errors.push(...unrolledLocal.errors);
@@ -129,13 +108,7 @@ async function loadConfigYaml(options: {
       {
         renderSecrets: true,
         currentUserSlug: "",
-        onPremProxyUrl: null,
-        orgScopeId,
-        platformClient: new LocalPlatformClient(
-          orgScopeId,
-          controlPlaneClient,
-          ide,
-        ),
+        platformClient: new LocalPlatformClient(ide),
         injectBlocks: localPackageIdentifiers,
       },
     );
@@ -186,7 +159,6 @@ export async function configYamlToContinueConfig(options: {
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
-  workOsAccessToken: string | undefined;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   let { unrolledAssistant, ide, ideInfo, uniqueId, llmLogger } = options;
 
@@ -305,14 +277,10 @@ export async function configYamlToContinueConfig(options: {
   });
 
   // Models
-  let warnAboutFreeTrial = false;
   const defaultModelRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
   for (const model of config.models ?? []) {
     model.roles = model.roles ?? defaultModelRoles; // Default to all 4 chat-esque roles if not specified
 
-    if (model.provider === "free-trial") {
-      warnAboutFreeTrial = true;
-    }
     try {
       const llms = await llmsFromModelConfig({
         model,
@@ -386,14 +354,6 @@ export async function configYamlToContinueConfig(options: {
     );
   }
 
-  if (warnAboutFreeTrial) {
-    localErrors.push({
-      fatal: false,
-      message:
-        "Model provider 'free-trial' is no longer supported, will be ignored.",
-    });
-  }
-
   const { providers, errors: contextErrors } = loadConfigContextProviders(
     config.context,
     !!config.docs?.length,
@@ -406,23 +366,18 @@ export async function configYamlToContinueConfig(options: {
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
 
-  const orgPolicy = PolicySingleton.getInstance().policy;
-  if (orgPolicy?.policy?.allowMcpServers === false) {
-    await mcpManager.shutdown();
-  } else {
-    const mcpOptions: InternalMcpOptions[] = (config.mcpServers ?? []).map(
-      (server) =>
-        convertYamlMcpConfigToInternalMcpOptions(server, config.requestOptions),
-    );
-    const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
-      ide,
-      true,
-      config.requestOptions,
-    );
-    localErrors.push(...jsonMcpErrors);
-    mcpOptions.push(...mcpServers);
-    mcpManager.setConnections(mcpOptions, false, { ide });
-  }
+  const mcpOptions: InternalMcpOptions[] = (config.mcpServers ?? []).map(
+    (server) =>
+      convertYamlMcpConfigToInternalMcpOptions(server, config.requestOptions),
+  );
+  const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
+    ide,
+    true,
+    config.requestOptions,
+  );
+  localErrors.push(...jsonMcpErrors);
+  mcpOptions.push(...mcpServers);
+  mcpManager.setConnections(mcpOptions, false, { ide });
 
   return { config: continueConfig, errors: localErrors };
 }
@@ -433,10 +388,7 @@ export async function loadContinueConfigFromYaml(options: {
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
-  workOsAccessToken: string | undefined;
   overrideConfigYaml: AssistantUnrolled | undefined;
-  controlPlaneClient: ControlPlaneClient;
-  orgScopeId: string | null;
   packageIdentifier: PackageIdentifier;
 }): Promise<ConfigResult<ContinueConfig>> {
   const {
@@ -445,17 +397,12 @@ export async function loadContinueConfigFromYaml(options: {
     ideInfo,
     uniqueId,
     llmLogger,
-    workOsAccessToken,
     overrideConfigYaml,
-    controlPlaneClient,
-    orgScopeId,
     packageIdentifier,
   } = options;
 
   const configYamlResult = await loadConfigYaml({
     overrideConfigYaml,
-    controlPlaneClient,
-    orgScopeId,
     ideSettings,
     ide,
     packageIdentifier,
@@ -477,7 +424,6 @@ export async function loadContinueConfigFromYaml(options: {
       ideInfo,
       uniqueId,
       llmLogger,
-      workOsAccessToken,
     });
 
   // Apply shared config

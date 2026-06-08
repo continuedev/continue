@@ -4,15 +4,11 @@ import * as path from "path";
 
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
-import { AuthenticatedConfig } from "src/auth/workos-types.js";
-
+import { getModelName, updateModelName } from "../auth/workos.js";
 import {
-  getModelName,
-  loadAuthConfig,
-  saveAuthConfig,
-  updateModelName,
-} from "../auth/workos.js";
-import { persistModelName } from "../util/modelPersistence.js";
+  getPersistedModelName,
+  persistModelName,
+} from "../util/modelPersistence.js";
 
 describe("Model Persistence Integration", () => {
   let testDir: string;
@@ -41,155 +37,50 @@ describe("Model Persistence Integration", () => {
   });
 
   test("should persist model name when user selects a model", () => {
-    // Create initial auth config without model name
-    const authConfig: AuthenticatedConfig = {
-      userId: "test-user",
-      userEmail: "test@example.com",
-      accessToken: "test-token",
-      refreshToken: "test-refresh",
-      expiresAt: Date.now() + 3600000,
-      organizationId: "test-org",
-    };
-
-    saveAuthConfig(authConfig);
-
-    // User selects a model
+    // User selects a model (auth is always null now)
     updateModelName("Claude 3.5 Sonnet");
 
-    // Load config and verify model name is persisted
-    const loadedConfig = loadAuthConfig();
-    expect(getModelName(loadedConfig)).toBe("Claude 3.5 Sonnet");
+    // Verify model name is persisted via GlobalContext
+    expect(getModelName(null)).toBe("Claude 3.5 Sonnet");
   });
 
   test("should update model name when user switches models", () => {
-    // Create initial auth config with a model
-    const authConfig: AuthenticatedConfig = {
-      userId: "test-user",
-      userEmail: "test@example.com",
-      accessToken: "test-token",
-      refreshToken: "test-refresh",
-      expiresAt: Date.now() + 3600000,
-      organizationId: "test-org",
-      modelName: "GPT-4",
-    };
-
-    saveAuthConfig(authConfig);
+    // Set initial model
+    updateModelName("GPT-4");
+    expect(getModelName(null)).toBe("GPT-4");
 
     // User switches to a different model
     updateModelName("Claude 3.5 Sonnet");
 
-    // Load config and verify new model name
-    const loadedConfig = loadAuthConfig();
-    expect(getModelName(loadedConfig)).toBe("Claude 3.5 Sonnet");
-  });
-
-  test("should preserve other auth config fields when updating model", () => {
-    // Create initial auth config
-    const authConfig: AuthenticatedConfig = {
-      userId: "test-user",
-      userEmail: "test@example.com",
-      accessToken: "test-token",
-      refreshToken: "test-refresh",
-      expiresAt: Date.now() + 3600000,
-      organizationId: "test-org",
-      configUri: "slug://owner/my-config",
-    };
-
-    saveAuthConfig(authConfig);
-
-    // Update model name
-    updateModelName("Claude 3.5 Sonnet");
-
-    // Load config and verify all fields are preserved
-    const loadedConfig = loadAuthConfig();
-    expect(loadedConfig).toMatchObject({
-      userId: "test-user",
-      userEmail: "test@example.com",
-      organizationId: "test-org",
-      configUri: "slug://owner/my-config",
-      modelName: "Claude 3.5 Sonnet",
-    });
+    // Verify new model name
+    expect(getModelName(null)).toBe("Claude 3.5 Sonnet");
   });
 
   test("should clear model name when set to null", () => {
-    // Create initial auth config with a model
-    const authConfig: AuthenticatedConfig = {
-      userId: "test-user",
-      userEmail: "test@example.com",
-      accessToken: "test-token",
-      refreshToken: "test-refresh",
-      expiresAt: Date.now() + 3600000,
-      organizationId: "test-org",
-      modelName: "GPT-4",
-    };
-
-    saveAuthConfig(authConfig);
+    // Set a model
+    updateModelName("GPT-4");
+    expect(getModelName(null)).toBe("GPT-4");
 
     // Clear model name
     updateModelName(null);
 
-    // Load config and verify model name is cleared
-    const loadedConfig = loadAuthConfig();
-    expect(getModelName(loadedConfig)).toBeNull();
+    // Verify model name is cleared
+    expect(getModelName(null)).toBeNull();
   });
 
-  test("should return null for model name when not authenticated and no GlobalContext", () => {
-    // No auth config exists and no GlobalContext model
+  test("should return null for model name when no model persisted", () => {
+    // No model persisted and no auth config
     persistModelName(null); // Ensure GlobalContext is clear
-    const loadedConfig = loadAuthConfig();
-    expect(getModelName(loadedConfig)).toBeNull();
+    expect(getModelName(null)).toBeNull();
   });
 
-  test("should not persist model name when using CONTINUE_API_KEY", () => {
-    // Clear GlobalContext first
-    persistModelName(null);
-
-    // Capture original value to restore after test
-    const originalApiKey = process.env.CONTINUE_API_KEY;
-    // Set environment variable
-    process.env.CONTINUE_API_KEY = "test-api-key";
-
-    // Try to update model name
+  test("should persist model name via GlobalContext", () => {
     updateModelName("Claude 3.5 Sonnet");
 
-    // Load config - should be environment auth config without model name
-    const loadedConfig = loadAuthConfig();
-    expect(getModelName(loadedConfig)).toBeNull();
+    // Verify via getPersistedModelName
+    expect(getPersistedModelName()).toBe("Claude 3.5 Sonnet");
 
-    // Restore original value
-    if (originalApiKey === undefined) {
-      delete process.env.CONTINUE_API_KEY;
-    } else {
-      process.env.CONTINUE_API_KEY = originalApiKey;
-    }
-  });
-
-  test("should persist model name in auth.json file with correct format", () => {
-    // Create and save auth config
-    const authConfig: AuthenticatedConfig = {
-      userId: "test-user",
-      userEmail: "test@example.com",
-      accessToken: "test-token",
-      refreshToken: "test-refresh",
-      expiresAt: Date.now() + 3600000,
-      organizationId: "test-org",
-    };
-
-    saveAuthConfig(authConfig);
-    updateModelName("Claude 3.5 Sonnet");
-
-    // Read the raw file content
-    const authPath = path.join(testDir, "auth.json");
-    const rawContent = fs.readFileSync(authPath, "utf8");
-    const parsedContent = JSON.parse(rawContent);
-
-    // Verify the file structure
-    expect(parsedContent).toHaveProperty("userId", "test-user");
-    expect(parsedContent).toHaveProperty("userEmail", "test@example.com");
-    expect(parsedContent).toHaveProperty("organizationId", "test-org");
-    expect(parsedContent).toHaveProperty("modelName", "Claude 3.5 Sonnet");
-
-    // Verify it's pretty-printed (has indentation)
-    expect(rawContent).toContain("\n  ");
+    // Verify via getModelName (which reads from GlobalContext)
+    expect(getModelName(null)).toBe("Claude 3.5 Sonnet");
   });
 });

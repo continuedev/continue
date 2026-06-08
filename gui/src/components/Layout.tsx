@@ -1,12 +1,11 @@
 import { OnboardingModes } from "core/protocol/core";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv } from ".";
 import { AuthProvider } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { LocalStorageProvider } from "../context/LocalStorage";
-import TelemetryProviders from "../hooks/TelemetryProviders";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setCodeToEdit } from "../redux/slices/editState";
@@ -25,7 +24,6 @@ import {
   useOnboardingCard,
 } from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
-import PostHogPageView from "./PosthogPageView";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -41,7 +39,6 @@ const GridDiv = styled.div`
 `;
 
 const Layout = () => {
-  const [showStagingIndicator, setShowStagingIndicator] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -56,17 +53,6 @@ const Layout = () => {
   const isHome =
     location.pathname === ROUTES.HOME ||
     location.pathname === ROUTES.HOME_INDEX;
-
-  useEffect(() => {
-    (async () => {
-      const response = await ideMessenger.request(
-        "controlPlane/getEnvironment",
-        undefined,
-      );
-      response.status === "success" &&
-        setShowStagingIndicator(response.content.AUTH_TYPE.includes("staging"));
-    })();
-  }, []);
 
   useWebviewListener(
     "newSession",
@@ -147,22 +133,6 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "freeTrialExceeded",
-    async () => {
-      dispatch(setShowDialog(true));
-      onboardingCard.setActiveTab(OnboardingModes.MODELS_ADD_ON);
-      dispatch(
-        setDialogMessage(
-          <div className="flex-1">
-            <OnboardingCard isDialog />
-          </div>,
-        ),
-      );
-    },
-    [],
-  );
-
-  useWebviewListener(
     "setupApiKey",
     async () => {
       onboardingCard.open(OnboardingModes.API_KEY);
@@ -237,47 +207,35 @@ const Layout = () => {
   return (
     <LocalStorageProvider>
       <AuthProvider>
-        <TelemetryProviders>
-          <LayoutTopDiv>
-            {showStagingIndicator && (
-              <span
-                title="Staging environment"
-                className="absolute right-0 mx-1.5 h-1.5 w-1.5 rounded-full"
-                style={{
-                  backgroundColor: "var(--vscode-list-warningForeground)",
-                }}
-              />
-            )}
-            <OSRContextMenu />
-            <div
-              style={{
-                scrollbarGutter: "stable both-edges",
-                minHeight: "100%",
-                display: "grid",
-                gridTemplateRows: "1fr auto",
+        <LayoutTopDiv>
+          <OSRContextMenu />
+          <div
+            style={{
+              scrollbarGutter: "stable both-edges",
+              minHeight: "100%",
+              display: "grid",
+              gridTemplateRows: "1fr auto",
+            }}
+          >
+            <TextDialog
+              showDialog={showDialog}
+              onEnter={() => {
+                dispatch(setShowDialog(false));
               }}
-            >
-              <TextDialog
-                showDialog={showDialog}
-                onEnter={() => {
-                  dispatch(setShowDialog(false));
-                }}
-                onClose={() => {
-                  dispatch(setShowDialog(false));
-                }}
-                message={dialogMessage}
-              />
+              onClose={() => {
+                dispatch(setShowDialog(false));
+              }}
+              message={dialogMessage}
+            />
 
-              <GridDiv>
-                <PostHogPageView />
-                <Outlet />
-                {/* The fatal error for chat is shown below input */}
-                {!isHome && <FatalErrorIndicator />}
-              </GridDiv>
-            </div>
-            <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
-          </LayoutTopDiv>
-        </TelemetryProviders>
+            <GridDiv>
+              <Outlet />
+              {/* The fatal error for chat is shown below input */}
+              {!isHome && <FatalErrorIndicator />}
+            </GridDiv>
+          </div>
+          <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
+        </LayoutTopDiv>
       </AuthProvider>
     </LocalStorageProvider>
   );

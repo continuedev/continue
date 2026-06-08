@@ -14,11 +14,6 @@ import CLIInstall from '/snippets/cli-install.mdx'
   issues with the GitHub CLI.
 </Card>
 
-<Info>
-  The new [PostHog Mission Control Integration](/mission-control/integrations/posthog) enables **[Continuous AI](/guides/continuous-ai)** for product analytics - where AI agents autonomously analyze user behavior, identify optimization opportunities, and create data-driven development tasks. This cookbook focuses on CLI-based workflows, but you can also deploy autonomous agents through Mission Control.
-
-  **Get Started:** Use this cookbook to understand PostHog analytics fundamentals, then [enable Mission Control](/mission-control/integrations/posthog) to deploy autonomous analytics-driven agents across your organization.
-</Info>
 
 ## What You'll Learn
 
@@ -103,17 +98,13 @@ First, you'll need to gather your PostHog and GitHub API credentials and add the
   </Tab>
 <Tab title= "Configure API Access in Continue CLI">
  
-<Tip>
-See the [secret types documentation](/mission-control/secrets/secret-types) for adding secrets
-</Tip>
+You only need to configure the PostHog MCP credential - it automatically handles project selection. Set your PostHog API key as an environment variable:
 
-You only need to configure the PostHog MCP credential - it automatically handles project selection. To add environment variables to your Continue Mission Control account:
+```bash
+export POSTHOG_AUTH_HEADER="Bearer YOUR_API_KEY"
+```
 
-1.  Go to the [Continue Mission Control](https://continue.dev)
-2.  Sign in to your account
-3.  Navigate to your user settings
-4.  Look for the "Secrets" section
-5.  Add your Personal API Key from PostHog (phx_...) as POSTHOG_AUTH_HEADER secret with format: Bearer YOUR_API_KEY
+Replace `YOUR_API_KEY` with your Personal API Key from PostHog (phx_...).
 
 </Tab>
 </Tabs>
@@ -143,7 +134,7 @@ You only need to configure the PostHog MCP credential - it automatically handles
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
-        Visit the [PostHog Continuous AI Agent](https://continue.dev/continuedev/posthog-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
+        Run:
         
         ```bash
         cn --agent continuedev/posthog-continuous-ai-agent
@@ -174,14 +165,10 @@ You only need to configure the PostHog MCP credential - it automatically handles
   <Tab title="🛠️ Manual Setup">
   <Steps>
     <Step title="Add PostHog MCP to Continue CLI">
-      First, install the [PostHog MCP](https://continue.dev/posthog/http-mcp) to the Continue CLI by
-      1. Adding it to a Hub Config by clicking "Use MCP Server" and selecting a Config
-      2. Adding it to your [Local Config](/reference#mcpservers)
+      Add the PostHog MCP to your [local config](/reference#mcpservers).
     </Step>
     <Step title="Add PostHog + GitHub Analysis Rules">
-      Visit [PostHog GitHub Continuous AI Rules](https://continue.dev/bekah-hawrot-weigel/posthog-github-continuous-ai-rules) and click "Use Rule" to add it to your Config.
-      
-      You could also
+      Add PostHog GitHub Continuous AI rules to your configuration:
       1. Pass `--rule bekah-hawrot-weigel/posthog-github-continuous-ai-rules` to `cn` OR
       2. Copy the rules to your local `.continue/rules` folder. See the [Rules Guide](/customize/deep-dives/rules#how-to-create-rules).
     </Step>
@@ -212,12 +199,11 @@ You only need to configure the PostHog MCP credential - it automatically handles
 </Info>
 
 <Accordion title="Agent Requirements">
-    To use the pre-built agent, you need either: 
-      - **Continue CLI Pro Plan** with
-      the models add-on, OR 
-      - **Your own API keys** added to Continue Mission Control secrets
-      The agent will automatically detect and use your
-      configuration.
+    To use the pre-built agent, you need either:
+      - **Continue CLI Pro Plan** with the models add-on, OR
+      - **Your own API keys** configured as environment variables
+
+    The agent will automatically detect and use your configuration.
 
 </Accordion>
 
@@ -346,18 +332,12 @@ Consider enhancing your workflow with these advanced Continue CLI prompts:
   <Card title="Feature Flag Performance Impact" icon="flag">
     "Use PostHog MCP to correlate feature flag rollouts with performance metrics and user behavior changes to identify flags causing issues"
   </Card>
-  <Card title="Custom Slack Alerts" icon="slack">
-    "Create Slack alerts when critical UX issues are detected in PostHog
-    sessions or when feature flags need attention"
-  </Card>
 </CardGroup>
 
 ## Next Steps
 
-- Consider [GitHub MCP](https://continue.dev/github/github-mcp) as an alternative (note: can be token-expensive)
-- Configure [Slack MCP](https://continue.dev/slack/slack-mcp) for alerts
+- Consider GitHub MCP as an alternative (note: can be token-expensive)
 - Set up [PostHog performance monitoring](https://posthog.com/docs/web-analytics)
-- Join the [GitHub Discussions](https://github.com/continuedev/continue/discussions) for support
 
 ## Resources
 
@@ -367,6 +347,5 @@ Consider enhancing your workflow with these advanced Continue CLI prompts:
 - [PostHog Feature Flags](https://posthog.com/docs/feature-flags)
 - [PostHog Error Tracking](https://posthog.com/docs/error-tracking)
 - [GitHub CLI Documentation](https://cli.github.com/)
-- [GitHub MCP on Continue Mission Control](https://continue.dev/github/github-mcp) (alternative option)
 - [Continue CLI Guide](https://docs.continue.dev/guides/cli)
 - [Continuous AI Best Practices](https://blog.continue.dev/what-is-continuous-ai-a-developers-guide/)

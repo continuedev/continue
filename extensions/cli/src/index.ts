@@ -7,11 +7,7 @@ import { Command } from "commander";
 
 import { chat } from "./commands/chat.js";
 import { checks } from "./commands/checks.js";
-import { login } from "./commands/login.js";
-import { logout } from "./commands/logout.js";
 import { listSessionsCommand } from "./commands/ls.js";
-import { remoteTest } from "./commands/remote-test.js";
-import { remote } from "./commands/remote.js";
 import { review } from "./commands/review.js";
 import { serve } from "./commands/serve.js";
 import {
@@ -19,9 +15,7 @@ import {
   validateFlags,
 } from "./flags/flagValidator.js";
 import { configureConsoleForHeadless, safeStderr } from "./init.js";
-import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
-import { posthogService } from "./telemetry/posthogService.js";
 import { post } from "./util/apiClient.js";
 import { markUnhandledError } from "./util/errorState.js";
 import { gracefulExit } from "./util/exit.js";
@@ -154,7 +148,6 @@ process.on("unhandledRejection", (reason, promise) => {
     });
   }
 
-  // Note: Sentry capture is handled by logger.error() above
   // Don't exit the process immediately, but hasUnhandledError will cause non-zero exit later
 });
 
@@ -167,7 +160,6 @@ process.on("uncaughtException", (error) => {
   reportUnhandledErrorToApi(error).catch(() => {
     // Silently fail if API reporting errors - already logged in helper
   });
-  // Note: Sentry capture is handled by logger.error() above
   // Don't exit the process immediately, but hasUnhandledError will cause non-zero exit later
 });
 
@@ -205,8 +197,6 @@ addCommonOptions(program)
     "Enable beta Subagent tool for invoking subagents",
   )
   .action(async (prompt, options) => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "cn" });
     // Handle piped input - detect it early and decide on mode
     let stdinInput = null;
 
@@ -306,76 +296,15 @@ addCommonOptions(program)
     await chat(prompt, options);
   });
 
-// Login subcommand
-program
-  .command("login")
-  .description("Authenticate with Continue")
-  .action(async () => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "login" });
-    await login();
-  });
-
-// Logout subcommand
-program
-  .command("logout")
-  .description("Log out from Continue")
-  .action(async () => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "logout" });
-    await logout();
-  });
-
 // List sessions subcommand
 program
   .command("ls")
   .description("List recent chat sessions and select one to resume")
   .option("--json", "Output in JSON format")
   .action(async (options) => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "ls" });
     await listSessionsCommand({
       format: options.json ? "json" : undefined,
     });
-  });
-
-// Remote subcommand
-addCommonOptions(
-  program
-    .command("remote [prompt]", { hidden: true })
-    .description("Launch a remote instance of the cn agent"),
-)
-  .option(
-    "--url <url>",
-    "Connect directly to the specified URL instead of creating a new remote environment",
-  )
-  .option(
-    "--id <id>",
-    "Connect to an existing remote agent by id and establish a tunnel",
-  )
-  .option(
-    "--idempotency-key <key>",
-    "Idempotency key for session management - allows resuming existing sessions",
-  )
-  .option(
-    "-s, --start",
-    "Create remote environment and print connection details without starting TUI",
-  )
-  .option(
-    "--branch <branch>",
-    "Specify the git branch name to use in the remote environment",
-  )
-  .option(
-    "--repo <url>",
-    "Specify the repository URL to use in the remote environment",
-  )
-  .action(async (prompt: string | undefined, options) => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", {
-      command: "remote",
-      flagS: options.start,
-    });
-    await remote(prompt, options);
   });
 
 // Serve subcommand
@@ -397,8 +326,6 @@ program
     "Enable beta UploadArtifact tool for uploading screenshots, videos, and logs",
   )
   .action(async (prompt, options) => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "serve" });
     // Merge parent options with subcommand options
     const mergedOptions = mergeParentOptions(program, options);
 
@@ -410,23 +337,11 @@ program
     await serve(prompt, mergedOptions);
   });
 
-// Remote test subcommand (for development)
-program
-  .command("remote-test [prompt]")
-  .description("Test remote TUI mode with a local server")
-  .option("--url <url>", "Server URL (default: http://localhost:8000)")
-  .action(async (prompt: string | undefined, options) => {
-    // Telemetry: record command invocation
-    await posthogService.capture("cliCommand", { command: "remote-test" });
-    await remoteTest(prompt, options.url);
-  });
-
 // Checks subcommand
 program
   .command("checks [action] [pr-url]")
   .description("Show CI check statuses for a PR")
   .action(async (action: string | undefined, prUrl: string | undefined) => {
-    await posthogService.capture("cliCommand", { command: "checks" });
     await checks(action, prUrl);
   });
 
@@ -442,7 +357,6 @@ program
   .option("--review-agents <agents...>", "Specific review agents to run")
   .option("--verbose", "Enable verbose logging")
   .action(async (options) => {
-    await posthogService.capture("cliCommand", { command: "review" });
     await review(options);
   });
 
@@ -468,9 +382,6 @@ export async function runCli(): Promise<void> {
     program.parse();
   } catch (error) {
     console.error(error);
-    sentryService.captureException(
-      error instanceof Error ? error : new Error(String(error)),
-    );
     process.exit(1);
   }
 

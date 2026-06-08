@@ -547,7 +547,6 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     packages: [
       models.llama3170bChat,
       models.llama318bChat,
-      { ...models.mixtralTrial, title: "Mixtral" },
       {
         ...models.AUTODETECT,
         params: {
@@ -736,7 +735,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       "https://novita.ai/settings/key-management?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link",
   },
   gemini: {
-    title: "Google Gemini API",
+    title: "Google Gemini",
     provider: "gemini",
     refPage: "geminiapi",
     description:
