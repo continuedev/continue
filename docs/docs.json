@@ -106,6 +106,7 @@
                     "group": "More Providers",
                     "pages": [
                       "customize/model-providers/more/asksage",
+                      "customize/model-providers/more/claudexia",
                       "customize/model-providers/more/clawrouter",
                       "customize/model-providers/more/deepseek",
                       "customize/model-providers/more/deepinfra",

@@ -1,0 +1,114 @@
+---
+title: "Claudexia"
+description: "Configure Claudexia with Continue — a pay-per-token Claude API gateway with OpenAI- and Anthropic-compatible endpoints"
+---
+
+<Info>
+  [Claudexia](https://claudexia.tech) is a pay-per-token gateway to Claude (and other frontier models) with OpenAI- and Anthropic-compatible APIs. Get an API key from the [Claudexia dashboard](https://claudexia.tech).
+</Info>
+
+Claudexia exposes an OpenAI-compatible endpoint at `https://api.claudexia.tech/v1`, so you can use it with Continue via the `openai` provider by setting `apiBase`.
+
+## Chat Model
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Claude Sonnet 4.6 (Claudexia)
+      provider: openai
+      model: claude-sonnet-4-6
+      apiKey: <YOUR_CLAUDEXIA_API_KEY>
+      apiBase: https://api.claudexia.tech/v1
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude Sonnet 4.6 (Claudexia)",
+        "provider": "openai",
+        "model": "claude-sonnet-4-6",
+        "apiKey": "<YOUR_CLAUDEXIA_API_KEY>",
+        "apiBase": "https://api.claudexia.tech/v1"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+Claudexia routes to Anthropic's Claude family and other frontier models. Common model IDs:
+
+- `claude-opus-4-7`
+- `claude-sonnet-4-6`
+- `claude-haiku-4-5`
+- `gpt-5.5`
+
+See the full list at [claudexia.tech](https://claudexia.tech).
+
+## Multiple Models
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Claude Opus 4.7
+      provider: openai
+      model: claude-opus-4-7
+      apiKey: <YOUR_CLAUDEXIA_API_KEY>
+      apiBase: https://api.claudexia.tech/v1
+      roles:
+        - chat
+        - edit
+
+    - name: Claude Haiku 4.5
+      provider: openai
+      model: claude-haiku-4-5
+      apiKey: <YOUR_CLAUDEXIA_API_KEY>
+      apiBase: https://api.claudexia.tech/v1
+      roles:
+        - autocomplete
+        - apply
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude Opus 4.7",
+        "provider": "openai",
+        "model": "claude-opus-4-7",
+        "apiKey": "<YOUR_CLAUDEXIA_API_KEY>",
+        "apiBase": "https://api.claudexia.tech/v1",
+        "roles": ["chat", "edit"]
+      },
+      {
+        "title": "Claude Haiku 4.5",
+        "provider": "openai",
+        "model": "claude-haiku-4-5",
+        "apiKey": "<YOUR_CLAUDEXIA_API_KEY>",
+        "apiBase": "https://api.claudexia.tech/v1",
+        "roles": ["autocomplete", "apply"]
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Sign up and grab an API key at [claudexia.tech](https://claudexia.tech). Pay-per-token billing supports SBP, card, and USDT — no VPN required.
+</Tip>
