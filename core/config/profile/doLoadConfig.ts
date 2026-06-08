@@ -71,6 +71,66 @@ async function loadRules(ide: IDE) {
   return { rules, errors };
 }
 
+/**
+ * If the YAML content contains a legacy config.json-style `tabAutocompleteModel`
+ * object, inject it into `models` with `roles: [autocomplete]` and show a
+ * deprecation toast. Returns an updated PackageIdentifier whose `content` field
+ * carries the transformed YAML; the file on disk is never modified.
+ */
+function migrateTabAutocompleteModelInYaml(
+  packageIdentifier: PackageIdentifier,
+  overrideConfigYaml: AssistantUnrolled | undefined,
+  configYamlPath: string,
+  ide: IDE,
+): PackageIdentifier {
+  if (overrideConfigYaml) {
+    return packageIdentifier;
+  }
+
+  const hasPreReadContent =
+    packageIdentifier.uriType === "file" &&
+    packageIdentifier.content !== undefined;
+
+  if (!hasPreReadContent && !fs.existsSync(configYamlPath)) {
+    return packageIdentifier;
+  }
+
+  try {
+    const rawContent = hasPreReadContent
+      ? packageIdentifier.content!
+      : fs.readFileSync(configYamlPath, "utf8");
+    const rawParsed = YAML.parse(rawContent) as Record<string, any> | null;
+
+    if (
+      !rawParsed ||
+      typeof rawParsed["tabAutocompleteModel"] !== "object" ||
+      rawParsed["tabAutocompleteModel"] === null
+    ) {
+      return packageIdentifier;
+    }
+
+    const transformed: Record<string, any> = {
+      ...rawParsed,
+      models: [
+        ...(rawParsed["models"] ?? []),
+        { ...rawParsed["tabAutocompleteModel"], roles: ["autocomplete"] },
+      ],
+    };
+    delete transformed["tabAutocompleteModel"];
+
+    void ide.showToast(
+      "warning",
+      "config.yaml: 'tabAutocompleteModel' is a config.json field. " +
+        "In config.yaml, add 'roles: [autocomplete]' to your model entry instead. " +
+        "See https://docs.continue.dev/features/tab-autocomplete for migration details.",
+    );
+
+    return { ...packageIdentifier, content: YAML.stringify(transformed) };
+  } catch {
+    return packageIdentifier;
+  }
+}
+
 export default async function doLoadConfig(options: {
   ide: IDE;
   controlPlaneClient: ControlPlaneClient;
@@ -116,53 +176,12 @@ export default async function doLoadConfig(options: {
   let configLoadInterrupted = false;
   let configName: string | undefined;
 
-  // Migrate legacy config.json-style tabAutocompleteModel in config.yaml.
-  // The YAML format has no tabAutocompleteModel field; autocomplete models must
-  // appear in the models array with roles: [autocomplete]. If the user wrote
-  // a config.yaml using the JSON-format object style, Zod strips it silently
-  // and autocomplete shows "Setup Autocomplete model" with no error.
-  // We detect and transform it here so the YAML pipeline sees it correctly.
-  const hasPreReadYamlContent =
-    packageIdentifier.uriType === "file" &&
-    packageIdentifier.content !== undefined;
-
-  let effectivePackageIdentifier = packageIdentifier;
-  if (!overrideConfigYaml && (hasPreReadYamlContent || fs.existsSync(configYamlPath))) {
-    try {
-      const rawContent = hasPreReadYamlContent
-        ? packageIdentifier.content!
-        : fs.readFileSync(configYamlPath, "utf8");
-      const rawParsed = YAML.parse(rawContent) as Record<string, any> | null;
-      if (
-        rawParsed &&
-        rawParsed["tabAutocompleteModel"] !== undefined &&
-        typeof rawParsed["tabAutocompleteModel"] === "object" &&
-        rawParsed["tabAutocompleteModel"] !== null
-      ) {
-        const autocompleteModelEntry = {
-          ...rawParsed["tabAutocompleteModel"],
-          roles: ["autocomplete"],
-        };
-        const transformed: Record<string, any> = {
-          ...rawParsed,
-          models: [...(rawParsed["models"] ?? []), autocompleteModelEntry],
-        };
-        delete transformed["tabAutocompleteModel"];
-        void ide.showToast(
-          "warning",
-          "config.yaml: 'tabAutocompleteModel' is a config.json field. " +
-            "In config.yaml, add 'roles: [autocomplete]' to your model entry instead. " +
-            "See https://docs.continue.dev/features/tab-autocomplete for migration details.",
-        );
-        effectivePackageIdentifier = {
-          ...packageIdentifier,
-          content: YAML.stringify(transformed),
-        };
-      }
-    } catch {
-      // If YAML parsing fails here, let the normal pipeline surface the error
-    }
-  }
+  const effectivePackageIdentifier = migrateTabAutocompleteModelInYaml(
+    packageIdentifier,
+    overrideConfigYaml,
+    configYamlPath,
+    ide,
+  );
 
   const hasPreReadContent =
     effectivePackageIdentifier.uriType === "file" &&
