@@ -44,6 +44,10 @@ export class OpenAIApi implements BaseLlmApi {
       // Necessary because `new OpenAI()` will throw an error if there is no API Key
       apiKey: config.apiKey ?? "",
       baseURL: this.apiBase,
+      defaultHeaders: {
+        "openai-organization": undefined,
+        "openai-project": undefined,
+      },
       fetch: customFetch(config.requestOptions),
       timeout: config?.requestOptions?.timeout || undefined,
     });

@@ -235,6 +235,19 @@ describe("Configuration", () => {
     );
   });
 
+  it("should disable optional OpenAI org/project headers with lowercase keys", () => {
+    const openai = constructLlmApi({
+      provider: "openai",
+      apiKey: "sk-xxx",
+      apiBase: "https://openrouter.ai/api/v1/",
+    }) as OpenAIApi;
+
+    expect((openai.openai as any)._options.defaultHeaders).toMatchObject({
+      "openai-organization": undefined,
+      "openai-project": undefined,
+    });
+  });
+
   it("should configure Inception OpenAI client with correct apiBase and apiKey", () => {
     const inception = constructLlmApi({
       provider: "inception",
