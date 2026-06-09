@@ -83,5 +83,5 @@ Use the `openai` provider and point `apiBase` at the QVAC server. The `model` is
 ## Recommendations
 
 - **Set `ctx_size` explicitly.** QVAC's LLM context size defaults to `1024` tokens, which is too small for most chat and agent prompts. Set it in `qvac.config.json` (e.g. `32768`) as shown above.
-- **Disable reasoning for reasoning-tuned models.** For models such as Qwen3, set `reasoning_budget: 0` in the model `config` to keep responses suited to Continue's chat and edit flows.
+- **Disable reasoning for reasoning-tuned models.** For models such as Qwen3.5, set `reasoning_budget: 0` in the model `config` to keep responses suited to Continue's chat and edit flows.
 - **Pick a capable model for tools and autocomplete.** Local tool-calling and autocomplete quality is bounded by the model you run. A capable agent-tuned model such as `gpt-oss-20b` is a good default for chat and agent use.
