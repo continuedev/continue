@@ -396,6 +396,31 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(PROVIDER_TOOL_SUPPORT["non-existent"]).toBe(undefined);
     });
   });
+
+  describe("vllm", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["vllm"];
+
+    it("should return true for qwen3", () => {
+      expect(supportsFn("qwen3")).toBe(true);
+    });
+
+    it("should return true for Qwen3-72B-Instruct", () => {
+      expect(supportsFn("Qwen3-72B-Instruct")).toBe(true);
+    });
+
+    it("should return true for llama3.1", () => {
+      expect(supportsFn("llama3.1")).toBe(true);
+    });
+
+    it("should return true for deepseek models", () => {
+      expect(supportsFn("deepseek")).toBe(true);
+      expect(supportsFn("deepseek-r1")).toBe(true);
+    });
+
+    it("should return false for llama2", () => {
+      expect(supportsFn("llama2")).toBe(false);
+    });
+  });
 });
 
 describe("isRecommendedAgentModel", () => {
