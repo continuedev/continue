@@ -64,10 +64,18 @@ export class OpenAIApi implements BaseLlmApi {
       body.max_tokens = undefined;
     }
 
-    // o-series models - only apply for official OpenAI API
+    // o-series and gpt-5+ models don't support stop parameter
+    const isOSeriesOrGpt5Plus = !!(
+      body.model.match(/^o[0-9]/) || body.model.match(/gpt-[5-9]/i)
+    );
+    if (isOSeriesOrGpt5Plus) {
+      body.stop = undefined;
+    }
+
+    // Additional handling for official OpenAI API
     const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
     if (isOfficialOpenAIAPI) {
-      if (body.model.startsWith("o") || body.model.includes("gpt-5")) {
+      if (isOSeriesOrGpt5Plus) {
         // a) use max_completion_tokens instead of max_tokens
         body.max_completion_tokens = body.max_tokens;
         body.max_tokens = undefined;

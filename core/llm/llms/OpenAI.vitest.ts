@@ -424,4 +424,133 @@ describe("OpenAI", () => {
       },
     });
   });
+
+  test("streamChat for gpt-5-nano should not include stop parameter", async () => {
+    const openai = new OpenAI({
+      apiKey: "test-api-key",
+      model: "gpt-5-nano",
+      apiBase: "https://api.openai.com/v1/",
+    });
+
+    const testCase: LlmTestCase = {
+      llm: openai,
+      methodToTest: "streamChat",
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+        { stop: ["<|fim_suffix|>"] },
+      ],
+      mockStream: [{ choices: [{ delta: { content: "Hello world" } }] }],
+      expectedRequest: {
+        url: "https://api.openai.com/v1/chat/completions",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    };
+
+    const mockFetch = setupMockFetch(undefined, testCase.mockStream);
+    setupReadableStreamPolyfill();
+    (openai as any).fetch = mockFetch;
+    (openai as any).useOpenAIAdapterFor = [];
+
+    await executeLlmMethod(
+      testCase.llm,
+      testCase.methodToTest,
+      testCase.params,
+    );
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [, options] = mockFetch.mock.calls[0];
+    const actualBody = JSON.parse(options.body as string);
+    expect(actualBody.model).toBe("gpt-5-nano");
+    expect(actualBody.stop).toBeUndefined();
+  });
+
+  test("streamChat for o3-mini should not include stop parameter", async () => {
+    const openai = new OpenAI({
+      apiKey: "test-api-key",
+      model: "o3-mini",
+      apiBase: "https://api.openai.com/v1/",
+    });
+
+    const testCase: LlmTestCase = {
+      llm: openai,
+      methodToTest: "streamChat",
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+        { stop: ["<|fim_suffix|>"] },
+      ],
+      mockStream: [{ choices: [{ delta: { content: "Hello world" } }] }],
+      expectedRequest: {
+        url: "https://api.openai.com/v1/chat/completions",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    };
+
+    const mockFetch = setupMockFetch(undefined, testCase.mockStream);
+    setupReadableStreamPolyfill();
+    (openai as any).fetch = mockFetch;
+    (openai as any).useOpenAIAdapterFor = [];
+
+    await executeLlmMethod(
+      testCase.llm,
+      testCase.methodToTest,
+      testCase.params,
+    );
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [, options] = mockFetch.mock.calls[0];
+    const actualBody = JSON.parse(options.body as string);
+    expect(actualBody.model).toBe("o3-mini");
+    expect(actualBody.stop).toBeUndefined();
+  });
+
+  test("streamChat for gpt-4o should include stop parameter (regression guard)", async () => {
+    const openai = new OpenAI({
+      apiKey: "test-api-key",
+      model: "gpt-4o",
+      apiBase: "https://api.openai.com/v1/",
+    });
+
+    const testCase: LlmTestCase = {
+      llm: openai,
+      methodToTest: "streamChat",
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+        { stop: ["<|fim_suffix|>"] },
+      ],
+      mockStream: [{ choices: [{ delta: { content: "Hello world" } }] }],
+      expectedRequest: {
+        url: "https://api.openai.com/v1/chat/completions",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    };
+
+    const mockFetch = setupMockFetch(undefined, testCase.mockStream);
+    setupReadableStreamPolyfill();
+    (openai as any).fetch = mockFetch;
+    (openai as any).useOpenAIAdapterFor = [];
+
+    await executeLlmMethod(
+      testCase.llm,
+      testCase.methodToTest,
+      testCase.params,
+    );
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [, options] = mockFetch.mock.calls[0];
+    const actualBody = JSON.parse(options.body as string);
+    expect(actualBody.model).toBe("gpt-4o");
+    expect(actualBody.stop).toEqual(["<|fim_suffix|>"]);
+  });
 });
