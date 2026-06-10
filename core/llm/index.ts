@@ -275,6 +275,21 @@ export abstract class BaseLLM implements ILLM {
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;
     }
+    if (this.apiBase) {
+      if (!this.apiBase.includes("://")) {
+        this.apiBase = `http://${this.apiBase}`;
+      }
+      try {
+        new URL(this.apiBase);
+      } catch {
+        throw new Error(
+          `Invalid apiBase for provider "${(this.constructor as typeof BaseLLM).providerName}": ` +
+            `"${this.apiBase}". ` +
+            `Expected a full URL (e.g. "http://localhost:11434/v1/"). ` +
+            `If you are using a secret reference, make sure it resolves before being passed here.`,
+        );
+      }
+    }
     this.accountId = options.accountId;
     this.capabilities = options.capabilities;
     this.roles = options.roles;
