@@ -206,4 +206,21 @@ describe("FileIndexService", () => {
     // Should not match files that don't contain the @ pattern
     expect(results.some((f) => f.path === "regular-file.js")).toBe(false);
   });
+
+  it("should include C++ source files with .cc, .cxx, and .c++ extensions", async () => {
+    fs.writeFileSync("main.cc", "int main() { return 0; }");
+    fs.writeFileSync("util.cxx", "void helper() {}");
+    fs.writeFileSync("lib.c++", "void lib() {}");
+    fs.writeFileSync("app.cpp", "int app() { return 0; }");
+
+    await service.initialize();
+
+    const files = service.getFiles();
+    const filePaths = files.map((f) => f.path);
+
+    expect(filePaths).toContain("main.cc");
+    expect(filePaths).toContain("util.cxx");
+    expect(filePaths).toContain("lib.c++");
+    expect(filePaths).toContain("app.cpp"); // regression guard
+  });
 });
