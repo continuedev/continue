@@ -388,6 +388,8 @@ createOpenAISubclassTests(Kindo, {
 
 createOpenAISubclassTests(Azure, {
   providerName: "azure",
+  customEmbeddingsUrl:
+    "https://api.openai.com/v1/openai/deployments/text-embedding-ada-002/embeddings?api-version=2023-07-01-preview",
 });
 
 createOpenAISubclassTests(Inception, {
