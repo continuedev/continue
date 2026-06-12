@@ -1,0 +1,67 @@
+---
+title: "How to Configure EmpirioLabs with Continue"
+sidebarTitle: "EmpirioLabs"
+---
+
+<Info>
+  [EmpirioLabs AI](https://empiriolabs.ai) is an OpenAI-compatible multi-model
+  API hosting open and proprietary models (Qwen, DeepSeek, GLM, Kimi, MiniMax,
+  Gemma, and more) with pay-as-you-go pricing.
+</Info>
+
+<Tip>
+  Get an API key from the [EmpirioLabs dashboard](https://platform.empiriolabs.ai/dashboard/api-keys). The model catalog with per-model pricing and context windows is at [empiriolabs.ai/models](https://empiriolabs.ai/models).
+</Tip>
+
+## Configuration
+
+EmpirioLabs serves the OpenAI-compatible Chat Completions API, so it works through the `openai` provider with a custom `apiBase`:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Qwen3.7 Plus
+      provider: openai
+      model: qwen3-7-plus
+      apiBase: https://api.empiriolabs.ai/v1
+      apiKey: <YOUR_EMPIRIOLABS_API_KEY>
+      roles:
+        - chat
+        - edit
+        - apply
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Qwen3.7 Plus",
+        "provider": "openai",
+        "model": "qwen3-7-plus",
+        "apiBase": "https://api.empiriolabs.ai/v1",
+        "apiKey": "<YOUR_EMPIRIOLABS_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Popular Models
+
+| Model | Context | Best For |
+|-------|---------|----------|
+| `qwen3-7-max` | 1M tokens | Coding, agents, deep thinking |
+| `qwen3-7-plus` | 1M tokens | Cost-effective multimodal coding |
+| `deepseek-v4-pro` | 1M tokens | Flagship reasoning |
+| `deepseek-v4-flash` | 1M tokens | Fast, low-cost reasoning |
+| `glm-5-1` | 202K tokens | Long-context tool use |
+| `kimi-k2-6` | 256K tokens | Agentic multimodal reasoning |
+
+Reasoning-capable models accept the `reasoning_effort` request option (`none`, `low`, `medium`, `high`, `max`).
