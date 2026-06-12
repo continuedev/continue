@@ -50,6 +50,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("ollama"),
     z.literal("cerebras"),
     z.literal("kindo"),
+    z.literal("rodiumai"),
     z.literal("msty"),
     z.literal("openrouter"),
     z.literal("clawrouter"),

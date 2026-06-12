@@ -1,0 +1,59 @@
+---
+title: "How to Configure RodiumAi with Continue"
+sidebarTitle: "RodiumAi"
+---
+
+<Info>
+  Get your API key from the [RodiumAi Dashboard](https://rodiumai.io/dashboard/api-keys). Keys start with `rd_sk_prod_`.
+</Info>
+
+RodiumAi is an OpenAI-compatible API gateway that routes requests to models from OpenAI, Anthropic, Google, and other providers. Models use catalogue slugs in the form `provider/model` (for example, `anthropic/claude-fable-5` or `openai/gpt-5.4`).
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Claude Fable 5
+      provider: rodiumai
+      model: anthropic/claude-fable-5
+      apiKey: <YOUR_RODIUMAI_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude Fable 5",
+        "provider": "rodiumai",
+        "model": "anthropic/claude-fable-5",
+        "apiKey": "<YOUR_RODIUMAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+Use `GET https://api.rodiumai.io/v1/models` to list routable models, or browse the catalogue at [rodiumai.io/models](https://rodiumai.io/models).
+
+| Example slug | Description |
+| :----------- | :---------- |
+| `anthropic/claude-fable-5` | Claude Fable 5 via RodiumAi |
+| `anthropic/claude-sonnet-4-6` | Claude Sonnet 4.6 via RodiumAi |
+| `openai/gpt-5.4` | GPT-5.4 via RodiumAi |
+| `openai/gpt-5.4-mini` | GPT-5.4 Mini via RodiumAi |
+
+## Get your API key
+
+1. Sign up at [rodiumai.io](https://rodiumai.io)
+2. Open the [API Keys page](https://rodiumai.io/dashboard/api-keys)
+3. Create a key and paste it into your Continue config

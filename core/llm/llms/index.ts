@@ -54,6 +54,7 @@ import ClawRouter from "./ClawRouter";
 import OVHcloud from "./OVHcloud";
 import { Relace } from "./Relace";
 import Replicate from "./Replicate";
+import RodiumAi from "./RodiumAi";
 import SageMaker from "./SageMaker";
 import SambaNova from "./SambaNova";
 import Scaleway from "./Scaleway";
@@ -127,6 +128,7 @@ export const LLMClasses = [
   Tensorix,
   Scaleway,
   Relace,
+  RodiumAi,
   Inception,
   Voyage,
   LlamaStack,
