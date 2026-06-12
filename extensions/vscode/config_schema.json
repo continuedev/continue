@@ -226,6 +226,7 @@
             "vertexai",
             "xAI",
             "kindo",
+            "rodiumai",
             "moonshot",
             "siliconflow",
             "tensorix",
@@ -279,6 +280,7 @@
             "### Vertex AI\nVertex AI provides access to Google's foundation models and ML tools. To get started, enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
             "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)",
             "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)",
+            "### RodiumAi\nRodiumAi provides unified access to leading AI models through an OpenAI-compatible API. Get your API key at [rodiumai.io](https://rodiumai.io).",
             "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)",
             "### SiliconFlow\nTo get started with SiliconFlow, obtain your API key from [SiliconCloud](https://cloud.siliconflow.cn/account/ak). SiliconCloud provides cost-effective GenAI services based on excellent open source basic models.\n> [Models](https://siliconflow.cn/zh-cn/models)",
             "### Tensorix\nTensorix is an OpenAI-compatible API gateway with access to DeepSeek, Llama, Qwen, GLM, and other models. Pay-as-you-go with no subscription required.\nTo get started, create an account and get an API key at [app.tensorix.ai](https://app.tensorix.ai).\n> [Models](https://tensorix.ai/models)",
@@ -534,6 +536,7 @@
                   "nebius",
                   "xAI",
                   "kindo",
+                  "rodiumai",
                   "scaleway",
                   "ovhcloud",
                   "venice"

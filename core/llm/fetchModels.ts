@@ -1,3 +1,4 @@
+import { fetchRodiumAiModels } from "./fetchRodiumAiModels.js";
 import { LLMClasses, llmFromProviderAndOptions } from "./llms/index.js";
 
 export interface FetchedModel {
@@ -248,6 +249,8 @@ export async function fetchModels(
       return fetchOllamaModels();
     case "openrouter":
       return fetchOpenRouterModels();
+    case "rodiumai":
+      return fetchRodiumAiModels(apiKey, apiBase);
     case "anthropic":
       return fetchAnthropicModels(apiKey);
     case "gemini":

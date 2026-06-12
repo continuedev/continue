@@ -127,7 +127,7 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
     if (!selectedProvider.tags?.includes(ModelProviderTags.RequiresApiKey)) {
       formMethods.setValue("apiKey", "");
     }
-  }, [selectedProvider]);
+  }, [selectedProvider, formMethods]);
 
   const requiresSkPrefix =
     selectedProvider.provider === "openai" ||
@@ -141,6 +141,24 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
     !apiKeyValue.startsWith("sk-")
       ? "API key usually starts with sk-"
       : undefined;
+
+  useEffect(() => {
+    if (
+      !apiKeyValue ||
+      apiKeyValue.length === 0 ||
+      selectedProvider.provider === "ollama" ||
+      selectedProvider.provider === "openrouter" ||
+      selectedProvider.provider === "rodiumai"
+    ) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      void handleFetchModels();
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [apiKeyValue, selectedProvider.provider, handleFetchModels]);
 
   function onSubmit() {
     const apiKey = formMethods.watch("apiKey");

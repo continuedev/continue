@@ -18,6 +18,7 @@ import { MockApi } from "./apis/Mock.js";
 import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
 import { OpenRouterApi } from "./apis/OpenRouter.js";
+import { RodiumAiApi } from "./apis/RodiumAi.js";
 import { ClawRouterApi } from "./apis/ClawRouter.js";
 import { RelaceApi } from "./apis/Relace.js";
 import { VertexAIApi } from "./apis/VertexAI.js";
@@ -151,6 +152,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.cerebras.ai/v1/", config);
     case "kindo":
       return openAICompatible("https://llm.kindo.ai/v1/", config);
+    case "rodiumai":
+      return new RodiumAiApi(config);
     case "msty":
       return openAICompatible("http://localhost:10000", config);
     case "nvidia":

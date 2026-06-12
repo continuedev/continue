@@ -65,7 +65,7 @@ function toGenericPackage(model: FetchedModel, provider: string): ModelPackage {
   const id = model.modelId ?? model.name;
   return {
     title: model.name,
-    description: model.name,
+    description: model.description ?? model.name,
     params: {
       title: model.name,
       model: id,
@@ -73,6 +73,15 @@ function toGenericPackage(model: FetchedModel, provider: string): ModelPackage {
     },
     isOpenSource: false,
     providerOptions: [provider],
+    icon: model.icon,
+  };
+}
+
+function toRodiumAiPackage(model: FetchedModel): ModelPackage {
+  return {
+    ...toGenericPackage(model, "rodiumai"),
+    tags: [ModelProviderTags.RequiresApiKey],
+    icon: model.icon ?? "rodium.svg",
   };
 }
 
@@ -100,6 +109,9 @@ export async function fetchProviderModels(
   apiBase?: string,
 ): Promise<ModelPackage[]> {
   const models = await fetchModels(ideMessenger, provider, apiKey, apiBase);
+  if (provider === "rodiumai") {
+    return models.map(toRodiumAiPackage);
+  }
   return models.map((m) => toGenericPackage(m, provider));
 }
 
@@ -140,5 +152,15 @@ export async function initializeDynamicModels(ideMessenger: IIdeMessenger) {
     }
   } catch (error) {
     console.error("Failed to initialize OpenRouter models:", error);
+  }
+
+  try {
+    const fetched = await fetchModels(ideMessenger, "rodiumai");
+    const packages = fetched.map(toRodiumAiPackage);
+    if (packages.length > 0 && providers.rodiumai) {
+      providers.rodiumai.packages = packages;
+    }
+  } catch (error) {
+    console.error("Failed to initialize RodiumAi models:", error);
   }
 }

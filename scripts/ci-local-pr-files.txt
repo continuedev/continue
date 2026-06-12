@@ -1,0 +1,17 @@
+# Fichiers à valider (Prettier + scope PR RodiumAi) — un chemin par ligne
+core/llm/autodetect.ts
+core/llm/fetchModels.ts
+core/llm/fetchRodiumAiModels.ts
+core/llm/fetchRodiumAiModels.test.ts
+core/llm/llms/RodiumAi.ts
+core/llm/llms/RodiumAi.vitest.ts
+core/llm/llms/index.ts
+packages/openai-adapters/src/apis/RodiumAi.ts
+packages/openai-adapters/src/index.ts
+packages/openai-adapters/src/types.ts
+gui/src/forms/AddModelForm.tsx
+gui/src/pages/AddNewModel/configs/fetchProviderModels.ts
+gui/src/pages/AddNewModel/configs/providers.ts
+extensions/vscode/config_schema.json
+docs/customize/model-providers/more/rodiumai.mdx
+docs/customize/model-providers/overview.mdx

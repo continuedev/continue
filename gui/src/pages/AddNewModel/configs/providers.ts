@@ -895,6 +895,35 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://replicate.com/account/api-tokens",
   },
+  rodiumai: {
+    title: "RodiumAi",
+    provider: "rodiumai",
+    icon: "rodium.svg",
+    refPage: "rodiumai",
+    description:
+      "OpenAI-compatible gateway to GPT, Claude, Gemini, and more with RODI billing.",
+    longDescription: `RodiumAi provides unified access to leading AI models through a single OpenAI-compatible API. To get started:\n1. Sign up at [rodiumai.io](https://rodiumai.io)\n2. Create an API key in your [dashboard](https://rodiumai.io/dashboard/api-keys)\n3. Select a model from the catalogue`,
+    tags: [ModelProviderTags.RequiresApiKey],
+    apiKeyUrl: "https://rodiumai.io/dashboard/api-keys",
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your RodiumAi API key (rd_sk_prod_...)",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      {
+        title: "Loading models...",
+        description: "Fetching available models from RodiumAi",
+        params: { model: "placeholder" },
+        isOpenSource: false,
+      },
+    ],
+  },
   "llama.cpp": {
     title: "llama.cpp",
     provider: "llama.cpp",
