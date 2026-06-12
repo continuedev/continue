@@ -48,12 +48,16 @@ export function CliInstallBanner({
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     // Check if user has permanently dismissed the banner
     if (permanentDismissal) {
       const hasDismissed = getLocalStorage("hasDismissedCliInstallBanner");
       if (hasDismissed) {
         setDismissed(true);
-        return;
+        return () => {
+          isMounted = false;
+        };
       }
     }
 
@@ -65,6 +69,10 @@ export function CliInstallBanner({
 
         const [stdout, stderr] = await ideMessenger.ide.subprocess(command);
 
+        if (!isMounted) {
+          return;
+        }
+
         // If stdout has content (path to cn), it's installed
         // If empty or stderr has "not found", it's not installed
         const isInstalled =
@@ -72,11 +80,17 @@ export function CliInstallBanner({
         setCliInstalled(isInstalled);
       } catch (error) {
         // If subprocess throws an error, assume CLI is not installed
-        setCliInstalled(false);
+        if (isMounted) {
+          setCliInstalled(false);
+        }
       }
     };
 
     void checkCliInstallation();
+
+    return () => {
+      isMounted = false;
+    };
   }, [ideMessenger, permanentDismissal]);
 
   const handleDismiss = () => {
