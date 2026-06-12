@@ -1,0 +1,51 @@
+---
+title: "How to Configure TrustedRouter with Continue"
+sidebarTitle: "TrustedRouter"
+---
+
+<Info>
+  Get an API key from [TrustedRouter](https://trustedrouter.com/console/keys)
+</Info>
+
+TrustedRouter provides an OpenAI-compatible gateway for privacy-sensitive development tasks. It uses an open-source and verifiable attested router with zero prompt and output logging by default. This is useful for workflows involving private codebases, project context, or customer data while keeping the standard Continue model configuration shape.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: TrustedRouter Auto
+      provider: openai
+      model: trustedrouter/auto
+      apiBase: https://api.trustedrouter.com/v1
+      apiKey: <YOUR_TRUSTEDROUTER_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "TrustedRouter Auto",
+        "provider": "openai",
+        "model": "trustedrouter/auto",
+        "apiBase": "https://api.trustedrouter.com/v1",
+        "apiKey": "<YOUR_TRUSTEDROUTER_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Routing aliases
+
+TrustedRouter supports standard model IDs plus routing aliases:
+
+- `trustedrouter/auto` chooses a healthy route automatically.
+- `trustedrouter/zdr` prefers zero data retention providers.
+- `trustedrouter/e2e` prefers end-to-end encrypted providers where available.
+
