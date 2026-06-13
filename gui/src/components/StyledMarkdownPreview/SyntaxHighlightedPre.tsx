@@ -26,6 +26,11 @@ const StyledPre = styled.pre<{ theme: any }>`
   max-height: 40vh;
   overflow-y: scroll !important;
 
+  /* Keep code text selectable so a partial selection isn't lost when the
+     cursor leaves the code block while dragging (see issue #3850). */
+  user-select: text;
+  -webkit-user-select: text;
+
   ${(props) => generateThemeStyles(props.theme)}
 `;
 
