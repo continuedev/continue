@@ -15,7 +15,32 @@ sidebarTitle: "EmpirioLabs"
 
 ## Configuration
 
-EmpirioLabs serves the OpenAI-compatible Chat Completions API, so it works through the `openai` provider with a custom `apiBase`:
+EmpirioLabs serves the OpenAI-compatible Chat Completions API, so it works through the `openai` provider with a custom `apiBase`.
+
+### Load every model automatically
+
+Set `model: AUTODETECT` and Continue fetches the full model list from the EmpirioLabs `/v1/models` endpoint, so every model on your account appears in the picker without listing them by hand:
+
+```yaml title="config.yaml"
+name: My Config
+version: 0.0.1
+schema: v1
+
+models:
+  - name: EmpirioLabs
+    provider: openai
+    model: AUTODETECT
+    apiBase: https://api.empiriolabs.ai/v1
+    apiKey: <YOUR_EMPIRIOLABS_API_KEY>
+    roles:
+      - chat
+      - edit
+      - apply
+```
+
+### Configure a single model
+
+To pin one model, set its slug as the `model`:
 
 <Tabs>
   <Tab title="YAML">
