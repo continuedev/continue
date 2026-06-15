@@ -6,7 +6,7 @@ import { varWithFallback } from "../styles/theme";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 const EXPIRATION_DATE = new Date("2026-09-09");
-const EXPORT_URL = "https://continue.dev/settings/export";
+const EXPORT_URL = "https://continue.dev/export";
 const REPO_URL = "https://github.com/continuedev/continue/blob/main/README.md";
 
 interface DeprecationBannerProps {

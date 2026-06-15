@@ -371,12 +371,6 @@
         "title": "Continue: Reject Jump Suggestion"
       },
       {
-        "command": "continue.generateRule",
-        "category": "Continue",
-        "title": "Generate Rule",
-        "group": "Continue"
-      },
-      {
         "command": "continue.openInNewWindow",
         "category": "Continue",
         "title": "Open in new window",
@@ -523,9 +517,6 @@
         },
         {
           "command": "continue.enterEnterpriseLicenseKey"
-        },
-        {
-          "command": "continue.generateRule"
         },
         {
           "command": "continue.openInNewWindow"
