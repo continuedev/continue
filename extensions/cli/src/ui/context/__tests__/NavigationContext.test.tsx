@@ -78,7 +78,6 @@ describe("NavigationContext", () => {
           "chat",
           "config",
           "model",
-
           "login",
           "mcp",
         ];
