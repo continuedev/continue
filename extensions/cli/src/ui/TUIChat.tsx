@@ -31,11 +31,7 @@ import { useNavigation } from "./context/NavigationContext.js";
 import { useChat } from "./hooks/useChat.js";
 import { useContextPercentage } from "./hooks/useContextPercentage.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
-import {
-  useIntroMessage,
-  useLoginHandlers,
-  useSelectors,
-} from "./hooks/useTUIChatHooks.js";
+import { useIntroMessage, useSelectors } from "./hooks/useTUIChatHooks.js";
 
 interface TUIChatProps {
   // Remote mode props
@@ -179,13 +175,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     isRemoteMode,
     services,
     allServicesReady,
-  );
-
-  // Use login handlers
-  const { handleLoginTokenSubmit } = useLoginHandlers(
-    navigateTo,
-    navState,
-    closeCurrentScreen,
   );
 
   // State to trigger static content refresh for /clear command
@@ -460,9 +449,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         {/* All screen-specific content */}
         <ScreenContent
           isScreenActive={isScreenActive}
-          navState={navState}
           services={services}
-          handleLoginTokenSubmit={handleLoginTokenSubmit}
           handleConfigSelect={handleConfigSelect}
           handleModelSelect={handleModelSelect}
           handleSessionSelect={handleSessionSelect}
