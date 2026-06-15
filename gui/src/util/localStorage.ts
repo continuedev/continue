@@ -15,7 +15,6 @@ type LocalStorageTypes = {
   showTutorialCard: boolean;
   shownProfilesIntroduction: boolean;
   disableIndexing: boolean;
-  hasDismissedCliInstallBanner: boolean;
   hasDismissedDeprecationBanner: boolean;
 };
 

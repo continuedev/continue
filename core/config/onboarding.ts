@@ -8,20 +8,84 @@ export const LOCAL_ONBOARDING_CHAT_TITLE = "Llama 3.1 8B";
 export const LOCAL_ONBOARDING_EMBEDDINGS_MODEL = "nomic-embed-text:latest";
 export const LOCAL_ONBOARDING_EMBEDDINGS_TITLE = "Nomic Embed";
 
-const ANTHROPIC_MODEL_CONFIG = {
-  slugs: ["anthropic/claude-sonnet-4-6", "anthropic/claude-opus-4-6"],
-  apiKeyInputName: "ANTHROPIC_API_KEY",
-};
-const OPENAI_MODEL_CONFIG = {
-  slugs: ["openai/gpt-4.1", "openai/o3", "openai/gpt-4.1-mini"],
-  apiKeyInputName: "OPENAI_API_KEY",
-};
+type OnboardingModel = NonNullable<ConfigYaml["models"]>[number];
 
-// TODO: These need updating on the hub
-const GEMINI_MODEL_CONFIG = {
-  slugs: ["google/gemini-3.1-pro-preview", "google/gemini-3-flash-preview"],
-  apiKeyInputName: "GEMINI_API_KEY",
-};
+// These model definitions are inlined copies of the corresponding Continue Hub
+// blocks (e.g. anthropic/claude-sonnet-4-6) that onboarding previously resolved
+// via `uses:` slugs. Since Hub/slug resolution has been removed, we reproduce
+// the exact block contents here, with `apiKey` substituted for the block's
+// `${{ inputs.*_API_KEY }}` placeholder. Keep these in sync with the Hub blocks.
+const ANTHROPIC_ONBOARDING_MODELS = (apiKey: string): OnboardingModel[] => [
+  {
+    name: "Claude Sonnet 4.6",
+    provider: "anthropic",
+    model: "claude-sonnet-4-6",
+    apiKey,
+    roles: ["chat", "edit", "apply"],
+    defaultCompletionOptions: { contextLength: 200000, maxTokens: 64000 },
+    capabilities: ["tool_use", "image_input"],
+  },
+  {
+    name: "Claude Opus 4.6",
+    provider: "anthropic",
+    model: "claude-opus-4-6",
+    apiKey,
+    roles: ["chat", "edit", "apply"],
+    defaultCompletionOptions: { contextLength: 200000, maxTokens: 64000 },
+    capabilities: ["tool_use", "image_input"],
+  },
+];
+
+const OPENAI_ONBOARDING_MODELS = (apiKey: string): OnboardingModel[] => [
+  {
+    name: "OpenAI GPT-4.1",
+    provider: "openai",
+    model: "gpt-4.1-2025-04-14",
+    apiKey,
+    roles: ["chat", "edit", "apply"],
+    defaultCompletionOptions: { contextLength: 1047576, maxTokens: 32768 },
+    useLegacyCompletionsEndpoint: false,
+  },
+  {
+    name: "o3",
+    provider: "openai",
+    model: "o3",
+    apiKey,
+    roles: ["chat"],
+    defaultCompletionOptions: { contextLength: 200000, maxTokens: 100000 },
+    capabilities: ["image_input"],
+  },
+  {
+    name: "OpenAI GPT-4.1 mini",
+    provider: "openai",
+    model: "gpt-4.1-mini-2025-04-14",
+    apiKey,
+    roles: ["chat", "edit", "apply"],
+    defaultCompletionOptions: { contextLength: 1047576, maxTokens: 32768 },
+    useLegacyCompletionsEndpoint: false,
+  },
+];
+
+const GEMINI_ONBOARDING_MODELS = (apiKey: string): OnboardingModel[] => [
+  {
+    name: "Gemini 3 Pro Preview",
+    provider: "gemini",
+    model: "gemini-3-pro-preview",
+    apiKey,
+    roles: ["chat", "edit", "apply"],
+    defaultCompletionOptions: { contextLength: 1048576, maxTokens: 65536 },
+    capabilities: ["tool_use", "image_input"],
+  },
+  {
+    name: "Gemini 3 Flash Preview",
+    provider: "gemini",
+    model: "gemini-3-flash-preview",
+    apiKey,
+    roles: ["chat", "edit", "apply"],
+    defaultCompletionOptions: { contextLength: 1048576, maxTokens: 65536 },
+    capabilities: ["tool_use", "image_input"],
+  },
+];
 
 /**
  * We set the "best" chat + autocopmlete models by default
@@ -70,32 +134,17 @@ export function setupProviderConfig(
   provider: string,
   apiKey: string,
 ): ConfigYaml {
-  let newModels;
+  let newModels: OnboardingModel[];
 
   switch (provider) {
     case "openai":
-      newModels = OPENAI_MODEL_CONFIG.slugs.map((slug) => ({
-        uses: slug,
-        with: {
-          [OPENAI_MODEL_CONFIG.apiKeyInputName]: apiKey,
-        },
-      }));
+      newModels = OPENAI_ONBOARDING_MODELS(apiKey);
       break;
     case "anthropic":
-      newModels = ANTHROPIC_MODEL_CONFIG.slugs.map((slug) => ({
-        uses: slug,
-        with: {
-          [ANTHROPIC_MODEL_CONFIG.apiKeyInputName]: apiKey,
-        },
-      }));
+      newModels = ANTHROPIC_ONBOARDING_MODELS(apiKey);
       break;
     case "gemini":
-      newModels = GEMINI_MODEL_CONFIG.slugs.map((slug) => ({
-        uses: slug,
-        with: {
-          [GEMINI_MODEL_CONFIG.apiKeyInputName]: apiKey,
-        },
-      }));
+      newModels = GEMINI_ONBOARDING_MODELS(apiKey);
       break;
     default:
       throw new Error(`Unknown provider: ${provider}`);
@@ -103,14 +152,19 @@ export function setupProviderConfig(
 
   const existingModels = config.models ?? [];
 
-  // Update API key on existing models; add new entries for any missing slugs
+  const isSameModel = (m: OnboardingModel, n: OnboardingModel) =>
+    "provider" in m &&
+    "provider" in n &&
+    m.provider === n.provider &&
+    m.model === n.model;
+
+  // Update API key on existing models; add new entries for any missing models
   const updatedModels = existingModels.map((m) => {
-    if (!("uses" in m)) return m;
-    const match = newModels.find((n) => n.uses === m.uses);
-    return match ? { ...m, with: { ...m.with, ...match.with } } : m;
+    const match = newModels.find((n) => isSameModel(m, n));
+    return match ? { ...m, apiKey } : m;
   });
   const modelsToAdd = newModels.filter(
-    (n) => !existingModels.some((m) => "uses" in m && m.uses === n.uses),
+    (n) => !existingModels.some((m) => isSameModel(m, n)),
   );
 
   return { ...config, models: [...updatedModels, ...modelsToAdd] };

@@ -44,7 +44,6 @@ import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
 import { useStore } from "react-redux";
-import { CliInstallBanner } from "../../components/CliInstallBanner";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 
 import { DeprecationBanner } from "../../components/DeprecationBanner";
@@ -125,9 +124,6 @@ export function Chat() {
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
-  const allSessionMetadata = useAppSelector(
-    (state) => state.session.allSessionMetadata,
-  );
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
@@ -423,12 +419,6 @@ export function Chat() {
             sendInput(editorState, modifiers, undefined, editor)
           }
           inputId={MAIN_EDITOR_INPUT_ID}
-        />
-
-        <CliInstallBanner
-          sessionCount={allSessionMetadata.length}
-          sessionThreshold={3}
-          permanentDismissal={true}
         />
 
         <div

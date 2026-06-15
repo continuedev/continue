@@ -9,14 +9,13 @@ import { LocalStorageProvider } from "../context/LocalStorage";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setCodeToEdit } from "../redux/slices/editState";
-import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
+import { setShowDialog } from "../redux/slices/uiSlice";
 import { enterEdit, exitEdit } from "../redux/thunks/edit";
 import { saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { ROUTES } from "../util/navigation";
 import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
-import { GenerateRuleDialog } from "./GenerateRuleDialog";
 import { useMainEditor } from "./mainInput/TipTapEditor";
 import {
   isNewUserOnboarding,
@@ -166,15 +165,6 @@ const Layout = () => {
     "exitEditMode",
     async () => {
       await dispatch(exitEdit({}));
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "generateRule",
-    async () => {
-      dispatch(setShowDialog(true));
-      dispatch(setDialogMessage(<GenerateRuleDialog />));
     },
     [],
   );
