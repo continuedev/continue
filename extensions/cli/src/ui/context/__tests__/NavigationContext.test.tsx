@@ -74,12 +74,7 @@ describe("NavigationContext", () => {
 
       it("can navigate to all valid screens", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
-        const screens: NavigationScreen[] = [
-          "chat",
-          "config",
-          "model",
-          "mcp",
-        ];
+        const screens: NavigationScreen[] = ["chat", "config", "model", "mcp"];
 
         screens.forEach((screen) => {
           act(() => {
