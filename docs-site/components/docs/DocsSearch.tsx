@@ -12,6 +12,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { create, load, search, type AnyOrama } from "@orama/orama";
+import { withBasePath } from "@/lib/basePath";
 
 interface SearchResult {
   title: string;
@@ -44,7 +45,7 @@ export function DocsSearch({ resolve }: { resolve: (path: string) => string }) {
   useEffect(() => {
     if (!open || dbRef.current) return;
     setLoading(true);
-    fetch("/search-index.json")
+    fetch(withBasePath("/search-index.json"))
       .then((res) => res.json())
       .then((data) => {
         const db = create({

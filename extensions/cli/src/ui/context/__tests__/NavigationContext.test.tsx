@@ -62,25 +62,19 @@ describe("NavigationContext", () => {
 
       it("navigates to a new screen with data", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
-        const testData = { text: "Login required", resolve: vi.fn() };
+        const testData = { text: "Some data", resolve: vi.fn() };
 
         act(() => {
-          result.current.navigateTo("login", testData);
+          result.current.navigateTo("config", testData);
         });
 
-        expect(result.current.state.currentScreen).toBe("login");
+        expect(result.current.state.currentScreen).toBe("config");
         expect(result.current.state.screenData).toEqual(testData);
       });
 
       it("can navigate to all valid screens", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
-        const screens: NavigationScreen[] = [
-          "chat",
-          "config",
-          "model",
-          "login",
-          "mcp",
-        ];
+        const screens: NavigationScreen[] = ["chat", "config", "model", "mcp"];
 
         screens.forEach((screen) => {
           act(() => {
@@ -96,12 +90,12 @@ describe("NavigationContext", () => {
         const secondData = { value: 2 };
 
         act(() => {
-          result.current.navigateTo("login", firstData);
+          result.current.navigateTo("config", firstData);
         });
         expect(result.current.state.screenData).toEqual(firstData);
 
         act(() => {
-          result.current.navigateTo("login", secondData);
+          result.current.navigateTo("config", secondData);
         });
         expect(result.current.state.screenData).toEqual(secondData);
       });
@@ -111,7 +105,7 @@ describe("NavigationContext", () => {
         const testData = { value: "test" };
 
         act(() => {
-          result.current.navigateTo("login", testData);
+          result.current.navigateTo("model", testData);
         });
         expect(result.current.state.screenData).toEqual(testData);
 
@@ -142,7 +136,7 @@ describe("NavigationContext", () => {
         const testData = { text: "Test data" };
 
         act(() => {
-          result.current.navigateTo("login", testData);
+          result.current.navigateTo("config", testData);
         });
         expect(result.current.state.screenData).toEqual(testData);
 
@@ -166,10 +160,9 @@ describe("NavigationContext", () => {
 
       it("closes from any screen back to chat", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
-        const screens: Array<"config" | "model" | "login" | "mcp"> = [
+        const screens: Array<"config" | "model" | "mcp"> = [
           "config",
           "model",
-          "login",
           "mcp",
         ];
 
@@ -207,7 +200,7 @@ describe("NavigationContext", () => {
         expect(result.current.isScreenActive("config")).toBe(false);
         expect(result.current.isScreenActive("model")).toBe(false);
         expect(result.current.isScreenActive("mcp")).toBe(false);
-        expect(result.current.isScreenActive("login")).toBe(false);
+        expect(result.current.isScreenActive("session")).toBe(false);
       });
 
       it("updates correctly when navigating", () => {
@@ -249,13 +242,13 @@ describe("NavigationContext", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
 
         act(() => {
-          result.current.navigateTo("login", { custom: "data" });
+          result.current.navigateTo("config", { custom: "data" });
         });
 
         const stateWithData = result.current.state;
 
         act(() => {
-          result.current.navigateTo("login", { different: "data" });
+          result.current.navigateTo("config", { different: "data" });
         });
 
         expect(result.current.state.currentScreen).toBe(
@@ -268,23 +261,23 @@ describe("NavigationContext", () => {
     });
 
     describe("Integration Scenarios", () => {
-      it("handles login flow correctly", () => {
+      it("handles a screen flow with screen data correctly", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
         const mockResolve = vi.fn();
 
-        // Navigate to login with resolve callback
+        // Navigate to a screen with screen data
         act(() => {
-          result.current.navigateTo("login", {
-            text: "Please log in",
+          result.current.navigateTo("config", {
+            text: "Some data",
             resolve: mockResolve,
           });
         });
 
-        expect(result.current.state.currentScreen).toBe("login");
-        expect(result.current.state.screenData?.text).toBe("Please log in");
+        expect(result.current.state.currentScreen).toBe("config");
+        expect(result.current.state.screenData?.text).toBe("Some data");
         expect(result.current.state.screenData?.resolve).toBe(mockResolve);
 
-        // Close login screen (simulating successful login)
+        // Close the screen
         act(() => {
           result.current.closeCurrentScreen();
         });
