@@ -8,6 +8,7 @@ import { type NavGroup, type NavItem, type NavTab } from "@/config/docsNav";
 import { TableOfContents } from "./TableOfContents";
 import { DocsSearch } from "./DocsSearch";
 import { resolveHref } from "@/lib/resolveHref";
+import { withBasePath } from "@/lib/basePath";
 import type { Heading } from "@/lib/docs";
 
 /* ------------------------------------------------------------------ */
@@ -235,7 +236,7 @@ export function DocsShell({
             >
               <Link href={resolveHref("/")} className="flex items-center">
                 <img
-                  src="/images/continue-logo-light.png"
+                  src={withBasePath("/images/continue-logo-light.png")}
                   alt="Continue"
                   className="h-8 w-auto dark:invert"
                 />
@@ -245,7 +246,7 @@ export function DocsShell({
             <div className="flex items-center px-5 py-3 lg:hidden">
               <Link href={resolveHref("/")} className="flex items-center">
                 <img
-                  src="/images/continue-logo-light.png"
+                  src={withBasePath("/images/continue-logo-light.png")}
                   alt="Continue"
                   className="h-8 w-auto dark:invert"
                 />
