@@ -29,7 +29,7 @@ function findActiveTab(nav: NavTab[], slug: string) {
       }
     }
   }
-  return nav[nav.length - 1];
+  return nav[0];
 }
 
 function slugToLabel(slug: string, titleMap?: Record<string, string>) {
