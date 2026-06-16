@@ -26,6 +26,7 @@ import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { getAllPromptFiles } from "../../promptFiles/getPromptFiles";
 import { GlobalContext } from "../../util/GlobalContext";
+import { applyConfigTsIfPresent } from "../load";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
@@ -430,13 +431,24 @@ export async function loadContinueConfigFromYaml(options: {
   // TODO: override several of these values with user/org shared config
   // Don't try catch this - has security implications and failure should be fatal
   const sharedConfig = new GlobalContext().getSharedConfig();
-  const withShared = modifyAnyConfigWithSharedConfig(
+  let withShared = modifyAnyConfigWithSharedConfig(
     continueConfig,
     sharedConfig,
   );
   if (withShared.allowAnonymousTelemetry === undefined) {
     withShared.allowAnonymousTelemetry = true;
   }
+
+  // Apply config.ts (modifyConfig) the same way the config.json pipeline
+  // does. Previously this pipeline never called config.ts at all, so
+  // experimental.defaultContext / custom context providers set up there
+  // silently never ran for config.yaml users.
+  withShared = await applyConfigTsIfPresent(
+    withShared,
+    ide,
+    ideSettings,
+    ideInfo,
+  );
 
   return {
     config: withShared,
