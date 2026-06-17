@@ -172,7 +172,10 @@ describe("runTerminalCommandTool", () => {
       try {
         await runTerminalCommandTool.run({
           command: nodeCommand(
-            "process.stderr.write('ERR-' + 'E'.repeat(100000) + '-FAIL_TAIL'); process.exit(2)",
+            // Write synchronously so the full payload (including the tail marker)
+            // is flushed before process.exit; an async write races the exit and is
+            // truncated on macOS/Windows.
+            "require('fs').writeSync(2, 'ERR-' + 'E'.repeat(100000) + '-FAIL_TAIL'); process.exit(2)",
           ),
         });
         throw new Error("Expected command to fail");
