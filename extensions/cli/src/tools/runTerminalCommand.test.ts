@@ -179,7 +179,11 @@ describe("runTerminalCommandTool", () => {
       } catch (error) {
         const result = String(error);
         expect(outputByteLength(result)).toBeLessThanOrEqual(maxBytes);
-        expect(result).toContain("Error (exit code 2):");
+        // The large stderr write races with process.exit(2): on macOS/Windows the
+        // pipe can tear down (SIGPIPE) before the requested code is recorded, so the
+        // observed exit code is platform-dependent. This test asserts stderr capping,
+        // not the exact code, so match any non-zero exit-code error.
+        expect(result).toMatch(/Error \(exit code \d+\):/);
         expect(result).toContain("ERR-");
         expect(result).toContain("-FAIL_TAIL");
         expect(result).toContain("terminal_output_truncated");
