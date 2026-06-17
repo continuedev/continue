@@ -1,0 +1,61 @@
+---
+title: "Pinstripes"
+description: "Configure Pinstripes with Continue to access DeepSeek, GLM, Qwen, and MiniMax models through an OpenAI-compatible inference API"
+---
+
+[Pinstripes](https://pinstripes.io) is an OpenAI-compatible inference API offering fast, affordable access to a curated selection of open models including DeepSeek, GLM, Qwen, and MiniMax.
+
+<Info>
+  Get an API key from the [Pinstripes dashboard](https://pinstripes.io)
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: DeepSeek V4 Flash
+      provider: pinstripes
+      model: ps/deepseek-v4-flash
+      apiKey: <YOUR_PINSTRIPES_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "DeepSeek V4 Flash",
+        "provider": "pinstripes",
+        "model": "ps/deepseek-v4-flash",
+        "apiKey": "<YOUR_PINSTRIPES_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+| Model ID | Description |
+| :--- | :--- |
+| `ps/deepseek-v4-flash` | DeepSeek V4 Flash — fast, capable coding and reasoning model |
+| `ps/glm-4.5-air` | GLM-4.5 Air — efficient multilingual model |
+| `ps/qwen3-35b` | Qwen3 35B — strong open-weight model from Alibaba |
+| `ps/minimax-m2.7` | MiniMax M2.7 — high-context MoE model |
+
+## Configuration Options
+
+| Option | Description | Default |
+| :--- | :--- | :--- |
+| `apiKey` | Pinstripes API key | Required |
+| `apiBase` | API base URL | `https://pinstripes.io/v1/` |
+| `model` | Model ID to use | `ps/deepseek-v4-flash` |
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Pinstripes.ts)
