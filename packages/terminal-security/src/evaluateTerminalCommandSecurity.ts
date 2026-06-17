@@ -1,5 +1,10 @@
 import { parse } from "shell-quote";
-import { ToolPolicy } from "./types.js";
+import type {
+  TerminalCommandSecurityEvaluation,
+  TerminalCommandSecurityOptions,
+  TerminalSecurityWarning,
+  ToolPolicy,
+} from "./types.js";
 
 /**
  * Token types from shell-quote
@@ -19,6 +24,10 @@ interface CommentToken {
 
 type ParsedToken = string | ShellOperator | GlobPattern | CommentToken;
 
+interface EvaluationContext {
+  warnings: TerminalSecurityWarning[];
+}
+
 /**
  * Evaluates the security policy for a terminal command.
  *
@@ -32,21 +41,54 @@ type ParsedToken = string | ShellOperator | GlobPattern | CommentToken;
 export function evaluateTerminalCommandSecurity(
   basePolicy: ToolPolicy,
   command: string | null | undefined,
-): ToolPolicy {
+): ToolPolicy;
+export function evaluateTerminalCommandSecurity(
+  basePolicy: ToolPolicy,
+  command: string | null | undefined,
+  options: TerminalCommandSecurityOptions & { includeWarnings: true },
+): TerminalCommandSecurityEvaluation;
+export function evaluateTerminalCommandSecurity(
+  basePolicy: ToolPolicy,
+  command: string | null | undefined,
+  options: TerminalCommandSecurityOptions,
+): ToolPolicy | TerminalCommandSecurityEvaluation;
+export function evaluateTerminalCommandSecurity(
+  basePolicy: ToolPolicy,
+  command: string | null | undefined,
+  options?: TerminalCommandSecurityOptions,
+): ToolPolicy | TerminalCommandSecurityEvaluation {
+  const evaluation = evaluateTerminalCommandSecurityDetailed(
+    basePolicy,
+    command,
+  );
+
+  if (options?.includeWarnings) {
+    return evaluation;
+  }
+
+  return evaluation.policy;
+}
+
+export function evaluateTerminalCommandSecurityDetailed(
+  basePolicy: ToolPolicy,
+  command: string | null | undefined,
+): TerminalCommandSecurityEvaluation {
+  const context: EvaluationContext = { warnings: [] };
+
   // If tool is already disabled, keep it disabled
   if (basePolicy === "disabled") {
-    return "disabled";
+    return toEvaluation("disabled", context);
   }
 
   // Handle null/undefined/empty commands
   if (!command || typeof command !== "string") {
-    return basePolicy;
+    return toEvaluation(basePolicy, context);
   }
 
   // Normalize command for analysis
   const normalizedCommand = command.trim();
   if (normalizedCommand === "") {
-    return basePolicy;
+    return toEvaluation(basePolicy, context);
   }
 
   try {
@@ -72,6 +114,7 @@ export function evaluateTerminalCommandSecurity(
           tokens,
           basePolicy,
           trimmedLine,
+          context,
         );
 
         // Track the most restrictive policy
@@ -82,22 +125,59 @@ export function evaluateTerminalCommandSecurity(
 
         // If we found a disabled command, return immediately
         if (mostRestrictivePolicy === "disabled") {
-          return "disabled";
+          return toEvaluation("disabled", context);
         }
       }
 
-      return mostRestrictivePolicy;
+      return toEvaluation(mostRestrictivePolicy, context);
     }
 
     // Single line command - parse and evaluate normally
     const tokens = parse(normalizedCommand);
 
     // Evaluate security of the parsed tokens
-    return evaluateTokensSecurity(tokens, basePolicy, normalizedCommand);
+    return toEvaluation(
+      evaluateTokensSecurity(tokens, basePolicy, normalizedCommand, context),
+      context,
+    );
   } catch (error) {
     // If parsing fails, be conservative and require permission
     console.error("Failed to parse command:", error);
-    return "allowedWithPermission";
+    return toEvaluation("allowedWithPermission", context);
+  }
+}
+
+function toEvaluation(
+  policy: ToolPolicy,
+  context: EvaluationContext,
+): TerminalCommandSecurityEvaluation {
+  const effectivePolicy =
+    context.warnings.length > 0
+      ? getMostRestrictive(policy, "allowedWithPermission")
+      : policy;
+
+  if (context.warnings.length === 0) {
+    return { policy: effectivePolicy };
+  }
+
+  return { policy: effectivePolicy, warnings: context.warnings };
+}
+
+function addWarnings(
+  context: EvaluationContext,
+  warnings: TerminalSecurityWarning[],
+): void {
+  for (const warning of warnings) {
+    const alreadyExists = context.warnings.some(
+      (existingWarning) =>
+        existingWarning.type === warning.type &&
+        existingWarning.packageName === warning.packageName &&
+        existingWarning.suspectedPackageName === warning.suspectedPackageName,
+    );
+
+    if (!alreadyExists) {
+      context.warnings.push(warning);
+    }
   }
 }
 
@@ -129,6 +209,7 @@ function evaluateTokensSecurity(
   tokens: ParsedToken[],
   basePolicy: ToolPolicy,
   originalCommand: string,
+  context: EvaluationContext,
 ): ToolPolicy {
   // Check for empty strings that might indicate variable expansion
   const hasEmptyStrings = tokens.some((t) => typeof t === "string" && t === "");
@@ -144,18 +225,29 @@ function evaluateTokensSecurity(
       // Variable expansion detected - evaluate both interpretations
 
       // 1. Evaluate with empty strings as-is
+      const policyWithEmptyContext: EvaluationContext = { warnings: [] };
       const policyWithEmpty = evaluateTokens(
         tokens,
         basePolicy,
         originalCommand,
+        policyWithEmptyContext,
       );
 
       // 2. Evaluate without empty strings
       const tokensWithoutEmpty = tokens.filter((t) => t !== "");
+      const policyWithoutEmptyContext: EvaluationContext = { warnings: [] };
       const policyWithoutEmpty =
         tokensWithoutEmpty.length > 0
-          ? evaluateTokens(tokensWithoutEmpty, basePolicy, originalCommand)
+          ? evaluateTokens(
+              tokensWithoutEmpty,
+              basePolicy,
+              originalCommand,
+              policyWithoutEmptyContext,
+            )
           : basePolicy;
+
+      addWarnings(context, policyWithEmptyContext.warnings);
+      addWarnings(context, policyWithoutEmptyContext.warnings);
 
       // Variable expansion always requires at least permission
       return getMostRestrictive(
@@ -167,7 +259,7 @@ function evaluateTokensSecurity(
   }
 
   // Normal evaluation for commands without variable expansion
-  return evaluateTokens(tokens, basePolicy, originalCommand);
+  return evaluateTokens(tokens, basePolicy, originalCommand, context);
 }
 
 /**
@@ -177,6 +269,7 @@ function evaluateTokens(
   tokens: ParsedToken[],
   basePolicy: ToolPolicy,
   originalCommand: string,
+  context: EvaluationContext,
 ): ToolPolicy {
   let mostRestrictivePolicy = basePolicy;
   let currentCommand: string[] = [];
@@ -196,6 +289,7 @@ function evaluateTokens(
         const commandPolicy = evaluateSingleCommand(
           currentCommand,
           originalCommand,
+          context,
         );
         mostRestrictivePolicy = getMostRestrictive(
           mostRestrictivePolicy,
@@ -235,6 +329,7 @@ function evaluateTokens(
     const commandPolicy = evaluateSingleCommand(
       currentCommand,
       originalCommand,
+      context,
     );
     mostRestrictivePolicy = getMostRestrictive(
       mostRestrictivePolicy,
@@ -247,10 +342,16 @@ function evaluateTokens(
   if (hasCommandSubstitution(originalCommand)) {
     const substitutedCommands = extractSubstitutedCommands(originalCommand);
     for (const subCmd of substitutedCommands) {
-      const nestedPolicy = evaluateTerminalCommandSecurity(basePolicy, subCmd);
+      const nestedEvaluation = evaluateTerminalCommandSecurityDetailed(
+        basePolicy,
+        subCmd,
+      );
+      if (nestedEvaluation.warnings) {
+        addWarnings(context, nestedEvaluation.warnings);
+      }
       mostRestrictivePolicy = getMostRestrictive(
         mostRestrictivePolicy,
-        nestedPolicy,
+        nestedEvaluation.policy,
       );
       if (mostRestrictivePolicy === "disabled") {
         return "disabled";
@@ -362,6 +463,7 @@ function evaluatePipeChain(
 function evaluateSingleCommand(
   commandTokens: string[],
   originalCommand: string,
+  context: EvaluationContext,
 ): ToolPolicy {
   if (commandTokens.length === 0) {
     return "allowedWithoutPermission";
@@ -379,6 +481,12 @@ function evaluateSingleCommand(
   // Handle variable expansion patterns
   if (baseCommand.startsWith("$")) {
     // Command is a variable - could be anything, so require permission
+    return "allowedWithPermission";
+  }
+
+  const packageTargets = getPackageManagerTargets(baseCommand, args);
+  if (packageTargets !== null) {
+    addWarnings(context, getTyposquatTargetWarnings(packageTargets));
     return "allowedWithPermission";
   }
 
@@ -562,39 +670,331 @@ function isCriticalCommand(baseCommand: string, args: string[]): boolean {
 /**
  * Checks if command is a package manager install
  */
+const POPULAR_PACKAGE_TARGETS = [
+  "@angular/core",
+  "@types/node",
+  "axios",
+  "chalk",
+  "commander",
+  "debug",
+  "dotenv",
+  "esbuild",
+  "eslint",
+  "express",
+  "lodash",
+  "next",
+  "nodejs",
+  "nginx",
+  "numpy",
+  "preact",
+  "prettier",
+  "rails",
+  "react",
+  "react-dom",
+  "requests",
+  "ripgrep",
+  "typescript",
+  "vite",
+  "vue",
+  "webpack",
+  "zod",
+];
+
+const PACKAGE_MANAGER_COMMANDS = [
+  "npm",
+  "yarn",
+  "pnpm",
+  "pip",
+  "pip3",
+  "gem",
+  "cargo",
+  "go",
+  "apt",
+  "apt-get",
+  "yum",
+  "dnf",
+  "zypper",
+  "pacman",
+  "brew",
+  "choco",
+  "scoop",
+  "winget",
+];
+
+const PACKAGE_MANAGER_INSTALL_COMMANDS = ["install", "add", "i"];
+
+const INSTALL_FLAGS_WITH_VALUES = [
+  "-c",
+  "-C",
+  "-e",
+  "-f",
+  "-i",
+  "-r",
+  "-t",
+  "-w",
+  "--cache",
+  "--config-settings",
+  "--constraint",
+  "--extra-index-url",
+  "--find-links",
+  "--filter",
+  "--global-option",
+  "--index-url",
+  "--install-option",
+  "--prefix",
+  "--python",
+  "--registry",
+  "--requirement",
+  "--root",
+  "--save-prefix",
+  "--tag",
+  "--target",
+  "--timeout",
+  "--trusted-host",
+  "--userconfig",
+  "--workspace",
+];
+
+const RUNNER_FLAGS_WITH_VALUES = [
+  "-c",
+  "-p",
+  "--cache",
+  "--package",
+  "--prefix",
+  "--registry",
+  "--shell",
+  "--userconfig",
+];
+
 function isHighRiskPackageManager(
   baseCommand: string,
   args: string[],
 ): boolean {
-  const packageManagers = [
-    "npm",
-    "yarn",
-    "pnpm",
-    "pip",
-    "pip3",
-    "gem",
-    "cargo",
-    "go",
-    "apt",
-    "apt-get",
-    "yum",
-    "dnf",
-    "zypper",
-    "pacman",
-    "brew",
-    "choco",
-    "scoop",
-    "winget",
-  ];
+  return getPackageManagerTargets(baseCommand, args) !== null;
+}
 
-  if (packageManagers.includes(baseCommand)) {
-    // Check for install/add subcommands
-    const installCommands = ["install", "add", "i"];
-    if (args.length > 0 && installCommands.includes(args[0])) {
-      return true;
+function getPackageManagerTargets(
+  baseCommand: string,
+  args: string[],
+): string[] | null {
+  if (baseCommand === "npx" || baseCommand === "bunx") {
+    return getRunnerPackageTargets(args);
+  }
+
+  if ((baseCommand === "pnpm" || baseCommand === "yarn") && args[0] === "dlx") {
+    return getRunnerPackageTargets(args.slice(1));
+  }
+
+  if (
+    !PACKAGE_MANAGER_COMMANDS.includes(baseCommand) ||
+    args.length === 0 ||
+    !PACKAGE_MANAGER_INSTALL_COMMANDS.includes(args[0])
+  ) {
+    return null;
+  }
+
+  return getInstallPackageTargets(args.slice(1));
+}
+
+function getInstallPackageTargets(args: string[]): string[] {
+  const targets: string[] = [];
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg === "--") {
+      break;
+    }
+
+    if (shouldSkipFlagValue(arg, INSTALL_FLAGS_WITH_VALUES)) {
+      i++;
+      continue;
+    }
+
+    if (isCommandFlag(arg)) {
+      continue;
+    }
+
+    const packageName = normalizePackageTarget(arg);
+    if (packageName) {
+      targets.push(packageName);
     }
   }
-  return false;
+
+  return targets;
+}
+
+function getRunnerPackageTargets(args: string[]): string[] {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg === "--") {
+      break;
+    }
+
+    if (shouldSkipFlagValue(arg, RUNNER_FLAGS_WITH_VALUES)) {
+      i++;
+      continue;
+    }
+
+    if (isCommandFlag(arg)) {
+      continue;
+    }
+
+    const packageName = normalizePackageTarget(arg);
+    return packageName ? [packageName] : [];
+  }
+
+  return [];
+}
+
+function getTyposquatTargetWarnings(
+  packageTargets: string[],
+): TerminalSecurityWarning[] {
+  const warnings: TerminalSecurityWarning[] = [];
+
+  for (const packageName of packageTargets) {
+    const warning = getTyposquatTargetWarning(packageName);
+    if (warning) {
+      warnings.push(warning);
+    }
+  }
+
+  return warnings;
+}
+
+function getTyposquatTargetWarning(
+  packageName: string,
+): TerminalSecurityWarning | null {
+  let closestMatch: TerminalSecurityWarning | null = null;
+
+  for (const popularPackage of POPULAR_PACKAGE_TARGETS) {
+    if (packageName === popularPackage) {
+      return null;
+    }
+
+    const distance = getLevenshteinDistance(packageName, popularPackage, 2);
+    if (!isLikelyTyposquatDistance(packageName, popularPackage, distance)) {
+      continue;
+    }
+
+    if (!closestMatch || distance < closestMatch.distance) {
+      closestMatch = {
+        type: "typosquat-target",
+        packageName,
+        suspectedPackageName: popularPackage,
+        distance,
+      };
+    }
+  }
+
+  return closestMatch;
+}
+
+function isLikelyTyposquatDistance(
+  packageName: string,
+  popularPackage: string,
+  distance: number,
+): boolean {
+  if (distance <= 0) {
+    return false;
+  }
+
+  if (distance === 1) {
+    return true;
+  }
+
+  return (
+    distance === 2 &&
+    packageName.length === popularPackage.length &&
+    packageName[0] === popularPackage[0]
+  );
+}
+
+function getLevenshteinDistance(
+  source: string,
+  target: string,
+  maxDistance: number,
+): number {
+  if (Math.abs(source.length - target.length) > maxDistance) {
+    return maxDistance + 1;
+  }
+
+  let previousRow = Array.from({ length: target.length + 1 }, (_, i) => i);
+
+  for (let i = 1; i <= source.length; i++) {
+    const currentRow = [i];
+    let rowMinimum = currentRow[0];
+
+    for (let j = 1; j <= target.length; j++) {
+      const substitutionCost = source[i - 1] === target[j - 1] ? 0 : 1;
+      const distance = Math.min(
+        currentRow[j - 1] + 1,
+        previousRow[j] + 1,
+        previousRow[j - 1] + substitutionCost,
+      );
+
+      currentRow[j] = distance;
+      rowMinimum = Math.min(rowMinimum, distance);
+    }
+
+    if (rowMinimum > maxDistance) {
+      return maxDistance + 1;
+    }
+
+    previousRow = currentRow;
+  }
+
+  return previousRow[target.length];
+}
+
+function normalizePackageTarget(target: string): string | null {
+  let packageName = target.trim();
+
+  if (
+    packageName === "" ||
+    packageName.startsWith(".") ||
+    packageName.startsWith("/") ||
+    packageName.startsWith("~") ||
+    packageName.endsWith(".tgz") ||
+    packageName.endsWith(".tar.gz") ||
+    /^[a-z][a-z0-9+.-]*:/i.test(packageName) ||
+    packageName.includes("://") ||
+    packageName.startsWith("git@")
+  ) {
+    return null;
+  }
+
+  const pythonExtraStart = packageName.indexOf("[");
+  if (pythonExtraStart > 0) {
+    packageName = packageName.slice(0, pythonExtraStart);
+  }
+
+  const pythonVersionStart = packageName.search(/[<>=~!]/);
+  if (pythonVersionStart > 0) {
+    packageName = packageName.slice(0, pythonVersionStart);
+  }
+
+  const versionStart = packageName.startsWith("@")
+    ? packageName.indexOf("@", 1)
+    : packageName.indexOf("@");
+  if (versionStart > 0) {
+    packageName = packageName.slice(0, versionStart);
+  }
+
+  return packageName.toLowerCase();
+}
+
+function shouldSkipFlagValue(arg: string, flagsWithValues: string[]): boolean {
+  if (arg.includes("=")) {
+    return false;
+  }
+
+  return flagsWithValues.includes(arg);
+}
+
+function isCommandFlag(arg: string): boolean {
+  return arg.startsWith("-") && arg !== "-";
 }
 
 /**
