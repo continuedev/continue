@@ -48,6 +48,7 @@ import Nous from "./Nous";
 import Novita from "./Novita";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
+import Pinstripes from "./Pinstripes";
 import OpenAI from "./OpenAI";
 import OpenRouter from "./OpenRouter";
 import ClawRouter from "./ClawRouter";
@@ -103,6 +104,7 @@ export const LLMClasses = [
   Groq,
   Fireworks,
   NCompass,
+  Pinstripes,
   Cloudflare,
   Deepseek,
   Docker,
