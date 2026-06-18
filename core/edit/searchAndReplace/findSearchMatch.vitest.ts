@@ -179,6 +179,36 @@ describe("findSearchMatch", () => {
         strategyName: "caseInsensitiveMatch",
       });
     });
+
+    it("should return original-cased indices when an earlier character changes length on lowercase", () => {
+      // "İ" (U+0130) lowercases to "i" + combining dot (2 UTF-16 units), so an
+      // index found in the lowercased file would be shifted relative to the original.
+      const fileContent = "İ test";
+      const result = findSearchMatch(fileContent, "TEST");
+
+      expect(result).toEqual({
+        startIndex: 2,
+        endIndex: 6,
+        strategyName: "caseInsensitiveMatch",
+      });
+      expect(fileContent.slice(result!.startIndex, result!.endIndex)).toBe(
+        "test",
+      );
+    });
+
+    it("should return original-cased indices when the match itself changes length on lowercase", () => {
+      // The matched region in the file is a single code unit ("İ") that lowercases
+      // to two units, so endIndex must come from the original slice, not the search length.
+      const fileContent = "x İ y";
+      const result = findSearchMatch(fileContent, "i̇");
+
+      expect(result).toEqual({
+        startIndex: 2,
+        endIndex: 3,
+        strategyName: "caseInsensitiveMatch",
+      });
+      expect(fileContent.slice(result!.startIndex, result!.endIndex)).toBe("İ");
+    });
   });
 
   describe("Whitespace ignored strategy fallback", () => {
