@@ -171,12 +171,18 @@ export class ConfigHandler {
     if (options.includeWorkspace) {
       const yamlOptions = { ...options, fileExtType: "yaml" } as const;
       const allFiles = (
-        await Promise.all([
+        await Promise.allSettled([
           getAllDotContinueDefinitionFiles(this.ide, yamlOptions, "assistants"),
           getAllDotContinueDefinitionFiles(this.ide, yamlOptions, "agents"),
           getAllDotContinueDefinitionFiles(this.ide, yamlOptions, "configs"),
         ])
-      ).flat();
+      ).flatMap((result) => {
+        if (result.status === "rejected") {
+          console.warn("Failed to load local config profiles:", result.reason);
+          return [];
+        }
+        return result.value;
+      });
       const profiles = allFiles.map((assistant) => {
         return new LocalProfileLoader(this.ide, this.llmLogger, assistant);
       });
