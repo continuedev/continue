@@ -1270,6 +1270,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  atlascloud: {
+    title: "Atlas Cloud",
+    provider: "atlascloud",
+    description:
+      "Atlas Cloud is an OpenAI-compatible API gateway with access to 300+ open-source and frontier models.",
+    longDescription:
+      "To get started with Atlas Cloud, create an account and get an API key at [www.atlascloud.ai](https://www.atlascloud.ai).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Atlas Cloud API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://www.atlascloud.ai",
+  },
   venice: {
     title: "Venice",
     provider: "venice",
