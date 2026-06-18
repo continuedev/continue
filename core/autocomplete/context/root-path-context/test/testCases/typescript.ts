@@ -298,7 +298,7 @@ const CLASS_METHODS = [
   },
   {
     nodeType:
-      "method_declaration with with generic params and generic return type",
+      "method_declaration with generic params and generic return type",
     fileName: "typescript/classMethods.ts",
     language: "TypeScript",
     cursorPosition: { line: 24, character: 11 },
