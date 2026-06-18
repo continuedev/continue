@@ -7,6 +7,65 @@ import { logger } from "../util/logger.js";
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
 import { AgentFileServiceState, ModelServiceState } from "./types.js";
 
+const AUTODETECT = "AUTODETECT";
+
+/**
+ * Expands AUTODETECT model entries into concrete models
+ * For each model with model === "AUTODETECT", calls llm.list() to get available models
+ * and replaces the AUTODETECT entry with one ModelConfig per available model.
+ * Handles errors gracefully by skipping failed expansions with a warning.
+ */
+export async function expandAutodetectModels(
+  models: ModelConfig[],
+  authConfig: AuthConfig,
+): Promise<ModelConfig[]> {
+  const expanded: ModelConfig[] = [];
+
+  for (const model of models) {
+    if (model.model !== AUTODETECT) {
+      expanded.push(model);
+      continue;
+    }
+
+    const llmApi = createLlmApi(model, authConfig);
+    if (!llmApi) {
+      logger.warn(
+        `Cannot create API client for AUTODETECT model with provider ${model.provider}, skipping`,
+      );
+      continue;
+    }
+
+    try {
+      const availableModels = await llmApi.list();
+      if (!availableModels || availableModels.length === 0) {
+        logger.warn(
+          `No models returned from ${model.provider} for AUTODETECT, skipping`,
+        );
+        continue;
+      }
+
+      for (const available of availableModels) {
+        if (available.id === AUTODETECT) continue;
+        expanded.push({
+          ...model,
+          model: available.id,
+          name: available.id,
+        });
+      }
+
+      logger.debug(
+        `Expanded AUTODETECT for ${model.provider}: ${availableModels.map((m) => m.id).join(", ")}`,
+      );
+    } catch (e) {
+      logger.warn(
+        `Error listing models for AUTODETECT expansion (${model.provider}): ${e}`,
+      );
+    }
+  }
+
+  return expanded;
+}
+
 /**
  * Service for managing LLM and model state
  * Depends on auth config and assistant config
@@ -49,8 +108,20 @@ export class ModelService
       assistantModelsCount: assistant?.models?.length || 0,
     });
 
-    this.assistant = assistant;
     this.authConfig = authConfig;
+
+    // Expand AUTODETECT model entries into concrete models
+    if (assistant.models) {
+      assistant = {
+        ...assistant,
+        models: await expandAutodetectModels(
+          assistant.models.filter((m): m is ModelConfig => !!m),
+          authConfig,
+        ),
+      };
+    }
+
+    this.assistant = assistant;
     this.availableModels = (assistant.models?.filter(
       (model) =>
         model && (model.roles?.includes("chat") || model.roles === undefined),
