@@ -223,7 +223,6 @@ function handleToolResult(
   const toolCall = pendingToolCalls.get(unifiedMessage.toolCallId);
   if (!toolCall) return;
 
-  // Add tool result as context to the previous assistant message
   let lastAssistantIndex = -1;
   for (let i = historyItems.length - 1; i >= 0; i--) {
     if (historyItems[i].message.role === "assistant") {
@@ -233,6 +232,12 @@ function handleToolResult(
   }
   if (lastAssistantIndex < 0) return;
   if (!historyItems[lastAssistantIndex].toolCallStates) return;
+
+  // Guard: only match if this toolCallId belongs to THIS assistant turn
+  const belongsToThisTurn = historyItems[lastAssistantIndex].toolCallStates?.some(
+    (ts: ToolCallState) => ts.toolCallId === unifiedMessage.toolCallId,
+  );
+  if (!belongsToThisTurn) return;
 
   const toolState = historyItems[lastAssistantIndex].toolCallStates?.find(
     (ts: ToolCallState) => ts.toolCallId === unifiedMessage.toolCallId,
@@ -246,6 +251,8 @@ function handleToolResult(
         description: "Tool execution result",
       },
     ];
+    // Consume the ID so a reused tool_call_id in a later turn starts fresh
+    pendingToolCalls.delete(unifiedMessage.toolCallId);
   }
 }
 
@@ -305,11 +312,11 @@ export function convertFromUnifiedHistory(
   historyItems: ChatHistoryItem[],
 ): ChatCompletionMessageParam[] {
   const messages: ChatCompletionMessageParam[] = [];
+  const emittedToolCallIds = new Set<string>(); // prevent duplicate tool results for reused IDs
 
   for (const item of historyItems) {
     const baseMessage = convertFromUnifiedMessage(item.message);
 
-    // If this is a user message with context items, expand the content
     if (
       item.message.role === "user" &&
       item.contextItems &&
@@ -325,25 +332,28 @@ export function convertFromUnifiedHistory(
       baseMessage.content =
         typeof baseMessage.content === "string"
           ? contextContent + baseMessage.content
-          : baseMessage.content; // Keep array format if it's already an array
+          : baseMessage.content;
     }
 
     messages.push(baseMessage);
 
-    // Add tool result messages if there are completed tool calls, and fallback when tool output is missing
     if (item.toolCallStates) {
       for (const toolState of item.toolCallStates) {
+        const id = toolState.toolCallId;
+        if (emittedToolCallIds.has(id)) continue; // skip duplicate reused IDs
+        emittedToolCallIds.add(id);
+
         if (toolState.output && toolState.output.length > 0) {
           messages.push({
             role: "tool",
             content: toolState.output.map((o: any) => o.content).join("\n"),
-            tool_call_id: toolState.toolCallId,
+            tool_call_id: id,
           });
         } else {
           messages.push({
             role: "tool",
             content: "Tool cancelled",
-            tool_call_id: toolState.toolCallId,
+            tool_call_id: id,
           });
         }
       }
