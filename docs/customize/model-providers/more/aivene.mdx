@@ -1,0 +1,124 @@
+---
+title: "Aivene"
+description: "Configure Aivene with Continue to access various LLM models through a unified AI gateway"
+---
+
+[Aivene](https://aivene.com) is an AI gateway that provides access to various LLM models including GPT-4o, Claude, DeepSeek, Gemini, Llama, and many more through a single unified OpenAI-compatible API. Browse all available models at [platform.aivene.com/models](https://platform.aivene.com/models).
+
+<Info>
+  You can get an API key from
+  [platform.aivene.com](https://platform.aivene.com).
+</Info>
+
+## Chat Model
+
+We recommend configuring **deepseek-v4-pro** as your chat model for complex reasoning and coding tasks.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: DeepSeek V4 Pro
+        provider: aivene
+        model: deepseek-v4-pro
+        apiKey: <YOUR_AIVENE_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "DeepSeek V4 Pro",
+          "provider": "aivene",
+          "model": "deepseek-v4-pro",
+          "apiKey": "<YOUR_AIVENE_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: GPT-4o Mini
+        provider: aivene
+        model: gpt-4o-mini
+        apiKey: <YOUR_AIVENE_API_KEY>
+        roles:
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "GPT-4o Mini",
+          "provider": "aivene",
+          "model": "gpt-4o-mini",
+          "apiKey": "<YOUR_AIVENE_API_KEY>"
+        }
+      ],
+      "tabAutocompleteModel": {
+        "title": "GPT-4o Mini",
+        "provider": "aivene",
+        "model": "gpt-4o-mini",
+        "apiKey": "<YOUR_AIVENE_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Embeddings Model
+
+Aivene provides access to various embedding models for semantic search, clustering, and RAG pipelines.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Text Embedding 3 Small
+        provider: aivene
+        model: text-embedding-3-small
+        apiKey: <YOUR_AIVENE_API_KEY>
+        roles:
+          - embed
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "embeddingsProvider": {
+        "provider": "aivene",
+        "model": "text-embedding-3-small",
+        "apiKey": "<YOUR_AIVENE_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+Browse all available embedding models at [platform.aivene.com/models](https://platform.aivene.com/models) under the Embeddings tab.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Aivene.ts)

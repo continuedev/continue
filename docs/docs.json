@@ -105,6 +105,7 @@
                   {
                     "group": "More Providers",
                     "pages": [
+                      "customize/model-providers/more/aivene",
                       "customize/model-providers/more/asksage",
                       "customize/model-providers/more/clawrouter",
                       "customize/model-providers/more/deepseek",
