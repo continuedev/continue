@@ -27,7 +27,11 @@ import {
   Usage,
 } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
-import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import {
+  renderChatMessage,
+  renderChatMessageWithoutThinking,
+  stripImages,
+} from "../../util/messageContent.js";
 import { extractBase64FromDataUrl } from "../../util/url.js";
 import { DEFAULT_REASONING_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
@@ -258,7 +262,7 @@ class Anthropic extends BaseLLM {
   ): AsyncGenerator<string> {
     const messages = [{ role: "user" as const, content: prompt }];
     for await (const update of this._streamChat(messages, signal, options)) {
-      yield renderChatMessage(update);
+      yield renderChatMessageWithoutThinking(update);
     }
   }
 

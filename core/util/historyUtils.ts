@@ -5,7 +5,7 @@ import path from "path";
 
 import { languageForFilepath } from "../autocomplete/constants/AutocompleteLanguageInfo.js";
 import { ChatMessage, IDE } from "../index.js";
-import { renderChatMessage } from "../util/messageContent.js";
+import { renderChatMessageWithoutThinking } from "../util/messageContent.js";
 import { getContinueGlobalPath } from "../util/paths.js";
 
 // If useful elsewhere, helper funcs should move to core/util/index.ts or similar
@@ -45,7 +45,7 @@ export function toMarkDown(history: ChatMessage[], time?: Date): string {
   let content = `### [Continue](https://continue.dev) session transcript\n Exported: ${time.toLocaleString()}`;
 
   for (const msg of history) {
-    let msgText = renderChatMessage(msg);
+    let msgText = renderChatMessageWithoutThinking(msg);
     if (!msgText) {
       continue; // Skip messages without content
     }

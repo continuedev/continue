@@ -20,7 +20,10 @@ import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import type { CompletionOptions } from "../../index.js";
 import { ChatMessage, Chunk, LLMOptions, MessageContent } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
-import { renderChatMessage, stripImages } from "../../util/messageContent.js";
+import {
+  renderChatMessageWithoutThinking,
+  stripImages,
+} from "../../util/messageContent.js";
 import { parseDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
@@ -100,7 +103,7 @@ class Bedrock extends BaseLLM {
   ): AsyncGenerator<string> {
     const messages = [{ role: "user" as const, content: prompt }];
     for await (const update of this._streamChat(messages, signal, options)) {
-      yield renderChatMessage(update);
+      yield renderChatMessageWithoutThinking(update);
     }
   }
 
