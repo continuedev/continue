@@ -216,6 +216,13 @@ export class VerticalDiffManager {
     // Get the current editor fileUri/range
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
+      // Emit closed status so the tool call doesn't hang
+      void this.webviewProtocol.request("updateApplyState", {
+        streamId,
+        status: "closed",
+        numDiffs: 0,
+        toolCallId,
+      });
       return;
     }
     const fileUri = editor.document.uri.toString();
@@ -254,6 +261,15 @@ export class VerticalDiffManager {
 
     if (!diffHandler) {
       console.warn("Issue occurred while creating new vertical diff handler");
+      // Emit closed status so the tool call doesn't hang
+      void this.webviewProtocol.request("updateApplyState", {
+        streamId,
+        status: "closed",
+        numDiffs: 0,
+        fileContent: editor.document.getText(),
+        filepath: fileUri,
+        toolCallId,
+      });
       return;
     }
 
@@ -305,6 +321,13 @@ export class VerticalDiffManager {
 
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
+      // Emit closed status so the tool call doesn't hang
+      void this.webviewProtocol.request("updateApplyState", {
+        streamId,
+        status: "closed",
+        numDiffs: 0,
+        toolCallId,
+      });
       return;
     }
 
@@ -333,6 +356,15 @@ export class VerticalDiffManager {
 
     if (!diffHandler) {
       console.warn("Issue occurred while creating vertical diff handler");
+      // Emit closed status so the tool call doesn't hang
+      void this.webviewProtocol.request("updateApplyState", {
+        streamId,
+        status: "closed",
+        numDiffs: 0,
+        fileContent: editor.document.getText(),
+        filepath: fileUri,
+        toolCallId,
+      });
       return;
     }
 

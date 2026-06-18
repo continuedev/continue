@@ -170,7 +170,7 @@ describe("handleApplyStateUpdate", () => {
         status: "done",
         ...UNUSED_TOOL_CALL_PARAMS,
       };
-      const newApplyState = { streamId: "chat-stream" };
+      const newApplyState = { streamId: "chat-stream", numDiffs: 1 };
 
       vi.mocked(findToolCallById).mockReturnValue(toolCallState);
       mockGetState.mockReturnValue({
@@ -181,14 +181,26 @@ describe("handleApplyStateUpdate", () => {
           },
         },
         config: { config: {} },
+        ui: { toolSettings: {} },
       });
+
+      // Simulate the "done" event that precedes "closed" in normal flow
+      const doneState: ApplyState = {
+        streamId: "chat-stream",
+        toolCallId: "test-tool-call",
+        status: "done",
+        filepath: "test.txt",
+        numDiffs: 1,
+      };
+      const doneThunk = handleApplyStateUpdate(doneState);
+      await doneThunk(mockDispatch, mockGetState, mockExtra);
 
       const applyState: ApplyState = {
         streamId: "chat-stream",
         toolCallId: "test-tool-call",
         status: "closed",
         filepath: "test.txt",
-        numDiffs: 1,
+        numDiffs: 0,
       };
 
       const thunk = handleApplyStateUpdate(applyState);
@@ -222,7 +234,7 @@ describe("handleApplyStateUpdate", () => {
         status: "canceled",
         ...UNUSED_TOOL_CALL_PARAMS,
       };
-      const newApplyState = { streamId: "chat-stream" };
+      const newApplyState = { streamId: "chat-stream-cancel" };
 
       vi.mocked(findToolCallById).mockReturnValue(toolCallState);
       mockGetState.mockReturnValue({
@@ -236,11 +248,11 @@ describe("handleApplyStateUpdate", () => {
       });
 
       const applyState: ApplyState = {
-        streamId: "chat-stream",
+        streamId: "chat-stream-cancel",
         toolCallId: "test-tool-call",
         status: "closed",
         filepath: "test.txt",
-        numDiffs: 1,
+        numDiffs: 0,
       };
 
       const thunk = handleApplyStateUpdate(applyState);
@@ -270,7 +282,7 @@ describe("handleApplyStateUpdate", () => {
         status: "errored",
         ...UNUSED_TOOL_CALL_PARAMS,
       };
-      const newApplyState = { streamId: "chat-stream" };
+      const newApplyState = { streamId: "chat-stream-error" };
 
       vi.mocked(findToolCallById).mockReturnValue(toolCallState);
       mockGetState.mockReturnValue({
@@ -284,17 +296,66 @@ describe("handleApplyStateUpdate", () => {
       });
 
       const applyState: ApplyState = {
-        streamId: "chat-stream",
+        streamId: "chat-stream-error",
         toolCallId: "test-tool-call",
         status: "closed",
         filepath: "test.txt",
-        numDiffs: 1,
+        numDiffs: 0,
       };
 
       const thunk = handleApplyStateUpdate(applyState);
       await thunk(mockDispatch, mockGetState, mockExtra);
 
       expect(acceptToolCall).not.toHaveBeenCalled();
+      expect(streamResponseAfterToolCall).toHaveBeenCalledWith({
+        toolCallId: "test-tool-call",
+      });
+    });
+
+    it("should reject closure that skipped done (bail-out path)", async () => {
+      const toolCallState: ToolCallState = {
+        toolCallId: "test-tool-call",
+        status: "calling",
+        ...UNUSED_TOOL_CALL_PARAMS,
+      };
+      const newApplyState = { streamId: "bail-stream" };
+
+      vi.mocked(findToolCallById).mockReturnValue(toolCallState);
+      mockGetState.mockReturnValue({
+        session: {
+          history: [],
+          codeBlockApplyStates: {
+            states: [newApplyState],
+          },
+        },
+        config: { config: {} },
+      });
+
+      // No "done" event dispatched — simulates handler bail-out
+      const applyState: ApplyState = {
+        streamId: "bail-stream",
+        toolCallId: "test-tool-call",
+        status: "closed",
+        filepath: "test.txt",
+        numDiffs: 0,
+      };
+
+      const thunk = handleApplyStateUpdate(applyState);
+      await thunk(mockDispatch, mockGetState, mockExtra);
+
+      expect(acceptToolCall).not.toHaveBeenCalled();
+      expect(updateToolCallOutput).toHaveBeenCalledWith({
+        toolCallId: "test-tool-call",
+        contextItems: [
+          {
+            name: "Edit Failed",
+            content:
+              "Failed to edit test.txt. To continue working with the file, read it again to see the most up-to-date contents",
+            description: "",
+            hidden: true,
+          },
+        ],
+      });
       expect(streamResponseAfterToolCall).toHaveBeenCalledWith({
         toolCallId: "test-tool-call",
       });
@@ -343,14 +404,26 @@ describe("handleApplyStateUpdate", () => {
           },
         },
         config: { config: {} },
+        ui: { toolSettings: {} },
       });
+
+      // Simulate the "done" event
+      const doneState: ApplyState = {
+        streamId: "chat-stream",
+        toolCallId: "test-tool-call",
+        status: "done",
+        filepath: "test.txt",
+        numDiffs: 1,
+      };
+      const doneThunk = handleApplyStateUpdate(doneState);
+      await doneThunk(mockDispatch, mockGetState, mockExtra);
 
       const applyState: ApplyState = {
         streamId: "chat-stream",
         toolCallId: "test-tool-call",
         status: "closed",
         filepath: "test.txt",
-        numDiffs: 1,
+        numDiffs: 0,
       };
 
       const thunk = handleApplyStateUpdate(applyState);
@@ -382,7 +455,6 @@ describe("handleApplyStateUpdate", () => {
 
     it("should handle different status values", async () => {
       const statusValues: ApplyState["status"][] = [
-        "not-started",
         "streaming",
         "done",
         "closed",
@@ -391,8 +463,17 @@ describe("handleApplyStateUpdate", () => {
       for (const status of statusValues) {
         vi.clearAllMocks();
 
+        vi.mocked(findToolCallById).mockReturnValue(undefined);
+        mockGetState.mockReturnValue({
+          session: {
+            history: [],
+            codeBlockApplyStates: { states: [] },
+          },
+          ui: { toolSettings: {} },
+        });
+
         const applyState: ApplyState = {
-          streamId: "chat-stream",
+          streamId: `chat-stream-${status}`,
           toolCallId: "test-tool-call",
           status,
           filepath: "test.txt",
@@ -663,6 +744,179 @@ describe("applyForEditTool", () => {
 
       expect(errorToolCall).not.toHaveBeenCalled();
       expect(updateToolCallOutput).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("timeout handling", () => {
+    it("should dispatch error on apply timeout", async () => {
+      vi.useFakeTimers();
+
+      const payload: ApplyToFilePayload & { toolCallId: string } = {
+        toolCallId: "test-tool-call",
+        streamId: "test-stream",
+        filepath: "test.txt",
+        text: "new content",
+        isSearchAndReplace: true,
+      };
+
+      const toolCallState: ToolCallState = {
+        toolCallId: "test-tool-call",
+        status: "calling",
+        ...UNUSED_TOOL_CALL_PARAMS,
+      };
+      const applyState: ApplyState = {
+        status: "not-started",
+        streamId: "test-stream",
+        toolCallId: "test-tool-call",
+      };
+
+      vi.mocked(selectToolCallById).mockReturnValue(toolCallState);
+      vi.mocked(selectApplyStateByToolCallId).mockReturnValue(applyState);
+      mockGetState.mockReturnValue({});
+
+      // Simulate the apply request never completing (never calling a callback)
+      let resolveApplyRequest: (value: any) => void;
+      const applyPromise = new Promise((resolve) => {
+        resolveApplyRequest = resolve;
+      });
+      mockExtra.ideMessenger.request.mockReturnValue(applyPromise);
+
+      const thunk = applyForEditTool(payload);
+      const thunkPromise = thunk(mockDispatch, mockGetState, mockExtra);
+
+      // Advance time past the timeout (60 seconds)
+      vi.advanceTimersByTime(61_000);
+
+      // Allow promises to settle
+      await vi.runAllTimersAsync();
+
+      expect(errorToolCall).toHaveBeenCalledWith({
+        toolCallId: "test-tool-call",
+      });
+      expect(updateToolCallOutput).toHaveBeenCalledWith({
+        toolCallId: "test-tool-call",
+        contextItems: [
+          {
+            icon: "problems",
+            name: "Apply Timeout",
+            description: "Edit operation timed out",
+            content:
+              "Error editing file: the apply operation did not complete within the expected time. The file may not have been modified. Please try again or use a different approach.\n\nPlease try something else or request further instructions.",
+            hidden: false,
+          },
+        ],
+      });
+
+      // Verify that a dispatch with type 'apply/updateState' was made (for handleApplyStateUpdate)
+      expect(mockDispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: expect.stringContaining("apply"),
+        }),
+      );
+
+      vi.useRealTimers();
+    });
+
+    it("should not trigger timeout when apply completes normally", async () => {
+      vi.useFakeTimers();
+      vi.clearAllMocks();
+
+      const payload: ApplyToFilePayload & { toolCallId: string } = {
+        toolCallId: "test-tool-call-normal",
+        streamId: "test-stream-normal",
+        filepath: "test.txt",
+        text: "new content",
+        isSearchAndReplace: true,
+      };
+
+      const toolCallState: ToolCallState = {
+        toolCallId: "test-tool-call-normal",
+        status: "calling",
+        ...UNUSED_TOOL_CALL_PARAMS,
+      };
+      const applyState: ApplyState = {
+        status: "not-started",
+        streamId: "test-stream-normal",
+        toolCallId: "test-tool-call-normal",
+      };
+
+      vi.mocked(selectToolCallById).mockReturnValue(toolCallState);
+      vi.mocked(selectApplyStateByToolCallId).mockReturnValue(applyState);
+      mockGetState.mockReturnValue({});
+
+      // Simulate successful apply request
+      mockExtra.ideMessenger.request.mockResolvedValue({ status: "success" });
+
+      const thunk = applyForEditTool(payload);
+      await thunk(mockDispatch, mockGetState, mockExtra);
+
+      // Simulate the apply state reaching "closed" status via the normal flow
+      // This would happen when VS Code sends back the status update
+      const closedApplyState: ApplyState = {
+        status: "closed",
+        streamId: "test-stream-normal",
+        toolCallId: "test-tool-call-normal",
+      };
+      vi.mocked(selectApplyStateByToolCallId).mockReturnValue(closedApplyState);
+
+      // Advance time past the timeout
+      vi.advanceTimersByTime(61_000);
+
+      // The timeout should not have dispatched error because the apply state reached "closed"
+      expect(errorToolCall).not.toHaveBeenCalled();
+
+      vi.useRealTimers();
+    });
+
+    it("should clear timeout on immediate error", async () => {
+      vi.useFakeTimers();
+
+      const payload: ApplyToFilePayload & { toolCallId: string } = {
+        toolCallId: "test-tool-call",
+        streamId: "test-stream",
+        filepath: "test.txt",
+        text: "new content",
+        isSearchAndReplace: true,
+      };
+
+      const toolCallState: ToolCallState = {
+        toolCallId: "test-tool-call",
+        status: "calling",
+        ...UNUSED_TOOL_CALL_PARAMS,
+      };
+      const applyState: ApplyState = {
+        status: "not-started",
+        streamId: "test-stream",
+        toolCallId: "test-tool-call",
+      };
+
+      vi.mocked(selectToolCallById).mockReturnValue(toolCallState);
+      vi.mocked(selectApplyStateByToolCallId).mockReturnValue(applyState);
+      mockGetState.mockReturnValue({});
+
+      mockExtra.ideMessenger.request.mockRejectedValue(
+        new Error("Request failed"),
+      );
+
+      const thunk = applyForEditTool(payload);
+      await thunk(mockDispatch, mockGetState, mockExtra);
+
+      // Check that error was dispatched (from immediate error, not timeout)
+      expect(errorToolCall).toHaveBeenCalledWith({
+        toolCallId: "test-tool-call",
+      });
+
+      const callCountAfterError = vi.mocked(errorToolCall).mock.calls.length;
+
+      // Advance time past the timeout
+      vi.advanceTimersByTime(61_000);
+
+      // Error should only have been dispatched once (from the immediate error)
+      expect(vi.mocked(errorToolCall).mock.calls.length).toBe(
+        callCountAfterError,
+      );
+
+      vi.useRealTimers();
     });
   });
 
