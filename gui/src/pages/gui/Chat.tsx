@@ -386,7 +386,7 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1 overflow-y-scroll" : "shrink-0"}`}
       >
         <DeprecationBanner dismissable={true} />
         {highlights}
@@ -411,7 +411,7 @@ export function Chat() {
             </div>
           ))}
       </StepsDiv>
-      <div className={"relative"}>
+      <div className={"relative shrink-0"}>
         <ContinueInputBox
           isMainInput
           isLastUserInput={false}
