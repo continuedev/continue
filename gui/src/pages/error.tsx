@@ -1,11 +1,8 @@
 import { ArrowPathIcon, FlagIcon } from "@heroicons/react/24/outline";
-import { DISCUSSIONS_LINK, GITHUB_LINK } from "core/util/constants";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useRouteError } from "react-router-dom";
-import { Button, SecondaryButton } from "../components";
-import { GithubIcon } from "../components/svg/GithubIcon";
-import { IdeMessengerContext } from "../context/IdeMessenger";
+import { Button } from "../components";
 import { newSession } from "../redux/slices/sessionSlice";
 
 const ErrorPage: React.FC = () => {
@@ -13,13 +10,6 @@ const ErrorPage: React.FC = () => {
   console.error(error);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const messenger = useContext(IdeMessengerContext);
-  const openUrl = (url: string) => {
-    if (messenger) {
-      messenger.post("openUrl", url);
-    }
-  };
 
   const [initialLoad, setInitialLoad] = useState(true);
 
