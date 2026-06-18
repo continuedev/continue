@@ -11,7 +11,7 @@ function render(history: Session["history"]) {
       workspaceDirectory: "/workspace",
       history,
     },
-    { createdAt },
+    { traceCreatedAt: createdAt },
   );
 }
 
@@ -43,7 +43,7 @@ describe("sessionToTraceMarkdown", () => {
 
     expect(trace).toContain("traceVersion: 1");
     expect(trace).toContain('sessionId: "session-123"');
-    expect(trace).toContain('createdAt: "2026-06-18T12:00:00.000Z"');
+    expect(trace).toContain('traceCreatedAt: "2026-06-18T12:00:00.000Z"');
     expect(trace).toContain("messageCount: 2");
     expect(trace).toContain("## 001 user_message");
     expect(trace).toContain("Fix the auth tests");
@@ -211,5 +211,68 @@ describe("sessionToTraceMarkdown", () => {
     expect(trace).toContain("Tool Call ID: missing-tool-state");
     expect(trace).toContain("Success: unknown");
     expect(trace).toContain("Detached tool output");
+  });
+
+  it("renders unknown success for incomplete tool call states", () => {
+    const trace = render([
+      {
+        message: {
+          role: "assistant",
+          content: "",
+        },
+        contextItems: [],
+        toolCallStates: [
+          {
+            toolCallId: "tool-1",
+            toolCall: {
+              id: "tool-1",
+              type: "function",
+              function: {
+                name: "runTerminalCommand",
+                arguments: '{"cmd":"npm test"}',
+              },
+            },
+            status: "calling",
+            parsedArgs: { cmd: "npm test" },
+            output: [
+              {
+                name: "Partial output",
+                description: "Still running",
+                content: "Command started",
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    expect(trace).toContain("## 002 tool_result: runTerminalCommand");
+    expect(trace).toContain("Success: unknown");
+    expect(trace).toContain("Command started");
+  });
+
+  it("does not label non-json tool args as json", () => {
+    const trace = render([
+      {
+        message: {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "tool-1",
+              type: "function",
+              function: {
+                name: "legacyTool",
+                arguments: "not json",
+              },
+            },
+          ],
+        },
+        contextItems: [],
+      },
+    ]);
+
+    expect(trace).toContain("Args:\n\n```\nnot json\n```");
+    expect(trace).not.toContain("```json\nnot json");
   });
 });

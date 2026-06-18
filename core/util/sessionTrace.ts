@@ -19,7 +19,12 @@ export type SessionTraceEventType =
 type ToolCallState = NonNullable<ChatHistoryItem["toolCallStates"]>[number];
 
 export interface SessionTraceOptions {
-  createdAt?: Date;
+  traceCreatedAt?: Date;
+}
+
+interface FormattedToolArgs {
+  content: string;
+  language?: "json";
 }
 
 function formatDate(date: Date): string {
@@ -36,14 +41,14 @@ function countMessages(session: Session): number {
   ).length;
 }
 
-function frontmatter(session: Session, createdAt: Date): string {
+function frontmatter(session: Session, traceCreatedAt: Date): string {
   return [
     "---",
     `traceVersion: ${SESSION_TRACE_VERSION}`,
     `sessionId: ${yamlString(session.sessionId)}`,
     `title: ${yamlString(session.title)}`,
     `workspaceDirectory: ${yamlString(session.workspaceDirectory)}`,
-    `createdAt: ${yamlString(formatDate(createdAt))}`,
+    `traceCreatedAt: ${yamlString(formatDate(traceCreatedAt))}`,
     `messageCount: ${countMessages(session)}`,
     "---",
   ].join("\n");
@@ -72,20 +77,26 @@ function formatContextItems(contextItems: ContextItem[]): string {
   ].join("\n");
 }
 
-function formatJsonBlock(value: unknown): string {
+function formatToolArgs(value: unknown): FormattedToolArgs | undefined {
   if (value === undefined) {
-    return "";
+    return undefined;
   }
 
   if (typeof value === "string") {
     try {
-      return JSON.stringify(JSON.parse(value), undefined, 2);
+      return {
+        content: JSON.stringify(JSON.parse(value), undefined, 2),
+        language: "json",
+      };
     } catch {
-      return value;
+      return { content: value };
     }
   }
 
-  return JSON.stringify(value, undefined, 2);
+  return {
+    content: JSON.stringify(value, undefined, 2),
+    language: "json",
+  };
 }
 
 function getToolCallName(toolCallState?: ToolCallState, delta?: ToolCallDelta) {
@@ -113,7 +124,15 @@ function isSuccessfulToolCall(toolCallState?: ToolCallState): string {
     return "unknown";
   }
 
-  return toolCallState.status === "done" ? "true" : "false";
+  if (toolCallState.status === "done") {
+    return "true";
+  }
+
+  if (["errored", "canceled"].includes(toolCallState.status)) {
+    return "false";
+  }
+
+  return "unknown";
 }
 
 function toolOutputFromContextItems(contextItems: ContextItem[] | undefined) {
@@ -158,7 +177,7 @@ export function sessionToTraceMarkdown(
   session: Session,
   options: SessionTraceOptions = {},
 ): string {
-  const createdAt = options.createdAt ?? new Date();
+  const traceCreatedAt = options.traceCreatedAt ?? new Date();
   const toolCallStates = collectToolCallStates(session.history);
   const toolMessageIds = collectToolMessageIds(session.history);
   const events: string[] = [];
@@ -209,14 +228,14 @@ export function sessionToTraceMarkdown(
       for (const [toolCallState, delta] of toolCallEntries) {
         const toolName = getToolCallName(toolCallState, delta);
         const toolCallId = getToolCallId(toolCallState, delta);
-        const args = formatJsonBlock(getToolCallArgs(toolCallState, delta));
+        const args = formatToolArgs(getToolCallArgs(toolCallState, delta));
+        const argsFence = args
+          ? `Args:\n\n\`\`\`${args.language ?? ""}\n${args.content}\n\`\`\``
+          : "";
 
         addEvent(
           "tool_call",
-          [
-            toolCallId ? `Tool Call ID: ${toolCallId}` : "",
-            args ? `Args:\n\n\`\`\`json\n${args}\n\`\`\`` : "",
-          ]
+          [toolCallId ? `Tool Call ID: ${toolCallId}` : "", argsFence]
             .filter(Boolean)
             .join("\n\n"),
           toolName,
@@ -261,7 +280,7 @@ export function sessionToTraceMarkdown(
   }
 
   return [
-    frontmatter(session, createdAt),
+    frontmatter(session, traceCreatedAt),
     "",
     `# Session: ${session.title}`,
     "",
