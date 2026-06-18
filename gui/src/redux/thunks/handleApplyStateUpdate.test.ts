@@ -666,6 +666,179 @@ describe("applyForEditTool", () => {
     });
   });
 
+  describe("timeout handling", () => {
+    it("should dispatch error on apply timeout", async () => {
+      vi.useFakeTimers();
+
+      const payload: ApplyToFilePayload & { toolCallId: string } = {
+        toolCallId: "test-tool-call",
+        streamId: "test-stream",
+        filepath: "test.txt",
+        text: "new content",
+        isSearchAndReplace: true,
+      };
+
+      const toolCallState: ToolCallState = {
+        toolCallId: "test-tool-call",
+        status: "calling",
+        ...UNUSED_TOOL_CALL_PARAMS,
+      };
+      const applyState: ApplyState = {
+        status: "not-started",
+        streamId: "test-stream",
+        toolCallId: "test-tool-call",
+      };
+
+      vi.mocked(selectToolCallById).mockReturnValue(toolCallState);
+      vi.mocked(selectApplyStateByToolCallId).mockReturnValue(applyState);
+      mockGetState.mockReturnValue({});
+
+      // Simulate the apply request never completing (never calling a callback)
+      let resolveApplyRequest: (value: any) => void;
+      const applyPromise = new Promise((resolve) => {
+        resolveApplyRequest = resolve;
+      });
+      mockExtra.ideMessenger.request.mockReturnValue(applyPromise);
+
+      const thunk = applyForEditTool(payload);
+      const thunkPromise = thunk(mockDispatch, mockGetState, mockExtra);
+
+      // Advance time past the timeout (60 seconds)
+      vi.advanceTimersByTime(61_000);
+
+      // Allow promises to settle
+      await vi.runAllTimersAsync();
+
+      expect(errorToolCall).toHaveBeenCalledWith({
+        toolCallId: "test-tool-call",
+      });
+      expect(updateToolCallOutput).toHaveBeenCalledWith({
+        toolCallId: "test-tool-call",
+        contextItems: [
+          {
+            icon: "problems",
+            name: "Apply Timeout",
+            description: "Edit operation timed out",
+            content:
+              "Error editing file: the apply operation did not complete within the expected time. The file may not have been modified. Please try again or use a different approach.\n\nPlease try something else or request further instructions.",
+            hidden: false,
+          },
+        ],
+      });
+
+      // Verify that a dispatch with type 'apply/updateState' was made (for handleApplyStateUpdate)
+      expect(mockDispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: expect.stringContaining("apply"),
+        }),
+      );
+
+      vi.useRealTimers();
+    });
+
+    it("should not trigger timeout when apply completes normally", async () => {
+      vi.useFakeTimers();
+      vi.clearAllMocks();
+
+      const payload: ApplyToFilePayload & { toolCallId: string } = {
+        toolCallId: "test-tool-call-normal",
+        streamId: "test-stream-normal",
+        filepath: "test.txt",
+        text: "new content",
+        isSearchAndReplace: true,
+      };
+
+      const toolCallState: ToolCallState = {
+        toolCallId: "test-tool-call-normal",
+        status: "calling",
+        ...UNUSED_TOOL_CALL_PARAMS,
+      };
+      const applyState: ApplyState = {
+        status: "not-started",
+        streamId: "test-stream-normal",
+        toolCallId: "test-tool-call-normal",
+      };
+
+      vi.mocked(selectToolCallById).mockReturnValue(toolCallState);
+      vi.mocked(selectApplyStateByToolCallId).mockReturnValue(applyState);
+      mockGetState.mockReturnValue({});
+
+      // Simulate successful apply request
+      mockExtra.ideMessenger.request.mockResolvedValue({ status: "success" });
+
+      const thunk = applyForEditTool(payload);
+      await thunk(mockDispatch, mockGetState, mockExtra);
+
+      // Simulate the apply state reaching "closed" status via the normal flow
+      // This would happen when VS Code sends back the status update
+      const closedApplyState: ApplyState = {
+        status: "closed",
+        streamId: "test-stream-normal",
+        toolCallId: "test-tool-call-normal",
+      };
+      vi.mocked(selectApplyStateByToolCallId).mockReturnValue(closedApplyState);
+
+      // Advance time past the timeout
+      vi.advanceTimersByTime(61_000);
+
+      // The timeout should not have dispatched error because the apply state reached "closed"
+      expect(errorToolCall).not.toHaveBeenCalled();
+
+      vi.useRealTimers();
+    });
+
+    it("should clear timeout on immediate error", async () => {
+      vi.useFakeTimers();
+
+      const payload: ApplyToFilePayload & { toolCallId: string } = {
+        toolCallId: "test-tool-call",
+        streamId: "test-stream",
+        filepath: "test.txt",
+        text: "new content",
+        isSearchAndReplace: true,
+      };
+
+      const toolCallState: ToolCallState = {
+        toolCallId: "test-tool-call",
+        status: "calling",
+        ...UNUSED_TOOL_CALL_PARAMS,
+      };
+      const applyState: ApplyState = {
+        status: "not-started",
+        streamId: "test-stream",
+        toolCallId: "test-tool-call",
+      };
+
+      vi.mocked(selectToolCallById).mockReturnValue(toolCallState);
+      vi.mocked(selectApplyStateByToolCallId).mockReturnValue(applyState);
+      mockGetState.mockReturnValue({});
+
+      mockExtra.ideMessenger.request.mockRejectedValue(
+        new Error("Request failed"),
+      );
+
+      const thunk = applyForEditTool(payload);
+      await thunk(mockDispatch, mockGetState, mockExtra);
+
+      // Check that error was dispatched (from immediate error, not timeout)
+      expect(errorToolCall).toHaveBeenCalledWith({
+        toolCallId: "test-tool-call",
+      });
+
+      const callCountAfterError = vi.mocked(errorToolCall).mock.calls.length;
+
+      // Advance time past the timeout
+      vi.advanceTimersByTime(61_000);
+
+      // Error should only have been dispatched once (from the immediate error)
+      expect(vi.mocked(errorToolCall).mock.calls.length).toBe(
+        callCountAfterError,
+      );
+
+      vi.useRealTimers();
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle different payload types", async () => {
       const payloads: (ApplyToFilePayload & { toolCallId: string })[] = [

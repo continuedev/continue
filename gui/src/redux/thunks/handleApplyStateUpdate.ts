@@ -166,6 +166,48 @@ export const applyForEditTool = createAsyncThunk<
     }),
   );
 
+  // Set up a timeout to detect stalled apply operations
+  const APPLY_TIMEOUT_MS = 60_000;
+  const timeoutId = setTimeout(() => {
+    const state = getState();
+    const applyState = selectApplyStateByToolCallId(state, toolCallId);
+    const toolCallState = selectToolCallById(state, toolCallId);
+
+    if (
+      applyState &&
+      applyState.status !== "closed" &&
+      toolCallState?.status === "calling"
+    ) {
+      dispatch(
+        errorToolCall({
+          toolCallId,
+        }),
+      );
+      dispatch(
+        updateToolCallOutput({
+          toolCallId,
+          contextItems: [
+            {
+              icon: "problems",
+              name: "Apply Timeout",
+              description: "Edit operation timed out",
+              content:
+                "Error editing file: the apply operation did not complete within the expected time. The file may not have been modified. Please try again or use a different approach.\n\nPlease try something else or request further instructions.",
+              hidden: false,
+            },
+          ],
+        }),
+      );
+      void dispatch(
+        handleApplyStateUpdate({
+          status: "closed",
+          streamId,
+          toolCallId,
+        }),
+      );
+    }
+  }, APPLY_TIMEOUT_MS);
+
   let didError = false;
   try {
     const response = await extra.ideMessenger.request("applyToFile", payload);
@@ -176,6 +218,7 @@ export const applyForEditTool = createAsyncThunk<
     didError = true;
   }
   if (didError) {
+    clearTimeout(timeoutId);
     const state = getState();
 
     const toolCallState = selectToolCallById(state, toolCallId);
