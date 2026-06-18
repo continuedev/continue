@@ -170,7 +170,7 @@ describe("handleApplyStateUpdate", () => {
         status: "done",
         ...UNUSED_TOOL_CALL_PARAMS,
       };
-      const newApplyState = { streamId: "chat-stream" };
+      const newApplyState = { streamId: "chat-stream", numDiffs: 1 };
 
       vi.mocked(findToolCallById).mockReturnValue(toolCallState);
       mockGetState.mockReturnValue({
