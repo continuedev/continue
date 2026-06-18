@@ -181,14 +181,26 @@ describe("handleApplyStateUpdate", () => {
           },
         },
         config: { config: {} },
+        ui: { toolSettings: {} },
       });
+
+      // Simulate the "done" event that precedes "closed" in normal flow
+      const doneState: ApplyState = {
+        streamId: "chat-stream",
+        toolCallId: "test-tool-call",
+        status: "done",
+        filepath: "test.txt",
+        numDiffs: 1,
+      };
+      const doneThunk = handleApplyStateUpdate(doneState);
+      await doneThunk(mockDispatch, mockGetState, mockExtra);
 
       const applyState: ApplyState = {
         streamId: "chat-stream",
         toolCallId: "test-tool-call",
         status: "closed",
         filepath: "test.txt",
-        numDiffs: 1,
+        numDiffs: 0,
       };
 
       const thunk = handleApplyStateUpdate(applyState);
@@ -222,7 +234,7 @@ describe("handleApplyStateUpdate", () => {
         status: "canceled",
         ...UNUSED_TOOL_CALL_PARAMS,
       };
-      const newApplyState = { streamId: "chat-stream" };
+      const newApplyState = { streamId: "chat-stream-cancel" };
 
       vi.mocked(findToolCallById).mockReturnValue(toolCallState);
       mockGetState.mockReturnValue({
@@ -236,11 +248,11 @@ describe("handleApplyStateUpdate", () => {
       });
 
       const applyState: ApplyState = {
-        streamId: "chat-stream",
+        streamId: "chat-stream-cancel",
         toolCallId: "test-tool-call",
         status: "closed",
         filepath: "test.txt",
-        numDiffs: 1,
+        numDiffs: 0,
       };
 
       const thunk = handleApplyStateUpdate(applyState);
@@ -270,7 +282,7 @@ describe("handleApplyStateUpdate", () => {
         status: "errored",
         ...UNUSED_TOOL_CALL_PARAMS,
       };
-      const newApplyState = { streamId: "chat-stream" };
+      const newApplyState = { streamId: "chat-stream-error" };
 
       vi.mocked(findToolCallById).mockReturnValue(toolCallState);
       mockGetState.mockReturnValue({
@@ -284,17 +296,66 @@ describe("handleApplyStateUpdate", () => {
       });
 
       const applyState: ApplyState = {
-        streamId: "chat-stream",
+        streamId: "chat-stream-error",
         toolCallId: "test-tool-call",
         status: "closed",
         filepath: "test.txt",
-        numDiffs: 1,
+        numDiffs: 0,
       };
 
       const thunk = handleApplyStateUpdate(applyState);
       await thunk(mockDispatch, mockGetState, mockExtra);
 
       expect(acceptToolCall).not.toHaveBeenCalled();
+      expect(streamResponseAfterToolCall).toHaveBeenCalledWith({
+        toolCallId: "test-tool-call",
+      });
+    });
+
+    it("should reject closure that skipped done (bail-out path)", async () => {
+      const toolCallState: ToolCallState = {
+        toolCallId: "test-tool-call",
+        status: "calling",
+        ...UNUSED_TOOL_CALL_PARAMS,
+      };
+      const newApplyState = { streamId: "bail-stream" };
+
+      vi.mocked(findToolCallById).mockReturnValue(toolCallState);
+      mockGetState.mockReturnValue({
+        session: {
+          history: [],
+          codeBlockApplyStates: {
+            states: [newApplyState],
+          },
+        },
+        config: { config: {} },
+      });
+
+      // No "done" event dispatched — simulates handler bail-out
+      const applyState: ApplyState = {
+        streamId: "bail-stream",
+        toolCallId: "test-tool-call",
+        status: "closed",
+        filepath: "test.txt",
+        numDiffs: 0,
+      };
+
+      const thunk = handleApplyStateUpdate(applyState);
+      await thunk(mockDispatch, mockGetState, mockExtra);
+
+      expect(acceptToolCall).not.toHaveBeenCalled();
+      expect(updateToolCallOutput).toHaveBeenCalledWith({
+        toolCallId: "test-tool-call",
+        contextItems: [
+          {
+            name: "Edit Failed",
+            content:
+              "Failed to edit test.txt. To continue working with the file, read it again to see the most up-to-date contents",
+            description: "",
+            hidden: true,
+          },
+        ],
+      });
       expect(streamResponseAfterToolCall).toHaveBeenCalledWith({
         toolCallId: "test-tool-call",
       });
@@ -343,14 +404,26 @@ describe("handleApplyStateUpdate", () => {
           },
         },
         config: { config: {} },
+        ui: { toolSettings: {} },
       });
+
+      // Simulate the "done" event
+      const doneState: ApplyState = {
+        streamId: "chat-stream",
+        toolCallId: "test-tool-call",
+        status: "done",
+        filepath: "test.txt",
+        numDiffs: 1,
+      };
+      const doneThunk = handleApplyStateUpdate(doneState);
+      await doneThunk(mockDispatch, mockGetState, mockExtra);
 
       const applyState: ApplyState = {
         streamId: "chat-stream",
         toolCallId: "test-tool-call",
         status: "closed",
         filepath: "test.txt",
-        numDiffs: 1,
+        numDiffs: 0,
       };
 
       const thunk = handleApplyStateUpdate(applyState);
@@ -382,7 +455,6 @@ describe("handleApplyStateUpdate", () => {
 
     it("should handle different status values", async () => {
       const statusValues: ApplyState["status"][] = [
-        "not-started",
         "streaming",
         "done",
         "closed",
@@ -391,8 +463,17 @@ describe("handleApplyStateUpdate", () => {
       for (const status of statusValues) {
         vi.clearAllMocks();
 
+        vi.mocked(findToolCallById).mockReturnValue(undefined);
+        mockGetState.mockReturnValue({
+          session: {
+            history: [],
+            codeBlockApplyStates: { states: [] },
+          },
+          ui: { toolSettings: {} },
+        });
+
         const applyState: ApplyState = {
-          streamId: "chat-stream",
+          streamId: `chat-stream-${status}`,
           toolCallId: "test-tool-call",
           status,
           filepath: "test.txt",

@@ -18,6 +18,11 @@ import { findToolCallById, logToolUsage } from "../util";
 import { exitEdit } from "./edit";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
+// Tracks streams that reached "done" (diffs generated and awaiting user action).
+// Consumed when "closed" fires to distinguish successful edits from bail-outs
+// where the handler was never created.
+const doneStreams = new Set<string>();
+
 export const handleApplyStateUpdate = createAsyncThunk<
   void,
   ApplyState,
@@ -61,7 +66,12 @@ export const handleApplyStateUpdate = createAsyncThunk<
           });
         }
 
+        if (applyState.status === "done") {
+          doneStreams.add(applyState.streamId);
+        }
+
         if (applyState.status === "closed") {
+          const reachedDone = doneStreams.delete(applyState.streamId);
           if (toolCallState) {
             const newApplyState =
               getState().session.codeBlockApplyStates.states.find(
@@ -70,7 +80,7 @@ export const handleApplyStateUpdate = createAsyncThunk<
             const accepted =
               toolCallState.status !== "canceled" &&
               toolCallState.status !== "errored" &&
-              (!newApplyState || (newApplyState.numDiffs ?? 0) > 0);
+              reachedDone;
 
             logToolUsage(toolCallState, accepted, true, extra.ideMessenger);
             const newState = getState();
@@ -214,8 +224,8 @@ export const applyForEditTool = createAsyncThunk<
   } catch (e) {
     didError = true;
   }
+  clearTimeout(timeoutId);
   if (didError) {
-    clearTimeout(timeoutId);
     const state = getState();
 
     const toolCallState = selectToolCallById(state, toolCallId);
