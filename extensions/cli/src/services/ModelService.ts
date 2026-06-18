@@ -111,7 +111,7 @@ export class ModelService
     this.authConfig = authConfig;
 
     // Expand AUTODETECT model entries into concrete models
-    if (assistant.models) {
+    if (assistant.models?.some((m) => m?.model === AUTODETECT)) {
       assistant = {
         ...assistant,
         models: await expandAutodetectModels(
