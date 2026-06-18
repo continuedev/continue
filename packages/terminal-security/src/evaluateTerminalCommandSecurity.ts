@@ -757,14 +757,17 @@ const INSTALL_FLAGS_WITH_VALUES = [
 
 const RUNNER_FLAGS_WITH_VALUES = [
   "-c",
-  "-p",
   "--cache",
-  "--package",
   "--prefix",
   "--registry",
   "--shell",
   "--userconfig",
 ];
+
+// Runner flags whose value names a package to fetch (e.g. `npx -p cowsay ...`).
+// Their values must be typosquat-checked rather than skipped, so they are kept
+// out of RUNNER_FLAGS_WITH_VALUES above.
+const RUNNER_PACKAGE_FLAGS = ["-p", "--package"];
 
 function isHighRiskPackageManager(
   baseCommand: string,
@@ -825,11 +828,40 @@ function getInstallPackageTargets(args: string[]): string[] {
 }
 
 function getRunnerPackageTargets(args: string[]): string[] {
+  const targets: string[] = [];
+  let sawPackageFlag = false;
+
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
     if (arg === "--") {
       break;
+    }
+
+    // `-p`/`--package` (and `--package=foo`) name a package to fetch, so their
+    // value is a typosquat candidate rather than something to skip over.
+    if (arg.includes("=") && RUNNER_PACKAGE_FLAGS.includes(arg.split("=")[0])) {
+      sawPackageFlag = true;
+      const packageName = normalizePackageTarget(
+        arg.slice(arg.indexOf("=") + 1),
+      );
+      if (packageName) {
+        targets.push(packageName);
+      }
+      continue;
+    }
+
+    if (RUNNER_PACKAGE_FLAGS.includes(arg)) {
+      sawPackageFlag = true;
+      const value = args[i + 1];
+      if (value !== undefined) {
+        i++;
+        const packageName = normalizePackageTarget(value);
+        if (packageName) {
+          targets.push(packageName);
+        }
+      }
+      continue;
     }
 
     if (shouldSkipFlagValue(arg, RUNNER_FLAGS_WITH_VALUES)) {
@@ -841,11 +873,19 @@ function getRunnerPackageTargets(args: string[]): string[] {
       continue;
     }
 
-    const packageName = normalizePackageTarget(arg);
-    return packageName ? [packageName] : [];
+    // The first positional argument is the package target only when no explicit
+    // `-p`/`--package` was given; with one, the positional is the binary to run
+    // (e.g. `npx -p typescript tsc`), not a package to install.
+    if (!sawPackageFlag) {
+      const packageName = normalizePackageTarget(arg);
+      if (packageName) {
+        targets.push(packageName);
+      }
+    }
+    break;
   }
 
-  return [];
+  return targets;
 }
 
 function getTyposquatTargetWarnings(

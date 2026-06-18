@@ -420,6 +420,54 @@ describe("evaluateTerminalCommandSecurity", () => {
       }
     });
 
+    it("should warn for runner package flags that look like typosquats", () => {
+      const commands = [
+        "npx -p expres cowsay",
+        "npx --package expres cowsay",
+        "npx --package=expres cowsay",
+        "pnpm dlx --package expres cowsay",
+      ];
+
+      for (const command of commands) {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          command,
+          { includeWarnings: true },
+        );
+
+        expect(result.policy).toBe("allowedWithPermission");
+        expect(result.warnings).toEqual([
+          expect.objectContaining({
+            type: "typosquat-target",
+            packageName: "expres",
+            suspectedPackageName: "express",
+          }),
+        ]);
+      }
+    });
+
+    it("should not treat non-package runner flag values as typosquats", () => {
+      // `-c`/`--registry` values are not packages and must not be checked, and
+      // with an explicit `-p` the trailing binary name is not a package target.
+      const commands = [
+        "npx -c expres",
+        "npx --registry expres cowsay",
+        "npx -p cowsay expres",
+      ];
+
+      for (const command of commands) {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          command,
+          { includeWarnings: true },
+        );
+
+        expect(
+          (result.warnings ?? []).some((w) => w.type === "typosquat-target"),
+        ).toBe(false);
+      }
+    });
+
     it("should parse scoped packages, versions, and multiple install targets", () => {
       const result = evaluateTerminalCommandSecurity(
         "allowedWithoutPermission",
