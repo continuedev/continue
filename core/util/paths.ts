@@ -83,6 +83,17 @@ export function getSessionsFolderPath(): string {
   return sessionsPath;
 }
 
+export function getSessionTracesFolderPath(): string {
+  const sessionTracesPath = path.join(
+    getContinueGlobalPath(),
+    "session-traces",
+  );
+  if (!fs.existsSync(sessionTracesPath)) {
+    fs.mkdirSync(sessionTracesPath);
+  }
+  return sessionTracesPath;
+}
+
 export function getIndexFolderPath(): string {
   const indexPath = path.join(getContinueGlobalPath(), "index");
   if (!fs.existsSync(indexPath)) {

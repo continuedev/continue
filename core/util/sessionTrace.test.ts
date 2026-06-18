@@ -1,5 +1,15 @@
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+
 import { Session } from "../index.js";
-import { sessionToTraceMarkdown } from "./sessionTrace.js";
+import {
+  getSessionTraceFilename,
+  listSessionTraceFiles,
+  parseSessionTraceMetadata,
+  sessionToTraceMarkdown,
+  SESSION_TRACE_FILE_EXTENSION,
+} from "./sessionTrace.js";
 
 const createdAt = new Date("2026-06-18T12:00:00.000Z");
 
@@ -274,5 +284,112 @@ describe("sessionToTraceMarkdown", () => {
 
     expect(trace).toContain("Args:\n\n```\nnot json\n```");
     expect(trace).not.toContain("```json\nnot json");
+  });
+});
+
+describe("session trace storage helpers", () => {
+  it("generates deterministic safe trace filenames", () => {
+    const filename = getSessionTraceFilename(
+      {
+        sessionId: "abcdef12-3456-7890-abcd-ef1234567890",
+        title: "Fix: auth/tests? now",
+      },
+      createdAt,
+    );
+
+    expect(filename).toBe(
+      `20260618T120000Z-Fix-auth-tests-now-abcdef12${SESSION_TRACE_FILE_EXTENSION}`,
+    );
+  });
+
+  it("parses trace metadata from frontmatter", () => {
+    const trace = render([
+      {
+        message: {
+          role: "user",
+          content: "Hello",
+        },
+        contextItems: [],
+      },
+    ]);
+
+    expect(parseSessionTraceMetadata(trace)).toEqual({
+      traceVersion: 1,
+      sessionId: "session-123",
+      title: "Trace Test",
+      workspaceDirectory: "/workspace",
+      traceCreatedAt: "2026-06-18T12:00:00.000Z",
+      messageCount: 1,
+    });
+  });
+
+  it("returns undefined for malformed trace metadata", () => {
+    expect(parseSessionTraceMetadata("# no frontmatter")).toBeUndefined();
+    expect(
+      parseSessionTraceMetadata("---\ntraceVersion: nope\n---\n# Bad"),
+    ).toBeUndefined();
+  });
+
+  it("lists trace files sorted by trace creation time", () => {
+    const traceDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "continue-session-traces-"),
+    );
+
+    try {
+      const older = sessionToTraceMarkdown(
+        {
+          sessionId: "older-session",
+          title: "Older",
+          workspaceDirectory: "/workspace",
+          history: [],
+        },
+        { traceCreatedAt: new Date("2026-06-18T10:00:00.000Z") },
+      );
+      const newer = sessionToTraceMarkdown(
+        {
+          sessionId: "newer-session",
+          title: "Newer",
+          workspaceDirectory: "/workspace",
+          history: [],
+        },
+        { traceCreatedAt: new Date("2026-06-18T11:00:00.000Z") },
+      );
+
+      fs.writeFileSync(
+        path.join(traceDir, `older${SESSION_TRACE_FILE_EXTENSION}`),
+        older,
+      );
+      fs.writeFileSync(
+        path.join(traceDir, `newer${SESSION_TRACE_FILE_EXTENSION}`),
+        newer,
+      );
+      fs.writeFileSync(
+        path.join(traceDir, `malformed${SESSION_TRACE_FILE_EXTENSION}`),
+        "# Missing metadata",
+      );
+      fs.writeFileSync(path.join(traceDir, "not-a-trace.md"), newer);
+
+      const traces = listSessionTraceFiles(traceDir);
+
+      expect(traces.map((trace) => trace.metadata.sessionId)).toEqual([
+        "newer-session",
+        "older-session",
+      ]);
+      expect(traces.map((trace) => trace.filename)).toEqual([
+        `newer${SESSION_TRACE_FILE_EXTENSION}`,
+        `older${SESSION_TRACE_FILE_EXTENSION}`,
+      ]);
+    } finally {
+      fs.rmSync(traceDir, { recursive: true, force: true });
+    }
+  });
+
+  it("returns an empty list for missing trace directories", () => {
+    const missingDir = path.join(
+      os.tmpdir(),
+      `missing-session-traces-${Date.now()}`,
+    );
+
+    expect(listSessionTraceFiles(missingDir)).toEqual([]);
   });
 });

@@ -1,3 +1,7 @@
+import * as fs from "fs";
+import * as path from "path";
+import * as YAML from "yaml";
+
 import {
   ChatHistoryItem,
   ContextItem,
@@ -5,8 +9,10 @@ import {
   ToolCallDelta,
 } from "../index.js";
 import { renderChatMessage, renderContextItems } from "./messageContent.js";
+import { getSessionTracesFolderPath } from "./paths.js";
 
 export const SESSION_TRACE_VERSION = 1;
+export const SESSION_TRACE_FILE_EXTENSION = ".continue-trace.md";
 
 export type SessionTraceEventType =
   | "user_message"
@@ -22,6 +28,21 @@ export interface SessionTraceOptions {
   traceCreatedAt?: Date;
 }
 
+export interface SessionTraceMetadata {
+  traceVersion: number;
+  sessionId: string;
+  title: string;
+  workspaceDirectory: string;
+  traceCreatedAt: string;
+  messageCount: number;
+}
+
+export interface SessionTraceFile {
+  filepath: string;
+  filename: string;
+  metadata: SessionTraceMetadata;
+}
+
 interface FormattedToolArgs {
   content: string;
   language?: "json";
@@ -33,6 +54,25 @@ function formatDate(date: Date): string {
 
 function yamlString(value: string): string {
   return JSON.stringify(value);
+}
+
+function formatFilenameDate(date: Date): string {
+  return date
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}Z$/, "Z");
+}
+
+function sanitizeFilenameSegment(value: string): string {
+  return (
+    value
+      .trim()
+      .replace(/[<>:"/\\|?*\u0000-\u001F]/g, "-")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 80) || "untitled"
+  );
 }
 
 function countMessages(session: Session): number {
@@ -171,6 +211,83 @@ function collectToolMessageIds(history: ChatHistoryItem[]) {
     }
   }
   return toolMessageIds;
+}
+
+export function getSessionTraceFilename(
+  session: Pick<Session, "sessionId" | "title">,
+  date: Date = new Date(),
+): string {
+  const timestamp = formatFilenameDate(date);
+  const title = sanitizeFilenameSegment(session.title || session.sessionId);
+  const shortSessionId = sanitizeFilenameSegment(session.sessionId).slice(0, 8);
+  return `${timestamp}-${title}-${shortSessionId}${SESSION_TRACE_FILE_EXTENSION}`;
+}
+
+export function parseSessionTraceMetadata(
+  traceMarkdown: string,
+): SessionTraceMetadata | undefined {
+  const frontmatterMatch = traceMarkdown.match(/^---\n([\s\S]*?)\n---/);
+  if (!frontmatterMatch) {
+    return undefined;
+  }
+
+  let metadata: Partial<SessionTraceMetadata>;
+  try {
+    metadata = YAML.parse(frontmatterMatch[1]) ?? {};
+  } catch {
+    return undefined;
+  }
+
+  if (
+    typeof metadata.traceVersion !== "number" ||
+    typeof metadata.sessionId !== "string" ||
+    typeof metadata.title !== "string" ||
+    typeof metadata.workspaceDirectory !== "string" ||
+    typeof metadata.traceCreatedAt !== "string" ||
+    typeof metadata.messageCount !== "number"
+  ) {
+    return undefined;
+  }
+
+  return {
+    traceVersion: metadata.traceVersion,
+    sessionId: metadata.sessionId,
+    title: metadata.title,
+    workspaceDirectory: metadata.workspaceDirectory,
+    traceCreatedAt: metadata.traceCreatedAt,
+    messageCount: metadata.messageCount,
+  };
+}
+
+export function listSessionTraceFiles(
+  traceDir: string = getSessionTracesFolderPath(),
+): SessionTraceFile[] {
+  if (!fs.existsSync(traceDir)) {
+    return [];
+  }
+
+  return fs
+    .readdirSync(traceDir)
+    .filter((filename) => filename.endsWith(SESSION_TRACE_FILE_EXTENSION))
+    .flatMap((filename) => {
+      const filepath = path.join(traceDir, filename);
+      try {
+        const metadata = parseSessionTraceMetadata(
+          fs.readFileSync(filepath, "utf8"),
+        );
+        return metadata ? [{ filepath, filename, metadata }] : [];
+      } catch {
+        return [];
+      }
+    })
+    .sort((a, b) => {
+      const bTime = Date.parse(b.metadata.traceCreatedAt) || 0;
+      const aTime = Date.parse(a.metadata.traceCreatedAt) || 0;
+      if (bTime !== aTime) {
+        return bTime - aTime;
+      }
+      return a.filename.localeCompare(b.filename);
+    });
 }
 
 export function sessionToTraceMarkdown(
