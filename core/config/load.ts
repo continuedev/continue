@@ -788,6 +788,101 @@ async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
   return readConfigJs();
 }
 
+/**
+ * Applies the user's `config.ts` (`modifyConfig`) to an already-built config
+ * object, if `config.ts` exists and esbuild is available. Shared between the
+ * `config.json` and `config.yaml` loading pipelines so config.ts support
+ * doesn't have to be reimplemented (or silently omitted) per pipeline.
+ *
+ * Any custom context providers added by `modifyConfig()` are wrapped in
+ * `CustomContextProviderClass` here, mirroring what `intermediateToFinalConfig`
+ * does for the JSON pipeline. Without this, a provider added via
+ * `modifyConfig()` on a config object that has already passed through its own
+ * finalization step (e.g. the YAML pipeline's `configYamlToContinueConfig`)
+ * is a plain object with no `.description` getter, so
+ * `context/getContextItems`'s `provider.description.title === name` lookup
+ * never matches it and the provider is silently never invoked.
+ */
+export async function applyConfigTsIfPresent<
+  T extends { contextProviders?: any[] },
+>(config: T, ide: IDE, ideSettings: IdeSettings, ideInfo: IdeInfo): Promise<T> {
+  let result = config;
+
+  const configJsContents = await buildConfigTsandReadConfigJs(
+    ide,
+    ideInfo.ideType,
+  );
+  if (configJsContents) {
+    try {
+      const configJsPath = getConfigJsPath();
+      let module: any;
+
+      try {
+        module = await import(configJsPath);
+      } catch (e) {
+        console.log(e);
+        console.log(
+          "Could not load config.ts as absolute path, retrying as file url ...",
+        );
+        try {
+          module = await import(localPathToUri(configJsPath));
+        } catch (e) {
+          throw new Error("Could not load config.ts as file url either", {
+            cause: e,
+          });
+        }
+      }
+
+      if (typeof require !== "undefined") {
+        delete require.cache[require.resolve(configJsPath)];
+      }
+      if (!module.modifyConfig) {
+        throw new Error("config.ts does not export a modifyConfig function.");
+      }
+      result = module.modifyConfig(result);
+
+      if (result.contextProviders) {
+        result.contextProviders = result.contextProviders.map((cp: any) => {
+          const alreadyWrapped =
+            cp &&
+            cp.description &&
+            typeof cp.description === "object" &&
+            cp.description.title;
+          if (alreadyWrapped) {
+            return cp;
+          }
+          if (cp && cp.title && typeof cp.getContextItems === "function") {
+            return new CustomContextProviderClass(cp);
+          }
+          return cp;
+        });
+      }
+    } catch (e) {
+      console.log("Error loading config.ts: ", e);
+    }
+  }
+
+  if (ideSettings.remoteConfigServerUrl) {
+    try {
+      const configJsPathForRemote = getConfigJsPathForRemote(
+        ideSettings.remoteConfigServerUrl,
+      );
+      const module = await import(configJsPathForRemote);
+      if (typeof require !== "undefined") {
+        delete require.cache[require.resolve(configJsPathForRemote)];
+      }
+      if (!module.modifyConfig) {
+        throw new Error("config.ts does not export a modifyConfig function.");
+      }
+      result = module.modifyConfig(result);
+    } catch (e) {
+      console.log("Error loading remotely set config.js: ", e);
+    }
+  }
+
+  return result;
+}
+
 async function loadContinueConfigFromJson(
   ide: IDE,
   ideSettings: IdeSettings,
