@@ -63,7 +63,10 @@ function getBashMaxLines(): number {
 }
 
 // Helper function to use login shell on Unix/macOS and PowerShell on Windows and available shell in WSL
-function getShellCommand(command: string): { shell: string; args: string[] } {
+export function getShellCommand(command: string): {
+  shell: string;
+  args: string[];
+} {
   if (process.platform === "win32") {
     // Windows: Use PowerShell
     return {
@@ -77,13 +80,25 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
     const wslShell = process.env.SHELL || "/bin/bash";
     return {
       shell: wslShell,
-      args: ["-l", "-c", command],
+      args: shellSupportsLoginFlag(wslShell)
+        ? ["-l", "-c", command]
+        : ["-c", command],
     };
   }
 
   // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
   const userShell = process.env.SHELL || "/bin/bash";
-  return { shell: userShell, args: ["-l", "-c", command] };
+  return {
+    shell: userShell,
+    args: shellSupportsLoginFlag(userShell)
+      ? ["-l", "-c", command]
+      : ["-c", command],
+  };
+}
+
+function shellSupportsLoginFlag(shell: string): boolean {
+  const shellName = shell.split(/[\\/]/).pop()?.toLowerCase();
+  return shellName !== "csh" && shellName !== "tcsh";
 }
 
 export function runCommandInBackground(command: string): {
