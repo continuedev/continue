@@ -1,0 +1,93 @@
+---
+title: "Atlas Cloud"
+description: "Configure Atlas Cloud with Continue to access 300+ open-source and frontier models through a single OpenAI-compatible API"
+---
+
+[Atlas Cloud](https://www.atlascloud.ai) is an OpenAI-compatible API gateway that provides access to 300+ open-source and frontier models, including DeepSeek, Llama, Qwen, and more. Pay-as-you-go with no subscription required.
+
+<Info>
+  You can get an API key from
+  [www.atlascloud.ai](https://www.atlascloud.ai).
+</Info>
+
+## Chat Model
+
+We recommend configuring **deepseek-ai/deepseek-v4-pro** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: DeepSeek V4 Pro
+        provider: atlascloud
+        model: deepseek-ai/deepseek-v4-pro
+        apiKey: <YOUR_ATLASCLOUD_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "DeepSeek V4 Pro",
+          "provider": "atlascloud",
+          "model": "deepseek-ai/deepseek-v4-pro",
+          "apiKey": "<YOUR_ATLASCLOUD_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: DeepSeek V4 Pro
+        provider: atlascloud
+        model: deepseek-ai/deepseek-v4-pro
+        apiKey: <YOUR_ATLASCLOUD_API_KEY>
+        roles:
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "DeepSeek V4 Pro",
+          "provider": "atlascloud",
+          "model": "deepseek-ai/deepseek-v4-pro",
+          "apiKey": "<YOUR_ATLASCLOUD_API_KEY>"
+        }
+      ],
+      "tabAutocompleteModel": {
+        "title": "DeepSeek V4 Pro",
+        "provider": "atlascloud",
+        "model": "deepseek-ai/deepseek-v4-pro",
+        "apiKey": "<YOUR_ATLASCLOUD_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Embeddings Model
+
+Atlas Cloud provides access to various embedding models. [Click here](https://www.atlascloud.ai) to see a list of available models.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/AtlasCloud.ts)
