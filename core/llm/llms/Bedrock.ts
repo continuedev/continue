@@ -77,7 +77,8 @@ class Bedrock extends BaseLLM {
         region: this.region,
         endpoint: this.apiBase,
         token: async () => ({ token: this.apiKey! }),
-      });
+        authSchemePreference: ["httpBearerAuth"],
+      } as any);
     }
 
     // IAM credential authentication
