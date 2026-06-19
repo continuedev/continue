@@ -51,11 +51,71 @@ async function buildAgentSystemMessage(
   return baseMessage;
 }
 
+let subagentExecutionChain: Promise<void> = Promise.resolve();
+
 /**
- * Execute a subagent in a child session
+ * Run `fn` exclusively with respect to other subagent executions.
+ *
+ * @remarks
+ * {@link executeSubAgent} temporarily flips the shared `TOOL_PERMISSIONS`
+ * service state to allow-all and restores the main agent's permissions in a
+ * `finally`. If two executions run concurrently the read/restore interleaves:
+ * the second reads the allow-all state as its "main" and later restores *that*,
+ * leaving the main agent permanently escalated to allow-all. Chaining every
+ * execution onto a single promise guarantees one-at-a-time execution, so the
+ * restore is never lost. A rejected `fn` still releases the lock.
+ *
+ * @typeParam T - Resolved type of `fn`.
+ * @param fn - The async execution to serialize; awaited while the lock is held.
+ * @returns The value resolved by `fn`.
+ */
+async function withSubagentExecutionLock<T>(fn: () => Promise<T>): Promise<T> {
+  const previous = subagentExecutionChain;
+  let release!: () => void;
+  subagentExecutionChain = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await previous;
+  try {
+    return await fn();
+  } finally {
+    release();
+  }
+}
+
+/**
+ * Execute a subagent in a child session.
+ *
+ * @remarks
+ * Serialized via {@link withSubagentExecutionLock} so concurrent subagents can
+ * never interleave the shared `TOOL_PERMISSIONS` read/restore — which would
+ * otherwise strand the main agent's permissions at allow-all. The public
+ * signature is identical to the pre-serialization implementation; only mutual
+ * exclusion is added (no behavior change for a single subagent).
+ *
+ * @param options - Subagent, prompt, parent session id, abort controller, and
+ *   optional output callback. See {@link SubAgentExecutionOptions}.
+ * @returns The subagent result: success flag, accumulated response text, and an
+ *   optional error message when execution fails.
+ */
+export async function executeSubAgent(
+  options: SubAgentExecutionOptions,
+): Promise<SubAgentResult> {
+  return withSubagentExecutionLock(() => executeSubAgentImpl(options));
+}
+
+/**
+ * Implementation of {@link executeSubAgent}.
+ *
+ * @remarks
+ * Always invoke via {@link executeSubAgent}; calling this directly re-opens the
+ * concurrent permission-escalation race this module exists to close.
+ *
+ * @param options - See {@link SubAgentExecutionOptions}.
+ * @returns The subagent result. See {@link executeSubAgent}.
  */
 // eslint-disable-next-line complexity
-export async function executeSubAgent(
+async function executeSubAgentImpl(
   options: SubAgentExecutionOptions,
 ): Promise<SubAgentResult> {
   const { agent: subAgent, prompt, abortController, onOutputUpdate } = options;
