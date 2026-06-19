@@ -48,8 +48,11 @@ export async function shouldPrefilter(
     return true;
   }
 
-  // Check whether we're in the continue config.json file
-  if (helper.filepath === getConfigJsonPath()) {
+  // Check whether we're in the continue config.json or config.yaml file
+  if (
+    helper.filepath === getConfigJsonPath() ||
+    helper.filepath === getConfigJsonPath().replace(/\.json$/, ".yaml")
+  ) {
     return true;
   }
 
