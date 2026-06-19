@@ -88,6 +88,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   }, [availableContextProviders, isInEdit]);
 
   const historyKey = isInEdit ? "edit" : "chat";
+  const draft = useAppSelector((state) => state.session.draft[historyKey]);
   const placeholder = isInEdit ? "Edit selected code" : undefined;
 
   const toolbarOptions: ToolbarOptions = useMemo(() => {
@@ -107,6 +108,15 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
 
   const { appliedRules = [], contextItems = [] } = props;
 
+  const resolvedEditorState = useMemo(() => {
+    if (props.isMainInput) {
+      return draft && !draft.messageId ? draft.content : props.editorState;
+    }
+    return draft?.messageId === props.inputId
+      ? draft.content
+      : props.editorState;
+  }, [draft, props.editorState, props.isMainInput, props.inputId]);
+
   return (
     <div
       className={`${props.hidden ? "hidden" : ""}`}
@@ -124,7 +134,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           borderRadius={defaultBorderRadius}
         >
           <TipTapEditor
-            editorState={props.editorState}
+            editorState={resolvedEditorState}
             onEnter={props.onEnter}
             placeholder={placeholder}
             isMainInput={props.isMainInput ?? false}
