@@ -293,7 +293,6 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           </ToggleDiv>
         </div>
       )}
-
     </div>
   );
 };
