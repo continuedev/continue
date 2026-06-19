@@ -1,0 +1,93 @@
+---
+title: "TokenMix"
+description: "Configure TokenMix with Continue to access DeepSeek, Qwen, Kimi, GLM, MiniMax, and other models through a single OpenAI-compatible API gateway"
+---
+
+[TokenMix](https://tokenmix.ai) is an OpenAI-compatible API gateway that provides access to DeepSeek, Qwen, Kimi, GLM, MiniMax, and other models through one endpoint and one API key. Pay-as-you-go with no subscription required.
+
+<Info>
+  You can get an API key from
+  [tokenmix.ai](https://tokenmix.ai).
+</Info>
+
+## Chat Model
+
+We recommend configuring **deepseek/deepseek-v4-pro** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: DeepSeek V4 Pro
+        provider: tokenmix
+        model: deepseek/deepseek-v4-pro
+        apiKey: <YOUR_TOKENMIX_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "DeepSeek V4 Pro",
+          "provider": "tokenmix",
+          "model": "deepseek/deepseek-v4-pro",
+          "apiKey": "<YOUR_TOKENMIX_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: DeepSeek V4 Pro
+        provider: tokenmix
+        model: deepseek/deepseek-v4-pro
+        apiKey: <YOUR_TOKENMIX_API_KEY>
+        roles:
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "DeepSeek V4 Pro",
+          "provider": "tokenmix",
+          "model": "deepseek/deepseek-v4-pro",
+          "apiKey": "<YOUR_TOKENMIX_API_KEY>"
+        }
+      ],
+      "tabAutocompleteModel": {
+        "title": "DeepSeek V4 Pro",
+        "provider": "tokenmix",
+        "model": "deepseek/deepseek-v4-pro",
+        "apiKey": "<YOUR_TOKENMIX_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Embeddings Model
+
+TokenMix provides access to various models. [Click here](https://tokenmix.ai/models) to see a list of available models.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Tokenmix.ts)

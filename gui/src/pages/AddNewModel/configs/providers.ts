@@ -1270,6 +1270,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  tokenmix: {
+    title: "TokenMix",
+    provider: "tokenmix",
+    description:
+      "TokenMix is an OpenAI-compatible API gateway with access to DeepSeek, Qwen, Kimi, GLM, MiniMax, and other models.",
+    longDescription:
+      "To get started with TokenMix, create an account and get an API key at [tokenmix.ai](https://tokenmix.ai).",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your TokenMix API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://tokenmix.ai",
+  },
   venice: {
     title: "Venice",
     provider: "venice",
