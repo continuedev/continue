@@ -17,8 +17,8 @@ const ModelCapabilityWarning: React.FC<ModelCapabilityWarningProps> = ({
         </Text>
       </Box>
       <Text color="gray">
-        The model "{modelName}" is not recommended for use with cn due to
-        limited reasoning and tool calling capabilities
+        The model "{modelName}" has not been verified for cn. Some reasoning or
+        tool-calling features may be unreliable.
       </Text>
     </Box>
   );
