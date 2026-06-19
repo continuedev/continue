@@ -56,6 +56,18 @@ function is401Error(error: unknown) {
   );
 }
 
+function createMcpClient() {
+  return new Client(
+    {
+      name: "continue-client",
+      version: "1.0.0",
+    },
+    {
+      capabilities: {},
+    },
+  );
+}
+
 export type MCPExtras = {
   ide: IDE;
 };
@@ -85,17 +97,68 @@ class MCPConnection {
     // Don't construct transport in constructor to avoid blocking
     this.transport = {} as Transport; // Will be set in connectClient
 
-    this.client = new Client(
-      {
-        name: "continue-client",
-        version: "1.0.0",
-      },
-      {
-        capabilities: {},
-      },
-    );
+    this.client = createMcpClient();
 
     this.abortController = new AbortController();
+  }
+
+  private async resetClientAndTransport() {
+    try {
+      await this.client.close();
+    } catch {
+      // Ignore close errors while replacing stale clients/transports.
+    }
+
+    try {
+      await this.transport.close?.();
+    } catch {
+      // Ignore close errors while replacing stale clients/transports.
+    }
+
+    this.client = createMcpClient();
+    this.transport = {} as Transport;
+  }
+
+  private shouldReconnectAfterError(error: unknown) {
+    if (this.options.type !== "sse" || this.status === "disabled") {
+      return false;
+    }
+
+    const message = (
+      error instanceof Error ? error.message : String(error)
+    ).toLowerCase();
+
+    const sessionError =
+      message.includes("session") &&
+      (message.includes("invalid") ||
+        message.includes("unknown") ||
+        message.includes("expired") ||
+        message.includes("not found") ||
+        message.includes("valid") ||
+        message.includes("missing"));
+
+    return (
+      sessionError ||
+      message.includes("connection closed") ||
+      message.includes("transport closed")
+    );
+  }
+
+  private async withSseReconnectRetry<T>(operation: () => Promise<T>) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (!this.shouldReconnectAfterError(error)) {
+        throw error;
+      }
+
+      await this.connectClient(true, new AbortController().signal);
+      if (this.status !== "connected") {
+        throw error;
+      }
+
+      return await operation();
+    }
   }
 
   async disconnect(disable = false) {
@@ -147,6 +210,7 @@ class MCPConnection {
 
     this.abortController.abort();
     this.abortController = new AbortController();
+    await this.resetClientAndTransport();
 
     // currently support oauth for sse transports only
     if (this.options.type === "sse") {
@@ -613,11 +677,25 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
   }
 
   async getResource(uri: string) {
-    return await this.client.readResource(
-      { uri },
-      {
-        timeout: this.options.timeout,
-      },
+    return await this.withSseReconnectRetry(() =>
+      this.client.readResource(
+        { uri },
+        {
+          timeout: this.options.timeout,
+        },
+      ),
+    );
+  }
+
+  async getPrompt(...args: Parameters<Client["getPrompt"]>) {
+    return await this.withSseReconnectRetry(() =>
+      this.client.getPrompt(...args),
+    );
+  }
+
+  async callTool(...args: Parameters<Client["callTool"]>) {
+    return await this.withSseReconnectRetry(() =>
+      this.client.callTool(...args),
     );
   }
 }

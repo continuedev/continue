@@ -99,7 +99,7 @@ async function callToolFromUri(
         args,
         extras.tool?.function?.parameters,
       );
-      const response = await client.client.callTool(
+      const response = await client.callTool(
         {
           name: toolName,
           arguments: coercedArgs,
