@@ -1,0 +1,97 @@
+---
+title: "FuturMix"
+description: "Configure FuturMix with Continue to access Claude, Gemini, GPT, and other models through a single OpenAI-compatible API gateway"
+---
+
+[FuturMix](https://futurmix.ai) is a unified AI gateway that provides OpenAI-compatible access to 22+ models from OpenAI, Anthropic, and Google through a single API endpoint and key.
+
+<Info>
+  You can get an API key from
+  [futurmix.ai](https://futurmix.ai).
+</Info>
+
+## Chat Model
+
+We recommend configuring **claude-sonnet-4-6** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Claude Sonnet 4-6
+        provider: futurmix
+        model: claude-sonnet-4-6
+        apiKey: <YOUR_FUTURMIX_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Claude Sonnet 4-6",
+          "provider": "futurmix",
+          "model": "claude-sonnet-4-6",
+          "apiKey": "<YOUR_FUTURMIX_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Claude Haiku 4.5
+        provider: futurmix
+        model: claude-haiku-4-5-20251001
+        apiKey: <YOUR_FUTURMIX_API_KEY>
+        roles:
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Claude Haiku 4.5",
+          "provider": "futurmix",
+          "model": "claude-haiku-4-5-20251001",
+          "apiKey": "<YOUR_FUTURMIX_API_KEY>"
+        }
+      ],
+      "tabAutocompleteModel": {
+        "title": "Claude Haiku 4.5",
+        "provider": "futurmix",
+        "model": "claude-haiku-4-5-20251001",
+        "apiKey": "<YOUR_FUTURMIX_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Available Models
+
+FuturMix provides access to models including:
+
+- **Anthropic**: Claude Opus 4-7, Claude Sonnet 4-6, Claude Haiku 4.5
+- **Google**: Gemini 2.5 Pro, Gemini 2.5 Flash
+- **OpenAI**: GPT-5.4, GPT-5.4 Mini
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/FuturMix.ts)
