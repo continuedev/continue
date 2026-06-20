@@ -1,0 +1,53 @@
+---
+title: "SaladCloud"
+description: "Configure SaladCloud AI Gateway with Continue"
+---
+
+You can get an API key from the [SaladCloud portal](https://portal.salad.com/api-key)
+
+## Available Models
+
+Available models can be found on the [SaladCloud AI Gateway pricing page](https://docs.salad.com/ai-gateway/reference/pricing). Continue includes presets for the Qwen models currently returned by SaladCloud's `/v1/models` endpoint: `qwen3.6-35b-a3b`, `qwen3.6-27b`, and `qwen3.5-9b`.
+
+## Chat Model
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Qwen 3.6 35B A3B
+      provider: saladcloud
+      model: qwen3.6-35b-a3b
+      apiKey: <YOUR_SALAD_CLOUD_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Qwen 3.6 35B A3B",
+        "provider": "saladcloud",
+        "model": "qwen3.6-35b-a3b",
+        "apiKey": "<YOUR_SALAD_CLOUD_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+<Note>
+  Continue disables Qwen thinking output by default with
+  `chat_template_kwargs.enable_thinking: false`. To enable thinking, add
+  `requestOptions.extraBodyProperties.chat_template_kwargs.enable_thinking` and
+  set it to `true` in your model configuration.
+</Note>
+
+## Embeddings Model
+
+SaladCloud AI Gateway currently focuses on chat/completion models.

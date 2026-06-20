@@ -59,6 +59,20 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("saladcloud", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["saladcloud"];
+
+    it("should return true for SaladCloud Qwen models", () => {
+      expect(supportsFn("qwen3.6-35b-a3b")).toBe(true);
+      expect(supportsFn("qwen3.6-27b")).toBe(true);
+      expect(supportsFn("qwen3.5-9b")).toBe(true);
+    });
+
+    it("should return false for unverified SaladCloud models", () => {
+      expect(supportsFn("gemma-4-26b-a4b-instruct")).toBe(false);
+    });
+  });
+
   describe("cohere", () => {
     const supportsFn = PROVIDER_TOOL_SUPPORT["cohere"];
 

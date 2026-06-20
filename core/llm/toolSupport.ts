@@ -58,6 +58,10 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    saladcloud: (model) => {
+      const lower = model.toLowerCase();
+      return lower.startsWith("qwen3.5-") || lower.startsWith("qwen3.6-");
+    },
     cohere: (model) => {
       const lower = model.toLowerCase();
       if (lower.startsWith("command-a-vision")) {
