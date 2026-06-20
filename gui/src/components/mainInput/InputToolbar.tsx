@@ -226,6 +226,8 @@ function InputToolbar(props: InputToolbarProps) {
               variant={props.isMainInput ? "primary" : "secondary"}
               size="sm"
               data-testid="submit-input-button"
+              aria-label="Send message"
+              title="Send message"
               onClick={async (e) => {
                 if (props.onEnter) {
                   props.onEnter({

@@ -109,6 +109,8 @@ function ModelOption({
           size="sm"
           className="text-description-muted hover:enabled:text-foreground my-0 h-4 w-4 p-0 opacity-0 transition-opacity group-hover:opacity-100"
           onClick={handleConfigureClick}
+          aria-label={`Configure ${option.title}`}
+          title={`Configure ${option.title}`}
         >
           <Cog6ToothIcon className="h-3.5 w-3.5" />
         </Button>
@@ -271,6 +273,8 @@ function ModelSelect() {
                 variant="ghost"
                 size="sm"
                 className="my-0 h-5 w-5 p-0"
+                aria-label="Configure models"
+                title="Configure models"
               >
                 <Cog6ToothIcon className="text-description h-3.5 w-3.5" />
               </Button>
