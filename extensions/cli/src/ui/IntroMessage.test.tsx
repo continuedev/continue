@@ -72,7 +72,19 @@ describe("IntroMessage", () => {
     const { lastFrame } = render(<IntroMessage model={model} />);
 
     expect(lastFrame()).toContain("Model:");
-    expect(lastFrame()).toContain("model-name");
+    expect(lastFrame()).toContain("provider/model-name");
+  });
+
+  it("renders full model name including slashes without trimming", () => {
+    const model = {
+      name: "local/large",
+      provider: "openai",
+      model: "local/large",
+    };
+
+    const { lastFrame } = render(<IntroMessage model={model} />);
+
+    expect(lastFrame()).toContain("local/large");
   });
 
   it("shows loading state when model is not provided", () => {
