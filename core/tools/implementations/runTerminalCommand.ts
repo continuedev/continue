@@ -24,9 +24,14 @@ function getDecodedOutput(data: Buffer): string {
 } // Simple helper function to use login shell on Unix/macOS and PowerShell on Windows
 function getShellCommand(command: string): { shell: string; args: string[] } {
   if (process.platform === "win32") {
-    // Windows: Use PowerShell
+    // Windows: Use PowerShell with full path to avoid ENOENT when the
+    // extension host PATH doesn't include Windows system directories.
+    // SystemRoot is always set on Windows (e.g. C:\Windows).
+    const systemRoot =
+      process.env.SystemRoot || process.env.SYSTEMROOT || "C:\\Windows";
+    const powershellPath = `${systemRoot}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`;
     return {
-      shell: "powershell.exe",
+      shell: powershellPath,
       args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
     };
   } else {
