@@ -7,6 +7,36 @@ import {
 } from "./uri";
 
 /*
+  Helper function to normalize workspace directory paths to proper file:// URIs.
+  This handles cases where workspace directories might be returned as plain file paths
+  instead of URIs, which can occur on some IDE extensions like IntelliJ on Linux.
+
+  Examples:
+  - Input: "/home/user/project" -> Output: "file:///home/user/project"
+  - Input: "file:///home/user/project" -> Output: "file:///home/user/project"
+*/
+export function normalizeDirUri(dirPath: string): string {
+  // If it's already a URI with a scheme, return as-is
+  if (dirPath.includes("://")) {
+    return dirPath;
+  }
+
+  // Convert likely absolute filesystem paths to file:// URIs.
+  // Workspace dirs should already be URIs, but this guards against malformed IDE inputs.
+  if (dirPath.startsWith("/")) {
+    return `file:///${pathToUriPathSegment(dirPath)}`;
+  }
+
+  // For Windows paths (C:\ or drive letters)
+  if (/^[a-zA-Z]:/.test(dirPath)) {
+    const normalized = dirPath.replaceAll("\\", "/");
+    return `file:///${pathToUriPathSegment(normalized)}`;
+  }
+
+  return dirPath;
+}
+
+/*
   This function takes a relative (to workspace) filepath
   And checks each workspace for if it exists or not
   Only returns fully resolved URI if it exists
@@ -18,7 +48,10 @@ export async function resolveRelativePathInDir(
 ): Promise<string | undefined> {
   const dirs = dirUriCandidates ?? (await ide.getWorkspaceDirs());
   for (const dirUri of dirs) {
-    const fullUri = joinPathsToUri(dirUri, path);
+    // Normalize the directory URI to ensure it's a proper file:// URI
+    // This handles cases where workspace directories might be plain file paths
+    const normalizedDirUri = normalizeDirUri(dirUri);
+    const fullUri = joinPathsToUri(normalizedDirUri, path);
     if (await ide.fileExists(fullUri)) {
       return fullUri;
     }
@@ -39,7 +72,10 @@ export async function inferResolvedUriFromRelativePath(
   dirCandidates?: string[],
 ): Promise<string> {
   const relativePath = _relativePath.trim().replaceAll("\\", "/");
-  const dirs = dirCandidates ?? (await ide.getWorkspaceDirs());
+  const rawDirs = dirCandidates ?? (await ide.getWorkspaceDirs());
+
+  // Normalize all directories to proper file:// URIs
+  const dirs = rawDirs.map(normalizeDirUri);
 
   if (dirs.length === 0) {
     throw new Error("inferResolvedUriFromRelativePath: no dirs provided");
