@@ -228,6 +228,30 @@ describe("generateToolsSystemMessage", () => {
     expect(hasExampleDefinition).toBe(true);
     expect(hasExampleCall).toBe(true);
   });
+
+  it("instructs models to call tools serially", () => {
+    const tools: Tool[] = [
+      {
+        function: {
+          name: "test_tool",
+          description: "Test description",
+          parameters: {
+            type: "object",
+            properties: {},
+            required: [],
+          },
+        },
+        ...SHARED_TOOL_FIELDS,
+      },
+    ];
+
+    const result = generateToolsSystemMessage(tools, framework);
+
+    expect(result).includes(
+      "Call ONE tool at a time and wait for its result before calling another tool.",
+    );
+    expect(result).not.includes("simultaneously");
+  });
 });
 
 describe("addSystemMessageToolsToSystemMessage", () => {

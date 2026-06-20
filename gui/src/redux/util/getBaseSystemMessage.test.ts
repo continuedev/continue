@@ -84,3 +84,10 @@ test("getBaseSystemMessage should append no-tools warning for agent/plan modes w
     "Custom Plan System Message" + NO_TOOL_WARNING,
   );
 });
+
+test("default agent system message should instruct serial tool calling", () => {
+  expect(DEFAULT_AGENT_SYSTEM_MESSAGE).toContain(
+    "Call tools one at a time. Wait for each tool result before deciding whether to call another tool.",
+  );
+  expect(DEFAULT_AGENT_SYSTEM_MESSAGE).not.toContain("simultaneously");
+});
