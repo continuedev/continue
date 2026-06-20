@@ -1,6 +1,7 @@
 import { createOpenAISubclassTests } from "./test-utils/openai-test-utils.js";
 
 // Import core OpenAI-compatible providers
+import AGIone from "./AGIone.js";
 import OpenAI from "./OpenAI.js";
 import Groq from "./Groq.js";
 import Fireworks from "./Fireworks.js";
@@ -16,6 +17,11 @@ import Nvidia from "./Nvidia.js";
 import CometAPI from "./CometAPI.js";
 
 // Base OpenAI tests
+createOpenAISubclassTests(AGIone, {
+  providerName: "agione",
+  defaultApiBase: "https://agione.pro/hyperone/xapi/api/v1/",
+});
+
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { ILLM } from "../../index.js";
 
