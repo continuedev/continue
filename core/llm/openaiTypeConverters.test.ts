@@ -643,6 +643,142 @@ describe("openaiTypeConverters", () => {
       });
     });
 
+    describe("orphaned fc_ ID stripping (context compaction)", () => {
+      it("should strip fc_ ID from function_call when reasoning was pruned from context", () => {
+        // Scenario: thinking message was removed by compileChatMessages due to context overflow.
+        // The assistant message still has the fc_ ID that references the now-absent reasoning.
+        const messages: ChatMessage[] = [
+          {
+            role: "user",
+            content: "Hello",
+          },
+          // thinking message was pruned — NOT present in messages
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "call_001",
+                type: "function",
+                function: { name: "read_file", arguments: '{"path":"a.txt"}' },
+              },
+            ],
+            metadata: {
+              responsesOutputItemIds: ["fc_001"], // fc_ ID orphaned without reasoning
+            },
+          } as ChatMessage,
+          {
+            role: "tool",
+            content: "file contents",
+            toolCallId: "call_001",
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        // function_call should be present but WITHOUT its fc_ ID
+        const functionCalls = getFunctionCalls(result);
+        expect(functionCalls.length).toBe(1);
+        expect(functionCalls[0].id).toBeUndefined();
+        expect(functionCalls[0].call_id).toBe("call_001");
+
+        // function_call_output should still be present
+        const outputs = getFunctionCallOutputs(result);
+        expect(outputs.length).toBe(1);
+        expect(outputs[0].call_id).toBe("call_001");
+      });
+
+      it("should keep fc_ ID when reasoning is present before function_call", () => {
+        // Sanity check: valid case should still work
+        const messages: ChatMessage[] = [
+          {
+            role: "thinking",
+            content: "",
+            reasoning_details: [
+              { type: "reasoning_id", id: "rs_001" },
+              {
+                type: "encrypted_content",
+                encrypted_content: "encrypted_data",
+              },
+            ],
+            metadata: { reasoningId: "rs_001", encrypted_content: "encrypted_data" },
+          } as ChatMessage,
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "call_001",
+                type: "function",
+                function: { name: "read_file", arguments: '{"path":"a.txt"}' },
+              },
+            ],
+            metadata: {
+              responsesOutputItemIds: ["fc_001"],
+            },
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        const reasoning = getReasoningItems(result);
+        expect(reasoning.length).toBe(1);
+
+        const functionCalls = getFunctionCalls(result);
+        expect(functionCalls.length).toBe(1);
+        expect(functionCalls[0].id).toBe("fc_001"); // ID preserved
+      });
+
+      it("should strip fc_ IDs from multiple pruned function_calls", () => {
+        const messages: ChatMessage[] = [
+          {
+            role: "user",
+            content: "Use two tools",
+          },
+          // thinking message pruned
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "call_001",
+                type: "function",
+                function: { name: "tool_a", arguments: "{}" },
+              },
+              {
+                id: "call_002",
+                type: "function",
+                function: { name: "tool_b", arguments: "{}" },
+              },
+            ],
+            metadata: {
+              responsesOutputItemIds: ["fc_001", "fc_002"],
+            },
+          } as ChatMessage,
+          {
+            role: "tool",
+            content: "result_a",
+            toolCallId: "call_001",
+          } as ChatMessage,
+          {
+            role: "tool",
+            content: "result_b",
+            toolCallId: "call_002",
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        const functionCalls = getFunctionCalls(result);
+        expect(functionCalls.length).toBe(2);
+        // Both fc_ IDs should be stripped
+        expect(functionCalls[0].id).toBeUndefined();
+        expect(functionCalls[1].id).toBeUndefined();
+        expect(functionCalls[0].call_id).toBe("call_001");
+        expect(functionCalls[1].call_id).toBe("call_002");
+      });
+    });
+
     describe("orphaned function_call_output removal", () => {
       it("should remove function_call_output with no matching function_call", () => {
         // This can happen when conversation history is truncated/pruned
