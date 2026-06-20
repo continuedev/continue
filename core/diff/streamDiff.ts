@@ -14,6 +14,7 @@ import { LineStream, matchLine } from "./util.js";
 export async function* streamDiff(
   oldLines: string[],
   newLines: LineStream,
+  filename?: string,
 ): AsyncGenerator<DiffLine> {
   const oldLinesCopy = [...oldLines];
 
@@ -27,6 +28,7 @@ export async function* streamDiff(
       newLineResult.value,
       oldLinesCopy,
       seenIndentationMistake,
+      filename,
     );
 
     if (!seenIndentationMistake && newLineResult.value !== newLine) {
