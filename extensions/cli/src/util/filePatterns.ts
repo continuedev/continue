@@ -49,7 +49,7 @@ export const FILE_IGNORE_PATTERNS = [
 ];
 
 export const FILE_PATTERNS = [
-  "**/*.{ts,tsx,js,jsx,py,java,cpp,c,h,hpp,cs,go,rs,rb,php,swift,kt,scala,md,json,yaml,yml,xml,html,css,scss,sass,less,sql,sh,dockerfile,makefile,cmake,gradle,toml,ini,env,txt,log}",
+  "**/*.{ts,tsx,js,jsx,py,java,cpp,cc,cxx,c++,c,h,hpp,cs,go,rs,rb,php,swift,kt,scala,md,json,yaml,yml,xml,html,css,scss,sass,less,sql,sh,dockerfile,makefile,cmake,gradle,toml,ini,env,txt,log}",
   "**/README*",
   "**/LICENSE*",
   "**/CHANGELOG*",
