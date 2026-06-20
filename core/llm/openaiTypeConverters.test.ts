@@ -489,6 +489,55 @@ describe("openaiTypeConverters", () => {
         expect(functionCalls[0].id).toBe("fc_001");
       });
 
+      it("should emit assistant message before function_call when reasoning and tool calls share a turn", () => {
+        const messages: ChatMessage[] = [
+          {
+            role: "thinking",
+            content: "",
+            reasoning_details: [
+              { type: "reasoning_id", id: "rs_001" },
+              {
+                type: "encrypted_content",
+                encrypted_content: "encrypted_data_here",
+              },
+            ],
+            metadata: { reasoningId: "rs_001" },
+          } as ChatMessage,
+          {
+            role: "assistant",
+            content: "I'll inspect the file first.",
+            toolCalls: [
+              {
+                id: "call_001",
+                type: "function",
+                function: { name: "read_file", arguments: '{"path":"a.txt"}' },
+              },
+            ],
+            metadata: {
+              responsesOutputItemIds: ["msg_001", "fc_001"],
+              responsesOutputItemId: "fc_001",
+            },
+          } as ChatMessage,
+        ];
+
+        const result = toResponsesInput(messages);
+
+        expect(result[0]).toMatchObject({
+          type: "reasoning",
+          id: "rs_001",
+        });
+        expect(result[1]).toMatchObject({
+          type: "message",
+          role: "assistant",
+          id: "msg_001",
+        });
+        expect(result[2]).toMatchObject({
+          type: "function_call",
+          id: "fc_001",
+          call_id: "call_001",
+        });
+      });
+
       it("should strip fc_ id from function_calls after removed reasoning", () => {
         const messages: ChatMessage[] = [
           {
