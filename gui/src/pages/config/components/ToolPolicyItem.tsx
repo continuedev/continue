@@ -141,14 +141,19 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
                   <span className="text-xs">
                     {disabled || policy === "disabled"
                       ? "Excluded"
-                      : policy === "allowedWithoutPermission"
-                        ? "Automatic"
-                        : "Ask First"}
+                      : policy === "allowedUnrestricted"
+                        ? "Unrestricted"
+                        : policy === "allowedWithoutPermission"
+                          ? "Automatic"
+                          : "Ask First"}
                   </span>
                   <ChevronDownIcon className="h-3 w-3" />
                 </ListboxButton>
                 {!disabled && (
                   <ListboxOptions className="min-w-0">
+                    <ListboxOption value="allowedUnrestricted">
+                      Unrestricted
+                    </ListboxOption>
                     <ListboxOption value="allowedWithoutPermission">
                       Automatic
                     </ListboxOption>
