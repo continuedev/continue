@@ -7,6 +7,7 @@ import {
   countTokens,
   countTokensAsync,
   extractToolSequence,
+  getAvailableInputTokens,
   pruneLinesFromBottom,
   pruneLinesFromTop,
   pruneRawPromptFromTop,
@@ -25,6 +26,34 @@ describe.skip("countTokens", () => {
     const content: MessagePart[] = [{ type: "text", text: "Hello world!" }];
     const tokenCount = countTokens(content, "gpt-4");
     expect(tokenCount).toBeGreaterThan(0);
+  });
+});
+
+describe("getAvailableInputTokens", () => {
+  it("reserves only a minimum response allowance, not the full maxTokens", () => {
+    // Small context window with the default 4096 maxTokens (e.g. a local model
+    // with no known completion limit). The old guard reserved the full 4096,
+    // leaving only contextLength - 4096; this reserves MIN_RESPONSE_TOKENS (1000)
+    // plus the safety buffer instead.
+    const contextLength = 8192;
+    const maxTokens = 4096;
+
+    const available = getAvailableInputTokens(contextLength, maxTokens);
+
+    // Far more headroom than the old `contextLength - maxTokens` formula.
+    expect(available).toBeGreaterThan(contextLength - maxTokens);
+    // Safety buffer is min(1000, 8192 * 0.02 = 163.84) = 163.84, response = 1000.
+    expect(available).toBeCloseTo(8192 - 163.84 - 1000, 2);
+  });
+
+  it("reserves maxTokens when it is below the minimum response allowance", () => {
+    const contextLength = 100_000;
+    const maxTokens = 256;
+
+    const available = getAvailableInputTokens(contextLength, maxTokens);
+
+    // Safety buffer caps at 1000; response reservation is the smaller maxTokens.
+    expect(available).toBe(100_000 - 1000 - 256);
   });
 });
 

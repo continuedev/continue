@@ -376,6 +376,26 @@ export function getTokenCountingBufferSafety(contextLength: number) {
 
 const MIN_RESPONSE_TOKENS = 1000;
 
+/**
+ * Tokens available for input content in a single request. This mirrors how
+ * compileChatMessages budgets a request: reserve the counting safety buffer
+ * plus a minimum response allowance, rather than the full configured
+ * completion budget (`maxTokens`). Reserving the full `maxTokens` here makes a
+ * single context item appear too big on small context windows or on models
+ * with no known completion limit (where `maxTokens` defaults to 4096), even
+ * though the message compiler would happily include it.
+ */
+export function getAvailableInputTokens(
+  contextLength: number,
+  maxTokens: number,
+): number {
+  return (
+    contextLength -
+    getTokenCountingBufferSafety(contextLength) -
+    Math.min(MIN_RESPONSE_TOKENS, maxTokens)
+  );
+}
+
 function pruneRawPromptFromTop(
   modelName: string,
   contextLength: number,
