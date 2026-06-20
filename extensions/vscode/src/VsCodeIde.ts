@@ -15,6 +15,7 @@ import {
 import { Repository } from "./otherExtensions/git";
 import { SecretStorage } from "./stubs/SecretStorage";
 import { VsCodeIdeUtils } from "./util/ideUtils";
+import { runCommandInTerminal } from "./util/runCommandInTerminal";
 import { getExtensionVersion, isExtensionPrerelease } from "./util/util";
 import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
@@ -337,22 +338,7 @@ class VsCodeIde implements IDE {
     command: string,
     options: TerminalOptions = { reuseTerminal: true },
   ): Promise<void> {
-    let terminal: vscode.Terminal | undefined;
-    if (vscode.window.terminals.length && options.reuseTerminal) {
-      if (options.terminalName) {
-        terminal = vscode.window.terminals.find(
-          (t) => t?.name === options.terminalName,
-        );
-      } else {
-        terminal = vscode.window.activeTerminal ?? vscode.window.terminals[0];
-      }
-    }
-
-    if (!terminal) {
-      terminal = vscode.window.createTerminal(options?.terminalName);
-    }
-    terminal.show();
-    terminal.sendText(command, false);
+    await runCommandInTerminal(command, options);
   }
 
   async saveFile(fileUri: string): Promise<void> {
