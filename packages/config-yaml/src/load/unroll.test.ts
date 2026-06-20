@@ -4,6 +4,7 @@ import {
   getTemplateVariables,
   parseMarkdownRuleOrAssistantUnrolled,
   replaceInputsWithSecrets,
+  unrollBlocks,
 } from "./unroll.js";
 
 describe("parseMarkdownRuleOrAssistantUnrolled tests", () => {
@@ -91,6 +92,41 @@ model: # should be models
     expect(rule).toHaveProperty("name", "foo/bar");
     expect(rule).toHaveProperty("globs", undefined);
     expect(rule).toHaveProperty("rule", dubiousContent);
+  });
+
+  it("unrolls markdown files used in prompts as prompts", async () => {
+    const markdownContent = `
+---
+name: scotty
+description: A reusable prompt
+---
+Generate a concise repair plan.
+`;
+
+    const registry = {
+      getContent: async () => markdownContent,
+    };
+
+    const result = await unrollBlocks(
+      {
+        name: "Test Agent",
+        version: "1.0.0",
+        prompts: [{ uses: "file://prompts/scotty.md" }],
+      },
+      registry,
+      undefined,
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.config?.rules).toBeUndefined();
+    expect(result.config?.prompts).toEqual([
+      {
+        name: "scotty",
+        description: "A reusable prompt",
+        prompt: "Generate a concise repair plan.",
+        sourceFile: "prompts/scotty.md",
+      },
+    ]);
   });
 });
 
