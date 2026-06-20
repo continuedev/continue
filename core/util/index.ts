@@ -206,6 +206,30 @@ export function removeCodeBlocksAndTrim(text: string): string {
   return processedText.trim();
 }
 
+const THINK_BLOCK_REGEX = /<think>[\s\S]*?<\/think>/gi;
+const HARMONY_TOKEN_REGEX =
+  /<\|(?:start|end|channel|message|constrain|call|return)\|>/g;
+const HARMONY_FINAL_CHANNEL_REGEX =
+  /(?:<\|start\|>[^\n<|]+)?\s*<\|channel\|>\s*final\s*<\|message\|>([\s\S]*?)(?=(?:<\|end\|>|<\|start\|>|$))/gi;
+
+/**
+ * Strips reasoning blocks and Harmony protocol wrappers from model output
+ * before it is treated as file content by apply/edit flows.
+ */
+export function stripReasoningFromApplyContent(content: string): string {
+  let processedText = content.replace(THINK_BLOCK_REGEX, "");
+
+  const finalChannelMatches = Array.from(
+    processedText.matchAll(HARMONY_FINAL_CHANNEL_REGEX),
+  );
+  if (finalChannelMatches.length > 0) {
+    processedText =
+      finalChannelMatches[finalChannelMatches.length - 1][1] ?? "";
+  }
+
+  return processedText.replace(HARMONY_TOKEN_REGEX, "");
+}
+
 export function splitCamelCaseAndNonAlphaNumeric(value: string) {
   return value
     .split(/(?<=[a-z0-9])(?=[A-Z])|[^a-zA-Z0-9]/)
