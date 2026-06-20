@@ -57,18 +57,42 @@ function getFilePathsInSkillDirectory(
     .map((filePath) => getRelativePath(cwd, filePath));
 }
 
-/**get the SKILL.md files from the given directory */
-async function getSkillFilesFromDir(dirPath: string): Promise<string[]> {
-  // check if dirPath exists
+async function getSkillDirectoriesFromDir(dirPath: string): Promise<string[]> {
   try {
     await fsPromises.stat(dirPath);
   } catch {
     return [];
   }
 
-  const skillDirs = (await fsPromises.readdir(dirPath, { withFileTypes: true }))
-    .filter((dir) => dir.isDirectory())
-    .map((dir) => path.join(dirPath, dir.name));
+  const dirEntries = await fsPromises.readdir(dirPath, { withFileTypes: true });
+
+  return (
+    await Promise.all(
+      dirEntries.map(async (dirEntry) => {
+        const candidatePath = path.join(dirPath, dirEntry.name);
+
+        if (dirEntry.isDirectory()) {
+          return candidatePath;
+        }
+
+        if (!dirEntry.isSymbolicLink()) {
+          return null;
+        }
+
+        try {
+          const stats = await fsPromises.stat(candidatePath);
+          return stats.isDirectory() ? candidatePath : null;
+        } catch {
+          return null;
+        }
+      }),
+    )
+  ).filter((candidatePath): candidatePath is string => Boolean(candidatePath));
+}
+
+/**get the SKILL.md files from the given directory */
+async function getSkillFilesFromDir(dirPath: string): Promise<string[]> {
+  const skillDirs = await getSkillDirectoriesFromDir(dirPath);
 
   return (
     await Promise.all(
@@ -82,7 +106,7 @@ async function getSkillFilesFromDir(dirPath: string): Promise<string[]> {
         }
       }),
     )
-  ).filter((path) => typeof path === "string");
+  ).filter((skillFilePath): skillFilePath is string => Boolean(skillFilePath));
 }
 
 export async function loadMarkdownSkills(): Promise<LoadSkillsResult> {

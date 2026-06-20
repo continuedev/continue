@@ -77,6 +77,43 @@ This is the skill body.
     );
   });
 
+  it("loads a skill from a symlinked project skill directory", async () => {
+    const targetSkillDir = path.join(tmpDir, "shared-skill-target");
+    fs.mkdirSync(targetSkillDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(targetSkillDir, "SKILL.md"),
+      `---
+name: Skill Creator
+description: Creates skills
+---
+
+# Skill Creator
+`,
+    );
+    fs.writeFileSync(path.join(targetSkillDir, "helper.ts"), "// helper code");
+
+    const skillsDir = path.join(tmpDir, ".continue", "skills");
+    fs.mkdirSync(skillsDir, { recursive: true });
+    const symlinkPath = path.join(skillsDir, "skill-creator");
+    fs.symlinkSync(
+      targetSkillDir,
+      symlinkPath,
+      process.platform === "win32" ? "junction" : "dir",
+    );
+
+    const result = await loadMarkdownSkills();
+
+    expect(result.errors).toEqual([]);
+    expect(result.skills).toHaveLength(1);
+    expect(result.skills[0].name).toBe("Skill Creator");
+    expect(result.skills[0].path).toBe(
+      path.join(".", ".continue", "skills", "skill-creator", "SKILL.md"),
+    );
+    expect(result.skills[0].files).toContain(
+      path.join(".", ".continue", "skills", "skill-creator", "helper.ts"),
+    );
+  });
+
   it("returns error for invalid frontmatter", async () => {
     const skillDir = path.join(tmpDir, ".continue", "skills", "bad-skill");
     fs.mkdirSync(skillDir, { recursive: true });
