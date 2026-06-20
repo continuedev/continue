@@ -1,0 +1,207 @@
+---
+title: "How to Configure OfoxAI with Continue"
+sidebarTitle: "OfoxAI"
+---
+
+<Info>
+  [OfoxAI](https://ofox.ai/zh) is a unified LLM API gateway that provides access to 100+ models (OpenAI, Anthropic, Google, Meta, DeepSeek, Mistral, Qwen, and more) through a single API key. It is fully compatible with the OpenAI, Anthropic, and Gemini protocols, so you can switch by only updating the base URL and key — no code changes required.
+</Info>
+
+<Tip>
+  Get an API key from the [OfoxAI Console](https://app.ofox.ai/auth). Full documentation lives at [docs.ofox.ai](https://docs.ofox.ai).
+</Tip>
+
+## Base URLs
+
+OfoxAI exposes three protocol-compatible endpoints. Pick the one that matches the model family you want to call:
+
+| Protocol  | Base URL                          | Use For                                    |
+| :-------- | :-------------------------------- | :----------------------------------------- |
+| OpenAI    | `https://api.ofox.ai/v1`          | GPT, DeepSeek, Qwen, Llama, and most others |
+| Anthropic | `https://api.ofox.ai/anthropic`   | Claude family                              |
+| Gemini    | `https://api.ofox.ai/gemini`      | Gemini family                              |
+
+All three endpoints accept the same OfoxAI API key. China users get optimized routing via HK express by default.
+
+## Configuration
+
+Because OfoxAI speaks the OpenAI / Anthropic / Gemini wire protocols natively, you can configure it in Continue using the matching built-in provider and just override `apiBase`.
+
+### OpenAI-compatible models (recommended default)
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: GPT-4o (OfoxAI)
+      provider: openai
+      model: gpt-4o
+      apiBase: https://api.ofox.ai/v1
+      apiKey: ${{ secrets.OFOXAI_API_KEY }}
+      roles:
+        - chat
+        - edit
+        - apply
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GPT-4o (OfoxAI)",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "apiBase": "https://api.ofox.ai/v1",
+        "apiKey": "<YOUR_OFOXAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+### Claude via the Anthropic protocol
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude Sonnet (OfoxAI)
+      provider: anthropic
+      model: claude-sonnet-4-20250514
+      apiBase: https://api.ofox.ai/anthropic
+      apiKey: ${{ secrets.OFOXAI_API_KEY }}
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude Sonnet (OfoxAI)",
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-20250514",
+        "apiBase": "https://api.ofox.ai/anthropic",
+        "apiKey": "<YOUR_OFOXAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+### Gemini via the Gemini protocol
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Gemini 2.5 Pro (OfoxAI)
+      provider: gemini
+      model: gemini-2.5-pro
+      apiBase: https://api.ofox.ai/gemini
+      apiKey: ${{ secrets.OFOXAI_API_KEY }}
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Gemini 2.5 Pro (OfoxAI)",
+        "provider": "gemini",
+        "model": "gemini-2.5-pro",
+        "apiBase": "https://api.ofox.ai/gemini",
+        "apiKey": "<YOUR_OFOXAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Mixing Models for Different Roles
+
+Because every OfoxAI request uses the same key, you can comfortably wire different upstream models to different Continue roles:
+
+```yaml title="config.yaml"
+models:
+  # Chat & Edit — high-quality model
+  - name: Claude Sonnet (OfoxAI)
+    provider: anthropic
+    model: claude-sonnet-4-20250514
+    apiBase: https://api.ofox.ai/anthropic
+    apiKey: ${{ secrets.OFOXAI_API_KEY }}
+    roles:
+      - chat
+      - edit
+      - apply
+
+  # Autocomplete — fast & cheap
+  - name: DeepSeek Coder (OfoxAI)
+    provider: openai
+    model: deepseek-coder
+    apiBase: https://api.ofox.ai/v1
+    apiKey: ${{ secrets.OFOXAI_API_KEY }}
+    roles:
+      - autocomplete
+
+  # Embeddings
+  - name: text-embedding-3-large (OfoxAI)
+    provider: openai
+    model: text-embedding-3-large
+    apiBase: https://api.ofox.ai/v1
+    apiKey: ${{ secrets.OFOXAI_API_KEY }}
+    roles:
+      - embed
+```
+
+## Tool Use / Agent Mode
+
+OfoxAI passes through native function calling for models that support it (GPT-4o, Claude, Gemini, Qwen, etc.). If a model's tool support isn't auto-detected by Continue, set it explicitly:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: GPT-4o (OfoxAI)
+      provider: openai
+      model: gpt-4o
+      apiBase: https://api.ofox.ai/v1
+      apiKey: ${{ secrets.OFOXAI_API_KEY }}
+      capabilities:
+        - tool_use
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GPT-4o (OfoxAI)",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "apiBase": "https://api.ofox.ai/v1",
+        "apiKey": "<YOUR_OFOXAI_API_KEY>",
+        "capabilities": {
+          "tools": true
+        }
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Pricing
+
+OfoxAI offers a free tier for evaluation and pay-per-token usage thereafter. Token cost is charged at the upstream provider's published rate plus a small gateway fee. Detailed pricing and the live model catalog are available at [docs.ofox.ai](https://docs.ofox.ai).
+
+<Note>
+  Because Continue talks to OfoxAI through the standard OpenAI / Anthropic / Gemini providers, all of Continue's existing features — streaming, tool calls, prompt caching where supported — work out of the box.
+</Note>
