@@ -219,7 +219,9 @@ class OpenAI extends BaseLLM {
   }
 
   public isOSeriesOrGpt5PlusModel(model?: string): boolean {
-    return !!model && (!!model.match(/^o[0-9]+/) || !!model.match(/gpt-[5-9]/));
+    return (
+      !!model && (!!model.match(/^o[0-9]+/i) || !!model.match(/gpt-[5-9]/i))
+    );
   }
 
   private isFireworksAiModel(model?: string): boolean {

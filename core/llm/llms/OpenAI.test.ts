@@ -24,6 +24,13 @@ describe("OpenAI", () => {
     expect(openai.isOSeriesOrGpt5PlusModel("gpt-5.4-pro")).toBeTruthy();
     expect(openai.isOSeriesOrGpt5PlusModel("gpt-6")).toBeTruthy();
     expect(openai.isOSeriesOrGpt5PlusModel("gpt-7-turbo")).toBeTruthy();
+
+    // case-insensitive matching (e.g. Azure deployments named in upper case)
+    expect(openai.isOSeriesOrGpt5PlusModel("GPT-5")).toBeTruthy();
+    expect(openai.isOSeriesOrGpt5PlusModel("GPT-5-mini")).toBeTruthy();
+    expect(openai.isOSeriesOrGpt5PlusModel("Gpt-5.4")).toBeTruthy();
+    expect(openai.isOSeriesOrGpt5PlusModel("O1")).toBeTruthy();
+    expect(openai.isOSeriesOrGpt5PlusModel("O3-mini")).toBeTruthy();
   });
   test("should identify incorrect o-series models", () => {
     const openai = new OpenAI({
