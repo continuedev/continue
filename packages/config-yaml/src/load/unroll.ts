@@ -14,7 +14,7 @@ import {
   PackageSlug,
   packageSlugsEqual,
 } from "../interfaces/slugs.js";
-import { markdownToRule } from "../markdown/index.js";
+import { markdownToRule, parseMarkdownPrompt } from "../markdown/index.js";
 import {
   AssistantUnrolled,
   assistantUnrolledSchema,
@@ -437,6 +437,7 @@ export async function unrollBlocks(
               blockIdentifier,
               unrolledBlock.with,
               registry,
+              section,
             );
             const block = blockConfigYaml[section]?.[0];
             if (block) {
@@ -720,6 +721,7 @@ export async function resolveBlock(
   id: PackageIdentifier,
   inputs: Record<string, string | undefined> | undefined,
   registry: Registry,
+  sectionHint?: keyof AssistantUnrolled,
 ): Promise<AssistantUnrolled> {
   // Retrieve block raw yaml
   const rawYaml = await registry.getContent(id);
@@ -753,7 +755,11 @@ export async function resolveBlock(
   }
 
   // Add source slug for mcp servers
-  const parsed = parseMarkdownRuleOrAssistantUnrolled(templatedYaml, id);
+  const parsed = parseMarkdownRuleOrAssistantUnrolled(
+    templatedYaml,
+    id,
+    sectionHint,
+  );
   if (
     id.uriType === "slug" &&
     "mcpServers" in parsed &&
@@ -768,8 +774,14 @@ export async function resolveBlock(
 export function parseMarkdownRuleOrAssistantUnrolled(
   content: string,
   id: PackageIdentifier,
+  sectionHint?: keyof AssistantUnrolled,
 ): AssistantUnrolled {
-  return parseYamlOrMarkdownRule<AssistantUnrolled>(content, id, parseBlock);
+  return parseYamlOrMarkdownRule<AssistantUnrolled>(
+    content,
+    id,
+    parseBlock,
+    sectionHint,
+  );
 }
 
 function parseMarkdownRuleOrConfigYaml(
@@ -783,6 +795,7 @@ function parseYamlOrMarkdownRule<T>(
   content: string,
   id: PackageIdentifier,
   parseYamlFn: (content: string) => T,
+  sectionHint?: keyof AssistantUnrolled,
 ): T {
   let parsedYaml: T;
   try {
@@ -797,6 +810,16 @@ function parseYamlOrMarkdownRule<T>(
     }
     // If YAML parsing fails, try parsing as markdown rule
     try {
+      if (sectionHint === "prompts") {
+        const prompt = parseMarkdownPrompt(content, id);
+        parsedYaml = {
+          name: prompt.name,
+          version: "1.0.0",
+          prompts: [prompt],
+        } as T;
+        return parsedYaml;
+      }
+
       const rule = markdownToRule(content, id);
       // Convert the rule object to the expected format
       parsedYaml = { name: rule.name, version: "1.0.0", rules: [rule] } as T;

@@ -1,8 +1,10 @@
 import { PackageIdentifier } from "../interfaces/slugs.js";
+import type { Registry } from "../interfaces/index.js";
 import {
   fillTemplateVariables,
   getTemplateVariables,
   parseMarkdownRuleOrAssistantUnrolled,
+  unrollBlocks,
   replaceInputsWithSecrets,
 } from "./unroll.js";
 
@@ -91,6 +93,133 @@ model: # should be models
     expect(rule).toHaveProperty("name", "foo/bar");
     expect(rule).toHaveProperty("globs", undefined);
     expect(rule).toHaveProperty("rule", dubiousContent);
+  });
+});
+
+describe("unrollBlocks markdown file blocks", () => {
+  it("unrolls markdown prompt file blocks into prompts", async () => {
+    const registry: Registry = {
+      async getContent(fullSlug) {
+        if (
+          fullSlug.uriType === "file" &&
+          fullSlug.fileUri === "prompts/scotty.md"
+        ) {
+          return `
+---
+name: Scotty
+description: Engineering prompt
+---
+Use concise engineering language.
+`;
+        }
+
+        throw new Error("Unexpected registry lookup");
+      },
+    };
+
+    const result = await unrollBlocks(
+      {
+        name: "Test Assistant",
+        version: "1.0.0",
+        prompts: [{ uses: "file://prompts/scotty.md" }],
+      },
+      registry,
+      undefined,
+    );
+
+    expect(result.config).toBeDefined();
+    expect(result.config!.prompts).toEqual([
+      {
+        name: "Scotty",
+        description: "Engineering prompt",
+        prompt: "Use concise engineering language.",
+        sourceFile: "prompts/scotty.md",
+      },
+    ]);
+    expect(result.config!.rules).toBeUndefined();
+  });
+
+  it("uses markdown prompt filenames when frontmatter omits name", async () => {
+    const registry: Registry = {
+      async getContent(fullSlug) {
+        if (
+          fullSlug.uriType === "file" &&
+          fullSlug.fileUri === "prompts/fallback.md"
+        ) {
+          return `
+---
+description: Fallback prompt
+---
+Use the fallback filename.
+`;
+        }
+
+        throw new Error("Unexpected registry lookup");
+      },
+    };
+
+    const result = await unrollBlocks(
+      {
+        name: "Test Assistant",
+        version: "1.0.0",
+        prompts: [{ uses: "file://prompts/fallback.md" }],
+      },
+      registry,
+      undefined,
+    );
+
+    expect(result.config?.prompts?.[0]).toEqual({
+      name: "fallback",
+      description: "Fallback prompt",
+      prompt: "Use the fallback filename.",
+      sourceFile: "prompts/fallback.md",
+    });
+  });
+
+  it("keeps markdown rule blocks resolving as rules", async () => {
+    const registry: Registry = {
+      async getContent(fullSlug) {
+        if (
+          fullSlug.uriType === "file" &&
+          fullSlug.fileUri === "rules/concise.md"
+        ) {
+          return `
+---
+name: concise-rule
+description: Keep replies concise
+---
+Respond in short paragraphs.
+`;
+        }
+
+        throw new Error("Unexpected registry lookup");
+      },
+    };
+
+    const result = await unrollBlocks(
+      {
+        name: "Test Assistant",
+        version: "1.0.0",
+        rules: [{ uses: "file://rules/concise.md" }],
+      },
+      registry,
+      undefined,
+    );
+
+    expect(result.config).toBeDefined();
+    expect(result.config!.rules).toEqual([
+      {
+        name: "concise-rule",
+        description: "Keep replies concise",
+        globs: undefined,
+        regex: undefined,
+        alwaysApply: undefined,
+        invokable: undefined,
+        rule: "Respond in short paragraphs.",
+        sourceFile: "rules/concise.md",
+      },
+    ]);
+    expect(result.config!.prompts).toBeUndefined();
   });
 });
 
