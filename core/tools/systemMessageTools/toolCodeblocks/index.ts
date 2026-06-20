@@ -72,8 +72,8 @@ CRITICAL: Follow the exact syntax. Do not use XML tags, JSON objects, or any oth
   systemMessageSuffix = `RULES FOR TOOL USE:
 1. To call a tool, output a tool code block using EXACTLY the format shown above.
 2. Always start the code block on a new line.
-3. You can only call ONE tool at a time.
-4. The tool code block MUST be the last thing in your response. Stop immediately after the closing fence.
+3. Call only the tools you need for this step; do not invent parallel calls in a single code block.
+4. You may include explanatory text before or after a tool code block, but do not nest tool calls inside each other.
 5. Do NOT wrap tool calls in XML tags like <tool_call> or <function=...>.
 6. Do NOT use JSON format for tool calls.
 7. Do NOT invent tools that are not listed above.
