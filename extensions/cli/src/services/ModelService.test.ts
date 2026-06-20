@@ -9,7 +9,7 @@ import * as workos from "../auth/workos.js";
 import { AuthConfig } from "../auth/workos.js";
 import * as config from "../config.js";
 
-import { ModelService } from "./ModelService.js";
+import { ModelService, expandAutodetectModels } from "./ModelService.js";
 
 describe("ModelService", () => {
   let service: ModelService;
@@ -364,6 +364,196 @@ describe("ModelService", () => {
         "Failed to initialize LLM",
       );
       expect(errorListener).toHaveBeenCalledWith(expect.any(Error));
+    });
+  });
+
+  describe("expandAutodetectModels()", () => {
+    test("expands AUTODETECT into concrete models", async () => {
+      const autodetectModel: ModelConfig = {
+        provider: "ollama",
+        model: "AUTODETECT",
+        apiBase: "http://localhost:11434",
+        roles: ["chat"],
+      } as ModelConfig;
+
+      const mockLlmApi = {
+        list: vi.fn().mockResolvedValue([
+          { id: "llama3", object: "model", owned_by: "ollama" },
+          { id: "mistral", object: "model", owned_by: "ollama" },
+        ]),
+      };
+
+      vi.mocked(config.createLlmApi).mockReturnValue(mockLlmApi as any);
+
+      const result = await expandAutodetectModels(
+        [autodetectModel],
+        mockAuthConfig,
+      );
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({
+        ...autodetectModel,
+        model: "llama3",
+        name: "llama3",
+      });
+      expect(result[1]).toEqual({
+        ...autodetectModel,
+        model: "mistral",
+        name: "mistral",
+      });
+    });
+
+    test("passes through non-AUTODETECT models unchanged", async () => {
+      const gpt4Model: ModelConfig = {
+        provider: "openai",
+        model: "gpt-4",
+        name: "GPT-4",
+        apiKey: "test-key",
+        roles: ["chat"],
+      } as ModelConfig;
+
+      vi.mocked(config.createLlmApi).mockReturnValue(mockLlmApi as any);
+
+      const result = await expandAutodetectModels([gpt4Model], mockAuthConfig);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBe(gpt4Model);
+    });
+
+    test("handles list() failure gracefully", async () => {
+      const autodetectModel: ModelConfig = {
+        provider: "ollama",
+        model: "AUTODETECT",
+        apiBase: "http://localhost:11434",
+        roles: ["chat"],
+      } as ModelConfig;
+
+      const mockLlmApi = {
+        list: vi.fn().mockRejectedValue(new Error("Connection failed")),
+      };
+
+      vi.mocked(config.createLlmApi).mockReturnValue(mockLlmApi as any);
+
+      const result = await expandAutodetectModels(
+        [autodetectModel],
+        mockAuthConfig,
+      );
+
+      // AUTODETECT entry should be skipped when list() fails
+      expect(result).toHaveLength(0);
+    });
+
+    test("handles empty list() results", async () => {
+      const autodetectModel: ModelConfig = {
+        provider: "ollama",
+        model: "AUTODETECT",
+        apiBase: "http://localhost:11434",
+        roles: ["chat"],
+      } as ModelConfig;
+
+      const mockLlmApi = {
+        list: vi.fn().mockResolvedValue([]),
+      };
+
+      vi.mocked(config.createLlmApi).mockReturnValue(mockLlmApi as any);
+
+      const result = await expandAutodetectModels(
+        [autodetectModel],
+        mockAuthConfig,
+      );
+
+      // AUTODETECT entry should be skipped when no models are returned
+      expect(result).toHaveLength(0);
+    });
+
+    test("filters out AUTODETECT from list results", async () => {
+      const autodetectModel: ModelConfig = {
+        provider: "ollama",
+        model: "AUTODETECT",
+        apiBase: "http://localhost:11434",
+        roles: ["chat"],
+      } as ModelConfig;
+
+      const mockLlmApi = {
+        list: vi.fn().mockResolvedValue([
+          { id: "AUTODETECT", object: "model", owned_by: "ollama" },
+          { id: "real-model", object: "model", owned_by: "ollama" },
+        ]),
+      };
+
+      vi.mocked(config.createLlmApi).mockReturnValue(mockLlmApi as any);
+
+      const result = await expandAutodetectModels(
+        [autodetectModel],
+        mockAuthConfig,
+      );
+
+      // Only real-model should appear, AUTODETECT should be filtered
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        ...autodetectModel,
+        model: "real-model",
+        name: "real-model",
+      });
+    });
+
+    test("handles mixed AUTODETECT and non-AUTODETECT models", async () => {
+      const autodetectModel: ModelConfig = {
+        provider: "ollama",
+        model: "AUTODETECT",
+        apiBase: "http://localhost:11434",
+        roles: ["chat"],
+      } as ModelConfig;
+
+      const gpt4Model: ModelConfig = {
+        provider: "openai",
+        model: "gpt-4",
+        name: "GPT-4",
+        apiKey: "test-key",
+        roles: ["chat"],
+      } as ModelConfig;
+
+      const mockLlmApi = {
+        list: vi
+          .fn()
+          .mockResolvedValue([
+            { id: "llama3", object: "model", owned_by: "ollama" },
+          ]),
+      };
+
+      vi.mocked(config.createLlmApi).mockReturnValue(mockLlmApi as any);
+
+      const result = await expandAutodetectModels(
+        [autodetectModel, gpt4Model],
+        mockAuthConfig,
+      );
+
+      // Should have the expanded llama3 and the unchanged gpt-4
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({
+        ...autodetectModel,
+        model: "llama3",
+        name: "llama3",
+      });
+      expect(result[1]).toBe(gpt4Model);
+    });
+
+    test("handles createLlmApi returning null", async () => {
+      const autodetectModel: ModelConfig = {
+        provider: "invalid-provider",
+        model: "AUTODETECT",
+        roles: ["chat"],
+      } as ModelConfig;
+
+      vi.mocked(config.createLlmApi).mockReturnValue(null as any);
+
+      const result = await expandAutodetectModels(
+        [autodetectModel],
+        mockAuthConfig,
+      );
+
+      // AUTODETECT entry should be skipped when createLlmApi returns null
+      expect(result).toHaveLength(0);
     });
   });
 });
