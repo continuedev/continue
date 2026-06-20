@@ -264,6 +264,62 @@ describe("handleApplyStateUpdate", () => {
       expect(streamResponseAfterToolCall).not.toHaveBeenCalled();
     });
 
+    it("should not mark a rejected closed apply state as accepted", async () => {
+      const toolCallState: ToolCallState = {
+        toolCallId: "test-tool-call",
+        status: "done",
+        ...UNUSED_TOOL_CALL_PARAMS,
+      };
+      const newApplyState = { streamId: "chat-stream" };
+
+      vi.mocked(findToolCallById).mockReturnValue(toolCallState);
+      mockGetState.mockReturnValue({
+        session: {
+          history: [],
+          codeBlockApplyStates: {
+            states: [newApplyState],
+          },
+        },
+        config: { config: {} },
+      });
+
+      const applyState: ApplyState = {
+        streamId: "chat-stream",
+        toolCallId: "test-tool-call",
+        status: "closed",
+        filepath: "test.txt",
+        numDiffs: 0,
+        accepted: false,
+      };
+
+      const thunk = handleApplyStateUpdate(applyState);
+      await thunk(mockDispatch, mockGetState, mockExtra);
+
+      expect(logToolUsage).toHaveBeenCalledWith(
+        toolCallState,
+        false,
+        true,
+        mockExtra.ideMessenger,
+      );
+      expect(logAgentModeEditOutcome).toHaveBeenCalledWith(
+        [],
+        {},
+        toolCallState,
+        newApplyState,
+        false,
+        mockExtra.ideMessenger,
+      );
+      expect(acceptToolCall).not.toHaveBeenCalled();
+      expect(updateToolCallOutput).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          contextItems: expect.arrayContaining([
+            expect.objectContaining({ name: "Edit Success" }),
+          ]),
+        }),
+      );
+      expect(streamResponseAfterToolCall).not.toHaveBeenCalled();
+    });
+
     it("should handle errored tool call closure", async () => {
       const toolCallState: ToolCallState = {
         toolCallId: "test-tool-call",

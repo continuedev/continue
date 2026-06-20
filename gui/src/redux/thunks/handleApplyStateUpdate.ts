@@ -63,7 +63,11 @@ export const handleApplyStateUpdate = createAsyncThunk<
 
         if (applyState.status === "closed") {
           if (toolCallState) {
-            const accepted = toolCallState.status !== "canceled";
+            // Closing a diff does not always mean the user accepted it.
+            // Only report edit success when the close event confirms acceptance.
+            const accepted =
+              toolCallState.status !== "canceled" &&
+              applyState.accepted !== false;
 
             logToolUsage(toolCallState, accepted, true, extra.ideMessenger);
 

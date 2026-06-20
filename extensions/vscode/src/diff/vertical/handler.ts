@@ -20,6 +20,7 @@ export interface VerticalDiffHandlerOptions {
     status?: ApplyState["status"],
     numDiffs?: ApplyState["numDiffs"],
     fileContent?: ApplyState["fileContent"],
+    accepted?: ApplyState["accepted"],
   ) => void;
   streamId?: string;
 }
@@ -145,6 +146,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       "closed",
       this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0,
       this.editor.document.getText(),
+      accept,
     );
 
     this.cancelled = true;
@@ -279,6 +281,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
         status,
         numDiffs,
         this.editor.document.getText(),
+        status === "closed" ? accept : undefined,
       );
     }
   }
