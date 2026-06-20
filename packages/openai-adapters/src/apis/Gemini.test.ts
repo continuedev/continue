@@ -1,6 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { GeminiApi } from "./Gemini.js";
+
+// Mock the fetch package so the embeddings test can stub the HTTP response.
+vi.mock("@continuedev/fetch", async () => {
+  const actual = await vi.importActual("@continuedev/fetch");
+  return {
+    ...actual,
+    fetchwithRequestOptions: vi.fn(),
+  };
+});
 
 describe("GeminiApi", () => {
   const api = new GeminiApi({
@@ -131,6 +140,45 @@ describe("GeminiApi", () => {
       expect(result.contents[0].role).toBe("user");
       expect(result.contents[1].role).toBe("model");
       expect(result.contents[2].role).toBe("user");
+    });
+  });
+
+  describe("embed", () => {
+    afterEach(() => {
+      vi.clearAllMocks();
+      vi.unstubAllGlobals();
+    });
+
+    it("parses the 'embeddings' field from the batchEmbedContents response", async () => {
+      const mockFetch = vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            embeddings: [
+              { values: [0.1, 0.2, 0.3] },
+              { values: [0.4, 0.5, 0.6] },
+            ],
+          }),
+          { headers: { "Content-Type": "application/json" } },
+        ),
+      );
+      vi.stubGlobal("fetch", mockFetch);
+      const fetchPackage = await import("@continuedev/fetch");
+      vi.mocked(fetchPackage.fetchwithRequestOptions).mockImplementation(
+        mockFetch as any,
+      );
+
+      const response = await api.embed({
+        model: "gemini-embedding-001",
+        input: ["Hello", "World"],
+      });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url] = mockFetch.mock.calls[0];
+      expect(url.toString()).toContain(":batchEmbedContents");
+      expect(response.data.map((d) => d.embedding)).toEqual([
+        [0.1, 0.2, 0.3],
+        [0.4, 0.5, 0.6],
+      ]);
     });
   });
 });
