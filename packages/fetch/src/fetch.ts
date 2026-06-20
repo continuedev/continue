@@ -1,13 +1,12 @@
 import { RequestOptions } from "@continuedev/config-types";
-import * as followRedirects from "follow-redirects";
+import * as http from "http";
 import { HttpProxyAgent } from "http-proxy-agent";
+import * as https from "https";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { BodyInit, RequestInit, Response } from "node-fetch";
 import { getAgentOptions } from "./getAgentOptions.js";
 import patchedFetch from "./node-fetch-patch.js";
 import { getProxy, shouldBypassProxy } from "./util.js";
-
-const { http, https } = (followRedirects as any).default;
 
 function logRequest(
   method: string,
