@@ -2,6 +2,7 @@ import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 
 import { AuthConfig, getModelName } from "../auth/workos.js";
 import { createLlmApi, getLlmApi } from "../config.js";
+import { getBuiltInSubagentModels } from "../subagent/builtins.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
@@ -307,23 +308,21 @@ export class ModelService
   }
 
   static getSubagentModels(modelState: ModelServiceState) {
-    if (!modelState.assistant) {
-      return [];
-    }
-    const subagentModels = modelState.assistant.models
+    const configuredSubagentModels = modelState.assistant?.models
       ?.filter((model) => !!model)
-      .filter((model) => !!model.name) // filter out models without a name
-      .filter((model) => model.roles?.includes("subagent")) // filter with role subagent
-      .filter((model) => !!model.chatOptions?.baseSystemMessage); // filter those with a system message
+      .filter((model) => !!model.name)
+      .filter((model) => model.roles?.includes("subagent"))
+      .filter((model) => !!model.chatOptions?.baseSystemMessage);
 
-    if (!subagentModels) {
-      return [];
+    if (configuredSubagentModels?.length) {
+      return configuredSubagentModels.map((model) => ({
+        llmApi: createLlmApi(model, modelState.authConfig),
+        model,
+        assistant: modelState.assistant,
+        authConfig: modelState.authConfig,
+      }));
     }
-    return subagentModels?.map((model) => ({
-      llmApi: createLlmApi(model, modelState.authConfig),
-      model,
-      assistant: modelState.assistant,
-      authConfig: modelState.authConfig,
-    }));
+
+    return getBuiltInSubagentModels(modelState);
   }
 }
