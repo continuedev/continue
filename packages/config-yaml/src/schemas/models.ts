@@ -16,6 +16,8 @@ export const requestOptionsSchema = z.object({
   proxy: z.string().optional(),
   headers: z.record(z.string()).optional(),
   extraBodyProperties: z.record(z.any()).optional(),
+  keepAlive: z.number().optional(),
+  options: z.record(z.any()).optional(),
   noProxy: z.array(z.string()).optional(),
   clientCertificate: clientCertificateOptionsSchema.optional(),
 });
