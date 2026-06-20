@@ -164,6 +164,12 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.scaleway.ai/v1/", config);
     case "fireworks":
       return openAICompatible("https://api.fireworks.ai/inference/v1/", config);
+    case "auxen":
+      // Auxen instance URLs are per-customer. The config.apiBase the user
+      // sets on their config (issued by the Auxen dashboard) is the source
+      // of truth; fall back to the marketing root only so the type-system
+      // is satisfied.
+      return openAICompatible("https://api.auxen.ai/v1/", config);
     case "together":
       return openAICompatible("https://api.together.xyz/v1/", config);
     case "ncompass":
