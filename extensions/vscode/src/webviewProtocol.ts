@@ -91,7 +91,12 @@ export class VsCodeWebviewProtocol
           let message = e.message;
           respond({ done: true, error: message, status: "error" });
 
-          const stringified = JSON.stringify({ msg }, null, 2);
+          let stringified: string;
+          try {
+            stringified = JSON.stringify({ msg }, null, 2);
+          } catch {
+            stringified = `[unserializable message: ${String(msg?.messageType)}]`;
+          }
           console.error(
             `Error handling webview message: ${stringified}\n\n${e}`,
           );
