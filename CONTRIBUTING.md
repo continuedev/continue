@@ -82,16 +82,20 @@ You can run the documentation server locally using either of the following metho
 1. Open your terminal and navigate to the `docs` subdirectory of the project. The `favicon.png` file you'll see
    there is a sign you're in the right place.
 
-2. Run the following command to install the necessary dependencies for the documentation server:
-
+2. Install the Mintlify CLI globally : 
    ```bash
-   npm install
+   npm install -g mint
+   ```
+
+3. Install project dependencies 
+   ```bash
+   npm install 
    ```
 
 3. Run the following command to start the documentation server:
 
    ```bash
-   npm run dev
+   mint dev
    ```
 
 #### Method 2: VS Code Task
