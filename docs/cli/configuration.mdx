@@ -32,6 +32,8 @@ This shows your available local configs. The selection is saved for next time.
 
 `cn` looks for `~/.continue/config.yaml`. This file uses the same format as the IDE extensions — see [config.yaml reference](/customize/deep-dives/configuration) for the full schema.
 
+If this file exists when you first run `cn`, the onboarding prompt is skipped — `cn` treats you as already configured and loads the file. This matches the IDE behaviour and is the recommended setup for local-LLM workflows that don't need a Continue account or an API key.
+
 ## CLI-specific flags
 
 Several flags inject configuration at launch without editing a file:
