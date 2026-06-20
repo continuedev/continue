@@ -10,7 +10,7 @@ import {
   ResponseInputMessageContentList,
   Tool as ResponsesTool,
 } from "openai/resources/responses/responses.mjs";
-import {
+import type {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
