@@ -179,8 +179,8 @@ check_node() {
 }
 
 install_node() {
-    # Only mark for cleanup if fnm directory doesn't already exist
-    if [ ! -d "$FNM_INSTALL_DIR" ]; then
+    # Only mark for cleanup if fnm isn't already available
+    if ! command -v fnm &>/dev/null; then
         CLEANUP_FNM=true
     fi
     info "Installing fnm (Fast Node Manager)..."
@@ -191,11 +191,11 @@ install_node() {
         error "Failed to install fnm. Check your network connection and try again."
     fi
 
-    if [ ! -x "$FNM_INSTALL_DIR/fnm" ]; then
-        error "fnm installation failed - binary not found at $FNM_INSTALL_DIR/fnm"
-    fi
-
     export PATH="$FNM_INSTALL_DIR:$PATH"
+
+    if ! command -v fnm &>/dev/null; then
+        error "fnm installation failed - binary not found"
+    fi
 
     # Initialize fnm for current session
     if ! eval "$(fnm env --shell bash 2>/dev/null)"; then
