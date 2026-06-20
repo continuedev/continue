@@ -36,7 +36,7 @@ jobs:
           echo "last_month=$first_day..$last_day" >> "$GITHUB_ENV"
 
       - name: Run issue-metrics tool
-        uses: github/issue-metrics@v3
+        uses: github/issue-metrics@v4
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SEARCH_QUERY: 'repo:continuedev/continue created:${{ env.last_month }} -reason:"not planned"'
