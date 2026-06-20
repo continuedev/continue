@@ -98,7 +98,7 @@ You can run the documentation server locally using either of the following metho
 
 1. Open VS Code in the root directory of the project.
 
-2. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task`.
+2. Open the VS Code command palette (`cmd/ctrl+shift+p`) and select `Tasks: Run Task`.
 
 3. Look for the `docs:start` task and select it.
 
@@ -142,7 +142,7 @@ npm i -g vite
 
 #### VS Code
 
-1. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task` and then select
+1. Open the VS Code command palette (`cmd/ctrl+shift+p`) and select `Tasks: Run Task` and then select
    `install-all-dependencies`
 
 2. Start debugging:
