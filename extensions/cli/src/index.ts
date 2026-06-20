@@ -192,10 +192,6 @@ addCommonOptions(program)
   )
   .option("--resume", "Resume from last session")
   .option("--fork <sessionId>", "Fork from an existing session ID")
-  .option(
-    "--beta-subagent-tool",
-    "Enable beta Subagent tool for invoking subagents",
-  )
   .action(async (prompt, options) => {
     // Handle piped input - detect it early and decide on mode
     let stdinInput = null;

@@ -4,7 +4,6 @@
  */
 
 let betaUploadArtifactToolEnabled = false;
-let betaSubagentToolEnabled = false;
 
 export function setBetaUploadArtifactToolEnabled(enabled: boolean): void {
   betaUploadArtifactToolEnabled = enabled;
@@ -12,12 +11,4 @@ export function setBetaUploadArtifactToolEnabled(enabled: boolean): void {
 
 export function isBetaUploadArtifactToolEnabled(): boolean {
   return betaUploadArtifactToolEnabled;
-}
-
-export function setBetaSubagentToolEnabled(enabled: boolean): void {
-  betaSubagentToolEnabled = enabled;
-}
-
-export function isBetaSubagentToolEnabled(): boolean {
-  return betaSubagentToolEnabled;
 }
