@@ -89,6 +89,54 @@ For example, to prevent extra long prompts from being compressed, you can explic
   </Tab>
 </Tabs>
 
+## App Identification Headers
+
+Continue automatically sends [OpenRouter identification headers](https://openrouter.ai/docs/api-reference/overview#headers) on every request so that activity shows up under Continue in OpenRouter's dashboard and App Showcase:
+
+- `HTTP-Referer: https://www.continue.dev/`
+- `X-OpenRouter-Title: Continue`
+- `X-OpenRouter-Categories: ide-extension`
+
+These are sent by default and require no configuration. If you need to override any of them (for example, to attribute traffic to your own app), set the corresponding header in `requestOptions.headers` — user-provided headers take precedence over the defaults:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <MODEL_NAME>
+      provider: openrouter
+      model: <MODEL_ID>
+      requestOptions:
+        headers:
+          HTTP-Referer: https://your-app.example.com/
+          X-OpenRouter-Title: Your App
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "openrouter",
+        "model": "<MODEL_ID>",
+        "requestOptions": {
+          "headers": {
+            "HTTP-Referer": "https://your-app.example.com/",
+            "X-OpenRouter-Title": "Your App"
+          }
+        }
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
 ## Model Capabilities
 
 OpenRouter models may require explicit capability configuration because the proxy doesn't always preserve the function calling support of the original model. 
