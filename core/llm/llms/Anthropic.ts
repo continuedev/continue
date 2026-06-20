@@ -90,7 +90,7 @@ class Anthropic extends BaseLLM {
   ): ContentBlockParam[] {
     const parts: ContentBlockParam[] = [];
     if (typeof content === "string") {
-      if (content) {
+      if (content.trim()) {
         parts.push({
           type: "text",
           text: content,
@@ -99,7 +99,7 @@ class Anthropic extends BaseLLM {
     } else {
       for (const part of content) {
         if (part.type === "text") {
-          if (part.text) {
+          if (part.text?.trim()) {
             parts.push({
               type: "text",
               text: part.text,
