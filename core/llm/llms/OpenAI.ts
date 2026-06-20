@@ -285,6 +285,7 @@ class OpenAI extends BaseLLM {
 
     // OpenAI o1-preview and o1-mini or o3-mini:
     if (this.isOSeriesOrGpt5PlusModel(options.model)) {
+      finalOptions.stop = undefined;
       // a) use max_completion_tokens instead of max_tokens
       finalOptions.max_completion_tokens = options.maxTokens;
       finalOptions.max_tokens = undefined;
@@ -441,6 +442,7 @@ class OpenAI extends BaseLLM {
 
     // OpenAI o1-preview and o1-mini or o3-mini:
     if (this.isOSeriesOrGpt5PlusModel(body.model)) {
+      body.stop = undefined;
       // a) use max_completion_tokens instead of max_tokens
       body.max_completion_tokens = body.max_tokens;
       body.max_tokens = undefined;
