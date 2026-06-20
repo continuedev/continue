@@ -65,5 +65,23 @@ describe("ChatDescriber", () => {
         ChatDescriber.describe(testLLM, completionOptions, message),
       ).rejects.toThrow();
     });
+
+    it("should exclude thinking/reasoning content from the generated title", async () => {
+      const message = "Help me write a sorting algorithm";
+
+      // Simulate a model that emits a thinking chunk followed by an assistant chunk
+      testLLM.chatStreams = [
+        [
+          { role: "thinking", content: "Here is my thinking process, I need to consider various sorting algorithms..." },
+          { role: "assistant", content: "Sorting Algorithm Help" },
+        ],
+      ];
+
+      const result = await ChatDescriber.describe(testLLM, {}, message);
+
+      // The title should come from the assistant chunk, not the thinking chunk
+      expect(result).toBe("Sorting Algorithm Help");
+      expect(result).not.toContain("thinking process");
+    });
   });
 });
