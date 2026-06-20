@@ -48,7 +48,7 @@
     "handlebars": "^4.7.8",
     "lodash": "^4.17.23",
     "lowlight": "^3.3.0",
-    "mermaid": "^11.10.0",
+    "mermaid": "^11.15.0",
     "minisearch": "^7.0.2",
     "mustache": "^4.2.0",
     "react": "^18.2.0",
