@@ -32,6 +32,18 @@ import {
   toResponsesParams,
 } from "./openaiResponses.js";
 
+/**
+ * `requestOptions.timeout` is specified in seconds (see getAgentOptions in
+ * @continuedev/fetch, which multiplies by 1000), but the OpenAI SDK expects
+ * milliseconds. Convert so a user setting `timeout: 300` gets 300 seconds, not
+ * 300 milliseconds. Returns undefined when unset so the SDK keeps its own default.
+ */
+export function timeoutSecondsToMs(
+  timeoutSeconds?: number,
+): number | undefined {
+  return timeoutSeconds ? timeoutSeconds * 1000 : undefined;
+}
+
 export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
   apiBase: string = "https://api.openai.com/v1/";
@@ -45,7 +57,7 @@ export class OpenAIApi implements BaseLlmApi {
       apiKey: config.apiKey ?? "",
       baseURL: this.apiBase,
       fetch: customFetch(config.requestOptions),
-      timeout: config?.requestOptions?.timeout || undefined,
+      timeout: timeoutSecondsToMs(config?.requestOptions?.timeout),
     });
   }
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
