@@ -9,7 +9,7 @@ on:
 jobs:
   build-and-upload-vsix:
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       matrix:
         include:
