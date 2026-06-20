@@ -208,7 +208,7 @@ describe("CodebaseIndexer", () => {
       expect(indexed.some((file) => file.endsWith("main.py"))).toBe(true);
     });
 
-    test("should successfuly re-index specific files", async () => {
+    test("should successfully re-index specific files", async () => {
       // Could add more specific tests for this but uses similar logic
       const before = await getAllIndexedFiles();
       await codebaseIndexer.refreshCodebaseIndexFiles(before);
