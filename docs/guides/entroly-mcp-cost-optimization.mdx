@@ -1,0 +1,121 @@
+---
+title: "Reduce LLM API Costs with Entroly MCP and Continue"
+description: "Use Continue with the Entroly MCP server to compress context by 70-95%, align provider caches, and cut LLM API bills without losing answer quality."
+sidebarTitle: "Cost Reduction with Entroly"
+---
+
+<Card title="What You'll Build" icon="compress">
+  A cost-optimized AI coding workflow that uses Continue with the Entroly MCP server to:
+  - Compress context by 70-95% before sending to the LLM
+  - Align prefixes for provider cache discounts (Anthropic 90%, OpenAI 50%)
+  - Verify model outputs against supplied evidence with WITNESS
+  - Monitor real-time savings via a local dashboard
+</Card>
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- Continue installed in your IDE (VS Code, JetBrains, etc.)
+- Python 3.10+ installed
+- An LLM API key (Anthropic, OpenAI, etc.)
+
+## Setup
+
+<Steps>
+<Step title="Install Entroly">
+  ```bash
+  pip install entroly
+  ```
+</Step>
+
+<Step title="Add Entroly MCP Server to Continue">
+  Add the following to your Continue config:
+
+  ```yaml title="config.yaml"
+  mcpServers:
+    - name: Entroly
+      command: uvx
+      args:
+        - "--from"
+        - "entroly"
+        - "entroly"
+        - "serve"
+  ```
+</Step>
+
+<Step title="Verify the Connection">
+  Launch Continue and type `@` — you should see Entroly in the context providers list.
+
+  Try asking:
+  ```
+  Use Entroly to analyze this repository and show me the token savings estimate.
+  ```
+</Step>
+</Steps>
+
+## Alternative: Proxy Mode
+
+For transparent cost reduction without changing your Continue config, run Entroly as a local proxy:
+
+```bash
+entroly proxy
+```
+
+Then update your provider's base URL in Continue to point at the proxy:
+
+```yaml title="config.yaml"
+models:
+  - name: claude-sonnet
+    provider: anthropic
+    apiBase: http://localhost:9377
+```
+
+All requests are compressed transparently — no other config changes needed.
+
+## How It Works
+
+```
+Continue IDE  ──►  Entroly (local)  ──►  LLM Provider
+                   │
+                   ├─ Rank repo files      (BM25 + entropy + dep-graph)
+                   ├─ Select under budget  (knapsack, reversible)
+                   ├─ Cache-align prefix   (keep provider cache hot)
+                   └─ Verify the reply     (WITNESS hallucination guard)
+```
+
+## Monitor Savings
+
+Open the Entroly dashboard to see real-time cost metrics:
+
+```bash
+entroly dashboard
+# Opens http://localhost:9378
+```
+
+The dashboard shows:
+- Tokens saved per request
+- Cumulative dollar savings
+- Cache hit rates
+- Per-lever cost breakdown
+
+## Key Benefits for Continue Users
+
+| Feature | Benefit |
+|---|---|
+| **Context compression** | 70-95% fewer input tokens on large repos |
+| **Cache alignment** | Captures provider prefix-cache discounts |
+| **Reversible compression** | Original context recoverable via CCR handles |
+| **WITNESS guard** | $0 hallucination check on every response |
+| **Local-first** | No code sent for analysis — runs on-device |
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Entroly Repository" icon="github" href="https://github.com/juyterman1000/entroly">
+    Full documentation, benchmarks, and source code
+  </Card>
+  <Card title="MCP in Continue" icon="book" href="/customize/deep-dives/mcp">
+    How MCP works with Continue agents
+  </Card>
+</CardGroup>
