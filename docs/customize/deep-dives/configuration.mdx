@@ -24,6 +24,39 @@ When editing this file, you can see the available options suggested as you type,
 
 See the full reference for `config.yaml` [here](/reference).
 
+### Local Config Profiles
+
+In addition to the main `config.yaml`, you can create multiple local config profiles by adding YAML files to a `.continue/configs/` directory:
+
+- `~/.continue/configs/` for profiles available across all workspaces
+- `<workspace>/.continue/configs/` for profiles available only in that workspace
+
+Each `.yaml` or `.yml` file is loaded as a separate local profile and appears in the config selector. Creating, editing, or deleting a file in `.continue/configs/` automatically reloads Continue.
+
+Local profile files use the same YAML schema as `config.yaml`.
+
+Example (global/user-level `~/.continue/` directory):
+
+```text
+.continue/
+|-- config.yaml
+|-- configs/
+|   |-- default.yaml
+|   `-- code-review.yaml
+|-- agents/
+|   `-- local-agent.yaml
+`-- assistants/
+    `-- local-assistant.yaml
+```
+
+Continue also discovers YAML profiles from these local directories:
+
+ - `<workspace>/.continue/configs/` or `~/.continue/configs/` (`%USERPROFILE%\.continue\configs\` on Windows for global profiles)
+ - `<workspace>/.continue/agents/` or `~/.continue/agents/` (`%USERPROFILE%\.continue\agents\` on Windows for global profiles)
+ - `<workspace>/.continue/assistants/` or `~/.continue/assistants/` (`%USERPROFILE%\.continue\assistants\` on Windows for global profiles)
+
+Use `.continue/configs/` for general local config profiles. The `.continue/agents/` and `.continue/assistants/` directories are supported alongside it for existing local agent and assistant profiles in either workspace-local or global Continue directories.
+
 ## Legacy Configuration Methods (Deprecated)
 
 <Info>
