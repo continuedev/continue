@@ -424,4 +424,38 @@ describe("OpenAI", () => {
       },
     });
   });
+
+  test("_getEmbedEndpoint should construct correct Azure deployment URL", () => {
+    const openai = new OpenAI({
+      apiType: "azure-openai",
+      apiBase: "https://test.openai.azure.com/",
+      deployment: "gpt-5.4",
+      apiVersion: "2024-02-15-preview",
+      model: "gpt-5.4",
+      apiKey: "test-key",
+    });
+
+    const endpoint = (openai as any)["_getEmbedEndpoint"]();
+    const url = endpoint.toString();
+
+    expect(url).toContain("openai/deployments/gpt-5.4/embeddings");
+    expect(url).toContain("api-version=2024-02-15-preview");
+  });
+
+  test("_getEmbedEndpoint should not use deployment path for azure-foundry", () => {
+    const openai = new OpenAI({
+      apiType: "azure-foundry",
+      apiBase: "https://test.services.ai.azure.com/",
+      apiVersion: "2024-05-01-preview",
+      model: "text-embedding-ada-002",
+      apiKey: "test-key",
+    });
+
+    const endpoint = (openai as any)["_getEmbedEndpoint"]();
+    const url = endpoint.toString();
+
+    expect(url).not.toContain("openai/deployments");
+    expect(url).toContain("embeddings");
+    expect(url).toContain("api-version=2024-05-01-preview");
+  });
 });
