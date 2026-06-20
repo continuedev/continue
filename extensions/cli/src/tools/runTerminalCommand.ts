@@ -20,6 +20,7 @@ import {
   truncateOutputFromStart,
 } from "../util/truncateOutput.js";
 
+import { getPowerShellCommand } from "core/util/shell.js";
 import { Tool, ToolRunContext } from "./types.js";
 
 // Output truncation defaults
@@ -67,7 +68,7 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
   if (process.platform === "win32") {
     // Windows: Use PowerShell
     return {
-      shell: "powershell.exe",
+      shell: getPowerShellCommand(),
       args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
     };
   }

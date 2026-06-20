@@ -5,6 +5,7 @@ import {
   evaluateTerminalCommandSecurity,
   ToolPolicy,
 } from "@continuedev/terminal-security";
+import { getPowerShellCommand } from "../../util/shell.js";
 
 /**
  * Get the preferred shell for the current platform
@@ -14,7 +15,7 @@ function getPreferredShell(): string {
   const platform = os.platform();
 
   if (platform === "win32") {
-    return "powershell.exe";
+    return getPowerShellCommand();
   } else if (platform === "darwin") {
     return process.env.SHELL || "/bin/zsh";
   } else {
