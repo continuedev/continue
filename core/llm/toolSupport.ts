@@ -378,6 +378,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    requesty: (model) => {
+      // Requesty uses the same provider/model naming convention as
+      // OpenRouter (e.g. openai/gpt-4o-mini, anthropic/claude-sonnet-4-5),
+      // so reuse the OpenRouter tool-support detection.
+      return PROVIDER_TOOL_SUPPORT.openrouter(model);
+    },
     clawrouter: (model) => {
       // ClawRouter routes to various providers, so we check common tool-supporting patterns
       const lower = model.toLowerCase();
