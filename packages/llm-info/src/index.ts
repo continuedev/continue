@@ -4,6 +4,10 @@ import { Bedrock } from "./providers/bedrock.js";
 import { Cohere } from "./providers/cohere.js";
 import { CometAPI } from "./providers/cometapi.js";
 import { Gemini } from "./providers/gemini.js";
+<<<<<<< HEAD
+=======
+import { Inception } from "./providers/inception.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { MiniMax } from "./providers/minimax.js";
 import { Mistral } from "./providers/mistral.js";
 import { Ollama } from "./providers/ollama.js";
@@ -26,6 +30,10 @@ export const allModelProviders: ModelProvider[] = [
   Bedrock,
   Cohere,
   CometAPI,
+<<<<<<< HEAD
+=======
+  Inception,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   MiniMax,
   xAI,
   zAI,

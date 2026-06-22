@@ -14,8 +14,11 @@ import type {
   TerminalOptions,
   Thread,
 } from "../";
+<<<<<<< HEAD
 import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export interface GetGhTokenArgs {
   force?: boolean;
 }
@@ -88,11 +91,14 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getReferences: [{ location: Location }, RangeInFile[]];
   getDocumentSymbols: [{ textDocumentIdentifier: string }, DocumentSymbol[]];
 
+<<<<<<< HEAD
   getControlPlaneSessionInfo: [
     { silent: boolean; useOnboarding: boolean },
     ControlPlaneSessionInfo | undefined,
   ];
   logoutOfControlPlane: [undefined, void];
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   reportError: [any, void];
   closeSidebar: [undefined, void];
 };

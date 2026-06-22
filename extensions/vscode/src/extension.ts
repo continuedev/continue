@@ -3,12 +3,17 @@
  */
 
 import { setupCa } from "core/util/ca";
+<<<<<<< HEAD
 import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
 import { SentryLogger } from "core/util/sentry/SentryLogger";
 import { getExtensionVersion } from "./util/util";
+=======
+import * as vscode from "vscode";
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export { default as buildTimestamp } from "./.buildTimestamp";
 
 async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
@@ -20,6 +25,7 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
 export function activate(context: vscode.ExtensionContext) {
   return dynamicImportAndActivate(context).catch((e) => {
     console.log("Error activating extension: ", e);
+<<<<<<< HEAD
     Telemetry.capture(
       "vscode_extension_activation_error",
       {
@@ -29,6 +35,8 @@ export function activate(context: vscode.ExtensionContext) {
       false,
       true,
     );
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     vscode.window
       .showWarningMessage(
         "Error activating the Continue extension.",
@@ -46,6 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
   });
 }
 
+<<<<<<< HEAD
 export function deactivate() {
   void Telemetry.capture(
     "deactivate",
@@ -58,3 +67,6 @@ export function deactivate() {
   Telemetry.shutdownPosthogClient();
   SentryLogger.shutdownSentryClient();
 }
+=======
+export function deactivate() {}
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))

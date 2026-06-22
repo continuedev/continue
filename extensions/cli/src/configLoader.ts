@@ -1,6 +1,9 @@
 import * as fs from "fs";
 import { dirname } from "node:path";
+<<<<<<< HEAD
 import { fileURLToPath } from "node:url";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import * as path from "path";
 
 import {
@@ -15,17 +18,27 @@ import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 
 import { uriToPath, uriToSlug } from "./auth/uriUtils.js";
+<<<<<<< HEAD
 import {
   AuthConfig,
   getAccessToken,
   getConfigUri,
   getOrganizationId,
   isEnvironmentAuthConfig,
+=======
+import type { AuthConfig } from "./auth/workos.js";
+import {
+  getAccessToken,
+  getOrganizationId,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   updateConfigUri,
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
 import { env } from "./env.js";
+<<<<<<< HEAD
 import { logger } from "./util/logger.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 export interface ConfigLoadResult {
   config: AssistantUnrolled;
@@ -70,12 +83,19 @@ export async function loadConfiguration(
     injectBlocks,
   );
 
+<<<<<<< HEAD
   // Step 3: Save config URI for session continuity (only for file-based auth)
   if (!isEnvironmentAuthConfig(authConfig) && authConfig !== null) {
     const uri = getUriFromSource(configSource);
     if (uri) {
       updateConfigUri(uri);
     }
+=======
+  // Step 3: Save config URI for session continuity
+  const uri = getUriFromSource(configSource);
+  if (uri) {
+    updateConfigUri(uri);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }
 
   return { config, source: configSource };
@@ -90,13 +110,18 @@ export async function loadConfiguration(
 function determineConfigSource(
   authConfig: AuthConfig,
   cliConfigPath: string | undefined,
+<<<<<<< HEAD
   isHeadless: boolean | undefined,
+=======
+  _isHeadless: boolean | undefined,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 ): ConfigSource {
   // Priority 1: CLI --config flag
   if (cliConfigPath) {
     return { type: "cli-flag", path: cliConfigPath };
   }
 
+<<<<<<< HEAD
   // Priority 2: Saved config URI (only for file-based auth)
   if (!isEnvironmentAuthConfig(authConfig) && authConfig !== null) {
     const savedUri = getConfigUri(authConfig);
@@ -138,6 +163,14 @@ function determineConfigSource(
     // Authenticated: try user assistants first
     return { type: "user-assistant", slug: "" }; // Empty slug means "first available"
   }
+=======
+  // Priority 2: Check for default config.yaml, then fallback to default config
+  const defaultConfigPath = path.join(env.continueHome, "config.yaml");
+  if (fs.existsSync(defaultConfigPath)) {
+    return { type: "local-config-yaml" };
+  }
+  return { type: "remote-default-config" };
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 /**
@@ -408,14 +441,20 @@ export async function unrollPackageIdentifiersAsConfigYaml(
     },
     "name: Agent\nschema: v1\nversion: 0.0.1",
     new RegistryClient({
+<<<<<<< HEAD
       accessToken: accessToken ?? undefined,
       apiBase: env.apiBase,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       rootPath: undefined, // TODO verify this doesn't cause issues with file blocks
     }),
     {
       currentUserSlug: "",
+<<<<<<< HEAD
       onPremProxyUrl: null,
       orgScopeId: organizationId,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       platformClient: new CLIPlatformClient(organizationId, apiClient),
       renderSecrets: true,
       injectBlocks: packageIdentifiers,
@@ -444,8 +483,11 @@ async function unrollAssistantWithConfig(
   const unrollResult = await unrollAssistant(
     packageIdentifier,
     new RegistryClient({
+<<<<<<< HEAD
       accessToken: accessToken ?? undefined,
       apiBase: env.apiBase,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       rootPath:
         packageIdentifier.uriType === "file"
           ? dirname(packageIdentifier.fileUri)
@@ -454,10 +496,15 @@ async function unrollAssistantWithConfig(
     {
       currentUserSlug: "",
       alwaysUseProxy: false,
+<<<<<<< HEAD
       orgScopeId: organizationId,
       renderSecrets: true,
       platformClient: new CLIPlatformClient(organizationId, apiClient),
       onPremProxyUrl: null,
+=======
+      renderSecrets: true,
+      platformClient: new CLIPlatformClient(organizationId, apiClient),
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       injectBlocks,
     },
   );

@@ -2,7 +2,10 @@
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { ChatCompletionTool } from "openai/resources.mjs";
 
+<<<<<<< HEAD
 import { posthogService } from "src/telemetry/posthogService.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { isModelCapable } from "src/utils/modelCapability.js";
 
 import {
@@ -250,12 +253,15 @@ export async function executeToolCall(
       durationMs: duration,
       toolParameters: JSON.stringify(toolCall.arguments),
     });
+<<<<<<< HEAD
     void posthogService.capture("tool_call_outcome", {
       succeeded: true,
       toolName: toolCall.name,
       duration_ms: duration,
     });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     logger.debug("Tool execution completed", {
       toolName: toolCall.name,
       resultLength: result?.length || 0,
@@ -278,6 +284,7 @@ export async function executeToolCall(
       errorReason,
       toolParameters: JSON.stringify(toolCall.arguments),
     });
+<<<<<<< HEAD
     void posthogService.capture("tool_call_outcome", {
       succeeded: false,
       toolName: toolCall.name,
@@ -285,6 +292,8 @@ export async function executeToolCall(
       errorReason,
     });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     throw error;
   }
 }

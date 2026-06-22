@@ -78,6 +78,7 @@ export function getLocationsToLook(
       userSlug: currentUserSlug,
       secretName,
     },
+<<<<<<< HEAD
     // Free Trial (must be using a eligible block)
     ...(blockSlug
       ? [
@@ -88,6 +89,8 @@ export function getLocationsToLook(
           },
         ]
       : []),
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   ];
   return locationsToLook;
 }

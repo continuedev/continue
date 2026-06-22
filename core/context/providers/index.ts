@@ -4,7 +4,11 @@ import { ContextProviderName } from "../../";
 import ClipboardContextProvider from "./ClipboardContextProvider";
 import CodebaseContextProvider from "./CodebaseContextProvider";
 import CodeContextProvider from "./CodeContextProvider";
+<<<<<<< HEAD
 import ContinueProxyContextProvider from "./ContinueProxyContextProvider";
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import CurrentFileContextProvider from "./CurrentFileContextProvider";
 import DatabaseContextProvider from "./DatabaseContextProvider";
 import DebugLocalsProvider from "./DebugLocalsProvider";
@@ -63,7 +67,10 @@ export const Providers: (typeof BaseContextProvider)[] = [
   CodeContextProvider,
   CurrentFileContextProvider,
   URLContextProvider,
+<<<<<<< HEAD
   ContinueProxyContextProvider,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   RepoMapContextProvider,
   DiscordContextProvider,
   GreptileContextProvider,

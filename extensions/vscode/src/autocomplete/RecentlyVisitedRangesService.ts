@@ -15,7 +15,10 @@ export class RecentlyVisitedRangesService {
     string,
     Array<AutocompleteCodeSnippet & { timestamp: number }>
   >;
+<<<<<<< HEAD
   // Default value, we override in initWithPostHog
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   private numSurroundingLines = 20;
   private maxRecentFiles = 3;
   private maxSnippetsPerFile = 3;
@@ -28,6 +31,7 @@ export class RecentlyVisitedRangesService {
     >({
       max: this.maxRecentFiles,
     });
+<<<<<<< HEAD
 
     void this.initWithPostHog();
   }
@@ -45,6 +49,8 @@ export class RecentlyVisitedRangesService {
     // vscode.window.onDidChangeTextEditorSelection(
     //   this.cacheCurrentSelectionContext,
     // );
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }
 
   private cacheCurrentSelectionContext = async (

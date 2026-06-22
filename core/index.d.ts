@@ -667,7 +667,10 @@ export interface LLMOptions {
   apiKeyLocation?: string;
   envSecretLocations?: Record<string, string>;
   apiBase?: string;
+<<<<<<< HEAD
   orgScopeId?: string | null;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   onPremProxyUrl?: string | null;
 
@@ -1029,7 +1032,10 @@ export type ContextProviderName =
   | "currentFile"
   | "greptile"
   | "outline"
+<<<<<<< HEAD
   | "continue-proxy"
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   | "highlights"
   | "file"
   | "issue"
@@ -1188,7 +1194,10 @@ interface ToolChoice {
 export interface ConfigDependentToolParams {
   rules: RuleWithSource[];
   enableExperimentalTools: boolean;
+<<<<<<< HEAD
   isSignedIn: boolean;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   isRemote: boolean;
   modelName: string | undefined;
   ide: IDE;
@@ -1236,7 +1245,10 @@ export interface ModelDescription {
   apiBase?: string;
   apiKeyLocation?: string;
   envSecretLocations?: Record<string, string>;
+<<<<<<< HEAD
   orgScopeId?: string | null;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   onPremProxyUrl?: string | null;
 
@@ -1371,9 +1383,12 @@ export interface MCPPrompt {
   arguments?: MCPPromptArgs;
 }
 
+<<<<<<< HEAD
 // Leaving here to ideate on
 // export type ContinueConfigSource = "local-yaml" | "local-json" | "hub-assistant" | "hub"
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 // https://modelcontextprotocol.io/docs/concepts/resources#direct-resources
 export interface MCPResource {
   name: string;
@@ -1724,6 +1739,10 @@ export interface JSONModelDescription {
   maxStopWords?: number;
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
+<<<<<<< HEAD
+=======
+  capabilities?: ModelCapability;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   systemMessage?: string;
   requestOptions?: RequestOptions;
   cacheBehavior?: CacheBehavior;
@@ -1863,7 +1882,10 @@ export interface BrowserSerializedContinueConfig {
   tools: Omit<Tool, "preprocessArgs", "evaluateToolCallPolicy">[];
   mcpServerStatuses: MCPServerStatus[];
   rules: RuleWithSource[];
+<<<<<<< HEAD
   usePlatform: boolean;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   modelsByRole: Record<ModelRole, ModelDescription[]>;
   selectedModelByRole: Record<ModelRole, ModelDescription | null>;

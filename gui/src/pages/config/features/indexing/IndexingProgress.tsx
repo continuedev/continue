@@ -1,5 +1,8 @@
 import { IndexingProgressUpdate } from "core";
+<<<<<<< HEAD
 import { usePostHog } from "posthog-js/react";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
@@ -25,7 +28,10 @@ export function getProgressPercentage(
 
 function IndexingProgress() {
   const ideMessenger = useContext(IdeMessengerContext);
+<<<<<<< HEAD
   const posthog = usePostHog();
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const dispatch = useDispatch();
   const [paused, setPaused] = useState<boolean | undefined>(undefined);
   const [update, setUpdate] = useState<IndexingProgressUpdate>({
@@ -71,7 +77,10 @@ function IndexingProgress() {
               "the Command Palette, and type out 'Continue: Force Codebase Re-Indexing'"
             }
             onConfirm={() => {
+<<<<<<< HEAD
               posthog.capture("rebuild_index_clicked");
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
               ideMessenger.post("index/forceReIndex", {
                 shouldClearIndexes: true,
               });

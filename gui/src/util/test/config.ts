@@ -1,6 +1,9 @@
 import { EnhancedStore } from "@reduxjs/toolkit";
 import { BrowserSerializedContinueConfig, ModelDescription } from "core";
+<<<<<<< HEAD
 import { SerializedOrgWithProfiles } from "core/config/ProfileLifecycleManager";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { copyOf } from "core/util";
 import { MockIdeMessenger } from "../../context/MockIdeMessenger";
 
@@ -8,8 +11,11 @@ interface TestConfigUpdateParams {
   store: EnhancedStore;
   ideMessenger: MockIdeMessenger;
   newProfileId?: string;
+<<<<<<< HEAD
   newOrgId?: string;
   newOrgs?: SerializedOrgWithProfiles[];
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   editConfig?: (
     current: BrowserSerializedContinueConfig,
   ) => BrowserSerializedContinueConfig;
@@ -19,15 +25,23 @@ export function triggerConfigUpdate({
   store,
   ideMessenger,
   editConfig,
+<<<<<<< HEAD
   newOrgs,
   newOrgId,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   newProfileId,
 }: TestConfigUpdateParams) {
   const state = store.getState();
   ideMessenger.mockMessageToWebview("configUpdate", {
+<<<<<<< HEAD
     organizations: newOrgs ?? state.profiles.organizations,
     selectedOrgId: newOrgId ?? state.profiles.selectedOrganizationId,
     profileId: newProfileId ?? state.profiles.selectedProfileId,
+=======
+    profileId: newProfileId ?? state.profiles.selectedProfileId,
+    profiles: state.profiles.profiles,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     result: {
       config: editConfig
         ? editConfig(copyOf(state.config.config))

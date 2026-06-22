@@ -30,7 +30,10 @@ import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateConfig } from "../../../redux/slices/configSlice";
+<<<<<<< HEAD
 import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { ConfigHeader } from "../components/ConfigHeader";
 import { ToolPoliciesGroup } from "../components/ToolPoliciesGroup";
 
@@ -408,15 +411,22 @@ function MCPServerPreview({
 export function ToolsSection() {
   const availableTools = useAppSelector((state) => state.config.config.tools);
 
+<<<<<<< HEAD
   const currentOrg = useAppSelector(selectCurrentOrg);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const mode = useAppSelector((store) => store.session.mode);
   const servers = useAppSelector(
     (store) => store.config.config.mcpServerStatuses,
   );
   const { selectedProfile } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
+<<<<<<< HEAD
   const disableMcp = currentOrg?.policy?.allowMcpServers === false;
   const isLocal = selectedProfile?.profileType === "local";
+=======
+  const disableMcp = false;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   const duplicateDetection = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -454,6 +464,7 @@ export function ToolsSection() {
   }, [servers, selectedProfile]);
 
   const handleAddMcpServer = () => {
+<<<<<<< HEAD
     if (isLocal) {
       void ideMessenger.request("config/addLocalWorkspaceBlock", {
         blockType: "mcpServers",
@@ -464,6 +475,11 @@ export function ToolsSection() {
         orgSlug: undefined,
       });
     }
+=======
+    void ideMessenger.request("config/addLocalWorkspaceBlock", {
+      blockType: "mcpServers",
+    });
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   };
 
   const allToolsOff = useMemo(() => {

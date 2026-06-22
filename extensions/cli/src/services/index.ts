@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import { loadAuthConfig } from "../auth/workos.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { HookService } from "../hooks/HookService.js";
 import { initializeWithOnboarding } from "../onboarding.js";
 import {
@@ -74,8 +77,12 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   }
   // Handle onboarding for TUI mode (headless: false) unless explicitly skipped
   if (!initOptions.headless && !initOptions.skipOnboarding) {
+<<<<<<< HEAD
     const authConfig = loadAuthConfig();
     await initializeWithOnboarding(authConfig, commandOptions.config);
+=======
+    await initializeWithOnboarding(null, commandOptions.config);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }
 
   // Handle ANTHROPIC_API_KEY in headless mode when no config path is provided
@@ -201,6 +208,7 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
         serviceContainer.get<AgentFileServiceState>(SERVICE_NAMES.AGENT_FILE),
       ]);
 
+<<<<<<< HEAD
       // Ensure organization is selected if authenticated
       let finalAuthState = authState;
       if (authState.authConfig) {
@@ -212,6 +220,8 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
         serviceContainer.set(SERVICE_NAMES.AUTH, finalAuthState);
       }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       if (!apiClientState.apiClient) {
         throw new Error("API client not available");
       }
@@ -220,12 +230,17 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
       // otherwise use initial options.config (for first initialization)
       // IMPORTANT: Always prefer explicit --config flag over saved state
       const currentState = configService.getState();
+<<<<<<< HEAD
       let configPath =
+=======
+      const configPath =
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         commandOptions.config ||
         (currentState.configPath === undefined
           ? undefined
           : currentState.configPath);
 
+<<<<<<< HEAD
       // If no config path is available, check for saved config URI in auth config
       if (!configPath) {
         const { getConfigUri } = await import("../auth/workos.js");
@@ -242,6 +257,11 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
         authConfig: finalAuthState.authConfig,
         configPath,
         // organizationId: finalAuthState.organizationId || null,
+=======
+      return await configService.initialize({
+        authConfig: authState.authConfig,
+        configPath,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         apiClient: apiClientState.apiClient,
         agentFileState,
         injectedConfigOptions: commandOptions,

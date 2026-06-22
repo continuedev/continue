@@ -8,7 +8,10 @@ import { logger } from "src/util/logger.js";
 
 import { DEFAULT_SESSION_TITLE } from "../../constants/session.js";
 import { loadSession, startNewSession } from "../../session.js";
+<<<<<<< HEAD
 import { posthogService } from "../../telemetry/posthogService.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { telemetryService } from "../../telemetry/telemetryService.js";
 
 import { processImagePlaceholder } from "./useChat.imageProcessing.js";
@@ -36,9 +39,12 @@ export async function initChatHistory(
  * Handle /config command
  */
 export function handleConfigCommand(onShowConfigSelector: () => void): void {
+<<<<<<< HEAD
   posthogService.capture("useSlashCommand", {
     name: "config",
   });
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   onShowConfigSelector();
 }
 
@@ -237,6 +243,7 @@ export async function formatMessageWithFiles(
 /**
  * Track telemetry for user message
  */
+<<<<<<< HEAD
 export function trackUserMessage(message: string, model?: any): void {
   telemetryService.startActiveTime();
   telemetryService.logUserPrompt(message.length, message);
@@ -244,6 +251,11 @@ export function trackUserMessage(message: string, model?: any): void {
     model: model?.name,
     provider: model?.provider,
   });
+=======
+export function trackUserMessage(message: string, _model?: any): void {
+  telemetryService.startActiveTime();
+  telemetryService.logUserPrompt(message.length, message);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 interface HandleSpecialCommandsOptions {

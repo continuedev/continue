@@ -1,9 +1,14 @@
 import { COUNT_COMPLETION_REJECTED_AFTER } from "../util/parameters";
 
+<<<<<<< HEAD
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { getControlPlaneEnvSync } from "../control-plane/env";
 import { DataLogger } from "../data/log";
 import { Telemetry } from "../util/posthog";
+=======
+import { DataLogger } from "../data/log";
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { NextEditOutcome } from "./types";
 
 export class NextEditLoggingService {
@@ -217,6 +222,7 @@ export class NextEditLoggingService {
     });
 
     // const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
+<<<<<<< HEAD
     if (outcome.requestId && outcome.accepted !== undefined) {
       void this.logAcceptReject(outcome.requestId, outcome.accepted);
     }
@@ -251,5 +257,7 @@ export class NextEditLoggingService {
     } catch (error: any) {
       console.debug(`Error capturing feedback: ${error.message}`);
     }
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }
 }

@@ -2,7 +2,10 @@
 import { IDE, ILLM, RuleWithSource } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { DataLogger } from "core/data/log";
+<<<<<<< HEAD
 import { Telemetry } from "core/util/posthog";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import * as vscode from "vscode";
 
 import { VerticalDiffManager } from "../diff/vertical/manager";
@@ -161,6 +164,7 @@ export class QuickEdit {
       return;
     }
 
+<<<<<<< HEAD
     Telemetry.capture("quickEditSelection", {
       selection: {
         label: selectedLabel,
@@ -168,6 +172,8 @@ export class QuickEdit {
       },
     });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     const prompt = await this.handleSelect({
       selectedLabel,
       selectedValue,

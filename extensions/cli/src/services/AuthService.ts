@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { AuthenticatedConfig } from "src/auth/workos-types.js";
 
 import {
@@ -9,14 +10,22 @@ import {
   loadAuthConfig,
   saveAuthConfig,
 } from "../auth/workos.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
 import { AuthServiceState } from "./types.js";
 
 /**
+<<<<<<< HEAD
  * Service for managing authentication state and operations
  * Encapsulates all auth logic and provides reactive updates
+=======
+ * Service for managing authentication state.
+ * Hub/WorkOS auth has been removed - this is a minimal stub that always
+ * reports unauthenticated.
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
  */
 export class AuthService extends BaseService<AuthServiceState> {
   constructor() {
@@ -26,6 +35,7 @@ export class AuthService extends BaseService<AuthServiceState> {
     });
   }
 
+<<<<<<< HEAD
   /**
    * Initialize the auth service by loading current config
    */
@@ -204,6 +214,51 @@ export class AuthService extends BaseService<AuthServiceState> {
    */
   async refresh(): Promise<AuthServiceState> {
     logger.debug("Refreshing auth state from disk");
+=======
+  async doInitialize(): Promise<AuthServiceState> {
+    const state: AuthServiceState = {
+      authConfig: null,
+      isAuthenticated: false,
+    };
+
+    logger.debug("AuthService initialized (no auth)");
+    return state;
+  }
+
+  async login(): Promise<AuthServiceState> {
+    throw new Error(
+      "Login is not available. Hub authentication has been removed.",
+    );
+  }
+
+  async logout(): Promise<AuthServiceState> {
+    logger.debug("Logout (no-op)");
+    return this.getState();
+  }
+
+  async ensureOrganization(
+    _isHeadless: boolean = false,
+    _cliOrganizationSlug?: string,
+  ): Promise<AuthServiceState> {
+    return this.getState();
+  }
+
+  async switchOrganization(
+    _organizationId: string | null,
+  ): Promise<AuthServiceState> {
+    return this.getState();
+  }
+
+  async getAvailableOrganizations(): Promise<null> {
+    return null;
+  }
+
+  async hasMultipleOrganizations(): Promise<boolean> {
+    return false;
+  }
+
+  async refresh(): Promise<AuthServiceState> {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     return this.reload();
   }
 }

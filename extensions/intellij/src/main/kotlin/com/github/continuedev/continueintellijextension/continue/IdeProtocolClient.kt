@@ -3,11 +3,18 @@ package com.github.continuedev.continueintellijextension.`continue`
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.activities.showTutorial
+<<<<<<< HEAD
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService.Companion.getBrowser
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
 import com.github.continuedev.continueintellijextension.error.ContinueSentryService
+=======
+
+import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService.Companion.getBrowser
+import com.github.continuedev.continueintellijextension.editor.DiffStreamService
+import com.github.continuedev.continueintellijextension.editor.EditorUtils
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import com.github.continuedev.continueintellijextension.protocol.*
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -100,6 +107,7 @@ class IdeProtocolClient(
                     }
 
                     "getControlPlaneSessionInfo" -> {
+<<<<<<< HEAD
                         val params = gsonService.gson.fromJson(
                             dataElement.toString(),
                             GetControlPlaneSessionInfoParams::class.java
@@ -119,6 +127,12 @@ class IdeProtocolClient(
                         val authService = service<ContinueAuthService>()
                         authService.signOut()
 
+=======
+                        respond(null)
+                    }
+
+                    "logoutOfControlPlane" -> {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
                         respond(null)
                     }
 
@@ -462,7 +476,11 @@ class IdeProtocolClient(
                 }
             } catch (exception: Exception) {
                 val exceptionMessage = "Error handling message of type $messageType: $exception"
+<<<<<<< HEAD
                 service<ContinueSentryService>().report(exception, exceptionMessage)
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
                 ide.showToast(ToastType.ERROR, exceptionMessage)
             }
         }

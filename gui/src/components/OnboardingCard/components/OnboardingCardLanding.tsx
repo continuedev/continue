@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useContext } from "react";
 import { Button, SecondaryButton } from "../..";
 import { useAuth } from "../../../context/Auth";
@@ -7,6 +8,10 @@ import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
 import { selectFirstHubProfile } from "../../../redux/thunks/selectFirstHubProfile";
 import ContinueLogo from "../../svg/ContinueLogo";
 import { useOnboardingCard } from "../hooks/useOnboardingCard";
+=======
+import { SecondaryButton } from "../..";
+import ContinueLogo from "../../svg/ContinueLogo";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 export function OnboardingCardLanding({
   onSelectConfigure,
@@ -15,6 +20,7 @@ export function OnboardingCardLanding({
   onSelectConfigure: () => void;
   isDialog?: boolean;
 }) {
+<<<<<<< HEAD
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const auth = useAuth();
@@ -46,11 +52,16 @@ export function OnboardingCardLanding({
 
   return (
     <div className="xs:px-0 flex w-full max-w-full flex-col items-center justify-center px-4 text-center">
+=======
+  return (
+    <div className="xs:px-0 max-full flex w-full flex-col items-center justify-center px-4 text-center">
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       <div className="xs:flex hidden">
         <ContinueLogo height={75} />
       </div>
 
       <p className="mb-5 mt-0 w-full text-sm">
+<<<<<<< HEAD
         Log in to Continue Hub to get started with AI-powered coding
       </p>
 
@@ -63,6 +74,13 @@ export function OnboardingCardLanding({
 
       <SecondaryButton onClick={onSelectConfigure} className="w-full">
         Or, configure your own models
+=======
+        Get started with AI-powered coding by configuring your models
+      </p>
+
+      <SecondaryButton onClick={onSelectConfigure} className="w-full">
+        Configure your models
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       </SecondaryButton>
     </div>
   );

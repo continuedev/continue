@@ -2,6 +2,7 @@ import {
   SharedConfigSchema,
   modifyAnyConfigWithSharedConfig,
 } from "core/config/sharedConfig";
+<<<<<<< HEAD
 import { HubSessionInfo } from "core/control-plane/AuthTypes";
 import { isContinueTeamMember } from "core/util/isContinueTeamMember";
 import { useContext, useEffect, useState } from "react";
@@ -14,6 +15,15 @@ import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
 import { setLocalStorage } from "../../../util/localStorage";
 import { ConfigHeader } from "../components/ConfigHeader";
 import { ContinueFeaturesMenu } from "../components/ContinueFeaturesMenu";
+=======
+import { useContext, useEffect, useState } from "react";
+import { Card, Toggle, useFontSize } from "../../../components/ui";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { updateConfig } from "../../../redux/slices/configSlice";
+import { setLocalStorage } from "../../../util/localStorage";
+import { ConfigHeader } from "../components/ConfigHeader";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { UserSetting } from "../components/UserSetting";
 
 export function UserSettingsSection() {
@@ -21,10 +31,15 @@ export function UserSettingsSection() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((state) => state.config.config);
+<<<<<<< HEAD
   const currentOrg = useAppSelector(selectCurrentOrg);
 
   const [showExperimental, setShowExperimental] = useState(false);
   const { session } = useAuth();
+=======
+
+  const [showExperimental, setShowExperimental] = useState(false);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   function handleUpdate(sharedConfig: SharedConfigSchema) {
     // Optimistic update
@@ -53,10 +68,13 @@ export function UserSettingsSection() {
   // Workspace prompts
   const promptPath = config.experimental?.promptPath || "";
 
+<<<<<<< HEAD
   const handleEnableStaticContextualizationToggle = (value: boolean) => {
     handleUpdate({ enableStaticContextualization: value });
   };
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   // TODO defaults are in multiple places, should be consolidated and probably not explicit here
   const showSessionTabs = config.ui?.showSessionTabs ?? false;
   const continueAfterToolRejection =
@@ -74,9 +92,12 @@ export function UserSettingsSection() {
     config.experimental?.onlyUseSystemMessageTools ?? false;
   const codebaseToolCallingOnly =
     config.experimental?.codebaseToolCallingOnly ?? false;
+<<<<<<< HEAD
   const enableStaticContextualization =
     config.experimental?.enableStaticContextualization ?? false;
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
 
   const useAutocompleteMultilineCompletions =
@@ -97,12 +118,16 @@ export function UserSettingsSection() {
     });
   };
 
+<<<<<<< HEAD
   const hasContinueEmail = isContinueTeamMember(
     (session as HubSessionInfo)?.account?.id,
   );
 
   const disableTelemetryToggle =
     currentOrg?.policy?.allowAnonymousTelemetry === false;
+=======
+  const disableTelemetryToggle = false;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   return (
     <div>
@@ -166,6 +191,7 @@ export function UserSettingsSection() {
             </Card>
           </div>
 
+<<<<<<< HEAD
           {/* Telemetry Settings */}
           <div>
             <ConfigHeader title="Telemetry" variant="sm" />
@@ -185,6 +211,8 @@ export function UserSettingsSection() {
             </Card>
           </div>
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           {/* Appearance Settings */}
           <div>
             <ConfigHeader title="Appearance" variant="sm" />
@@ -321,6 +349,7 @@ export function UserSettingsSection() {
                       handleUpdate({ continueAfterToolRejection: value })
                     }
                   />
+<<<<<<< HEAD
 
                   {hasContinueEmail && (
                     <ContinueFeaturesMenu
@@ -332,6 +361,8 @@ export function UserSettingsSection() {
                       }
                     />
                   )}
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
                 </div>
               </Toggle>
             </Card>

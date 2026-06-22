@@ -302,6 +302,7 @@ function ModelSelect() {
 
           {!isConfigLoading && (
             <>
+<<<<<<< HEAD
               {selectedProfile?.profileType === "local" && (
                 <>
                   <Divider className="!mb-0" />
@@ -319,6 +320,21 @@ function ModelSelect() {
                   </ListboxOption>
                 </>
               )}
+=======
+              <Divider className="!mb-0" />
+              <ListboxOption
+                key={options.length}
+                onClick={onClickAddModel}
+                value={"addModel" as any}
+                fontSizeModifier={-2}
+                className="px-2 py-2"
+              >
+                <span className="text-description text-2xs flex flex-row items-center">
+                  <PlusIcon className="mr-1.5 h-3.5 w-3.5" />
+                  Add Chat model
+                </span>
+              </ListboxOption>
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
               <Divider className="!my-0" />
               <div className="text-description flex items-center justify-start p-2">

@@ -5,6 +5,7 @@ import * as path from "path";
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+<<<<<<< HEAD
 import { AuthenticatedConfig } from "src/auth/workos-types.js";
 
 import {
@@ -13,6 +14,9 @@ import {
   saveAuthConfig,
   updateModelName,
 } from "../auth/workos.js";
+=======
+import { getModelName, updateModelName } from "../auth/workos.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import * as config from "../config.js";
 import { ModelService } from "../services/ModelService.js";
 import { persistModelName } from "../util/modelPersistence.js";
@@ -24,7 +28,10 @@ describe("Model Persistence End-to-End", () => {
   let testDir: string;
   let originalContinueHome: string | undefined;
   let mockAssistant: AssistantUnrolled;
+<<<<<<< HEAD
   let mockAuthConfig: AuthenticatedConfig;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const mockLlmApi = { complete: vi.fn(), stream: vi.fn() };
 
   beforeEach(() => {
@@ -66,6 +73,7 @@ describe("Model Persistence End-to-End", () => {
       ],
     } as AssistantUnrolled;
 
+<<<<<<< HEAD
     mockAuthConfig = {
       userId: "test-user",
       userEmail: "test@example.com",
@@ -75,6 +83,8 @@ describe("Model Persistence End-to-End", () => {
       organizationId: "test-org",
     };
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     // Setup default mock behavior
     vi.mocked(config.getLlmApi).mockReturnValue([
       mockLlmApi as any,
@@ -84,6 +94,12 @@ describe("Model Persistence End-to-End", () => {
   });
 
   afterEach(() => {
+<<<<<<< HEAD
+=======
+    // Clear persisted model to avoid cross-test contamination
+    persistModelName(null);
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     // Cleanup
     if (fs.existsSync(testDir)) {
       fs.rmSync(testDir, { recursive: true });
@@ -95,6 +111,7 @@ describe("Model Persistence End-to-End", () => {
     }
   });
 
+<<<<<<< HEAD
   test("should restore model selection after restart", async () => {
     // Step 1: Initial session - user starts with default model (GPT-4)
     saveAuthConfig(mockAuthConfig);
@@ -129,17 +146,39 @@ describe("Model Persistence End-to-End", () => {
 
     // Step 5: Verify the persisted model is restored
     console.log("After restart:", state.model?.name);
+=======
+  test("should restore model selection after switch and restart", async () => {
+    // Step 1: Persist the model choice via updateModelName (uses GlobalContext)
+    updateModelName("Claude 3.5 Sonnet");
+
+    // Verify it was saved
+    expect(getModelName(null)).toBe("Claude 3.5 Sonnet");
+
+    // Step 2: Create a new service (simulating restart) - should restore persisted model
+    const service = new ModelService();
+    const state = await service.initialize(mockAssistant, null);
+
+    // Verify the persisted model is restored
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     expect(state.model?.name).toBe("Claude 3.5 Sonnet");
     expect(state.model?.provider).toBe("anthropic");
   });
 
   test("should handle model name mismatch gracefully", async () => {
+<<<<<<< HEAD
     // Save auth config with a model that doesn't exist
     mockAuthConfig.modelName = "Non-existent Model";
     saveAuthConfig(mockAuthConfig);
 
     const service = new ModelService();
     const state = await service.initialize(mockAssistant, mockAuthConfig);
+=======
+    // Save a model name that doesn't exist in the assistant
+    updateModelName("Non-existent Model");
+
+    const service = new ModelService();
+    const state = await service.initialize(mockAssistant, null);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     // Should fall back to first available model (GPT-4)
     expect(state.model?.name).toBe("GPT-4");
@@ -167,6 +206,7 @@ describe("Model Persistence End-to-End", () => {
       ],
     } as AssistantUnrolled;
 
+<<<<<<< HEAD
     mockAuthConfig.modelName = "claude-3-5-sonnet-20241022";
     saveAuthConfig(mockAuthConfig);
 
@@ -175,24 +215,42 @@ describe("Model Persistence End-to-End", () => {
       assistantWithModelField,
       mockAuthConfig,
     );
+=======
+    updateModelName("claude-3-5-sonnet-20241022");
+
+    const service = new ModelService();
+    const state = await service.initialize(assistantWithModelField, null);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     // Should match by model field
     expect(state.model?.model).toBe("claude-3-5-sonnet-20241022");
   });
 
   test("should persist model through multiple switches", async () => {
+<<<<<<< HEAD
     saveAuthConfig(mockAuthConfig);
     const service = new ModelService();
     await service.initialize(mockAssistant, mockAuthConfig);
+=======
+    const service = new ModelService();
+    // Clear any persisted model first
+    persistModelName(null);
+    await service.initialize(mockAssistant, null);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     // Switch to Claude 3.5 Sonnet
     await service.switchModel(1);
     updateModelName("Claude 3.5 Sonnet");
+<<<<<<< HEAD
     expect(getModelName(loadAuthConfig())).toBe("Claude 3.5 Sonnet");
+=======
+    expect(getModelName(null)).toBe("Claude 3.5 Sonnet");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     // Switch to Claude 3 Opus
     await service.switchModel(2);
     updateModelName("Claude 3 Opus");
+<<<<<<< HEAD
     expect(getModelName(loadAuthConfig())).toBe("Claude 3 Opus");
 
     // Restart and verify last selection
@@ -201,6 +259,13 @@ describe("Model Persistence End-to-End", () => {
 
     const newService = new ModelService();
     const state = await newService.initialize(mockAssistant, freshAuthConfig);
+=======
+    expect(getModelName(null)).toBe("Claude 3 Opus");
+
+    // Restart and verify last selection
+    const newService = new ModelService();
+    const state = await newService.initialize(mockAssistant, null);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     expect(state.model?.name).toBe("Claude 3 Opus");
   });
 });

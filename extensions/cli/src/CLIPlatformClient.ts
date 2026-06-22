@@ -121,8 +121,11 @@ export class CLIPlatformClient implements PlatformClient {
         });
 
         // Merge API results - keep all found results (with or without value)
+<<<<<<< HEAD
         // Results with value = user secrets (rendered directly)
         // Results with secretLocation but no value = org/package/models_add_on/free_trial (will be proxied)
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         for (let j = 0; j < apiResults.length; j++) {
           if (apiResults[j]?.found) {
             results[unresolvedIndices[j]] = apiResults[j];

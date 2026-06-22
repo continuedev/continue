@@ -94,6 +94,7 @@ models:
       timeout: 15000,
     });
 
+<<<<<<< HEAD
     // The CLI should create config but fail due to invalid API key
     // This is expected behavior - invalid API keys should cause authentication errors
     expect(result.exitCode).toBe(1);
@@ -120,5 +121,12 @@ models:
         "ANTHROPIC_API_KEY: TEST-test-invalid-key-format",
       );
     }
+=======
+    // The CLI should fail because auto-config from ANTHROPIC_API_KEY no longer creates a model
+    expect(result.exitCode).toBe(1);
+
+    // Should contain error about no model being specified
+    expect(result.stderr).toContain("No model specified in headless mode");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }, 20000);
 });

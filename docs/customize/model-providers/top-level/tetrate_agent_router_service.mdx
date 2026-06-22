@@ -8,7 +8,11 @@ The **Tetrate Agent Router Service** provides a unified Gateway for accessing va
 This gateway acts as an intelligent router that can distribute requests across multiple model providers, offering enterprise-grade reliability and performance optimization.
 
 <Tip>
+<<<<<<< HEAD
 Want to get started quickly? Sign up for the [Tetrate Agent Router Service](https://router.tetrate.ai/) to get an API key, then use [Tetrate on Continue Mission Control](https://continue.dev/tetrate) to get started fast.
+=======
+Want to get started quickly? Sign up for the [Tetrate Agent Router Service](https://router.tetrate.ai/) to get an API key, then follow the configuration examples below.
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 </Tip>
 
 ## Setup
@@ -32,6 +36,7 @@ Go to the [API keys page](https://router.tetrate.ai/api-keys) to get your key
 </Steps>
 
 
+<<<<<<< HEAD
 ### Quickstart with Continue Mission Control
 
 Fastest way: use preconfigured models from Tetrate on Continue Mission Control
@@ -59,10 +64,13 @@ Add it as a Continue Mission Control secret named `TETRATE_API_KEY` to reuse acr
 If a model is missing, remix a similar one and set the `model` field to the target ID.
 </Info>
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 ### Configuration Methods
 
 <CardGroup cols={1}>
   <Card title="In Local Agent Configuration" icon="folder" vertical>
+<<<<<<< HEAD
     Use a Tetrate model block from the Hub or define it directly in your local agent configuration.
   </Card>
   <Card title="Continue Mission Control" icon="cloud" vertical>
@@ -70,6 +78,12 @@ If a model is missing, remix a similar one and set the `model` field to the targ
   </Card>
   <Card title="Using Local Model Blocks" icon="file-lines" vertical>
     Create a local model block for reuse across agents without publishing it to the Hub.
+=======
+    Define models directly in your local agent configuration.
+  </Card>
+  <Card title="Using Local Model Blocks" icon="file-lines" vertical>
+    Create a local model block for reuse across agents.
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   </Card>
 </CardGroup>
 
@@ -83,7 +97,11 @@ If a model is missing, remix a similar one and set the `model` field to the targ
 
 **When to use**: Simple local setups (like using the VS Code extension) when you don't need shared or published blocks.
 
+<<<<<<< HEAD
 Use a Tetrate model block from the Hub in your local agent configuration:
+=======
+Use a Tetrate model block in your local agent configuration:
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 ```yaml title="~/.continue/config.yaml"
 name: Local Agent
@@ -130,6 +148,7 @@ context:
   - provider: codebase
 ```
 </Tab>
+<<<<<<< HEAD
 <Tab title="Continue Mission Control">
 **When to use**: Share configurations across teams or contribute to the community.
 
@@ -173,6 +192,10 @@ context:
 
 <Tab title="Using Local Model Blocks">
 **When to use**: Reuse configurations across agents and keep them local or in GitHub (not on Continue Mission Control).
+=======
+<Tab title="Using Local Model Blocks">
+**When to use**: Reuse configurations across agents and keep them local or in GitHub.
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 **The Local Model Block:**
 <Info>
@@ -233,7 +256,11 @@ Learn more about [model blocks](/reference#models).
     Check your network or try a less-loaded model. Contact Tetrate support if issues persist.
   </Card>
   <Card title="Configuration not loading" icon="file-lines" vertical>
+<<<<<<< HEAD
     Validate YAML syntax and review error messages in Continue. If using Hub, ensure the block is published.
+=======
+    Validate YAML syntax and review error messages in Continue.
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   </Card>
 </CardGroup>
 

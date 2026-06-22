@@ -13,7 +13,10 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "history/list",
     "history/delete",
     "history/load",
+<<<<<<< HEAD
     "history/loadRemote",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     "history/save",
     "history/clear",
     "devdata/log",
@@ -80,6 +83,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "onboarding/complete",
     "addAutocompleteModel",
     "didChangeSelectedProfile",
+<<<<<<< HEAD
     "didChangeSelectedOrg",
     "tools/call",
     "tools/evaluatePolicy",
@@ -87,10 +91,19 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "controlPlane/getEnvironment",
     "controlPlane/getCreditStatus",
     "controlPlane/openUrl",
+=======
+    "tools/call",
+    "tools/evaluatePolicy",
+    "tools/preprocessArgs",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     "isItemTooBig",
     "process/markAsBackgrounded",
     "process/isBackgrounded",
     "process/killTerminalProcess",
+<<<<<<< HEAD
+=======
+    "models/fetch",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   ];
 
 // Message types to pass through from core to webview
@@ -110,5 +123,8 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "sessionUpdate",
     "didCloseFiles",
     "toolCallPartialOutput",
+<<<<<<< HEAD
     "freeTrialExceeded",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   ];

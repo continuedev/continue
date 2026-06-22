@@ -7,10 +7,14 @@ import {
 
 // Export command functions
 export { chat } from "./chat.js";
+<<<<<<< HEAD
 export { login } from "./login.js";
 export { logout } from "./logout.js";
 export { listSessionsCommand } from "./ls.js";
 export { remote } from "./remote.js";
+=======
+export { listSessionsCommand } from "./ls.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export { review } from "./review.js";
 export { serve } from "./serve.js";
 
@@ -37,6 +41,7 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
+<<<<<<< HEAD
     name: "login",
     description: "Authenticate with your account",
     category: "system",
@@ -47,16 +52,21 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     name: "update",
     description: "Update the Continue CLI",
     category: "system",
   },
   {
+<<<<<<< HEAD
     name: "whoami",
     description: "Check who you're currently logged in as",
     category: "system",
   },
   {
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     name: "info",
     description: "Show session information",
     category: "system",
@@ -68,7 +78,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   },
   {
     name: "config",
+<<<<<<< HEAD
     description: "Switch configuration or organization",
+=======
+    description: "Switch configuration",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     category: "system",
   },
   {
@@ -143,7 +157,10 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   },
 ];
 
+<<<<<<< HEAD
 // Remote mode specific commands
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export const REMOTE_MODE_SLASH_COMMANDS: SlashCommand[] = [
   {
     name: "exit",

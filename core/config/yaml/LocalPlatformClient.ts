@@ -6,16 +6,23 @@ import {
 } from "@continuedev/config-yaml";
 import * as dotenv from "dotenv";
 import { IDE } from "../..";
+<<<<<<< HEAD
 import { ControlPlaneClient } from "../../control-plane/client";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { getContinueDotEnv } from "../../util/paths";
 import { joinPathsToUri } from "../../util/uri";
 
 export class LocalPlatformClient implements PlatformClient {
+<<<<<<< HEAD
   constructor(
     private orgScopeId: string | null,
     private readonly client: ControlPlaneClient,
     private readonly ide: IDE,
   ) {}
+=======
+  constructor(private readonly ide: IDE) {}
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   /**
    * searches for the first valid secret file in order of ~/.continue/.env, <workspace>/.continue/.env, <workspace>/.env
@@ -97,6 +104,7 @@ export class LocalPlatformClient implements PlatformClient {
       return [];
     }
 
+<<<<<<< HEAD
     let results: (SecretResult | undefined)[] = [];
     try {
       results = await this.client.resolveFQSNs(fqsns, this.orgScopeId);
@@ -132,6 +140,30 @@ export class LocalPlatformClient implements PlatformClient {
           results[i] = secretResult;
         }
       }
+=======
+    const results: (SecretResult | undefined)[] = [];
+
+    for (let i = 0; i < fqsns.length; i++) {
+      let secretResult = await this.findSecretInEnvFiles(fqsns[i]);
+
+      // If not found in .env files, try process.env
+      if (!secretResult?.found) {
+        const secretValueFromProcessEnv = process.env[fqsns[i].secretName];
+        if (secretValueFromProcessEnv !== undefined) {
+          secretResult = {
+            found: true,
+            fqsn: fqsns[i],
+            value: secretValueFromProcessEnv,
+            secretLocation: {
+              secretName: fqsns[i].secretName,
+              secretType: SecretType.ProcessEnv as SecretType.ProcessEnv,
+            },
+          };
+        }
+      }
+
+      results[i] = secretResult;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     }
 
     return results;

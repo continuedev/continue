@@ -419,10 +419,14 @@ export function useChat({
       return message;
     }
 
+<<<<<<< HEAD
     const commandResult = await handleSlashCommands(message, assistant, {
       remoteUrl,
       isRemoteMode,
     });
+=======
+    const commandResult = await handleSlashCommands(message, assistant);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     if (!commandResult) {
       return message;

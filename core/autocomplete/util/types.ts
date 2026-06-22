@@ -43,5 +43,8 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
   uniqueId: string;
   timestamp: string;
   enabledStaticContextualization?: boolean;
+<<<<<<< HEAD
   profileType?: "local" | "platform" | "control-plane";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }

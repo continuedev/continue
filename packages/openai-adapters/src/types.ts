@@ -104,6 +104,7 @@ export const LlamastackConfigSchema = OpenAIConfigSchema.extend({
 });
 export type LlamastackConfig = z.infer<typeof LlamastackConfigSchema>;
 
+<<<<<<< HEAD
 export const ContinueProxyConfigSchema = BasePlusConfig.extend({
   provider: z.literal("continue-proxy"),
   env: z.object({
@@ -115,6 +116,8 @@ export const ContinueProxyConfigSchema = BasePlusConfig.extend({
 });
 export type ContinueProxyConfig = z.infer<typeof ContinueProxyConfigSchema>;
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export const MockConfigSchema = BasePlusConfig.extend({
   provider: z.literal("mock"),
 });
@@ -282,7 +285,10 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   InceptionConfigSchema,
   VertexAIConfigSchema,
   LlamastackConfigSchema,
+<<<<<<< HEAD
   ContinueProxyConfigSchema,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   CometAPIConfigSchema,
   AskSageConfigSchema,
   AiSdkConfigSchema,

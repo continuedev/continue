@@ -3,6 +3,7 @@ vi.mock("./hooks/useTerminalSize.js", () => ({
   useTerminalSize: () => ({ columns: 80, rows: 24 }),
 }));
 
+<<<<<<< HEAD
 // Mock sentry to prevent initialization issues
 vi.mock("../sentry.js", () => ({
   sentryService: {
@@ -19,6 +20,8 @@ vi.mock("../sentry.js", () => ({
   },
 }));
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { render } from "ink-testing-library";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

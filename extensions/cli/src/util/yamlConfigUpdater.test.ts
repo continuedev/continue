@@ -9,7 +9,11 @@ describe("updateAnthropicModelInYaml", () => {
     it("should create new config from empty string", () => {
       const result = updateAnthropicModelInYaml("", testApiKey);
 
+<<<<<<< HEAD
       expect(result).toContain("name: Local Config");
+=======
+      expect(result).toContain("name: Main Config");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       expect(result).toContain("version: 1.0.0");
       expect(result).toContain("schema: v1");
       expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
@@ -20,7 +24,11 @@ describe("updateAnthropicModelInYaml", () => {
       const invalidYaml = "invalid: [yaml content";
       const result = updateAnthropicModelInYaml(invalidYaml, testApiKey);
 
+<<<<<<< HEAD
       expect(result).toContain("name: Local Config");
+=======
+      expect(result).toContain("name: Main Config");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
       expect(result).toContain("ANTHROPIC_API_KEY: sk-ant-test123456789");
     });
@@ -29,7 +37,11 @@ describe("updateAnthropicModelInYaml", () => {
   describe("comment preservation", () => {
     it("should preserve comments when adding new model", () => {
       const yamlWithComments = `# My Continue config
+<<<<<<< HEAD
 name: Local Config
+=======
+name: Main Config
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 version: 1.0.0
 schema: v1
 # List of available models
@@ -50,7 +62,11 @@ models:
 
     it("should preserve comments when updating existing model", () => {
       const yamlWithComments = `# My Continue config
+<<<<<<< HEAD
 name: Local Config
+=======
+name: Main Config
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 version: 1.0.0
 schema: v1
 # List of available models
@@ -72,7 +88,11 @@ models:
 
   describe("model management", () => {
     it("should add new anthropic model when none exists", () => {
+<<<<<<< HEAD
       const existingConfig = `name: Local Config
+=======
+      const existingConfig = `name: Main Config
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 version: 1.0.0
 schema: v1
 models:
@@ -90,7 +110,11 @@ models:
     });
 
     it("should update existing anthropic model", () => {
+<<<<<<< HEAD
       const existingConfig = `name: Local Config
+=======
+      const existingConfig = `name: Main Config
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 version: 1.0.0
 schema: v1
 models:
@@ -118,7 +142,11 @@ models:
     });
 
     it("should handle config with no models array", () => {
+<<<<<<< HEAD
       const configWithoutModels = `name: Local Config
+=======
+      const configWithoutModels = `name: Main Config
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 version: 1.0.0
 schema: v1
 `;
@@ -128,14 +156,22 @@ schema: v1
         testApiKey,
       );
 
+<<<<<<< HEAD
       expect(result).toContain("name: Local Config");
+=======
+      expect(result).toContain("name: Main Config");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       expect(result).toContain("models:");
       expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
       expect(result).toContain("ANTHROPIC_API_KEY: sk-ant-test123456789");
     });
 
     it("should handle config with empty models array", () => {
+<<<<<<< HEAD
       const configWithEmptyModels = `name: Local Config
+=======
+      const configWithEmptyModels = `name: Main Config
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 version: 1.0.0
 schema: v1
 models: []
@@ -146,7 +182,11 @@ models: []
         testApiKey,
       );
 
+<<<<<<< HEAD
       expect(result).toContain("name: Local Config");
+=======
+      expect(result).toContain("name: Main Config");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       expect(result).toContain("uses: anthropic/claude-sonnet-4-6");
       expect(result).toContain("ANTHROPIC_API_KEY: sk-ant-test123456789");
     });
@@ -183,7 +223,11 @@ models:
 
   describe("edge cases", () => {
     it("should handle malformed models array gracefully", () => {
+<<<<<<< HEAD
       const malformedConfig = `name: Local Config
+=======
+      const malformedConfig = `name: Main Config
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 models: "not an array"
 `;
 

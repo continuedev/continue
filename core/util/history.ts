@@ -38,6 +38,19 @@ export class HistoryManager {
       })
       .reverse();
 
+<<<<<<< HEAD
+=======
+    // Filter by workspace directory if provided
+    if (options.workspaceDirectory) {
+      const target = options.workspaceDirectory.toLowerCase();
+      sessions = sessions.filter(
+        (session) =>
+          typeof session.workspaceDirectory === "string" &&
+          session.workspaceDirectory.toLowerCase() === target,
+      );
+    }
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     // Apply limit and offset
     if (options.limit) {
       const offset = options.offset || 0;

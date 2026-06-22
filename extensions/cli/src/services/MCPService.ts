@@ -2,9 +2,12 @@ import { decodeFQSN, getTemplateVariables } from "@continuedev/config-yaml";
 import { type AssistantConfig } from "@continuedev/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
+<<<<<<< HEAD
 import { isAuthenticated, loadAuthConfig } from "src/auth/workos.js";
 
 import { get } from "../util/apiClient.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { getErrorString } from "../util/error.js";
 import { logger } from "../util/logger.js";
 
@@ -176,6 +179,7 @@ export class MCPService
       return await operation();
     }
 
+<<<<<<< HEAD
     try {
       // Try the operation first
       return await operation();
@@ -235,6 +239,10 @@ export class MCPService
 
       return await operation();
     }
+=======
+    // No auth/token refresh available - just execute the operation directly
+    return await operation();
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }
 
   /**

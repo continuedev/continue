@@ -818,7 +818,10 @@ declare global {
     | "currentFile"
     | "greptile"
     | "outline"
+<<<<<<< HEAD
     | "continue-proxy"
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     | "highlights"
     | "file"
     | "issue"

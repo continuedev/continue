@@ -1,6 +1,10 @@
 import { ToolCallState } from "core";
 import { ContinueErrorReason } from "core/util/errors";
+<<<<<<< HEAD
 import posthog from "posthog-js";
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import {
   errorToolCall,
@@ -33,6 +37,7 @@ export async function preprocessToolCalls(
         errorReason = ContinueErrorReason.Unknown;
       }
       if (errorReason) {
+<<<<<<< HEAD
         posthog.capture("tool_call_outcome", {
           // model: , TODO
           succeeded: false,
@@ -40,6 +45,8 @@ export async function preprocessToolCalls(
           errorReason,
           duration_ms: 0, // preprocessing is more or less instantaneous
         });
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         dispatch(
           errorToolCall({
             toolCallId: tcState.toolCallId,

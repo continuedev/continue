@@ -7,7 +7,11 @@ import { AzureApi } from "./apis/Azure.js";
 import { BedrockApi } from "./apis/Bedrock.js";
 import { CohereApi } from "./apis/Cohere.js";
 import { CometAPIApi } from "./apis/CometAPI.js";
+<<<<<<< HEAD
 import { ContinueProxyApi } from "./apis/ContinueProxy.js";
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { DeepSeekApi } from "./apis/DeepSeek.js";
 import { GeminiApi } from "./apis/Gemini.js";
 import { InceptionApi } from "./apis/Inception.js";
@@ -127,8 +131,11 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new VertexAIApi(config);
     case "llamastack":
       return new LlamastackApi(config);
+<<<<<<< HEAD
     case "continue-proxy":
       return new ContinueProxyApi(config);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     case "xAI":
       return openAICompatible("https://api.x.ai/v1/", config);
     case "zAI":
@@ -243,4 +250,8 @@ export {
 } from "./apis/AnthropicUtils.js";
 
 export { isResponsesModel } from "./apis/openaiResponses.js";
+<<<<<<< HEAD
+=======
+export { OPENROUTER_HEADERS } from "./apis/OpenRouter.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export { extractBase64FromDataUrl, parseDataUrl } from "./util/url.js";

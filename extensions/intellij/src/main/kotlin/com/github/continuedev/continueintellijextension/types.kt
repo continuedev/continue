@@ -128,6 +128,7 @@ data class DocumentSymbol(
     val selectionRange: Range
 )
 
+<<<<<<< HEAD
 data class ControlPlaneSessionInfo(
     val accessToken: String,
     val account: Account
@@ -138,6 +139,8 @@ data class Account(
     val id: String
 )
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 data class FileStats(
     val lastModified: Long,
     val size: Long

@@ -20,6 +20,10 @@ interface ModelSelectionListboxProps {
   setSelectedProvider: (val: DisplayInfo) => void;
   topOptions?: DisplayInfo[];
   otherOptions?: DisplayInfo[];
+<<<<<<< HEAD
+=======
+  otherOptionsLabel?: string;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   searchPlaceholder?: string;
 }
 
@@ -55,6 +59,10 @@ function ModelSelectionListbox({
   setSelectedProvider,
   topOptions = [],
   otherOptions = [],
+<<<<<<< HEAD
+=======
+  otherOptionsLabel = "Additional providers",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   searchPlaceholder = "Search models...",
 }: ModelSelectionListboxProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -197,7 +205,11 @@ function ModelSelectionListbox({
                   {filteredOtherOptions.length > 0 && (
                     <div className="py-1">
                       <div className="text-description-muted px-3 py-1 text-xs font-medium uppercase tracking-wider">
+<<<<<<< HEAD
                         Additional providers
+=======
+                        {otherOptionsLabel}
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
                       </div>
                       {filteredOtherOptions.map((option, index) => (
                         <ListboxOption

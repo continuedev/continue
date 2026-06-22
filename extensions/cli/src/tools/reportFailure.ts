@@ -1,6 +1,9 @@
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
+<<<<<<< HEAD
 import { sentryService } from "../sentry.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import {
   ApiRequestError,
   AuthenticationRequiredError,
@@ -58,6 +61,7 @@ export const reportFailureTool: Tool = {
         throw new ContinueError(ContinueErrorReason.Unspecified, errorMessage);
       }
 
+<<<<<<< HEAD
       // Capture failure in Sentry with context
       sentryService.captureException(
         new Error(trimmedMessage),
@@ -70,6 +74,8 @@ export const reportFailureTool: Tool = {
         "fatal",
       );
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       await post(`agents/${agentId}/status`, {
         status: "FAILED",
         errorMessage: trimmedMessage,

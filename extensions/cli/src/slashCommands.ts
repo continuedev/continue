@@ -6,6 +6,7 @@ import type { Session } from "core/index.js";
 import historyManager from "core/util/history.js";
 import { v4 as uuidv4 } from "uuid";
 
+<<<<<<< HEAD
 import {
   isAuthenticated,
   isAuthenticatedConfig,
@@ -17,6 +18,12 @@ import { handleInfoSlashCommand } from "./infoScreen.js";
 import { reloadService, SERVICE_NAMES, services } from "./services/index.js";
 import { getCurrentSession, updateSessionTitle } from "./session.js";
 import { posthogService } from "./telemetry/posthogService.js";
+=======
+import { getAllSlashCommands } from "./commands/commands.js";
+import { handleInit } from "./commands/init.js";
+import { handleInfoSlashCommand } from "./infoScreen.js";
+import { getCurrentSession, updateSessionTitle } from "./session.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { telemetryService } from "./telemetry/telemetryService.js";
 import { buildImportSkillPrompt } from "./tools/skills.js";
 import { SlashCommandResult } from "./ui/hooks/useChat.types.js";
@@ -28,8 +35,11 @@ import {
 type CommandHandler = (
   args: string[],
   assistant: AssistantConfig,
+<<<<<<< HEAD
   remoteUrl?: string,
   options?: { isRemoteMode?: boolean },
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 ) => Promise<SlashCommandResult> | SlashCommandResult;
 
 async function handleHelp(_args: string[], _assistant: AssistantConfig) {
@@ -63,6 +73,7 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
   return { output: helpMessage };
 }
 
+<<<<<<< HEAD
 async function handleLogin() {
   try {
     const newAuthState = await services.auth.login();
@@ -126,6 +137,8 @@ async function handleWhoami() {
   }
 }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 async function handleFork() {
   try {
     const currentSession = getCurrentSession();
@@ -253,8 +266,11 @@ function isValidExportedSession(data: unknown): data is ExportedSession {
 }
 
 function handleExport(_args: string[]): SlashCommandResult {
+<<<<<<< HEAD
   posthogService.capture("useSlashCommand", { name: "export" });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   return {
     exit: false,
     openExportSelector: true,
@@ -262,8 +278,11 @@ function handleExport(_args: string[]): SlashCommandResult {
 }
 
 function handleImport(args: string[]): SlashCommandResult {
+<<<<<<< HEAD
   posthogService.capture("useSlashCommand", { name: "import" });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const filePath = args.join(" ").trim();
   if (!filePath) {
     return {
@@ -341,9 +360,12 @@ const commandHandlers: Record<string, CommandHandler> = {
   config: () => {
     return { openConfigSelector: true };
   },
+<<<<<<< HEAD
   login: handleLogin,
   logout: handleLogout,
   whoami: handleWhoami,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   info: handleInfoSlashCommand,
   model: () => ({ openModelSelector: true }),
   compact: () => {
@@ -375,7 +397,10 @@ const commandHandlers: Record<string, CommandHandler> = {
 export async function handleSlashCommands(
   input: string,
   assistant: AssistantConfig,
+<<<<<<< HEAD
   options?: { remoteUrl?: string; isRemoteMode?: boolean },
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 ): Promise<SlashCommandResult | null> {
   // Only trigger slash commands if slash is the very first character
   if (!input.startsWith("/") || !input.trim().startsWith("/")) {
@@ -385,11 +410,18 @@ export async function handleSlashCommands(
   const [command, ...args] = input.slice(1).split(" ");
 
   telemetryService.recordSlashCommand(command);
+<<<<<<< HEAD
   posthogService.capture("useSlashCommand", { name: command });
 
   const handler = commandHandlers[command];
   if (handler) {
     return await handler(args, assistant, options?.remoteUrl, options);
+=======
+
+  const handler = commandHandlers[command];
+  if (handler) {
+    return await handler(args, assistant);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }
 
   // Check for custom assistant prompts
@@ -431,9 +463,13 @@ export async function handleSlashCommands(
   }
 
   // Check if this command would match any available commands (same logic as UI)
+<<<<<<< HEAD
   const allCommands = await getAllSlashCommands(assistant, {
     isRemoteMode: options?.isRemoteMode,
   });
+=======
+  const allCommands = await getAllSlashCommands(assistant);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const hasMatches = allCommands.some((cmd) =>
     cmd.name.toLowerCase().includes(command.toLowerCase()),
   );

@@ -47,6 +47,7 @@ describe("E2E: Basic Commands", () => {
       const result = await runCLI(context, { args: ["--help"] });
 
       expect(result.stdout).toContain("Commands:");
+<<<<<<< HEAD
       expect(result.stdout).toContain("login");
       expect(result.stdout).toContain("logout");
     });
@@ -65,6 +66,8 @@ describe("E2E: Basic Commands", () => {
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("Log out from Continue");
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
   });
 

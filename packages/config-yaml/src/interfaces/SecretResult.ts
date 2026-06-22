@@ -6,7 +6,10 @@ export enum SecretType {
   Organization = "organization",
   NotFound = "not_found",
   ModelsAddOn = "models_add_on",
+<<<<<<< HEAD
   FreeTrial = "free_trial",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   LocalEnv = "local_env",
   ProcessEnv = "process_env",
 }
@@ -35,12 +38,15 @@ export interface ModelsAddOnSecretLocation {
   secretName: string;
 }
 
+<<<<<<< HEAD
 export interface FreeTrialSecretLocation {
   secretType: SecretType.FreeTrial;
   blockSlug: PackageSlug;
   secretName: string;
 }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export interface LocalEnvSecretLocation {
   secretType: SecretType.LocalEnv;
   secretName: string;
@@ -55,7 +61,10 @@ export interface ProcessEnvSecretLocation {
  * If not found in user/package/org secrets, then there's a chance it's in
  * - the on-prem proxy
  * - models add-on
+<<<<<<< HEAD
  * - free trial
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
  */
 export interface NotFoundSecretLocation {
   secretType: SecretType.NotFound;
@@ -68,7 +77,10 @@ export type SecretLocation =
   | UserSecretLocation
   | NotFoundSecretLocation
   | ModelsAddOnSecretLocation
+<<<<<<< HEAD
   | FreeTrialSecretLocation
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   | LocalEnvSecretLocation
   | ProcessEnvSecretLocation;
 
@@ -83,8 +95,11 @@ export function encodeSecretLocation(secretLocation: SecretLocation): string {
     return `${SecretType.NotFound}:${secretLocation.secretName}`;
   } else if (secretLocation.secretType === SecretType.ModelsAddOn) {
     return `${SecretType.ModelsAddOn}:${encodePackageSlug(secretLocation.blockSlug)}/${secretLocation.secretName}`;
+<<<<<<< HEAD
   } else if (secretLocation.secretType === SecretType.FreeTrial) {
     return `${SecretType.FreeTrial}:${encodePackageSlug(secretLocation.blockSlug)}/${secretLocation.secretName}`;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   } else if (secretLocation.secretType === SecretType.LocalEnv) {
     return `${SecretType.LocalEnv}:${secretLocation.secretName}`;
   } else if (secretLocation.secretType === SecretType.ProcessEnv) {
@@ -132,6 +147,7 @@ export function decodeSecretLocation(secretLocation: string): SecretLocation {
           packageSlug: parts[1],
         },
       };
+<<<<<<< HEAD
     case SecretType.FreeTrial:
       return {
         secretType: SecretType.FreeTrial,
@@ -141,6 +157,8 @@ export function decodeSecretLocation(secretLocation: string): SecretLocation {
           packageSlug: parts[1],
         },
       };
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     case SecretType.LocalEnv:
       return {
         secretType: SecretType.LocalEnv,
@@ -168,7 +186,10 @@ export interface FoundSecretResult {
     | OrgSecretLocation
     | PackageSecretLocation
     | ModelsAddOnSecretLocation
+<<<<<<< HEAD
     | FreeTrialSecretLocation
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     | LocalEnvSecretLocation
     | ProcessEnvSecretLocation;
   fqsn: FQSN;

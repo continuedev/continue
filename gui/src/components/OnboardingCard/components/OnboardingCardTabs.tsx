@@ -1,6 +1,9 @@
 import { KeyIcon } from "@heroicons/react/24/outline";
 import { OnboardingModes } from "core/protocol/core";
+<<<<<<< HEAD
 import ContinueSignet from "../../svg/ContinueSignet";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import OllamaLogo from "../../svg/OllamaLogo";
 
 interface OnboardingCardTabsProps {
@@ -21,7 +24,11 @@ const renderTabButton = (
       <button
         className={baseButtonClass}
         key={tabTitle}
+<<<<<<< HEAD
         onClick={() => onTabClick(tabTitle as OnboardingModes)}
+=======
+        onClick={() => onTabClick(tabTitle)}
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         data-testid={`onboarding-tab-${tabTitle}`}
       >
         <KeyIcon className="-mb-0.5 mr-2 h-4 w-4" />
@@ -35,7 +42,11 @@ const renderTabButton = (
       <button
         className={baseButtonClass}
         key={tabTitle}
+<<<<<<< HEAD
         onClick={() => onTabClick(tabTitle as OnboardingModes)}
+=======
+        onClick={() => onTabClick(tabTitle)}
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         data-testid={`onboarding-tab-${tabTitle}`}
       >
         <OllamaLogo width={18} height={18} className="-mb-0.5 mr-2" />
@@ -44,6 +55,7 @@ const renderTabButton = (
     );
   }
 
+<<<<<<< HEAD
   if (tabTitle === OnboardingModes.MODELS_ADD_ON) {
     return (
       <button
@@ -58,6 +70,8 @@ const renderTabButton = (
     );
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   return null;
 };
 
@@ -68,12 +82,16 @@ export function OnboardingCardTabs({
   activeTab,
   onTabClick,
 }: OnboardingCardTabsProps) {
+<<<<<<< HEAD
   // Show Models Add-On (Credits) first as the primary option
   const tabs = [
     OnboardingModes.MODELS_ADD_ON,
     OnboardingModes.API_KEY,
     OnboardingModes.LOCAL,
   ];
+=======
+  const tabs = [OnboardingModes.API_KEY, OnboardingModes.LOCAL];
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   return (
     <div>
       <div className="hidden sm:block">

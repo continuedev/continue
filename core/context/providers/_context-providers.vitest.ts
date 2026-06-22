@@ -29,11 +29,15 @@ async function getContextProviderExtras(
   setUpTestDir();
   const ide = new FileSystemIde(TEST_DIR);
   const llmLogger = new LLMLogger();
+<<<<<<< HEAD
   const configHandler = new ConfigHandler(
     ide,
     llmLogger,
     Promise.resolve(undefined),
   );
+=======
+  const configHandler = new ConfigHandler(ide, llmLogger);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   await configHandler.isInitialized;
   const { config } = await configHandler.loadConfig();
   if (!config) {

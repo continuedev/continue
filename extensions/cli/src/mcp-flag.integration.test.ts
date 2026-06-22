@@ -10,6 +10,7 @@ describe("--mcp flag integration", () => {
     vi.clearAllMocks();
   });
 
+<<<<<<< HEAD
   it("should validate MCP slug format", async () => {
     // Test that invalid slug formats are rejected
     await expect(loadMcpFromHub("invalid-slug")).rejects.toThrow(
@@ -27,6 +28,15 @@ describe("--mcp flag integration", () => {
     // This will fail at the HTTP level, not validation level
     await expect(loadMcpFromHub("valid/slug")).rejects.toThrow(
       'Failed to load mcp from hub "valid/slug": HTTP 404: Not Found',
+=======
+  it("should reject all hub loading since hub has been removed", async () => {
+    await expect(loadMcpFromHub("invalid-slug")).rejects.toThrow(
+      "Hub package loading has been removed.",
+    );
+
+    await expect(loadMcpFromHub("valid/slug")).rejects.toThrow(
+      "Hub package loading has been removed.",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     );
   });
 });

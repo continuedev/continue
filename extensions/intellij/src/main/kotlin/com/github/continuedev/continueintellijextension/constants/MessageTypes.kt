@@ -34,8 +34,11 @@ class MessageTypes {
             "getFileStats",
             "insertAtCursor",
             "applyToFile",
+<<<<<<< HEAD
             "getControlPlaneSessionInfo",
             "logoutOfControlPlane",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             "showToast",
             "openUrl",
             "isWorkspaceRemote",
@@ -155,7 +158,12 @@ class MessageTypes {
             "isItemTooBig",
             "process/markAsBackgrounded",
             "process/isBackgrounded",
+<<<<<<< HEAD
             "process/killTerminalProcess"
+=======
+            "process/killTerminalProcess",
+            "models/fetch"
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         )
     }
 }

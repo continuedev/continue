@@ -189,6 +189,7 @@ export class DataLogger {
           "Content-Type": "application/json",
         };
 
+<<<<<<< HEAD
         // If an API key is provided, use it, otherwise use the Continue access token
         if (dataConfig.apiKey) {
           headers["Authorization"] = `Bearer ${dataConfig.apiKey}`;
@@ -196,6 +197,10 @@ export class DataLogger {
           const accessToken =
             await this.core?.configHandler.controlPlaneClient.getAccessToken();
           headers["Authorization"] = `Bearer ${accessToken}`;
+=======
+        if (dataConfig.apiKey) {
+          headers["Authorization"] = `Bearer ${dataConfig.apiKey}`;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         }
 
         const profileId =

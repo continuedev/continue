@@ -84,6 +84,11 @@ export function isPrerelease() {
   return false;
 }
 
+<<<<<<< HEAD
 export function isLocalProfile(profile: ProfileDescription): boolean {
   return profile.profileType === "local";
+=======
+export function isLocalProfile(_profile: ProfileDescription): boolean {
+  return true;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }

@@ -10,9 +10,16 @@ export interface OpenRouterConfig extends OpenAIConfig {
 
 // TODO: Extract detailed error info from OpenRouter's error.metadata.raw to surface better messages
 
+<<<<<<< HEAD
 const OPENROUTER_HEADERS: Record<string, string> = {
   "HTTP-Referer": "https://www.continue.dev/",
   "X-Title": "Continue",
+=======
+export const OPENROUTER_HEADERS: Record<string, string> = {
+  "HTTP-Referer": "https://www.continue.dev/",
+  "X-OpenRouter-Title": "Continue",
+  "X-OpenRouter-Categories": "ide-extension",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 };
 
 export class OpenRouterApi extends OpenAIApi {

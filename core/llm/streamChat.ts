@@ -1,12 +1,19 @@
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { ChatMessage, IDE, PromptLog } from "..";
 import { ConfigHandler } from "../config/ConfigHandler";
+<<<<<<< HEAD
 import { usesCreditsBasedApiKey } from "../config/usesFreeTrialApiKey";
 import { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import { IMessenger, Message } from "../protocol/messenger";
 import { Telemetry } from "../util/posthog";
 import { TTS } from "../util/tts";
 import { isOutOfStarterCredits } from "./utils/starterCredits";
+=======
+import { FromCoreProtocol, ToCoreProtocol } from "../protocol";
+import { IMessenger, Message } from "../protocol/messenger";
+
+import { TTS } from "../util/tts";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 export async function* llmStreamChat(
   configHandler: ConfigHandler,
@@ -136,6 +143,7 @@ export async function* llmStreamChat(
         void TTS.read(next.value?.completion);
       }
 
+<<<<<<< HEAD
       void Telemetry.capture(
         "chat",
         {
@@ -147,6 +155,8 @@ export async function* llmStreamChat(
 
       void checkForOutOfStarterCredits(configHandler, messenger);
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       if (!next.done) {
         throw new Error("Will never happen");
       }
@@ -158,6 +168,7 @@ export async function* llmStreamChat(
     throw error;
   }
 }
+<<<<<<< HEAD
 
 async function checkForOutOfStarterCredits(
   configHandler: ConfigHandler,
@@ -179,3 +190,5 @@ async function checkForOutOfStarterCredits(
     console.error("Error checking free trial status:", error);
   }
 }
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))

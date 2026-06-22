@@ -14,7 +14,11 @@ function logDomText() {
     "",
   );
   cleaned = cleaned?.replace(
+<<<<<<< HEAD
     /[⌘Ctrl]+⏎ (?:No )?[Aa]ctive file⏎ Enter⏎Log in to access a free trial of theModels Add-OnLog in to Continue HubOr, configure your own models/,
+=======
+    /[⌘Ctrl]+⏎ (?:No )?[Aa]ctive file⏎ Enter⏎(?:Get started with AI-powered coding by configuring your models|Configure your models|Models Add-On|Configure your own model providers to get started\.|Configure Models)/,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     "",
   );
   cleaned = cleaned.replaceAll("Select model", "");

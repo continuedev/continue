@@ -30,8 +30,12 @@ export function useOnboardingCard(): UseOnboardingCard {
 
   let show: boolean;
 
+<<<<<<< HEAD
   // Always show if we explicitly want to, e.g. passing free trial
   // and setting up keys
+=======
+  // Always show if we explicitly want to, e.g. setting up keys
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   if (onboardingCard.show) {
     show = true;
   } else {
@@ -43,7 +47,11 @@ export function useOnboardingCard(): UseOnboardingCard {
     dispatch(
       setOnboardingCard({
         show: true,
+<<<<<<< HEAD
         activeTab: tab ?? OnboardingModes.MODELS_ADD_ON,
+=======
+        activeTab: tab ?? OnboardingModes.API_KEY,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       }),
     );
   }

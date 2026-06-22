@@ -23,6 +23,7 @@ import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 
 // Removed: shouldAutoEnableSystemMessageTools - let it run naturally
 
+<<<<<<< HEAD
 // Additional mocks for streamResponseThunk
 vi.mock("posthog-js", () => ({
   default: {
@@ -30,6 +31,8 @@ vi.mock("posthog-js", () => ({
   },
 }));
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 vi.mock("uuid", () => ({
   v4: vi.fn(() => "mock-uuid-123"),
 }));
@@ -44,13 +47,19 @@ vi.mock(
 import { ModelDescription } from "core";
 import { serializeTool } from "core/tools";
 import { grepSearchTool } from "core/tools/definitions";
+<<<<<<< HEAD
 import posthog from "posthog-js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { RootState } from "../store";
 
 const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
 
+<<<<<<< HEAD
 const mockPosthog = vi.mocked(posthog);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 const mockResolveEditorContent = vi.mocked(resolveEditorContent);
 
 const mockClaudeModel: ModelDescription = {

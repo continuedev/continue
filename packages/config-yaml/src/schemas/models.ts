@@ -198,6 +198,7 @@ const baseModelFields = {
   autocompleteOptions: autocompleteOptionsSchema.optional(),
 };
 
+<<<<<<< HEAD
 export const modelSchema = z.union([
   z.object({
     ...baseModelFields,
@@ -230,5 +231,19 @@ export const partialModelSchema = z.union([
     })
     .partial(),
 ]);
+=======
+export const modelSchema = z.object({
+  ...baseModelFields,
+  provider: z.string(),
+  sourceFile: z.string().optional(),
+});
+
+export const partialModelSchema = z
+  .object({
+    ...baseModelFields,
+    provider: z.string(),
+  })
+  .partial();
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 export type ModelConfig = z.infer<typeof modelSchema>;

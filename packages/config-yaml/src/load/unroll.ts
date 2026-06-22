@@ -26,10 +26,14 @@ import {
 } from "../schemas/index.js";
 import { ConfigResult, ConfigValidationError } from "../validation.js";
 import { BlockDuplicationDetector } from "./blockDuplicationDetector.js";
+<<<<<<< HEAD
 import {
   packageIdentifierToShorthandSlug,
   useProxyForUnrenderedSecrets,
 } from "./clientRender.js";
+=======
+import { packageIdentifierToShorthandSlug } from "./clientRender.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { BlockType, getBlockType } from "./getBlockType.js";
 
 export function parseConfigYaml(configYaml: string): ConfigYaml {
@@ -224,10 +228,15 @@ export interface DoNotRenderSecretsUnrollAssistantOptions
 export interface RenderSecretsUnrollAssistantOptions
   extends BaseUnrollAssistantOptions {
   renderSecrets: true;
+<<<<<<< HEAD
   orgScopeId: string | null;
   currentUserSlug: string;
   platformClient: PlatformClient;
   onPremProxyUrl: string | null;
+=======
+  currentUserSlug: string;
+  platformClient: PlatformClient;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   alwaysUseProxy?: boolean;
 }
 
@@ -327,6 +336,7 @@ export async function unrollAssistantFromContent(
   );
   const renderedYaml = renderTemplateData(templatedYaml, { secrets });
 
+<<<<<<< HEAD
   // Parse again and replace models with proxy versions where secrets weren't rendered
   const renderedConfig = useProxyForUnrenderedSecrets(
     parseAssistantUnrolled(renderedYaml),
@@ -334,6 +344,9 @@ export async function unrollAssistantFromContent(
     options.orgScopeId,
     options.onPremProxyUrl,
   );
+=======
+  const renderedConfig = parseAssistantUnrolled(renderedYaml);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   return {
     config: renderedConfig,

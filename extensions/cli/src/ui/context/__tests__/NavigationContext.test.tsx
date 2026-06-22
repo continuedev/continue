@@ -62,6 +62,7 @@ describe("NavigationContext", () => {
 
       it("navigates to a new screen with data", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
+<<<<<<< HEAD
         const testData = { text: "Login required", resolve: vi.fn() };
 
         act(() => {
@@ -69,11 +70,21 @@ describe("NavigationContext", () => {
         });
 
         expect(result.current.state.currentScreen).toBe("login");
+=======
+        const testData = { text: "Some data", resolve: vi.fn() };
+
+        act(() => {
+          result.current.navigateTo("config", testData);
+        });
+
+        expect(result.current.state.currentScreen).toBe("config");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         expect(result.current.state.screenData).toEqual(testData);
       });
 
       it("can navigate to all valid screens", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
+<<<<<<< HEAD
         const screens: NavigationScreen[] = [
           "chat",
           "config",
@@ -82,6 +93,9 @@ describe("NavigationContext", () => {
           "login",
           "mcp",
         ];
+=======
+        const screens: NavigationScreen[] = ["chat", "config", "model", "mcp"];
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
         screens.forEach((screen) => {
           act(() => {
@@ -97,12 +111,20 @@ describe("NavigationContext", () => {
         const secondData = { value: 2 };
 
         act(() => {
+<<<<<<< HEAD
           result.current.navigateTo("login", firstData);
+=======
+          result.current.navigateTo("config", firstData);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         });
         expect(result.current.state.screenData).toEqual(firstData);
 
         act(() => {
+<<<<<<< HEAD
           result.current.navigateTo("login", secondData);
+=======
+          result.current.navigateTo("config", secondData);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         });
         expect(result.current.state.screenData).toEqual(secondData);
       });
@@ -112,7 +134,11 @@ describe("NavigationContext", () => {
         const testData = { value: "test" };
 
         act(() => {
+<<<<<<< HEAD
           result.current.navigateTo("login", testData);
+=======
+          result.current.navigateTo("model", testData);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         });
         expect(result.current.state.screenData).toEqual(testData);
 
@@ -143,7 +169,11 @@ describe("NavigationContext", () => {
         const testData = { text: "Test data" };
 
         act(() => {
+<<<<<<< HEAD
           result.current.navigateTo("login", testData);
+=======
+          result.current.navigateTo("config", testData);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         });
         expect(result.current.state.screenData).toEqual(testData);
 
@@ -167,9 +197,17 @@ describe("NavigationContext", () => {
 
       it("closes from any screen back to chat", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
+<<<<<<< HEAD
         const screens: Array<
           "config" | "model" | "free-trial" | "login" | "mcp"
         > = ["config", "model", "free-trial", "login", "mcp"];
+=======
+        const screens: Array<"config" | "model" | "mcp"> = [
+          "config",
+          "model",
+          "mcp",
+        ];
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
         screens.forEach((screen) => {
           act(() => {
@@ -205,22 +243,36 @@ describe("NavigationContext", () => {
         expect(result.current.isScreenActive("config")).toBe(false);
         expect(result.current.isScreenActive("model")).toBe(false);
         expect(result.current.isScreenActive("mcp")).toBe(false);
+<<<<<<< HEAD
         expect(result.current.isScreenActive("free-trial")).toBe(false);
         expect(result.current.isScreenActive("login")).toBe(false);
+=======
+        expect(result.current.isScreenActive("session")).toBe(false);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       });
 
       it("updates correctly when navigating", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
 
         act(() => {
+<<<<<<< HEAD
           result.current.navigateTo("free-trial");
         });
         expect(result.current.isScreenActive("free-trial")).toBe(true);
+=======
+          result.current.navigateTo("config");
+        });
+        expect(result.current.isScreenActive("config")).toBe(true);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
         act(() => {
           result.current.navigateTo("model");
         });
+<<<<<<< HEAD
         expect(result.current.isScreenActive("free-trial")).toBe(false);
+=======
+        expect(result.current.isScreenActive("config")).toBe(false);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         expect(result.current.isScreenActive("model")).toBe(true);
 
         act(() => {
@@ -248,13 +300,21 @@ describe("NavigationContext", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
 
         act(() => {
+<<<<<<< HEAD
           result.current.navigateTo("login", { custom: "data" });
+=======
+          result.current.navigateTo("config", { custom: "data" });
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         });
 
         const stateWithData = result.current.state;
 
         act(() => {
+<<<<<<< HEAD
           result.current.navigateTo("login", { different: "data" });
+=======
+          result.current.navigateTo("config", { different: "data" });
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         });
 
         expect(result.current.state.currentScreen).toBe(
@@ -267,6 +327,7 @@ describe("NavigationContext", () => {
     });
 
     describe("Integration Scenarios", () => {
+<<<<<<< HEAD
       it("handles login flow correctly", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
         const mockResolve = vi.fn();
@@ -275,15 +336,33 @@ describe("NavigationContext", () => {
         act(() => {
           result.current.navigateTo("login", {
             text: "Please log in",
+=======
+      it("handles a screen flow with screen data correctly", () => {
+        const { result } = renderHook(() => useNavigation(), { wrapper });
+        const mockResolve = vi.fn();
+
+        // Navigate to a screen with screen data
+        act(() => {
+          result.current.navigateTo("config", {
+            text: "Some data",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             resolve: mockResolve,
           });
         });
 
+<<<<<<< HEAD
         expect(result.current.state.currentScreen).toBe("login");
         expect(result.current.state.screenData?.text).toBe("Please log in");
         expect(result.current.state.screenData?.resolve).toBe(mockResolve);
 
         // Close login screen (simulating successful login)
+=======
+        expect(result.current.state.currentScreen).toBe("config");
+        expect(result.current.state.screenData?.text).toBe("Some data");
+        expect(result.current.state.screenData?.resolve).toBe(mockResolve);
+
+        // Close the screen
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         act(() => {
           result.current.closeCurrentScreen();
         });
@@ -308,6 +387,7 @@ describe("NavigationContext", () => {
         expect(result.current.isScreenActive("chat")).toBe(true);
       });
 
+<<<<<<< HEAD
       it("handles free trial transition flow", () => {
         const { result } = renderHook(() => useNavigation(), { wrapper });
 
@@ -318,11 +398,20 @@ describe("NavigationContext", () => {
         expect(result.current.isScreenActive("free-trial")).toBe(true);
 
         // User might navigate to config from free trial
+=======
+      it("handles config selection flow", () => {
+        const { result } = renderHook(() => useNavigation(), { wrapper });
+
+        // Navigate to config
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         act(() => {
           result.current.navigateTo("config");
         });
         expect(result.current.isScreenActive("config")).toBe(true);
+<<<<<<< HEAD
         expect(result.current.isScreenActive("free-trial")).toBe(false);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
         // Return to chat
         act(() => {

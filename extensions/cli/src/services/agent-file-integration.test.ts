@@ -9,8 +9,11 @@ vi.mock("../hubLoader.js", () => ({
   loadPackageFromHub: vi.fn(),
   loadPackagesFromHub: vi.fn(),
   loadModelFromHub: vi.fn(),
+<<<<<<< HEAD
   mcpProcessor: {},
   modelProcessor: {},
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   processRule: vi.fn(),
   isStringRule: vi.fn(),
   agentFileProcessor: {
@@ -80,7 +83,11 @@ describe("Agent file Integration Tests", () => {
   let mockProcessRule: any;
   let mockCreateLlmApi: any;
   let mockGetLlmApi: any;
+<<<<<<< HEAD
   let mockModelProcessor: any;
+=======
+  // modelProcessor removed (Hub integration removed)
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   let mockDecodePackageIdentifier: any;
   let mockLoadModelFromHub: any;
   let mockIsStringRule: any;
@@ -123,7 +130,11 @@ describe("Agent file Integration Tests", () => {
     mockLoadPackageFromHub = hubLoaderModule.loadPackageFromHub as any;
     mockLoadPackagesFromHub = hubLoaderModule.loadPackagesFromHub as any;
     mockProcessRule = hubLoaderModule.processRule as any;
+<<<<<<< HEAD
     mockModelProcessor = hubLoaderModule.modelProcessor;
+=======
+    // mockModelProcessor removed (Hub integration removed)
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     mockLoadModelFromHub = hubLoaderModule.loadModelFromHub as any;
     mockIsStringRule = hubLoaderModule.isStringRule as any;
     mockCreateLlmApi = configModule.createLlmApi as any;

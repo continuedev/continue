@@ -3,7 +3,11 @@ import path from "path";
 
 import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
+<<<<<<< HEAD
 import { EXTENSION_NAME, getControlPlaneEnv } from "core/control-plane/env";
+=======
+import { EXTENSION_NAME } from "core/util/constants";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/protocol/messenger";
@@ -30,12 +34,16 @@ import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { registerAllPromptFilesCompletionProviders } from "../lang-server/promptFileCompletions";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
+<<<<<<< HEAD
 import { setupRemoteConfigSync } from "../stubs/activation";
 import { UriEventHandler } from "../stubs/uriHandler";
 import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
+=======
+import { UriEventHandler } from "../stubs/uriHandler";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { Battery } from "../util/battery";
 import { FileSearch } from "../util/FileSearch";
 import { VsCodeIdeUtils } from "../util/ideUtils";
@@ -80,7 +88,10 @@ export class VsCodeExtension {
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
   private battery: Battery;
+<<<<<<< HEAD
   private workOsAuthProvider: WorkOsAuthProvider;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   private fileSearch: FileSearch;
   private uriHandler = new UriEventHandler();
   private completionProvider: ContinueCompletionProvider;
@@ -176,12 +187,15 @@ export class VsCodeExtension {
   }
 
   constructor(context: vscode.ExtensionContext) {
+<<<<<<< HEAD
     // Register auth provider
     this.workOsAuthProvider = new WorkOsAuthProvider(context, this.uriHandler);
 
     void this.workOsAuthProvider.refreshSessions();
     context.subscriptions.push(this.workOsAuthProvider);
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     this.editDecorationManager = new EditDecorationManager(context);
 
     let resolveWebviewProtocol: any = undefined;
@@ -285,7 +299,10 @@ export class VsCodeExtension {
       this.ide,
       verticalDiffManagerPromise,
       configHandlerPromise,
+<<<<<<< HEAD
       this.workOsAuthProvider,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       this.editDecorationManager,
       context,
       this,
@@ -304,12 +321,15 @@ export class VsCodeExtension {
     );
     resolveVerticalDiffManager?.(this.verticalDiffManager);
 
+<<<<<<< HEAD
     void setupRemoteConfigSync(() =>
       this.configHandler.reloadConfig.bind(this.configHandler)(
         "Remote config sync",
       ),
     );
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     void this.configHandler.loadConfig().then(async ({ config }) => {
       const shouldUseFullFileDiff = await getUsingFullFileDiff();
       this.completionProvider.updateUsingFullFileDiff(shouldUseFullFileDiff);
@@ -373,11 +393,17 @@ export class VsCodeExtension {
     this.uriHandler.event((uri) => {
       const queryParams = new URLSearchParams(uri.query);
       let profileId = queryParams.get("profile_id");
+<<<<<<< HEAD
       let orgId = queryParams.get("org_id");
 
       this.core.invoke("config/refreshProfiles", {
         reason: "VS Code deep link",
         selectOrgId: orgId === "null" ? undefined : (orgId ?? undefined),
+=======
+
+      this.core.invoke("config/refreshProfiles", {
+        reason: "VS Code deep link",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         selectProfileId:
           profileId === "null" ? undefined : (profileId ?? undefined),
       });
@@ -560,6 +586,7 @@ export class VsCodeExtension {
 
     // When GitHub sign-in status changes, reload config
     vscode.authentication.onDidChangeSessions(async (e) => {
+<<<<<<< HEAD
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       if (e.provider.id === env.AUTH_TYPE) {
         void vscode.commands.executeCommand(
@@ -582,6 +609,10 @@ export class VsCodeExtension {
         if (e.provider.id === "github") {
           this.configHandler.reloadConfig("Github sign-in status changed");
         }
+=======
+      if (e.provider.id === "github") {
+        this.configHandler.reloadConfig("Github sign-in status changed");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       }
     });
 

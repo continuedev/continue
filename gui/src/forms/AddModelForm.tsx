@@ -1,9 +1,18 @@
+<<<<<<< HEAD
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
+=======
+import {
+  ArrowPathIcon,
+  ArrowTopRightOnSquareIcon,
+} from "@heroicons/react/24/outline";
+import { useCallback, useContext, useEffect, useState } from "react";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { FormProvider, useForm } from "react-hook-form";
 import { Button, Input, StyledActionButton } from "../components";
 import Alert from "../components/gui/Alert";
 import ModelSelectionListbox from "../components/modelSelection/ModelSelectionListbox";
+<<<<<<< HEAD
 import { useAuth } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
@@ -19,6 +28,24 @@ import { updateSelectedModelByRole } from "../redux/thunks/updateSelectedModelBy
 interface AddModelFormProps {
   onDone: () => void;
   hideFreeTrialLimitMessage?: boolean;
+=======
+import { ModelProviderTags } from "../components/modelSelection/utils";
+import { useAuth } from "../context/Auth";
+import { IdeMessengerContext } from "../context/IdeMessenger";
+import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
+import {
+  fetchProviderModels,
+  initializeDynamicModels,
+} from "../pages/AddNewModel/configs/fetchProviderModels";
+import { DisplayInfo, ModelPackage } from "../pages/AddNewModel/configs/models";
+import {
+  ProviderInfo,
+  providers,
+} from "../pages/AddNewModel/configs/providers";
+
+interface AddModelFormProps {
+  onDone: () => void;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 const MODEL_PROVIDERS_URL =
@@ -26,6 +53,7 @@ const MODEL_PROVIDERS_URL =
 const CODESTRAL_URL = "https://console.mistral.ai/codestral";
 const CONTINUE_SETUP_URL = "https://docs.continue.dev/setup/overview";
 
+<<<<<<< HEAD
 export function AddModelForm({
   onDone,
   hideFreeTrialLimitMessage,
@@ -34,6 +62,12 @@ export function AddModelForm({
     providers["openai"]!,
   );
   const dispatch = useAppDispatch();
+=======
+export function AddModelForm({ onDone }: AddModelFormProps) {
+  const [selectedProvider, setSelectedProvider] = useState<ProviderInfo>(
+    providers["openai"]!,
+  );
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const { selectedProfile } = useAuth();
   const [selectedModel, setSelectedModel] = useState(
     selectedProvider.packages[0],
@@ -41,11 +75,51 @@ export function AddModelForm({
   const formMethods = useForm();
   const ideMessenger = useContext(IdeMessengerContext);
 
+<<<<<<< HEAD
   // Initialize OpenRouter models from API on component mount
   useEffect(() => {
     void initializeOpenRouterModels();
   }, []);
 
+=======
+  const [fetchedModelsList, setFetchedModelsList] = useState<ModelPackage[]>(
+    [],
+  );
+  const [isFetchingModels, setIsFetchingModels] = useState(false);
+
+  useEffect(() => {
+    void initializeDynamicModels(ideMessenger);
+  }, []);
+
+  useEffect(() => {
+    setFetchedModelsList([]);
+  }, [selectedProvider]);
+
+  const handleFetchModels = useCallback(async () => {
+    const apiKey = formMethods.watch("apiKey");
+    const apiBase = formMethods.watch("apiBase");
+    if (!apiKey) return;
+
+    const providerAtFetchTime = selectedProvider.provider;
+    setIsFetchingModels(true);
+    try {
+      const models = await fetchProviderModels(
+        ideMessenger,
+        providerAtFetchTime,
+        apiKey,
+        apiBase,
+      );
+      setFetchedModelsList((prev) =>
+        selectedProvider.provider === providerAtFetchTime ? models : prev,
+      );
+    } catch (error) {
+      console.error("Failed to fetch models:", error);
+    } finally {
+      setIsFetchingModels(false);
+    }
+  }, [ideMessenger, selectedProvider, formMethods]);
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const popularProviderTitles = [
     providers["openai"]?.title || "",
     providers["anthropic"]?.title || "",
@@ -92,6 +166,12 @@ export function AddModelForm({
 
   useEffect(() => {
     setSelectedModel(selectedProvider.packages[0]);
+<<<<<<< HEAD
+=======
+    if (!selectedProvider.tags?.includes(ModelProviderTags.RequiresApiKey)) {
+      formMethods.setValue("apiKey", "");
+    }
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }, [selectedProvider]);
 
   const requiresSkPrefix =
@@ -131,6 +211,7 @@ export function AddModelForm({
       profileId: "local",
     });
 
+<<<<<<< HEAD
     void dispatch(
       updateSelectedModelByRole({
         selectedProfile,
@@ -139,6 +220,17 @@ export function AddModelForm({
       }),
     );
 
+=======
+    if (selectedProfile) {
+      ideMessenger.post("config/updateSelectedModel", {
+        profileId: selectedProfile.id,
+        role: "chat",
+        title: model.title,
+      });
+    }
+
+    formMethods.setValue("apiKey", "");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     onDone();
   }
 
@@ -199,7 +291,31 @@ export function AddModelForm({
             )}
 
             <div>
+<<<<<<< HEAD
               <label className="block text-sm font-medium">Model</label>
+=======
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium">Model</label>
+                <button
+                  type="button"
+                  title="Use entered API key to fetch available models"
+                  className={`cursor-pointer border-none bg-transparent p-0 ${
+                    apiKeyValue &&
+                    apiKeyValue.length > 0 &&
+                    selectedProvider.provider !== "ollama" &&
+                    selectedProvider.provider !== "openrouter"
+                      ? `text-description-muted hover:text-foreground`
+                      : "invisible"
+                  }`}
+                  onClick={handleFetchModels}
+                  disabled={isFetchingModels}
+                >
+                  <ArrowPathIcon
+                    className={`h-3.5 w-3.5 ${isFetchingModels ? "animate-spin" : ""}`}
+                  />
+                </button>
+              </div>
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
               <ModelSelectionListbox
                 selectedProvider={selectedModel}
                 setSelectedProvider={(val: DisplayInfo) => {
@@ -208,19 +324,62 @@ export function AddModelForm({
                       ([, provider]) =>
                         provider?.title === selectedProvider.title,
                     )?.[1]?.packages ?? [];
+<<<<<<< HEAD
                   const match = options.find(
+=======
+                  const allOptions = [...options, ...fetchedModelsList];
+                  const match = allOptions.find(
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
                     (option) => option.title === val.title,
                   );
                   if (match) {
                     setSelectedModel(match);
                   }
                 }}
+<<<<<<< HEAD
                 topOptions={
                   Object.entries(providers).find(
                     ([, provider]) =>
                       provider?.title === selectedProvider.title,
                   )?.[1]?.packages
                 }
+=======
+                topOptions={(() => {
+                  const providerInfo = Object.entries(providers).find(
+                    ([, provider]) =>
+                      provider?.title === selectedProvider.title,
+                  )?.[1];
+                  return (
+                    providerInfo?.popularPackages ?? providerInfo?.packages
+                  );
+                })()}
+                otherOptions={(() => {
+                  const providerInfo = Object.entries(providers).find(
+                    ([, provider]) =>
+                      provider?.title === selectedProvider.title,
+                  )?.[1];
+                  const staticOther = providerInfo?.popularPackages
+                    ? providerInfo.packages.filter(
+                        (p) =>
+                          !new Set(
+                            providerInfo.popularPackages!.map((pp) => pp.title),
+                          ).has(p.title),
+                      )
+                    : undefined;
+                  // Merge dynamically fetched models (deduplicated)
+                  if (fetchedModelsList.length > 0) {
+                    const existingTitles = new Set(
+                      (providerInfo?.packages ?? []).map((p) => p.title),
+                    );
+                    const newModels = fetchedModelsList.filter(
+                      (m) => !existingTitles.has(m.title),
+                    );
+                    return [...(staticOther ?? []), ...newModels];
+                  }
+                  return staticOther;
+                })()}
+                otherOptionsLabel="Additional models"
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
               />
             </div>
 

@@ -4,6 +4,7 @@ import Deepseek from "../Deepseek.js";
 import FunctionNetwork from "../FunctionNetwork.js";
 import Mistral from "../Mistral.js";
 import OpenAI from "../OpenAI.js";
+<<<<<<< HEAD
 import ContinueProxy from "../stubs/ContinueProxy.js";
 import Vllm from "../Vllm.js";
 
@@ -33,6 +34,12 @@ const testCases: [any, string, boolean, string][] = [
     "unknown provider",
   ],
   [ContinueProxy, "owner/package/groq/llama-model", true, "groq provider"],
+=======
+import Vllm from "../Vllm.js";
+
+// Test cases: [LLM class, model, expected supportsFim result, description]
+const testCases: [any, string, boolean, string][] = [
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   [Vllm, "any-model", false, "Vllm"],
   [Anthropic, "claude-3-5-sonnet-latest", false, "Anthropic"],
   [FunctionNetwork, "any-model", false, "FunctionNetwork"],

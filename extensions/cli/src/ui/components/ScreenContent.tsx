@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import { Box, Text } from "ink";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import React from "react";
 
 import { UpdateServiceState } from "src/services/types.js";
@@ -8,7 +11,10 @@ import { ConfigSelector } from "../ConfigSelector.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
 import { DiffViewer } from "../DiffViewer.js";
 import { EditMessageSelector } from "../EditMessageSelector.js";
+<<<<<<< HEAD
 import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import type {
   ActivePermissionRequest,
   ActiveQuizQuestion,
@@ -18,16 +24,23 @@ import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
 import { UpdateSelector } from "../UpdateSelector.js";
+<<<<<<< HEAD
 import { UserInput } from "../UserInput.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 import { ChatScreenContent } from "./ChatScreenContent.js";
 import { SessionSelectorWithLoading } from "./SessionSelectorWithLoading.js";
 
 interface ScreenContentProps {
   isScreenActive: (screen: NavigationScreen) => boolean;
+<<<<<<< HEAD
   navState: any;
   services: any;
   handleLoginTokenSubmit: (token: string) => void;
+=======
+  services: any;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   handleConfigSelect: (config: ConfigOption) => Promise<void>;
   handleModelSelect: (model: ModelOption) => Promise<void>;
   handleSessionSelect: (sessionId: string) => Promise<void>;
@@ -69,14 +82,22 @@ function hideScreenContent(state?: UpdateServiceState) {
 
 export const ScreenContent: React.FC<ScreenContentProps> = ({
   isScreenActive,
+<<<<<<< HEAD
   navState,
   services,
   handleLoginTokenSubmit,
+=======
+  services,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   handleConfigSelect,
   handleModelSelect,
   handleSessionSelect,
   handleExportSession,
+<<<<<<< HEAD
   handleReload,
+=======
+  handleReload: _handleReload,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   closeCurrentScreen,
   activePermissionRequest,
   activeQuizQuestion,
@@ -101,6 +122,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
     return null;
   }
 
+<<<<<<< HEAD
   // Login prompt
   if (isScreenActive("login") && navState.screenData) {
     return (
@@ -128,6 +150,8 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
     );
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   // Config selector
   if (isScreenActive("config")) {
     return (
@@ -181,11 +205,14 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
     return <JobsSelector onCancel={closeCurrentScreen} />;
   }
 
+<<<<<<< HEAD
   // Free trial transition UI
   if (isScreenActive("free-trial")) {
     return <FreeTrialTransitionUI onReload={handleReload} />;
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   // Diff viewer overlay
   if (isScreenActive("diff")) {
     return (

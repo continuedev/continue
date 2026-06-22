@@ -1,8 +1,19 @@
+<<<<<<< HEAD
+=======
+/**
+ * Rule/package processing utilities.
+ *
+ * Hub package loading has been removed. Only local file-based rule
+ * processing and string detection remain.
+ */
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import {
   AgentFile,
   ModelConfig,
   parseAgentFile,
 } from "@continuedev/config-yaml";
+<<<<<<< HEAD
 import JSZip from "jszip";
 
 import { getAccessToken, loadAuthConfig } from "./auth/workos.js";
@@ -11,16 +22,32 @@ import { logger } from "./util/logger.js";
 
 /**
  * Pattern to match valid hub slugs (owner/package format)
+=======
+
+import { logger } from "./util/logger.js";
+
+/**
+ * Pattern to match valid hub slugs (owner/package format).
+ * Kept so that isStringRule can still detect them (and reject them).
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
  */
 export const HUB_SLUG_PATTERN = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
 
 /**
+<<<<<<< HEAD
  * Hub package type definitions
+=======
+ * Hub package type definitions (kept for type compatibility)
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
  */
 export type HubPackageType = "rule" | "mcp" | "model" | "prompt" | "agentFile";
 
 /**
+<<<<<<< HEAD
  * Hub package processor interface
+=======
+ * Hub package processor interface (kept for type compatibility)
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
  */
 export interface HubPackageProcessor<T> {
   type: HubPackageType;
@@ -29,15 +56,19 @@ export interface HubPackageProcessor<T> {
   validateContent?(content: T): boolean;
 }
 
+<<<<<<< HEAD
 /**
  * Rule processor - handles text content from .md files
  */
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export const ruleProcessor: HubPackageProcessor<string> = {
   type: "rule",
   expectedFileExtensions: [".md"],
   parseContent: (content: string) => content,
 };
 
+<<<<<<< HEAD
 /**
  * MCP processor - handles JSON/YAML configuration files
  */
@@ -105,10 +136,13 @@ export const promptProcessor: HubPackageProcessor<string> = {
   parseContent: (content: string) => content,
 };
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export const agentFileProcessor: HubPackageProcessor<AgentFile> = {
   type: "agentFile",
   expectedFileExtensions: [".md"],
   parseContent: (content: string) => parseAgentFile(content),
+<<<<<<< HEAD
   validateContent: (agentFile: AgentFile) => {
     return !!agentFile.name;
   },
@@ -235,10 +269,31 @@ export async function loadPackageFromHub<T>(
 
 /**
  * Convenience functions for specific package types
+=======
+  validateContent: (agentFile: AgentFile) => !!agentFile.name,
+};
+
+/**
+ * Hub package loading has been removed.
+ * This function always throws.
+ */
+export async function loadPackageFromHub<T>(
+  slug: string,
+  _processor: HubPackageProcessor<T>,
+): Promise<T> {
+  throw new Error(
+    `Hub package loading has been removed. Cannot load "${slug}" from hub.`,
+  );
+}
+
+/**
+ * Convenience functions (stubs that throw)
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
  */
 export const loadRuleFromHub = (slug: string) =>
   loadPackageFromHub(slug, ruleProcessor);
 
+<<<<<<< HEAD
 export const loadMcpFromHub = (slug: string) =>
   loadPackageFromHub(slug, mcpProcessor);
 
@@ -247,6 +302,17 @@ export const loadModelFromHub = (slug: string) =>
 
 /**
  * Process a rule specification - supports file paths, hub slugs, or direct content
+=======
+export const loadMcpFromHub = (_slug: string): Promise<any> =>
+  Promise.reject(new Error("Hub package loading has been removed."));
+
+export const loadModelFromHub = (_slug: string): Promise<ModelConfig> =>
+  Promise.reject(new Error("Hub package loading has been removed."));
+
+/**
+ * Process a rule specification - supports file paths or direct content.
+ * Hub slug resolution has been removed.
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
  */
 export async function processRule(ruleSpec: string): Promise<string> {
   const trimmedRuleSpec = ruleSpec.trim();
@@ -277,6 +343,7 @@ export async function processRule(ruleSpec: string): Promise<string> {
     }
   }
 
+<<<<<<< HEAD
   // Check if it might be a hub slug (contains "/" and is a single line)
   if (!hasNewline && trimmedRuleSpec.includes("/")) {
     const parts = trimmedRuleSpec.split("/");
@@ -294,6 +361,8 @@ export async function processRule(ruleSpec: string): Promise<string> {
     }
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   // Otherwise, treat it as direct string content
   return ruleSpec;
 }
@@ -315,14 +384,21 @@ export function isStringRule(rule: string) {
 }
 
 /**
+<<<<<<< HEAD
  * Batch load multiple packages with error handling
+=======
+ * Batch load (stub - always returns empty)
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
  */
 export async function loadPackagesFromHub<T>(
   slugs: string[],
   processor: HubPackageProcessor<T>,
 ): Promise<T[]> {
   const results: T[] = [];
+<<<<<<< HEAD
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   for (const slug of slugs) {
     try {
       const content = await loadPackageFromHub(slug, processor);
@@ -333,6 +409,9 @@ export async function loadPackagesFromHub<T>(
       );
     }
   }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   return results;
 }

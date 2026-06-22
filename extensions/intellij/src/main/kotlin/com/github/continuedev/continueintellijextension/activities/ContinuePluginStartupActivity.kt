@@ -1,9 +1,13 @@
 package com.github.continuedev.continueintellijextension.activities
 
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
+<<<<<<< HEAD
 import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.auth.ControlPlaneSessionInfo
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import com.github.continuedev.continueintellijextension.browser.ContinueBrowserService.Companion.getBrowser
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.`continue`.*
@@ -257,6 +261,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                 project.getBrowser()?.sendToWebview("jetbrains/setColors", colors)
             })
 
+<<<<<<< HEAD
             // Listen for clicking settings button to start the auth flow
             val authService = service<ContinueAuthService>()
             val initialSessionInfo = authService.loadControlPlaneSessionInfo()
@@ -285,6 +290,8 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                 }
             })
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             val listener =
                 ContinuePluginSelectionListener(
                     coroutineScope,

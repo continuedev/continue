@@ -4,7 +4,10 @@ import React, { useEffect, useState } from "react";
 import { setExitMessageCallback, shouldShowExitMessage } from "../../index.js";
 import type { PermissionMode } from "../../permissions/types.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
+<<<<<<< HEAD
 import { FreeTrialStatus } from "../FreeTrialStatus.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { UpdateNotification } from "../UpdateNotification.js";
 
 import { ContextPercentageDisplay } from "./ContextPercentageDisplay.js";
@@ -29,10 +32,17 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
   currentMode,
   remoteUrl,
   isRemoteMode,
+<<<<<<< HEAD
   services,
   navState,
   navigateTo,
   closeCurrentScreen,
+=======
+  services: _services,
+  navState: _navState,
+  navigateTo: _navigateTo,
+  closeCurrentScreen: _closeCurrentScreen,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   contextPercentage,
   hasImageInClipboard,
   isVerboseMode,
@@ -89,6 +99,7 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
           </React.Fragment>
         )}
       </Box>
+<<<<<<< HEAD
       <Box>
         {!isRemoteMode && services.model?.model && (
           <FreeTrialStatus
@@ -107,6 +118,8 @@ export const BottomStatusBar: React.FC<BottomStatusBarProps> = ({
           />
         )}
       </Box>
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       <Box marginRight={2} marginLeft={2}>
         <UpdateNotification isRemoteMode={isRemoteMode} />
       </Box>

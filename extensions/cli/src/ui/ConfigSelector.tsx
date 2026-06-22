@@ -3,6 +3,7 @@ import * as path from "path";
 
 import React, { useEffect, useState } from "react";
 
+<<<<<<< HEAD
 import {
   getAccessToken,
   getAssistantSlug,
@@ -11,6 +12,8 @@ import {
   loadAuthConfig,
 } from "../auth/workos.js";
 import { getApiClient } from "../config.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { env } from "../env.js";
 import { services } from "../services/index.js";
 
@@ -19,7 +22,11 @@ import { Selector, SelectorOption } from "./Selector.js";
 interface ConfigOption extends SelectorOption {
   type: "local" | "assistant" | "create";
   slug?: string;
+<<<<<<< HEAD
   organizationId?: string | null; // null for personal, string for org
+=======
+  organizationId?: string | null;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 interface ConfigSelectorProps {
@@ -42,23 +49,32 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
   useEffect(() => {
     const loadConfigs = async () => {
       try {
+<<<<<<< HEAD
         const authConfig = loadAuthConfig();
         const accessToken = getAccessToken(authConfig);
         const currentOrganizationId = getOrganizationId(authConfig);
 
         const options: ConfigOption[] = [];
         let currentId: string | null = null;
+=======
+        const options: ConfigOption[] = [];
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
         // Add local config.yaml if it exists
         if (fs.existsSync(CONFIG_PATH)) {
           options.push({
             id: "local",
+<<<<<<< HEAD
             name: "[Personal] Local config.yaml",
+=======
+            name: "Local config.yaml",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             type: "local",
             organizationId: null,
           });
         }
 
+<<<<<<< HEAD
         // Add assistants from all organizations if authenticated
         if (accessToken) {
           const apiClient = getApiClient(accessToken);
@@ -140,6 +156,16 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
         ) {
           // Only mark local config as current if it's actually the active config path in the service
           // This ensures we don't show a green checkmark for first-time users just because the file exists
+=======
+        // Determine current config
+        const currentConfigState = services.config.getState();
+        let currentId: string | null = null;
+
+        if (
+          currentConfigState.configPath === CONFIG_PATH &&
+          fs.existsSync(CONFIG_PATH)
+        ) {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           currentId = "local";
         }
 

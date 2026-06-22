@@ -12,10 +12,15 @@ import React, {
  */
 export type NavigationScreen =
   | "chat" // Normal chat interface
+<<<<<<< HEAD
   | "config" // Config selector (includes organization switching)
   | "model" // Model selector
   | "free-trial" // Free trial transition UI
   | "login" // Login prompt
+=======
+  | "config" // Config selector
+  | "model" // Model selector
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   | "mcp" // MCP selector
   | "session" // Session selector
   | "diff" // Full-screen diff overlay
@@ -26,7 +31,11 @@ export type NavigationScreen =
 
 interface NavigationState {
   currentScreen: NavigationScreen;
+<<<<<<< HEAD
   // Screen-specific data (e.g., login prompt details)
+=======
+  // Screen-specific data passed to the active screen
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   screenData?: any;
 }
 

@@ -48,7 +48,11 @@ models:
 
       expect(result.exitCode).not.toBe(0);
       expect(result.stderr).toContain(
+<<<<<<< HEAD
         "--org flag is only supported in headless mode (with -p/--print flag)",
+=======
+        "Cannot start TUI in TTY-less environment",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       );
     });
 

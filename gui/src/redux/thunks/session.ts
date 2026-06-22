@@ -1,6 +1,9 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { BaseSessionMetadata, ChatMessage, Session } from "core";
+<<<<<<< HEAD
 import { RemoteSessionMetadata } from "core/control-plane/client";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { renderChatMessage } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
@@ -32,6 +35,7 @@ export async function getSession(
   return result.content;
 }
 
+<<<<<<< HEAD
 export async function getRemoteSession(
   ideMessenger: IIdeMessenger,
   remoteId: string,
@@ -45,6 +49,10 @@ export async function getRemoteSession(
 
 export const refreshSessionMetadata = createAsyncThunk<
   RemoteSessionMetadata[] | BaseSessionMetadata[],
+=======
+export const refreshSessionMetadata = createAsyncThunk<
+  BaseSessionMetadata[],
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   {
     offset?: number;
     limit?: number;
@@ -125,6 +133,7 @@ export const loadSession = createAsyncThunk<
   },
 );
 
+<<<<<<< HEAD
 export const loadRemoteSession = createAsyncThunk<
   void,
   {
@@ -157,6 +166,8 @@ export const loadRemoteSession = createAsyncThunk<
   },
 );
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export const selectChatModelForProfile = createAsyncThunk<
   void,
   string,

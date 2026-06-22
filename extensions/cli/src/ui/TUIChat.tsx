@@ -9,7 +9,10 @@ import React, {
 
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 
+<<<<<<< HEAD
 import { listUserOrganizations } from "../auth/workos.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { useServices } from "../hooks/useService.js";
 import {
   ApiClientServiceState,
@@ -32,11 +35,15 @@ import { useNavigation } from "./context/NavigationContext.js";
 import { useChat } from "./hooks/useChat.js";
 import { useContextPercentage } from "./hooks/useContextPercentage.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
+<<<<<<< HEAD
 import {
   useIntroMessage,
   useLoginHandlers,
   useSelectors,
 } from "./hooks/useTUIChatHooks.js";
+=======
+import { useIntroMessage, useSelectors } from "./hooks/useTUIChatHooks.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 interface TUIChatProps {
   // Remote mode props
@@ -113,6 +120,7 @@ function useTUIChatServices(remoteUrl?: string) {
   return { services, allServicesReady, isRemoteMode };
 }
 
+<<<<<<< HEAD
 // Custom hook to fetch organization name
 function useOrganizationName(organizationId?: string): string | undefined {
   const [organizationName, setOrganizationName] = useState<string | undefined>(
@@ -147,6 +155,11 @@ function useOrganizationName(organizationId?: string): string | undefined {
       isMounted = false;
     };
   }, [organizationId]);
+=======
+// Organization names are no longer available (Hub integration removed)
+function useOrganizationName(_organizationId?: string): string | undefined {
+  const organizationName = undefined;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   return organizationName;
 }
@@ -213,6 +226,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     allServicesReady,
   );
 
+<<<<<<< HEAD
   // Use login handlers
   const { handleLoginTokenSubmit } = useLoginHandlers(
     navigateTo,
@@ -220,6 +234,8 @@ const TUIChat: React.FC<TUIChatProps> = ({
     closeCurrentScreen,
   );
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   // State to trigger static content refresh for /clear command
   const [staticRefreshTrigger, setStaticRefreshTrigger] = useState(0);
 
@@ -492,9 +508,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
         {/* All screen-specific content */}
         <ScreenContent
           isScreenActive={isScreenActive}
+<<<<<<< HEAD
           navState={navState}
           services={services}
           handleLoginTokenSubmit={handleLoginTokenSubmit}
+=======
+          services={services}
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           handleConfigSelect={handleConfigSelect}
           handleModelSelect={handleModelSelect}
           handleSessionSelect={handleSessionSelect}
@@ -526,7 +546,11 @@ const TUIChat: React.FC<TUIChatProps> = ({
           <ResourceDebugBar visible={navState.currentScreen === "chat"} />
         )}
 
+<<<<<<< HEAD
         {/* Free trial status and Continue CLI info - always show */}
+=======
+        {/* Bottom status bar */}
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         <BottomStatusBar
           currentMode={services?.toolPermissions?.currentMode ?? "normal"}
           remoteUrl={remoteUrl}

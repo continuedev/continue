@@ -1,5 +1,8 @@
 import { ContinueConfig, QuickActionConfig } from "core";
+<<<<<<< HEAD
 import { Telemetry } from "core/util/posthog";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import * as vscode from "vscode";
 
 import { QuickEditShowParams } from "../../../quickEdit/QuickEditQuickPick";
@@ -20,10 +23,13 @@ export function subscribeToVSCodeQuickActionsSettings(listener: Function) {
     const configKey = `${CONTINUE_WORKSPACE_KEY}.${ENABLE_QUICK_ACTIONS_KEY}`;
 
     if (e.affectsConfiguration(configKey)) {
+<<<<<<< HEAD
       Telemetry.capture("VSCode Quick Actions Settings Changed", {
         enabled: quickActionsEnabledStatus(),
       });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       listener();
     }
   });

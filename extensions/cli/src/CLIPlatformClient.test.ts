@@ -143,7 +143,11 @@ describe("CLIPlatformClient", () => {
       );
     });
 
+<<<<<<< HEAD
     it("keeps API results with secretLocation but no value (free_trial)", async () => {
+=======
+    it("keeps API results with secretLocation but no value (models_add_on)", async () => {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const fqsn: FQSN = {
         packageSlugs: [{ ownerSlug: "openai", packageSlug: "gpt-4" }],
         secretName: "OPENAI_API_KEY",
@@ -153,12 +157,20 @@ describe("CLIPlatformClient", () => {
       vi.stubEnv("OPENAI_API_KEY", undefined as unknown as string);
       vi.mocked(fs.existsSync).mockReturnValue(false);
 
+<<<<<<< HEAD
       // API returns a free_trial result
+=======
+      // API returns a models_add_on result
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const apiResult: SecretResult = {
         found: true,
         fqsn,
         secretLocation: {
+<<<<<<< HEAD
           secretType: SecretType.FreeTrial,
+=======
+          secretType: SecretType.ModelsAddOn,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           blockSlug: { ownerSlug: "openai", packageSlug: "gpt-4" },
           secretName: "OPENAI_API_KEY",
         },
@@ -171,7 +183,11 @@ describe("CLIPlatformClient", () => {
       expect(results).toHaveLength(1);
       expect(results[0]).toEqual(apiResult);
       expect((results[0] as any).secretLocation.secretType).toBe(
+<<<<<<< HEAD
         SecretType.FreeTrial,
+=======
+        SecretType.ModelsAddOn,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       );
     });
 

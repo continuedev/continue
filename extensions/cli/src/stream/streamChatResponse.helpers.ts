@@ -17,7 +17,10 @@ import {
   services,
 } from "../services/index.js";
 import { trackSessionUsage } from "../session.js";
+<<<<<<< HEAD
 import { posthogService } from "../telemetry/posthogService.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { telemetryService } from "../telemetry/telemetryService.js";
 import {
   executeToolCall,
@@ -371,6 +374,7 @@ export function recordStreamTelemetry(options: {
     costUsd: cost,
   });
 
+<<<<<<< HEAD
   // Mirror core metrics to PostHog for product analytics
   const cacheReadTokens =
     fullUsage?.prompt_tokens_details?.cache_read_tokens ?? 0;
@@ -410,6 +414,8 @@ export function recordStreamTelemetry(options: {
     }
   } catch {}
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   return cost;
 }
 
@@ -485,6 +491,7 @@ export async function preprocessStreamedToolCalls(
         errorReason,
         // modelName, TODO
       });
+<<<<<<< HEAD
       void posthogService.capture("tool_call_outcome", {
         succeeded: false,
         toolName: toolCall.name,
@@ -493,6 +500,8 @@ export async function preprocessStreamedToolCalls(
         // model: options.modelName, TODO
       });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       // Add error to chat history
       errorChatEntries.push({
         role: "tool",

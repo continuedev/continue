@@ -156,6 +156,7 @@ export class NextEditProvider {
     if (llm instanceof OpenAI && llm.providerName !== "openrouter") {
       llm.useLegacyCompletionsEndpoint = true;
     }
+<<<<<<< HEAD
     // TODO: Resolve import error with TRIAL_FIM_MODEL
     // else if (
     //   llm.providerName === "free-trial" &&
@@ -163,6 +164,8 @@ export class NextEditProvider {
     // ) {
     //   llm.model = TRIAL_FIM_MODEL;
     // }
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     return llm;
   }
@@ -510,9 +513,12 @@ export class NextEditProvider {
     let outcome: NextEditOutcome | undefined;
 
     // Handle based on diff type.
+<<<<<<< HEAD
     const profileType =
       this.configHandler.currentProfile?.profileDescription.profileType;
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
       outcome = await this.modelProvider.handlePartialFileDiff({
         helper,
@@ -523,7 +529,10 @@ export class NextEditProvider {
         nextCompletion,
         promptMetadata: this.promptMetadata!,
         ide: this.ide,
+<<<<<<< HEAD
         profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       });
     } else {
       outcome = await this.modelProvider.handleFullFileDiff({
@@ -535,7 +544,10 @@ export class NextEditProvider {
         nextCompletion,
         promptMetadata: this.promptMetadata!,
         ide: this.ide,
+<<<<<<< HEAD
         profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       });
     }
 

@@ -1,6 +1,9 @@
 import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 
+<<<<<<< HEAD
 import { ControlPlaneClient } from "../control-plane/client.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -10,6 +13,7 @@ import {
   ILLMLogger,
 } from "../index.js";
 import { GlobalContext } from "../util/GlobalContext.js";
+<<<<<<< HEAD
 
 import EventEmitter from "node:events";
 import {
@@ -20,11 +24,19 @@ import { getControlPlaneEnv } from "../control-plane/env.js";
 import { PolicySingleton } from "../control-plane/PolicySingleton.js";
 import { Logger } from "../util/Logger.js";
 import { Telemetry } from "../util/posthog.js";
+=======
+import { getConfigYamlPath } from "../util/paths.js";
+
+import EventEmitter from "node:events";
+import { Logger } from "../util/Logger.js";
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import {
   getAllDotContinueDefinitionFiles,
   LoadAssistantFilesOptions,
 } from "./loadLocalAssistants.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
+<<<<<<< HEAD
 import PlatformProfileLoader from "./profile/PlatformProfileLoader.js";
 import {
   OrganizationDescription,
@@ -32,6 +44,11 @@ import {
   ProfileDescription,
   ProfileLifecycleManager,
   SerializedOrgWithProfiles,
+=======
+import {
+  ProfileDescription,
+  ProfileLifecycleManager,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 } from "./ProfileLifecycleManager.js";
 
 export type { ProfileDescription };
@@ -39,6 +56,7 @@ export type { ProfileDescription };
 type ConfigUpdateFunction = (payload: ConfigResult<ContinueConfig>) => void;
 
 export class ConfigHandler {
+<<<<<<< HEAD
   controlPlaneClient: ControlPlaneClient;
   private readonly globalContext = new GlobalContext();
   private globalLocalProfileManager: ProfileLifecycleManager;
@@ -46,6 +64,17 @@ export class ConfigHandler {
   private organizations: OrgWithProfiles[] = [];
   currentProfile: ProfileLifecycleManager | null;
   currentOrg: OrgWithProfiles | null;
+=======
+  private readonly globalContext = new GlobalContext();
+  private globalLocalProfileManager: ProfileLifecycleManager;
+
+  private profiles: ProfileLifecycleManager[] = [];
+
+  get profileDescriptions(): ProfileDescription[] {
+    return this.profiles.map((p) => p.profileDescription);
+  }
+  currentProfile: ProfileLifecycleManager | null;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   totalConfigReloads: number = 0;
 
   public isInitialized: Promise<void>;
@@ -60,6 +89,7 @@ export class ConfigHandler {
   constructor(
     private readonly ide: IDE,
     private llmLogger: ILLMLogger,
+<<<<<<< HEAD
     initialSessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
   ) {
     this.controlPlaneClient = new ControlPlaneClient(
@@ -76,6 +106,17 @@ export class ConfigHandler {
     this.currentOrg = null;
     this.currentProfile = null;
     this.organizations = [];
+=======
+  ) {
+    // This profile manager will always be available
+    this.globalLocalProfileManager = new ProfileLifecycleManager(
+      new LocalProfileLoader(ide, this.llmLogger),
+      this.ide,
+    );
+
+    this.currentProfile = null;
+    this.profiles = [];
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     this.initter = new EventEmitter();
     this.isInitialized = new Promise((resolve) => {
@@ -95,6 +136,7 @@ export class ConfigHandler {
     return this.workspaceDirs.join("&");
   }
 
+<<<<<<< HEAD
   async getProfileKey(orgId: string) {
     const workspaceId = await this.getWorkspaceId();
     return `${workspaceId}:::${orgId}`;
@@ -108,10 +150,19 @@ export class ConfigHandler {
     // during every cascadeInit so it holds the most recent controlPlaneClient.
     this.globalLocalProfileManager = new ProfileLifecycleManager(
       new LocalProfileLoader(this.ide, this.controlPlaneClient, this.llmLogger),
+=======
+  private async cascadeInit(reason: string) {
+    const signal = this.cascadeAbortController.signal;
+    this.workspaceDirs = null; // forces workspace dirs reload
+
+    this.globalLocalProfileManager = new ProfileLifecycleManager(
+      new LocalProfileLoader(this.ide, this.llmLogger),
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       this.ide,
     );
 
     try {
+<<<<<<< HEAD
       const { orgs, errors } = await this.getOrgs();
 
       // Figure out selected org
@@ -155,6 +206,41 @@ export class ConfigHandler {
       this.organizations = orgs;
       this.currentOrg = selectedOrg;
       this.currentProfile = selectedOrg?.currentProfile;
+=======
+      const { profiles, errors } = await this.loadProfiles();
+
+      // Figure out selected profile
+      const workspaceId = await this.getWorkspaceId();
+      const selectedProfiles =
+        this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
+      const currentSelection = selectedProfiles[workspaceId];
+
+      const fallback = profiles.length > 0 ? profiles[0] : null;
+
+      let selectedProfile: ProfileLifecycleManager | null;
+      if (currentSelection) {
+        const match = profiles.find(
+          (profile) => profile.profileDescription.id === currentSelection,
+        );
+        selectedProfile = match ?? fallback;
+      } else {
+        selectedProfile = fallback;
+      }
+
+      if (signal.aborted) {
+        return;
+      }
+
+      if (selectedProfile) {
+        this.globalContext.update("lastSelectedProfileForWorkspace", {
+          ...selectedProfiles,
+          [workspaceId]: selectedProfile.profileDescription.id,
+        });
+      }
+
+      this.profiles = profiles;
+      this.currentProfile = selectedProfile;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
       await this.reloadConfig(reason, errors);
     } catch (e) {
@@ -167,6 +253,7 @@ export class ConfigHandler {
     }
   }
 
+<<<<<<< HEAD
   private async getOrgs(): Promise<{
     orgs: OrgWithProfiles[];
     errors?: ConfigValidationError[];
@@ -212,18 +299,36 @@ export class ConfigHandler {
     try {
       const orgs = [await this.getLocalOrg()];
       return { orgs };
+=======
+  private async loadProfiles(): Promise<{
+    profiles: ProfileLifecycleManager[];
+    errors?: ConfigValidationError[];
+  }> {
+    const errors: ConfigValidationError[] = [];
+    try {
+      const profiles = await this.getLocalProfiles({
+        includeGlobal: true,
+        includeWorkspace: true,
+      });
+      return { profiles };
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     } catch (e) {
       errors.push({
         fatal: true,
         message: `Error loading local assistants${e instanceof Error ? ":\n" + e.message : ""}`,
       });
       return {
+<<<<<<< HEAD
         orgs: [],
+=======
+        profiles: [],
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         errors,
       };
     }
   }
 
+<<<<<<< HEAD
   getSerializedOrgs(): SerializedOrgWithProfiles[] {
     return this.organizations.map((org) => ({
       iconUrl: org.iconUrl,
@@ -340,10 +445,13 @@ export class ConfigHandler {
     };
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   async getLocalProfiles(options: LoadAssistantFilesOptions) {
     /**
      * Users can define as many local agents as they want in a `.continue/agents` (or previous .continue/assistants) folder
      */
+<<<<<<< HEAD
 
     // Local customization disabled for on-premise deployments
     const env = await getControlPlaneEnv(this.ide.getIdeSettings());
@@ -351,6 +459,8 @@ export class ConfigHandler {
       return [];
     }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     const localProfiles: ProfileLifecycleManager[] = [];
 
     if (options.includeGlobal) {
@@ -358,6 +468,7 @@ export class ConfigHandler {
     }
 
     if (options.includeWorkspace) {
+<<<<<<< HEAD
       const assistantFiles = await getAllDotContinueDefinitionFiles(
         this.ide,
         { ...options, fileExtType: "yaml" },
@@ -375,6 +486,18 @@ export class ConfigHandler {
           this.llmLogger,
           assistant,
         );
+=======
+      const yamlOptions = { ...options, fileExtType: "yaml" } as const;
+      const allFiles = (
+        await Promise.all([
+          getAllDotContinueDefinitionFiles(this.ide, yamlOptions, "assistants"),
+          getAllDotContinueDefinitionFiles(this.ide, yamlOptions, "agents"),
+          getAllDotContinueDefinitionFiles(this.ide, yamlOptions, "configs"),
+        ])
+      ).flat();
+      const profiles = allFiles.map((assistant) => {
+        return new LocalProfileLoader(this.ide, this.llmLogger, assistant);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       });
       const localAssistantProfiles = profiles.map(
         (profile) => new ProfileLifecycleManager(profile, this.ide),
@@ -399,6 +522,7 @@ export class ConfigHandler {
     await this.cascadeInit("IDE settings update");
   }
 
+<<<<<<< HEAD
   // Session change: refresh session and cascade refresh from the top
   async updateControlPlaneSessionInfo(
     sessionInfo: ControlPlaneSessionInfo | undefined,
@@ -475,12 +599,17 @@ export class ConfigHandler {
     if (!this.currentOrg) {
       throw new Error(`No org selected`);
     }
+=======
+  // Profile id: check id validity, save selection, switch and reload
+  async setSelectedProfileId(profileId: string) {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     if (
       this.currentProfile &&
       profileId === this.currentProfile.profileDescription.id
     ) {
       return;
     }
+<<<<<<< HEAD
     const profile = this.currentOrg.profiles.find(
       (profile) => profile.profileDescription.id === profileId,
     );
@@ -489,11 +618,25 @@ export class ConfigHandler {
     }
 
     const profileKey = await this.getProfileKey(this.currentOrg.id);
+=======
+    const profile = this.profiles.find(
+      (profile) => profile.profileDescription.id === profileId,
+    );
+    if (!profile) {
+      throw new Error(`Profile ${profileId} not found`);
+    }
+
+    const workspaceId = await this.getWorkspaceId();
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     const selectedProfiles =
       this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
     this.globalContext.update("lastSelectedProfileForWorkspace", {
       ...selectedProfiles,
+<<<<<<< HEAD
       [profileKey]: profileId,
+=======
+      [workspaceId]: profileId,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
 
     this.currentProfile = profile;
@@ -518,6 +661,7 @@ export class ConfigHandler {
       return out;
     }
 
+<<<<<<< HEAD
     for (const org of this.organizations) {
       for (const profile of org.profiles) {
         if (
@@ -526,6 +670,14 @@ export class ConfigHandler {
         ) {
           profile.clearConfig();
         }
+=======
+    for (const profile of this.profiles) {
+      if (
+        profile.profileDescription.id !==
+        this.currentProfile.profileDescription.id
+      ) {
+        profile.clearConfig();
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       }
     }
 
@@ -543,6 +695,7 @@ export class ConfigHandler {
 
     this.initter.emit("init");
 
+<<<<<<< HEAD
     // Track config loading telemetry
     const endTime = performance.now();
     const duration = endTime - startTime;
@@ -562,6 +715,8 @@ export class ConfigHandler {
 
     void Telemetry.capture("config_reload", telemetryData);
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     if (errors.length) {
       Logger.error("Errors loading config: ", errors);
     }
@@ -628,7 +783,11 @@ export class ConfigHandler {
     if (!openProfileId) {
       return;
     }
+<<<<<<< HEAD
     const profile = this.currentOrg?.profiles.find(
+=======
+    const profile = this.profiles.find(
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       (p) => p.profileDescription.id === openProfileId,
     );
     if (!profile) {
@@ -636,6 +795,7 @@ export class ConfigHandler {
       return;
     }
 
+<<<<<<< HEAD
     if (profile.profileDescription.profileType === "local") {
       const configFile = element?.sourceFile ?? profile.profileDescription.uri;
       await this.ide.openFile(configFile);
@@ -643,6 +803,11 @@ export class ConfigHandler {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
     }
+=======
+    getConfigYamlPath();
+    const configFile = element?.sourceFile ?? profile.profileDescription.uri;
+    await this.ide.openFile(configFile);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }
 
   // Ancient method of adding custom providers through vs code

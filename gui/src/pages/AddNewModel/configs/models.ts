@@ -25,7 +25,11 @@ export interface ModelPackage {
   params: {
     model: ILLM["model"];
     templateMessages?: ILLM["templateMessages"];
+<<<<<<< HEAD
     contextLength: ILLM["contextLength"];
+=======
+    contextLength?: ILLM["contextLength"];
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     stopTokens?: string[];
     promptTemplates?: ILLM["promptTemplates"];
     replace?: [string, string][];
@@ -648,6 +652,7 @@ export const models: { [key: string]: ModelPackage } = {
     ],
     isOpenSource: true,
   },
+<<<<<<< HEAD
   mixtralTrial: {
     title: "Mixtral (Free Trial)",
     description:
@@ -662,6 +667,8 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["groq"],
     isOpenSource: false,
   },
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   llama38bChat: {
     title: "Llama3 8b",
     description: "The latest Llama model from Meta, fine-tuned for chat",
@@ -2240,6 +2247,51 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
+<<<<<<< HEAD
+=======
+  gpt5_4Pro: {
+    title: "GPT-5.4 Pro",
+    description:
+      "OpenAI's smartest model with increased compute for more precise responses.",
+    params: {
+      model: "gpt-5.4-pro",
+      contextLength: 1_050_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-5.4 Pro",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt5_4: {
+    title: "GPT-5.4",
+    description:
+      "OpenAI's high-intelligence flagship model with 1M context window.",
+    params: {
+      model: "gpt-5.4",
+      contextLength: 1_050_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-5.4",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt5_4Mini: {
+    title: "GPT-5.4 Mini",
+    description:
+      "OpenAI's strongest mini model for coding, computer use, and high-volume workloads.",
+    params: {
+      model: "gpt-5.4-mini",
+      contextLength: 400_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-5.4 Mini",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   codexMini: {
     title: "Codex Mini",
     description:
@@ -2438,6 +2490,22 @@ export const models: { [key: string]: ModelPackage } = {
     },
     isOpenSource: true,
   },
+<<<<<<< HEAD
+=======
+  gemma4: {
+    title: "Gemma 4",
+    description:
+      "Gemma 4 is a multimodal open model from Google, supporting text, image, tool use, and up to 128k context.",
+    params: {
+      title: "Gemma 4",
+      model: "gemma4",
+      contextLength: 128_000,
+    },
+    icon: "gemini.png",
+    providerOptions: ["ollama"],
+    isOpenSource: true,
+  },
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   phi3mini: {
     title: "Microsoft Phi 3 mini",
     description:
@@ -3270,4 +3338,23 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "mimo.png",
     isOpenSource: false,
   },
+<<<<<<< HEAD
+=======
+
+  // Inception Labs models
+  mercury2: {
+    title: "Mercury 2",
+    description:
+      "Inception Labs' fastest reasoning LLM with 128k context, tool calling, and structured outputs.",
+    refUrl: "https://docs.inceptionlabs.ai/",
+    params: {
+      title: "Mercury 2",
+      model: "mercury-2",
+      contextLength: 128_000,
+    },
+    providerOptions: ["inception"],
+    icon: "inception.png",
+    isOpenSource: false,
+  },
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 };

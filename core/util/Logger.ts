@@ -1,5 +1,8 @@
 import winston from "winston";
+<<<<<<< HEAD
 import { captureException } from "./sentry/SentryLogger";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 class LoggerClass {
   private static instance: LoggerClass;
@@ -28,8 +31,15 @@ class LoggerClass {
               }),
             ]
           : []),
+<<<<<<< HEAD
         // Normal console.log behavior
         new winston.transports.Console(),
+=======
+        // Use stderr to avoid corrupting IPC stdout stream in the binary
+        new winston.transports.Console({
+          stderrLevels: ["error", "warn", "info", "debug"],
+        }),
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       ],
     });
   }
@@ -41,10 +51,13 @@ class LoggerClass {
     return LoggerClass.instance;
   }
 
+<<<<<<< HEAD
   private shouldSendToSentry(): boolean {
     return process.env.NODE_ENV !== "test" && process.env.NODE_ENV !== "e2e";
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   public log(message: string, meta?: any): void {
     this.winston.info(message, meta);
   }
@@ -76,10 +89,13 @@ class LoggerClass {
     }
 
     this.winston.error(errorMessage, context);
+<<<<<<< HEAD
 
     if (this.shouldSendToSentry() && error instanceof Error) {
       captureException(error, context);
     }
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }
 }
 

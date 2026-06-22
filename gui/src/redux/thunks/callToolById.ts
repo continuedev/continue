@@ -2,7 +2,11 @@ import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ContextItem, McpUiState } from "core";
 import { CLIENT_TOOLS_IMPLS } from "core/tools/builtIn";
 import { ContinueError, ContinueErrorReason } from "core/util/errors";
+<<<<<<< HEAD
 import posthog from "posthog-js";
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { callClientTool } from "../../util/clientTools/callClientTool";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
@@ -34,6 +38,7 @@ export const callToolById = createAsyncThunk<
     return;
   }
 
+<<<<<<< HEAD
   // Track tool call acceptance and start timing
   const startTime = Date.now();
 
@@ -46,6 +51,10 @@ export const callToolById = createAsyncThunk<
     toolCallId: toolCallId,
   });
 
+=======
+  const selectedChatModel = selectSelectedChatModel(state);
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   if (!selectedChatModel) {
     throw new Error("No model selected");
   }
@@ -129,6 +138,7 @@ export const callToolById = createAsyncThunk<
     );
   }
 
+<<<<<<< HEAD
   // Capture telemetry for tool call execution outcome with duration
   const duration_ms = Date.now() - startTime;
   posthog.capture("tool_call_outcome", {
@@ -139,6 +149,8 @@ export const callToolById = createAsyncThunk<
     duration_ms: duration_ms,
   });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   if (streamResponse) {
     if (error) {
       logToolUsage(toolCallState, false, false, extra.ideMessenger, output);

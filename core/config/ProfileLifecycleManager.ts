@@ -2,7 +2,10 @@ import {
   ConfigResult,
   ConfigValidationError,
   FullSlug,
+<<<<<<< HEAD
   Policy,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 } from "@continuedev/config-yaml";
 
 import {
@@ -18,7 +21,10 @@ import { IProfileLoader } from "./profile/IProfileLoader.js";
 
 export interface ProfileDescription {
   fullSlug: FullSlug;
+<<<<<<< HEAD
   profileType: "control-plane" | "local" | "platform";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   title: string;
   id: string;
   iconUrl: string;
@@ -27,6 +33,7 @@ export interface ProfileDescription {
   rawYaml?: string;
 }
 
+<<<<<<< HEAD
 export interface OrganizationDescription {
   id: string;
   iconUrl: string;
@@ -45,6 +52,8 @@ export type SerializedOrgWithProfiles = OrganizationDescription & {
   selectedProfileId: string | null;
 };
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export class ProfileLifecycleManager {
   private savedConfigResult: ConfigResult<ContinueConfig> | undefined;
   private savedBrowserConfigResult?: ConfigResult<BrowserSerializedContinueConfig>;
@@ -99,7 +108,10 @@ export class ProfileLifecycleManager {
         try {
           result = await this.profileLoader.doLoadConfig();
         } catch (e) {
+<<<<<<< HEAD
           // Capture config loading system failures to Sentry
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           Logger.error(e, {
             context: "profile_config_loading",
           });

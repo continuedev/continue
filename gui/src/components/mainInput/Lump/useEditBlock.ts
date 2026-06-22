@@ -9,6 +9,7 @@ export function useEditBlock() {
   const { selectedProfile } = useAuth();
 
   return (slug?: string, sourceFile?: string) => {
+<<<<<<< HEAD
     if (slug) {
       ideMessenger.post("controlPlane/openUrl", {
         path: `${slug}/new-version`,
@@ -35,6 +36,17 @@ export function useEditBlock() {
       });
     } else {
       // Local etc
+=======
+    if (sourceFile) {
+      ideMessenger.post("openFile", {
+        path: sourceFile,
+      });
+    } else if (selectedProfile?.uri) {
+      ideMessenger.post("openFile", {
+        path: selectedProfile.uri,
+      });
+    } else {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       ideMessenger.post("config/openProfile", {
         profileId: undefined,
       });

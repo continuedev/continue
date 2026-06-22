@@ -1,6 +1,10 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { SlashCommandDescWithSource } from "core";
+<<<<<<< HEAD
 import { SerializedOrgWithProfiles } from "core/config/ProfileLifecycleManager";
+=======
+import { ProfileDescription } from "core/config/ProfileLifecycleManager";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 const DEFAULT_SLASH_COMMANDS_BOOKMARKS_COUNT = 5;
 
@@ -13,15 +17,21 @@ export interface PreferencesState {
 }
 
 export interface ProfilesState {
+<<<<<<< HEAD
   organizations: SerializedOrgWithProfiles[];
   selectedProfileId: string | null;
   selectedOrganizationId: string | null;
+=======
+  profiles: ProfileDescription[];
+  selectedProfileId: string | null;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   preferencesByProfileId: Record<string, PreferencesState>;
 }
 
 export const INITIAL_PROFILES_STATE: ProfilesState = {
   preferencesByProfileId: {},
   selectedProfileId: null,
+<<<<<<< HEAD
   selectedOrganizationId: null,
   organizations: [
     {
@@ -45,6 +55,20 @@ export const INITIAL_PROFILES_STATE: ProfilesState = {
       selectedProfileId: "local",
       name: "Personal",
       iconUrl: "",
+=======
+  profiles: [
+    {
+      title: "Main Config",
+      id: "local",
+      errors: [],
+      uri: "",
+      iconUrl: "",
+      fullSlug: {
+        ownerSlug: "",
+        packageSlug: "",
+        versionSlug: "",
+      },
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     },
   ],
 };
@@ -55,6 +79,7 @@ export const profilesSlice = createSlice({
   reducers: {
     setSelectedProfile: (state, { payload }: PayloadAction<string | null>) => {
       state.selectedProfileId = payload;
+<<<<<<< HEAD
       const currentOrg = state.organizations.find(
         (o) => o.id === state.selectedOrganizationId,
       );
@@ -76,6 +101,11 @@ export const profilesSlice = createSlice({
       } else {
         state.selectedProfileId = null;
       }
+=======
+    },
+    setProfiles: (state, { payload }: PayloadAction<ProfileDescription[]>) => {
+      state.profiles = payload;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     },
     initializeProfilePreferences: (
       state,
@@ -142,6 +172,7 @@ export const profilesSlice = createSlice({
   },
   selectors: {
     selectSelectedProfile: (state) => {
+<<<<<<< HEAD
       const selectedOrg = state.organizations.find(
         (org) => org.id === state.selectedOrganizationId,
       );
@@ -159,10 +190,22 @@ export const profilesSlice = createSlice({
       return (
         state.organizations.find(
           (org) => org.id === state.selectedOrganizationId,
+=======
+      return (
+        (state.profiles ?? []).find(
+          (profile) => profile.id === state.selectedProfileId,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         ) ?? null
       );
     },
 
+<<<<<<< HEAD
+=======
+    selectProfiles: (state) => {
+      return state.profiles ?? [];
+    },
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     selectBookmarkedSlashCommands: (state) => {
       if (!state.selectedProfileId) return [];
       const preferences = state.preferencesByProfileId[state.selectedProfileId];
@@ -178,15 +221,25 @@ export const {
   bookmarkSlashCommand,
   unbookmarkSlashCommand,
   initializeProfilePreferences,
+<<<<<<< HEAD
   setOrganizations,
   setSelectedOrgId,
+=======
+  setProfiles,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 } = profilesSlice.actions;
 
 export const {
   selectSelectedProfile,
+<<<<<<< HEAD
   selectBookmarkedSlashCommands,
   selectPreferencesByProfileId,
   selectCurrentOrg,
+=======
+  selectProfiles,
+  selectBookmarkedSlashCommands,
+  selectPreferencesByProfileId,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 } = profilesSlice.selectors;
 
 export const { reducer: profilesReducer } = profilesSlice;

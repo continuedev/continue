@@ -1,5 +1,8 @@
 import { SlashCommandDescWithSource } from "core";
+<<<<<<< HEAD
 import { usePostHog } from "posthog-js/react";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
@@ -10,7 +13,10 @@ import {
 
 export function useBookmarkedSlashCommands() {
   const dispatch = useAppDispatch();
+<<<<<<< HEAD
   const posthog = usePostHog();
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const bookmarkedCommands = useAppSelector(selectBookmarkedSlashCommands);
 
   const isCommandBookmarked = (commandName: string): boolean => {
@@ -20,10 +26,13 @@ export function useBookmarkedSlashCommands() {
   const toggleBookmark = (command: SlashCommandDescWithSource) => {
     const isBookmarked = isCommandBookmarked(command.name);
 
+<<<<<<< HEAD
     posthog.capture("toggle_bookmarked_slash_command", {
       isBookmarked,
     });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     if (isBookmarked) {
       dispatch(
         unbookmarkSlashCommand({

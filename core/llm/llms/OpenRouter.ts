@@ -1,5 +1,10 @@
 import { ChatCompletionCreateParams } from "openai/resources/index";
 
+<<<<<<< HEAD
+=======
+import { OPENROUTER_HEADERS } from "@continuedev/openai-adapters";
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { LLMOptions } from "../../index.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
 
@@ -18,6 +23,22 @@ class OpenRouter extends OpenAI {
     useLegacyCompletionsEndpoint: false,
   };
 
+<<<<<<< HEAD
+=======
+  constructor(options: LLMOptions) {
+    super({
+      ...options,
+      requestOptions: {
+        ...options.requestOptions,
+        headers: {
+          ...OPENROUTER_HEADERS,
+          ...options.requestOptions?.headers,
+        },
+      },
+    });
+  }
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   private isAnthropicModel(model?: string): boolean {
     if (!model) return false;
     const modelLower = model.toLowerCase();

@@ -59,7 +59,10 @@ import SambaNova from "./SambaNova";
 import Scaleway from "./Scaleway";
 import SiliconFlow from "./SiliconFlow";
 import Tensorix from "./Tensorix";
+<<<<<<< HEAD
 import ContinueProxy from "./stubs/ContinueProxy";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import TARS from "./TARS";
 import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
@@ -104,7 +107,10 @@ export const LLMClasses = [
   Groq,
   Fireworks,
   NCompass,
+<<<<<<< HEAD
   ContinueProxy,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   Cloudflare,
   Deepseek,
   Docker,
@@ -186,6 +192,7 @@ export async function llmFromDescription(
     uniqueId,
   };
 
+<<<<<<< HEAD
   if (desc.provider === "continue-proxy") {
     options.apiKey = ideSettings.userToken;
     if (ideSettings.remoteConfigServerUrl) {
@@ -196,6 +203,8 @@ export async function llmFromDescription(
     }
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   return new cls(options);
 }
 

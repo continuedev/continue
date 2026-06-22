@@ -187,6 +187,7 @@ export function HelpSection() {
                   ideMessenger.post("openUrl", "https://docs.continue.dev/")
                 }
               />
+<<<<<<< HEAD
 
               <ConfigRow
                 title="Have an issue?"
@@ -211,6 +212,8 @@ export function HelpSection() {
                   )
                 }
               />
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             </div>
           </Card>
         </div>

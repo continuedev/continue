@@ -36,7 +36,10 @@ import { getLegacyBuiltInSlashCommandFromDescription } from "../commands/slash/b
 import { convertCustomCommandToSlashCommand } from "../commands/slash/customSlashCommand";
 import { slashCommandFromPromptFile } from "../commands/slash/promptFileSlashCommand";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
+<<<<<<< HEAD
 import { useHub } from "../control-plane/env";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { BaseLLM } from "../llm";
 import { LLMClasses, llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
@@ -60,7 +63,10 @@ import { localPathToUri } from "../util/pathToUri";
 
 import { loadJsonMcpConfigs } from "../context/mcp/json/loadJsonMcpConfigs";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
+<<<<<<< HEAD
 import { PolicySingleton } from "../control-plane/PolicySingleton";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { getBaseToolDefinitions, serializeTool } from "../tools";
 import { resolveRelativePathInDir } from "../util/ideUtils";
 import { getWorkspaceRcConfigs } from "./json/loadRcConfigs";
@@ -240,7 +246,10 @@ async function intermediateToFinalConfig({
   ideInfo,
   uniqueId,
   llmLogger,
+<<<<<<< HEAD
   workOsAccessToken,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   loadPromptFiles = true,
 }: {
   config: Config;
@@ -249,7 +258,10 @@ async function intermediateToFinalConfig({
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
+<<<<<<< HEAD
   workOsAccessToken: string | undefined;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   loadPromptFiles?: boolean;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   const errors: ConfigValidationError[] = [];
@@ -346,6 +358,7 @@ async function intermediateToFinalConfig({
     "summarize",
   ]); // Default to chat role if not specified
 
+<<<<<<< HEAD
   // Free trial provider will be completely ignored
   let warnAboutFreeTrial = false;
   models = models.filter((model) => model.providerName !== "free-trial");
@@ -353,6 +366,8 @@ async function intermediateToFinalConfig({
     warnAboutFreeTrial = true;
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   // Tab autocomplete model
   const tabAutocompleteModels: BaseLLM[] = [];
   if (config.tabAutocompleteModel) {
@@ -373,11 +388,15 @@ async function intermediateToFinalConfig({
             config.completionOptions,
           );
           if (llm) {
+<<<<<<< HEAD
             if (llm.providerName === "free-trial") {
               warnAboutFreeTrial = true;
             } else {
               tabAutocompleteModels.push(llm);
             }
+=======
+            tabAutocompleteModels.push(llm);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           }
         } else {
           tabAutocompleteModels.push(new CustomLLMClass(desc));
@@ -418,10 +437,14 @@ async function intermediateToFinalConfig({
         return embedConfig;
       }
       const { provider, ...options } = embedConfig;
+<<<<<<< HEAD
       if (provider === "transformers.js" || provider === "free-trial") {
         if (provider === "free-trial") {
           warnAboutFreeTrial = true;
         }
+=======
+      if (provider === "transformers.js") {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         return new TransformersJsEmbeddingsProvider();
       } else {
         const cls = LLMClasses.find((c) => c.providerName === provider);
@@ -458,10 +481,13 @@ async function intermediateToFinalConfig({
       return rerankingConfig;
     }
     const { name, params } = config.reranker as RerankerDescription;
+<<<<<<< HEAD
     if (name === "free-trial") {
       warnAboutFreeTrial = true;
       return null;
     }
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     if (name === "llm") {
       const llm = models.find((model) => model.title === params?.modelTitle);
       if (!llm) {
@@ -492,6 +518,7 @@ async function intermediateToFinalConfig({
   }
   const newReranker = getRerankingILLM(config.reranker);
 
+<<<<<<< HEAD
   if (warnAboutFreeTrial) {
     errors.push({
       fatal: false,
@@ -500,6 +527,8 @@ async function intermediateToFinalConfig({
     });
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
@@ -550,10 +579,14 @@ async function intermediateToFinalConfig({
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
 
+<<<<<<< HEAD
   const orgPolicy = PolicySingleton.getInstance().policy;
   if (orgPolicy?.policy?.allowMcpServers === false) {
     await mcpManager.shutdown();
   } else {
+=======
+  {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     const mcpOptions: InternalMcpOptions[] = (
       config.experimental?.modelContextProtocolServers ?? []
     ).map((server, index) => ({
@@ -677,7 +710,10 @@ async function finalToBrowserConfig(
     tools: final.tools.map(serializeTool),
     mcpServerStatuses: final.mcpServerStatuses,
     tabAutocompleteOptions: final.tabAutocompleteOptions,
+<<<<<<< HEAD
     usePlatform: await useHub(ide.getIdeSettings()),
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     modelsByRole: Object.fromEntries(
       Object.entries(final.modelsByRole).map(([k, v]) => [
         k,
@@ -828,7 +864,10 @@ async function loadContinueConfigFromJson(
   ideInfo: IdeInfo,
   uniqueId: string,
   llmLogger: ILLMLogger,
+<<<<<<< HEAD
   workOsAccessToken: string | undefined,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   overrideConfigJson: SerializedContinueConfig | undefined,
 ): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceRcConfigs(ide);
@@ -924,7 +963,10 @@ async function loadContinueConfigFromJson(
       ideInfo,
       uniqueId,
       llmLogger,
+<<<<<<< HEAD
       workOsAccessToken,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
   return {
     config: finalConfig,

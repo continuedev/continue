@@ -61,12 +61,15 @@ vi.mock("../../tools/callTool", () => ({
 vi.mock("../../tools/mcpToolName", () => ({
   getMCPToolName: vi.fn(),
 }));
+<<<<<<< HEAD
 vi.mock("../../util/posthog", () => ({
   Telemetry: { setup: vi.fn() },
 }));
 vi.mock("../../util/sentry/SentryLogger", () => ({
   SentryLogger: { setup: vi.fn() },
 }));
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 vi.mock("../../util/tts", () => ({
   TTS: { setup: vi.fn() },
 }));
@@ -78,6 +81,7 @@ vi.mock("../../util/GlobalContext", () => ({
     update() {}
   },
 }));
+<<<<<<< HEAD
 vi.mock("../../control-plane/env", () => ({
   getControlPlaneEnv: vi.fn().mockResolvedValue({
     DEFAULT_CONTROL_PLANE_PROXY_URL: "https://proxy.example.com/",
@@ -92,6 +96,8 @@ vi.mock("../../control-plane/PolicySingleton", () => ({
 vi.mock("../../control-plane/TeamAnalytics", () => ({
   TeamAnalytics: { setup: vi.fn(), shutdown: vi.fn() },
 }));
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 vi.mock("../../promptFiles/initPrompt", () => ({
   initSlashCommand: { name: "init", description: "init" },
 }));
@@ -125,12 +131,15 @@ const mockIde = {
   isWorkspaceRemote: vi.fn().mockResolvedValue(true),
 } as any;
 
+<<<<<<< HEAD
 const mockControlPlaneClient = {
   getAccessToken: vi.fn().mockResolvedValue("token"),
   isSignedIn: vi.fn().mockResolvedValue(false),
   sessionInfoPromise: Promise.resolve(undefined),
 } as any;
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 const mockLlmLogger = {} as any;
 
 describe("doLoadConfig pre-read content bypass", () => {
@@ -147,11 +156,19 @@ describe("doLoadConfig pre-read content bypass", () => {
 
     await doLoadConfig({
       ide: mockIde,
+<<<<<<< HEAD
       controlPlaneClient: mockControlPlaneClient,
       llmLogger: mockLlmLogger,
       profileId: "test-profile",
       overrideConfigYamlByPath: packageIdentifier.fileUri,
       orgScopeId: null,
+=======
+
+      llmLogger: mockLlmLogger,
+      profileId: "test-profile",
+      overrideConfigYamlByPath: packageIdentifier.fileUri,
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       packageIdentifier,
     });
 
@@ -171,11 +188,19 @@ describe("doLoadConfig pre-read content bypass", () => {
 
     await doLoadConfig({
       ide: mockIde,
+<<<<<<< HEAD
       controlPlaneClient: mockControlPlaneClient,
       llmLogger: mockLlmLogger,
       profileId: "test-profile",
       overrideConfigYamlByPath: packageIdentifier.fileUri,
       orgScopeId: null,
+=======
+
+      llmLogger: mockLlmLogger,
+      profileId: "test-profile",
+      overrideConfigYamlByPath: packageIdentifier.fileUri,
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       packageIdentifier,
     });
 

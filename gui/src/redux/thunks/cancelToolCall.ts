@@ -1,12 +1,20 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
+<<<<<<< HEAD
 import posthog from "posthog-js";
 import { selectSelectedChatModel } from "../slices/configSlice";
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import {
   cancelToolCall as cancelToolCallAction,
   updateToolCallOutput,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
+<<<<<<< HEAD
 import { findToolCallById } from "../util";
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
 const DEFAULT_USER_REJECTION_MESSAGE = `The user skipped the tool call.
@@ -20,6 +28,7 @@ export const cancelToolCallThunk = createAsyncThunk<
   ThunkApiType
 >("chat/cancelToolCall", async ({ toolCallId }, { dispatch, getState }) => {
   const state = getState();
+<<<<<<< HEAD
   const selectedChatModel = selectSelectedChatModel(state);
   const continueAfterToolRejection =
     state.config.config.ui?.continueAfterToolRejection;
@@ -34,6 +43,10 @@ export const cancelToolCallThunk = createAsyncThunk<
       toolCallId: toolCallId,
     });
   }
+=======
+  const continueAfterToolRejection =
+    state.config.config.ui?.continueAfterToolRejection;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   if (continueAfterToolRejection) {
     // Update tool call output with rejection message

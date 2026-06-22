@@ -53,19 +53,30 @@ const SlashCommandsMaybe: React.FC<{
   show,
   inputMode,
   hideNormalUI,
+<<<<<<< HEAD
   isRemoteMode,
+=======
+  isRemoteMode: _isRemoteMode,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   assistant,
   filter,
   selectedIndex,
 }) => {
+<<<<<<< HEAD
   if (!show || !inputMode || hideNormalUI || !(isRemoteMode || assistant))
     return null;
+=======
+  if (!show || !inputMode || hideNormalUI || !assistant) return null;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   return (
     <SlashCommandUI
       assistant={assistant}
       filter={filter}
       selectedIndex={selectedIndex}
+<<<<<<< HEAD
       isRemoteMode={isRemoteMode}
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     />
   );
 };
@@ -195,17 +206,26 @@ const UserInput: React.FC<UserInputProps> = ({
 
   useEffect(() => {
     const loadCommands = async () => {
+<<<<<<< HEAD
       if (assistant || isRemoteMode) {
         const commands = await getAllSlashCommands(
           assistant || ({} as AssistantConfig),
           { isRemoteMode },
         );
+=======
+      if (assistant) {
+        const commands = await getAllSlashCommands(assistant);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         setSlashCommands(commands);
       }
     };
 
     void loadCommands();
+<<<<<<< HEAD
   }, [isRemoteMode, assistant?.prompts, assistant?.rules]);
+=======
+  }, [assistant?.prompts, assistant?.rules]);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   // Cycle through permission modes
   const cycleModes = async () => {

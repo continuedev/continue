@@ -70,14 +70,28 @@ export function addModel(
         config.models = [];
       }
 
+<<<<<<< HEAD
+=======
+      const capabilities: string[] = [];
+      if (model.capabilities?.tools) capabilities.push("tool_use");
+      if (model.capabilities?.uploadImage) capabilities.push("image_input");
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const desc: ModelConfig = {
         name: model.title,
         provider: model.provider,
         model: model.model,
         apiKey: model.apiKey,
         apiBase: model.apiBase,
+<<<<<<< HEAD
         maxStopWords: model.maxStopWords,
         defaultCompletionOptions: model.completionOptions,
+=======
+        contextLength: model.contextLength,
+        maxStopWords: model.maxStopWords,
+        defaultCompletionOptions: model.completionOptions,
+        ...(capabilities.length > 0 ? { capabilities } : {}),
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       };
       config.models.push(desc);
       return config;

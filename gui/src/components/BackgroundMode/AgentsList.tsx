@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { ArrowPathIcon, PlayIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { normalizeRepoUrl } from "core/util/repoUrl";
@@ -18,10 +19,13 @@ interface Agent {
   };
 }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 interface AgentsListProps {
   isCreatingAgent?: boolean;
 }
 
+<<<<<<< HEAD
 interface WorkspaceInfo {
   repoUrl: string;
   workspaceDir: string;
@@ -312,3 +316,12 @@ function formatRelativeTime(dateString: string): string {
     return dateString;
   }
 }
+=======
+export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
+  return (
+    <div className="text-description-muted px-2 py-4 text-center text-sm">
+      Background agents are not available.
+    </div>
+  );
+}
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))

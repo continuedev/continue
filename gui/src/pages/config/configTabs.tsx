@@ -1,6 +1,9 @@
 import {
   ArrowLeftIcon,
+<<<<<<< HEAD
   BuildingOfficeIcon,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   CircleStackIcon,
   Cog6ToothIcon,
   CubeIcon,
@@ -14,7 +17,10 @@ import { ConfigsSection } from "./sections/ConfigsSection";
 import { HelpSection } from "./sections/HelpSection";
 import { IndexingSettingsSection } from "./sections/IndexingSettingsSection";
 import { ModelsSection } from "./sections/ModelsSection";
+<<<<<<< HEAD
 import { OrganizationsSection } from "./sections/OrganizationsSection";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { RulesSection } from "./sections/RulesSection";
 import { ToolsSection } from "./sections/ToolsSection";
 import { UserSettingsSection } from "./sections/UserSettingsSection";
@@ -98,6 +104,7 @@ export const topTabSections: TabSection[] = [
         ),
         icon: <DocumentIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />,
       },
+<<<<<<< HEAD
       {
         id: "organizations",
         label: "Organizations",
@@ -110,6 +117,8 @@ export const topTabSections: TabSection[] = [
           <BuildingOfficeIcon className="xs:h-4 xs:w-4 h-3 w-3 flex-shrink-0" />
         ),
       },
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     ],
   },
   {

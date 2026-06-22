@@ -57,7 +57,10 @@ export const modelDescriptionSchema = z.object({
     "cloudflare",
     "azure",
     "ovhcloud",
+<<<<<<< HEAD
     "continue-proxy",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     "nebius",
     "scaleway",
     "watsonx",
@@ -112,7 +115,10 @@ export const embeddingsProviderSchema = z.object({
     "cohere",
     "gemini",
     "ovhcloud",
+<<<<<<< HEAD
     "continue-proxy",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     "nebius",
     "scaleway",
     "watsonx",
@@ -188,21 +194,31 @@ export const contextProviderSchema = z.object({
 export type ContextProvider = z.infer<typeof contextProviderSchema>;
 
 export const rerankerSchema = z.object({
+<<<<<<< HEAD
   name: z.enum(["cohere", "voyage", "watsonx", "llm", "continue-proxy"]),
+=======
+  name: z.enum(["cohere", "voyage", "watsonx", "llm"]),
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   params: z.record(z.any()).optional(),
 });
 export type Reranker = z.infer<typeof rerankerSchema>;
 
 export const analyticsSchema = z.object({
   provider: z.enum([
+<<<<<<< HEAD
     "posthog",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     "amplitude",
     "segment",
     "logstash",
     "mixpanel",
     "splunk",
     "datadog",
+<<<<<<< HEAD
     "continue-proxy",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   ]),
   url: z.string().optional(),
   clientKey: z.string().optional(),
@@ -224,11 +240,14 @@ export const siteIndexingConfigSchema = z.object({
   sourceFile: z.string().optional(),
 });
 
+<<<<<<< HEAD
 export const controlPlaneConfigSchema = z.object({
   useContinueForTeamsProxy: z.boolean().optional(),
   proxyUrl: z.string().optional(),
 });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export const configJsonSchema = z.object({
   models: z.array(modelDescriptionSchema),
   tabAutocompleteModel: modelDescriptionSchema.optional(),
@@ -247,6 +266,9 @@ export const configJsonSchema = z.object({
   tabAutocompleteOptions: tabAutocompleteOptionsSchema.optional(),
   ui: uiOptionsSchema.optional(),
   docs: z.array(siteIndexingConfigSchema).optional(),
+<<<<<<< HEAD
   controlPlane: controlPlaneConfigSchema.optional(),
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 });
 export type ConfigJson = z.infer<typeof configJsonSchema>;

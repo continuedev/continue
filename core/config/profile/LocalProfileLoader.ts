@@ -1,6 +1,9 @@
 import { ConfigResult } from "@continuedev/config-yaml";
 
+<<<<<<< HEAD
 import { ControlPlaneClient } from "../../control-plane/client.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { ContinueConfig, IDE, ILLMLogger } from "../../index.js";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
@@ -17,7 +20,10 @@ export default class LocalProfileLoader implements IProfileLoader {
 
   constructor(
     private ide: IDE,
+<<<<<<< HEAD
     private controlPlaneClient: ControlPlaneClient,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     private llmLogger: ILLMLogger,
     private overrideAssistantFile?:
       | { path: string; content: string }
@@ -25,7 +31,10 @@ export default class LocalProfileLoader implements IProfileLoader {
   ) {
     this.description = {
       id: overrideAssistantFile?.path ?? LocalProfileLoader.ID,
+<<<<<<< HEAD
       profileType: "local",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       fullSlug: {
         ownerSlug: "",
         packageSlug: "",
@@ -34,7 +43,11 @@ export default class LocalProfileLoader implements IProfileLoader {
       iconUrl: "",
       title: overrideAssistantFile?.path
         ? getUriPathBasename(overrideAssistantFile.path)
+<<<<<<< HEAD
         : "Local Config",
+=======
+        : "Main Config",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       errors: undefined,
       uri:
         overrideAssistantFile?.path ??
@@ -46,11 +59,17 @@ export default class LocalProfileLoader implements IProfileLoader {
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
     const result = await doLoadConfig({
       ide: this.ide,
+<<<<<<< HEAD
       controlPlaneClient: this.controlPlaneClient,
       llmLogger: this.llmLogger,
       profileId: this.description.id,
       overrideConfigYamlByPath: this.overrideAssistantFile?.path,
       orgScopeId: null,
+=======
+      llmLogger: this.llmLogger,
+      profileId: this.description.id,
+      overrideConfigYamlByPath: this.overrideAssistantFile?.path,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       packageIdentifier: {
         uriType: "file",
         fileUri: this.overrideAssistantFile?.path ?? getPrimaryConfigFilePath(),

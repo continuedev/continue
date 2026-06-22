@@ -8,7 +8,10 @@ import { Card, Divider } from "../../../components/ui";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateConfig } from "../../../redux/slices/configSlice";
+<<<<<<< HEAD
 import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { ConfigHeader } from "../components/ConfigHeader";
 import { UserSetting } from "../components/UserSetting";
 import IndexingProgress from "../features/indexing";
@@ -42,7 +45,10 @@ function EnableIndexingSetting() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((state) => state.config.config);
+<<<<<<< HEAD
   const currentOrg = useAppSelector(selectCurrentOrg);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   function handleUpdate(sharedConfig: SharedConfigSchema) {
     const updatedConfig = modifyAnyConfigWithSharedConfig(config, sharedConfig);
@@ -51,8 +57,12 @@ function EnableIndexingSetting() {
   }
 
   const disableIndexing = config.disableIndexing ?? false;
+<<<<<<< HEAD
   const disableIndexingToggle =
     currentOrg?.policy?.allowCodebaseIndexing === false;
+=======
+  const disableIndexingToggle = false;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   return (
     <div className="flex flex-col gap-4">

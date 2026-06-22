@@ -2,6 +2,7 @@
 import { PROVIDER_TOOL_SUPPORT, isRecommendedAgentModel } from "./toolSupport";
 
 describe("PROVIDER_TOOL_SUPPORT", () => {
+<<<<<<< HEAD
   describe("continue-proxy", () => {
     const supportsFn = PROVIDER_TOOL_SUPPORT["continue-proxy"];
 
@@ -66,6 +67,8 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   describe("anthropic", () => {
     const supportsFn = PROVIDER_TOOL_SUPPORT["anthropic"];
 
@@ -107,6 +110,10 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     it("should return true for Gemma models", () => {
       expect(supportsFn("gemma")).toBe(true);
       expect(supportsFn("gemma3")).toBe(true);
+<<<<<<< HEAD
+=======
+      expect(supportsFn("gemma4")).toBe(true);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
 
     it("should return undefined for unsupported models", () => {
@@ -118,6 +125,10 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("GPT-4-turbo")).toBe(true);
       expect(supportsFn("O3-preview")).toBe(true);
       expect(supportsFn("Gemma3")).toBe(true);
+<<<<<<< HEAD
+=======
+      expect(supportsFn("Gemma4")).toBe(true);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
   });
 
@@ -444,7 +455,10 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
 
   describe("edge cases", () => {
     it("should handle empty model names", () => {
+<<<<<<< HEAD
       expect(PROVIDER_TOOL_SUPPORT["continue-proxy"]("")).toBe(false);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       expect(PROVIDER_TOOL_SUPPORT["anthropic"]("")).toBe(false);
       expect(PROVIDER_TOOL_SUPPORT["openai"]("")).toBe(false);
       expect(PROVIDER_TOOL_SUPPORT["gemini"]("")).toBe(false);

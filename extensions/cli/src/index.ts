@@ -7,11 +7,15 @@ import { Command } from "commander";
 
 import { chat } from "./commands/chat.js";
 import { checks } from "./commands/checks.js";
+<<<<<<< HEAD
 import { login } from "./commands/login.js";
 import { logout } from "./commands/logout.js";
 import { listSessionsCommand } from "./commands/ls.js";
 import { remoteTest } from "./commands/remote-test.js";
 import { remote } from "./commands/remote.js";
+=======
+import { listSessionsCommand } from "./commands/ls.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { review } from "./commands/review.js";
 import { serve } from "./commands/serve.js";
 import {
@@ -19,9 +23,13 @@ import {
   validateFlags,
 } from "./flags/flagValidator.js";
 import { configureConsoleForHeadless, safeStderr } from "./init.js";
+<<<<<<< HEAD
 import { sentryService } from "./sentry.js";
 import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
 import { posthogService } from "./telemetry/posthogService.js";
+=======
+import { addCommonOptions, mergeParentOptions } from "./shared-options.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { post } from "./util/apiClient.js";
 import { markUnhandledError } from "./util/errorState.js";
 import { gracefulExit } from "./util/exit.js";
@@ -154,7 +162,10 @@ process.on("unhandledRejection", (reason, promise) => {
     });
   }
 
+<<<<<<< HEAD
   // Note: Sentry capture is handled by logger.error() above
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   // Don't exit the process immediately, but hasUnhandledError will cause non-zero exit later
 });
 
@@ -167,7 +178,10 @@ process.on("uncaughtException", (error) => {
   reportUnhandledErrorToApi(error).catch(() => {
     // Silently fail if API reporting errors - already logged in helper
   });
+<<<<<<< HEAD
   // Note: Sentry capture is handled by logger.error() above
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   // Don't exit the process immediately, but hasUnhandledError will cause non-zero exit later
 });
 
@@ -205,8 +219,11 @@ addCommonOptions(program)
     "Enable beta Subagent tool for invoking subagents",
   )
   .action(async (prompt, options) => {
+<<<<<<< HEAD
     // Telemetry: record command invocation
     await posthogService.capture("cliCommand", { command: "cn" });
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     // Handle piped input - detect it early and decide on mode
     let stdinInput = null;
 
@@ -306,6 +323,7 @@ addCommonOptions(program)
     await chat(prompt, options);
   });
 
+<<<<<<< HEAD
 // Login subcommand
 program
   .command("login")
@@ -326,19 +344,25 @@ program
     await logout();
   });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 // List sessions subcommand
 program
   .command("ls")
   .description("List recent chat sessions and select one to resume")
   .option("--json", "Output in JSON format")
   .action(async (options) => {
+<<<<<<< HEAD
     // Telemetry: record command invocation
     await posthogService.capture("cliCommand", { command: "ls" });
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     await listSessionsCommand({
       format: options.json ? "json" : undefined,
     });
   });
 
+<<<<<<< HEAD
 // Remote subcommand
 addCommonOptions(
   program
@@ -378,6 +402,8 @@ addCommonOptions(
     await remote(prompt, options);
   });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 // Serve subcommand
 program
   .command("serve [prompt]", { hidden: true })
@@ -397,8 +423,11 @@ program
     "Enable beta UploadArtifact tool for uploading screenshots, videos, and logs",
   )
   .action(async (prompt, options) => {
+<<<<<<< HEAD
     // Telemetry: record command invocation
     await posthogService.capture("cliCommand", { command: "serve" });
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     // Merge parent options with subcommand options
     const mergedOptions = mergeParentOptions(program, options);
 
@@ -410,6 +439,7 @@ program
     await serve(prompt, mergedOptions);
   });
 
+<<<<<<< HEAD
 // Remote test subcommand (for development)
 program
   .command("remote-test [prompt]")
@@ -421,12 +451,17 @@ program
     await remoteTest(prompt, options.url);
   });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 // Checks subcommand
 program
   .command("checks [action] [pr-url]")
   .description("Show CI check statuses for a PR")
   .action(async (action: string | undefined, prUrl: string | undefined) => {
+<<<<<<< HEAD
     await posthogService.capture("cliCommand", { command: "checks" });
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     await checks(action, prUrl);
   });
 
@@ -442,7 +477,10 @@ program
   .option("--review-agents <agents...>", "Specific review agents to run")
   .option("--verbose", "Enable verbose logging")
   .action(async (options) => {
+<<<<<<< HEAD
     await posthogService.capture("cliCommand", { command: "review" });
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     await review(options);
   });
 
@@ -468,9 +506,12 @@ export async function runCli(): Promise<void> {
     program.parse();
   } catch (error) {
     console.error(error);
+<<<<<<< HEAD
     sentryService.captureException(
       error instanceof Error ? error : new Error(String(error)),
     );
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     process.exit(1);
   }
 

@@ -10,10 +10,13 @@ import { defaultConfig } from "./default";
 
 describe.skip("Test the ConfigHandler and E2E config loading", () => {
   test("should show only local profile", () => {
+<<<<<<< HEAD
     const profiles = testConfigHandler.currentOrg?.profiles;
     expect(profiles?.length).toBe(1);
     expect(profiles?.[0].profileDescription.id).toBe("local");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     const currentProfile = testConfigHandler.currentProfile;
     expect(currentProfile?.profileDescription.id).toBe("local");
   });

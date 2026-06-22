@@ -1,9 +1,16 @@
 import { getContinueRcPath, getTsConfigPath } from "core/util/paths";
+<<<<<<< HEAD
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import { getExtensionVersion, isUnsupportedPlatform } from "../util/util";
+=======
+import * as vscode from "vscode";
+
+import { VsCodeExtension } from "../extension/VsCodeExtension";
+import { isUnsupportedPlatform } from "../util/util";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 import { GlobalContext } from "core/util/GlobalContext";
 import { VsCodeContinueApi } from "./api";
@@ -23,6 +30,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     void vscode.window.showInformationMessage(
       `Continue detected that you are using ${platformTarget}. Due to native dependencies, Continue may not be able to start`,
     );
+<<<<<<< HEAD
 
     void Telemetry.capture(
       "unsupported_platform_activation_attempt",
@@ -33,6 +41,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       },
       true,
     );
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }
 
   // Add necessary files
@@ -47,6 +57,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   // Load Continue configuration
   if (!context.globalState.get("hasBeenInstalled")) {
     void context.globalState.update("hasBeenInstalled", true);
+<<<<<<< HEAD
     void Telemetry.capture(
       "install",
       {
@@ -54,6 +65,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       },
       true,
     );
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }
 
   // Register config.yaml schema by removing old entries and adding new one (uri.fsPath changes with each version)

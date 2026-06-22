@@ -6,10 +6,15 @@ import {
   AddToChatPayload,
   ApplyState,
   ApplyToFilePayload,
+<<<<<<< HEAD
   ContextItemWithId,
   HighlightedCodePayload,
   MessageContent,
   RangeInFile,
+=======
+  HighlightedCodePayload,
+  MessageContent,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   RangeInFileWithContents,
   SetCodeToEditPayload,
   ShowFilePayload,
@@ -52,6 +57,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   "edit/addCurrentSelection": [undefined, void];
   "edit/clearDecorations": [undefined, void];
   "session/share": [{ sessionId: string }, void];
+<<<<<<< HEAD
   createBackgroundAgent: [
     {
       content: MessageContent;
@@ -84,6 +90,8 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     },
     void,
   ];
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
@@ -100,7 +108,10 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
 
   focusContinueSessionId: [{ sessionId: string | undefined }, void];
   newSession: [undefined, void];
+<<<<<<< HEAD
   loadAgentSession: [{ session: any }, void];
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];
   "jetbrains/editorInsetRefresh": [undefined, void];
@@ -113,6 +124,9 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   updateApplyState: [ApplyState, void];
   exitEditMode: [undefined, void];
   focusEdit: [undefined, void];
+<<<<<<< HEAD
   generateRule: [undefined, void];
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   addToChat: [AddToChatPayload, void];
 };

@@ -1,6 +1,7 @@
 import {
   ArrowsPointingInIcon,
   BarsArrowDownIcon,
+<<<<<<< HEAD
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
@@ -14,6 +15,15 @@ import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { useCompactConversation } from "../../util/compactConversation";
 import { FeedbackButtons } from "../FeedbackButtons";
 import { GenerateRuleDialog } from "../GenerateRuleDialog";
+=======
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import { ChatHistoryItem } from "core";
+import { renderChatMessage } from "core/util/messageContent";
+import { useAppSelector } from "../../redux/hooks";
+import { useCompactConversation } from "../../util/compactConversation";
+import { FeedbackButtons } from "../FeedbackButtons";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { CopyIconButton } from "../gui/CopyIconButton";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 
@@ -34,15 +44,21 @@ export default function ResponseActions({
   onDelete,
   isLast,
 }: ResponseActionsProps) {
+<<<<<<< HEAD
   const dispatch = useAppDispatch();
   const selectedModel = useAppSelector(selectSelectedChatModel);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const contextPercentage = useAppSelector(
     (state) => state.session.contextPercentage,
   );
   const isPruned = useAppSelector((state) => state.session.isPruned);
+<<<<<<< HEAD
   const ruleGenerationSupported = useMemo(() => {
     return selectedModel && modelSupportsNativeTools(selectedModel);
   }, [selectedModel]);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   const percent = Math.round((contextPercentage ?? 0) * 100);
   const buttonColorClass =
@@ -54,11 +70,14 @@ export default function ResponseActions({
 
   const compactConversation = useCompactConversation();
 
+<<<<<<< HEAD
   const onGenerateRule = () => {
     dispatch(setShowDialog(true));
     dispatch(setDialogMessage(<GenerateRuleDialog />));
   };
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   return (
     <div className="text-description-muted mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs">
       <HeaderButtonWithToolTip
@@ -85,6 +104,7 @@ export default function ResponseActions({
         </div>
       </HeaderButtonWithToolTip>
 
+<<<<<<< HEAD
       {isLast && ruleGenerationSupported && (
         <HeaderButtonWithToolTip
           tabIndex={-1}
@@ -95,6 +115,8 @@ export default function ResponseActions({
         </HeaderButtonWithToolTip>
       )}
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       {isTruncated && (
         <HeaderButtonWithToolTip
           tabIndex={-1}

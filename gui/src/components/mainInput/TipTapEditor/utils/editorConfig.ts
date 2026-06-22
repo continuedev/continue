@@ -10,7 +10,10 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { useEditor } from "@tiptap/react";
 import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
+<<<<<<< HEAD
 import { usePostHog } from "posthog-js/react";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { useRef } from "react";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { useSubmenuContextProviders } from "../../../../context/SubmenuContextProviders";
@@ -84,8 +87,11 @@ export function createEditorConfig(options: {
 }) {
   const { props, ideMessenger, dispatch } = options;
 
+<<<<<<< HEAD
   const posthog = usePostHog();
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const { getSubmenuContextItems } = useSubmenuContextProviders();
   const defaultModel = useAppSelector(selectSelectedChatModel);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
@@ -247,8 +253,11 @@ export function createEditorConfig(options: {
             },
 
             "Mod-Enter": () => {
+<<<<<<< HEAD
               posthog.capture("gui_use_active_file_enter");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
               onEnter({
                 useCodebase: false,
                 noContext: !!useActiveFile,
@@ -257,8 +266,11 @@ export function createEditorConfig(options: {
               return true;
             },
             "Alt-Enter": () => {
+<<<<<<< HEAD
               posthog.capture("gui_use_active_file_enter");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
               onEnter({
                 useCodebase: false,
                 noContext: !!useActiveFile,

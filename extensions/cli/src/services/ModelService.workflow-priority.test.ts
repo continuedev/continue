@@ -48,7 +48,11 @@ describe("ModelService agent file model prioritization", () => {
       models: mockModels,
     } as AssistantUnrolled;
 
+<<<<<<< HEAD
     mockAuthConfig = {} as AuthConfig;
+=======
+    mockAuthConfig = null;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     // Reset mocks
     vi.clearAllMocks();

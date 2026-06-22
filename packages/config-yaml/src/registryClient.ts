@@ -1,15 +1,22 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { Registry } from "./interfaces/index.js";
+<<<<<<< HEAD
 import { FullSlug, PackageIdentifier } from "./interfaces/slugs.js";
 
 interface RegistryClientOptions {
   accessToken?: string;
   apiBase?: string;
+=======
+import { PackageIdentifier } from "./interfaces/slugs.js";
+
+interface RegistryClientOptions {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   rootPath?: string;
 }
 
 export class RegistryClient implements Registry {
+<<<<<<< HEAD
   private readonly accessToken?: string;
   private readonly apiBase: string;
   private readonly rootPath?: string;
@@ -21,6 +28,12 @@ export class RegistryClient implements Registry {
     if (!this.apiBase.endsWith("/")) {
       this.apiBase += "/";
     }
+=======
+  private readonly rootPath?: string;
+
+  constructor(options: RegistryClientOptions = {}) {
+    this.rootPath = options.rootPath;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }
 
   async getContent(id: PackageIdentifier): Promise<string> {
@@ -33,7 +46,11 @@ export class RegistryClient implements Registry {
       case "file":
         return this.getContentFromFilePath(id.fileUri);
       case "slug":
+<<<<<<< HEAD
         return this.getContentFromSlug(id.fullSlug);
+=======
+        throw new Error("Slug-based package resolution is not supported");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       default:
         throw new Error(
           `Unknown package identifier type: ${(id as any).uriType}`,
@@ -61,6 +78,7 @@ export class RegistryClient implements Registry {
       throw new Error("No rootPath provided for relative file path");
     }
   }
+<<<<<<< HEAD
 
   private async getContentFromSlug(fullSlug: FullSlug): Promise<string> {
     const response = await fetch(
@@ -76,4 +94,6 @@ export class RegistryClient implements Registry {
     const data = await response.json();
     return data.content;
   }
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }

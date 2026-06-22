@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   ArrowRightStartOnRectangleIcon,
   Cog6ToothIcon,
@@ -104,4 +105,9 @@ export function AccountDropdown() {
       </Listbox>
     </div>
   );
+=======
+// Account dropdown removed - no longer needed without Hub auth
+export function AccountDropdown() {
+  return null;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }

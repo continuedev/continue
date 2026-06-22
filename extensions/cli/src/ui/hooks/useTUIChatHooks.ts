@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { useCallback, useEffect, useState } from "react";
+=======
+import { useEffect, useState } from "react";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 import { getGitBranch, getGitRemoteUrl, isGitRepo } from "../../util/git.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
@@ -120,6 +124,7 @@ export function useIntroMessage(
   return [showIntroMessage, setShowIntroMessage] as const;
 }
 
+<<<<<<< HEAD
 // Custom hook for login handling
 export function useLoginHandlers(
   navigateTo: any,
@@ -148,6 +153,8 @@ export function useLoginHandlers(
   return { handleLoginPrompt, handleLoginTokenSubmit };
 }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 // Custom hook to combine all selector logic
 export function useSelectors(
   configPath: string | undefined,

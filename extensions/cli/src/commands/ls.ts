@@ -3,11 +3,17 @@ import React from "react";
 
 import { listSessions, loadSessionById } from "../session.js";
 import { SessionSelector } from "../ui/SessionSelector.js";
+<<<<<<< HEAD
 import { ApiRequestError, post } from "../util/apiClient.js";
 import { logger } from "../util/logger.js";
 
 import { chat } from "./chat.js";
 import { remote } from "./remote.js";
+=======
+import { logger } from "../util/logger.js";
+
+import { chat } from "./chat.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 interface ListSessionsOptions {
   format?: "json";
@@ -25,6 +31,7 @@ function setSessionId(sessionId: string): void {
   );
 }
 
+<<<<<<< HEAD
 export async function getTunnelForAgent(agentId: string): Promise<string> {
   try {
     const response = await post<{ url: string }>(
@@ -41,6 +48,8 @@ export async function getTunnelForAgent(agentId: string): Promise<string> {
   }
 }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 /**
  * List recent chat sessions and allow selection
  */
@@ -87,6 +96,7 @@ export async function listSessionsCommand(
       try {
         app.unmount();
 
+<<<<<<< HEAD
         // Find the selected session to check if it's remote
         const selectedSession = sessions.find((s) => s.sessionId === sessionId);
 
@@ -118,6 +128,27 @@ export async function listSessionsCommand(
           });
         }
 
+=======
+        // Handle local session
+        const sessionHistory = loadSessionById(sessionId);
+        if (!sessionHistory) {
+          logger.error(`Session ${sessionId} could not be loaded.`);
+          resolve();
+          return;
+        }
+
+        logger.info(`Loading session: ${sessionId}`);
+
+        // Set the session ID so that when chat() runs, it will load this session
+        setSessionId(sessionId);
+
+        // Start chat with resume flag to load the selected session
+        await chat(undefined, {
+          resume: true,
+          headless: false,
+        });
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         resolve();
       } catch (error) {
         logger.error("Error loading session:", error);

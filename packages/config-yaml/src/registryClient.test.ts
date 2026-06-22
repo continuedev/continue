@@ -1,6 +1,9 @@
 import * as fs from "node:fs";
+<<<<<<< HEAD
 import * as http from "node:http";
 import { AddressInfo } from "node:net";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import * as os from "node:os";
 import * as path from "node:path";
 import { pathToFileURL } from "url";
@@ -10,6 +13,7 @@ import { RegistryClient } from "./registryClient.js";
 describe("RegistryClient", () => {
   // Create a temp directory for test files
   let tempDir: string;
+<<<<<<< HEAD
   // Setup a test server
   let server: http.Server;
   let apiBaseUrl: string;
@@ -42,11 +46,17 @@ describe("RegistryClient", () => {
 
     const address = server.address() as AddressInfo;
     apiBaseUrl = `http://localhost:${address.port}`;
+=======
+  beforeAll(async () => {
+    // Create a temporary directory for test files
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "registry-client-test-"));
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   });
 
   afterAll(async () => {
     // Clean up temp directory
     fs.rmSync(tempDir, { recursive: true, force: true });
+<<<<<<< HEAD
 
     // Close the test server
     await new Promise<void>((resolve) => {
@@ -73,6 +83,14 @@ describe("RegistryClient", () => {
     it("should store the accessToken if provided", () => {
       const client = new RegistryClient({ accessToken: "test-token" });
       expect((client as any).accessToken).toBe("test-token");
+=======
+  });
+
+  describe("constructor", () => {
+    it("should create client with no options", () => {
+      const client = new RegistryClient();
+      expect(client).toBeDefined();
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
 
     it("should store the rootPath if provided", () => {
@@ -102,10 +120,15 @@ describe("RegistryClient", () => {
       expect(result).toBe("file content");
     });
 
+<<<<<<< HEAD
     it("should get content from slug for slug uriType", async () => {
       const client = new RegistryClient({
         apiBase: apiBaseUrl,
       });
+=======
+    it("should throw error for slug uriType", async () => {
+      const client = new RegistryClient();
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
       const id: PackageIdentifier = {
         uriType: "slug",
@@ -116,8 +139,14 @@ describe("RegistryClient", () => {
         },
       };
 
+<<<<<<< HEAD
       const result = await client.getContent(id);
       expect(result).toBe("content for /registry/v1/owner/package/1.0.0");
+=======
+      await expect(client.getContent(id)).rejects.toThrow(
+        "Slug-based package resolution is not supported",
+      );
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
 
     it("should throw error for unknown uriType", async () => {
@@ -205,6 +234,7 @@ describe("RegistryClient", () => {
       }).toThrow("No rootPath provided for relative file path");
     });
   });
+<<<<<<< HEAD
 
   describe("getContentFromSlug", () => {
     it("should fetch content from API without auth token", async () => {
@@ -235,4 +265,6 @@ describe("RegistryClient", () => {
       expect(result).toBe("auth content for /registry/v1/owner/package/1.0.0");
     });
   });
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 });

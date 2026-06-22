@@ -1,6 +1,9 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { IndexingStatus, SiteIndexingConfig } from "core";
+<<<<<<< HEAD
 import { usePostHog } from "posthog-js/react";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Input, SecondaryButton } from "..";
@@ -12,7 +15,10 @@ import { ToolTip } from "../gui/Tooltip";
 import DocsIndexingPeeks from "../../pages/config/sections/docs/DocsIndexingPeeks";
 
 function AddDocsDialog() {
+<<<<<<< HEAD
   const posthog = usePostHog();
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const dispatch = useDispatch();
 
   const titleRef = useRef<HTMLInputElement>(null);
@@ -63,8 +69,11 @@ function AddDocsDialog() {
     setStartUrl("");
     setFaviconUrl("");
 
+<<<<<<< HEAD
     posthog.capture("add_docs_gui", { url: startUrl });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     // Optimistic status update
     dispatch(
       updateIndexingStatus({

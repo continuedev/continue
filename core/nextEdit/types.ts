@@ -68,7 +68,10 @@ export interface NextEditOutcome extends TabAutocompleteOptions {
   editableRegionStartLine: number;
   editableRegionEndLine: number;
   diffLines: DiffLine[];
+<<<<<<< HEAD
   profileType?: "local" | "platform" | "control-plane";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 export interface PromptMetadata {

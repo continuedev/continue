@@ -6,7 +6,11 @@ import {
   FetchFunction,
 } from "../..";
 import { getHeaders } from "../../continueServer/stubs/headers";
+<<<<<<< HEAD
 import { TRIAL_PROXY_URL } from "../../control-plane/client";
+=======
+const TRIAL_PROXY_URL = "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 export const fetchSearchResults = async (
   query: string,

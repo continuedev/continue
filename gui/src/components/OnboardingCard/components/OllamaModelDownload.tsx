@@ -26,9 +26,13 @@ function OllamaModelDownload({
 
   return (
     <div className="flex flex-col">
+<<<<<<< HEAD
       <p className="text-foreground mb-0 mt-4 text-base font-semibold">
         {title}
       </p>
+=======
+      <p className="text-foreground mb-1 mt-4 text-sm font-semibold">{title}</p>
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       {hasDownloaded ? (
         <OllamaCompletedStep text={command} />
       ) : (

@@ -1,7 +1,10 @@
 import { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
 import { Message } from "core/protocol/messenger";
+<<<<<<< HEAD
 import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { Telemetry } from "core/util/posthog";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
@@ -114,6 +117,7 @@ export class VsCodeWebviewProtocol
               message = `The request failed with "${e.cause.name}": ${e.cause.message}. If you're having trouble setting up Continue, please see the troubleshooting guide for help.`;
             }
           }
+<<<<<<< HEAD
 
           if (message.includes("https://proxy-server")) {
             message = message.split("\n").filter((l: string) => l !== "")[1];
@@ -145,6 +149,8 @@ export class VsCodeWebviewProtocol
               false,
             );
           }
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         }
       }
     };

@@ -14,7 +14,10 @@ export const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
   contextProviders: [],
   tools: [],
   mcpServerStatuses: [],
+<<<<<<< HEAD
   usePlatform: true,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   modelsByRole: {
     chat: [],
     apply: [],

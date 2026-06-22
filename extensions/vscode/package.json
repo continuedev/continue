@@ -2,7 +2,11 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
+<<<<<<< HEAD
   "version": "1.3.36",
+=======
+  "version": "1.3.40",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -371,12 +375,15 @@
         "title": "Continue: Reject Jump Suggestion"
       },
       {
+<<<<<<< HEAD
         "command": "continue.generateRule",
         "category": "Continue",
         "title": "Generate Rule",
         "group": "Continue"
       },
       {
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         "command": "continue.openInNewWindow",
         "category": "Continue",
         "title": "Open in new window",
@@ -525,9 +532,12 @@
           "command": "continue.enterEnterpriseLicenseKey"
         },
         {
+<<<<<<< HEAD
           "command": "continue.generateRule"
         },
         {
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           "command": "continue.openInNewWindow"
         }
       ],
@@ -759,7 +769,10 @@
     "ncp": "^2.0.0",
     "node-fetch": "^3.3.2",
     "node-machine-id": "^1.1.12",
+<<<<<<< HEAD
     "posthog-node": "^3.6.3",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     "react-markdown": "^8.0.7",
     "react-redux": "^8.0.5",
     "read-last-lines": "^1.8.0",

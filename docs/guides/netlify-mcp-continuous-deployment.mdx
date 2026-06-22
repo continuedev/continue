@@ -15,11 +15,14 @@ import CLIInstall from '/snippets/cli-install.mdx'
   from Netlify Analytics
 </Card>
 
+<<<<<<< HEAD
 <Info>
   The new [Netlify Mission Control Integration](/mission-control/integrations/netlify) enables **[Continuous AI](/guides/continuous-ai)** for deployment automation - where AI agents autonomously manage deployments, monitor site performance, and respond to deployment events. This cookbook focuses on CLI-based performance optimization workflows, but you can also deploy autonomous deployment agents through Mission Control.
 
   **Get Started:** Use this cookbook to understand Netlify MCP fundamentals, then [enable Mission Control](/mission-control/integrations/netlify) to deploy autonomous deployment management agents across your organization.
 </Info>
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 <Info>
   **Did You Know?** Netlify is more than just static hosting! It offers:
@@ -50,8 +53,13 @@ This cookbook teaches you to:
 - [Netlify account](https://netlify.com) (free tier works)
 - Node.js 22+ installed (required for Netlify)
 - [Continue CLI](https://docs.continue.dev/guides/cli)
+<<<<<<< HEAD
 - [Netlify MCP](https://continue.dev/netlify/netlify-mcp) configured
 - [Netlify Development Rules](https://continue.dev/netlify/netlify-development) (recommended)
+=======
+- Netlify MCP configured
+- Netlify Development Rules (recommended)
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 ## Quick Setup
 
@@ -91,7 +99,11 @@ After completing **Quick Setup** above, you have two paths to get started:
 
     <Steps>
       <Step title="Add the Pre-Built Agent">
+<<<<<<< HEAD
         Visit the [Netlify Continuous AI Agent](https://continue.dev/continuedev/netlify-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
+=======
+        Run:
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         
         ```bash
         cn --agent continuedev/netlify-continuous-ai-agent
@@ -128,18 +140,26 @@ After completing **Quick Setup** above, you have two paths to get started:
 <Step title="Configure Netlify MCP">
   1. Authenticate with Netlify:
   `netlify login`
+<<<<<<< HEAD
   2. Visit [Netlify MCP on Continue
   Hub](https://continue.dev/netlify/netlify-mcp)
+=======
+  2. Add the Netlify MCP to your configuration
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   3. Follow the configuration instructions for your editor
 
 </Step>
 
   <Step title="Add Development Rules">
+<<<<<<< HEAD
     Install the [Netlify Development Rules](https://continue.dev/netlify/netlify-development) bundle for best practices:
 
     1. Visit the bundle page on Continue Mission Control
     2. Click **"Install Rules"**
     3. Rules automatically apply to your agent
+=======
+    Install the Netlify Development Rules bundle for best practices. Add these rules to your agent configuration.
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   </Step>
 
@@ -163,12 +183,20 @@ After completing **Quick Setup** above, you have two paths to get started:
 </Tabs>
 
 <Accordion title="Agent Requirements">
+<<<<<<< HEAD
     To use the pre-built agent, you need either: 
       - **Continue CLI Pro Plan** with
       the models add-on, OR 
       - **Your own API keys** added to Continue Mission Control secrets
       The agent will automatically detect and use your
       configuration along with the Netlify MCP for deployment operations.
+=======
+    To use the pre-built agent, you need either:
+      - **Continue CLI Pro Plan** with the models add-on, OR
+      - **Your own API keys** configured as environment variables
+
+    The agent will automatically detect and use your configuration along with the Netlify MCP for deployment operations.
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 </Accordion>
 
@@ -409,7 +437,10 @@ Leverage Netlify's built-in analytics and integrate advanced RUM solutions:
    - Notify if CLS increases by 20%
    - Monitor JavaScript error rates
    - Track 404s and broken resources
+<<<<<<< HEAD
    - Send alerts to Slack via Netlify Functions
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 4. Configure Geographic Performance Monitoring:
    - Use Netlify Edge Functions to track region-specific metrics
@@ -714,6 +745,7 @@ The Netlify Performance Rules enforce:
 
 ## Next Steps
 
+<<<<<<< HEAD
 - Install [Netlify MCP](https://continue.dev/netlify/netlify-mcp) from Continue Mission Control
 - Set up [Performance Monitoring](https://docs.netlify.com/analytics/get-started/)
 - Configure [A/B Testing](https://docs.netlify.com/split-testing/overview/)
@@ -722,6 +754,15 @@ The Netlify Performance Rules enforce:
 ## Resources
 
 - [Netlify MCP on Continue Mission Control](https://continue.dev/netlify/netlify-mcp)
+=======
+- Install the Netlify MCP in your Continue configuration
+- Set up [Performance Monitoring](https://docs.netlify.com/analytics/get-started/)
+- Configure [A/B Testing](https://docs.netlify.com/split-testing/overview/)
+
+## Resources
+
+- [Netlify MCP](https://docs.netlify.com/)
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 - [Core Web Vitals Guide](https://web.dev/vitals/)
 - [Netlify Analytics Documentation](https://docs.netlify.com/analytics/)
 - [Continue Performance Guides](https://docs.continue.dev/guides)

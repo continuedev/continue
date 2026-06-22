@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+<<<<<<< HEAD
 import { EXTENSION_NAME } from "core/control-plane/env";
+=======
+import { EXTENSION_NAME } from "core/util/constants";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 // @ts-ignore
 import * as vscode from "vscode";
 

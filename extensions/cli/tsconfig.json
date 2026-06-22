@@ -26,5 +26,9 @@
       "core": ["../../core/dist/index.js"]
     }
   },
+<<<<<<< HEAD
   "include": ["src/**/*", "vitest.setup.ts"]
+=======
+  "include": ["src/**/*", "vitest.setup.ts", "vitest.global-dir-setup.ts"]
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }

@@ -1,6 +1,9 @@
 import * as fs from "fs";
 import {
+<<<<<<< HEAD
   decodeSecretLocation,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   FQSN,
   PackageIdentifier,
   packageIdentifierToShorthandSlug,
@@ -8,7 +11,10 @@ import {
   PlatformSecretStore,
   Registry,
   resolveFQSN,
+<<<<<<< HEAD
   resolveSecretLocationInProxy,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   SecretLocation,
   SecretResult,
   SecretStore,
@@ -73,7 +79,10 @@ describe("E2E Scenarios", () => {
         case SecretType.Organization:
           return orgSecrets[secretLocation.secretName];
         case SecretType.ModelsAddOn:
+<<<<<<< HEAD
         case SecretType.FreeTrial:
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           if (
             secretLocation.blockSlug.ownerSlug === "test-org" &&
             secretLocation.blockSlug.packageSlug === "claude35sonnet" &&
@@ -115,9 +124,13 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
+<<<<<<< HEAD
         orgScopeId: "test-org",
         currentUserSlug: "test-user",
         onPremProxyUrl: null,
+=======
+        currentUserSlug: "test-user",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       },
     );
 
@@ -138,9 +151,13 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
+<<<<<<< HEAD
         orgScopeId: "test-org",
         currentUserSlug: "test-user",
         onPremProxyUrl: null,
+=======
+        currentUserSlug: "test-user",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       },
     );
 
@@ -153,6 +170,7 @@ describe("E2E Scenarios", () => {
     expect(openAiModel.apiKey).toBe("sk-123");
 
     const geminiModel = config?.models?.[1]!;
+<<<<<<< HEAD
     expect(geminiModel.provider).toBe("continue-proxy");
     expect(geminiModel.apiKey).toBeUndefined();
     const geminiSecretLocation = "organization:test-org/GEMINI_API_KEY";
@@ -166,6 +184,12 @@ describe("E2E Scenarios", () => {
     expect((anthropicModel as any).apiKeyLocation).toBe(
       anthropicSecretLocation,
     );
+=======
+    expect(geminiModel.provider).toBe("gemini");
+
+    const anthropicModel = config?.models?.[2]!;
+    expect(anthropicModel.provider).toBe("anthropic");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     const proxyOllamaModel = config?.models?.[3]!;
     expect(proxyOllamaModel.provider).toBe("ollama");
@@ -178,6 +202,7 @@ describe("E2E Scenarios", () => {
     expect(config?.docs?.[0]?.rootUrl).toBe(
       "https://docs.python.org/release/3.13.1",
     );
+<<<<<<< HEAD
 
     // Test that proxy can correctly resolve secrets
     const decodedAnthropicSecretLocation = decodeSecretLocation(
@@ -213,6 +238,8 @@ describe("E2E Scenarios", () => {
       undefined,
     );
     expect(geminiSecretValue2).toBe("gemini-api-key");
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   });
 
   it("should correctly unroll assistant with injected blocks", async () => {
@@ -229,9 +256,13 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
+<<<<<<< HEAD
         orgScopeId: "test-org",
         currentUserSlug: "test-user",
         onPremProxyUrl: null,
+=======
+        currentUserSlug: "test-user",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         // Add injected blocks
         injectBlocks: [
           {
@@ -277,9 +308,13 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
+<<<<<<< HEAD
         orgScopeId: "test-org",
         currentUserSlug: "test-user",
         onPremProxyUrl: null,
+=======
+        currentUserSlug: "test-user",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         // Add injected blocks
         injectBlocks: [
           {
@@ -324,9 +359,13 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
+<<<<<<< HEAD
         orgScopeId: "test-org",
         currentUserSlug: "test-user",
         onPremProxyUrl: null,
+=======
+        currentUserSlug: "test-user",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         blocklistedBlocks: [
           {
             ownerSlug: "test-org",
@@ -362,9 +401,13 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
+<<<<<<< HEAD
         orgScopeId: "test-org",
         currentUserSlug: "test-user",
         onPremProxyUrl: null,
+=======
+        currentUserSlug: "test-user",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         allowlistedBlocks: [
           {
             ownerSlug: "test-org",
@@ -408,9 +451,13 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
+<<<<<<< HEAD
         orgScopeId: "test-org",
         currentUserSlug: "test-user",
         onPremProxyUrl: null,
+=======
+        currentUserSlug: "test-user",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         allowlistedBlocks: [
           {
             ownerSlug: "test-org",
@@ -448,9 +495,13 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
+<<<<<<< HEAD
         orgScopeId: "test-org",
         currentUserSlug: "test-user",
         onPremProxyUrl: null,
+=======
+        currentUserSlug: "test-user",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         blocklistedBlocks: [
           {
             ownerSlug: "test-org",

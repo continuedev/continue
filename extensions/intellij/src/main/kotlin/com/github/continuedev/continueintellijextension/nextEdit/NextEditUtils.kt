@@ -1,11 +1,14 @@
 package com.github.continuedev.continueintellijextension.nextEdit
 
 import com.github.continuedev.continueintellijextension.FimResult
+<<<<<<< HEAD
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.`continue`.ProfileInfoService
 import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 
 object NextEditUtils {

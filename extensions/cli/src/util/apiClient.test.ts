@@ -2,7 +2,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
   ApiRequestError,
+<<<<<<< HEAD
   AuthenticationRequiredError,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   del,
   get,
   makeAuthenticatedRequest,
@@ -10,12 +13,15 @@ import {
   put,
 } from "./apiClient.js";
 
+<<<<<<< HEAD
 // Mock the dependencies
 vi.mock("../auth/workos.js", () => ({
   loadAuthConfig: vi.fn(),
   getAccessToken: vi.fn(),
 }));
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 vi.mock("../env.js", () => ({
   env: {
     apiBase: "https://api.continue.dev",
@@ -35,12 +41,16 @@ vi.mock("./logger.js", () => ({
 global.fetch = vi.fn();
 
 describe("apiClient", () => {
+<<<<<<< HEAD
   let mockLoadAuthConfig: any;
   let mockGetAccessToken: any;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const mockFetch = vi.mocked(global.fetch);
 
   beforeEach(async () => {
     vi.clearAllMocks();
+<<<<<<< HEAD
 
     // Get mocked functions
     const authModule = await import("../auth/workos.js");
@@ -50,6 +60,8 @@ describe("apiClient", () => {
     // Setup default successful authentication
     mockLoadAuthConfig.mockReturnValue({ some: "config" });
     mockGetAccessToken.mockReturnValue("test-access-token");
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   });
 
   afterEach(() => {
@@ -77,7 +89,10 @@ describe("apiClient", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+<<<<<<< HEAD
             Authorization: "Bearer test-access-token",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           },
           body: JSON.stringify({ key: "value" }),
         },
@@ -104,6 +119,7 @@ describe("apiClient", () => {
       expect(result.data).toBe("plain text response");
     });
 
+<<<<<<< HEAD
     test("should throw AuthenticationRequiredError when no auth config", async () => {
       mockLoadAuthConfig.mockReturnValue(null);
 
@@ -120,6 +136,8 @@ describe("apiClient", () => {
       );
     });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     test("should throw ApiRequestError on API error", async () => {
       mockFetch.mockResolvedValue({
         ok: false,
@@ -182,7 +200,10 @@ describe("apiClient", () => {
         expect.objectContaining({
           headers: {
             "Content-Type": "application/json",
+<<<<<<< HEAD
             Authorization: "Bearer test-access-token",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             "Custom-Header": "custom-value",
           },
         }),
@@ -245,16 +266,30 @@ describe("apiClient", () => {
   });
 
   describe("error classes", () => {
+<<<<<<< HEAD
     test("AuthenticationRequiredError should have correct properties", () => {
+=======
+    test("AuthenticationRequiredError should have correct properties", async () => {
+      const { AuthenticationRequiredError } = await import("./apiClient.js");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const error = new AuthenticationRequiredError();
 
       expect(error.name).toBe("AuthenticationRequiredError");
       expect(error.message).toBe(
+<<<<<<< HEAD
         "Not authenticated. Please run 'cn login' first.",
       );
     });
 
     test("AuthenticationRequiredError should accept custom message", () => {
+=======
+        "Not authenticated. Hub integration has been removed.",
+      );
+    });
+
+    test("AuthenticationRequiredError should accept custom message", async () => {
+      const { AuthenticationRequiredError } = await import("./apiClient.js");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const customMessage = "Custom auth error";
       const error = new AuthenticationRequiredError(customMessage);
 

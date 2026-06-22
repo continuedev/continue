@@ -9,6 +9,7 @@ import {
   DefaultApi,
 } from "@continuedev/sdk/dist/api/dist/index.js";
 
+<<<<<<< HEAD
 import {
   AuthConfig,
   getAccessToken,
@@ -16,6 +17,11 @@ import {
 } from "./auth/workos.js";
 import { env } from "./env.js";
 import { posthogService } from "./telemetry/posthogService.js";
+=======
+import { AuthConfig } from "./auth/workos.js";
+import { env } from "./env.js";
+import { getUniqueId } from "./util/uniqueId.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { getVersion } from "./version.js";
 
 /**
@@ -29,7 +35,11 @@ function getUserAgent(): string {
 /**
  * Merges user-agent header into request options
  */
+<<<<<<< HEAD
 function mergeUserAgentIntoRequestOptions(
+=======
+function _mergeUserAgentIntoRequestOptions(
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   requestOptions: ModelConfig["requestOptions"],
 ): ModelConfig["requestOptions"] {
   return {
@@ -37,13 +47,18 @@ function mergeUserAgentIntoRequestOptions(
     headers: {
       ...requestOptions?.headers,
       "user-agent": getUserAgent(),
+<<<<<<< HEAD
       "x-continue-unique-id": posthogService.uniqueId,
+=======
+      "x-continue-unique-id": getUniqueId(),
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     },
   };
 }
 
 /**
  * Creates an LLM API instance from a ModelConfig and auth configuration
+<<<<<<< HEAD
  * Handles special logic for continue-proxy provider and constructs the API
  */
 export function createLlmApi(
@@ -78,6 +93,21 @@ export function createLlmApi(
           requestOptions: model.requestOptions,
           env: model.env,
         };
+=======
+ */
+export function createLlmApi(
+  model: ModelConfig,
+  _authConfig: AuthConfig,
+): BaseLlmApi | null {
+  const config: LLMConfig = {
+    provider: model.provider as any,
+    model: model.model,
+    apiKey: model.apiKey,
+    apiBase: model.apiBase,
+    requestOptions: model.requestOptions,
+    env: model.env,
+  };
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   return constructLlmApi(config) ?? null;
 }

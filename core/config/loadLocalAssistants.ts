@@ -23,7 +23,11 @@ export function isContinueConfigRelatedUri(uri: string): boolean {
       (uri.endsWith(".yaml") ||
         uri.endsWith(".yml") ||
         uri.endsWith(".json"))) ||
+<<<<<<< HEAD
     [...BLOCK_TYPES, "agents", "assistants"].some((blockType) =>
+=======
+    [...BLOCK_TYPES, "agents", "assistants", "configs"].some((blockType) =>
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       uri.includes(`.continue/${blockType}`),
     )
   );
@@ -38,7 +42,12 @@ export function isContinueAgentConfigFile(uri: string): boolean {
   const normalizedUri = URI.normalize(uri);
   return (
     normalizedUri.includes(`/.continue/agents/`) ||
+<<<<<<< HEAD
     normalizedUri.includes(`/.continue/assistants/`)
+=======
+    normalizedUri.includes(`/.continue/assistants/`) ||
+    normalizedUri.includes(`/.continue/configs/`)
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   );
 }
 

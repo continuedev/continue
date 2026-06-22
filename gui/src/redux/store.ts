@@ -60,12 +60,16 @@ const saveSubsetFilters = [
   ]),
   createFilter("indexing", []),
   createFilter("tabs", ["tabs"]),
+<<<<<<< HEAD
   createFilter("profiles", [
     "preferencesByProfileId",
     "selectedProfileId",
     "selectedOrganizationId",
     "organizations",
   ]),
+=======
+  createFilter("profiles", ["preferencesByProfileId", "selectedProfileId"]),
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 ];
 
 const migrations: MigrationManifest = {

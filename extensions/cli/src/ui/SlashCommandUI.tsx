@@ -23,14 +23,20 @@ interface SlashCommandUIProps {
   assistant?: AssistantConfig;
   filter: string;
   selectedIndex: number;
+<<<<<<< HEAD
   isRemoteMode?: boolean;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
   assistant,
   filter,
   selectedIndex,
+<<<<<<< HEAD
   isRemoteMode = false,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }) => {
   const [allCommands, setAllCommands] = useState<SlashCommand[]>(
     // Fallback - basic commands without assistant
@@ -49,11 +55,16 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
     let stale = false;
 
     const loadCommands = async () => {
+<<<<<<< HEAD
       if (assistant || isRemoteMode) {
         const commands = await getAllSlashCommands(
           assistant || ({} as AssistantConfig),
           { isRemoteMode },
         );
+=======
+      if (assistant) {
+        const commands = await getAllSlashCommands(assistant);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         if (!stale) {
           setAllCommands(commands);
         }
@@ -65,7 +76,11 @@ const SlashCommandUI: React.FC<SlashCommandUIProps> = ({
     return () => {
       stale = true;
     };
+<<<<<<< HEAD
   }, [isRemoteMode, assistant?.prompts, assistant?.rules]);
+=======
+  }, [assistant?.prompts, assistant?.rules]);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   // Filter commands based on the current filter
   const filteredCommands = allCommands

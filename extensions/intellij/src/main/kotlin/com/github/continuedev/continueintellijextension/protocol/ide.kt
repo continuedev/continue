@@ -3,8 +3,11 @@ package com.github.continuedev.continueintellijextension.protocol
 import com.github.continuedev.continueintellijextension.Range
 import com.github.continuedev.continueintellijextension.TerminalOptions
 
+<<<<<<< HEAD
 data class GetControlPlaneSessionInfoParams(val silent: Boolean, val useOnboarding: Boolean)
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 data class WriteFileParams(
     val path: String,
     val contents: String

@@ -20,6 +20,7 @@ You can view the current rules by clicking the pen icon above the main toolbar:
 
 To form the system message, rules are joined with new lines, in the order they appear in the toolbar. This includes the base chat system message ([see below](#how-to-customize-chat-system-message)).
 
+<<<<<<< HEAD
 ## Understanding Hub vs Local Rules Integration
 
 <Warning>
@@ -56,6 +57,8 @@ When using Continue, rules are loaded in this order:
 **TL;DR**: Local rules show up automatically when using Hub configs. Hub rules show up automatically when referenced in your config.
 </Info>
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 ## Quick Start: How to Create Your First Rule File
 
 Below is a quick example of setting up a new rule file:
@@ -90,6 +93,7 @@ Rules can be added locally using the "Add Rules" button.
 For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
 </Info>
 
+<<<<<<< HEAD
 ### Creating Hub Rules
 
 Rules can also be created and managed on the Continue Mission Control:
@@ -127,6 +131,8 @@ To move local rules to the Hub:
 </Tab>
 </Tabs>
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 ### How to Configure Rule Properties and Syntax
 
 <Info>
@@ -222,6 +228,7 @@ globs: ["**/*.ts", "**/*.tsx"]
 
 ## Troubleshooting Rules
 
+<<<<<<< HEAD
 ### Issue: Rules Created in Different Places Don't Sync
 
 **Problem**: You created rules in the Hub but don't see them in VSCode, or vice versa.
@@ -246,15 +253,22 @@ globs: ["**/*.ts", "**/*.tsx"]
 **Known Issue**: This link accuracy problem is tracked in [Linear issue CON-3084](https://linear.app/continue/issue/CON-3084) and will be fixed in a future update.
 </Info>
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 ### Issue: Rules Don't Appear in Assistant
 
 **Problem**: Your rules exist but don't show up in the rules toolbar.
 
 **Check These**:
+<<<<<<< HEAD
 1. **File location**: Ensure local rules are in `.continue/rules/` (not `.continue/rule/`)
 2. **File format**: Rules should be `.md` files with proper YAML frontmatter
 3. **Config reference**: Hub rules must be referenced in `config.yaml`
 4. **Assistant type**: Ensure you're using the correct assistant (local vs Hub)
+=======
+1. **File location**: Ensure rules are in `.continue/rules/` (not `.continue/rule/`)
+2. **File format**: Rules should be `.md` files with proper YAML frontmatter
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 ### How to Customize Chat System Message
 

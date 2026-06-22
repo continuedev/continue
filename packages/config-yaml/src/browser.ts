@@ -6,7 +6,10 @@ export * from "./interfaces/slugs.js";
 export * from "./load/clientRender.js";
 export * from "./load/getBlockType.js";
 export * from "./load/merge.js";
+<<<<<<< HEAD
 export * from "./load/proxySecretResolution.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export * from "./load/typeGuards.js";
 export * from "./load/unroll.js";
 export * from "./markdown/index.js";

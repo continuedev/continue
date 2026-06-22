@@ -127,7 +127,10 @@ export class CodebaseIndexer {
     try {
       await fs.unlink(sqliteFilepath);
     } catch (error) {
+<<<<<<< HEAD
       // Capture indexer system failures to Sentry
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       Logger.error(error, {
         filepath: sqliteFilepath,
       });
@@ -137,7 +140,10 @@ export class CodebaseIndexer {
     try {
       await fs.rm(lanceDbFolder, { recursive: true, force: true });
     } catch (error) {
+<<<<<<< HEAD
       // Capture indexer system failures to Sentry
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       Logger.error(error, {
         folderPath: lanceDbFolder,
       });

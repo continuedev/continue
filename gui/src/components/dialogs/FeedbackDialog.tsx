@@ -1,10 +1,16 @@
+<<<<<<< HEAD
 import { usePostHog } from "posthog-js/react";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { Button, Input, SecondaryButton } from "..";
 import { useAppDispatch } from "../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 
 export default function FeedbackDialog() {
+<<<<<<< HEAD
   const posthog = usePostHog();
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const dispatch = useAppDispatch();
 
   return (
@@ -23,10 +29,13 @@ export default function FeedbackDialog() {
       <form
         onSubmit={(e: any) => {
           e.preventDefault();
+<<<<<<< HEAD
           posthog?.capture("user_interest_form", {
             name: e.target.elements[0].value,
             email: e.target.elements[1].value,
           });
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           dispatch(
             setDialogMessage(
               <div className="p-6 text-center">

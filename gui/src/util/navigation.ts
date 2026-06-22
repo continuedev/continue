@@ -4,7 +4,10 @@ export type ConfigTab =
   | "rules"
   | "tools"
   | "configs"
+<<<<<<< HEAD
   | "organizations"
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   | "indexing"
   | "settings"
   | "help";
@@ -30,7 +33,10 @@ export const CONFIG_ROUTES = {
   RULES: buildConfigRoute("rules"),
   TOOLS: buildConfigRoute("tools"),
   CONFIGS: buildConfigRoute("configs"),
+<<<<<<< HEAD
   ORGANIZATIONS: buildConfigRoute("organizations"),
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   INDEXING: buildConfigRoute("indexing"),
   SETTINGS: buildConfigRoute("settings"),
   HELP: buildConfigRoute("help"),

@@ -23,7 +23,10 @@ import {
   InternalMcpOptions,
 } from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
+<<<<<<< HEAD
 import { ControlPlaneClient } from "../../control-plane/client";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { getAllPromptFiles } from "../../promptFiles/getPromptFiles";
 import { GlobalContext } from "../../util/GlobalContext";
@@ -32,8 +35,11 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlockSlashCommand";
 import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
 import { loadJsonMcpConfigs } from "../../context/mcp/json/loadJsonMcpConfigs";
+<<<<<<< HEAD
 import { getControlPlaneEnvSync } from "../../control-plane/env";
 import { PolicySingleton } from "../../control-plane/PolicySingleton";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { getBaseToolDefinitions } from "../../tools";
 import { getCleanUriPath } from "../../util/uri";
 import { loadConfigContextProviders } from "../loadContextProviders";
@@ -48,12 +54,16 @@ import {
 
 async function loadConfigYaml(options: {
   overrideConfigYaml: AssistantUnrolled | undefined;
+<<<<<<< HEAD
   controlPlaneClient: ControlPlaneClient;
   orgScopeId: string | null;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   ideSettings: IdeSettings;
   ide: IDE;
   packageIdentifier: PackageIdentifier;
 }): Promise<ConfigResult<AssistantUnrolled>> {
+<<<<<<< HEAD
   const {
     overrideConfigYaml,
     controlPlaneClient,
@@ -62,6 +72,9 @@ async function loadConfigYaml(options: {
     ide,
     packageIdentifier,
   } = options;
+=======
+  const { overrideConfigYaml, ideSettings, ide, packageIdentifier } = options;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   // Add local .continue blocks
   // Use "content" field to pass pre-read content directly, avoiding
@@ -82,10 +95,13 @@ async function loadConfigYaml(options: {
     await Promise.all(localBlockPromises)
   ).flat();
 
+<<<<<<< HEAD
   // logger.info(
   //   `Loading config.yaml from ${JSON.stringify(packageIdentifier)} with root path ${rootPath}`,
   // );
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   // Registry client is only used if local blocks are present, but logic same for hub/local assistants
   const getRegistryClient = async () => {
     const rootPath =
@@ -93,9 +109,12 @@ async function loadConfigYaml(options: {
         ? dirname(getCleanUriPath(packageIdentifier.fileUri))
         : undefined;
     return new RegistryClient({
+<<<<<<< HEAD
       accessToken: await controlPlaneClient.getAccessToken(),
       apiBase: getControlPlaneEnvSync(ideSettings.continueTestEnvironment)
         .CONTROL_PLANE_URL,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       rootPath,
     });
   };
@@ -111,8 +130,11 @@ async function loadConfigYaml(options: {
         localPackageIdentifiers,
         ide,
         await getRegistryClient(),
+<<<<<<< HEAD
         orgScopeId,
         controlPlaneClient,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       );
       if (unrolledLocal.errors) {
         errors.push(...unrolledLocal.errors);
@@ -129,6 +151,7 @@ async function loadConfigYaml(options: {
       {
         renderSecrets: true,
         currentUserSlug: "",
+<<<<<<< HEAD
         onPremProxyUrl: null,
         orgScopeId,
         platformClient: new LocalPlatformClient(
@@ -136,6 +159,9 @@ async function loadConfigYaml(options: {
           controlPlaneClient,
           ide,
         ),
+=======
+        platformClient: new LocalPlatformClient(ide),
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         injectBlocks: localPackageIdentifiers,
       },
     );
@@ -186,7 +212,10 @@ export async function configYamlToContinueConfig(options: {
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
+<<<<<<< HEAD
   workOsAccessToken: string | undefined;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   let { unrolledAssistant, ide, ideInfo, uniqueId, llmLogger } = options;
 
@@ -305,14 +334,20 @@ export async function configYamlToContinueConfig(options: {
   });
 
   // Models
+<<<<<<< HEAD
   let warnAboutFreeTrial = false;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const defaultModelRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
   for (const model of config.models ?? []) {
     model.roles = model.roles ?? defaultModelRoles; // Default to all 4 chat-esque roles if not specified
 
+<<<<<<< HEAD
     if (model.provider === "free-trial") {
       warnAboutFreeTrial = true;
     }
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     try {
       const llms = await llmsFromModelConfig({
         model,
@@ -386,6 +421,7 @@ export async function configYamlToContinueConfig(options: {
     );
   }
 
+<<<<<<< HEAD
   if (warnAboutFreeTrial) {
     localErrors.push({
       fatal: false,
@@ -394,6 +430,8 @@ export async function configYamlToContinueConfig(options: {
     });
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const { providers, errors: contextErrors } = loadConfigContextProviders(
     config.context,
     !!config.docs?.length,
@@ -406,6 +444,7 @@ export async function configYamlToContinueConfig(options: {
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
 
+<<<<<<< HEAD
   const orgPolicy = PolicySingleton.getInstance().policy;
   if (orgPolicy?.policy?.allowMcpServers === false) {
     await mcpManager.shutdown();
@@ -423,6 +462,20 @@ export async function configYamlToContinueConfig(options: {
     mcpOptions.push(...mcpServers);
     mcpManager.setConnections(mcpOptions, false, { ide });
   }
+=======
+  const mcpOptions: InternalMcpOptions[] = (config.mcpServers ?? []).map(
+    (server) =>
+      convertYamlMcpConfigToInternalMcpOptions(server, config.requestOptions),
+  );
+  const { errors: jsonMcpErrors, mcpServers } = await loadJsonMcpConfigs(
+    ide,
+    true,
+    config.requestOptions,
+  );
+  localErrors.push(...jsonMcpErrors);
+  mcpOptions.push(...mcpServers);
+  mcpManager.setConnections(mcpOptions, false, { ide });
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   return { config: continueConfig, errors: localErrors };
 }
@@ -433,10 +486,14 @@ export async function loadContinueConfigFromYaml(options: {
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
+<<<<<<< HEAD
   workOsAccessToken: string | undefined;
   overrideConfigYaml: AssistantUnrolled | undefined;
   controlPlaneClient: ControlPlaneClient;
   orgScopeId: string | null;
+=======
+  overrideConfigYaml: AssistantUnrolled | undefined;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   packageIdentifier: PackageIdentifier;
 }): Promise<ConfigResult<ContinueConfig>> {
   const {
@@ -445,17 +502,24 @@ export async function loadContinueConfigFromYaml(options: {
     ideInfo,
     uniqueId,
     llmLogger,
+<<<<<<< HEAD
     workOsAccessToken,
     overrideConfigYaml,
     controlPlaneClient,
     orgScopeId,
+=======
+    overrideConfigYaml,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     packageIdentifier,
   } = options;
 
   const configYamlResult = await loadConfigYaml({
     overrideConfigYaml,
+<<<<<<< HEAD
     controlPlaneClient,
     orgScopeId,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     ideSettings,
     ide,
     packageIdentifier,
@@ -477,7 +541,10 @@ export async function loadContinueConfigFromYaml(options: {
       ideInfo,
       uniqueId,
       llmLogger,
+<<<<<<< HEAD
       workOsAccessToken,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
 
   // Apply shared config

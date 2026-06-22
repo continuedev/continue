@@ -12,6 +12,7 @@ import type {
 import historyManager from "core/util/history.js";
 import { v4 as uuidv4 } from "uuid";
 
+<<<<<<< HEAD
 import {
   getAccessToken,
   isAuthenticatedConfig,
@@ -19,6 +20,9 @@ import {
 } from "./auth/workos.js";
 import { DEFAULT_SESSION_TITLE } from "./constants/session.js";
 import { env } from "./env.js";
+=======
+import { DEFAULT_SESSION_TITLE } from "./constants/session.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { logger } from "./util/logger.js";
 
 // Re-export BaseSessionMetadata for external consumers
@@ -445,6 +449,7 @@ function getSessionMetadataWithPreview(
 }
 
 /**
+<<<<<<< HEAD
  * Fetch remote agents/sessions from the API
  */
 export async function getRemoteSessions(): Promise<ExtendedSessionMetadata[]> {
@@ -484,6 +489,12 @@ export async function getRemoteSessions(): Promise<ExtendedSessionMetadata[]> {
     logger.error("Error fetching remote sessions:", error);
     return [];
   }
+=======
+ * Remote sessions are no longer available (Hub integration removed).
+ */
+export async function getRemoteSessions(): Promise<ExtendedSessionMetadata[]> {
+  return [];
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 /**

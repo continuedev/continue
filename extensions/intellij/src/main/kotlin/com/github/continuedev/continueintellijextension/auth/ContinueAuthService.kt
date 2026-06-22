@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.auth
 
+<<<<<<< HEAD
 import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -253,4 +254,10 @@ data class ControlPlaneSessionInfo(
         val id: String,
         val label: String
     )
+=======
+import com.intellij.openapi.components.Service
+
+@Service
+class ContinueAuthService {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }

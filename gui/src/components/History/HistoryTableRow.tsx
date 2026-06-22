@@ -1,11 +1,17 @@
 import {
   ArrowDownOnSquareIcon,
+<<<<<<< HEAD
   CloudIcon,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { BaseSessionMetadata } from "core";
+<<<<<<< HEAD
 import type { RemoteSessionMetadata } from "core/control-plane/client";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { getUriPathBasename } from "core/util/uri";
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +22,10 @@ import { exitEdit } from "../../redux/thunks/edit";
 import {
   deleteSession,
   getSession,
+<<<<<<< HEAD
   loadRemoteSession,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   loadSession,
   updateSession,
 } from "../../redux/thunks/session";
@@ -30,7 +39,11 @@ export function HistoryTableRow({
   sessionMetadata,
   index,
 }: {
+<<<<<<< HEAD
   sessionMetadata: BaseSessionMetadata | RemoteSessionMetadata;
+=======
+  sessionMetadata: BaseSessionMetadata;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   index: number;
 }) {
   const dispatch = useAppDispatch();
@@ -56,11 +69,15 @@ export function HistoryTableRow({
       });
     }
   };
+<<<<<<< HEAD
   const isRemote = "isRemote" in sessionMetadata && sessionMetadata.isRemote;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   const handleKeyUp = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       if (sessionTitleEditValue !== sessionMetadata.title) {
+<<<<<<< HEAD
         // Don't allow editing remote sessions
         if (isRemote) {
           setSessionTitleEditValue(sessionMetadata.title);
@@ -68,6 +85,8 @@ export function HistoryTableRow({
           return;
         }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         // imperfect solution of loading session just to update it
         // but fine for now, pretty low latency
         const currentSession = await getSession(
@@ -95,6 +114,7 @@ export function HistoryTableRow({
       data-testid={`history-row-${index}`}
       className="hover:bg-input relative mb-2 box-border flex w-full cursor-pointer overflow-hidden rounded-lg p-3"
       onClick={async () => {
+<<<<<<< HEAD
         // Handle remote sessions - load remote session data
         if (isRemote) {
           const remoteSession = sessionMetadata as RemoteSessionMetadata;
@@ -110,6 +130,8 @@ export function HistoryTableRow({
         }
 
         // Handle local sessions - load and navigate as before
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         await dispatch(exitEdit({}));
         if (sessionMetadata.sessionId !== currentSessionId) {
           await dispatch(
@@ -140,11 +162,14 @@ export function HistoryTableRow({
             <span className="line-clamp-1 break-all text-sm font-semibold">
               {sessionMetadata.title}
             </span>
+<<<<<<< HEAD
             {isRemote && (
               <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
                 Remote
               </span>
             )}
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
             {sessionMetadata.messageCount !== undefined && (
               <ToolTip
@@ -180,6 +205,7 @@ export function HistoryTableRow({
 
       {hovered && !editing && (
         <td className="bg-input absolute right-2 top-12 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full px-2 py-1 shadow-md">
+<<<<<<< HEAD
           {isRemote ? (
             <HeaderButtonWithToolTip
               text="Open in browser"
@@ -193,6 +219,9 @@ export function HistoryTableRow({
               <CloudIcon width="1em" height="1em" />
             </HeaderButtonWithToolTip>
           ) : (
+=======
+          {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             <>
               <HeaderButtonWithToolTip
                 text="Edit"
@@ -224,7 +253,11 @@ export function HistoryTableRow({
                 <TrashIcon width="1em" height="1em" />
               </HeaderButtonWithToolTip>
             </>
+<<<<<<< HEAD
           )}
+=======
+          }
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         </td>
       )}
     </tr>

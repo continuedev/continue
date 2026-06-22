@@ -5,11 +5,15 @@ import * as path from "path";
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+<<<<<<< HEAD
 import {
   getModelName,
   loadAuthConfig,
   updateModelName,
 } from "../auth/workos.js";
+=======
+import { getModelName, updateModelName } from "../auth/workos.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import * as config from "../config.js";
 import { ModelService } from "../services/ModelService.js";
 import {
@@ -20,7 +24,11 @@ import {
 // Mock the config module
 vi.mock("../config.js");
 
+<<<<<<< HEAD
 describe("Model Persistence for Unauthenticated Users", () => {
+=======
+describe("Model Persistence (Hub auth removed)", () => {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   let testDir: string;
   let originalContinueHome: string | undefined;
   let mockAssistant: AssistantUnrolled;
@@ -85,12 +93,17 @@ describe("Model Persistence for Unauthenticated Users", () => {
     }
   });
 
+<<<<<<< HEAD
   test("should persist model selection for logged-out users", () => {
     // User is logged out (no auth config)
     const authConfig = loadAuthConfig();
     expect(authConfig).toBeNull();
 
     // User switches model
+=======
+  test("should persist model selection via GlobalContext", () => {
+    // Auth is always null now
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     updateModelName("Claude 3.5 Sonnet");
 
     // Verify it was saved to GlobalContext
@@ -101,6 +114,7 @@ describe("Model Persistence for Unauthenticated Users", () => {
     expect(getModelName(null)).toBe("Claude 3.5 Sonnet");
   });
 
+<<<<<<< HEAD
   test("should restore model selection on next session for logged-out users", async () => {
     // Session 1: User is logged out and switches model
     const authConfig = loadAuthConfig();
@@ -108,10 +122,17 @@ describe("Model Persistence for Unauthenticated Users", () => {
 
     const modelService = new ModelService();
     await modelService.initialize(mockAssistant, authConfig);
+=======
+  test("should restore model selection on next session", async () => {
+    // Session 1: User switches model
+    const modelService = new ModelService();
+    await modelService.initialize(mockAssistant, null);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     await modelService.switchModel(1);
     updateModelName("Claude 3.5 Sonnet");
 
+<<<<<<< HEAD
     // Session 2: User reopens CLI (still logged out)
     const newAuthConfig = loadAuthConfig();
     expect(newAuthConfig).toBeNull();
@@ -121,11 +142,17 @@ describe("Model Persistence for Unauthenticated Users", () => {
       mockAssistant,
       newAuthConfig,
     );
+=======
+    // Session 2: User reopens CLI
+    const newModelService = new ModelService();
+    const state = await newModelService.initialize(mockAssistant, null);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     // Should restore Claude 3.5 Sonnet
     expect(state.model?.name).toBe("Claude 3.5 Sonnet");
   });
 
+<<<<<<< HEAD
   test("should handle multiple model switches for logged-out users", () => {
     updateModelName("GPT-4");
     expect(getModelName(null)).toBe("GPT-4");
@@ -133,6 +160,13 @@ describe("Model Persistence for Unauthenticated Users", () => {
     updateModelName("Claude 3.5 Sonnet");
     expect(getModelName(null)).toBe("Claude 3.5 Sonnet");
 
+=======
+  test("should handle multiple model switches and persist last one", () => {
+    // Perform multiple switches - only verify the final state
+    // to avoid race conditions with concurrent test files using the same GlobalContext
+    updateModelName("GPT-4");
+    updateModelName("Claude 3.5 Sonnet");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     updateModelName("Claude 3 Opus");
     expect(getModelName(null)).toBe("Claude 3 Opus");
   });
@@ -145,6 +179,7 @@ describe("Model Persistence for Unauthenticated Users", () => {
     expect(getModelName(null)).toBeNull();
   });
 
+<<<<<<< HEAD
   test("should preserve GlobalContext model when user logs in", () => {
     // User is logged out with a persisted model
     updateModelName("Claude 3.5 Sonnet");
@@ -226,6 +261,9 @@ describe("Model Persistence for Unauthenticated Users", () => {
   });
 
   test("should work across config changes for logged-out users", async () => {
+=======
+  test("should work across config changes", async () => {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     // User switches model with one config
     updateModelName("Claude 3.5 Sonnet");
 

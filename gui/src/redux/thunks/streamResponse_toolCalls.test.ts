@@ -11,12 +11,15 @@ vi.mock("../util/getBaseSystemMessage", () => ({
 
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 
+<<<<<<< HEAD
 vi.mock("posthog-js", () => ({
   default: {
     capture: vi.fn(),
   },
 }));
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 vi.mock("uuid", () => ({
   v4: vi.fn(() => "mock-uuid-123"),
 }));
@@ -35,7 +38,10 @@ import {
   grepSearchTool,
   runTerminalCommandTool,
 } from "core/tools/definitions";
+<<<<<<< HEAD
 import posthog from "posthog-js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { MockIdeMessenger } from "../../context/MockIdeMessenger";
 import { RootState } from "../store";
@@ -50,7 +56,10 @@ const terminalName = terminalTool.function.name;
 
 const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
 
+<<<<<<< HEAD
 const mockPosthog = vi.mocked(posthog);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 const mockResolveEditorContent = vi.mocked(resolveEditorContent);
 
 const mockClaudeModel: ModelDescription = {
@@ -432,6 +441,7 @@ describe("streamResponseThunk - tool calls", () => {
 
     expect(result.type).toBe("chat/streamResponse/fulfilled");
 
+<<<<<<< HEAD
     // Verify telemetry events for auto-approved tool execution
     // Use partial matching to allow additional fields (e.g. model) in payload
     expect(mockPosthog.capture).toHaveBeenCalledWith(
@@ -453,6 +463,8 @@ describe("streamResponseThunk - tool calls", () => {
       }),
     );
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     // Verify final state after tool call execution
     const finalState = mockStoreWithToolSettings.getState() as RootState;
 
@@ -1768,6 +1780,7 @@ describe("streamResponseThunk - tool calls", () => {
       },
     ]);
 
+<<<<<<< HEAD
     // Verify telemetry events for manual approval flow
     // Use partial matching to allow additional fields (e.g. model) in payload
     expect(mockPosthog.capture).toHaveBeenCalledWith(
@@ -1789,6 +1802,8 @@ describe("streamResponseThunk - tool calls", () => {
       }),
     );
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     // Verify IDE messenger calls for tool execution
     expect(requestSpy).toHaveBeenCalledWith("tools/call", {
       toolCall: {

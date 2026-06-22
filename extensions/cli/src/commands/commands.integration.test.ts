@@ -25,10 +25,13 @@ describe("Slash Commands Integration", () => {
       expect(commandNames).toContain("help");
       expect(commandNames).toContain("clear");
       expect(commandNames).toContain("exit");
+<<<<<<< HEAD
       expect(commandNames).toContain("login");
       expect(commandNames).toContain("logout");
       expect(commandNames).toContain("whoami");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       expect(commandNames).toContain("model");
       expect(commandNames).toContain("config");
     });
@@ -43,6 +46,7 @@ describe("Slash Commands Integration", () => {
     it("should categorize system commands correctly", async () => {
       const commands = await getAllSlashCommands(mockAssistant);
       const systemCommands = commands.filter((cmd) =>
+<<<<<<< HEAD
         [
           "help",
           "clear",
@@ -53,6 +57,9 @@ describe("Slash Commands Integration", () => {
           "model",
           "config",
         ].includes(cmd.name),
+=======
+        ["help", "clear", "exit", "model", "config"].includes(cmd.name),
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       );
 
       systemCommands.forEach((cmd) => {

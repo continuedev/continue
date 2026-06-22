@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import { z } from "zod";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { PlatformClient, SecretStore } from "../interfaces/index.js";
 import {
   decodeSecretLocation,
@@ -22,8 +25,11 @@ export async function renderSecrets(
   packageIdentifier: PackageIdentifier,
   unrolledConfigContent: string,
   clientSecretStore: SecretStore,
+<<<<<<< HEAD
   orgScopeId: string | null, // The "scope" that the user is logged in with
   onPremProxyUrl: string | null,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   platformClient?: PlatformClient,
 ): Promise<AssistantUnrolled> {
   // 1. First we need to get a list of all the FQSNs that are required to render the config
@@ -69,6 +75,7 @@ export async function renderSecrets(
   // 6. The rendered YAML is parsed and validated again
   const parsedYaml = parseAssistantUnrolled(renderedYaml);
 
+<<<<<<< HEAD
   // 7. We update any of the items with the proxy version if there are un-rendered secrets
   const finalConfig = useProxyForUnrenderedSecrets(
     parsedYaml,
@@ -77,6 +84,20 @@ export async function renderSecrets(
     onPremProxyUrl,
   );
   return finalConfig;
+=======
+  return parsedYaml;
+}
+
+export function packageIdentifierToShorthandSlug(
+  id: PackageIdentifier,
+): string {
+  switch (id.uriType) {
+    case "slug":
+      return `${id.fullSlug.ownerSlug}/${id.fullSlug.packageSlug}`;
+    case "file":
+      return "/";
+  }
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 export function getUnrenderedSecretLocation(
@@ -102,6 +123,7 @@ export function getUnrenderedSecretLocation(
 
   return undefined;
 }
+<<<<<<< HEAD
 
 export function packageIdentifierToShorthandSlug(
   id: PackageIdentifier,
@@ -186,3 +208,5 @@ export const continuePropertiesSchema = z.object({
 });
 
 export type ContinueProperties = z.infer<typeof continuePropertiesSchema>;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))

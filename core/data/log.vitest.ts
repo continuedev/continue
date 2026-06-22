@@ -87,9 +87,12 @@ describe("DataLogger", () => {
             id: "test-profile-id",
           },
         },
+<<<<<<< HEAD
         controlPlaneClient: {
           getAccessToken: vi.fn().mockResolvedValue("test-access-token"),
         },
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       },
     } as unknown as Core;
 

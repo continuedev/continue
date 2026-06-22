@@ -1,6 +1,9 @@
 import type { ChatHistoryItem } from "core/index.js";
 
+<<<<<<< HEAD
 import { sentryService } from "../sentry.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { backgroundJobService } from "../services/BackgroundJobService.js";
 import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
@@ -212,6 +215,7 @@ export async function gracefulExit(code: number = 0): Promise<void> {
     logger.debug("Telemetry shutdown error (ignored)", err as any);
   }
 
+<<<<<<< HEAD
   try {
     // Flush Sentry (best effort)
     await sentryService.flush();
@@ -219,6 +223,8 @@ export async function gracefulExit(code: number = 0): Promise<void> {
     logger.debug("Sentry flush error (ignored)", err as any);
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   // If we're trying to exit with success (0) but had unhandled errors,
   // exit with 1 instead to signal failure
   const finalCode = code === 0 && hadUnhandledError() ? 1 : code;

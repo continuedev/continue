@@ -8,8 +8,11 @@ import {
   type MockedFunction,
 } from "vitest";
 
+<<<<<<< HEAD
 import { AuthenticatedConfig } from "./auth/workos-types.js";
 import type { AuthConfig } from "./auth/workos.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import type { ConfigServiceState } from "./services/types.js";
 import { handleSlashCommands } from "./slashCommands.js";
 
@@ -19,6 +22,12 @@ vi.mock("./services/index.js", () => ({
     config: {
       getState: vi.fn(),
     },
+<<<<<<< HEAD
+=======
+    model: {
+      getModelInfo: vi.fn(),
+    },
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   },
   reloadService: vi.fn(),
   SERVICE_NAMES: {
@@ -26,6 +35,7 @@ vi.mock("./services/index.js", () => ({
   },
 }));
 
+<<<<<<< HEAD
 // Mock auth functions
 vi.mock("./auth/workos.js", () => ({
   isAuthenticated: vi.fn(),
@@ -40,6 +50,8 @@ vi.mock("./telemetry/posthogService.js", () => ({
   },
 }));
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 // Mock commands
 vi.mock("./commands/commands.js", () => ({
   getAllSlashCommands: vi.fn(() => []),
@@ -59,7 +71,10 @@ vi.mock("./util/logger.js", () => ({
 vi.mock("./env.js", () => ({
   env: {
     continueHome: "/home/test/.continue",
+<<<<<<< HEAD
     appUrl: "https://continue.dev",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   },
 }));
 
@@ -120,7 +135,11 @@ describe("slashCommands", () => {
       expect(result).toBeDefined();
       expect(result?.output).toContain("Keyboard Shortcuts:");
       expect(result?.output).toContain("Navigation:");
+<<<<<<< HEAD
       expect(result?.output).toContain("↑/↓");
+=======
+      expect(result?.output).toContain("\u2191/\u2193");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       expect(result?.output).toContain("Tab");
       expect(result?.output).toContain("Enter");
       expect(result?.output).toContain("Shift+Enter");
@@ -136,6 +155,7 @@ describe("slashCommands", () => {
       expect(result?.exit).toBeUndefined();
     });
 
+<<<<<<< HEAD
     it("should handle /info command when not authenticated", async () => {
       const { isAuthenticated } = await import("./auth/workos.js");
       const { services } = await import("./services/index.js");
@@ -144,6 +164,12 @@ describe("slashCommands", () => {
         isAuthenticated as MockedFunction<typeof isAuthenticated>
       ).mockResolvedValue(false);
       (
+=======
+    it("should handle /info command and show config info", async () => {
+      const { services } = await import("./services/index.js");
+
+      (
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         services.config.getState as MockedFunction<
           typeof services.config.getState
         >
@@ -155,8 +181,11 @@ describe("slashCommands", () => {
       const result = await handleSlashCommands("/info", mockAssistant);
 
       expect(result).toBeDefined();
+<<<<<<< HEAD
       expect(result?.output).toContain("Authentication:");
       expect(result?.output).toContain("Not logged in");
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       expect(result?.output).toContain("Configuration:");
       expect(result?.output).toContain("/test/config.yaml");
       expect(result?.output).toContain("Session:");
@@ -164,6 +193,7 @@ describe("slashCommands", () => {
       expect(result?.exit).toBe(false);
     });
 
+<<<<<<< HEAD
     it("should handle /info command when authenticated via environment", async () => {
       const { isAuthenticated, loadAuthConfig, isAuthenticatedConfig } =
         await import("./auth/workos.js");
@@ -177,6 +207,12 @@ describe("slashCommands", () => {
       );
       (isAuthenticatedConfig as any).mockReturnValue(false);
       (
+=======
+    it("should handle /info command when config not found", async () => {
+      const { services } = await import("./services/index.js");
+
+      (
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         services.config.getState as MockedFunction<
           typeof services.config.getState
         >
@@ -188,15 +224,19 @@ describe("slashCommands", () => {
       const result = await handleSlashCommands("/info", mockAssistant);
 
       expect(result).toBeDefined();
+<<<<<<< HEAD
       expect(result?.output).toContain("Authentication:");
       expect(result?.output).toContain(
         "Authenticated via environment variable",
       );
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       expect(result?.output).toContain("Configuration:");
       expect(result?.output).toContain("Config not found");
       expect(result?.exit).toBe(false);
     });
 
+<<<<<<< HEAD
     it("should handle /info command when authenticated with user config", async () => {
       const { isAuthenticated, loadAuthConfig, isAuthenticatedConfig } =
         await import("./auth/workos.js");
@@ -218,6 +258,11 @@ describe("slashCommands", () => {
         mockAuthConfig,
       );
       (isAuthenticatedConfig as any).mockReturnValue(true);
+=======
+    it("should handle /info command with config path", async () => {
+      const { services } = await import("./services/index.js");
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       (
         services.config.getState as MockedFunction<
           typeof services.config.getState
@@ -230,15 +275,19 @@ describe("slashCommands", () => {
       const result = await handleSlashCommands("/info", mockAssistant);
 
       expect(result).toBeDefined();
+<<<<<<< HEAD
       expect(result?.output).toContain("Authentication:");
       expect(result?.output).toContain("test@example.com");
       expect(result?.output).toContain("test-org-id");
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       expect(result?.output).toContain("Configuration:");
       expect(result?.output).toContain("/custom/config.yaml");
       expect(result?.exit).toBe(false);
     });
 
     it("should handle config service errors gracefully", async () => {
+<<<<<<< HEAD
       const { isAuthenticated } = await import("./auth/workos.js");
       const { services } = await import("./services/index.js");
 
@@ -246,6 +295,11 @@ describe("slashCommands", () => {
         isAuthenticated as MockedFunction<typeof isAuthenticated>
       ).mockResolvedValue(false);
       (
+=======
+      const { services } = await import("./services/index.js");
+
+      (
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         services.config.getState as MockedFunction<
           typeof services.config.getState
         >
@@ -260,7 +314,10 @@ describe("slashCommands", () => {
     });
 
     it("should use test session directory when in test mode", async () => {
+<<<<<<< HEAD
       const { isAuthenticated } = await import("./auth/workos.js");
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const { services } = await import("./services/index.js");
       const { getSessionFilePath, getCurrentSession } = await import(
         "./session.js"
@@ -276,9 +333,12 @@ describe("slashCommands", () => {
       });
 
       (
+<<<<<<< HEAD
         isAuthenticated as MockedFunction<typeof isAuthenticated>
       ).mockResolvedValue(false);
       (
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         services.config.getState as MockedFunction<
           typeof services.config.getState
         >

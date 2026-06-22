@@ -15,7 +15,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // Note: Everything else will be bundled to create a self-contained CLI
 // Users should not need to install any additional dependencies
 const external = [
+<<<<<<< HEAD
   "@sentry/profiling-node", // Contains native profiler bindings (optional)
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   "fsevents", // macOS native file watcher (optional dependency)
   "./xhr-sync-worker.js", // JSDOM worker file that needs to be copied separately
 ];

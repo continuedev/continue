@@ -18,6 +18,7 @@ import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 
 // Removed: shouldAutoEnableSystemMessageTools - let it run naturally
 
+<<<<<<< HEAD
 // Additional mocks for streamResponseThunk
 vi.mock("posthog-js", () => ({
   default: {
@@ -25,6 +26,8 @@ vi.mock("posthog-js", () => ({
   },
 }));
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 vi.mock("uuid", () => ({
   v4: vi.fn(() => "mock-uuid-123"),
 }));
@@ -37,14 +40,20 @@ vi.mock(
 );
 
 import { unwrapResult } from "@reduxjs/toolkit";
+<<<<<<< HEAD
 import posthog from "posthog-js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { MockIdeMessenger } from "../../context/MockIdeMessenger";
 import { getRootStateWithClaude } from "./streamResponse.test";
 
 const mockGetBaseSystemMessage = vi.mocked(getBaseSystemMessage);
 
+<<<<<<< HEAD
 const mockPosthog = vi.mocked(posthog);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 const mockResolveEditorContent = vi.mocked(resolveEditorContent);
 
 // Mock editor state (what user types in the input)

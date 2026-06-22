@@ -9,7 +9,10 @@ import { processCommandFlags } from "../flags/flagProcessor.js";
 import { safeStderr, safeStdout } from "../init.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
+<<<<<<< HEAD
 import { sentryService } from "../sentry.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { initializeServices, services } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
 import {
@@ -23,7 +26,10 @@ import {
   updateSessionTitle,
 } from "../session.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
+<<<<<<< HEAD
 import { posthogService } from "../telemetry/posthogService.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { startTUIChat } from "../ui/index.js";
 import { gracefulExit } from "../util/exit.js";
@@ -427,12 +433,15 @@ async function processMessage(
       );
     }
 
+<<<<<<< HEAD
     sentryService.captureException(error, {
       context: "chat_response",
       isHeadless,
       chatHistoryLength: services.chatHistory.getHistory().length,
     });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     // In headless mode, re-throw the error to bubble up to main error handler
     // This preserves downstream logic like telemetry cleanup
     if (isHeadless) {
@@ -561,7 +570,10 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
   try {
     // Record session start
     telemetryService.recordSessionStart();
+<<<<<<< HEAD
     await posthogService.capture("sessionStart", {});
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     // Start active time tracking
     telemetryService.startActiveTime();
@@ -639,11 +651,14 @@ export async function chat(prompt?: string, options: ChatOptions = {}) {
       logging.error(chalk.red(`Fatal error: ${formatError(err)}`));
     }
 
+<<<<<<< HEAD
     sentryService.captureException(err, {
       context: "chat_command_fatal",
       headless: options.headless,
     });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     // Stop active time tracking BEFORE graceful exit
     telemetryService.stopActiveTime();
 

@@ -7,7 +7,10 @@ import {
 import { MessageModes } from "core";
 import { isRecommendedAgentModel } from "core/llm/toolSupport";
 import { useCallback, useEffect, useMemo } from "react";
+<<<<<<< HEAD
 import { useAuth } from "../../context/Auth";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
@@ -21,7 +24,10 @@ export function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector((store) => store.session.mode);
   const selectedModel = useAppSelector(selectSelectedChatModel);
+<<<<<<< HEAD
   const { selectedProfile } = useAuth();
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   const isGoodAtAgentMode = useMemo(() => {
     if (!selectedModel) {
@@ -30,10 +36,13 @@ export function ModeSelect() {
     return isRecommendedAgentModel(selectedModel.model);
   }, [selectedModel]);
 
+<<<<<<< HEAD
   const isLocalAgent = useMemo(() => {
     return selectedProfile?.profileType === "local";
   }, [selectedProfile]);
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const { mainEditor } = useMainEditor();
   const metaKeyLabel = useMemo(() => {
     return getMetaKeyLabel();
@@ -44,9 +53,12 @@ export function ModeSelect() {
       dispatch(setMode("plan"));
     } else if (mode === "plan") {
       dispatch(setMode("agent"));
+<<<<<<< HEAD
     } else if (mode === "agent") {
       // Skip background mode if local agent is selected
       dispatch(setMode(isLocalAgent ? "chat" : "background"));
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     } else {
       dispatch(setMode("chat"));
     }
@@ -54,7 +66,11 @@ export function ModeSelect() {
     if (!document.activeElement?.classList?.contains("ProseMirror")) {
       mainEditor?.commands.focus();
     }
+<<<<<<< HEAD
   }, [mode, mainEditor, isLocalAgent]);
+=======
+  }, [mode, mainEditor]);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   const selectMode = useCallback(
     (newMode: MessageModes) => {
@@ -81,6 +97,7 @@ export function ModeSelect() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [cycleMode]);
 
+<<<<<<< HEAD
   // Auto-switch from background mode when local agent is selected
   useEffect(() => {
     if (mode === "background" && isLocalAgent) {
@@ -88,6 +105,8 @@ export function ModeSelect() {
     }
   }, [mode, isLocalAgent, dispatch]);
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const notGreatAtAgent = (mode: string) => (
     <>
       <ToolTip
@@ -111,6 +130,7 @@ export function ModeSelect() {
         >
           <ModeIcon mode={mode} />
           <span className="hidden sm:block">
+<<<<<<< HEAD
             {mode === "chat"
               ? "Chat"
               : mode === "agent"
@@ -118,6 +138,9 @@ export function ModeSelect() {
                 : mode === "background"
                   ? "Background"
                   : "Plan"}
+=======
+            {mode === "chat" ? "Chat" : mode === "agent" ? "Agent" : "Plan"}
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           </span>
           <ChevronDownIcon
             className="h-2 w-2 flex-shrink-0"
@@ -186,6 +209,7 @@ export function ModeSelect() {
             />
           </ListboxOption>
 
+<<<<<<< HEAD
           <ListboxOption
             value="background"
             className={"gap-1"}
@@ -211,6 +235,8 @@ export function ModeSelect() {
             />
           </ListboxOption>
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           <div className="text-description-muted px-2 py-1">
             {`${metaKeyLabel} . for next mode`}
           </div>

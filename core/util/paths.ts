@@ -118,6 +118,7 @@ export function getConfigJsonPath(): string {
 
 export function getConfigYamlPath(ideType?: IdeType): string {
   const p = path.join(getContinueGlobalPath(), "config.yaml");
+<<<<<<< HEAD
   if (!fs.existsSync(p) && !fs.existsSync(getConfigJsonPath())) {
     if (ideType === "jetbrains") {
       // https://github.com/continuedev/continue/pull/7224
@@ -127,6 +128,14 @@ export function getConfigYamlPath(ideType?: IdeType): string {
     } else {
       fs.writeFileSync(p, YAML.stringify(defaultConfig));
     }
+=======
+  const exists = fs.existsSync(p);
+  const isEmpty = exists && fs.readFileSync(p, "utf8").trim() === "";
+  const needsCreation = !exists && !fs.existsSync(getConfigJsonPath());
+
+  if (needsCreation || isEmpty) {
+    fs.writeFileSync(p, YAML.stringify(defaultConfig));
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     setConfigFilePermissions(p);
   }
   return p;

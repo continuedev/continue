@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   ArrowPathIcon,
   ExclamationTriangleIcon,
@@ -8,6 +9,9 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
 import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
+=======
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { AgentsList } from "./AgentsList";
 
 interface BackgroundModeViewProps {
@@ -17,6 +21,7 @@ interface BackgroundModeViewProps {
 export function BackgroundModeView({
   isCreatingAgent = false,
 }: BackgroundModeViewProps) {
+<<<<<<< HEAD
   const { session, login } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
   const currentOrg = useAppSelector(selectCurrentOrg);
@@ -136,6 +141,10 @@ export function BackgroundModeView({
           </div>
         </div>
       )}
+=======
+  return (
+    <div className="flex flex-col gap-4 py-4">
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       <div className="px-2">
         <div className="text-description text-sm">
           Submit a task above to run a background agent. Your task will appear

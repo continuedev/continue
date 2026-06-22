@@ -7,7 +7,10 @@ describe("Tool Definitions", () => {
   const mockParams: ConfigDependentToolParams = {
     rules: [],
     enableExperimentalTools: false,
+<<<<<<< HEAD
     isSignedIn: false,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     isRemote: false,
     modelName: "a model",
     ide: {} as any,

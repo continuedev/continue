@@ -1,7 +1,10 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
+<<<<<<< HEAD
 import com.github.continuedev.continueintellijextension.error.ContinuePostHogService
 import com.intellij.openapi.components.service
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.CoroutineScope
@@ -26,7 +29,10 @@ class CoreMessengerManager(
                 log.warn("Continue process terminated externally, retrying in $backoffIntervalSeconds seconds")
                 coreMessenger.restart()
             } catch (e: Exception) {
+<<<<<<< HEAD
                 service<ContinuePostHogService>().capture("jetbrains_core_start_error", mapOf("error" to e))
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             }
         }
     }

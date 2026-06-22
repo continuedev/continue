@@ -22,12 +22,15 @@ vi.mock("../telemetry/telemetryService.js", () => ({
   },
 }));
 
+<<<<<<< HEAD
 vi.mock("../telemetry/posthogService.js", () => ({
   posthogService: {
     capture: vi.fn(),
   },
 }));
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 // Mock logger
 vi.mock("../util/logger.js", () => ({
   logger: {

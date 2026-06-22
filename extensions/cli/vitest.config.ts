@@ -5,7 +5,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+<<<<<<< HEAD
     setupFiles: ["./vitest.setup.ts"],
+=======
+    setupFiles: ["./vitest.global-dir-setup.ts", "./vitest.setup.ts"],
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     exclude: ["**/node_modules/**", "**/dist/**", "**/*.e2e.*", "**/e2e/**"],
     coverage: {
       reporter: ["text", "json", "html"],

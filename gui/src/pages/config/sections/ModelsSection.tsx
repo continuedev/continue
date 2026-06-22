@@ -57,6 +57,7 @@ export function ModelsSection() {
   const handleConfigureModel = useEditModel();
 
   function handleAddModel() {
+<<<<<<< HEAD
     const isLocal = selectedProfile?.profileType === "local";
 
     if (isLocal) {
@@ -76,6 +77,18 @@ export function ModelsSection() {
         orgSlug: undefined,
       });
     }
+=======
+    dispatch(setShowDialog(true));
+    dispatch(
+      setDialogMessage(
+        <AddModelForm
+          onDone={() => {
+            dispatch(setShowDialog(false));
+          }}
+        />,
+      ),
+    );
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }
 
   return (

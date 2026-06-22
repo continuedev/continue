@@ -3,7 +3,10 @@ import * as path from "path";
 
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 
+<<<<<<< HEAD
 import { getAccessToken, loadAuthConfig } from "../auth/workos.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { logger } from "../util/logger.js";
 
 import { Tool } from "./types.js";
@@ -61,6 +64,7 @@ export const uploadArtifactTool: Tool = {
         );
       }
 
+<<<<<<< HEAD
       // Get access token
       const authConfig = loadAuthConfig();
       const accessToken = getAccessToken(authConfig);
@@ -68,6 +72,14 @@ export const uploadArtifactTool: Tool = {
         throw new ContinueError(
           ContinueErrorReason.Unspecified,
           "Authentication required. Please log in with 'cn login'.",
+=======
+      // Auth has been removed - artifact upload requires auth
+      const accessToken: string | null = null;
+      if (!accessToken) {
+        throw new ContinueError(
+          ContinueErrorReason.Unspecified,
+          "Artifact upload requires authentication, which has been removed.",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         );
       }
 

@@ -4,7 +4,11 @@ import * as path from "path";
 import chalk from "chalk";
 import { setConfigFilePermissions } from "core/util/paths.js";
 
+<<<<<<< HEAD
 import { AuthConfig, login } from "./auth/workos.js";
+=======
+import type { AuthConfig } from "./auth/workos.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { getApiClient } from "./config.js";
 import { loadConfiguration } from "./configLoader.js";
 import { env } from "./env.js";
@@ -12,7 +16,11 @@ import {
   getApiKeyValidationError,
   isValidAnthropicApiKey,
 } from "./util/apiKeyValidation.js";
+<<<<<<< HEAD
 import { question, questionWithChoices } from "./util/prompt.js";
+=======
+import { question } from "./util/prompt.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { updateAnthropicModelInYaml } from "./util/yamlConfigUpdater.js";
 
 const CONFIG_PATH = path.join(env.continueHome, "config.yaml");
@@ -85,6 +93,7 @@ export async function runOnboardingFlow(
     return false;
   }
 
+<<<<<<< HEAD
   // Step 4: Present user with two options
   console.log(chalk.yellow("How do you want to get started?"));
   console.log(chalk.white("1. ⏩ Log in with Continue"));
@@ -118,6 +127,25 @@ export async function runOnboardingFlow(
   } else {
     throw new Error(`Invalid choice. Please select "1" or "2"`);
   }
+=======
+  // Step 4: Prompt for API key
+  console.log(chalk.yellow("To get started, enter your Anthropic API key."));
+
+  const apiKey = await question(
+    chalk.white("\nEnter your Anthropic API key: "),
+  );
+
+  if (!isValidAnthropicApiKey(apiKey)) {
+    throw new Error(getApiKeyValidationError(apiKey));
+  }
+
+  await createOrUpdateConfig(apiKey);
+  console.log(
+    chalk.green(`✓ Config file updated successfully at ${CONFIG_PATH}`),
+  );
+
+  return true;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 export async function isFirstTime(): Promise<boolean> {
@@ -147,7 +175,11 @@ export async function initializeWithOnboarding(
       await loadConfiguration(
         authConfig,
         configPath,
+<<<<<<< HEAD
         getApiClient(authConfig?.accessToken),
+=======
+        getApiClient(undefined),
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         [],
         false,
       );

@@ -1,5 +1,8 @@
 import { BaseSessionMetadata } from "core";
+<<<<<<< HEAD
 import type { RemoteSessionMetadata } from "core/control-plane/client";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import MiniSearch from "minisearch";
 import React, {
   Fragment,
@@ -67,10 +70,14 @@ export function History() {
 
   const platform = useMemo(() => getPlatform(), []);
 
+<<<<<<< HEAD
   const filteredAndSortedSessions: (
     | BaseSessionMetadata
     | RemoteSessionMetadata
   )[] = useMemo(() => {
+=======
+  const filteredAndSortedSessions: BaseSessionMetadata[] = useMemo(() => {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     // 1. Exact phrase matching
     const exactResults = minisearch.search(searchTerm, {
       fuzzy: false,

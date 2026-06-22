@@ -161,7 +161,11 @@ class Ollama extends BaseLLM implements ModelInstaller {
   private static modelsBeingInstalledMutex = new Mutex();
 
   private fimSupported: boolean = false;
+<<<<<<< HEAD
   private templateSupportsTools: boolean | undefined = undefined;
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   private modelInfoPromise: Promise<void> | undefined = undefined;
   private explicitContextLength: boolean;
 
@@ -240,11 +244,14 @@ class Ollama extends BaseLLM implements ModelInstaller {
          * it's a good indication the model supports FIM.
          */
         this.fimSupported = !!body?.template?.includes(".Suffix");
+<<<<<<< HEAD
 
         // Check if model template supports tool calling (same pattern as .Suffix above)
         if (body?.template) {
           this.templateSupportsTools = body.template.includes(".Tools");
         }
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       })
       .catch((e) => {
         // console.warn("Error calling the Ollama /api/show endpoint: ", e);
@@ -516,12 +523,16 @@ class Ollama extends BaseLLM implements ModelInstaller {
       stream: options.stream,
       // format: options.format, // Not currently in base completion options
     };
+<<<<<<< HEAD
     // Only include tools with user messages, and only if the template supports them
     if (
       options.tools?.length &&
       ollamaMessages.at(-1)?.role === "user" &&
       this.templateSupportsTools !== false
     ) {
+=======
+    if (options.tools?.length && ollamaMessages.at(-1)?.role === "user") {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       chatOptions.tools = options.tools.map((tool) => ({
         type: "function",
         function: {

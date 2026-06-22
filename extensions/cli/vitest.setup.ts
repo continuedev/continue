@@ -58,8 +58,14 @@ vi.mock("./src/systemMessage.js", () => ({
   loadMarkdownRulesWithMetadata: vi.fn().mockReturnValue([]),
 }));
 
+<<<<<<< HEAD
 // Mock environment for tests
 process.env.CONTINUE_GLOBAL_DIR = "/tmp/continue-test";
+=======
+// NOTE: CONTINUE_GLOBAL_DIR is set to a unique per-worker temp dir in
+// ./vitest.global-dir-setup.ts (which runs first) to isolate the shared
+// GlobalContext store across parallel test files. Do not override it here.
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 // Set up global afterEach hook to clear all timers and reset console
 afterEach(() => {

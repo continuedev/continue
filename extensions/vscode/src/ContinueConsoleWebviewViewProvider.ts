@@ -1,5 +1,9 @@
 import { LLMInteractionItem } from "core";
+<<<<<<< HEAD
 import { EXTENSION_NAME } from "core/control-plane/env";
+=======
+import { EXTENSION_NAME } from "core/util/constants";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { LLMLogger } from "core/llm/logger";
 import * as vscode from "vscode";
 

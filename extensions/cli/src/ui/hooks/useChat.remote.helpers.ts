@@ -1,7 +1,10 @@
 import type { ChatHistoryItem } from "core/index.js";
 
 import { services } from "../../services/index.js";
+<<<<<<< HEAD
 import { posthogService } from "../../telemetry/posthogService.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { logger } from "../../util/logger.js";
 
 import { RemoteServerState } from "./useChat.types.js";
@@ -135,10 +138,13 @@ export async function handleRemoteExit(
   remoteUrl: string,
   exit: () => void,
 ): Promise<void> {
+<<<<<<< HEAD
   posthogService.capture("useSlashCommand", {
     name: "exit",
   });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   try {
     const response = await fetch(`${remoteUrl}/exit`, {
       method: "POST",

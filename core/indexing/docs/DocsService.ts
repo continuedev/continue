@@ -25,7 +25,10 @@ import {
   getDocsSqlitePath,
   getLanceDbPath,
 } from "../../util/paths";
+<<<<<<< HEAD
 import { Telemetry } from "../../util/posthog";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 import {
   ArticleWithChunks,
@@ -588,10 +591,13 @@ export default class DocsService {
         }
       }
 
+<<<<<<< HEAD
       void Telemetry.capture("docs_pages_crawled", {
         count: processedPages,
       });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       // Chunk pages based on which crawler was used
       const articles: ArticleWithChunks[] = [];
       const chunks: Chunk[] = [];
@@ -1006,7 +1012,10 @@ export default class DocsService {
           }
         } else {
           addedDocs.push(doc);
+<<<<<<< HEAD
           void Telemetry.capture("add_docs_config", { url: doc.startUrl });
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         }
       }
 

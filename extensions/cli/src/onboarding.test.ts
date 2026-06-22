@@ -15,6 +15,7 @@ describe("onboarding config flag handling", () => {
     // Create a temporary directory for test config files
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "continue-test-"));
 
+<<<<<<< HEAD
     // Create a minimal auth config for testing
     mockAuthConfig = {
       userId: "test-user",
@@ -24,6 +25,10 @@ describe("onboarding config flag handling", () => {
       expiresAt: Date.now() + 3600000,
       organizationId: "test-org",
     };
+=======
+    // Auth config is always null after Hub removal
+    mockAuthConfig = null;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   });
 
   afterEach(() => {
@@ -187,6 +192,7 @@ describe("CONTINUE_USE_BEDROCK environment variable", () => {
     // Mock the config module
     vi.doMock("./config.js", () => ({ initialize: mockInitialize }));
 
+<<<<<<< HEAD
     mockAuthConfig = {
       userId: "test-user",
       userEmail: "test@example.com",
@@ -195,6 +201,9 @@ describe("CONTINUE_USE_BEDROCK environment variable", () => {
       expiresAt: Date.now() + 3600000,
       organizationId: "test-org",
     };
+=======
+    mockAuthConfig = null;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   });
 
   afterEach(() => {

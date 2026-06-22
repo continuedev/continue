@@ -11,6 +11,7 @@
   "navigation": {
     "tabs": [
       {
+<<<<<<< HEAD
         "tab": "Checks",
         "groups": [
           {
@@ -74,6 +75,8 @@
         ]
       },
       {
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         "tab": "IDE Extensions",
         "groups": [
           {
@@ -209,11 +212,19 @@
                   "customize/deep-dives/autocomplete",
                   "customize/deep-dives/development-data",
                   "customize/deep-dives/mcp",
+<<<<<<< HEAD
                   "customize/deep-dives/custom-providers",
                   "customize/deep-dives/model-capabilities"
                 ]
               },
               "customize/telemetry"
+=======
+                  "customize/deep-dives/mcp-examples",
+                  "customize/deep-dives/custom-providers",
+                  "customize/deep-dives/model-capabilities"
+                ]
+              }
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             ]
           },
           {
@@ -250,6 +261,7 @@
             "group": "Help",
             "icon": "book-open",
             "expanded": false,
+<<<<<<< HEAD
             "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
           },
           {
@@ -273,11 +285,30 @@
                   "mission-control/configs/edit-a-config"
                 ]
               }
+=======
+            "pages": ["faqs", "troubleshooting"]
+          }
+        ]
+      },
+      {
+        "tab": "CLI",
+        "groups": [
+          {
+            "group": "CLI",
+            "icon": "terminal",
+            "pages": [
+              "cli/quickstart",
+              "cli/tui-mode",
+              "cli/headless-mode",
+              "cli/configuration",
+              "cli/tool-permissions"
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             ]
           }
         ]
       }
     ],
+<<<<<<< HEAD
     "global": {
       "anchors": [
         {
@@ -297,11 +328,18 @@
         }
       ]
     }
+=======
+    "global": {}
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   },
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg",
+<<<<<<< HEAD
     "href": "https://continue.dev"
+=======
+    "href": "https://docs.continue.dev"
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   },
   "background": {
     "color": {
@@ -309,12 +347,15 @@
     }
   },
   "navbar": {
+<<<<<<< HEAD
     "links": [
       {
         "label": "🚀 Get Started",
         "href": "https://continue.dev/"
       }
     ],
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     "primary": {
       "type": "github",
       "href": "https://github.com/continuedev/continue"
@@ -339,9 +380,12 @@
   "integrations": {
     "ga4": {
       "measurementId": "G-M3JWW8N2XQ"
+<<<<<<< HEAD
     },
     "posthog": {
       "apiKey": "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs"
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     }
   },
   "custom": {
@@ -362,6 +406,7 @@
       "destination": "https://changelog.continue.dev"
     },
     {
+<<<<<<< HEAD
       "source": "/hub",
       "destination": "/mission-control"
     },
@@ -446,6 +491,8 @@
       "destination": "/hub/introduction"
     },
     {
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       "source": "/customization",
       "destination": "/customize/overview"
     },
@@ -1151,11 +1198,14 @@
       "destination": "/customize/overview"
     },
     {
+<<<<<<< HEAD
       "source": "/hub/blocks/bundles",
       "destination": "/hub/introduction"
     },
 
     {
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       "source": "/customize/custom-providers#@greptile-context-provider",
       "destination": "/reference/deprecated-context-providers"
     },
@@ -1296,6 +1346,7 @@
       "destination": "/ide-extensions/agent/plan-mode"
     },
     {
+<<<<<<< HEAD
       "source": "/hub/assistants/intro",
       "destination": "/mission-control/configs/intro"
     },
@@ -1324,6 +1375,8 @@
       "destination": "/mission-control/configs/edit-a-config"
     },
     {
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       "source": "/guides/understanding-assistants",
       "destination": "/guides/understanding-configs"
     },
@@ -1428,6 +1481,7 @@
       "destination": "/ide-extensions/quick-start"
     },
     {
+<<<<<<< HEAD
       "source": "/hub/agents/intro",
       "destination": "/agents/intro"
     },
@@ -1500,6 +1554,8 @@
       "destination": "/checks/running-locally"
     },
     {
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       "source": "/overview",
       "destination": "/"
     }

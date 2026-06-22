@@ -1,7 +1,10 @@
 package com.github.continuedev.continueintellijextension.`continue`.process
 
+<<<<<<< HEAD
 import com.github.continuedev.continueintellijextension.error.ContinueSentryService
 import com.intellij.openapi.components.service
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import com.intellij.openapi.diagnostic.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -32,13 +35,19 @@ class ContinueProcessHandler(
                             log.debug("Handle: $line")
                             handleMessage(line)
                         } catch (e: Exception) {
+<<<<<<< HEAD
                             service<ContinueSentryService>().report(e, "Error handling message: $line")
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
                         }
                     } else
                         delay(100)
                 }
             } catch (e: IOException) {
+<<<<<<< HEAD
                 service<ContinueSentryService>().report(e)
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             }
         }
         scope.launch(Dispatchers.IO) {

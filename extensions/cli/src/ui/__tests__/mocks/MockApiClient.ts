@@ -1,5 +1,6 @@
 // Mock API Client
 export class MockApiClient {
+<<<<<<< HEAD
   async getFreeTrialStatus() {
     return {
       optedInToFreeTrial: true,
@@ -7,6 +8,8 @@ export class MockApiClient {
       chatLimit: 100,
     };
   }
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   async listAssistants() {
     return [];
   }

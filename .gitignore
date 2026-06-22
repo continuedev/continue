@@ -15,6 +15,10 @@ downloads/
 eggs/
 .eggs/
 lib/
+<<<<<<< HEAD
+=======
+!docs-site/lib/
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 lib64/
 parts/
 sdist/

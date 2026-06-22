@@ -286,7 +286,10 @@ function PromptsSubSection() {
   const { selectedProfile } = useAuth();
   const { isCommandBookmarked, toggleBookmark } = useBookmarkedSlashCommands();
   const ideMessenger = useContext(IdeMessengerContext);
+<<<<<<< HEAD
   const isLocal = selectedProfile?.profileType === "local";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   const slashCommands = useAppSelector(
     (state) => state.config.config.slashCommands ?? [],
@@ -299,6 +302,7 @@ function PromptsSubSection() {
   };
 
   const handleAddPrompt = () => {
+<<<<<<< HEAD
     if (isLocal) {
       void ideMessenger.request("config/addLocalWorkspaceBlock", {
         blockType: "prompts",
@@ -309,6 +313,11 @@ function PromptsSubSection() {
         orgSlug: undefined,
       });
     }
+=======
+    void ideMessenger.request("config/addLocalWorkspaceBlock", {
+      blockType: "prompts",
+    });
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   };
 
   const sortedCommands = useMemo(() => {
@@ -431,12 +440,16 @@ function RulesSubSection() {
   const mode = useAppSelector((store) => store.session.mode);
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
+<<<<<<< HEAD
   const isLocal = selectedProfile?.profileType === "local";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const [globalRulesMode, setGlobalRulesMode] = useState<string>("workspace");
   const configLoading = useAppSelector((store) => store.config.loading);
 
   const handleAddRule = (mode?: string) => {
     const currentMode = mode || globalRulesMode;
+<<<<<<< HEAD
     if (isLocal) {
       dispatch(setShowDialog(true));
       dispatch(
@@ -452,6 +465,16 @@ function RulesSubSection() {
         orgSlug: undefined,
       });
     }
+=======
+    dispatch(setShowDialog(true));
+    dispatch(
+      setDialogMessage(
+        <AddRuleDialog
+          mode={currentMode === "global" ? "global" : "workspace"}
+        />,
+      ),
+    );
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   };
 
   const handleOptionClick = (value: string) => {
@@ -501,6 +524,7 @@ function RulesSubSection() {
 
   return (
     <div>
+<<<<<<< HEAD
       {isLocal ? (
         <DropdownButton
           title="Rules"
@@ -517,6 +541,15 @@ function RulesSubSection() {
           addButtonTooltip="Add rules"
         />
       )}
+=======
+      <DropdownButton
+        title="Rules"
+        variant="sm"
+        options={globalRulesOptions}
+        onOptionClick={handleOptionClick}
+        addButtonTooltip="Add rules"
+      />
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
       <Card>
         {sortedRules.length > 0 ? (

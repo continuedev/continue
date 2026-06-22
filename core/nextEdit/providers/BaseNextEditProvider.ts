@@ -56,7 +56,10 @@ export abstract class BaseNextEditModelProvider {
     nextCompletion: string;
     promptMetadata: PromptMetadata;
     ide: IDE;
+<<<<<<< HEAD
     profileType?: "local" | "platform" | "control-plane";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }): Promise<NextEditOutcome> {
     const {
       helper,
@@ -67,7 +70,10 @@ export abstract class BaseNextEditModelProvider {
       nextCompletion,
       promptMetadata,
       ide,
+<<<<<<< HEAD
       profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     } = params;
     const oldEditRangeSlice = helper.fileContents
       .split("\n")
@@ -95,7 +101,10 @@ export abstract class BaseNextEditModelProvider {
       originalEditableRange: oldEditRangeSlice,
       diffLines: [],
       ide,
+<<<<<<< HEAD
       profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
 
     return outcome;
@@ -110,7 +119,10 @@ export abstract class BaseNextEditModelProvider {
     nextCompletion: string;
     promptMetadata: PromptMetadata;
     ide: IDE;
+<<<<<<< HEAD
     profileType?: "local" | "platform" | "control-plane";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }): Promise<NextEditOutcome | undefined> {
     const {
       helper,
@@ -121,7 +133,10 @@ export abstract class BaseNextEditModelProvider {
       nextCompletion,
       promptMetadata,
       ide,
+<<<<<<< HEAD
       profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     } = params;
     const fileSlice = helper.fileLines
       .slice(editableRegionStartLine, editableRegionEndLine + 1)
@@ -145,7 +160,10 @@ export abstract class BaseNextEditModelProvider {
       prefetchQueue,
       promptMetadata,
       ide,
+<<<<<<< HEAD
       profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
 
     if (cursorLocalDiffGroup) {
@@ -158,7 +176,10 @@ export abstract class BaseNextEditModelProvider {
         isCurrentCursorGroup: true,
         promptMetadata,
         ide,
+<<<<<<< HEAD
         profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       });
     }
 
@@ -177,7 +198,10 @@ export abstract class BaseNextEditModelProvider {
     prefetchQueue: PrefetchQueue;
     promptMetadata: PromptMetadata;
     ide: IDE;
+<<<<<<< HEAD
     profileType?: "local" | "platform" | "control-plane";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }): Promise<DiffGroup | undefined> {
     const {
       diffGroups,
@@ -188,7 +212,10 @@ export abstract class BaseNextEditModelProvider {
       prefetchQueue,
       promptMetadata,
       ide,
+<<<<<<< HEAD
       profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     } = params;
     let cursorGroup: DiffGroup | undefined;
 
@@ -204,7 +231,10 @@ export abstract class BaseNextEditModelProvider {
           prefetchQueue,
           promptMetadata,
           ide,
+<<<<<<< HEAD
           profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         });
       }
     }
@@ -220,7 +250,10 @@ export abstract class BaseNextEditModelProvider {
     prefetchQueue: PrefetchQueue;
     promptMetadata: PromptMetadata;
     ide: IDE;
+<<<<<<< HEAD
     profileType?: "local" | "platform" | "control-plane";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }): Promise<void> {
     const {
       group,
@@ -230,7 +263,10 @@ export abstract class BaseNextEditModelProvider {
       prefetchQueue,
       promptMetadata,
       ide,
+<<<<<<< HEAD
       profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     } = params;
     // Extract lines that are not old.
     const groupContent = group.lines
@@ -274,7 +310,10 @@ export abstract class BaseNextEditModelProvider {
       completionId: uuidv4(), // Generate a new ID for this prefetched item.
       diffLines: group.lines,
       ide,
+<<<<<<< HEAD
       profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
 
     prefetchQueue.enqueueProcessed({
@@ -292,7 +331,10 @@ export abstract class BaseNextEditModelProvider {
     isCurrentCursorGroup: boolean;
     promptMetadata: PromptMetadata;
     ide: IDE;
+<<<<<<< HEAD
     profileType?: "local" | "platform" | "control-plane";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }): Promise<NextEditOutcome> {
     const {
       diffGroup,
@@ -303,7 +345,10 @@ export abstract class BaseNextEditModelProvider {
       isCurrentCursorGroup,
       promptMetadata,
       ide,
+<<<<<<< HEAD
       profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     } = params;
     const groupContent = diffGroup.lines
       .filter((l) => l.type !== "old")
@@ -342,7 +387,10 @@ export abstract class BaseNextEditModelProvider {
       completionId,
       diffLines: diffGroup.lines,
       ide,
+<<<<<<< HEAD
       profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
 
     return outcomeNext;
@@ -364,7 +412,10 @@ export abstract class BaseNextEditModelProvider {
     completionId?: string;
     diffLines: DiffLine[];
     ide: IDE;
+<<<<<<< HEAD
     profileType?: "local" | "platform" | "control-plane";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }): Promise<NextEditOutcome> {
     return {
       elapsed: Date.now() - outcomeCtx.startTime,
@@ -391,7 +442,10 @@ export abstract class BaseNextEditModelProvider {
       editableRegionStartLine: outcomeCtx.editableRegionStartLine,
       editableRegionEndLine: outcomeCtx.editableRegionEndLine,
       diffLines: outcomeCtx.diffLines,
+<<<<<<< HEAD
       profileType: outcomeCtx.profileType,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       ...outcomeCtx.helper.options,
     };
   }

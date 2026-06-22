@@ -1,5 +1,8 @@
 import { BaseSessionMetadata } from "core";
+<<<<<<< HEAD
 import type { RemoteSessionMetadata } from "core/control-plane/client";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 export const parseDate = (date: string): Date => {
   let dateObj = new Date(date);
@@ -11,11 +14,19 @@ export const parseDate = (date: string): Date => {
 
 export interface SessionGroup {
   label: string;
+<<<<<<< HEAD
   sessions: (BaseSessionMetadata | RemoteSessionMetadata)[];
 }
 
 export const groupSessionsByDate = (
   sessions: (BaseSessionMetadata | RemoteSessionMetadata)[],
+=======
+  sessions: BaseSessionMetadata[];
+}
+
+export const groupSessionsByDate = (
+  sessions: BaseSessionMetadata[],
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 ): SessionGroup[] => {
   const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
   const lastWeek = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);

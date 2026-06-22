@@ -26,7 +26,11 @@ import { applyToolOverrides } from "core/tools/applyToolOverrides";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
+<<<<<<< HEAD
 import posthog from "posthog-js";
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import {
   selectCurrentToolCalls,
   selectPendingToolCalls,
@@ -256,6 +260,7 @@ export const streamNormalInput = createAsyncThunk<
       }
     } catch (e) {
       const toolCallsToCancel = selectCurrentToolCalls(getState());
+<<<<<<< HEAD
       posthog.capture("stream_premature_close_error", {
         duration: (Date.now() - start) / 1000,
         model: selectedChatModel.model,
@@ -265,6 +270,8 @@ export const streamNormalInput = createAsyncThunk<
           command: legacySlashCommandData.command.name,
         }),
       });
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       if (
         toolCallsToCancel.length > 0 &&
         e instanceof Error &&

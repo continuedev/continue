@@ -1,12 +1,18 @@
 package com.github.continuedev.continueintellijextension.`continue`.process
 
+<<<<<<< HEAD
 import com.github.continuedev.continueintellijextension.error.ContinuePostHogService
 import com.github.continuedev.continueintellijextension.error.ContinueSentryService
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import com.github.continuedev.continueintellijextension.proxy.ProxySettings
 import com.github.continuedev.continueintellijextension.utils.OS
 import com.github.continuedev.continueintellijextension.utils.getContinueBinaryPath
 import com.github.continuedev.continueintellijextension.utils.getOS
+<<<<<<< HEAD
 import com.intellij.openapi.components.service
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -51,8 +57,12 @@ class ContinueBinaryProcess(
                 err = err.substring(doneIndex + delimiter.length)
             }
         }
+<<<<<<< HEAD
         service<ContinueSentryService>().reportMessage("Core process exited with output: $err")
         service<ContinuePostHogService>().capture("jetbrains_core_exit", mapOf("error" to err))
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     }
 
     private companion object {

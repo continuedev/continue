@@ -1,6 +1,10 @@
 import { MessagePart, RangeInFile, SlashCommandDescWithSource } from "core";
 import { stripImages } from "core/util/messageContent";
+<<<<<<< HEAD
 import posthog from "posthog-js";
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { renderMcpPrompt } from "./renderMcpPrompt";
 import { getRenderedV1Prompt } from "./renderPromptv1";
@@ -37,6 +41,7 @@ export async function renderSlashCommandPrompt(
     return NO_COMMAND;
   }
 
+<<<<<<< HEAD
   try {
     posthog.capture("useSlashCommand", {
       name: command.name,
@@ -47,6 +52,8 @@ export async function renderSlashCommandPrompt(
     console.error(e);
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const nonTextParts = parts.filter((part) => part.type !== "text");
   const textParts = parts.filter((part) => part.type === "text");
   const slashedParts: MessagePart[] = [...nonTextParts];

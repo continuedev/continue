@@ -15,28 +15,37 @@ import {
   WEBVIEW_TO_CORE_PASS_THROUGH,
 } from "core/protocol/passThrough";
 import { stripImages } from "core/util/messageContent";
+<<<<<<< HEAD
 import { normalizeRepoUrl } from "core/util/repoUrl";
 import {
   sanitizeShellArgument,
   validateGitHubRepoUrl,
 } from "core/util/sanitization";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import * as vscode from "vscode";
 
 import { ApplyManager } from "../apply";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { addCurrentSelectionToEdit } from "../quickEdit/AddCurrentSelection";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
+<<<<<<< HEAD
 import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { handleLLMError } from "../util/errorHandling";
 import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
+<<<<<<< HEAD
 import { encodeFullSlug } from "../../../../packages/config-yaml/dist";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { VsCodeExtension } from "./VsCodeExtension";
 
 type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
@@ -88,7 +97,10 @@ export class VsCodeMessenger {
     private readonly ide: VsCodeIde,
     private readonly verticalDiffManagerPromise: Promise<VerticalDiffManager>,
     private readonly configHandlerPromise: Promise<ConfigHandler>,
+<<<<<<< HEAD
     private readonly workOsAuthProvider: WorkOsAuthProvider,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     private readonly editDecorationManager: EditDecorationManager,
     private readonly context: vscode.ExtensionContext,
     private readonly vsCodeExtension: VsCodeExtension,
@@ -269,6 +281,7 @@ export class VsCodeMessenger {
       );
     });
 
+<<<<<<< HEAD
     this.onWebview("createBackgroundAgent", async (msg) => {
       const configHandler = await configHandlerPromise;
       const { content, contextItems, selectedCode, organizationId } = msg.data;
@@ -651,6 +664,8 @@ export class VsCodeMessenger {
       }
     });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/
     WEBVIEW_TO_CORE_PASS_THROUGH.forEach((messageType) => {
       this.onWebview(messageType, async (msg) => {
@@ -754,6 +769,7 @@ export class VsCodeMessenger {
     this.onWebviewOrCore("showToast", (msg) => {
       this.ide.showToast(...msg.data);
     });
+<<<<<<< HEAD
     this.onWebviewOrCore("getControlPlaneSessionInfo", async (msg) => {
       return getControlPlaneSessionInfo(
         msg.data.silent,
@@ -771,6 +787,8 @@ export class VsCodeMessenger {
         false,
       );
     });
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     this.onWebviewOrCore("saveFile", async (msg) => {
       return await ide.saveFile(msg.data.filepath);
     });

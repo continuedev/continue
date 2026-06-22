@@ -14,9 +14,12 @@
       "model": "this field is not used"
     }
   ],
+<<<<<<< HEAD
   "analytics": {
     "provider": "continue-proxy"
   },
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   "tabAutocompleteModel": {
     "title": "TEST LLM",
     "provider": "test",

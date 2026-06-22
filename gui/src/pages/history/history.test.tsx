@@ -16,8 +16,11 @@ mockIdeMessenger.responses["history/list"] = [
     sessionId: "remote-agent-123",
     dateCreated: new Date().toString(),
     workspaceDirectory: "",
+<<<<<<< HEAD
     isRemote: true,
     remoteId: "agent-123",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   },
 ];
 describe("history Page test", () => {

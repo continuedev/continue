@@ -25,7 +25,10 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
+<<<<<<< HEAD
 import type { RemoteSessionMetadata } from "core/control-plane/client";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { mergeReasoningDetails } from "core/llm/openaiTypeConverters";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
@@ -204,7 +207,11 @@ export type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 type SessionState = {
   lastSessionId?: string;
   isSessionMetadataLoading: boolean;
+<<<<<<< HEAD
   allSessionMetadata: (BaseSessionMetadata | RemoteSessionMetadata)[];
+=======
+  allSessionMetadata: BaseSessionMetadata[];
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   history: ChatHistoryItemWithMessageId[];
   isStreaming: boolean;
   title: string;
@@ -721,9 +728,13 @@ export const sessionSlice = createSlice({
     },
     setAllSessionMetadata: (
       state,
+<<<<<<< HEAD
       {
         payload,
       }: PayloadAction<(BaseSessionMetadata | RemoteSessionMetadata)[]>,
+=======
+      { payload }: PayloadAction<BaseSessionMetadata[]>,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     ) => {
       state.allSessionMetadata = payload;
     },

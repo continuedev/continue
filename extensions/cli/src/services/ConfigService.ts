@@ -225,8 +225,13 @@ export class ConfigService
       try {
         const modelConfig = await unrollPackageIdentifiersAsConfigYaml(
           [DEFAULT_MODEL_IDENTIFIER],
+<<<<<<< HEAD
           authConfig?.accessToken ?? null,
           authConfig?.organizationId ?? null,
+=======
+          null,
+          null,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           apiClient,
         );
         const defaultModel = modelConfig?.models?.[0];

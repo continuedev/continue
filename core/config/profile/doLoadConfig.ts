@@ -4,7 +4,10 @@ import {
   AssistantUnrolled,
   ConfigResult,
   ConfigValidationError,
+<<<<<<< HEAD
   ModelRole,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   PackageIdentifier,
 } from "@continuedev/config-yaml";
 
@@ -20,6 +23,7 @@ import {
 import { stringifyMcpPrompt } from "../../commands/slash/mcpSlashCommand";
 import { convertRuleBlockToSlashCommand } from "../../commands/slash/ruleBlockSlashCommand";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
+<<<<<<< HEAD
 import ContinueProxyContextProvider from "../../context/providers/ContinueProxyContextProvider";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
@@ -28,6 +32,9 @@ import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { PolicySingleton } from "../../control-plane/PolicySingleton";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
+=======
+import MCPContextProvider from "../../context/providers/MCPContextProvider";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { initSlashCommand } from "../../promptFiles/initPrompt";
 import { getConfigDependentToolDefinitions } from "../../tools";
 import { encodeMCPToolUri } from "../../tools/callTool";
@@ -35,8 +42,12 @@ import { getMCPToolName } from "../../tools/mcpToolName";
 import { GlobalContext } from "../../util/GlobalContext";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
+<<<<<<< HEAD
 import { Telemetry } from "../../util/posthog";
 import { SentryLogger } from "../../util/sentry/SentryLogger";
+=======
+import { IdeInfoService } from "../../util/IdeInfoService";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { TTS } from "../../util/tts";
 import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
@@ -72,32 +83,47 @@ async function loadRules(ide: IDE) {
 
 export default async function doLoadConfig(options: {
   ide: IDE;
+<<<<<<< HEAD
   controlPlaneClient: ControlPlaneClient;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   llmLogger: ILLMLogger;
   overrideConfigJson?: SerializedContinueConfig;
   overrideConfigYaml?: AssistantUnrolled;
   profileId: string;
   overrideConfigYamlByPath?: string;
+<<<<<<< HEAD
   orgScopeId: string | null;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   packageIdentifier: PackageIdentifier;
 }): Promise<ConfigResult<ContinueConfig>> {
   const {
     ide,
+<<<<<<< HEAD
     controlPlaneClient,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     llmLogger,
     overrideConfigJson,
     overrideConfigYaml,
     profileId,
     overrideConfigYamlByPath,
+<<<<<<< HEAD
     orgScopeId,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     packageIdentifier,
   } = options;
 
   const ideInfo = await ide.getIdeInfo();
   const uniqueId = await ide.getUniqueId();
   const ideSettings = await ide.getIdeSettings();
+<<<<<<< HEAD
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
   const isSignedIn = await controlPlaneClient.isSignedIn();
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   // Migrations for old config files
   // Removes
@@ -131,10 +157,14 @@ export default async function doLoadConfig(options: {
       uniqueId,
       llmLogger,
       overrideConfigYaml,
+<<<<<<< HEAD
       controlPlaneClient,
       orgScopeId,
       packageIdentifier,
       workOsAccessToken,
+=======
+      packageIdentifier,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
     newConfig = result.config;
     errors = result.errors;
@@ -147,7 +177,10 @@ export default async function doLoadConfig(options: {
       ideInfo,
       uniqueId,
       llmLogger,
+<<<<<<< HEAD
       workOsAccessToken,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       overrideConfigJson,
     );
     newConfig = result.config;
@@ -190,6 +223,7 @@ export default async function doLoadConfig(options: {
 
   newConfig.slashCommands.push(initSlashCommand);
 
+<<<<<<< HEAD
   const proxyContextProvider = newConfig.contextProviders?.find(
     (cp) => cp.description.title === "continue-proxy",
   );
@@ -198,6 +232,8 @@ export default async function doLoadConfig(options: {
       workOsAccessToken;
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   // Show deprecation warnings for providers
   const globalContext = new GlobalContext();
   newConfig.contextProviders.forEach((provider) => {
@@ -320,7 +356,10 @@ export default async function doLoadConfig(options: {
       rules: newConfig.rules,
       enableExperimentalTools:
         newConfig.experimental?.enableExperimentalTools ?? false,
+<<<<<<< HEAD
       isSignedIn,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       isRemote: await ide.isWorkspaceRemote(),
       modelName: newConfig.selectedModelByRole.chat?.model,
       ide,
@@ -377,6 +416,7 @@ export default async function doLoadConfig(options: {
     }
   }
 
+<<<<<<< HEAD
   // Org policies
   const policy = PolicySingleton.getInstance().policy?.policy;
   if (policy?.allowAnonymousTelemetry === false) {
@@ -410,10 +450,15 @@ export default async function doLoadConfig(options: {
     ideInfo,
     userEmail,
   );
+=======
+  // Setup IdeInfoService
+  IdeInfoService.setup(uniqueId, ideInfo);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   // TODO: pass config to pre-load non-system TTS models
   await TTS.setup();
 
+<<<<<<< HEAD
   // Set up control plane proxy if configured
   const controlPlane = (newConfig as any).controlPlane;
   const useOnPremProxy =
@@ -453,6 +498,8 @@ export default async function doLoadConfig(options: {
     controlPlaneProxyInfo,
   );
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   return {
     config: newConfig,
     errors,
@@ -460,6 +507,7 @@ export default async function doLoadConfig(options: {
     configName,
   };
 }
+<<<<<<< HEAD
 
 // Pass ControlPlaneProxyInfo to objects that need it
 async function injectControlPlaneProxyInfo(
@@ -489,3 +537,5 @@ async function injectControlPlaneProxyInfo(
 
   return config;
 }
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))

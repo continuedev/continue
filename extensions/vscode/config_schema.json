@@ -2858,7 +2858,10 @@
                 "ollama",
                 "openai",
                 "cohere",
+<<<<<<< HEAD
                 "continue-proxy",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
                 "gemini",
                 "voyage",
                 "nvidia",
@@ -3324,12 +3327,17 @@
           "properties": {
             "provider": {
               "type": "string",
+<<<<<<< HEAD
               "enum": ["posthog", "logstash"],
               "description": "The 3rd party analytics provider to use.",
               "default": "posthog",
               "markdownEnumDescriptions": [
                 "### Posthog\nTo use Posthog, set up an account, obtain your client key, and enter it in the client key field."
               ]
+=======
+              "enum": ["logstash"],
+              "description": "The 3rd party analytics provider to use."
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             },
             "url": {
               "type": "string",
@@ -3346,6 +3354,7 @@
               "if": {
                 "properties": {
                   "provider": {
+<<<<<<< HEAD
                     "enum": ["posthog"]
                   }
                 }
@@ -3358,6 +3367,8 @@
               "if": {
                 "properties": {
                   "provider": {
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
                     "enum": ["logstash"]
                   }
                 }

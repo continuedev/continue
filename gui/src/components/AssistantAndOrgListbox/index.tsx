@@ -1,19 +1,29 @@
 import {
   ArrowPathIcon,
+<<<<<<< HEAD
   ArrowRightStartOnRectangleIcon,
   Cog6ToothIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import { isOnPremSession } from "core/control-plane/AuthTypes";
+=======
+  Cog6ToothIcon,
+  PlusIcon,
+} from "@heroicons/react/24/outline";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { useContext, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+<<<<<<< HEAD
 import {
   selectCurrentOrg,
   setSelectedProfile,
 } from "../../redux/slices/profilesSlice";
+=======
+import { setSelectedProfile } from "../../redux/slices/profilesSlice";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { cn } from "../../util/cn";
 import { CONFIG_ROUTES } from "../../util/navigation";
@@ -24,9 +34,13 @@ import {
   Transition,
   useFontSize,
 } from "../ui";
+<<<<<<< HEAD
 import { Divider } from "../ui/Divider";
 import { AssistantOptions } from "./AssistantOptions";
 import { OrganizationOptions } from "./OrganizationOptions";
+=======
+import { AssistantOptions } from "./AssistantOptions";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { SelectedAssistantButton } from "./SelectedAssistantButton";
 
 export interface AssistantAndOrgListboxProps {
@@ -39,6 +53,7 @@ export function AssistantAndOrgListbox({
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const listboxRef = useRef<HTMLDivElement>(null);
+<<<<<<< HEAD
   const currentOrg = useAppSelector(selectCurrentOrg);
   const ideMessenger = useContext(IdeMessengerContext);
   const {
@@ -54,6 +69,12 @@ export function AssistantAndOrgListbox({
   const tinyFont = useFontSize(-4);
   const shouldRenderOrgInfo =
     session && organizations.length > 1 && !isOnPremSession(session);
+=======
+  const ideMessenger = useContext(IdeMessengerContext);
+  const { profiles, selectedProfile, refreshProfiles } = useAuth();
+  const configLoading = useAppSelector((store) => store.config.loading);
+  const tinyFont = useFontSize(-4);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   function close() {
     // Close the listbox by clicking outside or programmatically
@@ -62,6 +83,7 @@ export function AssistantAndOrgListbox({
   }
 
   function onNewAssistant() {
+<<<<<<< HEAD
     if (session) {
       void ideMessenger.request("controlPlane/openUrl", {
         path: "/new",
@@ -77,6 +99,9 @@ export function AssistantAndOrgListbox({
     void ideMessenger.request("controlPlane/openUrl", {
       path: "/organizations/new",
     });
+=======
+    void ideMessenger.request("config/newAssistantFile", undefined);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     close();
   }
 
@@ -85,6 +110,7 @@ export function AssistantAndOrgListbox({
     close();
   }
 
+<<<<<<< HEAD
   function onOrganizationsConfig() {
     navigate(CONFIG_ROUTES.ORGANIZATIONS);
     close();
@@ -100,6 +126,8 @@ export function AssistantAndOrgListbox({
     close();
   }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   useEffect(() => {
     let lastToggleTime = 0;
     const DEBOUNCE_MS = 800;
@@ -139,7 +167,11 @@ export function AssistantAndOrgListbox({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
+<<<<<<< HEAD
   }, [currentOrg, selectedProfile]);
+=======
+  }, [selectedProfile]);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   return (
     <Listbox>
@@ -154,7 +186,11 @@ export function AssistantAndOrgListbox({
             style={{ zIndex: 200 }}
           >
             <div className="flex items-center justify-between px-1.5 py-1">
+<<<<<<< HEAD
               <span className="text-description text-xs font-medium">
+=======
+              <span className="text-description text-2xs font-medium">
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
                 Configs
               </span>
               <div className="flex items-center gap-0.5">
@@ -188,6 +224,7 @@ export function AssistantAndOrgListbox({
               onClose={close}
             />
 
+<<<<<<< HEAD
             {shouldRenderOrgInfo && (
               <>
                 <Divider className="!mb-0.5 !mt-0" />
@@ -227,6 +264,8 @@ export function AssistantAndOrgListbox({
               </>
             )}
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             {/* Settings Section */}
             {variant !== "sidebar" && (
               <div>
@@ -242,13 +281,18 @@ export function AssistantAndOrgListbox({
                   <div className="flex w-full items-center">
                     <ArrowPathIcon
                       className={cn(
+<<<<<<< HEAD
                         "ml-1.5 mr-2 h-3.5 w-3.5 flex-shrink-0",
+=======
+                        "ml-1 mr-3 h-3.5 w-3.5 flex-shrink-0",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
                         configLoading && "animate-spin-slow",
                       )}
                     />
                     <span className="text-2xs">Reload</span>
                   </div>
                 </Button>
+<<<<<<< HEAD
                 {session ? (
                   <Button
                     onClick={(e) => {
@@ -284,6 +328,8 @@ export function AssistantAndOrgListbox({
                 )}
 
                 <Divider className="!mt-0" />
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
               </div>
             )}
 

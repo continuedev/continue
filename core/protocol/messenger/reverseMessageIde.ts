@@ -109,11 +109,14 @@ export class ReverseMessageIde {
       return this.ide.showLines(data.filepath, data.startLine, data.endLine);
     });
 
+<<<<<<< HEAD
     this.on("getControlPlaneSessionInfo", async (msg) => {
       // Not supported in testing
       return undefined;
     });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     this.on("writeFile", (data) => {
       return this.ide.writeFile(data.path, data.contents);
     });

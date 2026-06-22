@@ -4,6 +4,7 @@ import * as path from "path";
 
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
+<<<<<<< HEAD
 import { AuthenticatedConfig } from "src/auth/workos-types.js";
 
 import {
@@ -13,6 +14,13 @@ import {
   updateModelName,
 } from "../auth/workos.js";
 import { persistModelName } from "../util/modelPersistence.js";
+=======
+import { getModelName, updateModelName } from "../auth/workos.js";
+import {
+  getPersistedModelName,
+  persistModelName,
+} from "../util/modelPersistence.js";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 describe("Model Persistence Integration", () => {
   let testDir: string;
@@ -41,6 +49,7 @@ describe("Model Persistence Integration", () => {
   });
 
   test("should persist model name when user selects a model", () => {
+<<<<<<< HEAD
     // Create initial auth config without model name
     const authConfig: AuthenticatedConfig = {
       userId: "test-user",
@@ -74,10 +83,24 @@ describe("Model Persistence Integration", () => {
     };
 
     saveAuthConfig(authConfig);
+=======
+    // User selects a model (auth is always null now)
+    updateModelName("Claude 3.5 Sonnet");
+
+    // Verify model name is persisted via GlobalContext
+    expect(getModelName(null)).toBe("Claude 3.5 Sonnet");
+  });
+
+  test("should update model name when user switches models", () => {
+    // Set initial model
+    updateModelName("GPT-4");
+    expect(getModelName(null)).toBe("GPT-4");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     // User switches to a different model
     updateModelName("Claude 3.5 Sonnet");
 
+<<<<<<< HEAD
     // Load config and verify new model name
     const loadedConfig = loadAuthConfig();
     expect(getModelName(loadedConfig)).toBe("Claude 3.5 Sonnet");
@@ -124,10 +147,21 @@ describe("Model Persistence Integration", () => {
     };
 
     saveAuthConfig(authConfig);
+=======
+    // Verify new model name
+    expect(getModelName(null)).toBe("Claude 3.5 Sonnet");
+  });
+
+  test("should clear model name when set to null", () => {
+    // Set a model
+    updateModelName("GPT-4");
+    expect(getModelName(null)).toBe("GPT-4");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     // Clear model name
     updateModelName(null);
 
+<<<<<<< HEAD
     // Load config and verify model name is cleared
     const loadedConfig = loadAuthConfig();
     expect(getModelName(loadedConfig)).toBeNull();
@@ -191,5 +225,25 @@ describe("Model Persistence Integration", () => {
 
     // Verify it's pretty-printed (has indentation)
     expect(rawContent).toContain("\n  ");
+=======
+    // Verify model name is cleared
+    expect(getModelName(null)).toBeNull();
+  });
+
+  test("should return null for model name when no model persisted", () => {
+    // No model persisted and no auth config
+    persistModelName(null); // Ensure GlobalContext is clear
+    expect(getModelName(null)).toBeNull();
+  });
+
+  test("should persist model name via GlobalContext", () => {
+    updateModelName("Claude 3.5 Sonnet");
+
+    // Verify via getPersistedModelName
+    expect(getPersistedModelName()).toBe("Claude 3.5 Sonnet");
+
+    // Verify via getModelName (which reads from GlobalContext)
+    expect(getModelName(null)).toBe("Claude 3.5 Sonnet");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   });
 });

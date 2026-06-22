@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import { sentryVitePlugin } from "@sentry/vite-plugin";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import react from "@vitejs/plugin-react-swc";
 import { resolve } from "path";
 import tailwindcss from "tailwindcss";
@@ -6,6 +9,7 @@ import { defineConfig } from "vitest/config";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+<<<<<<< HEAD
   plugins: [
     react(),
     tailwindcss(),
@@ -14,6 +18,9 @@ export default defineConfig({
       project: "continue",
     }),
   ],
+=======
+  plugins: [react(), tailwindcss()],
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   build: {
     sourcemap: true,
 

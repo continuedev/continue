@@ -6,7 +6,10 @@ import {
   unrollAssistantFromContent,
 } from "@continuedev/config-yaml";
 import { IDE } from "../..";
+<<<<<<< HEAD
 import { ControlPlaneClient } from "../../control-plane/client";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { LocalPlatformClient } from "./LocalPlatformClient";
 
 // This is a certain approach to unrolling local YAML where it
@@ -16,8 +19,11 @@ export async function unrollLocalYamlBlocks(
   packageIdentifiers: PackageIdentifier[],
   ide: IDE,
   registryClient: RegistryClient,
+<<<<<<< HEAD
   orgScopeId: string | null,
   controlPlaneClient: ControlPlaneClient,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 ): Promise<ConfigResult<AssistantUnrolled>> {
   try {
     const unrollResult = await unrollAssistantFromContent(
@@ -29,6 +35,7 @@ export async function unrollLocalYamlBlocks(
       registryClient,
       {
         currentUserSlug: "",
+<<<<<<< HEAD
         onPremProxyUrl: null,
         orgScopeId,
         platformClient: new LocalPlatformClient(
@@ -36,6 +43,9 @@ export async function unrollLocalYamlBlocks(
           controlPlaneClient,
           ide,
         ),
+=======
+        platformClient: new LocalPlatformClient(ide),
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         renderSecrets: true,
         injectBlocks: packageIdentifiers,
       },

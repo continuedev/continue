@@ -1,7 +1,10 @@
 import {
   CubeIcon,
   ExclamationTriangleIcon,
+<<<<<<< HEAD
   GiftIcon,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   PencilIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
@@ -14,12 +17,18 @@ import {
   selectToolCallsByStatus,
 } from "../../../../redux/selectors/selectToolCalls";
 import { setSelectedProfile } from "../../../../redux/slices/profilesSlice";
+<<<<<<< HEAD
 import StarterCreditsPopover from "../../../StarterCreditsPopover";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { ToolTip } from "../../../gui/Tooltip";
 import HoverItem from "../../InputToolbar/HoverItem";
 
 import { useAuth } from "../../../../context/Auth";
+<<<<<<< HEAD
 import { useCreditStatus } from "../../../../hooks/useCredits";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { CONFIG_ROUTES } from "../../../../util/navigation";
 import { AssistantAndOrgListbox } from "../../../AssistantAndOrgListbox";
 
@@ -40,9 +49,12 @@ export function BlockSettingsTopToolbar() {
 
   const shouldShowError = configError && configError?.length > 0;
 
+<<<<<<< HEAD
   const { creditStatus, isUsingFreeTrial, refreshCreditStatus } =
     useCreditStatus();
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const handleRulesClick = () => {
     if (selectedProfile) {
       dispatch(setSelectedProfile(selectedProfile.id));
@@ -101,6 +113,7 @@ export function BlockSettingsTopToolbar() {
 
         {!hasActiveContent && (
           <div className="flex items-center gap-1.5">
+<<<<<<< HEAD
             {isUsingFreeTrial && (
               <ToolTip content="View remaining starter credits">
                 <StarterCreditsPopover
@@ -114,6 +127,8 @@ export function BlockSettingsTopToolbar() {
               </ToolTip>
             )}
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             <ToolTip content="Configure rules">
               <HoverItem onClick={handleRulesClick} px={2}>
                 <PencilIcon className="text-description-muted h-3 w-3 hover:brightness-125" />

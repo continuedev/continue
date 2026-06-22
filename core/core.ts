@@ -9,14 +9,21 @@ import {
 } from "./autocomplete/util/openedFilesLruCache";
 import { ConfigHandler } from "./config/ConfigHandler";
 import { addModel, deleteModel } from "./config/util";
+<<<<<<< HEAD
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { getControlPlaneEnv } from "./control-plane/env";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Lemonade from "./llm/llms/Lemonade";
+<<<<<<< HEAD
+=======
+import { fetchModels } from "./llm/fetchModels";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
@@ -26,7 +33,11 @@ import { compactConversation } from "./util/conversationCompaction";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
+<<<<<<< HEAD
 import { Telemetry } from "./util/posthog";
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import {
   isProcessBackgrounded,
   killTerminalProcess,
@@ -69,7 +80,10 @@ import {
 } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp/MCPManagerSingleton";
 import { performAuth, removeMCPAuth } from "./context/mcp/MCPOauth";
+<<<<<<< HEAD
 import { setMdmLicenseKey } from "./control-plane/mdm/mdm";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { myersDiff } from "./diff/myers";
 import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
@@ -137,6 +151,7 @@ export class Core {
 
       const ideInfoPromise = messenger.request("getIdeInfo", undefined);
       const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
+<<<<<<< HEAD
       const initialSessionInfoPromise = messenger.request(
         "getControlPlaneSessionInfo",
         {
@@ -150,6 +165,9 @@ export class Core {
         this.llmLogger,
         initialSessionInfoPromise,
       );
+=======
+      this.configHandler = new ConfigHandler(this.ide, this.llmLogger);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
       this.docsService = DocsService.createSingleton(
         this.configHandler,
@@ -188,8 +206,12 @@ export class Core {
             result: serializedResult,
             profileId:
               this.configHandler.currentProfile?.profileDescription.id || null,
+<<<<<<< HEAD
             organizations: this.configHandler.getSerializedOrgs(),
             selectedOrgId: this.configHandler.currentOrg?.id ?? null,
+=======
+            profiles: this.configHandler.profileDescriptions,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           });
 
           if (await this.codeBaseIndexer.wasAnyOneIndexAdded()) {
@@ -293,11 +315,14 @@ export class Core {
     // Note, VsCode's in-process messenger doesn't do anything with this
     // It will only show for jetbrains
     this.messenger.onError((message, err) => {
+<<<<<<< HEAD
       void Telemetry.capture("core_messenger_error", {
         message: err.message,
         stack: err.stack,
       });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       // just to prevent duplicate error messages in jetbrains (same logic in webview protocol)
       if (
         ["llm/streamChat", "chatDescriber/describe"].includes(
@@ -323,6 +348,7 @@ export class Core {
 
     // History
     on("history/list", async (msg) => {
+<<<<<<< HEAD
       const localSessions = historyManager.list(msg.data);
 
       // Check if remote sessions should be enabled based on feature flags
@@ -343,6 +369,11 @@ export class Core {
       // Apply limit if specified
       const limit = msg.data?.limit ?? 100;
       return allSessions.slice(0, limit);
+=======
+      const sessions = historyManager.list(msg.data);
+      const limit = msg.data?.limit ?? 100;
+      return sessions.slice(0, limit);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
 
     on("history/delete", (msg) => {
@@ -353,12 +384,15 @@ export class Core {
       return historyManager.load(msg.data.id);
     });
 
+<<<<<<< HEAD
     on("history/loadRemote", async (msg) => {
       return this.configHandler.controlPlaneClient.loadRemoteSession(
         msg.data.remoteId,
       );
     });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     on("history/save", (msg) => {
       historyManager.save(msg.data);
     });
@@ -481,11 +515,17 @@ export class Core {
       const codebaseRulesCache = CodebaseRulesCache.getInstance();
       await codebaseRulesCache.refresh(this.ide);
 
+<<<<<<< HEAD
       const { selectOrgId, selectProfileId, reason } = msg.data ?? {};
       await this.configHandler.refreshAll(reason);
       if (selectOrgId) {
         await this.configHandler.setSelectedOrgId(selectOrgId, selectProfileId);
       } else if (selectProfileId) {
+=======
+      const { selectProfileId, reason } = msg.data ?? {};
+      await this.configHandler.refreshAll(reason);
+      if (selectProfileId) {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         await this.configHandler.setSelectedProfileId(selectProfileId);
       }
     });
@@ -510,6 +550,7 @@ export class Core {
       return newSelectedModels;
     });
 
+<<<<<<< HEAD
     on("controlPlane/openUrl", async (msg) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       const urlPath = msg.data.path.startsWith("/")
@@ -532,6 +573,8 @@ export class Core {
       return this.configHandler.controlPlaneClient.getCreditStatus();
     });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     on("mcp/reloadServer", async (msg) => {
       await MCPManagerSingleton.getInstance().refreshConnection(msg.data.id);
     });
@@ -623,8 +666,12 @@ export class Core {
         result: await this.configHandler.getSerializedConfig(),
         profileId:
           this.configHandler.currentProfile?.profileDescription.id ?? null,
+<<<<<<< HEAD
         organizations: this.configHandler.getSerializedOrgs(),
         selectedOrgId: this.configHandler.currentOrg?.id ?? null,
+=======
+        profiles: this.configHandler.profileDescriptions,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       };
     });
 
@@ -1108,6 +1155,7 @@ export class Core {
       }
     });
 
+<<<<<<< HEAD
     on("didChangeSelectedOrg", async (msg) => {
       if (msg.data.id) {
         await this.configHandler.setSelectedOrgId(
@@ -1132,6 +1180,10 @@ export class Core {
         msg.data.useOnboarding,
       );
       return { url };
+=======
+    on("auth/getAuthUrl", async (_msg) => {
+      return { url: "" };
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
 
     on("tools/call", async ({ data: { toolCall } }) =>
@@ -1223,9 +1275,23 @@ export class Core {
       await killTerminalProcess(toolCallId);
     });
 
+<<<<<<< HEAD
     on("mdm/setLicenseKey", ({ data: { licenseKey } }) => {
       const isValid = setMdmLicenseKey(licenseKey);
       return isValid;
+=======
+    on("models/fetch", async (msg) => {
+      try {
+        return await fetchModels(
+          msg.data.provider,
+          msg.data.apiKey,
+          msg.data.apiBase,
+        );
+      } catch (error: any) {
+        void this.ide.showToast("error", error.message);
+        return [];
+      }
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
   }
 
@@ -1483,10 +1549,13 @@ export class Core {
     }
 
     try {
+<<<<<<< HEAD
       void Telemetry.capture("context_provider_get_context_items", {
         name: provider.description.title,
       });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const items = await provider.getContextItems(query, {
         config,
         llm,
@@ -1502,6 +1571,7 @@ export class Core {
         isInAgentMode: msg.data.isInAgentMode,
       });
 
+<<<<<<< HEAD
       void Telemetry.capture(
         "useContextProvider",
         {
@@ -1510,6 +1580,8 @@ export class Core {
         true,
       );
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       return items.map((item) => {
         const id: ContextItemId = {
           providerTitle: provider.description.title,

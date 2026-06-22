@@ -4,7 +4,11 @@ import * as fs from "node:fs";
 import { ContextMenuConfig, ILLM, ModelInstaller } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
+<<<<<<< HEAD
 import { EXTENSION_NAME } from "core/control-plane/env";
+=======
+import { EXTENSION_NAME } from "core/util/constants";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { isModelInstaller } from "core/llm";
@@ -16,7 +20,10 @@ import {
   getConfigYamlPath,
   setConfigFilePermissions,
 } from "core/util/paths";
+<<<<<<< HEAD
 import { Telemetry } from "core/util/posthog";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import * as vscode from "vscode";
 import * as YAML from "yaml";
 
@@ -59,6 +66,7 @@ function getFullScreenTab() {
   );
 }
 
+<<<<<<< HEAD
 type TelemetryCaptureParams = Parameters<typeof Telemetry.capture>;
 
 /**
@@ -71,6 +79,8 @@ function captureCommandTelemetry(
   Telemetry.capture(commandName, { isCommandEvent: true, ...properties });
 }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 function focusGUI() {
   const fullScreenTab = getFullScreenTab();
   if (fullScreenTab) {
@@ -184,7 +194,10 @@ const getCommandsMap: (
 
   return {
     "continue.acceptDiff": async (newFileUri?: string, streamId?: string) => {
+<<<<<<< HEAD
       captureCommandTelemetry("acceptDiff");
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       void processDiff(
         "accept",
         sidebar,
@@ -197,7 +210,10 @@ const getCommandsMap: (
     },
 
     "continue.rejectDiff": async (newFileUri?: string, streamId?: string) => {
+<<<<<<< HEAD
       captureCommandTelemetry("rejectDiff");
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       void processDiff(
         "reject",
         sidebar,
@@ -209,36 +225,52 @@ const getCommandsMap: (
       );
     },
     "continue.acceptVerticalDiffBlock": (fileUri?: string, index?: number) => {
+<<<<<<< HEAD
       captureCommandTelemetry("acceptVerticalDiffBlock");
       verticalDiffManager.acceptRejectVerticalDiffBlock(true, fileUri, index);
     },
     "continue.rejectVerticalDiffBlock": (fileUri?: string, index?: number) => {
       captureCommandTelemetry("rejectVerticalDiffBlock");
+=======
+      verticalDiffManager.acceptRejectVerticalDiffBlock(true, fileUri, index);
+    },
+    "continue.rejectVerticalDiffBlock": (fileUri?: string, index?: number) => {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       verticalDiffManager.acceptRejectVerticalDiffBlock(false, fileUri, index);
     },
     "continue.quickFix": async (
       range: vscode.Range,
       diagnosticMessage: string,
     ) => {
+<<<<<<< HEAD
       captureCommandTelemetry("quickFix");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const prompt = `Please explain the cause of this error and how to solve it: ${diagnosticMessage}`;
 
       addCodeToContextFromRange(range, sidebar.webviewProtocol, prompt);
 
       vscode.commands.executeCommand("continue.continueGUIView.focus");
     },
+<<<<<<< HEAD
     // Passthrough for telemetry purposes
     "continue.defaultQuickAction": async (args: QuickEditShowParams) => {
       captureCommandTelemetry("defaultQuickAction");
+=======
+    "continue.defaultQuickAction": async (args: QuickEditShowParams) => {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       vscode.commands.executeCommand("continue.focusEdit", args);
     },
     "continue.customQuickActionSendToChat": async (
       prompt: string,
       range: vscode.Range,
     ) => {
+<<<<<<< HEAD
       captureCommandTelemetry("customQuickActionSendToChat");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       addCodeToContextFromRange(range, sidebar.webviewProtocol, prompt);
 
       vscode.commands.executeCommand("continue.continueGUIView.focus");
@@ -247,8 +279,11 @@ const getCommandsMap: (
       prompt: string,
       range: vscode.Range,
     ) => {
+<<<<<<< HEAD
       captureCommandTelemetry("customQuickActionStreamInlineEdit");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       streamInlineEdit("docstring", prompt, range);
     },
     "continue.codebaseForceReIndex": async () => {
@@ -341,11 +376,15 @@ const getCommandsMap: (
     // QuickEditShowParams are passed from CodeLens, temp fix
     // until we update to new params specific to Edit
     "continue.focusEdit": async (args?: QuickEditShowParams) => {
+<<<<<<< HEAD
       captureCommandTelemetry("focusEdit");
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       focusGUI();
       sidebar.webviewProtocol?.request("focusEdit", undefined);
     },
     "continue.exitEditMode": async () => {
+<<<<<<< HEAD
       captureCommandTelemetry("exitEditMode");
       editDecorationManager.clear();
       void sidebar.webviewProtocol?.request("exitEditMode", undefined);
@@ -358,33 +397,51 @@ const getCommandsMap: (
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");
 
+=======
+      editDecorationManager.clear();
+      void sidebar.webviewProtocol?.request("exitEditMode", undefined);
+    },
+    "continue.writeCommentsForCode": async () => {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       streamInlineEdit(
         "comment",
         "Write comments for this code. Do not change anything about the code itself.",
       );
     },
     "continue.writeDocstringForCode": async () => {
+<<<<<<< HEAD
       captureCommandTelemetry("writeDocstringForCode");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       void streamInlineEdit(
         "docstring",
         "Write a docstring for this code. Do not change anything about the code itself.",
       );
     },
     "continue.fixCode": async () => {
+<<<<<<< HEAD
       captureCommandTelemetry("fixCode");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       streamInlineEdit(
         "fix",
         "Fix this code. If it is already 100% correct, simply rewrite the code.",
       );
     },
     "continue.optimizeCode": async () => {
+<<<<<<< HEAD
       captureCommandTelemetry("optimizeCode");
       streamInlineEdit("optimize", "Optimize this code");
     },
     "continue.fixGrammar": async () => {
       captureCommandTelemetry("fixGrammar");
+=======
+      streamInlineEdit("optimize", "Optimize this code");
+    },
+    "continue.fixGrammar": async () => {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       streamInlineEdit(
         "fixGrammar",
         "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
@@ -394,12 +451,18 @@ const getCommandsMap: (
       consoleView.clearLog();
     },
     "continue.viewLogs": async () => {
+<<<<<<< HEAD
       captureCommandTelemetry("viewLogs");
       vscode.commands.executeCommand("workbench.action.toggleDevTools");
     },
     "continue.debugTerminal": async () => {
       captureCommandTelemetry("debugTerminal");
 
+=======
+      vscode.commands.executeCommand("workbench.action.toggleDevTools");
+    },
+    "continue.debugTerminal": async () => {
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const terminalContents = await ide.getTerminalContents();
 
       vscode.commands.executeCommand("continue.continueGUIView.focus");
@@ -416,8 +479,11 @@ const getCommandsMap: (
 
     // Commands without keyboard shortcuts
     "continue.addModel": () => {
+<<<<<<< HEAD
       captureCommandTelemetry("addModel");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       vscode.commands.executeCommand("continue.continueGUIView.focus");
       sidebar.webviewProtocol?.request("addModel", undefined);
     },
@@ -535,8 +601,11 @@ const getCommandsMap: (
       nextEditLoggingService.reject(completionId);
     },
     "continue.toggleTabAutocompleteEnabled": () => {
+<<<<<<< HEAD
       captureCommandTelemetry("toggleTabAutocompleteEnabled");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const enabled = config.get("enableTabAutocomplete");
       const pauseOnBattery = config.get<boolean>(
@@ -571,8 +640,11 @@ const getCommandsMap: (
       }
     },
     "continue.forceAutocomplete": async () => {
+<<<<<<< HEAD
       captureCommandTelemetry("forceAutocomplete");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       // 1. Explicitly hide any existing suggestion. This clears VS Code's cache for the current position.
       await vscode.commands.executeCommand("editor.action.inlineSuggest.hide");
 
@@ -583,8 +655,11 @@ const getCommandsMap: (
     },
 
     "continue.openTabAutocompleteConfigMenu": async () => {
+<<<<<<< HEAD
       captureCommandTelemetry("openTabAutocompleteConfigMenu");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const quickPick = vscode.window.createQuickPick();
 
@@ -744,8 +819,11 @@ const getCommandsMap: (
         });
     },
     "continue.enterEnterpriseLicenseKey": async () => {
+<<<<<<< HEAD
       captureCommandTelemetry("enterEnterpriseLicenseKey");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const licenseKey = await vscode.window.showInputBox({
         prompt: "Enter your enterprise license key",
         password: true,
@@ -780,8 +858,11 @@ const getCommandsMap: (
       }
     },
     "continue.toggleNextEditEnabled": async () => {
+<<<<<<< HEAD
       captureCommandTelemetry("toggleNextEditEnabled");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const tabAutocompleteEnabled = config.get<boolean>(
         "enableTabAutocomplete",
@@ -823,8 +904,11 @@ const getCommandsMap: (
       vscode.commands.executeCommand("continue.newSession");
 
       // Full screen not open - open it
+<<<<<<< HEAD
       captureCommandTelemetry("openInNewWindow");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       // Create the full screen panel
       let panel = vscode.window.createWebviewPanel(
         "continue.continueGUIView",
@@ -872,8 +956,11 @@ const getCommandsMap: (
       vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     },
     "continue.forceNextEdit": async () => {
+<<<<<<< HEAD
       captureCommandTelemetry("forceNextEdit");
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       // This is basically the same logic as forceAutocomplete.
       // I'm writing a new command KV pair here in case we diverge in features.
 

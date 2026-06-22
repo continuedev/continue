@@ -1,6 +1,9 @@
 package com.github.continuedev.continueintellijextension.nextEdit
 
+<<<<<<< HEAD
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import com.github.continuedev.continueintellijextension.`continue`.ProfileInfoService
 import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
 import com.intellij.openapi.components.Service
@@ -10,7 +13,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
+<<<<<<< HEAD
 import kotlin.text.endsWith
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 /**
  * This cache-like service is introduced to enable checking the Next Edit status in a non-blocking way (e.g., while
@@ -45,6 +52,7 @@ class NextEditStatusService(private val project: Project) {
 
     private suspend fun isNextEditEnabledAsync(project: Project): Boolean {
         return try {
+<<<<<<< HEAD
             // NOTE: Quick filter for non-continue users.
             // Remove this once we have a FIM - Next Edit toggle UI.
             val authService = project.service<ContinueAuthService>()
@@ -55,6 +63,8 @@ class NextEditStatusService(private val project: Project) {
                 return false
             }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
             val profileInfoService = project.service<ProfileInfoService>()
             val selectedModelByRole = profileInfoService.fetchSelectedModelByRoleOrNull()
 

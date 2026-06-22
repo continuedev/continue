@@ -1,6 +1,10 @@
 import { Chunk } from "../../..";
 import { RETRIEVAL_PARAMS } from "../../../util/parameters";
+<<<<<<< HEAD
 import { Telemetry } from "../../../util/posthog";
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { findUriInDirs } from "../../../util/uri";
 import { requestFilesFromRepoMap } from "../repoMapRequest";
 import { deduplicateChunks } from "../util";
@@ -21,7 +25,10 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     try {
       ftsChunks = await this.retrieveFts(args, nRetrieve);
     } catch (error) {
+<<<<<<< HEAD
       await Telemetry.captureError("reranker_fts_retrieval", error);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       // console.error("Error retrieving FTS chunks:", error);
     }
 
@@ -31,7 +38,10 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
         ? await this.retrieveEmbeddings(input, nRetrieve)
         : [];
     } catch (error) {
+<<<<<<< HEAD
       await Telemetry.captureError("reranker_embeddings_retrieval", error);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       console.error("Error retrieving embeddings chunks:", error);
     }
 
@@ -40,7 +50,10 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       recentlyEditedFilesChunks =
         await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
     } catch (error) {
+<<<<<<< HEAD
       await Telemetry.captureError("reranker_recently_edited_retrieval", error);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       console.error("Error retrieving recently edited files chunks:", error);
     }
 
@@ -54,7 +67,10 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
         filterDirectory,
       );
     } catch (error) {
+<<<<<<< HEAD
       await Telemetry.captureError("reranker_repo_map_retrieval", error);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       console.error("Error retrieving repo map chunks:", error);
     }
 

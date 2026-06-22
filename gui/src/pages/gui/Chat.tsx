@@ -31,7 +31,10 @@ import {
   selectDoneApplyStates,
   selectPendingToolCalls,
 } from "../../redux/selectors/selectToolCalls";
+<<<<<<< HEAD
 import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import {
   cancelToolCall,
   ChatHistoryItemWithMessageId,
@@ -45,10 +48,16 @@ import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
 import { useStore } from "react-redux";
+<<<<<<< HEAD
 import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundModeView";
 import { CliInstallBanner } from "../../components/CliInstallBanner";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 
+=======
+import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
+
+import { DeprecationBanner } from "../../components/DeprecationBanner";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
@@ -115,7 +124,10 @@ export function Chat() {
   );
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
+<<<<<<< HEAD
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -127,6 +139,7 @@ export function Chat() {
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
+<<<<<<< HEAD
   const allSessionMetadata = useAppSelector(
     (state) => state.session.allSessionMetadata,
   );
@@ -135,6 +148,11 @@ export function Chat() {
   );
   const mode = useAppSelector((state) => state.session.mode);
   const currentOrg = useAppSelector(selectCurrentOrg);
+=======
+  const hasDismissedExploreDialog = useAppSelector(
+    (state) => state.ui.hasDismissedExploreDialog,
+  );
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);
@@ -181,6 +199,7 @@ export function Chat() {
         stateSnapshot.config.config.selectedModelByRole;
       const currentMode = stateSnapshot.session.mode;
 
+<<<<<<< HEAD
       // Handle background mode specially
       if (currentMode === "background" && !isCurrentlyInEdit) {
         // Background mode triggers agent creation instead of chat
@@ -231,6 +250,8 @@ export function Chat() {
         return;
       }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       // Cancel all pending tool calls
       latestPendingToolCalls.forEach((toolCallState) => {
         dispatch(
@@ -285,7 +306,11 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
+<<<<<<< HEAD
     [dispatch, ideMessenger, reduxStore, setIsCreatingAgent],
+=======
+    [dispatch, ideMessenger, reduxStore],
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   );
 
   useWebviewListener(
@@ -446,6 +471,10 @@ export function Chat() {
         ref={stepsDivRef}
         className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
+<<<<<<< HEAD
+=======
+        <DeprecationBanner dismissable={true} />
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         {highlights}
         {history
           .filter((item) => item.message.role !== "system")
@@ -478,12 +507,15 @@ export function Chat() {
           inputId={MAIN_EDITOR_INPUT_ID}
         />
 
+<<<<<<< HEAD
         <CliInstallBanner
           sessionCount={allSessionMetadata.length}
           sessionThreshold={3}
           permanentDismissal={true}
         />
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         <div
           style={{
             pointerEvents: isStreaming ? "none" : "auto",
@@ -506,12 +538,17 @@ export function Chat() {
           </div>
           <FatalErrorIndicator />
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
+<<<<<<< HEAD
           {mode === "background" ? (
             <BackgroundModeView isCreatingAgent={isCreatingAgent} />
           ) : (
             history.length === 0 && (
               <EmptyChatBody showOnboardingCard={onboardingCard.show} />
             )
+=======
+          {history.length === 0 && (
+            <EmptyChatBody showOnboardingCard={onboardingCard.show} />
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           )}
         </div>
       </div>

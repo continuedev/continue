@@ -8,8 +8,12 @@ import { setLastNonEditSessionEmpty } from "../redux/slices/editState";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
   initializeProfilePreferences,
+<<<<<<< HEAD
   setOrganizations,
   setSelectedOrgId,
+=======
+  setProfiles,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   setSelectedProfile,
 } from "../redux/slices/profilesSlice";
 import {
@@ -55,12 +59,16 @@ function ParallelListeners() {
 
   const handleConfigUpdate = useCallback(
     async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
+<<<<<<< HEAD
       const {
         result: configResult,
         profileId,
         organizations,
         selectedOrgId,
       } = result;
+=======
+      const { result: configResult, profileId, profiles } = result;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       if (isInitial && hasDoneInitialConfigLoad.current) {
         return;
       }
@@ -68,8 +76,12 @@ function ParallelListeners() {
         return;
       }
       hasDoneInitialConfigLoad.current = true;
+<<<<<<< HEAD
       dispatch(setOrganizations(organizations));
       dispatch(setSelectedOrgId(selectedOrgId));
+=======
+      dispatch(setProfiles(profiles));
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       dispatch(setSelectedProfile(profileId));
       dispatch(setConfigResult(configResult));
 
@@ -230,11 +242,14 @@ function ParallelListeners() {
     void dispatch(cancelStream());
   });
 
+<<<<<<< HEAD
   useWebviewListener("loadAgentSession", async (data) => {
     dispatch(newSession(data.session));
     dispatch(setMode("agent"));
   });
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   useWebviewListener("setTTSActive", async (status) => {
     dispatch(setTTSActive(status));
   });

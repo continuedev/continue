@@ -2,11 +2,14 @@ import { execSync } from "child_process";
 
 import chalk from "chalk";
 
+<<<<<<< HEAD
 import {
   isAuthenticated,
   isAuthenticatedConfig,
   loadAuthConfig,
 } from "./auth/workos.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { services } from "./services/index.js";
 import {
   getCurrentSession,
@@ -27,6 +30,7 @@ function getVersionInfo(): string[] {
   ];
 }
 
+<<<<<<< HEAD
 async function getAuthInfo(): Promise<string[]> {
   const lines: string[] = ["", chalk.white("Authentication:")];
 
@@ -49,6 +53,8 @@ async function getAuthInfo(): Promise<string[]> {
   return lines;
 }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 function getConfigInfo(): string[] {
   const lines: string[] = ["", chalk.white("Configuration:")];
 
@@ -168,7 +174,10 @@ function getDiagnosticInfo(): string[] {
 export async function handleInfoSlashCommand() {
   const infoLines = [
     ...getVersionInfo(),
+<<<<<<< HEAD
     ...(await getAuthInfo()),
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     ...getConfigInfo(),
     ...getSessionInfo(),
     ...getUsageInfo(),

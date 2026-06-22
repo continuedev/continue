@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 import { parseProxyModelName } from "@continuedev/config-yaml";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { ModelDescription } from "..";
 
 export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
   {
+<<<<<<< HEAD
     "continue-proxy": (model) => {
       try {
         const { provider, model: _model } = parseProxyModelName(model);
@@ -18,6 +22,8 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         model.toLowerCase().startsWith(part),
       );
     },
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     anthropic: (model) => {
       if (model.includes("claude-2") || model.includes("claude-instant")) {
         return false;
@@ -29,6 +35,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     azure: (model) => {
       const lower = model.toLowerCase();
+<<<<<<< HEAD
       if (
         lower.startsWith("gpt-4") ||
         lower.startsWith("gpt-5") ||
@@ -38,12 +45,16 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         lower.startsWith("o4")
       )
         return true;
+=======
+      if (lower.match(/^gpt-[4-9]/) || lower.match(/^o[1-9]/)) return true;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       return false;
     },
     openai: (model) => {
       const lower = model.toLowerCase();
       // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling
       if (
+<<<<<<< HEAD
         lower.startsWith("gpt-4") ||
         lower.startsWith("gpt-5") ||
         lower.startsWith("o1") ||
@@ -51,6 +62,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         lower.startsWith("o4") ||
         lower.startsWith("codex") ||
         lower.startsWith("gpt-4.1")
+=======
+        lower.match(/^gpt-[4-9]/) ||
+        lower.match(/^o[1-9]/) ||
+        lower.startsWith("codex")
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       ) {
         return true;
       }
@@ -107,8 +123,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     },
     xAI: (model) => {
       const lowerCaseModel = model.toLowerCase();
+<<<<<<< HEAD
       return ["grok-3", "grok-4", "grok-4-1", "grok-code"].some((val) =>
         lowerCaseModel.includes(val),
+=======
+      return (
+        !!lowerCaseModel.match(/grok-[3-9]/) ||
+        lowerCaseModel.includes("grok-code")
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       );
     },
     bedrock: (model) => {
@@ -276,6 +298,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+<<<<<<< HEAD
+=======
+    inception: (model) => {
+      const lower = model.toLowerCase();
+      return lower.startsWith("mercury-2");
+    },
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     deepseek: (model) => {
       // https://api-docs.deepseek.com/quick_start/pricing
       // https://api-docs.deepseek.com/guides/function_calling
@@ -331,6 +360,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       }
 
       const supportedPrefixes = [
+<<<<<<< HEAD
         "openai/gpt-3.5",
         "openai/gpt-4",
         "openai/gpt-5",
@@ -339,11 +369,19 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "openai/o4",
         "openai/codex",
         "openai/gpt-oss",
+=======
+        "openai/gpt-",
+        "openai/codex",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         "anthropic/claude",
         "microsoft/phi-3",
         "google/gemini-flash-1.5",
         "google/gemini-2",
         "google/gemini-3",
+<<<<<<< HEAD
+=======
+        "google/gemma-4",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         "google/gemini-pro",
         "x-ai/grok",
         "qwen/qwen3",
@@ -376,6 +414,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         }
       }
 
+<<<<<<< HEAD
+=======
+      // OpenAI o-series (o1, o3, o4, ...)
+      if (baseModel.match(/^openai\/o[1-9]/)) {
+        return true;
+      }
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const specificModels = [
         "qwen/qwq-32b",
         "qwen/qwen-2.5-72b-instruct",
@@ -412,6 +458,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       // Check for common tool-supporting model patterns
       const toolSupportingPatterns = [
+<<<<<<< HEAD
         "gpt-4",
         "gpt-5",
         "o1",
@@ -419,6 +466,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "o4",
         "claude-3",
         "claude-4",
+=======
+        "claude",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         "sonnet",
         "opus",
         "haiku",
@@ -435,11 +485,23 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         "deepseek",
       ];
 
+<<<<<<< HEAD
       return toolSupportingPatterns.some((pattern) => lower.includes(pattern));
     },
     zAI: (model) => {
       const lower = model.toLowerCase();
       return lower.startsWith("glm-4") || lower.startsWith("glm-5");
+=======
+      return (
+        toolSupportingPatterns.some((pattern) => lower.includes(pattern)) ||
+        !!lower.match(/gpt-[4-9]/) ||
+        !!lower.match(/\bo[1-9]\b/)
+      );
+    },
+    zAI: (model) => {
+      const lower = model.toLowerCase();
+      return !!lower.match(/^glm-[4-9]/);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     },
     moonshot: (model) => {
       // support moonshot models
@@ -519,6 +581,7 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/deepseek/, /r1|reasoner/],
     [/gemini/, /2\.5/, /pro/],
     [/gemini/, /3\.1-pro|3-flash-preview/],
+<<<<<<< HEAD
     [/gpt/, /-5|5\.1|5\.2/],
     [/gpt-4\.1/],
     [/codex/],
@@ -527,6 +590,16 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/grok-code/],
     [/grok-4-1|grok-4\.1/],
     [/claude/, /4-5/],
+=======
+    [/gpt-[5-9]/],
+    [/gpt-4\.1/],
+    [/codex/],
+    [/claude/, /sonnet/, /3\.7|3-7|(?<!\d)-[4-9]/],
+    [/claude/, /opus/, /(?<!\d)-[4-9]/],
+    [/grok-code/],
+    [/grok-[4-9][\.-]\d/],
+    [/claude/, /[4-9]-[5-9]/],
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   ];
   for (const combo of recs) {
     if (combo.every((regex) => modelName.toLowerCase().match(regex))) {

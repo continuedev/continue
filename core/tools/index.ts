@@ -18,16 +18,24 @@ export const getBaseToolDefinitions = () => [
 export const getConfigDependentToolDefinitions = async (
   params: ConfigDependentToolParams,
 ): Promise<Tool[]> => {
+<<<<<<< HEAD
   const { modelName, isSignedIn, enableExperimentalTools, isRemote } = params;
+=======
+  const { modelName, enableExperimentalTools, isRemote } = params;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const tools: Tool[] = [];
 
   tools.push(await toolDefinitions.requestRuleTool(params));
   tools.push(await toolDefinitions.readSkillTool(params));
 
+<<<<<<< HEAD
   if (isSignedIn) {
     // Web search is only available for signed-in users
     tools.push(toolDefinitions.searchWebTool);
   }
+=======
+  tools.push(toolDefinitions.searchWebTool);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   if (enableExperimentalTools) {
     tools.push(

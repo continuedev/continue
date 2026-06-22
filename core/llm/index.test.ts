@@ -105,6 +105,15 @@ describe("BaseLLM", () => {
       baseLLM.model = "google/gemma-3-270m";
       expect(baseLLM.supportsImages()).toBe(true);
 
+<<<<<<< HEAD
+=======
+      baseLLM.model = "gemma4:31b";
+      expect(baseLLM.supportsImages()).toBe(true);
+
+      baseLLM.model = "google/gemma-4-31b-it";
+      expect(baseLLM.supportsImages()).toBe(true);
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       baseLLM.model = "foo/paligemma-custom-100";
       expect(baseLLM.supportsImages()).toBe(true);
 

@@ -4,7 +4,10 @@ import { fileURLToPath } from "url";
 
 import node_machine_id from "node-machine-id";
 
+<<<<<<< HEAD
 import { isAuthenticatedConfig, loadAuthConfig } from "./auth/workos.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { logger } from "./util/logger.js";
 
 export function getVersion(): string {
@@ -21,6 +24,7 @@ export function getVersion(): string {
 }
 
 function getEventUserId(): string {
+<<<<<<< HEAD
   const authConfig = loadAuthConfig();
 
   if (isAuthenticatedConfig(authConfig)) {
@@ -28,6 +32,8 @@ function getEventUserId(): string {
   }
 
   // Fall back to unique machine id if not signed in
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   return node_machine_id.machineIdSync();
 }
 

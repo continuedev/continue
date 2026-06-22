@@ -1,5 +1,8 @@
 import { ChatMessage, IDE, PromptLog } from "core";
+<<<<<<< HEAD
 import { AuthType } from "core/control-plane/AuthTypes";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import {
   FromWebviewProtocol,
   ToCoreProtocol,
@@ -33,12 +36,15 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
     contents: "Current file contents",
     path: "file:///Users/user/workspace1/current_file.py",
   },
+<<<<<<< HEAD
   "controlPlane/getCreditStatus": {
     optedInToFreeTrial: false,
     creditBalance: 0,
     hasCredits: false,
     hasPurchasedCredits: false,
   },
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   getWorkspaceDirs: [
     "file:///Users/user/workspace1",
     "file:///Users/user/workspace2",
@@ -46,6 +52,7 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   "history/list": [],
   "docs/getIndexedPages": [],
   "history/save": undefined,
+<<<<<<< HEAD
   getControlPlaneSessionInfo: {
     AUTH_TYPE: AuthType.WorkOsStaging,
     accessToken: "",
@@ -80,13 +87,21 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
       },
     ],
     profileId: "local",
+=======
+  "config/getSerializedProfileInfo": {
+    profileId: "local",
+    profiles: [],
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     result: {
       config: {
         tools: [],
         slashCommands: [],
         contextProviders: [],
         mcpServerStatuses: [],
+<<<<<<< HEAD
         usePlatform: true,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         modelsByRole: {
           chat: [],
           apply: [],
@@ -112,7 +127,10 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
       errors: [],
       configLoadInterrupted: false,
     },
+<<<<<<< HEAD
     selectedOrgId: "personal",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   },
   "chatDescriber/describe": "Session summary",
   applyToFile: undefined,
@@ -151,7 +169,10 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
       },
     },
   ],
+<<<<<<< HEAD
   listBackgroundAgents: { agents: [], totalCount: 0 },
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 };
 
 const DEFAULT_MOCK_CORE_RESPONSE_HANDLERS: MockResponseHandlers = {

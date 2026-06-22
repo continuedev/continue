@@ -4,6 +4,7 @@ title: "Configuration"
 
 `cn` resolves its configuration (models, MCP servers, rules, etc.) from several sources, in this order:
 
+<<<<<<< HEAD
 1. **`--config` flag** — a file path or hub assistant slug passed at launch
 2. **Saved config** — the last-used configuration, persisted across sessions
 3. **Default** — your first assistant from [Continue](https://continue.dev), or `~/.continue/config.yaml` if you're not logged in
@@ -18,6 +19,18 @@ cn --config ./my-config.yaml
 
 # Hub assistant
 cn --config my-org/my-assistant
+=======
+1. **`--config` flag** — a file path passed at launch
+2. **Saved config** — the last-used configuration, persisted across sessions
+3. **Default** — `~/.continue/config.yaml`
+
+## `--config` flag
+
+Point `cn` at a local YAML file:
+
+```bash
+cn --config ./my-config.yaml
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 ```
 
 This overrides any saved preference for the current session.
@@ -30,17 +43,26 @@ Use `/config` inside a TUI session to switch between available configurations:
 > /config
 ```
 
+<<<<<<< HEAD
 This shows your available assistants and local configs. The selection is saved for next time.
 
 ## `config.yaml`
 
 If you're not logged in to Continue, `cn` looks for `~/.continue/config.yaml`. This file uses the same format as the IDE extensions — see [config.yaml reference](/customize/deep-dives/configuration) for the full schema.
+=======
+This shows your available local configs. The selection is saved for next time.
+
+## `config.yaml`
+
+`cn` looks for `~/.continue/config.yaml`. This file uses the same format as the IDE extensions — see [config.yaml reference](/customize/deep-dives/configuration) for the full schema.
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 ## CLI-specific flags
 
 Several flags inject configuration at launch without editing a file:
 
 ```bash
+<<<<<<< HEAD
 # Add models from the hub
 cn --model my-org/claude-sonnet
 
@@ -53,11 +75,19 @@ cn --rule my-org/code-review-rules
 cn --rule "Always use TypeScript strict mode"
 
 # Load an agent file from the hub
+=======
+# Add rules (file path or inline string)
+cn --rule ./rules/style.md
+cn --rule "Always use TypeScript strict mode"
+
+# Load an agent file
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 cn --agent my-org/pr-reviewer
 ```
 
 All of these are repeatable — pass them multiple times to add multiple items.
 
+<<<<<<< HEAD
 ## Organization
 
 If you belong to multiple organizations on Continue, use `--org` to specify which one:
@@ -71,6 +101,11 @@ In TUI mode, `/config` lets you switch organizations interactively.
 ## Secrets
 
 Store sensitive values (API keys, tokens) in [Continue → Settings → Secrets](https://continue.dev/settings/secrets). Reference them in config with:
+=======
+## Secrets
+
+Store sensitive values (API keys, tokens) as environment variables. Reference them in config with:
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 ```yaml
 ${{ secrets.MY_API_KEY }}

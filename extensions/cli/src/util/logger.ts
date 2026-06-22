@@ -6,7 +6,10 @@ import chalk from "chalk";
 import winston from "winston";
 
 import { env } from "../env.js";
+<<<<<<< HEAD
 import { sentryService } from "../sentry.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 const { combine, timestamp, printf, errors } = winston.format;
 
@@ -150,7 +153,10 @@ export const logger = {
   info: (message: string, meta?: any) => winstonLogger.info(message, meta),
   warn: (message: string, meta?: any) => {
     winstonLogger.warn(message, meta);
+<<<<<<< HEAD
     sentryService.captureMessage(message, "warning", meta);
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   },
   error: (message: string, error?: Error | any, meta?: any) => {
     if (error instanceof Error) {
@@ -159,6 +165,7 @@ export const logger = {
         error: error.message,
         stack: error.stack,
       });
+<<<<<<< HEAD
       sentryService.captureException(error, { message, ...meta });
     } else if (error) {
       winstonLogger.error(message, { ...meta, error });
@@ -170,6 +177,12 @@ export const logger = {
     } else {
       winstonLogger.error(message, meta);
       sentryService.captureMessage(message, "error", meta);
+=======
+    } else if (error) {
+      winstonLogger.error(message, { ...meta, error });
+    } else {
+      winstonLogger.error(message, meta);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     }
 
     // In headless mode, also output to stderr

@@ -55,6 +55,7 @@ const ErrorPage: React.FC = () => {
         )}
         Continue
       </Button>
+<<<<<<< HEAD
 
       <p className="mb-0 mt-6 text-lg">
         Report the issue on GitHub or Discussions:
@@ -74,6 +75,8 @@ const ErrorPage: React.FC = () => {
           <GithubIcon size={20} /> <span className="ml-2">Discussions</span>
         </SecondaryButton>
       </div>
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     </div>
   );
 };

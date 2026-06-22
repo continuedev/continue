@@ -1,7 +1,11 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/core";
 import { InputModifiers } from "core";
+<<<<<<< HEAD
 import posthog from "posthog-js";
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { v4 as uuidv4 } from "uuid";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { selectSelectedChatModel } from "../slices/configSlice";
@@ -83,6 +87,7 @@ export const streamResponseThunk = createAsyncThunk<
           }),
         );
 
+<<<<<<< HEAD
         posthog.capture("step run", {
           step_name: "User Input",
           params: {},
@@ -96,6 +101,8 @@ export const streamResponseThunk = createAsyncThunk<
           });
         }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         unwrapResult(
           await dispatch(
             streamNormalInput({

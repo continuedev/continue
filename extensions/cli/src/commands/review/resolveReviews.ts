@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
@@ -6,6 +7,11 @@ import { loadAuthConfig, getAccessToken } from "../../auth/workos.js";
 import { env } from "../../env.js";
 import { logger } from "../../util/logger.js";
 
+=======
+import * as fs from "fs";
+import * as path from "path";
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 export interface ResolvedReview {
   /** Display name for the review */
   name: string;
@@ -49,6 +55,7 @@ export async function resolveReviews(
 }
 
 /**
+<<<<<<< HEAD
  * Try to resolve reviews from the hub API based on the current repo.
  */
 async function resolveFromHub(): Promise<ResolvedReview[]> {
@@ -104,6 +111,12 @@ async function resolveFromHub(): Promise<ResolvedReview[]> {
     logger.debug("Hub review resolution failed", { error: e });
     return [];
   }
+=======
+ * Hub review resolution has been removed.
+ */
+async function resolveFromHub(): Promise<ResolvedReview[]> {
+  return [];
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 /**

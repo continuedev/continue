@@ -49,6 +49,7 @@ describe("ModelService", () => {
       ],
     } as AssistantUnrolled;
 
+<<<<<<< HEAD
     mockAuthConfig = {
       accessToken: "test-token",
       refreshToken: "test-refresh",
@@ -57,6 +58,9 @@ describe("ModelService", () => {
       organizationId: "test-org",
       expiresAt: Date.now() + 3600000, // 1 hour from now
     };
+=======
+    mockAuthConfig = null;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   });
 
   describe("State Management", () => {
@@ -146,6 +150,10 @@ describe("ModelService", () => {
     test("should handle continue-proxy provider specially", async () => {
       const proxyModel = {
         provider: "continue-proxy",
+<<<<<<< HEAD
+=======
+        model: "proxy-model",
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
         name: "Proxy Model",
         apiBase: "https://proxy.continue.dev",
         apiKeyLocation: "env.PROXY_KEY",

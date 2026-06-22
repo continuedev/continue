@@ -3,10 +3,15 @@ import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
+<<<<<<< HEAD
 import { posthogService } from "src/telemetry/posthogService.js";
 import { prependPrompt } from "src/util/promptProcessor.js";
 
 import { getAccessToken, getAssistantSlug } from "../auth/workos.js";
+=======
+import { prependPrompt } from "src/util/promptProcessor.js";
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { runEnvironmentInstallSafe } from "../environment/environmentHandler.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
 import { setAgentId } from "../index.js";
@@ -19,7 +24,10 @@ import {
 } from "../services/index.js";
 import {
   AgentFileServiceState,
+<<<<<<< HEAD
   AuthServiceState,
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
@@ -75,8 +83,11 @@ export function shouldQueueInitialPrompt(
 
 // eslint-disable-next-line max-statements
 export async function serve(prompt?: string, options: ServeOptions = {}) {
+<<<<<<< HEAD
   await posthogService.capture("sessionStart", {});
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   // Set agent ID for error reporting if provided
   setAgentId(options.id);
 
@@ -124,6 +135,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     model: modelState.model,
   };
 
+<<<<<<< HEAD
   // Organization selection is already handled in initializeServices
   const authState = await getService<AuthServiceState>(SERVICE_NAMES.AUTH);
   if (authState.organizationId) {
@@ -135,10 +147,15 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const organizationId = authState.organizationId || "personal";
   const assistantName = config.name;
   const assistantSlug = getAssistantSlug(authState.authConfig);
+=======
+  // Log configuration information
+  const assistantName = config.name;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const modelProvider = model.provider;
   const modelName = model.model;
 
   console.log(chalk.blue(`\nConfiguration:`));
+<<<<<<< HEAD
   console.log(chalk.dim(`  Organization: ${organizationId}`));
   console.log(
     chalk.dim(
@@ -147,6 +164,9 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       }`,
     ),
   );
+=======
+  console.log(chalk.dim(`  Assistant: ${assistantName}`));
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   console.log(chalk.dim(`  Model: ${modelProvider}/${modelName}`));
   if (options.config) {
     console.log(chalk.dim(`  Config file: ${options.config}`));
@@ -206,7 +226,11 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const storageSyncService = services.storageSync;
   let storageSyncActive = await storageSyncService.startFromOptions({
     storageOption: options.id,
+<<<<<<< HEAD
     accessToken,
+=======
+    accessToken: null,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     syncSessionHistory,
     getCompleteStateSnapshot: () =>
       getCompleteStateSnapshot(

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   ProfileDescription,
   SerializedOrgWithProfiles,
@@ -18,10 +19,20 @@ import {
   selectSelectedProfile,
   setOrganizations,
   setSelectedOrgId,
+=======
+import { ProfileDescription } from "core/config/ProfileLifecycleManager";
+import React, { createContext, useCallback, useContext } from "react";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { setConfigLoading } from "../redux/slices/configSlice";
+import {
+  selectProfiles,
+  selectSelectedProfile,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 } from "../redux/slices/profilesSlice";
 import { IdeMessengerContext } from "./IdeMessenger";
 
 interface AuthContextType {
+<<<<<<< HEAD
   session: ControlPlaneSessionInfo | undefined;
   logout: () => void;
   login: (useOnboarding: boolean) => Promise<boolean>;
@@ -29,6 +40,11 @@ interface AuthContextType {
   profiles: ProfileDescription[] | null;
   refreshProfiles: (reason?: string) => Promise<void>;
   organizations: SerializedOrgWithProfiles[];
+=======
+  selectedProfile: ProfileDescription | null;
+  profiles: ProfileDescription[] | null;
+  refreshProfiles: (reason?: string) => Promise<void>;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,6 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
+<<<<<<< HEAD
   // Session
   const [session, setSession] = useState<ControlPlaneSessionInfo | undefined>(
     undefined,
@@ -101,6 +118,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [],
   );
 
+=======
+
+  // Profiles
+  const profiles = useAppSelector(selectProfiles);
+  const selectedProfile = useAppSelector(selectSelectedProfile);
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const refreshProfiles = useCallback(
     async (reason?: string) => {
       try {
@@ -122,6 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <AuthContext.Provider
       value={{
+<<<<<<< HEAD
         session,
         logout,
         login,
@@ -129,6 +154,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         profiles: currentOrg?.profiles ?? [],
         refreshProfiles,
         organizations: orgs,
+=======
+        selectedProfile,
+        profiles: profiles ?? [],
+        refreshProfiles,
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       }}
     >
       {children}

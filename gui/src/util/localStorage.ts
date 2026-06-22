@@ -15,14 +15,21 @@ type LocalStorageTypes = {
   showTutorialCard: boolean;
   shownProfilesIntroduction: boolean;
   disableIndexing: boolean;
+<<<<<<< HEAD
   hasExitedFreeTrial: boolean;
   hasDismissedCliInstallBanner: boolean;
+=======
+  hasDismissedDeprecationBanner: boolean;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 };
 
 export enum LocalStorageKey {
   IsExploreDialogOpen = "isExploreDialogOpen",
   HasDismissedExploreDialog = "hasDismissedExploreDialog",
+<<<<<<< HEAD
   HasExitedFreeTrial = "hasExitedFreeTrial",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 export function getLocalStorage<T extends keyof LocalStorageTypes>(

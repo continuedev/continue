@@ -90,13 +90,19 @@ export class InProcessMessenger<
     try {
       return listener(msg);
     } catch (error) {
+<<<<<<< HEAD
       // Capture message handling errors to Sentry
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       Logger.error(error, {
         messageType: String(messageType),
         messageId: msg.messageId,
       });
 
+<<<<<<< HEAD
       // Re-throw the original error
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       throw error;
     }
   }
@@ -141,13 +147,19 @@ export class InProcessMessenger<
       });
       return response;
     } catch (error) {
+<<<<<<< HEAD
       // Capture message handling errors to Sentry
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       Logger.error(error, {
         messageType: String(messageType),
         messageId,
       });
 
+<<<<<<< HEAD
       // Re-throw the original error
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       throw error;
     }
   }
@@ -178,13 +190,19 @@ export class InProcessMessenger<
       });
       return Promise.resolve(response);
     } catch (error) {
+<<<<<<< HEAD
       // Capture message handling errors to Sentry
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       Logger.error(error, {
         messageType: String(messageType),
         messageId,
       });
 
+<<<<<<< HEAD
       // Re-throw the original error
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       throw error;
     }
   }

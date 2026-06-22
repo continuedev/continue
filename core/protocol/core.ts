@@ -10,6 +10,10 @@ import {
   AutocompleteInput,
   RecentlyEditedRange,
 } from "../autocomplete/util/types";
+<<<<<<< HEAD
+=======
+import { ProfileDescription } from "../config/ProfileLifecycleManager";
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
@@ -44,12 +48,15 @@ import {
 import { AutocompleteCodeSnippet } from "../autocomplete/snippets/types";
 import { GetLspDefinitionsFunction } from "../autocomplete/types";
 import { ConfigHandler } from "../config/ConfigHandler";
+<<<<<<< HEAD
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
 import {
   ControlPlaneEnv,
   ControlPlaneSessionInfo,
 } from "../control-plane/AuthTypes";
 import { CreditStatus, RemoteSessionMetadata } from "../control-plane/client";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { ProcessedItem } from "../nextEdit/NextEditPrefetchQueue";
 import { NextEditOutcome } from "../nextEdit/types";
 import { ContinueErrorReason } from "../util/errors";
@@ -57,12 +64,19 @@ import { ContinueErrorReason } from "../util/errors";
 export enum OnboardingModes {
   API_KEY = "API Key",
   LOCAL = "Local",
+<<<<<<< HEAD
   MODELS_ADD_ON = "Models Add-On",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 export interface ListHistoryOptions {
   offset?: number;
   limit?: number;
+<<<<<<< HEAD
+=======
+  workspaceDirectory?: string;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 }
 
 export type ToCoreFromIdeOrWebviewProtocol = {
@@ -72,6 +86,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   cancelApply: [undefined, void];
 
   // History
+<<<<<<< HEAD
   "history/list": [
     ListHistoryOptions,
     (BaseSessionMetadata | RemoteSessionMetadata)[],
@@ -79,6 +94,11 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
   "history/loadRemote": [{ remoteId: string }, Session];
+=======
+  "history/list": [ListHistoryOptions, BaseSessionMetadata[]];
+  "history/delete": [{ id: string }, void];
+  "history/load": [{ id: string }, Session];
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   "history/save": [Session, void];
   "history/share": [{ id: string; outputDir?: string }, void];
   "history/clear": [undefined, void];
@@ -105,8 +125,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
+<<<<<<< HEAD
       organizations: SerializedOrgWithProfiles[];
       selectedOrgId: string | null;
+=======
+      profiles: ProfileDescription[];
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     },
   ];
   "config/deleteModel": [{ title: string }, void];
@@ -115,7 +139,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       | undefined
       | {
           reason?: string;
+<<<<<<< HEAD
           selectOrgId?: string;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
           selectProfileId?: string;
         }
     ),
@@ -338,6 +365,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
   ];
   "clipboardCache/add": [{ content: string }, void];
+<<<<<<< HEAD
   "controlPlane/openUrl": [{ path: string; orgSlug?: string }, void];
   "controlPlane/getEnvironment": [undefined, ControlPlaneEnv];
   "controlPlane/getCreditStatus": [undefined, CreditStatus | null];
@@ -346,8 +374,27 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { sessionInfo: ControlPlaneSessionInfo | undefined },
     void,
   ];
+=======
+  isItemTooBig: [{ item: ContextItemWithId }, boolean];
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   "process/markAsBackgrounded": [{ toolCallId: string }, void];
   "process/isBackgrounded": [{ toolCallId: string }, boolean];
   "process/killTerminalProcess": [{ toolCallId: string }, void];
   "mdm/setLicenseKey": [{ licenseKey: string }, boolean];
+<<<<<<< HEAD
+=======
+  "models/fetch": [
+    { provider: string; apiKey?: string; apiBase?: string },
+    {
+      name: string;
+      modelId?: string;
+      description?: string;
+      icon?: string;
+      popular?: boolean;
+      contextLength?: number;
+      maxTokens?: number;
+      supportsTools?: boolean;
+    }[],
+  ];
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 };

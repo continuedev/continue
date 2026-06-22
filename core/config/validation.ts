@@ -1,7 +1,10 @@
 import { ConfigValidationError } from "@continuedev/config-yaml";
 
 import { ModelDescription, SerializedContinueConfig } from "../";
+<<<<<<< HEAD
 import { Telemetry } from "../util/posthog";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
 /**
  * Validates a SerializedContinueConfig object to ensure all properties are correctly formed.
@@ -158,6 +161,7 @@ export function validateConfig(config: SerializedContinueConfig) {
   });
 
   if (errors.length > 0) {
+<<<<<<< HEAD
     void Telemetry.capture(
       "configValidationError",
       {
@@ -166,6 +170,8 @@ export function validateConfig(config: SerializedContinueConfig) {
       true,
     );
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     return errors;
   }
 

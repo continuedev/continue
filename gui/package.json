@@ -23,8 +23,11 @@
     "@modelcontextprotocol/ext-apps": "^1.0.1",
     "@panzoom/panzoom": "^4.6.0",
     "@reduxjs/toolkit": "^2.11.2",
+<<<<<<< HEAD
     "@sentry/react": "^9.43.0",
     "@sentry/vite-plugin": "^4.0.2",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     "@tiptap/core": "^2.27.0",
     "@tiptap/extension-document": "^2.27.0",
     "@tiptap/extension-dropcursor": "^2.27.0",
@@ -53,7 +56,10 @@
     "mermaid": "^11.10.0",
     "minisearch": "^7.0.2",
     "mustache": "^4.2.0",
+<<<<<<< HEAD
     "posthog-js": "^1.310.1",
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-error-boundary": "^4.0.11",

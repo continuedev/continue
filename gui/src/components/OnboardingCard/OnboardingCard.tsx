@@ -5,7 +5,10 @@ import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { ReusableCard } from "../ReusableCard";
 import { OnboardingCardTabs } from "./components/OnboardingCardTabs";
 import { OnboardingLocalTab } from "./components/OnboardingLocalTab";
+<<<<<<< HEAD
 import { OnboardingModelsAddOnTab } from "./components/OnboardingModelsAddOnTab";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { OnboardingProvidersTab } from "./components/OnboardingProvidersTab";
 import { useOnboardingCard } from "./hooks/useOnboardingCard";
 
@@ -26,10 +29,16 @@ export function OnboardingCard({ isDialog }: OnboardingCardProps) {
     setLocalStorage("onboardingStatus", "Started");
   }
 
+<<<<<<< HEAD
   // Default to MODELS_ADD_ON tab if no active tab is set
   useEffect(() => {
     if (!activeTab) {
       setActiveTab(OnboardingModes.MODELS_ADD_ON);
+=======
+  useEffect(() => {
+    if (!activeTab) {
+      setActiveTab(OnboardingModes.API_KEY);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     }
   }, [activeTab, setActiveTab]);
 
@@ -39,6 +48,7 @@ export function OnboardingCard({ isDialog }: OnboardingCardProps) {
         return <OnboardingProvidersTab />;
       case OnboardingModes.LOCAL:
         return <OnboardingLocalTab />;
+<<<<<<< HEAD
       case OnboardingModes.MODELS_ADD_ON:
         return <OnboardingModelsAddOnTab />;
       default:
@@ -48,6 +58,14 @@ export function OnboardingCard({ isDialog }: OnboardingCardProps) {
 
   // Always show tabs view, defaulting to Models Add-On
   const currentTab = activeTab || OnboardingModes.MODELS_ADD_ON;
+=======
+      default:
+        return <OnboardingProvidersTab />;
+    }
+  }
+
+  const currentTab = activeTab || OnboardingModes.API_KEY;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
   return (
     <ReusableCard

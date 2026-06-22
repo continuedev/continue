@@ -13,6 +13,7 @@ describe("config", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+<<<<<<< HEAD
     mockAuthConfig = {
       accessToken: "test-token",
       refreshToken: "test-refresh",
@@ -21,6 +22,9 @@ describe("config", () => {
       organizationId: "test-org",
       expiresAt: Date.now() + 3600000,
     };
+=======
+    mockAuthConfig = null;
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   });
 
   describe("getLlmApi()", () => {

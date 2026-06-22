@@ -1,6 +1,10 @@
 import { DataLogger } from "../../data/log";
 import { COUNT_COMPLETION_REJECTED_AFTER } from "../../util/parameters";
+<<<<<<< HEAD
 import { Telemetry } from "../../util/posthog";
+=======
+
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { getUriFileExtension } from "../../util/uri";
 
 import { AutocompleteOutcome } from "./types";
@@ -119,6 +123,7 @@ export class AutocompleteLoggingService {
       time: restOfOutcome.time,
       useRecentlyEdited: restOfOutcome.useRecentlyEdited,
       numLines: restOfOutcome.numLines,
+<<<<<<< HEAD
       profileType: restOfOutcome.profileType,
     };
 
@@ -128,5 +133,8 @@ export class AutocompleteLoggingService {
           enabledStaticContextualization: true,
         })
       : void Telemetry.capture("autocomplete", toLog);
+=======
+    };
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   }
 }

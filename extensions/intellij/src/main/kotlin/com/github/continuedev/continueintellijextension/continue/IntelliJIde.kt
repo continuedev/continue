@@ -4,7 +4,10 @@ import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.ContinueConstants
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.`continue`.file.FileUtils
+<<<<<<< HEAD
 import com.github.continuedev.continueintellijextension.error.ContinueSentryService
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.*
@@ -448,7 +451,10 @@ class IntelliJIDE(
                 return results.split("\n")
             } catch (exception: Exception) {
                 val message = "Error executing ripgrep: ${exception.message}"
+<<<<<<< HEAD
                 service<ContinueSentryService>().report(exception, message)
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
                 showToast(ToastType.ERROR, message)
                 return emptyList()
             }
@@ -495,7 +501,10 @@ class IntelliJIDE(
                 return ExecUtil.execAndGetOutput(command).stdout
             } catch (exception: Exception) {
                 val message = "Error executing ripgrep: ${exception.message}"
+<<<<<<< HEAD
                 service<ContinueSentryService>().report(exception, message)
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
                 showToast(ToastType.ERROR, message)
                 return "Error: Unable to execute ripgrep command."
             }

@@ -77,7 +77,11 @@ vi.mock("vscode", () => ({
   },
 }));
 
+<<<<<<< HEAD
 vi.mock("core/control-plane/env", () => ({
+=======
+vi.mock("core/util/constants", () => ({
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   EXTENSION_NAME: "continue",
 }));
 

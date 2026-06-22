@@ -47,6 +47,7 @@ function getModelClass(
   return LLMClasses.find((llm) => llm.providerName === model.provider);
 }
 
+<<<<<<< HEAD
 // function getContinueProxyModelName(
 //   ownerSlug: string,
 //   packageSlug: string,
@@ -55,6 +56,8 @@ function getModelClass(
 //   return `${ownerSlug}/${packageSlug}/${model.provider}/${model.model}`;
 // }
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 async function modelConfigToBaseLLM({
   model,
   uniqueId,

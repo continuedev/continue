@@ -9,7 +9,10 @@ import {
   vi,
 } from "vitest";
 import { IDE } from "../..";
+<<<<<<< HEAD
 import { ControlPlaneClient } from "../../control-plane/client";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { LocalPlatformClient } from "./LocalPlatformClient";
 
 vi.mock("../../util/paths", { spy: true });
@@ -34,6 +37,7 @@ describe("LocalPlatformClient", () => {
     secretName: "TEST_WORKSPACE_SECRET_KEY",
   };
 
+<<<<<<< HEAD
   const testResolvedFQSN: SecretResult = {
     found: true,
     fqsn: testFQSN,
@@ -45,12 +49,17 @@ describe("LocalPlatformClient", () => {
   };
 
   let testControlPlaneClient: ControlPlaneClient;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   let testIde: IDE;
   beforeEach(
     /**dynamic import before each test for test isolation */
     async () => {
       const testFixtures = await import("../../test/fixtures");
+<<<<<<< HEAD
       testControlPlaneClient = testFixtures.testControlPlaneClient;
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       testIde = testFixtures.testIde;
     },
   );
@@ -79,6 +88,7 @@ describe("LocalPlatformClient", () => {
   });
 
   test("should not be able to resolve FQSNs if they do not exist", async () => {
+<<<<<<< HEAD
     const localPlatformClient = new LocalPlatformClient(
       null,
       testControlPlaneClient,
@@ -101,6 +111,13 @@ describe("LocalPlatformClient", () => {
     expect(testControlPlaneClient.resolveFQSNs).toHaveBeenCalled();
     expect(resolvedFQSNs).toEqual([testResolvedFQSN]);
     expect(resolvedFQSNs[0]?.found).toBe(true);
+=======
+    const localPlatformClient = new LocalPlatformClient(testIde);
+    const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
+
+    expect(resolvedFQSNs.length).toBeGreaterThan(0);
+    expect(resolvedFQSNs[0]?.found).toBeUndefined();
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   });
 
   describe("searches for secrets in local .env files", () => {
@@ -112,11 +129,15 @@ describe("LocalPlatformClient", () => {
     });
 
     test("should be able to get secrets from ~/.continue/.env files", async () => {
+<<<<<<< HEAD
       const localPlatformClient = new LocalPlatformClient(
         null,
         testControlPlaneClient,
         testIde,
       );
+=======
+      const localPlatformClient = new LocalPlatformClient(testIde);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
       expect(getContinueDotEnv).toHaveBeenCalled();
       expect(resolvedFQSNs.length).toBe(1);
@@ -155,11 +176,15 @@ describe("LocalPlatformClient", () => {
         return originalIdeReadFile(fileUri);
       });
 
+<<<<<<< HEAD
       const localPlatformClient = new LocalPlatformClient(
         null,
         testControlPlaneClient,
         testIde,
       );
+=======
+      const localPlatformClient = new LocalPlatformClient(testIde);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const resolvedFQSNs = await localPlatformClient.resolveFQSNs([
         testFQSN,
         testFQSN2,
@@ -209,11 +234,15 @@ describe("LocalPlatformClient", () => {
         return originalIdeReadFile(fileUri);
       });
 
+<<<<<<< HEAD
       const localPlatformClient = new LocalPlatformClient(
         null,
         testControlPlaneClient,
         testIde,
       );
+=======
+      const localPlatformClient = new LocalPlatformClient(testIde);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
 
       expect(resolvedFQSNs.length).toBe(1);
@@ -234,6 +263,7 @@ describe("LocalPlatformClient", () => {
     const ogProcessEnv = { ...process.env };
 
     beforeEach(async () => {
+<<<<<<< HEAD
       // Ensure secrets are not found in ControlPlane initially for these tests
       const mockResolveFQSNsNotFound = async (
         fqsns: FQSN[],
@@ -248,6 +278,8 @@ describe("LocalPlatformClient", () => {
         }));
       testControlPlaneClient.resolveFQSNs = vi.fn(mockResolveFQSNsNotFound);
 
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       // Ensure secrets are not found in local .env files
       const utilPaths = await import("../../util/paths");
       utilPaths.getContinueDotEnv = vi.fn(() => ({}));
@@ -270,11 +302,15 @@ describe("LocalPlatformClient", () => {
       const processEnvSecretValue = "secret-from-process-env";
       process.env[testFQSN.secretName] = processEnvSecretValue;
 
+<<<<<<< HEAD
       const localPlatformClient = new LocalPlatformClient(
         null,
         testControlPlaneClient,
         testIde,
       );
+=======
+      const localPlatformClient = new LocalPlatformClient(testIde);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
 
       expect(resolvedFQSNs.length).toBe(1);
@@ -297,6 +333,7 @@ describe("LocalPlatformClient", () => {
       // Ensure it's not in process.env
       expect(process.env[testFQSN.secretName]).toBeUndefined();
 
+<<<<<<< HEAD
       const localPlatformClient = new LocalPlatformClient(
         null,
         testControlPlaneClient,
@@ -349,6 +386,13 @@ describe("LocalPlatformClient", () => {
         controlPlaneValue,
       );
       expect(result?.secretLocation?.secretType).toBe(SecretType.Organization);
+=======
+      const localPlatformClient = new LocalPlatformClient(testIde);
+      const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
+
+      expect(resolvedFQSNs.length).toBe(1);
+      expect(resolvedFQSNs[0]).toBeUndefined();
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
     });
 
     test("should prioritize local ~/.continue/.env file over process.env", async () => {
@@ -361,11 +405,15 @@ describe("LocalPlatformClient", () => {
       process.env[testFQSN.secretName] =
         "secret-from-process-env-should-be-ignored";
 
+<<<<<<< HEAD
       const localPlatformClient = new LocalPlatformClient(
         null,
         testControlPlaneClient,
         testIde,
       );
+=======
+      const localPlatformClient = new LocalPlatformClient(testIde);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
 
       expect(resolvedFQSNs.length).toBe(1);
@@ -393,11 +441,15 @@ describe("LocalPlatformClient", () => {
       process.env[testFQSN.secretName] =
         "secret-from-process-env-should-be-ignored";
 
+<<<<<<< HEAD
       const localPlatformClient = new LocalPlatformClient(
         null,
         testControlPlaneClient,
         testIde,
       );
+=======
+      const localPlatformClient = new LocalPlatformClient(testIde);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
       const resolvedFQSNs = await localPlatformClient.resolveFQSNs([testFQSN]);
 
       expect(resolvedFQSNs.length).toBe(1);

@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
+<<<<<<< HEAD
 import { ControlPlaneClient } from "../../control-plane/client.js";
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 import { LLMLogger } from "../../llm/logger.js";
 import { testIde } from "../../test/fixtures.js";
 import LocalProfileLoader from "./LocalProfileLoader.js";
@@ -17,10 +20,13 @@ vi.mock("./doLoadConfig.js", () => ({
 }));
 
 describe("LocalProfileLoader", () => {
+<<<<<<< HEAD
   const controlPlaneClient = new ControlPlaneClient(
     Promise.resolve(undefined),
     testIde,
   );
+=======
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   const llmLogger = new LLMLogger();
 
   it("should pass pre-read content in packageIdentifier for override files", async () => {
@@ -29,12 +35,16 @@ describe("LocalProfileLoader", () => {
       content: "name: Test\nversion: 1.0.0\nschema: v1\n",
     };
 
+<<<<<<< HEAD
     const loader = new LocalProfileLoader(
       testIde,
       controlPlaneClient,
       llmLogger,
       overrideFile,
     );
+=======
+    const loader = new LocalProfileLoader(testIde, llmLogger, overrideFile);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     await loader.doLoadConfig();
 
@@ -50,11 +60,15 @@ describe("LocalProfileLoader", () => {
   });
 
   it("should not include content in packageIdentifier when no override file", async () => {
+<<<<<<< HEAD
     const loader = new LocalProfileLoader(
       testIde,
       controlPlaneClient,
       llmLogger,
     );
+=======
+    const loader = new LocalProfileLoader(testIde, llmLogger);
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     await loader.doLoadConfig();
 
@@ -76,6 +90,7 @@ describe("LocalProfileLoader", () => {
       configName: "My Custom Config",
     });
 
+<<<<<<< HEAD
     const loader = new LocalProfileLoader(
       testIde,
       controlPlaneClient,
@@ -83,6 +98,11 @@ describe("LocalProfileLoader", () => {
     );
 
     expect(loader.description.title).toBe("Local Config");
+=======
+    const loader = new LocalProfileLoader(testIde, llmLogger);
+
+    expect(loader.description.title).toBe("Main Config");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
 
     await loader.doLoadConfig();
 
@@ -96,6 +116,7 @@ describe("LocalProfileLoader", () => {
       configLoadInterrupted: false,
     });
 
+<<<<<<< HEAD
     const loader = new LocalProfileLoader(
       testIde,
       controlPlaneClient,
@@ -105,5 +126,12 @@ describe("LocalProfileLoader", () => {
     await loader.doLoadConfig();
 
     expect(loader.description.title).toBe("Local Config");
+=======
+    const loader = new LocalProfileLoader(testIde, llmLogger);
+
+    await loader.doLoadConfig();
+
+    expect(loader.description.title).toBe("Main Config");
+>>>>>>> 18acf6fc2 (test(cli): isolate GlobalContext to fix flaky model-persistence tests (#12639))
   });
 });
