@@ -69,8 +69,13 @@ export function hasValidEditorContent(json: JSONContent): boolean {
     }),
   );
 
+  // Check for images
+  const hasImage = json.content?.some(
+    (c) => c.type === "image" || c.content?.some((child) => child.type === "image")
+  );
+
   // Content is valid if it has either non-whitespace text or special blocks
-  return hasNonWhitespaceText || hasPromptOrCodeBlock || false;
+  return hasNonWhitespaceText || hasPromptOrCodeBlock || hasImage || false;
 }
 
 /**
