@@ -276,13 +276,15 @@ export async function configYamlToContinueConfig(options: {
       subagent: null,
     },
     rules: [],
-    requestOptions: { ...unrolledAssistant.requestOptions },
+    requestOptions: {},
   };
 
   const config = await resolveConfigEnvPlaceholders(
     nonNullifyConfigYaml(unrolledAssistant),
     ideInfo.remoteName,
   );
+
+  continueConfig.requestOptions = { ...config.requestOptions };
 
   for (const rule of config.rules ?? []) {
     const convertedRule = convertYamlRuleToContinueRule(rule);

@@ -3,6 +3,27 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
+function parseEnvEntries(entries: string[]): Record<string, string> {
+  return Object.fromEntries(
+    entries
+      .filter(Boolean)
+      .map((entry) => {
+        const separatorIndex = entry.indexOf("=");
+        if (separatorIndex === -1) {
+          return undefined;
+        }
+
+        return [
+          entry.slice(0, separatorIndex),
+          entry.slice(separatorIndex + 1),
+        ] as const;
+      })
+      .filter(
+        (entry): entry is readonly [string, string] => entry !== undefined,
+      ),
+  );
+}
+
 async function getUserShellEnvironment(
   remoteName?: string,
 ): Promise<Record<string, string> | undefined> {
@@ -18,31 +39,15 @@ async function getUserShellEnvironment(
 
   try {
     // Source common profile files
-    const command = `${process.env.SHELL} -l -c 'for f in ~/.zprofile ~/.zshrc ~/.bash_profile ~/.bashrc; do [ -f "$f" ] && . "$f" 2>/dev/null; done; env'`;
+    const command = `${process.env.SHELL} -l -c 'for f in ~/.zprofile ~/.zshrc ~/.bash_profile ~/.bashrc; do [ -f "$f" ] && . "$f" 2>/dev/null; done; if env -0 >/dev/null 2>&1; then env -0; elif printenv -0 >/dev/null 2>&1; then printenv -0; else env; fi'`;
 
     const { stdout } = await execAsync(command, {
       encoding: "utf8",
     });
 
-    return Object.fromEntries(
-      stdout
-        .split(/\r?\n/)
-        .filter(Boolean)
-        .map((line) => {
-          const separatorIndex = line.indexOf("=");
-          if (separatorIndex === -1) {
-            return undefined;
-          }
-
-          return [
-            line.slice(0, separatorIndex),
-            line.slice(separatorIndex + 1),
-          ] as const;
-        })
-        .filter(
-          (entry): entry is readonly [string, string] => entry !== undefined,
-        ),
-    );
+    return stdout.includes("\0")
+      ? parseEnvEntries(stdout.split("\0"))
+      : parseEnvEntries(stdout.split(/\r?\n/));
   } catch (error) {
     return undefined;
   }
