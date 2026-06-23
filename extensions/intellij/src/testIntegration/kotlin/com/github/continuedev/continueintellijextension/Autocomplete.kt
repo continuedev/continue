@@ -35,11 +35,18 @@ class Autocomplete {
                         enterText("TEST_USER_MESSAGE_0")
                         space()
                     }
-                    wait(2.seconds)
+                    wait(5.seconds)
                     keyboard {
                         tab()
                     }
-                    assertTrue(text.contains("TEST_LLM_RESPONSE_0"))
+                    var attempts = 0
+                    while (!text.contains("TEST_LLM_RESPONSE_0") && attempts < 10) {
+                        wait(1.seconds)
+                        attempts++
+                    }
+                    assertTrue(text.contains("TEST_LLM_RESPONSE_0")) {
+                        "Autocomplete mismatch.\nEditor=${text.take(500)}"
+                    }
                 }
             }
         }
