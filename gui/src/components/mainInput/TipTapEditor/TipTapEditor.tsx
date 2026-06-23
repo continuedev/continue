@@ -255,10 +255,14 @@ function TipTapEditorInner(props: TipTapEditorProps) {
           }
           if (result) {
             const [_, dataUrl] = result;
-            editor.commands.insertContent({
-              type: "image",
-              attrs: { src: dataUrl },
-            });
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: "image",
+                attrs: { src: dataUrl },
+              })
+              .run();
           }
         });
         event.preventDefault();
@@ -287,10 +291,14 @@ function TipTapEditorInner(props: TipTapEditorProps) {
               }
               if (result) {
                 const [_, dataUrl] = result;
-                editor.commands.insertContent({
-                  type: "image",
-                  attrs: { src: dataUrl },
-                });
+                editor
+                  .chain()
+                  .focus()
+                  .insertContent({
+                    type: "image",
+                    attrs: { src: dataUrl },
+                  })
+                  .run();
               }
             });
           }}
