@@ -7,6 +7,7 @@ import {
 import * as dotenv from "dotenv";
 import { IDE } from "../..";
 import { getContinueDotEnv } from "../../util/paths";
+import { getEnvVarsFromUserShell } from "../../util/shellPath";
 import { joinPathsToUri } from "../../util/uri";
 
 export class LocalPlatformClient implements PlatformClient {
@@ -93,6 +94,7 @@ export class LocalPlatformClient implements PlatformClient {
     }
 
     const results: (SecretResult | undefined)[] = [];
+    let shellEnvVars: Record<string, string> | undefined;
 
     for (let i = 0; i < fqsns.length; i++) {
       let secretResult = await this.findSecretInEnvFiles(fqsns[i]);
@@ -105,6 +107,25 @@ export class LocalPlatformClient implements PlatformClient {
             found: true,
             fqsn: fqsns[i],
             value: secretValueFromProcessEnv,
+            secretLocation: {
+              secretName: fqsns[i].secretName,
+              secretType: SecretType.ProcessEnv as SecretType.ProcessEnv,
+            },
+          };
+        }
+      }
+
+      if (!secretResult?.found) {
+        shellEnvVars ??= await getEnvVarsFromUserShell(
+          (await this.ide.getIdeInfo()).remoteName,
+        );
+
+        const secretValueFromShellEnv = shellEnvVars?.[fqsns[i].secretName];
+        if (secretValueFromShellEnv !== undefined) {
+          secretResult = {
+            found: true,
+            fqsn: fqsns[i],
+            value: secretValueFromShellEnv,
             secretLocation: {
               secretName: fqsns[i].secretName,
               secretType: SecretType.ProcessEnv as SecretType.ProcessEnv,
