@@ -257,7 +257,7 @@ function TipTapEditorInner(props: TipTapEditorProps) {
             const [_, dataUrl] = result;
             editor.commands.insertContent({
               type: "image",
-              attrs: { src: dataUrl }
+              attrs: { src: dataUrl },
             });
           }
         });
@@ -289,7 +289,7 @@ function TipTapEditorInner(props: TipTapEditorProps) {
                 const [_, dataUrl] = result;
                 editor.commands.insertContent({
                   type: "image",
-                  attrs: { src: dataUrl }
+                  attrs: { src: dataUrl },
                 });
               }
             });
