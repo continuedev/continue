@@ -32,9 +32,8 @@ class Autocomplete {
                 codeEditor {
                     keyboard {
                         escape() // close any popups
-                        pageDown()
-                        pageDown()
-                        end()
+                        enter()
+                        enter()
                         enter()
                     }
                     var success = false
