@@ -31,6 +31,13 @@ class Autocomplete {
                     clickTab("Main.java")
                 }
                 codeEditor {
+                    keyboard {
+                        escape() // close any popups
+                        pageDown()
+                        pageDown()
+                        end()
+                        enter()
+                    }
                     var success = false
                     for (i in 1..10) {
                         keyboard {
@@ -49,8 +56,8 @@ class Autocomplete {
                             enter()
                         }
                     }
-                    assertTrue(success) {
-                        "Autocomplete mismatch.\nEditor=${text.take(500)}"
+                    if (!success) {
+                        throw Exception("DEBUG_TEXT: ${text.take(500)}")
                     }
                 }
             }
