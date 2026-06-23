@@ -210,6 +210,7 @@ export const applyForEditTool = createAsyncThunk<
           status: "closed",
           streamId: applyState.streamId,
           toolCallId,
+          filepath: payload.filepath,
         }),
       );
     }
