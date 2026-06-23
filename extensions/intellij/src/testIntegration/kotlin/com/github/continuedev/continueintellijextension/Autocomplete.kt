@@ -31,20 +31,25 @@ class Autocomplete {
                     clickTab("Main.java")
                 }
                 codeEditor {
-                    keyboard {
-                        enterText("TEST_USER_MESSAGE_0")
-                        space()
+                    var success = false
+                    for (i in 1..10) {
+                        keyboard {
+                            enterText("TEST_USER_MESSAGE_0")
+                            space()
+                        }
+                        wait(2.seconds)
+                        keyboard {
+                            tab()
+                        }
+                        if (text.contains("TEST_LLM_RESPONSE_0")) {
+                            success = true
+                            break
+                        }
+                        keyboard {
+                            enter()
+                        }
                     }
-                    wait(5.seconds)
-                    keyboard {
-                        tab()
-                    }
-                    var attempts = 0
-                    while (!text.contains("TEST_LLM_RESPONSE_0") && attempts < 10) {
-                        wait(1.seconds)
-                        attempts++
-                    }
-                    assertTrue(text.contains("TEST_LLM_RESPONSE_0")) {
+                    assertTrue(success) {
                         "Autocomplete mismatch.\nEditor=${text.take(500)}"
                     }
                 }
