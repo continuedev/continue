@@ -255,10 +255,10 @@ function TipTapEditorInner(props: TipTapEditorProps) {
           }
           if (result) {
             const [_, dataUrl] = result;
-            const { schema } = editor.state;
-            const node = schema.nodes.image.create({ src: dataUrl });
-            const tr = editor.state.tr.insert(0, node);
-            editor.view.dispatch(tr);
+            editor.commands.insertContent({
+              type: "image",
+              attrs: { src: dataUrl }
+            });
           }
         });
         event.preventDefault();
@@ -287,11 +287,9 @@ function TipTapEditorInner(props: TipTapEditorProps) {
               }
               if (result) {
                 const [_, dataUrl] = result;
-                const { schema } = editor.state;
-                const node = schema.nodes.image.create({ src: dataUrl });
-                editor.commands.command(({ tr }) => {
-                  tr.insert(0, node);
-                  return true;
+                editor.commands.insertContent({
+                  type: "image",
+                  attrs: { src: dataUrl }
                 });
               }
             });

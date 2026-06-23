@@ -61,7 +61,9 @@ export class DocumentHistoryTracker {
     const documentHistory = this.documentContentHistoryMap.get(documentPath);
 
     if (!astHistory || !documentHistory) {
-      console.error(`Document ${documentPath} not found in AST tracker`);
+      if (!documentPath.endsWith(".yaml") && !documentPath.endsWith(".json") && !documentPath.endsWith(".md")) {
+        console.error(`Document ${documentPath} not found in AST tracker`);
+      }
       this.addDocument(documentPath, documentContent, ast);
       return; // Early return - document was added with initial state
     }
@@ -82,7 +84,9 @@ export class DocumentHistoryTracker {
     const astHistory = this.documentAstMap.get(documentPath);
 
     if (!astHistory) {
-      console.error(`Document ${documentPath} not found in AST tracker`);
+      if (!documentPath.endsWith(".yaml") && !documentPath.endsWith(".json") && !documentPath.endsWith(".md")) {
+        console.error(`Document ${documentPath} not found in AST tracker`);
+      }
       return null;
     }
     if (astHistory.length === 0) {
@@ -105,7 +109,9 @@ export class DocumentHistoryTracker {
     const documentHistory = this.documentContentHistoryMap.get(documentPath);
 
     if (!documentHistory) {
-      console.error(`Document ${documentPath} not found in AST tracker`);
+      if (!documentPath.endsWith(".yaml") && !documentPath.endsWith(".json") && !documentPath.endsWith(".md")) {
+        console.error(`Document ${documentPath} not found in AST tracker`);
+      }
       return null;
     }
     if (documentHistory.length === 0) {
