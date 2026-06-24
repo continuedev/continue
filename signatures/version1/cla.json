@@ -2799,6 +2799,14 @@
       "created_at": "2026-06-23T15:53:16Z",
       "repoId": 644686905,
       "pullRequestNo": 12886
+    },
+    {
+      "name": "simon-iribarren",
+      "id": 4296119,
+      "comment_id": 4789800504,
+      "created_at": "2026-06-24T13:29:54Z",
+      "repoId": 644686905,
+      "pullRequestNo": 12579
     }
   ]
 }
