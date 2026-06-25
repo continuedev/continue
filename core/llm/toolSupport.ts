@@ -378,6 +378,16 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    crossmodel: (model) => {
+      // CrossModel is an OpenAI/Anthropic-compatible gateway whose catalog is
+      // made up of tool-capable chat models, addressed as `<vendor>/<model>`.
+      const lower = model.toLowerCase();
+      const unsupported = ["embedding", "embed", "whisper", "tts", "moderation"];
+      if (unsupported.some((p) => lower.includes(p))) {
+        return false;
+      }
+      return true;
+    },
     clawrouter: (model) => {
       // ClawRouter routes to various providers, so we check common tool-supporting patterns
       const lower = model.toLowerCase();
