@@ -538,7 +538,8 @@
                   "kindo",
                   "scaleway",
                   "ovhcloud",
-                  "venice"
+                  "venice",
+                  "crossmodel"
                 ]
               }
             },

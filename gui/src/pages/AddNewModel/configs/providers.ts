@@ -218,7 +218,8 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     packages: [
       {
         title: "Loading models...",
-        description: "Enter your API key and fetch available models from CrossModel",
+        description:
+          "Enter your API key and fetch available models from CrossModel",
         params: { model: "placeholder" },
         isOpenSource: false,
       },
