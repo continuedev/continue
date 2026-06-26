@@ -25,6 +25,7 @@ import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
 import FunctionNetwork from "./FunctionNetwork";
 import Gemini from "./Gemini";
+import Gonkabroker from "./Gonkabroker";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTEIEmbeddingsProvider from "./HuggingFaceTEI";
@@ -71,6 +72,7 @@ import WatsonX from "./WatsonX";
 import xAI from "./xAI";
 import zAI from "./zAI";
 export const LLMClasses = [
+  Gonkabroker,
   Anthropic,
   Cohere,
   CometAPI,
