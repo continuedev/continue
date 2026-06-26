@@ -1250,6 +1250,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://cloud.siliconflow.cn/account/ak",
   },
+  gonkabroker: {
+    title: "Gonka Broker",
+    provider: "gonkabroker",
+    description:
+      "Gonka Broker is an OpenAI-compatible gateway to decentralized Gonka compute.",
+    longDescription:
+      "To get started with Gonka Broker, create an account and get an API key at [app.gonkabroker.com](https://app.gonkabroker.com).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Gonka Broker API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://app.gonkabroker.com",
+  },
   tensorix: {
     title: "Tensorix",
     provider: "tensorix",
