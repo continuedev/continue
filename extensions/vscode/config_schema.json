@@ -217,6 +217,7 @@
             "watsonx",
             "openrouter",
             "clawrouter",
+            "crossmodel",
             "sambanova",
             "nvidia",
             "vllm",
@@ -270,6 +271,7 @@
             "### IBM watsonx\nwatsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.",
             "### OpenRouter\nOpenRouter offers a single API to access almost any language model. To get started, obtain an API key from [their console](https://openrouter.ai/settings/keys).",
             "### ClawRouter\nClawRouter is an open-source LLM router that automatically selects the cheapest capable model for each request based on prompt complexity, providing 78-96% cost savings. To get started, run `npx clawrouter` to start the router at localhost:1337. A wallet is auto-generated on first run - fund it with USDC (Solana/Base) to access premium models, or use `blockrun/free` tier without payment.\n> [Reference](https://github.com/BlockRunAI/ClawRouter)",
+            "### CrossModel\nCrossModel is an OpenAI- and Anthropic-compatible API gateway. Use one API key and base URL to call models from OpenAI, Anthropic, DeepSeek, Gemini, Qwen, Kimi, GLM and more, with unified billing and usage tracking. Obtain an API key from [the console](https://www.crossmodel.ai/console/api-keys).\n> [Reference](https://crossmodel.ai/docs)",
             "### SambaNova\n SambaNova provides fast inference of open-source language models with zero data retention. To get started, obtain an API key in [SambaNova Cloud](https://cloud.sambanova.ai/apis?utm_source=continue&utm_medium=external&utm_campaign=cloud_signup ).",
             "### NVIDIA NIMs\nNVIDIA offers a single API to access almost any language model. To find out more, visit the [LLM APIs Documentation](https://docs.api.nvidia.com/nim/reference/llm-apis).\nFor information specific to getting a key, please check out the [docs here](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog)",
             "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server.",
@@ -536,7 +538,8 @@
                   "kindo",
                   "scaleway",
                   "ovhcloud",
-                  "venice"
+                  "venice",
+                  "crossmodel"
                 ]
               }
             },

@@ -194,6 +194,37 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     ],
     apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
+  crossmodel: {
+    title: "CrossModel",
+    provider: "crossmodel",
+    refPage: "crossmodel",
+    description:
+      "OpenAI- and Anthropic-compatible gateway to models from OpenAI, Anthropic, DeepSeek, Gemini, Qwen, Kimi, GLM and more",
+    longDescription:
+      "[CrossModel](https://crossmodel.ai) is an OpenAI- and Anthropic-compatible API gateway. Use one API key and base URL to call models from OpenAI, Anthropic, DeepSeek, Gemini, Qwen, Kimi, GLM and more, with unified billing and usage tracking. Sign up at [crossmodel.ai](https://crossmodel.ai), create an API key, then enter it below and fetch the available models.",
+    icon: "crossmodel.svg",
+    tags: [ModelProviderTags.RequiresApiKey],
+    apiKeyUrl: "https://www.crossmodel.ai/console/api-keys",
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your CrossModel API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      {
+        title: "Loading models...",
+        description:
+          "Enter your API key and fetch available models from CrossModel",
+        params: { model: "placeholder" },
+        isOpenSource: false,
+      },
+    ],
+  },
   openrouter: {
     title: "OpenRouter",
     provider: "openrouter",

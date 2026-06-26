@@ -18,6 +18,7 @@ import Cerebras from "./Cerebras";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import CometAPI from "./CometAPI";
+import CrossModel from "./CrossModel";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
 import Docker from "./Docker";
@@ -74,6 +75,7 @@ export const LLMClasses = [
   Anthropic,
   Cohere,
   CometAPI,
+  CrossModel,
   FunctionNetwork,
   Gemini,
   Llamafile,
