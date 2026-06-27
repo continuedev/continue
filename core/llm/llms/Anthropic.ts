@@ -55,9 +55,41 @@ class Anthropic extends BaseLLM {
   }
 
   // Public for use within VertexAI
+  private buildThinkingParams(
+    options: CompletionOptions,
+  ): Record<string, unknown> {
+    const params: Record<string, unknown> = {};
+
+    if (options.thinking?.type) {
+      const thinking: Record<string, unknown> = {
+        type: options.thinking.type,
+      };
+      if (options.thinking.type === "enabled") {
+        thinking.budget_tokens =
+          options.thinking.budget_tokens ??
+          options.reasoningBudgetTokens ??
+          DEFAULT_REASONING_TOKENS;
+      }
+      params.thinking = thinking;
+    } else if (options.reasoning) {
+      params.thinking = {
+        type: "enabled",
+        budget_tokens:
+          options.reasoningBudgetTokens ?? DEFAULT_REASONING_TOKENS,
+      };
+    }
+
+    if (options.output_config) {
+      params.output_config = options.output_config;
+    }
+
+    return params;
+  }
+
   public convertArgs(
     options: CompletionOptions,
   ): Omit<MessageCreateParams, "messages"> {
+    const thinkingParams = this.buildThinkingParams(options);
     const finalOptions = {
       top_k: options.topK,
       top_p: options.topP,
@@ -67,13 +99,7 @@ class Anthropic extends BaseLLM {
       stop_sequences: options.stop?.filter((x) => x.trim() !== ""),
       stream: options.stream ?? true,
       tools: options.tools?.map(this.convertToolToAnthropicTool),
-      thinking: options.reasoning
-        ? {
-            type: "enabled" as const,
-            budget_tokens:
-              options.reasoningBudgetTokens ?? DEFAULT_REASONING_TOKENS,
-          }
-        : undefined,
+      ...thinkingParams,
       tool_choice: options.toolChoice
         ? {
             type: "tool" as const,
@@ -82,7 +108,7 @@ class Anthropic extends BaseLLM {
         : undefined,
     };
 
-    return finalOptions;
+    return finalOptions as Omit<MessageCreateParams, "messages">;
   }
 
   private convertMessageContentToBlocks(
