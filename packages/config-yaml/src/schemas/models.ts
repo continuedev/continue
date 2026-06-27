@@ -44,6 +44,17 @@ export const modelCapabilitySchema = z.union([
 // not ideal but lose type suggestions if use z.infer because of the string fallback
 export type ModelCapability = "tool_use" | "image_input" | "next_edit";
 
+export const thinkingConfigSchema = z.object({
+  type: z.enum(["enabled", "adaptive", "disabled"]).optional(),
+  budget_tokens: z.number().optional(),
+});
+export type ThinkingConfig = z.infer<typeof thinkingConfigSchema>;
+
+export const outputConfigSchema = z.object({
+  effort: z.enum(["low", "medium", "high"]).optional(),
+});
+export type OutputConfig = z.infer<typeof outputConfigSchema>;
+
 export const completionOptionsSchema = z.object({
   contextLength: z.number().optional(),
   maxTokens: z.number().optional(),
@@ -57,6 +68,8 @@ export const completionOptionsSchema = z.object({
   n: z.number().optional(),
   reasoning: z.boolean().optional(),
   reasoningBudgetTokens: z.number().optional(),
+  thinking: thinkingConfigSchema.optional(),
+  output_config: outputConfigSchema.optional(),
   promptCaching: z.boolean().optional(),
   stream: z.boolean().optional(),
   keepAlive: z.number().optional(),
