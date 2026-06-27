@@ -1,0 +1,61 @@
+---
+title: "Avian"
+description: "Configure Avian's AI models with Continue, including DeepSeek V3.2, Kimi K2.5, GLM-5, and MiniMax M2.5"
+---
+
+[Avian](https://avian.io/) provides an OpenAI-compatible API with access to leading AI models at competitive pricing.
+
+<Info>Get an API key from the [Avian dashboard](https://avian.io)</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: DeepSeek V3.2
+      provider: avian
+      model: deepseek/deepseek-v3.2
+      apiKey: <YOUR_AVIAN_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "DeepSeek V3.2",
+        "provider": "avian",
+        "model": "deepseek/deepseek-v3.2",
+        "apiKey": "<YOUR_AVIAN_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+| Model | Context Length | Input Price | Output Price |
+| ----- | ------------- | ----------- | ------------ |
+| `deepseek/deepseek-v3.2` | 164K | $0.26/M | $0.38/M |
+| `moonshotai/kimi-k2.5` | 131K | $0.45/M | $2.20/M |
+| `z-ai/glm-5` | 131K | $0.30/M | $2.55/M |
+| `minimax/minimax-m2.5` | 1M | $0.30/M | $1.10/M |
+
+## Configuration Options
+
+| Option    | Description          | Default                       |
+| --------- | -------------------- | ----------------------------- |
+| `apiKey`  | Avian API key        | Required                      |
+| `apiBase` | API base URL         | `https://api.avian.io/v1`     |
+| `model`   | Model name to use    | -                             |
+
+<Tip>
+You can set the `AVIAN_API_KEY` environment variable instead of specifying the API key directly in the configuration file.
+</Tip>

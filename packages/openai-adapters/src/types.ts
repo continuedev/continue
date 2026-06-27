@@ -58,6 +58,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("vllm"),
     z.literal("xAI"),
     z.literal("zAI"),
+    z.literal("avian"),
     z.literal("scaleway"),
     z.literal("tensorix"),
     z.literal("ncompass"),
