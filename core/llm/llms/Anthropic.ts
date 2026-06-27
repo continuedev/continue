@@ -58,6 +58,8 @@ class Anthropic extends BaseLLM {
   private buildThinkingParams(
     options: CompletionOptions,
   ): Record<string, unknown> {
+    const params: Record<string, unknown> = {};
+
     if (options.thinking?.type) {
       const thinking: Record<string, unknown> = {
         type: options.thinking.type,
@@ -68,24 +70,20 @@ class Anthropic extends BaseLLM {
           options.reasoningBudgetTokens ??
           DEFAULT_REASONING_TOKENS;
       }
-      const params: Record<string, unknown> = { thinking };
-      if (options.output_config) {
-        params.output_config = options.output_config;
-      }
-      return params;
-    }
-
-    if (options.reasoning) {
-      return {
-        thinking: {
-          type: "enabled",
-          budget_tokens:
-            options.reasoningBudgetTokens ?? DEFAULT_REASONING_TOKENS,
-        },
+      params.thinking = thinking;
+    } else if (options.reasoning) {
+      params.thinking = {
+        type: "enabled",
+        budget_tokens:
+          options.reasoningBudgetTokens ?? DEFAULT_REASONING_TOKENS,
       };
     }
 
-    return {};
+    if (options.output_config) {
+      params.output_config = options.output_config;
+    }
+
+    return params;
   }
 
   public convertArgs(
