@@ -519,6 +519,56 @@ describe("Anthropic", () => {
       });
     });
 
+    test("should forward output_config on legacy reasoning path", async () => {
+      const anthropic = new Anthropic({
+        apiKey: "test-api-key",
+        model: "claude-opus-4-8",
+        apiBase: "https://api.anthropic.com/v1/",
+      });
+
+      await runLlmTest({
+        llm: anthropic,
+        methodToTest: "streamChat",
+        params: [
+          [{ role: "user", content: "hello" }],
+          new AbortController().signal,
+          {
+            model: "claude-opus-4-8",
+            reasoning: true,
+            output_config: { effort: "high" },
+          },
+        ],
+        expectedRequest: {
+          url: "https://api.anthropic.com/v1/messages",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "anthropic-version": "2023-06-01",
+            "x-api-key": "test-api-key",
+          },
+          body: {
+            model: "claude-opus-4-8",
+            max_tokens: 8192,
+            stream: true,
+            messages: [
+              {
+                role: "user",
+                content: [{ type: "text", text: "hello" }],
+              },
+            ],
+            thinking: { type: "enabled", budget_tokens: 2048 },
+            output_config: { effort: "high" },
+            system: "",
+          },
+        },
+        mockStream: [
+          '{"type": "content_block_delta", "delta": {"type": "text_delta", "text": "Hello!"}}',
+          '{"type": "content_block_stop"}',
+        ],
+      });
+    });
+
     test("should prefer configured thinking over legacy reasoning toggle", async () => {
       const anthropic = new Anthropic({
         apiKey: "test-api-key",
