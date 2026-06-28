@@ -1,0 +1,119 @@
+---
+title: "app.nz"
+description: "Configure app.nz with Continue to access a hosted OpenAI-compatible LLM gateway with automatic model routing across multiple providers, including API setup instructions"
+---
+
+<Info>
+  app.nz is a hosted, OpenAI-compatible LLM gateway with an automatic router that selects the best model for each request across multiple providers.
+</Info>
+
+<Tip>
+  Get an API key from the [app.nz dashboard](https://app.nz/) and read the [docs](https://app.nz/docs).
+</Tip>
+
+## Configuration
+
+app.nz exposes an OpenAI-compatible API at `https://app.nz/v1`, so it is configured with the `openai` provider and a custom `apiBase`. Use the `app/auto` model to let the router pick the best model automatically.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: app.nz Auto
+      provider: openai
+      model: app/auto
+      apiBase: https://app.nz/v1
+      apiKey: <APP_NZ_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "app.nz Auto",
+        "provider": "openai",
+        "model": "app/auto",
+        "apiBase": "https://app.nz/v1",
+        "apiKey": "<APP_NZ_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+`app/auto` routes each request to the best available model. You can also target a routing variant tuned for a specific workload, or address any upstream model directly with `provider/model`.
+
+| Model | Best For |
+|-------|----------|
+| `app/auto` | General use, balanced routing (recommended) |
+| `app/auto-code` | Coding and editing tasks |
+| `app/auto-reasoning` | Complex reasoning and planning |
+| `app/auto-fast` | Low-latency responses |
+| `app/auto-cheap` | Maximum cost savings |
+| `app/auto-vision` | Image and multimodal input |
+
+To use a specific upstream model instead of the router, pass it as `provider/model` (for example `anthropic/claude-sonnet-4` or `openai/gpt-4o`).
+
+## Using Multiple Roles
+
+You can configure app.nz routing variants for different Continue roles:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: app.nz Code
+      provider: openai
+      model: app/auto-code
+      apiBase: https://app.nz/v1
+      apiKey: <APP_NZ_API_KEY>
+      roles:
+        - chat
+        - edit
+        - apply
+
+    - name: app.nz Fast
+      provider: openai
+      model: app/auto-fast
+      apiBase: https://app.nz/v1
+      apiKey: <APP_NZ_API_KEY>
+      roles:
+        - autocomplete
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "app.nz Code",
+        "provider": "openai",
+        "model": "app/auto-code",
+        "apiBase": "https://app.nz/v1",
+        "apiKey": "<APP_NZ_API_KEY>",
+        "roles": ["chat", "edit", "apply"]
+      }
+    ],
+    "tabAutocompleteModel": {
+      "title": "app.nz Fast",
+      "provider": "openai",
+      "model": "app/auto-fast",
+      "apiBase": "https://app.nz/v1",
+      "apiKey": "<APP_NZ_API_KEY>"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+<Info>
+  app.nz also exposes an Anthropic-compatible endpoint at `https://app.nz/v1/messages` for clients that speak the Anthropic Messages API.
+</Info>
