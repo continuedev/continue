@@ -724,14 +724,7 @@ class IntelliJIDE(
         }
     }
 
-    private fun workspaceDirectories(): Array<String> {
-        val dirs = this.continuePluginService.workspacePaths
-
-        if (dirs?.isNotEmpty() == true) {
-            return dirs
-        }
-
-        return listOfNotNull(project.guessProjectDir()?.toUriOrNull()).toTypedArray()
-    }
+    private fun workspaceDirectories(): Array<String> =
+        resolveWorkspacePathsOrGuess(project, continuePluginService.workspacePaths)
 
 }
