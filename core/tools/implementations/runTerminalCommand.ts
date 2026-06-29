@@ -21,13 +21,45 @@ function getDecodedOutput(data: Buffer): string {
   } else {
     return data.toString();
   }
-} // Simple helper function to use login shell on Unix/macOS and PowerShell on Windows
+}
+// Cached result of PowerShell availability check
+let _powerShellAvailable: boolean | undefined;
+
+// Try to detect if PowerShell is available on Windows (result is cached)
+function isPowerShellAvailable(): boolean {
+  if (_powerShellAvailable !== undefined) {
+    return _powerShellAvailable;
+  }
+  try {
+    childProcess.execFileSync(
+      "powershell.exe",
+      ["-NoProfile", "-Command", "exit"],
+      {
+        timeout: 3000,
+        windowsHide: true,
+      },
+    );
+    _powerShellAvailable = true;
+  } catch {
+    _powerShellAvailable = false;
+  }
+  return _powerShellAvailable;
+}
+
+// Helper function to use login shell on Unix/macOS and PowerShell on Windows
+// Falls back to cmd.exe when PowerShell is unavailable (e.g., corporate policy)
 function getShellCommand(command: string): { shell: string; args: string[] } {
   if (process.platform === "win32") {
-    // Windows: Use PowerShell
+    if (isPowerShellAvailable()) {
+      return {
+        shell: "powershell.exe",
+        args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
+      };
+    }
+    const cmd = process.env.COMSPEC || "cmd.exe";
     return {
-      shell: "powershell.exe",
-      args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
+      shell: cmd,
+      args: ["/C", command],
     };
   } else {
     // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
