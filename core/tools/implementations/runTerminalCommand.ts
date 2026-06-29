@@ -22,17 +22,28 @@ function getDecodedOutput(data: Buffer): string {
     return data.toString();
   }
 }
-// Try to detect if PowerShell is available on Windows
+// Cached result of PowerShell availability check
+let _powerShellAvailable: boolean | undefined;
+
+// Try to detect if PowerShell is available on Windows (result is cached)
 function isPowerShellAvailable(): boolean {
-  try {
-    childProcess.execFileSync("powershell.exe", ["-NoProfile", "-Command", "exit"], {
-      timeout: 3000,
-      windowsHide: true,
-    });
-    return true;
-  } catch {
-    return false;
+  if (_powerShellAvailable !== undefined) {
+    return _powerShellAvailable;
   }
+  try {
+    childProcess.execFileSync(
+      "powershell.exe",
+      ["-NoProfile", "-Command", "exit"],
+      {
+        timeout: 3000,
+        windowsHide: true,
+      },
+    );
+    _powerShellAvailable = true;
+  } catch {
+    _powerShellAvailable = false;
+  }
+  return _powerShellAvailable;
 }
 
 // Helper function to use login shell on Unix/macOS and PowerShell on Windows
