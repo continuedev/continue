@@ -19,6 +19,7 @@ import { fetchModels } from "./llm/fetchModels";
 import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
+import { BuiltInToolNames } from "./tools/builtIn";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { compactConversation } from "./util/conversationCompaction";
@@ -1184,6 +1185,18 @@ export class Core {
       onPartialOutput,
       codeBaseIndexer: this.codeBaseIndexer,
     });
+
+    // Hot-reload config when a rule is created via the create_rule_block tool,
+    // since ide.writeFile() does not trigger VS Code workspace file events.
+    if (
+      toolCall.function.name === BuiltInToolNames.CreateRuleBlock &&
+      !result.errorMessage
+    ) {
+      walkDirCache.invalidate();
+      await this.configHandler.reloadConfig(
+        "Rule created via create_rule_block tool",
+      );
+    }
 
     return result;
   }
