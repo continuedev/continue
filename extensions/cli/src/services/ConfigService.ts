@@ -19,6 +19,7 @@ import {
 import { logger } from "../util/logger.js";
 
 import { BaseService, ServiceWithDependencies } from "./BaseService.js";
+import { loadJsonMcpServers } from "./loadJsonMcpServers.js";
 import { serviceContainer } from "./ServiceContainer.js";
 import { ToolPermissionServiceState } from "./ToolPermissionService.js";
 import {
@@ -96,6 +97,7 @@ export class ConfigService
       packageIdentifiers,
       additional,
     );
+    this.processJsonMcpServers(additional);
     this.processAgentFileRules(agentFileState, packageIdentifiers);
     this.processRulesAndPrompts(
       options.rule || [],
@@ -154,6 +156,12 @@ export class ConfigService
       } catch (e) {
         logger.warn(`Failed to add MCP server "${mcp}": ${getErrorString(e)}`);
       }
+    }
+  }
+
+  private processJsonMcpServers(additional: AssistantUnrolled): void {
+    for (const server of loadJsonMcpServers()) {
+      additional.mcpServers!.push(server);
     }
   }
 
