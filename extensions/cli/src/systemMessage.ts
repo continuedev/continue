@@ -83,6 +83,50 @@ function getRuleNameFromPath(filePath: string): string {
   return lastTwoParts.filter(Boolean).join("/").replace(/\.md$/, "");
 }
 
+function appendUniqueRuleContents(target: string[], incoming: string[]): void {
+  const seen = new Set(target);
+  for (const rule of incoming) {
+    if (seen.has(rule)) continue;
+    seen.add(rule);
+    target.push(rule);
+  }
+}
+
+function parseAlwaysApplyMarkdownRule(
+  filePath: string,
+  file: string,
+  seenRuleContents: Set<string>,
+): RuleObject | null {
+  try {
+    const content = fs.readFileSync(filePath, "utf-8");
+    const { frontmatter, markdown } = parseMarkdownRule(content);
+
+    if (frontmatter.invokable) return null;
+
+    const isAlwaysApply =
+      frontmatter.alwaysApply === true ||
+      (frontmatter.alwaysApply === undefined &&
+        !frontmatter.globs &&
+        !frontmatter.regex);
+
+    if (!isAlwaysApply || !markdown.trim()) return null;
+    if (seenRuleContents.has(markdown)) return null;
+
+    seenRuleContents.add(markdown);
+    return {
+      name: frontmatter.name || getRuleNameFromPath(String(file)),
+      rule: markdown,
+      description: frontmatter.description,
+      globs: frontmatter.globs,
+      regex: frontmatter.regex,
+      alwaysApply: true,
+      sourceFile: filePath,
+    };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Scan .continue/rules/ directories for markdown rule files and return the rules with metadata that should be always-applied
  */
@@ -94,6 +138,7 @@ export function loadMarkdownRulesWithMetadata(): RuleObject[] {
   ];
 
   const rules: RuleObject[] = [];
+  const seenRuleContents = new Set<string>();
 
   for (const dir of rulesDirs) {
     if (!fs.existsSync(dir)) continue;
@@ -116,34 +161,12 @@ export function loadMarkdownRulesWithMetadata(): RuleObject[] {
         continue;
       }
 
-      try {
-        const content = fs.readFileSync(filePath, "utf-8");
-        const { frontmatter, markdown } = parseMarkdownRule(content);
-
-        if (frontmatter.invokable) continue;
-
-        const isAlwaysApply =
-          frontmatter.alwaysApply === true ||
-          (frontmatter.alwaysApply === undefined &&
-            !frontmatter.globs &&
-            !frontmatter.regex);
-
-        if (isAlwaysApply && markdown.trim()) {
-          const ruleName =
-            frontmatter.name || getRuleNameFromPath(String(file));
-          rules.push({
-            name: ruleName,
-            rule: markdown,
-            description: frontmatter.description,
-            globs: frontmatter.globs,
-            regex: frontmatter.regex,
-            alwaysApply: true,
-            sourceFile: filePath,
-          });
-        }
-      } catch {
-        // Skip files that can't be read or parsed
-      }
+      const rule = parseAlwaysApplyMarkdownRule(
+        filePath,
+        String(file),
+        seenRuleContents,
+      );
+      if (rule) rules.push(rule);
     }
   }
 
@@ -198,18 +221,14 @@ export async function constructSystemMessage(
   }
 
   const configYamlRules = await getConfigYamlRules();
-  processedRules.push(...configYamlRules);
+  appendUniqueRuleContents(processedRules, configYamlRules);
 
-  // Load markdown rules from .continue/rules/ directories
+  // Fallback for callers without ConfigService markdown merge (e.g. tests)
   const markdownRules = loadMarkdownRulesWithMetadata();
-  // Deduplicate against already-loaded rules
-  const existingRulesSet = new Set(processedRules);
-  for (const rule of markdownRules) {
-    if (!existingRulesSet.has(rule.rule)) {
-      processedRules.push(rule.rule);
-      existingRulesSet.add(rule.rule);
-    }
-  }
+  appendUniqueRuleContents(
+    processedRules,
+    markdownRules.map((rule) => rule.rule),
+  );
 
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;

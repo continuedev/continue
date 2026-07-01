@@ -281,9 +281,13 @@ export class ConfigService
       const existingRuleContents = new Set(
         (merged.rules ?? []).map((r) => (typeof r === "string" ? r : r?.rule)),
       );
-      const newRules = markdownRules.filter(
-        (r) => !existingRuleContents.has(r.rule),
-      );
+      const newRules = markdownRules.filter((r) => {
+        if (existingRuleContents.has(r.rule)) {
+          return false;
+        }
+        existingRuleContents.add(r.rule);
+        return true;
+      });
       merged.rules = [...(merged.rules ?? []), ...newRules];
     }
 
