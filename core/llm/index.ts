@@ -184,6 +184,13 @@ export abstract class BaseLLM implements ILLM {
   // For IBM watsonx
   deploymentId?: string;
 
+  /**
+   * The XML tag name used for thinking/reasoning output.
+   * Defaults to "think" (<think>...</think>).
+   * Override via config to match your provider (e.g. vLLM custom reasoning tags).
+   */
+  thinkTagName: string;
+
   // Embedding options
   embeddingId: string;
   maxEmbeddingChunkSize: number;
@@ -271,6 +278,9 @@ export abstract class BaseLLM implements ILLM {
 
     // watsonx deploymentId
     this.deploymentId = options.deploymentId;
+
+    // Thinking/reasoning output tag name (configurable for providers like vLLM)
+    this.thinkTagName = options.thinkTagName ?? "think";
 
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;

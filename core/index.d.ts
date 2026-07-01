@@ -713,6 +713,14 @@ export interface LLMOptions {
 
   /** Tool overrides for this model */
   toolOverrides?: ToolOverride[];
+
+  /**
+   * The XML tag name used by the LLM provider for thinking/reasoning output.
+   * Defaults to "think", which produces <think>...</think> blocks.
+   * Configure this to match your provider's reasoning output format.
+   * See: https://docs.vllm.ai/en/latest/features/reasoning_outputs.html
+   */
+  thinkTagName?: string;
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
