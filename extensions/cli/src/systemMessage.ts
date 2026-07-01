@@ -83,6 +83,18 @@ function getRuleNameFromPath(filePath: string): string {
   return lastTwoParts.filter(Boolean).join("/").replace(/\.md$/, "");
 }
 
+function appendUniqueRuleContents(
+  target: string[],
+  incoming: string[],
+): void {
+  const seen = new Set(target);
+  for (const rule of incoming) {
+    if (seen.has(rule)) continue;
+    seen.add(rule);
+    target.push(rule);
+  }
+}
+
 /**
  * Scan .continue/rules/ directories for markdown rule files and return the rules with metadata that should be always-applied
  */
@@ -94,6 +106,7 @@ export function loadMarkdownRulesWithMetadata(): RuleObject[] {
   ];
 
   const rules: RuleObject[] = [];
+  const seenRuleContents = new Set<string>();
 
   for (const dir of rulesDirs) {
     if (!fs.existsSync(dir)) continue;
@@ -129,6 +142,9 @@ export function loadMarkdownRulesWithMetadata(): RuleObject[] {
             !frontmatter.regex);
 
         if (isAlwaysApply && markdown.trim()) {
+          if (seenRuleContents.has(markdown)) continue;
+          seenRuleContents.add(markdown);
+
           const ruleName =
             frontmatter.name || getRuleNameFromPath(String(file));
           rules.push({
@@ -198,18 +214,14 @@ export async function constructSystemMessage(
   }
 
   const configYamlRules = await getConfigYamlRules();
-  processedRules.push(...configYamlRules);
+  appendUniqueRuleContents(processedRules, configYamlRules);
 
-  // Load markdown rules from .continue/rules/ directories
+  // Fallback for callers without ConfigService markdown merge (e.g. tests)
   const markdownRules = loadMarkdownRulesWithMetadata();
-  // Deduplicate against already-loaded rules
-  const existingRulesSet = new Set(processedRules);
-  for (const rule of markdownRules) {
-    if (!existingRulesSet.has(rule.rule)) {
-      processedRules.push(rule.rule);
-      existingRulesSet.add(rule.rule);
-    }
-  }
+  appendUniqueRuleContents(
+    processedRules,
+    markdownRules.map((rule) => rule.rule),
+  );
 
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;

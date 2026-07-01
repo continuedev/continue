@@ -1,8 +1,17 @@
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+
 import { describe, expect, it, vi } from "vitest";
+
+import { serviceContainer } from "./services/ServiceContainer.js";
 
 // Use the actual implementation instead of the mocked one
 vi.unmock("./systemMessage.js");
-const { constructSystemMessage } = await import("./systemMessage.js");
+import * as systemMessageModule from "./systemMessage.js";
+
+const { constructSystemMessage, loadMarkdownRulesWithMetadata } =
+  systemMessageModule;
 
 // Mock the service container to avoid "No factory registered for service 'config'" error
 vi.mock("./services/ServiceContainer.js", () => ({
@@ -258,5 +267,82 @@ Rule 3: Third rule`;
     expect(result).toContain(
       "which means that your goal is to help the user investigate their ideas",
     );
+  });
+
+  it("should not duplicate markdown rules already loaded via config", async () => {
+    const dbRule = "Use PostgreSQL for all database queries.";
+    const globalRule = "Always write tests for new features.";
+
+    vi.mocked(serviceContainer.get).mockResolvedValueOnce({
+      config: {
+        rules: [
+          { name: "db", rule: dbRule },
+          { name: "global", rule: globalRule },
+        ],
+      },
+    });
+
+    vi.spyOn(
+      systemMessageModule,
+      "loadMarkdownRulesWithMetadata",
+    ).mockReturnValue([
+      { name: "db", rule: dbRule, alwaysApply: true },
+      { name: "global", rule: globalRule, alwaysApply: true },
+    ]);
+
+    const result = await constructSystemMessage("normal");
+
+    const userRulesMatch = result.match(
+      /<context name="userRules">([\s\S]*?)<\/context>/,
+    );
+    expect(userRulesMatch).toBeTruthy();
+    const userRulesBody = userRulesMatch![1];
+
+    expect(userRulesBody.match(new RegExp(dbRule, "g"))?.length).toBe(1);
+    expect(userRulesBody.match(new RegExp(globalRule, "g"))?.length).toBe(1);
+  });
+
+  it("should dedupe identical markdown rules from multiple rule directories", () => {
+    const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), "continue-home-"));
+    const tmpProject = fs.mkdtempSync(
+      path.join(os.tmpdir(), "continue-project-"),
+    );
+    const sharedRule = "Never commit secrets to the repository.";
+
+    const writeRule = (dir: string, name: string, content: string) => {
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, name), content);
+    };
+
+    writeRule(
+      path.join(tmpHome, "rules"),
+      "security.md",
+      `---\nalwaysApply: true\n---\n${sharedRule}`,
+    );
+    writeRule(
+      path.join(tmpProject, ".continue", "rules"),
+      "security.md",
+      `---\nalwaysApply: true\n---\n${sharedRule}`,
+    );
+
+    const originalCwd = process.cwd();
+    const originalHome = process.env.CONTINUE_GLOBAL_DIR;
+    process.chdir(tmpProject);
+    process.env.CONTINUE_GLOBAL_DIR = tmpHome;
+
+    try {
+      const rules = loadMarkdownRulesWithMetadata();
+      expect(rules).toHaveLength(1);
+      expect(rules[0]?.rule).toBe(sharedRule);
+    } finally {
+      process.chdir(originalCwd);
+      if (originalHome === undefined) {
+        delete process.env.CONTINUE_GLOBAL_DIR;
+      } else {
+        process.env.CONTINUE_GLOBAL_DIR = originalHome;
+      }
+      fs.rmSync(tmpHome, { recursive: true, force: true });
+      fs.rmSync(tmpProject, { recursive: true, force: true });
+    }
   });
 });
