@@ -102,6 +102,13 @@ declare global {
     apiType?: string;
     region?: string;
     projectId?: string;
+
+    /**
+     * The XML tag name used for thinking/reasoning output.
+     * Defaults to "think" (<think>...</think>).
+     * Configure this to match your provider's format (e.g. vLLM custom reasoning tags).
+     */
+    thinkTagName: string;
   
     // Embedding options
     embeddingId: string;
