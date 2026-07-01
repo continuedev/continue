@@ -535,6 +535,8 @@ class Ollama extends BaseLLM implements ModelInstaller {
       signal,
     });
     let isThinking: boolean = false;
+    const thinkOpenTag = `<${this.thinkTagName}>`;
+    const thinkCloseTag = `</${this.thinkTagName}>`;
 
     function convertChatMessage(res: OllamaChatResponse): ChatMessage[] {
       if ("error" in res) {
@@ -544,7 +546,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
       if ("type" in res) {
         const { content } = res;
 
-        if (content === "<think>") {
+        if (content === thinkOpenTag) {
           isThinking = true;
         }
 
@@ -557,7 +559,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
 
           if (thinkingMessage) {
             // could cause issues with termination if chunk doesn't match this exactly
-            if (content === "</think>") {
+            if (content === thinkCloseTag) {
               isThinking = false;
             }
             // When Streaming you can't have both thinking and content
