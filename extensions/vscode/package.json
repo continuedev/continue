@@ -721,7 +721,7 @@
   "dependencies": {
     "@continuedev/config-types": "file:../../packages/config-types",
     "@continuedev/fetch": "file:../../packages/fetch",
-    "@electron/rebuild": "^4.0.3",
+    "@electron/rebuild": "^4.0.4",
     "@reduxjs/toolkit": "^1.9.3",
     "@vscode/ripgrep": "^1.15.9",
     "axios": "^1.13.1",
@@ -763,7 +763,7 @@
     "uuidv4": "^6.2.13",
     "vectordb": "0.4.20",
     "vitest": "^3.1.4",
-    "vscode-languageclient": "^8.0.2",
+    "vscode-languageclient": "^10.0.0",
     "ws": "^8.19.0",
     "yarn": "^1.22.21"
   },
