@@ -83,15 +83,47 @@ function getRuleNameFromPath(filePath: string): string {
   return lastTwoParts.filter(Boolean).join("/").replace(/\.md$/, "");
 }
 
-function appendUniqueRuleContents(
-  target: string[],
-  incoming: string[],
-): void {
+function appendUniqueRuleContents(target: string[], incoming: string[]): void {
   const seen = new Set(target);
   for (const rule of incoming) {
     if (seen.has(rule)) continue;
     seen.add(rule);
     target.push(rule);
+  }
+}
+
+function parseAlwaysApplyMarkdownRule(
+  filePath: string,
+  file: string,
+  seenRuleContents: Set<string>,
+): RuleObject | null {
+  try {
+    const content = fs.readFileSync(filePath, "utf-8");
+    const { frontmatter, markdown } = parseMarkdownRule(content);
+
+    if (frontmatter.invokable) return null;
+
+    const isAlwaysApply =
+      frontmatter.alwaysApply === true ||
+      (frontmatter.alwaysApply === undefined &&
+        !frontmatter.globs &&
+        !frontmatter.regex);
+
+    if (!isAlwaysApply || !markdown.trim()) return null;
+    if (seenRuleContents.has(markdown)) return null;
+
+    seenRuleContents.add(markdown);
+    return {
+      name: frontmatter.name || getRuleNameFromPath(String(file)),
+      rule: markdown,
+      description: frontmatter.description,
+      globs: frontmatter.globs,
+      regex: frontmatter.regex,
+      alwaysApply: true,
+      sourceFile: filePath,
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -129,37 +161,12 @@ export function loadMarkdownRulesWithMetadata(): RuleObject[] {
         continue;
       }
 
-      try {
-        const content = fs.readFileSync(filePath, "utf-8");
-        const { frontmatter, markdown } = parseMarkdownRule(content);
-
-        if (frontmatter.invokable) continue;
-
-        const isAlwaysApply =
-          frontmatter.alwaysApply === true ||
-          (frontmatter.alwaysApply === undefined &&
-            !frontmatter.globs &&
-            !frontmatter.regex);
-
-        if (isAlwaysApply && markdown.trim()) {
-          if (seenRuleContents.has(markdown)) continue;
-          seenRuleContents.add(markdown);
-
-          const ruleName =
-            frontmatter.name || getRuleNameFromPath(String(file));
-          rules.push({
-            name: ruleName,
-            rule: markdown,
-            description: frontmatter.description,
-            globs: frontmatter.globs,
-            regex: frontmatter.regex,
-            alwaysApply: true,
-            sourceFile: filePath,
-          });
-        }
-      } catch {
-        // Skip files that can't be read or parsed
-      }
+      const rule = parseAlwaysApplyMarkdownRule(
+        filePath,
+        String(file),
+        seenRuleContents,
+      );
+      if (rule) rules.push(rule);
     }
   }
 

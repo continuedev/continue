@@ -5,10 +5,10 @@ import * as path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
 import { serviceContainer } from "./services/ServiceContainer.js";
+import * as systemMessageModule from "./systemMessage.js";
 
 // Use the actual implementation instead of the mocked one
 vi.unmock("./systemMessage.js");
-import * as systemMessageModule from "./systemMessage.js";
 
 const { constructSystemMessage, loadMarkdownRulesWithMetadata } =
   systemMessageModule;
