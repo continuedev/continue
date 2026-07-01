@@ -16,7 +16,7 @@ import { BaseContextProvider } from "../index.js";
  *     {
  *       "name": "dakera",
  *       "params": {
- *         "baseUrl": "http://localhost:3000",
+ *         "baseUrl": "http://localhost:3300",
  *         "apiKey": "your-api-key",
  *         "topK": 10
  *       }
@@ -42,7 +42,7 @@ class DakeraContextProvider extends BaseContextProvider {
   ): Promise<ContextItem[]> {
     const baseUrl: string =
       (this.options.baseUrl as string | undefined)?.replace(/\/$/, "") ??
-      "http://localhost:3000";
+      "http://localhost:3300";
     const apiKey: string | undefined = this.options.apiKey as
       | string
       | undefined;
