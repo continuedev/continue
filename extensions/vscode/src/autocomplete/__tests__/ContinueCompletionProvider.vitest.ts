@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as vscode from "vscode";
 
-import { ContinueCompletionProvider } from "../completionProvider";
+import {
+  ContinueCompletionProvider,
+  isNonCodeInputScheme,
+} from "../completionProvider";
 
 import * as NextEditLoggingServiceModule from "core/nextEdit/NextEditLoggingService";
 import * as PrefetchQueueModule from "core/nextEdit/NextEditPrefetchQueue";
@@ -158,6 +161,90 @@ describe("ContinueCompletionProvider triggering logic", () => {
   });
 });
 
+describe("isNonCodeInputScheme", () => {
+  it("returns true for non-code input surfaces", () => {
+    const deniedSchemes = [
+      "vscode-scm",
+      "comment",
+      "chatSessionInput",
+      "vscode-interactive-input",
+      "vscode-chat-editor",
+      "chat-editing-text-model",
+      "output",
+      "vscode-settings",
+    ];
+    for (const scheme of deniedSchemes) {
+      expect(isNonCodeInputScheme(scheme)).toBe(true);
+    }
+  });
+
+  it("returns false for real editable document schemes", () => {
+    const allowedSchemes = [
+      "file",
+      "vscode-remote",
+      "untitled",
+      "vscode-notebook-cell",
+      "vscode-vfs",
+    ];
+    for (const scheme of allowedSchemes) {
+      expect(isNonCodeInputScheme(scheme)).toBe(false);
+    }
+  });
+});
+
+describe("ContinueCompletionProvider non-code input schemes", () => {
+  const deniedSchemes = [
+    "vscode-scm",
+    "comment",
+    "chatSessionInput",
+    "vscode-interactive-input",
+    "vscode-chat-editor",
+    "chat-editing-text-model",
+    "output",
+    "vscode-settings",
+  ];
+
+  it.each(deniedSchemes)(
+    "returns null and does not start a chain for the %s scheme",
+    async (scheme) => {
+      const document = createDocument(undefined, `${scheme}:input-0`);
+      setActiveEditor(document);
+
+      const provider = buildProvider();
+
+      const result = await provider.provideInlineCompletionItems(
+        document,
+        createPosition(),
+        createContext(),
+        createToken(),
+      );
+
+      expect(result).toBeNull();
+      expect(mockNextEditProvider.startChain).not.toHaveBeenCalled();
+      expect(
+        mockNextEditProvider.provideInlineCompletionItems,
+      ).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not autocomplete inside the Copilot Chat input (chatSessionInput)", async () => {
+    const document = createDocument(undefined, "chatSessionInput:input-0");
+    setActiveEditor(document);
+
+    const provider = buildProvider();
+
+    const result = await provider.provideInlineCompletionItems(
+      document,
+      createPosition(),
+      createContext(),
+      createToken(),
+    );
+
+    expect(result).toBeNull();
+    expect(mockNextEditProvider.startChain).not.toHaveBeenCalled();
+  });
+});
+
 function buildProvider(options: { usingFullFileDiff?: boolean } = {}) {
   const usingFullFileDiff = options.usingFullFileDiff ?? true;
   const configHandler = {
@@ -181,10 +268,11 @@ function buildProvider(options: { usingFullFileDiff?: boolean } = {}) {
 
 function createDocument(
   text = "function example() {\n  return true;\n}",
+  uri = "file:///test",
 ): vscode.TextDocument {
   const lines = text.split("\n");
   return {
-    uri: vscode.Uri.parse("file:///test"),
+    uri: { scheme: uri.split(":")[0], toString: () => uri },
     isUntitled: false,
     getText: (range?: any) => {
       if (!range) {
