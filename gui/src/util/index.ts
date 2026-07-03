@@ -32,6 +32,17 @@ export function isMetaEquivalentKeyPressed({
       return metaKey;
   }
 }
+export function isTextInputTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+
+  return Boolean(
+    target.closest(
+      'input, textarea, [contenteditable="true"], [contenteditable="plaintext-only"]',
+    ),
+  );
+}
 
 export function getMetaKeyLabel(): string {
   return getPlatform() === "mac" ? "⌘" : "Ctrl";

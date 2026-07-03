@@ -259,15 +259,6 @@ export function createEditorConfig(options: {
 
               return true;
             },
-            "Mod-Backspace": () => {
-              // If you press cmd+backspace wanting to cancel,
-              // but are inside of a text box, it shouldn't
-              // delete the text
-              if (isStreamingRef.current) {
-                return true;
-              }
-              return false;
-            },
             "Shift-Enter": () =>
               this.editor.commands.first(({ commands }) => [
                 () => commands.newlineInCode(),
