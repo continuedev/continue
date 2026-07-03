@@ -17,7 +17,7 @@ import {
   SERVICE_NAMES,
 } from "../services/types.js";
 import {
-  loadSession,
+  loadResumeSession,
   updateSessionHistory,
   updateSessionTitle,
 } from "../session.js";
@@ -80,6 +80,7 @@ function stripThinkTags(response: string): string {
 export interface ChatOptions extends ExtendedCommandOptions {
   headless?: boolean;
   resume?: boolean;
+  resumeSessionId?: string;
   fork?: string; // Fork from an existing session ID
   format?: "json"; // Output format for headless mode
   silent?: boolean; // Strip <think></think> tags and excess whitespace
@@ -106,7 +107,7 @@ export async function initializeChatHistory(
 
   // Load previous session if --resume flag is used
   if (options.resume) {
-    session = loadSession();
+    session = loadResumeSession(options.resumeSessionId);
     if (session) {
       logger.info(chalk.yellow("Resuming previous session..."));
       return session.history;

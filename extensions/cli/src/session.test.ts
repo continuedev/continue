@@ -12,6 +12,7 @@ import {
   hasSession,
   loadOrCreateSessionById,
   loadSession,
+  loadResumeSession,
   saveSession,
   startNewSession,
   updateSessionHistory,
@@ -356,6 +357,52 @@ describe("SessionManager", () => {
 
       expect(result).toEqual(mockSession);
       expect(getCurrentSession()).toEqual(mockSession);
+    });
+  });
+
+  describe("loadResumeSession", () => {
+    it("should load the selected session id and set it as current", () => {
+      const selectedSession: Session = {
+        sessionId: "selected-session-id",
+        title: "Selected Session",
+        workspaceDirectory: "/test/workspace",
+        history: [
+          {
+            message: { role: "user", content: "selected" },
+            contextItems: [],
+          },
+        ],
+      };
+
+      mockHistoryManager.load.mockReturnValue(selectedSession);
+
+      const result = loadResumeSession("selected-session-id");
+
+      expect(result).toBe(selectedSession);
+      expect(mockHistoryManager.load).toHaveBeenCalledWith(
+        "selected-session-id",
+      );
+      expect(getCurrentSession()).toBe(selectedSession);
+    });
+
+    it("should preserve bare resume by loading the most recent session", () => {
+      const recentSession: Session = {
+        sessionId: "recent-session-id",
+        title: "Recent Session",
+        workspaceDirectory: "/test/workspace",
+        history: [],
+      };
+
+      mockFs.readdirSync.mockReturnValue(["recent-session.json" as any]);
+      mockFs.statSync.mockReturnValue({
+        mtime: new Date("2023-01-02"),
+      } as any);
+      mockFs.readFileSync.mockReturnValue(JSON.stringify(recentSession));
+
+      const result = loadResumeSession();
+
+      expect(result).toEqual(recentSession);
+      expect(getCurrentSession()).toEqual(recentSession);
     });
   });
 

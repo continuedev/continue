@@ -1,7 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+const renderState = vi.hoisted(() => ({
+  element: undefined as
+    | { props?: { onSelect?: (sessionId: string) => Promise<void> } }
+    | undefined,
+}));
 
 import * as sessionModule from "../session.js";
 
+import { chat } from "./chat.js";
 import { listSessionsCommand } from "./ls.js";
 
 // Mock the session module
@@ -17,7 +23,10 @@ vi.mock("../ui/SessionSelector.js", () => ({
 
 // Mock ink
 vi.mock("ink", () => ({
-  render: vi.fn(() => ({ unmount: vi.fn() })),
+  render: vi.fn((element) => {
+    renderState.element = element;
+    return { unmount: vi.fn() };
+  }),
 }));
 
 // Mock react with createContext
@@ -25,7 +34,11 @@ vi.mock("react", async (importOriginal) => {
   const actual: any = await importOriginal();
   return {
     ...actual,
-    createElement: vi.fn(),
+    createElement: vi.fn((type: any, props: any, ...children: any[]) => ({
+      type,
+      props,
+      children,
+    })),
     createContext: vi.fn(() => ({ Provider: vi.fn(), Consumer: vi.fn() })),
   };
 });
@@ -42,9 +55,12 @@ vi.mock("./remote.js", () => ({
 
 describe("listSessionsCommand", () => {
   const mockListSessions = vi.mocked(sessionModule.listSessions);
+  const mockLoadSessionById = vi.mocked(sessionModule.loadSessionById);
+  const mockChat = vi.mocked(chat);
 
   beforeEach(() => {
     vi.clearAllMocks();
+    renderState.element = undefined;
   });
 
   afterEach(() => {
@@ -151,5 +167,48 @@ describe("listSessionsCommand", () => {
     );
 
     consoleSpy.mockRestore();
+  });
+
+  it("should pass the selected session id to chat resume", async () => {
+    const mockSessions = [
+      {
+        sessionId: "older-session",
+        title: "Older session",
+        dateCreated: "2023-01-01T09:00:00.000Z",
+        workspaceDirectory: "/workspace",
+        firstUserMessage: "Older message",
+        isRemote: false,
+      },
+      {
+        sessionId: "newer-session",
+        title: "Newer session",
+        dateCreated: "2023-01-01T10:00:00.000Z",
+        workspaceDirectory: "/workspace",
+        firstUserMessage: "Newer message",
+        isRemote: false,
+      },
+    ];
+    mockListSessions.mockResolvedValue(mockSessions);
+    mockLoadSessionById.mockReturnValue({
+      sessionId: "older-session",
+      title: "Older session",
+      workspaceDirectory: "/workspace",
+      history: [],
+    } as any);
+
+    const commandPromise = listSessionsCommand({});
+    await new Promise((resolve) => setImmediate(resolve));
+
+    const onSelect = renderState.element?.props?.onSelect;
+    expect(onSelect).toBeDefined();
+    await onSelect!("older-session");
+    await commandPromise;
+
+    expect(mockLoadSessionById).toHaveBeenCalledWith("older-session");
+    expect(mockChat).toHaveBeenCalledWith(undefined, {
+      resume: true,
+      resumeSessionId: "older-session",
+      headless: false,
+    });
   });
 });

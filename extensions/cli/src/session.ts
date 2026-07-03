@@ -331,6 +331,18 @@ export function loadSession(): Session | null {
   }
 }
 
+export function loadResumeSession(sessionId?: string): Session | null {
+  if (!sessionId) {
+    return loadSession();
+  }
+
+  const session = loadSessionById(sessionId);
+  if (session) {
+    SessionManager.getInstance().setSession(session);
+  }
+  return session;
+}
+
 /**
  * Create a new session
  */
