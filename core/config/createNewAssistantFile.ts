@@ -9,7 +9,7 @@ version: 1.0.0
 schema: v1
 
 # Define which models can be used
-# https://docs.continue.dev/customization/models
+# https://docs.continue.dev/customize/models
 models:
   - name: my gpt-5
     provider: openai
