@@ -412,6 +412,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         !!lower.match(/\bo[1-9]\b/)
       );
     },
+    manifest: (model) => {
+      // Manifest is a gateway that routes to various providers server-side.
+      // The "auto" model resolves to whatever the user has configured in
+      // their dashboard, which may support tools.
+      return true;
+    },
     zAI: (model) => {
       const lower = model.toLowerCase();
       return !!lower.match(/^glm-[4-9]/);

@@ -1,0 +1,56 @@
+---
+title: Manifest
+description: OpenAI-compatible gateway with multi-provider support
+---
+
+# Manifest
+
+[Manifest](https://manifest.build) is an open-source, OpenAI-compatible gateway for AI agents. It exposes a single endpoint in front of multiple providers (API keys, subscriptions, local models), with per-message cost/token tracking and automatic fallback when a provider fails.
+
+The served model is resolved server-side from your dashboard configuration, so requests always target the single `auto` model id.
+
+## Setup
+
+1. Sign up at [manifest.build](https://manifest.build)
+2. Add your provider API keys (OpenAI, Anthropic, etc.) in the dashboard
+3. Configure Continue to use Manifest as your provider
+
+### config.json
+
+```json
+{
+  "models": [
+    {
+      "title": "Manifest Auto",
+      "provider": "manifest",
+      "model": "auto",
+      "apiKey": "YOUR_MANIFEST_API_KEY"
+    }
+  ]
+}
+```
+
+### config.yaml
+
+```yaml
+models:
+  - title: "Manifest Auto"
+    provider: manifest
+    model: auto
+    apiKey: "YOUR_MANIFEST_API_KEY"
+```
+
+## Configuration Options
+
+| Field      | Required | Default                     | Description                          |
+| ---------- | -------- | --------------------------- | ------------------------------------ |
+| `apiKey`   | Yes      | -                           | Your Manifest API key                |
+| `apiBase`  | No       | `https://app.manifest.build/v1/` | Custom API base URL (e.g. for self-hosted) |
+| `model`    | No       | `auto`                      | Model identifier (always `auto`)     |
+
+## Features
+
+- **Multi-provider routing** — one endpoint, multiple providers
+- **Cost & token tracking** — per-message breakdown in the dashboard
+- **Automatic fallback** — if one provider fails, Manifest retries with the next
+- **Self-hostable** — deploy your own instance from [github.com/mnfst/manifest](https://github.com/mnfst/manifest)

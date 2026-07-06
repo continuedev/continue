@@ -46,6 +46,11 @@ const PROVIDER_MAP: Record<string, AiSdkProviderCreator> = {
       ...options,
       baseURL: options.baseURL ?? "http://localhost:1337/v1/",
     }),
+  manifest: (options) =>
+    createOpenAI({
+      ...options,
+      baseURL: options.baseURL ?? "https://app.manifest.build/v1/",
+    }),
 };
 
 export class AiSdkApi implements BaseLlmApi {

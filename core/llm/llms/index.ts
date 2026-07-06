@@ -36,6 +36,7 @@ import Llamafile from "./Llamafile";
 import LlamaStack from "./LlamaStack";
 import Lemonade from "./Lemonade";
 import LMStudio from "./LMStudio";
+import Manifest from "./Manifest";
 import Mistral from "./Mistral";
 import Mimo from "./Mimo";
 import MiniMax from "./MiniMax";
@@ -92,6 +93,7 @@ export const LLMClasses = [
   OVHcloud,
   Lemonade,
   LMStudio,
+  Manifest,
   Mistral,
   Mimo,
   MiniMax,
