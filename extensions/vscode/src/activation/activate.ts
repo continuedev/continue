@@ -60,10 +60,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
         vscode.ConfigurationTarget.Global,
       );
     } catch (error) {
-      console.error(
-        "Failed to register Continue config.yaml schema",
-        error,
-      );
+      console.error("Failed to register Continue config.yaml schema", error);
     }
   }
 
