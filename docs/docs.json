@@ -112,6 +112,7 @@
                       "customize/model-providers/more/groq",
                       "customize/model-providers/more/llamacpp",
                       "customize/model-providers/more/llamastack",
+                      "customize/model-providers/more/lynkr",
                       "customize/model-providers/more/mimo",
                       "customize/model-providers/more/mistral",
                       "customize/model-providers/more/moonshot",
