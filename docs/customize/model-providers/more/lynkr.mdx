@@ -1,0 +1,43 @@
+---
+title: "How to Configure Lynkr with Continue"
+sidebarTitle: "Lynkr"
+---
+
+<Info>
+  Lynkr is an open-source, self-hosted LLM gateway that routes each request by
+  complexity: simple requests go to local models (Ollama, llama.cpp, LM Studio),
+  complex ones to a configured cloud provider (AWS Bedrock, Azure OpenAI,
+  Databricks, OpenRouter, and others). It also strips unused tool schemas and
+  compresses large JSON tool results to reduce token usage.
+</Info>
+
+<Tip>
+  Get started with [Lynkr on GitHub](https://github.com/Fast-Editor/Lynkr)
+</Tip>
+
+## Installation
+
+Lynkr runs locally and provides an OpenAI-compatible API:
+
+```bash
+npm install -g lynkr
+lynkr init   # interactive wizard: choose tier models and provider credentials
+lynkr start
+```
+
+This starts the gateway at `http://localhost:8081`.
+
+## Configuration
+
+```yaml title="config.yaml"
+models:
+  - name: Lynkr
+    provider: openai
+    model: lynkr-auto
+    apiBase: http://localhost:8081/v1
+    apiKey: none
+```
+
+The `model` value is a placeholder — Lynkr's tier routing selects the actual
+model per request based on the tiers configured in `lynkr init`, so a single
+entry covers the local-to-cloud range.
