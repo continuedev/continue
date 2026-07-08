@@ -1,0 +1,57 @@
+---
+title: "How Chat Works"
+description: "Continue's Chat feature provides a conversational interface with AI models directly in your IDE sidebar."
+---
+
+## How Chat Core Functionality Works
+
+When you start a chat conversation, Continue:
+
+1. **Gathers Context**: Uses any selected code sections and @-mentioned context
+2. **Constructs Prompt**: Combines your input with relevant context
+3. **Sends to Model**: Prompts the configured AI model for a response
+4. **Streams Response**: Returns the AI response in real-time to the sidebar
+
+## How Context Management Works
+
+### What Context Is Automatically Included
+
+- Selected code in your editor
+- Current file context when relevant
+- Previous conversation history in the session
+
+### How to Add Manual Context
+
+- `@Files` - Reference specific files
+
+## How Response Handling Works
+
+Each code section in the AI response includes action buttons:
+
+- **Apply to current file** - Replace selected code
+- **Insert at cursor** - Add code at cursor position
+- **Copy** - Copy code to clipboard
+
+## How Session Management Works
+
+- Use `Cmd/Ctrl + L` (VS Code) or `Cmd/Ctrl + J` (JetBrains) to start a new session
+- Clears all previous context for a fresh start
+- Helpful for switching between different tasks
+
+## What Advanced Features Are Available
+
+### How to Use Prompt Inspection
+
+View the exact prompt sent to the AI model in the [prompt logs](/troubleshooting) for debugging and optimization.
+
+### Context
+
+Learn more about how you can bring in context:
+
+- [Codebase Context](/guides/codebase-documentation-awareness)
+- [Documentation Context](/guides/codebase-documentation-awareness)
+- [Built-in Context Providers](/customize/deep-dives/custom-providers)
+
+---
+
+_Chat is designed to feel like a natural conversation while maintaining full transparency about what context is being used._

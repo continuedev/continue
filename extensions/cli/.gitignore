@@ -1,0 +1,17 @@
+node_modules
+dist
+.env
+/*-repomix.xml
+
+chat.log
+
+*notes.md
+
+# Local config files (users should not commit their personal configs)
+config.yaml
+
+.continue-debug/
+
+*.expect
+!demo.expect
+*.cast

@@ -1,0 +1,190 @@
+---
+title: "Example MCP Servers"
+keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify, atlassian, github, sanity, snyk, dlt, chrome-devtools]
+---
+
+Ready-to-use MCP server configurations for popular tools and services. Copy these into your `config.yaml` to get started.
+
+MCP servers are only available in **agent** mode. For configuration concepts and setup details, see the [MCP deep dive](/customize/deep-dives/mcp).
+
+## Sentry
+
+Sentry's MCP server provides tools for querying issues, viewing stack traces, and searching events.
+
+**Remote (SSE)**:
+
+```yaml
+mcpServers:
+  - name: Sentry
+    type: sse
+    url: https://mcp.sentry.io
+```
+
+**Local (stdio)** — requires an auth token:
+
+```yaml
+mcpServers:
+  - name: Sentry
+    command: npx
+    args:
+      - "-y"
+      - "@sentry/mcp-server@latest"
+      - "--transport"
+      - "stdio"
+    env:
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+```
+
+See also: [Sentry MCP Error Monitoring guide](/guides/sentry-mcp-error-monitoring)
+
+## Slack
+
+```yaml
+mcpServers:
+  - name: Slack
+    command: npx
+    args:
+      - "-y"
+      - "@anthropic/slack-mcp"
+    env:
+      SLACK_OAUTH_TOKEN: ${{ secrets.SLACK_OAUTH_TOKEN }}
+```
+
+## Linear
+
+```yaml
+mcpServers:
+  - name: Linear
+    type: sse
+    url: https://mcp.linear.app/sse
+    apiKey: ${{ secrets.LINEAR_OAUTH_TOKEN }}
+```
+
+## PostHog
+
+```yaml
+mcpServers:
+  - name: PostHog
+    type: streamable-http
+    url: https://mcp.posthog.com/mcp
+    apiKey: ${{ secrets.POSTHOG_API_KEY }}
+```
+
+See also: [PostHog + GitHub Continuous AI guide](/guides/posthog-github-continuous-ai)
+
+## Supabase
+
+```yaml
+mcpServers:
+  - name: Supabase
+    type: streamable-http
+    url: https://mcp.supabase.com/mcp
+    apiKey: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+```
+
+See also: [Supabase MCP Database Workflow guide](/guides/supabase-mcp-database-workflow)
+
+## Netlify
+
+```yaml
+mcpServers:
+  - name: Netlify
+    type: streamable-http
+    url: https://openapi.netlify.com/v1/mcp
+    apiKey: ${{ secrets.NETLIFY_API_TOKEN }}
+```
+
+See also: [Netlify MCP Continuous Deployment guide](/guides/netlify-mcp-continuous-deployment)
+
+## Atlassian
+
+```yaml
+mcpServers:
+  - name: Atlassian
+    type: sse
+    url: https://mcp.atlassian.com/v1/sse
+    env:
+      ATLASSIAN_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
+```
+
+See also: [Atlassian MCP cookbook](/guides/atlassian-mcp-continue-cookbook)
+
+## GitHub
+
+```yaml
+mcpServers:
+  - name: GitHub
+    command: npx
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-github"
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+See also: [GitHub MCP cookbook](/guides/github-mcp-continue-cookbook)
+
+## Sanity
+
+```yaml
+mcpServers:
+  - name: Sanity
+    command: npx
+    args:
+      - "-y"
+      - "@sanity/mcp"
+    env:
+      SANITY_PROJECT_ID: ${{ secrets.SANITY_PROJECT_ID }}
+      SANITY_DATASET: ${{ secrets.SANITY_DATASET }}
+      SANITY_API_TOKEN: ${{ secrets.SANITY_API_TOKEN }}
+      MCP_USER_ROLE: ${{ secrets.MCP_USER_ROLE }}
+```
+
+See also: [Sanity MCP cookbook](/guides/sanity-mcp-continue-cookbook)
+
+## Snyk
+
+```yaml
+mcpServers:
+  - name: Snyk
+    command: npx
+    args:
+      - "-y"
+      - "@snyk/mcp"
+    env:
+      SNYK_API_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
+```
+
+See also: [Snyk MCP cookbook](/guides/snyk-mcp-continue-cookbook)
+
+## dlt
+
+```yaml
+mcpServers:
+  - name: dlt
+    command: npx
+    args:
+      - "-y"
+      - "dlthub/dlt-mcp"
+```
+
+See also: [dlt MCP cookbook](/guides/dlt-mcp-continue-cookbook)
+
+## Chrome DevTools
+
+```yaml
+mcpServers:
+  - name: Chrome DevTools
+    command: npx
+    args:
+      - "-y"
+      - "chrome-devtools-mcp@latest"
+```
+
+See also: [Chrome DevTools MCP guide](/guides/chrome-devtools-mcp-performance)
+
+## Other guides
+
+These integrations have guides available but use direct API integration rather than MCP:
+
+- [Notion](/guides/notion-continue-guide)

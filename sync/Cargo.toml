@@ -1,0 +1,34 @@
+[package]
+name = "sync"
+version = "0.1.0"
+description = "Continue Codebase Syncing"
+authors = ["Nate Sesti and Ty Dunn"]
+license = "Apache-2.0"
+edition = "2018"
+exclude = ["index.node"]
+
+[lib]
+crate-type = ["cdylib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dirs = "5.0.1"
+hex-literal = "0.4.1"
+homedir = "0.2.1"
+ignore = "0.4.20"
+ndarray = "0.15.6"
+rand = "0.8.5"
+rusqlite = { version = "0.30.0", features = ["bundled"] }
+serde = { version = "1.0.192", features = ["derive"] }
+serde_json = "1.0.108"
+sha1 = "0.10.6"
+tempfile = "3.8.1"
+
+[dev-dependencies]
+tempfile = "3.8.1"
+
+[dependencies.neon]
+version = "0.10"
+default-features = false
+features = ["napi-6"]

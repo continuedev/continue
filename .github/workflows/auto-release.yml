@@ -1,0 +1,71 @@
+name: Create Automatic Release
+
+on:
+  push:
+    branches:
+      - nate/auto-main-release-draft
+  # Not using this now because making drafts was just noisy. Will be useful when we are ready for automated releases.
+  # schedule:
+  #   - cron: "0 17 * * 1,3,5" # Run at 9am PST (17:00 UTC) on Monday, Wednesday, Friday
+  workflow_dispatch: # Keep manual trigger option
+
+jobs:
+  create-vscode-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for creating releases
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Get version from package.json
+        id: get_version
+        run: |
+          # Read version from package.json and add -vscode suffix
+          version=$(node -p "require('./extensions/vscode/package.json').version")
+          new_version="v${version}-vscode"
+          echo "New version will be: $new_version"
+          echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Create a new draft release with auto-generated release notes
+          gh release create "$NEW_VERSION" \
+            --generate-notes \
+            --title "$NEW_VERSION" \
+            --draft \
+            --latest \
+            --prerelease
+
+  create-jetbrains-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for creating releases
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Get version from gradle.properties
+        id: get_version
+        run: |
+          # Read version from gradle.properties and add -jetbrains suffix
+          version=$(grep '^pluginVersion=' extensions/intellij/gradle.properties | cut -d'=' -f2)
+          new_version="v${version}-jetbrains"
+          echo "New version will be: $new_version"
+          echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Create a new draft release with auto-generated release notes
+          gh release create "$NEW_VERSION" \
+            --generate-notes \
+            --title "$NEW_VERSION" \
+            --draft \
+            --latest \
+            --prerelease

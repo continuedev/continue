@@ -1,0 +1,36 @@
+---
+title: "Text Generation WebUI"
+description: "Configure Text Generation WebUI with Continue to use its comprehensive open-source language model UI and local server through its OpenAI-compatible API"
+---
+
+TextGenWebUI is a comprehensive, open-source language model UI and local server. You can set it up with an OpenAI-compatible server plugin, and then configure it like this:
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Text Generation WebUI
+        provider: text-gen-webui
+        apiBase: http://localhost:5000/v1
+        model: MODEL_NAME
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Text Generation WebUI",
+          "provider": "text-gen-webui",
+          "apiBase": "http://localhost:5000/v1",
+          "model": "MODEL_NAME"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>

@@ -1,0 +1,39 @@
+name: Duplicate Test Agent
+version: 0.0.1
+schema: v1
+
+docs:
+  - name: React
+    startUrl: https://react.dev
+  - name: React
+    startUrl: https://react.dev
+
+rules:
+  - Be humble
+  - uses: ./src/__tests__/local-files/rules.yaml
+
+models:
+  - name: gpt-5
+    provider: openai
+    model: gpt-5
+    apiKey: ${{ secrets.OPENAI_API_KEY }}
+    roles:
+      - chat
+
+  - name: gpt-5
+    provider: openai
+    model: gpt-5
+    apiKey: ${{ secrets.OPENAI_API_KEY }}
+    roles:
+      - chat
+
+mcpServers:
+  - uses: ./src/__tests__/local-files/mcpServer.yaml
+
+prompts:
+  - uses: ./src/__tests__/local-files/prompt.yaml
+  - uses: ./src/__tests__/local-files/prompt.yaml
+
+context:
+  - provider: doc
+  - provider: doc

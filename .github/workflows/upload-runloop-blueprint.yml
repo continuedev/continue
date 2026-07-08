@@ -1,0 +1,67 @@
+name: Upload Runloop Blueprint
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/runloop-blueprint-template.json'
+      - '.github/workflows/runloop-blueprint-staging-template.json'
+
+permissions:
+  contents: read
+
+jobs:
+  upload-blueprints:
+    name: Upload Blueprints to Runloop
+    runs-on: ubuntu-latest
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
+    strategy:
+      matrix:
+        include:
+          - template: runloop-blueprint-template.json
+            name: cn
+          - template: runloop-blueprint-staging-template.json
+            name: cn-staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Publish ${{ matrix.name }} Blueprint to Runloop
+        env:
+          RUNLOOP_API_KEY: ${{ secrets.RUNLOOP_API_KEY }}
+        run: |
+          echo "Publishing blueprint '${{ matrix.name }}' to Runloop API"
+
+          # Use blueprint configuration from template file
+          cp .github/workflows/${{ matrix.template }} blueprint.json
+
+          # Publish to Runloop API
+          response=$(curl -X POST "https://api.runloop.ai/v1/blueprints" \
+            -H "Authorization: Bearer $RUNLOOP_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d @blueprint.json \
+            -w "%{http_code}" \
+            -s)
+
+          http_code=$(echo "$response" | tail -c 4)
+          response_body=$(echo "$response" | head -c -4)
+
+          if [[ "$http_code" == "200" ]] || [[ "$http_code" == "201" ]]; then
+            echo "✅ Successfully published blueprint '${{ matrix.name }}' to Runloop API"
+            echo "Response: $response_body"
+
+            # Extract blueprint ID if available
+            blueprint_id=$(echo "$response_body" | jq -r '.id // empty')
+            if [[ -n "$blueprint_id" ]]; then
+              echo "Blueprint ID: $blueprint_id"
+              echo "blueprint_id=$blueprint_id" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "❌ Failed to publish blueprint '${{ matrix.name }}' to Runloop API"
+            echo "HTTP Code: $http_code"
+            echo "Response: $response_body"
+            exit 1
+          fi

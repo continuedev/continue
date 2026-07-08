@@ -1,0 +1,38 @@
+---
+title: "Flowise"
+description: "Configure Flowise with Continue to integrate with this low-code/no-code drag & drop tool for building and visualizing LLM applications"
+---
+
+[Flowise](https://flowiseai.com/) is a low-code/no-code drag & drop tool with the aim to make it easy for people to visualize and build LLM apps. Continue can then be configured to use the `Flowise` LLM class, like the example here:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Flowise
+      provider: flowise
+      model: <MODEL>
+      apiBase: <API_BASE>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "provider": "flowise",
+        "title": "Flowise",
+        "model": "<MODEL>",
+        "apiBase": "<API_BASE>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Flowise.ts)

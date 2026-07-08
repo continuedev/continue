@@ -1,0 +1,92 @@
+name: Reusable Release Workflow
+
+on:
+  workflow_call:
+    inputs:
+      package-name:
+        required: true
+        type: string
+      package-path:
+        required: true
+        type: string
+    secrets:
+      SEMANTIC_RELEASE_GITHUB_TOKEN:
+        required: true
+      SEMANTIC_RELEASE_NPM_TOKEN:
+        required: true
+      OPENAI_API_KEY:
+        required: false
+      ANTHROPIC_API_KEY:
+        required: false
+      GEMINI_API_KEY:
+        required: false
+      MISTRAL_API_KEY:
+        required: false
+      AZURE_OPENAI_API_KEY:
+        required: false
+      AZURE_FOUNDRY_CODESTRAL_API_KEY:
+        required: false
+      AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY:
+        required: false
+      AZURE_OPENAI_GPT41_API_KEY:
+        required: false
+      VOYAGE_API_KEY:
+        required: false
+      RELACE_API_KEY:
+        required: false
+      INCEPTION_API_KEY:
+        required: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Release ${{ inputs.package-name }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.package-path }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
+
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_FOUNDRY_CODESTRAL_API_KEY: ${{ secrets.AZURE_FOUNDRY_CODESTRAL_API_KEY }}
+          AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ${{ secrets.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY }}
+          AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
+          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+          RELACE_API_KEY: ${{ secrets.RELACE_API_KEY }}
+          INCEPTION_API_KEY: ${{ secrets.INCEPTION_API_KEY }}
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.SEMANTIC_RELEASE_NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.SEMANTIC_RELEASE_NPM_TOKEN }}
+        run: npx semantic-release

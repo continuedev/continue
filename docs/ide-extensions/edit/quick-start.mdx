@@ -1,0 +1,39 @@
+---
+title: "Quick Start with Continue Edit"
+sideBarTitle: "Quick Start"
+description: "Get started with Continue's Edit feature for making quick, targeted code changes directly in your file using AI suggestions, with keyboard shortcuts for accepting or rejecting modifications"
+---
+
+## How to Continue Edit
+
+Edit is a convenient way to make quick changes to specific code and files. Select code, describe your code changes, and a diff will be streamed inline to your file which you can accept or reject.
+
+Edit is recommended for small, targeted changes, such as
+
+- Writing comments
+- Generating unit tests
+- Refactoring functions or methods
+
+## How to Activate Edit
+
+Highlight the block of code you would like to modify and press `Cmd+I` (Mac) or `Ctrl+I` (Windows/Linux) to activate Edit mode. You can also press `Cmd/Ctrl+I` with no code highlighted, which will default to inserting code at the current cursor location.
+
+Once you've activated Edit, you're ready to provide instructions.
+
+### How to Provide Instructions
+
+Describe the changes you would like the model to make to your highlighted code. For edits, a good prompt should be relatively short and concise. For longer, more complex tasks, we recommend using [Chat](/ide-extensions/chat/quick-start).
+
+### How to Accept or Reject Changes
+
+Proposed changes appear as inline diffs within your highlighted text.
+
+You can navigate through each proposed change, accepting or rejecting them using `Cmd+Opt+Y` (Mac) or `Ctrl+Alt+Y` (Windows/Linux) to accept, or `Cmd+Opt+N` (Mac) or `Ctrl+Alt+N` (Windows/Linux) to reject.
+
+You can also accept or reject all changes at once using `Cmd+Shift+Enter` (Mac) or `Ctrl+Shift+Enter` (Windows/Linux) to accept, or `Cmd+Shift+Delete` (Mac) or `Ctrl+Shift+Backspace` (Windows/Linux) to reject.
+
+If you want to request a new suggestion for the same highlighted code section, you can use `Cmd+I` (Mac) or `Ctrl+I` (Windows/Linux) to re-prompt the model.
+
+## How to Use Edit in Jetbrains
+
+In Jetbrains, Edit is implemented as an inline popup. See the header GIF example.

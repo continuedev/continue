@@ -1,0 +1,33 @@
+name: Daily Snyk Agent
+
+on:
+  schedule:
+    # Runs at 9:00 AM UTC every day
+    - cron: "0 9 * * *"
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  run-cn-task:
+    runs-on: ubuntu-latest
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Install Continue CLI globally
+        run: npm install -g @continuedev/cli@latest
+
+      - name: Run Snyk Agent
+        run: cd extensions/cli && cn -p --agent continuedev/snyk-code-scan-agent "The current directory"
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}

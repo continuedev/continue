@@ -1,0 +1,18 @@
+name: Weekly CN Task
+
+on:
+  schedule:
+    # Runs at 8/9:30 AM PST (16:30 UTC) every Monday so PR shows up at beginning of week
+    - cron: "30 16 * * 1"
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  run-cn-task:
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
+    uses: ./.github/workflows/run-continue-agent.yml
+    with:
+      agent: continuedev/tidy-up-markdown-agent
+      branch_name: main
+    secrets:
+      CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}

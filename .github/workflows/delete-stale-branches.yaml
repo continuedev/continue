@@ -1,0 +1,24 @@
+name: Delete Stale Branches
+
+on:
+  schedule:
+    - cron: "0 6 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: write
+
+jobs:
+  stale_branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stale Branches
+        uses: crs-k/stale-branches@v8.2.2
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          days-before-stale: 59
+          days-before-delete: 60
+          pr-check: true
+          ignore-issue-interaction: true
+          branches-filter-regex: "^(?!cla-signatures$).*"

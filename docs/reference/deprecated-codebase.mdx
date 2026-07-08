@@ -1,0 +1,120 @@
+---
+title: "@Codebase (Deprecated)"
+description: Deprecated codebase context provider - use the new codebase awareness approach instead
+keywords: [deprecated, codebase, embeddings, context, legacy]
+noindex: true
+---
+
+<Warning>
+  **This feature is deprecated.** The `@Codebase` context provider has been deprecated in favor of a more integrated approach to codebase awareness. Please refer to our [Guide on Making Agent Mode Aware of Codebases and Documentation](/guides/codebase-documentation-awareness) for the recommended approach.
+</Warning>
+
+## Migration Guide
+
+If you're currently using `@Codebase` or `@Folder` context providers, please migrate to the new approach outlined in our [codebase and documentation awareness guide](/guides/codebase-documentation-awareness). The new approach provides:
+
+- Better integration with Continue's Agent mode features
+- More intelligent context selection
+- Improved performance and accuracy
+
+## Legacy Documentation
+
+*Below is the original documentation for the `@Codebase` context provider, preserved for reference*
+
+Continue indexes your codebase so that it can later automatically pull in the most relevant context from throughout your workspace. This is done via a combination of embeddings-based retrieval and keyword search. By default, all embeddings are calculated locally using `transformers.js` and stored locally in `~/.continue/index`.
+
+<Info>
+  **Note:** `transformers.js` cannot be used in JetBrains IDEs. However, you can
+  select a different embeddings model from [the list
+  here](../customize/model-roles/embeddings).
+</Info>
+
+## How to Use @Codebase and @Folder Context Providers
+
+Currently, the codebase retrieval feature is available as the "codebase" and "folder" context providers. You can use them by typing `@Codebase` or `@Folder` in the input box, and then asking a question. The contents of the input box will be compared with the embeddings from the rest of the codebase (or folder) to determine relevant files.
+
+### When @Codebase Context Provider Is Useful
+
+Here are some common use cases where it can be useful:
+
+- **Asking high-level questions about your codebase**
+  - "How do I add a new endpoint to the server?"
+  - "Do we use VS Code's CodeLens feature anywhere?"
+  - "Is there any code written already to convert HTML to markdown?"
+- **Generate code using existing samples as reference**
+  - "Generate a new React component with a date picker, using the same patterns as existing components"
+  - "Write a draft of a CLI application for this project using Python's argparse"
+  - "Implement the `foo` method in the `bar` class, following the patterns seen in other subclasses of `baz`.
+- **Use `@Folder` to ask questions about a specific folder, increasing the likelihood of relevant results**
+  - "What is the main purpose of this folder?"
+  - "How do we use VS Code's CodeLens API?"
+  - Or any of the above examples, but with `@Folder` instead of `@Codebase`
+
+### When @Codebase Context Provider Is Not Useful
+
+Here are use cases where it is not useful:
+
+- **When you need the LLM to see _literally every_ file in your codebase**
+  - "Find everywhere where the `foo` function is called"
+  - "Review our codebase and find any spelling mistakes"
+- **Refactoring tasks**
+  - "Add a new parameter to the `bar` function and update usages"
+
+## How to Configure @Codebase Context Provider Settings
+
+There are a few options that let you configure the behavior of the `@codebase` context provider, which are the same for the `@folder` context provider:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml" 
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  context:
+    - provider: codebase
+      params:
+        nRetrieve: 25
+        nFinal: 5
+        useReranking: true
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "codebase",
+        "params": {
+          "nRetrieve": 25,
+          "nFinal": 5,
+          "useReranking": true
+        }
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+### `nRetrieve`
+
+Number of results to initially retrieve from vector database (default: 25)
+
+### `nFinal`
+
+Final number of results to use after re-ranking (default: 5)
+
+### `useReranking`
+
+Whether to use re-ranking, which will allow initial selection of `nRetrieve` results, then will use an LLM to select the top `nFinal` results (default: true)
+
+## How to Ignore Files During Indexing
+
+Continue respects `.gitignore` files in order to determine which files should not be indexed. If you'd like to exclude additional files, you can add them to a `.continueignore` file, which follows the exact same rules as `.gitignore`.
+
+Continue also supports a **global** `.continueignore` file that will be respected for all workspaces, which can be created at `~/.continue/.continueignore`.
+
+If you want to see exactly what files Continue has indexed, the metadata is stored in `~/.continue/index/index.sqlite`. You can use a tool like [DB Browser for SQLite](https://sqlitebrowser.org/) to view the `tag_catalog` table within this file.
+
+If you need to force a refresh of the index, reload the VS Code window with <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>p</kbd> + "Reload Window".

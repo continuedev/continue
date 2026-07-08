@@ -1,0 +1,336 @@
+/* Docs content typography — matches homepage palette */
+
+:root {
+  --docs-text: rgb(0 0 0 / 0.7);
+  --docs-heading: rgb(0 0 0 / 0.85);
+  --docs-link: rgb(0 0 0 / 0.8);
+  --docs-link-underline: rgb(0 0 0 / 0.2);
+  --docs-link-underline-hover: rgb(0 0 0 / 0.6);
+  --docs-muted: rgb(0 0 0 / 0.5);
+  --docs-border: rgb(0 0 0 / 0.1);
+  --docs-border-light: rgb(0 0 0 / 0.06);
+  --docs-border-faint: rgb(0 0 0 / 0.05);
+  --docs-code-bg: rgb(0 0 0 / 0.03);
+  --docs-code-bg-solid: #f7f7f8;
+  --docs-code-border: rgb(0 0 0 / 0.06);
+  --docs-inline-code-bg: rgb(0 0 0 / 0.04);
+  --docs-anchor: rgb(0 0 0 / 0.2);
+  --docs-video-bg: rgb(0 0 0 / 0.03);
+}
+
+.dark {
+  --docs-text: rgb(255 255 255 / 0.7);
+  --docs-heading: rgb(255 255 255 / 0.85);
+  --docs-link: rgb(255 255 255 / 0.8);
+  --docs-link-underline: rgb(255 255 255 / 0.2);
+  --docs-link-underline-hover: rgb(255 255 255 / 0.6);
+  --docs-muted: rgb(255 255 255 / 0.5);
+  --docs-border: rgb(255 255 255 / 0.1);
+  --docs-border-light: rgb(255 255 255 / 0.06);
+  --docs-border-faint: rgb(255 255 255 / 0.05);
+  --docs-code-bg: rgb(255 255 255 / 0.05);
+  --docs-code-bg-solid: #171717;
+  --docs-code-border: rgb(255 255 255 / 0.06);
+  --docs-inline-code-bg: rgb(255 255 255 / 0.06);
+  --docs-anchor: rgb(255 255 255 / 0.2);
+  --docs-video-bg: rgb(255 255 255 / 0.05);
+}
+
+.docs-content {
+  color: var(--docs-text);
+  line-height: 1.75;
+}
+
+.docs-content h1,
+.docs-content h2,
+.docs-content h3,
+.docs-content h4 {
+  color: var(--docs-heading);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.docs-content h1 {
+  font-size: 2rem;
+  margin-bottom: 1em;
+}
+
+.docs-content h2 {
+  margin-top: 2.5em;
+  margin-bottom: 0.75em;
+  font-size: 1.5rem;
+}
+
+.docs-content h3 {
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+  font-size: 1.25rem;
+}
+
+.docs-content h4 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-size: 1.1rem;
+}
+
+.docs-content p,
+.docs-content .docs-p {
+  margin-bottom: 1.5em;
+}
+
+.docs-content a:not(.no-underline) {
+  color: var(--docs-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--docs-link-underline);
+  transition: text-decoration-color 0.2s;
+}
+
+.docs-content a:not(.no-underline):hover {
+  text-decoration-color: var(--docs-link-underline-hover);
+}
+
+.docs-content blockquote {
+  border-left: 2px solid var(--docs-border);
+  padding-left: 1.25em;
+  color: var(--docs-muted);
+  font-style: italic;
+}
+
+.docs-content hr {
+  border: none;
+  border-top: 1px solid var(--docs-border-light);
+  margin: 2.5em 0;
+}
+
+/* Code blocks */
+.docs-content pre {
+  background: var(--docs-code-bg);
+  border: 1px solid var(--docs-code-border);
+  border-radius: 6px;
+  padding: 0.75em 4em 0.75em 1em;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-size: 0.875em;
+  line-height: 1.6;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  margin-bottom: 1.5em;
+}
+
+.docs-content code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.875em;
+}
+
+.docs-content :not(pre) > code {
+  background: var(--docs-inline-code-bg);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+}
+
+/* Tables */
+.docs-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  font-size: 0.9em;
+}
+
+.docs-content th {
+  text-align: left;
+  border-bottom: 1px solid var(--docs-border);
+  padding: 0.75em 1em;
+  font-weight: 500;
+  color: var(--docs-heading);
+}
+
+.docs-content td {
+  border-bottom: 1px solid var(--docs-border-faint);
+  padding: 0.75em 1em;
+}
+
+/* Lists */
+.docs-content ul {
+  padding-left: 1.5em;
+  margin-bottom: 1.5em;
+  list-style-type: disc;
+}
+
+.docs-content ol {
+  padding-left: 1.5em;
+  margin-bottom: 1.5em;
+  list-style-type: decimal;
+}
+
+.docs-content li {
+  margin-bottom: 0.5em;
+}
+
+.docs-content li > ul,
+.docs-content li > ol {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+}
+
+/* Images */
+.docs-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 1.5em 0;
+}
+
+/* Videos and iframes */
+.docs-content iframe {
+  max-width: 100%;
+  border-radius: 6px;
+  margin: 1.5em 0;
+}
+
+.docs-content video {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 1.5em 0;
+  background: var(--docs-video-bg);
+}
+
+/* Syntax highlighting — light GitHub-style theme */
+.docs-content .token.comment,
+.docs-content .token.prolog,
+.docs-content .token.doctype,
+.docs-content .token.cdata {
+  color: #6a737d;
+}
+
+.docs-content .token.punctuation {
+  color: #24292e;
+}
+
+.docs-content .token.property,
+.docs-content .token.tag,
+.docs-content .token.constant,
+.docs-content .token.symbol,
+.docs-content .token.deleted {
+  color: #22863a;
+}
+
+.docs-content .token.boolean,
+.docs-content .token.number {
+  color: #005cc5;
+}
+
+.docs-content .token.selector,
+.docs-content .token.attr-name,
+.docs-content .token.string,
+.docs-content .token.char,
+.docs-content .token.builtin,
+.docs-content .token.inserted {
+  color: #032f62;
+}
+
+.docs-content .token.operator,
+.docs-content .token.entity,
+.docs-content .token.url,
+.docs-content .language-css .token.string,
+.docs-content .style .token.string {
+  color: #d73a49;
+}
+
+.docs-content .token.atrule,
+.docs-content .token.attr-value,
+.docs-content .token.keyword {
+  color: #d73a49;
+}
+
+.docs-content .token.function,
+.docs-content .token.class-name {
+  color: #6f42c1;
+}
+
+.docs-content .token.regex,
+.docs-content .token.important,
+.docs-content .token.variable {
+  color: #e36209;
+}
+
+.docs-content .token.key {
+  color: #005cc5;
+}
+
+/* Syntax highlighting — dark GitHub-style theme */
+.dark .docs-content .token.comment,
+.dark .docs-content .token.prolog,
+.dark .docs-content .token.doctype,
+.dark .docs-content .token.cdata {
+  color: #8b949e;
+}
+
+.dark .docs-content .token.punctuation {
+  color: #c9d1d9;
+}
+
+.dark .docs-content .token.property,
+.dark .docs-content .token.tag,
+.dark .docs-content .token.constant,
+.dark .docs-content .token.symbol,
+.dark .docs-content .token.deleted {
+  color: #7ee787;
+}
+
+.dark .docs-content .token.boolean,
+.dark .docs-content .token.number {
+  color: #79c0ff;
+}
+
+.dark .docs-content .token.selector,
+.dark .docs-content .token.attr-name,
+.dark .docs-content .token.string,
+.dark .docs-content .token.char,
+.dark .docs-content .token.builtin,
+.dark .docs-content .token.inserted {
+  color: #a5d6ff;
+}
+
+.dark .docs-content .token.operator,
+.dark .docs-content .token.entity,
+.dark .docs-content .token.url,
+.dark .docs-content .language-css .token.string,
+.dark .docs-content .style .token.string {
+  color: #ff7b72;
+}
+
+.dark .docs-content .token.atrule,
+.dark .docs-content .token.attr-value,
+.dark .docs-content .token.keyword {
+  color: #ff7b72;
+}
+
+.dark .docs-content .token.function,
+.dark .docs-content .token.class-name {
+  color: #d2a8ff;
+}
+
+.dark .docs-content .token.regex,
+.dark .docs-content .token.important,
+.dark .docs-content .token.variable {
+  color: #ffa657;
+}
+
+.dark .docs-content .token.key {
+  color: #79c0ff;
+}
+
+/* Heading anchors from rehype-autolink-headings (behavior: wrap) */
+.docs-content h2 > a.heading-anchor,
+.docs-content h3 > a.heading-anchor,
+.docs-content h4 > a.heading-anchor {
+  color: inherit;
+  text-decoration: none !important;
+}
+
+.docs-content h2 > a.heading-anchor:hover,
+.docs-content h3 > a.heading-anchor:hover,
+.docs-content h4 > a.heading-anchor:hover {
+  text-decoration: none !important;
+}

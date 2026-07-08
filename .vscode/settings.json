@@ -1,0 +1,59 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/server/.venv/bin/python3",
+  "rust-analyzer.linkedProjects": ["./server/Cargo.toml"],
+  "python.analysis.extraPaths": [],
+  "python.autoComplete.extraPaths": [],
+  "python.testing.pytestArgs": ["server"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.profiles.linux": {
+    "bash": {
+      "path": "bash",
+      "args": ["-l"]
+    }
+  },
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "search.exclude": {
+    "**/package-lock.json": true,
+    "binary/bin/**": true,
+    "binary/build/**": true,
+    "binary/out/**": true,
+    "binary/tmp/**": true,
+    "core/dist/**": true,
+    "core/edit/lazy/test-examples/**": true,
+    "core/llm/llamaTokenizer.js": true,
+    "core/llm/llamaTokenizer.mjs": true,
+    "core/vendor/**": true,
+    "docs/.docusaurus/**": true,
+    "extensions/intellij/build/**": true,
+    "extensions/vscode/bin/**": true,
+    "extensions/vscode/build/**": true,
+    "extensions/vscode/gui/**": true,
+    "extensions/vscode/models/all-MiniLM-L6-v2/**": true,
+    "extensions/vscode/out/**": true,
+    "extensions/vscode/tag-qry/**": true,
+    "extensions/vscode/textmate-syntaxes/**": true,
+    "extensions/vscode/tree-sitter/**": true,
+    "gui/dist/**": true,
+    "extensions/vscode/e2e/.test-extensions": true,
+    "extensions/vscode/e2e/_output": true,
+    "extensions/vscode/e2e/storage": true,
+    "extensions/vscode/e2e/vsix": true,
+    "extensions/.continue-debug": true,
+    "extensions/cli/dist/**": true,
+    "packages/config-yaml/dist/**": true
+    // "sync/**": true
+  },
+  "editor.formatOnSave": true,
+  "eslint.workingDirectories": ["./core"],
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "conventionalCommits.showNewVersionNotes": false,
+  "conventionalCommits.promptBody": false,
+  "conventionalCommits.promptFooter": false,
+  "conventionalCommits.promptScopes": true,
+  "conventionalCommits.scopes": ["reg"]
+}

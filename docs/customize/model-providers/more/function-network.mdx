@@ -1,0 +1,123 @@
+---
+title: "Function Network"
+description: "Configure Function Network with Continue to access private and affordable AI models, including Llama 3.1, Qwen2.5-Coder, and various embedding models for a user-owned AI experience"
+---
+
+> Private, Affordable User-Owned AI
+
+<Info>
+
+To get an API key, login to the Function Network Developer Platform. If you don't have an account, you can create one [here](https://www.function.network/join-waitlist).
+
+</Info>
+
+## Chat Model
+
+Function Network supports a number of models for chat. We recommend using LLama 3.1 70b or Qwen2.5-Coder-32B-Instruct.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Llama 3.1 70b
+      provider: function-network
+      model: meta/llama-3.1-70b-instruct
+      apiKey: <YOUR_FUNCTION_NETWORK_API_KEY>
+      roles:
+        - chat
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Llama 3.1 70b",
+        "provider": "function-network",
+        "model": "meta/llama-3.1-70b-instruct",
+        "apiKey": "<YOUR_FUNCTION_NETWORK_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+[Click here](https://docs.function.network/models-supported/chat-and-code-completion) to see a list of chat model providers.
+
+## Autocomplete Model
+
+Function Network supports a number of models for autocomplete. We recommend using Llama 3.1 8b or Qwen2.5-Coder-1.5B.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Deepseek Coder 6.7b
+      provider: function-network
+      model: thebloke/deepseek-coder-6.7b-base-awq
+      apiKey: <YOUR_FUNCTION_NETWORK_API_KEY>
+      roles:
+        - autocomplete
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": {
+      "title": "Deepseek Coder 6.7b",
+      "provider": "function-network",
+      "model": "thebloke/deepseek-coder-6.7b-base-awq",
+      "apiKey": "<YOUR_FUNCTION_NETWORK_API_KEY>"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Embeddings Model
+
+Function Network supports a number of models for embeddings. We recommend using baai/bge-base-en-v1.5.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: BGE Base En
+      provider: function-network
+      model: baai/bge-base-en-v1.5
+      apiKey: <YOUR_FUNCTION_NETWORK_API_KEY>
+      roles:
+        - embed
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "function-network",
+      "model": "baai/bge-base-en-v1.5",
+      "apiKey": "<YOUR_FUNCTION_NETWORK_API_KEY>"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+[Click here](https://docs.function.network/models-supported/embeddings) to see a list of embeddings model providers.
+
+## Reranking Model
+
+Function Network currently does not offer any reranking models.

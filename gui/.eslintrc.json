@@ -1,0 +1,30 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "eslint-plugin-react", "no-barrel-files"],
+  "parserOptions": {
+    "project": ["tsconfig.json", "tsconfig.node.json"]
+  },
+  "extends": [
+    // "eslint:recommended",
+    // "plugin:@typescript-eslint/recommended",
+    // "plugin:@typescript-eslint/recommended-requiring-type-checking"
+    // "plugin:react/recommended"
+  ],
+  "rules": {
+    "@typescript-eslint/naming-convention": "off",
+    "@typescript-eslint/no-floating-promises": "warn",
+    "no-barrel-files/no-barrel-files": "error"
+  },
+  "overrides": [
+    {
+      "files": ["src/**/*.{js,ts,jsx,tsx}"]
+    }
+  ],
+  "ignorePatterns": ["dist/**/*"],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  }
+}

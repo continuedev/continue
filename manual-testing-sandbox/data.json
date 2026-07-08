@@ -1,0 +1,83 @@
+{
+  "active": true,
+  "department": "Product Development",
+  "location": {
+    "country": "USA",
+    "state": "California",
+    "city": "San Francisco",
+    "coordinates": {
+      "latitude": 37.7749,
+      "longitude": -122.4194
+    }
+  },
+  "employees": [
+    {
+      "name": "John Doe",
+      "age": 30,
+      "position": "Developer",
+      "skills": ["JavaScript", "React", "Node.js"],
+      "remote": false,
+      "salary": {
+        "currency": "USD",
+        "amount": 95000
+      }
+    },
+    {
+      "name": "Jane Smith",
+      "age": 25,
+      "position": "Designer",
+      "skills": ["Photoshop", "Illustrator"],
+      "remote": true,
+      "salary": {
+        "currency": "USD",
+        "amount": 70000
+      }
+    },
+    {
+      "name": "Emily Johnson",
+      "age": 35,
+      "position": "Manager",
+      "teamSize": 8,
+      "remote": true,
+      "skills": ["Leadership", "Project Management"],
+      "salary": {
+        "currency": "USD",
+        "amount": 120000
+      },
+      "contact": {
+        "email": "emily.johnson@company.com",
+        "phone": "+1-202-555-0163"
+      }
+    }
+  ],
+  "projects": [
+    {
+      "name": "Project Alpha",
+      "deadline": "2023-12-31",
+      "budget": 150000,
+      "teamMembers": ["John Doe", "Jane Smith"]
+    },
+    {
+      "name": "Project Beta",
+      "deadline": "2024-06-30",
+      "budget": 200000,
+      "teamMembers": ["Emily Johnson"]
+    }
+  ],
+  "companyStats": {
+    "founded": 2010,
+    "annualRevenue": 2500000,
+    "clients": [
+      {
+        "name": "Client A",
+        "industry": "Technology",
+        "engagements": ["Consulting", "Development"]
+      },
+      {
+        "name": "Client B",
+        "industry": "Finance",
+        "engagements": ["Design"]
+      }
+    ]
+  }
+}

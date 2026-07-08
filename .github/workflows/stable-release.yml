@@ -1,0 +1,134 @@
+name: Stable Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      stable_version:
+        description: "Version for stable release (e.g., 1.2.3)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write  # Required for OIDC
+
+jobs:
+  stable-release:
+    name: Stable Release
+    runs-on: ubuntu-latest
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
+
+      - name: Setup core component
+        uses: ./.github/actions/setup-component
+        with:
+          component: core
+          include-root: true
+
+      - name: Build core
+        run: |
+          cd core
+          npm run build
+
+      - name: Install CLI dependencies
+        working-directory: extensions/cli
+        run: npm ci
+
+      - name: Update version
+        working-directory: extensions/cli
+        run: npm version ${{ inputs.stable_version }} --no-git-tag-version
+
+      - name: Build
+        working-directory: extensions/cli
+        run: npm run build
+
+      - name: Run tests
+        working-directory: extensions/cli
+        run: npm test
+
+      - name: Setup Node.js for OIDC publish
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Publish to npm
+        working-directory: extensions/cli
+        run: |
+          unset NODE_AUTH_TOKEN
+          npm publish --tag latest --provenance
+          echo "Published version: ${{ inputs.stable_version }}"
+
+      - name: Create release on GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag "v${{ inputs.stable_version }}"
+          git push origin "v${{ inputs.stable_version }}"
+
+          gh release create "v${{ inputs.stable_version }}" \
+            --title "CLI Release v${{ inputs.stable_version }}" \
+            --notes "Release v${{ inputs.stable_version }} built and published from the main branch." \
+            --latest
+
+      - name: Publish Blueprints to Runloop
+        env:
+          RUNLOOP_API_KEY: ${{ secrets.RUNLOOP_API_KEY }}
+        run: |
+          publish_blueprint() {
+            local name=$1
+            local template=$2
+
+            echo "Publishing blueprint '$name' to Runloop API for version ${{ inputs.stable_version }}"
+
+            # Use blueprint configuration from template file
+            cp ".github/workflows/$template" blueprint.json
+
+            # Publish to Runloop API
+            response=$(curl -X POST "https://api.runloop.ai/v1/blueprints" \
+              -H "Authorization: Bearer $RUNLOOP_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d @blueprint.json \
+              -w "%{http_code}" \
+              -s)
+
+            http_code=$(echo "$response" | tail -c 4)
+            response_body=$(echo "$response" | head -c -4)
+
+            if [[ "$http_code" == "200" ]] || [[ "$http_code" == "201" ]]; then
+              echo "✅ Successfully published blueprint '$name' to Runloop API"
+              echo "Response: $response_body"
+
+              blueprint_id=$(echo "$response_body" | jq -r '.id // empty')
+              if [[ -n "$blueprint_id" ]]; then
+                echo "Blueprint ID: $blueprint_id"
+              fi
+            else
+              echo "❌ Failed to publish blueprint '$name' to Runloop API"
+              echo "HTTP Code: $http_code"
+              echo "Response: $response_body"
+              exit 1
+            fi
+          }
+
+          # Publish both cn and cn-staging blueprints
+          publish_blueprint "cn" "runloop-blueprint-template.json"
+          publish_blueprint "cn-staging" "runloop-blueprint-staging-template.json"

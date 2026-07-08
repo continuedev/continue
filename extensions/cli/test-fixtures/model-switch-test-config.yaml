@@ -1,0 +1,18 @@
+name: Model Switch Test Config
+version: 1.0.0
+
+models:
+  - name: GPT-4
+    provider: openai
+    model: gpt-4
+    apiKey: test-api-key-1
+
+  - name: GPT-3.5
+    provider: openai
+    model: gpt-3.5-turbo
+    apiKey: test-api-key-2
+
+  - name: Claude 3
+    provider: anthropic
+    model: claude-3-opus
+    apiKey: test-api-key-3

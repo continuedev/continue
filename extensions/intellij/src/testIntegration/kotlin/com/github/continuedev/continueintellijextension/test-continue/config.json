@@ -1,0 +1,40 @@
+{
+  "ui": {
+    "displayRawMarkdown": false
+  },
+  "models": [
+    {
+      "title": "TEST LLM",
+      "provider": "test",
+      "model": "this field is not used"
+    },
+    {
+      "title": "Mock",
+      "provider": "mock",
+      "model": "this field is not used"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "TEST LLM",
+    "provider": "test",
+    "model": "this field is not used"
+  },
+  "tabAutocompleteOptions": {
+    "useCache": false
+  },
+  "contextProviders": [
+    {
+      "name": "docs"
+    },
+    {
+      "name": "diff"
+    },
+    {
+      "name": "url"
+    },
+    {
+      "name": "folder"
+    }
+  ],
+  "docs": []
+}

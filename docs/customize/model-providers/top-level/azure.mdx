@@ -1,0 +1,92 @@
+---
+title: "How to Configure Azure AI Foundry with Continue"
+slug: ../azure
+sidebarTitle: "Azure AI Foundry"
+---
+
+<Info>
+  Create an Azure AI Foundry resource in the [Azure Portal](https://portal.azure.com)
+</Info>
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <Model_NAME>
+      provider: azure
+      model: <MODEL_ID>
+      apiBase: <YOUR_DEPLOYMENT_BASE>
+      apiKey: <YOUR_AZURE_API_KEY> # If you use subscription key, try using Azure gateway to rename it apiKey
+      env:
+        deployment: <YOUR_DEPLOYMENT_NAME>
+        apiType: azure-foundry # Or "azure-openai" if using OpenAI models
+        apiVersion: 2023-07-01-preview # Azure API version
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [{
+        "title": "<MODEL_NAME>",
+        "provider": "azure",
+        "model": "<MODEL_ID>",
+        "apiBase": "<YOUR_DEPLOYMENT_BASE>",
+        "deployment": "<YOUR_DEPLOYMENT_NAME>",
+        "apiKey": "<YOUR_AZURE_API_KEY>", // If you use subscription key, try using Azure gateway to rename it apiKey
+        "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
+    }]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Azure OpenAI Service (Alternative)
+
+<Info>
+  Get access to the Azure OpenAI service [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service)
+</Info>
+
+Azure OpenAI Service requires a handful of additional parameters to be configured, such as a deployment name and API base URL.
+
+To find this information in _Azure AI Foundry_, first select the model that you would like to connect. Then visit _Endpoint_ > _Target URI_.
+
+For example, a Target URI of `https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview` would map to the following:
+
+<Tabs>
+	<Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: <MODEL_NAME>
+        model: <MODEL_ID>
+        provider: azure
+        apiBase: https://just-an-example.openai.azure.com
+        apiKey: <YOUR_AZURE_API_KEY>
+        env:
+          apiVersion: <API_VERSION>
+          deployment: <MODEL_DEPLOYMENT>
+          apiType: azure-openai
+    ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+    ```json title="config.json"
+    {
+      "title": "<MODEL_NAME>",
+      "model": "<MODEL_ID>",
+      "provider": "azure",
+      "apiBase": "https://just-an-example.openai.azure.com",
+      "deployment": "<MODEL_DEPLOYMENT>",
+      "apiVersion": "<API_VERSION>",
+      "apiKey": "<YOUR_AZURE_API_KEY>",
+      "apiType": "azure-openai"
+    }
+    ```
+  </Tab>
+</Tabs>

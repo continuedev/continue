@@ -1,0 +1,525 @@
+name: "Continue PR Review"
+description: "Automated code review for pull requests using Continue CLI"
+author: "Continue Dev, Inc."
+
+inputs:
+  continue-api-key:
+    description: "API key for Continue service"
+    required: true
+  continue-org:
+    description: "Organization for Continue config"
+    required: true
+  continue-agent:
+    description: 'Agent path to use (e.g., "myorg/review-bot")'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Check Authorization
+      id: auth-check
+      uses: actions/github-script@v7
+      with:
+        script: |
+          let shouldRun = false;
+          let skipReason = '';
+
+          if (context.eventName === 'pull_request') {
+            // Check if PR is a draft
+            if (context.payload.pull_request.draft) {
+              skipReason = 'PR is a draft';
+            } else {
+              // Check if user has write permission (includes admin, maintain, write)
+              const prAuthor = context.payload.pull_request.user.login;
+              try {
+                const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  username: prAuthor
+                });
+                
+                const allowedPermissions = ['admin', 'maintain', 'write'];
+                if (allowedPermissions.includes(permission.permission)) {
+                  shouldRun = true;
+                  console.log(`PR author @${prAuthor} has ${permission.permission} permission`);
+                } else {
+                  skipReason = `PR author @${prAuthor} does not have write permission (has: ${permission.permission})`;
+                }
+              } catch (error) {
+                // If API call fails, fall back to checking author_association
+                const association = context.payload.pull_request.author_association;
+                const allowedAssociations = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+                if (allowedAssociations.includes(association)) {
+                  shouldRun = true;
+                  console.log(`PR author @${prAuthor} association: ${association}`);
+                } else {
+                  skipReason = `PR author @${prAuthor} is not a team member (association: ${association})`;
+                }
+              }
+            }
+          } else if (context.eventName === 'issue_comment') {
+            // Check if it's a PR comment with the trigger phrase
+            const hasTrigger = context.payload.comment.body.includes('@continue-review');
+            if (context.payload.issue.pull_request && hasTrigger) {
+              const commenter = context.payload.comment.user.login;
+              try {
+                const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  username: commenter
+                });
+                
+                const allowedPermissions = ['admin', 'maintain', 'write'];
+                if (allowedPermissions.includes(permission.permission)) {
+                  shouldRun = true;
+                  console.log(`Commenter @${commenter} has ${permission.permission} permission`);
+                } else {
+                  skipReason = `Commenter @${commenter} does not have write permission (has: ${permission.permission})`;
+                }
+              } catch (error) {
+                // If API call fails, fall back to checking author_association
+                const association = context.payload.comment.author_association;
+                const allowedAssociations = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+                if (allowedAssociations.includes(association)) {
+                  shouldRun = true;
+                  console.log(`Commenter @${commenter} association: ${association}`);
+                } else {
+                  skipReason = `Commenter @${commenter} is not a team member (association: ${association})`;
+                }
+              }
+            } else {
+              skipReason = 'Comment does not contain @continue-review trigger, or is not on a PR';
+            }
+          } else {
+            skipReason = `Unsupported event type: ${context.eventName}`;
+          }
+
+          if (skipReason) {
+            core.notice(`Skipping review - ${skipReason}`);
+          }
+
+          core.exportVariable('SHOULD_RUN', shouldRun.toString());
+          return shouldRun;
+
+    - name: Setup Node.js
+      if: env.SHOULD_RUN == 'true'
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install Continue CLI
+      if: env.SHOULD_RUN == 'true'
+      shell: bash
+      run: npm install -g @continuedev/cli@latest
+
+    - name: Setup Action Scripts
+      if: env.SHOULD_RUN == 'true'
+      shell: bash
+      run: |
+        # Create directory for scripts
+        mkdir -p .continue-action-scripts
+        
+        # Check if we're running in the Continue repo itself (scripts exist locally)
+        if [ -f "actions/general-review/scripts/buildPrompt.js" ] && [ -f "actions/general-review/scripts/writeMarkdown.js" ]; then
+          echo "Running in Continue repo - using local scripts from current checkout"
+          cp actions/general-review/scripts/buildPrompt.js .continue-action-scripts/buildPrompt.js
+          cp actions/general-review/scripts/writeMarkdown.js .continue-action-scripts/writeMarkdown.js
+        else
+          echo "Running in external repo - downloading scripts from Continue repo"
+          
+          # Download scripts from Continue repo
+          echo "Downloading buildPrompt.js..."
+          curl -sSL https://raw.githubusercontent.com/continuedev/continue/main/actions/general-review/scripts/buildPrompt.js \
+            -o .continue-action-scripts/buildPrompt.js
+          
+          echo "Downloading writeMarkdown.js..."
+          curl -sSL https://raw.githubusercontent.com/continuedev/continue/main/actions/general-review/scripts/writeMarkdown.js \
+            -o .continue-action-scripts/writeMarkdown.js
+        fi
+        
+        # Verify scripts exist
+        if [ ! -f .continue-action-scripts/buildPrompt.js ]; then
+          echo "Error: buildPrompt.js not found"
+          exit 1
+        fi
+        
+        if [ ! -f .continue-action-scripts/writeMarkdown.js ]; then
+          echo "Error: writeMarkdown.js not found"
+          exit 1
+        fi
+        
+        echo "Scripts ready:"
+        ls -lh .continue-action-scripts/
+
+    - name: Post Initial Comment
+      if: env.SHOULD_RUN == 'true'
+      id: initial-comment
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const marker = '<!-- continue-agent-review -->';
+
+          // Get PR number based on event type
+          let prNumber;
+          if (context.eventName === 'pull_request') {
+            prNumber = context.payload.pull_request.number;
+          } else {
+            // For issue_comment event
+            prNumber = context.payload.issue.number;
+          }
+
+          // Check for existing comment
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+            per_page: 100
+          });
+
+          // Find existing Continue review comment
+          const existingComment = comments
+            .filter(c => c.body && c.body.includes(marker))
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+
+          // Get workflow run URL
+          const workflowRunUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+          // Create initial "review in progress" message
+          let initialMessage = `${marker}\n**🔄 Review In Progress**\n\n`;
+
+          if (context.eventName === 'issue_comment') {
+            initialMessage = `${marker}\n**🔄 Review In Progress**\n\n*Triggered by @${context.payload.comment.user.login}'s request*\n\n`;
+          }
+
+          initialMessage += `Continue AI is analyzing the code changes...\n\n`;
+          initialMessage += `📊 **Review Scope:**\n`;
+          initialMessage += `- Repository: ${context.repo.owner}/${context.repo.repo}\n`;
+          initialMessage += `- PR #${prNumber}\n\n`;
+          initialMessage += `⏱️ This typically takes 1-2 minutes.\n\n`;
+          initialMessage += `[View live progress →](${workflowRunUrl})\n\n`;
+          initialMessage += `---\n<!-- ${new Date().toISOString()} | Powered by Continue (https://continue.dev) -->`;
+
+          if (existingComment) {
+            // Check if comment is less than 1 hour old
+            const commentAge = Date.now() - new Date(existingComment.created_at).getTime();
+            const oneHour = 60 * 60 * 1000;
+
+            if (commentAge < oneHour) {
+              // Update existing comment if less than 1 hour old
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: initialMessage
+              });
+              console.log(`Updated existing comment ${existingComment.id} to show review in progress`);
+              core.setOutput('comment_id', existingComment.id);
+            } else {
+              // Create new comment if older than 1 hour (preserve history)
+              const { data: comment } = await github.rest.issues.createComment({
+                issue_number: prNumber,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: initialMessage
+              });
+              console.log(`Created new comment ${comment.id} showing review in progress`);
+              core.setOutput('comment_id', comment.id);
+            }
+          } else {
+            // Create new comment
+            const { data: comment } = await github.rest.issues.createComment({
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: initialMessage
+            });
+            console.log(`Created new comment ${comment.id} on PR #${prNumber}`);
+            core.setOutput('comment_id', comment.id);
+          }
+
+    - name: Build PR Review Prompt
+      if: env.SHOULD_RUN == 'true'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        # Get PR number based on event type
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          PR_NUMBER="${{ github.event.number }}"
+        else
+          # For issue_comment event on a PR
+          PR_NUMBER="${{ github.event.issue.number }}"
+        fi
+
+        # Gather PR context and build prompt without heredocs
+        gh pr diff "$PR_NUMBER" > pr_diff.txt
+        gh pr view "$PR_NUMBER" --json title,author,body,files > pr_data.json
+        node .continue-action-scripts/buildPrompt.js "$PR_NUMBER"
+        rm -f pr_data.json
+
+    - name: Run Continue CLI Review
+      if: env.SHOULD_RUN == 'true'
+      shell: bash
+      env:
+        CONTINUE_API_KEY: ${{ inputs.continue-api-key }}
+        CONTINUE_ORG: ${{ inputs.continue-org }}
+        CONTINUE_AGENT: ${{ inputs.continue-agent }}
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        echo "Running Continue CLI with prompt:"
+        echo "=================================="
+        head -n 100 review_prompt.txt
+        echo "... [truncated] ..."
+        echo "=================================="
+        echo ""
+
+        # Validate API key
+        if [ -z "$CONTINUE_API_KEY" ]; then
+          echo "Warning: CONTINUE_API_KEY environment variable is not set"
+          # Create fallback review and continue
+          node .continue-action-scripts/writeMarkdown.js code_review.md missing_api_key
+          echo "SKIP_CLI=true" >> $GITHUB_ENV
+        else
+          echo "SKIP_CLI=false" >> $GITHUB_ENV
+        fi
+
+        # Validate inputs to prevent command injection
+        if [[ ! "$CONTINUE_ORG" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+          echo "Error: Invalid organization name. Must contain only alphanumeric characters, hyphens, and underscores."
+          exit 1
+        fi
+
+        if [[ ! "$CONTINUE_AGENT" =~ ^[a-zA-Z0-9_/-]+$ ]]; then
+          echo "Error: Invalid config path. Must contain only alphanumeric characters, hyphens, underscores, and forward slashes."
+          exit 1
+        fi
+
+        # Test Continue CLI availability
+        if [ "$SKIP_CLI" != "true" ]; then
+          echo "Testing Continue CLI..."
+          if ! which cn > /dev/null 2>&1; then
+            echo "Warning: Continue CLI not found or not working"
+            node .continue-action-scripts/writeMarkdown.js code_review.md cli_install_failed
+            echo "SKIP_CLI=true" >> $GITHUB_ENV
+          else
+            echo "Continue CLI found at: $(which cn)"
+            echo "Continue CLI version: $(cn --version 2>/dev/null || echo 'version check failed')"
+          fi
+        fi
+
+        # Run the CLI with validated config and error handling
+        if [ "$SKIP_CLI" != "true" ]; then
+          echo "Executing Continue CLI with config: $CONTINUE_ORG/$CONTINUE_AGENT"
+          
+          # Write prompt to temp file for headless mode
+          PROMPT_FILE="/tmp/continue-review-$RANDOM.txt"
+          cp review_prompt.txt "$PROMPT_FILE"
+          echo "Prompt file: $PROMPT_FILE"
+          echo "Prompt length: $(wc -c < "$PROMPT_FILE") characters"
+          
+          # Use timeout to prevent hanging (360 seconds = 6 minutes)
+          echo "Executing command: cn --agent $CONTINUE_ORG/$CONTINUE_AGENT -p @$PROMPT_FILE --allow Bash"
+          
+          if timeout 360 cn --agent "$CONTINUE_ORG/$CONTINUE_AGENT" -p "@$PROMPT_FILE" --allow Bash > code_review_raw.md 2>cli_error.log; then
+            echo "Continue CLI completed successfully"
+            echo "Raw output length: $(wc -c < code_review_raw.md) characters"
+            
+            # Clean up ANSI codes if any
+            sed 's/\x1b\[[0-9;]*m//g' code_review_raw.md > code_review.md
+            
+            echo "Cleaned output length: $(wc -c < code_review.md) characters"
+            echo "First 500 chars of output:"
+            head -c 500 code_review.md
+            echo ""
+            
+            # Check if output is empty
+            if [ ! -s code_review.md ]; then
+              echo "Warning: Continue CLI returned empty output"
+              node .continue-action-scripts/writeMarkdown.js code_review.md empty_output
+            fi
+          else
+            echo "Error: Continue CLI command failed with exit code $?"
+            echo "CLI error log:"
+            cat cli_error.log
+            
+            # Check for specific error patterns
+            if grep -q "not found\|ENOENT" cli_error.log 2>/dev/null; then
+              node .continue-action-scripts/writeMarkdown.js code_review.md cli_not_found
+            elif grep -q "config\|assistant" cli_error.log 2>/dev/null; then
+              node .continue-action-scripts/writeMarkdown.js code_review.md config_error
+            elif grep -q "api\|auth" cli_error.log 2>/dev/null; then
+              node .continue-action-scripts/writeMarkdown.js code_review.md auth_error
+            else
+              node .continue-action-scripts/writeMarkdown.js code_review.md generic_failure
+            fi
+          fi
+          
+          # Clean up temp file
+          rm -f "$PROMPT_FILE"
+        else
+          echo "Review generation successfully completed"
+        fi
+
+    - name: Upload Review Results
+      if: env.SHOULD_RUN == 'true' && always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: code-review-results
+        path: |
+          code_review.md
+          review_prompt.txt
+          pr_diff.txt
+        retention-days: 30
+
+    - name: Update Comment with Review
+      if: env.SHOULD_RUN == 'true' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+
+          try {
+            let reviewContent = '';
+
+            if (fs.existsSync('code_review.md') && fs.statSync('code_review.md').size > 0) {
+              reviewContent = fs.readFileSync('code_review.md', 'utf8');
+            } else {
+              // Build direct link to workflow logs
+              const workflowRunUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+              reviewContent = `⚠️ AI review completed but no review output was generated.\n\n**Likely cause:** Expired CONTINUE_API_KEY or missing continuedev/review-bot assistant\n\n[📋 View workflow logs](${workflowRunUrl}) for details.`;
+            }
+
+            // Get PR number based on event type
+            let prNumber;
+            if (context.eventName === 'pull_request') {
+              prNumber = context.payload.pull_request.number;
+            } else {
+              // For issue_comment event
+              prNumber = context.payload.issue.number;
+            }
+
+            // Add a header if triggered by comment
+            if (context.eventName === 'issue_comment') {
+              reviewContent = `*Triggered by @${context.payload.comment.user.login}'s request*\n\n${reviewContent}`;
+            }
+
+            // Add footer with timestamp and branding
+            const timestamp = new Date().toISOString();
+            reviewContent += `\n\n---\n<!-- ${timestamp} | Powered by Continue (https://continue.dev) -->`;
+
+            // Look for existing review comment to update (sticky comment)
+            const marker = '<!-- continue-agent-review -->';
+
+            // Try to get comment_id from the initial comment step
+            const initialCommentId = '${{ steps.initial-comment.outputs.comment_id }}';
+
+            if (initialCommentId && initialCommentId !== '') {
+              // We have the comment ID from the initial step, use it directly
+              reviewContent = `${marker}\n**✅ Review Complete**\n\n${reviewContent}`;
+
+              try {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: parseInt(initialCommentId),
+                  body: reviewContent
+                });
+                console.log(`Updated comment ${initialCommentId} with review results`);
+              } catch (updateError) {
+                console.log(`Failed to update comment ${initialCommentId}, will search for it instead:`, updateError.message);
+
+                // Fallback: search for the comment
+                const { data: comments } = await github.rest.issues.listComments({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  per_page: 100
+                });
+
+                // Find existing Continue review comment
+                const existingComment = comments
+                  .filter(c => c.body && c.body.includes(marker))
+                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+
+                if (existingComment) {
+                  await github.rest.issues.updateComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    comment_id: existingComment.id,
+                    body: reviewContent
+                  });
+                  console.log(`Updated existing comment ${existingComment.id} via search`);
+                } else {
+                  // Create new comment as last resort
+                  await github.rest.issues.createComment({
+                    issue_number: prNumber,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    body: reviewContent
+                  });
+                  console.log(`Created new comment on PR #${prNumber} as fallback`);
+                }
+              }
+            } else {
+              // No initial comment ID, search for existing comment
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                per_page: 100
+              });
+
+              // Find existing Continue review comment
+              const existingComment = comments
+                .filter(c => c.body && c.body.includes(marker))
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+
+              // Add marker and review status
+              reviewContent = `${marker}\n**✅ Review Complete**\n\n${reviewContent}`;
+
+              if (existingComment) {
+                // Check if comment is less than 1 hour old
+                const commentAge = Date.now() - new Date(existingComment.created_at).getTime();
+                const oneHour = 60 * 60 * 1000;
+
+                if (commentAge < oneHour) {
+                  // Update existing comment if less than 1 hour old
+                  await github.rest.issues.updateComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    comment_id: existingComment.id,
+                    body: reviewContent
+                  });
+                  console.log(`Updated existing comment ${existingComment.id} (${Math.round(commentAge / 1000 / 60)} minutes old)`);
+                } else {
+                  // Create new comment if older than 1 hour (preserve history)
+                  await github.rest.issues.createComment({
+                    issue_number: prNumber,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    body: reviewContent
+                  });
+                  console.log(`Created new comment (existing comment was ${Math.round(commentAge / 1000 / 60)} minutes old)`);
+                }
+              } else {
+                // Create new comment
+                await github.rest.issues.createComment({
+                  issue_number: prNumber,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: reviewContent
+                });
+                console.log(`Created new comment on PR #${prNumber}`);
+              }
+            }
+          } catch (error) {
+            console.log('Failed to post comment:', error.message);
+            console.log('Error details:', error);
+          }
+
+branding:
+  icon: "code"
+  color: "blue"

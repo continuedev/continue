@@ -1,0 +1,60 @@
+##### Prompt #####
+{
+  "active": true,
+  "department": "Product Development",
+  "location": {
+    "country": "USA",
+    "state": "California",
+    "city": "San BERNARDINO",
+    "coordinates": {
+      <FIM>
+    }
+  },
+  "employees": [
+    {
+      "name": "John Doe",
+      "age": 30,
+      "position": "Developer",
+      "skills": ["JavaScript", "React", "Node.js"],
+      "remote": false,
+      "salary": {
+        "currency": "USD",
+        "amount": 95000
+      }
+    },
+    {
+      "name": "Jane Smith",
+      "age": 25,
+      "position": "Designer",
+      "skills": ["Photoshop", "Illustrator"],
+      "remote": true,
+      "salary": {
+        "currency": "USD",
+        "amount": 70000
+      }
+    },
+    {
+      "name": "Emily Johnson",
+      "age": 35,
+      "position": "Manager",
+      "teamSize": 8,
+      "remote": true,
+      "skills": ["Leadership", "Project Management"],==========================================================================
+==========================================================================
+Completion:
+
+ "latitude": 34.10834,
+       "longitude": -117.28977
+    }
+  },
+  "employeeCount": 2,
+  "averageAge": 30,
+  "remoteFriendly": true,
+  "salaryRange": {
+    "min": 70000,
+    "max": 95000,
+    "currency": "USD"
+  },
+  "skills": {
+    "required": ["JavaScript", "React", "Node.js", "Leadership", "Project Management"],
+    "optional": ["Photoshop", "Illustrator"]

@@ -1,0 +1,114 @@
+---
+title: "Cohere"
+description: "Configure Cohere's AI models with Continue, including setup for Command A for chat, embed-v4.0 for embeddings, and rerank-v3.5 for reranking capabilities"
+---
+
+Before using Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.
+
+## Chat Model
+
+We recommend configuring **Command A** as your chat model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Command A 03-2025
+      provider: cohere
+      model: command-a-03-2025
+      apiKey: <YOUR_COHERE_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Command A 03-2025",
+        "provider": "cohere",
+        "model": "command-a-03-2025",
+        "apiKey": "<YOUR_COHERE_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+Cohere currently does not offer any autocomplete models.
+
+[Click here](../../model-roles/autocomplete) to see a list of autocomplete model providers.
+
+## Embeddings Model
+
+We recommend configuring **embed-v4.0** as your embeddings model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Cohere Embed v4.0
+      provider: cohere
+      model: embed-v4.0
+      apiKey: <YOUR_COHERE_API_KEY>
+      roles:
+        - embed
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "cohere",
+      "model": "embed-v4.0",
+      "apiKey": "<YOUR_COHERE_API_KEY>"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Reranking Model
+
+We recommend configuring **rerank-v3.5** as your reranking model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Cohere Rerank v3.5
+      provider: cohere
+      model: rerank-v3.5
+      apiKey: <YOUR_COHERE_API_KEY>
+      roles:
+        - rerank
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "reranker": {
+      "name": "cohere",
+      "params": {
+        "model": "rerank-v3.5",
+        "apiKey": "<YOUR_COHERE_API_KEY>"
+      }
+    }
+  }
+  ```
+  </Tab>
+</Tabs>

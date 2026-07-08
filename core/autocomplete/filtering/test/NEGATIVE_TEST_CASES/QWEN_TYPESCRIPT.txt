@@ -1,0 +1,128 @@
+##### Prompt #####
+    }`,
+  },
+  {
+    description: "Should autocomplete Vue computed property",
+    filename: "UserComponent.vue",
+    input: `<template>
+  <div>
+    <p>User Full Name: {{ fullName }}</p>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      firstName: 'John',
+      lastName: 'Doe',
+    };
+  },
+  computed: {
+    fullName<|fim|>
+  },
+};
+</script>
+`,
+    llmOutput: `() {
+      return this.firstName + ' ' + this.lastName;
+    }`,
+    expectedCompletion: `() {
+      return this.firstName + ' ' + this.lastName;
+    }`,
+  },
+  {
+    description: "Should autocomplete Vue method using props",
+    filename: "TodoItem.vue",
+    input: `<template>
+  <li>
+    <p>{{ title }}</p>
+    <button @click="completeTodo">Complete</button>
+  </li>
+</template>
+
+<script>
+export default {
+  props: {
+    title: String,
+    completed: Boolean,
+  },
+  methods: {
+    completeTodo() {
+      <|fim|> = true;
+    }
+  },
+};
+</script>
+`,
+    llmOutput: `this.completed`,
+    expectedCompletion: `this.completed`,
+  },
+  {
+    description: "Should autocomplete Svelte reactive statement",
+    filename: "Counter.svelte",
+    input: `
+<script>
+  let count = 0;
+
+  $: <|fim|>
+
+  function handleClick() {
+    count += 1;
+  }
+</script>
+
+<button on:click={handleClick}>
+  Clicked {count} times
+</button>
+`,
+    llmOutput: `doubledCount = count * 2`,
+    expectedCompletion: `doubledCount = count * 2`,
+  },
+
+  {
+    description: "Should autocomplete Svelte component inside HTML",
+    filename: "NestedComponent.svelte",
+    input: `
+<script>
+  import ChildComponent from './ChildComponent.svelte';
+</script>
+
+<main>
+  <h1>Hello Svelte</h1>
+  <ChildComponent <|fim|> />
+</main>
+`,
+    llmOutput: `name="World"`,
+    expectedCompletion: `name="World"`,
+  },
+
+  {
+    description: "Should handle autocomplete in Svelte each block",
+    filename: "List.svelte",
+    input: `
+<script>
+  let items = ["Apple", "Banana", "Cherry"];
+</script>
+
+<ul>
+  {#each items as item}
+    <li>{item}</li>
+  {/each<|fim|>
+</ul>
+`,
+    llmOutput: `}`,
+    expectedCompletion: `}`,
+  },
+  <FIM>
+];
+==========================================================================
+==========================================================================
+Completion:
+
+
+
+export default {
+  components: {
+    ChildComponent,
+  },

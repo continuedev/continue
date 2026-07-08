@@ -1,0 +1,38 @@
+---
+title: "OpenVINO Model Server"
+description: "Configure OpenVINO Model Server with Continue to use Intel-optimized models for CPU, iGPU, GPU and NPU via the OpenAI-compatible API, supporting code completion with models like CodeLlama and Qwen"
+---
+
+<Info>
+  [**OpenVINO™ Mode Server**](https://github.com/openvinotoolkit/model_server)
+  is scalable inference server for models optimized with OpenVINO™ for Intel
+  CPU, iGPU, GPU and NPU.
+</Info>
+
+OpenVINO™ Mode Server supports text generation via OpenAI Chat Completions API. Simply select OpenAI provider to point `apiBase` to running OVMS instance. Refer [to this demo](https://docs.openvino.ai/2025/model-server/ovms_demos_code_completion_vsc.html) on official OVMS documentation to easily set up your own local server.
+
+Example configuration once OVMS is launched:
+
+```yaml title="config.yaml"
+name: My Config
+version: 0.0.1
+schema: v1
+
+models:
+  - name: OVMS CodeLlama-7b-Instruct-hf
+    provider: openai
+    model: codellama/CodeLlama-7b-Instruct-hf
+    apiKey: unused
+    apiBase: http://localhost:5555/v3
+    roles:
+      - chat
+      - edit
+      - apply
+  - name: OVMS Qwen2.5-Coder-1.5B
+    provider: openai
+    model: Qwen/Qwen2.5-Coder-1.5B
+    apiKey: unused
+    apiBase: http://localhost:5555/v3
+    roles:
+      - autocomplete
+```

@@ -1,0 +1,67 @@
+---
+title: TokenLab
+slug: ../tokenlab
+---
+
+TokenLab provides a unified AI gateway for GPT, Claude, Gemini, Grok, DeepSeek, GLM, Qwen, Kimi, MiniMax, and other model families.
+
+<Info>
+  Get an API key from [TokenLab](https://tokenlab.sh/) and see API details in the [TokenLab docs](https://docs.tokenlab.sh/introduction).
+</Info>
+
+## Configuration
+
+Continue uses TokenLab's OpenAI-compatible chat endpoint. TokenLab also exposes native endpoints for Responses, Anthropic Messages, Gemini generateContent, embeddings, images, videos, audio, realtime, and translations for applications that call those APIs directly.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: GPT-5.5
+      provider: tokenlab
+      model: gpt-5.5
+      apiKey: <YOUR_TOKENLAB_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GPT-5.5",
+        "provider": "tokenlab",
+        "model": "gpt-5.5",
+        "apiKey": "<YOUR_TOKENLAB_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Example Models
+
+Common TokenLab model IDs include:
+
+- `gpt-5.5`
+- `gpt-5.4`
+- `gpt-5.4-mini`
+- `claude-sonnet-5`
+- `claude-opus-4-8`
+- `claude-fable-5`
+- `gemini-3.5-flash`
+- `gemini-3.1-flash-lite`
+- `grok-4.3`
+- `grok-4-fast`
+- `deepseek-v4-pro`
+- `deepseek-v4-flash`
+- `glm-5.2`
+- `qwen3.7-max`
+- `kimi-k2.7-code`
+- `minimax-m3`
+
+TokenLab's full model catalog is available from `https://api.tokenlab.sh/v1/models`.

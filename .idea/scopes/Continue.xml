@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Continue" pattern="file:*/&amp;&amp;!file:binary/bin//*&amp;&amp;!file:binary/build//*&amp;&amp;!file:binary/out//*&amp;&amp;!file:gui/dist//*&amp;&amp;!file:extensions/intellij/build//*&amp;&amp;!file:extensions/vscode/bin//*&amp;&amp;!file:extensions/vscode/build//*&amp;&amp;!file:extensions/vscode/out//*&amp;&amp;!file:**/*.coverage&amp;&amp;!file:**/*.coveragedata&amp;&amp;!file:**/coverage//*&amp;&amp;!file:**/.coverage//*&amp;&amp;!file:**/assets//**" />
+</component>

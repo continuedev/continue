@@ -1,0 +1,87 @@
+---
+title: "Scaleway"
+description: "Configure Scaleway Generative APIs with Continue to access AI models hosted in European data centers, offering low latency, data privacy, and EU AI Act compliance with models like Qwen2.5-Coder and BGE-Multilingual-Gemma2"
+---
+
+<Info>
+  Scaleway Generative APIs give you instant access to leading AI models hosted
+  in European data centers, ideal for developers requiring low latency, full
+  data privacy, and compliance with EU AI Act. You can generate your API key in
+  [Scaleway's console](https://console.scaleway.com/generative-api/models). Read
+  the [quickstart documentation
+  here](https://www.scaleway.com/en/docs/ai-data/generative-apis/quickstart/).
+</Info>
+
+## Chat Model
+
+We recommend configuring **Qwen2.5-Coder-32B-Instruct** as your chat model.
+[Click here](https://www.scaleway.com/en/docs/ai-data/generative-apis/reference-content/supported-models/) to see the list of available chat models.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Qwen2.5-Coder-32B-Instruct
+        provider: scaleway
+        model: qwen2.5-coder-32b-instruct
+        apiKey: <YOUR_SCALEWAY_API_KEY>
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Qwen2.5-Coder-32B-Instruct",
+          "provider": "scaleway",
+          "model": "qwen2.5-coder-32b-instruct",
+          "apiKey": "<YOUR_SCALEWAY_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+Scaleway currently does not offer any autocomplete models.
+
+[Click here](../../model-roles/autocomplete) to see a list of autocomplete model providers.
+
+## Embeddings Model
+
+We recommend configuring **BGE-Multilingual-Gemma2** as your embeddings model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: BGE Multilingual Gemma2
+      provider: scaleway
+      model: bge-multilingual-gemma2
+      apiKey: <YOUR_SCALEWAY_API_KEY>
+      roles: 
+        - embed
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "scaleway",
+      "model": "bge-multilingual-gemma2",
+      "apiKey": "<YOUR_SCALEWAY_API_KEY>"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>

@@ -1,0 +1,66 @@
+/* Custom CSS for Continue documentation */
+
+/* Enable smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+  /* Adjust scroll padding to account for fixed header */
+  scroll-padding-top: 80px;
+}
+
+/* Ensure proper spacing for heading anchors */
+h1[id],
+h2[id],
+h3[id],
+h4[id],
+h5[id],
+h6[id] {
+  scroll-margin-top: 80px;
+}
+
+/* Optional: Add a subtle highlight effect when navigating to anchors */
+:target {
+  animation: highlight 2s ease-out;
+}
+
+@keyframes highlight {
+  0% {
+    background-color: rgba(255, 235, 59, 0.3);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* Fix: Cmd+K search modal dark mode - popover/background CSS vars unset */
+.dark [role="dialog"].bg-background {
+  background-color: #1a1a1a;
+  border-color: #333;
+}
+
+.dark .bg-popover {
+  background-color: #1a1a1a;
+}
+
+.dark .text-popover-foreground {
+  color: #e5e5e5;
+}
+
+.dark [cmdk-item] {
+  color: #e5e5e5;
+}
+
+.dark [cmdk-item][data-selected="true"] {
+  background-color: #333;
+}
+
+.dark [cmdk-input] {
+  color: #e5e5e5;
+}
+
+.dark [cmdk-separator] {
+  background-color: #333;
+}
+
+.dark [cmdk-group-heading] {
+  color: #999;
+}

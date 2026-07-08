@@ -1,0 +1,54 @@
+---
+title: "Plan Mode in Continue – Safe, Read-Only Code Exploration"
+sidebarTitle: "Plan Mode"
+description: "Learn how to use Plan Mode in Continue to explore and understand codebases safely with read-only tools, search, and analysis before making changes"
+---
+
+## What is Plan mode?
+
+Plan mode is a restricted environment that provides read-only access to your codebase. It's designed for safe exploration, understanding code, and planning changes without making any modifications.
+
+![Plan mode in action](/images/plan-mode.gif)
+
+### What Are the Key Features of Plan Mode?
+
+- **Read-only tools**: Access files, search, and analyze without risk
+- **Safe exploration**: Perfect for understanding unfamiliar codebases
+- **Planning focus**: Develop implementation strategies before execution
+- **MCP support**: Works with all MCP tools alongside built-in read-only tools
+
+### How Plan Mode Works
+
+Plan mode filters the available tools to only include read-only operations. This means you can:
+
+- Read any file in your project
+- Search through code with grep and glob patterns
+- View repository structure and diffs
+- Fetch web content for additional context
+- Use all MCP tools
+
+But you cannot:
+
+- Create, edit, or delete files
+- Run terminal commands
+- Make any system changes
+
+### How to Get Started with Plan Mode
+
+Select "Plan" from the mode selector below the chat input, or use `Cmd/Ctrl + .` to cycle through modes.
+
+![Plan mode selector](/images/plan-mode-selector.png)
+
+For detailed information about tools and usage, see the [Agent documentation](/ide-extensions/agent/how-it-works), which covers both Agent and Plan modes.
+
+### What Is the Common Workflow for Plan Mode?
+
+1. **Start in Plan mode** to explore and understand
+2. **Develop your approach** with the model's help
+3. **Switch to Agent mode** when ready to implement
+
+<Tip>
+  Plan mode shares the same interface and context features as Chat and Agent
+  modes. You can use `@` context providers and highlight code just like in other
+  modes.
+</Tip>

@@ -1,0 +1,36 @@
+#!/usr/bin/expect -f
+# Automated demo script for Continue TUI
+
+set timeout 30
+log_user 1
+
+# Set terminal environment for better TUI rendering
+set env(TERM) "xterm-256color"
+
+# Spawn cn directly inside an asciinema recording session
+spawn bash -c "asciinema rec --overwrite demo.cast -c 'npm run start'"
+
+# Wait for TUI to load
+sleep 5
+
+# Demo interaction 1: Show help
+send "?"
+sleep 3
+
+# Demo interaction 2: Close help
+send "?"
+sleep 2
+
+# Demo interaction 3: Type a message
+send "Hello, this is a demo!"
+sleep 1
+
+# Submit the message
+send "\r"
+sleep 3
+
+# Exit the application with Ctrl+C
+send "\x03"
+sleep 1
+
+expect eof

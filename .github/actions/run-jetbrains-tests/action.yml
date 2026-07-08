@@ -1,0 +1,148 @@
+name: "Run JetBrains Tests"
+description: "Setup and run JetBrains IntelliJ tests with all dependencies"
+
+inputs:
+  github-token:
+    description: "GitHub token for accessing repositories"
+    required: true
+  ci-github-token:
+    description: "CI GitHub token for vscode extension build"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: ".nvmrc"
+
+    - uses: actions/cache@v4
+      with:
+        path: core/node_modules
+        key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+    - name: Build packages and install core dependencies
+      shell: bash
+      run: |
+        node ./scripts/build-packages.js
+        cd core
+        npm ci
+
+    - name: Install gui node_modules and build
+      shell: bash
+      run: |
+        cd gui
+        npm ci
+        npm run build
+
+    - name: Setup Java
+      uses: actions/setup-java@v4.5.0
+      with:
+        distribution: zulu
+        java-version: 17
+
+    - name: Setup FFmpeg
+      uses: AnimMouse/setup-ffmpeg@v1
+      with:
+        version: 7.1
+        token: ${{ inputs.github-token }}
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    - uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-cache-jetbrains-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+    - uses: actions/cache@v4
+      id: vscode-extension-cache
+      with:
+        path: extensions/vscode/node_modules
+        key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+    - uses: actions/cache@v4
+      id: gui-cache
+      with:
+        path: gui/node_modules
+        key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
+
+    # Cache prepackaged extension build to share with other jobs
+    - uses: actions/cache@v4
+      id: vscode-prepackage-cache
+      with:
+        path: extensions/vscode/build
+        key: ${{ runner.os }}-vscode-prepackage-${{ hashFiles('extensions/vscode/package-lock.json', 'extensions/vscode/**/*.ts', 'extensions/vscode/**/*.json') }}
+
+    # Only run prepackage if not cached - saves ~1 minute
+    - name: Run prepackage script
+      if: steps.vscode-prepackage-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cd extensions/vscode
+        if [ "${{ steps.vscode-extension-cache.outputs.cache-hit }}" != "true" ]; then
+          npm ci
+        fi
+        npm run prepackage
+      env:
+        # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
+        GITHUB_TOKEN: ${{ inputs.ci-github-token }}
+
+    - uses: actions/cache@v4
+      id: binary-cache
+      with:
+        path: binary/node_modules
+        key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
+
+    - name: Install binary dependencies
+      if: steps.binary-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cd binary
+        npm ci
+
+    - name: Build the binaries
+      shell: bash
+      run: |
+        cd binary
+        npm run build
+
+    - name: Run tests
+      shell: bash
+      run: |
+        cd extensions/intellij
+        export DISPLAY=:99.0
+        Xvfb -ac :99 -screen 0 1920x1080x24 &
+        sleep 10
+        mkdir -p build/reports
+        ./gradlew test testIntegration
+
+    - name: Move video
+      if: ${{ failure() }}
+      shell: bash
+      run: |
+        cd extensions/intellij
+        if [ -d "video" ]; then
+          mv video build/reports
+        else
+          echo "No video directory found to move"
+        fi
+
+    - name: Copy logs
+      if: ${{ failure() }}
+      shell: bash
+      run: |
+        cd extensions/intellij
+        if [ -d "build/idea-sandbox/system/log/" ]; then
+          mv build/idea-sandbox/system/log/ build/reports
+        else
+          echo "No log directory found to copy"
+        fi
+
+    - name: Save fails report
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: jb-failure-report
+        path: |
+          ${{ github.workspace }}/extensions/intellij/build/reports

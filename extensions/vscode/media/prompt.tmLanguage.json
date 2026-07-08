@@ -1,0 +1,64 @@
+{
+  "name": "Prompt",
+  "scopeName": "source.prompt",
+  "patterns": [
+    {
+      "include": "#at-references"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#comments"
+    }
+  ],
+  "repository": {
+    "at-references": {
+      "patterns": [
+        {
+          "name": "entity.name.type.prompt",
+          "match": "@\\S+"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.prompt",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.prompt",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.prompt",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.prompt",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.prompt",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.prompt",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    }
+  }
+}

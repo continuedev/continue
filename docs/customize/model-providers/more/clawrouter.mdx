@@ -1,0 +1,507 @@
+---
+title: "How to Configure ClawRouter with Continue"
+sidebarTitle: "ClawRouter"
+---
+
+<Info>
+  ClawRouter is an open-source LLM router that automatically selects the cheapest capable model for each request based on prompt complexity, providing 78-96% cost savings.
+</Info>
+
+<Tip>
+  Get started with [ClawRouter on GitHub](https://github.com/BlockRunAI/ClawRouter)
+</Tip>
+
+## Installation
+
+ClawRouter runs locally and provides an OpenAI-compatible API:
+
+```bash
+npx clawrouter
+```
+
+This starts the router at `http://localhost:1337`.
+
+You can also install it globally:
+
+```bash
+npm install -g clawrouter
+clawrouter
+```
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: ClawRouter Auto
+      provider: clawrouter
+      model: blockrun/auto
+      apiBase: http://localhost:1337/v1/
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "ClawRouter Auto",
+        "provider": "clawrouter",
+        "model": "blockrun/auto",
+        "apiBase": "http://localhost:1337/v1/"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+ClawRouter provides four routing profiles:
+
+| Model | Savings | Description | Best For |
+|-------|---------|-------------|----------|
+| `blockrun/auto` | 74-100% | Balanced routing based on prompt complexity | General use (recommended) |
+| `blockrun/eco` | 95-100% | Cheapest possible models | Maximum savings |
+| `blockrun/premium` | 0% | Best quality models (Opus, GPT-5.4 Pro) | Mission-critical tasks |
+| `blockrun/free` | 100% | Free-tier models only (nvidia/gpt-oss-120b) | Zero cost testing |
+
+You can also specify any of the 44+ models directly (e.g., `anthropic/claude-sonnet-4.6`, `openai/gpt-5.4`, `xai/grok-4`).
+
+## How It Works
+
+ClawRouter uses a 15-dimension prompt complexity scoring system to analyze each request:
+
+- **Simple requests** (greetings, basic Q&A, simple edits) → routed to cheap models like Claude Haiku or Gemini Flash
+- **Medium requests** (code explanations, refactoring) → routed to balanced models like Claude Sonnet or GPT-4o-mini
+- **Complex requests** (architecture design, complex debugging) → routed to capable models like Claude Opus or GPT-4o
+
+This automatic routing provides significant cost savings while maintaining quality for complex tasks.
+
+### Complexity Dimensions
+
+The router analyzes prompts across dimensions including:
+- Code complexity and language detection
+- Reasoning depth required
+- Context length and dependencies
+- Domain expertise needed
+- Output format requirements
+
+## Model Capabilities
+
+ClawRouter supports function calling and tool use through its underlying model providers. Capabilities are automatically inherited from the routed model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: ClawRouter Auto
+      provider: clawrouter
+      model: blockrun/auto
+      apiBase: http://localhost:1337/v1/
+      capabilities:
+        - tool_use
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "ClawRouter Auto",
+        "provider": "clawrouter",
+        "model": "blockrun/auto",
+        "apiBase": "http://localhost:1337/v1/",
+        "capabilities": {
+          "tools": true
+        }
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Switching Between Routing Profiles
+
+Add multiple ClawRouter profiles to your config and switch via Continue's model picker:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    # Default: automatic routing
+    - name: ClawRouter Auto
+      provider: clawrouter
+      model: blockrun/auto
+      apiBase: http://localhost:1337/v1/
+
+    # Maximum savings
+    - name: ClawRouter Eco  
+      provider: clawrouter
+      model: blockrun/eco
+      apiBase: http://localhost:1337/v1/
+
+    # Best quality
+    - name: ClawRouter Premium
+      provider: clawrouter
+      model: blockrun/premium
+      apiBase: http://localhost:1337/v1/
+
+    # Zero cost
+    - name: ClawRouter Free
+      provider: clawrouter
+      model: blockrun/free
+      apiBase: http://localhost:1337/v1/
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "ClawRouter Auto",
+        "provider": "clawrouter",
+        "model": "blockrun/auto",
+        "apiBase": "http://localhost:1337/v1/"
+      },
+      {
+        "title": "ClawRouter Eco",
+        "provider": "clawrouter",
+        "model": "blockrun/eco",
+        "apiBase": "http://localhost:1337/v1/"
+      },
+      {
+        "title": "ClawRouter Premium",
+        "provider": "clawrouter",
+        "model": "blockrun/premium",
+        "apiBase": "http://localhost:1337/v1/"
+      },
+      {
+        "title": "ClawRouter Free",
+        "provider": "clawrouter",
+        "model": "blockrun/free",
+        "apiBase": "http://localhost:1337/v1/"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+Use the **model picker dropdown** in Continue's chat panel to switch between profiles. Each profile routes to different model tiers based on cost vs. quality trade-offs.
+
+<Tip>
+  **Quick switch via CLI:** In the Continue chat, type `/model` followed by the profile name (e.g., `/model ClawRouter Eco`).
+</Tip>
+
+## Custom API Base
+
+If you're running ClawRouter on a different port or host:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: ClawRouter
+      provider: clawrouter
+      model: blockrun/auto
+      apiBase: http://your-server:8080/v1/
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "ClawRouter",
+        "provider": "clawrouter",
+        "model": "blockrun/auto",
+        "apiBase": "http://your-server:8080/v1/"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Using Multiple Roles
+
+You can configure ClawRouter for different Continue roles:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: ClawRouter Auto
+      provider: clawrouter
+      model: blockrun/auto
+      apiBase: http://localhost:1337/v1/
+      roles:
+        - chat
+        - edit
+        - apply
+
+    - name: ClawRouter Eco
+      provider: clawrouter
+      model: blockrun/eco
+      apiBase: http://localhost:1337/v1/
+      roles:
+        - autocomplete
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "ClawRouter Auto",
+        "provider": "clawrouter",
+        "model": "blockrun/auto",
+        "apiBase": "http://localhost:1337/v1/",
+        "roles": ["chat", "edit", "apply"]
+      }
+    ],
+    "tabAutocompleteModel": {
+      "title": "ClawRouter Eco",
+      "provider": "clawrouter",
+      "model": "blockrun/eco",
+      "apiBase": "http://localhost:1337/v1/"
+    }
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## API Keys
+
+ClawRouter manages upstream provider API keys internally. You configure them in ClawRouter, not in Continue.
+
+For self-hosted setups with custom authentication:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: ClawRouter
+      provider: clawrouter
+      model: blockrun/auto
+      apiBase: http://localhost:1337/v1/
+      apiKey: ${{ secrets.CLAWROUTER_API_KEY }}
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "ClawRouter",
+        "provider": "clawrouter",
+        "model": "blockrun/auto",
+        "apiBase": "http://localhost:1337/v1/",
+        "apiKey": "<YOUR_CLAWROUTER_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Wallet & Payment Setup
+
+ClawRouter supports crypto-native payments via the x402 protocol. On first run, ClawRouter automatically generates a wallet:
+
+```bash
+npx clawrouter
+# Wallet created: 5g3cB6...
+# Fund your wallet to access premium models
+```
+
+### Payment Options
+
+| Tier | Description | Payment Required |
+|------|-------------|------------------|
+| `blockrun/free` | Free-tier models only | No |
+| `blockrun/eco` | Economy models | Yes (low cost) |
+| `blockrun/auto` | Automatic routing | Yes (pay-per-use) |
+
+### Funding Your Wallet
+
+ClawRouter supports both Solana and EVM wallets:
+
+```bash
+# Check wallet balance
+clawrouter wallet
+
+# View wallet address
+clawrouter wallet address
+```
+
+Fund your wallet with USDC on Solana or Base for the lowest fees. ClawRouter uses the x402 Payment Required protocol for seamless micropayments.
+
+<Tip>
+  Start with `blockrun/free` tier to test without payment, then upgrade to `blockrun/auto` for full model access.
+</Tip>
+
+### Spend Controls
+
+Set daily/monthly spending limits:
+
+```bash
+# Set daily limit to $5
+clawrouter config set spendLimit.daily 5
+
+# Set monthly limit to $50  
+clawrouter config set spendLimit.monthly 50
+```
+
+## Error Handling
+
+ClawRouter handles common LLM errors automatically at the router level:
+
+### Automatic Error Recovery
+
+| Error | Continue's Default | ClawRouter's Handling |
+|-------|-------------------|----------------------|
+| **429 Rate Limit** | Retry same provider with backoff | Route to different provider entirely |
+| **402 Payment Required** | Fail immediately | x402 auto-payment from wallet |
+| **500+ Server Error** | Retry same provider | Fallback to next model in tier |
+| **Timeout** | Retry same provider | Route to faster model |
+
+### Response Headers
+
+ClawRouter adds diagnostic headers to every response:
+
+```
+x-clawrouter-model: anthropic/claude-sonnet-4.6
+x-clawrouter-tier: MEDIUM  
+x-clawrouter-cost: 0.0045
+x-clawrouter-fallback: false
+```
+
+When a fallback occurs:
+
+```
+x-clawrouter-model: openai/gpt-4o-mini
+x-clawrouter-fallback: true
+x-clawrouter-original-model: anthropic/claude-sonnet-4.6
+x-clawrouter-fallback-reason: 429_rate_limit
+```
+
+## Troubleshooting
+
+### Connection Refused
+
+If you see connection errors, make sure ClawRouter is running:
+
+```bash
+# Check if ClawRouter is running
+curl http://localhost:1337/v1/models
+
+# Start ClawRouter if needed
+npx clawrouter
+```
+
+### Model Not Found
+
+If a specific model isn't available, check that ClawRouter has the required provider API keys configured. Run `clawrouter --help` for configuration options.
+
+### Slow Responses
+
+ClawRouter adds minimal latency (~10-50ms) for routing decisions. If responses are slow, the issue is likely with the upstream provider. Try a different model tier (`blockrun/eco` vs `blockrun/auto`).
+
+### AI-Powered Diagnostics
+
+Run the doctor command for AI-analyzed troubleshooting:
+
+```bash
+# Basic diagnostics with Claude Sonnet (~$0.003)
+npx clawrouter doctor
+
+# Complex issues with Claude Opus (~$0.01)  
+npx clawrouter doctor opus
+
+# Ask a specific question
+npx clawrouter doctor "why are my requests failing?"
+```
+
+The doctor collects system info, wallet status, network connectivity, and sends to Claude for analysis.
+
+## Cost Monitoring
+
+ClawRouter provides cost tracking via response headers:
+
+- `x-clawrouter-cost` — Cost of the request
+- `x-clawrouter-model` — Model that handled the request
+- `x-clawrouter-complexity` — Computed complexity score
+
+You can view aggregated costs with:
+
+```bash
+curl http://localhost:1337/stats
+```
+
+## Dual-Chain Wallet Support
+
+ClawRouter supports payments on two chains from a single wallet:
+
+| Chain | Token | Best For |
+|-------|-------|----------|
+| **Base (EVM)** | USDC | Lower fees, Coinbase integration |
+| **Solana** | USDC | Fastest settlement |
+
+Switch chains via CLI:
+
+```bash
+# Switch to Solana payments
+clawrouter wallet solana
+
+# Switch to Base (EVM) payments  
+clawrouter wallet base
+
+# Check balances on both chains
+clawrouter wallet
+```
+
+Both wallets are derived from the same BIP-39 mnemonic generated on first run.
+
+## Model Exclusion
+
+Block specific models from routing:
+
+```bash
+# Block a model
+clawrouter exclude add nvidia/gpt-oss-120b
+
+# Aliases work
+clawrouter exclude add grok-4
+
+# Show exclusions
+clawrouter exclude
+
+# Remove exclusion
+clawrouter exclude remove grok-4
+```
+
+Useful when a model doesn't follow instructions well or you want to control costs.
+
+## Comparison with OpenRouter
+
+| Feature | ClawRouter | OpenRouter |
+|---------|------------|------------|
+| Hosting | Self-hosted (local) | Cloud-hosted |
+| Automatic routing | ✅ Complexity-based | ❌ Manual selection |
+| Cost optimization | ✅ 78-96% savings | ❌ Pay per model |
+| Privacy | ✅ Data stays local | ⚠️ Data sent to cloud |
+| Authentication | Wallet signature | API key |
+| Payment | USDC (Solana/Base) | Credit card |
+| Setup | `npx clawrouter` | Account signup |
+
+<Note>
+  ClawRouter can be used alongside OpenRouter — route complex tasks through ClawRouter while using OpenRouter for specific model access.
+</Note>

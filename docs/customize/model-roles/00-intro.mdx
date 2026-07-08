@@ -1,0 +1,33 @@
+---
+title: Intro to Roles
+description: Apply model role
+keywords: [apply, model, role]
+sidebar_position: 0
+sidebar_label: Introduction
+---
+
+Models in Continue can be configured to be used for various roles in the extension.
+
+- [`chat`](./chat.mdx): Used for chat conversations in the extension sidebar
+- [`autocomplete`](./autocomplete): Used for autocomplete code suggestions in the editor
+- [`edit`](./edit.mdx): Used to generate code based on edit prompts
+- [`apply`](./apply.mdx): Used to decide how to apply edits to a file
+- [`embed`](./embeddings.mdx): Used to generate embeddings used for vector search (@Codebase and @Docs context providers)
+- [`rerank`](./reranking.mdx): Used to rerank results from vector search
+
+These roles can be specified for a `config.yaml` model block using `roles`. See the [YAML Specification](/reference#models) for more details.
+
+<Info>
+  For recommendations on which models work best for each role, see our [comprehensive model recommendations](/customize/models#recommended-models).
+</Info>
+
+## Selecting model roles
+
+You can control which of the models in your config for a given role will be currently used for that role. Above the main input, click the 3 dots and then the cube icon to expand the `Models` section. Then you can use the dropdowns to select an active model for each role.
+
+![Settings Active Models Section](/images/settings-model-roles.png)
+
+<Info>
+  `roles` are not explicitly defined within `config.json` (deprecated) - they
+  are infered by the top level keys like `embeddingsProvider`
+</Info>

@@ -1,0 +1,38 @@
+---
+title: "Relace"
+description: "Configure Relace with Continue to access their Fast Apply model, which helps you quickly and reliably apply chat suggestions to your codebase"
+---
+
+Relace provides a fast apply model through their API that helps you reliably and almost instantly apply chat suggestions to your codebase. You can sign up and obtain an API key [here](https://app.relace.ai/settings/api-keys). Then, change your configuration file to look like this:
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="Package or config.yaml"
+   models:
+     - name: Relace Fast Apply
+       provider: relace
+       model: Fast-Apply
+       apiKey: <YOUR_RELACE_API_KEY>
+       roles:
+         - apply
+       promptTemplates:
+         apply: "{{{ new_code }}}"
+   ```
+   </Tab>
+   <Tab title="JSON">
+	```json title="config.json"
+	{
+      "models": [
+        {
+          "title": "Relace Fast Apply",
+          "provider": "relace",
+          "model": "Fast-Apply",
+          "apiKey": "<YOUR_RELACE_API_KEY>"
+        }
+      ]
+	}
+    ```
+   </Tab>
+</Tabs>
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Relace.ts)

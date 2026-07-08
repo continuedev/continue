@@ -1,0 +1,38 @@
+---
+title: "Llama Stack"
+keywords: [llama, stack, local, api, inference]
+---
+
+<Info>
+  Get started with [Lllama Stack](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html)
+</Info>
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <MODEL_NAME>
+      provider: llamastack
+      model: <MODEL_ID>
+      apiBase: http://<LLAMA_STACK_ENDPOINT>/v1/openai/v1/
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "llamastack",
+        "model": "<MODEL_ID>",
+        "apiBase": "http://<LLAMA_STACK_ENDPOINT>/v1/openai/v1/"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

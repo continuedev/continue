@@ -1,0 +1,35 @@
+.keyboard-key {
+  letter-spacing: 0.06rem;
+  color: var(--vscode-editor-foreground);
+  padding: 1px 4px;
+  margin: 0.08rem 0.08rem;
+}
+
+.keyboard-key-normal {
+  font-family:
+    "JetBrains Mono", "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono",
+    "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace;
+  font-weight: 300;
+}
+
+.keyboard-key-special {
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe WPC",
+    "Segoe UI",
+    "HelveticaNeue-Light",
+    system-ui,
+    "Ubuntu",
+    "Droid Sans",
+    sans-serif;
+  font-weight: 300;
+}
+
+.separator {
+  position: relative;
+  top: 0.1rem;
+  margin: 0 0.1rem;
+  color: var(--vscode-editor-foreground);
+}

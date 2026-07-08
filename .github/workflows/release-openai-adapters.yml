@@ -1,0 +1,38 @@
+name: Release @continuedev/openai-adapters
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/openai-adapters/**"
+      - ".github/workflows/release-openai-adapters.yml"
+      - ".github/workflows/reusable-release.yml"
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    # Only run this workflow on the main repository (continuedev/continue)
+    if: github.repository == 'continuedev/continue'
+    uses: ./.github/workflows/reusable-release.yml
+    with:
+      package-name: "openai-adapters"
+      package-path: "packages/openai-adapters"
+    secrets:
+      SEMANTIC_RELEASE_GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_GITHUB_TOKEN }}
+      SEMANTIC_RELEASE_NPM_TOKEN: ${{ secrets.SEMANTIC_RELEASE_NPM_TOKEN }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_FOUNDRY_CODESTRAL_API_KEY: ${{ secrets.AZURE_FOUNDRY_CODESTRAL_API_KEY }}
+      AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY: ${{ secrets.AZURE_FOUNDRY_MISTRAL_SMALL_API_KEY }}
+      AZURE_OPENAI_GPT41_API_KEY: ${{ secrets.AZURE_OPENAI_GPT41_API_KEY }}
+      VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+      RELACE_API_KEY: ${{ secrets.RELACE_API_KEY }}
+      INCEPTION_API_KEY: ${{ secrets.INCEPTION_API_KEY }}

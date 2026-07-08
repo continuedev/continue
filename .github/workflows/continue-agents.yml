@@ -1,0 +1,178 @@
+name: Continue Agents
+
+on:
+  workflow_call:
+    inputs:
+      agents-path:
+        description: 'Path to agents folder'
+        required: false
+        default: '.continue/agents'
+        type: string
+    secrets:
+      ANTHROPIC_API_KEY:
+        description: 'Anthropic API key for Claude'
+        required: true
+
+permissions:
+  contents: write
+  checks: write
+  pull-requests: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.discover.outputs.matrix }}
+      has-agents: ${{ steps.discover.outputs.has_agents }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Discover agents
+        id: discover
+        run: |
+          AGENTS_DIR="${{ inputs.agents-path }}"
+          if [ -d "$AGENTS_DIR" ]; then
+            # Use -sc for compact single-line JSON (required for GitHub Actions output)
+            FILES=$(find "$AGENTS_DIR" -name "*.md" -type f 2>/dev/null | jq -R . | jq -sc .)
+            COUNT=$(echo "$FILES" | jq 'length')
+            HAS_AGENTS=$([[ $COUNT -gt 0 ]] && echo "true" || echo "false")
+          else
+            FILES="[]"
+            COUNT=0
+            HAS_AGENTS="false"
+          fi
+
+          echo "matrix=$FILES" >> $GITHUB_OUTPUT
+          echo "has_agents=$HAS_AGENTS" >> $GITHUB_OUTPUT
+          echo "Found $COUNT agent(s)"
+
+  run-agent:
+    needs: discover
+    if: needs.discover.outputs.has-agents == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        agent: ${{ fromJson(needs.discover.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Install Continue CLI
+        run: npm i -g @continuedev/cli
+
+      - name: Extract agent name
+        id: agent-name
+        run: |
+          AGENT_FILE="${{ matrix.agent }}"
+          AGENT_NAME=$(basename "$AGENT_FILE" .md)
+          echo "name=$AGENT_NAME" >> $GITHUB_OUTPUT
+
+      - name: Create Check Run
+        id: check
+        uses: actions/github-script@v8
+        env:
+          AGENT_NAME: ${{ steps.agent-name.outputs.name }}
+        with:
+          script: |
+            const { data: check } = await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: `Continue: ${process.env.AGENT_NAME}`,
+              head_sha: context.sha,
+              status: 'in_progress',
+              started_at: new Date().toISOString(),
+            });
+            core.setOutput('id', check.id);
+
+      - name: Run agent
+        id: run
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          AGENT_FILE="${{ matrix.agent }}"
+
+          # Run agent in non-interactive mode (-p flag)
+          if OUTPUT=$(cn -p --agent "$AGENT_FILE" 2>&1); then
+            echo "success=true" >> $GITHUB_OUTPUT
+            echo "output<<EOF" >> $GITHUB_OUTPUT
+            echo "$OUTPUT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "✅ Agent completed successfully"
+            echo ""
+            echo "--- Agent Output ---"
+            echo "$OUTPUT"
+          else
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "error<<EOF" >> $GITHUB_OUTPUT
+            echo "$OUTPUT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "❌ Agent failed"
+            echo ""
+            echo "--- Agent Output ---"
+            echo "$OUTPUT"
+          fi
+
+      - name: Write job summary
+        if: always()
+        env:
+          AGENT_OUTPUT: ${{ steps.run.outputs.output }}
+          AGENT_ERROR: ${{ steps.run.outputs.error }}
+          AGENT_SUCCESS: ${{ steps.run.outputs.success }}
+          AGENT_NAME: ${{ steps.agent-name.outputs.name }}
+        run: |
+          echo "## 🤖 Agent: $AGENT_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$AGENT_SUCCESS" == "true" ]; then
+            echo "✅ **Status:** Completed successfully" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Output" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            printf '%s\n' "$AGENT_OUTPUT" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Error" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            printf '%s\n' "$AGENT_ERROR" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Fail if agent failed
+        if: steps.run.outputs.success != 'true'
+        run: exit 1
+
+      - name: Update Check Run
+        if: always()
+        uses: actions/github-script@v8
+        env:
+          AGENT_OUTPUT: ${{ steps.run.outputs.output }}
+          AGENT_ERROR: ${{ steps.run.outputs.error }}
+          AGENT_SUCCESS: ${{ steps.run.outputs.success }}
+          CHECK_RUN_ID: ${{ steps.check.outputs.id }}
+        with:
+          script: |
+            const success = process.env.AGENT_SUCCESS === 'true';
+            const output = process.env.AGENT_OUTPUT || '';
+            const error = process.env.AGENT_ERROR || '';
+
+            await github.rest.checks.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              check_run_id: parseInt(process.env.CHECK_RUN_ID, 10),
+              status: 'completed',
+              conclusion: success ? 'success' : 'failure',
+              completed_at: new Date().toISOString(),
+              output: {
+                title: success ? 'Agent completed' : 'Agent failed',
+                summary: success
+                  ? `Agent completed successfully.\n\n<details><summary>Output</summary>\n\n\`\`\`\n${output.slice(0, 60000)}\n\`\`\`\n</details>`
+                  : `Agent failed.\n\n\`\`\`\n${error.slice(0, 60000)}\n\`\`\``,
+              },
+            });

@@ -1,0 +1,69 @@
+---
+title: Continue Documentation MCP Server
+description: Set up an MCP server to search Continue documentation
+keywords: [mcp, documentation, search, mintlify, reference]
+---
+
+The Continue Documentation MCP Server allows you to search and retrieve information from the Continue documentation directly within your agent conversations.
+
+## Set Up
+
+### Configure Continue
+
+1. Create a folder called `.continue/mcpServers` at the top level of your workspace
+2. Add a file called `continue-docs-mcp.yaml` to this folder
+3. Write the following contents and save:
+
+```yaml title=".continue/mcpServers/continue-docs-mcp.yaml"
+name: Continue Documentation MCP
+version: 0.0.1
+schema: v1
+mcpServers:
+  - uses: continuedev/continue-docs-mcp
+```
+
+### Enable Agent Mode
+
+MCP servers only work in agent mode. Make sure to switch to agent mode in Continue before testing.
+
+## Usage Examples
+
+Once configured, you can use the MCP server to search Continue documentation:
+
+### Model Configuration Help
+
+```
+How do I add Claude 4 Sonnet as a model from Bedrock in Continue?
+```
+
+### Context Providers
+
+```
+What context providers are available in Continue?
+```
+
+### Customization
+
+```
+How do I add custom rules to my configuration in Continue?
+```
+
+## Troubleshooting
+
+### MCP Server Not Loading
+
+1. **Check configuration**: Ensure your YAML configuration uses the correct `uses` field with `continuedev/continue-docs-mcp`
+2. **Check agent mode**: MCP servers only work in agent mode
+3. **Restart Continue**: Try restarting the Continue extension
+
+### No Search Results
+
+1. **Verify connection**: The MCP server needs internet access to search the documentation
+2. **Check query format**: Try rephrasing your search query
+3. **Test with known topics**: Search for well-documented features like "model configuration"
+
+## Related Documentation
+
+- [MCP Overview](/customize/deep-dives/mcp)
+- [Agent Mode](/ide-extensions/agent/quick-start)
+- [Configuration](/customize/overview)

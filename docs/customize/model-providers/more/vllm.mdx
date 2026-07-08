@@ -1,0 +1,119 @@
+---
+title: "vLLM"
+description: "Configure vLLM's high-performance inference library with Continue for chat, autocomplete, and embeddings, including setup instructions for Llama3.1, Qwen2.5-Coder, and Nomic Embed models"
+---
+
+vLLM is an open-source library for fast LLM inference which typically is used to serve multiple users at the same time. It can also be used to run a large model on multiple GPU:s (e.g. when it doesn´t fit in a single GPU). Run their OpenAI-compatible server using `vllm serve`. See their [server documentation](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html) and the [engine arguments documentation](https://docs.vllm.ai/en/latest/usage/engine_args.html).
+
+```shell
+vllm serve meta-llama/Meta-Llama-3.1-8B-Instruct
+```
+
+## Chat Model
+
+We recommend configuring **Llama3.1 8B** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Llama3.1 8B Instruct
+        provider: vllm
+        model: meta-llama/Meta-Llama-3.1-8B-Instruct
+        apiBase: http://<vllm chat endpoint>/v1
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Llama3.1 8B Instruct",
+          "provider": "vllm",
+          "model": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+          "apiBase": "http://<vllm chat endpoint>/v1"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+We recommend configuring **Qwen2.5-Coder 1.5B** as your autocomplete model.
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="config.yaml"
+   name: My Config
+   version: 0.0.1
+   schema: v1
+
+   models:
+     - name: Qwen2.5-Coder 1.5B
+       provider: vllm
+       model: Qwen/Qwen2.5-Coder-1.5B
+       apiBase: http://<vllm autocomplete endpoint>/v1
+       roles:
+         - autocomplete
+   ```
+   </Tab>
+   <Tab title="JSON">
+   ```json title="config.json"
+   {
+     "tabAutocompleteModel": {
+        "title": "Qwen2.5-Coder 1.5B",
+        "provider": "vllm",
+        "model": "Qwen/Qwen2.5-Coder-1.5B",
+        "apiBase": "http://<vllm autocomplete endpoint>/v1"
+     }
+   }
+   ```
+   </Tab>
+</Tabs>
+
+## Embeddings Model
+
+We recommend configuring **Nomic Embed Text** as your embeddings model.
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="config.yaml"
+   name: My Config
+   version: 0.0.1
+   schema: v1
+
+   models:
+     - name: VLLM Nomad Embed Text 
+       provider: vllm
+       model: nomic-ai/nomic-embed-text-v1
+       apiBase: http://<vllm embed endpoint>/v1
+       roles:
+         - embed
+   ```
+   </Tab>
+   <Tab title="JSON">
+   ```json title="config.json"
+   {
+     "embeddingsProvider": {
+       "provider": "vllm",
+       "model": "nomic-ai/nomic-embed-text-v1",
+       "apiBase": "http://<vllm embed endpoint>/v1"
+     }
+   }
+   ```
+   </Tab>
+</Tabs>
+
+## Reranking Model
+
+Continue automatically handles vLLM's response format (which uses `results` instead of `data`).
+
+[Click here](../../model-roles/reranking) to see a list of reranking model providers.
+
+The continue implementation uses [OpenAI](../top-level/openai) under the hood. [View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Vllm.ts)

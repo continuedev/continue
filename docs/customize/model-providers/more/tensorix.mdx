@@ -1,0 +1,93 @@
+---
+title: "Tensorix"
+description: "Configure Tensorix with Continue to access DeepSeek, Llama, Qwen, GLM, and other models through a single OpenAI-compatible API gateway"
+---
+
+[Tensorix](https://tensorix.ai) is an OpenAI-compatible API gateway that provides access to DeepSeek, Llama, Qwen, GLM, MiniMax, and other models. Pay-as-you-go with no subscription required.
+
+<Info>
+  You can get an API key from
+  [app.tensorix.ai](https://app.tensorix.ai).
+</Info>
+
+## Chat Model
+
+We recommend configuring **deepseek/deepseek-chat-v3.1** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: DeepSeek Chat
+        provider: tensorix
+        model: deepseek/deepseek-chat-v3.1
+        apiKey: <YOUR_TENSORIX_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "DeepSeek Chat",
+          "provider": "tensorix",
+          "model": "deepseek/deepseek-chat-v3.1",
+          "apiKey": "<YOUR_TENSORIX_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: DeepSeek Chat
+        provider: tensorix
+        model: deepseek/deepseek-chat-v3.1
+        apiKey: <YOUR_TENSORIX_API_KEY>
+        roles:
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "DeepSeek Chat",
+          "provider": "tensorix",
+          "model": "deepseek/deepseek-chat-v3.1",
+          "apiKey": "<YOUR_TENSORIX_API_KEY>"
+        }
+      ],
+      "tabAutocompleteModel": {
+        "title": "DeepSeek Chat",
+        "provider": "tensorix",
+        "model": "deepseek/deepseek-chat-v3.1",
+        "apiKey": "<YOUR_TENSORIX_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Embeddings Model
+
+Tensorix provides access to various embedding models. [Click here](https://tensorix.ai/models) to see a list of available models.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Tensorix.ts)
