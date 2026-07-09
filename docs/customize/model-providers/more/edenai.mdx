@@ -1,0 +1,45 @@
+---
+title: "Eden AI"
+description: "Configure Eden AI with Continue — an OpenAI-compatible, EU-hosted API to 100+ models from many providers through a single API key"
+---
+
+[Eden AI](https://www.edenai.co) provides unified, OpenAI-compatible access to 100+ models from many providers (OpenAI, Anthropic, Google, Mistral, DeepSeek, and more) through a single EU-hosted endpoint and API key. Models use the `provider/model` naming scheme.
+
+1. Create an account and get an API key from the [Eden AI platform](https://app.edenai.run).
+2. Copy the API key for use in Continue.
+3. Update your Continue config file:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Eden AI Claude Sonnet 4.5
+      provider: edenai
+      model: anthropic/claude-sonnet-4-5
+      apiKey: <YOUR_EDENAI_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Eden AI Claude Sonnet 4.5",
+        "provider": "edenai",
+        "model": "anthropic/claude-sonnet-4-5",
+        "apiKey": "<YOUR_EDENAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+<Info>
+  The default endpoint is `https://api.edenai.run/v3`. For EU-only data residency,
+  set `apiBase` to `https://api.eu.edenai.run/v3`.
+</Info>

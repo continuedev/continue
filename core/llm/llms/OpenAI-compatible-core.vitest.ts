@@ -6,6 +6,7 @@ import Groq from "./Groq.js";
 import Fireworks from "./Fireworks.js";
 import Together from "./Together.js";
 import Deepseek from "./Deepseek.js";
+import EdenAI from "./EdenAI.js";
 import OpenRouter from "./OpenRouter.js";
 import xAI from "./xAI.js";
 import Mistral from "./Mistral.js";
@@ -224,6 +225,11 @@ createOpenAISubclassTests(Together, {
 createOpenAISubclassTests(Deepseek, {
   providerName: "deepseek",
   defaultApiBase: "https://api.deepseek.com/",
+});
+
+createOpenAISubclassTests(EdenAI, {
+  providerName: "edenai",
+  defaultApiBase: "https://api.edenai.run/v3/",
 });
 
 createOpenAISubclassTests(OpenRouter, {
