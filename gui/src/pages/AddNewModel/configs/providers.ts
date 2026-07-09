@@ -224,6 +224,28 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     ],
   },
 
+  unorouter: {
+    title: "UnoRouter",
+    provider: "unorouter",
+    description:
+      "UnoRouter is an open-source gateway serving 200+ models, most with a genuine free tier.",
+    longDescription: `To get started with UnoRouter, sign up at [unorouter.com](https://unorouter.com/) (Discord or GitHub, no card) and create an API key on the [token page](https://unorouter.com/token). Models with a \`:free\` suffix cost nothing.`,
+    icon: "unorouter.svg",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    apiKeyUrl: "https://unorouter.com/token",
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your UnoRouter API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [models.unorouterDeepseekV4FlashFree, models.unorouterClaudeSonnet5],
+  },
+
   moonshot: {
     title: "Moonshot",
     provider: "moonshot",

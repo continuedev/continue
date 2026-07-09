@@ -3312,6 +3312,37 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
 
+  // UnoRouter models
+  unorouterDeepseekV4FlashFree: {
+    title: "deepseek-v4-flash:free",
+    description:
+      "DeepSeek V4 Flash on UnoRouter's free tier; fast, long context, costs nothing",
+    refUrl: "https://unorouter.com/models",
+    params: {
+      title: "deepseek-v4-flash:free",
+      model: "deepseek-v4-flash:free",
+      contextLength: 128_000,
+      apiKey: "",
+    },
+    providerOptions: ["unorouter"],
+    icon: "unorouter.svg",
+    isOpenSource: true,
+  },
+  unorouterClaudeSonnet5: {
+    title: "claude-sonnet-5",
+    description: "Anthropic Claude Sonnet 5 served through UnoRouter",
+    refUrl: "https://unorouter.com/models",
+    params: {
+      title: "claude-sonnet-5",
+      model: "claude-sonnet-5",
+      contextLength: 200_000,
+      apiKey: "",
+    },
+    providerOptions: ["unorouter"],
+    icon: "unorouter.svg",
+    isOpenSource: false,
+  },
+
   // Inception Labs models
   mercury2: {
     title: "Mercury 2",

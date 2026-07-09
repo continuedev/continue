@@ -63,6 +63,7 @@ import TARS from "./TARS";
 import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
+import UnoRouter from "./UnoRouter";
 import Venice from "./Venice";
 import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
@@ -120,6 +121,7 @@ export const LLMClasses = [
   Asksage,
   Nebius,
   Nous,
+  UnoRouter,
   Venice,
   VertexAI,
   xAI,
