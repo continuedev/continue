@@ -243,7 +243,10 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       },
       ...completionParamsInputsConfigs,
     ],
-    packages: [models.unorouterDeepseekV4FlashFree, models.unorouterClaudeSonnet5],
+    packages: [
+      models.unorouterDeepseekV4FlashFree,
+      models.unorouterClaudeSonnet5,
+    ],
   },
 
   moonshot: {
