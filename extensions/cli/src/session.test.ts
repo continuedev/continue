@@ -357,6 +357,31 @@ describe("SessionManager", () => {
       expect(result).toEqual(mockSession);
       expect(getCurrentSession()).toEqual(mockSession);
     });
+
+    it("should load the selected session when CONTINUE_CLI_TEST_SESSION_ID is set", () => {
+      const selectedSession: Session = {
+        sessionId: "selected-session-id",
+        title: "Selected Session",
+        workspaceDirectory: "/test/workspace",
+        history: [],
+      };
+      mockHistoryManager.load.mockReturnValue(selectedSession);
+      process.env.CONTINUE_CLI_TEST_SESSION_ID = "selected-session-id";
+
+      try {
+        const result = loadSession();
+
+        expect(result).toEqual(selectedSession);
+        // It must resolve the session by id, not by most-recent mtime
+        expect(mockHistoryManager.load).toHaveBeenCalledWith(
+          "selected-session-id",
+        );
+        expect(mockFs.readdirSync).not.toHaveBeenCalled();
+        expect(getCurrentSession()).toEqual(selectedSession);
+      } finally {
+        delete process.env.CONTINUE_CLI_TEST_SESSION_ID;
+      }
+    });
   });
 
   describe("clearSession", () => {
