@@ -21,6 +21,23 @@ function createMockResponse(sseLines: string[]): Response {
   } as unknown as Response;
 }
 
+function createMockResponseFromChunks(chunks: string[]): Response {
+  const stream = new Readable({
+    read() {
+      for (const chunk of chunks) {
+        this.push(chunk);
+      }
+      this.push(null);
+    },
+  }) as any;
+
+  return {
+    status: 200,
+    body: stream,
+    text: async () => "",
+  } as unknown as Response;
+}
+
 describe("streamSse", () => {
   it("yields parsed SSE data objects that ends with `data:[DONE]`", async () => {
     const sseLines = [
@@ -52,6 +69,44 @@ describe("streamSse", () => {
     }
 
     expect(results).toEqual([{ foo: "bar" }, { baz: 42 }]);
+  });
+
+  it("propogate AbortError when the stream is aborted with partial buffer", async () => {
+    // Simulate an abort mid-stream: the stream emits one complete SSE event,
+    // then a partial `data:` line (no trailing newline),
+    // then throws AbortError. The AbortError must propagate to the caller
+    // and not be swallowed, and the partial buffer must not be parsed.
+    async function* abortedStream() {
+      yield Buffer.from('data: {"foo": "bar"}\n\n');
+      yield Buffer.from('data: {"foo": "ba'); // partial - no newline
+      const abortError = new Error("The operation was aborted");
+      abortError.name = "AbortError";
+      throw abortError;
+    }
+
+    const stream = Readable.from(abortedStream()) as any;
+    const response = {
+      status: 200,
+      body: stream,
+      text: async () => "",
+    } as unknown as Response;
+
+    const results = [];
+    let caught: Error | undefined;
+    try {
+      for await (const data of streamSse(response)) {
+        results.push(data);
+      }
+    } catch (err) {
+      caught = err as Error;
+    }
+
+    // The first complete SSE event should be yielded before the abort occurs
+    expect(results).toEqual([{ foo: "bar" }]);
+
+    // The AbortError should be propagated to the caller, and not swallowed
+    expect(caught).toBeDefined();
+    expect(caught!.name).toBe("AbortError");
   });
 
   it("throws on malformed JSON", async () => {
