@@ -16,7 +16,7 @@
 
 ## What is Continue?
 
-> _Note: The `continuedev/continue` repository is no longer actively maintained and is read-only for all users._
+> _Note: The `continuedev/continue` repository is no longer actively maintained and is read-only for all users. For the latest development, visit [main-continuedev/continue](https://github.com/main-continuedev/continue)._
 
 Continue is a coding agent available as a [CLI](#cli), [VS Code extension](#vs-code), and [JetBrains plugin](#jetbrains).
 
