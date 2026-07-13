@@ -47,7 +47,7 @@ describe("countTokensAsync", () => {
   });
 });
 
-describe.skip("pruneLinesFromTop", () => {
+describe("pruneLinesFromTop", () => {
   it("should prune lines from the top to fit within max tokens", () => {
     const prompt = "Line 1\nLine 2\nLine 3\nLine 4";
     const pruned = pruneLinesFromTop(prompt, 5, "gpt-4");
@@ -88,7 +88,7 @@ describe.skip("pruneLinesFromTop", () => {
   });
 });
 
-describe.skip("pruneLinesFromBottom", () => {
+describe("pruneLinesFromBottom", () => {
   it("should prune lines from the bottom to fit within max tokens", () => {
     const prompt = "Line 1\nLine 2\nLine 3\nLine 4";
     const pruned = pruneLinesFromBottom(prompt, 5, "gpt-4");
