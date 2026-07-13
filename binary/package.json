@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@octokit/rest": "^20.1.2",
-    "adm-zip": "^0.5.16",
+    "adm-zip": "^0.5.18",
     "commander": "^12.0.0",
     "core": "file:../core",
     "follow-redirects": "^1.15.5",
