@@ -164,7 +164,10 @@ describe("convertFromUnifiedHistoryWithSystemMessage", () => {
 
   it("does not leave a duplicate system message when history already starts with one", () => {
     const historyItems: ChatHistoryItem[] = [
-      { message: { role: "system", content: "Stored system" }, contextItems: [] },
+      {
+        message: { role: "system", content: "Stored system" },
+        contextItems: [],
+      },
       { message: { role: "user", content: "Hello" }, contextItems: [] },
     ];
 
@@ -187,7 +190,10 @@ describe("convertFromUnifiedHistoryWithSystemMessage", () => {
     // Reproduces the "System message must be at the beginning" 400 error:
     // a tool call is cancelled and a system notification lives mid-history.
     const historyItems: ChatHistoryItem[] = [
-      { message: { role: "user", content: "Run the command" }, contextItems: [] },
+      {
+        message: { role: "user", content: "Run the command" },
+        contextItems: [],
+      },
       {
         message: {
           role: "assistant",
@@ -215,7 +221,10 @@ describe("convertFromUnifiedHistoryWithSystemMessage", () => {
         ],
       },
       {
-        message: { role: "system", content: "Chat history auto-compacted successfully." },
+        message: {
+          role: "system",
+          content: "Chat history auto-compacted successfully.",
+        },
         contextItems: [],
       },
     ];
@@ -238,7 +247,10 @@ describe("convertFromUnifiedHistoryWithSystemMessage", () => {
 
   it("emits a leading system message even when base system message is empty but history has one", () => {
     const historyItems: ChatHistoryItem[] = [
-      { message: { role: "system", content: "Only stored system" }, contextItems: [] },
+      {
+        message: { role: "system", content: "Only stored system" },
+        contextItems: [],
+      },
       { message: { role: "user", content: "Hi" }, contextItems: [] },
     ];
 
