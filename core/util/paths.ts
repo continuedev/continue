@@ -308,18 +308,31 @@ export async function migrate(
 
   const migrationsPath = getMigrationsFolderPath();
   const migrationPath = path.join(migrationsPath, id);
+  let markerCreated = false;
 
-  if (!fs.existsSync(migrationPath)) {
-    try {
-      console.log(`Running migration: ${id}`);
+  try {
+    fs.writeFileSync(migrationPath, "", { flag: "wx" });
+    markerCreated = true;
+    console.log(`Running migration: ${id}`);
 
-      fs.writeFileSync(migrationPath, "");
-      await Promise.resolve(callback());
-    } catch (e) {
-      console.warn(`Migration ${id} failed`, e);
+    await Promise.resolve(callback());
+  } catch (e) {
+    if (!markerCreated && (e as NodeJS.ErrnoException).code === "EEXIST") {
+      onAlreadyComplete?.();
+      return;
     }
-  } else if (onAlreadyComplete) {
-    onAlreadyComplete();
+
+    if (markerCreated) {
+      try {
+        fs.rmSync(migrationPath, { force: true });
+      } catch (cleanupError) {
+        console.warn(
+          `Failed to remove migration marker after ${id} failed`,
+          cleanupError,
+        );
+      }
+    }
+    console.warn(`Migration ${id} failed`, e);
   }
 }
 
