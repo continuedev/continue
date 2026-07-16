@@ -1,0 +1,157 @@
+---
+title: "Manage Appwrite Backends with Appwrite MCP and Continue"
+description: "Connect Continue to the official Appwrite MCP server to inspect projects, manage databases, auth, functions, and storage using natural language — with hosted Cloud OAuth or a self-hosted API key."
+sidebarTitle: "Appwrite MCP Cookbook"
+---
+
+import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
+import CLIInstall from '/snippets/cli-install.mdx'
+
+<OSAutoDetect />
+
+<Card title="What You'll Build" icon="server">
+  An Appwrite workflow assistant that uses Continue with the official Appwrite MCP to:
+  - Connect to Appwrite Cloud through browser OAuth (no API keys to copy)
+  - Inspect projects, databases, collections, users, and storage
+  - Create and update backend resources with explicit write confirmation
+  - Optionally run the same tools against a self-hosted Appwrite instance
+</Card>
+
+## What You'll Learn
+
+This cookbook teaches you to:
+
+- Add the official [Appwrite MCP](https://github.com/appwrite/mcp) server to Continue
+- Authenticate to Appwrite Cloud via hosted OAuth at `https://mcp.appwrite.io/`
+- Ask Continue to explore and manage Appwrite resources safely
+- Fall back to a local stdio server when using self-hosted Appwrite
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- An [Appwrite Cloud](https://cloud.appwrite.io/) account (or a self-hosted Appwrite instance)
+- Node.js 18+ installed locally
+- [Continue](https://docs.continue.dev/) (IDE extension and/or Continue CLI)
+
+<Steps>
+  <Step title="Install Continue CLI (optional)">
+    <CLIInstall />
+  </Step>
+</Steps>
+
+## Step 1: Add the Appwrite MCP server
+
+<Tabs>
+  <Tab title="Appwrite Cloud (recommended)">
+
+    Add the hosted remote server to your Continue config. Cloud uses browser OAuth — you do not need to paste an API key.
+
+    ```yaml
+    mcpServers:
+      - name: Appwrite
+        type: streamable-http
+        url: https://mcp.appwrite.io/
+    ```
+
+    <Info>
+      The conventional `https://mcp.appwrite.io/mcp` URL connects to the same hosted server.
+    </Info>
+
+    On first use, Continue opens an Appwrite consent screen. Approve the scopes you need, then the server appears with its tools enabled.
+
+  </Tab>
+  <Tab title="Self-hosted (API key)">
+
+    For a self-hosted Appwrite deployment, run the official Python package over stdio with project credentials:
+
+    ```yaml
+    mcpServers:
+      - name: Appwrite
+        command: uvx
+        args:
+          - mcp-server-appwrite
+        env:
+          APPWRITE_ENDPOINT: https://your-instance.example/v1
+          APPWRITE_PROJECT_ID: your-project-id
+          APPWRITE_API_KEY: your-api-key
+    ```
+
+    <Warning>
+      Prefer a development project and the least-privilege API key scopes you need. Mutating tools require explicit confirmation (`confirm_write=true`).
+    </Warning>
+
+  </Tab>
+</Tabs>
+
+## Step 2: Verify the connection
+
+In **Agent** mode, ask Continue:
+
+```text
+Using Appwrite MCP, show my current account context and list the projects I can access.
+```
+
+You should see account/org context from `appwrite_get_context` (or equivalent search/call tools). If authentication is missing, complete the browser OAuth flow and retry.
+
+## Step 3: Explore your backend
+
+Try prompts like:
+
+```text
+Search Appwrite tools for listing databases and collections, then show the databases in my current project.
+```
+
+```text
+Find users created in the last 7 days and summarize counts by provider.
+```
+
+```text
+List storage buckets and the most recent files in each bucket.
+```
+
+The official server exposes a compact operator surface (`appwrite_search_tools` / `appwrite_call_tool`, plus docs search when enabled). Continue searches the full Appwrite catalog at runtime instead of loading hundreds of tool definitions into context.
+
+## Step 4: Make a safe write
+
+When you need a mutation, be explicit and keep confirmation in the loop:
+
+```text
+Create a collection named `articles` with attributes title (string) and body (string).
+Preview the tool call first; only confirm the write when I say so.
+```
+
+<Warning>
+  Do not point write-enabled credentials at production until you have tested the workflow on a development project.
+</Warning>
+
+## Step 5: Optional CLI one-off
+
+With Continue CLI and the MCP configured globally or in the project:
+
+```bash
+cn --mcp Appwrite
+```
+
+Then ask: "What Appwrite project am I authenticated against, and which databases exist?"
+
+## Troubleshooting
+
+| Issue | Fix |
+| --- | --- |
+| OAuth window never opens | Confirm `url` is `https://mcp.appwrite.io/` and that you are in Agent mode |
+| Tools missing after login | Restart Continue / reload the window, then ask for account context again |
+| Self-hosted auth errors | Check `APPWRITE_ENDPOINT` (must include `/v1`), project ID, and API key scopes |
+| Writes rejected | Pass `confirm_write=true` only after reviewing the planned mutation |
+
+## Next Steps
+
+- Read the [Appwrite MCP README](https://github.com/appwrite/mcp) for per-client setup snippets
+- Browse [Appwrite MCP docs](https://appwrite.io/docs/tooling/ai/mcp-servers)
+- Pair with the [GitHub MCP cookbook](/guides/github-mcp-continue-cookbook) to open issues when backend audits find problems
+
+## Resources
+
+- [Appwrite MCP server](https://github.com/appwrite/mcp)
+- [MCP examples in Continue](/customize/deep-dives/mcp-examples)
+- [Official MCP Registry entry](https://registry.modelcontextprotocol.io/?q=io.github.appwrite%2Fmcp)
