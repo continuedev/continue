@@ -51,7 +51,7 @@ export class ContinueServerClient implements IContinueServerClient {
         `Failed to sync remote config (HTTP ${response.status}): ${response.statusText}`,
       );
     }
-    const data = await response.json();
+    const data = (await response.json()) as { configJson: string };
     return data;
   }
 
@@ -100,7 +100,7 @@ export class ContinueServerClient implements IContinueServerClient {
         };
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as EmbeddingsCacheResponse<T>;
       return data;
     } catch (e) {
       console.warn("Failed to retrieve from remote cache", e);
