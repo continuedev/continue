@@ -143,7 +143,7 @@ async function fetchOpenRouterModels(
       throw new Error(`Failed to fetch OpenRouter models: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data: any = await response.json();
     if (!data.data || !Array.isArray(data.data)) {
       return [];
     }
@@ -181,7 +181,7 @@ async function fetchAnthropicModels(
   if (!response.ok) {
     throw new Error(`Failed to fetch Anthropic models: ${response.status}`);
   }
-  const data = await response.json();
+  const data: any = await response.json();
   return (data.data ?? []).map((m: any) => ({
     name: m.display_name ?? m.id,
     modelId: m.id,
@@ -200,11 +200,15 @@ async function fetchGeminiModels(
   const base = apiBase || "https://generativelanguage.googleapis.com/v1beta/";
   const url = new URL("models", base);
   url.searchParams.set("key", apiKey ?? "");
-  const response = await fetchwithRequestOptions(url, undefined, requestOptions);
+  const response = await fetchwithRequestOptions(
+    url,
+    undefined,
+    requestOptions,
+  );
   if (!response.ok) {
     throw new Error(`Failed to fetch Gemini models: ${response.status}`);
   }
-  const data = await response.json();
+  const data: any = await response.json();
   return (data.models ?? [])
     .filter((m: any) => {
       const id: string = m.name?.replace("models/", "") ?? "";
