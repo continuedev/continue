@@ -1,3 +1,6 @@
+import { fetchwithRequestOptions } from "@continuedev/fetch";
+
+import type { RequestOptions } from "../index.js";
 import { LLMClasses, llmFromProviderAndOptions } from "./llms/index.js";
 
 export interface FetchedModel {
@@ -61,9 +64,15 @@ function getOllamaIcon(modelName: string): string {
   return bestMatch ? OLLAMA_ICON_MAP[bestMatch] : "ollama.png";
 }
 
-async function fetchOllamaModels(): Promise<FetchedModel[]> {
+async function fetchOllamaModels(
+  requestOptions?: RequestOptions,
+): Promise<FetchedModel[]> {
   try {
-    const response = await fetch("https://ollama.com/library");
+    const response = await fetchwithRequestOptions(
+      "https://ollama.com/library",
+      undefined,
+      requestOptions,
+    );
     if (!response.ok) {
       throw new Error(`Failed to fetch Ollama library: ${response.status}`);
     }
@@ -121,9 +130,15 @@ async function fetchOllamaModels(): Promise<FetchedModel[]> {
   }
 }
 
-async function fetchOpenRouterModels(): Promise<FetchedModel[]> {
+async function fetchOpenRouterModels(
+  requestOptions?: RequestOptions,
+): Promise<FetchedModel[]> {
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/models");
+    const response = await fetchwithRequestOptions(
+      "https://openrouter.ai/api/v1/models",
+      undefined,
+      requestOptions,
+    );
     if (!response.ok) {
       throw new Error(`Failed to fetch OpenRouter models: ${response.status}`);
     }
@@ -149,8 +164,11 @@ async function fetchOpenRouterModels(): Promise<FetchedModel[]> {
   }
 }
 
-async function fetchAnthropicModels(apiKey?: string): Promise<FetchedModel[]> {
-  const response = await fetch(
+async function fetchAnthropicModels(
+  apiKey?: string,
+  requestOptions?: RequestOptions,
+): Promise<FetchedModel[]> {
+  const response = await fetchwithRequestOptions(
     "https://api.anthropic.com/v1/models?limit=100",
     {
       headers: {
@@ -158,6 +176,7 @@ async function fetchAnthropicModels(apiKey?: string): Promise<FetchedModel[]> {
         "anthropic-version": "2023-06-01",
       },
     },
+    requestOptions,
   );
   if (!response.ok) {
     throw new Error(`Failed to fetch Anthropic models: ${response.status}`);
@@ -176,11 +195,12 @@ async function fetchAnthropicModels(apiKey?: string): Promise<FetchedModel[]> {
 async function fetchGeminiModels(
   apiKey?: string,
   apiBase?: string,
+  requestOptions?: RequestOptions,
 ): Promise<FetchedModel[]> {
   const base = apiBase || "https://generativelanguage.googleapis.com/v1beta/";
   const url = new URL("models", base);
   url.searchParams.set("key", apiKey ?? "");
-  const response = await fetch(url);
+  const response = await fetchwithRequestOptions(url, undefined, requestOptions);
   if (!response.ok) {
     throw new Error(`Failed to fetch Gemini models: ${response.status}`);
   }
@@ -242,16 +262,17 @@ export async function fetchModels(
   provider: string,
   apiKey?: string,
   apiBase?: string,
+  requestOptions?: RequestOptions,
 ): Promise<FetchedModel[]> {
   switch (provider) {
     case "ollama":
-      return fetchOllamaModels();
+      return fetchOllamaModels(requestOptions);
     case "openrouter":
-      return fetchOpenRouterModels();
+      return fetchOpenRouterModels(requestOptions);
     case "anthropic":
-      return fetchAnthropicModels(apiKey);
+      return fetchAnthropicModels(apiKey, requestOptions);
     case "gemini":
-      return fetchGeminiModels(apiKey, apiBase);
+      return fetchGeminiModels(apiKey, apiBase, requestOptions);
     default:
       return fetchProviderModelsViaListModels(provider, apiKey, apiBase);
   }
