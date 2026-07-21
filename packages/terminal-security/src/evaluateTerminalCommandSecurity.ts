@@ -481,7 +481,9 @@ function isCriticalCommand(
     (allTokens.includes("-r") && allTokens.includes("-f")) ||
     (allTokens.includes("--recursive") && allTokens.includes("--force"));
 
-  const hasDangerousPath = allTokens.some((arg) => isDangerousFilesystemTarget(arg));
+  const hasDangerousPath = allTokens.some((arg) =>
+    isDangerousFilesystemTarget(arg),
+  );
 
   // If we have rm flags with dangerous paths, it's critical regardless of command
   if (hasRf && hasDangerousPath) {
@@ -498,7 +500,6 @@ function isCriticalCommand(
   ) {
     return true;
   }
-
 
   // Check for explicit rm command with additional critical paths
   if (baseCommand === "rm") {
@@ -531,7 +532,13 @@ function isCriticalCommand(
     baseCommand === "wipefs" ||
     baseCommand === "pkexec" ||
     (baseCommand === "truncate" &&
-      args.some((arg) => arg === "-s" || arg.startsWith("-s") || arg === "--size" || arg.startsWith("--size="))) ||
+      args.some(
+        (arg) =>
+          arg === "-s" ||
+          arg.startsWith("-s") ||
+          arg === "--size" ||
+          arg.startsWith("--size="),
+      )) ||
     (baseCommand === "find" && args.includes("-delete"))
   ) {
     return true;
