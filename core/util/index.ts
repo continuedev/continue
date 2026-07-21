@@ -1,3 +1,5 @@
+export { getPowerShellCommand } from "./shell.js";
+
 export function removeQuotesAndEscapes(input: string): string {
   let output = input.trim();
 
