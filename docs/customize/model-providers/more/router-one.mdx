@@ -1,0 +1,94 @@
+---
+title: "Router One"
+description: "Configure Router One with Continue through its OpenAI-compatible API, using a pinned model or server-managed routing"
+---
+
+<Info>
+  [Router One](https://router.one) is an LLM API gateway that exposes multiple
+  model providers through one OpenAI-compatible endpoint. Configure it with
+  Continue's existing `openai` provider and a custom `apiBase`; no dedicated
+  provider implementation is required.
+</Info>
+
+<Tip>
+  Create a key in [Dashboard → API Keys](https://router.one/dashboard/api-keys)
+  and choose an exact model ID from the [model catalog](https://router.one/models).
+</Tip>
+
+## Configuration
+
+The following example pins a tool-capable model for chat, edit, and apply roles:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Router One GPT-5.4 Mini
+      provider: openai
+      model: openai/gpt-5.4-mini
+      apiBase: https://api.router.one/v1
+      apiKey: <YOUR_ROUTER_ONE_API_KEY>
+      capabilities:
+        - tool_use
+      roles:
+        - chat
+        - edit
+        - apply
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Router One GPT-5.4 Mini",
+        "provider": "openai",
+        "model": "openai/gpt-5.4-mini",
+        "apiBase": "https://api.router.one/v1",
+        "apiKey": "<YOUR_ROUTER_ONE_API_KEY>",
+        "capabilities": ["tool_use"]
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+`provider: openai` selects Continue's OpenAI-compatible client. The `model`
+value is still sent unchanged to Router One, so it may reference a model from
+any upstream provider in the Router One catalog.
+
+## Server-managed routing
+
+Set `model` to `auto` when you want Router One to select from its server-managed
+candidate set. For predictable Agent mode capability detection, pin an exact
+tool-capable model as shown above.
+
+```yaml title="config.yaml"
+models:
+  - name: Router One Auto
+    provider: openai
+    model: auto
+    apiBase: https://api.router.one/v1
+    apiKey: <YOUR_ROUTER_ONE_API_KEY>
+    roles:
+      - chat
+```
+
+With an exact model ID, Router One keeps the requested model fixed while it may
+retry another eligible provider route serving that same model. With `auto`,
+candidate selection is managed by Router One.
+
+## Troubleshooting
+
+- Keep `/v1` in `apiBase`; Continue appends the OpenAI-compatible endpoint path.
+- A `401` response usually means the API key is missing or invalid.
+- A `402` response means the wallet balance or API-key spend limit is exhausted.
+- A `429` response means the API key's configured rate limit was reached.
+
+See the [Router One API documentation](https://router.one/docs) for endpoint and
+error details.
