@@ -75,6 +75,109 @@ describe("evaluateTerminalCommandSecurity", () => {
         );
         expect(result).toBe("disabled");
       });
+
+      it("should disable rm -rf on /home", () => {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          "rm -rf /home",
+        );
+        expect(result).toBe("disabled");
+      });
+
+      it("should disable rm -rf on /home/user", () => {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          "rm -rf /home/user",
+        );
+        expect(result).toBe("disabled");
+      });
+
+      it("should disable rm -rf on /root", () => {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          "rm -rf /root",
+        );
+        expect(result).toBe("disabled");
+      });
+
+      it("should disable rm -rf on /var", () => {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          "rm -rf /var",
+        );
+        expect(result).toBe("disabled");
+      });
+
+      it("should disable rm -rf on /opt and /srv", () => {
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "rm -rf /opt",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "rm -rf /srv/data",
+          ),
+        ).toBe("disabled");
+      });
+
+      it("should disable rm -rf $HOME (literal token left by shell-quote)", () => {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          "rm -rf $HOME",
+        );
+        expect(result).toBe("disabled");
+      });
+
+      it("should disable rm -rf ${HOME}/Documents", () => {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          "rm -rf ${HOME}/Documents",
+        );
+        expect(result).toBe("disabled");
+      });
+
+      it("should disable find -delete", () => {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          "find /tmp -name '*.log' -delete",
+        );
+        expect(result).toBe("disabled");
+      });
+
+      it("should disable shred", () => {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          "shred -vfz /var/log/secure",
+        );
+        expect(result).toBe("disabled");
+      });
+
+      it("should disable wipefs", () => {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          "wipefs -a /dev/sda",
+        );
+        expect(result).toBe("disabled");
+      });
+
+      it("should disable truncate -s 0 on paths", () => {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          "truncate -s 0 important.db",
+        );
+        expect(result).toBe("disabled");
+      });
+
+      it("should disable pkexec", () => {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          "pkexec rm -rf /",
+        );
+        expect(result).toBe("disabled");
+      });
     });
 
     describe("Privilege Escalation", () => {
@@ -793,12 +896,12 @@ describe("evaluateTerminalCommandSecurity", () => {
       expect(result).toBe("allowedWithPermission");
     });
 
-    it("should require permission for find with -delete", () => {
+    it("should disable find with -delete as critical destruction", () => {
       const result = evaluateTerminalCommandSecurity(
-        "allowedWithPermission",
+        "allowedWithoutPermission",
         "find /tmp -name '*.tmp' -delete",
       );
-      expect(result).toBe("allowedWithPermission");
+      expect(result).toBe("disabled");
     });
   });
 
@@ -1571,12 +1674,12 @@ describe("evaluateTerminalCommandSecurity", () => {
       expect(result).toBe("allowedWithPermission");
     });
 
-    it("should require permission for shred command", () => {
+    it("should disable shred command as critical destruction", () => {
       const result = evaluateTerminalCommandSecurity(
         "allowedWithoutPermission",
         "shred -vfz /var/log/secure",
       );
-      expect(result).toBe("allowedWithPermission");
+      expect(result).toBe("disabled");
     });
   });
 
