@@ -372,7 +372,7 @@ function evaluateSingleCommand(
   const args = commandTokens.slice(1);
 
   // Check for critical commands that should always be disabled
-  if (isCriticalCommand(baseCommand, args)) {
+  if (isCriticalCommand(baseCommand, args, originalCommand)) {
     return "disabled";
   }
 
@@ -397,9 +397,72 @@ function evaluateSingleCommand(
 }
 
 /**
+ * True when a token points at a filesystem root / home / high-impact system path.
+ * Also matches shell variables that expand to those locations ($HOME, ${HOME}, ~user
+ * shell-quote leaves $HOME as a literal token rather than expanding it).
+ */
+function isDangerousFilesystemTarget(arg: string): boolean {
+  if (!arg) return false;
+
+  // Shell variable forms that expand to the user's home or root at execution.
+  if (
+    arg === "$HOME" ||
+    arg === "${HOME}" ||
+    arg === "$HOME/" ||
+    arg === "${HOME}/" ||
+    arg.startsWith("$HOME/") ||
+    arg.startsWith("${HOME}/") ||
+    arg === "~" ||
+    arg === "~/" ||
+    arg === "~/*" ||
+    arg.startsWith("~/")
+  ) {
+    return true;
+  }
+
+  const exact = new Set([
+    "/",
+    "/*",
+    "/usr",
+    "/etc",
+    "/bin",
+    "/sbin",
+    "/home",
+    "/root",
+    "/var",
+    "/opt",
+    "/srv",
+    "/boot",
+    "/lib",
+    "/lib64",
+  ]);
+  if (exact.has(arg)) return true;
+
+  const prefixes = [
+    "/usr/",
+    "/etc/",
+    "/bin/",
+    "/sbin/",
+    "/home/",
+    "/root/",
+    "/var/",
+    "/opt/",
+    "/srv/",
+    "/boot/",
+    "/lib/",
+    "/lib64/",
+  ];
+  return prefixes.some((p) => arg === p.slice(0, -1) || arg.startsWith(p));
+}
+
+/**
  * Checks if a command is critical and should always be disabled
  */
-function isCriticalCommand(baseCommand: string, args: string[]): boolean {
+function isCriticalCommand(
+  baseCommand: string,
+  args: string[],
+  originalCommand: string = "",
+): boolean {
   // System destruction commands - check if base command starts with mkfs
   if (baseCommand.startsWith("mkfs")) {
     return true;
@@ -418,26 +481,24 @@ function isCriticalCommand(baseCommand: string, args: string[]): boolean {
     (allTokens.includes("-r") && allTokens.includes("-f")) ||
     (allTokens.includes("--recursive") && allTokens.includes("--force"));
 
-  const hasDangerousPath = allTokens.some(
-    (arg) =>
-      arg === "/" ||
-      arg === "/*" ||
-      arg === "~" ||
-      arg === "~/*" ||
-      arg === "/usr" ||
-      arg === "/etc" ||
-      arg === "/bin" ||
-      arg === "/sbin" ||
-      arg.startsWith("/usr/") ||
-      arg.startsWith("/etc/") ||
-      arg.startsWith("/bin/") ||
-      arg.startsWith("/sbin/"),
-  );
+  const hasDangerousPath = allTokens.some((arg) => isDangerousFilesystemTarget(arg));
 
   // If we have rm flags with dangerous paths, it's critical regardless of command
   if (hasRf && hasDangerousPath) {
     return true;
   }
+
+  // shell-quote expands/drops unquoted $HOME to "" (or strips ${HOME} prefix), so the
+  // token list loses the home target. Fall back to the original command string.
+  // See issue #13001 — "rm -rf $HOME" must stay disabled.
+  if (
+    hasRf &&
+    originalCommand &&
+    /(?:\$\{?HOME\}?|~(?=\/|$|[\s;|&]))/.test(originalCommand)
+  ) {
+    return true;
+  }
+
 
   // Check for explicit rm command with additional critical paths
   if (baseCommand === "rm") {
@@ -461,6 +522,19 @@ function isCriticalCommand(baseCommand: string, args: string[]): boolean {
     if (args.some((arg) => criticalPaths.some((path) => arg.includes(path)))) {
       return true;
     }
+  }
+
+  // Always-critical destructive utilities (even without -rf path heuristics)
+  // find -delete can wipe trees; shred/wipefs/truncate destroy data; pkexec escalates.
+  if (
+    baseCommand === "shred" ||
+    baseCommand === "wipefs" ||
+    baseCommand === "pkexec" ||
+    (baseCommand === "truncate" &&
+      args.some((arg) => arg === "-s" || arg.startsWith("-s") || arg === "--size" || arg.startsWith("--size="))) ||
+    (baseCommand === "find" && args.includes("-delete"))
+  ) {
+    return true;
   }
 
   // Windows destructive commands
