@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="crossmodel-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#crossmodel-g)"/>
+  <path d="M8 32 L56 32" stroke="white" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M16 32 A16 16 0 0 1 48 32" stroke="white" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+  <path d="M16 32 A16 16 0 0 0 48 32" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" stroke-dasharray="2 5" opacity="0.5"/>
+</svg>

@@ -123,6 +123,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "sagemaker",
   "openrouter",
   "clawrouter",
+  "crossmodel",
   "venice",
   "sambanova",
   "vertexai",

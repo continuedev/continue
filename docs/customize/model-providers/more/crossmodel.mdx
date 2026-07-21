@@ -1,0 +1,53 @@
+---
+title: "How to Configure CrossModel with Continue"
+sidebarTitle: "CrossModel"
+---
+
+[CrossModel](https://crossmodel.ai) is an OpenAI- and Anthropic-compatible API gateway. Use one API key and base URL to call models from OpenAI, Anthropic, DeepSeek, Gemini, Qwen, Kimi, GLM and more, with unified billing and usage tracking.
+
+<Info>
+  Sign up at [crossmodel.ai](https://crossmodel.ai) and create an API key from
+  the [console](https://www.crossmodel.ai/console/api-keys).
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Claude Sonnet 4.6
+      provider: crossmodel
+      model: anthropic/claude-sonnet-4-6
+      apiKey: <YOUR_CROSSMODEL_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude Sonnet 4.6",
+        "provider": "crossmodel",
+        "model": "anthropic/claude-sonnet-4-6",
+        "apiKey": "<YOUR_CROSSMODEL_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+Model IDs follow the `<vendor>/<model>` convention (for example `anthropic/claude-opus-4-8`, `openai/gpt-5.5`, `deepseek/deepseek-v4-pro`, `gemini/gemini-3.5-flash`). The full, up-to-date catalog with pricing is at [crossmodel.ai/models](https://www.crossmodel.ai/models), and can also be listed from the gateway's OpenAI-compatible `/v1/models` endpoint.
+
+## Notes
+
+- CrossModel uses an OpenAI-compatible API at `https://api.crossmodel.ai/v1`
+- Set the `CROSSMODEL_API_KEY` environment variable or configure `apiKey` in your config
+- An Anthropic-compatible endpoint is also available at the same host for tools that speak the Anthropic Messages API
