@@ -355,6 +355,17 @@ export function convertFromUnifiedHistory(
 
 /**
  * Convert ChatHistoryItem array to ChatCompletionMessageParam array with injected system message
+ *
+ * Many OpenAI-compatible providers require the system message to be the very
+ * first message in the array. The history can contain additional system
+ * messages (e.g. notifications added via `addSystemMessage`, compaction notices,
+ * or a system message already stored at `history[0]` in loaded/remote sessions).
+ * If those were emitted inline, the resulting array would have a system message
+ * at a non-zero index and the provider would reject the request with a
+ * "System message must be at the beginning" 400 error (notably surfaced after
+ * cancelling a tool call, which triggers a follow-up request). To avoid this we
+ * merge all system content into a single system message positioned at index 0.
+ *
  * @param historyItems - The chat history items
  * @param systemMessage - The system message to inject at the beginning
  */
@@ -362,17 +373,35 @@ export function convertFromUnifiedHistoryWithSystemMessage(
   historyItems: ChatHistoryItem[],
   systemMessage: string,
 ): ChatCompletionMessageParam[] {
+  const convertedMessages = convertFromUnifiedHistory(historyItems);
+
+  // Collect system content (the injected message plus any system messages that
+  // ended up inside the history) and keep the remaining messages in order.
+  const systemContents: string[] = [];
+  if (systemMessage.trim()) {
+    systemContents.push(systemMessage);
+  }
+
+  const nonSystemMessages: ChatCompletionMessageParam[] = [];
+  for (const message of convertedMessages) {
+    if (message.role === "system") {
+      if (typeof message.content === "string" && message.content.trim()) {
+        systemContents.push(message.content);
+      }
+      continue;
+    }
+    nonSystemMessages.push(message);
+  }
+
   const messages: ChatCompletionMessageParam[] = [];
 
-  // Inject system message at the beginning
+  // Always inject a single system message at the beginning
   messages.push({
     role: "system",
-    content: systemMessage,
+    content: systemContents.join("\n\n"),
   });
 
-  // Convert the rest of the history
-  const convertedMessages = convertFromUnifiedHistory(historyItems);
-  messages.push(...convertedMessages);
+  messages.push(...nonSystemMessages);
 
   return messages;
 }
