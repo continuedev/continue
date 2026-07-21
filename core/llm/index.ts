@@ -1021,9 +1021,23 @@ export abstract class BaseLLM implements ILLM {
   }
 
   private canUseOpenAIResponses(options: CompletionOptions): boolean {
+    // Only auto-route gpt-5 / o-series traffic to /responses on the official
+    // OpenAI API. Compatible proxies (custom apiBase) typically only implement
+    // /chat/completions — see #12995. Explicit useResponsesApi: true still
+    // opts in; useResponsesApi: false always opts out.
+    const useResponsesApi = this._llmOptions.useResponsesApi;
+    if (useResponsesApi === false) {
+      return false;
+    }
+    const apiBase = (this.apiBase ?? "").replace(/\/?$/, "/");
+    const isOfficialOpenAIAPI =
+      useResponsesApi === true ||
+      apiBase === "https://api.openai.com/v1/" ||
+      // empty / default base is treated as official OpenAI
+      !this.apiBase;
     return (
       this.providerName === "openai" &&
-      this._llmOptions.useResponsesApi !== false &&
+      isOfficialOpenAIAPI &&
       typeof (this as any)._streamResponses === "function" &&
       (this as any).isOSeriesOrGpt5PlusModel(options.model)
     );
