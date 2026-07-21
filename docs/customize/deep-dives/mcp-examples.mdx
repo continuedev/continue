@@ -1,6 +1,6 @@
 ---
 title: "Example MCP Servers"
-keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify, atlassian, github, sanity, snyk, dlt, chrome-devtools]
+keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify, atlassian, github, sanity, snyk, dlt, chrome-devtools, vestige, memory]
 ---
 
 Ready-to-use MCP server configurations for popular tools and services. Copy these into your `config.yaml` to get started.
@@ -182,6 +182,21 @@ mcpServers:
 ```
 
 See also: [Chrome DevTools MCP guide](/guides/chrome-devtools-mcp-performance)
+
+## Vestige
+
+Vestige gives the agent persistent memory across sessions. It runs locally and stores decisions, preferences, and past fixes on your own machine, so Continue can recall project context instead of starting cold each time.
+
+```yaml
+mcpServers:
+  - name: Vestige
+    command: npx
+    args:
+      - "-y"
+      - "-p"
+      - "vestige-mcp-server@latest"
+      - "vestige-mcp"
+```
 
 ## Other guides
 
