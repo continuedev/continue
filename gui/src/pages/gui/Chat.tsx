@@ -46,10 +46,9 @@ import { ToolCallDiv } from "./ToolCallDiv";
 import { useStore } from "react-redux";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 
-import { DeprecationBanner } from "../../components/DeprecationBanner";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
+import { DeprecationBanner } from "../../components/DeprecationBanner";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
-import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
@@ -386,6 +385,9 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
+        role="log"
+        aria-label="Message history"
+        aria-live="polite"
         className={`pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "min-h-0 flex-1 overflow-y-scroll" : "shrink-0"}`}
       >
         <DeprecationBanner dismissable={true} />
@@ -395,6 +397,8 @@ export function Chat() {
           .map((item, index: number) => (
             <div
               key={item.message.id}
+              tabIndex={0}
+              aria-label={`${item.message.role === "user" ? "You" : "Assistant"}, message ${index + 1}`}
               style={{
                 minHeight: index === history.length - 1 ? "200px" : 0,
               }}

@@ -18,6 +18,7 @@ interface HeaderButtonWithToolTipProps {
   hoverBackgroundColor?: string;
   tooltipPlacement?: PlacesType;
   testId?: string;
+  ariaLabel?: string;
 }
 
 const HeaderButtonWithToolTip = React.forwardRef<
@@ -41,6 +42,7 @@ const HeaderButtonWithToolTip = React.forwardRef<
         style={props.style}
         ref={ref}
         tabIndex={props.tabIndex}
+        aria-label={props.ariaLabel ?? props.text}
       >
         {props.children}
       </HeaderButton>
