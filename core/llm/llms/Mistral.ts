@@ -1,3 +1,5 @@
+import { fetchwithRequestOptions } from "@continuedev/fetch";
+
 import { ChatMessage, LLMOptions } from "../../index.js";
 import { codestralEditPrompt } from "../templates/edit/codestral.js";
 
@@ -17,10 +19,16 @@ class Mistral extends OpenAI {
   };
 
   private async autodetectApiKeyType(): Promise<MistralApiKeyType> {
-    const mistralResp = await fetch("https://api.mistral.ai/v1/models", {
-      method: "GET",
-      headers: this._getHeaders(),
-    });
+    // Not this.fetch: that throws on a non-ok response, and this request
+    // detects a Codestral key precisely by inspecting a 401.
+    const mistralResp = await fetchwithRequestOptions(
+      "https://api.mistral.ai/v1/models",
+      {
+        method: "GET",
+        headers: this._getHeaders(),
+      },
+      this.requestOptions,
+    );
     if (mistralResp.status === 401) {
       return "codestral";
     }
