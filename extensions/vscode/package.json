@@ -756,7 +756,7 @@
     "socket.io-client": "^4.7.2",
     "strip-ansi": "^7.1.0",
     "svg-builder": "^2.0.0",
-    "systeminformation": "^5.30.8",
+    "systeminformation": "^5.31.7",
     "tailwindcss": "^3.3.2",
     "undici": "^6.24.0",
     "uuid": "^9.0.1",
@@ -764,7 +764,7 @@
     "vectordb": "0.4.20",
     "vitest": "^3.1.4",
     "vscode-languageclient": "^8.0.2",
-    "ws": "^8.19.0",
+    "ws": "^8.21.1",
     "yarn": "^1.22.21"
   },
   "overrides": {
