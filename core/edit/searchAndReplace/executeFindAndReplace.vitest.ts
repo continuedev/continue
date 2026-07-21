@@ -326,5 +326,20 @@ describe("executeFindAndReplace", () => {
 
       expect(result).toBe("new content");
     });
+
+    it("should not corrupt the file when an earlier character changes length on lowercase", () => {
+      // "İ" (U+0130) lowercases to "i" + combining dot (2 UTF-16 units). The
+      // case-insensitive match must report indices into the original content,
+      // otherwise the replacement lands at the wrong offset and corrupts the file.
+      const content = "// İ marker comment\nconst value = 1;";
+      const result = executeFindAndReplace(
+        content,
+        "CONST VALUE = 1;",
+        "const value = 2;",
+        false,
+      );
+
+      expect(result).toBe("// İ marker comment\nconst value = 2;");
+    });
   });
 });

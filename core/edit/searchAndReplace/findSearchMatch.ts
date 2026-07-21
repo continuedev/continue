@@ -61,20 +61,50 @@ function trimmedMatch(
 
 /**
  * Case-insensitive matching strategy
+ *
+ * The match must be located in terms of the ORIGINAL file content. Searching
+ * the lowercased file directly is unsafe because `String.prototype.toLowerCase`
+ * is not guaranteed to be length-preserving (e.g. "İ" lowercases to "i̇", two
+ * UTF-16 units). A single such character before or within the match would shift
+ * every subsequent index, producing a misaligned slice and a corrupted edit.
+ *
+ * Instead we scan the original content and, for each candidate start position,
+ * lowercase only the slice that lines up with the lowercased search string. The
+ * matched region in the original may be longer or shorter than the search, so
+ * the end index is derived from that slice rather than from `searchContent.length`.
  */
 function caseInsensitiveMatch(
   fileContent: string,
   searchContent: string,
 ): BasicMatchResult | null {
-  const lowerFileContent = fileContent.toLowerCase();
   const lowerSearchContent = searchContent.toLowerCase();
-  const index = lowerFileContent.indexOf(lowerSearchContent);
-  if (index !== -1) {
-    return {
-      startIndex: index,
-      endIndex: index + searchContent.length,
-    };
+  if (lowerSearchContent.length === 0) {
+    return null;
   }
+
+  for (let startIndex = 0; startIndex < fileContent.length; startIndex++) {
+    // Grow the candidate slice until its lowercased form is at least as long as
+    // the search, then check for equality. This keeps indices anchored to the
+    // original string even when lowercasing changes length.
+    for (
+      let endIndex = startIndex + 1;
+      endIndex <= fileContent.length;
+      endIndex++
+    ) {
+      const lowerCandidate = fileContent
+        .slice(startIndex, endIndex)
+        .toLowerCase();
+      if (lowerCandidate.length < lowerSearchContent.length) {
+        continue;
+      }
+      if (lowerCandidate === lowerSearchContent) {
+        return { startIndex, endIndex };
+      }
+      // Once the candidate is long enough but doesn't match, advance the start.
+      break;
+    }
+  }
+
   return null;
 }
 
