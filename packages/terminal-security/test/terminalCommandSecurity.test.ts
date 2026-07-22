@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { evaluateTerminalCommandSecurity, ToolPolicy } from "../src/index.js";
+import { describe, expect, it } from "vitest";
+import { evaluateTerminalCommandSecurity } from "../src/index.js";
 
 describe("evaluateTerminalCommandSecurity", () => {
   describe("Critical Risk - Always Disabled", () => {
@@ -1862,6 +1862,53 @@ describe("evaluateTerminalCommandSecurity", () => {
         );
         expect(result).toBe("allowedWithoutPermission");
       });
+    });
+  });
+
+  describe("Unrestricted Mode", () => {
+    it("should always return allowedUnrestricted when base policy is allowedUnrestricted", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedUnrestricted",
+        "rm -rf /",
+      );
+      expect(result).toBe("allowedUnrestricted");
+    });
+
+    it("should return allowedUnrestricted for dangerous commands in unrestricted mode", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedUnrestricted",
+        "sudo apt-get update",
+      );
+      expect(result).toBe("allowedUnrestricted");
+    });
+
+    it("should return allowedUnrestricted for command substitution in unrestricted mode", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedUnrestricted",
+        "echo $(rm -rf /)",
+      );
+      expect(result).toBe("allowedUnrestricted");
+    });
+
+    it("should return allowedUnrestricted for obfuscated commands in unrestricted mode", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedUnrestricted",
+        "echo 'cm0gLXJmIC8=' | base64 -d | sh",
+      );
+      expect(result).toBe("allowedUnrestricted");
+    });
+
+    it("should return allowedUnrestricted for multi-line commands in unrestricted mode", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedUnrestricted",
+        "ls\nrm -rf /",
+      );
+      expect(result).toBe("allowedUnrestricted");
+    });
+
+    it("should handle empty command in unrestricted mode", () => {
+      const result = evaluateTerminalCommandSecurity("allowedUnrestricted", "");
+      expect(result).toBe("allowedUnrestricted");
     });
   });
 });
