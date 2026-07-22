@@ -96,6 +96,40 @@ If you are using an OpenAI API compatible providers, you can change the `apiBase
   </Tab>
 </Tabs>
 
+For example, to use API NODE as an OpenAI-compatible provider:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: API NODE GPT-5.5
+      provider: openai
+      model: gpt-5.5
+      apiBase: https://apinode.pro
+      apiKey: <YOUR_APINODE_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "API NODE GPT-5.5",
+        "provider": "openai",
+        "model": "gpt-5.5",
+        "apiKey": "<YOUR_APINODE_API_KEY>",
+        "apiBase": "https://apinode.pro"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
 ### How to Force Legacy Completions Endpoint Usage
 
 To force usage of `completions` instead of `chat/completions` endpoint you can set:
