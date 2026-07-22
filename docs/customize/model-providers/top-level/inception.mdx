@@ -22,9 +22,9 @@ sidebarTitle: "Inception"
   schema: v1
 
   models:
-    - name: <MODEL_NAME>
+    - name: Mercury 2
       provider: inception
-      model: <MODEL_ID>
+      model: mercury-2
       apiKey: <INCEPTION_API_KEY>
   ```
   </Tab>
@@ -33,9 +33,9 @@ sidebarTitle: "Inception"
   {
     "models": [
       {
-        "title": "<MODEL_NAME>",
+        "title": "Mercury 2",
         "provider": "inception",
-        "model": "<MODEL_ID>",
+        "model": "mercury-2",
         "apiKey": "<INCEPTION_API_KEY>"
       }
     ]
@@ -47,3 +47,50 @@ sidebarTitle: "Inception"
 <Info>
   **Check out a more advanced configuration [here](https://continue.dev/inceptionlabs/mercury-coder?view=config)**
 </Info>
+
+## Available Models
+
+| Model | Description | Context | Tool calling |
+|---|---|---|---|
+| `mercury-2` | Fastest reasoning diffusion model; most capable | 128k | ✓ |
+| `mercury-edit-2` | Code editing model for autocomplete, apply, and next-edit | 32k | — |
+| `mercury-coder-small` | Lightweight coding model | 32k | — |
+
+## Tool Calling with mercury-2
+
+`mercury-2` supports tool calling, enabling agent workflows in Continue. No extra configuration is required — Continue detects tool support automatically for models whose ID starts with `mercury-2`.
+
+To use `mercury-2` as both a chat and agent model:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Mercury 2
+      provider: inception
+      model: mercury-2
+      apiKey: <INCEPTION_API_KEY>
+      roles:
+        - chat
+        - agent
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Mercury 2",
+        "provider": "inception",
+        "model": "mercury-2",
+        "apiKey": "<INCEPTION_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

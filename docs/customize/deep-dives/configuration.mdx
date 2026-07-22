@@ -24,6 +24,41 @@ When editing this file, you can see the available options suggested as you type,
 
 See the full reference for `config.yaml` [here](/reference).
 
+## `.continue` Directory Structure
+
+Continue scans several subdirectories inside your `.continue/` folder (both the global `~/.continue/` and any workspace-level `.continue/`) to automatically discover and load local config profiles. Each YAML file found in these directories appears as a selectable profile in the config dropdown, and Continue watches for file changes to reload automatically.
+
+| Directory | Purpose |
+|---|---|
+| `.continue/configs/` | Config profiles — the recommended location for local YAML config files |
+| `.continue/agents/` | Agent definitions (also loaded as profiles) |
+| `.continue/assistants/` | Legacy name for `.continue/agents/` — still supported |
+
+### Using `.continue/configs/`
+
+Place any `config.yaml` (or other `.yaml` files) in `.continue/configs/` at the workspace or global level:
+
+```
+~/.continue/
+  configs/
+    frontend.yaml      # global profile: "frontend"
+    backend.yaml       # global profile: "backend"
+
+<your-project>/
+  .continue/
+    configs/
+      project.yaml     # workspace profile: "project"
+```
+
+Each file becomes its own selectable profile. Creating, deleting, or editing a file in this directory triggers an automatic config reload — no restart required.
+
+### Global vs. Workspace
+
+| Location | Scope |
+|---|---|
+| `~/.continue/configs/` (macOS/Linux) or `%USERPROFILE%\.continue\configs\` (Windows) | Available in all workspaces |
+| `<workspace-root>/.continue/configs/` | Available only in that workspace |
+
 ## Legacy Configuration Methods (Deprecated)
 
 <Info>
