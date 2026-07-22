@@ -255,85 +255,102 @@ async function intermediateToFinalConfig({
   };
   // Auto-detect models
   let models: BaseLLM[] = [];
-  await Promise.all(
+  const modelResults = await Promise.all(
     config.models.map(async (desc) => {
-      if ("title" in desc) {
-        const llm = await llmFromDescription(
-          desc,
-          ide.readFile.bind(ide),
-          getUriFromPath,
-          uniqueId,
-          ideSettings,
-          llmLogger,
-          config.completionOptions,
-        );
-        if (!llm) {
-          return;
-        }
-
-        if (llm.model === "AUTODETECT") {
-          try {
-            const modelNames = await llm.listModels();
-            const detectedModels = await Promise.all(
-              modelNames.map(async (modelName) => {
-                return await llmFromDescription(
-                  {
-                    ...desc,
-                    model: modelName,
-                    title: modelName,
-                    isFromAutoDetect: true,
-                  },
-                  ide.readFile.bind(ide),
-                  getUriFromPath,
-                  uniqueId,
-                  ideSettings,
-                  llmLogger,
-                  copyOf(config.completionOptions),
-                );
-              }),
-            );
-            models.push(
-              ...(detectedModels.filter(
-                (x) => typeof x !== "undefined",
-              ) as BaseLLM[]),
-            );
-          } catch (e) {
-            console.warn("Error listing models: ", e);
+      try {
+        if ("title" in desc) {
+          const llm = await llmFromDescription(
+            desc,
+            ide.readFile.bind(ide),
+            getUriFromPath,
+            uniqueId,
+            ideSettings,
+            llmLogger,
+            config.completionOptions,
+          );
+          if (!llm) {
+            return null;
           }
-        } else {
-          models.push(llm);
-        }
-      } else {
-        const llm = new CustomLLMClass({
-          ...desc,
-          options: { ...desc.options, logger: llmLogger } as any,
-        });
-        if (llm.model === "AUTODETECT") {
-          try {
-            const modelNames = await llm.listModels();
-            const models = modelNames.map(
-              (modelName) =>
-                new CustomLLMClass({
-                  ...desc,
-                  options: {
-                    ...desc.options,
-                    model: modelName,
-                    logger: llmLogger,
-                    isFromAutoDetect: true,
-                  },
+
+          if (llm.model === "AUTODETECT") {
+            try {
+              const modelNames = await llm.listModels();
+              const detectedModels = await Promise.all(
+                modelNames.map(async (modelName) => {
+                  return await llmFromDescription(
+                    {
+                      ...desc,
+                      model: modelName,
+                      title: modelName,
+                      isFromAutoDetect: true,
+                    },
+                    ide.readFile.bind(ide),
+                    getUriFromPath,
+                    uniqueId,
+                    ideSettings,
+                    llmLogger,
+                    copyOf(config.completionOptions),
+                  );
                 }),
-            );
-
-            models.push(...models);
-          } catch (e) {
-            console.warn("Error listing models: ", e);
+              );
+              return detectedModels.filter(
+                (x) => typeof x !== "undefined",
+              ) as BaseLLM[];
+            } catch (e) {
+              console.warn("Error listing models: ", e);
+              return [llm];
+            }
+          } else {
+            return [llm];
           }
         } else {
-          models.push(llm);
+          try {
+            const llm = new CustomLLMClass({
+              ...desc,
+              options: { ...desc.options, logger: llmLogger } as any,
+            });
+            if (llm.model === "AUTODETECT") {
+              try {
+                const modelNames = await llm.listModels();
+                const detectedCustomModels = modelNames.map(
+                  (modelName) =>
+                    new CustomLLMClass({
+                      ...desc,
+                      options: {
+                        ...desc.options,
+                        model: modelName,
+                        logger: llmLogger,
+                        isFromAutoDetect: true,
+                      },
+                    }),
+                );
+
+                return detectedCustomModels;
+              } catch (e) {
+                console.warn("Error listing models: ", e);
+                return [llm];
+              }
+            } else {
+              return [llm];
+            }
+          } catch (e) {
+            errors.push({
+              fatal: false,
+              message: `Error constructing model: ${e instanceof Error ? e.message : String(e)}`,
+            });
+            return null;
+          }
         }
+      } catch (e) {
+        errors.push({
+          fatal: false,
+          message: `Error loading model: ${e instanceof Error ? e.message : String(e)}`,
+        });
+        return null;
       }
     }),
   );
+  models.push(...(modelResults.filter((x) => x !== null).flat() as BaseLLM[]));
 
   applyRequestOptionsToModels(models, config, [
     "chat",
@@ -349,25 +366,42 @@ async function intermediateToFinalConfig({
       ? config.tabAutocompleteModel
       : [config.tabAutocompleteModel];
 
-    await Promise.all(
+    const tabAutocompleteResults = await Promise.all(
       autocompleteConfigs.map(async (desc) => {
-        if ("title" in desc) {
-          const llm = await llmFromDescription(
-            desc,
-            ide.readFile.bind(ide),
-            getUriFromPath,
-            uniqueId,
-            ideSettings,
-            llmLogger,
-            config.completionOptions,
-          );
-          if (llm) {
-            tabAutocompleteModels.push(llm);
+        try {
+          if ("title" in desc) {
+            const llm = await llmFromDescription(
+              desc,
+              ide.readFile.bind(ide),
+              getUriFromPath,
+              uniqueId,
+              ideSettings,
+              llmLogger,
+              config.completionOptions,
+            );
+            return llm ?? null;
+          } else {
+            try {
+              return new CustomLLMClass(desc);
+            } catch (e) {
+              errors.push({
+                fatal: false,
+                message: `Error constructing tab autocomplete model: ${e instanceof Error ? e.message : String(e)}`,
+              });
+              return null;
+            }
           }
-        } else {
-          tabAutocompleteModels.push(new CustomLLMClass(desc));
+        } catch (e) {
+          errors.push({
+            fatal: false,
+            message: `Error loading tab autocomplete model: ${e instanceof Error ? e.message : String(e)}`,
+          });
+          return null;
         }
       }),
+    );
+    tabAutocompleteModels.push(
+      ...(tabAutocompleteResults.filter((x) => x !== null) as BaseLLM[]),
     );
   }
 
@@ -408,11 +442,19 @@ async function intermediateToFinalConfig({
       } else {
         const cls = LLMClasses.find((c) => c.providerName === provider);
         if (cls) {
-          const llmOptions: LLMOptions = {
-            model: options.model ?? "UNSPECIFIED",
-            ...options,
-          };
-          return new cls(llmOptions);
+          try {
+            const llmOptions: LLMOptions = {
+              model: options.model ?? "UNSPECIFIED",
+              ...options,
+            };
+            return new cls(llmOptions);
+          } catch (e) {
+            errors.push({
+              fatal: false,
+              message: `Error constructing embeddings provider ${provider}: ${e instanceof Error ? e.message : String(e)}`,
+            });
+            return null;
+          }
         } else {
           errors.push({
             fatal: false,
@@ -454,11 +496,19 @@ async function intermediateToFinalConfig({
     } else {
       const cls = LLMClasses.find((c) => c.providerName === name);
       if (cls) {
-        const llmOptions: LLMOptions = {
-          model: params?.model ?? "UNSPECIFIED",
-          ...params,
-        };
-        return new cls(llmOptions);
+        try {
+          const llmOptions: LLMOptions = {
+            model: params?.model ?? "UNSPECIFIED",
+            ...params,
+          };
+          return new cls(llmOptions);
+        } catch (e) {
+          errors.push({
+            fatal: false,
+            message: `Error constructing reranker provider ${name}: ${e instanceof Error ? e.message : String(e)}`,
+          });
+          return null;
+        }
       } else {
         errors.push({
           fatal: false,

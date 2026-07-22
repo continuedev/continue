@@ -148,6 +148,38 @@ describe("BaseLLM", () => {
       expect(baseLLM.supportsCompletions()).toBe(true);
     });
   });
+
+  describe("BaseLLM apiBase normalization", () => {
+    it("should throw a descriptive error when apiBase is an unresolved template", () => {
+      expect(() => {
+        new DummyLLM({ model: "test", apiBase: "${{ secrets.MY_KEY }}" });
+      }).toThrow(
+        'Invalid apiBase for provider "openai": "http://${{ secrets.MY_KEY }}/". Expected a full URL (e.g. "http://localhost:11434/v1/"). If you are using a secret reference, make sure it resolves before being passed here.',
+      );
+    });
+
+    it("should prepend http:// and add trailing slash when apiBase is a bare host without protocol", () => {
+      const llm = new DummyLLM({ model: "test", apiBase: "localhost:11434" });
+      expect(llm.apiBase).toBe("http://localhost:11434/");
+    });
+
+    it("should not throw when apiBase is undefined", () => {
+      expect(() => {
+        new DummyLLM({ model: "test" });
+      }).not.toThrow();
+    });
+
+    it("should not throw for a well-formed URL", () => {
+      expect(() => {
+        new DummyLLM({ model: "test", apiBase: "https://api.openai.com/v1/" });
+      }).not.toThrow();
+      const llm = new DummyLLM({
+        model: "test",
+        apiBase: "https://api.openai.com/v1/",
+      });
+      expect(llm.apiBase).toBe("https://api.openai.com/v1/");
+    });
+  });
   describe("supportsPrefill", () => {
     test("should return correctly under specific conditions", () => {
       expect(baseLLM.supportsPrefill()).toBe(false);
