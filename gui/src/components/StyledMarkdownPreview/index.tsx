@@ -37,6 +37,8 @@ const StyledMarkdown = styled.div<{
   whiteSpace: string;
   bgColor: string;
 }>`
+  min-width: 0;
+  max-width: 100%;
   h1 {
     font-size: 1.25em;
   }
@@ -66,7 +68,9 @@ const StyledMarkdown = styled.div<{
     background-color: ${vscEditorBackground};
     border-radius: ${defaultBorderRadius};
 
-    max-width: calc(100vw - 24px);
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
     overflow-x: scroll;
     overflow-y: hidden;
 
@@ -77,6 +81,8 @@ const StyledMarkdown = styled.div<{
     span.line:empty {
       display: none;
     }
+    overflow-wrap: anywhere;
+    word-break: break-word;
     word-wrap: break-word;
     border-radius: 0.3125rem;
     background-color: ${vscEditorBackground};

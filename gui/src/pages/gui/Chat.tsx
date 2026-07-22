@@ -355,7 +355,7 @@ export function Chat() {
 
       // Default case - regular assistant message
       return (
-        <div className="thread-message">
+        <div className="thread-message min-w-0">
           <TimelineItem
             item={item}
             iconElement={<ChatBubbleOvalLeftIcon width="16px" height="16px" />}
@@ -386,7 +386,7 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "min-h-0 flex-1 overflow-y-scroll" : "shrink-0"}`}
+        className={`min-w-0 pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "min-h-0 flex-1 overflow-x-hidden overflow-y-scroll" : "shrink-0"}`}
       >
         <DeprecationBanner dismissable={true} />
         {highlights}
