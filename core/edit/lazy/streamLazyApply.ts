@@ -62,7 +62,7 @@ export async function* streamLazyApply(
 
   // Convert output to diff
   const oldLines = oldCode.split(/\r?\n/);
-  let diffLines = streamDiff(oldLines, lines);
+  let diffLines = streamDiff(oldLines, lines, filename);
   diffLines = filterLeadingAndTrailingNewLineInsertion(diffLines);
   for await (const diffLine of diffLines) {
     yield diffLine;

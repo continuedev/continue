@@ -49,6 +49,7 @@ export function matchLine(
   newLine: string,
   oldLines: string[],
   permissiveAboutIndentation = false,
+  filename?: string,
 ): MatchLineResult {
   // Only match empty lines if it's the next one:
   if (newLine.trim() === "" && oldLines[0]?.trim() === "") {
@@ -77,9 +78,14 @@ export function matchLine(
     }
     if (linesMatch(newLineTrimmed, oldLineTrimmed, i)) {
       // This is a way to fix indentation, but only for sufficiently long lines to avoid matching whitespace or short lines
+      // For Python files, indentation is syntax and should never be permissive
+      const isPythonFile = filename?.endsWith(".py");
+      const shouldBePermissive =
+        !isPythonFile &&
+        (permissiveAboutIndentation || newLine.trim().length > 8);
       if (
         newLineTrimmed.trimStart() === oldLineTrimmed.trimStart() &&
-        (permissiveAboutIndentation || newLine.trim().length > 8)
+        shouldBePermissive
       ) {
         return {
           matchIndex: i,

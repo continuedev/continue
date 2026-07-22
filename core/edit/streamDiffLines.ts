@@ -176,7 +176,7 @@ export async function* streamDiffLines(
     lines = filterEnglishLinesAtEnd(lines);
   }
 
-  let diffLines = streamDiff(oldLines, lines);
+  let diffLines = streamDiff(oldLines, lines, options.fileUri);
   diffLines = filterLeadingAndTrailingNewLineInsertion(diffLines);
   if (highlighted.length === 0) {
     const line = prefix.split("\n").slice(-1)[0];
