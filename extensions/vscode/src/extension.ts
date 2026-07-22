@@ -14,6 +14,14 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
 }
 
 export function activate(context: vscode.ExtensionContext) {
+  // Register viewLogs command early so it's available even if
+  // the dynamic import/activation fails.
+  context.subscriptions.push(
+    vscode.commands.registerCommand("continue.viewLogs", () => {
+      vscode.commands.executeCommand("workbench.action.toggleDevTools");
+    }),
+  );
+
   return dynamicImportAndActivate(context).catch((e) => {
     console.log("Error activating extension: ", e);
     vscode.window
