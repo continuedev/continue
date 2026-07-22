@@ -148,7 +148,7 @@ export const ADDITIONAL_INDEXING_IGNORE_FILETYPES = [
   "go.sum",
   "*.gitignore",
   "*.gitkeep",
-  "*.continueignore",
+  "*.babsignore",
   "*.csv",
   "*.uasset",
   "*.pdb",

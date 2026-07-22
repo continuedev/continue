@@ -1,4 +1,4 @@
-export const EXTENSION_NAME = "continue";
+export const EXTENSION_NAME = "babs";
 
 export const NEW_SESSION_TITLE = "New Session";
 

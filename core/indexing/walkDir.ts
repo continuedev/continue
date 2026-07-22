@@ -307,11 +307,9 @@ export async function getIgnoreContext(
     .map(([name, _]) => name);
 
   // Find ignore files and get ignore arrays from their contexts
-  // These are done separately so that .continueignore can override .gitignore
+  // These are done separately so that .babsignore can override .gitignore
   const gitIgnoreFile = dirFiles.find((name) => name === ".gitignore");
-  const continueIgnoreFile = dirFiles.find(
-    (name) => name === ".continueignore",
-  );
+  const continueIgnoreFile = dirFiles.find((name) => name === ".babsignore");
 
   const getGitIgnorePatterns = async () => {
     if (gitIgnoreFile) {
@@ -322,7 +320,7 @@ export async function getIgnoreContext(
   };
   const getContinueIgnorePatterns = async () => {
     if (continueIgnoreFile) {
-      const contents = await ide.readFile(`${currentDir}/.continueignore`);
+      const contents = await ide.readFile(`${currentDir}/.babsignore`);
       return gitIgArrayFromFile(contents);
     }
     return [];
@@ -340,8 +338,8 @@ export async function getIgnoreContext(
   // Note precedence here!
   const ignoreContext = ignore()
     .add(ignoreArrays[0]) // gitignore
-    .add(defaultAndGlobalIgnores) // default file/folder ignores followed by global .continueignore - this is combined for speed
-    .add(ignoreArrays[1]); // local .continueignore
+    .add(defaultAndGlobalIgnores) // default file/folder ignores followed by global .babsignore - this is combined for speed
+    .add(ignoreArrays[1]); // local .babsignore
 
   return ignoreContext;
 }
