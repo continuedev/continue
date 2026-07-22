@@ -70,6 +70,7 @@ import {
   serializePromptTemplates,
 } from "./util";
 import { validateConfig } from "./validation.js";
+import { mergeMcpRequestOptions } from "./yaml/yamlToContinueConfig";
 
 export function resolveSerializedConfig(
   filepath: string,
@@ -526,7 +527,7 @@ async function intermediateToFinalConfig({
     ).map((server, index) => ({
       id: `continue-mcp-server-${index + 1}`,
       name: `MCP Server`,
-      requestOptions: mergeConfigYamlRequestOptions(
+      requestOptions: mergeMcpRequestOptions(
         server.transport.type !== "stdio"
           ? server.transport.requestOptions
           : undefined,

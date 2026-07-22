@@ -32,6 +32,31 @@ export function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
   }
 }
 
+export function mergeMcpRequestOptions(
+  requestOptions?: RequestOptions,
+  globalRequestOptions?: RequestOptions,
+): RequestOptions | undefined {
+  if (!globalRequestOptions) {
+    return requestOptions;
+  }
+
+  const {
+    verifySsl: _globalVerifySsl,
+    ...globalRequestOptionsWithoutVerifySsl
+  } = globalRequestOptions;
+
+  // Global verifySsl can disable MCP certificate validation without a server-specific opt-out.
+  const sanitizedGlobalRequestOptions =
+    Object.keys(globalRequestOptionsWithoutVerifySsl).length > 0
+      ? globalRequestOptionsWithoutVerifySsl
+      : undefined;
+
+  return mergeConfigYamlRequestOptions(
+    requestOptions,
+    sanitizedGlobalRequestOptions,
+  );
+}
+
 export function convertYamlMcpConfigToInternalMcpOptions(
   config: MCPServer,
   globalRequestOptions?: RequestOptions,
@@ -66,7 +91,7 @@ export function convertYamlMcpConfigToInternalMcpOptions(
     type,
     url,
     apiKey,
-    requestOptions: mergeConfigYamlRequestOptions(
+    requestOptions: mergeMcpRequestOptions(
       requestOptions,
       globalRequestOptions,
     ),

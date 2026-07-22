@@ -3,6 +3,7 @@ import {
   validateConfigYaml,
 } from "@continuedev/config-yaml";
 import { describe, expect, it } from "vitest";
+import { convertYamlMcpConfigToInternalMcpOptions } from "./yamlToContinueConfig";
 
 describe("MCP Server cwd configuration", () => {
   describe("YAML schema validation", () => {
@@ -124,5 +125,108 @@ describe("MCP Server cwd configuration", () => {
         expect(errors).toHaveLength(0);
       });
     });
+  });
+});
+
+describe("convertYamlMcpConfigToInternalMcpOptions", () => {
+  it("does not inherit global verifySsl false into remote MCP request options", () => {
+    const result = convertYamlMcpConfigToInternalMcpOptions(
+      {
+        name: "remote",
+        type: "sse",
+        url: "https://mcp.example.com",
+      },
+      {
+        verifySsl: false,
+        headers: {
+          "X-Test": "1",
+        },
+        proxy: "https://proxy.example.com",
+      },
+    );
+
+    expect("requestOptions" in result).toBe(true);
+    expect(result.requestOptions).toEqual({
+      headers: {
+        "X-Test": "1",
+      },
+      proxy: "https://proxy.example.com",
+    });
+    expect(result.requestOptions?.verifySsl).toBeUndefined();
+    expect(result.requestOptions).not.toHaveProperty("verifySsl");
+  });
+
+  it("does not inherit global verifySsl false into streamable HTTP MCP options", () => {
+    const result = convertYamlMcpConfigToInternalMcpOptions(
+      {
+        name: "remote",
+        type: "streamable-http",
+        url: "https://mcp.example.com",
+      },
+      {
+        verifySsl: false,
+        timeout: 30,
+      },
+    );
+
+    expect("requestOptions" in result).toBe(true);
+    expect(result.requestOptions).toEqual({
+      timeout: 30,
+    });
+    expect(result.requestOptions).not.toHaveProperty("verifySsl");
+  });
+
+  it("preserves explicit per-server verifySsl false", () => {
+    const result = convertYamlMcpConfigToInternalMcpOptions(
+      {
+        name: "remote",
+        type: "sse",
+        url: "https://mcp.example.com",
+        requestOptions: {
+          verifySsl: false,
+        },
+      },
+      {
+        verifySsl: false,
+      },
+    );
+
+    expect("requestOptions" in result).toBe(true);
+    expect(result.requestOptions?.verifySsl).toBe(false);
+  });
+
+  it("preserves explicit per-server verifySsl true", () => {
+    const result = convertYamlMcpConfigToInternalMcpOptions(
+      {
+        name: "remote",
+        type: "streamable-http",
+        url: "https://mcp.example.com",
+        requestOptions: {
+          verifySsl: true,
+        },
+      },
+      {
+        verifySsl: false,
+      },
+    );
+
+    expect("requestOptions" in result).toBe(true);
+    expect(result.requestOptions?.verifySsl).toBe(true);
+  });
+
+  it("returns no request options when only global verifySsl is set", () => {
+    const result = convertYamlMcpConfigToInternalMcpOptions(
+      {
+        name: "remote",
+        type: "sse",
+        url: "https://mcp.example.com",
+      },
+      {
+        verifySsl: false,
+      },
+    );
+
+    expect("requestOptions" in result).toBe(true);
+    expect(result.requestOptions).toBeUndefined();
   });
 });
