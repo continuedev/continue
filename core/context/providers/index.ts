@@ -4,6 +4,7 @@ import { ContextProviderName } from "../../";
 import ClipboardContextProvider from "./ClipboardContextProvider";
 import CodebaseContextProvider from "./CodebaseContextProvider";
 import CodeContextProvider from "./CodeContextProvider";
+import DakeraContextProvider from "./DakeraContextProvider";
 
 import CurrentFileContextProvider from "./CurrentFileContextProvider";
 import DatabaseContextProvider from "./DatabaseContextProvider";
@@ -71,6 +72,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   GitCommitContextProvider,
   ClipboardContextProvider,
   RulesContextProvider,
+  DakeraContextProvider,
 ];
 
 export function contextProviderClassFromName(
