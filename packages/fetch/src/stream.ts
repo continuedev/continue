@@ -49,7 +49,10 @@ export async function* streamResponse(
   } catch (e) {
     if (e instanceof Error) {
       if (e.name.startsWith("AbortError")) {
-        return; // In case of client-side cancellation, just return
+        // Let callers know that the request was aborted, so they can handle it accordingly,
+        // especially not try parsing the left over buffers, which might be incomplete and
+        // cause a JSON parsing error.
+        throw e;
       }
       if (e.message.toLowerCase().includes("premature close")) {
         // Premature close can happen for various reasons, including:
