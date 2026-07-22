@@ -261,6 +261,34 @@ describe("evaluateTerminalCommandSecurity", () => {
       expect(result).toBe("allowedWithPermission");
     });
 
+    it("should not warn for exact popular package installs", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "npm install lodash",
+        { includeWarnings: true },
+      );
+
+      expect(result.policy).toBe("allowedWithPermission");
+      expect(result.warnings).toBeUndefined();
+    });
+
+    it("should warn when an npm install target looks like a typosquat", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "npm install lodahs",
+        { includeWarnings: true },
+      );
+
+      expect(result.policy).toBe("allowedWithPermission");
+      expect(result.warnings).toEqual([
+        expect.objectContaining({
+          type: "typosquat-target",
+          packageName: "lodahs",
+          suspectedPackageName: "lodash",
+        }),
+      ]);
+    });
+
     it("should require permission for npm i", () => {
       const result = evaluateTerminalCommandSecurity(
         "allowedWithoutPermission",
@@ -317,6 +345,23 @@ describe("evaluateTerminalCommandSecurity", () => {
       expect(result).toBe("allowedWithPermission");
     });
 
+    it("should warn when a yarn add target looks like a typosquat", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "yarn add lodahs",
+        { includeWarnings: true },
+      );
+
+      expect(result.policy).toBe("allowedWithPermission");
+      expect(result.warnings).toEqual([
+        expect.objectContaining({
+          type: "typosquat-target",
+          packageName: "lodahs",
+          suspectedPackageName: "lodash",
+        }),
+      ]);
+    });
+
     it("should require permission for pnpm install", () => {
       const result = evaluateTerminalCommandSecurity(
         "allowedWithoutPermission",
@@ -347,6 +392,115 @@ describe("evaluateTerminalCommandSecurity", () => {
         "choco install nodejs",
       );
       expect(result).toBe("allowedWithPermission");
+    });
+
+    it("should warn for runner targets that look like typosquats", () => {
+      const commands = [
+        "npx expres",
+        "pnpm dlx expres",
+        "yarn dlx expres",
+        "bunx expres",
+      ];
+
+      for (const command of commands) {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          command,
+          { includeWarnings: true },
+        );
+
+        expect(result.policy).toBe("allowedWithPermission");
+        expect(result.warnings).toEqual([
+          expect.objectContaining({
+            type: "typosquat-target",
+            packageName: "expres",
+            suspectedPackageName: "express",
+          }),
+        ]);
+      }
+    });
+
+    it("should warn for runner package flags that look like typosquats", () => {
+      const commands = [
+        "npx -p expres cowsay",
+        "npx --package expres cowsay",
+        "npx --package=expres cowsay",
+        "pnpm dlx --package expres cowsay",
+      ];
+
+      for (const command of commands) {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          command,
+          { includeWarnings: true },
+        );
+
+        expect(result.policy).toBe("allowedWithPermission");
+        expect(result.warnings).toEqual([
+          expect.objectContaining({
+            type: "typosquat-target",
+            packageName: "expres",
+            suspectedPackageName: "express",
+          }),
+        ]);
+      }
+    });
+
+    it("should not treat non-package runner flag values as typosquats", () => {
+      // `-c`/`--registry` values are not packages and must not be checked, and
+      // with an explicit `-p` the trailing binary name is not a package target.
+      const commands = [
+        "npx -c expres",
+        "npx --registry expres cowsay",
+        "npx -p cowsay expres",
+      ];
+
+      for (const command of commands) {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          command,
+          { includeWarnings: true },
+        );
+
+        expect(
+          (result.warnings ?? []).some((w) => w.type === "typosquat-target"),
+        ).toBe(false);
+      }
+    });
+
+    it("should parse scoped packages, versions, and multiple install targets", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "npm install lodash@4 @types/node@20 expres",
+        { includeWarnings: true },
+      );
+
+      expect(result.policy).toBe("allowedWithPermission");
+      expect(result.warnings).toEqual([
+        expect.objectContaining({
+          type: "typosquat-target",
+          packageName: "expres",
+          suspectedPackageName: "express",
+        }),
+      ]);
+    });
+
+    it("should not warn for non-install commands or distant package names", () => {
+      const safeCommand = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "echo lodahs",
+        { includeWarnings: true },
+      );
+      const distantPackage = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "npm install totally-unrelated-package",
+        { includeWarnings: true },
+      );
+
+      expect(safeCommand.policy).toBe("allowedWithoutPermission");
+      expect(safeCommand.warnings).toBeUndefined();
+      expect(distantPackage.policy).toBe("allowedWithPermission");
+      expect(distantPackage.warnings).toBeUndefined();
     });
   });
 
