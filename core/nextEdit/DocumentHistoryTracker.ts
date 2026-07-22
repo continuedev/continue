@@ -61,7 +61,7 @@ export class DocumentHistoryTracker {
     const documentHistory = this.documentContentHistoryMap.get(documentPath);
 
     if (!astHistory || !documentHistory) {
-      console.error(`Document ${documentPath} not found in AST tracker`);
+      console.debug(`Document ${documentPath} not found in AST tracker, adding it`);
       this.addDocument(documentPath, documentContent, ast);
       return; // Early return - document was added with initial state
     }
