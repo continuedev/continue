@@ -8,8 +8,12 @@ import Ollama from "./Ollama.js";
 function createOllama(): Ollama {
   // Create instance without triggering constructor's fetch call
   const instance = Object.create(Ollama.prototype);
+  instance.apiBase = "http://localhost:11434/";
   instance.model = "test-model";
+  instance.modelMap = {};
   instance.completionOptions = {};
+  instance.requestOptions = {};
+  instance._contextLength = 4096;
   instance.fetch = jest.fn();
   return instance;
 }
@@ -221,6 +225,118 @@ describe("Ollama", () => {
       // System should be moved before tool
       expect(result[0].role).toBe("system");
       expect(result[1].role).toBe("tool");
+    });
+  });
+
+  describe("request option overrides", () => {
+    let ollama: Ollama;
+
+    beforeEach(() => {
+      ollama = createOllama();
+    });
+
+    it("should merge requestOptions.options into generate requests", () => {
+      (ollama as any).requestOptions = {
+        options: {
+          num_gpu: 20,
+          num_thread: 8,
+          keep_alive: -1,
+          repeat_penalty: 1.2,
+        },
+      };
+
+      const result = (ollama as any)._getGenerateOptions({}, "hello");
+
+      expect(result.options).toMatchObject({
+        num_ctx: 4096,
+        num_gpu: 20,
+        num_thread: 8,
+        repeat_penalty: 1.2,
+      });
+      expect(result.keep_alive).toBe(-1);
+    });
+
+    it("should let completion options override request option defaults", () => {
+      (ollama as any).requestOptions = {
+        keepAlive: -1,
+        options: {
+          num_gpu: 20,
+          num_thread: 8,
+        },
+      };
+
+      const result = (ollama as any)._getGenerateOptions(
+        {
+          keepAlive: 120,
+          numGpu: 4,
+          numThreads: 2,
+        },
+        "hello",
+      );
+
+      expect(result.options).toMatchObject({
+        num_ctx: 4096,
+        num_gpu: 4,
+        num_thread: 2,
+      });
+      expect(result.keep_alive).toBe(120);
+    });
+  });
+
+  describe("tool attachment", () => {
+    const tool = {
+      type: "function",
+      function: {
+        name: "get_weather",
+        description: "Get weather",
+        parameters: {
+          type: "object",
+          properties: {
+            city: { type: "string" },
+          },
+        },
+      },
+    } as any;
+
+    async function runChatRequest(ollama: Ollama) {
+      (ollama as any).modelInfoPromise = Promise.resolve();
+      (ollama as any).fetch = jest.fn().mockResolvedValue({
+        status: 200,
+        json: async () => ({
+          message: { role: "assistant", content: "ok" },
+        }),
+      });
+
+      const messages: ChatMessage[] = [{ role: "user", content: "hello" }];
+      for await (const _ of (ollama as any)._streamChat(
+        messages,
+        new AbortController().signal,
+        { tools: [tool], stream: false },
+      )) {
+      }
+
+      const [, init] = ((ollama as any).fetch as jest.Mock).mock.calls[0];
+      return JSON.parse(init.body);
+    }
+
+    it("should skip tools when the model template does not support them", async () => {
+      const ollama = createOllama();
+      (ollama as any).templateSupportsTools = false;
+
+      const requestBody = await runChatRequest(ollama);
+
+      expect(requestBody.tools).toBeUndefined();
+    });
+
+    it("should let explicit capabilities override the template tool gate", async () => {
+      const ollama = createOllama();
+      (ollama as any).templateSupportsTools = false;
+      (ollama as any).capabilities = { tools: true };
+
+      const requestBody = await runChatRequest(ollama);
+
+      expect(requestBody.tools).toHaveLength(1);
+      expect(requestBody.tools[0].function.name).toBe("get_weather");
     });
   });
 });
