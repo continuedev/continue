@@ -33,7 +33,7 @@ export const createNewFileImpl: ToolImpl = async (args, extras) => {
       {
         name: getUriPathBasename(resolvedFileUri),
         description: getCleanUriPath(resolvedFileUri),
-        content: "File created successfuly",
+        content: "File created successfully",
         uri: {
           type: "file",
           value: resolvedFileUri,
