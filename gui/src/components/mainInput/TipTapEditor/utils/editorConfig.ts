@@ -69,8 +69,13 @@ export function hasValidEditorContent(json: JSONContent): boolean {
     }),
   );
 
+  // Check for images
+  const hasImage = json.content?.some(
+    (c) => c.type === "image" || c.content?.some((child) => child.type === "image")
+  );
+
   // Content is valid if it has either non-whitespace text or special blocks
-  return hasNonWhitespaceText || hasPromptOrCodeBlock || false;
+  return hasNonWhitespaceText || hasPromptOrCodeBlock || hasImage || false;
 }
 
 /**
@@ -156,34 +161,40 @@ export function createEditorConfig(options: {
           const pastePlugin = new Plugin({
             props: {
               handleDOMEvents: {
-                paste(view, event) {
+                paste: (view, event) => {
                   const model = defaultModelRef.current;
-                  if (!model) return;
+                  if (!model) return false;
                   const items = event.clipboardData?.items;
                   if (items) {
+                    let handled = false;
                     for (const item of items) {
+                      if (item.type.indexOf("image/") !== 0) continue;
                       const file = item.getAsFile();
-                      file &&
+                      if (
+                        file &&
                         modelSupportsImages(
                           model.provider,
                           model.model,
                           model.title,
                           model.capabilities,
-                        ) &&
+                        )
+                      ) {
                         void handleImageFile(ideMessenger, file).then(
                           (resp) => {
                             if (!resp) return;
                             const [img, dataUrl] = resp;
-                            const { schema } = view.state;
-                            const node = schema.nodes.image.create({
-                              src: dataUrl,
+                            this.editor.commands.insertContentAt(0, {
+                              type: "image",
+                              attrs: { src: dataUrl },
                             });
-                            const tr = view.state.tr.insert(0, node);
-                            view.dispatch(tr);
                           },
                         );
+                        handled = true;
+                      }
                     }
+                    if (handled) return true;
                   }
+                  return false;
                 },
               },
             },
