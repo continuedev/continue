@@ -1214,6 +1214,13 @@ export interface BaseCompletionOptions {
   toolChoice?: ToolChoice;
   reasoning?: boolean;
   reasoningBudgetTokens?: number;
+  thinking?: {
+    type?: "enabled" | "adaptive" | "disabled";
+    budget_tokens?: number;
+  };
+  output_config?: {
+    effort?: "low" | "medium" | "high";
+  };
   promptCaching?: boolean;
 }
 

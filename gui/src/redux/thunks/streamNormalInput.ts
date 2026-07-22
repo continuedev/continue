@@ -54,6 +54,10 @@ function buildReasoningCompletionOptions(
     return baseOptions;
   }
 
+  if (model.completionOptions?.thinking?.type) {
+    return baseOptions;
+  }
+
   const reasoningOptions: LLMFullCompletionOptions = {
     ...baseOptions,
     reasoning: !!hasReasoningEnabled,
