@@ -145,7 +145,8 @@ export class JumpManager {
           {
             ...baseTextConfig,
             x: 4,
-            fill: this._theme?.colors["editor.foreground"] ?? SVG_CONFIG.stroke,
+            fill:
+              this._theme?.colors?.["editor.foreground"] ?? SVG_CONFIG.stroke,
           },
           SVG_CONFIG.label,
         )
@@ -168,7 +169,7 @@ export class JumpManager {
 
   private _createSvgJumpDecoration(): vscode.TextEditorDecorationType {
     const backgroundColour =
-      this._theme?.colors["editor.background"] ?? "#333333";
+      this._theme?.colors?.["editor.background"] ?? "#333333";
 
     return vscode.window.createTextEditorDecorationType({
       after: {
