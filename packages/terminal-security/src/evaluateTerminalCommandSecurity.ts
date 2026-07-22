@@ -1156,6 +1156,36 @@ function extractSubstitutedCommands(command: string): string[] {
     idx = endIdx;
   }
 
+  // Extract from process substitution <(...) and >(...).
+  idx = 0;
+  while (idx < command.length - 2) {
+    const markerIdx = command.slice(idx).search(/[<>]\(/);
+    if (markerIdx === -1) break;
+
+    const startIdx = idx + markerIdx + 2;
+    let depth = 1;
+    let endIdx = startIdx;
+    while (endIdx < command.length && depth > 0) {
+      if (command[endIdx] === "(") depth++;
+      else if (command[endIdx] === ")") depth--;
+      endIdx++;
+    }
+
+    if (depth === 0) {
+      const extracted = command.slice(startIdx, endIdx - 1);
+      commands.push(extracted);
+      if (
+        extracted.includes("$(") ||
+        extracted.includes("`") ||
+        extracted.match(/<\(|>\(/)
+      ) {
+        commands.push(...extractSubstitutedCommands(extracted));
+      }
+    }
+
+    idx = endIdx;
+  }
+
   return commands;
 }
 
