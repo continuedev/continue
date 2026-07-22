@@ -76,6 +76,7 @@ test("patternMatchesHostname with wildcard domains", () => {
 test("patternMatchesHostname with domain suffix", () => {
   expect(patternMatchesHostname("sub.example.com", ".example.com")).toBe(true);
   expect(patternMatchesHostname("example.com", ".example.com")).toBe(true);
+  expect(patternMatchesHostname("badexample.com", ".example.com")).toBe(false);
   expect(patternMatchesHostname("different.com", ".example.com")).toBe(false);
 });
 
@@ -122,6 +123,9 @@ test("patternMatchesHostname with domain suffix and ports", () => {
     true,
   );
   expect(
+    patternMatchesHostname("badexample.com:8080", ".example.com:8080"),
+  ).toBe(false);
+  expect(
     patternMatchesHostname("sub.example.com:9090", ".example.com:8080"),
   ).toBe(false);
 });
@@ -157,6 +161,7 @@ test("shouldBypassProxy works with domain suffix", () => {
   process.env.NO_PROXY = ".example.com";
   expect(shouldBypassProxy("sub.example.com", undefined)).toBe(true);
   expect(shouldBypassProxy("example.com", undefined)).toBe(true);
+  expect(shouldBypassProxy("badexample.com", undefined)).toBe(false);
   expect(shouldBypassProxy("different.com", undefined)).toBe(false);
 });
 
@@ -166,6 +171,7 @@ test("shouldBypassProxy handles multiple entries with different patterns", () =>
   expect(shouldBypassProxy("sub.example.com", undefined)).toBe(true);
   expect(shouldBypassProxy("sub.test.com", undefined)).toBe(true);
   expect(shouldBypassProxy("test.com", undefined)).toBe(true);
+  expect(shouldBypassProxy("contest.com", undefined)).toBe(false);
   expect(shouldBypassProxy("example.org", undefined)).toBe(false);
 });
 
@@ -182,6 +188,7 @@ test("shouldBypassProxy with ports in NO_PROXY", () => {
   expect(shouldBypassProxy("sub.test.org:443", undefined)).toBe(true);
   expect(shouldBypassProxy("sub.internal.net:8443", undefined)).toBe(true);
   expect(shouldBypassProxy("internal.net:8443", undefined)).toBe(true);
+  expect(shouldBypassProxy("notinternal.net:8443", undefined)).toBe(false);
 });
 
 test("shouldBypassProxy accepts options with noProxy patterns", () => {

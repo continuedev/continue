@@ -74,11 +74,14 @@ export function patternMatchesHostname(hostname: string, pattern: string) {
     return true;
   }
   // Domain suffix match (.example.com)
-  if (
-    patternWithoutPort.startsWith(".") &&
-    hostnameWithoutPort.endsWith(patternWithoutPort.slice(1))
-  ) {
-    return true;
+  if (patternWithoutPort.startsWith(".")) {
+    const suffixWithoutDot = patternWithoutPort.slice(1);
+    if (
+      hostnameWithoutPort === suffixWithoutDot ||
+      hostnameWithoutPort.endsWith(patternWithoutPort)
+    ) {
+      return true;
+    }
   }
 
   // TODO IP address ranges
