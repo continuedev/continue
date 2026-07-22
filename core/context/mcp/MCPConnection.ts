@@ -85,7 +85,13 @@ class MCPConnection {
     // Don't construct transport in constructor to avoid blocking
     this.transport = {} as Transport; // Will be set in connectClient
 
-    this.client = new Client(
+    this.client = this.createClient();
+
+    this.abortController = new AbortController();
+  }
+
+  private createClient(): Client {
+    return new Client(
       {
         name: "continue-client",
         version: "1.0.0",
@@ -94,8 +100,24 @@ class MCPConnection {
         capabilities: {},
       },
     );
+  }
 
-    this.abortController = new AbortController();
+  private async connectTransport(transport: Transport): Promise<void> {
+    try {
+      await this.client.close();
+      await this.client.connect(transport, {});
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.startsWith("Already connected")
+      ) {
+        this.client = this.createClient();
+        await this.client.connect(transport, {});
+      } else {
+        throw error;
+      }
+    }
+    this.transport = transport;
   }
 
   async disconnect(disable = false) {
@@ -218,40 +240,20 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
                 const transport = await this.constructStdioTransport(
                   this.options,
                 );
-                try {
-                  await this.client.connect(transport, {});
-                  this.transport = transport;
-                } catch (error) {
-                  // Allow the case where for whatever reason is already connected
-                  if (
-                    error instanceof Error &&
-                    error.message.startsWith(
-                      "StdioClientTransport already started",
-                    )
-                  ) {
-                    await this.client.close();
-                    await this.client.connect(transport);
-                    this.transport = transport;
-                  } else {
-                    throw error;
-                  }
-                }
+                await this.connectTransport(transport);
               } else {
                 // SSE/HTTP: if type isn't explicit: try http and fall back to sse
                 if (this.options.type === "sse") {
                   const transport = this.constructSseTransport(this.options);
-                  await this.client.connect(transport, {});
-                  this.transport = transport;
+                  await this.connectTransport(transport);
                 } else if (this.options.type === "streamable-http") {
                   const transport = this.constructHttpTransport(this.options);
-                  await this.client.connect(transport, {});
-                  this.transport = transport;
+                  await this.connectTransport(transport);
                 } else if (this.options.type === "websocket") {
                   const transport = this.constructWebsocketTransport(
                     this.options,
                   );
-                  await this.client.connect(transport, {});
-                  this.transport = transport;
+                  await this.connectTransport(transport);
                 } else if (this.options.type) {
                   throw new Error(
                     `Unsupported transport type: ${this.options.type}`,
@@ -262,16 +264,14 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
                       ...this.options,
                       type: "streamable-http",
                     });
-                    await this.client.connect(transport, {});
-                    this.transport = transport;
+                    await this.connectTransport(transport);
                   } catch (e) {
                     try {
                       const transport = this.constructSseTransport({
                         ...this.options,
                         type: "sse",
                       });
-                      await this.client.connect(transport, {});
-                      this.transport = transport;
+                      await this.connectTransport(transport);
                     } catch (e) {
                       throw new Error(
                         `MCP config with URL and no type specified failed both SSE and HTTP connection: ${e instanceof Error ? e.message : String(e)}`,
