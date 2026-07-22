@@ -1,4 +1,5 @@
-import { describe, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { OpenAIApi } from "../apis/OpenAI.js";
 import { createAdapterTests } from "./adapter-test-utils.js";
 
 // Mock the fetch package (not needed for OpenAI but required by the shared test utils)
@@ -24,5 +25,30 @@ describe("OpenAI Adapter Tests", () => {
       "content-type": "application/json",
       accept: "application/json",
     },
+  });
+
+  it("includes streaming usage by default unless stream options are disabled", () => {
+    const body = {
+      model: "gpt-4",
+      messages: [{ role: "user" as const, content: "hello" }],
+      stream: true as const,
+    };
+    const defaultApi = new OpenAIApi({
+      provider: "openai",
+      apiKey: "test-api-key",
+    });
+    const disabledApi = new OpenAIApi({
+      provider: "openai",
+      apiKey: "test-api-key",
+      streamOptions: false,
+    });
+
+    expect(defaultApi.modifyChatBody({ ...body })).toHaveProperty(
+      "stream_options.include_usage",
+      true,
+    );
+    expect(disabledApi.modifyChatBody({ ...body })).not.toHaveProperty(
+      "stream_options",
+    );
   });
 });
