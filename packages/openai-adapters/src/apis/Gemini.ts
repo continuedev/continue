@@ -65,6 +65,30 @@ interface GeminiToolDelta
   };
 }
 
+function buildGoogleGenAIHttpOptions(config: GeminiConfig) {
+  const httpOptions: {
+    headers?: Record<string, string>;
+    timeout?: number;
+    baseUrl?: string;
+    apiVersion?: string;
+  } = {};
+
+  if (config.requestOptions?.headers) {
+    httpOptions.headers = config.requestOptions.headers;
+  }
+
+  if (config.requestOptions?.timeout !== undefined) {
+    httpOptions.timeout = config.requestOptions.timeout;
+  }
+
+  if (config.apiBase) {
+    httpOptions.baseUrl = config.apiBase;
+    httpOptions.apiVersion = "";
+  }
+
+  return Object.keys(httpOptions).length ? httpOptions : undefined;
+}
+
 export class GeminiApi implements BaseLlmApi {
   apiBase: string = "https://generativelanguage.googleapis.com/v1beta/";
   private genAI: GoogleGenAI;
@@ -79,6 +103,7 @@ export class GeminiApi implements BaseLlmApi {
       () =>
         new GoogleGenAI({
           apiKey: this.config.apiKey,
+          httpOptions: buildGoogleGenAIHttpOptions(this.config),
         }),
     );
   }
