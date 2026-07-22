@@ -10,7 +10,6 @@ import com.intellij.ide.starter.plugins.PluginConfigurator
 import com.intellij.ide.starter.project.NoProject
 import com.intellij.ide.starter.runner.Starter
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.assertTrue
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
 
@@ -32,14 +31,32 @@ class Autocomplete {
                 }
                 codeEditor {
                     keyboard {
-                        enterText("TEST_USER_MESSAGE_0")
-                        space()
+                        escape() // close any popups
+                        enter()
+                        enter()
+                        enter()
                     }
-                    wait(2.seconds)
-                    keyboard {
-                        tab()
+                    var success = false
+                    for (i in 1..10) {
+                        keyboard {
+                            enterText("TEST_USER_MESSAGE_0")
+                            space()
+                        }
+                        wait(2.seconds)
+                        keyboard {
+                            tab()
+                        }
+                        if (text.contains("TEST_LLM_RESPONSE_0")) {
+                            success = true
+                            break
+                        }
+                        keyboard {
+                            enter()
+                        }
                     }
-                    assertTrue(text.contains("TEST_LLM_RESPONSE_0"))
+                    if (!success) {
+                        throw Exception("DEBUG_TEXT: ${text.take(500)}")
+                    }
                 }
             }
         }

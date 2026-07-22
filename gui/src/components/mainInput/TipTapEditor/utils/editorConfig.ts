@@ -161,7 +161,8 @@ export function createEditorConfig(options: {
                   if (!model) return;
                   const items = event.clipboardData?.items;
                   if (items) {
-                    for (const item of items) {
+                    for (let i = 0; i < items.length; i++) {
+                      const item = items[i];
                       const file = item.getAsFile();
                       file &&
                         modelSupportsImages(
@@ -178,7 +179,7 @@ export function createEditorConfig(options: {
                             const node = schema.nodes.image.create({
                               src: dataUrl,
                             });
-                            const tr = view.state.tr.insert(0, node);
+                            const tr = view.state.tr.replaceSelectionWith(node);
                             view.dispatch(tr);
                           },
                         );
