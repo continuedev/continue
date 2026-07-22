@@ -235,6 +235,76 @@ describe("Configuration", () => {
     );
   });
 
+  it("should add empty DeepSeek reasoning_content when replaying assistant tool calls", () => {
+    const deepseek = constructLlmApi({
+      provider: "deepseek",
+      apiKey: "sk-xxx",
+    }) as OpenAIApi;
+
+    const body = deepseek.modifyChatBody({
+      model: "deepseek-v4-flash",
+      stream: true,
+      messages: [
+        { role: "user", content: "@src/file.ts please review this code" },
+        {
+          role: "assistant",
+          content: "",
+          tool_calls: [
+            {
+              id: "call_read",
+              type: "function",
+              function: {
+                name: "Read",
+                arguments: '{"filepath":"src/file.ts"}',
+              },
+            },
+          ],
+        },
+        {
+          role: "tool",
+          tool_call_id: "call_read",
+          content: "file contents",
+        },
+      ],
+    } as any);
+
+    expect((body.messages[1] as any).reasoning_content).toBe("");
+  });
+
+  it("should not overwrite existing DeepSeek reasoning_content", () => {
+    const deepseek = constructLlmApi({
+      provider: "deepseek",
+      apiKey: "sk-xxx",
+    }) as OpenAIApi;
+
+    const body = deepseek.modifyChatBody({
+      model: "deepseek-v4-flash",
+      stream: true,
+      messages: [
+        { role: "user", content: "Use a tool" },
+        {
+          role: "assistant",
+          content: "",
+          reasoning_content: "I should inspect the requested file.",
+          tool_calls: [
+            {
+              id: "call_read",
+              type: "function",
+              function: {
+                name: "Read",
+                arguments: '{"filepath":"src/file.ts"}',
+              },
+            },
+          ],
+        },
+      ],
+    } as any);
+
+    expect((body.messages[1] as any).reasoning_content).toBe(
+      "I should inspect the requested file.",
+    );
+  });
+
   it("should configure Inception OpenAI client with correct apiBase and apiKey", () => {
     const inception = constructLlmApi({
       provider: "inception",

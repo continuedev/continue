@@ -1,5 +1,9 @@
 import { streamSse } from "@continuedev/fetch";
-import { ChatCompletionChunk, Model } from "openai/resources/index";
+import {
+  ChatCompletionChunk,
+  ChatCompletionCreateParams,
+  Model,
+} from "openai/resources/index";
 import { DeepseekConfig } from "../types.js";
 import { chatChunk, customFetch } from "../util.js";
 import { OpenAIApi } from "./OpenAI.js";
@@ -13,6 +17,26 @@ export class DeepSeekApi extends OpenAIApi {
       provider: "openai",
       apiBase: config.apiBase ?? DEEPSEEK_API_BASE,
     });
+  }
+
+  modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
+    const modifiedBody = super.modifyChatBody(body);
+
+    modifiedBody.messages = modifiedBody.messages.map((message) => {
+      if (
+        message.role !== "assistant" ||
+        (message as any).reasoning_content !== undefined
+      ) {
+        return message;
+      }
+
+      return {
+        ...message,
+        reasoning_content: "",
+      } as typeof message;
+    }) as T["messages"];
+
+    return modifiedBody;
   }
 
   async *fimStream(
