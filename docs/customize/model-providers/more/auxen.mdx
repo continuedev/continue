@@ -1,0 +1,62 @@
+---
+title: Auxen
+slug: ../auxen
+---
+
+[Auxen](https://auxen.ai) hosts per-customer **dedicated** LLM endpoints (Llama 3.1/3.2, Qwen 2.5, Mistral, Gemma 2, Mixtral, Phi-3, Command R) on stable HTTPS URLs with an OpenAI-compatible `/v1/chat/completions` API. Each Auxen instance is a dedicated GPU billed per-minute of runtime, not per token.
+
+<Info>
+  Provision an instance from the [Auxen dashboard](https://auxen.ai). You will be issued two values:
+
+  - A per-instance **base URL** of the form `https://api.auxen.ai/v1/inst_xxx/v1`
+  - A per-instance **API key** prefixed `auxk_`
+</Info>
+
+## Configuration
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="config.yaml"
+   name: My Auxen Config
+   version: 0.0.1
+   schema: v1
+
+   models:
+     - name: Auxen Llama 3.1 8B
+       provider: auxen
+       model: llama-3.1-8b
+       apiBase: https://api.auxen.ai/v1/inst_xxx/v1
+       apiKey: auxk_...
+   ```
+   </Tab>
+   <Tab title="JSON">
+   ```json title="config.json"
+   {
+     "models": [
+       {
+         "title": "Auxen Llama 3.1 8B",
+         "provider": "auxen",
+         "model": "llama-3.1-8b",
+         "apiBase": "https://api.auxen.ai/v1/inst_xxx/v1",
+         "apiKey": "auxk_..."
+       }
+     ]
+   }
+   ```
+   </Tab>
+</Tabs>
+
+The `model` field should match the model your Auxen instance is serving. Each Auxen instance is provisioned with one model at creation time.
+
+## Catalog
+
+Auxen-hosted models:
+
+- `llama-3.1-8b`, `llama-3.1-70b`, `llama-3.2-3b`
+- `qwen2.5-7b`, `qwen2.5-14b`, `qwen2.5-32b`
+- `mistral-7b`, `mistral-nemo-12b`, `mixtral-8x7b`
+- `gemma2-9b`, `phi-3-mini`, `command-r-7b`
+
+## Pricing
+
+Auxen bills per-minute of dedicated GPU runtime, not per token. See [auxen.ai/pricing](https://auxen.ai/pricing) for hourly rates by model size.
