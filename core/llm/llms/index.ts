@@ -63,6 +63,7 @@ import TARS from "./TARS";
 import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
+import Tokenmix from "./Tokenmix";
 import Venice from "./Venice";
 import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
@@ -125,6 +126,7 @@ export const LLMClasses = [
   xAI,
   SiliconFlow,
   Tensorix,
+  Tokenmix,
   Scaleway,
   Relace,
   Inception,
