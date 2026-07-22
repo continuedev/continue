@@ -141,6 +141,30 @@ const StyledMarkdown = styled.div<{
   > *:last-child {
     margin-bottom: 0;
   }
+
+  table {
+    border-collapse: collapse;
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow: auto;
+    margin-bottom: 16px;
+  }
+
+  table th,
+  table td {
+    padding: 6px 13px;
+    border: 1px solid var(--vscode-editorWidget-border, #454545);
+  }
+
+  table th {
+    font-weight: 600;
+    background-color: var(--vscode-editor-background);
+  }
+
+  table tr:nth-child(2n) {
+    background-color: var(--vscode-list-hoverBackground, rgba(255,255,255,0.04));
+  }
 `;
 
 interface StyledMarkdownPreviewProps {

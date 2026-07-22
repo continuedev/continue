@@ -105,8 +105,7 @@ export function remarkTables() {
               {
                 type: "tableRow",
                 children: headerCells.map((cell, i) => ({
-                  type: "element",
-                  tagName: "th",
+                  type: "tableCell",
                   align: alignments[i],
                   children: [{ type: "text", value: cell }],
                 })),
