@@ -49,8 +49,10 @@ export class OpenAIApi implements BaseLlmApi {
     });
   }
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
-    // Add stream_options to include usage in streaming responses
-    if (body.stream) {
+    const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
+
+    // Add stream_options to include usage in official OpenAI streaming responses
+    if (body.stream && isOfficialOpenAIAPI) {
       (body as any).stream_options = { include_usage: true };
     }
 
@@ -65,7 +67,6 @@ export class OpenAIApi implements BaseLlmApi {
     }
 
     // o-series models - only apply for official OpenAI API
-    const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
     if (isOfficialOpenAIAPI) {
       if (body.model.startsWith("o") || body.model.includes("gpt-5")) {
         // a) use max_completion_tokens instead of max_tokens
