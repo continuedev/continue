@@ -54,7 +54,10 @@ export function handleToolCallBuffer(
         if (isNewLine) {
           const argName = (line.split(/begin_?arg:/i)[1] ?? "").trim();
           if (!argName) {
-            throw new Error("Invalid begin arg line");
+            // Model generated BEGIN_ARG: with no name (e.g. for no-arg tools).
+            // Reset state and skip rather than crash.
+            state.isWithinArgStart = false;
+            return;
           }
           state.currentArgName = argName;
           state.isWithinArgStart = false;
