@@ -39,7 +39,7 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^9.2.6",
     "@semantic-release/npm": "^13.1.5",
-    "semantic-release": "^24.2.7"
+    "semantic-release": "^25.0.5"
   },
   "overrides": {
     "picomatch": "^4.0.4"
