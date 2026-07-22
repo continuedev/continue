@@ -11,7 +11,7 @@ import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
 import { callToolById } from "../../../../redux/thunks/callToolById";
 import { cancelStream } from "../../../../redux/thunks/cancelStream";
 import { logToolUsage } from "../../../../redux/util";
-import { isJetBrains } from "../../../../util";
+import { isJetBrains, isTextInputTarget } from "../../../../util";
 import { useMainEditor } from "../../TipTapEditor";
 import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
 import { EditOutcomeToolbar } from "./EditOutcomeToolbar";
@@ -117,7 +117,7 @@ export function LumpToolbar() {
 
     // Also stop regular streaming if it's happening
     if (isStreaming) {
-      dispatch(cancelStream());
+      void dispatch(cancelStream());
     }
   };
 
@@ -127,6 +127,9 @@ export function LumpToolbar() {
     }
 
     const handleToolCallKeyboardShortcuts = (event: KeyboardEvent) => {
+      if (isTextInputTarget(event.target)) {
+        return;
+      }
       if (isExecuteToolCallShortcut(event) && firstPendingToolCall) {
         event.preventDefault();
         event.stopPropagation();
