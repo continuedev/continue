@@ -1,0 +1,78 @@
+---
+title: "Gonka Broker"
+description: "Configure Gonka Broker with Continue to access decentralized Gonka compute through an OpenAI-compatible API with predictable, top-up pricing"
+---
+
+[Gonka Broker](https://gonkabroker.com) is an OpenAI-compatible gateway to decentralized [Gonka](https://gonka.ai) compute. You top up once, your rate is locked at top-up, and billing is flat per token in and out — no crypto wallet required. See [pricing](https://gonkabroker.com/gonka-api-pricing/).
+
+<Info>You can get an API key from [app.gonkabroker.com](https://app.gonkabroker.com).</Info>
+
+## Chat Model
+
+We recommend `MiniMaxAI/MiniMax-M2.7` for chat and coding tasks.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: MiniMax M2.7
+      provider: gonkabroker
+      model: MiniMaxAI/MiniMax-M2.7
+      apiKey: <YOUR_GONKABROKER_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "MiniMax M2.7",
+        "provider": "gonkabroker",
+        "model": "MiniMaxAI/MiniMax-M2.7",
+        "apiKey": "<YOUR_GONKABROKER_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Autodetect Models
+
+Set `model` to `AUTODETECT` to have Continue discover every model Gonka Broker currently serves from its public `/v1/models` endpoint — no need to list them by hand.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Gonka Broker
+      provider: gonkabroker
+      model: AUTODETECT
+      apiKey: <YOUR_GONKABROKER_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Gonka Broker",
+        "provider": "gonkabroker",
+        "model": "AUTODETECT",
+        "apiKey": "<YOUR_GONKABROKER_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Gonkabroker.ts)

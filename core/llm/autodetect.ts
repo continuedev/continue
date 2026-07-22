@@ -74,6 +74,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "nous",
   "zAI",
   "tensorix",
+  "gonkabroker",
   // TODO add these, change to inverted logic so only the ones that need templating are hardcoded
   // Asksage.ts
   // Azure.ts
@@ -253,6 +254,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "scaleway",
   "minimax",
   "tensorix",
+  "gonkabroker",
 ];
 
 function llmCanGenerateInParallel(provider: string, model: string): boolean {
