@@ -1,9 +1,8 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.github.continuedev.continueintellijextension.utils.toUriOrNull
+import com.github.continuedev.continueintellijextension.utils.resolveWorkspacePathsOrGuess
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessProjectDir
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
@@ -56,14 +55,7 @@ class GitService(
         return diffs
     }
 
-    private fun workspaceDirectories(): Array<String> {
-        val dirs = this.continuePluginService.workspacePaths
-
-        if (dirs?.isNotEmpty() == true) {
-            return dirs
-        }
-
-        return listOfNotNull(project.guessProjectDir()?.toUriOrNull()).toTypedArray()
-    }
+    private fun workspaceDirectories(): Array<String> =
+        resolveWorkspacePathsOrGuess(project, continuePluginService.workspacePaths)
 
 }

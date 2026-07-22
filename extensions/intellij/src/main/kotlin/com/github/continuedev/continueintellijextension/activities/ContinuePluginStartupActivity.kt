@@ -9,6 +9,7 @@ import com.github.continuedev.continueintellijextension.listeners.ContinuePlugin
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.services.SettingsListener
+import com.github.continuedev.continueintellijextension.utils.resolveWorkspacePaths
 import com.github.continuedev.continueintellijextension.utils.toUriOrNull
 import com.intellij.openapi.actionSystem.KeyboardShortcut
 import com.intellij.openapi.application.ApplicationManager
@@ -28,9 +29,7 @@ import java.nio.file.Paths
 import javax.swing.*
 import com.intellij.openapi.components.service
 import com.intellij.openapi.module.Module
-import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.ModuleListener
-import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
@@ -201,19 +200,17 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                 ModuleListener.TOPIC,
                 object : ModuleListener {
                     override fun modulesAdded(project: Project, modules: MutableList<out Module>) {
-
-                        val allModulePaths = ModuleManager.getInstance(project).modules
-                            .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.mapNotNull { it.toUriOrNull() } }
-
-                        val topLevelModulePaths = allModulePaths
-                            .filter { modulePath -> allModulePaths.none { it != modulePath && modulePath.startsWith(it) } }
-
-                        continuePluginService.workspacePaths = topLevelModulePaths.toTypedArray();
+                        continuePluginService.workspacePaths = resolveWorkspacePaths(project)
                     }
 
                     override fun moduleRemoved(project: Project, module: Module) {
-                        val removedPaths = ModuleRootManager.getInstance(module).contentRoots.mapNotNull { it.toUriOrNull() } ;
-                        continuePluginService.workspacePaths = continuePluginService.workspacePaths?.toList()?.filter { path -> removedPaths.none {removedPath -> path == removedPath }}?.toTypedArray();
+                        // Re-derive top-level roots from the remaining modules instead of a plain
+                        // subtraction: removing a module can promote a formerly-nested sibling to a
+                        // top-level root, which an exact-match removal would never re-add.
+                        // Contract: moduleRemoved fires *after* the module has left ModuleManager
+                        // (beforeModuleRemoved is the pre-removal hook), so the rescan below already
+                        // excludes it — and we never touch the disposed `module` param.
+                        continuePluginService.workspacePaths = resolveWorkspacePaths(project)
                     }
 
                     override fun modulesRenamed(
@@ -221,13 +218,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                         modules: MutableList<out Module>,
                         oldNameProvider: Function<in Module, String>
                     ) {
-                        val allModulePaths = ModuleManager.getInstance(project).modules
-                            .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.mapNotNull { it.toUriOrNull() } }
-
-                        val topLevelModulePaths = allModulePaths
-                            .filter { modulePath -> allModulePaths.none { it != modulePath && modulePath.startsWith(it) } }
-
-                        continuePluginService.workspacePaths = topLevelModulePaths.toTypedArray()
+                        continuePluginService.workspacePaths = resolveWorkspacePaths(project)
                     }
                 }
             )
@@ -262,13 +253,8 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
             // Reload the WebView
             continuePluginService?.let { pluginService ->
-                val allModulePaths = ModuleManager.getInstance(project).modules
-                    .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.mapNotNull { it.toUriOrNull() } }
-
-                val topLevelModulePaths = allModulePaths
-                    .filter { modulePath -> allModulePaths.none { it != modulePath && modulePath.startsWith(it) } }
-
-                pluginService.workspacePaths = topLevelModulePaths.toTypedArray()
+                val topLevelModulePaths = resolveWorkspacePaths(project)
+                pluginService.workspacePaths = topLevelModulePaths
             }
 
             EditorFactory.getInstance().eventMulticaster.addSelectionListener(
