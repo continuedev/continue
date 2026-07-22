@@ -191,13 +191,24 @@ export function dedent(strings: TemplateStringsArray, ...values: any[]) {
 }
 
 /**
- * Removes code blocks from a message.
+ * Removes code blocks and thinking blocks from a message.
  *
- * Return modified message text.
+ * @param text - The message text to process.
+ * @param thinkTagName - The XML tag name used for thinking output (default: "think").
+ *   Different LLM providers may use different tag names for reasoning output.
+ *   Set this to match your provider's format (e.g. vLLM custom reasoning tags).
+ * @returns Modified message text with code blocks and think blocks removed.
  */
-export function removeCodeBlocksAndTrim(text: string): string {
+export function removeCodeBlocksAndTrim(
+  text: string,
+  thinkTagName: string = "think",
+): string {
   const codeBlockRegex = /```[\s\S]*?```/g;
-  const thinkBlockRegex = /<think>[\s\S]*?<\/think>/g;
+  // Build regex dynamically based on the configured tag name
+  const thinkBlockRegex = new RegExp(
+    `<${thinkTagName}>[\\s\\S]*?<\\/${thinkTagName}>`,
+    "g",
+  );
 
   // Remove code blocks and think blocks from the message text
   let processedText = text.replace(codeBlockRegex, "");

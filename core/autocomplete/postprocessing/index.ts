@@ -142,9 +142,16 @@ export function postprocessCompletion({
 
   if (llm.model.includes("qwen3")) {
     // Qwen3 always starts from special thinking markers, and we don't want them to output these contents
-    // Remove all content from "
-    completion = completion.replace(/<think>.*?<\/think>/s, "");
-    completion = completion.replace(/<\/think>/, "");
+    // Remove all content within thinking tags. Use the configurable thinkTagName so custom
+    // provider formats (e.g. vLLM reasoning output tags) are also handled correctly.
+    const thinkTagName = llm.thinkTagName;
+    const thinkBlockRegex = new RegExp(
+      `<${thinkTagName}>.*?<\\/${thinkTagName}>`,
+      "s",
+    );
+    const thinkCloseTagRegex = new RegExp(`<\\/${thinkTagName}>`);
+    completion = completion.replace(thinkBlockRegex, "");
+    completion = completion.replace(thinkCloseTagRegex, "");
 
     // Remove any number of newline characters at the beginning and end
     completion = completion.replace(/^\n+|\n+$/g, "");

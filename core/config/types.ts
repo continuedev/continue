@@ -102,6 +102,13 @@ declare global {
     apiType?: string;
     region?: string;
     projectId?: string;
+
+    /**
+     * The XML tag name used for thinking/reasoning output.
+     * Defaults to "think" (<think>...</think>).
+     * Configure this to match your provider's format (e.g. vLLM custom reasoning tags).
+     */
+    thinkTagName: string;
   
     // Embedding options
     embeddingId: string;
@@ -572,6 +579,15 @@ declare global {
   
     // IBM watsonx Options
     deploymentId?: string;
+
+    /**
+     * The XML tag name used by the LLM provider for thinking/reasoning output.
+     * Different providers (e.g. vLLM, Ollama) may use different tag names.
+     * Defaults to "think", which produces <think>...</think> blocks.
+     * Set this to match your provider's reasoning output format.
+     * See: https://docs.vllm.ai/en/latest/features/reasoning_outputs.html
+     */
+    thinkTagName?: string;
   }
   
   type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
