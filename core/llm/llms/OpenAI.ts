@@ -705,11 +705,14 @@ class OpenAI extends BaseLLM {
       );
     }
 
-    if (this.apiType === "azure") {
-      return new URL(
-        `openai/deployments/${this.deployment}/embeddings?api-version=${this.apiVersion}`,
-        this.apiBase,
-      );
+    if (this.apiType?.includes("azure")) {
+      const isAzureOpenAI =
+        this.apiType === "azure-openai" || this.apiType === "azure";
+      const path = isAzureOpenAI
+        ? `openai/deployments/${this.deployment}/embeddings`
+        : "embeddings";
+      const version = this.apiVersion ? `?api-version=${this.apiVersion}` : "";
+      return new URL(`${path}${version}`, this.apiBase);
     }
     return new URL("embeddings", this.apiBase);
   }
