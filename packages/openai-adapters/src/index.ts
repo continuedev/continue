@@ -183,6 +183,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "llama.cpp":
     case "llamafile":
       return openAICompatible("http://localhost:8000/", config);
+    case "atomic-chat":
+      return openAICompatible("http://127.0.0.1:1337/v1/", config);
     case "lmstudio":
       return openAICompatible("http://localhost:1234/", config);
     case "ollama":

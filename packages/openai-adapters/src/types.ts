@@ -46,6 +46,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("function-network"),
     z.literal("llama.cpp"),
     z.literal("llamafile"),
+    z.literal("atomic-chat"),
     z.literal("lmstudio"),
     z.literal("ollama"),
     z.literal("cerebras"),

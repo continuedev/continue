@@ -10,6 +10,7 @@ import OpenRouter from "./OpenRouter.js";
 import xAI from "./xAI.js";
 import Mistral from "./Mistral.js";
 import Mimo from "./Mimo.js";
+import AtomicChat from "./AtomicChat.js";
 import LMStudio from "./LMStudio.js";
 import Cerebras from "./Cerebras.js";
 import DeepInfra from "./DeepInfra.js";
@@ -304,6 +305,11 @@ createOpenAISubclassTests(Mistral, {
 createOpenAISubclassTests(Mimo, {
   providerName: "mimo",
   defaultApiBase: "https://api.xiaomimimo.com/v1/",
+});
+
+createOpenAISubclassTests(AtomicChat, {
+  providerName: "atomic-chat",
+  defaultApiBase: "http://127.0.0.1:1337/v1/",
 });
 
 createOpenAISubclassTests(LMStudio, {

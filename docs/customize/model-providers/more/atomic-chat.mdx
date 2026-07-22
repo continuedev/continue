@@ -1,0 +1,71 @@
+---
+title: "Atomic Chat"
+description: "Configure Atomic Chat with Continue for local LLM inference through an OpenAI-compatible API"
+---
+
+<Info>
+  Get started with [Atomic Chat](https://atomic.chat/) — a desktop app that serves local models at `http://127.0.0.1:1337/v1`
+</Info>
+
+## Overview
+
+Atomic Chat runs open-source models on your machine and exposes an OpenAI-compatible HTTP API. Continue connects to that endpoint for chat, edit, and agent workflows.
+
+## Configuration
+
+### Option 1: Using the Continue UI (Recommended)
+
+1. Open the model selector in Continue
+2. Choose **Add Model**
+3. Select **Atomic Chat** from the provider list
+4. Pick a model from the autodetected list (requires Atomic Chat to be running)
+
+### Option 2: Manual configuration
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Atomic Chat
+        provider: atomic-chat
+        model: <MODEL_ID>
+        apiBase: http://127.0.0.1:1337/v1/
+    ```
+    </Tab>
+    <Tab title="JSON (Deprecated)">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Atomic Chat",
+          "provider": "atomic-chat",
+          "model": "<MODEL_ID>",
+          "apiBase": "http://127.0.0.1:1337/v1/"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+Replace `<MODEL_ID>` with an id from Atomic Chat. List available models:
+
+```bash
+curl -s http://127.0.0.1:1337/v1/models | jq '.data[].id'
+```
+
+## Getting started
+
+1. Install and open [Atomic Chat](https://atomic.chat/)
+2. Load a model in the app so the API is listening on port **1337** (or **1338** if you changed the port)
+3. Add **Atomic Chat** as a provider in Continue and select your model
+
+## Tool calling
+
+For agent mode and tools, prefer models with strong tool-calling support (for example Qwen-Coder or DeepSeek-Coder variants).
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/AtomicChat.ts)

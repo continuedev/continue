@@ -10,6 +10,7 @@ import {
 import { renderTemplatedString } from "../../util/handlebars/renderTemplatedString";
 import { BaseLLM } from "../index";
 import Anthropic from "./Anthropic";
+import AtomicChat from "./AtomicChat";
 import Asksage from "./Asksage";
 import Azure from "./Azure";
 import Bedrock from "./Bedrock";
@@ -72,6 +73,7 @@ import xAI from "./xAI";
 import zAI from "./zAI";
 export const LLMClasses = [
   Anthropic,
+  AtomicChat,
   Cohere,
   CometAPI,
   FunctionNetwork,

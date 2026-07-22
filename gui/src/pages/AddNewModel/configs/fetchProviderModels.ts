@@ -61,6 +61,23 @@ function toOpenRouterPackage(model: FetchedModel): ModelPackage {
   };
 }
 
+function toAtomicChatPackage(model: FetchedModel): ModelPackage {
+  const id = model.modelId ?? model.name;
+  return {
+    title: model.name,
+    description: model.description ?? model.name,
+    params: {
+      title: model.name,
+      model: id,
+      ...modelParams(model),
+    },
+    isOpenSource: true,
+    tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
+    providerOptions: ["atomic-chat"],
+    icon: model.icon ?? "atomic-chat.png",
+  };
+}
+
 function toGenericPackage(model: FetchedModel, provider: string): ModelPackage {
   const id = model.modelId ?? model.name;
   return {
@@ -96,10 +113,13 @@ async function fetchModels(
 export async function fetchProviderModels(
   ideMessenger: IIdeMessenger,
   provider: string,
-  apiKey: string,
+  apiKey?: string,
   apiBase?: string,
 ): Promise<ModelPackage[]> {
   const models = await fetchModels(ideMessenger, provider, apiKey, apiBase);
+  if (provider === "atomic-chat") {
+    return models.map(toAtomicChatPackage);
+  }
   return models.map((m) => toGenericPackage(m, provider));
 }
 
@@ -140,5 +160,29 @@ export async function initializeDynamicModels(ideMessenger: IIdeMessenger) {
     }
   } catch (error) {
     console.error("Failed to initialize OpenRouter models:", error);
+  }
+
+  if (providers.atomicChat) {
+    const autodetect = {
+      ...models.AUTODETECT,
+      params: { ...models.AUTODETECT.params, title: "Atomic Chat" },
+    };
+
+    try {
+      const fetched = await fetchModels(
+        ideMessenger,
+        "atomic-chat",
+        undefined,
+        providers.atomicChat.params.apiBase,
+      );
+      if (fetched.length > 0) {
+        providers.atomicChat.packages = fetched.map(toAtomicChatPackage);
+      } else {
+        providers.atomicChat.packages = [autodetect];
+      }
+    } catch (error) {
+      console.error("Failed to initialize Atomic Chat models:", error);
+      providers.atomicChat.packages = [autodetect];
+    }
   }
 }

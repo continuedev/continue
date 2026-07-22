@@ -44,6 +44,7 @@ import {
 } from "./templates/edit.js";
 
 const PROVIDER_HANDLES_TEMPLATING: string[] = [
+  "atomic-chat",
   "lmstudio",
   "lemonade",
   "openai",
