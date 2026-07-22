@@ -166,4 +166,13 @@ export async function* streamJSON(response: Response): AsyncGenerator<any> {
       buffer = buffer.slice(position + 1);
     }
   }
+
+  if (buffer.length > 0) {
+    try {
+      const data = JSON.parse(buffer);
+      yield data;
+    } catch (e) {
+      throw new Error(`Malformed JSON sent from server: ${buffer}`);
+    }
+  }
 }
