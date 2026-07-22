@@ -22,6 +22,7 @@ import {
   blockSchema,
   ConfigYaml,
   configYamlSchema,
+  Prompt,
   Rule,
 } from "../schemas/index.js";
 import { ConfigResult, ConfigValidationError } from "../validation.js";
@@ -437,6 +438,7 @@ export async function unrollBlocks(
               blockIdentifier,
               unrolledBlock.with,
               registry,
+              section,
             );
             const block = blockConfigYaml[section]?.[0];
             if (block) {
@@ -503,6 +505,7 @@ export async function unrollBlocks(
                 decodePackageIdentifier(rule.uses),
                 rule.with,
                 registry,
+                "rules",
               );
               const block = blockConfigYaml.rules?.[0];
               return { index, rule: block || null, error: null };
@@ -720,6 +723,7 @@ export async function resolveBlock(
   id: PackageIdentifier,
   inputs: Record<string, string | undefined> | undefined,
   registry: Registry,
+  sectionHint?: BlockType,
 ): Promise<AssistantUnrolled> {
   // Retrieve block raw yaml
   const rawYaml = await registry.getContent(id);
@@ -753,7 +757,11 @@ export async function resolveBlock(
   }
 
   // Add source slug for mcp servers
-  const parsed = parseMarkdownRuleOrAssistantUnrolled(templatedYaml, id);
+  const parsed = parseMarkdownRuleOrAssistantUnrolled(
+    templatedYaml,
+    id,
+    sectionHint,
+  );
   if (
     id.uriType === "slug" &&
     "mcpServers" in parsed &&
@@ -768,8 +776,14 @@ export async function resolveBlock(
 export function parseMarkdownRuleOrAssistantUnrolled(
   content: string,
   id: PackageIdentifier,
+  sectionHint?: BlockType,
 ): AssistantUnrolled {
-  return parseYamlOrMarkdownRule<AssistantUnrolled>(content, id, parseBlock);
+  return parseYamlOrMarkdownRule<AssistantUnrolled>(
+    content,
+    id,
+    parseBlock,
+    sectionHint,
+  );
 }
 
 function parseMarkdownRuleOrConfigYaml(
@@ -779,10 +793,21 @@ function parseMarkdownRuleOrConfigYaml(
   return parseYamlOrMarkdownRule<ConfigYaml>(content, id, parseConfigYaml);
 }
 
+function markdownToPrompt(content: string, id: PackageIdentifier): Prompt {
+  const rule = markdownToRule(content, id);
+  return {
+    name: rule.name,
+    description: rule.description,
+    prompt: rule.rule,
+    sourceFile: rule.sourceFile,
+  };
+}
+
 function parseYamlOrMarkdownRule<T>(
   content: string,
   id: PackageIdentifier,
   parseYamlFn: (content: string) => T,
+  sectionHint?: BlockType,
 ): T {
   let parsedYaml: T;
   try {
@@ -797,9 +822,22 @@ function parseYamlOrMarkdownRule<T>(
     }
     // If YAML parsing fails, try parsing as markdown rule
     try {
-      const rule = markdownToRule(content, id);
-      // Convert the rule object to the expected format
-      parsedYaml = { name: rule.name, version: "1.0.0", rules: [rule] } as T;
+      if (sectionHint === "prompts") {
+        const prompt = markdownToPrompt(content, id);
+        parsedYaml = {
+          name: prompt.name,
+          version: "1.0.0",
+          prompts: [prompt],
+        } as T;
+      } else {
+        const rule = markdownToRule(content, id);
+        // Convert the rule object to the expected format
+        parsedYaml = {
+          name: rule.name,
+          version: "1.0.0",
+          rules: [rule],
+        } as T;
+      }
     } catch (markdownError) {
       // If both fail, throw the original YAML error
       throw yamlError;
