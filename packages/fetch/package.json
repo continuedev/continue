@@ -21,7 +21,7 @@
   "devDependencies": {
     "@types/follow-redirects": "^1.14.4",
     "typescript": "^5.0.0",
-    "vitest": "^3.2.0",
+    "vitest": "^4.1.8",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^9.2.6",
