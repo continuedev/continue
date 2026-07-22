@@ -149,6 +149,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("http://127.0.0.1:5000/v1/", config);
     case "cerebras":
       return openAICompatible("https://api.cerebras.ai/v1/", config);
+    case "edenai":
+      return openAICompatible("https://api.edenai.run/v3/", config);
     case "kindo":
       return openAICompatible("https://llm.kindo.ai/v1/", config);
     case "msty":
