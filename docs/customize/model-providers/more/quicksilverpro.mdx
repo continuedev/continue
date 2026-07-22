@@ -1,0 +1,61 @@
+---
+title: "QuickSilver Pro"
+description: "Configure QuickSilver Pro with Continue to access 12 frontier open-source models (DeepSeek V4, R1, Qwen 3.6, Kimi K2.6, Gemini 3) through one OpenAI-compatible key"
+---
+
+<Tip>
+  QuickSilver Pro is an OpenAI-compatible gateway for 12 frontier open-source
+  models: DeepSeek V4 Flash / V4 Pro / V3 / R1, Qwen 3.5 / 3.6, Kimi K2.6,
+  and the Gemini 2.5 / 3 family. ~20% under OpenRouter on the shared set.
+</Tip>
+
+<Info>
+  Get an API key from the [QuickSilver Pro dashboard](https://quicksilverpro.io/dashboard/).
+</Info>
+
+## Configuration
+
+Because QuickSilver Pro speaks the OpenAI Chat Completions API, use the
+`openai` provider with an `apiBase` override:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: DeepSeek V4 Pro (QSP)
+      provider: openai
+      model: deepseek-v4-pro
+      apiBase: https://api.quicksilverpro.io/v1
+      apiKey: <YOUR_QUICKSILVERPRO_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "DeepSeek V4 Pro (QSP)",
+        "provider": "openai",
+        "model": "deepseek-v4-pro",
+        "apiBase": "https://api.quicksilverpro.io/v1",
+        "apiKey": "<YOUR_QUICKSILVERPRO_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+Swap `model` for any of:
+`deepseek-v4-flash`, `deepseek-v4-pro`, `deepseek-v3`, `deepseek-r1`,
+`qwen3.6-35b`, `qwen3.5-35b`, `kimi-k2.6`, `gemini-2.5-flash`,
+`gemini-2.5-flash-lite`, `gemini-3-flash-preview`.
+
+<Info>
+  Full model list, pricing, and integration tips for other tools:
+  [quicksilverpro.io/docs/integrations](https://quicksilverpro.io/docs/integrations/).
+</Info>
