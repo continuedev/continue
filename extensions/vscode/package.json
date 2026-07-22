@@ -1,7 +1,7 @@
 {
-  "name": "continue",
+  "name": "babs",
   "icon": "media/icon.png",
-  "author": "Continue Dev, Inc",
+  "author": "Babs Dev, Inc",
   "version": "2.0.0",
   "repository": {
     "type": "git",
@@ -18,10 +18,10 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - open-source AI code agent",
+  "displayName": "Babs - open-source AI code agent",
   "pricing": "Free",
-  "description": "The leading open-source AI code agent",
-  "publisher": "Continue",
+  "description": "The leading open-source Babs AI code agent",
+  "publisher": "Babs",
   "engines": {
     "vscode": "^1.70.0",
     "node": ">=20.20.1"

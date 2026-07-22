@@ -15,7 +15,7 @@ import { SYSTEM_PROMPT_DOT_FILE } from "./getWorkspaceContinueRuleDotFiles";
 import { SUPPORTED_AGENT_FILES } from "./markdown";
 export function isContinueConfigRelatedUri(uri: string): boolean {
   return (
-    uri.endsWith(".continuerc.json") ||
+    uri.endsWith(".babsrc.json") ||
     uri.endsWith(".prompt") ||
     !!SUPPORTED_AGENT_FILES.find((file) => uri.endsWith(`/${file}`)) ||
     uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
