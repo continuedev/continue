@@ -15,7 +15,7 @@ export const readCurrentlyOpenFileImpl: ToolImpl = async (_, extras) => {
       extras.config.selectedModelByRole.chat,
     );
 
-    const { relativePathOrBasename, last2Parts, baseName } = getUriDescription(
+    const { last2Parts, baseName } = getUriDescription(
       result.path,
       await extras.ide.getWorkspaceDirs(),
     );
@@ -24,7 +24,7 @@ export const readCurrentlyOpenFileImpl: ToolImpl = async (_, extras) => {
       {
         name: `Current file: ${baseName}`,
         description: last2Parts,
-        content: `\`\`\`${relativePathOrBasename}\n${result.contents}\n\`\`\``,
+        content: result.contents,
         uri: {
           type: "file",
           value: result.path,
