@@ -380,6 +380,19 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("manifest", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["manifest"];
+
+    it("should return true for auto model", () => {
+      expect(supportsFn("auto")).toBe(true);
+    });
+
+    it("should return true for any model", () => {
+      expect(supportsFn("gpt-4o")).toBe(true);
+      expect(supportsFn("claude-sonnet-4")).toBe(true);
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle empty model names", () => {
       expect(PROVIDER_TOOL_SUPPORT["anthropic"]("")).toBe(false);

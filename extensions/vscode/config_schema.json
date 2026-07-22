@@ -217,6 +217,7 @@
             "watsonx",
             "openrouter",
             "clawrouter",
+            "manifest",
             "sambanova",
             "nvidia",
             "vllm",

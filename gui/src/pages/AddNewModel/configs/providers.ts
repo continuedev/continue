@@ -224,6 +224,42 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     ],
   },
 
+  manifest: {
+    title: "Manifest",
+    provider: "manifest",
+    description:
+      "OpenAI-compatible gateway with multi-provider support, cost/token tracking, and automatic fallback.",
+    longDescription: `[Manifest](https://manifest.build) is an open-source OpenAI-compatible gateway for AI agents. It exposes a single endpoint in front of multiple providers (API keys, subscriptions, local models), with per-message cost/token tracking and automatic fallback when a provider fails.
+
+The served model is resolved server-side from your dashboard configuration, so you always use the \`auto\` model id.
+
+To get started:
+1. Sign up at [manifest.build](https://manifest.build)
+2. Add your provider API keys in the dashboard
+3. Enter your API key below
+
+**Features:**
+- Multi-provider routing (one endpoint)
+- Per-message cost and token tracking
+- Automatic fallback on provider failures
+- Compatible with any OpenAI SDK`,
+    icon: "manifest.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    refPage: "manifest",
+    apiKeyUrl: "https://app.manifest.build/settings/keys",
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Manifest API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [models.manifestAuto],
+  },
+
   moonshot: {
     title: "Moonshot",
     provider: "moonshot",

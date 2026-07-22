@@ -2788,6 +2788,20 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: true,
   },
 
+  manifestAuto: {
+    title: "Manifest Auto",
+    description:
+      "Single endpoint that routes to models configured in your Manifest dashboard",
+    params: {
+      title: "Manifest Auto",
+      model: "auto",
+      contextLength: 128_000,
+    },
+    icon: "manifest.png",
+    providerOptions: ["manifest"],
+    isOpenSource: true,
+  },
+
   AUTODETECT: {
     title: "Autodetect",
     description:
