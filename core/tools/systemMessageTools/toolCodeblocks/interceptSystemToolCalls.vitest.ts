@@ -421,3 +421,20 @@ describe("interceptSystemToolCalls", () => {
     ).toBe("true");
   });
 });
+
+describe("SystemMessageToolCodeblocksFramework prompt rules", () => {
+  const framework = new SystemMessageToolCodeblocksFramework();
+
+  it("does not tell models to stop after one tool call", () => {
+    expect(framework.systemMessageSuffix).not.toMatch(/only call ONE tool/i);
+    expect(framework.systemMessageSuffix).not.toMatch(
+      /MUST be the last thing in your response/i,
+    );
+  });
+
+  it("does not instruct models to stop immediately after the closing fence", () => {
+    expect(framework.systemMessageSuffix).not.toMatch(
+      /Stop immediately after the closing/i,
+    );
+  });
+});
