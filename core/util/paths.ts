@@ -24,6 +24,44 @@ export function setConfigFilePermissions(filePath: string): void {
   }
 }
 
+/**
+ * Resolves the default Continue global directory path.
+ *
+ * On Linux the XDG Base Directory Specification is followed:
+ *   - $XDG_CONFIG_HOME/continue  (when XDG_CONFIG_HOME is set)
+ *   - ~/.config/continue         (otherwise)
+ *
+ * The legacy ~/.continue location is returned as-is on Linux when it already
+ * exists so that existing installations are not silently relocated.
+ *
+ * On all other platforms ~/.continue is used.
+ */
+export function getDefaultContinueGlobalDir(opts: {
+  platform: NodeJS.Platform;
+  homedir: string;
+  xdgConfigHome: string | undefined;
+  legacyDirExists: boolean;
+}): string {
+  const { platform, homedir, xdgConfigHome, legacyDirExists } = opts;
+  const legacyPath = path.join(homedir, ".continue");
+
+  if (platform === "linux") {
+    if (legacyDirExists) {
+      return legacyPath;
+    }
+    // Only accept XDG_CONFIG_HOME when it is a non-empty absolute path;
+    // an empty string or a relative path would place the config dir in an
+    // unexpected location (e.g. the current working directory).
+    const xdgBase =
+      xdgConfigHome && path.isAbsolute(xdgConfigHome)
+        ? xdgConfigHome
+        : path.join(homedir, ".config");
+    return path.join(xdgBase, "continue");
+  }
+
+  return legacyPath;
+}
+
 const CONTINUE_GLOBAL_DIR = (() => {
   const configPath = process.env.CONTINUE_GLOBAL_DIR;
   if (configPath) {
@@ -32,7 +70,14 @@ const CONTINUE_GLOBAL_DIR = (() => {
       ? configPath
       : path.resolve(process.cwd(), configPath);
   }
-  return path.join(os.homedir(), ".continue");
+
+  const homedir = os.homedir();
+  return getDefaultContinueGlobalDir({
+    platform: os.platform(),
+    homedir,
+    xdgConfigHome: process.env.XDG_CONFIG_HOME,
+    legacyDirExists: fs.existsSync(path.join(homedir, ".continue")),
+  });
 })();
 
 // export const DEFAULT_CONFIG_TS_CONTENTS = `import { Config } from "./types"\n\nexport function modifyConfig(config: Config): Config {
@@ -67,10 +112,12 @@ export function getGlobalContinueIgnorePath(): string {
 }
 
 export function getContinueGlobalPath(): string {
-  // This is ~/.continue on mac/linux
+  // This is ~/.continue on mac/linux (or ~/.config/continue on Linux for new installs)
   const continuePath = CONTINUE_GLOBAL_DIR;
   if (!fs.existsSync(continuePath)) {
-    fs.mkdirSync(continuePath);
+    // Use recursive so intermediate directories (e.g. ~/.config) are created
+    // when the XDG path is used on Linux.
+    fs.mkdirSync(continuePath, { recursive: true });
   }
   return continuePath;
 }
