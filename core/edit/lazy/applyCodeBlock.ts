@@ -1,5 +1,6 @@
 import { DiffLine, ILLM } from "../..";
 import { generateLines } from "../../diff/util";
+import { stripReasoningFromApplyContent } from "../../util";
 import { supportedLanguages } from "../../util/treeSitter";
 import { getUriFileExtension } from "../../util/uri";
 import { deterministicApplyLazyEdit } from "./deterministic";
@@ -21,6 +22,8 @@ export async function applyCodeBlock(
   isInstantApply: boolean;
   diffLinesGenerator: AsyncGenerator<DiffLine>;
 }> {
+  newLazyFile = stripReasoningFromApplyContent(newLazyFile);
+
   if (canUseInstantApply(filename)) {
     const diffLines = await deterministicApplyLazyEdit({
       oldFile,
