@@ -32,6 +32,7 @@ import { convertPromptBlockToSlashCommand } from "../../commands/slash/promptBlo
 import { slashCommandFromPromptFile } from "../../commands/slash/promptFileSlashCommand";
 import { loadJsonMcpConfigs } from "../../context/mcp/json/loadJsonMcpConfigs";
 import { getBaseToolDefinitions } from "../../tools";
+import { getEnvVarsFromUserShell } from "../../util/shellPath";
 import { getCleanUriPath } from "../../util/uri";
 import { loadConfigContextProviders } from "../loadContextProviders";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
@@ -153,6 +154,91 @@ function nonNullifyConfigYaml(
   };
 }
 
+const ENV_PLACEHOLDER_REGEX = /\$\{env:([A-Za-z_][A-Za-z0-9_]*)\}/g;
+
+function collectEnvPlaceholderNames(value: unknown, envVarNames: Set<string>) {
+  if (typeof value === "string") {
+    for (const match of value.matchAll(ENV_PLACEHOLDER_REGEX)) {
+      envVarNames.add(match[1]);
+    }
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectEnvPlaceholderNames(item, envVarNames));
+    return;
+  }
+
+  if (value && typeof value === "object") {
+    Object.values(value).forEach((item) =>
+      collectEnvPlaceholderNames(item, envVarNames),
+    );
+  }
+}
+
+function replaceEnvPlaceholders<T>(
+  value: T,
+  envValues: Record<string, string>,
+): T {
+  if (typeof value === "string") {
+    return value.replace(
+      ENV_PLACEHOLDER_REGEX,
+      (fullMatch, envVarName) => envValues[envVarName] ?? fullMatch,
+    ) as T;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => replaceEnvPlaceholders(item, envValues)) as T;
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [
+        key,
+        replaceEnvPlaceholders(item, envValues),
+      ]),
+    ) as T;
+  }
+
+  return value;
+}
+
+async function resolveConfigEnvPlaceholders<T>(
+  value: T,
+  remoteName?: string,
+): Promise<T> {
+  const envVarNames = new Set<string>();
+  collectEnvPlaceholderNames(value, envVarNames);
+
+  if (envVarNames.size === 0) {
+    return value;
+  }
+
+  const envValues: Record<string, string> = {};
+  for (const envVarName of envVarNames) {
+    const envValue = process.env[envVarName];
+    if (envValue !== undefined) {
+      envValues[envVarName] = envValue;
+    }
+  }
+
+  const missingEnvVarNames = [...envVarNames].filter(
+    (envVarName) => envValues[envVarName] === undefined,
+  );
+
+  if (missingEnvVarNames.length > 0) {
+    const shellEnvVars = await getEnvVarsFromUserShell(remoteName);
+    for (const envVarName of missingEnvVarNames) {
+      const envValue = shellEnvVars?.[envVarName];
+      if (envValue !== undefined) {
+        envValues[envVarName] = envValue;
+      }
+    }
+  }
+
+  return replaceEnvPlaceholders(value, envValues);
+}
+
 export async function configYamlToContinueConfig(options: {
   unrolledAssistant: AssistantUnrolled;
   ide: IDE;
@@ -190,10 +276,15 @@ export async function configYamlToContinueConfig(options: {
       subagent: null,
     },
     rules: [],
-    requestOptions: { ...unrolledAssistant.requestOptions },
+    requestOptions: {},
   };
 
-  const config = nonNullifyConfigYaml(unrolledAssistant);
+  const config = await resolveConfigEnvPlaceholders(
+    nonNullifyConfigYaml(unrolledAssistant),
+    ideInfo.remoteName,
+  );
+
+  continueConfig.requestOptions = { ...config.requestOptions };
 
   for (const rule of config.rules ?? []) {
     const convertedRule = convertYamlRuleToContinueRule(rule);
