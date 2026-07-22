@@ -130,6 +130,16 @@ export function getNumberArg(args: any, argName: string): number {
   return Math.floor(value); // Ensure integer for line numbers (supports negative numbers)
 }
 
+export function getOptionalNumberArg(
+  args: any,
+  argName: string,
+): number | undefined {
+  if (typeof args?.[argName] === "undefined") {
+    return undefined;
+  }
+  return getNumberArg(args, argName);
+}
+
 export function getBooleanArg(args: any, argName: string, required = false) {
   if (!args || !(argName in args)) {
     if (required) {

@@ -13,10 +13,21 @@ export const readCurrentlyOpenFileTool: Tool = {
   function: {
     name: BuiltInToolNames.ReadCurrentlyOpenFile,
     description:
-      "Read the currently open file in the IDE. If the user seems to be referring to a file that you can't see, or is requesting an action on content that seems missing, try using this tool.",
+      "Read the currently open file in the IDE. If the user seems to be referring to a file that you can't see, or is requesting an action on content that seems missing, try using this tool. For large files, use the offset and limit parameters to read a specific range of lines. When the response indicates more lines are available, continue reading with the next offset.",
     parameters: {
       type: "object",
-      properties: {},
+      properties: {
+        offset: {
+          type: "number",
+          description:
+            "The 1-based line number to start reading from. Defaults to 1 (beginning of file).",
+        },
+        limit: {
+          type: "number",
+          description:
+            "The maximum number of lines to read. Defaults to 2000. Output is also capped at 50 KB regardless of this value.",
+        },
+      },
     },
   },
   defaultToolPolicy: "allowedWithPermission",

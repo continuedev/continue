@@ -11,19 +11,17 @@ vi.mock("../../util/uri", () => ({
   getUriPathBasename: vi.fn(),
 }));
 
-vi.mock("./readFileLimit", () => ({
-  throwIfFileExceedsHalfOfContext: vi.fn(),
-}));
+// Note: readFileLimit mock removed — throwIfFileExceedsHalfOfContext is no
+// longer called from readFileRangeImpl. The IDE's readRangeInFile already
+// returns only the requested line window so output is bounded by definition.
 
 test("readFileRangeImpl handles out-of-bounds ranges gracefully", async () => {
   const { resolveRelativePathInDir } = await import("../../util/ideUtils");
   const { getUriPathBasename } = await import("../../util/uri");
-  const { throwIfFileExceedsHalfOfContext } = await import("./readFileLimit");
 
   // Mock the utility functions
   vi.mocked(resolveRelativePathInDir).mockResolvedValue("file:///test.txt");
   vi.mocked(getUriPathBasename).mockReturnValue("test.txt");
-  vi.mocked(throwIfFileExceedsHalfOfContext).mockResolvedValue(undefined);
 
   // Test case 1: Start line beyond end of file
   const mockIdeOutOfBounds = {
@@ -32,7 +30,6 @@ test("readFileRangeImpl handles out-of-bounds ranges gracefully", async () => {
 
   const mockExtras1 = {
     ide: mockIdeOutOfBounds,
-    config: { selectedModelByRole: { chat: { contextLength: 8192 } } },
   } as unknown as ToolExtras;
 
   const result1 = await readFileRangeImpl(
@@ -55,7 +52,6 @@ test("readFileRangeImpl handles out-of-bounds ranges gracefully", async () => {
 
   const mockExtras2 = {
     ide: mockIdePartialRange,
-    config: { selectedModelByRole: { chat: { contextLength: 8192 } } },
   } as unknown as ToolExtras;
 
   const result2 = await readFileRangeImpl(
@@ -92,7 +88,6 @@ test("readFileRangeImpl handles out-of-bounds ranges gracefully", async () => {
 test("readFileRangeImpl validates line number constraints", async () => {
   const mockExtras = {
     ide: { readRangeInFile: vi.fn(), readFile: vi.fn() },
-    config: { selectedModelByRole: { chat: { contextLength: 8192 } } },
   } as unknown as ToolExtras;
 
   // Test startLine < 1 (invalid)
@@ -161,11 +156,9 @@ test("readFileRangeImpl validates line number constraints", async () => {
 test("readFileRangeImpl handles normal ranges correctly", async () => {
   const { resolveRelativePathInDir } = await import("../../util/ideUtils");
   const { getUriPathBasename } = await import("../../util/uri");
-  const { throwIfFileExceedsHalfOfContext } = await import("./readFileLimit");
 
   vi.mocked(resolveRelativePathInDir).mockResolvedValue("file:///test.txt");
   vi.mocked(getUriPathBasename).mockReturnValue("test.txt");
-  vi.mocked(throwIfFileExceedsHalfOfContext).mockResolvedValue(undefined);
 
   const mockIde = {
     readRangeInFile: vi.fn().mockResolvedValue("line2\nline3\nline4"),
@@ -173,7 +166,6 @@ test("readFileRangeImpl handles normal ranges correctly", async () => {
 
   const mockExtras = {
     ide: mockIde,
-    config: { selectedModelByRole: { chat: { contextLength: 8192 } } },
   } as unknown as ToolExtras;
 
   const result = await readFileRangeImpl(

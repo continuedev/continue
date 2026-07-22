@@ -4,7 +4,6 @@ import { getUriPathBasename } from "../../util/uri";
 import { ToolImpl } from ".";
 import { throwIfFileIsSecurityConcern } from "../../indexing/ignore";
 import { getNumberArg, getStringArg } from "../parseArgs";
-import { throwIfFileExceedsHalfOfContext } from "./readFileLimit";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
 
 // Use Int.MAX_VALUE from Java/Kotlin (2^31 - 1) instead of JavaScript's Number.MAX_SAFE_INTEGER
@@ -48,7 +47,8 @@ export const readFileRangeImpl: ToolImpl = async (args, extras) => {
   // Security check on the resolved display path
   throwIfFileIsSecurityConcern(resolvedPath.displayPath);
 
-  // Use the IDE's readRangeInFile method with 0-based range (IDE expects 0-based internally)
+  // Use the IDE's readRangeInFile method with 0-based range (IDE expects 0-based internally).
+  // Only the requested line range is fetched — the full file is never loaded into memory.
   const content = await extras.ide.readRangeInFile(resolvedPath.uri, {
     start: {
       line: startLine - 1, // Convert from 1-based to 0-based
@@ -59,12 +59,6 @@ export const readFileRangeImpl: ToolImpl = async (args, extras) => {
       character: MAX_CHAR_POSITION, // Read to end of line
     },
   });
-
-  await throwIfFileExceedsHalfOfContext(
-    resolvedPath.displayPath,
-    content,
-    extras.config.selectedModelByRole.chat,
-  );
 
   const rangeDescription = `${resolvedPath.displayPath} (lines ${startLine}-${endLine})`;
 
