@@ -15,16 +15,15 @@ import {
 } from "../telemetry/utils.js";
 import { backgroundSignalManager } from "../util/backgroundSignalManager.js";
 import { emitBashToolEnded, emitBashToolStarted } from "../util/cli.js";
-import {
-  parseEnvNumber,
-  truncateOutputFromStart,
-} from "../util/truncateOutput.js";
+import { parseEnvNumber } from "../util/truncateOutput.js";
 
 import { Tool, ToolRunContext } from "./types.js";
 
 // Output truncation defaults
-const DEFAULT_BASH_MAX_CHARS = 50000; // ~12.5k tokens
+const DEFAULT_BASH_MAX_OUTPUT_BYTES = 50000; // ~12.5k tokens
 const DEFAULT_BASH_MAX_LINES = 1000;
+const TERMINAL_OUTPUT_TRUNCATION_MARKER =
+  "[Continue CLI: terminal_output_truncated";
 
 /**
  * When running on Windows, but inside WSL, shell commands need to run using the WSL environment.
@@ -48,10 +47,13 @@ export function isRunningInWsl(): boolean {
   }
 }
 
-function getBashMaxChars(): number {
+function getBashMaxOutputBytes(): number {
   return parseEnvNumber(
-    process.env.CONTINUE_CLI_BASH_MAX_OUTPUT_CHARS,
-    DEFAULT_BASH_MAX_CHARS,
+    process.env.CONTINUE_CLI_BASH_MAX_OUTPUT_BYTES,
+    parseEnvNumber(
+      process.env.CONTINUE_CLI_BASH_MAX_OUTPUT_CHARS,
+      DEFAULT_BASH_MAX_OUTPUT_BYTES,
+    ),
   );
 }
 
@@ -60,6 +62,166 @@ function getBashMaxLines(): number {
     process.env.CONTINUE_CLI_BASH_MAX_OUTPUT_LINES,
     DEFAULT_BASH_MAX_LINES,
   );
+}
+
+interface TerminalOutputLimits {
+  maxBytes: number;
+  maxLines: number;
+}
+
+interface TerminalOutputLimitResult {
+  output: string;
+  wasTruncated: boolean;
+}
+
+function byteLength(text: string): number {
+  return Buffer.byteLength(text, "utf8");
+}
+
+function takeUtf8Prefix(text: string, maxBytes: number): string {
+  if (maxBytes <= 0) {
+    return "";
+  }
+
+  let bytes = 0;
+  let result = "";
+
+  for (const char of text) {
+    const charBytes = byteLength(char);
+    if (bytes + charBytes > maxBytes) {
+      break;
+    }
+
+    result += char;
+    bytes += charBytes;
+  }
+
+  return result;
+}
+
+function takeUtf8Suffix(text: string, maxBytes: number): string {
+  if (maxBytes <= 0) {
+    return "";
+  }
+
+  const chars = Array.from(text);
+  let bytes = 0;
+  let startIndex = chars.length;
+
+  for (let i = chars.length - 1; i >= 0; i--) {
+    const charBytes = byteLength(chars[i]);
+    if (bytes + charBytes > maxBytes) {
+      break;
+    }
+
+    bytes += charBytes;
+    startIndex = i;
+  }
+
+  return chars.slice(startIndex).join("");
+}
+
+function buildByteTruncationMarker(
+  omittedBytes: number,
+  originalBytes: number,
+  maxBytes: number,
+): string {
+  return `\n\n${TERMINAL_OUTPUT_TRUNCATION_MARKER} omitted_bytes=${omittedBytes} original_bytes=${originalBytes} max_bytes=${maxBytes}; ${omittedBytes} bytes dropped]\n\n`;
+}
+
+function buildLineTruncationMarker(
+  omittedLines: number,
+  maxLines: number,
+): string {
+  return `${TERMINAL_OUTPUT_TRUNCATION_MARKER} omitted_lines=${omittedLines} max_lines=${maxLines}; ${omittedLines} lines dropped]`;
+}
+
+function truncateLinesHeadTail(
+  output: string,
+  maxLines: number,
+): TerminalOutputLimitResult {
+  if (!output) {
+    return { output, wasTruncated: false };
+  }
+
+  const lines = output.split("\n");
+  if (lines.length <= maxLines) {
+    return { output, wasTruncated: false };
+  }
+
+  const headLineCount = Math.ceil(maxLines / 2);
+  const tailLineCount = Math.floor(maxLines / 2);
+  const omittedLines = lines.length - headLineCount - tailLineCount;
+  const head = lines.slice(0, headLineCount).join("\n");
+  const tail = tailLineCount > 0 ? lines.slice(-tailLineCount).join("\n") : "";
+  const marker = buildLineTruncationMarker(omittedLines, maxLines);
+
+  return {
+    output: tail ? `${head}\n${marker}\n${tail}` : `${head}\n${marker}`,
+    wasTruncated: true,
+  };
+}
+
+function truncateBytesHeadTail(
+  output: string,
+  maxBytes: number,
+): TerminalOutputLimitResult {
+  const originalBytes = byteLength(output);
+  if (originalBytes <= maxBytes) {
+    return { output, wasTruncated: false };
+  }
+
+  let omittedBytes = originalBytes;
+  let truncatedOutput = "";
+
+  // The omitted byte count appears inside the marker, so marker length can
+  // change as the kept head/tail budgets settle.
+  for (let i = 0; i < 5; i++) {
+    const marker = buildByteTruncationMarker(
+      omittedBytes,
+      originalBytes,
+      maxBytes,
+    );
+    const availableBytes = maxBytes - byteLength(marker);
+
+    if (availableBytes <= 0) {
+      return {
+        output: takeUtf8Prefix(marker, maxBytes),
+        wasTruncated: true,
+      };
+    }
+
+    const headBudget = Math.ceil(availableBytes / 2);
+    const tailBudget = Math.floor(availableBytes / 2);
+    const head = takeUtf8Prefix(output, headBudget);
+    const tail = takeUtf8Suffix(output, tailBudget);
+    const nextOmittedBytes =
+      originalBytes - byteLength(head) - byteLength(tail);
+
+    truncatedOutput = `${head}${marker}${tail}`;
+    if (nextOmittedBytes === omittedBytes) {
+      break;
+    }
+    omittedBytes = nextOmittedBytes;
+  }
+
+  return {
+    output: takeUtf8Prefix(truncatedOutput, maxBytes),
+    wasTruncated: true,
+  };
+}
+
+function limitTerminalOutput(
+  output: string,
+  limits: TerminalOutputLimits,
+): TerminalOutputLimitResult {
+  const lineResult = truncateLinesHeadTail(output, limits.maxLines);
+  const byteResult = truncateBytesHeadTail(lineResult.output, limits.maxBytes);
+
+  return {
+    output: byteResult.output,
+    wasTruncated: lineResult.wasTruncated || byteResult.wasTruncated,
+  };
 }
 
 // Helper function to use login shell on Unix/macOS and PowerShell on Windows and available shell in WSL
@@ -179,10 +341,10 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
   ): Promise<string> => {
     // Divide limits by parallel tool call count to avoid context overflow
     const parallelCount = context?.parallelToolCallCount ?? 1;
-    const baseMaxChars = getBashMaxChars();
+    const baseMaxBytes = getBashMaxOutputBytes();
     const baseMaxLines = getBashMaxLines();
-    const maxChars = Math.floor(baseMaxChars / parallelCount);
-    const maxLines = Math.floor(baseMaxLines / parallelCount);
+    const maxBytes = Math.max(1, Math.floor(baseMaxBytes / parallelCount));
+    const maxLines = Math.max(1, Math.floor(baseMaxLines / parallelCount));
 
     emitBashToolStarted();
 
@@ -209,17 +371,27 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
       }
 
       /**
-       * Appends a note about reduced limits when parallel tool calls are in effect.
+       * Applies the terminal output budget to the complete payload returned to
+       * chat history or the model loop.
        */
-      const appendParallelLimitNote = (output: string): string => {
-        if (parallelCount > 1) {
-          return (
-            output +
+      const formatTerminalResult = (output: string): string => {
+        let result = output;
+        const limitResult = limitTerminalOutput(result, {
+          maxBytes,
+          maxLines,
+        });
+        result = limitResult.output;
+
+        if (limitResult.wasTruncated && parallelCount > 1) {
+          result +=
             `\n\n(Note: output limit reduced due to ${parallelCount} parallel tool calls. ` +
-            `Single-tool limit: ${baseMaxChars.toLocaleString()} characters or ${baseMaxLines.toLocaleString()} lines.)`
-          );
+            `Single-tool limit: ${baseMaxBytes.toLocaleString()} bytes or ${baseMaxLines.toLocaleString()} lines.)`;
         }
-        return output;
+
+        return limitTerminalOutput(result, {
+          maxBytes,
+          maxLines,
+        }).output;
       };
 
       const moveToBackground = () => {
@@ -244,19 +416,16 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         );
 
         if (job) {
-          const truncationResult = truncateOutputFromStart(stdout, {
-            maxChars,
-            maxLines,
-          });
-          const outputSoFar = truncationResult.wasTruncated
-            ? appendParallelLimitNote(truncationResult.output)
-            : truncationResult.output;
           resolve(
-            `Command moved to background. Job ID: ${job.id}\nOutput so far:\n${outputSoFar}\nUse CheckBackgroundJob("${job.id}") to check status.`,
+            formatTerminalResult(
+              `Command moved to background. Job ID: ${job.id}\nOutput so far:\n${stdout}\nUse CheckBackgroundJob("${job.id}") to check status.`,
+            ),
           );
         } else {
           resolve(
-            `Failed to move to background (job limit reached). Command continues in foreground.\nOutput so far: ${stdout}`,
+            formatTerminalResult(
+              `Failed to move to background (job limit reached). Command continues in foreground.\nOutput so far: ${stdout}`,
+            ),
           );
         }
       };
@@ -274,14 +443,7 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           let output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           output += `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`;
 
-          const truncationResult = truncateOutputFromStart(output, {
-            maxChars,
-            maxLines,
-          });
-          const finalOutput = truncationResult.wasTruncated
-            ? appendParallelLimitNote(truncationResult.output)
-            : truncationResult.output;
-          resolve(finalOutput);
+          resolve(formatTerminalResult(output));
         }, TIMEOUT_MS);
       };
 
@@ -291,7 +453,7 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           const currentOutput = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           services.chatHistory.addToolResult(
             context.toolCallId,
-            currentOutput,
+            formatTerminalResult(currentOutput),
             "calling",
           );
         } catch {
@@ -332,7 +494,7 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
 
         // Only reject on non-zero exit code if there's also stderr
         if (code !== 0 && stderr) {
-          reject(`Error (exit code ${code}): ${stderr}`);
+          reject(formatTerminalResult(`Error (exit code ${code}): ${stderr}`));
           return;
         }
 
@@ -350,14 +512,7 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           output = stdout + `\nStderr: ${stderr}`;
         }
 
-        const truncationResult = truncateOutputFromStart(output, {
-          maxChars,
-          maxLines,
-        });
-        const finalOutput = truncationResult.wasTruncated
-          ? appendParallelLimitNote(truncationResult.output)
-          : truncationResult.output;
-        resolve(finalOutput);
+        resolve(formatTerminalResult(output));
       });
 
       child.on("error", (error) => {
