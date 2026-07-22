@@ -54,10 +54,6 @@ function claudeSonnetLazyApplyPrompt(
 export function lazyApplyPromptForModel(
   model: string,
   provider: string,
-): LazyApplyPrompt | undefined {
-  if (model.includes("sonnet")) {
-    return claudeSonnetLazyApplyPrompt;
-  }
-
-  return undefined;
+): LazyApplyPrompt {
+  return claudeSonnetLazyApplyPrompt;
 }
