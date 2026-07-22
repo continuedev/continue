@@ -300,6 +300,18 @@ export function saveSession(): void {
  */
 export function loadSession(): Session | null {
   try {
+    // If a specific session has been selected (e.g. via `cn ls`), resume that
+    // one instead of the most recent. The selection is communicated through the
+    // same env var that SessionManager uses to pin the current session id.
+    const selectedSessionId = process.env.CONTINUE_CLI_TEST_SESSION_ID;
+    if (selectedSessionId) {
+      const selectedSession = loadSessionById(selectedSessionId);
+      if (selectedSession) {
+        SessionManager.getInstance().setSession(selectedSession);
+        return selectedSession;
+      }
+    }
+
     // For resume, we need to find the most recent session
     const sessionDir = getSessionDir();
     if (!fs.existsSync(sessionDir)) {
