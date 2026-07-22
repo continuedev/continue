@@ -424,4 +424,31 @@ describe("OpenAI", () => {
       },
     });
   });
+
+  describe("getMaxStopWords", () => {
+    test("returns Infinity instead of throwing when apiBase is undefined", () => {
+      const openai = new OpenAI({
+        apiKey: "test-api-key",
+        model: "gpt-4",
+        apiBase: "https://api.openai.com/v1/",
+      });
+      // continue-proxy and similar providers can leave apiBase undefined
+      (openai as any).apiBase = undefined;
+
+      expect(() => (openai as any).getMaxStopWords()).not.toThrow();
+      expect((openai as any).getMaxStopWords()).toBe(Infinity);
+    });
+
+    test("honors maxStopWords even when apiBase is undefined", () => {
+      const openai = new OpenAI({
+        apiKey: "test-api-key",
+        model: "gpt-4",
+        apiBase: "https://api.openai.com/v1/",
+      });
+      (openai as any).apiBase = undefined;
+      (openai as any).maxStopWords = 7;
+
+      expect((openai as any).getMaxStopWords()).toBe(7);
+    });
+  });
 });

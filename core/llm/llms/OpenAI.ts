@@ -253,11 +253,18 @@ class OpenAI extends BaseLLM {
   }
 
   protected getMaxStopWords(): number {
-    const url = new URL(this.apiBase!);
-
     if (this.maxStopWords !== undefined) {
       return this.maxStopWords;
-    } else if (url.host === "api.deepseek.com") {
+    }
+
+    // apiBase can legitimately be undefined (e.g. continue-proxy, whose
+    // defaultOptions don't carry one), so guard against `new URL(undefined)`.
+    if (!this.apiBase) {
+      return Infinity;
+    }
+
+    const url = new URL(this.apiBase);
+    if (url.host === "api.deepseek.com") {
       return 16;
     } else if (
       url.port === "1337" ||
