@@ -328,7 +328,9 @@ class OpenAI extends BaseLLM {
     const body: ResponseCreateParamsBase = {
       model,
       input,
-      temperature: options.temperature ?? null,
+      ...(options.temperature !== undefined && {
+        temperature: options.temperature,
+      }),
       top_p: options.topP ?? null,
       reasoning: {
         effort: "medium",
