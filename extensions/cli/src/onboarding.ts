@@ -140,9 +140,26 @@ export async function initializeWithOnboarding(
         `Failed to load config from "${configPath}": ${errorMessage}`,
       );
     }
+    // A successful explicit --config load implies the user is set up.
+    // Mark onboarding complete so subsequent runs without --config can
+    // fall through to their existing configuration.
+    if (firstTime) {
+      await markOnboardingComplete();
+    }
   }
 
   if (!firstTime) return;
+
+  // If the user already has a `~/.continue/config.yaml`, treat them as
+  // already configured — match the IDE behaviour and the unauthenticated
+  // fallback in configLoader.ts. No prompt, no forced login.
+  if (
+    configPath === undefined &&
+    fs.existsSync(path.join(env.continueHome, "config.yaml"))
+  ) {
+    await markOnboardingComplete();
+    return;
+  }
 
   const wasOnboarded = await runOnboardingFlow(configPath);
   if (wasOnboarded) {
