@@ -14,6 +14,12 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
 }
 
 export function activate(context: vscode.ExtensionContext) {
+  context.subscriptions.push(
+    vscode.commands.registerCommand("continue.viewLogs", () => {
+      vscode.commands.executeCommand("workbench.action.toggleDevTools");
+    }),
+  );
+
   return dynamicImportAndActivate(context).catch((e) => {
     console.log("Error activating extension: ", e);
     vscode.window
@@ -26,7 +32,6 @@ export function activate(context: vscode.ExtensionContext) {
         if (selection === "View Logs") {
           vscode.commands.executeCommand("continue.viewLogs");
         } else if (selection === "Retry") {
-          // Reload VS Code window
           vscode.commands.executeCommand("workbench.action.reloadWindow");
         }
       });
