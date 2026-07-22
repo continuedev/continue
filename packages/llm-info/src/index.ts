@@ -1,3 +1,4 @@
+import { AGIone } from "./providers/agione.js";
 import { Anthropic } from "./providers/anthropic.js";
 import { Azure } from "./providers/azure.js";
 import { Bedrock } from "./providers/bedrock.js";
@@ -17,6 +18,7 @@ import { LlmInfoWithProvider, ModelProvider, UseCase } from "./types.js";
 
 export const allModelProviders: ModelProvider[] = [
   OpenAi,
+  AGIone,
   Gemini,
   Anthropic,
   Mistral,

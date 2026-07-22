@@ -113,6 +113,40 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     ],
     apiKeyUrl: "https://api.cometapi.com/console/token",
   },
+  agione: {
+    title: "AGIone",
+    provider: "agione",
+    description:
+      "OpenAI-compatible API for LLM, vision, image, and video models",
+    longDescription:
+      "Use AGIone through its OpenAI-compatible endpoint at https://agione.pro/hyperone/xapi/api/v1/.",
+    icon: "openai.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "Auth Token",
+        placeholder: "Enter your AGIone Auth Token",
+        required: true,
+      },
+      apiBaseInput,
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.agioneGpt55,
+      models.agioneClaudeOpus47,
+      models.agioneDeepseekV32,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "AGIone",
+        },
+      },
+    ],
+    apiKeyUrl: "https://agione.pro",
+  },
   openai: {
     title: "OpenAI",
     provider: "openai",

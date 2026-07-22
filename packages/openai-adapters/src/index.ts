@@ -97,6 +97,11 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
   switch (config.provider) {
     case "openai":
       return new OpenAIApi(config);
+    case "agione":
+      return openAICompatible(
+        "https://agione.pro/hyperone/xapi/api/v1/",
+        config,
+      );
     case "azure":
       return new AzureApi(config);
     case "bedrock":
