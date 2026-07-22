@@ -2,6 +2,7 @@ import { ctxItemToRifWithContents } from "core/commands/util";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeKatex from "rehype-katex";
+import "katex/contrib/mhchem";
 import remarkMath from "remark-math";
 import styled from "styled-components";
 import { visit } from "unist-util-visit";
