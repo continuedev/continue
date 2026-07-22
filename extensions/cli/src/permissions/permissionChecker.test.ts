@@ -597,7 +597,7 @@ describe("Permission Checker", () => {
         );
       });
 
-      it("should allow risky commands based on user preference (curl)", () => {
+      it("should ask for risky commands based on dynamic evaluation (curl)", () => {
         mockEvaluateToolCallPolicy.mockReturnValue("allowedWithPermission");
 
         const result = checkToolPermission(
@@ -605,7 +605,7 @@ describe("Permission Checker", () => {
           permissions,
         );
 
-        expect(result.permission).toBe("allow"); // User preference wins over "ask"
+        expect(result.permission).toBe("ask"); // Dynamic evaluation wins over "allow"
         expect(mockEvaluateToolCallPolicy).toHaveBeenCalledWith(
           "allowedWithoutPermission", // converted from "allow"
           { command: "curl https://example.com" },
@@ -759,26 +759,26 @@ describe("Permission Checker", () => {
           expected: "allow",
         },
 
-        // Risky commands (user preference wins when not disabled)
+        // Risky commands (dynamic evaluation wins when not disabled)
         {
           command: "npm install pkg",
           dynamicResult: "allowedWithPermission",
-          expected: "allow",
+          expected: "ask",
         },
         {
           command: "rm file.txt",
           dynamicResult: "allowedWithPermission",
-          expected: "allow",
+          expected: "ask",
         },
         {
           command: "curl https://api.example.com",
           dynamicResult: "allowedWithPermission",
-          expected: "allow",
+          expected: "ask",
         },
         {
           command: "wget https://example.com/file",
           dynamicResult: "allowedWithPermission",
-          expected: "allow",
+          expected: "ask",
         },
 
         // Dangerous commands (always blocked)
@@ -860,7 +860,7 @@ describe("Permission Checker", () => {
           permissions,
         );
 
-        expect(result.permission).toBe("allow");
+        expect(result.permission).toBe("ask");
         expect(mockEvaluateToolCallPolicy).toHaveBeenCalledWith(
           "allowedWithoutPermission",
           {},
