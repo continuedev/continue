@@ -16,7 +16,7 @@
   "dependencies": {
     "@continuedev/config-yaml": "^1.38.0",
     "@openapitools/openapi-generator-cli": "^2.31.0",
-    "express": "^4.22.0",
+    "express": "^4.22.2",
     "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
