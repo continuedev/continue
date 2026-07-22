@@ -1,0 +1,55 @@
+---
+title: "How to Configure Perplexity with Continue"
+sidebarTitle: "Perplexity"
+---
+
+<Info>
+  Get your API key from the [Perplexity API Keys page](https://www.perplexity.ai/account/api/keys)
+</Info>
+
+Perplexity exposes its Sonar models through an OpenAI-compatible chat
+completions API. Sonar models include built-in web search, which is useful
+for coding agents that need to research up-to-date documentation or APIs
+while answering.
+
+Available models include:
+
+- `sonar`
+- `sonar-pro`
+- `sonar-reasoning`
+- `sonar-reasoning-pro`
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Sonar Pro
+      provider: perplexity
+      model: sonar-pro
+      apiKey: <YOUR_PERPLEXITY_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Sonar Pro",
+        "provider": "perplexity",
+        "model": "sonar-pro",
+        "apiKey": "<YOUR_PERPLEXITY_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+See the [Perplexity API documentation](https://docs.perplexity.ai/docs/getting-started)
+for more details on available models, parameters, and rate limits.

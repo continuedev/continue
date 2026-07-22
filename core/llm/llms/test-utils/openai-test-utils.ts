@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { ILLM } from "../../../index.js";
+import type { ILLM } from "../../../index.js";
 import OpenAI from "../OpenAI.js";
 
 interface LlmTestCase {

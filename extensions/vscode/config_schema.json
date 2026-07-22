@@ -208,6 +208,7 @@
             "mistral-vertexai",
             "deepinfra",
             "groq",
+            "perplexity",
             "fireworks",
             "ncompass",
             "cloudflare",
@@ -261,6 +262,7 @@
             "### Mistral API on Vertex AI\nTo get started you need to enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up the [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
             "### DeepInfra\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/deepinfra)",
             "### Groq\nGroq provides extremely fast inference of open-source language models. To get started, obtain an API key from [their console](https://console.groq.com/keys).",
+            "### Perplexity\nPerplexity offers Sonar models with built-in web search, useful for coding agents that need to research up-to-date documentation. To get started, obtain an API key from [their console](https://www.perplexity.ai/account/api/keys).\n> [Reference](https://docs.perplexity.ai/docs/getting-started)",
             "### Fireworks\nFireworks is a fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://fireworks.ai/api-keys).",
             "### Ncompass\nnCompass is an extremely fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://app.ncompass.tech/api-settings).",
             "### Cloudflare Workers AI\n\n[Reference](https://developers.cloudflare.com/workers-ai/)",
@@ -1322,6 +1324,29 @@
                   "llama3-70b",
                   "llama3.1-8b",
                   "llama3.1-70b",
+                  "AUTODETECT"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["perplexity"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "sonar",
+                  "sonar-pro",
+                  "sonar-reasoning",
+                  "sonar-reasoning-pro",
                   "AUTODETECT"
                 ]
               }

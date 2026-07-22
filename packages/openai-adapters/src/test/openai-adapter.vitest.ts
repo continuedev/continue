@@ -1,4 +1,5 @@
 import { describe, vi } from "vitest";
+import { PERPLEXITY_INTEGRATION_HEADERS } from "../integrationHeaders.js";
 import { createAdapterTests } from "./adapter-test-utils.js";
 
 // Mock the fetch package (not needed for OpenAI but required by the shared test utils)
@@ -20,6 +21,23 @@ describe("OpenAI Adapter Tests", () => {
     },
     expectedApiBase: "https://api.openai.com/v1/",
     customHeaders: {
+      authorization: "Bearer test-api-key",
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+  });
+});
+
+describe("Perplexity Adapter Tests", () => {
+  createAdapterTests({
+    providerName: "perplexity",
+    config: {
+      provider: "perplexity",
+      apiKey: "test-api-key",
+    },
+    expectedApiBase: "https://api.perplexity.ai/",
+    customHeaders: {
+      ...PERPLEXITY_INTEGRATION_HEADERS,
       authorization: "Bearer test-api-key",
       "content-type": "application/json",
       accept: "application/json",
