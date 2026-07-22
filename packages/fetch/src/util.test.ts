@@ -1,5 +1,6 @@
 import { afterEach, expect, test, vi } from "vitest";
 import {
+  getProxy,
   getProxyFromEnv,
   patternMatchesHostname,
   shouldBypassProxy,
@@ -54,6 +55,41 @@ test("getProxyFromEnv prefers HTTPS_PROXY over other env vars for https protocol
   process.env.HTTP_PROXY = "http://notused2.example.com";
   process.env.http_proxy = "http://notused3.example.com";
   expect(getProxyFromEnv("https:")).toBe("https://preferred.example.com");
+});
+
+// Tests for getProxy
+test("getProxy returns undefined when neither request options nor env proxy are set", () => {
+  expect(getProxy("http:", undefined)).toBeUndefined();
+  expect(getProxy("https:", undefined)).toBeUndefined();
+  expect(getProxy("http:", {})).toBeUndefined();
+});
+
+test("getProxy returns the request options proxy when set", () => {
+  expect(getProxy("https:", { proxy: "http://request.example.com" })).toBe(
+    "http://request.example.com",
+  );
+});
+
+test("getProxy prefers the request options proxy over environment variables", () => {
+  process.env.HTTPS_PROXY = "https://env.example.com";
+  expect(getProxy("https:", { proxy: "http://request.example.com" })).toBe(
+    "http://request.example.com",
+  );
+});
+
+test("getProxy falls back to the environment proxy when request options has no proxy", () => {
+  process.env.HTTP_PROXY = "http://env.example.com";
+  expect(getProxy("http:", {})).toBe("http://env.example.com");
+  expect(getProxy("http:", { noProxy: ["example.com"] })).toBe(
+    "http://env.example.com",
+  );
+});
+
+test("getProxy respects protocol when falling back to the environment proxy", () => {
+  process.env.HTTPS_PROXY = "https://secure.example.com";
+  process.env.HTTP_PROXY = "http://insecure.example.com";
+  expect(getProxy("https:", undefined)).toBe("https://secure.example.com");
+  expect(getProxy("http:", undefined)).toBe("http://insecure.example.com");
 });
 
 // Tests for patternMatchesHostname
