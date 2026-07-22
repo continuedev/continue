@@ -1270,6 +1270,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  aivene: {
+    title: "Aivene",
+    provider: "aivene",
+    description:
+      "Aivene is an AI gateway that provides access to various LLM models through a unified OpenAI-compatible API.",
+    longDescription:
+      "To get started with Aivene, create an account and get an API key at [platform.aivene.com](https://platform.aivene.com).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Aivene API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://platform.aivene.com",
+  },
   venice: {
     title: "Venice",
     provider: "venice",

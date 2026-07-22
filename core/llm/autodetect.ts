@@ -74,6 +74,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "nous",
   "zAI",
   "tensorix",
+  "aivene",
   // TODO add these, change to inverted logic so only the ones that need templating are hardcoded
   // Asksage.ts
   // Azure.ts
@@ -133,6 +134,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "watsonx",
   "zAI",
   "tensorix",
+  "aivene",
 ];
 
 const MODEL_SUPPORTS_IMAGES: RegExp[] = [
@@ -253,6 +255,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "scaleway",
   "minimax",
   "tensorix",
+  "aivene",
 ];
 
 function llmCanGenerateInParallel(provider: string, model: string): boolean {
@@ -533,5 +536,5 @@ export {
   llmCanGenerateInParallel,
   modelSupportsImages,
   modelSupportsNextEdit,
-  modelSupportsReasoning,
+  modelSupportsReasoning
 };
