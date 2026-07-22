@@ -240,15 +240,35 @@ add_to_profile() {
     grep -q "$check" "$SHELL_PROFILE" 2>/dev/null || echo "$line" >> "$SHELL_PROFILE"
 }
 
+get_npm_prefix() {
+    if ! command -v npm &>/dev/null; then
+        error "Node.js was found but npm is missing or misconfigured. Please install npm or reinstall Node.js with npm support."
+    fi
+
+    local npm_prefix
+    if ! npm_prefix="$(npm config get prefix 2>/dev/null)" || [ -z "$npm_prefix" ]; then
+        error "Node.js was found but npm is missing or misconfigured. Unable to read npm's global prefix."
+    fi
+
+    case "$npm_prefix" in
+        /|/bin|/usr/bin)
+            error "Node.js was found but npm is missing or misconfigured. npm global prefix resolved to '$npm_prefix'."
+            ;;
+    esac
+
+    printf "%s\n" "$npm_prefix"
+}
+
 setup_npm_path() {
-    local npm_bin
-    npm_bin="$(npm config get prefix 2>/dev/null)/bin"
+    local npm_prefix npm_bin
+    npm_prefix="$(get_npm_prefix)"
+    npm_bin="$npm_prefix/bin"
     [ -d "$npm_bin" ] && export PATH="$npm_bin:$PATH"
 }
 
 check_npm_permissions() {
     local npm_prefix
-    npm_prefix="$(npm config get prefix 2>/dev/null)"
+    npm_prefix="$(get_npm_prefix)"
 
     # Check if we can write to npm global directory
     if [ -d "$npm_prefix/lib" ] && [ ! -w "$npm_prefix/lib" ]; then
