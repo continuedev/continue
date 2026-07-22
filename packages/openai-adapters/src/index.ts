@@ -178,6 +178,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.tensorix.ai/v1/", config);
     case "openrouter":
       return new OpenRouterApi(config);
+    case "requesty":
+      return openAICompatible("https://router.requesty.ai/v1/", config);
     case "clawrouter":
       return new ClawRouterApi(config);
     case "llama.cpp":

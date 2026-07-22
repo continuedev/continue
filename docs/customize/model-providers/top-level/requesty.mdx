@@ -1,0 +1,102 @@
+---
+title: "How to Configure Requesty with Continue"
+sidebarTitle: "Requesty"
+---
+
+<Info>
+  Get an API key from [Requesty](https://app.requesty.ai/router) and browse
+  available models in the [model list](https://app.requesty.ai/router/list).
+  See the [Requesty docs](https://docs.requesty.ai) for more details.
+</Info>
+
+Requesty is an OpenAI-compatible LLM gateway. Models use the same
+`provider/model` naming convention as OpenRouter (e.g. `openai/gpt-4o-mini`,
+`anthropic/claude-sonnet-4-5`).
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <MODEL_NAME>
+      provider: requesty
+      model: <MODEL_ID>
+      apiBase: https://router.requesty.ai/v1
+      apiKey: <YOUR_REQUESTY_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "requesty",
+        "model": "<MODEL_ID>",
+        "apiBase": "https://router.requesty.ai/v1",
+        "apiKey": "<YOUR_REQUESTY_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Model Capabilities
+
+Requesty models may require explicit capability configuration because the
+gateway doesn't always preserve the function calling support of the original
+model.
+
+<Info>
+  Continue automatically uses system message tools for models that don't support
+  native function calling, so Agent mode should work even without explicit
+  capability configuration. However, you can still override capabilities if
+  needed.
+</Info>
+
+If you're experiencing issues with Agent mode or tools not working, you can add the capabilities field:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <MODEL_NAME>
+      provider: requesty
+      model: <MODEL_ID>
+      apiBase: https://router.requesty.ai/v1
+      apiKey: <YOUR_REQUESTY_API_KEY>
+      capabilities:
+        - tool_use      # Enable function calling for Agent mode
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<MODEL_NAME>",
+        "provider": "requesty",
+        "model": "<MODEL_ID>",
+        "apiBase": "https://router.requesty.ai/v1",
+        "apiKey": "<YOUR_REQUESTY_API_KEY>",
+        "capabilities": {
+          "tools": true // Enable function calling for Agent mode
+        }
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+<Note>
+  Not all models support function calling. Check the [Requesty model list](https://app.requesty.ai/router/list) for specific model capabilities.
+</Note>
