@@ -6,7 +6,7 @@ import {
   RETRY_AFTER_HEADER,
 } from "./withExponentialBackoff";
 
-describe.skip("withExponentialBackoff", () => {
+describe("withExponentialBackoff", () => {
   it("should return result when apiCall succeeds on first attempt", async () => {
     // Arrange
     const apiCall = jest.fn().mockResolvedValue("Success");
@@ -112,7 +112,7 @@ describe.skip("withExponentialBackoff", () => {
     // Act & Assert
     await expect(
       withExponentialBackoff(apiCall, maxTries, initialDelaySeconds),
-    ).rejects.toThrow("Failed to make API call after max tries");
+    ).rejects.toThrow("Failed to make API call after");
 
     expect(apiCall).toHaveBeenCalledTimes(maxTries);
   });
@@ -135,8 +135,43 @@ describe.skip("withExponentialBackoff", () => {
 
     await expect(
       withExponentialBackoff(apiCall, maxTries, initialDelaySeconds),
-    ).rejects.toThrow("Failed to make API call after max tries");
+    ).rejects.toThrow("Failed to make API call after");
 
     expect(apiCall).toHaveBeenCalledTimes(0);
+  });
+
+  it("should retry when error message contains 'overloaded'", async () => {
+    const apiCall = jest.fn();
+    const firstError = new Error("Service overloaded, please try again");
+    apiCall.mockRejectedValueOnce(firstError).mockResolvedValueOnce("Success");
+
+    const result = await withExponentialBackoff(apiCall, 5, 0.01);
+
+    expect(result).toBe("Success");
+    expect(apiCall).toHaveBeenCalledTimes(2);
+  });
+
+  it("should retry when error message contains 'malformed json'", async () => {
+    const apiCall = jest.fn();
+    const firstError = new Error("Received malformed JSON from upstream");
+    apiCall.mockRejectedValueOnce(firstError).mockResolvedValueOnce("Success");
+
+    const result = await withExponentialBackoff(apiCall, 5, 0.01);
+
+    expect(result).toBe("Success");
+    expect(apiCall).toHaveBeenCalledTimes(2);
+  });
+
+  it("should retry when error message contains a 429 code in JSON body", async () => {
+    const apiCall = jest.fn();
+    const firstError = new Error(
+      '{"error": {"code": 429, "message": "Too Many Requests"}}',
+    );
+    apiCall.mockRejectedValueOnce(firstError).mockResolvedValueOnce("Success");
+
+    const result = await withExponentialBackoff(apiCall, 5, 0.01);
+
+    expect(result).toBe("Success");
+    expect(apiCall).toHaveBeenCalledTimes(2);
   });
 });
