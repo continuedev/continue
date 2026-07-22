@@ -23,6 +23,15 @@ export const editToolImpl: ClientToolImpl = async (
     extras.ideMessenger.ide,
   );
 
+  // Fallback: try the raw filepath directly (handles non-ASCII paths
+  // where URI encoding causes resolveRelativePathInDir to fail)
+  if (!firstUriMatch) {
+    const exists = await extras.ideMessenger.ide.fileExists(filepath);
+    if (exists) {
+      firstUriMatch = filepath;
+    }
+  }
+
   if (!firstUriMatch) {
     const openFiles = await extras.ideMessenger.ide.getOpenFiles();
     for (const uri of openFiles) {

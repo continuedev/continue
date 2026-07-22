@@ -18,6 +18,11 @@ import { findToolCallById, logToolUsage } from "../util";
 import { exitEdit } from "./edit";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
+// Tracks streams that reached "done" (diffs generated and awaiting user action).
+// Consumed when "closed" fires to distinguish successful edits from bail-outs
+// where the handler was never created.
+const doneStreams = new Set<string>();
+
 export const handleApplyStateUpdate = createAsyncThunk<
   void,
   ApplyState,
@@ -61,17 +66,23 @@ export const handleApplyStateUpdate = createAsyncThunk<
           });
         }
 
+        if (applyState.status === "done") {
+          doneStreams.add(applyState.streamId);
+        }
+
         if (applyState.status === "closed") {
+          const reachedDone = doneStreams.delete(applyState.streamId);
           if (toolCallState) {
-            const accepted = toolCallState.status !== "canceled";
-
-            logToolUsage(toolCallState, accepted, true, extra.ideMessenger);
-
-            // Log edit outcome for Agent Mode
             const newApplyState =
               getState().session.codeBlockApplyStates.states.find(
                 (s) => s.streamId === applyState.streamId,
               );
+            const accepted =
+              toolCallState.status !== "canceled" &&
+              toolCallState.status !== "errored" &&
+              reachedDone;
+
+            logToolUsage(toolCallState, accepted, true, extra.ideMessenger);
             const newState = getState();
             if (newApplyState) {
               void logAgentModeEditOutcome(
@@ -85,52 +96,36 @@ export const handleApplyStateUpdate = createAsyncThunk<
             }
 
             if (accepted) {
-              if (toolCallState.status !== "errored") {
+              dispatch(
+                acceptToolCall({
+                  toolCallId: applyState.toolCallId,
+                }),
+              );
+
+              // Add autoformatting diff to tool output if present
+              if (applyState.autoFormattingDiff) {
                 dispatch(
-                  acceptToolCall({
+                  updateToolCallOutput({
                     toolCallId: applyState.toolCallId,
+                    contextItems: [
+                      {
+                        icon: "info",
+                        name: "Auto-formatting Applied",
+                        description: "Editor auto-formatting changes",
+                        content: `Along with your edits, the editor applied the following auto-formatting:\n\n${applyState.autoFormattingDiff}\n\n(Note: Pay close attention to changes such as single quotes being converted to double quotes, semicolons being removed or added, long lines being broken into multiple lines, adjusting indentation style, adding/removing trailing commas, etc. This will help you ensure future SEARCH/REPLACE operations to this file are accurate.)`,
+                        hidden: false,
+                      },
+                    ],
                   }),
                 );
-
-                // Add autoformatting diff to tool output if present
-                if (applyState.autoFormattingDiff) {
-                  dispatch(
-                    updateToolCallOutput({
-                      toolCallId: applyState.toolCallId,
-                      contextItems: [
-                        {
-                          icon: "info",
-                          name: "Auto-formatting Applied",
-                          description: "Editor auto-formatting changes",
-                          content: `Along with your edits, the editor applied the following auto-formatting:\n\n${applyState.autoFormattingDiff}\n\n(Note: Pay close attention to changes such as single quotes being converted to double quotes, semicolons being removed or added, long lines being broken into multiple lines, adjusting indentation style, adding/removing trailing commas, etc. This will help you ensure future SEARCH/REPLACE operations to this file are accurate.)`,
-                          hidden: false,
-                        },
-                      ],
-                    }),
-                  );
-                } else {
-                  dispatch(
-                    updateToolCallOutput({
-                      toolCallId: applyState.toolCallId,
-                      contextItems: [
-                        {
-                          name: "Edit Success",
-                          content: `Successfully edited ${applyState.filepath}`,
-                          description: "",
-                          hidden: true,
-                        },
-                      ],
-                    }),
-                  );
-                }
               } else {
                 dispatch(
                   updateToolCallOutput({
                     toolCallId: applyState.toolCallId,
                     contextItems: [
                       {
-                        name: "Edit Failed",
-                        content: `Failed to edit ${applyState.filepath}. To continue working with the file, read it again to see the most up-to-date contents`,
+                        name: "Edit Success",
+                        content: `Successfully edited ${applyState.filepath}`,
                         description: "",
                         hidden: true,
                       },
@@ -138,7 +133,25 @@ export const handleApplyStateUpdate = createAsyncThunk<
                   }),
                 );
               }
-
+              void dispatch(
+                streamResponseAfterToolCall({
+                  toolCallId: applyState.toolCallId,
+                }),
+              );
+            } else if (toolCallState.status !== "canceled") {
+              dispatch(
+                updateToolCallOutput({
+                  toolCallId: applyState.toolCallId,
+                  contextItems: [
+                    {
+                      name: "Edit Failed",
+                      content: `Failed to edit ${applyState.filepath}. To continue working with the file, read it again to see the most up-to-date contents`,
+                      description: "",
+                      hidden: true,
+                    },
+                  ],
+                }),
+              );
               void dispatch(
                 streamResponseAfterToolCall({
                   toolCallId: applyState.toolCallId,
@@ -166,6 +179,42 @@ export const applyForEditTool = createAsyncThunk<
     }),
   );
 
+  // Set up a timeout to detect stalled apply operations
+  const APPLY_TIMEOUT_MS = 60_000;
+  const timeoutId = setTimeout(() => {
+    const state = getState();
+    const applyState = selectApplyStateByToolCallId(state, toolCallId);
+    const toolCallState = selectToolCallById(state, toolCallId);
+
+    if (
+      applyState &&
+      applyState.status !== "closed" &&
+      applyState.status !== "done" &&
+      toolCallState?.status === "calling"
+    ) {
+      dispatch(
+        errorToolCall({
+          toolCallId,
+        }),
+      );
+      dispatch(
+        updateToolCallOutput({
+          toolCallId,
+          contextItems: [
+            {
+              icon: "problems",
+              name: "Apply Timeout",
+              description: "Edit operation timed out",
+              content:
+                "Error editing file: the apply operation did not complete within the expected time. The file may not have been modified. Please try again or use a different approach.\n\nPlease try something else or request further instructions.",
+              hidden: false,
+            },
+          ],
+        }),
+      );
+    }
+  }, APPLY_TIMEOUT_MS);
+
   let didError = false;
   try {
     const response = await extra.ideMessenger.request("applyToFile", payload);
@@ -175,6 +224,7 @@ export const applyForEditTool = createAsyncThunk<
   } catch (e) {
     didError = true;
   }
+  clearTimeout(timeoutId);
   if (didError) {
     const state = getState();
 
