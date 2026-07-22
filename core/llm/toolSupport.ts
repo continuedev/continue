@@ -485,6 +485,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    vllm: (model) => {
+      // vLLM serves many of the same models as Ollama; reuse its heuristic.
+      // Users can override per-model with `capabilities: [tool_use]` in config.yaml.
+      const ollamaFn = PROVIDER_TOOL_SUPPORT["ollama"];
+      return ollamaFn(model);
+    },
   };
 
 export function isRecommendedAgentModel(modelName: string): boolean {
