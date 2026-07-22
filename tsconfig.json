@@ -1,1 +1,24 @@
-{}
+{{
+  "models": [
+    {
+      "title": "Groq Llama 3.3",
+      "provider": "openai",
+      "model": "llama-3.3-70b-versatile",
+      "apiKey": "ضع_مفتاح_groq_الخاص_بك_هنا",
+      "apiBase": "https://api.groq.com/openai/v1"
+    },
+    {
+      "title": "Gemini 1.5 Pro",
+      "provider": "gemini",
+      "model": "gemini-1.5-pro",
+      "apiKey": "ضع_مفتاح_جوجل_الخاص_بك_هنا"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Groq Autocomplete",
+    "provider": "openai",
+    "model": "llama-3.3-70b-versatile",
+    "apiKey": "ضع_مفتاح_groq_الخاص_بك_هنا",
+    "apiBase": "https://api.groq.com/openai/v1"
+  }
+}}
