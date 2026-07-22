@@ -12,7 +12,7 @@ If possible, we recommend using [`voyage-code-3`](https://docs.voyageai.com/docs
 
 There are a number of available vector databases, but because most vector databases will be able to performantly handle large codebases, we would recommend choosing one for ease of setup and experimentation.
 
-[LanceDB](https://lancedb.github.io/lancedb/basic/) is a good choice for this because it can run in-memory with libraries for both Python and Node.js. This means that in the beginning you can focus on writing code rather than setting up infrastructure. If you have already chosen a vector database, then using this instead of LanceDB is also a fine choice.
+[LanceDB](https://lancedb.github.io/lancedb/python/python/) is a good choice for this because it can run in-memory with libraries for both Python and Node.js. This means that in the beginning you can focus on writing code rather than setting up infrastructure. If you have already chosen a vector database, then using this instead of LanceDB is also a fine choice.
 
 ## Step 3: How to Choose a "Chunking" Strategy
 
@@ -34,7 +34,7 @@ Indexing, in which we will insert your code into the vector database in a retrie
 2. Generating embeddings
 3. Inserting into the vector database
 
-With LanceDB, we can do steps 2 and 3 simultaneously, as demonstrated [in their docs](https://lancedb.github.io/lancedb/basic/#using-the-embedding-api). If you are using Voyage AI for example, it would be configured like this:
+With LanceDB, we can do steps 2 and 3 simultaneously, as demonstrated [in their docs](https://lancedb.github.io/lancedb/python/python/#using-the-embedding-api). If you are using Voyage AI for example, it would be configured like this:
 
 ```
 from lancedb.pydantic import LanceModel, Vectorfrom lancedb.embeddings import get_registrydb = lancedb.connect("/tmp/db")func = get_registry().get("openai").create(    name="voyage-code-3",    base_url="https://api.voyageai.com/v1/",    api_key=os.environ["VOYAGE_API_KEY"],)class CodeChunks(LanceModel):    filename: str    text: str = func.SourceField()    # 1024 is the default dimension for `voyage-code-3`: https://docs.voyageai.com/docs/embeddings#model-choices    vector: Vector(1024) = func.VectorField()table = db.create_table("code_chunks", schema=CodeChunks, mode="overwrite")table.add([    {"text": "print('hello world!')", filename: "hello.py"},    {"text": "print('goodbye world!')", filename: "goodbye.py"}])query = "greetings"actual = table.search(query).limit(1).to_pydantic(CodeChunks)[0]print(actual.text)
