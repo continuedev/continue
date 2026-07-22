@@ -494,11 +494,7 @@ export class GeminiApi implements BaseLlmApi {
     const data = (await response.json()) as any;
     return embedding({
       model: body.model,
-      usage: {
-        total_tokens: data.total_tokens,
-        prompt_tokens: data.prompt_tokens,
-      },
-      data: data.batchEmbedContents.map((embedding: any) => embedding.values),
+      data: data.embeddings.map((embedding: any) => embedding.values),
     });
   }
 
