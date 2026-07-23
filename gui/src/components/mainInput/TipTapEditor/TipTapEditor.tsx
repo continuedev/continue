@@ -96,12 +96,6 @@ function TipTapEditorInner(props: TipTapEditorProps) {
   }, [editor, props.placeholder, historyLength]);
 
   useEffect(() => {
-    if (props.isMainInput) {
-      editor?.commands.clearContent(true);
-    }
-  }, [editor, props.isMainInput]);
-
-  useEffect(() => {
     if (isInEdit) {
       setShouldHideToolbar(false);
     }
