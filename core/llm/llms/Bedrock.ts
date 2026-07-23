@@ -348,9 +348,6 @@ class Bedrock extends BaseLLM {
               budget_tokens: options.reasoningBudgetTokens,
             }
           : undefined,
-        anthropic_beta: options.model.includes("claude")
-          ? ["fine-grained-tool-streaming-2025-05-14"]
-          : undefined,
       },
     };
   }
