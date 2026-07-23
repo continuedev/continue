@@ -8,47 +8,29 @@ import { VsCodeIde } from "../VsCodeIde";
 
 import { VerticalDiffManager } from "./vertical/manager";
 
-export async function processDiff(
+async function processSingleFileDiff(
   action: "accept" | "reject",
   sidebar: ContinueGUIWebviewViewProvider,
   ide: VsCodeIde,
-  core: Core,
   verticalDiffManager: VerticalDiffManager,
-  newFileUri?: string,
+  fileUri: string,
   streamId?: string,
   toolCallId?: string,
 ) {
-  let newOrCurrentUri = newFileUri;
-  if (!newOrCurrentUri) {
-    const currentFile = await ide.getCurrentFile();
-    newOrCurrentUri = currentFile?.path;
-  }
-  if (!newOrCurrentUri) {
-    console.warn(
-      `No file provided or current file open while attempting to resolve diff`,
-    );
-    return;
-  }
-
-  await ide.openFile(newOrCurrentUri);
+  await ide.openFile(fileUri);
 
   // If streamId is not provided, try to get it from the VerticalDiffManager
   if (!streamId) {
-    streamId = verticalDiffManager.getStreamIdForFile(newOrCurrentUri);
+    streamId = verticalDiffManager.getStreamIdForFile(fileUri);
   }
 
   // Clear vertical diffs depending on action
-  verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");
-  if (action === "reject") {
-    // this is so that IDE reject diff command can also cancel apply
-    core.invoke("cancelApply", undefined);
-  }
+  verticalDiffManager.clearForfileUri(fileUri, action === "accept");
 
   if (streamId) {
     // Capture file content before save to detect autoformatting
-    const preSaveContent = await ide.readFile(newOrCurrentUri);
+    const preSaveContent = await ide.readFile(fileUri);
 
-    // Record the edit outcome before updating the apply state
     await editOutcomeTracker.recordEditOutcome(
       streamId,
       action === "accept",
@@ -56,10 +38,10 @@ export async function processDiff(
     );
 
     // Save the file
-    await ide.saveFile(newOrCurrentUri);
+    await ide.saveFile(fileUri);
 
     // Capture file content after save to detect autoformatting
-    const postSaveContent = await ide.readFile(newOrCurrentUri);
+    const postSaveContent = await ide.readFile(fileUri);
 
     // Detect autoformatting by comparing normalized content
     let autoFormattingDiff: string | undefined;
@@ -85,7 +67,7 @@ export async function processDiff(
 
     await sidebar.webviewProtocol.request("updateApplyState", {
       fileContent: postSaveContent, // Use post-save content
-      filepath: newOrCurrentUri,
+      filepath: fileUri,
       streamId,
       status: "closed",
       numDiffs: 0,
@@ -94,6 +76,48 @@ export async function processDiff(
     });
   } else {
     // Save the file even if no streamId
-    await ide.saveFile(newOrCurrentUri);
+    await ide.saveFile(fileUri);
   }
+}
+
+export async function processDiff(
+  action: "accept" | "reject",
+  sidebar: ContinueGUIWebviewViewProvider,
+  ide: VsCodeIde,
+  core: Core,
+  verticalDiffManager: VerticalDiffManager,
+  newFileUri?: string,
+  streamId?: string,
+  toolCallId?: string,
+) {
+  if (action === "reject") {
+    core.invoke("cancelApply", undefined);
+  }
+
+  let fileUriToProcess = newFileUri;
+
+  if (!fileUriToProcess) {
+    const allFilesWithDiffs = verticalDiffManager.getAllFilesWithDiffs();
+    if (allFilesWithDiffs.length > 0) {
+      fileUriToProcess = allFilesWithDiffs[0].fileUri;
+      streamId = allFilesWithDiffs[0].streamId;
+    }
+  }
+
+  if (!fileUriToProcess) {
+    console.warn(
+      `No file provided or current file open while attempting to resolve diff`,
+    );
+    return;
+  }
+
+  await processSingleFileDiff(
+    action,
+    sidebar,
+    ide,
+    verticalDiffManager,
+    fileUriToProcess,
+    streamId,
+    toolCallId,
+  );
 }

@@ -79,6 +79,18 @@ export class VerticalDiffManager {
     return this.fileUriToHandler.get(fileUri)?.streamId;
   }
 
+  getAllFilesWithDiffs(): Array<{
+    fileUri: string;
+    streamId: string | undefined;
+  }> {
+    return Array.from(this.fileUriToHandler.entries()).map(
+      ([fileUri, handler]) => ({
+        fileUri,
+        streamId: handler.streamId,
+      }),
+    );
+  }
+
   // Creates a listener for document changes by user.
   private enableDocumentChangeListener(): vscode.Disposable | undefined {
     if (this.userChangeListener) {
@@ -144,16 +156,19 @@ export class VerticalDiffManager {
 
     this.disableDocumentChangeListener();
 
+    const hasRemainingDiffs = this.fileUriToHandler.size > 0;
     void vscode.commands.executeCommand(
       "setContext",
       "continue.diffVisible",
-      false,
+      hasRemainingDiffs,
     );
 
-    void this.webviewProtocol.request(
-      "focusContinueInputWithoutClear",
-      undefined,
-    );
+    if (!hasRemainingDiffs) {
+      void this.webviewProtocol.request(
+        "focusContinueInputWithoutClear",
+        undefined,
+      );
+    }
   }
 
   async acceptRejectVerticalDiffBlock(
