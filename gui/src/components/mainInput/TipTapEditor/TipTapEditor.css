@@ -1,3 +1,8 @@
+.tiptap {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 .mention {
   background-color: var(--vscode-badge-background, #bfe2b6);
   color: var(--vscode-badge-foreground, --vscode-foreground, #000);
