@@ -212,8 +212,8 @@ export class MessageIde implements IDE {
     return this.request("getSearchResults", { query, maxResults });
   }
 
-  getFileResults(pattern: string): Promise<string[]> {
-    return this.request("getFileResults", { pattern });
+  getFileResults(pattern: string, maxResults?: number): Promise<string[]> {
+    return this.request("getFileResults", { pattern, maxResults });
   }
 
   getProblems(fileUri: string): Promise<Problem[]> {
