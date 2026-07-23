@@ -54,7 +54,7 @@ export const subagentTool = async (): Promise<Tool> => {
         preview: [
           {
             type: "text",
-            content: `Spawning ${agent.model.name} to: ${description}`,
+            content: `Spawning ${agent.model?.name ?? subagent_name} to: ${description}`,
           },
         ],
       };

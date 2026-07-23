@@ -25,7 +25,7 @@ export interface BaseCommandOptions {
   agent?: string;
   /** Enable beta UploadArtifact tool */
   betaUploadArtifactTool?: boolean;
-  /** Enable beta Subagent tool */
+  /** Enable beta Subagent tool with built-in specialized agents */
   betaSubagentTool?: boolean;
 }
 

@@ -39,7 +39,10 @@ export class HistoryManager {
       .reverse();
 
     // Filter by workspace directory if provided
-    if (options.workspaceDirectory) {
+    if (
+      options.workspaceDirectory !== undefined &&
+      options.workspaceDirectory !== null
+    ) {
       const target = options.workspaceDirectory.toLowerCase();
       sessions = sessions.filter(
         (session) =>
