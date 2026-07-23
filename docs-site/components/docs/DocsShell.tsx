@@ -272,9 +272,6 @@ export function DocsShell({
                     {link.label}
                   </Link>
                 ))}
-                <Link href={resolveHref("/login")} className={NAV_LINK_CLASSES}>
-                  Sign in
-                </Link>
               </div>
               <ThemeToggle />
               {/* Mobile menu button */}
@@ -303,13 +300,6 @@ export function DocsShell({
                   {link.label}
                 </Link>
               ))}
-              <Link
-                href={resolveHref("/login")}
-                className={NAV_LINK_CLASSES}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Sign in
-              </Link>
             </div>
           )}
         </nav>
