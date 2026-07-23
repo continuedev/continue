@@ -30,7 +30,7 @@ function toOllamaPackage(model: FetchedModel): ModelPackage {
   return {
     title: model.name,
     description: model.description || model.name,
-    refUrl: `https://ollama.com/library/${model.name}`,
+    refUrl: `https://ollama.com/library/${encodeURIComponent(model.name)}`,
     params: {
       title: model.name,
       model: model.name,
@@ -48,7 +48,7 @@ function toOpenRouterPackage(model: FetchedModel): ModelPackage {
   return {
     title: model.name,
     description: model.name,
-    refUrl: `https://openrouter.ai/models/${id}`,
+    refUrl: `https://openrouter.ai/models/${encodeURIComponent(id)}`,
     params: {
       title: model.name,
       model: id,
