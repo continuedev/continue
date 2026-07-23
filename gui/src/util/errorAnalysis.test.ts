@@ -130,7 +130,7 @@ describe("errorAnalysis", () => {
         expect(result.parsedError).toBe("");
       });
 
-      it("should handle complex nested JSON", () => {
+      it("should handle complex nested JSON by returning the nested message string", () => {
         const complexJson = {
           error: {
             code: 400,
@@ -141,7 +141,59 @@ describe("errorAnalysis", () => {
         const error = new Error(`Header\n\n${JSON.stringify(complexJson)}`);
         const result = analyzeError(error, null);
 
-        expect(result.parsedError).toBe(JSON.stringify(complexJson.error));
+        expect(result.parsedError).toBe("Bad Request");
+      });
+
+      it("should extract nested message from structured error object", () => {
+        const errorJson = {
+          error: {
+            message: "Quota exceeded",
+            status: "RESOURCE_EXHAUSTED",
+          },
+        };
+        const error = new Error(`Header\n\n${JSON.stringify(errorJson)}`);
+        const result = analyzeError(error, null);
+
+        expect(result.parsedError).toBe("Quota exceeded");
+      });
+
+      it("should preserve fallback behavior for nested error object without message", () => {
+        const errorJson = {
+          error: {
+            status: "RESOURCE_EXHAUSTED",
+          },
+        };
+        const error = new Error(`Header\n\n${JSON.stringify(errorJson)}`);
+        const result = analyzeError(error, null);
+
+        expect(result.parsedError).toBe('{"status":"RESOURCE_EXHAUSTED"}');
+      });
+
+      it("should handle primitive string error with no regression", () => {
+        const errorJson = {
+          error: "Invalid API key",
+        };
+        const error = new Error(`Header\n\n${JSON.stringify(errorJson)}`);
+        const result = analyzeError(error, null);
+
+        expect(result.parsedError).toBe('"Invalid API key"');
+      });
+
+      it("should handle top-level message with no regression", () => {
+        const errorJson = {
+          message: "Simple message",
+        };
+        const error = new Error(`Header\n\n${JSON.stringify(errorJson)}`);
+        const result = analyzeError(error, null);
+
+        expect(result.parsedError).toBe('"Simple message"');
+      });
+
+      it("should handle malformed JSON with no regression", () => {
+        const error = new Error("Header\n\n{invalid json}");
+        const result = analyzeError(error, null);
+
+        expect(result.parsedError).toBe("{invalid json}");
       });
     });
 
@@ -386,7 +438,7 @@ describe("errorAnalysis", () => {
         };
         const result = analyzeError(error, selectedModel);
 
-        expect(result.parsedError).toBe(JSON.stringify(errorObj.error));
+        expect(result.parsedError).toBe("Invalid request");
         expect(result.statusCode).toBe(400);
       });
 

@@ -24,6 +24,13 @@ function parseErrorMessage(fullErrMsg: string): string {
   try {
     const parsed = JSON.parse(msg);
     if (parsed.error !== undefined && parsed.error !== null) {
+      if (
+        typeof parsed.error === "object" &&
+        parsed.error !== null &&
+        typeof (parsed.error as any).message === "string"
+      ) {
+        return (parsed.error as any).message;
+      }
       return JSON.stringify(parsed.error);
     }
     if (parsed.message !== undefined && parsed.message !== null) {
