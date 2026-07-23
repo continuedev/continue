@@ -13,6 +13,7 @@ import { services } from "../services/index.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { applyChatCompletionToolOverrides } from "../tools/applyToolOverrides.js";
 import { ToolCall } from "../tools/index.js";
+import { parseXmlToolCallArgs } from "core/tools/parseArgs.js";
 import {
   chatCompletionStreamWithBackoff,
   isContextLengthError,
@@ -391,6 +392,17 @@ export async function processStreamingResponse(
   }
 
   const toolCalls = Array.from(toolCallsMap.values());
+
+  // For any tool call whose arguments weren't JSON-parseable during streaming,
+  // attempt XML-like <parameter=name>value</parameter> parsing as a fallback.
+  for (const tc of toolCalls) {
+    if (Object.keys(tc.arguments).length === 0 && tc.argumentsStr) {
+      const xmlParsed = parseXmlToolCallArgs(tc.argumentsStr);
+      if (Object.keys(xmlParsed).length > 0) {
+        tc.arguments = xmlParsed;
+      }
+    }
+  }
 
   // Validate tool calls have complete arguments
   const validToolCalls = toolCalls.filter((tc) => {

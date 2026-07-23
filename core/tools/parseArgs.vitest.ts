@@ -36,17 +36,78 @@ describe("safeParseToolCallArgs", () => {
     expect(result).toEqual({ name: "test", value: 123 });
   });
 
-  it("should return empty object for invalid JSON", () => {
+  it("should return empty object for invalid JSON with no XML", () => {
     const toolCall: ToolCallDelta = {
       id: "1",
       function: {
         name: "testFunction",
-        arguments: '{"name": "test", value: 123', // Invalid JSON
+        arguments: '{"name": "test", value: 123', // Invalid JSON, no XML params
       },
     };
 
     const result = safeParseToolCallArgs(toolCall);
     expect(result).toEqual({});
+  });
+
+  it("should parse XML-like arguments when JSON parsing fails", () => {
+    const toolCall: ToolCallDelta = {
+      id: "1",
+      function: {
+        name: "ls",
+        arguments: `<tool_call>
+<function=ls>
+<parameter=dirPath>src</parameter>
+<parameter=recursive>True</parameter>
+</function>
+</tool_call>`,
+      },
+    };
+
+    const result = safeParseToolCallArgs(toolCall);
+    expect(result).toEqual({ dirPath: "src", recursive: true });
+  });
+
+  it("should coerce XML parameter values: booleans", () => {
+    const toolCall: ToolCallDelta = {
+      id: "1",
+      function: {
+        name: "fn",
+        arguments:
+          "<parameter=flagTrue>true</parameter><parameter=flagFalse>False</parameter>",
+      },
+    };
+
+    const result = safeParseToolCallArgs(toolCall);
+    expect(result.flagTrue).toBe(true);
+    expect(result.flagFalse).toBe(false);
+  });
+
+  it("should coerce XML parameter values: numbers", () => {
+    const toolCall: ToolCallDelta = {
+      id: "1",
+      function: {
+        name: "fn",
+        arguments:
+          "<parameter=count>42</parameter><parameter=ratio>3.14</parameter>",
+      },
+    };
+
+    const result = safeParseToolCallArgs(toolCall);
+    expect(result.count).toBe(42);
+    expect(result.ratio).toBe(3.14);
+  });
+
+  it("should keep XML parameter values as strings when not coercible", () => {
+    const toolCall: ToolCallDelta = {
+      id: "1",
+      function: {
+        name: "fn",
+        arguments: "<parameter=path>/some/path/to/file.ts</parameter>",
+      },
+    };
+
+    const result = safeParseToolCallArgs(toolCall);
+    expect(result.path).toBe("/some/path/to/file.ts");
   });
 
   it("should return empty object when arguments is empty", () => {

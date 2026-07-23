@@ -1,5 +1,46 @@
 import { ToolCallDelta } from "..";
 
+/**
+ * Coerce a raw string value from XML-like tool arguments to an appropriate JS type.
+ * Applies scalar coercion in this order: boolean, number, JSON parse, string.
+ */
+function coerceXmlValue(value: string): any {
+  if (value.toLowerCase() === "true") return true;
+  if (value.toLowerCase() === "false") return false;
+
+  // Numeric coercion — only if the string is entirely numeric
+  if (value.trim() !== "" && !isNaN(Number(value))) return Number(value);
+
+  // JSON coercion (for embedded arrays/objects/quoted strings)
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
+/**
+ * Parse XML-like tool call arguments of the form:
+ *   <parameter=name>value</parameter>
+ *
+ * Some OpenAI-compatible models (e.g. local Qwen) emit function.arguments in
+ * this XML-like format instead of JSON.  Returns an empty object when no
+ * <parameter=…> tags are found so callers can detect a failed parse.
+ */
+export function parseXmlToolCallArgs(argsStr: string): Record<string, any> {
+  const result: Record<string, any> = {};
+  const paramRegex = /<parameter=([^>]+)>([\s\S]*?)<\/parameter>/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = paramRegex.exec(argsStr)) !== null) {
+    const name = match[1].trim();
+    const rawValue = match[2].trim();
+    result[name] = coerceXmlValue(rawValue);
+  }
+
+  return result;
+}
+
 export function safeParseToolCallArgs(
   toolCall: ToolCallDelta,
 ): Record<string, any> {
@@ -14,12 +55,16 @@ export function safeParseToolCallArgs(
     return args;
   }
 
+  const argsStr = toolCall.function?.arguments?.trim() || "{}";
+
   try {
-    return JSON.parse(toolCall.function?.arguments?.trim() || "{}");
+    return JSON.parse(argsStr);
   } catch (e) {
-    //console.error(
-    //  `Failed to parse tool call arguments:\nTool call: ${toolCall.function?.name + " " + toolCall.id}\nArgs:${toolCall.function?.arguments}\n`,
-    //);
+    // Fall back to XML-like <parameter=name>value</parameter> parsing
+    const xmlParsed = parseXmlToolCallArgs(argsStr);
+    if (Object.keys(xmlParsed).length > 0) {
+      return xmlParsed;
+    }
     return {};
   }
 }
