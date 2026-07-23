@@ -922,6 +922,7 @@ function isValidSuccessor(item: ResponseInputItem | undefined): boolean {
  * - Removes reasoning without encrypted_content; strips id from subsequent items
  * - Removes reasoning not followed by function_call or message
  * - Removes orphaned function_call_output with no matching function_call
+ * - Strips fc_ IDs from function_calls whose reasoning was pruned from context
  */
 function sanitizeResponsesInput(input: ResponseInput): ResponseInput {
   const skipIndices = new Set<number>();
@@ -950,6 +951,47 @@ function sanitizeResponsesInput(input: ResponseInput): ResponseInput {
 
     if (!isValidSuccessor(input[i + 1])) {
       skipIndices.add(i);
+    }
+  }
+
+  // Second pass: strip fc_ IDs from function_calls that have no preceding
+  // (kept) reasoning item in the same turn. This handles the case where a
+  // thinking message was pruned from context during compileChatMessages —
+  // the assistant message still carries fc_ IDs that reference the now-absent
+  // reasoning item, which causes a Responses API 400 error.
+  for (let i = 0; i < input.length; i++) {
+    if (skipIndices.has(i) || stripIdIndices.has(i)) continue;
+
+    const item = input[i];
+    if (!isItemType<ResponseFunctionToolCall>(item, "function_call")) continue;
+
+    const fc = item as ResponseFunctionToolCall;
+    if (!fc.id?.startsWith("fc_")) continue;
+
+    // Scan backward within the same turn (reasoning + function_call block).
+    // Stop at any item that isn't a reasoning or function_call — that signals
+    // a turn boundary (user message, function_call_output, etc.).
+    let foundReasoning = false;
+    for (let j = i - 1; j >= 0; j--) {
+      // Skip items that will be removed (they don't count as valid reasoning)
+      if (skipIndices.has(j)) continue;
+
+      const prev = input[j];
+      if (isItemType<ResponseReasoningItem>(prev, "reasoning")) {
+        foundReasoning = true;
+        break;
+      } else if (isItemType<ResponseFunctionToolCall>(prev, "function_call")) {
+        // Another function_call in the same block — keep looking backward
+        continue;
+      } else {
+        // Any other item (user/assistant message, function_call_output, etc.)
+        // means we crossed a turn boundary without finding a reasoning item
+        break;
+      }
+    }
+
+    if (!foundReasoning) {
+      stripIdIndices.add(i);
     }
   }
 
