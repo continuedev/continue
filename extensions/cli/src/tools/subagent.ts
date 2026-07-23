@@ -6,7 +6,7 @@ import {
   generateSubagentToolDescription,
   getSubagent,
   getAgentNames as getSubagentNames,
-} from "../subagent/get-agents.js";
+} from "../subagent/getAgents.js";
 import { SUBAGENT_TOOL_META } from "../subagent/index.js";
 import { logger } from "../util/logger.js";
 

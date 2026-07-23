@@ -1,9 +1,6 @@
 import { HookService } from "../hooks/HookService.js";
 import { initializeWithOnboarding } from "../onboarding.js";
-import {
-  setBetaSubagentToolEnabled,
-  setBetaUploadArtifactToolEnabled,
-} from "../tools/toolsConfig.js";
+import { setBetaUploadArtifactToolEnabled } from "../tools/toolsConfig.js";
 import { logger } from "../util/logger.js";
 
 import { AgentFileService } from "./AgentFileService.js";
@@ -67,9 +64,6 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   // Configure beta tools based on command options
   if (commandOptions.betaUploadArtifactTool) {
     setBetaUploadArtifactToolEnabled(true);
-  }
-  if (commandOptions.betaSubagentTool) {
-    setBetaSubagentToolEnabled(true);
   }
   // Handle onboarding for TUI mode (headless: false) unless explicitly skipped
   if (!initOptions.headless && !initOptions.skipOnboarding) {
