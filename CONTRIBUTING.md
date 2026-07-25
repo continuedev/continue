@@ -213,7 +213,7 @@ Guidelines for adding/updating theme colors:
 
 - Choose sensible VS Code variables to add/update in [gui/src/styles/theme.ts](gui/src/styles/theme.ts) (see [here](https://code.visualstudio.com/api/references/theme-color) and [here](https://www.notion.so/1fa1d55165f78097b551e3bc296fcf76?pvs=25) for inspiration)
 - Choose sensible JetBrains named colors to add/update in `GetTheme.kt` (flagship LLMs can give you good suggestions to try)
-- Update `tailwind.config.js` if needed
+- Update `tailwind.config.cjs` if needed
 - Use the Theme Test Page to check colors. This can be accessed by going to `Settings` -> `Help` -> `Theme Test Page` in dev/debug mode.
 
 ### Testing
@@ -258,7 +258,7 @@ add it with the following steps:
 ### Adding Models
 
 While any model that works with a supported provider can be used with Continue, we keep a list of recommended models
-that can be automatically configured from the UI or `config.json`. The following files should be updated when adding a
+that can be automatically configured from the UI or `config.yaml`. The following files should be updated when adding a
 model:
 
 - [AddNewModel page](./gui/src/pages/AddNewModel/configs/) - This directory defines which model options are shown in the
