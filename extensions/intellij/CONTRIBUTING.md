@@ -95,7 +95,7 @@ This should open a new instance on IntelliJ with the extension installed.
 
 When running the `Start Core Dev Server` task, we set the location of your Continue directory to
 `./extensions/.continue-debug`. This is to
-allow for changes to your `config.json` and other files during development, without affecting your actual configuration.
+allow for changes to your `config.yaml` and other files during development, without affecting your actual configuration.
 
 ### Viewing logs
 
