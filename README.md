@@ -14,6 +14,8 @@ improvements that make the assistant clearer and more dependable.
 
 ## Roadmap
 
+### [Issues Roadmap ➚](https://github.com/chadmzoghby-alt/please-continue/blob/main/issues-catalogue.md)
+
 The roadmap favours complete, reviewable features over publishing unfinished
 scaffolding. Priorities may change as the current codebase is revalidated.
 
