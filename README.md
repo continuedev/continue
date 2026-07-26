@@ -1,63 +1,82 @@
-<h1 align="center">Continue</h1>
+# Please Continue
 
-<p align="center">Pioneering open-source coding agent</p>
+Please Continue is a community-maintained fork of
+[Continue](https://github.com/continuedev/continue), the open-source coding
+assistant for editors and the command line.
 
-<div align="center">
+The project aims to preserve Continue, complete useful inherited infrastructure
+where it can become a safe and testable feature, and release focused
+improvements that make the assistant clearer and more dependable.
 
-<a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" /></a>
-<a href="https://docs.continue.dev"><img src="https://img.shields.io/badge/Docs-docs.continue.dev-blue" /></a>
-<a href="https://github.com/continuedev/continue/releases"><img src="https://img.shields.io/badge/Changelog-GitHub_Releases-blue" /></a>
+> **Project status:** Early-stage and not yet released for everyday use.
+> Installers, extension packages, and compatibility claims will be added only
+> after they have been tested on the platforms named in each release.
 
-</div>
+## Roadmap
 
-<p align="center">
-  <img src="media/github-readme.png" alt="Banner" />
-</p>
+The roadmap favours complete, reviewable features over publishing unfinished
+scaffolding. Priorities may change as the current codebase is revalidated.
 
-## What is Continue?
+The **Complete** column is a rounded July 2026 development-maturity estimate,
+not a measure of end-user availability. The shared scale is: 10% verified
+design, 40% working development capability, 60% integration into a Continue
+surface, 80% testing across target surfaces, 90% packaging and rollback
+readiness, and 100% tested public release. Intermediate values reflect partial
+completion between milestones.
 
-> _Note: The `continuedev/continue` repository is no longer actively maintained and is read-only for all users._
+| Roadmap item                  | Foundation                                      | What should be released                                                                                                   | Complete |
+| ----------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------: |
+| Clear tool feedback           | Structured tool error handling                  | Typed errors with plain-language recovery steps and protection against repeated failed actions                            |      35% |
+| Safer assisted changes        | Editor change and approval workflows            | Stale-file detection, reviewable changes, and validation before an edit is accepted                                       |      40% |
+| Manageable tool results       | Search and context-result handling              | Bounded results with clear truncation notices, pagination, and reliable continuation                                      |      35% |
+| Reliable context and sessions | Context retrieval and conversation state        | Fresh source checks and durable task state that survives long conversations                                               |      35% |
+| Lifecycle hooks               | Shared hooks core and CLI lifecycle integration | Shared, workspace-trust-gated hooks for the CLI and VS Code, with bounded execution, diagnostics, and compatibility tests |      55% |
+| Trust and output boundaries   | Permission, provider, and context controls      | Separation of trusted controls, untrusted evidence, model reasoning, and user-facing output                               |      20% |
+| Fresh indexes and connections | Project indexing and connected-tool state       | Visible freshness state, safe invalidation, and refresh behavior when projects or connected tools change                  |      25% |
+| Large-project discovery       | Code search and project indexing                | The smallest benchmark-proven improvement to finding relevant code in large repositories                                  |      30% |
 
-Continue is a coding agent available as a [CLI](#cli), [VS Code extension](#vs-code), and [JetBrains plugin](#jetbrains).
+Nothing in this table should be treated as available until it appears in a
+tested release with documentation, supported-platform notes, and known
+limitations.
 
-## Documentation
+## Releases
 
-To learn how to configure Continue, how it works, and how to customize it, check out the [Continue Docs](https://docs.continue.dev).
+[GitHub Releases](https://github.com/chadmzoghby-alt/please-continue/releases)
+will be the source for tested packages and release notes. Depending on verified
+support, a release may include:
 
-## Final 2.0.0 Release
+- a VS Code `.vsix`;
+- a JetBrains plugin package;
+- command-line packages or binaries;
+- checksums, installation instructions, known limitations, and upgrade notes.
 
-We polished Continue and did a final 2.0.0 release of the VS Code extension, CLI, and JetBrains plugin.
+Source builds and CI artifacts are for contributors unless a release explicitly
+states otherwise.
 
-This included removing anonymous telemetry, pulling out authentication, squashing bugs, and more.
+## Contributing
 
-### VS Code
+Contributions should solve one clear problem, include focused tests, and avoid
+mixing unrelated refactors. Before starting a large change, open or join an
+issue so that scope, compatibility, and verification can be agreed.
 
-[![VS Code Marketplace](https://img.shields.io/badge/VS_Code_Marketplace-007ACC?logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=Continue.continue) [![OpenVSX Registry](https://img.shields.io/badge/OpenVSX_Registry-C160EF?logo=eclipseide&logoColor=white)](https://open-vsx.org/extension/Continue/continue) [![View source](https://img.shields.io/badge/View_source-181717?logo=github&logoColor=white)](extensions/vscode)
+Useful ways to help include reproducing bugs, improving tests and documentation,
+validating inherited behavior, and completing one roadmap item end to end.
+See the
+[contribution guide](https://github.com/chadmzoghby-alt/please-continue/blob/main/CONTRIBUTING.md)
+before preparing a change.
 
-### CLI
+## Safety
 
-[![npm](https://img.shields.io/badge/npm-CB3837?logo=npm&logoColor=white)](https://www.npmjs.com/package/@continuedev/cli) [![View source](https://img.shields.io/badge/View_source-181717?logo=github&logoColor=white)](extensions/cli)
+AI coding tools can read files, propose edits, and invoke tools. Review changes
+before accepting them, protect credentials, and check provider data-handling
+policies before sending private source code to a hosted model.
 
-### JetBrains
-
-> _Note: We recommend using the Continue CLI instead of the JetBrains plugin._
-
-[![GitHub Releases](https://img.shields.io/badge/GitHub_Releases-181717?logo=github&logoColor=white)](https://github.com/continuedev/continue/releases) [![View source](https://img.shields.io/badge/View_source-181717?logo=github&logoColor=white)](extensions/intellij)
-
-## Contributors
-
-Thank you to the entire Continue community for helping us create a pioneering coding agent.
-
-What we built together pushed the boundaries of what AI developer tooling could be.
-
-We hope this codebase continues to serve as a foundation for others.
-
-## Code friends
-
-<a href="https://github.com/continuedev/continue/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=continuedev/continue&max=500" />
-</a>
+Do not include API keys, tokens, private code, or sensitive logs in public
+issues.
 
 ## License
 
-Apache 2.0 © 2023-2026 Continue Dev, Inc.
+Please Continue retains the licenses and notices that apply to Continue and its
+third-party dependencies. Read the
+[repository license](https://github.com/chadmzoghby-alt/please-continue/blob/main/LICENSE)
+before using, modifying, or redistributing the project.
