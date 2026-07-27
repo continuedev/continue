@@ -99,6 +99,36 @@ MCP components include a few additional properties specific to MCP servers.
 - `command`: The command to run to start the MCP server.
 - `args`: Arguments to pass to the command.
 - `env`: Secrets to be injected into the command as environment variables.
+- `cwd`: The working directory to launch the command in. If omitted, defaults to the workspace root when a workspace folder is open. Relative paths are resolved against the workspace root; absolute paths are used as-is.
+
+### How to Use Predefined Variables
+
+`command`, `args`, `cwd`, and `env` support the following variables, resolved right before the MCP server is launched:
+
+- `${workspaceFolder}`: The absolute path to your workspace root.
+- `${workspaceFolderBasename}`: The name of the workspace root folder.
+- `${userHome}`: The current user's home directory.
+- `${env:VARIABLE_NAME}`: The value of an environment variable from the environment Continue is running in. Unset variables are left unresolved.
+
+```yaml
+# ...
+mcpServers:
+  - name: Project-aware MCP
+    command: npx
+    args:
+      - "@some-org/mcp-server"
+      - "${workspaceFolder}/src"
+    cwd: ${workspaceFolder}
+    env:
+      PROJECT_DIR: ${workspaceFolder}
+      HOME: ${userHome}
+      TOKEN: ${env:GITHUB_TOKEN}
+# ...
+```
+
+<Note>
+This is separate from the `${{ secrets.X }}` syntax described below, which is used for injecting secrets stored in Continue.
+</Note>
 
 ### How to Choose MCP Transport Types
 

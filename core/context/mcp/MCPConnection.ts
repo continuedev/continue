@@ -1,6 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { homedir } from "os";
+import { isAbsolute } from "path";
 import { fileURLToPath } from "url";
 
 import {
@@ -30,6 +31,7 @@ import {
   MCPTool,
 } from "../..";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
+import { resolveMcpVariables } from "../../util/resolveMcpVariables";
 import { getEnvPathFromUserShell } from "../../util/shellPath";
 import { getOauthToken } from "./MCPOauth";
 
@@ -460,8 +462,9 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       return fileURLToPath(cwd);
     }
 
-    // Return cwd if cwd is an absolute path.
-    if (cwd.charAt(0) === "/") {
+    // Return cwd if cwd is already an absolute path (cross-platform, so this
+    // also catches Windows drive-letter paths like "C:\Users\...").
+    if (isAbsolute(cwd)) {
       return cwd;
     }
 
@@ -473,22 +476,46 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
     if (IDE) {
       const target = cwd ?? ".";
       const resolved = await resolveRelativePathInDir(target, IDE);
-      if (resolved) {
-        if (resolved.startsWith("file://")) {
-          return fileURLToPath(resolved);
-        }
-        // Remote URIs (e.g. vscode-remote://ssh-remote+host/path) cannot be
-        // used as a local cwd for child_process.spawn(). When the extension
-        // runs in the Local Extension Host on Windows while connected to a
-        // remote workspace, fall back to the user's home directory.
-        if (resolved.includes("://")) {
-          return homedir();
-        }
+      if (!resolved) {
         return resolved;
       }
-      return resolved;
+      // Remote URIs (e.g. vscode-remote://ssh-remote+host/path) cannot be
+      // used as a local cwd for child_process.spawn(). When the extension
+      // runs in the Local Extension Host on Windows while connected to a
+      // remote workspace, fall back to the user's home directory since any
+      // valid local directory is an acceptable cwd.
+      return this.workspaceUriToFsPath(resolved) ?? homedir();
     }
     return cwd;
+  }
+
+  /**
+   * Converts a workspace directory URI (as returned by ide.getWorkspaceDirs())
+   * into a local filesystem path, or undefined if the URI has no local
+   * filesystem equivalent (e.g. a remote workspace URI).
+   */
+  private workspaceUriToFsPath(uri: string): string | undefined {
+    if (uri.startsWith("file://")) {
+      return fileURLToPath(uri);
+    }
+    if (uri.includes("://")) {
+      return undefined;
+    }
+    return uri;
+  }
+
+  /**
+   * Resolves the primary workspace folder as a local filesystem path, for use
+   * as the `${workspaceFolder}` variable in MCP config interpolation.
+   * Returns undefined (leaving the variable unresolved) if there is no
+   * workspace open or it's a remote workspace with no local path equivalent -
+   * unlike cwd resolution, substituting an unrelated directory here would
+   * silently point configs at the wrong location.
+   */
+  private async getWorkspaceFolderPath(): Promise<string | undefined> {
+    const dirs = await this.extras?.ide?.getWorkspaceDirs();
+    const first = dirs?.[0];
+    return first ? this.workspaceUriToFsPath(first) : undefined;
   }
 
   private constructWebsocketTransport(
@@ -556,6 +583,16 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
   private async constructStdioTransport(
     options: InternalStdioMcpOptions,
   ): Promise<StdioClientTransport> {
+    // Resolve ${workspaceFolder}/${workspaceFolderBasename}/${userHome}/${env:VAR}
+    // exactly once, right before the process is spawned.
+    const variableContext = {
+      workspaceDir: await this.getWorkspaceFolderPath(),
+    };
+    const command = resolveMcpVariables(options.command, variableContext);
+    const args = resolveMcpVariables(options.args ?? [], variableContext);
+    const cwd = resolveMcpVariables(options.cwd, variableContext);
+    const resolvedEnv = resolveMcpVariables(options.env ?? {}, variableContext);
+
     const commonEnvVars: Record<string, string> = Object.fromEntries(
       COMMONS_ENV_VARS.filter((key) => process.env[key] !== undefined).map(
         (key) => [key, process.env[key] as string],
@@ -564,7 +601,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
 
     const env = {
       ...commonEnvVars,
-      ...(options.env ?? {}),
+      ...resolvedEnv,
     };
 
     if (process.env.PATH !== undefined) {
@@ -589,18 +626,18 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       }
     }
 
-    const { command, args } = await this.resolveCommandForPlatform(
-      options.command,
-      options.args || [],
-    );
-
-    const cwd = await this.resolveCwd(options.cwd);
-
-    const transport = new StdioClientTransport({
+    const platformResolved = await this.resolveCommandForPlatform(
       command,
       args,
+    );
+
+    const resolvedCwd = await this.resolveCwd(cwd);
+
+    const transport = new StdioClientTransport({
+      command: platformResolved.command,
+      args: platformResolved.args,
       env,
-      cwd,
+      cwd: resolvedCwd,
       stderr: "pipe",
     });
 

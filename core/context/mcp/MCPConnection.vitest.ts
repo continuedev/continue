@@ -1,5 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { pathToFileURL } from "url";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   InternalSseMcpOptions,
   InternalStdioMcpOptions,
@@ -185,6 +186,131 @@ describe("MCPConnection", () => {
 
       const { homedir } = require("os");
       await expect((conn as any).resolveCwd("src")).resolves.toBe(homedir());
+    });
+  });
+
+  describe("getWorkspaceFolderPath", () => {
+    const baseOptions: InternalStdioMcpOptions = {
+      name: "test-mcp",
+      id: "test-id",
+      type: "stdio",
+      command: "test-cmd",
+      args: [],
+    };
+
+    it("should return undefined when there is no ide", async () => {
+      const conn = new MCPConnection(baseOptions);
+      await expect(
+        (conn as any).getWorkspaceFolderPath(),
+      ).resolves.toBeUndefined();
+    });
+
+    it("should return undefined when no workspace folder is open", async () => {
+      const ide = {
+        getWorkspaceDirs: vi.fn().mockResolvedValue([]),
+      } as any;
+      const conn = new MCPConnection(baseOptions, { ide });
+      await expect(
+        (conn as any).getWorkspaceFolderPath(),
+      ).resolves.toBeUndefined();
+    });
+
+    it("should convert a file:// workspace dir to a local fs path", async () => {
+      const workspacePath =
+        process.platform === "win32" ? "C:\\workspace" : "/workspace";
+      const ide = {
+        getWorkspaceDirs: vi
+          .fn()
+          .mockResolvedValue([pathToFileURL(workspacePath).toString()]),
+      } as any;
+      const conn = new MCPConnection(baseOptions, { ide });
+      await expect((conn as any).getWorkspaceFolderPath()).resolves.toBe(
+        workspacePath,
+      );
+    });
+
+    it("should leave the workspace folder unresolved (not fall back to homedir) for remote workspace URIs", async () => {
+      // A wrong-but-valid directory (homedir) is an acceptable last resort for
+      // a spawn cwd, but not for a ${workspaceFolder} variable substituted
+      // into arbitrary args/env values - that must stay unresolved instead of
+      // silently pointing configs at the wrong directory.
+      const ide = {
+        getWorkspaceDirs: vi
+          .fn()
+          .mockResolvedValue([
+            "vscode-remote://ssh-remote+host/home/user/project",
+          ]),
+      } as any;
+      const conn = new MCPConnection(baseOptions, { ide });
+      await expect(
+        (conn as any).getWorkspaceFolderPath(),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe("constructStdioTransport variable interpolation", () => {
+    const optionsWithVariables: InternalStdioMcpOptions = {
+      name: "test-mcp",
+      id: "test-id",
+      type: "stdio",
+      command: "test-cmd",
+      args: ["${workspaceFolder}/src", "literal"],
+      cwd: "${workspaceFolder}",
+      env: {
+        PROJECT_DIR: "${workspaceFolder}",
+        TOKEN: "${env:MCP_TEST_TOKEN}",
+      },
+    };
+
+    afterEach(() => {
+      delete process.env.MCP_TEST_TOKEN;
+    });
+
+    it("should resolve ${workspaceFolder} and ${env:VAR} in command/args/cwd/env before spawning", async () => {
+      process.env.MCP_TEST_TOKEN = "secret-value";
+      const workspacePath =
+        process.platform === "win32" ? "C:\\workspace" : "/workspace";
+      const ide = {
+        getWorkspaceDirs: vi
+          .fn()
+          .mockResolvedValue([pathToFileURL(workspacePath).toString()]),
+        getIdeInfo: vi.fn().mockResolvedValue({ remoteName: "" }),
+      } as any;
+      const conn = new MCPConnection(optionsWithVariables, { ide });
+
+      const transport = await (conn as any).constructStdioTransport(
+        optionsWithVariables,
+      );
+      const params = (transport as any)._serverParams;
+
+      expect(params.args).toEqual([`${workspacePath}/src`, "literal"]);
+      expect(params.cwd).toBe(workspacePath);
+      expect(params.env.PROJECT_DIR).toBe(workspacePath);
+      expect(params.env.TOKEN).toBe("secret-value");
+    });
+
+    it("should leave ${workspaceFolder} unresolved when connected to a remote workspace", async () => {
+      const ide = {
+        getWorkspaceDirs: vi
+          .fn()
+          .mockResolvedValue([
+            "vscode-remote://ssh-remote+host/home/user/project",
+          ]),
+        getIdeInfo: vi.fn().mockResolvedValue({ remoteName: "" }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      } as any;
+      const options: InternalStdioMcpOptions = {
+        ...optionsWithVariables,
+        cwd: undefined,
+      };
+      const conn = new MCPConnection(options, { ide });
+
+      const transport = await (conn as any).constructStdioTransport(options);
+      const params = (transport as any)._serverParams;
+
+      // Must stay literal, not silently become the user's home directory.
+      expect(params.args).toEqual(["${workspaceFolder}/src", "literal"]);
+      expect(params.env.PROJECT_DIR).toBe("${workspaceFolder}");
     });
   });
 
