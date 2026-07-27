@@ -78,12 +78,12 @@ function InputToolbar(props: InputToolbarProps) {
     <>
       <div
         onClick={props.onClick}
-        className={`find-widget-skip bg-vsc-input-background flex select-none flex-row items-center justify-between gap-1 pt-1 ${props.hidden ? "pointer-events-none h-0 cursor-default opacity-0" : "pointer-events-auto mt-2 cursor-text opacity-100"}`}
+        className={`find-widget-skip bg-vsc-input-background flex min-w-0 select-none flex-row items-center justify-between gap-1 pt-1 ${props.hidden ? "pointer-events-none h-0 cursor-default opacity-0" : "pointer-events-auto mt-2 cursor-text opacity-100"}`}
         style={{
           fontSize: smallFont,
         }}
       >
-        <div className="xs:gap-1.5 flex flex-row items-center gap-1">
+        <div className="xs:gap-1.5 flex min-w-0 flex-row items-center gap-1 overflow-hidden">
           {!isInEdit && (
             <ToolTip place="top" content="Select Mode">
               <HoverItem className="!p-0">
@@ -169,7 +169,7 @@ function InputToolbar(props: InputToolbarProps) {
         </div>
 
         <div
-          className="text-description flex items-center gap-2 whitespace-nowrap"
+          className="text-description flex flex-shrink-0 items-center gap-2 whitespace-nowrap"
           style={{
             fontSize: tinyFont,
           }}
