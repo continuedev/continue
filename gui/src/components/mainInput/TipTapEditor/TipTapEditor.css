@@ -16,6 +16,11 @@
   transition: background-color 0.2s ease-in-out;
 }
 
+.tiptap {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 .tiptap p.is-editor-empty:first-child::before {
   color: #646464; /* lightGray */
   content: attr(data-placeholder);
