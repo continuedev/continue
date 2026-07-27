@@ -21,7 +21,7 @@ seaborn==0.11.2
 plotly==5.3.1
 
 # Natural Language Processing
-nltk==3.6.3
+nltk==3.9.3
 spacy==3.1.2
 
 # Deep Learning
