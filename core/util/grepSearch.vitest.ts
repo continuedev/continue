@@ -215,3 +215,57 @@ test("decreases indentation when original is more than 2 spaces", () => {
   expect(result.formatted).toContain("    tooMuchIndent();");
   expect(result.formatted).toContain("  }");
 });
+
+// ripgrep echoes the `.` search root back with the platform separator, so on
+// Windows every heading arrives as `.\path\file` rather than `./path/file`.
+// Headings that go unrecognised are not just mis-titled: processResult() only
+// keeps lines that follow a heading, so the whole result set is dropped and
+// numResults stays 0 — the caller reports "no results" with the matches in hand.
+const sampleWindowsGrepOutput = `.\\program.cs
+        Console.WriteLine("Hello World!");
+--
+        }
+
+.\\src\\test.kt
+    fun subtract(number: Double): Test {
+        result -= number`;
+
+test("formats Windows-style backslash headings", () => {
+  const result = formatGrepSearchResults(sampleWindowsGrepOutput);
+
+  expect(result.numResults).toBe(3);
+  expect(result.formatted).toContain(".\\program.cs");
+  expect(result.formatted).toContain(".\\src\\test.kt");
+  expect(result.formatted).toContain('Console.WriteLine("Hello World!");');
+  expect(result.formatted).toContain("fun subtract(number: Double): Test {");
+});
+
+test("counts Windows headings so results are not reported as empty", () => {
+  // The reported symptom: content present, numResults 0, caller says
+  // "The search returned no results."
+  const result = formatGrepSearchResults(".\\file.ts\n  const x = 1;");
+
+  expect(result.numResults).toBe(1);
+  expect(result.formatted).toBe(".\\file.ts\n  const x = 1;");
+});
+
+test("handles mixed separators in a single result set", () => {
+  // Multi-root workspaces concatenate one ripgrep run per directory, so a
+  // single string can carry both forms.
+  const input = "./posix.ts\n  a();\n.\\windows.ts\n  b();";
+  const result = formatGrepSearchResults(input);
+
+  expect(result.numResults).toBe(2);
+  expect(result.formatted).toContain("./posix.ts");
+  expect(result.formatted).toContain(".\\windows.ts");
+});
+
+test("does not treat a bare relative path as a heading", () => {
+  // Only `./` and `.\` are headings. A content line that merely starts with a
+  // dot must not open a new result.
+  const result = formatGrepSearchResults("./file.ts\n  ...spread\n  .method()");
+
+  expect(result.numResults).toBe(1);
+  expect(result.formatted).toContain("  ...spread");
+  expect(result.formatted).toContain("  .method()");
+});
