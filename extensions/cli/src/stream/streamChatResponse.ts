@@ -13,6 +13,7 @@ import { services } from "../services/index.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { applyChatCompletionToolOverrides } from "../tools/applyToolOverrides.js";
 import { ToolCall } from "../tools/index.js";
+import { withoutUiNotices } from "../uiNotices.js";
 import {
   chatCompletionStreamWithBackoff,
   isContextLengthError,
@@ -20,7 +21,6 @@ import {
 } from "../util/exponentialBackoff.js";
 import { logger } from "../util/logger.js";
 import { validateContextLength } from "../util/tokenizer.js";
-import { withoutUiNotices } from "../uiNotices.js";
 
 import { getRequestTools, handleToolCalls } from "./handleToolCalls.js";
 import {
