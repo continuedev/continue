@@ -20,6 +20,7 @@ import {
 } from "../util/exponentialBackoff.js";
 import { logger } from "../util/logger.js";
 import { validateContextLength } from "../util/tokenizer.js";
+import { withoutUiNotices } from "../uiNotices.js";
 
 import { getRequestTools, handleToolCalls } from "./handleToolCalls.js";
 import {
@@ -249,9 +250,12 @@ export async function processStreamingResponse(
     throw new Error(`Context length validation failed: ${validation.error}`);
   }
 
-  // Create OpenAI format history with validated system message
+  // Create OpenAI format history with validated system message. UI notices are
+  // dropped first: they are `role: "system"` items the TUI added for display
+  // only, and sending them would put a second system message at a non-zero
+  // index, which providers reject.
   const openaiChatHistory = convertFromUnifiedHistoryWithSystemMessage(
-    chatHistory,
+    withoutUiNotices(chatHistory),
     systemMessage,
   ) as ChatCompletionMessageParam[];
   const requestStartTime = Date.now();
