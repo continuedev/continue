@@ -48,6 +48,44 @@ sidebarTitle: "Anthropic"
   **Check out a more advanced configuration [here](https://continue.dev/anthropic/claude-sonnet-4-6?view=config)**
 </Info>
 
+## Using an Anthropic-compatible endpoint
+
+Continue's Anthropic provider can also connect to third-party services that implement the Anthropic Messages API. For example, configure [API Token Sale](https://apitoken.sale/) with the API key issued by the provider:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Claude Sonnet 4.6
+      provider: anthropic
+      model: claude-sonnet-4-6
+      apiBase: https://api.apitoken.sale/v1/
+      apiKey: <YOUR_PROVIDER_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude Sonnet 4.6",
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-6",
+        "apiBase": "https://api.apitoken.sale/v1/",
+        "apiKey": "<YOUR_PROVIDER_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+Keep the trailing slash in `/v1/` so Continue resolves the Messages endpoint correctly. API Token Sale is an independent provider and is not affiliated with Anthropic or Continue. Third-party services have their own billing, privacy, and availability terms.
+
 ## How to Enable Prompt Caching with Claude
 
 Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching), which allows Claude models to cache system messages and conversation history between requests to improve performance and reduce costs.
