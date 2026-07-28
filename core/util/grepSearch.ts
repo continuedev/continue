@@ -1,8 +1,26 @@
 /*
+  ripgrep is invoked with `.` as the search root, and with `--heading` it echoes
+  that root back on the file-heading line using the platform separator: `./path`
+  on POSIX, but `.\path` on Windows. Every parser of this output has to accept
+  both, or Windows results are silently discarded — the content is all there,
+  but no heading is ever recognised, so the result count stays 0.
+*/
+export function isGrepResultPathLine(line: string): boolean {
+  return line.startsWith("./") || line.startsWith(".\\");
+}
+
+/**
+ * Regex source for the same heading prefix, for callers that need it inside a
+ * larger pattern. Kept next to {@link isGrepResultPathLine} so the two cannot
+ * drift apart.
+ */
+export const GREP_RESULT_PATH_PREFIX_SOURCE = "\\.[\\\\/]";
+
+/*
   Formats the output of a grep search to reduce unnecessary indentation, lines, etc
   Assumes a command with these params
     ripgrep -i --ignore-file .continueignore --ignore-file .gitignore -C 2 --heading -m 100 -e <query> .
-  
+
   Also can truncate the output to a specified number of characters
 */
 export function formatGrepSearchResults(
@@ -57,7 +75,7 @@ export function formatGrepSearchResults(
 
   let resultLines: string[] = [];
   for (const line of results.split("\n").filter((l) => !!l)) {
-    if (line.startsWith("./") || line === "--") {
+    if (isGrepResultPathLine(line) || line === "--") {
       processResult(resultLines); // process previous result
       resultLines = [line];
       numResults++;

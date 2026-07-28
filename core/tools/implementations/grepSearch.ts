@@ -1,7 +1,10 @@
 import { ToolImpl } from ".";
 import { ContextItem } from "../..";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
-import { formatGrepSearchResults } from "../../util/grepSearch";
+import {
+  formatGrepSearchResults,
+  GREP_RESULT_PATH_PREFIX_SOURCE,
+} from "../../util/grepSearch";
 import { prepareQueryForRipgrep } from "../../util/regexValidator";
 import { getStringArg } from "../parseArgs";
 
@@ -9,13 +12,21 @@ const DEFAULT_GREP_SEARCH_RESULTS_LIMIT = 100;
 const DEFAULT_GREP_SEARCH_CHAR_LIMIT = 7500; // ~1500 tokens, will keep truncation simply for now
 
 function splitGrepResultsByFile(content: string): ContextItem[] {
-  const matches = [...content.matchAll(/^\.\/([^\n]+)$/gm)];
+  // `.\path` on Windows, `./path` elsewhere — see isGrepResultPathLine.
+  const headingRegex = new RegExp(
+    `^${GREP_RESULT_PATH_PREFIX_SOURCE}([^\\n]+)$`,
+    "gm",
+  );
+  const matches = [...content.matchAll(headingRegex)];
 
   const contextItems: ContextItem[] = [];
 
   for (let i = 0; i < matches.length; i++) {
     const match = matches[i];
-    const filepath = match[1];
+    // Normalise separators: this becomes a `file` context-item URI, and those
+    // are glob-matched for rule application, where a backslash is an escape
+    // character rather than a separator.
+    const filepath = match[1].replace(/\\/g, "/");
     const startIndex = match.index!;
     const endIndex =
       i < matches.length - 1 ? matches[i + 1].index! : content.length;
@@ -23,7 +34,7 @@ function splitGrepResultsByFile(content: string): ContextItem[] {
     // Extract grepped content for this file
     const fileContent = content
       .substring(startIndex, endIndex)
-      .replace(/^\.\/[^\n]+\n/, "") // remove the line with file path
+      .replace(new RegExp(`^${GREP_RESULT_PATH_PREFIX_SOURCE}[^\\n]+\\n`), "") // remove the line with file path
       .trim();
 
     if (fileContent) {

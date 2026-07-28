@@ -4,6 +4,7 @@ import { exec } from "node:child_process";
 import { Range } from "core";
 import { EXTENSION_NAME } from "core/util/constants";
 import { DEFAULT_IGNORES, defaultIgnoresGlob } from "core/indexing/ignore";
+import { GREP_RESULT_PATH_PREFIX_SOURCE } from "core/util/grepSearch";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
@@ -616,8 +617,12 @@ class VsCodeIde implements IDE {
     if (maxResults) {
       // In case of multiple workspaces, do max results per workspace and then truncate to maxResults
       // Will prioritize first workspace results, fine for now
-      // Results are separated by either ./ or --
-      const matches = Array.from(allResults.matchAll(/(\n--|\n\.\/)/g));
+      // Results are separated by either ./ or -- (.\ on Windows)
+      const matches = Array.from(
+        allResults.matchAll(
+          new RegExp(`(\\n--|\\n${GREP_RESULT_PATH_PREFIX_SOURCE})`, "g"),
+        ),
+      );
       if (matches.length > maxResults) {
         return allResults.substring(0, matches[maxResults].index);
       } else {
