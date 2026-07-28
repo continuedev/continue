@@ -1,0 +1,55 @@
+---
+title: "Modelsell"
+description: "Configure Modelsell with Continue through its OpenAI-compatible Chat Completions API and dynamic model discovery."
+---
+
+Modelsell provides a unified OpenAI-compatible endpoint for using multiple AI model providers in Continue.
+
+- **API base:** `https://modelsell.com/v1`
+- **API keys:** [modelsell.com/console/token](https://modelsell.com/console/token)
+- **API documentation:** [modelsell.com/docs/api-reference](https://modelsell.com/docs/api-reference)
+
+## Discover available models
+
+Modelsell's model catalog is dynamic. Fetch the model IDs available to your API key from `GET /v1/models` rather than relying on a static list:
+
+```bash
+curl https://modelsell.com/v1/models \
+  -H "Authorization: Bearer $MODELSELL_API_KEY"
+```
+
+Use an `id` from the response as the `model` value in your Continue configuration.
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Modelsell
+      provider: modelsell
+      model: <MODEL_ID_FROM_GET_V1_MODELS>
+      apiKey: ${{ secrets.MODELSELL_API_KEY }}
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Modelsell",
+        "provider": "modelsell",
+        "model": "<MODEL_ID_FROM_GET_V1_MODELS>",
+        "apiKey": "<YOUR_MODELSELL_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+The initial integration uses Modelsell's OpenAI-compatible Chat Completions endpoint. It does not maintain a hardcoded model catalog in Continue.
