@@ -133,12 +133,14 @@ export function useSelectors(
   const { handleConfigSelect } = useConfigSelector({
     configPath,
     onMessage: (message) => {
-      // Convert message to ChatHistoryItem format
+      // Convert message to ChatHistoryItem format, keeping the messageType the
+      // hook set so the notice is not mistaken for a system instruction.
       setChatHistory((prev) => [
         ...prev,
         {
           message: { role: message.role, content: message.content },
           contextItems: [],
+          messageType: message.messageType,
         },
       ]);
     },
@@ -147,12 +149,14 @@ export function useSelectors(
 
   const { handleModelSelect } = useModelSelector({
     onMessage: (message) => {
-      // Convert message to ChatHistoryItem format
+      // Convert message to ChatHistoryItem format, keeping the messageType the
+      // hook set so the notice is not mistaken for a system instruction.
       setChatHistory((prev) => [
         ...prev,
         {
           message: { role: "system", content: message.content },
           contextItems: [],
+          messageType: message.messageType,
         },
       ]);
     },

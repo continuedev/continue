@@ -9,6 +9,7 @@ import { logger } from "src/util/logger.js";
 import { DEFAULT_SESSION_TITLE } from "../../constants/session.js";
 import { loadSession, startNewSession } from "../../session.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
+import { uiNotice } from "../../uiNotices.js";
 
 import { processImagePlaceholder } from "./useChat.imageProcessing.js";
 import { SlashCommandResult } from "./useChat.types.js";
@@ -124,15 +125,7 @@ export function processSlashCommandResult({
     }
 
     if (result.output) {
-      setChatHistory([
-        {
-          message: {
-            role: "system",
-            content: result.output,
-          },
-          contextItems: [],
-        },
-      ]);
+      setChatHistory([uiNotice(result.output)]);
     }
     return null;
   }
@@ -140,26 +133,11 @@ export function processSlashCommandResult({
   if (result.diffContent) {
     setChatHistory((prev) => [
       ...prev,
-      {
-        message: {
-          role: "system",
-          content: `Diff:\n${result.diffContent}`,
-        },
-        contextItems: [],
-      },
+      uiNotice(`Diff:\n${result.diffContent}`),
     ]);
     return null;
   } else if (result.output) {
-    setChatHistory((prev) => [
-      ...prev,
-      {
-        message: {
-          role: "system",
-          content: result.output || "",
-        },
-        contextItems: [],
-      },
-    ]);
+    setChatHistory((prev) => [...prev, uiNotice(result.output || "")]);
     return null;
   }
 

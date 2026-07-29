@@ -15,6 +15,7 @@ import {
 import { handleSlashCommands } from "../../slashCommands.js";
 import { messageQueue, QueuedMessage } from "../../stream/messageQueue.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
+import { uiNotice } from "../../uiNotices.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
 
@@ -342,16 +343,7 @@ export function useChat({
       });
     } catch (error: any) {
       const errorMessage = `Error: ${formatError(error)}`;
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          message: {
-            role: "system",
-            content: errorMessage,
-          },
-          contextItems: [],
-        },
-      ]);
+      setChatHistory((prev) => [...prev, uiNotice(errorMessage)]);
     } finally {
       // Stop active time tracking
       telemetryService.stopActiveTime();
@@ -834,16 +826,14 @@ export function useChat({
       // If this is a "stop stream" rejection, abort the current request
       if (stopStream && abortController && isWaitingForResponse) {
         abortController.abort();
+        // Addressed to the user ("please tell Continue …"), not an instruction
+        // to the model, so it stays out of the wire format. This is the notice
+        // #12963 reported.
         setChatHistory((prev) => [
           ...prev,
-          {
-            message: {
-              role: "system",
-              content:
-                "[Tool canceled - please tell Continue what to do differently]",
-            },
-            contextItems: [],
-          },
+          uiNotice(
+            "[Tool canceled - please tell Continue what to do differently]",
+          ),
         ]);
         setIsWaitingForResponse(false);
         setResponseStartTime(null);

@@ -13,6 +13,7 @@ import { services } from "../services/index.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { applyChatCompletionToolOverrides } from "../tools/applyToolOverrides.js";
 import { ToolCall } from "../tools/index.js";
+import { withoutUiNotices } from "../uiNotices.js";
 import {
   chatCompletionStreamWithBackoff,
   isContextLengthError,
@@ -249,9 +250,12 @@ export async function processStreamingResponse(
     throw new Error(`Context length validation failed: ${validation.error}`);
   }
 
-  // Create OpenAI format history with validated system message
+  // Create OpenAI format history with validated system message. UI notices are
+  // dropped first: they are `role: "system"` items the TUI added for display
+  // only, and sending them would put a second system message at a non-zero
+  // index, which providers reject.
   const openaiChatHistory = convertFromUnifiedHistoryWithSystemMessage(
-    chatHistory,
+    withoutUiNotices(chatHistory),
     systemMessage,
   ) as ChatCompletionMessageParam[];
   const requestStartTime = Date.now();

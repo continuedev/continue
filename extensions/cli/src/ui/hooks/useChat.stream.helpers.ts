@@ -5,6 +5,7 @@ import { logger } from "src/util/logger.js";
 
 import { services } from "../../services/index.js";
 import { getCurrentSession, updateSessionTitle } from "../../session.js";
+import { uiNotice } from "../../uiNotices.js";
 
 import { generateSessionTitle } from "./useChat.helpers.js";
 
@@ -185,13 +186,7 @@ export function createStreamCallbacks(
           }
         } else {
           // General error message
-          newHistory.push({
-            message: {
-              role: "system",
-              content: error,
-            },
-            contextItems: [],
-          });
+          newHistory.push(uiNotice(error));
         }
 
         return newHistory;
@@ -225,17 +220,9 @@ export function createStreamCallbacks(
           return;
         }
       } catch {}
-      // Fallback to local state if service unavailable
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          message: {
-            role: "system",
-            content: message,
-          },
-          contextItems: [],
-        },
-      ]);
+      // Fallback to local state if service unavailable. Marked the same way
+      // ChatHistoryService.addSystemMessage does, so the two paths agree.
+      setChatHistory((prev) => [...prev, uiNotice(message)]);
     },
   };
 }

@@ -59,7 +59,8 @@ describe("useChat clear command", () => {
       chatHistory[0], // The system message ChatHistoryItem
     ]);
 
-    // Second call should be with the "Chat history cleared" message
+    // Second call should be with the "Chat history cleared" message, marked as
+    // a UI notice so it is shown to the user but not sent to the model.
     expect(mockSetChatHistory).toHaveBeenLastCalledWith([
       {
         message: {
@@ -67,6 +68,7 @@ describe("useChat clear command", () => {
           content: "Chat history cleared",
         },
         contextItems: [],
+        messageType: "system",
       },
     ]);
   });

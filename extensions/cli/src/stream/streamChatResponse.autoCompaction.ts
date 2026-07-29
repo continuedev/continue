@@ -10,6 +10,7 @@ import {
   shouldAutoCompact,
 } from "../compaction.js";
 import { updateSessionHistory } from "../session.js";
+import { uiNotice } from "../uiNotices.js";
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
 
@@ -74,13 +75,7 @@ function handleCompactionSuccess(
     callbacks.setCompactionIndex(result.compactionIndex);
     callbacks.setMessages((prev: ChatHistoryItem[]) => [
       ...prev,
-      {
-        message: {
-          role: "system",
-          content: successMessage,
-        },
-        contextItems: [],
-      },
+      uiNotice(successMessage),
     ]);
   }
 }
@@ -105,13 +100,7 @@ function handleCompactionError(
   } else if (callbacks?.setMessages) {
     callbacks.setMessages((prev: ChatHistoryItem[]) => [
       ...prev,
-      {
-        message: {
-          role: "system",
-          content: warningMessage,
-        },
-        contextItems: [],
-      },
+      uiNotice(warningMessage),
     ]);
   }
 }

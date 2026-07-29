@@ -2,6 +2,7 @@ import type { ChatHistoryItem, ToolStatus } from "core/index.js";
 import { createHistoryItem } from "core/util/messageConversion.js";
 
 import { loadSessionById, updateSessionHistory } from "../session.js";
+import type { ChatHistoryItemWithType } from "../uiNotices.js";
 import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
@@ -205,13 +206,23 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
   }
 
   /**
-   * Add a system message to the history
+   * Add a system message to the history.
+   *
+   * Everything that reaches this method is a notice addressed to the user —
+   * "Remote environment is shutting down…", `WARNING: Tool … requires
+   * permission`, command output, diffs — so the item is marked as a UI notice
+   * and is dropped before the history is converted to wire format. Callers that
+   * ever need to add a real system *instruction* should build the item
+   * themselves rather than reach for this.
    */
   addSystemMessage(content: string): ChatHistoryItem {
-    const newMessage = createHistoryItem({
-      role: "system",
-      content,
-    });
+    const newMessage: ChatHistoryItemWithType = {
+      ...createHistoryItem({
+        role: "system",
+        content,
+      }),
+      messageType: "system",
+    };
 
     const newHistory = [...this.currentState.history, newMessage];
     this.setHistoryInternal(newHistory);
