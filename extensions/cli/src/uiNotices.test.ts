@@ -4,6 +4,7 @@ import { convertFromUnifiedHistoryWithSystemMessage } from "core/util/messageCon
 import {
   type ChatHistoryItemWithType,
   isUiNotice,
+  uiNotice,
   withoutUiNotices,
 } from "./uiNotices.js";
 
@@ -67,6 +68,20 @@ describe("withoutUiNotices", () => {
   it("leaves a history with no notices untouched", () => {
     const history = [item("user", "hello"), item("assistant", "hi")];
     expect(withoutUiNotices(history)).toEqual(history);
+  });
+});
+
+describe("uiNotice", () => {
+  it("produces an item that isUiNotice recognises and withoutUiNotices drops", () => {
+    const notice = uiNotice("Error: Connection error.");
+
+    expect(notice.message).toEqual({
+      role: "system",
+      content: "Error: Connection error.",
+    });
+    expect(notice.messageType).toBe("system");
+    expect(isUiNotice(notice)).toBe(true);
+    expect(withoutUiNotices([notice])).toHaveLength(0);
   });
 });
 

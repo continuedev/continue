@@ -4,6 +4,7 @@ import type { ChatHistoryItem } from "core/index.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { services } from "../services/index.js";
+import { uiNotice } from "../uiNotices.js";
 
 import { processStreamingResponse } from "./streamChatResponse.js";
 
@@ -214,6 +215,56 @@ describe("streamChatResponse system message validation", () => {
           : false,
       ),
     ).toBe(false);
+  });
+
+  it("should not send notices from the non-selector sites either", async () => {
+    const model = {
+      model: "test-model",
+      defaultCompletionOptions: { contextLength: 1000, maxTokens: 100 },
+    } as ModelConfig;
+
+    const systemMessage = "System instructions";
+
+    // The shape reported in #13026: an error banner sitting next to a /model
+    // notice. The banner comes from useChat.ts, a site that does not go through
+    // the selector hooks, so it is only filtered because every notice site now
+    // builds its item with uiNotice().
+    const chatHistory: ChatHistoryItem[] = [
+      { message: { role: "user", content: "hello" }, contextItems: [] },
+      uiNotice("Switched to model: qwen/qwen3.6-35b-a3b") as ChatHistoryItem,
+      uiNotice("Error: Connection error.") as ChatHistoryItem,
+      uiNotice(
+        "[Tool canceled - please tell Continue what to do differently]",
+      ) as ChatHistoryItem,
+      uiNotice("Chat history compacted successfully.") as ChatHistoryItem,
+      uiNotice("Session exported to /tmp/x.json") as ChatHistoryItem,
+      { message: { role: "user", content: "and now?" }, contextItems: [] },
+    ];
+
+    const mockStream = {
+      [Symbol.asyncIterator]: async function* () {
+        yield { choices: [{ delta: { content: "ok" } }] };
+      },
+    };
+    mockLlmApi.chatCompletionStream = vi.fn().mockResolvedValue(mockStream);
+
+    await processStreamingResponse({
+      chatHistory,
+      model,
+      llmApi: mockLlmApi,
+      abortController,
+      systemMessage,
+    });
+
+    const sent = vi.mocked(mockLlmApi.chatCompletionStream).mock.calls[0]?.[0];
+
+    expect(sent!.messages.filter((m) => m.role === "system")).toHaveLength(1);
+    expect(sent!.messages[0]?.content).toBe(systemMessage);
+    expect(sent!.messages.map((m) => m.content)).toEqual([
+      systemMessage,
+      "hello",
+      "and now?",
+    ]);
   });
 
   it("should use safety buffer in validation", async () => {

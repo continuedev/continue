@@ -49,3 +49,21 @@ export function withoutUiNotices(
 ): ChatHistoryItem[] {
   return history.filter((item) => !isUiNotice(item));
 }
+
+/**
+ * Builds a history item for a message shown to the user but not sent to the
+ * model — a model/config switch, an error banner, command output, a compaction
+ * or export result.
+ *
+ * Every notice site should go through this rather than writing the object
+ * literal, so that adding one cannot accidentally omit the discriminator: an
+ * omission is silent, and the item then reaches the provider as a second
+ * `role: "system"` message.
+ */
+export function uiNotice(content: string): ChatHistoryItemWithType {
+  return {
+    message: { role: "system", content },
+    contextItems: [],
+    messageType: "system",
+  };
+}

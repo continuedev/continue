@@ -3,6 +3,7 @@ import type { ChatHistoryItem, Session } from "core/index.js";
 import { compactChatHistory } from "../../compaction.js";
 import { updateSessionHistory } from "../../session.js";
 import { handleAutoCompaction as coreHandleAutoCompaction } from "../../stream/streamChatResponse.autoCompaction.js";
+import { uiNotice } from "../../uiNotices.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
 
@@ -68,39 +69,18 @@ export async function handleCompactCommand({
     // Add success message to chat
     setChatHistory((prev) => [
       ...prev,
-      {
-        message: {
-          role: "system",
-          content: "Chat history compacted successfully.",
-        },
-        contextItems: [],
-      },
+      uiNotice("Chat history compacted successfully."),
     ]);
   } catch (error) {
     // Check if the error was due to abortion
     if (compactionController.signal.aborted) {
       logger.info("Manual compaction was cancelled by user");
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          message: {
-            role: "system",
-            content: "Compaction cancelled.",
-          },
-          contextItems: [],
-        },
-      ]);
+      setChatHistory((prev) => [...prev, uiNotice("Compaction cancelled.")]);
     } else {
       logger.error("Compaction failed:", error);
       setChatHistory((prev) => [
         ...prev,
-        {
-          message: {
-            role: "system",
-            content: `Compaction failed: ${formatError(error)}`,
-          },
-          contextItems: [],
-        },
+        uiNotice(`Compaction failed: ${formatError(error)}`),
       ]);
     }
   } finally {

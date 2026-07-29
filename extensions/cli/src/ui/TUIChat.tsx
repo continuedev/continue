@@ -19,6 +19,7 @@ import {
   UpdateServiceState,
 } from "../services/types.js";
 import { getTotalSessionCost } from "../session.js";
+import { uiNotice } from "../uiNotices.js";
 import { bashToolEvents } from "../util/cli.js";
 import { logger } from "../util/logger.js";
 
@@ -302,13 +303,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         if (!session) {
           setChatHistory((prev) => [
             ...prev,
-            {
-              message: {
-                role: "system",
-                content: `Failed to export: Session ${sessionId} not found`,
-              },
-              contextItems: [],
-            },
+            uiNotice(`Failed to export: Session ${sessionId} not found`),
           ]);
           closeCurrentScreen();
           return;
@@ -329,25 +324,13 @@ const TUIChat: React.FC<TUIChatProps> = ({
 
         setChatHistory((prev) => [
           ...prev,
-          {
-            message: {
-              role: "system",
-              content: `Session exported to ${defaultPath}`,
-            },
-            contextItems: [],
-          },
+          uiNotice(`Session exported to ${defaultPath}`),
         ]);
         closeCurrentScreen();
       } catch (error: any) {
         setChatHistory((prev) => [
           ...prev,
-          {
-            message: {
-              role: "system",
-              content: `Failed to export session: ${error.message}`,
-            },
-            contextItems: [],
-          },
+          uiNotice(`Failed to export session: ${error.message}`),
         ]);
         closeCurrentScreen();
       }
