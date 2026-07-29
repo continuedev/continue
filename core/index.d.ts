@@ -871,6 +871,7 @@ export interface IDE {
   getExternalUri?(uri: string): Promise<string>;
 
   runCommand(command: string, options?: TerminalOptions): Promise<void>;
+  runCommandWithOutput(command: string, cwd?: string): Promise<string>;
 
   saveFile(fileUri: string): Promise<void>;
 

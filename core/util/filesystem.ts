@@ -282,6 +282,9 @@ class FileSystemIde implements IDE {
   async subprocess(command: string, cwd?: string): Promise<[string, string]> {
     return ["", ""];
   }
+  runCommandWithOutput(command: string, cwd?: string): Promise<string> {
+    return Promise.resolve("");
+  }
 }
 
 export default FileSystemIde;

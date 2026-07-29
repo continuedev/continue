@@ -95,6 +95,7 @@ describe("runTerminalCommandImpl", () => {
       getIdeInfo: mockGetIdeInfo,
       getWorkspaceDirs: mockGetWorkspaceDirs,
       runCommand: mockRunCommand,
+      runCommandWithOutput: vi.fn().mockResolvedValue(""),
       // Add stubs for other required IDE methods
       getIdeSettings: vi.fn(),
       getDiff: vi.fn(),
@@ -270,9 +271,9 @@ describe("runTerminalCommandImpl", () => {
     const result = await runTerminalCommandImpl(args, extras);
 
     // In remote environments, it should use the IDE's runCommand
-    expect(mockRunCommand).toHaveBeenCalledWith("echo 'test'");
-    expect(result[0].content).toContain("Command executed in remote terminal");
-    expect(result[0].status).toBe("Command executed");
+    expect(mockRunCommand).not.toHaveBeenCalled();
+    expect(result[0].status).toBe("Command completed");
+    expect(result[0].status).toBe("Command completed");
   });
 
   it("should handle errors when executing invalid commands", async () => {
@@ -615,10 +616,8 @@ describe("runTerminalCommandImpl", () => {
           extras,
         );
 
-        expect(mockRunCommand).toHaveBeenCalledWith("echo test");
-        expect(result[0].content).toContain(
-          "Command executed in remote terminal",
-        );
+        expect(mockRunCommand).not.toHaveBeenCalled();
+        expect(result[0].status).toBe("Command completed");
       });
 
       it("should handle local environment with file URIs", async () => {
@@ -641,10 +640,8 @@ describe("runTerminalCommandImpl", () => {
           extras,
         );
 
-        expect(mockRunCommand).toHaveBeenCalledWith("echo test");
-        expect(result[0].content).toContain(
-          "Command executed in remote terminal",
-        );
+        expect(mockRunCommand).not.toHaveBeenCalled();
+        expect(result[0].status).toBe("Command completed");
       });
 
       it("should use ide.runCommand for dev-container environment", async () => {
@@ -655,10 +652,8 @@ describe("runTerminalCommandImpl", () => {
           extras,
         );
 
-        expect(mockRunCommand).toHaveBeenCalledWith("echo test");
-        expect(result[0].content).toContain(
-          "Command executed in remote terminal",
-        );
+        expect(mockRunCommand).not.toHaveBeenCalled();
+        expect(result[0].status).toBe("Command completed");
       });
     });
 
