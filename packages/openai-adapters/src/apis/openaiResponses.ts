@@ -26,7 +26,6 @@ import {
   ResponseInputImage,
   ResponseInputText,
   ResponseOutputItem,
-  ResponseOutputMessage,
   ResponseOutputRefusal,
   ResponseOutputText,
   ResponseReasoningSummaryTextDeltaEvent,
@@ -288,7 +287,6 @@ export function toResponsesInput(
   messages: ChatCompletionMessageParam[],
 ): ResponseInput {
   const inputItems: ResponseInput = [];
-  let assistantMessageCounter = 0;
 
   for (const message of messages) {
     if (message.role === "tool") {
@@ -337,18 +335,19 @@ export function toResponsesInput(
         assistantMessage.refusal ?? null,
       );
       if (assistantContentParts.length > 0) {
-        const providedId = (message as any).id;
-        const assistantId =
-          typeof providedId === "string" && providedId.startsWith("msg_")
-            ? providedId
-            : `msg_${(assistantMessageCounter++).toString().padStart(4, "0")}`;
+        // Chat Completions history does not carry the Responses reasoning item
+        // associated with an output message. Replay it as an easy input message
+        // without inventing a msg_ ID that would require that missing reasoning.
+        const content = assistantContentParts
+          .map((part) =>
+            part.type === "output_text" ? part.text : part.refusal,
+          )
+          .join("");
         inputItems.push({
           type: "message",
           role: "assistant",
-          content: assistantContentParts,
-          id: assistantId,
-          status: "completed",
-        } as ResponseOutputMessage as any);
+          content,
+        });
       }
       if (assistantMessage.tool_calls?.length) {
         assistantMessage.tool_calls.forEach((toolCall, index) => {
@@ -360,12 +359,9 @@ export function toResponsesInput(
               name: toolCall.function.name ?? "",
               arguments: toolCall.function.arguments ?? "{}",
             };
-            if (
-              typeof toolCall.id === "string" &&
-              toolCall.id.startsWith("fc_")
-            ) {
-              functionCall.id = toolCall.id;
-            }
+            // Chat Completions exposes only the call ID, not the Responses
+            // output-item ID. Reusing it as `id` can make the Responses API
+            // require a reasoning item that this representation cannot carry.
             inputItems.push(functionCall);
           }
         });
