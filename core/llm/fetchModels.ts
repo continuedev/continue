@@ -179,8 +179,14 @@ async function fetchGeminiModels(
 ): Promise<FetchedModel[]> {
   const base = apiBase || "https://generativelanguage.googleapis.com/v1beta/";
   const url = new URL("models", base);
-  url.searchParams.set("key", apiKey ?? "");
-  const response = await fetch(url);
+  // Send the key as a header, never a query param — URLs leak into server
+  // logs, proxies, and referer headers. Same auth method the Gemini adapter
+  // uses (x-goog-api-key).
+  const response = await fetch(url, {
+    headers: {
+      "x-goog-api-key": apiKey ?? "",
+    },
+  });
   if (!response.ok) {
     throw new Error(`Failed to fetch Gemini models: ${response.status}`);
   }
