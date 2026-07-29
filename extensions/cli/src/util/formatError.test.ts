@@ -1,4 +1,8 @@
-import { formatError, formatAnthropicError } from "./formatError.js";
+import {
+  formatError,
+  formatAnthropicError,
+  extractNestedJsonMessage,
+} from "./formatError.js";
 
 describe("formatError", () => {
   it("should format Error objects correctly", () => {
@@ -132,6 +136,108 @@ describe("formatError", () => {
       error: { code: "NOT_FOUND" },
     };
     expect(formatError(error)).toBe('{"code":"NOT_FOUND"}');
+  });
+});
+
+/**
+ * Real shape from continuedev/continue#12945: an SDK error message that is
+ * a JSON envelope whose error.message is ITSELF a pretty-printed JSON
+ * string, hiding the actual cause two parse levels deep. Shared vector for
+ * the formatError and extractNestedJsonMessage suites.
+ */
+function quotaErrorMessageVector(): string {
+  const googleBody = JSON.stringify(
+    {
+      error: {
+        code: 429,
+        message:
+          "You exceeded your current quota, please check your plan and billing details. Please retry in 45.191226092s.",
+        status: "RESOURCE_EXHAUSTED",
+      },
+    },
+    null,
+    2,
+  );
+  return JSON.stringify({
+    error: {
+      message: `${googleBody}\n`,
+      code: 429,
+      status: "Too Many Requests",
+    },
+  });
+}
+
+describe("formatError nested Gemini-style JSON messages", () => {
+  it("extracts the innermost message from a double-nested JSON error", () => {
+    const error = new Error(quotaErrorMessageVector());
+    expect(formatError(error)).toBe(
+      "You exceeded your current quota, please check your plan and billing details. Please retry in 45.191226092s.",
+    );
+  });
+
+  it("extracts a single-level nested message", () => {
+    const error = new Error(
+      JSON.stringify({
+        error: { message: "Quota exceeded", status: "RESOURCE_EXHAUSTED" },
+      }),
+    );
+    expect(formatError(error)).toBe("Quota exceeded");
+  });
+
+  it("leaves a message-less nested error unchanged", () => {
+    const raw = JSON.stringify({ error: { status: "RESOURCE_EXHAUSTED" } });
+    expect(formatError(new Error(raw))).toBe(raw);
+  });
+
+  it("leaves a primitive-valued error field unchanged", () => {
+    const raw = JSON.stringify({ error: "Invalid API key" });
+    expect(formatError(new Error(raw))).toBe(raw);
+  });
+
+  it("leaves malformed JSON unchanged", () => {
+    expect(formatError(new Error("{invalid json"))).toBe("{invalid json");
+  });
+
+  it("leaves plain non-JSON messages unchanged", () => {
+    expect(formatError(new Error("socket hang up"))).toBe("socket hang up");
+  });
+});
+
+describe("extractNestedJsonMessage (direct vectors)", () => {
+  it("extracts the innermost message from the double-nested shape", () => {
+    expect(extractNestedJsonMessage(quotaErrorMessageVector())).toBe(
+      "You exceeded your current quota, please check your plan and billing details. Please retry in 45.191226092s.",
+    );
+  });
+
+  it("extracts a single-level nested message", () => {
+    expect(
+      extractNestedJsonMessage(
+        JSON.stringify({ error: { message: "Quota exceeded" } }),
+      ),
+    ).toBe("Quota exceeded");
+  });
+
+  it("returns undefined for message-less JSON", () => {
+    expect(
+      extractNestedJsonMessage(
+        JSON.stringify({ error: { status: "RESOURCE_EXHAUSTED" } }),
+      ),
+    ).toBeUndefined();
+  });
+
+  it("returns undefined for a primitive error field", () => {
+    expect(
+      extractNestedJsonMessage(JSON.stringify({ error: "Invalid API key" })),
+    ).toBeUndefined();
+  });
+
+  it("returns undefined for malformed JSON", () => {
+    expect(extractNestedJsonMessage("{invalid json")).toBeUndefined();
+  });
+
+  it("returns undefined for plain non-JSON text", () => {
+    expect(extractNestedJsonMessage("socket hang up")).toBeUndefined();
   });
 });
 
