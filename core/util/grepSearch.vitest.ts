@@ -215,3 +215,21 @@ test("decreases indentation when original is more than 2 spaces", () => {
   expect(result.formatted).toContain("    tooMuchIndent();");
   expect(result.formatted).toContain("  }");
 });
+
+test("parses Windows ripgrep output with backslash path separators", () => {
+  // On Windows, ripgrep emits headings like `.\dir\file.ext` instead of `./dir/file.ext`.
+  // The parser must recognise those as file headers, otherwise every match is discarded (#13027).
+  const windowsOutput = [
+    ".\\src\\program.cs",
+    '        Console.WriteLine("Hello World!");',
+    "--",
+    ".\\test\\calc.kt",
+    "    fun subtract(number: Double): Test {",
+  ].join("\n");
+
+  const result = formatGrepSearchResults(windowsOutput);
+
+  expect(result.numResults).toBeGreaterThan(0);
+  expect(result.formatted).toContain("program.cs");
+  expect(result.formatted).toContain("calc.kt");
+});

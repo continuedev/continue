@@ -57,7 +57,9 @@ export function formatGrepSearchResults(
 
   let resultLines: string[] = [];
   for (const line of results.split("\n").filter((l) => !!l)) {
-    if (line.startsWith("./") || line === "--") {
+    // ripgrep headings start with the relative path: "./" on POSIX, ".\" on Windows.
+    // Only checking "./" silently discarded every match on Windows (#13027).
+    if (line.startsWith("./") || line.startsWith(".\\") || line === "--") {
       processResult(resultLines); // process previous result
       resultLines = [line];
       numResults++;
