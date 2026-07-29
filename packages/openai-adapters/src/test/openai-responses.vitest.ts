@@ -25,7 +25,7 @@ import {
 } from "../apis/openaiResponses.js";
 
 describe("toResponsesInput", () => {
-  it("maps assistant text content to output_text with generated msg ids", () => {
+  it("does not invent Responses output item ids for assistant history", () => {
     const messages: ChatCompletionMessageParam[] = [
       {
         role: "assistant",
@@ -40,14 +40,9 @@ describe("toResponsesInput", () => {
     expect(assistant).toMatchObject({
       type: "message",
       role: "assistant",
-      id: "msg_0000",
     });
-    expect(assistant.content).toMatchObject([
-      {
-        type: "output_text",
-        text: "Hello there!",
-      },
-    ]);
+    expect(assistant).not.toHaveProperty("id");
+    expect(assistant.content).toBe("Hello there!");
   });
 
   it("maps assistant refusal content to refusal output items", () => {
@@ -63,12 +58,7 @@ describe("toResponsesInput", () => {
 
     expect(inputItems).toHaveLength(1);
     const assistant = inputItems[0] as any;
-    expect(assistant.content).toEqual([
-      {
-        type: "refusal",
-        refusal: "I must decline.",
-      },
-    ]);
+    expect(assistant.content).toBe("I must decline.");
   });
 
   it("converts assistant structured content into output_text items", () => {
@@ -82,12 +72,7 @@ describe("toResponsesInput", () => {
     const inputItems = toResponsesInput(messages);
 
     const assistant = inputItems[0] as any;
-    expect(assistant.content).toMatchObject([
-      {
-        type: "output_text",
-        text: "Structured hello.",
-      },
-    ]);
+    expect(assistant.content).toBe("Structured hello.");
   });
 
   it("converts chat messages, multimodal content, and tool interactions into Responses input items", () => {
@@ -107,7 +92,7 @@ describe("toResponsesInput", () => {
         role: "assistant",
         tool_calls: [
           {
-            id: "fc_call_1",
+            id: "call_1",
             type: "function",
             function: {
               name: "searchDocs",
@@ -146,8 +131,7 @@ describe("toResponsesInput", () => {
       },
       {
         type: "function_call",
-        call_id: "fc_call_1",
-        id: "fc_call_1",
+        call_id: "call_1",
         name: "searchDocs",
         arguments: '{"query":"vitest expectations"}',
       },
@@ -157,16 +141,17 @@ describe("toResponsesInput", () => {
         output: "Found 3 relevant documents.",
       },
     ]);
+    expect(inputItems[2]).not.toHaveProperty("id");
   });
 });
 
-it("omits function_call id when tool call id lacks fc_ prefix", () => {
+it("does not treat a Chat Completions tool call id as a Responses item id", () => {
   const messages: ChatCompletionMessageParam[] = [
     {
       role: "assistant",
       tool_calls: [
         {
-          id: "call_custom",
+          id: "fc_custom",
           type: "function",
           function: {
             name: "lookup",
@@ -184,7 +169,7 @@ it("omits function_call id when tool call id lacks fc_ prefix", () => {
   ) as any;
 
   expect(functionCall).toBeTruthy();
-  expect(functionCall.call_id).toBe("call_custom");
+  expect(functionCall.call_id).toBe("fc_custom");
   expect(functionCall).not.toHaveProperty("id");
 });
 
