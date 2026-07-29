@@ -57,6 +57,7 @@ describe("MCPService", () => {
 
   afterEach(async () => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
     await mcpService.cleanup();
   });
 
@@ -216,6 +217,39 @@ describe("MCPService", () => {
       await expect(
         mcpService.initialize(defaultAssistant),
       ).resolves.not.toThrow();
+    });
+
+    it("should not forward ambient environment variables to stdio servers", async () => {
+      vi.stubEnv("CONTINUE_MCP_TEST_SECRET", "must-not-be-inherited");
+      const { StdioClientTransport } = await import(
+        "@modelcontextprotocol/sdk/client/stdio.js"
+      );
+      const stdioAssistant: AssistantConfig = {
+        name: "stdio-assistant",
+        version: "1.0.0",
+        mcpServers: [
+          {
+            name: "stdio-server",
+            command: "node",
+            env: { EXPLICIT_MCP_VALUE: "allowed" },
+          },
+        ],
+      } as AssistantConfig;
+
+      await mcpService.initialize(stdioAssistant);
+
+      expect(StdioClientTransport).toHaveBeenCalledWith(
+        expect.objectContaining({
+          env: { EXPLICIT_MCP_VALUE: "allowed" },
+        }),
+      );
+      expect(StdioClientTransport).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          env: expect.objectContaining({
+            CONTINUE_MCP_TEST_SECRET: "must-not-be-inherited",
+          }),
+        }),
+      );
     });
 
     it("should create HttpsAgent when verifySsl is false for SSE transport", async () => {

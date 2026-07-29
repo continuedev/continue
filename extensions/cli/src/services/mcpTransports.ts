@@ -74,19 +74,14 @@ export function constructStdioTransport(
   serverConfig: StdioMcpServer,
   connection: MCPConnectionInfo,
 ): StdioClientTransport {
-  const env: Record<string, string> = serverConfig.env || {};
-  if (process.env) {
-    for (const [key, value] of Object.entries(process.env)) {
-      if (!(key in env) && !!value) {
-        env[key] = value;
-      }
-    }
-  }
-
   const transport = new StdioClientTransport({
     command: serverConfig.command,
     args: serverConfig.args || [],
-    env,
+    // The MCP SDK adds its platform-safe default environment (for example
+    // PATH and HOME). Only add variables the user explicitly configured;
+    // forwarding process.env would expose unrelated credentials to every
+    // stdio MCP server.
+    env: serverConfig.env,
     cwd: serverConfig.cwd,
     stderr: "pipe",
   });
