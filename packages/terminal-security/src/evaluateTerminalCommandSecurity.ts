@@ -196,6 +196,7 @@ function evaluateTokens(
         const commandPolicy = evaluateSingleCommand(
           currentCommand,
           originalCommand,
+          basePolicy,
         );
         mostRestrictivePolicy = getMostRestrictive(
           mostRestrictivePolicy,
@@ -235,6 +236,7 @@ function evaluateTokens(
     const commandPolicy = evaluateSingleCommand(
       currentCommand,
       originalCommand,
+      basePolicy,
     );
     mostRestrictivePolicy = getMostRestrictive(
       mostRestrictivePolicy,
@@ -362,6 +364,7 @@ function evaluatePipeChain(
 function evaluateSingleCommand(
   commandTokens: string[],
   originalCommand: string,
+  basePolicy: ToolPolicy,
 ): ToolPolicy {
   if (commandTokens.length === 0) {
     return "allowedWithoutPermission";
@@ -392,8 +395,8 @@ function evaluateSingleCommand(
     return "allowedWithoutPermission";
   }
 
-  // Default: unknown commands require permission
-  return "allowedWithPermission";
+  // Default: respect user's base policy for unknown commands
+  return basePolicy;
 }
 
 /**
@@ -440,7 +443,7 @@ function isCriticalCommand(baseCommand: string, args: string[]): boolean {
   }
 
   // Check for explicit rm command with additional critical paths
-  if (baseCommand === "rm") {
+  if (baseCommand === "rm" || baseCommand === "shred") {
     // Check for deletion of critical system files (even without -rf)
     const criticalPaths = [
       "/etc/passwd",
@@ -589,9 +592,28 @@ function isHighRiskPackageManager(
 
   if (packageManagers.includes(baseCommand)) {
     // Check for install/add subcommands
-    const installCommands = ["install", "add", "i"];
+    const installCommands = ["install", "add", "i", "get"];
     if (args.length > 0 && installCommands.includes(args[0])) {
       return true;
+    }
+
+    // Check for suspicious npm/yarn script names
+    if (
+      baseCommand === "npm" ||
+      baseCommand === "yarn" ||
+      baseCommand === "pnpm"
+    ) {
+      if (args.length >= 2 && args[0] === "run") {
+        const suspiciousScripts = [
+          "preinstall",
+          "postinstall",
+          "prepare",
+          "prepublish",
+        ];
+        if (suspiciousScripts.includes(args[1])) {
+          return true;
+        }
+      }
     }
   }
   return false;
@@ -648,7 +670,11 @@ function isHighRiskScriptInterpreter(
     "lua",
     "tcl",
     "powershell",
+    "powershell.exe",
     "pwsh",
+    "pwsh.exe",
+    "cmd",
+    "cmd.exe",
   ];
 
   if (scriptInterpreters.includes(baseCommand)) {
@@ -684,7 +710,8 @@ function isHighRiskDirectScript(baseCommand: string): boolean {
     baseCommand.endsWith(".pl") ||
     baseCommand.endsWith(".ps1") ||
     baseCommand.endsWith(".bat") ||
-    baseCommand.endsWith(".cmd")
+    baseCommand.endsWith(".cmd") ||
+    baseCommand === "open"
   );
 }
 
@@ -765,7 +792,7 @@ function isHighRiskFileOperation(baseCommand: string, args: string[]): boolean {
  * Checks if rm command is high risk (but not critical)
  */
 function isHighRiskRmCommand(baseCommand: string, args: string[]): boolean {
-  if (baseCommand === "rm") {
+  if (baseCommand === "rm" || baseCommand === "shred") {
     const hasRf = args.some((arg) => arg === "-rf" || arg === "-fr");
     const hasCriticalPath = args.some((arg) =>
       ["/etc/", "/usr/", "/bin/", "/sbin/"].some((path) => arg.includes(path)),
