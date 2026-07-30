@@ -39,7 +39,7 @@ class Autocomplete {
                     // CI runners can be slow, so use a generous timeout with frequent polling.
                     val deadline = System.currentTimeMillis() + 30_000L
                     while (!text.contains("TEST_LLM_RESPONSE_0") && System.currentTimeMillis() < deadline) {
-                        Thread.sleep(500)
+                        java.lang.Thread.sleep(500L)
                     }
                     keyboard {
                         tab()
