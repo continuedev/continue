@@ -1,5 +1,5 @@
 /* Prevent long unbroken text from overflowing the input box */
-.tiptap {
+.ProseMirror {
   word-break: break-word;
   overflow-wrap: anywhere;
   overflow-x: hidden;
