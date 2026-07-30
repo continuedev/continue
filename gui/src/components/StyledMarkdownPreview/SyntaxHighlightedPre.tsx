@@ -24,6 +24,8 @@ const StyledPre = styled.pre<{ theme: any }>`
   margin-bottom: 0;
   border-radius: 0 0 ${defaultBorderRadius} ${defaultBorderRadius} !important;
   max-height: 40vh;
+  max-width: 100%;
+  min-width: 0;
   overflow-y: scroll !important;
 
   ${(props) => generateThemeStyles(props.theme)}
