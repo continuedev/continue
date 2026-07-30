@@ -1,3 +1,10 @@
+/* Prevent long unbroken text from overflowing the input box */
+.tiptap {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  overflow-x: hidden;
+}
+
 .mention {
   background-color: var(--vscode-badge-background, #bfe2b6);
   color: var(--vscode-badge-foreground, --vscode-foreground, #000);
