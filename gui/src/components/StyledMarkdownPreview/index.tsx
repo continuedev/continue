@@ -66,7 +66,9 @@ const StyledMarkdown = styled.div<{
     background-color: ${vscEditorBackground};
     border-radius: ${defaultBorderRadius};
 
+    box-sizing: border-box;
     max-width: 100%;
+    min-width: 0;
     overflow-x: scroll;
     overflow-y: hidden;
 
@@ -77,6 +79,8 @@ const StyledMarkdown = styled.div<{
     span.line:empty {
       display: none;
     }
+    overflow-wrap: anywhere;
+    word-break: break-word;
     word-wrap: break-word;
     border-radius: 0.3125rem;
     background-color: ${vscEditorBackground};

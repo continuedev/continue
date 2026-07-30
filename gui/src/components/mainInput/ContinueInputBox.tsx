@@ -109,10 +109,10 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
 
   return (
     <div
-      className={`${props.hidden ? "hidden" : ""}`}
+      className={`${props.hidden ? "hidden" : ""} min-w-0`}
       data-testid={`continue-input-box-${props.inputId}`}
     >
-      <div className={`relative flex flex-col px-2`}>
+      <div className={`relative flex min-w-0 flex-col px-2`}>
         {props.isMainInput && <Lump />}
         <GradientBorder
           loading={isStreaming && (props.isLastUserInput || isInEdit) ? 1 : 0}
