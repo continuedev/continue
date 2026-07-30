@@ -35,12 +35,7 @@ class Autocomplete {
                         enterText("TEST_USER_MESSAGE_0")
                         space()
                     }
-                    // Poll for autocomplete response from core binary (async via stdin/stdout);
-                    // CI runners can be slow, so use a generous timeout with frequent polling.
-                    val deadline = System.currentTimeMillis() + 30_000L
-                    while (!text.contains("TEST_LLM_RESPONSE_0") && System.currentTimeMillis() < deadline) {
-                        java.lang.Thread.sleep(500L)
-                    }
+                    wait(2.seconds)
                     keyboard {
                         tab()
                     }
