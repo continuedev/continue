@@ -33,6 +33,7 @@ import {
   calculateContextUsagePercentage,
   countChatHistoryTokens,
 } from "../util/tokenizer.js";
+import { withSigintAbort } from "../util/withSigintAbort.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
 
@@ -169,28 +170,14 @@ async function getStreamingResponse(
   model: ModelConfig,
   llmApi: BaseLlmApi,
 ): Promise<string> {
-  const abortController = new AbortController();
+  return withSigintAbort(async (abortController) => {
+    const history =
+      compactionIndex !== null && compactionIndex !== undefined
+        ? services.chatHistory.getHistoryForLLM(compactionIndex)
+        : services.chatHistory.getHistory();
 
-  if (compactionIndex !== null && compactionIndex !== undefined) {
-    // Use service to compute history for LLM
-    const historyForLLM =
-      services.chatHistory.getHistoryForLLM(compactionIndex);
-
-    return await streamChatResponse(
-      historyForLLM,
-      model,
-      llmApi,
-      abortController,
-    );
-  } else {
-    // No compaction - get full history from service
-    return await streamChatResponse(
-      services.chatHistory.getHistory(),
-      model,
-      llmApi,
-      abortController,
-    );
-  }
+    return await streamChatResponse(history, model, llmApi, abortController);
+  });
 }
 
 // Helper function to process and output response in headless mode
