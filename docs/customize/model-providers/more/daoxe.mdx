@@ -1,0 +1,60 @@
+---
+title: "DaoXE"
+description: "Configure DaoXE with Continue as a multi-model multi-protocol AI API gateway using an OpenAI-compatible endpoint"
+---
+
+<Info>
+  Get an API key from [DaoXE](https://daoxe.com)
+</Info>
+
+[DaoXE](https://daoxe.com) is a multi-model multi-protocol AI API gateway for developers.
+Use it with Continue through the OpenAI-compatible provider by setting `apiBase` to
+`https://daoxe.com/v1`.
+
+DaoXE supports OpenAI Chat Completions, OpenAI Responses, Anthropic Messages, and
+image-compatible endpoints. Continue uses the OpenAI Chat Completions path below.
+
+> DaoXE is **not available in mainland China**.
+
+## Configuration
+
+Replace the placeholders with values from your own DaoXE account. Prefer an exact
+model ID currently available to your key.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: DaoXE
+      provider: openai
+      model: <DAOXE_MODEL_ID>
+      apiBase: https://daoxe.com/v1
+      apiKey: <YOUR_DAOXE_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "DaoXE",
+        "provider": "openai",
+        "model": "<DAOXE_MODEL_ID>",
+        "apiBase": "https://daoxe.com/v1",
+        "apiKey": "<YOUR_DAOXE_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Notes
+
+- Discover current models on the [DaoXE pricing/catalog page](https://daoxe.com/pricing) and confirm against your account.
+- Public examples and a low-cost smoke/compare benchmark: [DaoXE-AI](https://github.com/seven7763/DaoXE-AI).
+- Continue's OpenAI provider supports OpenAI-compatible endpoints via `apiBase`.
