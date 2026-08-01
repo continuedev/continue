@@ -1,0 +1,93 @@
+---
+title: "Abliteration.ai"
+description: "Configure Abliteration.ai with Continue to access less-restrictive, uncensored models through an OpenAI-compatible API"
+---
+
+[Abliteration.ai](https://abliteration.ai) is an inference API for unrestricted, uncensored models behind an OpenAI-compatible API. Drop in by changing the base URL — same code, fewer refusals, with an optional policy gateway for governance.
+
+<Info>
+  You can get an API key from the
+  [Abliteration.ai console](https://abliteration.ai).
+</Info>
+
+## Chat Model
+
+We recommend configuring **abliterated-model** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Abliterated Model
+        provider: abliteration
+        model: abliterated-model
+        apiKey: <YOUR_ABLITERATION_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Abliterated Model",
+          "provider": "abliteration",
+          "model": "abliterated-model",
+          "apiKey": "<YOUR_ABLITERATION_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Abliterated Model
+        provider: abliteration
+        model: abliterated-model
+        apiKey: <YOUR_ABLITERATION_API_KEY>
+        roles:
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Abliterated Model",
+          "provider": "abliteration",
+          "model": "abliterated-model",
+          "apiKey": "<YOUR_ABLITERATION_API_KEY>"
+        }
+      ],
+      "tabAutocompleteModel": {
+        "title": "Abliterated Model",
+        "provider": "abliteration",
+        "model": "abliterated-model",
+        "apiKey": "<YOUR_ABLITERATION_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Available Models
+
+Abliteration.ai currently hosts two models: **abliterated-model** (general-purpose default, multimodal, 256K context) and **abliterated-model-large** (text-only, 1M context, for harder reasoning workloads). The live list is returned by `GET https://api.abliteration.ai/v1/models`. See the [Abliteration.ai docs](https://docs.abliteration.ai) for details.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Abliteration.ts)
