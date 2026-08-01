@@ -61,6 +61,7 @@ export const modelDescriptionSchema = z.object({
     "scaleway",
     "watsonx",
     "minimax",
+    "abliteration",
   ]),
   model: z.string(),
   apiKey: z.string().optional(),

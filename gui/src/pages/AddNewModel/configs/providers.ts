@@ -1270,6 +1270,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  abliteration: {
+    title: "Abliteration.ai",
+    provider: "abliteration",
+    description:
+      "Abliteration.ai is an inference API for unrestricted, uncensored models behind an OpenAI-compatible API.",
+    longDescription:
+      "To get started with Abliteration.ai, create an account and get an API key at [abliteration.ai](https://abliteration.ai).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Abliteration.ai API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://abliteration.ai",
+  },
   venice: {
     title: "Venice",
     provider: "venice",
