@@ -358,7 +358,12 @@ describe("ChatHistoryService", () => {
       expect(historyForLLM).toEqual(fullHistory);
     });
 
-    it("should return history after compaction index", () => {
+    it("should return full history after compaction (prefix-preserving)", () => {
+      // After compaction the stored history already IS the compacted history
+      // (pinned cache-stable prefix + summary + recent tail). Trimming it here
+      // would drop the pinned system message / first user turn / prior digests
+      // that subsequent requests depend on for prompt-cache hits, so the full
+      // history must be sent to the LLM.
       const history: ChatHistoryItem[] = [
         {
           message: { role: "user", content: "Old message" },
@@ -379,9 +384,30 @@ describe("ChatHistoryService", () => {
 
       const historyForLLM = service.getHistoryForLLM();
 
-      expect(historyForLLM).toHaveLength(2); // Compacted message + new message
-      expect(historyForLLM[0].message.content).toBe("[Compacted] Summary");
-      expect(historyForLLM[1].message.content).toBe("New message");
+      expect(historyForLLM).toHaveLength(3); // Full history, prefix preserved
+      expect(historyForLLM[0].message.content).toBe("Old message");
+      expect(historyForLLM[1].message.content).toBe("[Compacted] Summary");
+      expect(historyForLLM[2].message.content).toBe("New message");
+    });
+
+    it("should ignore compactionIndex argument (full history always returned)", () => {
+      const history: ChatHistoryItem[] = [
+        {
+          message: { role: "system", content: "[Compacted] Summary" },
+          contextItems: [],
+        },
+        {
+          message: { role: "user", content: "New message" },
+          contextItems: [],
+        },
+      ];
+
+      service.setHistory(history);
+      service.setCompactionIndex(0);
+
+      const historyForLLM = service.getHistoryForLLM(0);
+
+      expect(historyForLLM).toHaveLength(2);
     });
   });
 

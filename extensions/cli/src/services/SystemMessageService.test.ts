@@ -85,6 +85,64 @@ describe("SystemMessageService", () => {
     });
   });
 
+  describe("system message cache (prefix-preserving)", () => {
+    it("should construct the system message only once per identical inputs", async () => {
+      const config = {
+        additionalRules: ["rule1"],
+        format: "json" as const,
+        headless: true,
+      };
+
+      constructSystemMessageMock.mockResolvedValue("Cached system message");
+
+      await service.initialize(config);
+
+      const first = await service.getSystemMessage("normal");
+      const second = await service.getSystemMessage("normal");
+      const third = await service.getSystemMessage("normal");
+
+      expect(constructSystemMessageMock).toHaveBeenCalledTimes(1);
+      expect(first).toBe("Cached system message");
+      expect(second).toBe(first);
+      expect(third).toBe(first);
+    });
+
+    it("should re-construct when mode changes", async () => {
+      constructSystemMessageMock.mockResolvedValue("System message");
+
+      await service.initialize({
+        additionalRules: ["rule1"],
+        format: "json" as const,
+        headless: true,
+      });
+
+      await service.getSystemMessage("normal");
+      await service.getSystemMessage("plan");
+
+      expect(constructSystemMessageMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("should re-construct when config changes via updateConfig", async () => {
+      constructSystemMessageMock.mockResolvedValue("System message");
+
+      await service.initialize({
+        additionalRules: ["rule1"],
+        format: "json" as const,
+        headless: true,
+      });
+
+      await service.getSystemMessage("normal");
+      await service.getSystemMessage("normal");
+
+      expect(constructSystemMessageMock).toHaveBeenCalledTimes(1);
+
+      service.updateConfig({ additionalRules: ["rule2"] });
+      await service.getSystemMessage("normal");
+
+      expect(constructSystemMessageMock).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe("updateConfig", () => {
     it("should update configuration partially", async () => {
       await service.initialize({

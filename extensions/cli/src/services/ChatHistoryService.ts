@@ -408,19 +408,16 @@ export class ChatHistoryService extends BaseService<ChatHistoryState> {
   }
 
   /**
-   * Get history for LLM (considering compaction)
+   * Get history for LLM (considering compaction).
+   *
+   * After compaction the stored history already IS the compacted history
+   * (pinned prefix + summary + recent tail), so it is sent in full: trimming
+   * anything before the compaction index would drop the cache-stable pinned
+   * prefix (system message, first user turn, prior digests) that subsequent
+   * requests depend on for prompt-cache hits.
    */
-  getHistoryForLLM(compactionIndex?: number | null): ChatHistoryItem[] {
-    const index = compactionIndex ?? this.currentState.compactionIndex;
-    const full = this.currentState.history;
-    if (index === null || index === undefined || index >= full.length) {
-      return this.getHistory();
-    }
-    const systemMessage = full[0]?.message?.role === "system" ? full[0] : null;
-    const messagesFromCompaction = full.slice(index);
-    return systemMessage && index > 0
-      ? [systemMessage, ...messagesFromCompaction]
-      : messagesFromCompaction;
+  getHistoryForLLM(_compactionIndex?: number | null): ChatHistoryItem[] {
+    return this.getHistory();
   }
 
   /**

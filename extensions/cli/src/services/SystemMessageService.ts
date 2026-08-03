@@ -16,6 +16,15 @@ export interface SystemMessageServiceState {
  * Provides fresh system messages that reflect current mode and configuration
  */
 export class SystemMessageService extends BaseService<SystemMessageServiceState> {
+  // Cache of constructed system messages keyed by the inputs that affect them.
+  // The system message is re-fetched on every streaming iteration and its
+  // construction re-reads AGENTS.md/CLAUDE.md files and re-runs `git status`,
+  // so any change made by the agent invalidates the whole prompt prefix and
+  // cold-starts the provider's prompt cache. Memoizing per (mode, rules,
+  // format, headless) keeps the prefix byte-identical across turns — the same
+  // invariant Reasonix enforces by building its system prompt once at boot.
+  private systemMessageCache = new Map<string, string>();
+
   constructor() {
     super("SystemMessageService", {});
   }
@@ -49,12 +58,20 @@ export class SystemMessageService extends BaseService<SystemMessageServiceState>
   public async getSystemMessage(currentMode: PermissionMode): Promise<string> {
     const { additionalRules, format, headless } = this.currentState;
 
+    const cacheKey = JSON.stringify([currentMode, additionalRules, format, headless]);
+    const cached = this.systemMessageCache.get(cacheKey);
+    if (cached !== undefined) {
+      return cached;
+    }
+
     const systemMessage = await constructSystemMessage(
       currentMode,
       additionalRules,
       format,
       headless,
     );
+
+    this.systemMessageCache.set(cacheKey, systemMessage);
 
     logger.debug("Generated fresh system message", {
       mode: currentMode,
