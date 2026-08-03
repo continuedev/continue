@@ -21,12 +21,12 @@ seaborn==0.11.2
 plotly==5.3.1
 
 # Natural Language Processing
-nltk==3.6.3
+nltk==3.10.0
 spacy==3.1.2
 
 # Deep Learning
 torch==2.6.0
-keras==2.6.0
+keras==3.12.3
 
 # Image processing
 pillow==8.3.2
