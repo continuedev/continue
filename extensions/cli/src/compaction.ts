@@ -8,6 +8,7 @@ import { streamChatResponse } from "./stream/streamChatResponse.js";
 import { StreamCallbacks } from "./stream/streamChatResponse.types.js";
 import { logger } from "./util/logger.js";
 import {
+  countChatHistoryItemTokens,
   countChatHistoryTokens,
   countToolDefinitionTokens,
   countTotalInputTokens,
@@ -37,10 +38,123 @@ export interface CompactionOptions {
   systemMessageTokens?: number;
 }
 
-const COMPACTION_PROMPT =
-  "Please provide a concise summary of our conversation so far, capturing the key context, decisions made, and current state. Format this as a single comprehensive message that preserves all important information needed to continue our work. You do not need to recap the system message, as this will remain. Make sure it is clear what the current stream of work was at the very end prior to compaction so that you can continue exactly where you left off without missing any information.";
+// A structured briefing prompt (inspired by Reasonix's summarySystemPrompt) so
+// the compaction digest is a dependable briefing the model can resume from:
+// the section layout mirrors what a coding agent needs mid-task — the goal
+// verbatim, concrete file/code state, and an explicit next step.
+const COMPACTION_PROMPT = `You are compacting the earlier part of a coding agent's conversation to save context.
+The agent keeps your summary alongside the user's own turns (kept verbatim) and the recent tail; your job is to fold the assistant/tool work into a briefing it can resume from.
+Write under these exact headings, omitting a heading only if it has no content:
 
-const COMPACTION_PROMPT_TOKENS = 150; // rough generous token count of ^
+## Standing facts & constraints
+Everything the user stated that still governs the work — names, paths, IDs, versions, tokens, preferences, and hard "never do X" rules — in their own words. Be exhaustive; this is the durable contract, so prefer over- to under-including.
+
+## Goal
+The user's request and intent.
+
+## Decisions & rationale
+Key choices made so far and why — so they are not re-litigated or reversed.
+
+## Files & code
+Files read or modified, with the specific facts that matter: signatures, line locations, data shapes, and exact edits applied. Be concrete; this is what lets the agent act without re-reading everything.
+
+## Commands & outcomes
+Commands run (builds, tests, git) and their relevant results — what passed, what failed, and the error text that matters.
+
+## Errors & fixes
+Problems hit and how they were resolved (or not), so the same dead ends are not repeated.
+
+## Pending & next step
+What is still in progress or unstarted, and the single most concrete next action to take.
+
+Rules: be terse — bullet points and fragments, not prose. Preserve identifiers, paths, and numbers exactly. Do NOT invent anything not present in the messages; if something is unknown, leave it out rather than guessing.`;
+
+const COMPACTION_PROMPT_TOKENS = 700; // rough generous token count of ^
+
+// Token budget for the verbatim recent tail kept after a compaction. Bounded so
+// a few large tool outputs cannot keep the tail above the auto-compaction
+// trigger and re-fire compaction on every turn.
+const RECENT_TAIL_TOKEN_BUDGET = 12_000;
+// Never keep fewer recent messages than this after a compaction.
+const MIN_RECENT_TAIL_MESSAGES = 2;
+// Ceiling on pinning the first user turn verbatim; larger first turns (pasted
+// content) stay foldable so pinning never starves the context window.
+const MAX_PINNED_FIRST_USER_TOKENS = 1_500;
+
+/**
+ * Returns the number of leading messages that a compaction must preserve
+ * verbatim: the system prompt, the first user turn (its task + stated facts)
+ * when it is small enough to be a brief, and any prior compaction digests.
+ * This keeps the prompt prefix byte-identical across turns — the invariant
+ * that lets providers with automatic prompt caching (DeepSeek, OpenAI) serve
+ * cache hits on subsequent requests. It also guarantees a fold never
+ * summarizes the user's stated facts away, and a later fold never
+ * re-summarizes an earlier digest into nothing.
+ */
+function getPinnedPrefixLength(
+  chatHistory: ChatHistoryItem[],
+  model: ModelConfig,
+): number {
+  let i = 0;
+  if (chatHistory.length > 0 && chatHistory[0].message.role === "system") {
+    i++;
+  }
+  if (
+    i < chatHistory.length &&
+    chatHistory[i].message.role === "user" &&
+    chatHistory[i].conversationSummary === undefined &&
+    countChatHistoryItemTokens(chatHistory[i], model) <=
+      MAX_PINNED_FIRST_USER_TOKENS
+  ) {
+    i++;
+  }
+  while (
+    i < chatHistory.length &&
+    chatHistory[i].conversationSummary !== undefined
+  ) {
+    i++;
+  }
+  return i;
+}
+
+/**
+ * Walks newest → oldest, growing the verbatim recent tail until the next
+ * message would push its token estimate past RECENT_TAIL_TOKEN_BUDGET (but
+ * never below MIN_RECENT_TAIL_MESSAGES messages), then aligns the boundary
+ * back off any tool result so the tail never begins with an orphan whose
+ * assistant tool_calls were folded away.
+ */
+function getRecentTailStart(
+  chatHistory: ChatHistoryItem[],
+  pinnedLength: number,
+  model: ModelConfig,
+): number {
+  let start = chatHistory.length;
+  let acc = 0;
+  // Walk from the newest message down to (and including) the first message
+  // after the pinned prefix, so a conversation that entirely fits within
+  // pinned prefix + tail budget is recognized as a no-op (`start` reaches
+  // `pinnedLength` and the fold region is empty) instead of being folded.
+  for (let i = chatHistory.length - 1; i >= pinnedLength; i--) {
+    const tokens = countChatHistoryItemTokens(chatHistory[i], model);
+    if (
+      chatHistory.length - i > MIN_RECENT_TAIL_MESSAGES &&
+      acc + tokens > RECENT_TAIL_TOKEN_BUDGET
+    ) {
+      break;
+    }
+    acc += tokens;
+    start = i;
+  }
+  while (
+    start > pinnedLength &&
+    start < chatHistory.length &&
+    chatHistory[start].message.role === "tool"
+  ) {
+    start--;
+  }
+  return start;
+}
 
 /**
  * Compacts a chat history into a summarized form
@@ -57,6 +171,29 @@ export async function compactChatHistory(
   options?: CompactionOptions,
 ): Promise<CompactionResult> {
   const { callbacks, abortController, systemMessageTokens = 0 } = options || {};
+
+  // Prefix-aware layout (Reasonix-style): pin the cache-stable prefix and keep
+  // a token-budgeted recent tail, so compaction splices a summary in the middle
+  // instead of collapsing the whole history into [system, summary]. Keeping the
+  // prompt prefix byte-identical across turns is what lets providers with
+  // automatic prompt caching (DeepSeek, OpenAI) serve cache hits on subsequent
+  // requests — and it stops a fold from ever summarizing away the user's first
+  // turn or an earlier digest.
+  const pinnedLength = getPinnedPrefixLength(chatHistory, model);
+  const tailStart = getRecentTailStart(chatHistory, pinnedLength, model);
+
+  // Nothing worth folding: the whole conversation already fits in the pinned
+  // prefix + recent tail, so leave it untouched. Producing a summary here would
+  // only add tokens without reducing what is sent.
+  if (tailStart <= pinnedLength) {
+    const index = findCompactionIndex(chatHistory);
+    return {
+      compactedHistory: [...chatHistory],
+      compactionContent: "",
+      compactionIndex: index ?? pinnedLength,
+    };
+  }
+
   // Create a prompt to summarize the conversation
   const compactionPrompt: ChatHistoryItem = {
     message: {
@@ -138,9 +275,6 @@ export async function compactChatHistory(
     );
 
     // Create the compacted history with a special marker
-    const systemMessage = chatHistory.find(
-      (item) => item.message.role === "system",
-    );
     const compactionMessage: ChatHistoryItem = {
       message: {
         role: "assistant",
@@ -150,14 +284,19 @@ export async function compactChatHistory(
       conversationSummary: compactionContent,
     };
 
-    const compactedHistory: ChatHistoryItem[] = systemMessage
-      ? [systemMessage, compactionMessage]
-      : [compactionMessage];
+    // Splice the new digest between the pinned prefix and the recent tail so
+    // the cache-stable prefix (system, first user turn, prior digests) and the
+    // verbatim recent tail survive the compaction.
+    const compactedHistory: ChatHistoryItem[] = [
+      ...chatHistory.slice(0, pinnedLength),
+      compactionMessage,
+      ...chatHistory.slice(tailStart),
+    ];
 
     return {
       compactedHistory,
       compactionContent,
-      compactionIndex: systemMessage ? 1 : 0,
+      compactionIndex: pinnedLength,
     };
   } catch (error) {
     logger.error("Compaction failed", error);
@@ -180,12 +319,6 @@ export function findCompactionIndex(
   return compactedIndex === -1 ? null : compactedIndex;
 }
 
-/**
- * Gets the history to send to the LLM, taking compaction into account
- * @param fullHistory The complete chat history
- * @param compactionIndex The index of the compaction message, if any
- * @returns The history to send to the LLM
- */
 /**
  * Prunes chat history by removing messages from the end while ensuring
  * the history ends with either an assistant message or a tool result message
@@ -219,22 +352,23 @@ export function pruneLastMessage(
   return chatHistory.slice(0, -1);
 }
 
+/**
+ * Gets the history to send to the LLM, taking compaction into account.
+ *
+ * After compaction the stored history already IS the compacted history
+ * (pinned prefix + summary + recent tail), so it is sent in full: trimming
+ * anything before the compaction index would drop the cache-stable pinned
+ * prefix (system message, first user turn, prior digests) that subsequent
+ * requests depend on for prompt-cache hits.
+ * @param fullHistory The complete chat history
+ * @param _compactionIndex The index of the compaction message, if any
+ * @returns The history to send to the LLM
+ */
 export function getHistoryForLLM(
   fullHistory: ChatHistoryItem[],
-  compactionIndex: number | null,
+  _compactionIndex: number | null,
 ): ChatHistoryItem[] {
-  if (compactionIndex === null || compactionIndex >= fullHistory.length) {
-    return fullHistory;
-  }
-
-  // Include system message (if at index 0) and everything from compaction index forward
-  const systemMessage =
-    fullHistory[0]?.message?.role === "system" ? fullHistory[0] : null;
-  const messagesFromCompaction = fullHistory.slice(compactionIndex);
-
-  return systemMessage && compactionIndex > 0
-    ? [systemMessage, ...messagesFromCompaction]
-    : messagesFromCompaction;
+  return fullHistory;
 }
 
 /**
