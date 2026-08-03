@@ -199,6 +199,86 @@ describe("calculateRequestCost", () => {
       description: "Provider name case insensitive",
     },
 
+    // Anthropic Claude Opus 5
+    {
+      provider: "anthropic",
+      model: "claude-opus-5",
+      promptTokens: 1000,
+      completionTokens: 500,
+      expectedCost: 0.0175,
+      description: "Claude Opus 5 basic usage",
+    },
+    {
+      provider: "anthropic",
+      model: "claude-opus-5",
+      promptTokens: 1000,
+      completionTokens: 500,
+      cachedTokens: 2000,
+      cacheWriteTokens: 300,
+      expectedCost: 0.020375,
+      description: "Claude Opus 5 with cache reads and writes",
+    },
+
+    // Anthropic Claude Opus 4.8
+    {
+      provider: "anthropic",
+      model: "claude-opus-4-8",
+      promptTokens: 1000,
+      completionTokens: 500,
+      expectedCost: 0.0175,
+      description: "Claude Opus 4.8",
+    },
+
+    // Anthropic Claude Opus 4.7
+    {
+      provider: "anthropic",
+      model: "claude-opus-4-7",
+      promptTokens: 1000,
+      completionTokens: 500,
+      expectedCost: 0.0175,
+      description: "Claude Opus 4.7",
+    },
+
+    // Anthropic Claude Sonnet 5
+    {
+      provider: "anthropic",
+      model: "claude-sonnet-5",
+      promptTokens: 1000,
+      completionTokens: 500,
+      expectedCost: 0.0105,
+      description: "Claude Sonnet 5",
+    },
+
+    // Anthropic Claude Sonnet 4.5
+    {
+      provider: "anthropic",
+      model: "claude-sonnet-4-5",
+      promptTokens: 1000,
+      completionTokens: 500,
+      expectedCost: 0.0105,
+      description: "Claude Sonnet 4.5",
+    },
+
+    // Anthropic Claude Haiku 4.5
+    {
+      provider: "anthropic",
+      model: "claude-haiku-4-5",
+      promptTokens: 1000,
+      completionTokens: 500,
+      expectedCost: 0.0035,
+      description: "Claude Haiku 4.5",
+    },
+
+    // Anthropic Claude Fable 5
+    {
+      provider: "anthropic",
+      model: "claude-fable-5",
+      promptTokens: 1000,
+      completionTokens: 500,
+      expectedCost: 0.035,
+      description: "Claude Fable 5",
+    },
+
     // Unknown models/providers
     {
       provider: "anthropic",
