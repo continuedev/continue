@@ -229,8 +229,13 @@ describe("compaction", () => {
       expect(getHistoryForLLM(history, -1)).toEqual(history);
       expect(getHistoryForLLM([], 0)).toEqual([]);
       expect(
-        getHistoryForLLM(convertToUnifiedHistory([{ role: "system", content: "System" }]), 0),
-      ).toEqual(convertToUnifiedHistory([{ role: "system", content: "System" }]));
+        getHistoryForLLM(
+          convertToUnifiedHistory([{ role: "system", content: "System" }]),
+          0,
+        ),
+      ).toEqual(
+        convertToUnifiedHistory([{ role: "system", content: "System" }]),
+      );
     });
   });
 
@@ -246,9 +251,9 @@ describe("compaction", () => {
       expect(result.compactedHistory[1]).toEqual(history[1]);
 
       // compactionIndex points at the new summary
-      expect(result.compactedHistory[result.compactionIndex].conversationSummary).toBe(
-        mockContent,
-      );
+      expect(
+        result.compactedHistory[result.compactionIndex].conversationSummary,
+      ).toBe(mockContent);
       // The summary is spliced in the middle: not first, not last
       expect(result.compactionIndex).toBeGreaterThan(0);
       expect(result.compactionIndex).toBeLessThan(
@@ -288,9 +293,9 @@ describe("compaction", () => {
 
       // First user turn pinned verbatim
       expect(result.compactedHistory[0]).toEqual(history[0]);
-      expect(result.compactedHistory[result.compactionIndex].conversationSummary).toBe(
-        mockContent,
-      );
+      expect(
+        result.compactedHistory[result.compactionIndex].conversationSummary,
+      ).toBe(mockContent);
       expect(result.compactionIndex).toBe(1);
     });
 
@@ -397,7 +402,9 @@ describe("compaction", () => {
       );
 
       expect(result.compactionContent).toBe("");
-      expect(result.compactedHistory[result.compactionIndex].message.content).toBe("");
+      expect(
+        result.compactedHistory[result.compactionIndex].message.content,
+      ).toBe("");
     });
   });
 
@@ -411,8 +418,7 @@ describe("compaction", () => {
         mockLlmApi,
       );
 
-      const compactionMessage =
-        result.compactedHistory[result.compactionIndex];
+      const compactionMessage = result.compactedHistory[result.compactionIndex];
       expect(compactionMessage.message.role).toBe("assistant");
       expect(compactionMessage.conversationSummary).toBeDefined();
     });

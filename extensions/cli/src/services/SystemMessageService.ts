@@ -58,7 +58,12 @@ export class SystemMessageService extends BaseService<SystemMessageServiceState>
   public async getSystemMessage(currentMode: PermissionMode): Promise<string> {
     const { additionalRules, format, headless } = this.currentState;
 
-    const cacheKey = JSON.stringify([currentMode, additionalRules, format, headless]);
+    const cacheKey = JSON.stringify([
+      currentMode,
+      additionalRules,
+      format,
+      headless,
+    ]);
     const cached = this.systemMessageCache.get(cacheKey);
     if (cached !== undefined) {
       return cached;
