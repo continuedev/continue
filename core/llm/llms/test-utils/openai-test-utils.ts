@@ -132,6 +132,8 @@ async function runLlmTest(testCase: LlmTestCase) {
 export interface OpenAISubclassConfig {
   providerName: string;
   defaultApiBase?: string;
+  defaultModel?: string;
+  skipEmbeddings?: boolean;
   modelConversions?: { [key: string]: string };
   customOptions?: any;
   modelConversionContent?: string;
@@ -175,6 +177,12 @@ export const createOpenAISubclassTests = (
         expect(ProviderClass.defaultOptions?.apiBase).toBe(
           config.defaultApiBase,
         );
+      });
+    }
+
+    if (config.defaultModel) {
+      test("should have correct default model", () => {
+        expect(ProviderClass.defaultOptions?.model).toBe(config.defaultModel);
       });
     }
 
@@ -332,17 +340,12 @@ export const createOpenAISubclassTests = (
       });
     });
 
-    test("should handle embeddings", async () => {
+    test.skipIf(config.skipEmbeddings)("should handle embeddings", async () => {
       const provider = new ProviderClass({
         apiKey: "test-api-key",
         model: "text-embedding-ada-002",
         apiBase: config.defaultApiBase || "https://api.openai.com/v1/",
       });
-
-      // Skip test if provider doesn't support embeddings (e.g., ncompass with undefined endpoint)
-      if (config.providerName === "ncompass" && !config.customEmbeddingsUrl) {
-        return;
-      }
 
       await runLlmTest({
         llm: provider,

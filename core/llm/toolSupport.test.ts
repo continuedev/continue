@@ -322,6 +322,19 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("saladcloud", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["saladcloud"];
+
+    it("should support tools for Qwen3.6 35B-A3B", () => {
+      expect(supportsFn("qwen3.6-35b-a3b")).toBe(true);
+      expect(supportsFn("QWEN3.6-35B-A3B")).toBe(true);
+    });
+
+    it("should reject unlisted models", () => {
+      expect(supportsFn("another-model")).toBe(false);
+    });
+  });
+
   describe("openrouter", () => {
     const supportsFn = PROVIDER_TOOL_SUPPORT["openrouter"];
 

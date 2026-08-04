@@ -1,0 +1,50 @@
+---
+title: "Salad AI Gateway"
+description: "Configure Continue to use Qwen3.6 35B-A3B through Salad's OpenAI-compatible AI Gateway"
+---
+
+[Salad AI Gateway](https://salad.com/ai-gateway) provides an OpenAI-compatible endpoint for `qwen3.6-35b-a3b`, a multimodal model recommended for agentic tasks, complex reasoning, code generation, and instruction following.
+
+<Info>
+  Get your API key from the [SaladCloud portal](https://portal.salad.com/). The
+  model costs [$0.09 per million input tokens and $0.60 per million output
+  tokens](https://docs.salad.com/ai-gateway/reference/pricing).
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Qwen3.6 35B-A3B
+      provider: saladcloud
+      model: qwen3.6-35b-a3b
+      apiKey: ${{ secrets.SALAD_CLOUD_API_KEY }}
+      roles:
+        - chat
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Qwen3.6 35B-A3B",
+        "provider": "saladcloud",
+        "model": "qwen3.6-35b-a3b",
+        "apiKey": "<YOUR_SALAD_CLOUD_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+The provider uses `https://ai.salad.cloud/v1/` by default. The model has a 262,144-token context window and supports text and image input, streaming, tool calling, structured output, and reasoning.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/SaladCloud.ts)

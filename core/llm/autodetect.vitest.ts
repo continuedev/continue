@@ -1,5 +1,11 @@
 import { describe, expect, it, test } from "vitest";
-import { autodetectTemplateType, modelSupportsNextEdit } from "./autodetect";
+import {
+  autodetectTemplateType,
+  llmCanGenerateInParallel,
+  modelSupportsImages,
+  modelSupportsNextEdit,
+  modelSupportsReasoning,
+} from "./autodetect";
 
 test("autodetectTemplateType returns 'codellama-70b' for CodeLlama 70B models", () => {
   expect(autodetectTemplateType("codellama-70b")).toBe("codellama-70b");
@@ -200,6 +206,31 @@ test("autodetectTemplateType handles models with mixed keywords", () => {
   expect(autodetectTemplateType("llama3-chat")).toBe("llama3"); // llama3 comes before general patterns
   expect(autodetectTemplateType("gpt-llama")).toBe(undefined); // gpt comes first, returns undefined
   expect(autodetectTemplateType("claude-llama")).toBe("llama2"); // llama comes first, returns llama2
+});
+
+describe("SaladCloud model capabilities", () => {
+  it("detects image and reasoning support for Qwen3.6 35B-A3B", () => {
+    expect(
+      modelSupportsImages(
+        "saladcloud",
+        "qwen3.6-35b-a3b",
+        undefined,
+        undefined,
+      ),
+    ).toBe(true);
+    expect(
+      modelSupportsReasoning({
+        provider: "saladcloud",
+        model: "qwen3.6-35b-a3b",
+      } as any),
+    ).toBe(true);
+  });
+
+  it("allows parallel generation", () => {
+    expect(llmCanGenerateInParallel("saladcloud", "qwen3.6-35b-a3b")).toBe(
+      true,
+    );
+  });
 });
 
 describe("modelSupportsNextEdit", () => {
