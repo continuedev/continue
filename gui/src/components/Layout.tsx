@@ -201,7 +201,7 @@ const Layout = () => {
           <OSRContextMenu />
           <div
             style={{
-              scrollbarGutter: "stable both-edges",
+              scrollbarGutter: "stable",
               minHeight: "100%",
               display: "grid",
               gridTemplateRows: "1fr auto",
