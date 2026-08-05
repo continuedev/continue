@@ -47,7 +47,10 @@ export function extractNestedJsonMessage(raw: string): string | undefined {
     }
   }
 
-  return message?.trim();
+  // A blank extracted message is worse than the original text — report
+  // "nothing found" so callers keep the raw envelope.
+  const trimmed = message?.trim();
+  return trimmed === undefined || trimmed === "" ? undefined : trimmed;
 }
 
 /**
@@ -59,12 +62,15 @@ export function formatError(error: any): string {
   }
 
   if (typeof error === "string") {
-    return error;
+    return extractNestedJsonMessage(error) ?? error;
   }
 
   if (error && typeof error === "object") {
     // Try to extract common error properties
     if (error.message) {
+      if (typeof error.message === "string") {
+        return extractNestedJsonMessage(error.message) ?? error.message;
+      }
       return error.message;
     }
     if (error.error) {

@@ -201,6 +201,25 @@ describe("formatError nested Gemini-style JSON messages", () => {
   it("leaves plain non-JSON messages unchanged", () => {
     expect(formatError(new Error("socket hang up"))).toBe("socket hang up");
   });
+
+  it("falls back to the raw message when the nested message is empty", () => {
+    // A blank extracted message is worse than the original envelope — the
+    // caller must keep the raw text rather than render an empty error.
+    const raw = JSON.stringify({ error: { message: "" } });
+    expect(formatError(new Error(raw))).toBe(raw);
+  });
+
+  it("extracts nested messages from raw string errors too", () => {
+    expect(formatError(quotaErrorMessageVector())).toBe(
+      "You exceeded your current quota, please check your plan and billing details. Please retry in 45.191226092s.",
+    );
+  });
+
+  it("extracts nested messages from plain-object message properties", () => {
+    expect(formatError({ message: quotaErrorMessageVector() })).toBe(
+      "You exceeded your current quota, please check your plan and billing details. Please retry in 45.191226092s.",
+    );
+  });
 });
 
 describe("extractNestedJsonMessage (direct vectors)", () => {
@@ -238,6 +257,36 @@ describe("extractNestedJsonMessage (direct vectors)", () => {
 
   it("returns undefined for plain non-JSON text", () => {
     expect(extractNestedJsonMessage("socket hang up")).toBeUndefined();
+  });
+
+  it("returns undefined for an empty or whitespace-only nested message", () => {
+    expect(
+      extractNestedJsonMessage(JSON.stringify({ error: { message: "" } })),
+    ).toBeUndefined();
+    expect(
+      extractNestedJsonMessage(JSON.stringify({ error: { message: "   " } })),
+    ).toBeUndefined();
+  });
+
+  /** nest(0) = "CORE"; nest(k) wraps nest(k-1) in one more JSON envelope. */
+  function nestedEnvelope(levels: number): string {
+    let raw = "CORE";
+    for (let i = 0; i < levels; i++) {
+      raw = JSON.stringify({ error: { message: raw } });
+    }
+    return raw;
+  }
+
+  it("fully unwraps envelopes nested within the depth cap", () => {
+    expect(extractNestedJsonMessage(nestedEnvelope(5))).toBe("CORE");
+  });
+
+  it("stops unwrapping at the depth cap on pathological nesting", () => {
+    // MAX_DEPTH = 8: a 10-level envelope stops with the level-2 envelope
+    // still intact — bounded work, never an unbounded parse chain.
+    expect(extractNestedJsonMessage(nestedEnvelope(10))).toBe(
+      nestedEnvelope(2),
+    );
   });
 });
 
