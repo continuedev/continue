@@ -1,0 +1,87 @@
+---
+title: "QVAC"
+description: "Configure QVAC's local-first, OpenAI-compatible server with Continue for chat, edit, and agent workflows that run entirely on your machine"
+---
+
+<Info>
+  Get started with [QVAC](https://qvac.tether.io) - an open-source runtime for local-first, peer-to-peer AI
+</Info>
+
+## Overview
+
+QVAC runs models locally and exposes an OpenAI-compatible HTTP server, so you can point Continue at it using the built-in `openai` provider. Everything stays on your machine.
+
+## Installation
+
+Install the CLI and start the OpenAI-compatible server:
+
+```shell
+npm i -g @qvac/cli
+qvac serve openai
+```
+
+The server listens on port `11434` by default. Use `--port` to change it.
+
+Model aliases are defined in a `qvac.config.json` file. The `model` you reference from Continue must match a serve alias:
+
+```json title="qvac.config.json"
+{
+  "serve": {
+    "models": {
+      "gpt-oss-20b": {
+        "model": "GPT_OSS_20B_INST_Q4_K_M",
+        "preload": true,
+        "config": {
+          "ctx_size": 32768
+        }
+      }
+    }
+  }
+}
+```
+
+## Configuration
+
+Use the `openai` provider and point `apiBase` at the QVAC server. The `model` is the alias from `qvac.config.json`. QVAC does not validate the API key, but the field is typically required, so any non-empty string works.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: QVAC gpt-oss-20b
+      provider: openai
+      model: gpt-oss-20b
+      apiKey: qvac
+      apiBase: http://127.0.0.1:11434/v1
+      roles:
+        - chat
+        - edit
+        - apply
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "QVAC gpt-oss-20b",
+        "provider": "openai",
+        "model": "gpt-oss-20b",
+        "apiKey": "qvac",
+        "apiBase": "http://127.0.0.1:11434/v1"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Recommendations
+
+- **Set `ctx_size` explicitly.** QVAC's LLM context size defaults to `1024` tokens, which is too small for most chat and agent prompts. Set it in `qvac.config.json` (e.g. `32768`) as shown above.
+- **Disable reasoning for reasoning-tuned models.** For models such as Qwen3.5, set `reasoning_budget: 0` in the model `config` to keep responses suited to Continue's chat and edit flows.
+- **Pick a capable model for tools and autocomplete.** Local tool-calling and autocomplete quality is bounded by the model you run. A capable agent-tuned model such as `gpt-oss-20b` is a good default for chat and agent use.
