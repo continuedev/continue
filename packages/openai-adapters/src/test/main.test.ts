@@ -254,6 +254,28 @@ describe("Configuration", () => {
     );
   });
 
+  it("should configure SaladCloud with the default or a custom API base", () => {
+    const saladCloud = constructLlmApi({
+      provider: "saladcloud",
+      apiKey: "salad-key",
+    });
+
+    expect((saladCloud as OpenAIApi).openai.baseURL).toBe(
+      "https://ai.salad.cloud/v1/",
+    );
+    expect((saladCloud as OpenAIApi).openai.apiKey).toBe("salad-key");
+
+    const customSaladCloud = constructLlmApi({
+      provider: "saladcloud",
+      apiKey: "salad-key",
+      apiBase: "https://example.com/v1/",
+    });
+
+    expect((customSaladCloud as OpenAIApi).openai.baseURL).toBe(
+      "https://example.com/v1/",
+    );
+  });
+
   it("should configure Azure OpenAI client with root URL and trailing slash", () => {
     const azure = constructLlmApi({
       provider: "azure",

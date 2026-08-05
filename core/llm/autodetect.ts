@@ -74,6 +74,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "nous",
   "zAI",
   "tensorix",
+  "saladcloud",
   // TODO add these, change to inverted logic so only the ones that need templating are hardcoded
   // Asksage.ts
   // Azure.ts
@@ -133,6 +134,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "watsonx",
   "zAI",
   "tensorix",
+  "saladcloud",
 ];
 
 const MODEL_SUPPORTS_IMAGES: RegExp[] = [
@@ -153,6 +155,7 @@ const MODEL_SUPPORTS_IMAGES: RegExp[] = [
   /\bgemma-?[34](?!n)/, // gemma3/gemma4 support vision, but gemma3n doesn't!
   /\b(pali|med)gemma/,
   /qwen(.*)vl/,
+  /qwen3\.6-35b-a3b/,
   /mistral-small/,
   /mistral-medium/,
 ];
@@ -211,6 +214,9 @@ function modelSupportsReasoning(
   if (model.model.includes("command-a-reasoning")) {
     return true;
   }
+  if (model.model.toLowerCase() === "qwen3.6-35b-a3b") {
+    return true;
+  }
   if (model.model.includes("deepseek-r")) {
     return true;
   }
@@ -253,6 +259,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "scaleway",
   "minimax",
   "tensorix",
+  "saladcloud",
 ];
 
 function llmCanGenerateInParallel(provider: string, model: string): boolean {

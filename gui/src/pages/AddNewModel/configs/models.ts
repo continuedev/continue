@@ -3327,4 +3327,26 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "inception.png",
     isOpenSource: false,
   },
+  saladCloudQwen36_35bA3B: {
+    title: "Qwen3.6 35B-A3B",
+    description:
+      "Salad AI Gateway's recommended Qwen model for agentic tasks, complex reasoning, code generation, and instruction following.",
+    refUrl:
+      "https://docs.salad.com/ai-gateway/reference/models#qwen3-6-35b-a3b",
+    params: {
+      title: "Qwen3.6 35B-A3B",
+      model: "qwen3.6-35b-a3b",
+      contextLength: 262_144,
+      capabilities: {
+        tools: true,
+        uploadImage: true,
+      },
+      completionOptions: {
+        reasoning: true,
+      },
+    },
+    providerOptions: ["saladcloud"],
+    icon: "saladcloud.svg",
+    isOpenSource: true,
+  },
 };

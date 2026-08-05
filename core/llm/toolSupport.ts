@@ -462,6 +462,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    saladcloud: (model) => model.toLowerCase() === "qwen3.6-35b-a3b",
     ovhcloud: (model) => {
       const lower = model.toLowerCase();
 

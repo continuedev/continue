@@ -15,6 +15,7 @@ import Cerebras from "./Cerebras.js";
 import DeepInfra from "./DeepInfra.js";
 import Nvidia from "./Nvidia.js";
 import SambaNova from "./SambaNova.js";
+import SaladCloud from "./SaladCloud.js";
 import Scaleway from "./Scaleway.js";
 import Venice from "./Venice.js";
 import Moonshot from "./Moonshot.js";
@@ -353,6 +354,13 @@ createOpenAISubclassTests(Nvidia, {
 createOpenAISubclassTests(SambaNova, {
   providerName: "sambanova",
   defaultApiBase: "https://api.sambanova.ai/v1/",
+});
+
+createOpenAISubclassTests(SaladCloud, {
+  providerName: "saladcloud",
+  defaultApiBase: "https://ai.salad.cloud/v1/",
+  defaultModel: "qwen3.6-35b-a3b",
+  skipEmbeddings: true,
 });
 
 createOpenAISubclassTests(Scaleway, {

@@ -1270,6 +1270,29 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  saladcloud: {
+    title: "Salad AI Gateway",
+    provider: "saladcloud",
+    icon: "saladcloud.svg",
+    description:
+      "Use Qwen3.6 35B-A3B through Salad's OpenAI-compatible AI Gateway.",
+    longDescription:
+      "Salad AI Gateway provides pay-per-token access to Qwen3.6 35B-A3B for agentic tasks, multimodal prompts, reasoning, and code generation.",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Salad API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [models.saladCloudQwen36_35bA3B],
+    refPage: "saladcloud",
+    apiKeyUrl: "https://portal.salad.com/",
+  },
   venice: {
     title: "Venice",
     provider: "venice",
