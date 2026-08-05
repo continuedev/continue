@@ -3,7 +3,6 @@ import { Readable } from "node:stream";
 
 import { customFetch } from "../util.js";
 import {
-  nativeFetch,
   nativeHeaders,
   nativeRequest,
   nativeResponse,
