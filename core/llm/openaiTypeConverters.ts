@@ -155,14 +155,25 @@ export function toChatMessage(
 
     // Add tool calls if present
     if (message.toolCalls) {
-      msg.tool_calls = message.toolCalls.map((toolCall) => ({
-        id: toolCall.id!,
-        type: toolCall.type!,
-        function: {
-          name: toolCall.function?.name!,
-          arguments: toolCall.function?.arguments || "{}",
-        },
-      }));
+      msg.tool_calls = message.toolCalls.map((toolCall) => {
+        // Sanitize arguments — ensure valid JSON to prevent vLLM 400 errors
+        // when malformed tool arguments from previous turns are sent back in history
+        let args = toolCall.function?.arguments || "{}";
+        try {
+          JSON.parse(args);
+        } catch {
+          // If arguments are not valid JSON, wrap them to prevent server rejection
+          args = JSON.stringify({ _raw: args });
+        }
+        return {
+          id: toolCall.id!,
+          type: toolCall.type!,
+          function: {
+            name: toolCall.function?.name!,
+            arguments: args,
+          },
+        };
+      });
     }
 
     // Preserving reasoning blocks
