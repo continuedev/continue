@@ -48,7 +48,7 @@ async function bundleForBinary(target) {
   fs.mkdirSync(targetDir, { recursive: true });
   console.log(`[info] Building ${target}...`);
   execCmdSync(
-    `npx pkg --no-bytecode --public-packages "*" --public --compress GZip pkgJson/${target} --out-path ${targetDir}`,
+    `node node_modules/@yao-pkg/pkg/lib-es5/bin.js --no-bytecode --public-packages "*" --public --compress GZip pkgJson/${target} --out-path ${targetDir}`,
   );
 
   // copy @lancedb to bin folders

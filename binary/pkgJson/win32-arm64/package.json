@@ -21,7 +21,7 @@
       "../../out/package.json"
     ],
     "targets": [
-      "node18-win-arm64"
+      "node20-win-arm64"
     ],
     "outputPath": "bin"
   },
