@@ -294,10 +294,10 @@ export function StepContainerPreToolbar({
   return (
     <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor !my-2 flex min-w-0 flex-col outline outline-1">
       <div
-        className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex items-center justify-between gap-3 px-1.5 py-1 ${isExpanded ? "rounded-t-default border-command-border border-b" : "rounded-default"}`}
+        className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-1.5 py-1 ${isExpanded ? "rounded-t-default border-command-border border-b" : "rounded-default"}`}
         style={{ fontSize: `${getFontSize() - 2}px` }}
       >
-        <div className="flex max-w-[50%] flex-row items-center">
+        <div className="flex min-w-0 max-w-[50%] flex-row items-center">
           {toolCallStatusIcon}
           <ChevronDownIcon
             data-testid="toggle-codeblock"
@@ -319,7 +319,7 @@ export function StepContainerPreToolbar({
           )}
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex shrink-0 items-center gap-2.5">
           {!isGeneratingCodeBlock && (
             <div className="xs:flex hidden items-center gap-2.5">
               <InsertButton onInsert={onClickInsertAtCursor} />
