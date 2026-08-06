@@ -137,6 +137,7 @@ export const streamNormalInput = createAsyncThunk<
       state.session.mode,
       selectedChatModel,
       activeTools,
+      window.workspacePaths?.[0],
     );
 
     const systemMessage = systemToolsFramework
