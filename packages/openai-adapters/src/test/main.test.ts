@@ -235,6 +235,43 @@ describe("Configuration", () => {
     );
   });
 
+  it("should suppress OpenAI org/project headers that break under Turkish locales", () => {
+    // Demonstrates the locale bug: mixed-case OpenAI-* headers lowercase to
+    // invalid HTTP tokens under tr-TR (dotless ı).
+    expect("OpenAI-Organization".toLocaleLowerCase("tr-TR")).toBe(
+      "openaı-organization",
+    );
+    expect(() => {
+      new Headers({ "openaı-organization": "org" });
+    }).toThrow();
+
+    const prevOrg = process.env.OPENAI_ORG_ID;
+    const prevProject = process.env.OPENAI_PROJECT_ID;
+    process.env.OPENAI_ORG_ID = "org_should_not_leak";
+    process.env.OPENAI_PROJECT_ID = "proj_should_not_leak";
+    try {
+      const openai = constructLlmApi({
+        provider: "openai",
+        apiKey: "sk-xxx",
+        apiBase: "https://openrouter.ai/api/v1/",
+      }) as OpenAIApi;
+
+      // Client must not pick up org/project from the environment — that is what
+      // injects the PascalCase headers the SDK then lowercases unsafely.
+      expect(openai.openai.organization).toBeNull();
+      expect(openai.openai.project).toBeNull();
+      expect((openai.openai as any)._options.defaultHeaders).toMatchObject({
+        "openai-organization": null,
+        "openai-project": null,
+      });
+    } finally {
+      if (prevOrg === undefined) delete process.env.OPENAI_ORG_ID;
+      else process.env.OPENAI_ORG_ID = prevOrg;
+      if (prevProject === undefined) delete process.env.OPENAI_PROJECT_ID;
+      else process.env.OPENAI_PROJECT_ID = prevProject;
+    }
+  });
+
   it("should configure Inception OpenAI client with correct apiBase and apiKey", () => {
     const inception = constructLlmApi({
       provider: "inception",
