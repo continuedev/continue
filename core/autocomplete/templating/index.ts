@@ -9,6 +9,7 @@ import { DEFAULT_MAX_TOKENS } from "../../llm/constants.js";
 import {
   countTokens,
   getTokenCountingBufferSafety,
+  MIN_RESPONSE_TOKENS,
   pruneLinesFromBottom,
   pruneLinesFromTop,
 } from "../../llm/countTokens";
@@ -204,7 +205,12 @@ function pruneLength(llm: ILLM, prompt: string): number {
   const contextLength = llm.contextLength;
   const reservedTokens = llm.completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS;
   const safetyBuffer = getTokenCountingBufferSafety(contextLength);
-  const maxAllowedPromptTokens = contextLength - reservedTokens - safetyBuffer;
+  // Reserve at most MIN_RESPONSE_TOKENS for the completion, same as compileChatMessages.
+  // Otherwise a large maxTokens (the default is 4096) can consume the entire context
+  // window on small-context models, leaving no room for the prompt and silently
+  // pruning it to nothing on every request.
+  const minOutputTokens = Math.min(MIN_RESPONSE_TOKENS, reservedTokens);
+  const maxAllowedPromptTokens = contextLength - minOutputTokens - safetyBuffer;
   const promptTokenCount = countTokens(prompt, llm.model);
   return promptTokenCount - maxAllowedPromptTokens;
 }
