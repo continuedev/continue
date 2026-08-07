@@ -26,12 +26,14 @@ vi.mock("../../../llm/countTokens", () => {
   const pruneLinesFromBottom = (str: string, allowed: number) =>
     str.slice(0, allowed);
   const getTokenCountingBufferSafety = () => 0;
+  const MIN_RESPONSE_TOKENS = 1000;
 
   return {
     countTokens,
     pruneLinesFromTop,
     pruneLinesFromBottom,
     getTokenCountingBufferSafety,
+    MIN_RESPONSE_TOKENS,
   };
 });
 
@@ -253,6 +255,31 @@ describe("renderPromptWithTokenLimit parity & pruning", () => {
     });
 
     expect(compiledPrefix.length).toBeLessThan(120);
+  });
+
+  it("does not wipe a small prompt when default maxTokens exceeds a small context length", () => {
+    // Regression test: a model whose contextLength (e.g. Ollama's num_ctx) is smaller
+    // than the default maxTokens reservation (4096) used to compute a negative prompt
+    // budget, which caused every prefix/suffix to be pruned to nothing regardless of
+    // how small the actual prompt was.
+    const shortPrefix = "A".repeat(50);
+
+    const helper = makeHelper({ prunedPrefix: shortPrefix });
+
+    const llmStub = {
+      contextLength: 2048,
+      completionOptions: {},
+      model: "test-model",
+    } as any;
+
+    const { prefix: compiledPrefix } = renderPromptWithTokenLimit({
+      snippetPayload: emptySnippetPayload,
+      workspaceDirs: ["file:///workspace"],
+      helper,
+      llm: llmStub,
+    });
+
+    expect(compiledPrefix.includes(shortPrefix)).toBe(true);
   });
 });
 
