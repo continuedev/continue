@@ -46,6 +46,15 @@ export class OpenAIApi implements BaseLlmApi {
       baseURL: this.apiBase,
       fetch: customFetch(config.requestOptions),
       timeout: config?.requestOptions?.timeout || undefined,
+      // Avoid injecting OpenAI-Organization / OpenAI-Project from env. Under
+      // Turkish locales those PascalCase names lowercase to invalid tokens
+      // (openaı-organization) and crash fetch. See #12568.
+      organization: null,
+      project: null,
+      defaultHeaders: {
+        "openai-organization": null,
+        "openai-project": null,
+      },
     });
   }
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {

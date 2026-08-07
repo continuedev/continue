@@ -23,6 +23,13 @@ export class AzureApi extends OpenAIApi {
       baseURL,
       fetch: customFetch(azureConfig.requestOptions),
       defaultQuery,
+      // Same Turkish-locale header guard as OpenAIApi — see #12568.
+      organization: null,
+      project: null,
+      defaultHeaders: {
+        "openai-organization": null,
+        "openai-project": null,
+      },
     });
   }
 
