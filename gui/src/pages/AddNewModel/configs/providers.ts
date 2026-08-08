@@ -224,6 +224,47 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     ],
   },
 
+  trustedrouter: {
+    title: "TrustedRouter",
+    provider: "trustedrouter",
+    description:
+      "TrustedRouter is an attested OpenAI-compatible router with automatic model selection, ZDR routes, and E2E encrypted routes.",
+    longDescription: `To get started with TrustedRouter, sign in at [trustedrouter.com](https://trustedrouter.com/) and create an API key in the [console](https://trustedrouter.com/console/api-keys).`,
+    icon: "trustedrouter.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    apiKeyUrl: "https://trustedrouter.com/console/api-keys",
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your TrustedRouter API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      {
+        title: "Auto",
+        description: "Routes each request across healthy supported providers",
+        params: { model: "trustedrouter/auto" },
+        isOpenSource: false,
+      },
+      {
+        title: "ZDR",
+        description: "Prefers zero-data-retention routes",
+        params: { model: "trustedrouter/zdr" },
+        isOpenSource: false,
+      },
+      {
+        title: "E2E",
+        description: "Uses end-to-end encrypted routes where available",
+        params: { model: "trustedrouter/e2e" },
+        isOpenSource: false,
+      },
+    ],
+  },
+
   moonshot: {
     title: "Moonshot",
     provider: "moonshot",

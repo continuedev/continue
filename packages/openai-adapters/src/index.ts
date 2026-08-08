@@ -180,6 +180,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new OpenRouterApi(config);
     case "clawrouter":
       return new ClawRouterApi(config);
+    case "trustedrouter":
+      return openAICompatible("https://api.trustedrouter.com/v1/", config);
     case "llama.cpp":
     case "llamafile":
       return openAICompatible("http://localhost:8000/", config);
