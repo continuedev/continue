@@ -488,8 +488,12 @@ export type FileSymbolMap = Record<string, SymbolWithRange[]>;
 export interface PromptLog {
   modelTitle: string;
   modelProvider: string;
+  /** The actual model ID used for the request */
+  model?: string;
   prompt: string;
   completion: string;
+  /** Token usage reported by the provider for this request, if available */
+  usage?: Usage;
 }
 
 export type MessageModes = "chat" | "agent" | "plan" | "background";
