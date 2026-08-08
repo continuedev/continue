@@ -1330,8 +1330,10 @@ export abstract class BaseLLM implements ILLM {
     return {
       modelTitle: this.title ?? completionOptions.model,
       modelProvider: this.underlyingProviderName,
+      model: completionOptions.model,
       prompt,
       completion: completion.join(""),
+      usage,
     };
   }
 

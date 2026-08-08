@@ -10,6 +10,7 @@ import StyledMarkdownPreview from "../StyledMarkdownPreview";
 import ConversationSummary from "./ConversationSummary";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
+import UsageCost from "./UsageCost";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -131,6 +132,8 @@ export default function StepContainer(props: StepContainerProps) {
           </div>
         </div>
       )}
+
+      <UsageCost item={props.item} />
 
       {/* ConversationSummary is outside the dimmed container so it's always at full opacity */}
       <ConversationSummary item={props.item} index={props.index} />
