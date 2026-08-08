@@ -25,6 +25,11 @@ type ParsedToken = string | ShellOperator | GlobPattern | CommentToken;
  * This function uses shell-quote for proper tokenization, then implements
  * defense-in-depth security validation for terminal commands.
  *
+ * When the user selects Automatic (`allowedWithoutPermission`), only critical
+ * commands are hard-disabled. Non-critical commands are not demoted back to
+ * Ask First — that previously made Automatic appear broken for
+ * `run_terminal_command` (#13035, #10512).
+ *
  * @param basePolicy The base policy configured for the tool
  * @param command The command string to evaluate
  * @returns The security policy to apply: 'disabled', 'allowedWithPermission', or 'allowedWithoutPermission'
@@ -49,6 +54,27 @@ export function evaluateTerminalCommandSecurity(
     return basePolicy;
   }
 
+  const evaluated = evaluateCommandSecurity(basePolicy, normalizedCommand);
+
+  // Automatic mode: never re-prompt. Only critical commands stay disabled.
+  if (
+    basePolicy === "allowedWithoutPermission" &&
+    evaluated === "allowedWithPermission"
+  ) {
+    return "allowedWithoutPermission";
+  }
+
+  return evaluated;
+}
+
+/**
+ * Internal evaluation that may tighten Automatic to Ask First for non-safe
+ * commands. Callers that honor Automatic apply that preference after this.
+ */
+function evaluateCommandSecurity(
+  basePolicy: ToolPolicy,
+  normalizedCommand: string,
+): ToolPolicy {
   try {
     // Split on line breaks to handle multi-line commands
     // Newlines are command separators in shells, similar to semicolons

@@ -2021,6 +2021,125 @@ describe("streamResponseThunk - tool calls", () => {
       );
     });
 
+    it("should auto-execute run_terminal_command when Automatic and policy allows", async () => {
+      const initialState = getRootStateWithClaude();
+      initialState.session.history = [
+        {
+          message: { id: "1", role: "user", content: "Run npm test" },
+          contextItems: [],
+        },
+      ];
+      initialState.ui.toolSettings = {
+        [terminalName]: "allowedWithoutPermission",
+      };
+      initialState.config.config.tools = [terminalTool];
+      initialState.session.id = "session-terminal-auto";
+      const mockStore = createMockStore(initialState);
+      const mockIdeMessenger = mockStore.mockIdeMessenger;
+      const requestSpy = vi.spyOn(mockIdeMessenger, "request");
+
+      // Simulate core evaluatePolicy after #13035 fix: Automatic is honored
+      // for non-critical commands (including previously "high risk" ones).
+      mockIdeMessenger.responseHandlers["tools/evaluatePolicy"] = async (
+        data,
+      ) => {
+        return { policy: data.basePolicy };
+      };
+      mockIdeMessenger.responses["llm/compileChat"] = {
+        compiledChatMessages: [{ role: "user", content: "Run npm test" }],
+        didPrune: false,
+        contextPercentage: 0.5,
+      };
+      mockIdeMessenger.responses["tools/call"] = {
+        contextItems: [
+          {
+            name: "Terminal",
+            description: "Command output",
+            content: "tests passed",
+            icon: "terminal",
+            hidden: false,
+          },
+        ],
+        errorMessage: undefined,
+      };
+
+      async function* mockStreamWithNpmTest(): AsyncGenerator<
+        AssistantChatMessage[],
+        PromptLog
+      > {
+        yield [{ role: "assistant", content: "I'll run npm test." }];
+        yield [
+          {
+            role: "assistant",
+            content: "",
+            toolCalls: [
+              {
+                id: "tool-npm-test",
+                type: "function",
+                function: {
+                  name: terminalName,
+                  arguments: JSON.stringify({ command: "npm test" }),
+                },
+              },
+            ],
+          },
+        ];
+        return {
+          prompt: "Run npm test",
+          completion: "I'll run npm test.",
+          modelProvider: "anthropic",
+          modelTitle: "Claude 3.5 Sonnet",
+        };
+      }
+
+      let streamCallCount = 0;
+      mockIdeMessenger.llmStreamChat = vi.fn().mockImplementation(() => {
+        streamCallCount++;
+        if (streamCallCount === 1) {
+          return mockStreamWithNpmTest();
+        }
+        async function* simpleGenerator(): AsyncGenerator<
+          AssistantChatMessage[],
+          PromptLog
+        > {
+          yield [{ role: "assistant", content: "Done." }];
+          return {
+            prompt: "continuing after tool",
+            completion: "Done.",
+            modelProvider: "anthropic",
+            modelTitle: "Claude 3.5 Sonnet",
+          };
+        }
+        return simpleGenerator();
+      });
+
+      await mockStore.dispatch(
+        streamResponseThunk({
+          editorState: mockEditorState,
+          modifiers: mockModifiers,
+        }) as any,
+      );
+
+      expect(requestSpy).toHaveBeenCalledWith(
+        "tools/evaluatePolicy",
+        expect.objectContaining({
+          toolName: terminalName,
+          basePolicy: "allowedWithoutPermission",
+          parsedArgs: { command: "npm test" },
+        }),
+      );
+      expect(requestSpy).toHaveBeenCalledWith(
+        "tools/call",
+        expect.objectContaining({
+          toolCall: expect.objectContaining({
+            function: expect.objectContaining({
+              name: terminalName,
+            }),
+          }),
+        }),
+      );
+    });
+
     it("should respect disabled policy", async () => {
       const initialState = getRootStateWithClaude();
       initialState.session.history = [
