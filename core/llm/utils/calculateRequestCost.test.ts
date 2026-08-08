@@ -56,6 +56,17 @@ describe("calculateRequestCost", () => {
     expect(result!.cost).toBeCloseTo(0.15 + 0.6, 6);
   });
 
+  it("uses models.dev pricing for gpt-3.5-turbo", () => {
+    const result = calculateRequestCost(
+      "openai",
+      "gpt-3.5-turbo",
+      usage(1_000_000, 1_000_000),
+    );
+    expect(result).not.toBeNull();
+    // $0.5/MTok input + $1.5/MTok output (per models.dev, same source as OpenCode)
+    expect(result!.cost).toBeCloseTo(0.5 + 1.5, 6);
+  });
+
   it("calculates input and output costs for a known DeepSeek model", () => {
     const result = calculateRequestCost(
       "deepseek",
