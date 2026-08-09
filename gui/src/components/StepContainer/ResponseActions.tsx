@@ -38,9 +38,7 @@ export default function ResponseActions({
   const hasContextData = contextPercentage !== undefined;
 
   // Format: show 1 decimal place when < 1%, integer otherwise
-  const displayPercent = hasContextData
-    ? contextPercentage * 100
-    : 0;
+  const displayPercent = hasContextData ? contextPercentage * 100 : 0;
   const percentFormatted = hasContextData
     ? displayPercent < 1
       ? displayPercent.toFixed(1)

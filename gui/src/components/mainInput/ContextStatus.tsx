@@ -22,9 +22,7 @@ const ContextStatus = () => {
   const hasContextData = contextPercentage !== undefined;
 
   // Format: show 1 decimal place when < 1%, integer otherwise
-  const displayPercent = hasContextData
-    ? contextPercentage * 100
-    : 0;
+  const displayPercent = hasContextData ? contextPercentage * 100 : 0;
   const percentFormatted = hasContextData
     ? displayPercent < 1
       ? displayPercent.toFixed(1)
@@ -122,7 +120,7 @@ const ContextStatus = () => {
         </div>
       </ToolTip>
       <span
-        className={`text-description-muted hidden select-none text-[10px] leading-none xs:inline ${percent >= 80 ? "text-warning" : percent >= 60 ? "text-description" : "text-description-muted"}`}
+        className={`text-description-muted xs:inline hidden select-none text-[10px] leading-none ${percent >= 80 ? "text-warning" : percent >= 60 ? "text-description" : "text-description-muted"}`}
       >
         {hasContextData ? `${percentFormatted}%` : "—"}
       </span>
