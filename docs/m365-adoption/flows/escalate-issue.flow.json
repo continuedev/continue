@@ -1,0 +1,48 @@
+{
+  "name": "EscalateIssue",
+  "description": "Flujo: Escalar issues inactivos o críticos desde una lista de SharePoint",
+  "trigger": {
+    "type": "When an item is created or modified",
+    "site": "TODO_SITE_ID",
+    "list": "Issues"
+  },
+  "actions": [
+    {
+      "name": "Check_Status_And_Age",
+      "type": "Condition",
+      "parameters": {
+        "expression": "@or(equals(triggerOutputs()?['body/Status'], 'Critical'), greater(length(subtractFromTime(utcNow(), triggerOutputs()?['body/Modified'], 'Hour')), 72))"
+      },
+      "ifTrue": [
+        {
+          "name": "Create_Planner_Task",
+          "type": "Planner.CreateTask",
+          "parameters": {
+            "planId": "TODO_PLAN_ID",
+            "title": "Escalado: @{triggerOutputs()?['body/Title']}",
+            "assignedTo": "TODO_OWNER_ID"
+          }
+        },
+        {
+          "name": "Post_Teams_Alert",
+          "type": "Teams.PostMessage",
+          "parameters": {
+            "teamId": "TODO_TEAM_ID",
+            "channelId": "TODO_CHANNEL_ID",
+            "message": "Issue escalado: @{triggerOutputs()?['body/Title']} - Revisar inmediatamente."
+          }
+        },
+        {
+          "name": "Send_Email_To_Manager",
+          "type": "Office365.SendEmail",
+          "parameters": {
+            "to": "manager@example.com",
+            "subject": "Escalado automatico: @{triggerOutputs()?['body/Title']}",
+            "body": "El issue requiere atención: @{triggerOutputs()?['body/LinkToItem']}"
+          }
+        }
+      ],
+      "ifFalse": []
+    }
+  ]
+}

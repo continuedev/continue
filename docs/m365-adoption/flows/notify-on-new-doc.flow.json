@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "name": "NotifyOnNewDoc",
+  "description": "Flujo: Notificar en Teams y registrar en lista cuando se crea o modifica documento en SharePoint",
+  "trigger": {
+    "type": "When a file is created or modified (properties only)",
+    "site": "TODO_SITE_ID",
+    "library": "Documents"
+  },
+  "actions": [
+    {
+      "name": "Get_file_metadata",
+      "type": "SharePoint.GetFileMetadata",
+      "parameters": {
+        "site": "TODO_SITE_ID",
+        "fileId": "@triggerOutputs()?['body/ID']"
+      }
+    },
+    {
+      "name": "Post_to_Teams_Channel",
+      "type": "Teams.PostMessage",
+      "parameters": {
+        "teamId": "TODO_TEAM_ID",
+        "channelId": "TODO_CHANNEL_ID",
+        "message": "Nuevo documento creado: @{triggerOutputs()?['body/Name']} - @{triggerOutputs()?['body/LinkToItem']}"
+      }
+    },
+    {
+      "name": "Create_item_in_Inventory_List",
+      "type": "SharePoint.CreateItem",
+      "parameters": {
+        "site": "TODO_SITE_ID",
+        "list": "DocumentsInventory",
+        "fields": {
+          "Title": "@{triggerOutputs()?['body/Name']}",
+          "Path": "@{triggerOutputs()?['body/FolderPath']}",
+          "CreatedBy": "@{triggerOutputs()?['body/Author/Email']}"
+        }
+      }
+    }
+  ]
+}

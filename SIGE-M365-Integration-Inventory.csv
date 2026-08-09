@@ -1,0 +1,20 @@
+path,description,suggested_owner,priority
+SIGE-PROJECT-Cloud/docs/04_MICROSOFT_365.md,Policy and architecture doc,data-knowledge-rag,high
+SIGE-PROJECT-Cloud/config/m365-build-agents.json,Defines m365 subagents and deliverables,platform-sre,high
+SIGE-PROJECT-Cloud/config/knowledge-sources.json,Knowledge sources mapping,data-knowledge-rag,high
+SIGE-PROJECT-Cloud/src/sige/main.py,Ingress/orchestrator entrypoint,api-integrations,high
+SIGE-PROJECT-Cloud/src/sige/catalog.py,Indexing and sync logic,data-knowledge-rag,high
+SIGE-PROJECT-Cloud/src/sige/config.py,Runtime config and secrets locations,platform-sre,high
+SIGE-PROJECT-Cloud/src/sige/openai_runtime.py,LLM/runtime and auth,platform-sre,medium
+SIGE-PROJECT-Cloud/src/sige/router.py,HTTP endpoints and webhooks,api-integrations,high
+SIGE-PROJECT-Cloud/src/sige/policy.py,Governance decision points,ai-governance,high
+SIGE-PROJECT-Cloud/scripts/verify.ps1,Integration verification scripts,platform-sre,medium
+SIGE-PROJECT-Cloud/scripts/verify.sh,Integration verification scripts,platform-sre,medium
+SIGE-PROJECT-Cloud/compose.yaml,Docker compose for local stacks,platform-sre,medium
+SIGE-PROJECT-Cloud/pyproject.toml,Python packaging & deps,platform-sre,low
+SIGE-PROJECT-Cloud/evals/run_offline.py,Eval tooling,engineering,low
+sige-packages/llm-info/src/providers/azure.ts,Azure provider hooks for LLMs,platform-sre,medium
+sige-docs/customize/model-providers/top-level/azure.mdx,Docs for Azure provider,platform-sre,low
+SIGE-PROJECT-Cloud/config/m365-build-agents.json,Agent definitions (duplicate check),platform-sre,high
+SIGE-PROJECT-Cloud/README.md,Repo overview,product-portfolio,medium
+SIGE-PROJECT-Cloud/docs/05_RESUMEN_EJECUTIVO_IA.md,Executive summary for IA,product-portfolio,medium
