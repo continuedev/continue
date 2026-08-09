@@ -15,8 +15,22 @@ const ContextStatus = () => {
   const previousHistoryLength = useRef<number | null>(null);
   const previousSelectedChatModel = useRef<string | null>(null);
   const history = useAppSelector((state) => state.session.history);
-  const percent = Math.round((contextPercentage ?? 0) * 100);
   const isPruned = useAppSelector((state) => state.session.isPruned);
+
+  // contextPercentage is undefined until the first message is sent
+  // (it's only computed in compileChatMessages during streamNormalInput)
+  const hasContextData = contextPercentage !== undefined;
+
+  // Format: show 1 decimal place when < 1%, integer otherwise
+  const displayPercent = hasContextData
+    ? contextPercentage * 100
+    : 0;
+  const percentFormatted = hasContextData
+    ? displayPercent < 1
+      ? displayPercent.toFixed(1)
+      : Math.round(displayPercent).toString()
+    : "—";
+  const percent = hasContextData ? Math.round(displayPercent) : 0;
 
   const isDifferentModelAndSameHistory = useMemo(() => {
     if (!selectedChatModel) return false;
@@ -30,7 +44,10 @@ const ContextStatus = () => {
   }, [history.length, selectedChatModel]);
 
   const compactConversation = useCompactConversation();
-  if (!isPruned && percent < 60) {
+
+  // Always show context usage when there's history, regardless of percentage
+  // Previously: if (!isPruned && percent < 60) return null;
+  if (history.length === 0) {
     return null;
   }
 
@@ -39,13 +56,18 @@ const ContextStatus = () => {
     return null;
   }
 
-  const barColorClass = isPruned ? "bg-error" : "bg-description";
+  const barColorClass = isPruned
+    ? "bg-error"
+    : percent >= 80
+      ? "bg-warning"
+      : percent >= 60
+        ? "bg-description"
+        : "bg-description-muted";
 
   return (
-    <div>
+    <div className="flex items-center gap-1">
       <ToolTip
         closeEvents={{
-          // blur: false,
           mouseleave: true,
           click: true,
           mouseup: false,
@@ -54,7 +76,9 @@ const ContextStatus = () => {
         content={
           <div className="flex flex-col gap-0 text-left text-xs">
             <span className="inline-block">
-              {`${percent}% of context filled.`}
+              {hasContextData
+                ? `${percentFormatted}% of context filled.`
+                : `Context usage will be shown after sending a message.`}
             </span>
             {isPruned && (
               <span className="inline-block">
@@ -93,10 +117,15 @@ const ContextStatus = () => {
         <div className="border-command-border relative h-[14px] w-[7px] rounded-[1px] border-[0.5px] border-solid md:h-[10px] md:w-[5px]">
           <div
             className={`transition-height absolute bottom-0 left-0 w-full duration-300 ease-in-out ${barColorClass}`}
-            style={{ height: `${percent}%` }}
+            style={{ height: `${hasContextData ? Math.max(percent, 2) : 0}%` }}
           />
         </div>
       </ToolTip>
+      <span
+        className={`text-description-muted hidden select-none text-[10px] leading-none xs:inline ${percent >= 80 ? "text-warning" : percent >= 60 ? "text-description" : "text-description-muted"}`}
+      >
+        {hasContextData ? `${percentFormatted}%` : "—"}
+      </span>
     </div>
   );
 };
