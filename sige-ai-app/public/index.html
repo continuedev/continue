@@ -4,14 +4,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SIGE - Caja IA</title>
-  <style>body{font-family:Arial,Helvetica,sans-serif;padding:20px}textarea{width:100%;height:160px}button{margin-top:8px;padding:8px 12px}#reply{white-space:pre-wrap;margin-top:12px;background:#f6f6f6;padding:10px;border-radius:6px}</style>
+  <style>body{font-family:Arial,Helvetica,sans-serif;padding:20px}textarea{width:100%;height:160px}button{margin-top:8px;padding:8px 12px}#reply{white-space:pre-wrap;margin-top:12px;background:#f6f6f6;padding:10px;border-radius:6px}select{margin-top:8px;padding:6px}</style>
 </head>
 <body>
   <h1>SIGE — Caja de texto IA</h1>
-  <p>Escribe tu prompt y presiona Enviar. Esto usará un endpoint configurable en el servidor.</p>
+  <p>Escribe tu prompt y presiona Enviar. Selecciona el proveedor de IA desde la lista (configurable en la pestaña Configuración).</p>
+  <label for="providerSelect">Proveedor:</label>
+  <select id="providerSelect"><option>cargando...</option></select>
   <textarea id="prompt" placeholder="Escribe aquí..."></textarea>
   <div>
     <button id="send">Enviar</button>
+    <button id="openConfig" style="margin-left:8px">Configurar proveedores</button>
   </div>
   <div id="status"></div>
   <div id="reply"></div>

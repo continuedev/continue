@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Config Providers</title>
+<style>body{font-family:Arial;padding:20px}input,textarea{width:100%;padding:6px;margin:6px 0}button{padding:6px 10px;margin-top:6px}</style>
+</head>
+<body>
+  <h2>Configurar proveedores de IA (no guardar secrets aquí)</h2>
+  <p>Los secretos deben guardarse en Key Vault o variables de entorno en el servidor. Aquí solo se guardan metadatos (id, name, endpoint, secretEnv variable name).</p>
+  <div id="list"></div>
+  <h3>Añadir/Actualizar proveedor</h3>
+  <label>ID (sin espacios, minúsculas)</label>
+  <input id="id" />
+  <label>Nombre</label>
+  <input id="name" />
+  <label>Endpoint (URL)</label>
+  <input id="endpoint" />
+  <label>Secret env var name (opcional, e.g. AI_API_KEY_CLAUDE)</label>
+  <input id="secretEnv" />
+  <button id="save">Guardar</button>
+  <script>
+    async function load(){
+      const r=await fetch('/api/providers'); const list=await r.json();
+      const c=document.getElementById('list'); c.innerHTML='';
+      list.forEach(p=>{ const d=document.createElement('div'); d.innerHTML=`<b>${p.name}</b> (${p.id}) - ${p.endpoint} <button data-id="${p.id}">Eliminar</button>`; c.appendChild(d); d.querySelector('button').addEventListener('click', async e=>{ await fetch('/api/providers/'+p.id,{method:'DELETE'}); load(); }); });
+    }
+    document.getElementById('save').addEventListener('click', async ()=>{
+      const id=document.getElementById('id').value.trim();
+      const name=document.getElementById('name').value.trim();
+      const endpoint=document.getElementById('endpoint').value.trim();
+      const secretEnv=document.getElementById('secretEnv').value.trim();
+      if(!id||!name||!endpoint){ alert('id,name,endpoint required'); return }
+      await fetch('/api/providers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,name,endpoint,secretEnv})});
+      document.getElementById('id').value='';document.getElementById('name').value='';document.getElementById('endpoint').value='';document.getElementById('secretEnv').value='';
+      load();
+    });
+    load();
+  </script>
+</body>
+</html>

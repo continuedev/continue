@@ -1,0 +1,9 @@
+[
+  {
+    "id": "claude",
+    "name": "Anthropic Claude (example)",
+    "endpoint": "https://api.anthropic.com/v1/claude", 
+    "description": "Ejemplo: sustituir por tu endpoint Claude o proxy",
+    "secretEnv": "AI_API_KEY_CLAUDE"
+  }
+]
