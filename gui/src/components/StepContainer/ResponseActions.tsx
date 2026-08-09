@@ -32,14 +32,26 @@ export default function ResponseActions({
     (state) => state.session.contextPercentage,
   );
   const isPruned = useAppSelector((state) => state.session.isPruned);
+  const history = useAppSelector((state) => state.session.history);
 
-  const percent = Math.round((contextPercentage ?? 0) * 100);
+  // contextPercentage is undefined until first message is sent
+  const hasContextData = contextPercentage !== undefined;
+
+  // Format: show 1 decimal place when < 1%, integer otherwise
+  const displayPercent = hasContextData ? contextPercentage * 100 : 0;
+  const percentFormatted = hasContextData
+    ? displayPercent < 1
+      ? displayPercent.toFixed(1)
+      : Math.round(displayPercent).toString()
+    : "";
+  const percent = hasContextData ? Math.round(displayPercent) : 0;
   const buttonColorClass =
     isLast && (isPruned || percent > 80)
       ? "text-warning"
       : "text-description-muted";
 
-  const showLabel = isLast && (isPruned || percent >= 60);
+  // Always show label on last message when there's history
+  const showLabel = isLast && history.length > 0;
 
   const compactConversation = useCompactConversation();
 
@@ -63,7 +75,7 @@ export default function ResponseActions({
             <span
               className={`text-xs ${buttonColorClass || "text-description-muted"}`}
             >
-              Compact conversation
+              {hasContextData ? `${percentFormatted}% · ` : ""}Compact
             </span>
           )}
         </div>
