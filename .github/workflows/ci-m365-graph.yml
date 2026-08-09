@@ -1,0 +1,50 @@
+name: CI - M365 Graph adapters
+
+on:
+  push:
+    paths:
+      - 'src/adapters/m365-graph/**'
+  pull_request:
+    paths:
+      - 'src/adapters/m365-graph/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Node deps (if package.json present)
+        run: |
+          if [ -f src/adapters/m365-graph/package.json ]; then
+            cd src/adapters/m365-graph && npm install
+          else
+            echo "No package.json, skipping npm install"
+          fi
+
+      - name: Run Node lint/tests (optional)
+        run: |
+          echo "No tests configured; add your tests to the adapters folder"
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install msal requests flask || true
+
+      - name: Build Docker image for azure-function (optional)
+        run: |
+          if [ -f src/adapters/m365-graph/azure-function/Dockerfile ]; then
+            docker build -t m365-azure-function -f src/adapters/m365-graph/azure-function/Dockerfile src/adapters/m365-graph/azure-function
+          else
+            echo "No Dockerfile, skipping"
+          fi

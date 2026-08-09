@@ -1,0 +1,12 @@
+{
+  "name": "sige-ai-app",
+  "version": "0.1.0",
+  "description": "App mínima: caja de texto para interacción con IA (Claude) para el proyecto SIGE",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
