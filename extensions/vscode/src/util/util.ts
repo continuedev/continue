@@ -160,6 +160,10 @@ export function getExtensionVersion(): string {
   return extension?.packageJSON.version || "0.1.0";
 }
 
+export function getStylesheetLink(styleUri: string): string {
+  return `<link href="${styleUri}" rel="stylesheet" crossorigin="anonymous">`;
+}
+
 export function getvsCodeUriScheme(): string {
   return vscode.env.uriScheme;
 }

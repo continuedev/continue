@@ -1,7 +1,11 @@
 import * as vscode from "vscode";
 
 import { getTheme } from "./util/getTheme";
-import { getExtensionVersion, getvsCodeUriScheme } from "./util/util";
+import {
+  getExtensionVersion,
+  getStylesheetLink,
+  getvsCodeUriScheme,
+} from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
@@ -133,7 +137,7 @@ export class ContinueGUIWebviewViewProvider
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script>const vscode = acquireVsCodeApi();</script>
-        <link href="${styleMainUri}" rel="stylesheet">
+        ${getStylesheetLink(styleMainUri)}
 
         <title>Continue</title>
       </head>
