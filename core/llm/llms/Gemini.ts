@@ -210,6 +210,12 @@ class Gemini extends BaseLLM {
       };
     }
 
+    if (part.type === "file") {
+      return {
+        text: `[Attachment: ${part.name}]`,
+      };
+    }
+
     let data = "";
     if (part.imageUrl?.url) {
       const extracted = extractBase64FromDataUrl(part.imageUrl.url);

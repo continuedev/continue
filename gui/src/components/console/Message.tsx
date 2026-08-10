@@ -33,9 +33,12 @@ function renderMessageContent(
     return message.content.map((part) => {
       if (part.type == "text") {
         return renderMessageText(part.text);
-      } else {
+      } else if (part.type == "imageUrl") {
         return <div>Image: {part.imageUrl.url}</div>;
+      } else if (part.type == "file") {
+        return <div>Attachment: {part.name}</div>;
       }
+      return null;
     });
   }
 }

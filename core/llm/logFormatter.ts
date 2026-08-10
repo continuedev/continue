@@ -276,8 +276,10 @@ export class LLMLogFormatter {
       for (const part of message.content) {
         if (part.type === "text") {
           this.logMessageText(item, part.text);
-        } else {
+        } else if (part.type === "imageUrl") {
           this.logLines(item, `Image: ${part.imageUrl.url}`);
+        } else if (part.type === "file") {
+          this.logLines(item, `Attachment: ${part.name}`);
         }
       }
     }

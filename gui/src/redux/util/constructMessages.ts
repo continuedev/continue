@@ -34,25 +34,6 @@ interface MessageWithContextItems {
   ctxItems: ContextItemWithId[];
   message: ChatMessage;
 }
-
-/**
- * File attachments are rendered in the UI (via editorState) but are not sent
- * to LLM providers, which do not understand the `file` part type. Convert them
- * to a text placeholder so every provider receives a safe, valid message.
- */
-function sanitizeFilePartsForLLM(content: ChatMessage["content"]): ChatMessage["content"] {
-  if (!Array.isArray(content)) {
-    return content;
-  }
-  if (!content.some((part) => part.type === "file")) {
-    return content;
-  }
-  return content.map((part) =>
-    part.type === "file"
-      ? { type: "text" as const, text: `[Attachment: ${part.name}]` }
-      : part,
-  );
-}
 export function constructMessages(
   history: ChatHistoryItem[],
   baseSystemMessage: string | undefined,
@@ -240,10 +221,31 @@ export function constructMessages(
     });
   }
 
-  const messages = msgs.map((m) => ({
-    ...m.message,
-    content: sanitizeFilePartsForLLM(m.message.content),
-  }));
+  // File attachments are rendered in the UI (via editorState) but are not sent
+  // to LLM providers, which do not understand the `file` part type. Convert them
+  // to a text placeholder so every provider receives a safe, valid message.
+  const messages = msgs.map((m) => {
+    const { message } = m;
+    if (
+      message.role !== "user" &&
+      message.role !== "assistant" &&
+      message.role !== "thinking"
+    ) {
+      return message;
+    }
+    if (
+      typeof message.content === "string" ||
+      !message.content.some((part) => part.type === "file")
+    ) {
+      return message;
+    }
+    const content = message.content.map((part) =>
+      part.type === "file"
+        ? { type: "text" as const, text: `[Attachment: ${part.name}]` }
+        : part,
+    );
+    return { ...message, content };
+  });
   return {
     messages,
     appliedRules,
