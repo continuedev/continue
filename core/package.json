@@ -104,7 +104,7 @@
     "pg": "^8.11.3",
     "plist": "^3.1.0",
     "puppeteer": "^24.15.0",
-    "puppeteer-chromium-resolver": "^23.0.0",
+    "puppeteer-chromium-resolver": "^25.0.0",
     "quick-lru": "^7.0.0",
     "replicate": "^0.26.0",
     "shell-quote": "^1.8.3",
