@@ -846,7 +846,7 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
     expect(result).toBe("disabled");
   });
 
-  it("should require permission for high-risk network commands", () => {
+  it("should honor Automatic for high-risk network commands (#13035)", () => {
     const basePolicy = "allowedWithoutPermission";
     const args = { command: "curl http://example.com" };
 
@@ -855,6 +855,8 @@ describe("runTerminalCommandTool.evaluateToolCallPolicy", () => {
       args,
     );
 
-    expect(result).toBe("allowedWithPermission");
+    // Automatic mode no longer demotes to Ask First for non-critical commands.
+    // Only critical commands (rm -rf /, etc.) stay disabled under Automatic.
+    expect(result).toBe("allowedWithoutPermission");
   });
 });
