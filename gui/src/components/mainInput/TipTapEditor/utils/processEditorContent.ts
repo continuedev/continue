@@ -4,13 +4,14 @@ import { Text } from "@tiptap/extension-text";
 import { JSONContent } from "@tiptap/react";
 import {
   ContextItemWithId,
+  FileMessagePart,
   MessagePart,
   RangeInFile,
   TextMessagePart,
 } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { getUriDescription } from "core/util/uri";
-import { CodeBlock, Mention, PromptBlock } from "../extensions";
+import { CodeBlock, FileAttachment, Mention, PromptBlock } from "../extensions";
 import { GetContextRequest } from "./types";
 
 interface MentionAttrs {
@@ -24,8 +25,13 @@ function resolvePromptBlock(p: JSONContent): string | undefined {
   return p.attrs?.item.name;
 }
 
-function resolveParagraph(p: JSONContent): [string, GetContextRequest[]] {
+function resolveParagraph(p: JSONContent): {
+  text: string;
+  contextRequests: GetContextRequest[];
+  fileParts: FileMessagePart[];
+} {
   const contextRequests: GetContextRequest[] = [];
+  const fileParts: FileMessagePart[] = [];
 
   const text = (p.content || [])
     .map((child) => {
@@ -40,7 +46,16 @@ function resolveParagraph(p: JSONContent): [string, GetContextRequest[]] {
             query: attrs.query,
           });
           return child.attrs?.renderInlineAs ?? child.attrs?.label;
-
+        case FileAttachment.name:
+          const name = child.attrs?.name as string | undefined;
+          if (name) {
+            fileParts.push({
+              type: "file",
+              name,
+              dataUrl: (child.attrs?.dataUrl as string) ?? "",
+            });
+          }
+          return name ? `[Attachment: ${name}]` : "";
         default:
           console.warn("Unexpected child type", child.type);
           return "";
@@ -49,7 +64,7 @@ function resolveParagraph(p: JSONContent): [string, GetContextRequest[]] {
     .join("")
     .trimStart();
 
-  return [text, contextRequests];
+  return { text, contextRequests, fileParts };
 }
 
 export function processEditorContent(editorState: JSONContent) {
@@ -64,9 +79,10 @@ export function processEditorContent(editorState: JSONContent) {
         slashCommandName = resolvePromptBlock(p);
         break;
       case Paragraph.name:
-        const [text, ctxItems] = resolveParagraph(p);
+        const { text, contextRequests: paraCtxRequests, fileParts } =
+          resolveParagraph(p);
 
-        contextRequests.push(...ctxItems);
+        contextRequests.push(...paraCtxRequests);
 
         if (text) {
           // Merge with previous text part if possible
@@ -76,6 +92,8 @@ export function processEditorContent(editorState: JSONContent) {
             parts.push({ type: "text", text });
           }
         }
+
+        parts.push(...fileParts);
         break;
       case CodeBlock.name:
         if (!p.attrs?.item) {

@@ -21,7 +21,7 @@ import { InputBoxDiv } from "./components/StyledComponents";
 import { useMainEditor } from "./MainEditorProvider";
 import "./TipTapEditor.css";
 import { createEditorConfig, getPlaceholderText } from "./utils/editorConfig";
-import { handleImageFile } from "./utils/imageUtils";
+import { handleFile, handleImageFile } from "./utils/imageUtils";
 import { useEditorEventHandlers } from "./utils/keyHandlers";
 
 export interface TipTapEditorProps {
@@ -237,30 +237,56 @@ function TipTapEditorInner(props: TipTapEditorProps) {
       }}
       onDrop={(event) => {
         setShowDragOverMsg(false);
-        if (
-          !defaultModel ||
-          !modelSupportsImages(
+        const files = Array.from(event.dataTransfer.files);
+        if (files.length === 0) {
+          return;
+        }
+        const modelSupportsImage =
+          !!defaultModel &&
+          modelSupportsImages(
             defaultModel.provider,
             defaultModel.model,
             defaultModel.title,
             defaultModel.capabilities,
-          )
-        ) {
-          return;
+          );
+        for (const file of files) {
+          if (file.type.startsWith("image/")) {
+            if (!modelSupportsImage) {
+              continue;
+            }
+            void handleImageFile(ideMessenger, file).then((result) => {
+              if (!editor) {
+                return;
+              }
+              if (result) {
+                const [_, dataUrl] = result;
+                const { schema } = editor.state;
+                const node = schema.nodes.image.create({ src: dataUrl });
+                const tr = editor.state.tr.insert(0, node);
+                editor.view.dispatch(tr);
+              }
+            });
+          } else {
+            void handleFile(ideMessenger, file).then((result) => {
+              if (!editor) {
+                return;
+              }
+              if (result) {
+                const [name, dataUrl] = result;
+                const { schema } = editor.state;
+                const node = schema.nodes["file-attachment"].create({
+                  name,
+                  dataUrl,
+                });
+                const tr = editor.state.tr.insert(
+                  editor.state.selection.from,
+                  node,
+                );
+                editor.view.dispatch(tr);
+              }
+            });
+          }
         }
-        let file = event.dataTransfer.files[0];
-        void handleImageFile(ideMessenger, file).then((result) => {
-          if (!editor) {
-            return;
-          }
-          if (result) {
-            const [_, dataUrl] = result;
-            const { schema } = editor.state;
-            const node = schema.nodes.image.create({ src: dataUrl });
-            const tr = editor.state.tr.insert(0, node);
-            editor.view.dispatch(tr);
-          }
-        });
         event.preventDefault();
       }}
     >
@@ -289,6 +315,25 @@ function TipTapEditorInner(props: TipTapEditorProps) {
                 const [_, dataUrl] = result;
                 const { schema } = editor.state;
                 const node = schema.nodes.image.create({ src: dataUrl });
+                editor.commands.command(({ tr }) => {
+                  tr.insert(0, node);
+                  return true;
+                });
+              }
+            });
+          }}
+          onFileSelected={(file) => {
+            void handleFile(ideMessenger, file).then((result) => {
+              if (!editor) {
+                return;
+              }
+              if (result) {
+                const [name, dataUrl] = result;
+                const { schema } = editor.state;
+                const node = schema.nodes["file-attachment"].create({
+                  name,
+                  dataUrl,
+                });
                 editor.commands.command(({ tr }) => {
                   tr.insert(0, node);
                   return true;

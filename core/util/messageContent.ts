@@ -12,8 +12,12 @@ export function stripImages(messageContent: MessageContent): string {
   }
 
   return messageContent
-    .filter((part) => part.type === "text")
-    .map((part) => (part as TextMessagePart).text)
+    .filter((part) => part.type !== "imageUrl")
+    .map((part) =>
+      part.type === "file"
+        ? `[Attachment: ${part.name}]`
+        : (part as TextMessagePart).text ?? "",
+    )
     .join("\n");
 }
 

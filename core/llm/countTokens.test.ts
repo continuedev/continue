@@ -26,6 +26,13 @@ describe.skip("countTokens", () => {
     const tokenCount = countTokens(content, "gpt-4");
     expect(tokenCount).toBeGreaterThan(0);
   });
+
+  it("should not throw when counting tokens for file attachment parts", () => {
+    const content: MessagePart[] = [
+      { type: "file", name: "report.pdf", dataUrl: "data:application/pdf;base64,xxxx" },
+    ];
+    expect(() => countTokens(content, "gpt-4")).not.toThrow();
+  });
 });
 
 describe("countTokensAsync", () => {
@@ -44,6 +51,14 @@ describe("countTokensAsync", () => {
     const content: MessagePart[] = [{ type: "text", text: "Hello world!" }];
     const tokenCount = await countTokensAsync(content, "gpt-4");
     expect(tokenCount).toBeGreaterThan(0);
+  });
+
+  it("should count tokens asynchronously for file attachment parts", async () => {
+    const content: MessagePart[] = [
+      { type: "file", name: "report.pdf", dataUrl: "data:application/pdf;base64,xxxx" },
+    ];
+    const tokenCount = await countTokensAsync(content, "gpt-4");
+    expect(tokenCount).toBeGreaterThanOrEqual(0);
   });
 });
 

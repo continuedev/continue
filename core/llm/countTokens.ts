@@ -122,7 +122,9 @@ function countTokens(
         acc +
         (part.type === "text"
           ? encoding.encode(part.text ?? "", "all", []).length
-          : countImageTokens(part))
+          : part.type === "file"
+            ? encoding.encode(`[Attachment: ${part.name}]`, "all", []).length
+            : countImageTokens(part))
       );
     }, 0);
   } else {

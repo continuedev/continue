@@ -1063,4 +1063,69 @@ describe("constructMessages", () => {
       );
     });
   });
+
+  test("should convert file attachment parts to text placeholders for the LLM", () => {
+    mockHistory = [
+      {
+        message: {
+          role: "user",
+          content: [
+            { type: "text", text: "Please review this" },
+            {
+              type: "file",
+              name: "report.pdf",
+              dataUrl: "data:application/pdf;base64,xxxx",
+            },
+          ],
+        } as ChatMessage,
+        contextItems: [],
+      },
+    ];
+
+    const { messages } = constructMessages(
+      mockHistory,
+      "Base System Message",
+      [],
+      {},
+    );
+
+    const userMessage = messages[1] as UserChatMessage;
+    expect(Array.isArray(userMessage.content)).toBe(true);
+    const content = userMessage.content as any[];
+
+    // The text part is preserved as-is
+    expect(content[0]).toEqual({ type: "text", text: "Please review this" });
+    // The file part is converted to a text placeholder (no dataUrl leak)
+    expect(content[1]).toEqual({
+      type: "text",
+      text: "[Attachment: report.pdf]",
+    });
+    // No file part should ever reach the LLM
+    expect(content.some((part) => part.type === "file")).toBe(false);
+  });
+
+  test("should not alter messages without file parts", () => {
+    mockHistory = [
+      {
+        message: {
+          role: "user",
+          content: [{ type: "text", text: "Just text" }],
+        } as ChatMessage,
+        contextItems: [],
+      },
+    ];
+
+    const { messages } = constructMessages(
+      mockHistory,
+      "Base System Message",
+      [],
+      {},
+    );
+
+    const userMessage = messages[1] as UserChatMessage;
+    expect(Array.isArray(userMessage.content)).toBe(true);
+    expect(userMessage.content).toEqual([
+      { type: "text", text: "Just text" },
+    ]);
+  });
 });

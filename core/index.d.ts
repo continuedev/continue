@@ -349,7 +349,20 @@ export type ImageMessagePart = {
   imageUrl: { url: string };
 };
 
-export type MessagePart = TextMessagePart | ImageMessagePart;
+export type FileMessagePart = {
+  type: "file";
+  name: string;
+  dataUrl: string;
+  // Providers that support file uploads (e.g. OpenAI Responses API) may consume
+  // this optional sub-object. See OpenAI.ts's input_file conversion.
+  file?: {
+    file_data?: string;
+    file_id?: string;
+    filename?: string;
+  };
+};
+
+export type MessagePart = TextMessagePart | ImageMessagePart | FileMessagePart;
 
 export type MessageContent = string | MessagePart[];
 

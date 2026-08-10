@@ -1,6 +1,7 @@
 import {
   AtSymbolIcon,
   LightBulbIcon as LightBulbIconOutline,
+  PaperClipIcon,
   PhotoIcon,
 } from "@heroicons/react/24/outline";
 import { LightBulbIcon as LightBulbIconSolid } from "@heroicons/react/24/solid";
@@ -39,6 +40,7 @@ interface InputToolbarProps {
   onAddContextItem?: () => void;
   onClick?: () => void;
   onImageFileSelected?: (file: File) => void;
+  onFileSelected?: (file: File) => void;
   hidden?: boolean;
   activeKey: string | null;
   toolbarOptions?: ToolbarOptions;
@@ -50,6 +52,7 @@ function InputToolbar(props: InputToolbarProps) {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const attachmentFileInputRef = useRef<HTMLInputElement | null>(null);
   const defaultModel = useAppSelector(selectSelectedChatModel);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
@@ -128,6 +131,35 @@ function InputToolbar(props: InputToolbarProps) {
                   </ToolTip>
                 </>
               ))}
+            {props.toolbarOptions?.hideImageUpload || (
+              <>
+                <input
+                  type="file"
+                  ref={attachmentFileInputRef}
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const files = e.target?.files ?? [];
+                    for (const file of files) {
+                      props.onFileSelected?.(file);
+                    }
+                    if (attachmentFileInputRef.current) {
+                      attachmentFileInputRef.current.value = "";
+                    }
+                  }}
+                />
+
+                <ToolTip place="top" content="Attach File">
+                  <HoverItem className="">
+                    <PaperClipIcon
+                      className="h-3 w-3 hover:brightness-125"
+                      onClick={(e) => {
+                        attachmentFileInputRef.current?.click();
+                      }}
+                    />
+                  </HoverItem>
+                </ToolTip>
+              </>
+            )}
             {props.toolbarOptions?.hideAddContext || (
               <ToolTip place="top" content="Attach Context">
                 <HoverItem onClick={props.onAddContextItem}>

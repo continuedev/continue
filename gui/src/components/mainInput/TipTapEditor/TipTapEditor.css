@@ -43,3 +43,39 @@
 .tiptap img.selected-image {
   outline: 3px solid var(--vscode-badge-background, #bfe2b6);
 }
+
+.file-attachment {
+  display: inline-flex;
+  vertical-align: middle;
+  margin: 0 0.15em;
+}
+
+.file-attachment a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.1em 0.4em;
+  border-radius: 3px;
+  background-color: var(--vscode-badge-background, #bfe2b6);
+  color: var(--vscode-badge-foreground, --vscode-foreground, #000);
+  font-size: 0.9em;
+  text-decoration: none;
+  white-space: nowrap;
+  max-width: 20em;
+  overflow: hidden;
+}
+
+.file-attachment a:hover {
+  filter: brightness(1.1);
+}
+
+.file-attachment .file-attachment-icon {
+  width: 0.85em;
+  height: 0.85em;
+  flex-shrink: 0;
+}
+
+.file-attachment span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

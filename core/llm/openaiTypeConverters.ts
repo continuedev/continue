@@ -198,6 +198,13 @@ export function toChatMessage(
                 },
               };
             }
+            if (part.type === "file") {
+              // File attachments aren't supported by providers; render as text placeholder
+              return {
+                type: "text" as const,
+                text: `[Attachment: ${part.name}]`,
+              };
+            }
             return part;
           })
         : message.content
@@ -806,6 +813,9 @@ function toResponseInputContentList(
         image_url: part.imageUrl.url,
         detail: "auto",
       });
+    } else if (part.type === "file") {
+      // File attachments aren't supported by the Responses API; render as text
+      list.push({ type: "input_text", text: `[Attachment: ${part.name}]` });
     }
   }
   return list;

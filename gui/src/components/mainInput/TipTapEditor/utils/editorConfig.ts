@@ -22,13 +22,13 @@ import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import { AppDispatch } from "../../../../redux/store";
 import { exitEdit } from "../../../../redux/thunks/edit";
 import { getFontSize, isJetBrains } from "../../../../util";
-import { CodeBlock, Mention, PromptBlock, SlashCommand } from "../extensions";
+import { CodeBlock, FileAttachment, Mention, PromptBlock, SlashCommand } from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
 import {
   getContextProviderDropdownOptions,
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
-import { handleImageFile } from "./imageUtils";
+import { handleFile, handleImageFile } from "./imageUtils";
 
 export function getPlaceholderText(
   placeholder: TipTapEditorProps["placeholder"],
@@ -56,6 +56,13 @@ export function hasValidEditorContent(json: JSONContent): boolean {
     (c) => c.type === PromptBlock.name || c.type === CodeBlock.name,
   );
 
+  // File attachments (top-level or nested inside a paragraph) count as content
+  const hasFileAttachment = json.content?.some(
+    (c) =>
+      c.type === FileAttachment.name ||
+      c.content?.some((child) => child.type === FileAttachment.name),
+  );
+
   // Check for non-whitespace text content
   const hasNonWhitespaceText = json.content?.some((c) =>
     c.content?.some((child) => {
@@ -71,7 +78,7 @@ export function hasValidEditorContent(json: JSONContent): boolean {
   );
 
   // Content is valid if it has either non-whitespace text or special blocks
-  return hasNonWhitespaceText || hasPromptOrCodeBlock || false;
+  return hasNonWhitespaceText || hasPromptOrCodeBlock || hasFileAttachment || false;
 }
 
 /**
@@ -230,6 +237,51 @@ export function createEditorConfig(options: {
           props.placeholder,
           historyLengthRef.current,
         ),
+      }),
+      FileAttachment.extend({
+        addProseMirrorPlugins() {
+          const filePastePlugin = new Plugin({
+            props: {
+              handleDOMEvents: {
+                paste(view, event) {
+                  const items = event.clipboardData?.items;
+                  if (!items) {
+                    return;
+                  }
+                  const fileItems = [...items]
+                    .map((item) => item.getAsFile())
+                    .filter(
+                      (file): file is File =>
+                        !!file && !file.type.startsWith("image/"),
+                    );
+                  if (fileItems.length === 0) {
+                    return;
+                  }
+                  for (const file of fileItems) {
+                    void handleFile(ideMessenger, file).then((result) => {
+                      if (!result) {
+                        return;
+                      }
+                      const [name, dataUrl] = result;
+                      const { schema } = view.state;
+                      const node = schema.nodes["file-attachment"].create({
+                        name,
+                        dataUrl,
+                      });
+                      const tr = view.state.tr.insert(
+                        view.state.selection.from,
+                        node,
+                      );
+                      view.dispatch(tr);
+                    });
+                  }
+                  event.preventDefault();
+                },
+              },
+            },
+          });
+          return [filePastePlugin];
+        },
       }),
       Paragraph.extend({
         addKeyboardShortcuts() {

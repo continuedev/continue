@@ -1,6 +1,7 @@
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 
 const IMAGE_RESOLUTION = 1024;
+const MAX_FILE_SIZE_MB = 10;
 
 export function getDataUrlForFile(
   file: File,
@@ -70,4 +71,31 @@ export async function handleImageFile(
       "Images need to be in jpg or png format and less than 10MB in size.",
     ]);
   }
+}
+
+/**
+ * Reads a non-image file as a data URL so it can be embedded in the editor and
+ * history as a download-able attachment. Returns [name, dataUrl] or undefined.
+ */
+export async function handleFile(
+  ideMessenger: IIdeMessenger,
+  file: File,
+): Promise<[string, string] | undefined> {
+  const filesize = file.size / 1024 / 1024; // filesize in MB
+  if (filesize > MAX_FILE_SIZE_MB) {
+    ideMessenger.post("showToast", [
+      "error",
+      `File "${file.name}" is too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.`,
+    ]);
+    return undefined;
+  }
+
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
+  return [file.name, dataUrl];
 }
