@@ -315,8 +315,9 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                 <Alert>
                   <p className="m-0 text-sm font-bold">Codestral API key</p>
                   <p className="m-0 mt-1">
-                    Note that codestral requires a different API key from other
-                    Mistral models
+                    Codestral accepts either a Mistral API key or a
+                    Codestral-specific key. Continue detects which one you've
+                    entered and uses the matching endpoint.
                   </p>
                 </Alert>
               </div>
