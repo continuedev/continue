@@ -38,6 +38,9 @@ export function useOnboardingCard(): UseOnboardingCard {
   }
 
   async function open(tab?: OnboardingModes) {
+    // Clear the dismissal flag set by `close`. The redux `show` flag is not
+    // persisted, so without this the card disappears again on the next reload.
+    setLocalStorage("hasDismissedOnboardingCard", false);
     navigate("/");
     dispatch(
       setOnboardingCard({

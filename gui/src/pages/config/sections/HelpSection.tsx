@@ -8,10 +8,10 @@ import {
 import { useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Shortcut from "../../../components/gui/Shortcut";
+import { useOnboardingCard } from "../../../components/OnboardingCard/hooks/useOnboardingCard";
 import { Card } from "../../../components/ui";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { setOnboardingCard } from "../../../redux/slices/uiSlice";
 import { saveCurrentSession } from "../../../redux/thunks/session";
 import { isJetBrains } from "../../../util";
 import { ROUTES } from "../../../util/navigation";
@@ -150,6 +150,7 @@ export function HelpSection() {
   const ideMessenger = useContext(IdeMessengerContext);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const onboardingCard = useOnboardingCard();
 
   const currentSession = useAppSelector((state) => state.session);
 
@@ -226,12 +227,7 @@ export function HelpSection() {
                       generateTitle: true,
                     }),
                   );
-                  dispatch(
-                    setOnboardingCard({
-                      show: true,
-                      activeTab: undefined,
-                    }),
-                  );
+                  void onboardingCard.open();
                   ideMessenger.post("showTutorial", undefined);
                 }}
               />
