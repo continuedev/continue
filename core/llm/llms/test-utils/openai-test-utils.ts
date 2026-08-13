@@ -141,6 +141,7 @@ export interface OpenAISubclassConfig {
   customEmbeddingsHeaders?: { [key: string]: string };
   customEmbeddingsBody?: any;
   customBodyOptions?: any;
+  testTools?: boolean;
 }
 
 function getExpectedUrl(
@@ -251,6 +252,58 @@ export const createOpenAISubclassTests = (
         ],
       });
     });
+
+    if (config.testTools) {
+      test("chat should send tools to the provider", async () => {
+        const provider = new ProviderClass({
+          apiKey: "test-api-key",
+          model: "catalog/model-id",
+          apiBase: config.defaultApiBase || "https://api.openai.com/v1/",
+        });
+        const tools = [
+          {
+            type: "function" as const,
+            function: {
+              name: "read_file",
+              description: "Read a file",
+              parameters: {
+                type: "object",
+                properties: { path: { type: "string" } },
+                required: ["path"],
+              },
+            },
+          },
+        ];
+
+        await runLlmTest({
+          llm: provider,
+          methodToTest: "chat",
+          params: [
+            [{ role: "user", content: "read README.md" }],
+            new AbortController().signal,
+            { tools },
+          ],
+          expectedRequest: {
+            url: getExpectedUrl(config, "chat/completions"),
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer test-api-key",
+              "api-key": "test-api-key",
+            },
+            body: {
+              model: "catalog/model-id",
+              messages: [{ role: "user", content: "read README.md" }],
+              stream: true,
+              max_tokens: 4096,
+              tools,
+              ...config.customBodyOptions,
+            },
+          },
+          mockStream: [{ choices: [{ delta: { content: "" } }] }],
+        });
+      });
+    }
 
     test("streamComplete should send a valid request", async () => {
       const provider = new ProviderClass({

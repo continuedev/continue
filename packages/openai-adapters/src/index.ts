@@ -171,7 +171,10 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "novita":
       return openAICompatible("https://api.novita.ai/v3/openai", config);
     case "nebius":
-      return openAICompatible("https://api.studio.nebius.ai/v1/", config);
+      return openAICompatible(
+        "https://api.tokenfactory.nebius.com/v1/",
+        config,
+      );
     case "function-network":
       return openAICompatible("https://api.function.network/v1/", config);
     case "tensorix":

@@ -216,6 +216,27 @@ if (process.env.IGNORE_API_KEY_TESTS === "true") {
 }
 
 describe("Configuration", () => {
+  it("should configure Nebius with the Token Factory API by default", () => {
+    const nebius = constructLlmApi({
+      provider: "nebius",
+      apiKey: "test-api-key",
+    });
+
+    expect((nebius as OpenAIApi).openai.baseURL).toBe(
+      "https://api.tokenfactory.nebius.com/v1/",
+    );
+    expect((nebius as OpenAIApi).openai.apiKey).toBe("test-api-key");
+
+    const customNebius = constructLlmApi({
+      provider: "nebius",
+      apiKey: "test-api-key",
+      apiBase: "https://custom.example/v1/",
+    });
+    expect((customNebius as OpenAIApi).openai.baseURL).toBe(
+      "https://custom.example/v1/",
+    );
+  });
+
   it("should configure DeepSeek OpenAI client with correct apiBase and apiKey", () => {
     const deepseek = constructLlmApi({
       provider: "deepseek",
