@@ -1,0 +1,106 @@
+---
+title: "SayGM"
+description: "Configure SayGM's frontier models (GPT-5.x, o-series) with Continue. SayGM is a decentralized inference subnet on Bittensor serving OpenAI-compatible models."
+---
+
+[SayGM](https://saygm.com) is a decentralized inference subnet on Bittensor that serves frontier OpenAI models (GPT-5.x, o-series) over an OpenAI-compatible API at `https://api.saygm.com/v1`.
+
+## Configuration
+
+To use SayGM models, you need to:
+
+1. Sign up at [saygm.com](https://saygm.com) and get an API key (a `gm_live_...` token)
+2. Add the following configuration:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: GPT-5.6 Sol
+      provider: saygm
+      model: gpt-5.6-sol
+      apiKey: <YOUR_SAYGM_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GPT-5.6 Sol",
+        "provider": "saygm",
+        "model": "gpt-5.6-sol",
+        "apiKey": "<YOUR_SAYGM_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+SayGM currently serves the following OpenAI-chat-compatible models (all with a 1M token context window):
+
+- `gpt-5.6-sol`: latest frontier reasoning model
+- `gpt-5.6-terra`: mid-tier frontier model
+- `gpt-5.6-luna`: fast frontier model
+- `gpt-5.5`: frontier reasoning model
+- `gpt-5.4`: flagship reasoning model
+- `gpt-5.4-mini`: compact frontier model
+- `gpt-5.4-nano`: smallest gpt-5.4 model
+- `o3`: full o3 reasoning model
+- `o4-mini`: compact o-series reasoning model
+
+SayGM also serves Claude models and `gpt-5.5-pro`, but those require the Anthropic / OpenAI Responses wire protocols respectively, which Continue does not expose for the `saygm` provider.
+
+## Configuration Options
+
+| Option    | Description       | Default                       |
+| --------- | ----------------- | ----------------------------- |
+| `apiKey`  | SayGM API key     | Required                      |
+| `apiBase` | API base URL      | `https://api.saygm.com/v1/`   |
+| `model`   | Model name to use | `gpt-5.4`                     |
+
+## Example
+
+Here's a complete configuration example:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: GPT-5.6 Sol
+      provider: saygm
+      model: gpt-5.6-sol
+      apiKey: <YOUR_SAYGM_API_KEY>
+      defaultCompletionOptions:
+        maxTokens: 128000
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GPT-5.6 Sol",
+        "provider": "saygm",
+        "model": "gpt-5.6-sol",
+        "apiKey": "<YOUR_SAYGM_API_KEY>",
+        "completionOptions": {
+          "maxTokens": 128000
+        }
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

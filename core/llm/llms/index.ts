@@ -25,6 +25,7 @@ import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
 import FunctionNetwork from "./FunctionNetwork";
 import Gemini from "./Gemini";
+import Saygm from "./Saygm";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTEIEmbeddingsProvider from "./HuggingFaceTEI";
@@ -76,6 +77,7 @@ export const LLMClasses = [
   CometAPI,
   FunctionNetwork,
   Gemini,
+  Saygm,
   Llamafile,
   Moonshot,
   Ollama,

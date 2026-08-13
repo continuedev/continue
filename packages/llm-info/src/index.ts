@@ -4,6 +4,7 @@ import { Bedrock } from "./providers/bedrock.js";
 import { Cohere } from "./providers/cohere.js";
 import { CometAPI } from "./providers/cometapi.js";
 import { Gemini } from "./providers/gemini.js";
+import { Saygm } from "./providers/saygm.js";
 import { Inception } from "./providers/inception.js";
 import { MiniMax } from "./providers/minimax.js";
 import { Mistral } from "./providers/mistral.js";
@@ -18,6 +19,7 @@ import { LlmInfoWithProvider, ModelProvider, UseCase } from "./types.js";
 export const allModelProviders: ModelProvider[] = [
   OpenAi,
   Gemini,
+  Saygm,
   Anthropic,
   Mistral,
   Voyage,
