@@ -450,7 +450,8 @@ createOpenAISubclassTests(LlamaStack, {
 
 createOpenAISubclassTests(Nebius, {
   providerName: "nebius",
-  defaultApiBase: "https://api.studio.nebius.ai/v1/",
+  defaultApiBase: "https://api.tokenfactory.nebius.com/v1/",
+  testTools: true,
 });
 
 createOpenAISubclassTests(OVHcloud, {

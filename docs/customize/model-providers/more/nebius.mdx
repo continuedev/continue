@@ -1,75 +1,44 @@
 ---
-title: "Nebius"
-description: "Configure Nebius AI Studio with Continue to access their language model offerings, including DeepSeek R1 for chat and BAAI embeddings models"
+title: "Nebius Token Factory"
+description: "Configure Nebius Token Factory's OpenAI-compatible API with Continue"
 ---
 
-You can get an API key from the [Nebius AI Studio API keys page](https://studio.nebius.ai/settings/api-keys)
+[Nebius Token Factory](https://tokenfactory.nebius.com) provides an OpenAI-compatible inference API. Create an API key in Token Factory, then choose a model ID from its live catalog.
 
-## Available Models
+## Choose a model
 
-Available models can be found on the [Nebius AI Studio models page](https://studio.nebius.ai/models/text2text)
+Token Factory's catalog changes independently of Continue. Copy a current model ID from the [Models page](https://tokenfactory.nebius.com/models) or use the authenticated [`GET /v1/models` endpoint](https://docs.tokenfactory.nebius.com/api-reference/examples/list-of-models). Continue also fetches the catalog after you enter an API key in the model setup form.
 
-## Chat Model
+## Chat model
 
-<Tabs>
-  <Tab title="YAML">
-  ```yaml title="config.yaml"
-  name: My Config
-  version: 0.0.1
-  schema: v1
+```yaml title="config.yaml"
+name: My Config
+version: 0.0.1
+schema: v1
 
-  models:
-    - name: DeepSeek R1
-      provider: nebius
-      model: deepseek-ai/DeepSeek-R1
-      apiKey: <YOUR_NEBIUS_API_KEY>
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "models": [
-      {
-        "title": "DeepSeek R1",
-        "provider": "nebius",
-        "model": "deepseek-ai/DeepSeek-R1",
-        "apiKey": "<YOUR_NEBIUS_API_KEY>"
-      }
-    ]
-  }
-  ```
-  </Tab>
-</Tabs>
+models:
+  - name: Nebius model
+    provider: nebius
+    model: <MODEL_ID_FROM_TOKEN_FACTORY>
+    apiKey: <YOUR_NEBIUS_API_KEY>
+```
 
-## Embeddings Model
+The provider uses the Chat Completions endpoint by default. Tool calling and other capabilities depend on the selected model; check that model's catalog metadata before enabling it for an agent role.
 
-Available models can be found on the [Nebius AI Studio embeddings page](https://studio.nebius.ai/models/embedding)
+## Embeddings model
 
-<Tabs>
-  <Tab title="YAML">
-  ```yaml title="config.yaml"
-  name: My Config
-  version: 0.0.1
-  schema: v1
+```yaml title="config.yaml"
+name: My Config
+version: 0.0.1
+schema: v1
 
-  models:
-    - name: BAAI Embedder
-      provider: nebius
-      model: BAAI/bge-en-icl
-      apiKey: <YOUR_NEBIUS_API_KEY>
-      roles:
-        - embed
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "embeddingsProvider": {
-      "provider": "nebius",
-      "model": "BAAI/bge-en-icl",
-      "apiKey": "<YOUR_NEBIUS_API_KEY>"
-    }
-  }
-  ```
-  </Tab>
-</Tabs>
+models:
+  - name: Nebius embedder
+    provider: nebius
+    model: <EMBEDDING_MODEL_ID_FROM_TOKEN_FACTORY>
+    apiKey: <YOUR_NEBIUS_API_KEY>
+    roles:
+      - embed
+```
+
+See the [Token Factory API documentation](https://docs.tokenfactory.nebius.com/api-reference/introduction) for authentication and API details.
