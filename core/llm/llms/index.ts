@@ -35,6 +35,7 @@ import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
 import LlamaStack from "./LlamaStack";
 import Lemonade from "./Lemonade";
+import LiteLLM from "./LiteLLM";
 import LMStudio from "./LMStudio";
 import Mistral from "./Mistral";
 import Mimo from "./Mimo";
@@ -91,6 +92,7 @@ export const LLMClasses = [
   OpenAI,
   OVHcloud,
   Lemonade,
+  LiteLLM,
   LMStudio,
   Mistral,
   Mimo,

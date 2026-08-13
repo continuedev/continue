@@ -380,6 +380,22 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("litellm", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["litellm"];
+
+    it("should return true for tool-supporting models", () => {
+      expect(supportsFn("gpt-4o")).toBe(true);
+      expect(supportsFn("claude-3-sonnet")).toBe(true);
+      expect(supportsFn("gemini-pro")).toBe(true);
+      expect(supportsFn("deepseek-chat")).toBe(true);
+    });
+
+    it("should return false for non-tool-supporting patterns", () => {
+      expect(supportsFn("random-model")).toBe(false);
+      expect(supportsFn("")).toBe(false);
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle empty model names", () => {
       expect(PROVIDER_TOOL_SUPPORT["anthropic"]("")).toBe(false);

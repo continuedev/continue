@@ -412,6 +412,35 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         !!lower.match(/\bo[1-9]\b/)
       );
     },
+    litellm: (model) => {
+      // LiteLLM is a gateway that routes to many providers, so we check common
+      // tool-supporting model name patterns (the model name is the proxy alias).
+      const lower = model.toLowerCase();
+
+      const toolSupportingPatterns = [
+        "claude",
+        "sonnet",
+        "opus",
+        "haiku",
+        "gemini",
+        "command-r",
+        "mistral",
+        "mixtral",
+        "llama-3.1",
+        "llama-3.2",
+        "llama-3.3",
+        "llama-4",
+        "qwen3",
+        "qwen-2.5",
+        "deepseek",
+      ];
+
+      return (
+        toolSupportingPatterns.some((pattern) => lower.includes(pattern)) ||
+        !!lower.match(/gpt-[4-9]/) ||
+        !!lower.match(/\bo[1-9]\b/)
+      );
+    },
     zAI: (model) => {
       const lower = model.toLowerCase();
       return !!lower.match(/^glm-[4-9]/);
