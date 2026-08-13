@@ -2306,6 +2306,132 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
+  saygmGpt5_4: {
+    title: "GPT-5.4",
+    description:
+      "Frontier reasoning model served on the SayGM inference subnet (Bittensor), 1M context.",
+    params: {
+      model: "gpt-5.4",
+      contextLength: 1_000_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-5.4",
+    },
+    providerOptions: ["saygm"],
+    icon: "saygm.svg",
+    isOpenSource: false,
+  },
+  saygmGpt5_4Mini: {
+    title: "GPT-5.4 Mini",
+    description:
+      "Fast frontier model served on the SayGM inference subnet (Bittensor), 1M context.",
+    params: {
+      model: "gpt-5.4-mini",
+      contextLength: 1_000_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-5.4 Mini",
+    },
+    providerOptions: ["saygm"],
+    icon: "saygm.svg",
+    isOpenSource: false,
+  },
+  saygmGpt5_4Nano: {
+    title: "GPT-5.4 Nano",
+    description:
+      "Smallest gpt-5.4 model served on the SayGM inference subnet (Bittensor), 1M context.",
+    params: {
+      model: "gpt-5.4-nano",
+      contextLength: 1_000_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-5.4 Nano",
+    },
+    providerOptions: ["saygm"],
+    icon: "saygm.svg",
+    isOpenSource: false,
+  },
+  saygmGpt5_5: {
+    title: "GPT-5.5",
+    description:
+      "Frontier reasoning model served on the SayGM inference subnet (Bittensor), 1M context.",
+    params: {
+      model: "gpt-5.5",
+      contextLength: 1_000_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-5.5",
+    },
+    providerOptions: ["saygm"],
+    icon: "saygm.svg",
+    isOpenSource: false,
+  },
+  saygmGpt5_6Sol: {
+    title: "GPT-5.6 Sol",
+    description:
+      "Latest frontier reasoning model served on the SayGM inference subnet (Bittensor), 1M context.",
+    params: {
+      model: "gpt-5.6-sol",
+      contextLength: 1_000_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-5.6 Sol",
+    },
+    providerOptions: ["saygm"],
+    icon: "saygm.svg",
+    isOpenSource: false,
+  },
+  saygmGpt5_6Luna: {
+    title: "GPT-5.6 Luna",
+    description:
+      "Compact frontier model served on the SayGM inference subnet (Bittensor), 1M context.",
+    params: {
+      model: "gpt-5.6-luna",
+      contextLength: 1_000_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-5.6 Luna",
+    },
+    providerOptions: ["saygm"],
+    icon: "saygm.svg",
+    isOpenSource: false,
+  },
+  saygmGpt5_6Terra: {
+    title: "GPT-5.6 Terra",
+    description:
+      "Mid-tier frontier model served on the SayGM inference subnet (Bittensor), 1M context.",
+    params: {
+      model: "gpt-5.6-terra",
+      contextLength: 1_000_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-5.6 Terra",
+    },
+    providerOptions: ["saygm"],
+    icon: "saygm.svg",
+    isOpenSource: false,
+  },
+  saygmO3: {
+    title: "o3",
+    description:
+      "Full o3 reasoning model served on the SayGM inference subnet (Bittensor), 1M context.",
+    params: {
+      model: "o3",
+      contextLength: 1_000_000,
+      completionOptions: { maxTokens: 100_000 },
+      title: "o3",
+    },
+    providerOptions: ["saygm"],
+    icon: "saygm.svg",
+    isOpenSource: false,
+  },
+  saygmO4Mini: {
+    title: "o4 Mini",
+    description:
+      "Compact o-series reasoning model served on the SayGM inference subnet (Bittensor), 1M context.",
+    params: {
+      model: "o4-mini",
+      contextLength: 1_000_000,
+      completionOptions: { maxTokens: 100_000 },
+      title: "o4 Mini",
+    },
+    providerOptions: ["saygm"],
+    icon: "saygm.svg",
+    isOpenSource: false,
+  },
   gemini25Flash: {
     title: "Gemini 2.5 Flash",
     description:

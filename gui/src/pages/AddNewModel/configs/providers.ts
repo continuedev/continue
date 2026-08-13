@@ -266,6 +266,37 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     ],
     apiKeyUrl: "https://z.ai/manage-apikey/apikey-list",
   },
+  saygm: {
+    title: "SayGM",
+    provider: "saygm",
+    description:
+      "Frontier models (GPT-5.x, o-series) served by the SayGM inference subnet on Bittensor",
+    longDescription: `[SayGM](https://saygm.com) is a decentralized inference subnet on Bittensor serving frontier models over an OpenAI-compatible API. Sign up at [saygm.com](https://saygm.com) to create an API key.`,
+    icon: "saygm.svg",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your SayGM API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.saygmGpt5_6Sol,
+      models.saygmGpt5_6Terra,
+      models.saygmGpt5_6Luna,
+      models.saygmGpt5_5,
+      models.saygmGpt5_4,
+      models.saygmGpt5_4Mini,
+      models.saygmGpt5_4Nano,
+      models.saygmO3,
+      models.saygmO4Mini,
+    ],
+    apiKeyUrl: "https://saygm.com",
+  },
   "function-network": {
     title: "Function Network",
     provider: "function-network",
