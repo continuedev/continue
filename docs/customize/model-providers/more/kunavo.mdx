@@ -1,0 +1,95 @@
+---
+title: "How to Configure Kunavo with Continue"
+sidebarTitle: "Kunavo"
+---
+
+<Info>
+  [Kunavo](https://kunavo.com) is a hosted AI gateway that serves Claude,
+  Gemini and GPT models — plus image, video and music models — behind a single
+  OpenAI-compatible API key, with transparent per-token pricing.
+</Info>
+
+<Tip>
+  Get an API key from the [Kunavo dashboard](https://kunavo.com/app/signup) —
+  pay-as-you-go from a $10 top-up, no subscription, and the balance never
+  expires.
+</Tip>
+
+## Configuration
+
+Kunavo exposes an OpenAI-compatible endpoint at `https://api.kunavo.com/v1`,
+so it works with Continue's `openai` provider and an `apiBase` override:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Claude Sonnet 4.6 (Kunavo)
+      provider: openai
+      model: claude-sonnet-4-6
+      apiBase: https://api.kunavo.com/v1
+      apiKey: <YOUR_KUNAVO_API_KEY>
+      roles:
+        - chat
+        - edit
+        - apply
+    - name: Claude Opus 5 (Kunavo)
+      provider: openai
+      model: claude-opus-5
+      apiBase: https://api.kunavo.com/v1
+      apiKey: <YOUR_KUNAVO_API_KEY>
+      roles:
+        - chat
+    - name: Claude Haiku 4.5 (Kunavo)
+      provider: openai
+      model: claude-haiku-4-5
+      apiBase: https://api.kunavo.com/v1
+      apiKey: <YOUR_KUNAVO_API_KEY>
+      roles:
+        - chat
+        - autocomplete
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude Sonnet 4.6 (Kunavo)",
+        "provider": "openai",
+        "model": "claude-sonnet-4-6",
+        "apiBase": "https://api.kunavo.com/v1",
+        "apiKey": "<YOUR_KUNAVO_API_KEY>"
+      },
+      {
+        "title": "Claude Opus 5 (Kunavo)",
+        "provider": "openai",
+        "model": "claude-opus-5",
+        "apiBase": "https://api.kunavo.com/v1",
+        "apiKey": "<YOUR_KUNAVO_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+Model IDs are flat slugs (`claude-sonnet-4-6`, `gemini-3-6-flash`,
+`gpt-5-4` — no vendor prefix). The full catalog with live per-token pricing
+is at [kunavo.com/models](https://kunavo.com/models).
+
+## Recommended models
+
+| Role | Model | Why |
+| --- | --- | --- |
+| Chat / Edit | `claude-sonnet-4-6` | Value default for everyday agentic coding |
+| Hard refactors | `claude-opus-5` | Strongest reasoning; same price as the older `claude-opus-4-7` |
+| Autocomplete / quick asks | `claude-haiku-4-5` | Fast and inexpensive |
+| High-volume, cost-sensitive | `gemini-3-6-flash` | Cheapest capable tier on the gateway |
+
+Failed requests are not billed, and one key covers every model on the
+gateway, so switching models is a one-line change in `config.yaml`.
