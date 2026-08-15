@@ -4,6 +4,6 @@
     <bytecodeTargetLevel target="17" />
   </component>
   <component name="TypeScriptCompiler">
-    <option name="useTypesFromServer" value="true" />
+    <option name="nodeInterpreterTextField" value="$APPLICATION_CONFIG_DIR$/node/versions/26.7.0/bin/node" />
   </component>
 </project>
