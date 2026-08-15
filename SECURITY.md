@@ -2,15 +2,24 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please do not open a public issue. Instead, please report it by emailing security@continue.dev. We will be highly responsive to all security concerns and ask that you give us sufficient time to investigate and address the vulnerability before disclosing it publicly.
+If you discover a security vulnerability, please **do not open a public issue**. Instead, report it privately by emailing [security@liberide.dev](mailto:security@liberide.dev).
+
+We will investigate all reports promptly and ask that you give us reasonable time to address the issue before any public disclosure.
 
 Please include the following details in your report:
 
-- A description of the vulnerability
+- A clear description of the vulnerability
 - Steps to reproduce the issue
 - Your assessment of the potential impact
-- Any possible mitigations
+- Any possible mitigations or patches
+
+## Supported Versions
+
+| Version | Supported          |
+| ------- | ------------------ |
+| main    | :white_check_mark: |
+| < main  | :x:                |
 
 ## Contact
 
-For any other questions or concerns related to security, please contact us at security@continue.dev.
+For any other security-related questions, please contact us at [security@liberide.dev](mailto:security@liberide.dev).
