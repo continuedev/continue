@@ -17,6 +17,7 @@ import BedrockImport from "./BedrockImport";
 import Cerebras from "./Cerebras";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
+import Crusoe from "./Crusoe";
 import CometAPI from "./CometAPI";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
@@ -119,6 +120,7 @@ export const LLMClasses = [
   Cerebras,
   Asksage,
   Nebius,
+  Crusoe,
   Nous,
   Venice,
   VertexAI,

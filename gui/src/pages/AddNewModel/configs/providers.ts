@@ -1390,4 +1390,29 @@ Fund your wallet with USDC on Solana or Base. ClawRouter uses x402 micropayments
     ],
     apiKeyUrl: "https://portal.nousresearch.com",
   },
+  crusoe: {
+    title: "Crusoe",
+    provider: "crusoe",
+    refPage: "crusoe",
+    description:
+      "Crusoe Managed Inference serves open-weight models like GLM 5.2 on an OpenAI-compatible API.",
+    longDescription:
+      "Crusoe provides Managed Inference, an OpenAI-compatible API for open-weight models such as GLM, DeepSeek, and Nemotron. Get an API key in the [Crusoe Console](https://console.crusoe.ai/) under Security > Inference API Key.",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    params: {
+      apiBase: "https://api.inference.crusoecloud.com/v1",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Crusoe API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [models.crusoeGlm52, models.gptOss120B, models.crusoeGemma4],
+    apiKeyUrl: "https://console.crusoe.ai/",
+  },
 };

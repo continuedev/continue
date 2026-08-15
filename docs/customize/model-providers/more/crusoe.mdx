@@ -1,0 +1,96 @@
+---
+title: "Crusoe"
+description: "Configure Crusoe Managed Inference with Continue to access open-weight models like GLM 5.2, DeepSeek V3, and gpt-oss on an OpenAI-compatible API"
+---
+
+Crusoe Managed Inference is an OpenAI-compatible API for open-weight models such as GLM, DeepSeek, Nemotron, and gpt-oss, served from Crusoe's vertically integrated AI cloud.
+
+<Info>
+  You can get an API key in the [Crusoe Console](https://console.crusoe.ai/) under **Security > Inference API Key**. For pricing, see the [Crusoe pricing page](https://crusoe.ai/cloud/pricing).
+</Info>
+
+## Available Models
+
+| Model | Context Length | Notes |
+|-------|----------------|-------|
+| `zai/GLM-5.2` | 256k | Strong coding and agentic tool use, reasoning on by default |
+| `zai/GLM-5.1` | 202k | Reasoning model |
+| `openai/gpt-oss-120b` | 131k | Tool use, low/medium/high reasoning effort |
+| `google/gemma-4-31b-it` | 262k | Structured output, toggleable reasoning |
+| `deepseek-ai/DeepSeek-V3-0324` | 163k | General chat |
+| `moonshotai/Kimi-K2.6` | 256k | Agentic tool use, reasoning |
+| `meta-llama/Llama-3.3-70B-Instruct` | 131k | General chat and tool use |
+| `nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B` | 262k | Multimodal reasoning |
+
+The current catalog is always available from the [models endpoint](https://api.inference.crusoecloud.com/v1/models) and the [Crusoe Managed Inference docs](https://docs.crusoecloud.com/managed-inference/overview).
+
+## Chat Model
+
+We recommend configuring **GLM 5.2** as your chat model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: GLM 5.2
+      provider: crusoe
+      model: zai/GLM-5.2
+      apiKey: <YOUR_CRUSOE_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GLM 5.2",
+        "provider": "crusoe",
+        "model": "zai/GLM-5.2",
+        "apiKey": "<YOUR_CRUSOE_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Function Calling Example
+
+Models with function calling support include GLM 5.2, gpt-oss-120b, Kimi K2.6, and Llama 3.3 70B:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: gpt-oss-120b
+      provider: crusoe
+      model: openai/gpt-oss-120b
+      apiKey: <YOUR_CRUSOE_API_KEY>
+      capabilities:
+        - tool_use
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "gpt-oss-120b",
+        "provider": "crusoe",
+        "model": "openai/gpt-oss-120b",
+        "apiKey": "<YOUR_CRUSOE_API_KEY>",
+        "capabilities": ["tool_use"]
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
