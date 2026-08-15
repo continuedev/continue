@@ -14,6 +14,10 @@ import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
+import {
+  ShadowCodeToolsMcpServer,
+  setShadowCodeToolsMcpServer,
+} from "./mcp/shadowCodeToolsServer";
 import Lemonade from "./llm/llms/Lemonade";
 import { fetchModels } from "./llm/fetchModels";
 import Ollama from "./llm/llms/Ollama";
@@ -94,6 +98,7 @@ export class Core {
   private docsService: DocsService;
   private globalContext = new GlobalContext();
   llmLogger = new LLMLogger();
+  shadowCodeToolsMcpServer: ShadowCodeToolsMcpServer;
 
   private messageAbortControllers = new Map<string, AbortController>();
   private addMessageAbortController(id: string): AbortController {
@@ -136,6 +141,18 @@ export class Core {
       const ideInfoPromise = messenger.request("getIdeInfo", undefined);
       const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
       this.configHandler = new ConfigHandler(this.ide, this.llmLogger);
+
+      this.shadowCodeToolsMcpServer = new ShadowCodeToolsMcpServer({
+        loadConfig: async () => (await this.configHandler.loadConfig()).config,
+        executeTool: (toolCall, sessionId) =>
+          this.handleToolCall(toolCall, sessionId),
+        requestApproval: (params) =>
+          this.messenger.request("claudeCodeCli/authorizeToolCall", params),
+      });
+      setShadowCodeToolsMcpServer(this.shadowCodeToolsMcpServer);
+      void this.shadowCodeToolsMcpServer.ensureStarted().catch((e) => {
+        console.error("Failed to start shadow-code-tools MCP server", e);
+      });
 
       this.docsService = DocsService.createSingleton(
         this.configHandler,

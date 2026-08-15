@@ -1216,6 +1216,14 @@ export interface BaseCompletionOptions {
   reasoning?: boolean;
   reasoningBudgetTokens?: number;
   promptCaching?: boolean;
+  /**
+   * The ShadowChatDb session id this call's turn is recorded/looked-up under
+   * (see core/llm/tokenOptimizedChat.ts and core/util/shadowChatSessionId.ts).
+   * Set by tokenOptimizedStreamChat so providers that need to correlate their
+   * own side-channel state with the same session (e.g. ClaudeCodeCli's MCP
+   * tool calls) use the real id rather than re-deriving a different one.
+   */
+  shadowSessionId?: string;
 }
 
 export interface ModelCapability {

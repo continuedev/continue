@@ -116,7 +116,17 @@ export async function* llmStreamChat(
 
       return next.value;
     } else {
-      const ultraModeEnabled = config.ui?.ultraTokenSaving ?? false;
+      // Claude Code CLI (core/llm/llms/ClaudeCodeCli.ts) only ever sees the
+      // latest user message per call - it has no --resume-based continuity
+      // of its own, by design (see ClaudeCodeCli.ts's comments). It depends
+      // structurally on tokenOptimizedStreamChat's ShadowChatDb bookkeeping
+      // and forced shadow_* tool exposure to have any memory of earlier
+      // turns at all, not just as an optional token-saving optimization -
+      // so it always takes this path regardless of the user's Ultra Token
+      // Saving setting.
+      const ultraModeEnabled =
+        model.providerName === "claudecode" ||
+        (config.ui?.ultraTokenSaving ?? false);
       const historyLimit = 20;
       // Prefer the GUI's real per-conversation ID; fall back to a
       // content-derived one for callers that don't supply it yet.

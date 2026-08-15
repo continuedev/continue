@@ -22,6 +22,11 @@ import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
 import {
+  editExistingFileUnsupportedImpl,
+  multiEditServerImpl,
+  singleFindAndReplaceServerImpl,
+} from "./implementations/serverSideEdit";
+import {
   shadowGetChatHistoryImpl,
   shadowGetConversationStatsImpl,
   shadowGetToolResultImpl,
@@ -212,6 +217,16 @@ export async function callBuiltInTool(
       return await fileGlobSearchImpl(args, extras);
     case BuiltInToolNames.RunTerminalCommand:
       return await runTerminalCommandImpl(args, extras);
+    // Normally client-executed only (see CLIENT_TOOLS_IMPLS in ./builtIn) so
+    // the GUI can stream a live diff preview into the editor. These
+    // server-side fallbacks let callers with no interactive editor session
+    // (e.g. shadow-code-tools MCP) still actually apply the edit.
+    case BuiltInToolNames.SingleFindAndReplace:
+      return await singleFindAndReplaceServerImpl(args, extras);
+    case BuiltInToolNames.MultiEdit:
+      return await multiEditServerImpl(args, extras);
+    case BuiltInToolNames.EditExistingFile:
+      return await editExistingFileUnsupportedImpl(args, extras);
     case BuiltInToolNames.SearchWeb:
       return await searchWebImpl(args, extras);
     case BuiltInToolNames.FetchUrlContent:

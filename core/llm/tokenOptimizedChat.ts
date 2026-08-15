@@ -205,6 +205,7 @@ export async function* tokenOptimizedStreamChat(
   const augmentedOptions: LLMFullCompletionOptions = {
     ...options,
     tools: [...clientTools, ...missingShadowTools],
+    shadowSessionId: sessionId,
   };
 
   let loopMessages: ChatMessage[] = [
@@ -244,6 +245,26 @@ export async function* tokenOptimizedStreamChat(
     const { promptTokens, completionTokens } = extractUsageFromChunks(chunks);
     totalActualTokensIn += promptTokens;
     totalActualTokensOut += completionTokens;
+
+    // Claude Code CLI (core/llm/llms/ClaudeCodeCli.ts) resolves its entire
+    // tool-call loop internally, inside the single `claude -p` subprocess,
+    // via shadow-code-tools MCP - including shadow_* history lookups. Any
+    // toolCalls it yields here (paired with their results, for UI parity
+    // with the normal provider path) are already-resolved history, not
+    // pending work. Running the interception logic below would either
+    // re-execute already-resolved shadow_* calls a second time, or spawn a
+    // needless second `claude -p` process for calls that already have a
+    // final answer - so always treat a single iteration as done.
+    if (model.providerName === "claudecode") {
+      for (const chunk of chunks) {
+        yield chunk;
+      }
+      finalPromptLog = {
+        ...finalPromptLog,
+        completion: buildTextContent(chunks),
+      };
+      break;
+    }
 
     const toolCalls = extractCompletedToolCalls(chunks);
 

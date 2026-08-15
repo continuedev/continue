@@ -41,4 +41,20 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   "jetbrains/setColors": [Record<string, string | null | undefined>, void];
   sessionUpdate: [{ sessionInfo: any | undefined }, void];
   toolCallPartialOutput: [{ toolCallId: string; contextItems: any[] }, void];
+
+  // Sent by the in-process shadow-code-tools MCP server (core/mcp/shadowCodeToolsServer.ts)
+  // when a Claude Code CLI-driven tool call needs approval per the same policy rules
+  // that gate normal tool calls. Blocks until the user accepts/rejects in the GUI.
+  "claudeCodeCli/authorizeToolCall": [
+    {
+      approvalId: string;
+      toolCallId: string;
+      sessionId?: string;
+      toolName: string;
+      args: Record<string, unknown>;
+      displayTitle?: string;
+      wouldLikeTo?: string;
+    },
+    { approved: boolean },
+  ];
 };

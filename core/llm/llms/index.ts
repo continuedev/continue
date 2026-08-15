@@ -15,6 +15,7 @@ import Azure from "./Azure";
 import Bedrock from "./Bedrock";
 import BedrockImport from "./BedrockImport";
 import Cerebras from "./Cerebras";
+import ClaudeCodeCli from "./ClaudeCodeCli";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import CometAPI from "./CometAPI";
@@ -72,6 +73,7 @@ import xAI from "./xAI";
 import zAI from "./zAI";
 export const LLMClasses = [
   Anthropic,
+  ClaudeCodeCli,
   Cohere,
   CometAPI,
   FunctionNetwork,

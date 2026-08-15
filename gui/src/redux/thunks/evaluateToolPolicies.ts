@@ -16,7 +16,7 @@ interface EvaluatedPolicy {
  * Evaluates the tool policy for a tool call, including dynamic policy evaluation
  * Note that tool group policies are not considered here because activeTools already excludes disabled groups
  */
-async function evaluateToolPolicy(
+export async function evaluateToolPolicy(
   ideMessenger: IIdeMessenger,
   activeTools: Tool[],
   toolCallState: ToolCallState,

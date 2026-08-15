@@ -3,6 +3,7 @@ import Layout from "./components/Layout";
 import { MainEditorProvider } from "./components/mainInput/TipTapEditor";
 import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProviders";
 import { VscThemeProvider } from "./context/VscTheme";
+import ClaudeCodeCliApprovalGate from "./hooks/ClaudeCodeCliApprovalGate";
 import ParallelListeners from "./hooks/ParallelListeners";
 import ConfigPage from "./pages/config";
 import ErrorPage from "./pages/error";
@@ -59,6 +60,7 @@ function App() {
         </SubmenuContextProvidersProvider>
       </MainEditorProvider>
       <ParallelListeners />
+      <ClaudeCodeCliApprovalGate />
     </VscThemeProvider>
   );
 }
