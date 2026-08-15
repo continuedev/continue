@@ -37,6 +37,33 @@ export interface ModelPackage {
 }
 
 export const models: { [key: string]: ModelPackage } = {
+  crusoeGlm52: {
+    title: "GLM 5.2",
+    description:
+      "Z.ai's GLM 5.2 with 256k context, strong coding and agentic tool use, served on Crusoe Managed Inference.",
+    refUrl: "https://docs.crusoecloud.com/managed-inference/overview",
+    params: {
+      title: "GLM 5.2",
+      model: "zai/GLM-5.2",
+      contextLength: 256_000,
+    },
+    icon: "zai.svg",
+    providerOptions: ["crusoe"],
+    isOpenSource: true,
+  },
+  crusoeGemma4: {
+    title: "Gemma 4 31B",
+    description:
+      "Google's Gemma 4 31B instruction-tuned model with 262k context, served on Crusoe Managed Inference.",
+    refUrl: "https://docs.crusoecloud.com/managed-inference/overview",
+    params: {
+      title: "Gemma 4 31B",
+      model: "google/gemma-4-31b-it",
+      contextLength: 262_000,
+    },
+    providerOptions: ["crusoe"],
+    isOpenSource: true,
+  },
   hermes3Llama31_405b: {
     title: "Hermes 3 Llama 3.1 405B",
     description:
@@ -213,10 +240,15 @@ export const models: { [key: string]: ModelPackage } = {
             title: "gpt-oss-120b (OVHcloud)",
             contextLength: 131072,
           },
+          crusoe: {
+            model: "openai/gpt-oss-120b",
+            title: "gpt-oss-120b (Crusoe)",
+            contextLength: 131072,
+          },
         },
       },
     ],
-    providerOptions: ["vllm", "ovhcloud"],
+    providerOptions: ["vllm", "ovhcloud", "crusoe"],
     isOpenSource: true,
   },
   llama318BChat: {
