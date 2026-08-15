@@ -97,14 +97,21 @@ const getColorEnv = () => ({
   CLICOLOR_FORCE: "1",
 });
 
-// Only spawn processes locally when there is no remote workspace.
+// Spawn processes locally unless the workspace is a known remote environment.
 // With extensionKind: ["ui", "workspace"], the extension host almost always
 // runs on the local machine. childProcess.spawn() executes on the extension
-// host, so for any remote workspace it would run commands on the wrong machine
-// (or fail with ENOENT when the local shell doesn't match the remote OS).
-// All remote types delegate to ide.runCommand() which routes through VS Code's
-// integrated terminal and executes in the correct remote environment.
-const LOCAL_ONLY = ["", "local"];
+// host, so for a truly remote workspace it would run commands on the wrong
+// machine (or fail with ENOENT when the local shell doesn't match the remote
+// OS). All known remote types delegate to ide.runCommand() which routes
+// through the integrated terminal and executes in the correct remote env.
+//
+// We use a blocklist instead of an allowlist because VS Code forks like Cursor
+// may report a non-standard remoteName even when running locally.  The
+// previous allowlist (["", "local"]) caused those forks to fall into the
+// remote path, silently dropping stdout from tool results.
+const KNOWN_REMOTE_NAMES = ["wsl", "ssh-remote", "dev-container", "codespaces", "tunnel"];
+const isLocalEnvironment = (remoteName: string) =>
+  !KNOWN_REMOTE_NAMES.includes(remoteName);
 
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const command = getStringArg(args, "command");
@@ -115,7 +122,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const ideInfo = await extras.ide.getIdeInfo();
   const toolCallId = extras.toolCallId || "";
 
-  if (LOCAL_ONLY.includes(ideInfo.remoteName)) {
+  if (isLocalEnvironment(ideInfo.remoteName)) {
     // For streaming output
     if (extras.onPartialOutput) {
       try {
