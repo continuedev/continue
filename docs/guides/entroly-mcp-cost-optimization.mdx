@@ -1,0 +1,90 @@
+---
+title: "Use Entroly MCP with Continue"
+description: "Add Entroly's local context-selection, recovery, and receipt tools to Continue Agent mode."
+sidebarTitle: "Entroly MCP"
+---
+
+Entroly can run as a local MCP server for Continue. This gives the agent tools for
+selecting repository evidence under a token budget, recovering omitted source from
+content-addressed handles, and creating auditable Context Receipts.
+
+MCP attachment does not automatically intercept Continue's model requests or prove
+provider-billed token savings. Measure behavior on your own repository before using
+separate proxy routing.
+
+## Prerequisites
+
+- Continue installed in VS Code or JetBrains
+- Python 3.10 or newer
+- [`uv`](https://docs.astral.sh/uv/getting-started/installation/) installed; `uvx` is included with `uv`
+- A model configured for Continue Agent mode
+
+## Configure the MCP server
+
+Create `.continue/mcpServers/entroly.yaml` in your workspace:
+
+```yaml
+name: Entroly
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: Entroly
+    type: stdio
+    command: uvx
+    args:
+      - "--from"
+      - "entroly"
+      - "entroly"
+      - "serve"
+    env:
+      ENTROLY_NO_DOCKER: "1"
+```
+
+`ENTROLY_NO_DOCKER=1` selects Entroly's local Python fallback when the optional
+native engine is unavailable. Remove it if you intentionally use Entroly's Docker
+or native-engine setup.
+
+Restart Continue after saving the file. MCP tools are available in Agent mode.
+
+## Verify Entroly locally
+
+Run Entroly's bounded verifier from the repository you want to inspect:
+
+```bash
+uvx --from entroly entroly verify-claims --max-files 30
+```
+
+The verifier checks SDK loading, local indexing, budgeted context selection,
+content-addressed recovery, and engine mode without requiring an LLM API key.
+Results depend on the repository and selected sample; they are not a universal
+compression or answer-quality guarantee.
+
+## Use the tools in Continue
+
+In Agent mode, ask Continue to use an Entroly tool explicitly, for example:
+
+```text
+Use Entroly to select the most relevant repository evidence for this task and
+return the Context Receipt with the result.
+```
+
+Review the selected sources and receipt before relying on the result. Recovery
+handles let the agent retrieve exact omitted source when more detail is needed.
+
+## Measurement boundary
+
+| What this setup provides | What it does not claim |
+|---|---|
+| Local MCP context-selection tools | Automatic interception of every model request |
+| Content-addressed source recovery | Universal token or dollar savings |
+| Auditable Context Receipts | No quality loss on every task |
+| Local verification without an LLM key | Provider billing evidence from MCP attachment alone |
+
+For provider-bound accounting, the request must be deliberately routed through an
+Entroly proxy deployment. Keep MCP tool use and proxy traffic measurements separate.
+
+## Resources
+
+- [Entroly repository](https://github.com/juyterman1000/entroly)
+- [Entroly limitations](https://github.com/juyterman1000/entroly/blob/main/docs/limitations.md)
+- [Continue MCP setup](/customize/deep-dives/mcp)
