@@ -3,6 +3,7 @@ import { EXTENSION_NAME } from "core/util/constants";
 import { LLMLogger } from "core/llm/logger";
 import * as vscode from "vscode";
 
+import { getStylesheetLink } from "./util/util";
 import { getExtensionUri, getNonce } from "./util/vscode";
 
 interface FromConsoleView {
@@ -196,7 +197,7 @@ export class ContinueConsoleWebviewViewProvider
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script>const vscode = acquireVsCodeApi();</script>
-        <link href="${styleMainUri}" rel="stylesheet">
+        ${getStylesheetLink(styleMainUri)}
 
         <title>Continue</title>
       </head>

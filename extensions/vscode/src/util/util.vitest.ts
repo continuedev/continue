@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { getStylesheetLink } from "./util";
+
 vi.mock("node:os", () => ({
   platform: vi.fn(),
   arch: vi.fn(),
@@ -75,5 +77,13 @@ describe("isExtensionPrerelease", () => {
     } as any);
 
     expect(isExtensionPrerelease()).toBe(true);
+  });
+});
+
+describe("getStylesheetLink", () => {
+  it("requests webview stylesheets with CORS", () => {
+    expect(getStylesheetLink("vscode-webview://continue/gui/index.css")).toBe(
+      '<link href="vscode-webview://continue/gui/index.css" rel="stylesheet" crossorigin="anonymous">',
+    );
   });
 });
