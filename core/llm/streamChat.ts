@@ -31,6 +31,7 @@ export async function* llmStreamChat(
     completionOptions,
     messages,
     messageOptions,
+    sessionId: clientSessionId,
   } = msg.data;
 
   const model = config.selectedModelByRole.chat;
@@ -117,12 +118,14 @@ export async function* llmStreamChat(
     } else {
       const ultraModeEnabled = config.ui?.ultraTokenSaving ?? false;
       const historyLimit = 20;
-      const sessionId = deriveSessionId(messages);
+      // Prefer the GUI's real per-conversation ID; fall back to a
+      // content-derived one for callers that don't supply it yet.
+      const sessionId = clientSessionId ?? deriveSessionId(messages);
 
       // Guard against toggling Ultra Token Saving mid-conversation
-      if (messages.length > 1) {
-        const storedSession = await ShadowChatDb.getSession(sessionId);
-        if (storedSession && storedSession.ultraModeEnabled !== ultraModeEnabled) {
+      const storedSession = await ShadowChatDb.getSession(sessionId);
+      if (storedSession) {
+        if (storedSession.ultraModeEnabled !== ultraModeEnabled) {
           const direction = ultraModeEnabled ? "enabled" : "disabled";
           yield {
             role: "assistant",
@@ -131,7 +134,7 @@ export async function* llmStreamChat(
           return errorPromptLog;
         }
       } else {
-        // First message of a new conversation — record the current mode
+        // First turn seen for this session — record the current mode
         await ShadowChatDb.createSession(sessionId, ultraModeEnabled);
       }
 

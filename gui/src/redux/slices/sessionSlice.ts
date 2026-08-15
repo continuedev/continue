@@ -603,6 +603,27 @@ export const sessionSlice = createSlice({
             lastMessage = lastItem.message;
           }
 
+          // A tool result streamed inline (not via the client's own tool
+          // execution, e.g. resolved server-side) means the call is already
+          // complete — mark the matching tool call state done directly rather
+          // than leaving it stuck "generating" with nothing to resolve it.
+          if (message.role === "tool" && message.toolCallId) {
+            const preResolvedState = findToolCallById(
+              state.history,
+              message.toolCallId,
+            );
+            if (preResolvedState && preResolvedState.status !== "done") {
+              preResolvedState.status = "done";
+              preResolvedState.output = [
+                {
+                  name: preResolvedState.toolCall.function.name,
+                  description: "Tool output",
+                  content: messageContent,
+                },
+              ];
+            }
+          }
+
           // Add to the existing message
           if (messageContent) {
             if (messageContent.includes("<think>") && message.role !== "tool") {

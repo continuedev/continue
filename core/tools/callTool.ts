@@ -1,5 +1,6 @@
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
 import { ContextItem, McpUiState, Tool, ToolCall, ToolExtras } from "..";
+import { ShadowChatDb } from "../data/shadowChatDb";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import { ContinueError, ContinueErrorReason } from "../util/errors";
 import { canParseUrl } from "../util/url";
@@ -20,6 +21,15 @@ import { readSkillImpl } from "./implementations/readSkill";
 import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
+import {
+  shadowGetChatHistoryImpl,
+  shadowGetConversationStatsImpl,
+  shadowGetToolResultImpl,
+  shadowSearchAllSessionsImpl,
+  shadowSearchMessagesImpl,
+  shadowSemanticSearchAllSessionsImpl,
+  shadowSemanticSearchImpl,
+} from "./implementations/shadowChatHistory";
 import { viewDiffImpl } from "./implementations/viewDiff";
 import { viewRepoMapImpl } from "./implementations/viewRepoMap";
 import { viewSubdirectoryImpl } from "./implementations/viewSubdirectory";
@@ -224,6 +234,20 @@ export async function callBuiltInTool(
       return await viewRepoMapImpl(args, extras);
     case BuiltInToolNames.ViewSubdirectory:
       return await viewSubdirectoryImpl(args, extras);
+    case BuiltInToolNames.ShadowGetChatHistory:
+      return await shadowGetChatHistoryImpl(args, extras);
+    case BuiltInToolNames.ShadowSearchMessages:
+      return await shadowSearchMessagesImpl(args, extras);
+    case BuiltInToolNames.ShadowSemanticSearch:
+      return await shadowSemanticSearchImpl(args, extras);
+    case BuiltInToolNames.ShadowGetConversationStats:
+      return await shadowGetConversationStatsImpl(args, extras);
+    case BuiltInToolNames.ShadowGetToolResult:
+      return await shadowGetToolResultImpl(args, extras);
+    case BuiltInToolNames.ShadowSearchAllSessions:
+      return await shadowSearchAllSessionsImpl(args, extras);
+    case BuiltInToolNames.ShadowSemanticSearchAllSessions:
+      return await shadowSemanticSearchAllSessionsImpl(args, extras);
     default:
       throw new Error(`Tool "${functionName}" not found`);
   }
@@ -253,6 +277,28 @@ export async function callTool(
       contextItems.forEach((item) => {
         item.icon = tool.faviconUrl;
       });
+    }
+
+    if (extras.sessionId && toolCall.id) {
+      // Best-effort: record input/output so shadow_get_tool_result can serve
+      // this immediately, without blocking or failing the actual tool call.
+      void (async () => {
+        try {
+          const turnIndex = await ShadowChatDb.getCurrentTurnIndex(
+            extras.sessionId!,
+          );
+          await ShadowChatDb.saveToolCall(
+            extras.sessionId!,
+            tool.function.name,
+            toolCall.id!,
+            JSON.stringify(args),
+            JSON.stringify(contextItems),
+            turnIndex,
+          );
+        } catch (e) {
+          console.error("Failed to record tool call for shadow chat", e);
+        }
+      })();
     }
 
     return {

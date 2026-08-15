@@ -7,10 +7,8 @@ import {
   ToolCallDelta,
 } from "../index.js";
 import { ShadowChatDb } from "../data/shadowChatDb.js";
-import {
-  createShadowHistoryToolDefinitions,
-  SHADOW_TOOL_NAMES,
-} from "../tools/implementations/shadowChatHistory.js";
+import { SHADOW_TOOL_NAMES } from "../tools/builtIn.js";
+import { shadowChatHistoryTools } from "../tools/definitions/shadowChatHistory.js";
 
 interface CompletedToolCall {
   id: string;
@@ -41,14 +39,13 @@ function extractCompletedToolCalls(chunks: ChatMessage[]): CompletedToolCall[] {
     }
   }
 
-  return callOrder
-    .map((id) => callsById.get(id)!)
-    .filter((c) => c && c.name);
+  return callOrder.map((id) => callsById.get(id)!).filter((c) => c && c.name);
 }
 
-function extractUsageFromChunks(
-  chunks: ChatMessage[],
-): { promptTokens: number; completionTokens: number } {
+function extractUsageFromChunks(chunks: ChatMessage[]): {
+  promptTokens: number;
+  completionTokens: number;
+} {
   for (let i = chunks.length - 1; i >= 0; i--) {
     const chunk = chunks[i];
     if (chunk.role === "assistant" && chunk.usage) {
@@ -84,20 +81,24 @@ async function executeShadowTool(
     }
 
     if (call.name === "shadow_search_messages") {
-      const query: string =
-        typeof args.query === "string" ? args.query : "";
-      const limit: number =
-        typeof args.limit === "number" ? args.limit : 10;
-      const results = await ShadowChatDb.searchMessages(sessionId, query, limit);
+      const query: string = typeof args.query === "string" ? args.query : "";
+      const limit: number = typeof args.limit === "number" ? args.limit : 10;
+      const results = await ShadowChatDb.searchMessages(
+        sessionId,
+        query,
+        limit,
+      );
       return JSON.stringify(results);
     }
 
     if (call.name === "shadow_semantic_search") {
-      const query: string =
-        typeof args.query === "string" ? args.query : "";
-      const limit: number =
-        typeof args.limit === "number" ? args.limit : 10;
-      const results = await ShadowChatDb.semanticSearch(sessionId, query, limit);
+      const query: string = typeof args.query === "string" ? args.query : "";
+      const limit: number = typeof args.limit === "number" ? args.limit : 10;
+      const results = await ShadowChatDb.semanticSearch(
+        sessionId,
+        query,
+        limit,
+      );
       return JSON.stringify(results);
     }
 
@@ -118,35 +119,38 @@ async function executeShadowTool(
         typeof args.tool_name === "string" ? args.tool_name : "";
       const maxAgeTurns: number =
         typeof args.max_age_turns === "number" ? args.max_age_turns : 5;
-      const result = await ShadowChatDb.getToolResult(
+      const cached = await ShadowChatDb.getToolResult(
         sessionId,
         toolName,
         maxAgeTurns,
       );
-      if (result === undefined) {
+      if (cached === undefined) {
         return JSON.stringify({
           found: false,
           message: `No cached result found for tool '${toolName}' within the last ${maxAgeTurns} turns.`,
         });
       }
-      return JSON.stringify({ found: true, result });
+      return JSON.stringify({
+        found: true,
+        input: cached.inputArgs,
+        result: cached.result,
+      });
     }
 
     if (call.name === "shadow_search_all_sessions") {
-      const query: string =
-        typeof args.query === "string" ? args.query : "";
-      const limit: number =
-        typeof args.limit === "number" ? args.limit : 10;
+      const query: string = typeof args.query === "string" ? args.query : "";
+      const limit: number = typeof args.limit === "number" ? args.limit : 10;
       const results = await ShadowChatDb.searchAllSessions(query, limit);
       return JSON.stringify(results);
     }
 
     if (call.name === "shadow_semantic_search_all_sessions") {
-      const query: string =
-        typeof args.query === "string" ? args.query : "";
-      const limit: number =
-        typeof args.limit === "number" ? args.limit : 10;
-      const results = await ShadowChatDb.semanticSearchAllSessions(query, limit);
+      const query: string = typeof args.query === "string" ? args.query : "";
+      const limit: number = typeof args.limit === "number" ? args.limit : 10;
+      const results = await ShadowChatDb.semanticSearchAllSessions(
+        query,
+        limit,
+      );
       return JSON.stringify(results);
     }
 
@@ -190,11 +194,17 @@ export async function* tokenOptimizedStreamChat(
       ? currentUserMsg.content
       : JSON.stringify(currentUserMsg.content);
 
-  // Shadow tools let the LLM pull history on demand instead of receiving it all upfront
-  const shadowTools = createShadowHistoryToolDefinitions();
+  // Shadow tools let the LLM pull history on demand instead of receiving it all
+  // upfront. They're normally included via the client's active tool list, but
+  // ultra mode's correctness depends on them always being present, so they're
+  // force-included here regardless of the user's tool settings.
+  const clientTools = options.tools ?? [];
+  const missingShadowTools = shadowChatHistoryTools.filter(
+    (st) => !clientTools.some((t) => t.function.name === st.function.name),
+  );
   const augmentedOptions: LLMFullCompletionOptions = {
     ...options,
-    tools: [...shadowTools, ...(options.tools ?? [])],
+    tools: [...clientTools, ...missingShadowTools],
   };
 
   let loopMessages: ChatMessage[] = [
@@ -223,7 +233,11 @@ export async function* tokenOptimizedStreamChat(
       chunks.push(next.value);
       next = await gen.next();
     }
-    if (next.value && typeof next.value === "object" && "prompt" in next.value) {
+    if (
+      next.value &&
+      typeof next.value === "object" &&
+      "prompt" in next.value
+    ) {
       finalPromptLog = next.value as PromptLog;
     }
 
@@ -245,7 +259,9 @@ export async function* tokenOptimizedStreamChat(
       break;
     }
 
-    const shadowCalls = toolCalls.filter((tc) => SHADOW_TOOL_NAMES.has(tc.name));
+    const shadowCalls = toolCalls.filter((tc) =>
+      SHADOW_TOOL_NAMES.has(tc.name),
+    );
     const externalCalls = toolCalls.filter(
       (tc) => !SHADOW_TOOL_NAMES.has(tc.name),
     );
@@ -258,7 +274,13 @@ export async function* tokenOptimizedStreamChat(
       break;
     }
 
-    // All tool calls are shadow tools — execute server-side and loop
+    // All tool calls are shadow tools — execute server-side (never round-tripped
+    // to the client, so the reduced-history guarantee holds), but still yield
+    // the resolved call/result so the client renders the same tool-call card
+    // it would for any other tool. Since this is followed by more streamed
+    // chunks from the next loop iteration (ending in plain text), the client's
+    // "pending tool call" detection naturally treats it as already resolved
+    // history rather than something it needs to execute itself.
     const assistantToolCallMsg: AssistantChatMessage = {
       role: "assistant",
       content: "",
@@ -269,7 +291,9 @@ export async function* tokenOptimizedStreamChat(
       })),
     };
     loopMessages = [...loopMessages, assistantToolCallMsg];
+    yield assistantToolCallMsg;
 
+    const turnIndex = await ShadowChatDb.getCurrentTurnIndex(sessionId);
     for (const call of shadowCalls) {
       const result = await executeShadowTool(call, sessionId, historyLimit);
       const toolResultMsg: ChatMessage = {
@@ -278,6 +302,16 @@ export async function* tokenOptimizedStreamChat(
         toolCallId: call.id,
       };
       loopMessages = [...loopMessages, toolResultMsg];
+      yield toolResultMsg;
+
+      await ShadowChatDb.saveToolCall(
+        sessionId,
+        call.name,
+        call.id,
+        call.args,
+        result,
+        turnIndex,
+      );
     }
     // Loop: the LLM will now see the tool results and produce its final answer
   }

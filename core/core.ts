@@ -1044,8 +1044,8 @@ export class Core {
       return { url: "" };
     });
 
-    on("tools/call", async ({ data: { toolCall } }) =>
-      this.handleToolCall(toolCall),
+    on("tools/call", async ({ data: { toolCall, sessionId } }) =>
+      this.handleToolCall(toolCall, sessionId),
     );
 
     on(
@@ -1147,7 +1147,7 @@ export class Core {
     });
   }
 
-  private async handleToolCall(toolCall: ToolCall) {
+  private async handleToolCall(toolCall: ToolCall, sessionId?: string) {
     const { config } = await this.configHandler.loadConfig();
     if (!config) {
       throw new Error("Config not loaded");
@@ -1183,6 +1183,7 @@ export class Core {
       toolCallId: toolCall.id,
       onPartialOutput,
       codeBaseIndexer: this.codeBaseIndexer,
+      sessionId,
     });
 
     return result;

@@ -16,6 +16,14 @@ function getShadowChatDbPath(): string {
   return path.join(devDataDir, "shadow-chat.sqlite");
 }
 
+// FTS5's MATCH syntax treats punctuation (?, ", *, (, ), :, -, ...) as query
+// operators, so a natural-language query like "did we talk about coding?"
+// is a syntax error, not just a search with no results. Quoting it as a
+// literal phrase sidesteps FTS5 query syntax entirely.
+function toFtsQuery(query: string): string {
+  return `"${query.replace(/"/g, '""')}"`;
+}
+
 export class ShadowChatDb {
   static db: DatabaseConnection | null = null;
 
@@ -51,6 +59,7 @@ export class ShadowChatDb {
         session_id TEXT NOT NULL,
         tool_name TEXT NOT NULL,
         tool_call_id TEXT NOT NULL UNIQUE,
+        input_args TEXT NOT NULL DEFAULT '',
         result TEXT NOT NULL,
         turn_index INTEGER NOT NULL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -64,6 +73,14 @@ export class ShadowChatDb {
           INSERT INTO shadow_messages_fts(rowid, content) VALUES (new.id, new.content);
         END;
     `);
+
+    // Migration for DBs created before input_args existed
+    const columns = await db.all("PRAGMA table_info(shadow_tool_results)");
+    if (!columns.some((c: any) => c.name === "input_args")) {
+      await db.exec(
+        "ALTER TABLE shadow_tool_results ADD COLUMN input_args TEXT NOT NULL DEFAULT ''",
+      );
+    }
   }
 
   static async get(): Promise<DatabaseConnection | null> {
@@ -71,7 +88,10 @@ export class ShadowChatDb {
     if (ShadowChatDb.db && fs.existsSync(dbPath)) {
       return ShadowChatDb.db;
     }
-    ShadowChatDb.db = await open({ filename: dbPath, driver: sqlite3.Database });
+    ShadowChatDb.db = await open({
+      filename: dbPath,
+      driver: sqlite3.Database,
+    });
     await ShadowChatDb.db.exec("PRAGMA busy_timeout = 3000;");
     await ShadowChatDb.createTables(ShadowChatDb.db);
     return ShadowChatDb.db;
@@ -114,25 +134,6 @@ export class ShadowChatDb {
     const toInsert = messages.slice(existing?.cnt ?? 0);
     if (toInsert.length === 0) return;
 
-    // Build toolCallId → toolName map from all assistant messages (for tool result tracking)
-    const toolCallNames = new Map<string, string>();
-    for (const msg of messages) {
-      if (msg.role === "assistant" && msg.toolCalls) {
-        for (const tc of msg.toolCalls) {
-          if (tc.id && tc.function?.name) {
-            toolCallNames.set(tc.id, tc.function.name);
-          }
-        }
-      }
-    }
-
-    // Current turn count for age tracking on tool results
-    const turnRow = await db.get(
-      "SELECT COUNT(*) as cnt FROM shadow_turns WHERE session_id = ?",
-      [sessionId],
-    );
-    const turnIndex: number = turnRow?.cnt ?? 0;
-
     for (const msg of toInsert) {
       const content =
         typeof msg.content === "string"
@@ -143,18 +144,40 @@ export class ShadowChatDb {
         "INSERT INTO shadow_messages (session_id, role, content) VALUES (?, ?, ?)",
         [sessionId, msg.role, content],
       );
-
-      // Cache external MCP tool results for get_tool_result lookups
-      if (msg.role === "tool" && msg.toolCallId) {
-        const toolName = toolCallNames.get(msg.toolCallId) ?? "unknown";
-        await db.run(
-          `INSERT OR IGNORE INTO shadow_tool_results
-             (session_id, tool_name, tool_call_id, result, turn_index)
-           VALUES (?, ?, ?, ?, ?)`,
-          [sessionId, toolName, msg.toolCallId, content, turnIndex],
-        );
-      }
     }
+  }
+
+  // Current turn count for a session — used both for shadow_turns/tool-result
+  // age tracking and as the turn index stamped on newly-saved tool calls.
+  static async getCurrentTurnIndex(sessionId: string): Promise<number> {
+    const db = await ShadowChatDb.get();
+    const turnRow = await db?.get(
+      "SELECT COUNT(*) as cnt FROM shadow_turns WHERE session_id = ?",
+      [sessionId],
+    );
+    return turnRow?.cnt ?? 0;
+  }
+
+  // Records a tool call's input and output at the moment it executes, so
+  // shadow_get_tool_result can serve it immediately (not one turn late).
+  static async saveToolCall(
+    sessionId: string,
+    toolName: string,
+    toolCallId: string,
+    inputArgs: string,
+    result: string,
+    turnIndex: number,
+  ): Promise<void> {
+    const db = await ShadowChatDb.get();
+    await db?.run(
+      `INSERT INTO shadow_tool_results
+         (session_id, tool_name, tool_call_id, input_args, result, turn_index)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(tool_call_id) DO UPDATE SET
+         input_args = excluded.input_args,
+         result = excluded.result`,
+      [sessionId, toolName, toolCallId, inputArgs, result, turnIndex],
+    );
   }
 
   static async getHistory(
@@ -204,7 +227,7 @@ export class ShadowChatDb {
        WHERE fts.content MATCH ? AND m.session_id = ?
        ORDER BY rank
        LIMIT ?`,
-      [query, sessionId, limit],
+      [toFtsQuery(query), sessionId, limit],
     );
     if (!rows) return [];
     return rows.map(
@@ -245,7 +268,7 @@ export class ShadowChatDb {
        WHERE fts.content MATCH ?
        ORDER BY rank
        LIMIT ?`,
-      [query, limit],
+      [toFtsQuery(query), limit],
     );
     if (!rows) return [];
     return rows.map((r: any) => ({
@@ -289,22 +312,19 @@ export class ShadowChatDb {
     sessionId: string,
     toolName: string,
     maxAgeTurns: number,
-  ): Promise<string | undefined> {
+  ): Promise<{ inputArgs: string; result: string } | undefined> {
     const db = await ShadowChatDb.get();
-    const turnRow = await db?.get(
-      "SELECT COUNT(*) as cnt FROM shadow_turns WHERE session_id = ?",
-      [sessionId],
-    );
-    const currentTurnIndex: number = turnRow?.cnt ?? 0;
+    const currentTurnIndex = await ShadowChatDb.getCurrentTurnIndex(sessionId);
     const minTurnIndex = Math.max(0, currentTurnIndex - maxAgeTurns);
 
     const row = await db?.get(
-      `SELECT result FROM shadow_tool_results
+      `SELECT input_args, result FROM shadow_tool_results
        WHERE session_id = ? AND tool_name = ? AND turn_index >= ?
        ORDER BY id DESC LIMIT 1`,
       [sessionId, toolName, minTurnIndex],
     );
-    return row?.result;
+    if (!row) return undefined;
+    return { inputArgs: row.input_args, result: row.result };
   }
 
   static async saveTurn(

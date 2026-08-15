@@ -1,208 +1,142 @@
-import { Tool } from "../../index.js";
+import { ShadowChatDb } from "../../data/shadowChatDb.js";
+import { ToolImpl } from "./index.js";
 
-export const SHADOW_TOOL_NAMES = new Set([
-  "shadow_get_chat_history",
-  "shadow_search_messages",
-  "shadow_semantic_search",
-  "shadow_get_conversation_stats",
-  "shadow_get_tool_result",
-  "shadow_search_all_sessions",
-  "shadow_semantic_search_all_sessions",
-]);
+const DEFAULT_HISTORY_LIMIT = 20;
+const DEFAULT_SEARCH_LIMIT = 10;
+const DEFAULT_MAX_AGE_TURNS = 5;
 
-export function createShadowHistoryToolDefinitions(): Tool[] {
+function requireSessionId(extras: { sessionId?: string }): string {
+  if (!extras.sessionId) {
+    throw new Error(
+      "No session ID available for this conversation — shadow chat history tools require one.",
+    );
+  }
+  return extras.sessionId;
+}
+
+export const shadowGetChatHistoryImpl: ToolImpl = async (args, extras) => {
+  const sessionId = requireSessionId(extras);
+  const limit =
+    typeof args?.limit === "number" ? args.limit : DEFAULT_HISTORY_LIMIT;
+  const history = await ShadowChatDb.getHistory(sessionId, limit);
   return [
     {
-      type: "function",
-      function: {
-        name: "shadow_get_chat_history",
-        description:
-          "Retrieve the most recent messages from this conversation. Use this when the user refers to something said earlier, asks follow-up questions, or you need context from previous turns.",
-        parameters: {
-          type: "object",
-          properties: {
-            limit: {
-              type: "number",
-              description:
-                "Maximum number of recent messages to retrieve (default: 20)",
-            },
-          },
-          required: [],
-        },
-      },
-      displayTitle: "Get Chat History",
-      wouldLikeTo: "retrieve chat history",
-      isCurrently: "retrieving chat history",
-      hasAlready: "retrieved chat history",
-      readonly: true,
-      group: "shadow",
-    },
-    {
-      type: "function",
-      function: {
-        name: "shadow_search_messages",
-        description:
-          "Search this conversation for messages containing specific keywords or phrases. Use when looking for a particular topic, code snippet, or piece of information mentioned earlier.",
-        parameters: {
-          type: "object",
-          properties: {
-            query: {
-              type: "string",
-              description: "The keyword or phrase to search for",
-            },
-            limit: {
-              type: "number",
-              description:
-                "Maximum number of matching messages to return (default: 10)",
-            },
-          },
-          required: ["query"],
-        },
-      },
-      displayTitle: "Search Messages",
-      wouldLikeTo: "search chat history",
-      isCurrently: "searching chat history",
-      hasAlready: "searched chat history",
-      readonly: true,
-      group: "shadow",
-    },
-    {
-      type: "function",
-      function: {
-        name: "shadow_semantic_search",
-        description:
-          "Full-text ranked search of this conversation using BM25 scoring. Finds messages by meaning and relevance, not just exact keyword matches. Prefer this over shadow_search_messages when looking for conceptually related content.",
-        parameters: {
-          type: "object",
-          properties: {
-            query: {
-              type: "string",
-              description:
-                "The search query — describe what you are looking for",
-            },
-            limit: {
-              type: "number",
-              description:
-                "Maximum number of results to return (default: 10)",
-            },
-          },
-          required: ["query"],
-        },
-      },
-      displayTitle: "Semantic Search",
-      wouldLikeTo: "semantically search chat history",
-      isCurrently: "searching chat history",
-      hasAlready: "searched chat history",
-      readonly: true,
-      group: "shadow",
-    },
-    {
-      type: "function",
-      function: {
-        name: "shadow_get_conversation_stats",
-        description:
-          "Get statistics about this conversation: total messages, number of turns, and how many input tokens have been saved so far by Ultra Token Saving mode.",
-        parameters: {
-          type: "object",
-          properties: {},
-          required: [],
-        },
-      },
-      displayTitle: "Get Conversation Stats",
-      wouldLikeTo: "get conversation statistics",
-      isCurrently: "retrieving conversation statistics",
-      hasAlready: "retrieved conversation statistics",
-      readonly: true,
-      group: "shadow",
-    },
-    {
-      type: "function",
-      function: {
-        name: "shadow_get_tool_result",
-        description:
-          "Retrieve a cached result from a previously executed tool call in this conversation. Use this to avoid re-running expensive tool calls (file reads, searches, API calls) when their result is still valid.",
-        parameters: {
-          type: "object",
-          properties: {
-            tool_name: {
-              type: "string",
-              description:
-                "Name of the tool whose result you want to retrieve (e.g. 'read_file', 'run_terminal_command')",
-            },
-            max_age_turns: {
-              type: "number",
-              description:
-                "How many conversation turns back to look (default: 5)",
-            },
-          },
-          required: ["tool_name"],
-        },
-      },
-      displayTitle: "Get Tool Result",
-      wouldLikeTo: "retrieve a cached tool result",
-      isCurrently: "retrieving cached tool result",
-      hasAlready: "retrieved cached tool result",
-      readonly: true,
-      group: "shadow",
-    },
-    {
-      type: "function",
-      function: {
-        name: "shadow_search_all_sessions",
-        description:
-          "Search across all past conversations (not just this one) for messages matching a keyword or phrase. Use when the user refers to something discussed in a previous chat session.",
-        parameters: {
-          type: "object",
-          properties: {
-            query: {
-              type: "string",
-              description: "The keyword or phrase to search for",
-            },
-            limit: {
-              type: "number",
-              description:
-                "Maximum number of results to return (default: 10)",
-            },
-          },
-          required: ["query"],
-        },
-      },
-      displayTitle: "Search All Sessions",
-      wouldLikeTo: "search all past chat sessions",
-      isCurrently: "searching all past sessions",
-      hasAlready: "searched all past sessions",
-      readonly: true,
-      group: "shadow",
-    },
-    {
-      type: "function",
-      function: {
-        name: "shadow_semantic_search_all_sessions",
-        description:
-          "Full-text ranked search across all past conversations using BM25 scoring. Use when the user refers to something discussed in a previous session and a keyword search may not be precise enough.",
-        parameters: {
-          type: "object",
-          properties: {
-            query: {
-              type: "string",
-              description:
-                "The search query — describe what you are looking for",
-            },
-            limit: {
-              type: "number",
-              description:
-                "Maximum number of results to return (default: 10)",
-            },
-          },
-          required: ["query"],
-        },
-      },
-      displayTitle: "Semantic Search All Sessions",
-      wouldLikeTo: "semantically search all past sessions",
-      isCurrently: "searching all past sessions",
-      hasAlready: "searched all past sessions",
-      readonly: true,
-      group: "shadow",
+      name: "Chat History",
+      description: "Recent messages in this conversation",
+      content: JSON.stringify(history),
     },
   ];
-}
+};
+
+export const shadowSearchMessagesImpl: ToolImpl = async (args, extras) => {
+  const sessionId = requireSessionId(extras);
+  const query = typeof args?.query === "string" ? args.query : "";
+  const limit =
+    typeof args?.limit === "number" ? args.limit : DEFAULT_SEARCH_LIMIT;
+  const results = await ShadowChatDb.searchMessages(sessionId, query, limit);
+  return [
+    {
+      name: "Search Results",
+      description: `Messages matching "${query}"`,
+      content: JSON.stringify(results),
+    },
+  ];
+};
+
+export const shadowSemanticSearchImpl: ToolImpl = async (args, extras) => {
+  const sessionId = requireSessionId(extras);
+  const query = typeof args?.query === "string" ? args.query : "";
+  const limit =
+    typeof args?.limit === "number" ? args.limit : DEFAULT_SEARCH_LIMIT;
+  const results = await ShadowChatDb.semanticSearch(sessionId, query, limit);
+  return [
+    {
+      name: "Semantic Search Results",
+      description: `Ranked results for "${query}"`,
+      content: JSON.stringify(results),
+    },
+  ];
+};
+
+export const shadowGetConversationStatsImpl: ToolImpl = async (
+  _args,
+  extras,
+) => {
+  const sessionId = requireSessionId(extras);
+  const stats = await ShadowChatDb.getConversationStats(sessionId);
+  const savingsPercent =
+    stats.totalEstimatedBaselineTokens > 0
+      ? Math.round(
+          (stats.totalTokensSaved / stats.totalEstimatedBaselineTokens) * 100,
+        )
+      : 0;
+  return [
+    {
+      name: "Conversation Stats",
+      description: "Token usage and savings for this conversation",
+      content: JSON.stringify({ ...stats, savingsPercent }),
+    },
+  ];
+};
+
+export const shadowGetToolResultImpl: ToolImpl = async (args, extras) => {
+  const sessionId = requireSessionId(extras);
+  const toolName = typeof args?.tool_name === "string" ? args.tool_name : "";
+  const maxAgeTurns =
+    typeof args?.max_age_turns === "number"
+      ? args.max_age_turns
+      : DEFAULT_MAX_AGE_TURNS;
+  const cached = await ShadowChatDb.getToolResult(
+    sessionId,
+    toolName,
+    maxAgeTurns,
+  );
+  return [
+    {
+      name: "Cached Tool Result",
+      description:
+        cached === undefined
+          ? `No cached result for '${toolName}'`
+          : `Cached result for '${toolName}'`,
+      content:
+        cached === undefined
+          ? JSON.stringify({
+              found: false,
+              message: `No cached result found for tool '${toolName}' within the last ${maxAgeTurns} turns.`,
+            })
+          : JSON.stringify({
+              found: true,
+              input: cached.inputArgs,
+              result: cached.result,
+            }),
+    },
+  ];
+};
+
+export const shadowSearchAllSessionsImpl: ToolImpl = async (args) => {
+  const query = typeof args?.query === "string" ? args.query : "";
+  const limit =
+    typeof args?.limit === "number" ? args.limit : DEFAULT_SEARCH_LIMIT;
+  const results = await ShadowChatDb.searchAllSessions(query, limit);
+  return [
+    {
+      name: "Cross-Session Search Results",
+      description: `Messages matching "${query}" across all sessions`,
+      content: JSON.stringify(results),
+    },
+  ];
+};
+
+export const shadowSemanticSearchAllSessionsImpl: ToolImpl = async (args) => {
+  const query = typeof args?.query === "string" ? args.query : "";
+  const limit =
+    typeof args?.limit === "number" ? args.limit : DEFAULT_SEARCH_LIMIT;
+  const results = await ShadowChatDb.semanticSearchAllSessions(query, limit);
+  return [
+    {
+      name: "Cross-Session Semantic Search Results",
+      description: `Ranked results for "${query}" across all sessions`,
+      content: JSON.stringify(results),
+    },
+  ];
+};

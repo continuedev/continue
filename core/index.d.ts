@@ -1120,6 +1120,7 @@ export interface ToolExtras {
   }) => void;
   config: ContinueConfig;
   codeBaseIndexer?: CodebaseIndexer;
+  sessionId?: string;
 }
 
 export interface McpToolMeta {

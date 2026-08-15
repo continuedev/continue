@@ -15,6 +15,15 @@ export { readSkillTool } from "./readSkill";
 export { requestRuleTool } from "./requestRule";
 export { runTerminalCommandTool } from "./runTerminalCommand";
 export { searchWebTool } from "./searchWeb";
+export {
+  shadowGetChatHistoryTool,
+  shadowSearchMessagesTool,
+  shadowSemanticSearchTool,
+  shadowGetConversationStatsTool,
+  shadowGetToolResultTool,
+  shadowSearchAllSessionsTool,
+  shadowSemanticSearchAllSessionsTool,
+} from "./shadowChatHistory";
 export { singleFindAndReplaceTool } from "./singleFindAndReplace";
 export { viewDiffTool } from "./viewDiff";
 export { viewRepoMapTool } from "./viewRepoMap";

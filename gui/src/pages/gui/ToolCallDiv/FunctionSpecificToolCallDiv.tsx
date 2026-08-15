@@ -75,6 +75,16 @@ function FunctionSpecificToolCallDiv({
         />
       );
     default:
+      // Tools without a bespoke display (grep_search, shadow_* tools, MCP
+      // tools, etc.) still show their arguments so it's clear what was
+      // actually sent, rather than only ever showing the output.
+      if (args && Object.keys(args).length > 0) {
+        return (
+          <div className="text-description-muted break-all px-3 py-1 font-mono text-xs">
+            {JSON.stringify(args)}
+          </div>
+        );
+      }
       return null;
   }
 }

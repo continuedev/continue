@@ -13,6 +13,13 @@ export const getBaseToolDefinitions = () => [
   toolDefinitions.lsTool,
   toolDefinitions.createRuleBlock,
   toolDefinitions.fetchUrlContentTool,
+  toolDefinitions.shadowGetChatHistoryTool,
+  toolDefinitions.shadowSearchMessagesTool,
+  toolDefinitions.shadowSemanticSearchTool,
+  toolDefinitions.shadowGetConversationStatsTool,
+  toolDefinitions.shadowGetToolResultTool,
+  toolDefinitions.shadowSearchAllSessionsTool,
+  toolDefinitions.shadowSemanticSearchAllSessionsTool,
 ];
 
 export const getConfigDependentToolDefinitions = async (
