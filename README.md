@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="media/logo.svg" width="80" height="80" alt="Liberide" />
+  <img src="media/logo.svg" width="85" height="85" alt="Liberide" />
 </p>
 <h1 align="center">Liberide</h1>
 
