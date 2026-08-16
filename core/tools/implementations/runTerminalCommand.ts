@@ -2,6 +2,16 @@ import iconv from "iconv-lite";
 import childProcess from "node:child_process";
 import os from "node:os";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
+import { fileURLToPath } from "node:url";
+import { ToolImpl } from ".";
+import {
+  isProcessBackgrounded,
+  markProcessAsRunning,
+  removeBackgroundedProcess,
+  removeRunningProcess,
+  updateProcessOutput,
+} from "../../util/processTerminalStates";
+import { getBooleanArg, getStringArg } from "../parseArgs";
 
 // Default timeout for terminal commands (2 minutes)
 const DEFAULT_TOOL_TIMEOUT_MS = 120_000;
@@ -30,22 +40,12 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
       args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
     };
   } else {
-    // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
+    // Unix/macOS: Use standard shell without login profile to ensure reliable agent output
     const userShell = process.env.SHELL || "/bin/bash";
-    return { shell: userShell, args: ["-l", "-c", command] };
+    return { shell: userShell, args: ["-c", command] };
   }
 }
 
-import { fileURLToPath } from "node:url";
-import { ToolImpl } from ".";
-import {
-  isProcessBackgrounded,
-  markProcessAsRunning,
-  removeBackgroundedProcess,
-  removeRunningProcess,
-  updateProcessOutput,
-} from "../../util/processTerminalStates";
-import { getBooleanArg, getStringArg } from "../parseArgs";
 
 /**
  * Resolves the working directory from workspace dirs.
@@ -87,14 +87,11 @@ function resolveWorkingDirectory(workspaceDirs: string[]): string {
   }
 }
 
-// Add color-supporting environment variables
+// Provide a clean environment for agents (no ANSI escape codes)
 const getColorEnv = () => ({
   ...process.env,
-  FORCE_COLOR: "1",
-  COLORTERM: "truecolor",
-  TERM: "xterm-256color",
-  CLICOLOR: "1",
-  CLICOLOR_FORCE: "1",
+  NO_COLOR: "1",
+  TERM: "dumb",
 });
 
 // Spawn processes locally unless the workspace is a known remote environment.
@@ -215,6 +212,14 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
             const newOutput = getDecodedOutput(data);
             terminalOutput += newOutput;
+            
+            // LOGGING
+            try {
+              require("fs").appendFileSync(
+                "/tmp/continue-agent-output.log",
+                `[STDOUT] newOutput: ${JSON.stringify(newOutput)} | terminalOutput: ${JSON.stringify(terminalOutput)}\n`
+              );
+            } catch (e) {}
 
             // Update the tracked output for potential cancellation notifications
             if (toolCallId && waitForCompletion) {
@@ -430,7 +435,14 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               }, DEFAULT_TOOL_TIMEOUT_MS);
 
               childProc.stdout?.on("data", (data) => {
-                stdout += getDecodedOutput(data);
+                const newOut = getDecodedOutput(data);
+                stdout += newOut;
+                try {
+                  require("fs").appendFileSync(
+                    "/tmp/continue-agent-output.log",
+                    `[STDOUT NON-STREAM] newOut: ${JSON.stringify(newOut)} | stdout: ${JSON.stringify(stdout)}\n`
+                  );
+                } catch (e) {}
               });
 
               childProc.stderr?.on("data", (data) => {
