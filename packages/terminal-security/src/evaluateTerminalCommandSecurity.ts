@@ -974,6 +974,25 @@ function isHighRiskCommand(
 }
 
 /**
+ * Checks if tar arguments ask for archive creation.
+ *
+ * Only mode flags may be inspected: file operands such as `archive.tar.gz` also
+ * contain a "c", which would make extraction look like creation.
+ */
+function isTarCreation(args: string[]): boolean {
+  return args.some((arg, idx) => {
+    if (arg.startsWith("--")) {
+      return arg === "--create";
+    }
+    if (arg.startsWith("-")) {
+      return arg.includes("c");
+    }
+    // tar also accepts the flag bundle without a leading dash, e.g. `tar czf`
+    return idx === 0 && /^[a-z]+$/i.test(arg) && arg.includes("c");
+  });
+}
+
+/**
  * Checks if a command is safe and can be auto-approved
  */
 function isSafeCommand(baseCommand: string, args: string[]): boolean {
@@ -1074,7 +1093,7 @@ function isSafeCommand(baseCommand: string, args: string[]): boolean {
   if (baseCommand === "tar") {
     // Check for create flag
     if (
-      args.some((arg) => arg.includes("c")) &&
+      isTarCreation(args) &&
       !args.some(
         (arg, idx) =>
           (arg === "-C" &&

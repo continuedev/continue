@@ -1521,6 +1521,38 @@ describe("evaluateTerminalCommandSecurity", () => {
       expect(result).toBe("allowedWithPermission");
     });
 
+    it("should auto-approve tar creation", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "tar -czf backup.tar.gz ./data",
+      );
+      expect(result).toBe("allowedWithoutPermission");
+    });
+
+    it("should auto-approve tar creation with old-style flags", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "tar czf backup.tar.gz ./data",
+      );
+      expect(result).toBe("allowedWithoutPermission");
+    });
+
+    it("should require permission for tar extraction", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "tar -xzf archive.tar.gz",
+      );
+      expect(result).toBe("allowedWithPermission");
+    });
+
+    it("should require permission for tar extraction with old-style flags", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "tar xzf archive.tar.gz",
+      );
+      expect(result).toBe("allowedWithPermission");
+    });
+
     it("should allow safe zip creation", () => {
       const result = evaluateTerminalCommandSecurity(
         "allowedWithPermission",
