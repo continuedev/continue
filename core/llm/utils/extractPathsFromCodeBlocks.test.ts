@@ -28,6 +28,18 @@ describe("extractPathsFromCodeBlocks", () => {
     expect(result.length).toBe(3);
   });
 
+  it("should extract paths containing spaces", () => {
+    expect(
+      extractPathsFromCodeBlocks("```docs/foo bar.md\n# Title\n```"),
+    ).toEqual(["docs/foo bar.md"]);
+    expect(
+      extractPathsFromCodeBlocks("```md docs/foo bar.md\n# Title\n```"),
+    ).toEqual(["docs/foo bar.md"]);
+    expect(
+      extractPathsFromCodeBlocks("```md docs/foo bar.md (1-3)\n# Title\n```"),
+    ).toEqual(["docs/foo bar.md"]);
+  });
+
   it("should not extract paths from code blocks without file paths", () => {
     const content = "```typescript\nconst x = 1;\n```";
     expect(extractPathsFromCodeBlocks(content)).toEqual([]);

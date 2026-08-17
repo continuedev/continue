@@ -476,4 +476,36 @@ describe("Content pattern matching", () => {
       shouldApplyRule(nestedPatternRule, [utilFilePath], {}, utilContents),
     ).toBe(false);
   });
+
+  it("should apply rules to files whose names contain spaces", () => {
+    const docsRule: RuleWithSource = {
+      name: "Docs Rule",
+      rule: "Write docs in the active voice",
+      globs: "docs/**/*.md",
+      source: "rules-block",
+      sourceFile: "/path/to/repo/.continue/rules/docs.md",
+    };
+
+    // Code block headers are "```<language> <path> (<range>)", where the
+    // language and range are both optional
+    const messages: UserChatMessage[] = [
+      {
+        role: "user",
+        content: "What do you think?\n```docs/foo bar.md\n# Title\n```",
+      },
+      {
+        role: "user",
+        content: "What do you think?\n```md docs/foo bar.md\n# Title\n```",
+      },
+      {
+        role: "user",
+        content:
+          "What do you think?\n```md docs/foo bar.md (1-1)\n# Title\n```",
+      },
+    ];
+
+    for (const message of messages) {
+      expect(getApplicableRules(message, [docsRule], [])).toHaveLength(1);
+    }
+  });
 });
