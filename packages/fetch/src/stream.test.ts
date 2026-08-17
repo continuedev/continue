@@ -21,6 +21,23 @@ function createMockResponse(sseLines: string[]): Response {
   } as unknown as Response;
 }
 
+function createMockResponseFromRawChunks(chunks: string[]): Response {
+  const stream = new Readable({
+    read() {
+      for (const chunk of chunks) {
+        this.push(chunk);
+      }
+      this.push(null);
+    },
+  }) as any;
+
+  return {
+    status: 200,
+    body: stream,
+    text: async () => "",
+  } as unknown as Response;
+}
+
 describe("streamSse", () => {
   it("yields parsed SSE data objects that ends with `data:[DONE]`", async () => {
     const sseLines = [
@@ -45,6 +62,19 @@ describe("streamSse", () => {
       "data: [DONE]",
     ];
     const response = createMockResponse(sseLines);
+
+    const results = [];
+    for await (const data of streamSse(response)) {
+      results.push(data);
+    }
+
+    expect(results).toEqual([{ foo: "bar" }, { baz: 42 }]);
+  });
+
+  it("ignores comment keepalive lines that share a chunk with data lines", async () => {
+    const response = createMockResponseFromRawChunks([
+      'data: {"foo": "bar"}\n\n: ping\ndata: {"baz": 42}\n\ndata: [DONE]\n\n',
+    ]);
 
     const results = [];
     for await (const data of streamSse(response)) {
