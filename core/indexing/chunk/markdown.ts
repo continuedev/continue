@@ -133,7 +133,9 @@ export async function* markdownChunker(
       hLevel + 1,
     )) {
       yield {
-        content: `${section.header}\n${chunk.content}`,
+        content: section.header
+          ? `${section.header}\n${chunk.content}`
+          : chunk.content,
         startLine: section.startLine + chunk.startLine,
         endLine: section.startLine + chunk.endLine,
         otherMetadata: {
