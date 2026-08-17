@@ -60,6 +60,22 @@ describe("evaluateTerminalCommandSecurity", () => {
         expect(result).toBe("disabled");
       });
 
+      it("should disable Windows del with uppercase recursive flags", () => {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          "DEL /S /Q C:\\",
+        );
+        expect(result).toBe("disabled");
+      });
+
+      it("should disable Windows del on the system drive regardless of case", () => {
+        const result = evaluateTerminalCommandSecurity(
+          "allowedWithoutPermission",
+          "del /Q C:/Windows",
+        );
+        expect(result).toBe("disabled");
+      });
+
       it("should disable dd commands that could overwrite disk", () => {
         const result = evaluateTerminalCommandSecurity(
           "allowedWithoutPermission",

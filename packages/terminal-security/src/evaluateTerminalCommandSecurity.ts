@@ -465,9 +465,12 @@ function isCriticalCommand(baseCommand: string, args: string[]): boolean {
 
   // Windows destructive commands
   if (baseCommand === "del") {
-    const hasRecursive = args.includes("/s") && args.includes("/q");
-    const hasSystemDrive = args.some(
-      (arg) => arg.toLowerCase().includes("c:\\") || arg.includes("c:/"),
+    // Windows switches and drive letters are case-insensitive, so `/S /Q C:\`
+    // has to be treated exactly like `/s /q c:\`
+    const lowerArgs = args.map((arg) => arg.toLowerCase());
+    const hasRecursive = lowerArgs.includes("/s") && lowerArgs.includes("/q");
+    const hasSystemDrive = lowerArgs.some(
+      (arg) => arg.includes("c:\\") || arg.includes("c:/"),
     );
     if (hasRecursive || hasSystemDrive) {
       return true;
