@@ -224,6 +224,36 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     ],
   },
 
+  litellm: {
+    title: "LiteLLM",
+    provider: "litellm",
+    description:
+      "Self-hosted OpenAI-compatible gateway to 100+ providers; auto-discovers the models your proxy serves.",
+    longDescription:
+      "[LiteLLM](https://docs.litellm.ai/docs/simple_proxy) is a self-hosted proxy that exposes 100+ LLM providers behind a single OpenAI-compatible API. Run the proxy, then point Continue at its URL with your key — Continue auto-discovers the models your proxy serves via `/v1/models`.",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your LiteLLM virtual/master key",
+        required: true,
+      },
+      { ...apiBaseInput, defaultValue: "http://localhost:4000/v1" },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "LiteLLM",
+        },
+      },
+    ],
+  },
+
   moonshot: {
     title: "Moonshot",
     provider: "moonshot",

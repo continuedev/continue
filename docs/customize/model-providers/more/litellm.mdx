@@ -59,3 +59,18 @@ Use the model name (alias) your proxy routes, and set `apiKey` to your LiteLLM v
 </Tabs>
 
 `apiBase` defaults to `http://localhost:4000/v1/`; point it at a remote proxy to use a hosted deployment. Because LiteLLM is OpenAI-compatible, any model your proxy exposes (for example `claude-3-5-sonnet`, `gemini-2.5-flash`, or a self-hosted model) can be used by setting `model` to its LiteLLM alias.
+
+## Auto-discover models
+
+Instead of listing each model, set `model: AUTODETECT` and Continue fetches the model list from your proxy's `/v1/models` endpoint, adding every model your LiteLLM proxy serves:
+
+```yaml title="config.yaml"
+models:
+  - name: LiteLLM
+    provider: litellm
+    model: AUTODETECT
+    apiKey: <YOUR_LITELLM_KEY>
+    apiBase: http://localhost:4000/v1/
+```
+
+This is also what the **LiteLLM** option in the "Add Model" UI configures — provide the proxy URL and key, and the available models are discovered for you.
