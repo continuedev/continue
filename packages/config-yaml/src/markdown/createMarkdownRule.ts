@@ -39,7 +39,9 @@ export function createRuleMarkdown(
     invokable?: boolean;
   } = {},
 ): string {
-  const frontmatter: RuleFrontmatter = {};
+  const frontmatter: RuleFrontmatter = {
+    name: name.trim(),
+  };
 
   if (options.globs) {
     frontmatter.globs =

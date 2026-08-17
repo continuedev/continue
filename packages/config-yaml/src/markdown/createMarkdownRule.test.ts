@@ -101,6 +101,7 @@ describe("createRuleMarkdown", () => {
 
     const parsed = markdownToRule(result, mockPackageId);
 
+    expect(parsed.name).toBe("Test Rule");
     expect(parsed.description).toBe("Test description");
     expect(parsed.globs).toEqual(["*.ts", "*.js"]);
     expect(parsed.alwaysApply).toBe(true);
@@ -112,10 +113,18 @@ describe("createRuleMarkdown", () => {
 
     const parsed = markdownToRule(result, mockPackageId);
 
+    expect(parsed.name).toBe("Simple Rule");
     expect(parsed.description).toBeUndefined();
     expect(parsed.globs).toBeUndefined();
     expect(parsed.alwaysApply).toBeUndefined();
     expect(parsed.rule).toBe("Simple content");
+  });
+
+  it("should trim the name", () => {
+    const result = createRuleMarkdown("  Padded Name  ", "Content");
+
+    const parsed = markdownToRule(result, mockPackageId);
+    expect(parsed.name).toBe("Padded Name");
   });
 
   it("should handle string globs", () => {
