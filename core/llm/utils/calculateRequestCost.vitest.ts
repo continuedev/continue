@@ -163,6 +163,44 @@ describe("calculateRequestCost", () => {
       description: "GPT-3.5 Turbo",
     },
 
+    // OpenAI prompt caching (promptTokens includes cachedTokens)
+    {
+      provider: "openai",
+      model: "gpt-4o",
+      promptTokens: 1000,
+      completionTokens: 500,
+      cachedTokens: 800,
+      expectedCost: 0.0065,
+      description: "GPT-4o with cache reads",
+    },
+    {
+      provider: "openai",
+      model: "gpt-4o-mini",
+      promptTokens: 1000,
+      completionTokens: 500,
+      cachedTokens: 1000,
+      expectedCost: 0.000375,
+      description: "GPT-4o-mini fully cached input",
+    },
+    {
+      provider: "openai",
+      model: "gpt-4-turbo",
+      promptTokens: 1000,
+      completionTokens: 500,
+      cachedTokens: 400,
+      expectedCost: 0.025,
+      description: "GPT-4 Turbo cache reads bill at the input rate",
+    },
+    {
+      provider: "openai",
+      model: "gpt-4o",
+      promptTokens: 500,
+      completionTokens: 0,
+      cachedTokens: 1000,
+      expectedCost: 0.000625,
+      description: "GPT-4o cached tokens exceeding prompt tokens",
+    },
+
     // Edge cases
     {
       provider: "anthropic",
@@ -253,4 +291,19 @@ describe("calculateRequestCost", () => {
       });
     },
   );
+
+  it("excludes cached tokens from the OpenAI input breakdown", () => {
+    const result = calculateRequestCost("openai", "gpt-4o", {
+      promptTokens: 1000,
+      completionTokens: 500,
+      promptTokensDetails: { cachedTokens: 800 },
+    });
+
+    expect(result!.breakdown).toContain(
+      "Input: 200 tokens × $2.5/MTok = $0.000500",
+    );
+    expect(result!.breakdown).toContain(
+      "Cache Read: 800 tokens × $1.25/MTok = $0.001000",
+    );
+  });
 });
