@@ -10,13 +10,10 @@ import { getContinueGlobalPath } from "../util/paths.js";
 
 // If useful elsewhere, helper funcs should move to core/util/index.ts or similar
 function getOffsetDatetime(date: Date): Date {
-  const offset = date.getTimezoneOffset();
-  const offsetHours = Math.floor(offset / 60);
-  const offsetMinutes = offset % 60;
-  date.setHours(date.getHours() - offsetHours);
-  date.setMinutes(date.getMinutes() - offsetMinutes);
-
-  return date;
+  // Shift by the whole offset at once: splitting it into hours and minutes
+  // rounds the wrong way for zones east of UTC that aren't a whole number of
+  // hours ahead, e.g. UTC+05:30 would be treated as UTC+06:30.
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
 }
 
 function asBasicISOString(date: Date): string {
