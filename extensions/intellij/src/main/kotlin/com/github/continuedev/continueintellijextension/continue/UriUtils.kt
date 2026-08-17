@@ -21,22 +21,21 @@ object UriUtils {
      */
     fun parseUri(uri: String): URI {
         // Remove query parameters if present
-        val uriStr = uri.substringBefore("?")
+        val noParams = uri.substringBefore("?")
 
-        // Handle Windows file paths with authority component
-        if (uriStr.startsWith("file://") && !uriStr.startsWith("file:///")) {
-            val path = uriStr.substringAfter("file://")
-            return URI("file", "", "/$path", null)
-        }
+        // Normalize Windows file paths with authority component, so that the path
+        // is percent-decoded by URI just like for authority-less file URIs
+        val uriStr = if (noParams.startsWith("file://") && !noParams.startsWith("file:///"))
+            "file:///" + noParams.removePrefix("file://")
+        else
+            noParams
 
         return try {
             URI(uriStr)
         } catch (e: Exception) {
             // Handle unencoded file URIs (e.g. spaces in path from VirtualFile.toUriOrNull())
             if (uriStr.startsWith("file:///")) {
-                val path = uriStr.removePrefix("file://")
-                val file = File(path)
-                file.toURI()
+                URI("file", "", uriStr.removePrefix("file://"), null)
             } else {
                 throw Exception("Invalid URI: $uri ${e.message}")
             }
@@ -54,4 +53,14 @@ object UriUtils {
         val parsedUri = parseUri(uri)
         return File(parsedUri)
     }
+
+    /**
+     * Converts a URI string to a filesystem path with forward slashes, the
+     * format expected by the IntelliJ virtual file system.
+     *
+     * @param uri The URI string to convert to a file path
+     * @return A percent-decoded path, e.g. "C:/My Project/file.txt"
+     */
+    fun uriToPath(uri: String): String =
+        uriToFile(uri).path.replace('\\', '/')
 }

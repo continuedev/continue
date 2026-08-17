@@ -68,6 +68,13 @@ class UriUtilsTest : TestCase() {
         assertEquals(File("/path/to/[gamemode]/file.lua"), result)
     }
 
+    // Regression test for #13134 — Windows paths with spaces from JetBrains IDEs
+    fun `test Windows path with authority and encoded spaces`() {
+        val uri = "file://C:/Unity%20Projects/My%20Project/file.txt"
+        val parsed = UriUtils.parseUri(uri)
+        assertEquals("/C:/Unity Projects/My Project/file.txt", parsed.path)
+    }
+
     fun `test Windows path with square brackets`() {
         val uri = "file://C:/Users/user/projects/[gamemode]/file.lua"
         val parsed = UriUtils.parseUri(uri)

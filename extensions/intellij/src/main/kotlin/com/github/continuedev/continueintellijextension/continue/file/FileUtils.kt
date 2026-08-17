@@ -2,6 +2,7 @@ package com.github.continuedev.continueintellijextension.`continue`.file
 
 import com.github.continuedev.continueintellijextension.FileStats
 import com.github.continuedev.continueintellijextension.FileType
+import com.github.continuedev.continueintellijextension.`continue`.UriUtils
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.diagnostic.Logger
@@ -23,7 +24,8 @@ class FileUtils(
         findFile(fileUri) != null
 
     fun writeFile(fileUri: String, content: String) {
-        val path = VfsUtilCore.urlToPath(fileUri)
+        val path = toLocalPath(fileUri)
+            ?: return
         val pathDirectory = VfsUtil.getParentDir(path)
             ?: return LOG.warn("Parent directory is null for $path")
         val vfsDirectory = VfsUtil.createDirectories(pathDirectory)
@@ -91,11 +93,24 @@ class FileUtils(
         }.toMap()
 
     private fun findFile(fileUri: String): VirtualFile? {
-        val noParams = fileUri.substringBefore("?")
-        val normalizedAuthority = normalizeWindowsAuthority(noParams)
+        val path = toLocalPath(fileUri)
+            ?: return null
         return VirtualFileManager.getInstance()
-            .refreshAndFindFileByUrl(normalizedAuthority)
+            .refreshAndFindFileByUrl(VfsUtilCore.pathToUrl(path))
     }
+
+    /**
+     * Resolves a file URI to a filesystem path, percent-decoding it so that
+     * paths containing spaces (e.g. "C:/My Project") are not mistaken for
+     * literal "%20" segments.
+     */
+    private fun toLocalPath(fileUri: String): String? =
+        try {
+            UriUtils.uriToPath(fileUri)
+        } catch (e: Exception) {
+            LOG.warn("Could not resolve path for $fileUri", e)
+            null
+        }
 
     private fun readDocument(file: VirtualFile, maxLength: Int): String? {
         val document = FileDocumentManager.getInstance().getDocument(file)
@@ -107,16 +122,6 @@ class FileUtils(
     private fun normalizeLineEndings(text: String) =
         text.replace("\r\n", "\n")
             .replace("\r", "\n")
-
-    private fun normalizeWindowsAuthority(fileUri: String): String {
-        val authorityPrefix = "file://"
-        val noAuthorityPrefix = "file:///"
-        if (fileUri.startsWith(authorityPrefix) && !fileUri.startsWith(noAuthorityPrefix)) {
-            val path = fileUri.substringAfter(authorityPrefix)
-            return "$noAuthorityPrefix$path"
-        }
-        return fileUri
-    }
 
     private companion object {
         private val LOG = Logger.getInstance(FileUtils::class.java)

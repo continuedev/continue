@@ -57,6 +57,12 @@ class FileUtilsTest : UsefulTestCase() {
         assertEquals("new_text", myFixture.readTempFile("overwrite.txt"))
     }
 
+    // Regression test for #13134 — encoded URIs must not create %20 directories
+    fun `test writeFile decodes percent-encoded path`() {
+        fileUtils.writeFile("file://$tmp/Unity%20Projects/My%20Project/file.txt", "text")
+        assertEquals("text", myFixture.readTempFile("Unity Projects/My Project/file.txt"))
+    }
+
     fun `test readFile`() {
         myFixture.createTempFile("file.txt", "text")
         assertEquals("text", fileUtils.readFile("file://$tmp/file.txt"))
@@ -75,6 +81,16 @@ class FileUtilsTest : UsefulTestCase() {
 
     fun `test readFile fails when file is missing`() {
         assertEmpty(fileUtils.readFile("file://missing.txt"))
+    }
+
+    fun `test readFile decodes percent-encoded path`() {
+        myFixture.createTempFile("Unity Projects/My Project/file.txt", "text")
+        assertEquals("text", fileUtils.readFile("file://$tmp/Unity%20Projects/My%20Project/file.txt"))
+    }
+
+    fun `test fileExists decodes percent-encoded path`() {
+        myFixture.createTempFile("Unity Projects/My Project/file.txt")
+        assertTrue(fileUtils.fileExists("file://$tmp/Unity%20Projects/My%20Project/file.txt"))
     }
 
     fun `test readFile normalizes line endings`() {
