@@ -32,24 +32,22 @@ export function intersection(a: Range, b: Range): Range | null {
     return null;
   }
 
-  if (startLine === endLine) {
-    const startCharacter = Math.max(a.start.character, b.start.character);
-    const endCharacter = Math.min(a.end.character, b.end.character);
+  // A range only constrains the characters of the boundary line if it actually
+  // starts/ends there - otherwise it spans the whole line.
+  const startCharacter = Math.max(
+    ...[a.start, b.start]
+      .filter((position) => position.line === startLine)
+      .map((position) => position.character),
+  );
+  const endCharacter = Math.min(
+    ...[a.end, b.end]
+      .filter((position) => position.line === endLine)
+      .map((position) => position.character),
+  );
 
-    if (startCharacter > endCharacter) {
-      return null;
-    }
-
-    return {
-      start: { line: startLine, character: startCharacter },
-      end: { line: endLine, character: endCharacter },
-    };
+  if (startLine === endLine && startCharacter > endCharacter) {
+    return null;
   }
-
-  const startCharacter =
-    startLine === a.start.line ? a.start.character : b.start.character;
-  const endCharacter =
-    endLine === a.end.line ? a.end.character : b.end.character;
 
   return {
     start: { line: startLine, character: startCharacter },

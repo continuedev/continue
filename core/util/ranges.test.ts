@@ -301,8 +301,7 @@ describe("intersection", () => {
     expect(result).toBeNull();
   });
 
-  // TODO
-  test.skip("returns correct intersection for single line overlap", () => {
+  test("returns correct intersection for single line overlap", () => {
     rangeA = {
       start: { line: 1, character: 0 },
       end: { line: 1, character: 5 },
@@ -317,6 +316,42 @@ describe("intersection", () => {
     expect(result).toEqual({
       start: { line: 1, character: 3 },
       end: { line: 1, character: 5 },
+    });
+  });
+
+  test("returns correct intersection when both ranges start on the first line", () => {
+    rangeA = {
+      start: { line: 1, character: 0 },
+      end: { line: 5, character: 0 },
+    };
+
+    rangeB = {
+      start: { line: 1, character: 7 },
+      end: { line: 3, character: 2 },
+    };
+
+    const result = intersection(rangeA, rangeB);
+    expect(result).toEqual({
+      start: { line: 1, character: 7 },
+      end: { line: 3, character: 2 },
+    });
+  });
+
+  test("returns correct intersection when both ranges end on the last line", () => {
+    rangeA = {
+      start: { line: 1, character: 0 },
+      end: { line: 3, character: 8 },
+    };
+
+    rangeB = {
+      start: { line: 2, character: 0 },
+      end: { line: 3, character: 4 },
+    };
+
+    const result = intersection(rangeA, rangeB);
+    expect(result).toEqual({
+      start: { line: 2, character: 0 },
+      end: { line: 3, character: 4 },
     });
   });
 
