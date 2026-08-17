@@ -2,6 +2,10 @@ import { ConfigMergeType } from "../index.js";
 
 type JsonObject = { [key: string]: any };
 
+function isMergeableObject(value: any): boolean {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export function mergeJson(
   first: JsonObject,
   second: JsonObject,
@@ -38,13 +42,13 @@ export function mergeJson(
           copyOfFirst[key] = [...firstValue, ...secondValue];
         }
       } else if (
-        typeof secondValue === "object" &&
-        typeof firstValue === "object"
+        isMergeableObject(secondValue) &&
+        isMergeableObject(firstValue)
       ) {
         // Object
         copyOfFirst[key] = mergeJson(firstValue, secondValue, mergeBehavior);
       } else {
-        // Other (boolean, number, string)
+        // Other (boolean, number, string, null, or mismatched types)
         copyOfFirst[key] = secondValue;
       }
     }

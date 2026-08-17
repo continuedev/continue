@@ -71,6 +71,27 @@ describe("mergeJson", () => {
     expect(result).toEqual({ a: 1, b: 2, c: undefined });
   });
 
+  it("should let null in the second object replace an object", () => {
+    const first = { a: { b: 1 } };
+    const second = { a: null };
+    const result = mergeJson(first, second);
+    expect(result).toEqual({ a: null });
+  });
+
+  it("should let an object in the second object replace null", () => {
+    const first = { a: null };
+    const second = { a: { b: 1 } };
+    const result = mergeJson(first, second);
+    expect(result).toEqual({ a: { b: 1 } });
+  });
+
+  it("should replace rather than merge when only one value is an array", () => {
+    expect(mergeJson({ a: [1, 2] }, { a: { b: 1 } })).toEqual({
+      a: { b: 1 },
+    });
+    expect(mergeJson({ a: { b: 1 } }, { a: [1, 2] })).toEqual({ a: [1, 2] });
+  });
+
   it("should handle empty objects", () => {
     const first = {};
     const second = { a: 1 };
