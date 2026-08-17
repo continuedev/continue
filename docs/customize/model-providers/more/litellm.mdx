@@ -1,0 +1,76 @@
+---
+title: "How to Configure LiteLLM with Continue"
+sidebarTitle: "LiteLLM"
+---
+
+<Info>
+  [LiteLLM](https://docs.litellm.ai/docs/simple_proxy) is an open-source AI gateway that exposes 100+ LLM providers (OpenAI, Anthropic, Azure, Bedrock, Gemini, and more) behind a single OpenAI-compatible API. Run it as a self-hosted proxy to centralize API keys, spend limits, fallbacks, and routing.
+</Info>
+
+<Tip>
+  Get started with [LiteLLM on GitHub](https://github.com/BerriAI/litellm).
+</Tip>
+
+## Installation
+
+The LiteLLM proxy runs locally and provides an OpenAI-compatible API:
+
+```bash
+pip install "litellm[proxy]"
+litellm --model gpt-4o-mini
+```
+
+This starts the proxy at `http://localhost:4000`. Add your providers and model aliases in a [LiteLLM config](https://docs.litellm.ai/docs/proxy/configs).
+
+## Configuration
+
+Use the model name (alias) your proxy routes, and set `apiKey` to your LiteLLM virtual/master key.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: LiteLLM GPT-4o mini
+      provider: litellm
+      model: gpt-4o-mini
+      apiKey: <YOUR_LITELLM_KEY>
+      apiBase: http://localhost:4000/v1/
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "LiteLLM GPT-4o mini",
+        "provider": "litellm",
+        "model": "gpt-4o-mini",
+        "apiKey": "<YOUR_LITELLM_KEY>",
+        "apiBase": "http://localhost:4000/v1/"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+`apiBase` defaults to `http://localhost:4000/v1/`; point it at a remote proxy to use a hosted deployment. Because LiteLLM is OpenAI-compatible, any model your proxy exposes (for example `claude-3-5-sonnet`, `gemini-2.5-flash`, or a self-hosted model) can be used by setting `model` to its LiteLLM alias.
+
+## Auto-discover models
+
+Instead of listing each model, set `model: AUTODETECT` and Continue fetches the model list from your proxy's `/v1/models` endpoint, adding every model your LiteLLM proxy serves:
+
+```yaml title="config.yaml"
+models:
+  - name: LiteLLM
+    provider: litellm
+    model: AUTODETECT
+    apiKey: <YOUR_LITELLM_KEY>
+    apiBase: http://localhost:4000/v1/
+```
+
+This is also what the **LiteLLM** option in the "Add Model" UI configures — provide the proxy URL and key, and the available models are discovered for you.
