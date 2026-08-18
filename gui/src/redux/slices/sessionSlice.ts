@@ -580,7 +580,11 @@ export const sessionSlice = createSlice({
 
               handleToolCallsInMessage(message, lastItem);
 
-              return;
+              // `continue`, not `return`: this branch has finished handling
+              // *this* message, but `action.payload` may contain more. A
+              // `return` here exits the reducer entirely and silently drops
+              // every remaining message in the batch.
+              continue;
             }
           }
 

@@ -133,6 +133,32 @@ describe("sessionSlice streamUpdate", () => {
       );
       expect(newState.history[1].message.id).toBe("mock-uuid-1");
     });
+
+    it("should not drop later messages in a batch after a <think> block", () => {
+      const initialState = createInitialState();
+      const action = {
+        type: "session/streamUpdate",
+        payload: [
+          {
+            role: "assistant" as const,
+            content: "<think>Reasoning here.</think>First part.",
+          },
+          {
+            role: "assistant" as const,
+            content: " Second part.",
+          },
+        ],
+      };
+
+      const newState = sessionSlice.reducer(initialState, action);
+
+      expect(newState.history[0].reasoning?.text).toBe("Reasoning here.");
+
+      // The second message in the same payload must still be appended.
+      expect(newState.history[1].message.content).toBe(
+        "First part. Second part.",
+      );
+    });
   });
 
   describe("Tool Call With Response", () => {
