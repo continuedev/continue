@@ -330,6 +330,38 @@ describe("Configuration", () => {
     expect((azure as OpenAIApi).openai.apiKey).toBe("sk-xxx");
   });
 
+  it("should configure Azure AI Foundry client without appending /openai/deployments/{deployment}", () => {
+    const azure = constructLlmApi({
+      provider: "azure",
+      apiKey: "sk-xxx",
+      apiBase: "https://my-resource.services.ai.azure.com/openai/v1",
+      env: {
+        apiType: "azure-foundry",
+      },
+    });
+
+    // Azure AI Foundry endpoints use the apiBase as-is (OpenAI-compatible
+    // routing path supplied by the user). Appending /openai/deployments/{deployment}
+    // would 404 because Foundry does not expose that legacy path.
+    expect((azure as OpenAIApi).openai.baseURL).toBe(
+      "https://my-resource.services.ai.azure.com/openai/v1",
+    );
+    expect((azure as OpenAIApi).openai.apiKey).toBe("sk-xxx");
+  });
+
+  it("should not require env.deployment or env.apiVersion for Azure AI Foundry", () => {
+    expect(() =>
+      constructLlmApi({
+        provider: "azure",
+        apiKey: "sk-xxx",
+        apiBase: "https://my-resource.services.ai.azure.com/openai/v1",
+        env: {
+          apiType: "azure-foundry",
+        },
+      }),
+    ).not.toThrow();
+  });
+
   describe("ollama api base", () => {
     it('should have correct default API base for "ollama"', () => {
       const ollama = constructLlmApi({

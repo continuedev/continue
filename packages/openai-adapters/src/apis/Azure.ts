@@ -35,6 +35,10 @@ export class AzureApi extends OpenAIApi {
     return apiType === "azure-openai" || apiType === "azure";
   }
 
+  private _isAzureFoundry(apiType?: string): boolean {
+    return apiType === "azure-foundry";
+  }
+
   private _getAzureBaseURL(config: z.infer<typeof AzureConfigSchema>): {
     baseURL: string;
     defaultQuery: Record<string, string>;
@@ -49,6 +53,17 @@ export class AzureApi extends OpenAIApi {
 
     url.pathname = url.pathname.replace(/\/$/, ""); // Remove trailing slash if present
     url.search = ""; // Clear original search params
+
+    // Azure AI Foundry (a.k.a. Microsoft Foundry / Azure serverless) uses an
+    // OpenAI-compatible routing path (`/openai/v1/...`) that the user supplies
+    // in apiBase. We must NOT append `/openai/deployments/{deployment}` like the
+    // legacy Azure OpenAI Service path — doing so 404s on Foundry endpoints.
+    if (this._isAzureFoundry(config.env?.apiType)) {
+      return {
+        baseURL: url.toString(),
+        defaultQuery: queryParams,
+      };
+    }
 
     // Default is `azure-openai` in docs, but previously was `azure`
     if (this._isAzureOpenAI(config.env?.apiType)) {
