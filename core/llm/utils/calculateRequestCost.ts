@@ -155,11 +155,18 @@ function calculateOpenAICost(
   // Normalize model name
   const normalizedModel = model.toLowerCase();
 
-  // Define pricing per million tokens (MTok) by model family prefix
-  const pricing: Record<string, { input: number; output: number }> = {
+  // Define pricing per million tokens (MTok) by model family prefix.
+  // `cachedInput` is set only for model families where OpenAI documents a
+  // prompt-cache rate. prompt_tokens from the API includes the cached portion,
+  // so the input cost is split: uncached tokens at the input rate and cached
+  // tokens at the cachedInput rate.
+  const pricing: Record<
+    string,
+    { input: number; output: number; cachedInput?: number }
+  > = {
     // GPT-4o models (most specific first)
-    "gpt-4o-mini": { input: 0.15, output: 0.6 },
-    "gpt-4o": { input: 2.5, output: 10 },
+    "gpt-4o-mini": { input: 0.15, output: 0.6, cachedInput: 0.075 },
+    "gpt-4o": { input: 2.5, output: 10, cachedInput: 1.25 },
 
     // GPT-4 Turbo models
     "gpt-4-turbo": { input: 10, output: 30 },
@@ -188,16 +195,46 @@ function calculateOpenAICost(
     return null; // Unknown model
   }
 
-  // Calculate costs
-  const inputCost = (usage.promptTokens / 1_000_000) * modelPricing.input;
+  // Split prompt tokens into uncached and cached portions. prompt_tokens from
+  // the OpenAI usage object already includes cached tokens; cached_tokens is
+  // reported under prompt_tokens_details.cached_tokens. cachedTokens is
+  // clamped to promptTokens to defend against malformed usage payloads that
+  // report more cached tokens than total prompt tokens. If the model has no
+  // documented cachedInput rate, the cached portion is not subtracted from
+  // the input cost — those prompt tokens are billed at the standard input
+  // rate (the API wouldn't have returned a cached_tokens value for them in
+  // the first place).
+  const reportedCachedTokens =
+    usage.promptTokensDetails?.cachedTokens ?? 0;
+  const cachedTokens =
+    modelPricing.cachedInput !== undefined
+      ? Math.min(reportedCachedTokens, usage.promptTokens)
+      : 0;
+  const uncachedPromptTokens = usage.promptTokens - cachedTokens;
+
+  const cachedInputCost =
+    cachedTokens > 0 && modelPricing.cachedInput !== undefined
+      ? (cachedTokens / 1_000_000) * modelPricing.cachedInput
+      : 0;
+  const inputCost =
+    (uncachedPromptTokens / 1_000_000) * modelPricing.input + cachedInputCost;
   const outputCost = (usage.completionTokens / 1_000_000) * modelPricing.output;
 
   // Build breakdown components
   const breakdownParts: string[] = [];
 
-  if (usage.promptTokens > 0) {
+  if (uncachedPromptTokens > 0) {
     breakdownParts.push(
-      `Input: ${usage.promptTokens.toLocaleString()} tokens × $${modelPricing.input}/MTok = $${inputCost.toFixed(6)}`,
+      `Input: ${uncachedPromptTokens.toLocaleString()} tokens × $${modelPricing.input}/MTok = $${(
+        (uncachedPromptTokens / 1_000_000) *
+        modelPricing.input
+      ).toFixed(6)}`,
+    );
+  }
+
+  if (cachedTokens > 0 && modelPricing.cachedInput !== undefined) {
+    breakdownParts.push(
+      `Cached Input: ${cachedTokens.toLocaleString()} tokens × $${modelPricing.cachedInput}/MTok = $${cachedInputCost.toFixed(6)}`,
     );
   }
 
