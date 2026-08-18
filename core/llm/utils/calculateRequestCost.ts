@@ -204,8 +204,7 @@ function calculateOpenAICost(
   // the input cost — those prompt tokens are billed at the standard input
   // rate (the API wouldn't have returned a cached_tokens value for them in
   // the first place).
-  const reportedCachedTokens =
-    usage.promptTokensDetails?.cachedTokens ?? 0;
+  const reportedCachedTokens = usage.promptTokensDetails?.cachedTokens ?? 0;
   const cachedTokens =
     modelPricing.cachedInput !== undefined
       ? Math.min(reportedCachedTokens, usage.promptTokens)

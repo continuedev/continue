@@ -171,7 +171,8 @@ describe("calculateRequestCost", () => {
       completionTokens: 500,
       cachedTokens: 700,
       expectedCost: 0.006625,
-      description: "GPT-4o with cached input tokens (uncached 300 + cached 700)",
+      description:
+        "GPT-4o with cached input tokens (uncached 300 + cached 700)",
     },
     {
       provider: "openai",
@@ -200,7 +201,8 @@ describe("calculateRequestCost", () => {
       completionTokens: 200,
       cachedTokens: 800,
       expectedCost: 0.00021,
-      description: "GPT-4o-mini with cached input tokens (uncached 200 + cached 800)",
+      description:
+        "GPT-4o-mini with cached input tokens (uncached 200 + cached 800)",
     },
 
     // OpenAI GPT-4 (no documented cached rate) — cached_tokens present but ignored
@@ -211,7 +213,8 @@ describe("calculateRequestCost", () => {
       completionTokens: 100,
       cachedTokens: 500,
       expectedCost: 0.036,
-      description: "GPT-4 ignores cachedTokens because no cachedInput rate is defined",
+      description:
+        "GPT-4 ignores cachedTokens because no cachedInput rate is defined",
     },
 
     // Clamp cachedTokens > promptTokens (malformed payloads)
@@ -222,7 +225,8 @@ describe("calculateRequestCost", () => {
       completionTokens: 0,
       cachedTokens: 1500,
       expectedCost: 0.00125,
-      description: "GPT-4o clamps cachedTokens to promptTokens (all input treated as cached)",
+      description:
+        "GPT-4o clamps cachedTokens to promptTokens (all input treated as cached)",
     },
 
     // Edge cases
