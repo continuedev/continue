@@ -168,11 +168,22 @@ export class OpenAIApi implements BaseLlmApi {
     );
     let lastChunkWithUsage: ChatCompletionChunk | undefined;
     for await (const result of response) {
-      // Check if this chunk contains usage information
-      if (result.usage) {
+      // Defer usage-only chunks so usage is reported after all content.
+      // Some servers (e.g. llama.cpp with incremental usage) attach a running
+      // `usage` object to EVERY chunk. Withholding on `usage` alone would then
+      // swallow the entire stream, so only defer chunks that carry no payload.
+      const choice = result.choices?.[0];
+      const isUsageOnly =
+        !!result.usage &&
+        !choice?.finish_reason &&
+        Object.keys(choice?.delta ?? {}).length === 0;
+      if (isUsageOnly) {
         // Store it to emit after all content chunks
         lastChunkWithUsage = result;
       } else {
+        if (result.usage) {
+          lastChunkWithUsage = undefined;
+        }
         yield result;
       }
     }
