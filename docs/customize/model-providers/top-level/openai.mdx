@@ -61,6 +61,7 @@ OpenAI API compatible providers include
 - [vLLM](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html)
 - [BerriAI/litellm](https://github.com/BerriAI/litellm)
 - [Tetrate Agent Router Service](https://router.tetrate.ai)
+- [ZvenoAI](https://zveno.ai/models)
 
 If you are using an OpenAI API compatible providers, you can change the `apiBase` like this:
 
@@ -95,6 +96,30 @@ If you are using an OpenAI API compatible providers, you can change the `apiBase
   ```
   </Tab>
 </Tabs>
+
+### ZvenoAI
+
+Create a [ZvenoAI API key](https://zveno.ai/api-keys), save it as the
+`ZVENOAI_API_KEY` [Continue secret](/faqs#managing-local-secrets-and-environment-variables),
+and add this model to `config.yaml`:
+
+```yaml title="config.yaml"
+name: My Config
+version: 0.0.1
+schema: v1
+
+models:
+  - name: ZvenoAI GPT-OSS 20B
+    provider: openai
+    model: openai/gpt-oss-20b:free
+    apiBase: https://api.zveno.ai/v1
+    apiKey: ${{ secrets.ZVENOAI_API_KEY }}
+    capabilities:
+      - tool_use
+```
+
+When choosing another model from the [ZvenoAI model catalog](https://zveno.ai/models),
+include `tool_use` only if the model supports tool calling.
 
 ### How to Force Legacy Completions Endpoint Usage
 
