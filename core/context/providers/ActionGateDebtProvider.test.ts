@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  ActionGateDebtContextProvider,
-  GENESIS_HASH,
-} from "./ActionGateDebtProvider";
+import { ActionGateDebtContextProvider, GENESIS_HASH } from "./ActionGateDebtProvider";
 
 describe("ActionGateDebtContextProvider", () => {
   it("should approve clean refactoring with high readiness score", () => {
@@ -40,7 +37,9 @@ describe("ActionGateDebtContextProvider", () => {
     expect(report.isProductionReady).toBe(false);
     expect(report.readinessScore).toBeLessThan(50);
     expect(report.criticalSmells).toContain("DETECTED_1_UNBOUNDED_LOOPS");
-    expect(report.criticalSmells).toContain("DETECTED_2_UNHANDLED_EXCEPTION_PATHS");
+    expect(report.criticalSmells).toContain(
+      "DETECTED_2_UNHANDLED_EXCEPTION_PATHS",
+    );
     expect(report.criticalSmells).toContain("DETECTED_1_UNGATED_MUTATIONS");
   });
 
