@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 
 import { AnimatedEllipsis } from "../../AnimatedEllipsis";
+import { useAppSelector } from "../../../redux/hooks";
+import { selectUIConfig } from "../../../redux/slices/configSlice";
 import StyledMarkdownPreview from "../../StyledMarkdownPreview";
 import { Button } from "../../ui";
 
@@ -33,7 +35,8 @@ function ThinkingBlockPeek({
   inProgress,
   tokens,
 }: ThinkingBlockPeekProps) {
-  const [open, setOpen] = useState(false);
+  const uiConfig = useAppSelector(selectUIConfig);
+  const [open, setOpen] = useState(uiConfig?.expandThinkingBlocks ?? false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState<string>("");
 
@@ -42,6 +45,10 @@ function ThinkingBlockPeek({
     prevItem.message.role === "thinking" &&
     redactedThinking &&
     prevItem.message.redactedThinking;
+
+  useEffect(() => {
+    setOpen(uiConfig?.expandThinkingBlocks ?? false);
+  }, [uiConfig?.expandThinkingBlocks]);
 
   useEffect(() => {
     if (inProgress) {

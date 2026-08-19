@@ -52,6 +52,7 @@ export function UserSettingsSection() {
     config.ui?.continueAfterToolRejection ?? false;
   const codeWrap = config.ui?.codeWrap ?? false;
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
+  const expandThinkingBlocks = config.ui?.expandThinkingBlocks ?? false;
   const readResponseTTS = config.experimental?.readResponseTTS ?? false;
   const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
   const disableSessionTitles = config.disableSessionTitles ?? false;
@@ -116,6 +117,15 @@ export function UserSettingsSection() {
                   value={showChatScrollbar}
                   onChange={(value) =>
                     handleUpdate({ showChatScrollbar: value })
+                  }
+                />
+                <UserSetting
+                  type="toggle"
+                  title="Expand Thinking Blocks"
+                  description="Shows reasoning content expanded by default instead of collapsed."
+                  value={expandThinkingBlocks}
+                  onChange={(value) =>
+                    handleUpdate({ expandThinkingBlocks: value })
                   }
                 />
                 <UserSetting

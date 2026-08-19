@@ -1039,6 +1039,7 @@ declare global {
     displayRawMarkdown?: boolean;
     showChatScrollbar?: boolean;
     codeWrap?: boolean;
+    expandThinkingBlocks?: boolean;
   }
   
   interface ContextMenuConfig {

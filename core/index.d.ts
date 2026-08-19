@@ -1453,6 +1453,7 @@ export interface ContinueUIConfig {
   codeWrap?: boolean;
   showSessionTabs?: boolean;
   continueAfterToolRejection?: boolean;
+  expandThinkingBlocks?: boolean;
 }
 
 export interface ContextMenuConfig {

@@ -3315,6 +3315,13 @@
               "type": "boolean",
               "description": "If set to true, code in pre blocks will wrap.",
               "default": false
+            },
+            "expandThinkingBlocks": {
+              "title": "Expand Thinking Blocks",
+              "markdownDescription": "If set to `true`, model reasoning content will be shown expanded by default instead of collapsed.",
+              "x-intellij-html-description": "If set to <code>true</code>, model reasoning content will be shown expanded by default instead of collapsed.",
+              "default": false,
+              "type": "boolean"
             }
           }
         },

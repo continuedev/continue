@@ -32,6 +32,7 @@ export const sharedConfigSchema = z
     displayRawMarkdown: z.boolean(),
     showChatScrollbar: z.boolean(),
     continueAfterToolRejection: z.boolean(),
+    expandThinkingBlocks: z.boolean(),
 
     // `tabAutocompleteOptions` in `ContinueConfig`
     useAutocompleteCache: z.boolean(),
@@ -138,6 +139,9 @@ export function modifyAnyConfigWithSharedConfig<
   }
   if (sharedConfig.showChatScrollbar !== undefined) {
     configCopy.ui.showChatScrollbar = sharedConfig.showChatScrollbar;
+  }
+  if (sharedConfig.expandThinkingBlocks !== undefined) {
+    configCopy.ui.expandThinkingBlocks = sharedConfig.expandThinkingBlocks;
   }
 
   if (sharedConfig.allowAnonymousTelemetry !== undefined) {
