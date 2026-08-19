@@ -40,7 +40,7 @@ function apiYielding(chunks: ChatCompletionChunk[]) {
   const api = new OpenAIApi({
     provider: "openai",
     apiKey: "test-key",
-    apiBase: "http://192.168.1.2:58108/v1/",
+    apiBase: "http://custom:8080/v1/",
   });
   vi.spyOn(api["openai"].chat.completions, "create").mockResolvedValue({
     async *[Symbol.asyncIterator]() {
