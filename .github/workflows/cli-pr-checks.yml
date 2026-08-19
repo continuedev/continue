@@ -27,7 +27,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version-file: ".nvmrc"
           cache: "npm"
           cache-dependency-path: extensions/cli/package-lock.json
 
@@ -58,7 +58,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [18, 20, 22, 24]
+        node-version: [22, 24]
       fail-fast: false
     runs-on: ${{ matrix.os }}
 
@@ -130,7 +130,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version-file: ".nvmrc"
           cache: "npm"
           cache-dependency-path: extensions/cli/package-lock.json
 

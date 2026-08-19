@@ -91,7 +91,7 @@
     "@types/dompurify": "^3.2.0",
     "@types/lodash": "^4.17.6",
     "@types/mustache": "^4.2.5",
-    "@types/node": "^20.5.6",
+    "@types/node": "^22.20.1",
     "@types/node-fetch": "^2.6.4",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
@@ -116,6 +116,6 @@
   },
   "engine-strict": true,
   "engines": {
-    "node": ">=20.20.1"
+    "node": ">=22.23.2"
   }
 }

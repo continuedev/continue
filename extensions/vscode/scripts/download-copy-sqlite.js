@@ -7,6 +7,59 @@ const { rimrafSync } = require("rimraf");
 
 const { execCmdSync } = require("../../../scripts/util");
 
+// Keep the pre-built binary in lockstep with the sqlite3 version actually
+// installed in core, so a dependency bump can't silently leave us unpacking a
+// mismatched native binding over it.
+const SQLITE_VERSION =
+  require("../../../core/node_modules/sqlite3/package.json").version;
+
+// node-sqlite3 publishes both napi-v3 and napi-v6 builds for every target it
+// supports. napi-v6 needs Node >=18.17, which our engines floor already
+// requires, so prefer it everywhere.
+const NAPI_VERSION = 6;
+
+// Targets we know node-sqlite3 publishes a prebuild for. `target` reaches a
+// shell via execCmdSync in utils.js, and is interpolated into a download URL
+// in both scripts, so validate it before use: a typo should fail loudly here
+// rather than 404 or reach the shell.
+const SUPPORTED_SQLITE_TARGETS = new Set([
+  "darwin-arm64",
+  "darwin-x64",
+  "linux-arm64",
+  "linux-x64",
+  "win32-x64",
+  // No upstream prebuild — served from our own mirror, see sqliteDownloadUrl.
+  "win32-arm64",
+]);
+
+/**
+ * Resolve the prebuilt sqlite3 URL for a target, validating the target first.
+ * @param {string} target platform specific target, e.g. "linux-x64"
+ * @returns {string}
+ */
+function sqliteDownloadUrl(target) {
+  if (!SUPPORTED_SQLITE_TARGETS.has(target)) {
+    throw new Error(
+      `Unsupported sqlite3 target: ${JSON.stringify(target)}. Expected one of: ${[
+        ...SUPPORTED_SQLITE_TARGETS,
+      ].join(", ")}`,
+    );
+  }
+
+  // node-sqlite3 has never published a win32-arm64 asset (checked for 5.1.7
+  // and 6.0.1), so that target is served from our own mirror.
+  // FIXME: the mirrored archive is unversioned and still contains SQLite
+  // 3.44.2 (sqlite3 v5 era) while every other target now ships 3.52.0. It is
+  // currently unreachable — win32-arm64 is commented out of package-all.js
+  // for exactly this reason — but re-enabling that target requires rebuilding
+  // the mirror against SQLITE_VERSION and storing it under a versioned key.
+  if (target === "win32-arm64") {
+    return "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.tar.gz";
+  }
+
+  return `https://github.com/TryGhost/node-sqlite3/releases/download/v${SQLITE_VERSION}/sqlite3-v${SQLITE_VERSION}-napi-v${NAPI_VERSION}-${target}.tar.gz`;
+}
+
 /**
  * download a file using fetch API
  * @param {string} url
@@ -43,14 +96,7 @@ async function downloadFile(url, outputPath) {
  * @param {string} targetDir the directory to download into
  */
 async function downloadSqlite(target, targetDir) {
-  const downloadUrl =
-    // node-sqlite3 doesn't have a pre-built binary for win32-arm64
-    target === "win32-arm64"
-      ? "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.tar.gz"
-      : `https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-${
-          target
-        }.tar.gz`;
-  await downloadFile(downloadUrl, targetDir);
+  await downloadFile(sqliteDownloadUrl(target), targetDir);
 }
 
 async function installAndCopySqlite(target) {
@@ -143,6 +189,8 @@ async function copyEsbuild(target) {
 
 module.exports = {
   downloadSqlite,
+  sqliteDownloadUrl,
+  SUPPORTED_SQLITE_TARGETS,
   copySqlite,
   copyEsbuild,
 };

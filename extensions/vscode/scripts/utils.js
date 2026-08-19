@@ -1,3 +1,4 @@
+const { execFileSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -5,6 +6,7 @@ const ncp = require("ncp").ncp;
 const { rimrafSync } = require("rimraf");
 
 const { execCmdSync } = require("../../../scripts/util/index");
+const { sqliteDownloadUrl } = require("./download-copy-sqlite");
 
 const continueDir = path.join(__dirname, "..", "..", "..");
 
@@ -216,25 +218,18 @@ async function copyNodeModules() {
 async function downloadSqliteBinary(target) {
   console.log("[info] Downloading pre-built sqlite3 binary");
   rimrafSync("../../core/node_modules/sqlite3/build");
-  const downloadUrl = {
-    "darwin-arm64":
-      "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-arm64.tar.gz",
-    "linux-arm64":
-      "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
-    "win32-arm64":
-      "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-win32-arm64.tar.gz",
-    "linux-x64":
-      "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-x64.tar.gz",
-    "darwin-x64":
-      "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-x64.tar.gz",
-    "win32-x64":
-      "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-win32-x64.tar.gz",
-  }[target];
-  execCmdSync(
-    `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
-  );
+  // Validates `target` before it reaches the shell below, and keeps the URL in
+  // lockstep with the sqlite3 installed in core.
+  const downloadUrl = sqliteDownloadUrl(target);
+  const archivePath = "../../core/node_modules/sqlite3/build.tar.gz";
+  // execFileSync, not execCmdSync: no shell, so the URL cannot be reinterpreted
+  // as shell syntax. -f makes a 404 fail loudly instead of writing an error
+  // page to the archive and surfacing later as a confusing tar error.
+  execFileSync("curl", ["-fL", "-o", archivePath, downloadUrl], {
+    stdio: "inherit",
+  });
   execCmdSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
-  fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
+  fs.unlinkSync(archivePath);
 }
 
 async function copySqliteBinary() {

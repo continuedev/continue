@@ -36,6 +36,9 @@
   },
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.23.2"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue.git"
