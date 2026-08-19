@@ -172,11 +172,16 @@ export class OpenAIApi implements BaseLlmApi {
       // Some servers (e.g. llama.cpp with incremental usage) attach a running
       // `usage` object to EVERY chunk. Withholding on `usage` alone would then
       // swallow the entire stream, so only defer chunks that carry no payload.
-      const choice = result.choices?.[0];
+      // Check every choice, not just the first: with `n > 1` an empty
+      // choices[0] alongside a content-bearing choices[1] would otherwise
+      // classify the chunk as usage-only and drop the other choice's payload.
       const isUsageOnly =
         !!result.usage &&
-        !choice?.finish_reason &&
-        Object.keys(choice?.delta ?? {}).length === 0;
+        (result.choices ?? []).every(
+          (choice) =>
+            !choice?.finish_reason &&
+            Object.keys(choice?.delta ?? {}).length === 0,
+        );
       if (isUsageOnly) {
         // Store it to emit after all content chunks
         lastChunkWithUsage = result;

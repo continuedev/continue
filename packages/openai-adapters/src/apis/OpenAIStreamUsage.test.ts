@@ -36,6 +36,33 @@ function chunk(
   } as unknown as ChatCompletionChunk;
 }
 
+/** Multi-choice chunk, for `n > 1` requests. */
+function multiChoiceChunk(
+  deltas: Record<string, unknown>[],
+  usage?: { completion_tokens: number },
+): ChatCompletionChunk {
+  return {
+    id: "chatcmpl-test",
+    object: "chat.completion.chunk",
+    created: 0,
+    model: "test-model",
+    choices: deltas.map((delta, index) => ({
+      index,
+      delta,
+      finish_reason: null,
+    })),
+    ...(usage
+      ? {
+          usage: {
+            prompt_tokens: 10,
+            total_tokens: 10 + usage.completion_tokens,
+            ...usage,
+          },
+        }
+      : {}),
+  } as unknown as ChatCompletionChunk;
+}
+
 function apiYielding(chunks: ChatCompletionChunk[]) {
   const api = new OpenAIApi({
     provider: "openai",
@@ -126,6 +153,9 @@ describe("chatCompletionStream usage handling", () => {
 
   it("does not emit a duplicate trailing chunk when usage rides on content", async () => {
     const api = apiYielding([
+      // Leading usage-only chunk, so a deferred chunk actually exists to be
+      // cleared. Without it this test passes even if clearing is broken.
+      chunk({}, { completion_tokens: 0 }),
       chunk({ content: "A" }, { completion_tokens: 1 }),
       chunk({ content: "B" }, { completion_tokens: 2 }, "stop"),
     ]);
@@ -136,5 +166,33 @@ describe("chatCompletionStream usage handling", () => {
     expect(
       out.map((c) => (c.choices?.[0]?.delta as any)?.content).join(""),
     ).toBe("AB");
+  });
+
+  it("does not defer a chunk when a later choice carries content (n > 1)", async () => {
+    const api = apiYielding([
+      // choices[0] is empty but choices[1] has content: inspecting only the
+      // first choice would classify this as usage-only and drop "B".
+      multiChoiceChunk([{}, { content: "B" }], { completion_tokens: 1 }),
+      chunk({ content: "A" }, { completion_tokens: 2 }, "stop"),
+    ]);
+
+    const out = await collect(api, body);
+
+    expect(out).toHaveLength(2);
+    expect((out[0].choices?.[1]?.delta as any)?.content).toBe("B");
+  });
+
+  it("still defers a chunk when every choice is empty (n > 1)", async () => {
+    const api = apiYielding([
+      chunk({ content: "A" }, undefined, "stop"),
+      multiChoiceChunk([{}, {}], { completion_tokens: 3 }),
+    ]);
+
+    const out = await collect(api, body);
+
+    // The usage-only chunk is deferred, then emitted last.
+    expect(out).toHaveLength(2);
+    expect((out[0].choices?.[0]?.delta as any)?.content).toBe("A");
+    expect(out[1].usage?.completion_tokens).toBe(3);
   });
 });
