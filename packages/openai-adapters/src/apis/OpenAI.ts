@@ -45,9 +45,14 @@ export class OpenAIApi implements BaseLlmApi {
       apiKey: config.apiKey ?? "",
       baseURL: this.apiBase,
       fetch: customFetch(config.requestOptions),
-      timeout: config?.requestOptions?.timeout
-        ? config.requestOptions.timeout * 1000
-        : undefined,
+      // requestOptions.timeout is in seconds; the OpenAI SDK expects ms.
+      // Nullish rather than truthy: the schema permits `timeout: 0`, and both
+      // the SDK (`options.timeout ?? DEFAULT_TIMEOUT`) and our own
+      // getAgentOptions treat 0 as a real value, not as "unset".
+      timeout:
+        config?.requestOptions?.timeout != null
+          ? config.requestOptions.timeout * 1000
+          : undefined,
     });
   }
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
