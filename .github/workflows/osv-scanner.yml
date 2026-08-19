@@ -1,0 +1,87 @@
+name: OSV-Scanner
+
+# Vulnerability scanning via Google's OSV database, in two modes:
+#
+#   scan-pr       scans the base branch and the PR head separately, then reports
+#                 only the difference — the vulnerabilities the PR *introduces*.
+#                 Blocking, and safe to block precisely because of that diff: the
+#                 backlog below cannot fail an unrelated PR.
+#
+#   scan-main     full recursive scan of the whole tree on push to main and on
+#                 published releases. Report-only, because the tree already
+#                 carries a large pre-existing backlog: the first scan found 999
+#                 unique advisories across 19 sources (41 CRITICAL, 608 HIGH),
+#                 concentrated in manual-testing-sandbox/requirements.txt (718),
+#                 extensions/vscode (179), gui (118) and extensions/cli (116).
+#                 Setting fail-on-vuln here today would just paint main red and
+#                 teach everyone to ignore it. Flip it once that is triaged.
+#
+# Both jobs call google/osv-scanner-action's reusable workflows directly rather
+# than vendoring them, so upstream fixes arrive without us maintaining a copy.
+# Pinned by commit SHA, not tag: a tag can be repointed, a SHA cannot. Keep the
+# trailing version comment in sync when bumping so Dependabot can read it.
+
+# No merge_group trigger, deliberately. The upstream reusable PR workflow does
+# `git checkout $GITHUB_BASE_REF` unguarded, and GITHUB_BASE_REF is only set for
+# pull_request/pull_request_target — on a merge_group event it is empty, so the
+# checkout fails and takes the merge queue down with it. The ProtectMain ruleset
+# does not enable a merge queue today, so nothing is lost; revisit only if one is
+# turned on, and only once upstream handles the event.
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+  release:
+    types: [published]
+
+# Superseded pushes should stop burning runners; see issue #6. The PR number
+# keeps concurrent PRs in separate groups, so this cancels only older runs of
+# *this* workflow on *this* PR. github.ref is the fallback for push/release,
+# where pull_request.number is empty.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan-pr:
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      # Required to upload the SARIF file to CodeQL.
+      # See https://github.com/github/codeql-action/issues/2117
+      actions: read
+      # Required to write the SARIF file to the Security tab.
+      security-events: write
+      contents: read
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@6e4298ebc4db23e847df9b2e2de2939d6f066c67" # v2.5.1
+    with:
+      # --include-git-root also scans committed source, not just lockfiles.
+      scan-args: |-
+        --include-git-root
+        -r
+        ./
+      # Only new vulnerabilities reach this job, so failing is safe: a
+      # pre-existing CVE elsewhere in the tree will not block an unrelated PR.
+      fail-on-vuln: true
+      # Fork PRs get a read-only GITHUB_TOKEN regardless of the permissions block
+      # above, so the SARIF upload would fail and redden the check for a reason
+      # the contributor cannot fix. Skip the upload there and let fail-on-vuln
+      # plus the inline annotations carry the result; the full-tree scan on main
+      # keeps the Security tab populated either way.
+      upload-sarif: ${{ github.event.pull_request.head.repo.fork != true }}
+
+  scan-main:
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
+    permissions:
+      actions: read
+      security-events: write
+      contents: read
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@6e4298ebc4db23e847df9b2e2de2939d6f066c67" # v2.5.1
+    with:
+      scan-args: |-
+        --include-git-root
+        -r
+        ./
+      # Report-only until the 999-advisory backlog described at the top of this
+      # file is triaged.
+      fail-on-vuln: false
