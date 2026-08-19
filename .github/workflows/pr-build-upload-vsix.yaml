@@ -9,7 +9,9 @@ on:
 jobs:
   build-and-upload-vsix:
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 10
+    # Cold Windows/macOS builds of this monorepo regularly exceed 10 minutes,
+    # which GitHub reports as `cancelled` rather than `failure`.
+    timeout-minutes: 25
     strategy:
       matrix:
         include:
