@@ -1,0 +1,248 @@
+name: Nightly Pre-Release
+
+# Builds VSIX artifacts from main every night and publishes them as a
+# GitHub pre-release on this fork. Never publishes to any marketplace.
+on:
+  schedule:
+    - cron: "0 3 * * *" # 03:00 UTC daily
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Build even if there are no new commits since the last nightly"
+        required: false
+        type: boolean
+        default: false
+
+# Never cancel a release run in progress: cancelling mid-upload can leave a
+# partially populated release. Queue instead.
+concurrency:
+  group: nightly-release
+  cancel-in-progress: false
+
+# Least privilege by default; only the jobs that touch releases get write.
+permissions:
+  contents: read
+
+jobs:
+  # Skip the (expensive) matrix entirely when main hasn't moved since the
+  # last nightly tag. Manual dispatch can override with `force`.
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+
+      # Steps below run `node` before the build action sets it up, so pin it
+      # here rather than inheriting whatever the runner image defaults to.
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: ".nvmrc"
+
+      # `workflow_dispatch` allows any ref to be selected, so without this a
+      # nightly could be published from unmerged feature-branch code.
+      # Scheduled runs always use the default branch.
+      - name: Refuse to build from anything but main
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Nightly builds must run from refs/heads/main (got $GITHUB_REF)"
+            exit 1
+          fi
+
+      - name: Check for new commits since last nightly
+        id: check
+        run: |
+          if [ "${{ inputs.force }}" = "true" ]; then
+            echo "Forced build requested"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # `--merged HEAD` so a nightly tag created on some other branch
+          # can't win the sort and skew the commit count.
+          LAST_TAG=$(git tag -l 'v*-nightly.*' --merged HEAD --sort=-creatordate | head -n1)
+
+          if [ -z "$LAST_TAG" ]; then
+            echo "No previous nightly tag found; building"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          COMMITS=$(git rev-list "$LAST_TAG"..HEAD --count)
+          echo "$COMMITS commit(s) since $LAST_TAG"
+
+          if [ "$COMMITS" -gt 0 ]; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compute nightly version
+        id: version
+        run: |
+          BASE=$(node -p "require('./extensions/vscode/package.json').version")
+          DATE=$(date -u +%Y%m%d)
+          SHA_SHORT=$(git rev-parse --short=7 HEAD)
+          VERSION="${BASE}-nightly.${DATE}.${SHA_SHORT}"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Nightly version: $VERSION"
+
+  build:
+    needs: check-changes
+    if: needs.check-changes.outputs.should_build == 'true'
+    runs-on: ${{ matrix.os }}
+    # Cold Windows/macOS builds of this monorepo regularly exceed 10 minutes,
+    # which GitHub reports as `cancelled` rather than `failure`.
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            npm_config_arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: arm64
+            npm_config_arch: arm
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            npm_config_arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: arm64
+            npm_config_arch: arm64
+          - os: ubuntu-latest
+            platform: linux
+            arch: armhf
+            npm_config_arch: arm
+          - os: ubuntu-latest
+            platform: alpine
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+            npm_config_arch: arm64
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+
+      # The version rewrite below runs before the build action's own setup.
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Set nightly version in package.json
+        shell: bash
+        run: |
+          cd extensions/vscode
+          VERSION="${{ needs.check-changes.outputs.version }}"
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '$VERSION';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "package.json version is now $(node -p "require('./package.json').version")"
+
+      - name: Build VS Code extension
+        uses: ./.github/actions/build-vscode-extension
+        with:
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+          npm_config_arch: ${{ matrix.npm_config_arch }}
+          pre-release: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.arch }}-vsix
+          path: "extensions/vscode/*.vsix"
+
+  release:
+    needs: [check-changes, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: "*-vsix"
+          path: vsix-artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -la vsix-artifacts/
+
+      - name: Create nightly pre-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.check-changes.outputs.tag }}
+        run: |
+          # Always --prerelease, never --latest.
+          gh release create "$TAG" \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" \
+            --title "$TAG" \
+            --notes "Automated nightly build from \`main\` (${{ github.sha }}).
+
+          **Pre-release — not for production use.**
+
+          Install by downloading the \`.vsix\` for your platform and running:
+          \`code --install-extension <file>.vsix\`" \
+            --prerelease \
+            vsix-artifacts/*.vsix
+
+  # Keep the release list manageable; nightlies accumulate quickly.
+  prune:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Delete nightly releases older than the most recent 14
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # `gh release list --limit N` silently truncates, which would leave
+          # anything past the window un-prunable. Paginate the API instead so
+          # the backlog size can never outrun the prune.
+          gh api \
+            --paginate \
+            "repos/${{ github.repository }}/releases" \
+            --jq '.[] | {tagName: .tag_name, createdAt: .created_at}' \
+            | jq -s '[.[] | select(.tagName | test("-nightly\\."))]
+                     | sort_by(.createdAt) | reverse | .[14:] | .[].tagName' \
+            | jq -r '.' \
+            > to-delete.txt
+
+          if [ ! -s to-delete.txt ]; then
+            echo "Nothing to prune"
+            exit 0
+          fi
+
+          while read -r tag; do
+            [ -z "$tag" ] && continue
+            echo "Deleting $tag"
+            gh release delete "$tag" \
+              --repo "${{ github.repository }}" \
+              --cleanup-tag \
+              --yes
+          done < to-delete.txt

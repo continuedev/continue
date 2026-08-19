@@ -1,0 +1,161 @@
+name: Release
+
+# On-demand stable release. Builds VSIX artifacts from the current
+# package.json version, tags it, and publishes a GitHub release on this
+# fork. Never publishes to any marketplace.
+on:
+  workflow_dispatch:
+    inputs:
+      draft:
+        description: "Create as a draft (publish manually afterwards)"
+        required: false
+        type: boolean
+        default: true
+
+# Separate group from nightly: a stable release should never be queued behind
+# (or cancelled by) a nightly. Never cancel mid-upload.
+concurrency:
+  group: stable-release
+  cancel-in-progress: false
+
+# Least privilege by default; only the release job gets write.
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+
+      # Steps below run `node`, so pin it rather than inheriting the runner
+      # image default.
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Resolve version and tag
+        id: version
+        run: |
+          VERSION=$(node -p "require('./extensions/vscode/package.json').version")
+          TAG="v${VERSION}-vscode"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Releasing $TAG"
+
+      # NOTE: `extensions/vscode/scripts/versionCheck.js` (rejects odd minor
+      # versions) is deliberately NOT run here. It exists only to protect VS
+      # Code Marketplace odd/even pre-release semantics, and this fork
+      # publishes to GitHub Releases only. It now has no callers.
+      - name: Fail if tag already exists
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "::error::Tag $TAG already exists. Bump the version in extensions/vscode/package.json first."
+            exit 1
+          fi
+          echo "Tag $TAG is available"
+
+  build:
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    # Cold Windows/macOS builds of this monorepo regularly exceed 10 minutes,
+    # which GitHub reports as `cancelled` rather than `failure`.
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            npm_config_arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: arm64
+            npm_config_arch: arm
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            npm_config_arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: arm64
+            npm_config_arch: arm64
+          - os: ubuntu-latest
+            platform: linux
+            arch: armhf
+            npm_config_arch: arm
+          - os: ubuntu-latest
+            platform: alpine
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+            npm_config_arch: arm64
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Build VS Code extension
+        uses: ./.github/actions/build-vscode-extension
+        with:
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+          npm_config_arch: ${{ matrix.npm_config_arch }}
+          pre-release: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.arch }}-vsix
+          path: "extensions/vscode/*.vsix"
+
+  release:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: "*-vsix"
+          path: vsix-artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -la vsix-artifacts/
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          DRAFT_FLAG=""
+          if [ "${{ inputs.draft }}" = "true" ]; then
+            DRAFT_FLAG="--draft"
+          fi
+
+          gh release create "$TAG" \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" \
+            --title "$TAG" \
+            --generate-notes \
+            --latest \
+            $DRAFT_FLAG \
+            vsix-artifacts/*.vsix
