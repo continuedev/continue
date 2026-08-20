@@ -285,24 +285,19 @@ function pruneLinesFromTop(
   modelName: string,
 ): string {
   const lines = prompt.split("\n");
-  // Preprocess tokens for all lines and cache them.
-  const lineTokens = lines.map((line) => countTokens(line, modelName));
-  let totalTokens = lineTokens.reduce((sum, tokens) => sum + tokens, 0);
-  let start = 0;
-  let currentLines = lines.length;
+  let start = lines.length;
+  let totalTokens = 0;
 
-  // Calculate initial token count including newlines
-  totalTokens += Math.max(0, currentLines - 1); // Add tokens for joining newlines
-
-  // Using indexes instead of array modifications.
-  // Remove lines from the top until the token count is within the limit.
-  while (totalTokens > maxTokens && start < currentLines) {
-    totalTokens -= lineTokens[start];
-    // Decrement token count for the removed line and its preceding/joining newline (if not the last line)
-    if (currentLines - start > 1) {
-      totalTokens--;
+  // Build the retained suffix without tokenizing discarded leading lines.
+  while (start > 0) {
+    const next = start - 1;
+    const nextTokens = countTokens(lines[next], modelName);
+    const newlineTokens = start < lines.length ? 1 : 0;
+    if (totalTokens + nextTokens + newlineTokens > maxTokens) {
+      break;
     }
-    start++;
+    totalTokens += nextTokens + newlineTokens;
+    start = next;
   }
 
   return lines.slice(start).join("\n");
@@ -314,22 +309,18 @@ function pruneLinesFromBottom(
   modelName: string,
 ): string {
   const lines = prompt.split("\n");
-  const lineTokens = lines.map((line) => countTokens(line, modelName));
-  let totalTokens = lineTokens.reduce((sum, tokens) => sum + tokens, 0);
-  let end = lines.length;
+  let end = 0;
+  let totalTokens = 0;
 
-  // Calculate initial token count including newlines
-  totalTokens += Math.max(0, end - 1); // Add tokens for joining newlines
-
-  // Reverse traversal to avoid array modification
-  // Remove lines from the bottom until the token count is within the limit.
-  while (totalTokens > maxTokens && end > 0) {
-    end--;
-    totalTokens -= lineTokens[end];
-    // Decrement token count for the removed line and its following/joining newline (if not the first line)
-    if (end > 0) {
-      totalTokens--;
+  // Build the retained prefix without tokenizing discarded trailing lines.
+  while (end < lines.length) {
+    const nextTokens = countTokens(lines[end], modelName);
+    const newlineTokens = end > 0 ? 1 : 0;
+    if (totalTokens + nextTokens + newlineTokens > maxTokens) {
+      break;
     }
+    totalTokens += nextTokens + newlineTokens;
+    end++;
   }
 
   return lines.slice(0, end).join("\n");
