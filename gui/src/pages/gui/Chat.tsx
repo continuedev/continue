@@ -78,7 +78,6 @@ const StepsDiv = styled.div`
 
   .thread-message {
     margin: 0 0 0 1px;
-    width: 100vw;
   }
 `;
 
