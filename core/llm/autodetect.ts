@@ -68,6 +68,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "deepseek",
   "xAI",
   "minimax",
+  "spark",
   "groq",
   "gemini",
   "docker",
@@ -252,6 +253,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "function-network",
   "scaleway",
   "minimax",
+  "spark",
   "tensorix",
 ];
 

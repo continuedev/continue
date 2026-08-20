@@ -611,6 +611,38 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     packages: [models.mercury2],
     apiKeyUrl: "https://platform.inceptionlabs.ai/",
   },
+  spark: {
+    title: "iFLYTEK Spark",
+    provider: "spark",
+    description:
+      "Use iFLYTEK Spark (讯飞星火) models via an OpenAI-compatible API.",
+    longDescription:
+      "To get started with iFLYTEK Spark, obtain an API Password from the [iFLYTEK Spark console](https://console.xfyun.cn).",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Spark API Password",
+        required: true,
+      },
+    ],
+    packages: [
+      models.spark40Ultra,
+      models.sparkMax,
+      models.sparkMax32k,
+      models.sparkPro128k,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "iFLYTEK Spark",
+        },
+      },
+    ],
+    apiKeyUrl: "https://console.xfyun.cn",
+  },
   deepseek: {
     title: "DeepSeek",
     provider: "deepseek",

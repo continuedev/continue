@@ -82,6 +82,11 @@ export const MiniMaxConfigSchema = OpenAIConfigSchema.extend({
 });
 export type MiniMaxConfig = z.infer<typeof MiniMaxConfigSchema>;
 
+export const SparkConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("spark"),
+});
+export type SparkConfig = z.infer<typeof SparkConfigSchema>;
+
 export const BedrockConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("bedrock"),
   // cacheBehavior: z.object({
@@ -261,6 +266,7 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   MoonshotConfigSchema,
   DeepseekConfigSchema,
   MiniMaxConfigSchema,
+  SparkConfigSchema,
   CohereConfigSchema,
   AzureConfigSchema,
   GeminiConfigSchema,
