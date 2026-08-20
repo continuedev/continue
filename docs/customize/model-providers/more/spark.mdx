@@ -1,0 +1,56 @@
+---
+title: "How to Configure iFLYTEK Spark with Continue"
+sidebarTitle: "iFLYTEK Spark"
+---
+
+<Info>
+  Get your API Password from the [iFLYTEK Spark console](https://console.xfyun.cn)
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Spark 4.0 Ultra
+      provider: spark
+      model: 4.0Ultra
+      apiKey: <YOUR_SPARK_API_PASSWORD>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Spark 4.0 Ultra",
+        "provider": "spark",
+        "model": "4.0Ultra",
+        "apiKey": "<YOUR_SPARK_API_PASSWORD>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+| Model | Description |
+| :---- | :---------- |
+| `4.0Ultra` | Flagship Spark model with the strongest general capabilities. 32K context window. |
+| `generalv3.5` | Spark Max, high-capability model with function calling. 8K context window. |
+| `max-32k` | Spark Max with an extended 32K context window. |
+| `generalv3` | Spark Pro, cost-effective for everyday tasks. 8K context window. |
+| `pro-128k` | Spark Pro with a long 128K context window. |
+| `lite` | Lightweight, low-latency Spark model. 8K context window. |
+
+## Notes
+
+- Spark uses an OpenAI-compatible HTTP API at `https://spark-api-open.xf-yun.com/v1`
+- The `apiKey` is the **API Password** for the Spark HTTP service (`http服务接口认证信息` → `APIPassword` in the console). It is different from the APPID/APIKey/APISecret triple used by the legacy WebSocket API.

@@ -20,6 +20,7 @@ import { OpenAIApi } from "./apis/OpenAI.js";
 import { OpenRouterApi } from "./apis/OpenRouter.js";
 import { ClawRouterApi } from "./apis/ClawRouter.js";
 import { RelaceApi } from "./apis/Relace.js";
+import { SparkApi } from "./apis/Spark.js";
 import { VertexAIApi } from "./apis/VertexAI.js";
 import { WatsonXApi } from "./apis/WatsonX.js";
 import { BaseLlmApi } from "./apis/base.js";
@@ -143,6 +144,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.groq.com/openai/v1/", config);
     case "minimax":
       return new MiniMaxApi(config);
+    case "spark":
+      return new SparkApi(config);
     case "sambanova":
       return openAICompatible("https://api.sambanova.ai/v1/", config);
     case "text-gen-webui":

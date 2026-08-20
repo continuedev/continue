@@ -2788,6 +2788,52 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: true,
   },
 
+  spark40Ultra: {
+    title: "Spark 4.0 Ultra",
+    description:
+      "iFLYTEK's flagship Spark model with the strongest general capabilities. 32K context window.",
+    params: {
+      title: "Spark 4.0 Ultra",
+      model: "4.0Ultra",
+      contextLength: 32_768,
+    },
+    providerOptions: ["spark"],
+    isOpenSource: false,
+  },
+  sparkMax: {
+    title: "Spark Max",
+    description:
+      "High-capability Spark model with function calling support. 8K context window.",
+    params: {
+      title: "Spark Max",
+      model: "generalv3.5",
+      contextLength: 8_192,
+    },
+    providerOptions: ["spark"],
+    isOpenSource: false,
+  },
+  sparkMax32k: {
+    title: "Spark Max-32K",
+    description: "Spark Max with an extended 32K context window.",
+    params: {
+      title: "Spark Max-32K",
+      model: "max-32k",
+      contextLength: 32_768,
+    },
+    providerOptions: ["spark"],
+    isOpenSource: false,
+  },
+  sparkPro128k: {
+    title: "Spark Pro-128K",
+    description: "Spark Pro with a long 128K context window.",
+    params: {
+      title: "Spark Pro-128K",
+      model: "pro-128k",
+      contextLength: 131_072,
+    },
+    providerOptions: ["spark"],
+    isOpenSource: false,
+  },
   AUTODETECT: {
     title: "Autodetect",
     description:

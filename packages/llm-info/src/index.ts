@@ -9,6 +9,7 @@ import { MiniMax } from "./providers/minimax.js";
 import { Mistral } from "./providers/mistral.js";
 import { Ollama } from "./providers/ollama.js";
 import { OpenAi } from "./providers/openai.js";
+import { Spark } from "./providers/spark.js";
 import { Vllm } from "./providers/vllm.js";
 import { Voyage } from "./providers/voyage.js";
 import { xAI } from "./providers/xAI.js";
@@ -29,6 +30,7 @@ export const allModelProviders: ModelProvider[] = [
   CometAPI,
   Inception,
   MiniMax,
+  Spark,
   xAI,
   zAI,
 ];
