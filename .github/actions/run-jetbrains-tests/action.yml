@@ -8,6 +8,10 @@ inputs:
   ci-github-token:
     description: "CI GitHub token for vscode extension build"
     required: true
+  ffmpeg-version:
+    description: "FFmpeg release branch to install, must be one still published by BtbN/FFmpeg-Builds under its rolling 'latest' tag"
+    required: false
+    default: "8.1"
 
 runs:
   using: "composite"
@@ -41,10 +45,35 @@ runs:
         distribution: zulu
         java-version: 17
 
+    - name: Check FFmpeg artifact is available
+      shell: bash
+      env:
+        FFMPEG_VERSION: ${{ inputs.ffmpeg-version }}
+      run: |
+        asset="ffmpeg-n$FFMPEG_VERSION-latest-linux64-gpl-$FFMPEG_VERSION.tar.xz"
+        url="$GITHUB_SERVER_URL/BtbN/FFmpeg-Builds/releases/download/latest/$asset"
+        status=$(curl -sSIL --retry 3 --retry-connrefused --connect-timeout 10 \
+          --max-time 60 -o /dev/null -w '%{http_code}' "$url") || status=""
+        case "$status" in
+          2*) ;;
+          404)
+            echo "::error::FFmpeg $FFMPEG_VERSION is no longer published by BtbN/FFmpeg-Builds. Bump ffmpeg-version. Missing: $url"
+            exit 1
+            ;;
+          ""|000)
+            echo "::error::Could not reach $url to verify the FFmpeg artifact (network or DNS failure), so the pinned version was not checked."
+            exit 1
+            ;;
+          *)
+            echo "::error::Unexpected HTTP $status when verifying the FFmpeg artifact at $url."
+            exit 1
+            ;;
+        esac
+
     - name: Setup FFmpeg
       uses: AnimMouse/setup-ffmpeg@v1
       with:
-        version: 8.1
+        version: ${{ inputs.ffmpeg-version }}
         token: ${{ inputs.github-token }}
 
     - name: Setup Gradle
