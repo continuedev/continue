@@ -274,7 +274,8 @@ export class InlineTipManager {
           {
             ...baseTextConfig,
             x: SVG_CONFIG.chatLabelX,
-            fill: this.theme?.colors?.["editor.foreground"] ?? SVG_CONFIG.stroke,
+            fill:
+              this.theme?.colors?.["editor.foreground"] ?? SVG_CONFIG.stroke,
           },
           SVG_CONFIG.chatLabel,
         )
@@ -291,7 +292,8 @@ export class InlineTipManager {
           {
             ...baseTextConfig,
             x: SVG_CONFIG.editLabelX,
-            fill: this.theme?.colors?.["editor.foreground"] ?? SVG_CONFIG.stroke,
+            fill:
+              this.theme?.colors?.["editor.foreground"] ?? SVG_CONFIG.stroke,
           },
           SVG_CONFIG.editLabel,
         )

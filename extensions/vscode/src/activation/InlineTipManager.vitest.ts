@@ -38,18 +38,20 @@ describe("InlineTipManager.createSvgTooltipDecoration", () => {
     // undefined. Previously the guard only checked `this.theme` was truthy and
     // then read `this.theme.colors["editor.background"]`, throwing a TypeError
     // that killed extension activation (issue #12947).
-    const instance = Object.create(
-      InlineTipManager.prototype,
-    ) as { createSvgTooltipDecoration: () => unknown; theme: unknown };
+    const instance = Object.create(InlineTipManager.prototype) as {
+      createSvgTooltipDecoration: () => unknown;
+      theme: unknown;
+    };
     instance.theme = { colors: undefined };
 
     expect(() => instance.createSvgTooltipDecoration()).not.toThrow();
   });
 
   it("uses the theme background when the colors map is present", () => {
-    const instance = Object.create(
-      InlineTipManager.prototype,
-    ) as { createSvgTooltipDecoration: () => unknown; theme: unknown };
+    const instance = Object.create(InlineTipManager.prototype) as {
+      createSvgTooltipDecoration: () => unknown;
+      theme: unknown;
+    };
     instance.theme = { colors: { "editor.background": "#101010" } };
 
     expect(() => instance.createSvgTooltipDecoration()).not.toThrow();
