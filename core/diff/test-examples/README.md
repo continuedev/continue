@@ -14,7 +14,7 @@ Tests are specified as
 <EXPECTED DIFF>
 ```
 
-`---` is the delimeter, and surrounding whitespace will be trimmed.
+`---` is the delimiter, and surrounding whitespace will be trimmed.
 
 The expected diff can be generated with the `displayDiff` function.
 

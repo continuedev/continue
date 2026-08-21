@@ -53,4 +53,4 @@ Several files are stored and updated on disk in the ~/.continue/index folder to 
 ### Current limitations:
 
 - Only handles local files, so is not currently being used in situations where the Continue server is on a different machine from the IDE or the workspace (Remote SSH, WSL, or a Continue server being run for a team).
-- Currently not using stat to check for recent changes to files, is instaed re-calculating the entire Merkle tree on every IDE reload. This is fine for now since it only takes 0.2 seconds on the Continue codebase, but is a quick improvement we can make later.
+- Currently not using stat to check for recent changes to files, is instead re-calculating the entire Merkle tree on every IDE reload. This is fine for now since it only takes 0.2 seconds on the Continue codebase, but is a quick improvement we can make later.
