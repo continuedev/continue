@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { extractPathsFromCodeBlocks } from "./extractPathsFromCodeBlocks";
 
 describe("extractPathsFromCodeBlocks", () => {
@@ -28,21 +29,33 @@ describe("extractPathsFromCodeBlocks", () => {
     expect(result.length).toBe(3);
   });
 
+  it("should not extract paths from code blocks without file paths", () => {
+    const content = "```typescript\nconst x = 1;\n```";
+    expect(extractPathsFromCodeBlocks(content)).toEqual([]);
+  });
+
   // Regression for https://github.com/continuedev/continue/issues/13135
-  it("should extract paths whose filenames contain spaces", () => {
+  it("should extract paths whose filenames contain spaces (no language)", () => {
     expect(
       extractPathsFromCodeBlocks("```docs/foo bar.md\n# Title\n```"),
     ).toEqual(["docs/foo bar.md"]);
+  });
+
+  it("should extract paths whose filenames contain spaces (with language)", () => {
     expect(
       extractPathsFromCodeBlocks("```md docs/foo bar.md\n# Title\n```"),
     ).toEqual(["docs/foo bar.md"]);
+  });
+
+  it("should extract paths whose filenames contain spaces (with language and range)", () => {
     expect(
       extractPathsFromCodeBlocks("```md docs/foo bar.md (1-3)\n# Title\n```"),
     ).toEqual(["docs/foo bar.md"]);
   });
 
-  it("should not extract paths from code blocks without file paths", () => {
-    const content = "```typescript\nconst x = 1;\n```";
-    expect(extractPathsFromCodeBlocks(content)).toEqual([]);
+  it("should extract paths with spaces in nested directory segments", () => {
+    expect(
+      extractPathsFromCodeBlocks("```ts src/my folder/file.ts\ncode\n```"),
+    ).toEqual(["src/my folder/file.ts"]);
   });
 });

@@ -476,4 +476,55 @@ describe("Content pattern matching", () => {
       shouldApplyRule(nestedPatternRule, [utilFilePath], {}, utilContents),
     ).toBe(false);
   });
+
+  // Regression for https://github.com/continuedev/continue/issues/13135
+  it("should apply rules to files whose names contain spaces", () => {
+    const docsRule: RuleWithSource = {
+      name: "Docs Rule",
+      rule: "Write docs in the active voice",
+      globs: "docs/**/*.md",
+      source: "rules-block",
+      sourceFile: "docs/rules.md",
+    };
+
+    // Code block headers are "```<language> <path> (<range>)", where the
+    // language and range are both optional.
+    const messages: UserChatMessage[] = [
+      {
+        role: "user",
+        content: "What do you think?\n```docs/foo bar.md\n# Title\n```",
+      },
+      {
+        role: "user",
+        content: "What do you think?\n```md docs/foo bar.md\n# Title\n```",
+      },
+      {
+        role: "user",
+        content:
+          "What do you think?\n```md docs/foo bar.md (1-1)\n# Title\n```",
+      },
+    ];
+
+    for (const message of messages) {
+      expect(getApplicableRules(message, [docsRule], [])).toHaveLength(1);
+    }
+  });
+
+  // Regression for https://github.com/continuedev/continue/issues/13135
+  it("should match exact globs whose filenames contain spaces", () => {
+    const exactRule: RuleWithSource = {
+      name: "Exact Docs Rule",
+      rule: "Only docs/foo bar.md",
+      globs: "docs/foo bar.md",
+      source: "rules-block",
+      sourceFile: "docs/rules.md",
+    };
+
+    const message: UserChatMessage = {
+      role: "user",
+      content: "What do you think?\n```docs/foo bar.md\n# Title\n```",
+    };
+
+    expect(getApplicableRules(message, [exactRule], [])).toHaveLength(1);
+  });
 });
