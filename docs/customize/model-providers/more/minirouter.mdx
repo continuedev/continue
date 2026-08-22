@@ -1,0 +1,56 @@
+---
+title: "How to Configure minirouter with Continue"
+sidebarTitle: "minirouter"
+---
+
+<Info>
+  Get a prepaid, accountless API key at [minirouter](https://minirouter.sh/key).
+</Info>
+
+minirouter is an OpenAI-compatible gateway with one key for the Vercel AI
+Gateway catalog.
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Llama 3.3 70B (minirouter)
+      provider: openai
+      model: meta/llama-3.3-70b
+      apiBase: https://api.minirouter.sh/v1
+      apiKey: <MINIROUTER_API_KEY>
+      roles:
+        - chat
+        - edit
+        - apply
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Llama 3.3 70B (minirouter)",
+        "provider": "openai",
+        "model": "meta/llama-3.3-70b",
+        "apiBase": "https://api.minirouter.sh/v1",
+        "apiKey": "<MINIROUTER_API_KEY>",
+        "roles": ["chat", "edit", "apply"]
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+Model IDs use `<lab>/<model>`. See the [full model list and
+prices](https://minirouter.sh/docs/models), or send `GET https://api.minirouter.sh/v1/models`.
+
+Streaming, tool calling, and `max_completion_tokens` are supported on every
+model that advertises them.
