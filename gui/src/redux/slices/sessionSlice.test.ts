@@ -136,6 +136,18 @@ describe("sessionSlice streamUpdate", () => {
 
     it("should not drop later messages in a batch after a <think> block", () => {
       const initialState = createInitialState();
+      // Mirror the production layout: submitEditorAndInitAtIndex appends an
+      // empty assistant placeholder after the user message, so reasoning is
+      // attached to that placeholder rather than to the user turn.
+      initialState.history.push({
+        message: {
+          role: "assistant" as const,
+          content: "",
+          id: "initial-assistant-message",
+        },
+        contextItems: [],
+      });
+
       const action = {
         type: "session/streamUpdate",
         payload: [
@@ -152,10 +164,11 @@ describe("sessionSlice streamUpdate", () => {
 
       const newState = sessionSlice.reducer(initialState, action);
 
-      expect(newState.history[0].reasoning?.text).toBe("Reasoning here.");
+      expect(newState.history[1].message.role).toBe("assistant");
+      expect(newState.history[1].reasoning?.text).toBe("Reasoning here.");
 
       // The second message in the same payload must still be appended.
-      expect(newState.history[1].message.content).toBe(
+      expect(newState.history[2].message.content).toBe(
         "First part. Second part.",
       );
     });
