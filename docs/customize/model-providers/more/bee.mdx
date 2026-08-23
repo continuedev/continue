@@ -1,0 +1,75 @@
+---
+title: "Bee by HEOSSI"
+description: "Configure Bee by HEOSSI, the quantum-native governed multimodal intelligence platform, as an OpenAI-compatible provider in Continue"
+---
+
+<Info>
+  Bee by HEOSSI - The Progressive Quantum-Native Intelligence Engine - serves
+  six governed production tiers through an OpenAI-compatible developer API at
+  `https://api.bee.heossi.com/bee`, with a post-quantum trust posture on every
+  transport hop and a governed real-quantum-hardware execution path. Create an
+  API key in [Bee
+  Workspace](https://workspace.bee.heossi.com/account/api-keys). Bee Cell is
+  the free entry tier.
+</Info>
+
+## Chat Model
+
+Model IDs must match `GET https://api.bee.heossi.com/bee/models`
+(`bee-cell`, `bee-brood`, `bee-comb`, `bee-buzz`, `bee-hive`, `bee-swarm`).
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Bee Cell 1.0
+        provider: openai
+        model: bee-cell
+        apiBase: https://api.bee.heossi.com/bee
+        apiKey: <YOUR_BEE_API_KEY>
+      - name: Bee Buzz 1.0
+        provider: openai
+        model: bee-buzz
+        apiBase: https://api.bee.heossi.com/bee
+        apiKey: <YOUR_BEE_API_KEY>
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Bee Cell 1.0",
+          "provider": "openai",
+          "model": "bee-cell",
+          "apiBase": "https://api.bee.heossi.com/bee",
+          "apiKey": "<YOUR_BEE_API_KEY>"
+        },
+        {
+          "title": "Bee Buzz 1.0",
+          "provider": "openai",
+          "model": "bee-buzz",
+          "apiBase": "https://api.bee.heossi.com/bee",
+          "apiKey": "<YOUR_BEE_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+Bee does not currently offer a dedicated autocomplete model through this API.
+
+[Click here](../../model-roles/autocomplete) to see a list of autocomplete model providers.
+
+## Embeddings Model
+
+Bee does not currently offer an embeddings model through this API.
+
+[Click here](../../model-roles/embed) to see a list of embeddings model providers.
