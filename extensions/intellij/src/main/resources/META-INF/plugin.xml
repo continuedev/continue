@@ -8,6 +8,7 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>org.jetbrains.plugins.terminal</depends>
+    <depends>com.intellij.modules.jcef</depends>
 
     <!-- See here for why this is optional:  https://github.com/continuedev/continue/issues/2775#issuecomment-2535620877-->
     <depends optional="true" config-file="continueintellijextension-withJSON.xml">
