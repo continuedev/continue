@@ -50,9 +50,10 @@ class SageMaker extends BaseLLM {
     const response = await client.send(command, { abortSignal: signal });
     if (response.Body) {
       let buffer = "";
+      const decoder = new TextDecoder();
       for await (const rawValue of response.Body) {
         const binaryChunk = rawValue.PayloadPart?.Bytes;
-        let value = new TextDecoder().decode(binaryChunk);
+        let value = decoder.decode(binaryChunk, { stream: true });
         buffer += value;
         let position;
         while ((position = buffer.indexOf("\n")) >= 0) {
@@ -99,9 +100,10 @@ class SageMaker extends BaseLLM {
     const response = await client.send(command, { abortSignal: signal });
     if (response.Body) {
       let buffer = "";
+      const decoder = new TextDecoder();
       for await (const rawValue of response.Body) {
         const binaryChunk = rawValue.PayloadPart?.Bytes;
-        let value = new TextDecoder().decode(binaryChunk);
+        let value = decoder.decode(binaryChunk, { stream: true });
         buffer += value;
         let position;
         while ((position = buffer.indexOf("\n")) >= 0) {
