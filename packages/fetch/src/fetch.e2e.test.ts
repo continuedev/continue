@@ -6,6 +6,7 @@ import * as path from "node:path";
 import { execSync } from "node:child_process";
 import { afterEach, describe, expect, test } from "vitest";
 import { fetchwithRequestOptions } from "./fetch.js";
+import { clearHttpAgentCache } from "./httpAgentCache.js";
 
 // Test server ports
 const HTTP_PORT = 3001;
@@ -15,7 +16,10 @@ const HTTPS_PORT = 3002;
 const serversToCleanup: Array<http.Server | https.Server> = [];
 const tempDirsToCleanup: string[] = [];
 
-afterEach(() => {
+afterEach(async () => {
+  // Drop keep-alive sockets so the next test does not reuse a closed server.
+  await clearHttpAgentCache();
+
   // Clean up all servers
   serversToCleanup.forEach((server) => server.close());
   serversToCleanup.length = 0;

@@ -15,6 +15,7 @@ export default defineConfig({
       "./util.js": "./util.ts",
       "./certs.js": "./certs.ts",
       "./fetch.js": "./fetch.ts",
+      "./httpAgentCache.js": "./httpAgentCache.ts",
     },
   },
 });
