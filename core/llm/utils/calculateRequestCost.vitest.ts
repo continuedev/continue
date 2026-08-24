@@ -153,6 +153,40 @@ describe("calculateRequestCost", () => {
       description: "GPT-4o-mini",
     },
 
+    // OpenAI GPT-4.1 family
+    {
+      provider: "openai",
+      model: "gpt-4.1",
+      promptTokens: 1000,
+      completionTokens: 500,
+      expectedCost: 0.006,
+      description: "GPT-4.1",
+    },
+    {
+      provider: "openai",
+      model: "gpt-4.1-mini",
+      promptTokens: 1000,
+      completionTokens: 500,
+      expectedCost: 0.0012,
+      description: "GPT-4.1-mini",
+    },
+    {
+      provider: "openai",
+      model: "gpt-4.1-nano",
+      promptTokens: 1000,
+      completionTokens: 500,
+      expectedCost: 0.0003,
+      description: "GPT-4.1-nano",
+    },
+    {
+      provider: "openai",
+      model: "gpt-4.1-2025-04-14",
+      promptTokens: 1000,
+      completionTokens: 500,
+      expectedCost: 0.006,
+      description: "GPT-4.1 date-stamped snapshot",
+    },
+
     // OpenAI GPT-3.5
     {
       provider: "openai",

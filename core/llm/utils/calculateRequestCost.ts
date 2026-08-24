@@ -161,6 +161,11 @@ function calculateOpenAICost(
     "gpt-4o-mini": { input: 0.15, output: 0.6 },
     "gpt-4o": { input: 2.5, output: 10 },
 
+    // GPT-4.1 models
+    "gpt-4.1-mini": { input: 0.4, output: 1.6 },
+    "gpt-4.1-nano": { input: 0.1, output: 0.4 },
+    "gpt-4.1": { input: 2, output: 8 },
+
     // GPT-4 Turbo models
     "gpt-4-turbo": { input: 10, output: 30 },
 
