@@ -1021,9 +1021,18 @@ export abstract class BaseLLM implements ILLM {
   }
 
   private canUseOpenAIResponses(options: CompletionOptions): boolean {
+    const isOfficialOpenAIAPI =
+      !this.apiBase ||
+      this.apiBase.trim() === "" ||
+      this.apiBase.replace(/\/$/, "") === "https://api.openai.com/v1";
+
+    const shouldUseResponses =
+      this._llmOptions.useResponsesApi === true ||
+      (this._llmOptions.useResponsesApi !== false && isOfficialOpenAIAPI);
+
     return (
       this.providerName === "openai" &&
-      this._llmOptions.useResponsesApi !== false &&
+      shouldUseResponses &&
       typeof (this as any)._streamResponses === "function" &&
       (this as any).isOSeriesOrGpt5PlusModel(options.model)
     );

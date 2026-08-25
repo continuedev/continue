@@ -91,8 +91,17 @@ export class OpenAIApi implements BaseLlmApi {
     if (this.config.useResponsesApi === false) {
       return false;
     }
-    const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
-    return isOfficialOpenAIAPI && isResponsesModel(model);
+    if (!isResponsesModel(model)) {
+      return false;
+    }
+    if (this.config.useResponsesApi === true) {
+      return true;
+    }
+    const isOfficialOpenAIAPI =
+      !this.apiBase ||
+      this.apiBase.trim() === "" ||
+      this.apiBase.replace(/\/$/, "") === "https://api.openai.com/v1";
+    return isOfficialOpenAIAPI;
   }
 
   modifyCompletionBody<
