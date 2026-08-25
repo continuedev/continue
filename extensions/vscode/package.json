@@ -191,7 +191,7 @@
       {
         "command": "continue.focusContinueInput",
         "category": "Continue",
-        "title": "Add Highlighted Code to Context and Clear Chat",
+        "title": "Focus Continue Chat",
         "group": "Continue"
       },
       {
@@ -327,12 +327,6 @@
         "command": "continue.docsReIndex",
         "category": "Continue",
         "title": "Docs Force Re-Index",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.focusContinueInput",
-        "category": "Continue",
-        "title": "Focus Continue Chat",
         "group": "Continue"
       },
       {
