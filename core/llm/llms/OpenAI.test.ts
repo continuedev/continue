@@ -39,4 +39,51 @@ describe("OpenAI", () => {
     expect(openai.isOSeriesOrGpt5PlusModel("ao31")).toBeFalsy();
     expect(openai.isOSeriesOrGpt5PlusModel("1os")).toBeFalsy();
   });
+
+  describe("canUseOpenAIResponses", () => {
+    test("should use responses on official OpenAI apiBase for o-series model", () => {
+      const openai = new OpenAI({
+        model: "o3-mini",
+        apiKey: "test",
+      });
+      expect((openai as any).canUseOpenAIResponses({ model: "o3-mini" })).toBe(
+        true,
+      );
+    });
+
+    test("should not use responses on custom apiBase by default", () => {
+      const openai = new OpenAI({
+        model: "o3-mini",
+        apiKey: "test",
+        apiBase: "https://custom.openai-proxy.com/v1/",
+      });
+      expect((openai as any).canUseOpenAIResponses({ model: "o3-mini" })).toBe(
+        false,
+      );
+    });
+
+    test("should allow forcing responses on custom apiBase when useResponsesApi is true", () => {
+      const openai = new OpenAI({
+        model: "o3-mini",
+        apiKey: "test",
+        apiBase: "https://custom.openai-proxy.com/v1/",
+        useResponsesApi: true,
+      });
+      expect((openai as any).canUseOpenAIResponses({ model: "o3-mini" })).toBe(
+        true,
+      );
+    });
+
+    test("should disable responses when useResponsesApi is false", () => {
+      const openai = new OpenAI({
+        model: "o3-mini",
+        apiKey: "test",
+        apiBase: "https://api.openai.com/v1",
+        useResponsesApi: false,
+      });
+      expect((openai as any).canUseOpenAIResponses({ model: "o3-mini" })).toBe(
+        false,
+      );
+    });
+  });
 });
