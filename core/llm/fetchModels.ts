@@ -243,6 +243,7 @@ async function fetchProviderModelsViaListModels(
   provider: string,
   apiKey?: string,
   apiBase?: string,
+  requestOptions?: RequestOptions,
 ): Promise<FetchedModel[]> {
   try {
     const cls = LLMClasses.find((llm) => llm.providerName === provider);
@@ -252,6 +253,7 @@ async function fetchProviderModelsViaListModels(
       apiKey,
       apiBase: apiBase || defaultApiBase,
       model: "",
+      requestOptions,
     });
     const modelIds = await llm.listModels();
     return modelIds.map((id) => ({ name: id }));
@@ -278,6 +280,11 @@ export async function fetchModels(
     case "gemini":
       return fetchGeminiModels(apiKey, apiBase, requestOptions);
     default:
-      return fetchProviderModelsViaListModels(provider, apiKey, apiBase);
+      return fetchProviderModelsViaListModels(
+        provider,
+        apiKey,
+        apiBase,
+        requestOptions,
+      );
   }
 }
