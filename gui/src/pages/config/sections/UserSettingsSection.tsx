@@ -52,6 +52,7 @@ export function UserSettingsSection() {
     config.ui?.continueAfterToolRejection ?? false;
   const codeWrap = config.ui?.codeWrap ?? false;
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
+  const rainbowEffectEnabled = config.ui?.rainbowEffectEnabled ?? true;
   const readResponseTTS = config.experimental?.readResponseTTS ?? false;
   const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
   const disableSessionTitles = config.disableSessionTitles ?? false;
@@ -163,6 +164,15 @@ export function UserSettingsSection() {
                   }}
                   min={7}
                   max={50}
+                />
+                <UserSetting
+                  type="toggle"
+                  title="Enable Rainbow Effect"
+                  description="Show the animated rainbow border around the input box while Continue is processing."
+                  value={rainbowEffectEnabled}
+                  onChange={(value) =>
+                    handleUpdate({ rainbowEffectEnabled: value })
+                  }
                 />
               </div>
             </Card>
