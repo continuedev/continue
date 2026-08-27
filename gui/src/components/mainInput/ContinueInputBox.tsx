@@ -62,6 +62,9 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   );
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
   const editModeState = useAppSelector((state) => state.editModeState);
+  const rainbowEffectEnabled = useAppSelector(
+    (state) => state.config.config.ui?.rainbowEffectEnabled ?? true,
+  );
 
   const filteredSlashCommands = useMemo(() => {
     if (isInEdit) {
@@ -107,6 +110,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
 
   const { appliedRules = [], contextItems = [] } = props;
 
+  const isLoading = isStreaming && (props.isLastUserInput || isInEdit);
+
   return (
     <div
       className={`${props.hidden ? "hidden" : ""}`}
@@ -115,12 +120,11 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
       <div className={`relative flex flex-col px-2`}>
         {props.isMainInput && <Lump />}
         <GradientBorder
-          loading={isStreaming && (props.isLastUserInput || isInEdit) ? 1 : 0}
+          loading={isLoading ? 1 : 0}
           borderColor={
-            isStreaming && (props.isLastUserInput || isInEdit)
-              ? undefined
-              : vscBackground
+            isLoading && rainbowEffectEnabled ? undefined : vscBackground
           }
+          rainbowEffectEnabled={rainbowEffectEnabled}
           borderRadius={defaultBorderRadius}
         >
           <TipTapEditor

@@ -13,6 +13,7 @@ export const GradientBorder = styled.div<{
   borderRadius?: string;
   borderColor?: string;
   loading: 0 | 1;
+  rainbowEffectEnabled?: boolean;
 }>`
   border-radius: ${(props) => props.borderRadius || "0"};
   padding: 1px;
@@ -29,7 +30,12 @@ export const GradientBorder = styled.div<{
       #331BBE 85%,
       #1BBE84 99%
     )`};
-  animation: ${(props) => (props.loading ? gradient : "")} 6s linear infinite;
+  animation-name: ${(props) =>
+    props.loading && props.rainbowEffectEnabled !== false ? gradient : "none"};
+  animation-duration: 6s;
+  animation-timing-function: linear;
+  animation-iteration-count: ${(props) =>
+    props.loading && props.rainbowEffectEnabled !== false ? "infinite" : "1"};
   background-size: 200% 200%;
   width: 100%;
   display: flex;
