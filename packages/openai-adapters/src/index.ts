@@ -162,6 +162,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       );
     case "scaleway":
       return openAICompatible("https://api.scaleway.ai/v1/", config);
+    case "scalattice":
+      return openAICompatible("https://api.scalattice.cloud/v1/", config);
     case "fireworks":
       return openAICompatible("https://api.fireworks.ai/inference/v1/", config);
     case "together":
