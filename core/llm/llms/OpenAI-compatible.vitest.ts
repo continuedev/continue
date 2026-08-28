@@ -15,6 +15,7 @@ import Cerebras from "./Cerebras.js";
 import DeepInfra from "./DeepInfra.js";
 import Nvidia from "./Nvidia.js";
 import SambaNova from "./SambaNova.js";
+import Scalattice from "./Scalattice.js";
 import Scaleway from "./Scaleway.js";
 import Venice from "./Venice.js";
 import Moonshot from "./Moonshot.js";
@@ -353,6 +354,11 @@ createOpenAISubclassTests(Nvidia, {
 createOpenAISubclassTests(SambaNova, {
   providerName: "sambanova",
   defaultApiBase: "https://api.sambanova.ai/v1/",
+});
+
+createOpenAISubclassTests(Scalattice, {
+  providerName: "scalattice",
+  defaultApiBase: "https://api.scalattice.cloud/v1/",
 });
 
 createOpenAISubclassTests(Scaleway, {
