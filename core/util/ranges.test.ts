@@ -353,6 +353,24 @@ describe("intersection", () => {
     });
   });
 
+  test("uses later start and earlier end when both ranges share the start and end lines", () => {
+    rangeA = {
+      start: { line: 0, character: 5 },
+      end: { line: 3, character: 4 },
+    };
+
+    rangeB = {
+      start: { line: 0, character: 10 },
+      end: { line: 3, character: 2 },
+    };
+
+    const result = intersection(rangeA, rangeB);
+    expect(result).toEqual({
+      start: { line: 0, character: 10 },
+      end: { line: 3, character: 2 },
+    });
+  });
+
   test("returns correct intersection when ranges touch at the edge", () => {
     rangeA = {
       start: { line: 1, character: 0 },
