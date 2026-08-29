@@ -649,7 +649,7 @@ declare global {
   }
   
   export enum FileType {
-    Unkown = 0,
+    Unknown = 0,
     File = 1,
     Directory = 2,
     SymbolicLink = 64,
