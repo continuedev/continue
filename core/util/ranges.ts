@@ -46,10 +46,21 @@ export function intersection(a: Range, b: Range): Range | null {
     };
   }
 
+  // When both ranges begin on the shared start line, the intersection begins at
+  // the later of the two characters (and symmetrically ends at the earlier one).
+  // Picking whichever range's line matched first dropped that comparison.
   const startCharacter =
-    startLine === a.start.line ? a.start.character : b.start.character;
+    a.start.line === b.start.line
+      ? Math.max(a.start.character, b.start.character)
+      : startLine === a.start.line
+        ? a.start.character
+        : b.start.character;
   const endCharacter =
-    endLine === a.end.line ? a.end.character : b.end.character;
+    a.end.line === b.end.line
+      ? Math.min(a.end.character, b.end.character)
+      : endLine === a.end.line
+        ? a.end.character
+        : b.end.character;
 
   return {
     start: { line: startLine, character: startCharacter },
