@@ -75,4 +75,12 @@ class UriUtilsTest : TestCase() {
         assertEquals("/C:/Users/user/projects/[gamemode]/file.lua", parsed.path)
         assertEquals("file:///C:/Users/user/projects/%5Bgamemode%5D/file.lua", parsed.toString())
     }
+
+    // file://C:/... (two slashes). URI(scheme, authority, path, query) re-encodes `%`.
+    fun `test Windows path with percent-encoded spaces`() {
+        val uri = "file://C:/Unity%20Projects/My%20Project/foo.txt"
+        val parsed = UriUtils.parseUri(uri)
+        assertEquals("file", parsed.scheme)
+        assertEquals("/C:/Unity Projects/My Project/foo.txt", parsed.path)
+    }
 }

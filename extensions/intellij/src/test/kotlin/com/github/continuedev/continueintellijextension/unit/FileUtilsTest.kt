@@ -41,6 +41,11 @@ class FileUtilsTest : UsefulTestCase() {
         assertFalse(fileUtils.fileExists("file://dir/missing.txt"))
     }
 
+    fun `test fileExists decodes percent-encoded path`() {
+        myFixture.createTempFile("Unity Projects/foo.txt")
+        assertTrue(fileUtils.fileExists("file://$tmp/Unity%20Projects/foo.txt"))
+    }
+
     fun `test writeFile creates missing file`() {
         fileUtils.writeFile("file://$tmp/file.txt", "text")
         assertEquals("text", myFixture.readTempFile("file.txt"))
@@ -55,6 +60,12 @@ class FileUtilsTest : UsefulTestCase() {
         myFixture.createTempFile("file.txt", "old_text")
         fileUtils.writeFile("file://$tmp/overwrite.txt", "new_text")
         assertEquals("new_text", myFixture.readTempFile("overwrite.txt"))
+    }
+
+    fun `test writeFile decodes percent-encoded path`() {
+        fileUtils.writeFile("file://$tmp/Unity%20Projects/foo.txt", "text")
+        assertEquals("text", myFixture.readTempFile("Unity Projects/foo.txt"))
+        assertNull(myFixture.tempDirFixture.getFile("Unity%20Projects/foo.txt"))
     }
 
     fun `test readFile`() {
@@ -75,6 +86,11 @@ class FileUtilsTest : UsefulTestCase() {
 
     fun `test readFile fails when file is missing`() {
         assertEmpty(fileUtils.readFile("file://missing.txt"))
+    }
+
+    fun `test readFile decodes percent-encoded path`() {
+        myFixture.createTempFile("Unity Projects/foo.txt", "text")
+        assertEquals("text", fileUtils.readFile("file://$tmp/Unity%20Projects/foo.txt"))
     }
 
     fun `test readFile normalizes line endings`() {
