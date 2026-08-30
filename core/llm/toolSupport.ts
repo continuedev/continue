@@ -199,6 +199,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    // llmman serves the same local models over the Ollama API, so the same
+    // name-based heuristic applies.
+    llmman: (model) => PROVIDER_TOOL_SUPPORT["ollama"](model),
     lmstudio: (model) => {
       // LM Studio uses hyphenated model IDs (e.g., "Meta-Llama-3.1-8B-Instruct-GGUF")
       // that don't match Ollama's substring patterns (e.g., "llama3.1").

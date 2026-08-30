@@ -47,6 +47,7 @@ export const modelDescriptionSchema = z.object({
     "anthropic",
     "cohere",
     "ollama",
+    "llmman",
     "huggingface-tgi",
     "huggingface-inference-api",
     "replicate",
@@ -107,6 +108,7 @@ export const embeddingsProviderSchema = z.object({
   provider: z.enum([
     "transformers.js",
     "ollama",
+    "llmman",
     "openai",
     "cohere",
     "gemini",
