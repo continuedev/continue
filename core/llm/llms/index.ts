@@ -47,6 +47,7 @@ import Nebius from "./Nebius";
 import Nous from "./Nous";
 import Novita from "./Novita";
 import Nvidia from "./Nvidia";
+import Llmman from "./Llmman";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
 import OpenRouter from "./OpenRouter";
@@ -78,6 +79,7 @@ export const LLMClasses = [
   Gemini,
   Llamafile,
   Moonshot,
+  Llmman,
   Ollama,
   Replicate,
   TextGenWebUI,
