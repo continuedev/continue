@@ -2792,8 +2792,8 @@
         },
         "slashCommands": {
           "title": "Slash Commands",
-          "markdownDescription": "An array of slash commands that let you take custom actions from the sidebar. Learn more in the [documentation](https://docs.continue.dev/customization/slash-commands).",
-          "x-intellij-html-description": "An array of slash commands that let you take custom actions from the sidebar. Learn more in the <a href='https://docs.continue.dev/customization/slash-commands'>documentation</a>.",
+          "markdownDescription": "An array of slash commands that let you take custom actions from the sidebar. Learn more in the [documentation](https://docs.continue.dev/customize/slash-commands).",
+          "x-intellij-html-description": "An array of slash commands that let you take custom actions from the sidebar. Learn more in the <a href='https://docs.continue.dev/customize/slash-commands'>documentation</a>.",
           "default": [],
           "type": "array",
           "items": {
@@ -2802,8 +2802,8 @@
         },
         "customCommands": {
           "title": "Custom Commands",
-          "markdownDescription": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter `/<name>` in the text input, it will act as a shortcut to the prompt. Learn more in the [documentation](https://docs.continue.dev/customization/slash-commands#custom-commands-use-natural-language).",
-          "x-intellij-html-description": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter <code>/<name></code> in the text input, it will act as a shortcut to the prompt. Learn more in the <a href='https://docs.continue.dev/customization/slash-commands#custom-commands-use-natural-language'>documentation</a>.",
+          "markdownDescription": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter `/<name>` in the text input, it will act as a shortcut to the prompt. Learn more in the [documentation](https://docs.continue.dev/customize/slash-commands#custom-commands-use-natural-language).",
+          "x-intellij-html-description": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter <code>/<name></code> in the text input, it will act as a shortcut to the prompt. Learn more in the <a href='https://docs.continue.dev/customize/slash-commands#custom-commands-use-natural-language'>documentation</a>.",
           "default": [
             {
               "name": "test",
@@ -2818,8 +2818,8 @@
         },
         "contextProviders": {
           "title": "Context Providers",
-          "markdownDescription": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in [the documentation](https://docs.continue.dev/customization/context-providers).",
-          "x-intellij-html-description": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in <a href='https://docs.continue.dev/customization/context-providers'>the documentation</a>.",
+          "markdownDescription": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in [the documentation](https://docs.continue.dev/customize/deep-dives/custom-providers).",
+          "x-intellij-html-description": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in <a href='https://docs.continue.dev/customize/deep-dives/custom-providers'>the documentation</a>.",
           "default": [],
           "type": "array",
           "items": {
