@@ -23,10 +23,16 @@ object UriUtils {
         // Remove query parameters if present
         val uriStr = uri.substringBefore("?")
 
-        // Handle Windows file paths with authority component
+        // Handle Windows file paths with authority component.
+        // URI(scheme, authority, path, query) treats path as decoded and re-encodes `%`,
+        // so already-encoded paths (Unity%20Projects) must be parsed as a URI string.
         if (uriStr.startsWith("file://") && !uriStr.startsWith("file:///")) {
             val path = uriStr.substringAfter("file://")
-            return URI("file", "", "/$path", null)
+            return try {
+                URI("file:///$path")
+            } catch (e: Exception) {
+                URI("file", "", "/$path", null)
+            }
         }
 
         return try {
