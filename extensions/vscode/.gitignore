@@ -4,7 +4,7 @@ out/
 .vscode-test/
 data/
 src/client
-.continue
+.shadow-code
 
 exe
 bin
@@ -16,7 +16,7 @@ gui/**
 .devcontainer
 .github
 
-continue_rc_schema.json
+shadow_code_rc_schema.json
 
 e2e/_output
 e2e/.test-extensions

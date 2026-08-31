@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-shadow-code is a fork of [Continue](https://github.com/continuedev/continue) (the open-source AI coding agent - VS Code extension, JetBrains plugin, and CLI; upstream is now read-only/unmaintained, so this fork is the active codebase going forward).
+shadow-code is a fork of Continue (the open-source AI coding agent - VS Code extension, JetBrains plugin, and CLI; upstream is now read-only/unmaintained, so this fork is the active codebase going forward).
 
 The fork exists to add one capability Continue doesn't have: **using coding-agent CLIs the user already has a subscription for (Claude Code CLI first, later Codex CLI / GitHub Copilot CLI) as the model-execution backend, instead of paying per-token for an API key.** The design constraint driving all of this is that **Continue's own harness stays authoritative** - its own system prompt, its own tool definitions, its own permission/approval flow. The CLI is used purely for authenticated model execution, never for its own built-in agent loop (its Read/Write/Edit/Bash tools are explicitly disabled on every invocation).
 
@@ -100,7 +100,7 @@ Standard Continue layout - four packages talk to each other over a typed message
 
 **Provider registration** (`core/llm/llms/index.ts`): providers are plain classes with a static `providerName`, collected into the `LLMClasses` array and matched by that string in `llmFromDescription`. Adding a provider is additive - `class Foo extends BaseLLM { static providerName = "..." }`, implement `_streamChat`, add to the array.
 
-## Conventions (from `.continue/rules/`)
+## Conventions (from `.shadow-code/rules/`)
 
 - Prefer functional programming; modifying existing classes or a singleton is fine when that's genuinely the right shape, but default to functions.
 - Prefer `enum` over string-literal unions in TypeScript where reasonable.

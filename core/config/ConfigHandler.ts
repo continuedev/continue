@@ -160,7 +160,7 @@ export class ConfigHandler {
 
   async getLocalProfiles(options: LoadAssistantFilesOptions) {
     /**
-     * Users can define as many local agents as they want in a `.continue/agents` (or previous .continue/assistants) folder
+     * Users can define as many local agents as they want in a `.shadow-code/agents` (or previous .shadow-code/assistants) folder
      */
     const localProfiles: ProfileLifecycleManager[] = [];
 

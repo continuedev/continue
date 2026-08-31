@@ -17,7 +17,7 @@ describe("Rule Colocation Application", () => {
       name: "Root Rule",
       rule: "Follow project standards",
       source: "colocated-markdown",
-      sourceFile: ".continue/rules.md",
+      sourceFile: ".shadow-code/rules.md",
     },
 
     // Nested directory rule without globs - should only apply to files in that directory

@@ -193,12 +193,12 @@ export class IpcMessenger<
     });
     process.stdout.on("close", () => {
       fs.writeFileSync("./error.log", `${new Date().toISOString()}\n`);
-      console.log("[info] Exiting Continue core...");
+      console.log("[info] Exiting Shadow Code core...");
       process.exit(1);
     });
     process.stdin.on("close", () => {
       fs.writeFileSync("./error.log", `${new Date().toISOString()}\n`);
-      console.log("[info] Exiting Continue core...");
+      console.log("[info] Exiting Shadow Code core...");
       process.exit(1);
     });
   }
@@ -231,10 +231,10 @@ export class CoreBinaryMessenger<
       this._handleData(data);
     });
     this.subprocess.stdout.on("close", () => {
-      console.log("[info] Continue core exited");
+      console.log("[info] Shadow Code core exited");
     });
     this.subprocess.stdin.on("close", () => {
-      console.log("[info] Continue core exited");
+      console.log("[info] Shadow Code core exited");
     });
   }
 

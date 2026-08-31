@@ -10,7 +10,7 @@ export function getRuleDisplayName(rule: RuleMetadata): string {
 
 export function getRuleSourceDisplayName(rule: RuleMetadata): string {
   switch (rule.source) {
-    case ".continuerules":
+    case ".shadow-coderules":
       return "Project rules";
     case "default-chat":
       return "Default chat system message";

@@ -20,10 +20,11 @@ When working with Mintlify documentation components (Card, Info, Tip, Note, Warn
 ```mdx
 <Card title="Example" icon="icon-name">
 
-  This is the content with proper formatting:
-  - First bullet point
-  - Second bullet point
-  - Third bullet point
+This is the content with proper formatting:
+
+- First bullet point
+- Second bullet point
+- Third bullet point
 
 </Card>
 ```
@@ -31,10 +32,11 @@ When working with Mintlify documentation components (Card, Info, Tip, Note, Warn
 ```mdx
 <Info>
 
-  Important information here:
-  - Point one
-  - Point two
-  - Point three
+Important information here:
+
+- Point one
+- Point two
+- Point three
 
 </Info>
 ```
@@ -57,6 +59,7 @@ When working with Mintlify documentation components (Card, Info, Tip, Note, Warn
 ### Links in Lists
 
 When including links in bullet points:
+
 ```mdx
 - [Link Text](url): Description of the link
 ```
@@ -64,6 +67,7 @@ When including links in bullet points:
 ### Nested Components
 
 For nested components, maintain proper indentation levels:
+
 ```mdx
 <CardGroup>
   <Card title="First Card">
@@ -87,6 +91,7 @@ For nested components, maintain proper indentation levels:
 ## Application
 
 These rules apply to all `.mdx` files in the `docs/` directory, particularly:
+
 - Guide documents
 - Cookbook documents
 - Reference documentation
@@ -95,6 +100,7 @@ These rules apply to all `.mdx` files in the `docs/` directory, particularly:
 ## Automation Note
 
 When using Continue or other AI assistants to generate or modify documentation:
+
 - Always format Mintlify components according to these rules
 - Review generated content for proper formatting
 - Apply these rules consistently across all documentation

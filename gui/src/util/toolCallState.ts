@@ -65,6 +65,8 @@ export function addToolCallDeltaToState(
       },
     },
     toolCallId: callId,
+    // Remembered so later index-only fragments can find this call again.
+    streamIndex: toolCallDelta.index ?? currentState?.streamIndex,
     parsedArgs,
   };
 }

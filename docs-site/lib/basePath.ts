@@ -1,7 +1,7 @@
 /**
  * Base path for the deployed docs site.
  *
- * On GitHub Pages the site lives under `/continue/`, so raw absolute asset
+ * On GitHub Pages the site lives under `/shadow-code/`, so raw absolute asset
  * references (search index, <img> src, etc.) must be prefixed manually. Next
  * applies basePath automatically to <Link>, next/image and /_next assets, but
  * NOT to plain string paths, so use `withBasePath` for those.

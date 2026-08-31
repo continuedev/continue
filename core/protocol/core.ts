@@ -310,6 +310,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       mcpUiState?: McpUiState;
     },
   ];
+  // `tools/call` is a plain request, so the GUI's `abort` message (which is
+  // keyed on a streaming request's messageId) can't reach a running tool. This
+  // is how Stop terminates one - see Core.toolCallAbortControllers.
+  "tools/cancel": [{ toolCallId: string }, void];
   "tools/evaluatePolicy": [
     {
       toolName: string;

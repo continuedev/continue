@@ -1,1 +1,1 @@
-rootProject.name = "continue-intellij-extension"
+rootProject.name = "shadow-code-intellij-extension"

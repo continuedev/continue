@@ -77,7 +77,7 @@ class VerticalDiffBlock(
 
 
     fun addNewLine(text: String, line: Int) {
-        val greenKey = EditorUtils(editor).createTextAttributesKey("CONTINUE_DIFF_NEW_LINE", 0x3000FF00)
+        val greenKey = EditorUtils(editor).createTextAttributesKey("SHADOW_CODE_DIFF_NEW_LINE", 0x3000FF00)
 
         if (line == editor.document.lineCount) {
             editor.document.insertString(editor.document.textLength, "\n")
@@ -92,7 +92,7 @@ class VerticalDiffBlock(
     }
 
     fun addNewLineForHighlightOnly(text: String, line: Int) {
-        val greenKey = EditorUtils(editor).createTextAttributesKey("CONTINUE_DIFF_NEW_LINE", 0x3000FF00)
+        val greenKey = EditorUtils(editor).createTextAttributesKey("SHADOW_CODE_DIFF_NEW_LINE", 0x3000FF00)
         editor.markupModel.addLineHighlighter(greenKey, line, HighlighterLayer.LAST)
 
         addedLines.add(text)

@@ -34,7 +34,7 @@ export class AutocompleteActions {
     await editor.setText("def main():\n    ");
     await editor.moveCursor(2, 5);
 
-    await new Workbench().executeCommand("Continue: Force Autocomplete");
+    await new Workbench().executeCommand("Shadow Code: Force Autocomplete");
 
     const ghostText = await TestUtils.waitForSuccess(() =>
       AutocompleteSelectors.getGhostTextContent(VSBrowser.instance.driver),

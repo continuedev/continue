@@ -22,7 +22,7 @@ describe("Nested directory rules application", () => {
     name: "Global Rule",
     rule: "SOLID Design Principles - Coding Agent Guidelines",
     source: "rules-block",
-    sourceFile: ".continue/rules.md",
+    sourceFile: ".shadow-code/rules.md",
   };
 
   it("should apply nested directory rules to files in that directory", () => {

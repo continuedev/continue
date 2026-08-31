@@ -160,7 +160,7 @@ jobs:
       - name: Run smoke API tests
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+          SHADOW_CODE_API_KEY: ${{ secrets.SHADOW_CODE_API_KEY }}
         run: |
           cd extensions/cli
           npm run test:smoke-api

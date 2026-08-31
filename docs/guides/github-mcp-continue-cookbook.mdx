@@ -1,7 +1,7 @@
 ---
-title: "GitHub Issues and PRs with GitHub MCP and Continue"
-description: "Use Continue and the GitHub MCP to list, summarize, and act on open issues and recently merged pull requests with natural language prompts."
-sidebarTitle: "GitHub Issues with Continue"
+title: "GitHub Issues and PRs with GitHub MCP and Shadow Code"
+description: "Use Shadow Code and the GitHub MCP to list, summarize, and act on open issues and recently merged pull requests with natural language prompts."
+sidebarTitle: "GitHub Issues with Shadow Code"
 ---
 
 import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
@@ -10,7 +10,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
 <OSAutoDetect />
 
 <Card title="What You'll Build" icon="github">
-  A GitHub workflow assistant that uses Continue with the GitHub MCP to:
+  A GitHub workflow assistant that uses Shadow Code with the GitHub MCP to:
   - List, filter, and summarize open issues
   - Review and summarize recently merged PRs
   - Post comments with AI-generated summaries or checklists
@@ -29,7 +29,7 @@ Before starting, ensure you have:
 
 For all options, first:
 <Steps>
-<Step title="Install Continue CLI">
+<Step title="Install Shadow Code CLI">
   <CLIInstall />
   </Step>
 
@@ -42,14 +42,14 @@ For all options, first:
 </Steps>
 
 <Warning>
-  To use agents in headless mode, you need a [Continue API key](https://continue.dev/settings/api-keys).
+  To use agents in headless mode, you need a Shadow Code API key.
   For write actions (e.g., posting comments), your token must include the relevant GitHub scopes.
 </Warning>
 
 ## GitHub MCP Workflow Options
 
 <Card title="Fastest Path to Success" icon="rocket">
-  Use the GitHub MCP with Continue CLI for quick setup.
+  Use the GitHub MCP with Shadow Code CLI for quick setup.
 </Card>
 
 After ensuring you meet the **Prerequisites** above, you have two paths to get started:
@@ -106,7 +106,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       </Step>
 
       <Step title="Test the Connection">
-        Launch Continue and ask:
+        Launch Shadow Code and ask:
         ```
         List the 5 most recently updated open issues in this repository.
         ```
@@ -116,8 +116,8 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 </Tabs>
 
 <Accordion title="Agent Requirements">
-    To use GitHub MCP with Continue CLI, you need either:
-      - **Continue CLI Pro Plan** with the models add-on, OR
+    To use GitHub MCP with Shadow Code CLI, you need either:
+      - **Shadow Code CLI Pro Plan** with the models add-on, OR
       - **Your own API keys** configured as environment variables
 
     The agent will automatically detect and use your configuration along with the GitHub MCP for issue and PR operations.
@@ -132,7 +132,7 @@ Use natural language to explore, triage, and act on open issues. The agent calls
 
 <Info>
   **Where to run these workflows:**
-  - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
+  - **IDE Extensions**: Use Shadow Code in VS Code, JetBrains, or other supported IDEs
   - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
   - **CLI (headless mode)**: Use `cn -p "your prompt" --auto` for automation
   
@@ -244,7 +244,7 @@ Run headless commands on a schedule or in PRs to keep teams informed.
 
 Repository Settings → Secrets and variables → Actions:
 
-- `CONTINUE_API_KEY`: From [continue.dev/settings/api-keys](https://continue.dev/settings/api-keys)
+- `CONTINUE_API_KEY`: From continue.dev/settings/api-keys
 - `GITHUB_TOKEN`: A token with permissions to read issues/PRs and post comments
 
 ### Example Workflow
@@ -272,7 +272,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "18"
-      - name: Install Continue CLI
+      - name: Install Shadow Code CLI
         run: npm i -g @continuedev/cli
 
       - name: Weekly Issue Triage Summary
@@ -336,10 +336,10 @@ After completing this guide, you have a complete **AI-powered GitHub workflow sy
   <Card title="GitHub MCP Server" icon="link" href="https://github.com/modelcontextprotocol/servers/tree/main/src/github">
     Anthropic GitHub MCP server
   </Card>
-  <Card title="MCP in Continue" icon="book" href="/customize/deep-dives/mcp">
-    How MCP works with Continue agents
+  <Card title="MCP in Shadow Code" icon="book" href="/customize/deep-dives/mcp">
+    How MCP works with Shadow Code agents
   </Card>
-  <Card title="GitHub Project Manager Agent" icon="robot" href="https://docs.continue.dev/guides/github-mcp-continue-cookbook">
+  <Card title="GitHub Project Manager Agent" icon="robot" href="">
     Pre-configured agent for GitHub workflows
   </Card>
   <Card title="GitHub MCP Server" icon="link" href="https://github.com/github/github-mcp-server/blob/main/README.md">

@@ -144,17 +144,17 @@ describe("hookConfig", () => {
       projectDir = path.join(tmpDir, "project");
       fs.mkdirSync(fakeHome, { recursive: true });
       fs.mkdirSync(projectDir, { recursive: true });
-      // Override CONTINUE_GLOBAL_DIR so that user-global settings
-      // from the real ~/.continue/settings.json don't leak into tests
-      originalContinueGlobalDir = process.env.CONTINUE_GLOBAL_DIR;
-      process.env.CONTINUE_GLOBAL_DIR = path.join(fakeHome, ".continue");
+      // Override SHADOW_CODE_GLOBAL_DIR so that user-global settings
+      // from the real ~/.shadow-code/settings.json don't leak into tests
+      originalContinueGlobalDir = process.env.SHADOW_CODE_GLOBAL_DIR;
+      process.env.SHADOW_CODE_GLOBAL_DIR = path.join(fakeHome, ".shadow-code");
     });
 
     afterEach(() => {
       if (originalContinueGlobalDir === undefined) {
-        delete process.env.CONTINUE_GLOBAL_DIR;
+        delete process.env.SHADOW_CODE_GLOBAL_DIR;
       } else {
-        process.env.CONTINUE_GLOBAL_DIR = originalContinueGlobalDir;
+        process.env.SHADOW_CODE_GLOBAL_DIR = originalContinueGlobalDir;
       }
       fs.rmSync(tmpDir, { recursive: true, force: true });
     });
@@ -170,8 +170,8 @@ describe("hookConfig", () => {
       expect(result.disabled).toBe(false);
     });
 
-    it("loads hooks from .continue/settings.json", () => {
-      const settingsDir = path.join(projectDir, ".continue");
+    it("loads hooks from .shadow-code/settings.json", () => {
+      const settingsDir = path.join(projectDir, ".shadow-code");
       fs.mkdirSync(settingsDir, { recursive: true });
       fs.writeFileSync(
         path.join(settingsDir, "settings.json"),
@@ -227,8 +227,8 @@ describe("hookConfig", () => {
         }),
       );
 
-      // .continue/settings.json (project-level)
-      const continueDir = path.join(projectDir, ".continue");
+      // .shadow-code/settings.json (project-level)
+      const continueDir = path.join(projectDir, ".shadow-code");
       fs.mkdirSync(continueDir, { recursive: true });
       fs.writeFileSync(
         path.join(continueDir, "settings.json"),
@@ -247,7 +247,7 @@ describe("hookConfig", () => {
     });
 
     it("respects disableAllHooks", () => {
-      const settingsDir = path.join(projectDir, ".continue");
+      const settingsDir = path.join(projectDir, ".shadow-code");
       fs.mkdirSync(settingsDir, { recursive: true });
       fs.writeFileSync(
         path.join(settingsDir, "settings.json"),
@@ -268,7 +268,7 @@ describe("hookConfig", () => {
     });
 
     it("handles malformed settings files gracefully", () => {
-      const settingsDir = path.join(projectDir, ".continue");
+      const settingsDir = path.join(projectDir, ".shadow-code");
       fs.mkdirSync(settingsDir, { recursive: true });
       fs.writeFileSync(
         path.join(settingsDir, "settings.json"),
@@ -828,14 +828,14 @@ describeUnix("hookRunner", () => {
   });
 
   describe("runHooks - environment variables", () => {
-    it("sets CONTINUE_PROJECT_DIR and CLAUDE_PROJECT_DIR env vars", async () => {
+    it("sets SHADOW_CODE_PROJECT_DIR and CLAUDE_PROJECT_DIR env vars", async () => {
       const config: HooksConfig = {
         PreToolUse: [
           {
             hooks: [
               {
                 type: "command",
-                command: 'echo "$CONTINUE_PROJECT_DIR|$CLAUDE_PROJECT_DIR"',
+                command: 'echo "$SHADOW_CODE_PROJECT_DIR|$CLAUDE_PROJECT_DIR"',
               },
             ],
           },

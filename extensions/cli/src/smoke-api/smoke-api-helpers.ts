@@ -25,7 +25,7 @@ export async function createSmokeContext(): Promise<SmokeTestContext> {
   const testDir = await fs.mkdtemp(path.join(os.tmpdir(), "cn-smoke-"));
 
   // Create onboarding flag so the CLI skips onboarding flow
-  const continueDir = path.join(testDir, ".continue");
+  const continueDir = path.join(testDir, ".shadow-code");
   await fs.mkdir(continueDir, { recursive: true });
   await fs.writeFile(
     path.join(continueDir, ".onboarding_complete"),
@@ -83,7 +83,7 @@ models:
 const SMOKE_PROXY_MODEL = process.env.SMOKE_PROXY_MODEL || "";
 
 /**
- * Writes a YAML config that uses the Continue proxy (CONTINUE_API_KEY).
+ * Writes a YAML config that uses the Continue proxy (SHADOW_CODE_API_KEY).
  * Requires SMOKE_PROXY_MODEL to be set to a valid proxy model name.
  */
 export async function writeContinueProxyConfig(
@@ -123,7 +123,7 @@ export async function runHeadless(
     cwd: ctx.testDir,
     env: {
       ...process.env,
-      CONTINUE_CLI_TEST: "true",
+      SHADOW_CODE_CLI_TEST: "true",
       HOME: ctx.testDir,
       USERPROFILE: ctx.testDir,
       FORCE_NO_TTY: "true",
@@ -153,7 +153,7 @@ export function spawnServe(
     cwd: ctx.testDir,
     env: {
       ...process.env,
-      CONTINUE_CLI_TEST: "true",
+      SHADOW_CODE_CLI_TEST: "true",
       HOME: ctx.testDir,
       USERPROFILE: ctx.testDir,
       ...opts.env,

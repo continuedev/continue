@@ -15,7 +15,7 @@ abstract class ContinueToolbarAction : AnAction() {
     final override fun actionPerformed(event: AnActionEvent) {
         val project = event.project
             ?: return
-        val tool = ToolWindowManager.getInstance(project).getToolWindow("Continue")
+        val tool = ToolWindowManager.getInstance(project).getToolWindow("Shadow Code")
             ?: return
         tool.activate(null) // un-collapse toolbar
         toolbarActionPerformed(project)

@@ -50,14 +50,14 @@ export function isRunningInWsl(): boolean {
 
 function getBashMaxChars(): number {
   return parseEnvNumber(
-    process.env.CONTINUE_CLI_BASH_MAX_OUTPUT_CHARS,
+    process.env.SHADOW_CODE_CLI_BASH_MAX_OUTPUT_CHARS,
     DEFAULT_BASH_MAX_CHARS,
   );
 }
 
 function getBashMaxLines(): number {
   return parseEnvNumber(
-    process.env.CONTINUE_CLI_BASH_MAX_OUTPUT_LINES,
+    process.env.SHADOW_CODE_CLI_BASH_MAX_OUTPUT_LINES,
     DEFAULT_BASH_MAX_LINES,
   );
 }

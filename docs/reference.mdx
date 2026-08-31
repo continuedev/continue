@@ -5,13 +5,13 @@ description: "Comprehensive guide to the config.yaml format used by Continue.dev
 
 ## Introduction
 
-Continue Agents are defined using the `config.yaml` specification.
+Shadow Code Agents are defined using the `config.yaml` specification.
 
 **Agents** are composed of models, rules, and tools (MCP servers).
 
 <Columns cols={2}>
 <Card title="Configuring Models, Rules, and Tools" icon="cube" href="/guides/configuring-models-rules-tools">
-Learn how to work with Continue's configuration system, including using hub models, rules, and tools, creating local configurations, and organizing your setup.
+Learn how to work with Shadow Code's configuration system, including using hub models, rules, and tools, creating local configurations, and organizing your setup.
 </Card>
 
   <Card title="Understanding Configs" icon="robot" href="/guides/understanding-configs">
@@ -78,12 +78,12 @@ The `models` section defines the language models used in your configuration. Mod
 
 - `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
 
-- `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on provider and model. See the [Model Capabilities guide](/customize/deep-dives/model-capabilities) for detailed information. Supported capabilities include:
+- `capabilities`: Array of strings denoting model capabilities, which will overwrite Shadow Code's autodetection based on provider and model. See the [Model Capabilities guide](/customize/deep-dives/model-capabilities) for detailed information. Supported capabilities include:
 
   - `tool_use`: Enables function/tool calling support (required for Agent mode)
   - `image_input`: Enables image upload and processing support
 
-  Continue automatically detects these capabilities for most models, but you can override this when using custom deployments or if autodetection isn't working correctly.
+  Shadow Code automatically detects these capabilities for most models, but you can override this when using custom deployments or if autodetection isn't working correctly.
 
 - `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 
@@ -297,16 +297,16 @@ name: My Config
 version: 1.0.0
 schema: v1
 docs:
-  - name: Continue
-    startUrl: https://docs.continue.dev/intro
-    favicon: https://docs.continue.dev/favicon.ico
+  - name: Shadow Code
+    startUrl: 
+    favicon: 
 ```
 
 ---
 
 ### `mcpServers`
 
-The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider.
+The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Shadow Code supports any MCP server with the MCP context provider.
 
 **Properties:**
 
@@ -360,7 +360,7 @@ version: 1.0.0
 schema: v1
 data:
   - name: Local Data Bank
-    destination: file:///Users/dallin/Documents/code/continuedev/continue-extras/external-data
+    destination: file:///Users/dallin/Documents/code/-extras/external-data
     schema: 0.2.0
     level: all
   - name: My Private Company

@@ -24,15 +24,15 @@ export function setConfigFilePermissions(filePath: string): void {
   }
 }
 
-const CONTINUE_GLOBAL_DIR = (() => {
-  const configPath = process.env.CONTINUE_GLOBAL_DIR;
+const SHADOW_CODE_GLOBAL_DIR = (() => {
+  const configPath = process.env.SHADOW_CODE_GLOBAL_DIR;
   if (configPath) {
     // Convert relative path to absolute paths based on current working directory
     return path.isAbsolute(configPath)
       ? configPath
       : path.resolve(process.cwd(), configPath);
   }
-  return path.join(os.homedir(), ".continue");
+  return path.join(os.homedir(), ".shadow-code");
 })();
 
 // export const DEFAULT_CONFIG_TS_CONTENTS = `import { Config } from "./types"\n\nexport function modifyConfig(config: Config): Config {
@@ -58,7 +58,7 @@ export function getContinueUtilsPath(): string {
 export function getGlobalContinueIgnorePath(): string {
   const continueIgnorePath = path.join(
     getContinueGlobalPath(),
-    ".continueignore",
+    ".shadow-codeignore",
   );
   if (!fs.existsSync(continueIgnorePath)) {
     fs.writeFileSync(continueIgnorePath, "");
@@ -67,8 +67,8 @@ export function getGlobalContinueIgnorePath(): string {
 }
 
 export function getContinueGlobalPath(): string {
-  // This is ~/.continue on mac/linux
-  const continuePath = CONTINUE_GLOBAL_DIR;
+  // This is ~/.shadow-code on mac/linux
+  const continuePath = SHADOW_CODE_GLOBAL_DIR;
   if (!fs.existsSync(continuePath)) {
     fs.mkdirSync(continuePath);
   }
@@ -156,9 +156,9 @@ export function getConfigTsPath(): string {
     fs.writeFileSync(
       packageJsonPath,
       JSON.stringify({
-        name: "continue-config",
+        name: "shadow-code-config",
         version: "1.0.0",
-        description: "My Continue Configuration",
+        description: "My Shadow Code Configuration",
         main: "config.js",
       }),
     );
@@ -209,7 +209,10 @@ export function getTsConfigPath(): string {
 
 export function getContinueRcPath(): string {
   // Disable indexing of the config folder to prevent infinite loops
-  const continuercPath = path.join(getContinueGlobalPath(), ".continuerc.json");
+  const continuercPath = path.join(
+    getContinueGlobalPath(),
+    ".shadow-coderc.json",
+  );
   if (!fs.existsSync(continuercPath)) {
     fs.writeFileSync(
       continuercPath,

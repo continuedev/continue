@@ -1,7 +1,7 @@
 ---
-title: "Automated Security Scanning with Snyk MCP and Continue"
+title: "Automated Security Scanning with Snyk MCP and Shadow Code"
 description: "Set up an AI-powered security workflow that automatically scans your code, dependencies, infrastructure, and containers using natural language commands."
-sidebarTitle: "Snyk Security Scanning with Continue"
+sidebarTitle: "Snyk Security Scanning with Shadow Code"
 ---
 
 import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
@@ -10,7 +10,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
 <OSAutoDetect />
 
 <Card title="What You'll Build" icon="shield-halved">
-  An automated security scanning system that uses Continue's AI agent with Snyk
+  An automated security scanning system that uses Shadow Code's AI agent with Snyk
   MCP to identify vulnerabilities in code, dependencies, infrastructure, and
   containers - all through simple natural language prompts
 </Card>
@@ -21,7 +21,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
   width="100%"
   height="400"
   src="https://www.youtube.com/embed/cwVnKOf3tVg"
-  title="Snyk MCP Continue Cookbook Demo"
+  title="Snyk MCP Shadow Code Cookbook Demo"
   frameborder="0"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowfullscreen
@@ -37,7 +37,7 @@ Before starting, ensure you have:
 
 For all options, first:
 <Steps>
-<Step title="Install Continue CLI">
+<Step title="Install Shadow Code CLI">
     <CLIInstall />
   </Step>
 
@@ -56,10 +56,10 @@ For all options, first:
 </Steps>
 
 <Note>
-  **Important**: The Snyk MCP requires the Snyk CLI to be authenticated locally. Run `snyk auth` to authenticate before using the Continue agent with Snyk MCP.
+  **Important**: The Snyk MCP requires the Snyk CLI to be authenticated locally. Run `snyk auth` to authenticate before using the Shadow Code agent with Snyk MCP.
 </Note>
  <Warning>
-  To use agents in headless mode, you need a [Continue API key](https://continue.dev/settings/api-keys).
+  To use agents in headless mode, you need a Shadow Code API key.
   </Warning>
 
 ## Snyk Continuous AI Workflow Options
@@ -105,7 +105,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
   <Tab title="🛠️ Manual Setup">
 <Steps>
-  <Step title="Add Snyk MCP to Continue CLI">
+  <Step title="Add Snyk MCP to Shadow Code CLI">
     Add the Snyk MCP to your configuration:
 
     ```bash
@@ -115,14 +115,14 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
     <Tip>
       **Installation methods:**
       1. **Quick CLI install**: `cn --mcp snyk/snyk-mcp`
-      2. **Manual configuration**: Add the MCP to your `~/.continue/config.json` under the `mcpServers` section
+      2. **Manual configuration**: Add the MCP to your `~/.shadow-code/config.json` under the `mcpServers` section
 
-      Once installed, Snyk MCP tools become available to your Continue agent for all prompts.
+      Once installed, Snyk MCP tools become available to your Shadow Code agent for all prompts.
     </Tip>
 
     <Info>
       The MCP will request authentication and folder trust permissions when first used.
-      This is handled automatically by the Continue agent.
+      This is handled automatically by the Shadow Code agent.
     </Info>
 
   </Step>
@@ -151,7 +151,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
 <Accordion title="Agent Requirements">
     To use the pre-built agent, you need either:
-      - **Continue CLI Pro Plan** with the models add-on, OR
+      - **Shadow Code CLI Pro Plan** with the models add-on, OR
       - **Your own API keys** configured as environment variables
 
     The agent will automatically detect and use your configuration along with the pre-configured Snyk MCP for security scanning operations.
@@ -162,12 +162,12 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
 ## Security Scanning Recipes
 
-Now you can use natural language prompts to run comprehensive security scans. The Continue agent automatically calls the appropriate Snyk MCP tools.
+Now you can use natural language prompts to run comprehensive security scans. The Shadow Code agent automatically calls the appropriate Snyk MCP tools.
 
 
 <Info>
   **Where to run these workflows:**
-  - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
+  - **IDE Extensions**: Use Shadow Code in VS Code, JetBrains, or other supported IDEs
   - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
   - **CLI (headless mode)**: Use `cn -p "your prompt" --auto` for headless commands
 
@@ -302,7 +302,7 @@ This example demonstrates a **Continuous AI workflow** where security scanning r
 
 Navigate to **Repository Settings → Secrets and variables → Actions** and add:
 
-- `CONTINUE_API_KEY`: Your Continue API key from [continue.dev/settings/api-keys](https://continue.dev/settings/api-keys)
+- `CONTINUE_API_KEY`: Your Shadow Code API key from continue.dev/settings/api-keys
 - `SNYK_TOKEN`: Your Snyk authentication token from [app.snyk.io/account](https://app.snyk.io/account)
 
 ### Create Workflow File
@@ -343,10 +343,10 @@ jobs:
           npm install -g snyk
           echo "✅ Snyk CLI installed"
 
-      - name: Install Continue CLI
+      - name: Install Shadow Code CLI
         run: |
           npm install -g @continuedev/cli
-          echo "✅ Continue CLI installed"
+          echo "✅ Shadow Code CLI installed"
 
       - name: Validate Secrets
         run: |
@@ -423,7 +423,7 @@ jobs:
         run: |
           echo "🤖 Generating AI-powered mitigation suggestions..."
 
-          # Create a summary of findings for Continue CLI
+          # Create a summary of findings for Shadow Code CLI
           FINDINGS_SUMMARY=$(cat snyk-code-results.json snyk-oss-results.json | jq -r '
             if .runs then
               .runs[0].results[] | "Code Issue: \(.message.text) in \(.locations[0].physicalLocation.artifactLocation.uri) (Severity: \(.level))"
@@ -439,7 +439,7 @@ jobs:
             echo "$FINDINGS_SUMMARY"
             echo ""
 
-            # Use Continue CLI to generate mitigation suggestions
+            # Use Shadow Code CLI to generate mitigation suggestions
             PROMPT="Analyze these Snyk security findings and provide specific, actionable mitigation steps for each issue. Focus on: 1) Root cause, 2) Immediate fix, 3) Long-term prevention. Findings: $FINDINGS_SUMMARY. Provide clear, prioritized recommendations."
 
             cn --agent continuedev/snyk-continuous-ai-agent -p "$PROMPT" --auto > mitigation-suggestions.md || {
@@ -482,7 +482,7 @@ jobs:
           **Scan Details:**
           - 📊 Full report available in workflow artifacts
           - 🔍 Review the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for complete details
-          - 🤖 Generated with Continue CLI + Snyk
+          - 🤖 Generated with Shadow Code CLI + Snyk
 
           _This is an automated security analysis. Please review and address the findings before merging._
           EOF
@@ -564,7 +564,7 @@ jobs:
 <Info>
   **About SNYK_TOKEN**: The workflow uses the SNYK_TOKEN in two ways:
   1. **Direct Snyk CLI authentication** - Authenticates the Snyk CLI for running scans
-  2. **Continue CLI access** - Available as an environment variable when Continue generates AI mitigation suggestions
+  2. **Shadow Code CLI access** - Available as an environment variable when Shadow Code generates AI mitigation suggestions
 
   The `cn` agent automatically uses the SNYK_TOKEN when needed for Snyk MCP operations.
 </Info>
@@ -572,14 +572,14 @@ jobs:
 <Info>
   This workflow demonstrates several advanced features:
   - **Changed Files Detection**: Only scans files modified in the PR
-  - **AI Mitigation**: Uses Continue CLI to generate actionable mitigation steps
+  - **AI Mitigation**: Uses Shadow Code CLI to generate actionable mitigation steps
   - **PR Comments**: Automatically posts mitigation suggestions as PR comments
   - **Comprehensive Reporting**: Generates detailed security reports with artifacts
 </Info>
 
 ## Security Guardrails
 
-Implement automated security policies using Continue's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
+Implement automated security policies using Shadow Code's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
 
 
 <Card title="Pre-commit Scanning" icon="lock">
@@ -673,8 +673,8 @@ After completing this guide, you have a complete **AI-powered security system** 
   <Card title="Snyk Documentation" icon="book" href="https://docs.snyk.io">
     Complete Snyk platform documentation
   </Card>
-  <Card title="Continue Documentation" icon="book" href="https://docs.continue.dev">
-    Explore Continue documentation and guides
+  <Card title="Shadow Code Documentation" icon="book" href="https://docs.continue.dev">
+    Explore Shadow Code documentation and guides
   </Card>
   <Card
     title="Security Best Practices"

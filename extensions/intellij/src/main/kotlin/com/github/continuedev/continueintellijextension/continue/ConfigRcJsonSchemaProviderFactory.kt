@@ -22,21 +22,21 @@ class ConfigRcJsonSchemaProviderFactory : JsonSchemaProviderFactory {
 
 class ConfigRcJsonSchemaFileProvider : JsonSchemaFileProvider {
     override fun isAvailable(file: VirtualFile): Boolean {
-        return file.name == ".continuerc.json"
+        return file.name == ".shadow-coderc.json"
     }
 
     override fun getName(): String {
-        return ".continuerc.json"
+        return ".shadow-coderc.json"
     }
 
     override fun getSchemaFile(): VirtualFile? {
-        ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("continue_rc_schema.json")
+        ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("shadow_code_rc_schema.json")
             .use { `is` ->
                 if (`is` == null) {
-                    throw IOException("Resource not found: continue_rc_schema.json")
+                    throw IOException("Resource not found: shadow_code_rc_schema.json")
                 }
                 val content = `is`.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
-                val filepath = Paths.get(getContinueGlobalPath(), "continue_rc_schema.json").toString()
+                val filepath = Paths.get(getContinueGlobalPath(), "shadow_code_rc_schema.json").toString()
                 File(filepath).writeText(content)
                 return LocalFileSystem.getInstance().findFileByPath(filepath)
             }

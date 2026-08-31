@@ -59,5 +59,5 @@ class AddLicenseKey : AnAction() {
         )
 
     private fun getContinueNotifications() =
-        NotificationGroupManager.getInstance().getNotificationGroup("Continue")
+        NotificationGroupManager.getInstance().getNotificationGroup("Shadow Code")
 }

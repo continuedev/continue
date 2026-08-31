@@ -25,10 +25,7 @@ interface AddModelFormProps {
   onDone: () => void;
 }
 
-const MODEL_PROVIDERS_URL =
-  "https://docs.continue.dev/customize/model-providers";
 const CODESTRAL_URL = "https://console.mistral.ai/codestral";
-const CONTINUE_SETUP_URL = "https://docs.continue.dev/setup/overview";
 
 export function AddModelForm({ onDone }: AddModelFormProps) {
   const [selectedProvider, setSelectedProvider] = useState<ProviderInfo>(
@@ -207,16 +204,8 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                 searchPlaceholder="Search providers..."
               />
               <span className="text-description-muted mt-1 block text-xs">
-                Don't see your provider?{" "}
-                <a
-                  className="cursor-pointer text-inherit underline hover:text-inherit"
-                  onClick={() =>
-                    ideMessenger.post("openUrl", MODEL_PROVIDERS_URL)
-                  }
-                >
-                  Click here
-                </a>{" "}
-                to view the full list
+                Don't see your provider? Any OpenAI-compatible endpoint can be
+                configured manually in <code>config.yaml</code>.
               </span>
             </div>
 

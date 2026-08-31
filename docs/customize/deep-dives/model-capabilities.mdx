@@ -1,15 +1,15 @@
 ---
-title: "How to Configure Model Capabilities in Continue"
+title: "How to Configure Model Capabilities in Shadow Code"
 description: Understanding and configuring model capabilities for tools and image support
 keywords: [capabilities, tools, function calling, image input, config]
 sidebarTitle: "Model Capabilities"
 ---
 
-Continue needs to know what features your models support to provide the best experience. This guide explains how model capabilities work and how to configure them.
+Shadow Code needs to know what features your models support to provide the best experience. This guide explains how model capabilities work and how to configure them.
 
 ## What Are Model Capabilities?
 
-Model capabilities tell Continue what features a model supports:
+Model capabilities tell Shadow Code what features a model supports:
 
 - **`tool_use`** - Whether the model can use tools and functions
 - **`image_input`** - Whether the model can process images
@@ -20,13 +20,13 @@ Without proper capability configuration, you may encounter issues like:
 - Tools not working at all
 - Image uploads being disabled
 
-## How Continue Detects Model Capabilities
+## How Shadow Code Detects Model Capabilities
 
-Continue uses a two-tier system for determining model capabilities:
+Shadow Code uses a two-tier system for determining model capabilities:
 
 ### How Automatic Detection Works (Default)
 
-Continue automatically detects capabilities based on your provider and model name. For example:
+Shadow Code automatically detects capabilities based on your provider and model name. For example:
 
 - **OpenAI**: GPT-4 and GPT-3.5 Turbo models support tools
 - **Anthropic**: Claude 3.5+ models support both tools and images
@@ -37,15 +37,15 @@ This works well for popular models, but may not cover custom deployments or newe
 
 For implementation details, see:
 
-- [toolSupport.ts](https://github.com/continuedev/continue/blob/main/core/llm/toolSupport.ts) - Tool capability detection logic
+- toolSupport.ts - Tool capability detection logic
 - [@continuedev/llm-info](https://www.npmjs.com/package/@continuedev/llm-info) - Image support detection
 
 ### How to Configure Capabilities Manually
 
-You can add capabilities to models that Continue doesn't automatically detect in your `config.yaml`.
+You can add capabilities to models that Shadow Code doesn't automatically detect in your `config.yaml`.
 
 <Note>
-  You cannot override autodetection - you can only add capabilities. Continue
+  You cannot override autodetection - you can only add capabilities. Shadow Code
   will always use its built-in knowledge about your model in addition to any
   capabilities you specify.
 </Note>
@@ -66,7 +66,7 @@ models:
 Add capabilities when:
 
 1. **Using custom deployments** - Your API endpoint serves a model with different capabilities than the standard version
-2. **Using newer models** - Continue doesn't yet recognize a newly released model
+2. **Using newer models** - Shadow Code doesn't yet recognize a newly released model
 3. **Experiencing issues** - Autodetection isn't working correctly for your setup
 4. **Using proxy services** - Some proxy services modify model capabilities
 
@@ -74,7 +74,7 @@ Add capabilities when:
 
 ### How to Add Basic Tool Support
 
-Add tool support for a model that Continue doesn't recognize:
+Add tool support for a model that Shadow Code doesn't recognize:
 
 ```yaml
 models:
@@ -110,7 +110,7 @@ models:
 ```
 
 <Warning>
-  An empty capabilities array does not disable autodetection. Continue will
+  An empty capabilities array does not disable autodetection. Shadow Code will
   still detect and use the model's actual capabilities. To truly limit a model's
   capabilities, you would need to use a model that doesn't support those
   features.
@@ -159,13 +159,13 @@ For troubleshooting capability-related issues like Agent mode being unavailable 
 
 1. **Start with autodetection** - Only override if you experience issues
 2. **Test after changes** - Verify tools and images work as expected
-3. **Keep Continue updated** - Newer versions improve autodetection
+3. **Keep Shadow Code updated** - Newer versions improve autodetection
 
-Remember: Setting capabilities only adds to autodetection. Continue will still use its built-in knowledge about your model in addition to your specified capabilities.
+Remember: Setting capabilities only adds to autodetection. Shadow Code will still use its built-in knowledge about your model in addition to your specified capabilities.
 
 ## Model Capability Support
 
-This matrix shows which models support tool use and image input capabilities. Continue auto-detects these capabilities, but you can override them if needed.
+This matrix shows which models support tool use and image input capabilities. Shadow Code auto-detects these capabilities, but you can override them if needed.
 
 ### OpenAI
 

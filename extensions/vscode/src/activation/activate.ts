@@ -20,7 +20,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
     globalContext.update("hasShownUnsupportedPlatformWarning", true);
     void vscode.window.showInformationMessage(
-      `Continue detected that you are using ${platformTarget}. Due to native dependencies, Continue may not be able to start`,
+      `Shadow Code detected that you are using ${platformTarget}. Due to native dependencies, Shadow Code may not be able to start`,
     );
   }
 
@@ -39,7 +39,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   }
 
   // Register config.yaml schema by removing old entries and adding new one (uri.fsPath changes with each version)
-  const yamlMatcher = ".continue/**/*.yaml";
+  const yamlMatcher = ".shadow-code/**/*.yaml";
   const yamlConfig = vscode.workspace.getConfiguration("yaml");
   const yamlSchemas = yamlConfig.get<object>("schemas", {});
 
@@ -59,7 +59,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     );
   } catch (error) {
     console.error(
-      "Failed to register Continue config.yaml schema, most likely, YAML extension is not installed",
+      "Failed to register Shadow Code config.yaml schema, most likely, YAML extension is not installed",
       error,
     );
   }

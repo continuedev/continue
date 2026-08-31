@@ -21,7 +21,7 @@ class CoreMessengerManager(
             try {
                 delay(backoffIntervalSeconds.seconds)
                 backoffIntervalSeconds *= 2
-                log.warn("Continue process terminated externally, retrying in $backoffIntervalSeconds seconds")
+                log.warn("Shadow Code process terminated externally, retrying in $backoffIntervalSeconds seconds")
                 coreMessenger.restart()
             } catch (e: Exception) {
             }

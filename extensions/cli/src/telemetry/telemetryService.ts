@@ -73,12 +73,12 @@ class TelemetryService {
     );
 
     let telemetryEnabled = true;
-    if (process.env.CONTINUE_METRICS_ENABLED === "0") {
+    if (process.env.SHADOW_CODE_METRICS_ENABLED === "0") {
       telemetryEnabled = false;
-    } else if (process.env.CONTINUE_METRICS_ENABLED === "1") {
+    } else if (process.env.SHADOW_CODE_METRICS_ENABLED === "1") {
       telemetryEnabled = true;
     } else {
-      telemetryEnabled = process.env.CONTINUE_CLI_ENABLE_TELEMETRY !== "0";
+      telemetryEnabled = process.env.SHADOW_CODE_CLI_ENABLE_TELEMETRY !== "0";
     }
 
     const enabled = telemetryEnabled && hasOtelConfig;
@@ -232,7 +232,7 @@ class TelemetryService {
     });
 
     this.costCounter = this.meter.createCounter("continue_cli_cost_usage", {
-      description: "Cost of the Continue CLI session",
+      description: "Cost of the Shadow Code CLI session",
       unit: "USD",
     });
 
@@ -257,7 +257,7 @@ class TelemetryService {
       },
     );
 
-    // Additional Continue CLI specific metrics
+    // Additional Shadow Code CLI specific metrics
     this.authAttemptsCounter = this.meter.createCounter(
       "continue_cli_auth_attempts",
       {

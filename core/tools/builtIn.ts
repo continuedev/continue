@@ -17,6 +17,7 @@ export enum BuiltInToolNames {
   FetchUrlContent = "fetch_url_content",
   CodebaseTool = "codebase",
   ReadSkill = "read_skill",
+  SpawnSubagents = "spawn_subagents",
 
   // Shadow chat history tools — backed by the local per-session SQLite cache
   ShadowGetChatHistory = "shadow_get_chat_history",

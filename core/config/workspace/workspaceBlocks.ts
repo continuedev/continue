@@ -56,7 +56,7 @@ function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
       configYaml.docs = [
         {
           name: "New docs",
-          startUrl: "https://docs.continue.dev",
+          startUrl: "https://example.com",
         },
       ];
       break;
@@ -166,7 +166,10 @@ export async function createNewWorkspaceBlockFile(
     );
   }
 
-  const baseDirUri = joinPathsToUri(workspaceDirs[0], `.continue/${blockType}`);
+  const baseDirUri = joinPathsToUri(
+    workspaceDirs[0],
+    `.shadow-code/${blockType}`,
+  );
 
   const fileUri = await findAvailableFilename(
     baseDirUri,

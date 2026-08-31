@@ -48,7 +48,7 @@ export async function createNewPromptFileV2(
 
   const baseDirUri = joinPathsToUri(
     workspaceDirs[0],
-    promptPath ?? ".continue/prompts",
+    promptPath ?? ".shadow-code/prompts",
   );
 
   // Find the first available filename

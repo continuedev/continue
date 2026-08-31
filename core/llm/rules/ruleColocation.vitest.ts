@@ -38,7 +38,7 @@ describe("Rule colocation - glob pattern matching", () => {
       alwaysApply: true,
       globs: "src/specific/**/*.ts", // Should be ignored since alwaysApply is true
       source: "colocated-markdown",
-      sourceFile: ".continue/rules.md",
+      sourceFile: ".shadow-code/rules.md",
     },
 
     // Rule with explicit alwaysApply: false
@@ -48,7 +48,7 @@ describe("Rule colocation - glob pattern matching", () => {
       alwaysApply: false,
       // No globs, so should never apply
       source: "colocated-markdown",
-      sourceFile: ".continue/rules.md",
+      sourceFile: ".shadow-code/rules.md",
     },
 
     // Rule with explicit alwaysApply: false but with globs

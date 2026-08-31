@@ -106,7 +106,7 @@ class IntelliJIDE(
         "target/", "out/", "bin/", ".pytest_cache/", ".vscode-test/",
         "__pycache__/", "site-packages/", ".gradle/", ".mvn/", ".cache/",
         "gems/", "vendor/", ".venv/", "venv/", ".vscode/", ".idea/", ".vs/",
-        ".continue/"
+        ".shadow-code/"
     )
     
     // Combined patterns for use in ripgrep
@@ -634,7 +634,7 @@ class IntelliJIDE(
 
             val deferred = CompletableDeferred<String?>()
 
-            val notification = NotificationGroupManager.getInstance().getNotificationGroup("Continue")
+            val notification = NotificationGroupManager.getInstance().getNotificationGroup("Shadow Code")
                 .createNotification(message, notificationType).setIcon(Icons.Continue)
 
             val buttonTexts = otherParams.filterIsInstance<String>().toTypedArray()

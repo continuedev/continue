@@ -1,6 +1,6 @@
 # Continue PR Review Actions
 
-GitHub Actions that provide automated code reviews for pull requests using Continue CLI.
+GitHub Actions that provide automated code reviews for pull requests using Shadow Code CLI.
 
 ## Available Actions
 
@@ -38,8 +38,8 @@ jobs:
     steps:
       - uses: continuedev/continue/actions/general-review@main
         with:
-          continue-api-key: ${{ secrets.CONTINUE_API_KEY }}
-          continue-org: "your-org-name"
+          shadow-code-api-key: ${{ secrets.SHADOW_CODE_API_KEY }}
+          shadow-code-org: "your-org-name"
           continue-config: "your-org-name/review-bot"
 ```
 
@@ -47,22 +47,22 @@ jobs:
 
 The action accepts the following inputs:
 
-| Input              | Description                            | Required |
-| ------------------ | -------------------------------------- | -------- |
-| `continue-api-key` | API key for Continue service           | Yes      |
-| `continue-org`     | Organization for Continue config       | Yes      |
-| `continue-config`  | Config path (e.g., "myorg/review-bot") | Yes      |
+| Input                 | Description                            | Required |
+| --------------------- | -------------------------------------- | -------- |
+| `shadow-code-api-key` | API key for Continue service           | Yes      |
+| `shadow-code-org`     | Organization for Continue config       | Yes      |
+| `continue-config`     | Config path (e.g., "myorg/review-bot") | Yes      |
 
 ## Setup Requirements
 
 ### 1. Continue API Key
 
-Add your Continue API key as a secret named `CONTINUE_API_KEY` in your repository:
+Add your Continue API key as a secret named `SHADOW_CODE_API_KEY` in your repository:
 
 1. Go to your repository's Settings
 2. Navigate to Secrets and variables → Actions
 3. Click "New repository secret"
-4. Name: `CONTINUE_API_KEY`
+4. Name: `SHADOW_CODE_API_KEY`
 5. Value: Your Continue API key
 
 ### 2. Continue Configuration
@@ -110,7 +110,7 @@ The general review provides a structured comment that includes:
 1. Checks out repository code
 2. Fetches PR diff using GitHub CLI
 3. Generates a comprehensive review prompt
-4. Runs Continue CLI with specified configuration
+4. Runs Shadow Code CLI with specified configuration
 5. Posts review as a PR comment
 
 ## Versioning

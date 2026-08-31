@@ -11,6 +11,17 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       }
       return false;
     },
+    // Claude Code CLI (core/llm/llms/ClaudeCodeCli.ts). Always true: the
+    // provider is Claude, and the whole integration is built on native tool
+    // calls surfaced through the shadow-code-tools MCP server.
+    //
+    // This must be registered, not left to the default. Without it
+    // modelSupportsNativeTools() returns false, so streamNormalInput never
+    // populates completionOptions.tools - and since that is exactly what
+    // ClaudeCodeCli hands to registerToolsForSession, the CLI would be exposed
+    // only the shadow_* tools that tokenOptimizedChat force-includes. Every
+    // other tool would be described in the system prompt but be uncallable.
+    claudecode: () => true,
     azure: (model) => {
       const lower = model.toLowerCase();
       if (lower.match(/^gpt-[4-9]/) || lower.match(/^o[1-9]/)) return true;

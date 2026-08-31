@@ -1,15 +1,15 @@
 name: "Continue PR Review"
-description: "Automated code review for pull requests using Continue CLI"
+description: "Automated code review for pull requests using Shadow Code CLI"
 author: "Continue Dev, Inc."
 
 inputs:
-  continue-api-key:
+  shadow-code-api-key:
     description: "API key for Continue service"
     required: true
-  continue-org:
+  shadow-code-org:
     description: "Organization for Continue config"
     required: true
-  continue-agent:
+  shadow-code-agent:
     description: 'Agent path to use (e.g., "myorg/review-bot")'
     required: true
 
@@ -110,7 +110,7 @@ runs:
       with:
         node-version: 20
 
-    - name: Install Continue CLI
+    - name: Install Shadow Code CLI
       if: env.SHOULD_RUN == 'true'
       shell: bash
       run: npm install -g @continuedev/cli@latest
@@ -160,7 +160,7 @@ runs:
       uses: actions/github-script@v7
       with:
         script: |
-          const marker = '<!-- continue-agent-review -->';
+          const marker = '<!-- shadow-code-agent-review -->';
 
           // Get PR number based on event type
           let prNumber;
@@ -260,16 +260,16 @@ runs:
         node .continue-action-scripts/buildPrompt.js "$PR_NUMBER"
         rm -f pr_data.json
 
-    - name: Run Continue CLI Review
+    - name: Run Shadow Code CLI Review
       if: env.SHOULD_RUN == 'true'
       shell: bash
       env:
-        CONTINUE_API_KEY: ${{ inputs.continue-api-key }}
-        CONTINUE_ORG: ${{ inputs.continue-org }}
-        CONTINUE_AGENT: ${{ inputs.continue-agent }}
+        SHADOW_CODE_API_KEY: ${{ inputs.shadow-code-api-key }}
+        SHADOW_CODE_ORG: ${{ inputs.shadow-code-org }}
+        SHADOW_CODE_AGENT: ${{ inputs.shadow-code-agent }}
         GITHUB_TOKEN: ${{ github.token }}
       run: |
-        echo "Running Continue CLI with prompt:"
+        echo "Running Shadow Code CLI with prompt:"
         echo "=================================="
         head -n 100 review_prompt.txt
         echo "... [truncated] ..."
@@ -277,8 +277,8 @@ runs:
         echo ""
 
         # Validate API key
-        if [ -z "$CONTINUE_API_KEY" ]; then
-          echo "Warning: CONTINUE_API_KEY environment variable is not set"
+        if [ -z "$SHADOW_CODE_API_KEY" ]; then
+          echo "Warning: SHADOW_CODE_API_KEY environment variable is not set"
           # Create fallback review and continue
           node .continue-action-scripts/writeMarkdown.js code_review.md missing_api_key
           echo "SKIP_CLI=true" >> $GITHUB_ENV
@@ -287,32 +287,32 @@ runs:
         fi
 
         # Validate inputs to prevent command injection
-        if [[ ! "$CONTINUE_ORG" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        if [[ ! "$SHADOW_CODE_ORG" =~ ^[a-zA-Z0-9_-]+$ ]]; then
           echo "Error: Invalid organization name. Must contain only alphanumeric characters, hyphens, and underscores."
           exit 1
         fi
 
-        if [[ ! "$CONTINUE_AGENT" =~ ^[a-zA-Z0-9_/-]+$ ]]; then
+        if [[ ! "$SHADOW_CODE_AGENT" =~ ^[a-zA-Z0-9_/-]+$ ]]; then
           echo "Error: Invalid config path. Must contain only alphanumeric characters, hyphens, underscores, and forward slashes."
           exit 1
         fi
 
-        # Test Continue CLI availability
+        # Test Shadow Code CLI availability
         if [ "$SKIP_CLI" != "true" ]; then
-          echo "Testing Continue CLI..."
+          echo "Testing Shadow Code CLI..."
           if ! which cn > /dev/null 2>&1; then
-            echo "Warning: Continue CLI not found or not working"
+            echo "Warning: Shadow Code CLI not found or not working"
             node .continue-action-scripts/writeMarkdown.js code_review.md cli_install_failed
             echo "SKIP_CLI=true" >> $GITHUB_ENV
           else
-            echo "Continue CLI found at: $(which cn)"
-            echo "Continue CLI version: $(cn --version 2>/dev/null || echo 'version check failed')"
+            echo "Shadow Code CLI found at: $(which cn)"
+            echo "Shadow Code CLI version: $(cn --version 2>/dev/null || echo 'version check failed')"
           fi
         fi
 
         # Run the CLI with validated config and error handling
         if [ "$SKIP_CLI" != "true" ]; then
-          echo "Executing Continue CLI with config: $CONTINUE_ORG/$CONTINUE_AGENT"
+          echo "Executing Shadow Code CLI with config: $SHADOW_CODE_ORG/$SHADOW_CODE_AGENT"
           
           # Write prompt to temp file for headless mode
           PROMPT_FILE="/tmp/continue-review-$RANDOM.txt"
@@ -321,10 +321,10 @@ runs:
           echo "Prompt length: $(wc -c < "$PROMPT_FILE") characters"
           
           # Use timeout to prevent hanging (360 seconds = 6 minutes)
-          echo "Executing command: cn --agent $CONTINUE_ORG/$CONTINUE_AGENT -p @$PROMPT_FILE --allow Bash"
+          echo "Executing command: sc --agent $SHADOW_CODE_ORG/$SHADOW_CODE_AGENT -p @$PROMPT_FILE --allow Bash"
           
-          if timeout 360 cn --agent "$CONTINUE_ORG/$CONTINUE_AGENT" -p "@$PROMPT_FILE" --allow Bash > code_review_raw.md 2>cli_error.log; then
-            echo "Continue CLI completed successfully"
+          if timeout 360 sc --agent "$SHADOW_CODE_ORG/$SHADOW_CODE_AGENT" -p "@$PROMPT_FILE" --allow Bash > code_review_raw.md 2>cli_error.log; then
+            echo "Shadow Code CLI completed successfully"
             echo "Raw output length: $(wc -c < code_review_raw.md) characters"
             
             # Clean up ANSI codes if any
@@ -337,11 +337,11 @@ runs:
             
             # Check if output is empty
             if [ ! -s code_review.md ]; then
-              echo "Warning: Continue CLI returned empty output"
+              echo "Warning: Shadow Code CLI returned empty output"
               node .continue-action-scripts/writeMarkdown.js code_review.md empty_output
             fi
           else
-            echo "Error: Continue CLI command failed with exit code $?"
+            echo "Error: Shadow Code CLI command failed with exit code $?"
             echo "CLI error log:"
             cat cli_error.log
             
@@ -389,7 +389,7 @@ runs:
             } else {
               // Build direct link to workflow logs
               const workflowRunUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-              reviewContent = `⚠️ AI review completed but no review output was generated.\n\n**Likely cause:** Expired CONTINUE_API_KEY or missing continuedev/review-bot assistant\n\n[📋 View workflow logs](${workflowRunUrl}) for details.`;
+              reviewContent = `⚠️ AI review completed but no review output was generated.\n\n**Likely cause:** Expired SHADOW_CODE_API_KEY or missing review-bot assistant\n\n[📋 View workflow logs](${workflowRunUrl}) for details.`;
             }
 
             // Get PR number based on event type
@@ -411,7 +411,7 @@ runs:
             reviewContent += `\n\n---\n<!-- ${timestamp} | Powered by Continue (https://continue.dev) -->`;
 
             // Look for existing review comment to update (sticky comment)
-            const marker = '<!-- continue-agent-review -->';
+            const marker = '<!-- shadow-code-agent-review -->';
 
             // Try to get comment_id from the initial comment step
             const initialCommentId = '${{ steps.initial-comment.outputs.comment_id }}';

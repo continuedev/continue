@@ -167,10 +167,7 @@ export function getContextProviderDropdownOptions(
         title: "Add more context providers",
         type: "action",
         action: () => {
-          ideMessenger.post(
-            "openUrl",
-            "https://docs.continue.dev/customization/context-providers#built-in-context-providers",
-          );
+          ideMessenger.post("openUrl", "");
         },
         description: "",
       });

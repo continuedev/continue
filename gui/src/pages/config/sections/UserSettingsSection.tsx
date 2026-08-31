@@ -108,7 +108,9 @@ export function UserSettingsSection() {
                   title="Ultra Token Saving"
                   description="Sends only the current message to the LLM and retrieves history on demand, reducing input tokens by up to 97%. Changing this mid-conversation will require starting a new chat."
                   value={ultraTokenSaving}
-                  onChange={(value) => handleUpdate({ ultraTokenSaving: value })}
+                  onChange={(value) =>
+                    handleUpdate({ ultraTokenSaving: value })
+                  }
                 />
                 <UserSetting
                   type="toggle"
@@ -267,7 +269,7 @@ export function UserSettingsSection() {
                   <UserSetting
                     type="toggle"
                     title="Only use system message tools"
-                    description=" Continue will not attempt to use native tool calling and will only use system message tools."
+                    description=" Shadow Code will not attempt to use native tool calling and will only use system message tools."
                     value={onlyUseSystemMessageTools}
                     onChange={(value) =>
                       handleUpdate({ onlyUseSystemMessageTools: value })

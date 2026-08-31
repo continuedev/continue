@@ -30,7 +30,7 @@ describe("ClawRouter", () => {
 
     const headers = clawRouter["_getHeaders"]();
 
-    expect(headers["User-Agent"]).toMatch(/^Continue\//);
+    expect(headers["User-Agent"]).toMatch(/^ShadowCode\//);
     expect(headers["X-Continue-Provider"]).toBe("clawrouter");
   });
 

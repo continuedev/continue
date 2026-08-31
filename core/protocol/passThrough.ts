@@ -87,6 +87,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "process/isBackgrounded",
     "process/killTerminalProcess",
     "models/fetch",
+    "tools/cancel",
   ];
 
 // Message types to pass through from core to webview
@@ -106,4 +107,5 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "sessionUpdate",
     "didCloseFiles",
     "toolCallPartialOutput",
+    "agent/authorizeToolCall",
   ];

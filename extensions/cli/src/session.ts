@@ -34,8 +34,8 @@ export interface ExtendedSessionMetadata extends BaseSessionMetadata {
  */
 function getSessionDir(): string {
   // For tests, use the test directory if we're in test mode
-  if (process.env.CONTINUE_CLI_TEST && process.env.HOME) {
-    const sessionDir = path.join(process.env.HOME, ".continue", "sessions");
+  if (process.env.SHADOW_CODE_CLI_TEST && process.env.HOME) {
+    const sessionDir = path.join(process.env.HOME, ".shadow-code", "sessions");
 
     // Create directory if it doesn't exist
     if (!fs.existsSync(sessionDir)) {
@@ -45,9 +45,10 @@ function getSessionDir(): string {
     return sessionDir;
   }
 
-  // Use CONTINUE_GLOBAL_DIR if set (for testing)
+  // Use SHADOW_CODE_GLOBAL_DIR if set (for testing)
   const continueHome =
-    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+    process.env.SHADOW_CODE_GLOBAL_DIR ||
+    path.join(os.homedir(), ".shadow-code");
   const sessionDir = path.join(continueHome, "sessions");
 
   // Create directory if it doesn't exist
@@ -93,8 +94,8 @@ class SessionManager {
   getCurrentSession(): Session {
     if (!this.currentSession) {
       // Use test session ID for testing consistency
-      const sessionId = process.env.CONTINUE_CLI_TEST_SESSION_ID
-        ? process.env.CONTINUE_CLI_TEST_SESSION_ID
+      const sessionId = process.env.SHADOW_CODE_CLI_TEST_SESSION_ID
+        ? process.env.SHADOW_CODE_CLI_TEST_SESSION_ID
         : uuidv4();
 
       this.currentSession = {

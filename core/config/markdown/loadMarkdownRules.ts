@@ -9,7 +9,7 @@ import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 
 export const SUPPORTED_AGENT_FILES = ["AGENTS.md", "AGENT.md", "CLAUDE.md"];
 /**
- * Loads rules from markdown files in the .continue/rules and .continue/prompts directories
+ * Loads rules from markdown files in the .shadow-code/rules and .shadow-code/prompts directories
  * and agent files (AGENTS.md, AGENT.md, CLAUDE.md) at workspace root
  */
 export async function loadMarkdownRules(ide: IDE): Promise<{
@@ -54,7 +54,7 @@ export async function loadMarkdownRules(ide: IDE): Promise<{
     }
   }
 
-  // Load markdown files from both .continue/rules and .continue/prompts
+  // Load markdown files from both .shadow-code/rules and .shadow-code/prompts
   const dirsToCheck = [RULES_DIR_NAME, PROMPTS_DIR_NAME];
 
   for (const dirName of dirsToCheck) {

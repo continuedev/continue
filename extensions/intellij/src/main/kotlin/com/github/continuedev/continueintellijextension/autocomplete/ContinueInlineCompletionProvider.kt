@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 
 class ContinueInlineCompletionProvider : InlineCompletionProvider {
-    override val id get() = InlineCompletionProviderID("Continue")
+    override val id get() = InlineCompletionProviderID("Shadow Code")
     override val insertHandler: InlineCompletionInsertHandler = NotifyingHandler()
     private var lastUuid: String? = null
     private var lastProject: Project? = null

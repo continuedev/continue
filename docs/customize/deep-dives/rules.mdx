@@ -1,5 +1,5 @@
 ---
-title: "How to Create and Manage Rules in Continue"
+title: "How to Create and Manage Rules in Shadow Code"
 description: "Rules are used to provide system message instructions to the model for Agent mode, Chat mode, and Edit mode requests"
 keywords: [rules, system, prompt, message]
 sidebarTitle: "Rules"
@@ -12,7 +12,7 @@ Rules provide instructions to the model for [Agent mode](../../ide-extensions/ag
   [apply](../model-roles/apply).
 </Info>
 
-## How Rules Work in Continue
+## How Rules Work in Shadow Code
 
 You can view the current rules by clicking the pen icon above the main toolbar:
 
@@ -24,11 +24,11 @@ To form the system message, rules are joined with new lines, in the order they a
 
 Below is a quick example of setting up a new rule file:
 
-1. Create a folder called `.continue/rules` at the top level of your workspace
+1. Create a folder called `.shadow-code/rules` at the top level of your workspace
 2. Add a file called `pirates-rule.md` to this folder.
 3. Write the following contents to `pirates-rule.md` and save.
 
-```md title=".continue/rules/pirates-rule.md"
+```md title=".shadow-code/rules/pirates-rule.md"
 ---
 name: Pirate rule
 ---
@@ -51,7 +51,7 @@ Rules can be added locally using the "Add Rules" button.
 <Info>
 **Automatically create local rules**: When in Agent mode, you can prompt the agent to create a rule for you using the `create_rule_block` tool if enabled.
 
-For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
+For example, you can say "Create a rule for this", and a rule will be created for you in `.shadow-code/rules` based on your conversation.
 </Info>
 
 ### How to Configure Rule Properties and Syntax
@@ -80,10 +80,10 @@ Rules can be simple text, written in YAML configuration files, or as Markdown (`
 name: Documentation Standards
 globs: docs/**/*.{md,mdx}
 alwaysApply: false
-description: Standards for writing and maintaining Continue Docs
+description: Standards for writing and maintaining Shadow Code Docs
 ---
 
-# Continue Docs Standards
+# Shadow Code Docs Standards
 
 - Follow Mintlify documentation standards
 - Include YAML frontmatter with title, description, and keywords
@@ -125,13 +125,13 @@ rules:
 
 ### How to Set Up Project-Specific Rules
 
-You can create project-specific rules by adding a `.continue/rules` folder to the root of your project and adding new rule files.
+You can create project-specific rules by adding a `.shadow-code/rules` folder to the root of your project and adding new rule files.
 
 Rules files are loaded in lexicographical order, so you can prefix them with numbers to control the order in which they are applied. For example: `01-general.md`, `02-frontend.md`, `03-backend.md`.
 
 ### Example: How to Create TypeScript-Specific Rules
 
-```md title=".continue/rules/typescript.md"
+```md title=".shadow-code/rules/typescript.md"
 ---
 name: TypeScript Best Practices
 globs: ["**/*.ts", "**/*.tsx"]
@@ -154,13 +154,13 @@ globs: ["**/*.ts", "**/*.tsx"]
 **Problem**: Your rules exist but don't show up in the rules toolbar.
 
 **Check These**:
-1. **File location**: Ensure rules are in `.continue/rules/` (not `.continue/rule/`)
+1. **File location**: Ensure rules are in `.shadow-code/rules/` (not `.shadow-code/rule/`)
 2. **File format**: Rules should be `.md` files with proper YAML frontmatter
 
 ### How to Customize Chat System Message
 
-Continue includes a simple default system message for [Agent mode](../../ide-extensions/agent/quick-start) and [Chat](../../ide-extensions/chat/quick-start) requests, to help the model provide reliable codeblock formats in its output.
+Shadow Code includes a simple default system message for [Agent mode](../../ide-extensions/agent/quick-start) and [Chat](../../ide-extensions/chat/quick-start) requests, to help the model provide reliable codeblock formats in its output.
 
-This can be viewed in the rules section of the toolbar (see above), or in the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4).
+This can be viewed in the rules section of the toolbar (see above), or in the source code here.
 
 Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](/reference#models).

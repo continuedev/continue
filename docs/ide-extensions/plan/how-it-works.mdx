@@ -20,7 +20,7 @@ While Agent mode has access to all tools including those that modify files, Plan
 
 When you select Plan mode:
 
-1. Continue sends a special system message instructing the model to focus on understanding and planning
+1. Shadow Code sends a special system message instructing the model to focus on understanding and planning
 2. The tool list is filtered to include only read-only tools
 3. The model can use these tools to explore and analyze your codebase
 4. When you're ready to implement changes, you switch to Agent mode
@@ -85,9 +85,9 @@ Plan mode uses a dedicated system message that:
 - Encourages thorough analysis before suggesting changes
 
 <Info>
-  The system message can be customized per model. See it [directly in
+  The system message can be customized per model. See it directly in
   the
-  code](https://github.com/continuedev/continue/blob/main/core/llm/defaultSystemMessages.ts).
+  code.
 </Info>
 
 ## When to Use Plan Mode vs Other Modes

@@ -109,7 +109,7 @@ jobs:
         if: steps.workflow-details.outputs.has_failed_tests == 'true'
         id: remote-session
         env:
-          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+          SHADOW_CODE_API_KEY: ${{ secrets.SHADOW_CODE_API_KEY }}
         run: |
           # Create a detailed prompt for fixing the failed tests
           cat > /tmp/fix_tests_prompt.txt << 'PROMPT_EOF'

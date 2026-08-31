@@ -14,7 +14,7 @@ vi.mock("node:fs", () => ({
 // Mock env module
 vi.mock("./env.js", () => ({
   env: {
-    continueHome: "/home/user/.continue",
+    continueHome: "/home/user/.shadow-code",
   },
 }));
 

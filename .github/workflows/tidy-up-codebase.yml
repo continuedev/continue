@@ -10,9 +10,9 @@ jobs:
   run-cn-task:
     # Only run this workflow on the main repository (continuedev/continue)
     if: github.repository == 'continuedev/continue'
-    uses: ./.github/workflows/run-continue-agent.yml
+    uses: ./.github/workflows/run-shadow-code-agent.yml
     with:
       agent: continuedev/tidy-up-markdown-agent
       branch_name: main
     secrets:
-      CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+      SHADOW_CODE_API_KEY: ${{ secrets.SHADOW_CODE_API_KEY }}

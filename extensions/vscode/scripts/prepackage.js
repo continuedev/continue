@@ -37,8 +37,8 @@ if (args[2] === "--target") {
 }
 if (!target) {
   const envTarget =
-    process.env.CONTINUE_VSCODE_TARGET ||
-    process.env.CONTINUE_BUILD_TARGET ||
+    process.env.SHADOW_CODE_VSCODE_TARGET ||
+    process.env.SHADOW_CODE_BUILD_TARGET ||
     process.env.VSCODE_TARGET;
   if (envTarget && typeof envTarget === "string") {
     target = envTarget.trim();
@@ -463,7 +463,7 @@ void (async () => {
 
     // Tutorial
     "media/move-chat-panel-right.md",
-    "continue_tutorial.py",
+    "shadow_code_tutorial.py",
     "config_schema.json",
 
     // Embeddings model

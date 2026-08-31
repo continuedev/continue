@@ -9,7 +9,7 @@ import { DatabaseConnection } from "../indexing/refreshIndex.js";
 import { ChatMessage } from "../index.js";
 
 function getShadowChatDbPath(): string {
-  const devDataDir = path.join(os.homedir(), ".continue", "devdata");
+  const devDataDir = path.join(os.homedir(), ".shadow-code", "devdata");
   if (!fs.existsSync(devDataDir)) {
     fs.mkdirSync(devDataDir, { recursive: true });
   }

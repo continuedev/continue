@@ -62,7 +62,7 @@ export async function getAllPromptFiles(
     await Promise.all(fullDirs.map((dir) => getPromptFilesFromDir(ide, dir)))
   ).flat();
 
-  // Also read from ~/.continue/prompts and ~/.continue/rules
+  // Also read from ~/.shadow-code/prompts and ~/.shadow-code/rules
   promptFiles.push(...readAllGlobalPromptFiles());
 
   const promptFilesFromRulesDirectory = readAllGlobalPromptFiles(

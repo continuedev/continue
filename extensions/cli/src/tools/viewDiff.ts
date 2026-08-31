@@ -14,7 +14,7 @@ const DEFAULT_DIFF_MAX_CHARS = 50000;
 
 function getDiffMaxChars(): number {
   return parseEnvNumber(
-    process.env.CONTINUE_CLI_DIFF_MAX_OUTPUT_LENGTH,
+    process.env.SHADOW_CODE_CLI_DIFF_MAX_OUTPUT_LENGTH,
     DEFAULT_DIFF_MAX_CHARS,
   );
 }

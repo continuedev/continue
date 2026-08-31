@@ -24,7 +24,7 @@ describe("ClawRouterApi", () => {
     const api = new ClawRouterApi(baseConfig);
     const headers = api["getHeaders"]();
 
-    expect(headers["User-Agent"]).toBe("Continue/IDE");
+    expect(headers["User-Agent"]).toBe("ShadowCode/IDE");
     expect(headers["X-Continue-Provider"]).toBe("clawrouter");
   });
 

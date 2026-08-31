@@ -65,6 +65,7 @@ class MessageTypes {
             "sessionUpdate",
             "didCloseFiles",
             "toolCallPartialOutput",
+            "agent/authorizeToolCall",
         )
 
         // Note: If updating these values, make a corresponding update in
@@ -154,7 +155,8 @@ class MessageTypes {
             "process/markAsBackgrounded",
             "process/isBackgrounded",
             "process/killTerminalProcess",
-            "models/fetch"
+            "models/fetch",
+            "tools/cancel"
         )
     }
 }

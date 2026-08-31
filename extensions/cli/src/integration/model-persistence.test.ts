@@ -17,8 +17,8 @@ describe("Model Persistence Integration", () => {
   beforeEach(() => {
     // Create a temporary directory for testing
     testDir = fs.mkdtempSync(path.join(os.tmpdir(), "continue-test-"));
-    originalContinueHome = process.env.CONTINUE_GLOBAL_DIR;
-    process.env.CONTINUE_GLOBAL_DIR = testDir;
+    originalContinueHome = process.env.SHADOW_CODE_GLOBAL_DIR;
+    process.env.SHADOW_CODE_GLOBAL_DIR = testDir;
 
     // Clear GlobalContext for clean test state
     persistModelName(null);
@@ -30,9 +30,9 @@ describe("Model Persistence Integration", () => {
       fs.rmSync(testDir, { recursive: true });
     }
     if (originalContinueHome) {
-      process.env.CONTINUE_GLOBAL_DIR = originalContinueHome;
+      process.env.SHADOW_CODE_GLOBAL_DIR = originalContinueHome;
     } else {
-      delete process.env.CONTINUE_GLOBAL_DIR;
+      delete process.env.SHADOW_CODE_GLOBAL_DIR;
     }
   });
 

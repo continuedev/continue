@@ -48,7 +48,7 @@ Provide specific, actionable feedback for improvements.
 
 This slash command will be invokable using /review and will provide instructions for code review tasks common to this repository.
 
-Please create both the AGENTS.md file and the .continue/rules/review.md file using the Write tool after analyzing the repository. Focus on providing actionable information that would help both AI agents and human developers understand and work effectively with this codebase. Keep the files concise but informational.`;
+Please create both the AGENTS.md file and the .shadow-code/rules/review.md file using the Write tool after analyzing the repository. Focus on providing actionable information that would help both AI agents and human developers understand and work effectively with this codebase. Keep the files concise but informational.`;
 }
 
 export async function handleInit(

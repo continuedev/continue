@@ -57,8 +57,8 @@ export async function addPolicyToYaml(policyRule: string): Promise<void> {
       const yamlContent = YAML.stringify(config);
 
       // Add header comment
-      const finalContent = `# Continue CLI Permissions Configuration
-# This file is managed by the Continue CLI and should not be edited manually.
+      const finalContent = `# Shadow Code CLI Permissions Configuration
+# This file is managed by the Shadow Code CLI and should not be edited manually.
 # Use the TUI to modify permissions interactively.
 
 ${yamlContent}`;

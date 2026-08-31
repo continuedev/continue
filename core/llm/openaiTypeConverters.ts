@@ -367,6 +367,9 @@ export function fromChatCompletionChunk(
       .filter((tool_call) => !tool_call.type || tool_call.type === "function")
       .map((tool_call) => ({
         id: tool_call.id,
+        // Required to keep parallel tool calls apart: after the opening delta
+        // OpenAI identifies each call by index only, with no id.
+        index: tool_call.index,
         type: "function" as const,
         function: {
           name: (tool_call as any).function?.name,

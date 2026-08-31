@@ -56,10 +56,10 @@ export async function runOnboardingFlow(
     return false;
   }
 
-  // Step 2: Check for CONTINUE_USE_BEDROCK environment variable first (before test env check)
-  if (process.env.CONTINUE_USE_BEDROCK === "1") {
+  // Step 2: Check for SHADOW_CODE_USE_BEDROCK environment variable first (before test env check)
+  if (process.env.SHADOW_CODE_USE_BEDROCK === "1") {
     console.log(
-      chalk.blue("✓ Using AWS Bedrock (CONTINUE_USE_BEDROCK detected)"),
+      chalk.blue("✓ Using AWS Bedrock (SHADOW_CODE_USE_BEDROCK detected)"),
     );
     return true;
   }

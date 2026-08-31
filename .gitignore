@@ -143,7 +143,7 @@ continue_server.dist
 Icon
 Icon?
 
-.continuerc.json
+.shadow-coderc.json
 .aider*
 
 *.notes.md
@@ -151,7 +151,7 @@ notes.md
 *.notes.md
 
 manual-testing-sandbox/.idea/**
-manual-testing-sandbox/.continue/**
+manual-testing-sandbox/.shadow-code/**
 extensions/intellij/.idea/**
 
 **/.idea/workspace.xml
@@ -163,6 +163,7 @@ extensions/intellij/.idea/**
 
 
 extensions/intellij/bin
+extensions/.shadow-code-debug/
 extensions/.continue-debug/
 
 *.vsix
@@ -170,8 +171,8 @@ extensions/.continue-debug/
 # intellij module library files
 *.iml
 
-.continuerules
-**/.continue/assistants/
+.shadow-coderules
+**/.shadow-code/assistants/
 keys
 
 .channels_cache.json

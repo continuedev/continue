@@ -13,6 +13,7 @@ export const getBaseToolDefinitions = () => [
   toolDefinitions.lsTool,
   toolDefinitions.createRuleBlock,
   toolDefinitions.fetchUrlContentTool,
+  toolDefinitions.spawnSubagentsTool,
   toolDefinitions.shadowGetChatHistoryTool,
   toolDefinitions.shadowSearchMessagesTool,
   toolDefinitions.shadowSemanticSearchTool,

@@ -10,28 +10,33 @@ interface PendingApproval {
   toolName: string;
   displayTitle?: string;
   wouldLikeTo?: string;
+  agentLabel?: string;
   args: Record<string, unknown>;
   resolve: (approved: boolean) => void;
 }
 
 /**
- * Answers "claudeCodeCli/authorizeToolCall" requests sent by the in-core
- * shadow-code-tools MCP server (core/mcp/shadowCodeToolsServer.ts) whenever a
- * Claude Code CLI-driven tool call needs a policy decision. Reuses the same
- * evaluateToolPolicy logic and toolSettings the normal agent tool-call flow
- * uses, so a tool the user has configured as auto-approved/disabled behaves
- * identically whether it was called by the normal chat loop or by Claude
- * Code CLI. Only "allowedWithPermission" tools actually block on this
- * component's banner UI.
+ * Answers "agent/authorizeToolCall" requests, sent whenever a tool call
+ * originates somewhere other than the GUI's own streaming loop: the in-core
+ * shadow-code-tools MCP server driving Claude Code CLI
+ * (core/mcp/shadowCodeToolsServer.ts), or the subagent runner
+ * (core/agent/subagentRunner.ts). Those callers reach Core's handleToolCall
+ * directly, which executes unconditionally, so this is their equivalent of the
+ * gate the normal flow gets for free.
+ *
+ * Reuses the same evaluateToolPolicy logic and toolSettings the normal agent
+ * tool-call flow uses, so a tool the user configured as auto-approved/disabled
+ * behaves identically no matter who called it. Only "allowedWithPermission"
+ * tools actually block on this component's banner UI.
  */
-function ClaudeCodeCliApprovalGate() {
+function AgentApprovalGate() {
   const ideMessenger = useContext(IdeMessengerContext);
   const tools = useAppSelector((store) => store.config.config.tools);
   const toolPolicies = useAppSelector((store) => store.ui.toolSettings);
   const [pending, setPending] = useState<PendingApproval[]>([]);
 
   useWebviewListener(
-    "claudeCodeCli/authorizeToolCall",
+    "agent/authorizeToolCall",
     async (data) => {
       const syntheticToolCallState: ToolCallState = {
         toolCallId: data.approvalId,
@@ -70,6 +75,7 @@ function ClaudeCodeCliApprovalGate() {
             toolName: data.toolName,
             displayTitle: data.displayTitle,
             wouldLikeTo: data.wouldLikeTo,
+            agentLabel: data.agentLabel,
             args: data.args,
             resolve: (approved) => resolve({ approved }),
           },
@@ -98,7 +104,8 @@ function ClaudeCodeCliApprovalGate() {
           className="bg-vsc-editor-background border-vsc-input-border w-80 rounded-md border p-3 shadow-lg"
         >
           <div className="text-sm font-medium">
-            Claude Code wants to {p.wouldLikeTo ?? p.toolName}
+            {p.agentLabel ?? "Claude Code"} wants to{" "}
+            {p.wouldLikeTo ?? p.toolName}
           </div>
           <div className="text-description mt-1 truncate text-xs">
             {p.displayTitle ?? p.toolName}
@@ -123,4 +130,4 @@ function ClaudeCodeCliApprovalGate() {
   );
 }
 
-export default ClaudeCodeCliApprovalGate;
+export default AgentApprovalGate;

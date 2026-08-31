@@ -106,7 +106,7 @@ ${identifier}
 
 **Create the skill files**
 
-- The skills should be created under the directory: ~/.continue/skills/<skill-name>
+- The skills should be created under the directory: ~/.shadow-code/skills/<skill-name>
 - The subdirectory name should match the name of the skill directory in the fetched repository.
 - The relevant files and folders along with SKILL.md should be present inside the created skill subdirectory.
 - If the skill already exists, ask question to the user to clarify whether they want to update it.

@@ -222,7 +222,7 @@ export class ToolPermissionService
       // Normal mode: combine headless + mode policies with user configuration
       const compiledPolicies = resolvePermissionPrecedence({
         commandLineFlags: runtimeOverrides,
-        personalSettings: true, // Enable loading from ~/.continue/permissions.yaml
+        personalSettings: true, // Enable loading from ~/.shadow-code/permissions.yaml
         useDefaults: true,
         isHeadless: this.currentState.isHeadless,
       });
@@ -384,7 +384,7 @@ export class ToolPermissionService
 
     // Reload permissions from files
     const freshPolicies = resolvePermissionPrecedence({
-      personalSettings: true, // Enable loading from ~/.continue/permissions.yaml
+      personalSettings: true, // Enable loading from ~/.shadow-code/permissions.yaml
       useDefaults: true,
     });
 

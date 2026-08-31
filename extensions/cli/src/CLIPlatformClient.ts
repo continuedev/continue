@@ -61,11 +61,11 @@ export class CLIPlatformClient implements PlatformClient {
       return processEnvSecret;
     }
 
-    // Then check in priority order: ~/.continue/.env, <workspace>/.continue/.env, <workspace>/.env
+    // Then check in priority order: ~/.shadow-code/.env, <workspace>/.shadow-code/.env, <workspace>/.env
     const workspaceDir = process.cwd();
     const envPaths = [
       path.join(env.continueHome, ".env"),
-      path.join(workspaceDir, ".continue", ".env"),
+      path.join(workspaceDir, ".shadow-code", ".env"),
       path.join(workspaceDir, ".env"),
     ];
 

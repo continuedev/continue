@@ -151,7 +151,7 @@ async function package(target, os, arch, exe) {
 
     // Tutorial
     "media/move-chat-panel-right.md",
-    "continue_tutorial.py",
+    "shadow_code_tutorial.py",
     "config_schema.json",
 
     // Embeddings model

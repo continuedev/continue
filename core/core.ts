@@ -113,6 +113,15 @@ export class Core {
     this.messageAbortControllers.get(messageId)?.abort();
   }
 
+  // `tools/call` is a plain request rather than a generator, so it never gets a
+  // controller from addMessageAbortController and the GUI's `abort` message
+  // can't reach it. Long-running tools (the subagent runner especially) need
+  // their own kill switch, keyed by tool call id and driven by `tools/cancel`.
+  private toolCallAbortControllers = new Map<string, AbortController>();
+  private abortToolCall(toolCallId: string) {
+    this.toolCallAbortControllers.get(toolCallId)?.abort();
+  }
+
   invoke<T extends keyof ToCoreProtocol>(
     messageType: T,
     data: ToCoreProtocol[T][0],
@@ -135,7 +144,7 @@ export class Core {
     private readonly ide: IDE,
   ) {
     try {
-      // Ensure .continue directory is created
+      // Ensure .shadow-code directory is created
       migrateV1DevDataFiles();
 
       const ideInfoPromise = messenger.request("getIdeInfo", undefined);
@@ -147,7 +156,7 @@ export class Core {
         executeTool: (toolCall, sessionId) =>
           this.handleToolCall(toolCall, sessionId),
         requestApproval: (params) =>
-          this.messenger.request("claudeCodeCli/authorizeToolCall", params),
+          this.messenger.request("agent/authorizeToolCall", params),
       });
       setShadowCodeToolsMcpServer(this.shadowCodeToolsMcpServer);
       void this.shadowCodeToolsMcpServer.ensureStarted().catch((e) => {
@@ -884,7 +893,7 @@ export class Core {
         await this.configHandler.refreshAll("Local config file created");
       } else if (nonColocatedRuleUris.some(isContinueConfigRelatedUri)) {
         await this.configHandler.reloadConfig(
-          ".continue config-related file created",
+          ".shadow-code config-related file created",
         );
       }
     });
@@ -916,7 +925,7 @@ export class Core {
         await this.configHandler.refreshAll("Local config file deleted");
       } else if (nonColocatedRuleUris.some(isContinueConfigRelatedUri)) {
         await this.configHandler.reloadConfig(
-          ".continue config-related file deleted",
+          ".shadow-code config-related file deleted",
         );
       }
     });
@@ -1065,6 +1074,10 @@ export class Core {
       this.handleToolCall(toolCall, sessionId),
     );
 
+    on("tools/cancel", ({ data: { toolCallId } }) => {
+      this.abortToolCall(toolCallId);
+    });
+
     on(
       "tools/evaluatePolicy",
       async ({ data: { toolName, basePolicy, parsedArgs, processedArgs } }) => {
@@ -1164,7 +1177,11 @@ export class Core {
     });
   }
 
-  private async handleToolCall(toolCall: ToolCall, sessionId?: string) {
+  private async handleToolCall(
+    toolCall: ToolCall,
+    sessionId?: string,
+    subagentDepth = 0,
+  ) {
     const { config } = await this.configHandler.loadConfig();
     if (!config) {
       throw new Error("Config not loaded");
@@ -1190,20 +1207,33 @@ export class Core {
       this.messenger.send("toolCallPartialOutput", params);
     };
 
-    const result = await callTool(tool, toolCall, {
-      config,
-      ide: this.ide,
-      llm: config.selectedModelByRole.chat,
-      fetch: (url, init) =>
-        fetchwithRequestOptions(url, init, config.requestOptions),
-      tool,
-      toolCallId: toolCall.id,
-      onPartialOutput,
-      codeBaseIndexer: this.codeBaseIndexer,
-      sessionId,
-    });
+    const abortController = new AbortController();
+    if (toolCall.id) {
+      this.toolCallAbortControllers.set(toolCall.id, abortController);
+    }
 
-    return result;
+    try {
+      return await callTool(tool, toolCall, {
+        config,
+        ide: this.ide,
+        llm: config.selectedModelByRole.chat,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
+        tool,
+        toolCallId: toolCall.id,
+        onPartialOutput,
+        codeBaseIndexer: this.codeBaseIndexer,
+        sessionId,
+        signal: abortController.signal,
+        requestApproval: (params) =>
+          this.messenger.request("agent/authorizeToolCall", params),
+        subagentDepth,
+      });
+    } finally {
+      if (toolCall.id) {
+        this.toolCallAbortControllers.delete(toolCall.id);
+      }
+    }
   }
 
   private async isItemTooBig(item: ContextItemWithId) {
@@ -1302,7 +1332,7 @@ export class Core {
             "Local config-related file updated",
           );
         } else if (
-          uri.endsWith(".continueignore") ||
+          uri.endsWith(".shadow-codeignore") ||
           uri.endsWith(".gitignore")
         ) {
           // Reindex the workspaces

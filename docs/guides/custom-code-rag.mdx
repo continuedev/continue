@@ -22,7 +22,7 @@ If you use `voyage-code-3`, it has a maximum context length of 16,000 tokens, wh
 
 1. Truncate the file when it goes over the context length: in this case you will always have 1 chunk per file.
 2. Split the file into chunks of a fixed length: starting at the top of the file, add lines in your current chunk until it reaches the limit, then start a new chunk.
-3. Use a recursive, abstract syntax tree (AST)-based strategy: this is the most exact, but most complex. In most cases you can achieve high quality results by using (1) or (2), but if you'd like to try this you can find a reference example in [our code chunker](https://github.com/continuedev/continue/blob/main/core/indexing/chunk/code.ts) or in [LlamaIndex](https://docs.llamaindex.ai/en/stable/api_reference/node_parsers/code/).
+3. Use a recursive, abstract syntax tree (AST)-based strategy: this is the most exact, but most complex. In most cases you can achieve high quality results by using (1) or (2), but if you'd like to try this you can find a reference example in our code chunker or in [LlamaIndex](https://docs.llamaindex.ai/en/stable/api_reference/node_parsers/code/).
 
 As usual in this guide, we recommend starting with the strategy that gives 80% of the benefit with 20% of the effort.
 
@@ -64,7 +64,7 @@ In the beginning, you should probably run it by hand. Once you are confident tha
 
 ## Step 6: How to set up an MCP server
 
-To integrate your custom RAG system with Continue, you'll create an MCP (Model Context Protocol) server. MCP provides a standardized way for AI tools to access external resources.
+To integrate your custom RAG system with Shadow Code, you'll create an MCP (Model Context Protocol) server. MCP provides a standardized way for AI tools to access external resources.
 
 ### Create your MCP server
 
@@ -96,7 +96,7 @@ async def search_codebase(query: str, limit: int = 10) -> list[TextContent]:
     # Query your vector database
     results = table.search(query).limit(limit).to_list()
     
-    # Format results for Continue
+    # Format results for Shadow Code
     formatted_results = []
     for result in results:
         formatted_results.append(TextContent(
@@ -125,9 +125,9 @@ if __name__ == "__main__":
     stdio_server(app).run()
 ```
 
-### Configure Continue to use your MCP server
+### Configure Shadow Code to use your MCP server
 
-Add your MCP server to Continue's configuration:
+Add your MCP server to Shadow Code's configuration:
 
 **config.yaml:**
 ```yaml

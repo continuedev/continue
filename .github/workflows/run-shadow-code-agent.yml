@@ -19,7 +19,7 @@ on:
         type: string
         default: "main"
     secrets:
-      CONTINUE_API_KEY:
+      SHADOW_CODE_API_KEY:
         required: true
 
 jobs:
@@ -33,7 +33,7 @@ jobs:
           AGENT: ${{ inputs.agent }}
           BRANCH_NAME: ${{ inputs.branch_name }}
           REPO_URL: https://github.com/${{ github.repository }}
-          CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
+          SHADOW_CODE_API_KEY: ${{ secrets.SHADOW_CODE_API_KEY }}
         run: |
           # Use jq to properly construct JSON with safe escaping
           json_body=$(jq -n \
@@ -45,7 +45,7 @@ jobs:
 
           response=$(curl -f -X POST https://api.continue.dev/agents \
             -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $CONTINUE_API_KEY" \
+            -H "Authorization: Bearer $SHADOW_CODE_API_KEY" \
             -d "$json_body")
           id=$(echo $response | jq -r '.id')
           echo "https://continue.dev/hub?type=agents/$id"

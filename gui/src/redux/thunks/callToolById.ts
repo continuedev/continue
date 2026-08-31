@@ -7,6 +7,7 @@ import { callClientTool } from "../../util/clientTools/callClientTool";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   acceptToolCall,
+  cancelToolCall,
   errorToolCall,
   setInactive,
   setToolCallCalling,
@@ -118,6 +119,22 @@ export const callToolById = createAsyncThunk<
         mcpUiState,
       }),
     );
+  }
+
+  // The user may have pressed Stop while the tool was running. Core has already
+  // been told to abort it (see cancelStream -> "tools/cancel"), but this thunk
+  // is still holding a resolved result: without this guard it would fall
+  // through to streamResponseAfterToolCall -> streamNormalInput, whose
+  // dispatch(setActive()) silently restarts generation right after the user
+  // cancelled it.
+  const stateAfterTool = getState();
+  if (
+    stateAfterTool.session.streamAborter.signal.aborted ||
+    !stateAfterTool.session.isStreaming
+  ) {
+    dispatch(cancelToolCall({ toolCallId }));
+    dispatch(setInactive());
+    return;
   }
 
   if (streamResponse) {

@@ -268,7 +268,7 @@ class DiffStreamHandler(
         if (editor.document.lineCount == 0) return
 
         val editorUtils = EditorUtils(editor)
-        val unfinishedKey = editorUtils.createTextAttributesKey("CONTINUE_DIFF_UNFINISHED_LINE", 0x20888888)
+        val unfinishedKey = editorUtils.createTextAttributesKey("SHADOW_CODE_DIFF_UNFINISHED_LINE", 0x20888888)
 
         for (i in startLine..endLine) {
             val highlighter = editor.markupModel.addLineHighlighter(
@@ -358,7 +358,7 @@ class DiffStreamHandler(
 
     private fun updateProgressHighlighters(type: DiffLineType) {
         val editorUtils = EditorUtils(editor)
-        val curLineKey = editorUtils.createTextAttributesKey("CONTINUE_DIFF_CURRENT_LINE", 0x40888888)
+        val curLineKey = editorUtils.createTextAttributesKey("SHADOW_CODE_DIFF_CURRENT_LINE", 0x40888888)
 
         // Update the highlighter to show the current line
         curLine.highlighter?.let { editor.markupModel.removeHighlighter(it) }

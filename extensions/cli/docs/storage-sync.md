@@ -9,7 +9,7 @@ This document captures the responsibilities for both the CLI and backend compone
 ## CLI Responsibilities
 
 - **Flag plumbing**: When `cn serve` is invoked with `--id <storageId>`, the CLI treats that value as an opaque identifier.
-- **API key auth**: The CLI attaches the user-level Continue API key (same mechanism we already use for other authenticated requests) to backend calls.
+- **API key auth**: The CLI attaches the user-level Shadow Code API key (same mechanism we already use for other authenticated requests) to backend calls.
 - **Presign handshake**:
   1. On startup, issue `POST https://api.continue.dev/agents/storage/presigned-url` with JSON payload `{ "storageId": "<storageId>" }`.
   2. Expect a response payload containing two pre-signed `PUT` URLs and their target object keys:
@@ -35,7 +35,7 @@ This document captures the responsibilities for both the CLI and backend compone
 ## Backend Responsibilities
 
 - **Endpoint surface**: `POST /agents/storage/presigned-url` accepts a JSON body `{ "storageId": string }`.
-- **Authentication**: Leverage the caller's Continue API key (the request arrives with the standard `Authorization: Bearer <apiKey>` header). Apply normal auth/tenant validation so users can only request URLs tied to their account/org.
+- **Authentication**: Leverage the caller's Shadow Code API key (the request arrives with the standard `Authorization: Bearer <apiKey>` header). Apply normal auth/tenant validation so users can only request URLs tied to their account/org.
 - **URL issuance**:
   - Resolve `storageId` into the desired S3 prefix (e.g., `sessions/<org>/<storageId>/`).
   - Generate two short-lived pre-signed `PUT` URLs: one for `session.json`, one for `diff.txt`.

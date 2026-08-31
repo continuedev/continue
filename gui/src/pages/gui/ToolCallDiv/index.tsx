@@ -8,6 +8,7 @@ import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
 import { McpAppRenderer } from "./MCPAppRenderer";
 import { SimpleToolCallUI } from "./SimpleToolCallUI";
+import { SubagentToolCall } from "./SubagentToolCall";
 import { ToolCallDisplay } from "./ToolCallDisplay";
 import { getIconByName, getStatusIcon } from "./utils";
 
@@ -66,6 +67,17 @@ export function ToolCallDiv({
           tool={tool}
           toolCallState={toolCallState}
           icon={toolCallState.status === "generated" ? ArrowRightIcon : icon}
+          historyIndex={historyIndex}
+        />
+      );
+    }
+
+    // Subagents render their own live per-task cards rather than a generic
+    // args/output pair - the output is one ContextItem per delegated task.
+    if (functionName === BuiltInToolNames.SpawnSubagents) {
+      return (
+        <SubagentToolCall
+          toolCallState={toolCallState}
           historyIndex={historyIndex}
         />
       );

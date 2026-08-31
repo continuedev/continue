@@ -15,7 +15,7 @@ There is a default set of permissions for the builtin tools in [`src/permissions
 1. **Mode policies** (highest priority - see [modes.md](./modes.md))
 2. Command line flags (`--allow`, `--ask`, `--exclude`)
 3. Permissions in `config.yaml` / configuration
-4. Permissions in `~/.continue/permissions.yaml`
+4. Permissions in `~/.shadow-code/permissions.yaml`
 5. Default policies
 
 **Note:** Mode policies **completely override all other permission settings** in plan and auto modes. Available modes:
@@ -70,11 +70,11 @@ permissions:
     - Write
 ```
 
-## `~/.continue/permissions.yaml` (personal settings)
+## `~/.shadow-code/permissions.yaml` (personal settings)
 
 It would be frustrating for users to have to set the same permissions across all of their assistants, so we provide them a file for personal settings. It should be basically equivalent to the `permissions` section of `config.yaml`:
 
-```yaml title="~/.continue/permissions.yaml"
+```yaml title="~/.shadow-code/permissions.yaml"
 allow:
   - Read(*)
 

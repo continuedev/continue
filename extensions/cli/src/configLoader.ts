@@ -302,7 +302,7 @@ async function loadUserAssistantWithFallback(
 }
 
 /**
- * Loads default config.yaml from ~/.continue/config.yaml
+ * Loads default config.yaml from ~/.shadow-code/config.yaml
  */
 async function loadLocalConfigYaml(
   accessToken: string | null,

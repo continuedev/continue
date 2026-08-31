@@ -14,14 +14,14 @@ const DEFAULT_READ_FILE_MAX_LINES = 5000;
 
 function getReadFileMaxChars(): number {
   return parseEnvNumber(
-    process.env.CONTINUE_CLI_READ_FILE_MAX_OUTPUT_CHARS,
+    process.env.SHADOW_CODE_CLI_READ_FILE_MAX_OUTPUT_CHARS,
     DEFAULT_READ_FILE_MAX_CHARS,
   );
 }
 
 function getReadFileMaxLines(): number {
   return parseEnvNumber(
-    process.env.CONTINUE_CLI_READ_FILE_MAX_OUTPUT_LINES,
+    process.env.SHADOW_CODE_CLI_READ_FILE_MAX_OUTPUT_LINES,
     DEFAULT_READ_FILE_MAX_LINES,
   );
 }

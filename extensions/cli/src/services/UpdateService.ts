@@ -54,7 +54,7 @@ export class UpdateService extends BaseService<UpdateServiceState> {
       if (this.currentState.currentVersion === "0.0.0-dev") {
         this.setState({
           status: UpdateStatus.IDLE,
-          message: `Continue CLI`,
+          message: `Shadow Code CLI`,
         });
         return; // Uncomment to test auto-update behavior in dev
       }
@@ -73,7 +73,7 @@ export class UpdateService extends BaseService<UpdateServiceState> {
       if (!latestVersion) {
         this.setState({
           status: UpdateStatus.IDLE,
-          message: "Continue CLI",
+          message: "Shadow Code CLI",
           isUpdateAvailable: false,
         });
         return;
@@ -93,7 +93,7 @@ export class UpdateService extends BaseService<UpdateServiceState> {
         autoUpdate &&
         isUpdateAvailable &&
         this.currentState.status !== "updating" &&
-        !process.env.CONTINUE_CLI_AUTO_UPDATED //Already auto updated, preventing sequential auto-update
+        !process.env.SHADOW_CODE_CLI_AUTO_UPDATED //Already auto updated, preventing sequential auto-update
       ) {
         await this.performUpdate(true);
       } else {
@@ -101,7 +101,7 @@ export class UpdateService extends BaseService<UpdateServiceState> {
           status: UpdateStatus.IDLE,
           message: isUpdateAvailable
             ? `Update available: v${latestVersion}`
-            : `Continue CLI v${this.currentState.currentVersion}`,
+            : `Shadow Code CLI v${this.currentState.currentVersion}`,
           isUpdateAvailable,
           latestVersion,
         });
@@ -110,7 +110,7 @@ export class UpdateService extends BaseService<UpdateServiceState> {
       logger.error("Error checking for updates:", error);
       this.setState({
         status: UpdateStatus.ERROR,
-        message: `Continue CLI v${this.currentState.currentVersion}`,
+        message: `Shadow Code CLI v${this.currentState.currentVersion}`,
         error,
       });
     }
@@ -220,7 +220,7 @@ export class UpdateService extends BaseService<UpdateServiceState> {
         stdio: "inherit",
         env: {
           ...process.env,
-          CONTINUE_CLI_AUTO_UPDATED: "true",
+          SHADOW_CODE_CLI_AUTO_UPDATED: "true",
         },
       });
 

@@ -22,7 +22,7 @@ import { localPathToUri } from "../../../util/pathToUri";
 import { getUriPathBasename, joinPathsToUri } from "../../../util/uri";
 
 /**
- * Loads MCP configs from JSON files in ~/.continue/mcpServers and workspace .continue/mcpServers
+ * Loads MCP configs from JSON files in ~/.shadow-code/mcpServers and workspace .shadow-code/mcpServers
  */
 export async function loadJsonMcpConfigs(
   ide: IDE,
@@ -37,7 +37,7 @@ export async function loadJsonMcpConfigs(
   // Get dirs
   const workspaceDirs = await ide.getWorkspaceDirs();
   const mcpDirs = workspaceDirs.map((dir) =>
-    joinPathsToUri(dir, ".continue", "mcpServers"),
+    joinPathsToUri(dir, ".shadow-code", "mcpServers"),
   );
   if (includeGlobal) {
     mcpDirs.push(localPathToUri(getGlobalFolderWithName("mcpServers")));

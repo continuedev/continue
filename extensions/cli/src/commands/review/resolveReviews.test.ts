@@ -41,12 +41,12 @@ describe("resolveReviews local discovery", () => {
     vi.restoreAllMocks();
   });
 
-  it("discovers files from .continue/agents/", async () => {
+  it("discovers files from .shadow-code/agents/", async () => {
     vi.mocked(fs.existsSync).mockImplementation((p) => {
-      return p === path.join("/test/repo", ".continue", "agents");
+      return p === path.join("/test/repo", ".shadow-code", "agents");
     });
     vi.mocked(fs.readdirSync).mockImplementation(((p: fs.PathLike) => {
-      if (p === path.join("/test/repo", ".continue", "agents")) {
+      if (p === path.join("/test/repo", ".shadow-code", "agents")) {
         return ["security-review.md", "style-check.md"];
       }
       return [];
@@ -59,12 +59,12 @@ describe("resolveReviews local discovery", () => {
     expect(reviews[0].source).toContain("agents");
   });
 
-  it("discovers files from .continue/checks/", async () => {
+  it("discovers files from .shadow-code/checks/", async () => {
     vi.mocked(fs.existsSync).mockImplementation((p) => {
-      return p === path.join("/test/repo", ".continue", "checks");
+      return p === path.join("/test/repo", ".shadow-code", "checks");
     });
     vi.mocked(fs.readdirSync).mockImplementation(((p: fs.PathLike) => {
-      if (p === path.join("/test/repo", ".continue", "checks")) {
+      if (p === path.join("/test/repo", ".shadow-code", "checks")) {
         return ["anti-slop.md"];
       }
       return [];

@@ -88,14 +88,14 @@ const DEFAULT_SEARCH_MAX_RESULT_CHARS = 1000; // Max chars per result line
 
 function getSearchMaxResults(): number {
   return parseEnvNumber(
-    process.env.CONTINUE_CLI_SEARCH_CODE_MAX_RESULTS,
+    process.env.SHADOW_CODE_CLI_SEARCH_CODE_MAX_RESULTS,
     DEFAULT_SEARCH_MAX_RESULTS,
   );
 }
 
 function getSearchMaxResultChars(): number {
   return parseEnvNumber(
-    process.env.CONTINUE_CLI_SEARCH_CODE_MAX_RESULT_CHARS,
+    process.env.SHADOW_CODE_CLI_SEARCH_CODE_MAX_RESULT_CHARS,
     DEFAULT_SEARCH_MAX_RESULT_CHARS,
   );
 }

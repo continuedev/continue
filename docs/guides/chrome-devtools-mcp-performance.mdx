@@ -22,7 +22,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
   - [Performance Insights](https://developer.chrome.com/docs/devtools/performance-insights) with AI-powered analysis
   - [Screenshot Debugging](https://developer.chrome.com/docs/devtools/device-mode) for visual regression detection
 
-This guide shows you how to leverage these features through natural language with Continue CLI!
+This guide shows you how to leverage these features through natural language with Shadow Code CLI!
 
 </Info>
 
@@ -41,14 +41,14 @@ This cookbook teaches you to:
 - Chrome browser installed
 - Web project with a running development server (or deployed URL)
 - Node.js 20+ installed
-- [Continue CLI](https://docs.continue.dev/guides/cli)
-- [Chrome DevTools MCP](https://continue.dev) configured
+- Shadow Code CLI
+- [Chrome DevTools MCP]() configured
 
 ## Quick Setup
 
 For all options, first:
 <Steps>
-<Step title="Install Continue CLI">
+<Step title="Install Shadow Code CLI">
     <CLIInstall />
   </Step>
 </Steps>
@@ -77,7 +77,7 @@ After completing **Quick Setup** above, you have two paths to get started:
         This agent includes:
         - **Optimized prompts** for performance analysis and debugging
         - **Built-in rules** for consistent formatting and error handling
-        - **[Chrome DevTools MCP](https://continue.dev/google/chrome-devtools-mcp)** for reliable browser automation
+        - **Chrome DevTools MCP** for reliable browser automation
       </Step>
 
       <Step title="Run Performance Analysis">
@@ -142,7 +142,7 @@ After completing **Quick Setup** above, you have two paths to get started:
 
 <Accordion title="Agent Requirements">
     To use the pre-built agent, you need either:
-      - **Continue CLI Pro Plan** with the models add-on, OR
+      - **Shadow Code CLI Pro Plan** with the models add-on, OR
       - **Your own API keys** configured as environment variables
       - **Chrome browser** installed on your system
       - **Node.js 20+** to run the MCP via npx
@@ -204,11 +204,11 @@ Please check the LCP of web.dev.
 
 ## Performance Analysis Recipes
 
-Now you can use natural language prompts to analyze web performance. The Continue agent automatically calls the appropriate Chrome DevTools MCP tools.
+Now you can use natural language prompts to analyze web performance. The Shadow Code agent automatically calls the appropriate Chrome DevTools MCP tools.
 
 <Info>
   **Where to run these workflows:**
-  - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
+  - **IDE Extensions**: Use Shadow Code in VS Code, JetBrains, or other supported IDEs
   - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
   - **CLI (headless mode)**: Use `cn -p "your prompt"` for headless commands
 
@@ -401,11 +401,11 @@ This example demonstrates a **Continuous AI workflow** where performance validat
 
 Navigate to **Repository Settings → Secrets and variables → Actions** and add:
 
-- `CONTINUE_API_KEY`: Your Continue API key from [continue.dev/settings/api-keys](https://continue.dev/settings/api-keys)
+- `CONTINUE_API_KEY`: Your Shadow Code API key from continue.dev/settings/api-keys
 
 ### Create Workflow File
 
-This workflow automatically validates web performance on pull requests using the Continue CLI in headless mode. It records performance traces, extracts Core Web Vitals, and posts a summary report as a PR comment.
+This workflow automatically validates web performance on pull requests using the Shadow Code CLI in headless mode. It records performance traces, extracts Core Web Vitals, and posts a summary report as a PR comment.
 
 Create `.github/workflows/performance-check.yml` in your repository:
 
@@ -789,8 +789,8 @@ Set up automated regression detection:
   <Card title="Chrome DevTools MCP" icon="plug" href="https://github.com/ChromeDevTools/chrome-devtools-mcp">
     Official Chrome DevTools MCP repository
   </Card>
-  <Card title="Continue Documentation" icon="book" href="https://docs.continue.dev">
-    Explore Continue documentation and guides
+  <Card title="Shadow Code Documentation" icon="book" href="https://docs.continue.dev">
+    Explore Shadow Code documentation and guides
   </Card>
   <Card title="DevTools Documentation" icon="book" href="https://developer.chrome.com/docs/devtools">
     Complete Chrome DevTools documentation

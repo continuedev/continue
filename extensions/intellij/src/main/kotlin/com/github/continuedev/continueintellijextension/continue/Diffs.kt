@@ -25,7 +25,7 @@ import javax.swing.JComponent
 
 fun getDiffDirectory(): File {
     val homeDirectory = System.getProperty("user.home")
-    val diffDirPath = Paths.get(homeDirectory).resolve(".continue").resolve(".diffs").toString()
+    val diffDirPath = Paths.get(homeDirectory).resolve(".shadow-code").resolve(".diffs").toString()
     val diffDir = File(diffDirPath)
     if (!diffDir.exists()) {
         diffDir.mkdirs()
@@ -116,7 +116,7 @@ class DiffManager(private val project: Project) : DumbAware {
         val content2: DiffContent = DiffContentFactory.getInstance().create(UriUtils.uriToFile(file2).readText())
 
         // Create a SimpleDiffRequest and populate it with the DiffContents and titles
-        val diffRequest = SimpleDiffRequest("Continue Diff", content1, content2, "Old", "New")
+        val diffRequest = SimpleDiffRequest("Shadow Code Diff", content1, content2, "Old", "New")
 
         // Get a DiffRequestPanel from the DiffManager and set the DiffRequest to it
         val diffInfo = diffInfoMap[file2]
@@ -147,7 +147,7 @@ class DiffManager(private val project: Project) : DumbAware {
                     ?: object : DialogWrapper(project, true, IdeModalityType.MODELESS) {
                         init {
                             init()
-                            title = "Continue Diff"
+                            title = "Shadow Code Diff"
                         }
 
                         override fun createCenterPanel(): JComponent? {

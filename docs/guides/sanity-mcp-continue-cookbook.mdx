@@ -1,7 +1,7 @@
 ---
-title: "Content Management with Sanity MCP and Continue"
+title: "Content Management with Sanity MCP and Shadow Code"
 description: "Set up an AI-powered content management workflow that helps you manage schemas, run GROQ queries, handle documentation, and perform migrations using natural language commands."
-sidebarTitle: "Sanity CMS with Continue"
+sidebarTitle: "Sanity CMS with Shadow Code"
 ---
 
 import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
@@ -10,7 +10,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
 <OSAutoDetect />
 
 <Card title="What You'll Build" icon="database">
-  An AI-powered content management system workflow that uses Continue's AI agent with Sanity
+  An AI-powered content management system workflow that uses Shadow Code's AI agent with Sanity
   MCP to manage schemas, execute GROQ queries, handle migrations, and maintain documentation - all through simple natural language prompts
 </Card>
 
@@ -24,7 +24,7 @@ Before starting, ensure you have:
 
 For all options, first:
 <Steps>
-<Step title="Install Continue CLI">
+<Step title="Install Shadow Code CLI">
     <CLIInstall />
   </Step>
 
@@ -35,7 +35,7 @@ For all options, first:
   </Step>
 </Steps>
  <Warning>
-  To use agents in headless mode, you need a [Continue API key](https://continue.dev/settings/api-keys) and proper environment variable configuration.
+  To use agents in headless mode, you need a Shadow Code API key and proper environment variable configuration.
   </Warning>
 
 ## Getting Started with Sanity
@@ -80,7 +80,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
         ```
 
         This agent includes:
-        - **[Sanity MCP](https://continue.dev/sanity/sanity-mcp)** pre-configured and ready to use
+        - **Sanity MCP** pre-configured and ready to use
         - **Content management rules** for best practices
         - **Schema optimization** guidelines
       </Step>
@@ -104,14 +104,14 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
     </Steps>
 
     <Info>
-      **Why Use the Agent?** The pre-built Sanity Assistant agent provides consistent content management workflows and handles MCP configuration automatically, making it easier to get started with AI-powered CMS operations. Results are more consistent and debugging is easier thanks to the [Sanity MCP](https://continue.dev/sanity/sanity-mcp) integration and pre-tested prompts.
+      **Why Use the Agent?** The pre-built Sanity Assistant agent provides consistent content management workflows and handles MCP configuration automatically, making it easier to get started with AI-powered CMS operations. Results are more consistent and debugging is easier thanks to the Sanity MCP integration and pre-tested prompts.
     </Info>
 
   </Tab>
 
   <Tab title="🛠️ Manual Setup">
 <Steps>
-  <Step title="Add Sanity MCP to Continue CLI">
+  <Step title="Add Sanity MCP to Shadow Code CLI">
     Add the Sanity MCP to your configuration:
 
     <Tip>
@@ -119,7 +119,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
       1. **Quick CLI install**: `cn --mcp sanity/sanity-mcp`
       2. **Manual configuration**: Add the MCP to your agent configuration
 
-      Once installed, Sanity MCP tools become available to your Continue agent for all prompts.
+      Once installed, Sanity MCP tools become available to your Shadow Code agent for all prompts.
     </Tip>
 
     <Info>
@@ -149,7 +149,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
 <Accordion title="Agent Requirements">
     To use the pre-built Sanity Assistant agent, you need either:
-      - **Continue CLI Pro Plan** with the models add-on, OR
+      - **Shadow Code CLI Pro Plan** with the models add-on, OR
       - **Your own API keys** configured as environment variables
 
     The agent will automatically detect and use your configuration along with the pre-configured Sanity MCP for content operations. Note that OAuth authentication will be required on first use.
@@ -208,11 +208,11 @@ With everything set up, you're ready for your first AI-powered content conversat
 
 ## Content Management Recipes
 
-Now you can use natural language prompts to manage your Sanity content and schemas. The Continue agent automatically calls the appropriate Sanity MCP tools.
+Now you can use natural language prompts to manage your Sanity content and schemas. The Shadow Code agent automatically calls the appropriate Sanity MCP tools.
 
 <Info>
   **Where to run these workflows:**
-  - **IDE Extensions**: Use Continue in VS Code, JetBrains, or other supported IDEs
+  - **IDE Extensions**: Use Shadow Code in VS Code, JetBrains, or other supported IDEs
   - **Terminal (TUI mode)**: Run `cn` to enter interactive mode, then type your prompts
   - **CLI (headless mode)**: Use `cn -p "your prompt"` for headless commands
 
@@ -342,19 +342,19 @@ suggest optimizations to improve response times.
 
 Navigate to **Repository Settings → Secrets and variables → Actions** and add:
 
-- `CONTINUE_API_KEY`: Your Continue API key from [continue.dev/settings/api-keys](https://continue.dev/settings/api-keys)
+- `CONTINUE_API_KEY`: Your Shadow Code API key from continue.dev/settings/api-keys
 - `SANITY_PROJECT_ID`: Your Sanity project ID
 - `SANITY_DATASET`: Your Sanity dataset name (usually "production")
 - `SANITY_API_TOKEN`: Your Sanity API token with appropriate permissions
 - `MCP_USER_ROLE`: Your MCP user role (typically "admin" or "editor")
 
 <Info>
-  The workflow uses the [Sanity Assistant Agent](https://continue.dev/continuedev/sanity-assistant-agent) with environment variable authentication via [Sanity MCP Config](https://continue.dev/sanity/sanity-mcp-config). This enables headless mode operation without OAuth browser authentication.
+  The workflow uses the Sanity Assistant Agent with environment variable authentication via Sanity MCP Config. This enables headless mode operation without OAuth browser authentication.
 </Info>
 
 ### Create Workflow File
 
-This workflow automatically validates your Sanity schemas and content on pull requests using the Continue CLI in [headless mode](/cli/headless-mode). It checks schema integrity, validates content relationships, and posts a summary report as a PR comment.
+This workflow automatically validates your Sanity schemas and content on pull requests using the Shadow Code CLI in [headless mode](/cli/headless-mode). It checks schema integrity, validates content relationships, and posts a summary report as a PR comment.
 
 Create `.github/workflows/sanity-content-validation.yml` in your repository:
 
@@ -389,10 +389,10 @@ jobs:
           npm install -g @sanity/cli
           echo "✅ Sanity CLI installed"
 
-      - name: Install Continue CLI
+      - name: Install Shadow Code CLI
         run: |
           npm install -g @continuedev/cli
-          echo "✅ Continue CLI installed"
+          echo "✅ Shadow Code CLI installed"
 
       - name: Validate Schema Structure
         run: |
@@ -435,12 +435,12 @@ jobs:
 ```
 
 <Info>
-  Environment variables enable the MCP to authenticate without OAuth browser prompts. The [Sanity MCP Config](https://continue.dev/sanity/sanity-mcp-config) documentation provides detailed setup instructions for all required variables.
+  Environment variables enable the MCP to authenticate without OAuth browser prompts. The Sanity MCP Config documentation provides detailed setup instructions for all required variables.
 </Info>
 
 ## Content Management Best Practices
 
-Implement automated content quality checks using Continue's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
+Implement automated content quality checks using Shadow Code's rule system. See the [Rules deep dive](/customize/deep-dives/rules) for authoring tips.
 
 <Card title="Schema Validation" icon="check-circle">
   ```bash
@@ -533,8 +533,8 @@ After completing this guide, you have a complete **AI-powered content management
   <Card title="Sanity Documentation" icon="book" href="https://www.sanity.io/docs">
     Complete Sanity platform documentation
   </Card>
-  <Card title="Continue Documentation" icon="book" href="https://docs.continue.dev">
-    Explore Continue documentation and guides
+  <Card title="Shadow Code Documentation" icon="book" href="https://docs.continue.dev">
+    Explore Shadow Code documentation and guides
   </Card>
   <Card
     title="GROQ Documentation"

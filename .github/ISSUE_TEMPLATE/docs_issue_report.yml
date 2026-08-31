@@ -11,10 +11,7 @@ body:
         We appreciate your feedback. Before submitting, please check if a similar issue already exists.
 
         ### Quick Contribution Tips:
-        - Click "Edit this page" at the bottom of any page on [docs.continue.dev](https://docs.continue.dev) to contribute directly.
-        - For local development, see [CONTRIBUTING.md](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md#-updating--improving-documentation).
-
-  - type: dropdown
+        - type: dropdown
     id: doc-issue-category
     attributes:
       label: Issue Category
@@ -34,7 +31,7 @@ body:
     attributes:
       label: Affected Documentation Page URL
       description: Provide the URL of the specific page where you encountered the issue.
-      placeholder: "https://docs.continue.dev/path/to/page"
+      placeholder: "path/to/page"
     validations:
       required: false
 

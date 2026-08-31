@@ -43,10 +43,7 @@ export const FatalErrorIndicator = () => {
       <div className="mt-2 flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5">
         <div
           onClick={() => {
-            ideMessenger.post(
-              "openUrl",
-              "https://docs.continue.dev/troubleshooting",
-            );
+            ideMessenger.post("openUrl", "");
           }}
           className="cursor-pointer underline"
         >

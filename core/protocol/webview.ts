@@ -42,10 +42,15 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   sessionUpdate: [{ sessionInfo: any | undefined }, void];
   toolCallPartialOutput: [{ toolCallId: string; contextItems: any[] }, void];
 
-  // Sent by the in-process shadow-code-tools MCP server (core/mcp/shadowCodeToolsServer.ts)
-  // when a Claude Code CLI-driven tool call needs approval per the same policy rules
-  // that gate normal tool calls. Blocks until the user accepts/rejects in the GUI.
-  "claudeCodeCli/authorizeToolCall": [
+  // Sent whenever a tool call originates somewhere other than the GUI's own
+  // streaming loop - the in-process shadow-code-tools MCP server driving the
+  // Claude Code CLI (core/mcp/shadowCodeToolsServer.ts), or the subagent runner
+  // (core/agent/subagentRunner.ts). Those callers reach Core's handleToolCall
+  // directly, which executes unconditionally, so this is their equivalent of
+  // the GUI's normal policy gate. Blocks until the user accepts/rejects when
+  // the resolved policy is allowedWithPermission; resolves immediately
+  // otherwise.
+  "agent/authorizeToolCall": [
     {
       approvalId: string;
       toolCallId: string;
@@ -54,6 +59,8 @@ export type ToWebviewFromIdeOrCoreProtocol = {
       args: Record<string, unknown>;
       displayTitle?: string;
       wouldLikeTo?: string;
+      /** Which agent is asking, e.g. a subagent's task description. */
+      agentLabel?: string;
     },
     { approved: boolean },
   ];

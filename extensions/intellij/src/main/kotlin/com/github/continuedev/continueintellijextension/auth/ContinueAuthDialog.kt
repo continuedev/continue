@@ -18,7 +18,7 @@ class ContinueAuthDialog(
 
     init {
         init()
-        title = "Continue authentication"
+        title = "Shadow Code authentication"
     }
 
     override fun createCenterPanel(): JComponent {

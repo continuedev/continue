@@ -1,6 +1,6 @@
 # Test Helpers
 
-This directory contains helper functions for testing the Continue CLI.
+This directory contains helper functions for testing the Shadow Code CLI.
 
 ## Mock LLM Server
 

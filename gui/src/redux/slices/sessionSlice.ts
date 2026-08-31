@@ -127,8 +127,17 @@ function applyToolCallDelta(
     existingStateIndex = toolCallStates.findIndex(
       (state) => state.toolCallId === toolCallDelta.id,
     );
+  } else if (typeof toolCallDelta.index === "number") {
+    // No ID, but an index (the normal OpenAI streaming shape: the id appears
+    // only on the delta that opens each call, and every argument fragment
+    // afterwards carries just an index). Routing by index is what keeps
+    // parallel tool calls apart - falling back to "most recently added" here
+    // merges them all into whichever call opened last.
+    existingStateIndex = toolCallStates.findIndex(
+      (state) => state.streamIndex === toolCallDelta.index,
+    );
   } else {
-    // No ID in delta (common in OpenAI streaming fragments)
+    // Neither id nor index (some providers stream bare fragments).
     // Strategy: Update the most recently added tool call that's still being generated
     // This handles the pattern: initial tool call with ID, then fragments without ID
     existingStateIndex = toolCallStates.length - 1;
@@ -300,12 +309,17 @@ export const sessionSlice = createSlice({
         );
         if (message.message.content || hasGeneratedMsg) {
           validAssistantMessageIdx = i;
-          // Cancel any tool calls that are dangling and generated
+          // Cancel any tool calls that are dangling and generated.
+          // "calling" is included: Core has been asked to abort them (see the
+          // cancelStream thunk), and leaving them mid-flight is what previously
+          // let a cancelled run resume - callToolById would resolve later and
+          // restart the agent loop.
           if (message.toolCallStates) {
             message.toolCallStates.forEach((toolCallState) => {
               if (
                 toolCallState.status === "generated" ||
-                toolCallState.status === "generating"
+                toolCallState.status === "generating" ||
+                toolCallState.status === "calling"
               ) {
                 toolCallState.status = "canceled";
               }

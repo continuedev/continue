@@ -3,8 +3,8 @@ import { vi } from "vitest";
 import { resetConsoleOverrides } from "./src/init.js";
 
 // Disable telemetry for tests
-process.env.CONTINUE_CLI_ENABLE_TELEMETRY = "0";
-process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY = "0";
+process.env.SHADOW_CODE_CLI_ENABLE_TELEMETRY = "0";
+process.env.SHADOW_CODE_ALLOW_ANONYMOUS_TELEMETRY = "0";
 
 // Mock fetch to prevent actual API calls in tests
 const originalFetch = global.fetch;
@@ -58,7 +58,7 @@ vi.mock("./src/systemMessage.js", () => ({
   loadMarkdownRulesWithMetadata: vi.fn().mockReturnValue([]),
 }));
 
-// NOTE: CONTINUE_GLOBAL_DIR is set to a unique per-worker temp dir in
+// NOTE: SHADOW_CODE_GLOBAL_DIR is set to a unique per-worker temp dir in
 // ./vitest.global-dir-setup.ts (which runs first) to isolate the shared
 // GlobalContext store across parallel test files. Do not override it here.
 

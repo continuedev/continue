@@ -6,7 +6,7 @@ describe("Local Config Switching Investigation", () => {
 
     const configTypes = {
       localFilePaths: [
-        "~/.continue/config.yaml",
+        "~/.shadow-code/config.yaml",
         "./config.yaml",
         "/absolute/path/to/config.yaml",
       ],
@@ -51,20 +51,20 @@ describe("Local Config Switching Investigation", () => {
       {
         name: "Remote to Local switching",
         from: "continuedev/default-cli-config",
-        to: "~/.continue/config.yaml",
+        to: "~/.shadow-code/config.yaml",
         works: false, // This is the reported issue
         reason: "UNKNOWN - this is what we need to debug",
       },
       {
         name: "Local to Remote switching",
-        from: "~/.continue/config.yaml",
+        from: "~/.shadow-code/config.yaml",
         to: "continuedev/default-cli-config",
         works: false, // Likely also broken
         reason: "UNKNOWN - probably same root cause",
       },
       {
         name: "Local to Local switching",
-        from: "~/.continue/config.yaml",
+        from: "~/.shadow-code/config.yaml",
         to: "./other-config.yaml",
         works: false, // Likely also broken
         reason: "UNKNOWN - probably same root cause",

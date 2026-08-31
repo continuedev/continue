@@ -2,7 +2,7 @@
 title: "TUI Mode"
 ---
 
-Run `cn` to start an interactive session. You get a prompt where you can type messages, reference files with `@`, and use slash commands. `cn` uses the same underlying agent as the Continue IDE extensions.
+Run `cn` to start an interactive session. You get a prompt where you can type messages, reference files with `@`, and use slash commands. `cn` uses the same underlying agent as the Shadow Code IDE extensions.
 
 <Frame>
   <img src="/images/cn-demo.gif" />
@@ -30,7 +30,7 @@ Type `/` to see available commands. Run `/help` for the full list.
 | `/clear` | Clear the chat history |
 | `/login` | Authenticate with your account |
 | `/logout` | Sign out of your current session |
-| `/update` | Update the Continue CLI |
+| `/update` | Update the Shadow Code CLI |
 | `/whoami` | Check who you're currently logged in as |
 | `/info` | Show session information, including token usage and cost |
 | `/model` | Switch between configured chat models |
@@ -45,7 +45,7 @@ Type `/` to see available commands. Run `/help` for the full list.
 | `/exit` | Exit the chat |
 | `/jobs` | List background jobs |
 
-When you're connected to a remote environment, Continue also adds remote-only slash commands such as `/diff` and `/apply`.
+When you're connected to a remote environment, Shadow Code also adds remote-only slash commands such as `/diff` and `/apply`.
 
 ## Resume previous sessions
 
@@ -76,8 +76,8 @@ This is useful when the agent needs decisions like scope, preferences, or enviro
 
 Tools that can modify your system (file writes, terminal commands) prompt for approval before executing. You get three options:
 
-- **Continue** — approve this call
-- **Continue + don't ask again** — approve and save a policy rule to `~/.continue/permissions.yaml`
+- **Shadow Code** — approve this call
+- **Shadow Code + don't ask again** — approve and save a policy rule to `~/.shadow-code/permissions.yaml`
 - **No** — reject the call and give the agent new instructions
 
 Read-only tools (`Read`, `List`, `Search`, `Fetch`, `Diff`, `AskQuestion`) run automatically. See [tool permissions](/cli/tool-permissions) for the full policy system.

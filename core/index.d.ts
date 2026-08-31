@@ -364,6 +364,13 @@ export interface ToolCall {
 
 export interface ToolCallDelta {
   id?: string;
+  /**
+   * Position of this call within the assistant turn. OpenAI-style streams send
+   * `id` only on the delta that opens each tool call; every later argument
+   * fragment identifies its call by index alone. Without this, parallel tool
+   * calls get merged into whichever id was seen most recently.
+   */
+  index?: number;
   type?: "function";
   function?: {
     name?: string;
@@ -515,6 +522,12 @@ interface McpUiState {
 // Will exist only on "assistant" messages with tool calls
 interface ToolCallState {
   toolCallId: string;
+  /**
+   * Position of this call within its assistant turn, from ToolCallDelta.index.
+   * Needed to route argument fragments that arrive with an index but no id -
+   * see applyToolCallDelta. Absent for providers that don't send an index.
+   */
+  streamIndex?: number;
   toolCall: ToolCall;
   status: ToolStatus;
   parsedArgs: any;
@@ -1108,6 +1121,25 @@ export interface Prediction {
       }[];
 }
 
+/**
+ * A request to the GUI to resolve a tool call's policy and, if the policy
+ * requires it, prompt the user. Used by anything executing tool calls that did
+ * NOT originate from the GUI's own streaming loop - the Claude Code CLI's MCP
+ * server and the subagent runner - since Core's handleToolCall otherwise
+ * executes unconditionally and the GUI is normally the only gate.
+ */
+export interface ToolApprovalRequest {
+  approvalId: string;
+  toolCallId: string;
+  sessionId: string | undefined;
+  toolName: string;
+  args: Record<string, unknown>;
+  displayTitle?: string;
+  wouldLikeTo?: string;
+  /** Which agent is asking, e.g. a subagent's task description. */
+  agentLabel?: string;
+}
+
 export interface ToolExtras {
   ide: IDE;
   llm: ILLM;
@@ -1121,6 +1153,23 @@ export interface ToolExtras {
   config: ContinueConfig;
   codeBaseIndexer?: CodebaseIndexer;
   sessionId?: string;
+  /**
+   * Aborted when the user presses Stop. Long-running implementations (the
+   * subagent runner above all) must honor this - `tools/call` is a plain
+   * request with no cancellation of its own, so without this a tool keeps
+   * running after Stop.
+   */
+  signal?: AbortSignal;
+  /** See ToolApprovalRequest. Absent when no GUI is attached. */
+  requestApproval?: (
+    params: ToolApprovalRequest,
+  ) => Promise<{ approved: boolean }>;
+  /**
+   * 0 for a tool call made by the main chat, 1 for one made by a subagent.
+   * spawn_subagents refuses to run at depth > 0, which is what makes subagent
+   * recursion structurally impossible.
+   */
+  subagentDepth?: number;
 }
 
 export interface McpToolMeta {
@@ -1224,6 +1273,22 @@ export interface BaseCompletionOptions {
    * tool calls) use the real id rather than re-deriving a different one.
    */
   shadowSessionId?: string;
+  /**
+   * Identifies one agent run (the main chat turn, or a single subagent spawned
+   * by spawn_subagents) so providers keeping per-run side-channel state can key
+   * on it instead of on shadowSessionId. Several subagents share a
+   * shadowSessionId with their parent but each needs its own state - notably
+   * ClaudeCodeCli, where the MCP tool registration and the temp --mcp-config
+   * file would otherwise be overwritten/unlinked by whichever run finishes
+   * first. Defaults to shadowSessionId when unset.
+   */
+  agentRunId?: string;
+  /**
+   * Human-readable name for the agent making this call (a subagent's task
+   * description), shown on tool-approval prompts so the user can tell which
+   * agent is asking.
+   */
+  agentLabel?: string;
 }
 
 export interface ModelCapability {
@@ -1925,7 +1990,7 @@ export type RuleSource =
   | "rules-block"
   | "colocated-markdown"
   | "json-systemMessage"
-  | ".continuerules"
+  | ".shadow-coderules"
   | "agentFile";
 
 export interface RuleMetadata {

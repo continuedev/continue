@@ -1,10 +1,10 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>com.github.continuedev.continueintellijextension</id>
-    <name>Continue</name>
-    <vendor url="https://www.continue.dev/">continue-dev</vendor>
+    <id>com.shadowcode.plugin</id>
+    <name>Shadow Code</name>
+    <vendor>Shadow Code</vendor>
     <change-notes>
-        <![CDATA[View the latest release notes on <a href="https://github.com/continuedev/continue/releases">GitHub</a>]]></change-notes>
+        <![CDATA[Shadow Code]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>org.jetbrains.plugins.terminal</depends>
@@ -15,7 +15,7 @@
     </depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="Continue" anchor="right" icon="com.github.continuedev.continueintellijextension.Icons.Continue"
+        <toolWindow id="Shadow Code" anchor="right" icon="com.github.continuedev.continueintellijextension.Icons.Continue"
                     factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
         <projectService id="ContinuePluginService"
                         serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinuePluginService"/>
@@ -35,9 +35,9 @@
         <projectService
                 serviceImplementation="com.github.continuedev.continueintellijextension.nextEdit.NextEditJumpManager"/>
 
-        <inline.completion.provider id="Continue" implementation="com.github.continuedev.continueintellijextension.autocomplete.ContinueInlineCompletionProvider"/>
+        <inline.completion.provider id="Shadow Code" implementation="com.github.continuedev.continueintellijextension.autocomplete.ContinueInlineCompletionProvider"/>
         
-        <notificationGroup id="Continue"
+        <notificationGroup id="Shadow Code"
                            displayType="BALLOON"/>
         <actionPromoter order="last"
                         implementation="com.github.continuedev.continueintellijextension.actions.ContinueActionPromote"/>
@@ -48,89 +48,89 @@
                 parentId="tools"
                 instance="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
                 id="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
-                displayName="Continue"/>
+                displayName="Shadow Code"/>
         <applicationService
                 serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings"/>
     </extensions>
 
     <actions>
         <action class="com.github.continuedev.continueintellijextension.editor.InlineEditAction"
-                id="continue.inlineEdit"
+                id="shadowCode.inlineEdit"
                 description="Inline Edit"
                 text="Inline Edit">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="ctrl I"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta I"/>
-            <override-text place="GoToAction" text="Continue: Edit Code"/>
+            <override-text place="GoToAction" text="Shadow Code: Edit Code"/>
         </action>
 
-        <action id="continue.acceptDiff"
+        <action id="shadowCode.acceptDiff"
                 class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
                 text="Accept Diff" description="Accept Diff">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="shift ctrl ENTER"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="shift meta ENTER"/>
-            <override-text place="GoToAction" text="Continue: Accept Diff"/>
+            <override-text place="GoToAction" text="Shadow Code: Accept Diff"/>
         </action>
 
-        <action id="continue.restartProcess"
+        <action id="shadowCode.restartProcess"
                 class="com.github.continuedev.continueintellijextension.actions.RestartContinueProcess"
                 text="Restart Process"
                 description="Restart Process">
-            <override-text place="GoToAction" text="Continue: Restart Process"/>
+            <override-text place="GoToAction" text="Shadow Code: Restart Process"/>
         </action>
 
-        <action id="continue.rejectDiff"
+        <action id="shadowCode.rejectDiff"
                 class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
                 text="Reject Diff" description="Reject Diff">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="shift ctrl BACK_SPACE"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="shift meta BACK_SPACE"/>
-            <override-text place="GoToAction" text="Continue: Reject Diff"/>
+            <override-text place="GoToAction" text="Shadow Code: Reject Diff"/>
         </action>
 
-        <action id="continue.acceptVerticalDiffBlock"
+        <action id="shadowCode.acceptVerticalDiffBlock"
                 class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
                 text="Accept Diff" description="Accept Vertical Diff Block">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="alt shift Y"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="alt shift Y"/>
-            <override-text place="GoToAction" text="Continue: Accept Vertical Diff Block"/>
+            <override-text place="GoToAction" text="Shadow Code: Accept Vertical Diff Block"/>
         </action>
 
-        <action id="continue.rejectVerticalDiffBlock"
+        <action id="shadowCode.rejectVerticalDiffBlock"
                 class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
                 text="Reject Diff" description="Reject Vertical Diff Block">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="alt shift N"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="alt shift N"/>
-            <override-text place="GoToAction" text="Continue: Reject Vertical Diff Block"/>
+            <override-text place="GoToAction" text="Shadow Code: Reject Vertical Diff Block"/>
         </action>
 
-        <action id="continue.addLicenseKey"
+        <action id="shadowCode.addLicenseKey"
                 class="com.github.continuedev.continueintellijextension.license.AddLicenseKey"
                 text="Enter Enterprise License Key"
                 description="Enter Enterprise License Key">
-            <override-text place="GoToAction" text="Continue: Enter Enterprise License Key"/>
+            <override-text place="GoToAction" text="Shadow Code: Enter Enterprise License Key"/>
         </action>
 
-        <action id="continue.focusContinueInputWithoutClear"
+        <action id="shadowCode.focusContinueInputWithoutClear"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithoutClearAction"
                 text="Add selected code to context"
-                description="Focus Continue Input With Edit">
+                description="Focus Shadow Code Input With Edit">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="ctrl shift J"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta shift J"/>
-            <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context"/>
+            <override-text place="GoToAction" text="Shadow Code: Add Highlighted Code to Context"/>
         </action>
 
-        <action id="continue.newContinueSession"
+        <action id="shadowCode.newContinueSession"
                 icon="AllIcons.General.Add"
                 class="com.github.continuedev.continueintellijextension.actions.NewContinueSessionAction"
                 text="New Session"
@@ -139,7 +139,7 @@
             <override-text place="GoToAction" text="New Session"/>
         </action>
 
-        <action id="continue.viewHistory"
+        <action id="shadowCode.viewHistory"
                 icon="AllIcons.Vcs.History"
                 class="com.github.continuedev.continueintellijextension.actions.ViewHistoryAction"
                 text="View History"
@@ -147,7 +147,7 @@
             <override-text place="GoToAction" text="View History"/>
         </action>
 
-        <action id="continue.openConfigPage"
+        <action id="shadowCode.openConfigPage"
                 class="com.github.continuedev.continueintellijextension.actions.OpenConfigAction"
                 icon="AllIcons.General.GearPlain"
                 text="Settings"
@@ -155,41 +155,41 @@
             <override-text place="GoToAction" text="Settings"/>
         </action>
 
-        <action id="continue.reloadPage"
+        <action id="shadowCode.reloadPage"
                 class="com.github.continuedev.continueintellijextension.actions.ReloadBrowserAction"
                 icon="AllIcons.Actions.Refresh"
-                text="Reload Continue Browser"
-                description="Reload Continue Browser">
-            <override-text place="GoToAction" text="Reload Continue Browser"/>
+                text="Reload Shadow Code Browser"
+                description="Reload Shadow Code Browser">
+            <override-text place="GoToAction" text="Reload Shadow Code Browser"/>
         </action>
 
-        <action id="continue.openLogs"
+        <action id="shadowCode.openLogs"
                 class="com.github.continuedev.continueintellijextension.actions.OpenLogsAction"
                 icon="AllIcons.General.ShowInfos"
                 text="Open Logs"
-                description="Open Continue Logs">
-            <override-text place="GoToAction" text="Open Continue Logs"/>
+                description="Open Shadow Code Logs">
+            <override-text place="GoToAction" text="Open Shadow Code Logs"/>
         </action>
 
         <group id="ContinueSidebarActionsGroup">
-            <reference ref="continue.newContinueSession"/>
-            <reference ref="continue.viewHistory"/>
-            <reference ref="continue.openConfigPage"/>
-            <reference ref="continue.reloadPage" />
+            <reference ref="shadowCode.newContinueSession"/>
+            <reference ref="shadowCode.viewHistory"/>
+            <reference ref="shadowCode.openConfigPage"/>
+            <reference ref="shadowCode.reloadPage" />
         </group>
 
-        <action id="continue.focusContinueInput"
+        <action id="shadowCode.focusContinueInput"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputAction"
                 text="Add selected code to context"
-                description="Focus Continue Input">
+                description="Focus Shadow Code Input">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="ctrl J"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta J"/>
             <add-to-group group-id="EditorPopupMenu"/>
-            <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context and Clear Chat"/>
+            <override-text place="GoToAction" text="Shadow Code: Add Highlighted Code to Context and Clear Chat"/>
         </action>
-        <group id="ContinueProjectViewPopUpMenuGroup" popup="true" text="Continue" icon="/icons/continue.svg">
+        <group id="ContinueProjectViewPopUpMenuGroup" popup="true" text="Shadow Code" icon="/icons/continue.svg">
             <action id="com.github.continuedev.continueintellijextension.actions.AddToChatAction"
                     class="com.github.continuedev.continueintellijextension.actions.AddToChatAction"
                     text="Add to Chat">

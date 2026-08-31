@@ -455,7 +455,7 @@ export function expectNormalMode(frame: string | undefined) {
 
   // Should show normal indicator
   expect(frame).toContain("●");
-  expect(frame).toContain("Continue CLI");
+  expect(frame).toContain("Shadow Code CLI");
 }
 
 /**

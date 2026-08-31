@@ -9,7 +9,7 @@ vi.mock("./loadMarkdownSkills.js", async (importOriginal) => {
 
 vi.mock("../env.js", () => ({
   env: {
-    continueHome: "/mock/home/.continue",
+    continueHome: "/mock/home/.shadow-code",
   },
 }));
 
@@ -47,8 +47,8 @@ describe("loadMarkdownSkills", () => {
     expect(result.errors).toEqual([]);
   });
 
-  it("loads a valid skill with files from .continue/skills", async () => {
-    const skillDir = path.join(tmpDir, ".continue", "skills", "my-skill");
+  it("loads a valid skill with files from .shadow-code/skills", async () => {
+    const skillDir = path.join(tmpDir, ".shadow-code", "skills", "my-skill");
     fs.mkdirSync(skillDir, { recursive: true });
     fs.writeFileSync(
       path.join(skillDir, "SKILL.md"),
@@ -78,7 +78,7 @@ This is the skill body.
   });
 
   it("returns error for invalid frontmatter", async () => {
-    const skillDir = path.join(tmpDir, ".continue", "skills", "bad-skill");
+    const skillDir = path.join(tmpDir, ".shadow-code", "skills", "bad-skill");
     fs.mkdirSync(skillDir, { recursive: true });
     fs.writeFileSync(
       path.join(skillDir, "SKILL.md"),
@@ -96,8 +96,8 @@ Missing description
   });
 
   it("loads multiple skills from different directories", async () => {
-    const skill1Dir = path.join(tmpDir, ".continue", "skills", "skill-1");
-    const skill2Dir = path.join(tmpDir, ".continue", "skills", "skill-2");
+    const skill1Dir = path.join(tmpDir, ".shadow-code", "skills", "skill-1");
+    const skill2Dir = path.join(tmpDir, ".shadow-code", "skills", "skill-2");
     fs.mkdirSync(skill1Dir, { recursive: true });
     fs.mkdirSync(skill2Dir, { recursive: true });
 

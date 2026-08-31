@@ -15,6 +15,7 @@ export { readSkillTool } from "./readSkill";
 export { requestRuleTool } from "./requestRule";
 export { runTerminalCommandTool } from "./runTerminalCommand";
 export { searchWebTool } from "./searchWeb";
+export { spawnSubagentsTool } from "./spawnSubagents";
 export {
   shadowGetChatHistoryTool,
   shadowSearchMessagesTool,

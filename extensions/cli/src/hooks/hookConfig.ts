@@ -2,9 +2,9 @@
  * Hook configuration loader.
  *
  * Loads hooks from settings files in the same locations as Claude Code:
- * - ~/.continue/settings.json  (user-global)
- * - .continue/settings.json    (project, committable)
- * - .continue/settings.local.json (project-local, gitignored)
+ * - ~/.shadow-code/settings.json  (user-global)
+ * - .shadow-code/settings.json    (project, committable)
+ * - .shadow-code/settings.local.json (project-local, gitignored)
  *
  * Also supports Claude Code's native locations for cross-compatibility:
  * - ~/.claude/settings.json
@@ -73,7 +73,7 @@ function mergeHooksConfigs(
 function getSettingsFilePaths(cwd: string, homeDir?: string): string[] {
   const home = homeDir ?? os.homedir();
   const continueHome =
-    process.env.CONTINUE_GLOBAL_DIR || path.join(home, ".continue");
+    process.env.SHADOW_CODE_GLOBAL_DIR || path.join(home, ".shadow-code");
 
   return [
     // User-global (lowest precedence)
@@ -82,11 +82,11 @@ function getSettingsFilePaths(cwd: string, homeDir?: string): string[] {
 
     // Project-level
     path.join(cwd, ".claude", "settings.json"),
-    path.join(cwd, ".continue", "settings.json"),
+    path.join(cwd, ".shadow-code", "settings.json"),
 
     // Project-local (highest precedence)
     path.join(cwd, ".claude", "settings.local.json"),
-    path.join(cwd, ".continue", "settings.local.json"),
+    path.join(cwd, ".shadow-code", "settings.local.json"),
   ];
 }
 

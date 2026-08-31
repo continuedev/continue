@@ -669,31 +669,31 @@ async function handleEsbuildInstallation(
   _ideType: IdeType,
 ): Promise<boolean> {
   // Only check when config.ts is going to be used; never auto-install.
-  const installCmd = "npm i esbuild@x.x.x --prefix ~/.continue";
+  const installCmd = "npm i esbuild@x.x.x --prefix ~/.shadow-code";
 
   // Try to detect a user-installed esbuild (normal resolution)
   try {
     await import("esbuild");
     return true; // available
   } catch {
-    // Try resolving from ~/.continue/node_modules as a courtesy
+    // Try resolving from ~/.shadow-code/node_modules as a courtesy
     try {
       const userEsbuild = path.join(
         os.homedir(),
-        ".continue",
+        ".shadow-code",
         "node_modules",
         "esbuild",
       );
       const candidate = require.resolve("esbuild", { paths: [userEsbuild] });
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       require(candidate);
-      return true; // available via ~/.continue
+      return true; // available via ~/.shadow-code
     } catch {
       // Not available → show friendly instructions and opt out of building
       await ide.showToast(
         "error",
         [
-          "config.ts has been deprecated and esbuild is no longer automatically installed by Continue.",
+          "config.ts has been deprecated and esbuild is no longer automatically installed by Shadow Code.",
           "To use config.ts, install esbuild manually:",
           "",
           `    ${installCmd}`,
@@ -713,7 +713,7 @@ async function tryBuildConfigTs() {
     }
   } catch (e) {
     console.log(
-      `Build error. Please check your ~/.continue/config.ts file: ${e}`,
+      `Build error. Please check your ~/.shadow-code/config.ts file: ${e}`,
     );
   }
 }

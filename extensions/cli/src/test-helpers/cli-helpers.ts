@@ -84,7 +84,7 @@ export async function runCLI(
     cwd: context.testDir,
     env: {
       ...process.env,
-      CONTINUE_CLI_TEST: "true",
+      SHADOW_CODE_CLI_TEST: "true",
       HOME: context.testDir,
       // Windows-specific home directory variables
       USERPROFILE: context.testDir,
@@ -162,7 +162,7 @@ export async function readSession(
   context: CLITestContext,
 ): Promise<any | null> {
   try {
-    const sessionDir = path.join(context.testDir, ".continue", "sessions");
+    const sessionDir = path.join(context.testDir, ".shadow-code", "sessions");
     const files = await fs.readdir(sessionDir);
 
     if (files.length === 0) {
@@ -187,7 +187,7 @@ export async function createMockSession(
   context: CLITestContext,
   messages: any[],
 ): Promise<string> {
-  const sessionDir = path.join(context.testDir, ".continue", "sessions");
+  const sessionDir = path.join(context.testDir, ".shadow-code", "sessions");
   await fs.mkdir(sessionDir, { recursive: true });
 
   const sessionId = `test-session-${Date.now()}`;
@@ -251,7 +251,7 @@ export async function withInteractiveInput(
     cwd: context.testDir,
     env: {
       ...process.env,
-      CONTINUE_CLI_TEST: "true",
+      SHADOW_CODE_CLI_TEST: "true",
       HOME: context.testDir,
       // Windows-specific home directory variables
       USERPROFILE: context.testDir,

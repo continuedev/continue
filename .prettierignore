@@ -5,8 +5,8 @@ binary/tmp
 core/.continue-test
 docs/.docusaurus
 docs/**/*.mdx
-extensions/.continue-debug
-extensions/vscode/continue_rc_schema.json
+extensions/.shadow-code-debug
+extensions/vscode/shadow_code_rc_schema.json
 extensions/vscode/.vscode-test
 extensions/vscode/bin
 extensions/vscode/build

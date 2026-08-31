@@ -1,10 +1,10 @@
 const path = require("path");
-process.env.CONTINUE_DEVELOPMENT = true;
+process.env.SHADOW_CODE_DEVELOPMENT = true;
 
-process.env.CONTINUE_GLOBAL_DIR = path.join(
+process.env.SHADOW_CODE_GLOBAL_DIR = path.join(
   process.env.PROJECT_DIR,
   "extensions",
-  ".continue-debug",
+  ".shadow-code-debug",
 );
 
 require("./out/index.js");

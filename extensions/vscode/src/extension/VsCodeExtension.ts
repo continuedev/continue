@@ -119,7 +119,7 @@ export class VsCodeExtension {
       nextEditEnabled &&
       !modelSupportsNext &&
       !isNextEditTest() &&
-      process.env.CONTINUE_E2E_NON_NEXT_EDIT_TEST === "true"
+      process.env.SHADOW_CODE_E2E_NON_NEXT_EDIT_TEST === "true"
     ) {
       vscode.window
         .showWarningMessage(
@@ -136,7 +136,7 @@ export class VsCodeExtension {
             );
           } else if (selection === "Select different model") {
             vscode.commands.executeCommand(
-              "continue.openTabAutocompleteConfigMenu",
+              "shadowCode.openTabAutocompleteConfigMenu",
             );
           }
         });
@@ -253,7 +253,7 @@ export class VsCodeExtension {
     // Sidebar
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(
-        "continue.continueGUIView",
+        "shadowCode.guiView",
         this.sidebar,
         {
           webviewOptions: { retainContextWhenHidden: true },
@@ -393,7 +393,7 @@ export class VsCodeExtension {
 
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(
-        "continue.continueConsoleView",
+        "shadowCode.consoleView",
         this.consoleView,
       ),
     );

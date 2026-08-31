@@ -19,7 +19,7 @@ export interface PermissionsYamlConfig {
 }
 
 /**
- * Loads permissions from ~/.continue/permissions.yaml
+ * Loads permissions from ~/.shadow-code/permissions.yaml
  * Returns null if file doesn't exist or can't be parsed
  */
 export function loadPermissionsYaml(): PermissionsYamlConfig | null {

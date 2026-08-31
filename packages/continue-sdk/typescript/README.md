@@ -2,7 +2,7 @@
 
 > **⚠️ EXPERIMENTAL: This package is in early development and subject to frequent breaking changes without notice.**
 
-This SDK provides a drop-in replacement for OpenAI libraries to easily integrate with Continue assistants.
+This SDK provides a drop-in replacement for OpenAI libraries to easily integrate with Shadow Code assistants.
 
 ## Installation
 
@@ -15,9 +15,9 @@ npm install @continuedev/sdk
 The SDK provides a `Continue.from()` method that initializes an assistant and returns a client you can use as a drop-in replacement for the OpenAI SDK:
 
 ```typescript
-import { Continue } from "@continuedev/sdk";
+import { Shadow Code } from "@continuedev/sdk";
 
-// Initialize the Continue client with your API key and assistant
+// Initialize the Shadow Code client with your API key and assistant
 const { client, assistant } = await Continue.from({
   apiKey: process.env.CONTINUE_API_KEY,
   assistant: "owner-slug/assistant-slug", // The assistant identifier
@@ -35,17 +35,17 @@ const response = await client.chat.completions.create({
 console.log(response.choices[0].message.content);
 ```
 
-You can also use the SDK without specifying an assistant to just get the Continue API client:
+You can also use the SDK without specifying an assistant to just get the Shadow Code API client:
 
 ```typescript
-import { Continue } from "@continuedev/sdk";
+import { Shadow Code } from "@continuedev/sdk";
 
-// Initialize just the Continue API client
+// Initialize just the Shadow Code API client
 const { api } = await Continue.from({
   apiKey: process.env.CONTINUE_API_KEY,
 });
 
-// Make calls to the Continue API
+// Make calls to the Shadow Code API
 const assistants = await api.listAssistants({});
 ```
 
@@ -53,23 +53,23 @@ const assistants = await api.listAssistants({});
 
 ### Continue.from(options)
 
-Creates a Continue instance with a pre-configured OpenAI client and assistant.
+Creates a Shadow Code instance with a pre-configured OpenAI client and assistant.
 
 #### Options
 
-- `apiKey` (string, required): Your Continue API key
+- `apiKey` (string, required): Your Shadow Code API key
 - `assistant` (string, optional): The assistant identifier in the format `owner-slug/assistant-slug`
 - `organizationId` (string, optional): Optional organization ID
-- `baseURL` (string, optional): Base URL for the Continue API (defaults to `https://api.continue.dev/`)
+- `baseURL` (string, optional): Base URL for the Shadow Code API (defaults to `https://api.continue.dev/`)
 
 #### Returns
 
 When `assistant` is provided, returns an object containing:
 
-- `api`: The Continue API client for direct API access
-- `client`: An OpenAI-compatible client configured to use the Continue API
+- `api`: The Shadow Code API client for direct API access
+- `client`: An OpenAI-compatible client configured to use the Shadow Code API
 - `assistant`: The assistant configuration with utility methods
 
 When assistant is not provided, returns an object containing:
 
-- `api`: The Continue API client for direct API access
+- `api`: The Shadow Code API client for direct API access

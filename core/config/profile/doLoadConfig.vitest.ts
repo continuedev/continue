@@ -115,7 +115,7 @@ describe("doLoadConfig pre-read content bypass", () => {
     const packageIdentifier: PackageIdentifier = {
       uriType: "file",
       fileUri:
-        "vscode-remote://wsl+Ubuntu/home/user/.continue/agents/test.yaml",
+        "vscode-remote://wsl+Ubuntu/home/user/.shadow-code/agents/test.yaml",
       content: "name: Test\nversion: 1.0.0\nschema: v1\n",
     };
 
@@ -140,7 +140,7 @@ describe("doLoadConfig pre-read content bypass", () => {
     const packageIdentifier: PackageIdentifier = {
       uriType: "file",
       fileUri:
-        "vscode-remote://wsl+Ubuntu/home/user/.continue/agents/test.yaml",
+        "vscode-remote://wsl+Ubuntu/home/user/.shadow-code/agents/test.yaml",
     };
 
     await doLoadConfig({

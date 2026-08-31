@@ -22,7 +22,8 @@ export function getNonce() {
 }
 
 export function getExtensionUri(): vscode.Uri {
-  return vscode.extensions.getExtension("Continue.continue")!.extensionUri;
+  return vscode.extensions.getExtension("shadow-code.shadow-code")!
+    .extensionUri;
 }
 
 export function getViewColumnOfFile(

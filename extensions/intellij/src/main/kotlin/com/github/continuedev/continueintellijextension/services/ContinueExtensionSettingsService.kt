@@ -215,5 +215,5 @@ class ContinueExtensionConfigurable : Configurable {
     }
 
     override fun getDisplayName(): String =
-        "Continue Extension Settings"
+        "Shadow Code Extension Settings"
 }

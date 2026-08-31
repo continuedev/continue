@@ -11,7 +11,7 @@ import { DEFAULT_TIMEOUT } from "../constants";
 import { TestUtils } from "../TestUtils";
 
 export class GlobalActions {
-  static defaultFolder = "e2e/test-continue";
+  static defaultFolder = "e2e/test-shadow-code";
   public static defaultNewFilename = "test.py";
 
   public static async openTestWorkspace() {
@@ -88,7 +88,7 @@ export class GlobalActions {
     const workbench = new Workbench();
 
     await workbench.openCommandPrompt();
-    process.env.CONTINUE_E2E_NON_NEXT_EDIT_TEST = "true";
+    process.env.SHADOW_CODE_E2E_NON_NEXT_EDIT_TEST = "true";
 
     // Initial wait and clear
     await TestUtils.waitForTimeout(1000);
@@ -106,7 +106,7 @@ export class GlobalActions {
       }
 
       const element = await statusBar.findElement(
-        By.xpath("//*[contains(text(), 'Continue')]"),
+        By.xpath("//*[contains(text(), 'Shadow Code')]"),
       );
 
       // Validate we can get text
@@ -142,7 +142,7 @@ export class GlobalActions {
     console.log("hasNE:", hasNE);
 
     if (hasNE !== enabled) {
-      await workbench.executeCommand("Continue: Toggle Next Edit");
+      await workbench.executeCommand("Shadow Code: Toggle Next Edit");
       // Clear any resulting notifications
       await TestUtils.waitForTimeout(500);
       await GlobalActions.clearAllNotifications();

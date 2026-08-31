@@ -14,7 +14,7 @@ const DEFAULT_FETCH_MAX_CHARS = 20000;
 
 function getFetchMaxChars(): number {
   return parseEnvNumber(
-    process.env.CONTINUE_CLI_FETCH_MAX_OUTPUT_LENGTH,
+    process.env.SHADOW_CODE_CLI_FETCH_MAX_OUTPUT_LENGTH,
     DEFAULT_FETCH_MAX_CHARS,
   );
 }

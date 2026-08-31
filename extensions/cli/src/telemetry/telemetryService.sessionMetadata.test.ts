@@ -22,7 +22,7 @@ describe("TelemetryService - Session Metadata", () => {
     }));
 
     // Enable telemetry for tests
-    process.env.CONTINUE_CLI_ENABLE_TELEMETRY = "1";
+    process.env.SHADOW_CODE_CLI_ENABLE_TELEMETRY = "1";
     process.env.OTEL_METRICS_EXPORTER = "console";
   });
 
@@ -185,7 +185,7 @@ describe("TelemetryService - Session Metadata", () => {
 
     it("should include is_continue_remote_agent=true when in remote agent mode", () => {
       // Set Continue remote agent environment
-      process.env.CONTINUE_REMOTE = "true";
+      process.env.SHADOW_CODE_REMOTE = "true";
 
       const mockAdd = vi.fn();
       const mockRecord = vi.fn();
@@ -211,7 +211,7 @@ describe("TelemetryService - Session Metadata", () => {
       // Set all environments
       process.argv = ["node", "cli.js", "-p", "What is the weather?"];
       process.env.GITHUB_ACTIONS = "true";
-      process.env.CONTINUE_REMOTE = "true";
+      process.env.SHADOW_CODE_REMOTE = "true";
 
       const mockAdd = vi.fn();
       const mockRecord = vi.fn();

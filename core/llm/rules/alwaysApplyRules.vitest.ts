@@ -15,7 +15,7 @@ describe("Rule application with alwaysApply", () => {
     rule: "This rule should always be applied",
     alwaysApply: true,
     source: "rules-block",
-    sourceFile: ".continue/always-apply.md",
+    sourceFile: ".shadow-code/always-apply.md",
   };
 
   // Create a colocated rule in a nested directory

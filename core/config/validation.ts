@@ -64,7 +64,7 @@ export function validateConfig(config: SerializedContinueConfig) {
       ) {
         errors.push({
           fatal: false,
-          message: `${modelDescription.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/features/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
+          message: `${modelDescription.model} is not trained for tab-autocomplete, and will result in low-quality suggestions.`,
         });
       }
     }

@@ -300,7 +300,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
   // Create a temporary directory for installing the package
   const adjustedName = packageName.replace(/@/g, "").replace("/", "-");
 
-  const tempDir = `/tmp/continue-node_modules-${adjustedName}`;
+  const tempDir = `/tmp/shadow-code-node_modules-${adjustedName}`;
   const currentDir = process.cwd();
 
   // Remove the dir we will be copying to

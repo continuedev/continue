@@ -18,13 +18,13 @@ export function activate(context: vscode.ExtensionContext) {
     console.log("Error activating extension: ", e);
     vscode.window
       .showWarningMessage(
-        "Error activating the Continue extension.",
+        "Error activating the Shadow Code extension.",
         "View Logs",
         "Retry",
       )
       .then((selection) => {
         if (selection === "View Logs") {
-          vscode.commands.executeCommand("continue.viewLogs");
+          vscode.commands.executeCommand("shadowCode.viewLogs");
         } else if (selection === "Retry") {
           // Reload VS Code window
           vscode.commands.executeCommand("workbench.action.reloadWindow");

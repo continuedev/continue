@@ -94,7 +94,7 @@ class OpenConfigAction : ContinueToolbarAction() {
 
 class ReloadBrowserAction: ContinueToolbarAction() {
     override fun toolbarActionPerformed(project: Project) {
-        val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Continue")
+        val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Shadow Code")
             ?: return
         val browserService = project.service<ContinueBrowserService>()
 
@@ -128,7 +128,7 @@ class ReloadBrowserAction: ContinueToolbarAction() {
 class OpenLogsAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        val logFile = File(System.getProperty("user.home") + "/.continue/logs/core.log")
+        val logFile = File(System.getProperty("user.home") + "/.shadow-code/logs/core.log")
         if (logFile.exists()) {
             val virtualFile = com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByIoFile(logFile)
             if (virtualFile != null) {

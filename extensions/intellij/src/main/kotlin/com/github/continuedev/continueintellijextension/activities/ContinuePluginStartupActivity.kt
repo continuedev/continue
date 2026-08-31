@@ -106,12 +106,12 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
         val actionIds = keymap.getActionIds(keyStroke)
 
         // If Continue has been re-assigned to another key, don't remove the shortcut
-        if (!actionIds.any { it.startsWith("continue") }) {
+        if (!actionIds.any { it.startsWith("shadowCode") }) {
             return
         }
 
         for (actionId in actionIds) {
-            if (actionId.startsWith("continue")) {
+            if (actionId.startsWith("shadowCode")) {
                 continue
             }
             val shortcuts = keymap.getShortcuts(actionId)

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Continue CLI uses esbuild to bundle the application along with local packages (`@continuedev/config-yaml` and `@continuedev/openai-adapters`) into a single distributable file. This ensures that users who install the CLI from npm don't need to worry about local file references.
+The Shadow Code CLI uses esbuild to bundle the application along with local packages (`@continuedev/config-yaml` and `@continuedev/openai-adapters`) into a single distributable file. This ensures that users who install the CLI from npm don't need to worry about local file references.
 
 ## Build Steps
 

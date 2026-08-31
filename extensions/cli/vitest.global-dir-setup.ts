@@ -1,5 +1,5 @@
 // IMPORTANT: This file must run BEFORE any module that imports
-// `core/util/paths.ts`, because that module resolves `CONTINUE_GLOBAL_DIR`
+// `core/util/paths.ts`, because that module resolves `SHADOW_CODE_GLOBAL_DIR`
 // into a constant at import time. If multiple test files (which run in
 // parallel worker processes) all share the same global dir, they race on the
 // same `globalContext.json` file on disk, causing flaky failures in the
@@ -14,7 +14,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 
 const globalDir = fs.mkdtempSync(path.join(os.tmpdir(), "continue-cli-test-"));
-process.env.CONTINUE_GLOBAL_DIR = globalDir;
+process.env.SHADOW_CODE_GLOBAL_DIR = globalDir;
 
 // Best-effort cleanup of this worker's temp dir when the process exits.
 process.on("exit", () => {

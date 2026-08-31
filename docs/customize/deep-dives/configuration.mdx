@@ -1,11 +1,11 @@
 ---
-title: "How to Configure Continue"
-description: Learn how to access and manage Continue configurations through local YAML files
+title: "How to Configure Shadow Code"
+description: Learn how to access and manage Shadow Code configurations through local YAML files
 keywords: [config, settings, customize]
 sidebarTitle: "Configuration"
 ---
 
-You can easily access your configuration from the Continue Chat sidebar. Open the sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) and click the Agent selector above the main chat input. Then, you can hover over an agent and click the `gear` icon.
+You can easily access your configuration from the Shadow Code Chat sidebar. Open the sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) and click the Agent selector above the main chat input. Then, you can hover over an agent and click the `gear` icon.
 
 ![configure](/images/configure-continue.png)
 
@@ -13,14 +13,14 @@ You can easily access your configuration from the Continue Chat sidebar. Open th
 
 Local user-level configuration is stored and can be edited in your home directory in `config.yaml`:
 
-- `~/.continue/config.yaml` (MacOS / Linux)
+- `~/.shadow-code/config.yaml` (MacOS / Linux)
 - `%USERPROFILE%\.continue\config.yaml` (Windows)
 
 To open this `config.yaml`, you need to open the configs dropdown in the top-right portion of the chat input. On that dropdown beside the "Local Config" option, select the cog icon. It will open the local `config.yaml`.
 
 ![local-config-open-steps](/images/local-config-open-steps.png)
 
-When editing this file, you can see the available options suggested as you type, or check the reference below. When you save a config file from the IDE, Continue will automatically refresh to take into account your changes. A config file is automatically created the first time you use Continue, and always automatically generated with default values if it doesn't exist.
+When editing this file, you can see the available options suggested as you type, or check the reference below. When you save a config file from the IDE, Shadow Code will automatically refresh to take into account your changes. A config file is automatically created the first time you use Shadow Code, and always automatically generated with default values if it doesn't exist.
 
 See the full reference for `config.yaml` [here](/reference).
 
@@ -31,18 +31,18 @@ See the full reference for `config.yaml` [here](/reference).
 </Info>
 
 - [`config.json`](/reference) - The original configuration format which is stored in a file at the same location as `config.yaml`
-- `.continuerc.json` - Workspace-level configuration
+- `.shadow-coderc.json` - Workspace-level configuration
 - `config.ts` - Advanced configuration (probably unnecessary) - a TypeScript file in your home directory that can be used to programmatically modify (_merged_) the `config.json` schema:
-  - `~/.continue/config.ts` (MacOS / Linux)
+  - `~/.shadow-code/config.ts` (MacOS / Linux)
   - `%USERPROFILE%\.continue\config.ts` (Windows)
 
-### How to Use `.continuerc.json` for Workspace Configuration
+### How to Use `.shadow-coderc.json` for Workspace Configuration
 
-The format of `.continuerc.json` is the same as `config.json`, plus one _additional_ property `mergeBehavior`, which can be set to either "merge" or "overwrite". If set to "merge" (the default), `.continuerc.json` will be applied on top of `config.json` (arrays and objects are merged). If set to "overwrite", then every top-level property of `.continuerc.json` will overwrite that property from `config.json`.
+The format of `.shadow-coderc.json` is the same as `config.json`, plus one _additional_ property `mergeBehavior`, which can be set to either "merge" or "overwrite". If set to "merge" (the default), `.shadow-coderc.json` will be applied on top of `config.json` (arrays and objects are merged). If set to "overwrite", then every top-level property of `.shadow-coderc.json` will overwrite that property from `config.json`.
 
 Example
 
-```json title=".continuerc.json"
+```json title=".shadow-coderc.json"
 {
   "tabAutocompleteOptions": {
     "disable": true
@@ -53,7 +53,7 @@ Example
 
 ### How to Use `config.ts` for Advanced Configuration
 
-`config.yaml` or `config.json` can handle the vast majority of necessary configuration, so we recommend using it whenever possible. However, if you need to programmatically extend Continue configuration, you can use a `config.ts` file, placed at `~/.continue/config.ts` (MacOS / Linux) or `%USERPROFILE%\.continue\config.ts` (Windows).
+`config.yaml` or `config.json` can handle the vast majority of necessary configuration, so we recommend using it whenever possible. However, if you need to programmatically extend Shadow Code configuration, you can use a `config.ts` file, placed at `~/.shadow-code/config.ts` (MacOS / Linux) or `%USERPROFILE%\.continue\config.ts` (Windows).
 
 `config.ts` must export a `modifyConfig` function, like:
 

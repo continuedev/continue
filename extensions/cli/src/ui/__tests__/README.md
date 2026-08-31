@@ -1,6 +1,6 @@
 # TUI Testing Framework
 
-This directory contains a comprehensive testing framework for the Continue CLI's Terminal User Interface (TUI) that supports running tests in both normal (local) and remote modes.
+This directory contains a comprehensive testing framework for the Shadow Code CLI's Terminal User Interface (TUI) that supports running tests in both normal (local) and remote modes.
 
 ## Overview
 

@@ -26,7 +26,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
   - [Identity](https://docs.netlify.com/visitor-access/identity/) for user authentication
   - [Large Media](https://docs.netlify.com/large-media/overview/) for Git LFS support
 
-This guide shows you how to leverage these features through natural language with Continue CLI!
+This guide shows you how to leverage these features through natural language with Shadow Code CLI!
 
 </Info>
 
@@ -44,7 +44,7 @@ This cookbook teaches you to:
 - GitHub repository with a web project
 - [Netlify account](https://netlify.com) (free tier works)
 - Node.js 22+ installed (required for Netlify)
-- [Continue CLI](https://docs.continue.dev/guides/cli)
+- Shadow Code CLI
 - Netlify MCP configured
 - Netlify Development Rules (recommended)
 
@@ -60,7 +60,7 @@ This cookbook teaches you to:
 </Info>
 For all options, first:
 <Steps>
-<Step title="Install Continue CLI">
+<Step title="Install Shadow Code CLI">
     <CLIInstall />
   </Step>
 
@@ -154,7 +154,7 @@ After completing **Quick Setup** above, you have two paths to get started:
 
 <Accordion title="Agent Requirements">
     To use the pre-built agent, you need either:
-      - **Continue CLI Pro Plan** with the models add-on, OR
+      - **Shadow Code CLI Pro Plan** with the models add-on, OR
       - **Your own API keys** configured as environment variables
 
     The agent will automatically detect and use your configuration along with the Netlify MCP for deployment operations.
@@ -456,7 +456,7 @@ Unlike Google Analytics, Netlify Analytics:
 
 Navigate to **Repository Settings → Secrets and variables → Actions** and add:
 
-- `CONTINUE_API_KEY`: Your Continue API key from [continue.dev/settings/api-keys](https://continue.dev/settings/api-keys)
+- `CONTINUE_API_KEY`: Your Shadow Code API key from continue.dev/settings/api-keys
 - `NETLIFY_AUTH_TOKEN`: Your Netlify personal access token
 - `NETLIFY_SITE_ID`: Your Netlify site ID
 
@@ -479,17 +479,17 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install Continue CLI
+      - name: Install Shadow Code CLI
         run: |
           npm install -g @continuedev/cli
-          echo "✅ Continue CLI installed"
+          echo "✅ Shadow Code CLI installed"
 
-      - name: Authenticate Continue CLI
+      - name: Authenticate Shadow Code CLI
         env:
           CONTINUE_API_KEY: ${{ secrets.CONTINUE_API_KEY }}
         run: |
           cn auth login --api-key "$CONTINUE_API_KEY"
-          echo "✅ Continue CLI authenticated"
+          echo "✅ Shadow Code CLI authenticated"
 
       - name: Deploy and Test Performance
         id: perf
@@ -702,7 +702,7 @@ The Netlify Performance Rules enforce:
 
 ## Next Steps
 
-- Install the Netlify MCP in your Continue configuration
+- Install the Netlify MCP in your Shadow Code configuration
 - Set up [Performance Monitoring](https://docs.netlify.com/analytics/get-started/)
 - Configure [A/B Testing](https://docs.netlify.com/split-testing/overview/)
 
@@ -711,4 +711,4 @@ The Netlify Performance Rules enforce:
 - [Netlify MCP](https://docs.netlify.com/)
 - [Core Web Vitals Guide](https://web.dev/vitals/)
 - [Netlify Analytics Documentation](https://docs.netlify.com/analytics/)
-- [Continue Performance Guides](https://docs.continue.dev/guides)
+- Shadow Code Performance Guides

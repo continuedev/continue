@@ -6,9 +6,8 @@ import "./globals.css";
 import "./docs.css";
 
 export const metadata: Metadata = {
-  title: "Continue Docs",
-  description:
-    "Documentation for Continue — the open-source AI code assistant.",
+  title: "Shadow Code Docs",
+  description: "Documentation for Shadow Code.",
 };
 
 export default function RootLayout({

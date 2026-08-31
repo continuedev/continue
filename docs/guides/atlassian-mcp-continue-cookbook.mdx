@@ -1,7 +1,7 @@
 ---
-title: "Jira Issues and Confluence Pages with Atlassian MCP and Continue"
-description: "Use Continue and the Atlassian Rovo MCP to search, summarize, and manage Jira issues, Confluence pages, and Compass components with natural language prompts."
-sidebarTitle: "Atlassian Workflows with Continue"
+title: "Jira Issues and Confluence Pages with Atlassian MCP and Shadow Code"
+description: "Use Shadow Code and the Atlassian Rovo MCP to search, summarize, and manage Jira issues, Confluence pages, and Compass components with natural language prompts."
+sidebarTitle: "Atlassian Workflows with Shadow Code"
 ---
 
 import { OSAutoDetect } from '/snippets/OSAutoDetect.jsx'
@@ -10,7 +10,7 @@ import CLIInstall from '/snippets/cli-install.mdx'
 <OSAutoDetect />
 
 <Card title="What You'll Build" icon="atlassian">
-  An Atlassian workflow assistant that uses Continue with the Atlassian Rovo MCP to:
+  An Atlassian workflow assistant that uses Shadow Code with the Atlassian Rovo MCP to:
   - Search and summarize Jira issues across projects
   - Find and digest Confluence documentation
   - Create and update Jira issues with natural language
@@ -33,7 +33,7 @@ Before starting, ensure you have:
 
 For all options, first:
 <Steps>
-<Step title="Install Continue CLI">
+<Step title="Install Shadow Code CLI">
   <CLIInstall />
   </Step>
 
@@ -43,7 +43,7 @@ For all options, first:
 </Steps>
 
 <Warning>
-  To use agents in headless mode, you need a [Continue API key](https://continue.dev/settings/api-keys).
+  To use agents in headless mode, you need a Shadow Code API key.
   All data access respects your existing Jira, Confluence, and Compass user permissions.
 </Warning>
 
@@ -57,11 +57,11 @@ For all options, first:
 
 | Agent | Best For | Use Cases | Link |
 |-------|----------|-----------|------|
-| **Jira Agent** | Issue Management | Search issues, create stories, sprint planning, status updates, bulk operations | [View Agent](https://continue.dev/continuedev/atlassian-continuous-ai-jira-agent) |
-| **Confluence Agent** | Documentation | Search pages, summarize docs, create/update pages, manage spaces | [View Agent](https://continue.dev/continuedev/atlassian-continuous-ai-confluence-agent) |
+| **Jira Agent** | Issue Management | Search issues, create stories, sprint planning, status updates, bulk operations | View Agent |
+| **Confluence Agent** | Documentation | Search pages, summarize docs, create/update pages, manage spaces | View Agent |
 
 <Note>
-  **Cross-product workflows**: Both agents can work with Jira, Confluence, and Compass. Choose based on your primary focus area, or create your own agent using the [Atlassian MCP](https://continue.dev/atlassian/atlassian-mcp). The Atlassian MCP can work with Jira, Compass, or Confluence.
+  **Cross-product workflows**: Both agents can work with Jira, Confluence, and Compass. Choose based on your primary focus area, or create your own agent using the Atlassian MCP. The Atlassian MCP can work with Jira, Compass, or Confluence.
 </Note>
 
 <Tabs>
@@ -157,7 +157,7 @@ For all options, first:
       </Step>
 
       <Step title="Test the Connection">
-        Launch Continue and ask:
+        Launch Shadow Code and ask:
         ```
         List my Jira projects
         ```
@@ -168,8 +168,8 @@ For all options, first:
 </Tabs>
 
 <Accordion title="Agent Requirements">
-    To use Atlassian MCP with Continue CLI, you need either:
-      - **Continue CLI Pro Plan** with the models add-on, OR
+    To use Atlassian MCP with Shadow Code CLI, you need either:
+      - **Shadow Code CLI Pro Plan** with the models add-on, OR
       - **Your own API keys** configured as environment variables
 
     The agent will automatically detect and use your configuration along with the Atlassian MCP for Jira, Confluence, and Compass operations.
@@ -181,7 +181,7 @@ For all options, first:
 ## Jira Workflows
 
 <Note>
-  **Using the Jira Agent**: All examples below use the [Jira Agent](https://continue.dev/continuedev/atlassian-continuous-ai-jira-agent) which is optimized for issue management.
+  **Using the Jira Agent**: All examples below use the Jira Agent which is optimized for issue management.
 </Note>
 
 Use natural language to explore, triage, and manage Jira issues. The agent calls Atlassian MCP tools under the hood.
@@ -255,7 +255,7 @@ Use natural language to explore, triage, and manage Jira issues. The agent calls
 ## Confluence Workflows
 
 <Note>
-  **Using the Confluence Agent**: All examples below use the [Confluence Agent](https://continue.dev/continuedev/atlassian-continuous-ai-confluence-agent) which is optimized for documentation management.
+  **Using the Confluence Agent**: All examples below use the Confluence Agent which is optimized for documentation management.
 </Note>
 
 Access, search, and manage your team's documentation directly from Continue.
@@ -484,11 +484,11 @@ After completing this guide, you have a complete **AI-powered Atlassian workflow
   <Card title="Atlassian Rovo MCP" icon="link" href="https://support.atlassian.com/atlassian-rovo-mcp-server/docs/getting-started-with-the-atlassian-remote-mcp-server/">
     Official Atlassian MCP documentation
   </Card>
-  <Card title="MCP in Continue" icon="book" href="/customize/deep-dives/mcp">
-    How MCP works with Continue agents
+  <Card title="MCP in Shadow Code" icon="book" href="/customize/deep-dives/mcp">
+    How MCP works with Shadow Code agents
   </Card>
-  <Card title="Continue Documentation" icon="book" href="https://docs.continue.dev">
-    Continue documentation and guides
+  <Card title="Shadow Code Documentation" icon="book" href="https://docs.continue.dev">
+    Shadow Code documentation and guides
   </Card>
   <Card title="Atlassian Community" icon="users" href="https://community.atlassian.com/">
     Get help and share feedback

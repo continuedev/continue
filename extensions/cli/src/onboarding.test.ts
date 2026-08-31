@@ -127,7 +127,7 @@ name: "Incomplete Config"
       expect(message).toContain(configPath);
 
       // Should NOT mention falling back to default config (this was the bug!)
-      expect(message).not.toContain("~/.continue/config.yaml");
+      expect(message).not.toContain("~/.shadow-code/config.yaml");
       expect(message).not.toContain("default config");
       expect(message).not.toContain("fallback");
     }
@@ -156,10 +156,10 @@ name: "Incomplete Config"
 });
 
 // Separate describe block with its own mocking for BEDROCK tests
-describe("CONTINUE_USE_BEDROCK environment variable", () => {
+describe("SHADOW_CODE_USE_BEDROCK environment variable", () => {
   const mockConsoleLog = vi.fn();
   let mockAuthConfig: AuthConfig;
-  const originalEnv = process.env.CONTINUE_USE_BEDROCK;
+  const originalEnv = process.env.SHADOW_CODE_USE_BEDROCK;
 
   // Mock initialize for these tests only
   const mockInitialize = vi.fn().mockResolvedValue({
@@ -185,16 +185,16 @@ describe("CONTINUE_USE_BEDROCK environment variable", () => {
 
   afterEach(() => {
     if (originalEnv) {
-      process.env.CONTINUE_USE_BEDROCK = originalEnv;
+      process.env.SHADOW_CODE_USE_BEDROCK = originalEnv;
     } else {
-      delete process.env.CONTINUE_USE_BEDROCK;
+      delete process.env.SHADOW_CODE_USE_BEDROCK;
     }
     vi.restoreAllMocks();
     vi.doUnmock("./config.js");
   });
 
-  test("should bypass interactive options when CONTINUE_USE_BEDROCK=1", async () => {
-    process.env.CONTINUE_USE_BEDROCK = "1";
+  test("should bypass interactive options when SHADOW_CODE_USE_BEDROCK=1", async () => {
+    process.env.SHADOW_CODE_USE_BEDROCK = "1";
 
     // Re-import to get the mocked version
     vi.resetModules();
@@ -205,13 +205,13 @@ describe("CONTINUE_USE_BEDROCK environment variable", () => {
     expect(result).toBe(true);
     expect(mockConsoleLog).toHaveBeenCalledWith(
       expect.stringContaining(
-        "✓ Using AWS Bedrock (CONTINUE_USE_BEDROCK detected)",
+        "✓ Using AWS Bedrock (SHADOW_CODE_USE_BEDROCK detected)",
       ),
     );
   });
 
-  test("should not bypass when CONTINUE_USE_BEDROCK is not '1'", async () => {
-    process.env.CONTINUE_USE_BEDROCK = "0";
+  test("should not bypass when SHADOW_CODE_USE_BEDROCK is not '1'", async () => {
+    process.env.SHADOW_CODE_USE_BEDROCK = "0";
 
     // Re-import to get the mocked version
     vi.resetModules();
@@ -228,7 +228,7 @@ describe("CONTINUE_USE_BEDROCK environment variable", () => {
       const allCalls = mockConsoleLog.mock.calls.flat();
       const hasBedrockMessage = allCalls.some((call) =>
         String(call).includes(
-          "✓ Using AWS Bedrock (CONTINUE_USE_BEDROCK detected)",
+          "✓ Using AWS Bedrock (SHADOW_CODE_USE_BEDROCK detected)",
         ),
       );
       expect(hasBedrockMessage).toBe(false);

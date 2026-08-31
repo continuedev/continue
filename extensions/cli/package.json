@@ -29,7 +29,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "watch:logs": "touch ~/.continue/logs/cn.log && tail -f ~/.continue/logs/cn.log",
+    "watch:logs": "touch ~/.shadow-code/logs/cn.log && tail -f ~/.shadow-code/logs/cn.log",
     "prepare": "npm run build",
     "semantic-release": "semantic-release",
     "semantic-release:dry-run": "semantic-release --dry-run"

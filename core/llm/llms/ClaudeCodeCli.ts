@@ -43,6 +43,37 @@ interface StreamJsonEvent {
   };
 }
 
+/**
+ * Splits an NDJSON stream into non-empty trimmed lines, including any trailing
+ * line the process didn't terminate with a newline - that last line is
+ * typically the `result` event carrying the turn's usage numbers.
+ */
+async function* readLines(
+  stream: NodeJS.ReadableStream,
+): AsyncGenerator<string> {
+  let buffer = "";
+  for await (const chunk of stream) {
+    buffer += chunk.toString();
+    let newlineIndex: number;
+    while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+      const line = buffer.slice(0, newlineIndex).trim();
+      buffer = buffer.slice(newlineIndex + 1);
+      if (line) {
+        yield line;
+      }
+    }
+  }
+  const trailing = buffer.trim();
+  if (trailing) {
+    yield trailing;
+  }
+}
+
+/** Agent run ids are opaque; keep them safe to embed in a temp file name. */
+function sanitizeForFilename(value: string): string {
+  return value.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 64);
+}
+
 function toolResultText(
   content: Array<{ type: "text"; text: string }> | string | undefined,
 ): string {
@@ -63,12 +94,15 @@ class ClaudeCodeCli extends BaseLLM {
   // provider is a stateless completion API from Continue's perspective), so
   // this is the correct id to key on regardless - it's what the shadow_*
   // tools below already search against for any provider.
-  private async writeMcpConfig(sessionId: string): Promise<string> {
+  private async writeMcpConfig(runKey: string): Promise<string> {
     const mcpServer = getShadowCodeToolsMcpServer();
-    const url = await mcpServer.ensureStarted();
+    await mcpServer.ensureStarted();
+    // Keyed on the agent run, not the chat session: a parent turn and the
+    // subagents it spawns share a chat session, and would otherwise overwrite
+    // and unlink each other's config file.
     const configPath = path.join(
       os.tmpdir(),
-      `shadow-code-mcp-${sessionId}.json`,
+      `shadow-code-mcp-${sanitizeForFilename(runKey)}.json`,
     );
     await fs.writeFile(
       configPath,
@@ -76,7 +110,7 @@ class ClaudeCodeCli extends BaseLLM {
         mcpServers: {
           [MCP_SERVER_NAME]: {
             type: "http",
-            url: `${url}?continueSessionId=${encodeURIComponent(sessionId)}`,
+            url: mcpServer.getUrlForSession(runKey),
           },
         },
       }),
@@ -112,7 +146,18 @@ class ClaudeCodeCli extends BaseLLM {
     // the normal case, and shadow_get_chat_history would silently query an
     // empty session if we used the wrong one.
     const sessionId = options.shadowSessionId ?? deriveSessionId(messages);
-    const mcpConfigPath = await this.writeMcpConfig(sessionId);
+    // One key per agent run. Subagents share `sessionId` with the parent turn
+    // but each needs its own MCP transport, tool registration and config file.
+    const runKey = options.agentRunId ?? sessionId;
+
+    // addEventListener on an already-aborted signal never fires, and there are
+    // awaits below before the listener is attached - without this the child
+    // would be spawned and then never killed.
+    if (signal.aborted) {
+      return;
+    }
+
+    const mcpConfigPath = await this.writeMcpConfig(runKey);
 
     // Expose exactly the tools active for this turn (options.tools already
     // includes any client tool overrides plus, under Ultra Token Saving
@@ -121,7 +166,12 @@ class ClaudeCodeCli extends BaseLLM {
     // full config. Registered/unregistered per call since this MCP server
     // is a shared, long-lived singleton serving every Continue session.
     const mcpServer = getShadowCodeToolsMcpServer();
-    mcpServer.registerToolsForSession(sessionId, options.tools ?? []);
+    mcpServer.registerToolsForSession(
+      runKey,
+      options.tools ?? [],
+      sessionId,
+      options.agentLabel,
+    );
 
     const args = [
       "-p",
@@ -139,7 +189,7 @@ class ClaudeCodeCli extends BaseLLM {
       "",
       // Our own MCP server already gates every call through Continue's
       // approval/policy flow (see ShadowCodeToolsMcpServer + the
-      // claudeCodeCli/authorizeToolCall round-trip to the GUI); Claude
+      // agent/authorizeToolCall round-trip to the GUI); Claude
       // Code's own permission layer has no terminal to prompt against in
       // -p mode and would otherwise just hang or auto-deny.
       "--permission-mode",
@@ -164,13 +214,23 @@ class ClaudeCodeCli extends BaseLLM {
     const onAbort = () => child.kill();
     signal.addEventListener("abort", onAbort);
 
+    // Without a listener, a failed spawn (e.g. `claude` not on PATH) emits an
+    // unhandled 'error' event, which takes down the whole Core process.
+    let spawnError: Error | undefined;
+    child.on("error", (e) => {
+      spawnError = e;
+    });
+    child.stdin.on("error", () => {
+      // EPIPE if the CLI exited before reading the prompt; the exit code and
+      // stderr below are the real diagnosis.
+    });
+
     child.stdin.write(renderChatMessage(lastUserMessage));
     child.stdin.end();
 
     let stderr = "";
     child.stderr.on("data", (chunk) => (stderr += chunk.toString()));
 
-    let buffer = "";
     let usage: Usage | undefined;
 
     // Every tool call Claude Code makes (shadow_* or otherwise) is already
@@ -184,84 +244,84 @@ class ClaudeCodeCli extends BaseLLM {
     // double-execution (see the "claudecode" bypass in tokenOptimizedChat.ts
     // and the forced-ultra-mode routing in streamChat.ts).
     try {
-      for await (const chunk of child.stdout) {
-        buffer += chunk.toString();
-        let newlineIndex: number;
-        while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
-          const line = buffer.slice(0, newlineIndex).trim();
-          buffer = buffer.slice(newlineIndex + 1);
-          if (!line) continue;
+      for await (const line of readLines(child.stdout)) {
+        let event: StreamJsonEvent;
+        try {
+          event = JSON.parse(line);
+        } catch {
+          continue; // Not every line is guaranteed to be JSON we care about
+        }
 
-          let event: StreamJsonEvent;
-          try {
-            event = JSON.parse(line);
-          } catch {
-            continue; // Not every line is guaranteed to be JSON we care about
-          }
-
-          if (event.type === "assistant" && event.message?.content) {
-            let text = "";
-            const toolCalls: ToolCallDelta[] = [];
-            for (const block of event.message.content) {
-              if (block.type === "text") {
-                text += block.text;
-              } else if (block.type === "tool_use") {
-                toolCalls.push({
-                  id: block.id,
-                  type: "function",
-                  function: {
-                    name: block.name.startsWith(MCP_TOOL_PREFIX)
-                      ? block.name.slice(MCP_TOOL_PREFIX.length)
-                      : block.name,
-                    arguments: JSON.stringify(block.input ?? {}),
-                  },
-                });
-              }
+        if (event.type === "assistant" && event.message?.content) {
+          let text = "";
+          const toolCalls: ToolCallDelta[] = [];
+          for (const block of event.message.content) {
+            if (block.type === "text") {
+              text += block.text;
+            } else if (block.type === "tool_use") {
+              toolCalls.push({
+                id: block.id,
+                type: "function",
+                function: {
+                  name: block.name.startsWith(MCP_TOOL_PREFIX)
+                    ? block.name.slice(MCP_TOOL_PREFIX.length)
+                    : block.name,
+                  arguments: JSON.stringify(block.input ?? {}),
+                },
+              });
             }
-            if (text || toolCalls.length > 0) {
-              yield {
-                role: "assistant",
-                content: text,
-                ...(toolCalls.length > 0 ? { toolCalls } : {}),
-              };
-            }
-            continue;
           }
-
-          if (event.type === "user" && event.message?.content) {
-            for (const block of event.message.content) {
-              if (block.type === "tool_result") {
-                yield {
-                  role: "tool",
-                  toolCallId: block.tool_use_id,
-                  content: toolResultText(block.content),
-                };
-              }
-            }
-            continue;
-          }
-
-          if (event.type === "result" && event.usage) {
-            usage = {
-              promptTokens: event.usage.input_tokens ?? 0,
-              completionTokens: event.usage.output_tokens ?? 0,
-              promptTokensDetails: {
-                cachedTokens: event.usage.cache_read_input_tokens,
-                cacheWriteTokens: event.usage.cache_creation_input_tokens,
-              },
+          if (text || toolCalls.length > 0) {
+            yield {
+              role: "assistant",
+              content: text,
+              ...(toolCalls.length > 0 ? { toolCalls } : {}),
             };
           }
+          continue;
+        }
+
+        if (event.type === "user" && event.message?.content) {
+          for (const block of event.message.content) {
+            if (block.type === "tool_result") {
+              yield {
+                role: "tool",
+                toolCallId: block.tool_use_id,
+                content: toolResultText(block.content),
+              };
+            }
+          }
+          continue;
+        }
+
+        if (event.type === "result" && event.usage) {
+          usage = {
+            promptTokens: event.usage.input_tokens ?? 0,
+            completionTokens: event.usage.output_tokens ?? 0,
+            promptTokensDetails: {
+              cachedTokens: event.usage.cache_read_input_tokens,
+              cacheWriteTokens: event.usage.cache_creation_input_tokens,
+            },
+          };
         }
       }
     } finally {
       signal.removeEventListener("abort", onAbort);
-      mcpServer.unregisterSession(sessionId);
+      // If the consumer abandoned this generator without aborting (a throw
+      // further down the pipeline, say), nothing else will ever kill the child.
+      if (child.exitCode === null && child.signalCode === null) {
+        child.kill();
+      }
+      mcpServer.unregisterSession(runKey);
       await fs.unlink(mcpConfigPath).catch(() => {});
     }
 
     const exitCode: number = await new Promise((resolve) =>
       child.once("close", resolve),
     );
+    if (spawnError) {
+      throw new Error(`Failed to run the claude CLI: ${spawnError.message}`);
+    }
     if (exitCode !== 0 && !signal.aborted) {
       throw new Error(
         `claude CLI exited with code ${exitCode}${stderr ? `: ${stderr}` : ""}`,

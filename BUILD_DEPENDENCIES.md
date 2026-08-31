@@ -30,10 +30,10 @@ This document catalogs all build dependencies, secrets, and environment variable
 
 ## CLI
 
-| Variable            | Purpose                                                                 | Referenced In                                                                                      |
-| ------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `CONTINUE_API_BASE` | Base URL for the Continue API (defaults to `https://api.continue.dev/`) | `extensions/cli/.env.example`                                                                      |
-| `CONTINUE_API_KEY`  | API key for Continue authentication                                     | `extensions/cli/.env.example`, `packages/continue-sdk/typescript/.env.example`, multiple workflows |
+| Variable            | Purpose                                                                    | Referenced In                                                                                      |
+| ------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `CONTINUE_API_BASE` | Base URL for the Shadow Code API (defaults to `https://api.continue.dev/`) | `extensions/cli/.env.example`                                                                      |
+| `CONTINUE_API_KEY`  | API key for Shadow Code authentication                                     | `extensions/cli/.env.example`, `packages/continue-sdk/typescript/.env.example`, multiple workflows |
 
 ---
 
@@ -73,7 +73,7 @@ Used for integration tests in PR checks and package releases.
 | ------------------ | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `GITHUB_TOKEN`     | Default GitHub Actions token (automatic)                        | Many workflows                                                                                                        |
 | `CI_GITHUB_TOKEN`  | Elevated GitHub PAT for cross-repo operations and PR management | `jetbrains-release.yaml`, `preview.yaml`, `main.yaml`, `pr-checks.yaml`, `auto-assign-issue.yaml`                     |
-| `CONTINUE_API_KEY` | Continue platform API key for agent workflows                   | `run-continue-agent.yml`, `tidy-up-codebase.yml`, `snyk-agent.yaml`, `auto-fix-failed-tests.yml`, `cli-pr-checks.yml` |
+| `CONTINUE_API_KEY` | Shadow Code platform API key for agent workflows                | `run-continue-agent.yml`, `tidy-up-codebase.yml`, `snyk-agent.yaml`, `auto-fix-failed-tests.yml`, `cli-pr-checks.yml` |
 | `RUNLOOP_API_KEY`  | Runloop API key for uploading sandbox blueprints                | `stable-release.yml`, `upload-runloop-blueprint.yml`                                                                  |
 | `SNYK_TOKEN`       | Snyk security scanning token                                    | `snyk-agent.yaml`                                                                                                     |
 

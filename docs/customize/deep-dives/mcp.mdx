@@ -1,5 +1,5 @@
 ---
-title: "How to Set Up Model Context Protocol (MCP) in Continue"
+title: "How to Set Up Model Context Protocol (MCP) in Shadow Code"
 description: MCP use and customization
 keywords: [tool, use, function calling, claude, automatic]
 sidebarTitle: "Model Context Protocol (MCP)"
@@ -14,7 +14,7 @@ the wider digital world. This standard, created by Anthropic to bring together
 prompts, context, and tool use, is key for building truly useful AI experiences
 that can be set up with custom tools.
 
-## How MCP Works in Continue
+## How MCP Works in Shadow Code
 
 Currently custom tools can be configured using the Model Context
 Protocol standard to unify prompts, context, and tool use.
@@ -29,11 +29,11 @@ For ready-to-use configurations for popular MCP servers, see [Example MCP Server
 
 Below is a quick example of setting up a new MCP server for use in your config:
 
-1. Create a folder called `.continue/mcpServers` at the top level of your workspace
+1. Create a folder called `.shadow-code/mcpServers` at the top level of your workspace
 2. Add a file called `playwright-mcp.yaml` to this folder
 3. Write the following contents and save
 
-```yaml title=".continue/mcpServers/playwright-mcp.yaml"
+```yaml title=".shadow-code/mcpServers/playwright-mcp.yaml"
 name: Playwright mcpServer
 version: 0.0.1
 schema: v1
@@ -54,18 +54,18 @@ The result will be a generated file called `hn.txt` in the current working direc
 
 ![playwright mcp](/images/mcp-playwright.png)
 
-## How to Set Up Continue Documentation Search with MCP
+## How to Set Up Shadow Code Documentation Search with MCP
 
-You can set up an MCP server to search the Continue documentation directly from your config. This is particularly useful for getting help with Continue configuration and features.
+You can set up an MCP server to search the Shadow Code documentation directly from your config. This is particularly useful for getting help with Shadow Code configuration and features.
 
-For complete setup instructions, troubleshooting, and usage examples, see the [Continue MCP Reference](/reference/continue-mcp).
+For complete setup instructions, troubleshooting, and usage examples, see the [Shadow Code MCP Reference](/reference/continue-mcp).
 
 ## Using JSON MCP Format from Claude, Cursor, Cline, etc
 
 <Info>
-If you're coming from another tool that uses JSON MCP format configuration files (like Claude Desktop, Cursor, or Cline), you can copy those JSON config files directly into your `.continue/mcpServers/` directory (note the plural "Servers") and Continue will automatically pick them up.
+If you're coming from another tool that uses JSON MCP format configuration files (like Claude Desktop, Cursor, or Cline), you can copy those JSON config files directly into your `.shadow-code/mcpServers/` directory (note the plural "Servers") and Shadow Code will automatically pick them up.
 
-For example, place your JSON MCP config file at `.continue/mcpServers/mcp.json` in your workspace.
+For example, place your JSON MCP config file at `.shadow-code/mcpServers/mcp.json` in your workspace.
 </Info>
 
 ## How to Configure MCP Servers
@@ -87,7 +87,7 @@ mcpServers:
 ```
 
 <Note>
-When creating a standalone block file in `.continue/mcpServers/`, remember to include the required metadata fields (`name`, `version`, `schema`) as shown in the Quick Start example above.
+When creating a standalone block file in `.shadow-code/mcpServers/`, remember to include the required metadata fields (`name`, `version`, `schema`) as shown in the Quick Start example above.
 </Note>
 
 ### How to Configure MCP Server Properties

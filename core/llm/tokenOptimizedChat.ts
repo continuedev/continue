@@ -17,29 +17,41 @@ interface CompletedToolCall {
 }
 
 function extractCompletedToolCalls(chunks: ChatMessage[]): CompletedToolCall[] {
-  const callsById = new Map<string, CompletedToolCall>();
-  const callOrder: string[] = [];
-  let currentId = "";
+  // Keyed by delta.index when the provider sends one, falling back to a
+  // synthetic key derived from the id. Keying on "most recently seen id" alone
+  // merges parallel tool calls into one, because providers only repeat the id
+  // on the delta that opens each call - every subsequent argument fragment
+  // carries just an index.
+  const calls = new Map<string | number, CompletedToolCall>();
+  const callOrder: (string | number)[] = [];
+  let currentKey: string | number | undefined;
 
   for (const chunk of chunks) {
     if (chunk.role !== "assistant" || !chunk.toolCalls?.length) continue;
     for (const delta of chunk.toolCalls as ToolCallDelta[]) {
-      if (delta.id) {
-        currentId = delta.id;
-        if (!callsById.has(currentId)) {
-          callsById.set(currentId, { id: currentId, name: "", args: "" });
-          callOrder.push(currentId);
-        }
+      const key =
+        typeof delta.index === "number"
+          ? delta.index
+          : (delta.id ?? currentKey);
+      if (key === undefined) continue;
+      currentKey = key;
+
+      let call = calls.get(key);
+      if (!call) {
+        call = { id: delta.id ?? "", name: "", args: "" };
+        calls.set(key, call);
+        callOrder.push(key);
       }
-      if (!currentId) continue;
-      const call = callsById.get(currentId);
-      if (!call) continue;
+      // The id may arrive on a later delta than the one that opened the call.
+      if (delta.id && !call.id) call.id = delta.id;
       if (delta.function?.name) call.name += delta.function.name;
       if (delta.function?.arguments) call.args += delta.function.arguments;
     }
   }
 
-  return callOrder.map((id) => callsById.get(id)!).filter((c) => c && c.name);
+  return callOrder
+    .map((key) => calls.get(key)!)
+    .filter((c) => c && c.name && c.id);
 }
 
 function extractUsageFromChunks(chunks: ChatMessage[]): {
@@ -208,9 +220,21 @@ export async function* tokenOptimizedStreamChat(
     shadowSessionId: sessionId,
   };
 
+  // Everything after the last user message: the assistant tool-call /
+  // tool-result pairs of the turn currently in progress. Ultra mode drops
+  // *previous* turns, but dropping the *current* turn's in-flight state makes
+  // the loop non-convergent - the model would see the same user message with
+  // its tool results missing and simply re-emit the identical tool call. That
+  // is merely wasteful for a read_file; for spawn_subagents it re-runs the
+  // whole delegated task.
+  const lastUserIdx = messages.lastIndexOf(currentUserMsg);
+  const currentTurnTail =
+    lastUserIdx === -1 ? [] : messages.slice(lastUserIdx + 1);
+
   let loopMessages: ChatMessage[] = [
     ...(systemMsg ? [systemMsg] : []),
     currentUserMsg,
+    ...currentTurnTail,
   ];
 
   let totalActualTokensIn = 0;
@@ -222,130 +246,146 @@ export async function* tokenOptimizedStreamChat(
     completion: "",
   };
 
-  // Internal agentic loop: execute shadow_* tools server-side, pass external tools to client
-  while (true) {
-    const chunks: ChatMessage[] = [];
-    const gen = model.streamChat(loopMessages, signal, augmentedOptions, {
-      precompiled: true,
-    });
-
-    let next = await gen.next();
-    while (!next.done) {
-      chunks.push(next.value);
-      next = await gen.next();
-    }
-    if (
-      next.value &&
-      typeof next.value === "object" &&
-      "prompt" in next.value
-    ) {
-      finalPromptLog = next.value as PromptLog;
-    }
-
-    const { promptTokens, completionTokens } = extractUsageFromChunks(chunks);
-    totalActualTokensIn += promptTokens;
-    totalActualTokensOut += completionTokens;
-
-    // Claude Code CLI (core/llm/llms/ClaudeCodeCli.ts) resolves its entire
-    // tool-call loop internally, inside the single `claude -p` subprocess,
-    // via shadow-code-tools MCP - including shadow_* history lookups. Any
-    // toolCalls it yields here (paired with their results, for UI parity
-    // with the normal provider path) are already-resolved history, not
-    // pending work. Running the interception logic below would either
-    // re-execute already-resolved shadow_* calls a second time, or spawn a
-    // needless second `claude -p` process for calls that already have a
-    // final answer - so always treat a single iteration as done.
-    if (model.providerName === "claudecode") {
-      for (const chunk of chunks) {
-        yield chunk;
+  try {
+    // Internal agentic loop: execute shadow_* tools server-side, pass external tools to client
+    while (true) {
+      // The generator is resumed via gen.return() on abort, which skips straight
+      // to the finally below; this covers abort landing between iterations.
+      if (signal.aborted) {
+        break;
       }
-      finalPromptLog = {
-        ...finalPromptLog,
-        completion: buildTextContent(chunks),
-      };
-      break;
-    }
 
-    const toolCalls = extractCompletedToolCalls(chunks);
+      const chunks: ChatMessage[] = [];
+      const gen = model.streamChat(loopMessages, signal, augmentedOptions, {
+        precompiled: true,
+      });
 
-    if (toolCalls.length === 0) {
-      // Pure text response — stream all chunks to the caller
-      for (const chunk of chunks) {
-        yield chunk;
+      let next = await gen.next();
+      while (!next.done) {
+        chunks.push(next.value);
+        if (signal.aborted) {
+          await gen.return(undefined as any);
+          break;
+        }
+        next = await gen.next();
       }
-      finalPromptLog = {
-        ...finalPromptLog,
-        completion: buildTextContent(chunks),
-      };
-      break;
-    }
-
-    const shadowCalls = toolCalls.filter((tc) =>
-      SHADOW_TOOL_NAMES.has(tc.name),
-    );
-    const externalCalls = toolCalls.filter(
-      (tc) => !SHADOW_TOOL_NAMES.has(tc.name),
-    );
-
-    if (externalCalls.length > 0) {
-      // External/MCP tool calls — pass all chunks through to the client unchanged
-      for (const chunk of chunks) {
-        yield chunk;
+      if (
+        next.value &&
+        typeof next.value === "object" &&
+        "prompt" in next.value
+      ) {
+        finalPromptLog = next.value as PromptLog;
       }
-      break;
-    }
 
-    // All tool calls are shadow tools — execute server-side (never round-tripped
-    // to the client, so the reduced-history guarantee holds), but still yield
-    // the resolved call/result so the client renders the same tool-call card
-    // it would for any other tool. Since this is followed by more streamed
-    // chunks from the next loop iteration (ending in plain text), the client's
-    // "pending tool call" detection naturally treats it as already resolved
-    // history rather than something it needs to execute itself.
-    const assistantToolCallMsg: AssistantChatMessage = {
-      role: "assistant",
-      content: "",
-      toolCalls: shadowCalls.map((tc) => ({
-        id: tc.id,
-        type: "function" as const,
-        function: { name: tc.name, arguments: tc.args },
-      })),
-    };
-    loopMessages = [...loopMessages, assistantToolCallMsg];
-    yield assistantToolCallMsg;
+      const { promptTokens, completionTokens } = extractUsageFromChunks(chunks);
+      totalActualTokensIn += promptTokens;
+      totalActualTokensOut += completionTokens;
 
-    const turnIndex = await ShadowChatDb.getCurrentTurnIndex(sessionId);
-    for (const call of shadowCalls) {
-      const result = await executeShadowTool(call, sessionId, historyLimit);
-      const toolResultMsg: ChatMessage = {
-        role: "tool",
-        content: result,
-        toolCallId: call.id,
-      };
-      loopMessages = [...loopMessages, toolResultMsg];
-      yield toolResultMsg;
+      // Claude Code CLI (core/llm/llms/ClaudeCodeCli.ts) resolves its entire
+      // tool-call loop internally, inside the single `claude -p` subprocess,
+      // via shadow-code-tools MCP - including shadow_* history lookups. Any
+      // toolCalls it yields here (paired with their results, for UI parity
+      // with the normal provider path) are already-resolved history, not
+      // pending work. Running the interception logic below would either
+      // re-execute already-resolved shadow_* calls a second time, or spawn a
+      // needless second `claude -p` process for calls that already have a
+      // final answer - so always treat a single iteration as done.
+      if (model.providerName === "claudecode") {
+        for (const chunk of chunks) {
+          yield chunk;
+        }
+        finalPromptLog = {
+          ...finalPromptLog,
+          completion: buildTextContent(chunks),
+        };
+        break;
+      }
 
-      await ShadowChatDb.saveToolCall(
-        sessionId,
-        call.name,
-        call.id,
-        call.args,
-        result,
-        turnIndex,
+      const toolCalls = extractCompletedToolCalls(chunks);
+
+      if (toolCalls.length === 0) {
+        // Pure text response — stream all chunks to the caller
+        for (const chunk of chunks) {
+          yield chunk;
+        }
+        finalPromptLog = {
+          ...finalPromptLog,
+          completion: buildTextContent(chunks),
+        };
+        break;
+      }
+
+      const shadowCalls = toolCalls.filter((tc) =>
+        SHADOW_TOOL_NAMES.has(tc.name),
       );
-    }
-    // Loop: the LLM will now see the tool results and produce its final answer
-  }
+      const externalCalls = toolCalls.filter(
+        (tc) => !SHADOW_TOOL_NAMES.has(tc.name),
+      );
 
-  // Log token savings for this turn
-  await ShadowChatDb.saveTurn(
-    sessionId,
-    userMessageText,
-    finalPromptLog.completion,
-    totalActualTokensIn,
-    totalActualTokensOut,
-    estimatedBaselineTokens,
-  );
+      if (externalCalls.length > 0) {
+        // External/MCP tool calls — pass all chunks through to the client unchanged
+        for (const chunk of chunks) {
+          yield chunk;
+        }
+        break;
+      }
+
+      // All tool calls are shadow tools — execute server-side (never round-tripped
+      // to the client, so the reduced-history guarantee holds), but still yield
+      // the resolved call/result so the client renders the same tool-call card
+      // it would for any other tool. Since this is followed by more streamed
+      // chunks from the next loop iteration (ending in plain text), the client's
+      // "pending tool call" detection naturally treats it as already resolved
+      // history rather than something it needs to execute itself.
+      const assistantToolCallMsg: AssistantChatMessage = {
+        role: "assistant",
+        content: "",
+        toolCalls: shadowCalls.map((tc) => ({
+          id: tc.id,
+          type: "function" as const,
+          function: { name: tc.name, arguments: tc.args },
+        })),
+      };
+      loopMessages = [...loopMessages, assistantToolCallMsg];
+      yield assistantToolCallMsg;
+
+      const turnIndex = await ShadowChatDb.getCurrentTurnIndex(sessionId);
+      for (const call of shadowCalls) {
+        const result = await executeShadowTool(call, sessionId, historyLimit);
+        const toolResultMsg: ChatMessage = {
+          role: "tool",
+          content: result,
+          toolCallId: call.id,
+        };
+        loopMessages = [...loopMessages, toolResultMsg];
+        yield toolResultMsg;
+
+        await ShadowChatDb.saveToolCall(
+          sessionId,
+          call.name,
+          call.id,
+          call.args,
+          result,
+          turnIndex,
+        );
+      }
+      // Loop: the LLM will now see the tool results and produce its final answer
+    }
+  } finally {
+    // In a finally so an aborted or failed turn still lands in the token
+    // accounting. gen.return() on abort resumes this generator at its current
+    // yield, which runs this block; previously the turn was silently lost.
+    await ShadowChatDb.saveTurn(
+      sessionId,
+      userMessageText,
+      finalPromptLog.completion,
+      totalActualTokensIn,
+      totalActualTokensOut,
+      estimatedBaselineTokens,
+    ).catch((e) => {
+      console.error("Failed to record shadow chat turn", e);
+    });
+  }
 
   return finalPromptLog;
 }
