@@ -1,0 +1,114 @@
+# SLNG
+
+SLNG is a regional voice AI infrastructure provider offering TTS and STT models across EU, AU, and Asia with sub-100ms latency.
+
+## Configuration
+
+Add SLNG to your `~/.continue/config.json`:
+
+```json
+{
+  "models": [
+    {
+      "title": "SLNG - Deepgram Aura 2",
+      "provider": "slng",
+      "model": "deepgram-aura-2",
+      "apiKey": "your-slng-api-key"
+    }
+  ]
+}
+```
+
+You can also set the API key via environment variable:
+```bash
+export SLNG_API_KEY="your-slng-api-key"
+```
+
+## Available Models
+
+### TTS (Text-to-Speech) - 11 Models
+
+| Model ID | Name | Languages | Use Case |
+|----------|------|-----------|----------|
+| `deepgram-aura-2` | Deepgram Aura 2 | English, Spanish | Natural voices |
+| `bulbul-v3` | Sarvam Bulbul v3 | 23 Indian languages | Regional voices |
+| `cartesia-sonic-3` | Cartesia Sonic 3 | Multilingual | Low latency |
+| `cartesia-sonic-3-5` | Cartesia Sonic 3.5 | Multilingual | Enhanced quality |
+| `fish-tts-s2-1-pro` | Fish TTS S2.1 Pro | EN, ZH, JA | Asian languages |
+| `gradium-tts` | Gradium TTS | English | Regional deployment |
+| `inworld-max-1-5` | Inworld Max 1.5 | English | Character voices |
+| `kugel-2` | KugelAudio Kugel 2 | European languages | EU deployment |
+| `murf-falcon` | Murf Falcon | English | Professional narration |
+| `sarvam-saaras` | Sarvam AI Saaras | Indian languages | Regional voices |
+| `soniox-tts-rt-v1` | Soniox TTS RT v1 | English | Real-time synthesis |
+
+### STT (Speech-to-Text) - 8 Models
+
+| Model ID | Name | Languages | Use Case |
+|----------|------|-----------|----------|
+| `deepgram-nova-3` | Deepgram Nova 3 | English | Standard transcription |
+| `deepgram-nova-3-medical` | Deepgram Nova 3 Medical | English | Medical terminology |
+| `deepgram-nova-3-multi` | Deepgram Nova 3 Multi | EN, ES, HI | Multilingual |
+| `fish-audio-asr` | Fish Audio ASR | EN, ZH, JA | Asian languages |
+| `gradium-stt` | Gradium STT | English | Regional deployment |
+| `reson8-stt-v1` | Reson8 STT v1 | English | Enterprise-grade |
+| `soniox-speech-ai-rt-v5` | Soniox Speech AI RT v5 | English | High accuracy |
+| `speechmatics-realtime-v2` | Speechmatics Realtime v2 | Multilingual | Real-time |
+
+## Regional Deployment
+
+SLNG models are deployed across multiple regions:
+- **US:** Central US infrastructure
+- **EU:** European data centers
+- **AU:** Australia deployment
+- **Asia:** India, Singapore, and more
+
+Models automatically route to the nearest region for optimal latency.
+
+## Authentication
+
+Get your API key from [SLNG](https://app.slng.ai/sign-in).
+
+## Example Configurations
+
+### TTS for Documentation
+```json
+{
+  "title": "SLNG TTS - Aura 2",
+  "provider": "slng",
+  "model": "deepgram-aura-2",
+  "apiKey": "your-api-key"
+}
+```
+
+### STT for Transcription
+```json
+{
+  "title": "SLNG STT - Nova 3",
+  "provider": "slng",
+  "model": "deepgram-nova-3",
+  "apiKey": "your-api-key"
+}
+```
+
+### Multilingual Support
+```json
+{
+  "title": "SLNG - Indian Languages",
+  "provider": "slng",
+  "model": "bulbul-v3",
+  "apiKey": "your-api-key"
+}
+```
+
+## Documentation
+
+- [SLNG API Documentation](https://docs.slng.ai)
+- [Model Catalog](https://docs.slng.ai/models)
+- [API Reference](https://docs.slng.ai/api-reference)
+
+## Support
+
+For issues or questions:
+- GitHub: [continuedev/continue](https://github.com/continuedev/continue/issues)
+- SLNG Docs: https://docs.slng.ai
