@@ -744,7 +744,7 @@
     "jsdom": "^24.0.0",
     "lru-cache": "^11.2.4",
     "minisearch": "^7.0.0",
-    "mocha": "^11.7.5",
+    "mocha": "^12.0.0",
     "monaco-editor": "^0.53.0",
     "monaco-vscode-textmate-theme-converter": "^0.1.7",
     "ncp": "^2.0.0",
