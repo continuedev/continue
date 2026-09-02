@@ -4,9 +4,10 @@ sidebarTitle: "OpenZoo"
 ---
 
 <Info>
-  OpenZoo is an OpenAI-compatible provider with no signup: any API key value is
-  accepted (for example `sk-openzoo`), and usage is paid per request — by card,
-  or automatically via the x402 protocol from a local burner wallet.
+  OpenZoo is an OpenAI-compatible provider with no account: a small local proxy
+  (`npx openzoo`) pays for each request via the x402 protocol from a local
+  burner wallet. The proxy ignores the API key, so any non-empty value works
+  (for example `sk-openzoo`).
 </Info>
 
 <Tip>
@@ -21,8 +22,9 @@ OpenZoo runs locally and provides an OpenAI-compatible API:
 npx openzoo
 ```
 
-This starts the gateway at `http://localhost:8402/v1`. A hosted endpoint is
-also available at `https://api.openzoo.fun/v1`.
+This starts the proxy at `http://localhost:8402/v1`. `npx openzoo address`
+prints its wallet — fund it with USDC on Solana or Base; `npx openzoo balance`
+shows what is left.
 
 ## Configuration
 
@@ -58,7 +60,9 @@ also available at `https://api.openzoo.fun/v1`.
   </Tab>
 </Tabs>
 
-To use the hosted endpoint instead, set `apiBase: https://api.openzoo.fun/v1`.
+The hosted endpoint `https://api.openzoo.fun/v1` answers HTTP 402 unless the
+caller pays x402 or presents an OpenZoo subscription key (`ozk_live_…`);
+Continue cannot pay x402 itself, so keep `apiBase` on the local proxy.
 
 ## Available Models
 
@@ -80,5 +84,6 @@ curl http://localhost:8402/v1/models
 npx openzoo
 ```
 
-If a request returns HTTP 402, the local wallet is unfunded — the error body
-includes directions (`npx openzoo address` / `npx openzoo balance`).
+If a request returns HTTP 402, the local wallet is unfunded — send USDC to
+the address from `npx openzoo address` (`npx openzoo balance` shows what is
+left).
