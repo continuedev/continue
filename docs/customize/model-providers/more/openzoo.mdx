@@ -1,0 +1,84 @@
+---
+title: "How to Configure OpenZoo with Continue"
+sidebarTitle: "OpenZoo"
+---
+
+<Info>
+  OpenZoo is an OpenAI-compatible provider with no signup: any API key value is
+  accepted (for example `sk-openzoo`), and usage is paid per request — by card,
+  or automatically via the x402 protocol from a local burner wallet.
+</Info>
+
+<Tip>
+  Learn more at [openzoo.fun](https://openzoo.fun)
+</Tip>
+
+## Installation
+
+OpenZoo runs locally and provides an OpenAI-compatible API:
+
+```bash
+npx openzoo
+```
+
+This starts the gateway at `http://localhost:8402/v1`. A hosted endpoint is
+also available at `https://api.openzoo.fun/v1`.
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: GLM 5.3 Flash
+      provider: openai
+      model: z-ai/glm-5.3-flash
+      apiBase: http://localhost:8402/v1
+      apiKey: sk-openzoo
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GLM 5.3 Flash",
+        "provider": "openai",
+        "model": "z-ai/glm-5.3-flash",
+        "apiBase": "http://localhost:8402/v1",
+        "apiKey": "sk-openzoo"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+To use the hosted endpoint instead, set `apiBase: https://api.openzoo.fun/v1`.
+
+## Available Models
+
+List every available model id with live pricing (free, no payment):
+
+```bash
+curl http://localhost:8402/v1/models
+```
+
+Model ids are provider-prefixed, for example `z-ai/glm-5.3-flash` or
+`qwen/qwen3.7-flash`. SSE streaming is supported for all models.
+
+## Troubleshooting
+
+If you see connection errors, make sure OpenZoo is running:
+
+```bash
+curl http://localhost:8402/v1/models
+npx openzoo
+```
+
+If a request returns HTTP 402, the local wallet is unfunded — the error body
+includes directions (`npx openzoo address` / `npx openzoo balance`).
