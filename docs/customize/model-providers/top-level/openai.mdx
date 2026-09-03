@@ -96,6 +96,46 @@ If you are using an OpenAI API compatible providers, you can change the `apiBase
   </Tab>
 </Tabs>
 
+### PZERO
+
+[PZERO](https://pzero.studio/agents) is a prepaid OpenAI-compatible inference service. It uses a `pzero_` API key and serves `deepseek-v4-flash` among other models.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: PZERO
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: PZERO
+      provider: openai
+      model: deepseek-v4-flash
+      apiBase: https://api.pzero.studio/v1
+      apiKey: pzero_YOUR_KEY
+      useResponsesApi: false
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "PZERO",
+        "provider": "openai",
+        "model": "deepseek-v4-flash",
+        "apiBase": "https://api.pzero.studio/v1",
+        "apiKey": "pzero_YOUR_KEY",
+        "useResponsesApi": false
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+[Get a PZERO API key](https://pzero.studio/agents) (sign-in free; min top-up 1 USDC on Base; no starter credits). The public model catalog is available without a key: `GET https://api.pzero.studio/v1/models`.
+
 ### How to Force Legacy Completions Endpoint Usage
 
 To force usage of `completions` instead of `chat/completions` endpoint you can set:
