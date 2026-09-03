@@ -185,6 +185,25 @@ context:
   - provider: problems
 ```
 
+### @code-to-text – Translate Code into Human-Readable Polish
+
+The [code_to_text](https://github.com/Kondexor2000/code_to_text) project exposes a local HTTP context provider that translates pasted code into a Polish description. Start its FastAPI backend, then add this provider to your `config.yaml`:
+
+```yaml
+context:
+  - provider: http
+    name: code-to-text
+    params:
+      url: http://127.0.0.1:8000/api/continue/context
+      title: Code to human text
+      displayTitle: Code to human text
+      description: Translate code into a Polish description
+      options:
+        language: auto
+```
+
+In chat, select `@code-to-text` and paste the code to translate. The service accepts Continue's HTTP context payload and returns a context item containing the translated description. The backend repository includes a ready-to-use `.continue/config.yaml` and Docker setup.
+
 ### @Debugger Context Provider – Reference Debugger Local Variables
 
 Reference the contents of the local variables in the debugger. Currently only available in VS Code.
