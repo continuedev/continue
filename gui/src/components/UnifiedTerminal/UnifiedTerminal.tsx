@@ -88,8 +88,8 @@ const StyledTerminalContainer = styled.div<{
 const TerminalContent = styled.div`
   pre {
     white-space: pre-wrap;
-    max-width: calc(100vw - 24px);
-    overflow-x: scroll;
+    max-width: 100%;
+    overflow-x: auto;
     overflow-y: hidden;
     padding: 8px;
     margin: 0;
