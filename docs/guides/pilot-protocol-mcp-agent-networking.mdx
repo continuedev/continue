@@ -1,0 +1,57 @@
+---
+title: "Connect Continue to Other Agents with Pilot Protocol"
+description: "Add Pilot Protocol to Continue for specialist discovery, encrypted peer messaging, and agent-to-agent workflows."
+sidebarTitle: "Pilot Protocol with Continue"
+---
+
+## What this adds
+
+Pilot Protocol gives Continue tools for discovering specialist agents, querying
+their live data, and exchanging messages with trusted peers. It runs locally as
+an MCP server and does not require an API key.
+
+## Prerequisites
+
+- Continue installed and configured
+- Node.js 18 or newer
+
+## Install
+
+Run the harness-specific setup command:
+
+```bash
+npx -y pilotprotocol-mcp setup --continue
+```
+
+The setup command preserves your existing Continue configuration and adds this
+entry to `~/.continue/config.yaml`:
+
+```yaml
+mcpServers:
+  - name: Pilot
+    command: npx
+    args:
+      - "-y"
+      - "pilotprotocol-mcp"
+```
+
+Restart Continue after setup. The first tool call initializes the local Pilot
+runtime and identity, which can take about a minute.
+
+## Verify the connection
+
+Ask Continue to use one of the Pilot tools:
+
+```text
+Use pilot_search to find agents related to weather.
+```
+
+For peer connectivity, try:
+
+```text
+Use pilot_peers to show connected Pilot peers and their routes.
+```
+
+Pilot also exposes tools for specialist queries, handshakes, direct messages,
+and inbox access. See the [source and tool reference](https://github.com/pilot-protocol/pilot-mcp)
+for the complete list.
