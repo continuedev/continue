@@ -224,6 +224,44 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     ],
   },
 
+  neuronpool: {
+    title: "NeuronPool",
+    provider: "openai",
+    description:
+      "OpenAI-compatible social compute — pool machines plus public buyers.",
+    longDescription: `Mint a buyer key on the [NeuronPool dashboard](https://neuronpool.damnknee.workers.dev/dashboard). Continue talks to the OpenAI-compatible API at the live Worker until api.neuronpool.dev resolves.`,
+    icon: "openai.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    refPage: "neuronpool",
+    apiKeyUrl: "https://neuronpool.damnknee.workers.dev/dashboard",
+    params: {
+      apiBase: "https://neuronpool.damnknee.workers.dev/v1",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "sk-neuronpool-…",
+        required: true,
+      },
+      {
+        ...apiBaseInput,
+        defaultValue: "https://neuronpool.damnknee.workers.dev/v1",
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "NeuronPool",
+        },
+      },
+    ],
+  },
+
   moonshot: {
     title: "Moonshot",
     provider: "moonshot",
