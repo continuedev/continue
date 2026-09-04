@@ -364,6 +364,8 @@ export interface ToolCall {
 
 export interface ToolCallDelta {
   id?: string;
+  /** Provider-local correlation index for streamed tool-call fragments. */
+  index?: number;
   type?: "function";
   function?: {
     name?: string;
@@ -518,6 +520,8 @@ interface ToolCallState {
   toolCall: ToolCall;
   status: ToolStatus;
   parsedArgs: any;
+  /** Correlation index retained across streamed updates. */
+  index?: number;
   processedArgs?: Record<string, any>; // Added in preprocesing step
   output?: ContextItem[];
   tool?: Tool;

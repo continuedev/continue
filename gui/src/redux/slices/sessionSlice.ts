@@ -127,6 +127,11 @@ function applyToolCallDelta(
     existingStateIndex = toolCallStates.findIndex(
       (state) => state.toolCallId === toolCallDelta.id,
     );
+  } else if (typeof toolCallDelta.index === "number") {
+    // No ID, but the delta carries the provider's correlation index.
+    existingStateIndex = toolCallStates.findIndex(
+      (state) => state.index === toolCallDelta.index,
+    );
   } else {
     // No ID in delta (common in OpenAI streaming fragments)
     // Strategy: Update the most recently added tool call that's still being generated

@@ -23,6 +23,7 @@ export function addToolCallDeltaToState(
   // These will/should not be partially streamed
   const callType = toolCallDelta.type ?? "function";
   const callId = currentCall?.id || toolCallDelta.id || "";
+  const callIndex = currentState?.index ?? toolCallDelta.index;
 
   // These may be streamed in chunks
   const currentName = currentCall?.function.name ?? "";
@@ -66,6 +67,7 @@ export function addToolCallDeltaToState(
     },
     toolCallId: callId,
     parsedArgs,
+    index: callIndex,
   };
 }
 
