@@ -1,0 +1,49 @@
+---
+title: "NeuronPool"
+sidebarTitle: "NeuronPool"
+---
+
+<Info>
+  Mint a buyer key on the [NeuronPool dashboard](https://neuronpool.damnknee.workers.dev/dashboard).
+</Info>
+
+NeuronPool is an OpenAI-compatible inference API (pool machines plus public buyers). Use `provider: openai` and set `apiBase`. Model ids come from `GET /v1/models` (`gpt-oss-20b`, `llama-3.1-8b-instruct`, …).
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: NeuronPool gpt-oss-20b
+      provider: openai
+      model: gpt-oss-20b
+      apiBase: https://neuronpool.damnknee.workers.dev/v1
+      apiKey: ${{ secrets.NEURONPOOL_API_KEY }}
+      roles: [chat, edit, apply]
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "NeuronPool gpt-oss-20b",
+        "provider": "openai",
+        "model": "gpt-oss-20b",
+        "apiBase": "https://neuronpool.damnknee.workers.dev/v1",
+        "apiKey": "<YOUR_NEURONPOOL_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+`apiBase` **must** include `/v1`. Continue appends `/chat/completions` and `/models`. Store the key in Continue secrets, not in the file.
+
+Until `api.neuronpool.dev` resolves, use the live Worker URL above. After the custom-domain cutover, swap `apiBase` to `https://api.neuronpool.dev/v1`.
