@@ -11,7 +11,19 @@ export function pathToUriPathSegment(path: string) {
   clean = clean.replace(/\/$/, ""); // remove end slash
   return clean
     .split("/")
-    .map((part) => encodeURIComponent(part))
+    .map((part) =>
+      // RFC 3986 allows ":" in path segments (pchar); encodeURIComponent
+      // over-encodes it, breaking Windows drive letters ("C:" → "C%3A").
+      // Restore characters that are valid unencoded in a URI path segment.
+      encodeURIComponent(part)
+        .replace(/%3A/gi, ":")
+        .replace(/%40/gi, "@")
+        .replace(/%21/gi, "!")
+        .replace(/%27/gi, "'")
+        .replace(/%28/gi, "(")
+        .replace(/%29/gi, ")")
+        .replace(/%2A/gi, "*"),
+    )
     .join("/");
 }
 
