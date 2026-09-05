@@ -1270,6 +1270,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  aigateway: {
+    title: "AIgateway",
+    provider: "aigateway",
+    description:
+      "AIgateway is an OpenAI-compatible aggregator with 1,000+ models from 85+ labs at pass-through pricing.",
+    longDescription:
+      "To get started with AIgateway, create an account and get an API key at [aigateway.sh](https://aigateway.sh/dashboard/keys).",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your AIgateway API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://aigateway.sh/dashboard/keys",
+  },
   venice: {
     title: "Venice",
     provider: "venice",

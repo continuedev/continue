@@ -1,0 +1,93 @@
+---
+title: "AIgateway"
+description: "Configure AIgateway with Continue to access 1,000+ models from 85+ labs through a single OpenAI-compatible API"
+---
+
+[AIgateway](https://aigateway.sh) is an OpenAI-compatible model aggregator that provides access to 1,000+ models from 85+ labs — Claude, GPT, Gemini, Kimi, GLM, Llama, and more — with pass-through pricing plus a flat 5% platform fee on top-ups.
+
+<Info>
+  You can get an API key from
+  [aigateway.sh/dashboard/keys](https://aigateway.sh/dashboard/keys).
+</Info>
+
+## Chat Model
+
+We recommend configuring **zai-org/glm-5.3-flash** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: GLM-5.3 Flash
+        provider: aigateway
+        model: zai-org/glm-5.3-flash
+        apiKey: <YOUR_AIGATEWAY_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "GLM-5.3 Flash",
+          "provider": "aigateway",
+          "model": "zai-org/glm-5.3-flash",
+          "apiKey": "<YOUR_AIGATEWAY_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: GLM-5.3 Flash
+        provider: aigateway
+        model: zai-org/glm-5.3-flash
+        apiKey: <YOUR_AIGATEWAY_API_KEY>
+        roles:
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "GLM-5.3 Flash",
+          "provider": "aigateway",
+          "model": "zai-org/glm-5.3-flash",
+          "apiKey": "<YOUR_AIGATEWAY_API_KEY>"
+        }
+      ],
+      "tabAutocompleteModel": {
+        "title": "GLM-5.3 Flash",
+        "provider": "aigateway",
+        "model": "zai-org/glm-5.3-flash",
+        "apiKey": "<YOUR_AIGATEWAY_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Embeddings Model
+
+AIgateway provides access to various embedding models. [Click here](https://aigateway.sh/models?modality=embed) to see a list of available models.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/AIgateway.ts)
