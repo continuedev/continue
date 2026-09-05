@@ -1,0 +1,90 @@
+---
+title: "How to Configure OpenZoo with Continue"
+sidebarTitle: "OpenZoo"
+---
+
+<Info>
+  OpenZoo is an OpenAI-compatible provider with no account: a small local proxy
+  (`npx openzoo`) pays for each request via the x402 protocol from a local
+  burner wallet. The proxy ignores the API key, so any non-empty value works
+  (for example `sk-openzoo`).
+</Info>
+
+<Tip>
+  Learn more at [openzoo.fun](https://openzoo.fun)
+</Tip>
+
+## Installation
+
+OpenZoo runs locally and provides an OpenAI-compatible API:
+
+```bash
+npx openzoo
+```
+
+This starts the proxy at `http://localhost:8402/v1`. `npx openzoo address`
+prints its wallet — fund it with USDC on Solana or Base; `npx openzoo balance`
+shows what is left.
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: OpenZoo Auto
+      provider: openai
+      model: auto
+      apiBase: http://localhost:8402/v1
+      apiKey: sk-openzoo
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "OpenZoo Auto",
+        "provider": "openai",
+        "model": "auto",
+        "apiBase": "http://localhost:8402/v1",
+        "apiKey": "sk-openzoo"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+The hosted endpoint `https://api.openzoo.fun/v1` answers HTTP 402 unless the
+caller pays x402 or presents an OpenZoo subscription key (`ozk_live_…`);
+Continue cannot pay x402 itself, so keep `apiBase` on the local proxy.
+
+## Available Models
+
+List every available model id with live pricing (free, no payment):
+
+```bash
+curl http://localhost:8402/v1/models
+```
+
+Model ids are bare model names, for example `claude-sonnet-5` or
+`gpt-4o-mini`; `auto` lets the proxy pick a model per request. SSE streaming is
+supported for all models.
+
+## Troubleshooting
+
+If you see connection errors, make sure OpenZoo is running:
+
+```bash
+curl http://localhost:8402/v1/models
+npx openzoo
+```
+
+If a request returns HTTP 402, the local wallet is unfunded — send USDC to
+the address from `npx openzoo address` (`npx openzoo balance` shows what is
+left).
