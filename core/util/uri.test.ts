@@ -13,6 +13,19 @@ import {
 
 describe("uri utils", () => {
   describe("pathToUriPathSegment", () => {
+    it("should not percent-encode Windows drive letter colon (RFC 3986 pchar)", () => {
+      // encodeURIComponent over-encodes ":" → "%3A", breaking Windows drive
+      // letters. ":" is a valid pchar in URI path segments per RFC 3986.
+      expect(pathToUriPathSegment("C:/Users/foo")).toBe("C:/Users/foo");
+      expect(pathToUriPathSegment("C:\\Users\\foo")).toBe("C:/Users/foo");
+    });
+
+    it("should still encode characters invalid in URI path segments", () => {
+      expect(pathToUriPathSegment("hello world.ts")).toBe("hello%20world.ts");
+      expect(pathToUriPathSegment("file<name>.ts")).toBe("file%3Cname%3E.ts");
+      expect(pathToUriPathSegment("dir#sub")).toBe("dir%23sub");
+    });
+
     it("should convert Windows paths to URI segments", () => {
       expect(pathToUriPathSegment("\\path\\to\\folder\\")).toBe(
         "path/to/folder",
