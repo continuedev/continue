@@ -36,9 +36,9 @@ shows what is left.
   schema: v1
 
   models:
-    - name: GLM 5.3 Flash
+    - name: OpenZoo Auto
       provider: openai
-      model: z-ai/glm-5.3-flash
+      model: auto
       apiBase: http://localhost:8402/v1
       apiKey: sk-openzoo
   ```
@@ -48,9 +48,9 @@ shows what is left.
   {
     "models": [
       {
-        "title": "GLM 5.3 Flash",
+        "title": "OpenZoo Auto",
         "provider": "openai",
-        "model": "z-ai/glm-5.3-flash",
+        "model": "auto",
         "apiBase": "http://localhost:8402/v1",
         "apiKey": "sk-openzoo"
       }
@@ -72,8 +72,9 @@ List every available model id with live pricing (free, no payment):
 curl http://localhost:8402/v1/models
 ```
 
-Model ids are provider-prefixed, for example `z-ai/glm-5.3-flash` or
-`qwen/qwen3.7-flash`. SSE streaming is supported for all models.
+Model ids are bare model names, for example `claude-sonnet-5` or
+`gpt-4o-mini`; `auto` lets the proxy pick a model per request. SSE streaming is
+supported for all models.
 
 ## Troubleshooting
 
