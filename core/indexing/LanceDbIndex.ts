@@ -25,6 +25,7 @@ import {
 
 import type * as LanceType from "vectordb";
 import { tagToString } from "./utils";
+import { escapeLanceSqlString } from "./escapeLanceSqlString";
 
 interface LanceDbRow {
   uuid: string;
@@ -37,6 +38,7 @@ interface LanceDbRow {
 type ItemWithChunks = { item: PathAndCacheKey; chunks: Chunk[] };
 
 type ChunkMap = Map<string, ItemWithChunks>;
+
 
 export class LanceDbIndex implements CodebaseIndex {
   private static lance: typeof LanceType | null = null;
@@ -364,7 +366,7 @@ export class LanceDbIndex implements CodebaseIndex {
 
       for (const { path, cacheKey } of toDel) {
         await lanceTable.delete(
-          `cachekey = '${cacheKey}' AND path = '${path}'`,
+          `cachekey = '${escapeLanceSqlString(cacheKey)}' AND path = '${escapeLanceSqlString(path)}'`,
         );
 
         accumulatedProgress += 1 / toDel.length / 3;
@@ -419,7 +421,7 @@ export class LanceDbIndex implements CodebaseIndex {
     const table = await db.openTable(tableName);
     let query = table.search(vector);
     if (directory) {
-      query = query.where(`path LIKE '${directory}%'`).limit(300);
+      query = query.where(`path LIKE '${escapeLanceSqlString(directory)}%'`).limit(300);
     } else {
       query = query.limit(n);
     }
@@ -477,7 +479,7 @@ export class LanceDbIndex implements CodebaseIndex {
     const sqliteDb = await SqliteDb.get();
     const data = await sqliteDb.all(
       `SELECT * FROM lance_db_cache WHERE uuid in (${allResults
-        .map((r) => `'${r.uuid}'`)
+        .map((r) => `'${escapeLanceSqlString(r.uuid)}'`)
         .join(",")})`,
     );
 
