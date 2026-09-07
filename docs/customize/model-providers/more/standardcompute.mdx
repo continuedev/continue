@@ -1,0 +1,43 @@
+---
+title: "Standard Compute"
+description: "Use Standard Compute's routed model through Continue's OpenAI-compatible provider."
+---
+
+Use [Standard Compute](https://standardcompute.com/) to keep working in Continue
+while the service selects models and providers for your requests. Connect it
+through Continue's existing `openai` provider with a custom API base.
+
+## Configuration
+
+1. Get an API key from the [Standard Compute dashboard](https://standardcompute.com/dashboard).
+2. Add the model below to your `~/.continue/config.yaml`. If you already have
+   models configured, append this entry to your existing `models` list.
+3. Replace `<YOUR_STANDARD_COMPUTE_API_KEY>` with your key and select
+   **Standard Compute** in Continue's model selector.
+
+```yaml title="config.yaml"
+name: My Config
+version: 0.0.1
+schema: v1
+
+models:
+  - name: Standard Compute
+    provider: openai
+    model: standardcompute
+    apiBase: https://api.stdcmpt.com/v1
+    apiKey: <YOUR_STANDARD_COMPUTE_API_KEY>
+    roles:
+      - chat
+    capabilities:
+      - tool_use
+```
+
+Keep `provider: openai`: it selects the compatible connection, while `apiBase`
+directs requests to Standard Compute. This example uses Chat Completions and
+declares tool use explicitly because `standardcompute` is a routing alias that
+Continue cannot identify as a specific upstream model.
+
+The example configures the chat role, including Agent mode. Keep your existing
+autocomplete and embedding models if you use those features. Check
+[Standard Compute's current plans](https://standardcompute.com/pricing) for the
+subscription and usage allowance; these are separate from Continue.
