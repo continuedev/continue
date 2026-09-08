@@ -141,7 +141,7 @@ function convertJsonSchemaToGeminiSchema(jsonSchema: any): GeminiObjectSchema {
 }
 
 // https://ai.google.dev/api/caching#FunctionDeclaration
-// Note "reponse" field (schema showing function output structure) is not supported at the moment
+// Note "response" field (schema showing function output structure) is not supported at the moment
 export function convertContinueToolToGeminiFunction(
   tool: Tool,
 ): GeminiToolFunctionDeclaration {
