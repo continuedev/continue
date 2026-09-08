@@ -197,6 +197,62 @@ describe("streamChatResponse - auto-continuation after compaction", () => {
     expect(callCount).toBeGreaterThan(1);
   });
 
+  it("should block a third consecutive identical tool-call batch", async () => {
+    const { handleToolCalls } = await import("./handleToolCalls.js");
+
+    const blockedCallIds: string[][] = [];
+    vi.mocked(handleToolCalls).mockImplementation(async (options: any) => {
+      blockedCallIds.push(
+        options.blockedToolCallIds
+          ? Array.from(options.blockedToolCallIds)
+          : [],
+      );
+      return Boolean(options.blockedToolCallIds?.size);
+    });
+
+    let callCount = 0;
+    mockLlmApi.chatCompletionStream = vi
+      .fn()
+      .mockImplementation(async function* () {
+        callCount++;
+        yield {
+          id: "test",
+          object: "chat.completion.chunk",
+          created: Date.now(),
+          model: "test-model",
+          choices: [
+            {
+              index: 0,
+              delta: {
+                tool_calls: [
+                  {
+                    index: 0,
+                    id: `call_${callCount}`,
+                    type: "function",
+                    function: {
+                      name: "read_file",
+                      arguments: '{"filepath":"/tmp/repeat"}',
+                    },
+                  },
+                ],
+              },
+              finish_reason: "tool_calls",
+            },
+          ],
+        };
+      }) as any;
+
+    await streamChatResponse(
+      chatHistory,
+      mockModel,
+      mockLlmApi,
+      mockAbortController,
+    );
+
+    expect(callCount).toBe(3);
+    expect(blockedCallIds).toEqual([[], [], ["call_3"]]);
+  });
+
   it("should not auto-continue if compaction occurs with tool calls pending", async () => {
     const { services } = await import("../services/index.js");
     const { handleNormalAutoCompaction } = await import(

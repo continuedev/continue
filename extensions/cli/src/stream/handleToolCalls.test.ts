@@ -63,6 +63,46 @@ describe("handleToolCalls - duplicate tool_result prevention", () => {
     vi.mocked(services.chatHistory.isReady).mockReturnValue(true);
   });
 
+  it("records repeated tool calls as errors without executing them", async () => {
+    const toolCalls = [
+      {
+        id: "repeated-tool-1",
+        name: "read_file",
+        arguments: { filepath: "/tmp/example" },
+        argumentsStr: '{"filepath":"/tmp/example"}',
+        startNotified: false,
+      },
+    ];
+
+    mockPreprocess.mockResolvedValue({
+      preprocessedCalls: [],
+      errorChatEntries: [],
+    });
+    mockExecute.mockResolvedValue({
+      hasRejection: false,
+      chatHistoryEntries: [],
+    });
+
+    const shouldReturn = await handleToolCalls({
+      toolCalls,
+      chatHistory,
+      content: "",
+      callbacks: undefined,
+      isHeadless: false,
+      blockedToolCallIds: new Set(["repeated-tool-1"]),
+    });
+
+    expect(shouldReturn).toBe(true);
+    expect(services.chatHistory.addAssistantMessage).toHaveBeenCalledTimes(1);
+    expect(services.chatHistory.addToolResult).toHaveBeenCalledWith(
+      "repeated-tool-1",
+      "Repeated identical tool call blocked to prevent an unbounded agent loop",
+      "errored",
+    );
+    expect(mockPreprocess).toHaveBeenCalledWith(false, [], undefined);
+    expect(mockExecute).toHaveBeenCalledWith([], undefined, false);
+  });
+
   /**
    * This test verifies that preprocessing errors are stored in toolCallStates
    * (on the assistant message) rather than as separate tool history items.
