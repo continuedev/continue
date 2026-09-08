@@ -136,10 +136,27 @@ describe("isSecurityConcern", () => {
       expect(isSecurityConcern("backend/certs/server.key")).toBe(true);
     });
 
-    // it("should handle Windows-style paths", () => {
-    //   expect(isSecurityConcern("C:\\Users\\user\\.env")).toBe(true);
-    //   expect(isSecurityConcern("D:\\projects\\app\\secrets\\")).toBe(true);
-    // });
+    it("should detect nested files inside security directories for absolute paths", () => {
+      expect(isSecurityConcern("/home/user/.aws/prod/credentials")).toBe(true);
+      expect(isSecurityConcern("/home/user/.ssh/config.d/host")).toBe(true);
+      expect(isSecurityConcern("/var/www/.secrets/api/token")).toBe(true);
+      expect(isSecurityConcern("file:///home/user/.kube/cache/config")).toBe(
+        true,
+      );
+    });
+
+    it("should handle Windows-style paths", () => {
+      expect(isSecurityConcern("C:\\Users\\user\\.env")).toBe(true);
+      expect(isSecurityConcern("D:\\projects\\app\\secrets\\")).toBe(true);
+      expect(isSecurityConcern("C:\\Users\\user\\.aws\\prod\\credentials")).toBe(
+        true,
+      );
+      expect(isSecurityConcern("project\\config\\.env")).toBe(true);
+      expect(isSecurityConcern("file:///C:/Users/user/.env")).toBe(true);
+      expect(
+        isSecurityConcern("file:///C:/Users/user/.ssh/id_rsa"),
+      ).toBe(true);
+    });
   });
 
   describe("Non-security files", () => {
@@ -149,6 +166,8 @@ describe("isSecurityConcern", () => {
       expect(isSecurityConcern("utils/helper.py")).toBe(false);
       expect(isSecurityConcern("models/User.java")).toBe(false);
       expect(isSecurityConcern("styles/main.css")).toBe(false);
+      expect(isSecurityConcern("C:\\Users\\user\\src\\main.js")).toBe(false);
+      expect(isSecurityConcern("/home/user/project/src/main.js")).toBe(false);
     });
 
     it("should not flag regular configuration files", () => {
