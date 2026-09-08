@@ -31,13 +31,55 @@ interface HandleToolCallsOptions {
   callbacks: StreamCallbacks | undefined;
   isHeadless: boolean;
   usage?: any;
+  blockedToolCallIds?: ReadonlySet<string>;
+}
+
+const REPEATED_TOOL_CALL_ERROR =
+  "Repeated identical tool call blocked to prevent an unbounded agent loop";
+
+function recordToolResult(
+  chatHistory: ChatHistoryItem[],
+  useService: boolean,
+  toolCallId: string,
+  content: string,
+  status: ToolStatus,
+): void {
+  if (useService) {
+    services.chatHistory.addToolResult(toolCallId, content, status);
+    return;
+  }
+
+  const lastAssistantIndex = chatHistory.findLastIndex(
+    (item) => item.message.role === "assistant" && item.toolCallStates,
+  );
+  const toolCallStates = chatHistory[lastAssistantIndex]?.toolCallStates;
+  const toolState = toolCallStates?.find(
+    (state) => state.toolCallId === toolCallId,
+  );
+  if (toolState) {
+    toolState.status = status;
+    toolState.output = [
+      {
+        content,
+        name: "Tool Result",
+        description: "Tool execution result",
+      },
+    ];
+  }
 }
 
 export async function handleToolCalls(
   options: HandleToolCallsOptions,
 ): Promise<boolean> {
-  const { toolCalls, chatHistory, content, callbacks, isHeadless, usage } =
-    options;
+  const {
+    toolCalls,
+    chatHistory,
+    content,
+    callbacks,
+    isHeadless,
+    usage,
+    blockedToolCallIds,
+  } = options;
   const chatHistorySvc = services.chatHistory;
   const useService =
     typeof chatHistorySvc?.isReady === "function" && chatHistorySvc.isReady();
@@ -60,6 +102,13 @@ export async function handleToolCalls(
     }
     return false;
   }
+
+  const blockedToolCalls = toolCalls.filter((toolCall) =>
+    blockedToolCallIds?.has(toolCall.id),
+  );
+  const executableToolCalls = toolCalls.filter(
+    (toolCall) => !blockedToolCallIds?.has(toolCall.id),
+  );
 
   // Create tool call states for the ChatHistoryItem
   const toolCallStates = toolCalls.map((tc) => ({
@@ -106,44 +155,37 @@ export async function handleToolCalls(
     chatHistory.push(createHistoryItem(messageWithUsage, [], toolCallStates));
   }
 
+  for (const blockedToolCall of blockedToolCalls) {
+    callbacks?.onToolStart?.(blockedToolCall.name, blockedToolCall.arguments);
+    recordToolResult(
+      chatHistory,
+      useService,
+      blockedToolCall.id,
+      REPEATED_TOOL_CALL_ERROR,
+      "errored",
+    );
+    callbacks?.onToolError?.(REPEATED_TOOL_CALL_ERROR, blockedToolCall.name);
+  }
+
   // First preprocess the tool calls
   const { preprocessedCalls, errorChatEntries } =
-    await preprocessStreamedToolCalls(isHeadless, toolCalls, callbacks);
+    await preprocessStreamedToolCalls(
+      isHeadless,
+      executableToolCalls,
+      callbacks,
+    );
 
   // Add any preprocessing errors to the toolCallStates on the assistant message
   // (NOT as separate history items, which would cause duplicate tool_result messages)
   errorChatEntries.forEach((errorEntry) => {
     const errorContent = stripImages(errorEntry.content) || "";
-    if (useService) {
-      chatHistorySvc.addToolResult(
-        errorEntry.tool_call_id,
-        errorContent,
-        "errored",
-      );
-    } else {
-      // Fallback only when service is unavailable: update local tool state
-      const lastAssistantIndex = chatHistory.findLastIndex(
-        (item) => item.message.role === "assistant" && item.toolCallStates,
-      );
-      if (
-        lastAssistantIndex >= 0 &&
-        chatHistory[lastAssistantIndex].toolCallStates
-      ) {
-        const toolState = chatHistory[lastAssistantIndex].toolCallStates.find(
-          (ts) => ts.toolCallId === errorEntry.tool_call_id,
-        );
-        if (toolState) {
-          toolState.status = "errored";
-          toolState.output = [
-            {
-              content: errorContent,
-              name: `Tool Result`,
-              description: "Tool execution result",
-            },
-          ];
-        }
-      }
-    }
+    recordToolResult(
+      chatHistory,
+      useService,
+      errorEntry.tool_call_id,
+      errorContent,
+      "errored",
+    );
   });
 
   // Execute the valid preprocessed tool calls
@@ -166,7 +208,7 @@ export async function handleToolCalls(
   // via services.chatHistory.addToolResult() - no need to add them again here.
   // Adding them again would be redundant (and previously caused duplicate tool_result messages
   // when combined with separate tool history items).
-  return false;
+  return blockedToolCalls.length > 0;
 }
 
 export async function getRequestTools(isHeadless: boolean) {

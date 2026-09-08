@@ -37,6 +37,7 @@ import {
   getDefaultCompletionOptions,
   StreamCallbacks,
 } from "./streamChatResponse.types.js";
+import { ToolCallLoopGuard } from "./toolCallLoopGuard.js";
 
 dotenv.config();
 
@@ -439,6 +440,7 @@ export async function streamChatResponse(
   let fullResponse = "";
   let finalResponse = "";
   let compactionOccurredThisTurn = false; // Track if compaction happened during this conversation turn
+  const toolCallLoopGuard = new ToolCallLoopGuard();
 
   while (true) {
     // If ChatHistoryService is available, refresh local chatHistory view
@@ -504,6 +506,17 @@ export async function streamChatResponse(
       finalResponse,
     );
 
+    const loopGuardResult = toolCallLoopGuard.observe(toolCalls);
+    const blockedToolCallIds = loopGuardResult.blocked
+      ? new Set(toolCalls.map((toolCall) => toolCall.id))
+      : undefined;
+    if (loopGuardResult.blocked) {
+      logger.warn("Blocked repeated tool-call batch", {
+        count: loopGuardResult.count,
+        toolCalls: toolCalls.map((toolCall) => toolCall.name),
+      });
+    }
+
     // Handle content display
     handleContentDisplay(content, callbacks, isHeadless);
 
@@ -515,6 +528,7 @@ export async function streamChatResponse(
       callbacks,
       isHeadless,
       usage,
+      blockedToolCallIds,
     });
 
     if (shouldReturn) {
