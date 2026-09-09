@@ -1,0 +1,42 @@
+---
+title: "How to Configure Scalattice with Continue"
+sidebarTitle: "Scalattice"
+---
+
+<Info>
+  Get an API key from the [Scalattice developer docs](https://scalattice.cloud/docs/developers).
+</Info>
+
+Scalattice is an OpenAI-compatible inference marketplace. Use `provider: scalattice` and a catalog model ID such as `qwen-3-14b`.
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Qwen3 14B
+      provider: scalattice
+      model: qwen-3-14b
+      apiKey: <YOUR_SCALATTICE_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Qwen3 14B",
+        "provider": "scalattice",
+        "model": "qwen-3-14b",
+        "apiKey": "<YOUR_SCALATTICE_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

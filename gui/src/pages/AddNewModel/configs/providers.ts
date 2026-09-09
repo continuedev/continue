@@ -331,6 +331,39 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     ],
     apiKeyUrl: "https://endpoints.ai.cloud.ovh.net/",
   },
+  scalattice: {
+    title: "Scalattice",
+    provider: "scalattice",
+    refPage: "scalattice",
+    description:
+      "OpenAI-compatible marketplace for open-weight models on a GPU fleet",
+    longDescription:
+      "Get an API key from the [Scalattice developer docs](https://scalattice.cloud/docs/developers), then pick a catalog model ID such as qwen-3-14b.",
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API key",
+        placeholder: "Enter your Scalattice API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    packages: [
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "Scalattice",
+        },
+      },
+    ],
+    apiKeyUrl: "https://scalattice.cloud/docs/developers",
+  },
   scaleway: {
     title: "Scaleway",
     provider: "scaleway",

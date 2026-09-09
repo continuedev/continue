@@ -56,6 +56,7 @@ import { Relace } from "./Relace";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
 import SambaNova from "./SambaNova";
+import Scalattice from "./Scalattice";
 import Scaleway from "./Scaleway";
 import SiliconFlow from "./SiliconFlow";
 import Tensorix from "./Tensorix";
@@ -125,6 +126,7 @@ export const LLMClasses = [
   xAI,
   SiliconFlow,
   Tensorix,
+  Scalattice,
   Scaleway,
   Relace,
   Inception,
