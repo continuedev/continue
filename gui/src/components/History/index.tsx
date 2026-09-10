@@ -220,7 +220,7 @@ export function History() {
           Chat history is saved to{" "}
           <span className="italic">
             {platform === "windows"
-              ? "%USERPROFILE%/.continue"
+              ? "%USERPROFILE%/.continue/sessions"
               : "~/.continue/sessions"}
           </span>
         </span>
