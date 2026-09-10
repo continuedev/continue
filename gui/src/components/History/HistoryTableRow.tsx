@@ -104,6 +104,7 @@ export function HistoryTableRow({
               className="w-full"
               ref={(titleInput) => titleInput && titleInput.focus()}
               value={sessionTitleEditValue}
+              onClick={(e) => e.stopPropagation()}
               onChange={(e) => setSessionTitleEditValue(e.target.value)}
               onKeyUp={(e) => handleKeyUp(e)}
               onBlur={() => setEditing(false)}
