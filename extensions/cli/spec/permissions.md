@@ -10,7 +10,7 @@ To make sure that users can oversee the actions of the LLM, we implement a permi
 
 ## Rule precedence
 
-There is a default set of permissions for the builtin tools in [`src/permissions/defaultPolicies.ts`](../src/permissions/defaultPolicies.ts). But these policies can be overriden by multiple layers. The order of precedence is as follows, which the earlier items taking precedence:
+There is a default set of permissions for the builtin tools in [`src/permissions/defaultPolicies.ts`](../src/permissions/defaultPolicies.ts). But these policies can be overridden by multiple layers. The order of precedence is as follows, which the earlier items taking precedence:
 
 1. **Mode policies** (highest priority - see [modes.md](./modes.md))
 2. Command line flags (`--allow`, `--ask`, `--exclude`)
