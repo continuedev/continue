@@ -176,6 +176,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.function.network/v1/", config);
     case "tensorix":
       return openAICompatible("https://api.tensorix.ai/v1/", config);
+    case "api-route":
+      return openAICompatible("https://global.api-route.com/v1/", config);
     case "openrouter":
       return new OpenRouterApi(config);
     case "clawrouter":
