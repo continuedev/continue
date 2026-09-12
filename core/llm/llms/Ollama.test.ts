@@ -127,6 +127,68 @@ describe("Ollama", () => {
     });
   });
 
+  describe("_streamChat", () => {
+    const tool = {
+      type: "function",
+      function: {
+        name: "read_file",
+        description: "Read a file",
+        parameters: {
+          type: "object",
+          required: ["filepath"],
+          properties: { filepath: { type: "string" } },
+        },
+      },
+    };
+
+    async function requestBody(messages: ChatMessage[]) {
+      const ollama = createOllama();
+      (ollama as any).ensureModelInfo = jest.fn();
+      (ollama as any).getEndpoint = jest.fn(() => "http://localhost/api/chat");
+      (ollama as any)._getModel = jest.fn(() => "test-model");
+      (ollama.fetch as jest.Mock).mockResolvedValue({
+        json: async () => ({
+          message: { role: "assistant", content: "done" },
+        }),
+      });
+
+      const stream = (ollama as any)._streamChat(
+        messages,
+        new AbortController().signal,
+        { stream: false, tools: [tool] },
+      );
+      for await (const _ of stream) {
+        // Drain the response so the request completes.
+      }
+
+      const [, init] = (ollama.fetch as jest.Mock).mock.calls[0];
+      return JSON.parse(init.body);
+    }
+
+    it("should attach tools after a tool result for multi-step agent loops", async () => {
+      const body = await requestBody([
+        { role: "user", content: "Read file A, then file B" },
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "tc_1",
+              type: "function",
+              function: {
+                name: "read_file",
+                arguments: '{"filepath":"fileA"}',
+              },
+            },
+          ],
+        },
+        { role: "tool", content: "file A", toolCallId: "tc_1" },
+      ]);
+
+      expect(body.tools).toEqual([tool]);
+    });
+  });
+
   describe("_reorderMessagesForToolCompat", () => {
     let ollama: Ollama;
 
