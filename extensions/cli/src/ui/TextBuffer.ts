@@ -501,11 +501,12 @@ export class TextBuffer {
   }
 
   private handleNavigationKeys(key: Key): boolean {
-    if (key.home && !key.meta) {
+    const navKey = key as Key & { home?: boolean; end?: boolean };
+    if (navKey.home && !key.meta) {
       this.moveToLineStart();
       return true;
     }
-    if (key.end && !key.meta) {
+    if (navKey.end && !key.meta) {
       this.moveToLineEnd();
       return true;
     }
