@@ -46,9 +46,140 @@ beforeEach(() => {
   );
 
   (vscode.window as any).activeTextEditor = null;
+  setInlineSuggestEnabled(true);
 });
 
 describe("ContinueCompletionProvider triggering logic", () => {
+  it("does not request automatic completions when inline suggestions are disabled", async () => {
+    const document = createDocument();
+    setActiveEditor(document);
+    setInlineSuggestEnabled(false);
+
+    const provider = buildProvider();
+
+    const result = await provider.provideInlineCompletionItems(
+      document,
+      createPosition(),
+      createContext(),
+      createToken(),
+    );
+
+    expect(result).toBeNull();
+    expect(vscode.workspace.getConfiguration).toHaveBeenCalledWith(
+      "editor.inlineSuggest",
+      document,
+    );
+    expect(mockNextEditProvider.startChain).not.toHaveBeenCalled();
+    expect(
+      mockNextEditProvider.provideInlineCompletionItems,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("keeps manual completions available when inline suggestions are disabled", async () => {
+    const document = createDocument();
+    setActiveEditor(document);
+    setInlineSuggestEnabled(false);
+
+    const provider = buildProvider();
+
+    const manualResult = await provider.provideInlineCompletionItems(
+      document,
+      createPosition(),
+      createContext(vscode.InlineCompletionTriggerKind.Invoke),
+      createToken(),
+    );
+
+    const automaticResult = await provider.provideInlineCompletionItems(
+      document,
+      createPosition(),
+      createContext(),
+      createToken(),
+    );
+
+    expect(manualResult).not.toBeNull();
+    expect(automaticResult).toBeNull();
+    expect(mockNextEditProvider.startChain).toHaveBeenCalledTimes(1);
+    expect(
+      mockNextEditProvider.provideInlineCompletionItems,
+    ).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses a language override when it disables inline suggestions", async () => {
+    const document = createDocument(undefined, "python");
+    setActiveEditor(document);
+    setInlineSuggestConfiguration(true, { python: false });
+
+    const provider = buildProvider();
+    const result = await provider.provideInlineCompletionItems(
+      document,
+      createPosition(),
+      createContext(),
+      createToken(),
+    );
+
+    expect(result).toBeNull();
+    expect(vscode.workspace.getConfiguration).toHaveBeenCalledWith(
+      "editor.inlineSuggest",
+      document,
+    );
+    expect(mockNextEditProvider.startChain).not.toHaveBeenCalled();
+  });
+
+  it("uses a language override when it enables inline suggestions", async () => {
+    const document = createDocument(undefined, "python");
+    setActiveEditor(document);
+    setInlineSuggestConfiguration(false, { python: true });
+
+    const provider = buildProvider();
+    const result = await provider.provideInlineCompletionItems(
+      document,
+      createPosition(),
+      createContext(),
+      createToken(),
+    );
+
+    expect(result).not.toBeNull();
+    expect(vscode.workspace.getConfiguration).toHaveBeenCalledWith(
+      "editor.inlineSuggest",
+      document,
+    );
+    expect(mockNextEditProvider.startChain).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes trigger kind to regular autocomplete and allows enabled automatic requests", async () => {
+    const document = createDocument();
+    setActiveEditor(document);
+    setInlineSuggestEnabled(true);
+
+    const provider = buildProvider({ activateNextEdit: false });
+    const completionProvider = (provider as any).completionProvider;
+    completionProvider.provideInlineCompletionItems.mockResolvedValue(
+      mockOutcome,
+    );
+
+    const manualResult = await provider.provideInlineCompletionItems(
+      document,
+      createPosition(),
+      createContext(vscode.InlineCompletionTriggerKind.Invoke),
+      createToken(),
+    );
+    const automaticResult = await provider.provideInlineCompletionItems(
+      document,
+      createPosition(),
+      createContext(),
+      createToken(),
+    );
+
+    expect(manualResult).not.toBeNull();
+    expect(automaticResult).not.toBeNull();
+    expect(
+      completionProvider.provideInlineCompletionItems,
+    ).toHaveBeenNthCalledWith(1, expect.anything(), expect.anything(), true);
+    expect(
+      completionProvider.provideInlineCompletionItems,
+    ).toHaveBeenNthCalledWith(2, expect.anything(), expect.anything(), false);
+  });
+
   it("starts a new chain when none exists", async () => {
     const document = createDocument();
     setActiveEditor(document);
@@ -158,7 +289,9 @@ describe("ContinueCompletionProvider triggering logic", () => {
   });
 });
 
-function buildProvider(options: { usingFullFileDiff?: boolean } = {}) {
+function buildProvider(
+  options: { usingFullFileDiff?: boolean; activateNextEdit?: boolean } = {},
+) {
   const usingFullFileDiff = options.usingFullFileDiff ?? true;
   const configHandler = {
     loadConfig: vi.fn(async () => ({
@@ -175,16 +308,20 @@ function buildProvider(options: { usingFullFileDiff?: boolean } = {}) {
     webviewProtocol,
     usingFullFileDiff,
   );
-  provider.activateNextEdit();
+  if (options.activateNextEdit ?? true) {
+    provider.activateNextEdit();
+  }
   return provider;
 }
 
 function createDocument(
   text = "function example() {\n  return true;\n}",
+  languageId = "typescript",
 ): vscode.TextDocument {
   const lines = text.split("\n");
   return {
     uri: vscode.Uri.parse("file:///test"),
+    languageId,
     isUntitled: false,
     getText: (range?: any) => {
       if (!range) {
@@ -220,9 +357,11 @@ function createDocument(
   } as unknown as vscode.TextDocument;
 }
 
-function createContext(): any {
+function createContext(
+  triggerKind = vscode.InlineCompletionTriggerKind.Automatic,
+): any {
   return {
-    triggerKind: (vscode.InlineCompletionTriggerKind as any).Automatic,
+    triggerKind,
     selectedCompletionInfo: undefined,
   };
 }
@@ -236,6 +375,21 @@ function createToken(): any {
     isCancellationRequested: false,
     onCancellationRequested: vi.fn(),
   };
+}
+
+function setInlineSuggestEnabled(enabled: boolean) {
+  setInlineSuggestConfiguration(enabled);
+}
+
+function setInlineSuggestConfiguration(
+  globalEnabled: boolean,
+  languageOverrides: Record<string, boolean> = {},
+) {
+  (vscode.workspace.getConfiguration as any).mockImplementation(
+    (_section: string, scope: any) => ({
+      get: vi.fn(() => languageOverrides[scope?.languageId] ?? globalEnabled),
+    }),
+  );
 }
 
 function setActiveEditor(document: any, cursor = createPosition()) {

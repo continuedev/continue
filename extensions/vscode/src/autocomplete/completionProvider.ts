@@ -171,6 +171,20 @@ export class ContinueCompletionProvider
       return null;
     }
 
+    // VS Code still asks providers for automatic completions after an explicit
+    // invocation, even when inline suggestions are disabled. Only honor those
+    // explicit invocations in that mode. Passing the document as the scope
+    // ensures that language-scoped editor settings are respected.
+    const inlineSuggestEnabled = vscode.workspace
+      .getConfiguration("editor.inlineSuggest", document)
+      .get<boolean>("enabled", true);
+    if (
+      inlineSuggestEnabled === false &&
+      context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic
+    ) {
+      return null;
+    }
+
     if (document.uri.scheme === "vscode-scm") {
       return null;
     }
