@@ -7,6 +7,9 @@ import * as vscode from "vscode";
 
 type FileMiniSearchResult = { relativePath: string; id: string };
 
+export const MAX_FILE_SEARCH_FILES = 50_000;
+export const FILE_SEARCH_BATCH_SIZE = 1_000;
+
 /*
   id = file URI
 */
@@ -35,12 +38,23 @@ export class FileSearch {
     const results = await walkDirs(this.ide, {
       source: "file search initialization",
     });
-    this.miniSearch.addAll(
-      results.flat().map((uri) => ({
-        id: uri,
-        relativePath: vscode.workspace.asRelativePath(uri),
-      })),
-    );
+    const flatResults = results.flat();
+    const cappedResults =
+      flatResults.length > MAX_FILE_SEARCH_FILES
+        ? flatResults.slice(0, MAX_FILE_SEARCH_FILES)
+        : flatResults;
+
+    for (let i = 0; i < cappedResults.length; i += FILE_SEARCH_BATCH_SIZE) {
+      const batch = cappedResults
+        .slice(i, i + FILE_SEARCH_BATCH_SIZE)
+        .map((uri) => ({
+          id: uri,
+          relativePath: vscode.workspace.asRelativePath(uri),
+        }));
+      this.miniSearch.addAll(batch);
+      // Yield to event loop to keep the extension host and renderer responsive
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
   }
 
   public search(query: string): FileMiniSearchResult[] {
