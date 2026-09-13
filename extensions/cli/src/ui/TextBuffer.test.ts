@@ -664,11 +664,11 @@ describe("TextBuffer", () => {
       expect(buffer.cursor).toBe(2);
     });
 
-    it("should handle delete key", () => {
+    it("should handle delete key as forward deletion", () => {
       const result = buffer.handleInput("", { delete: true } as any);
       expect(result).toBe(true);
-      expect(buffer.text).toBe("hllo");
-      expect(buffer.cursor).toBe(1);
+      expect(buffer.text).toBe("helo");
+      expect(buffer.cursor).toBe(2);
     });
 
     it("should handle backspace key", () => {
@@ -676,6 +676,60 @@ describe("TextBuffer", () => {
       expect(result).toBe(true);
       expect(buffer.text).toBe("hllo");
       expect(buffer.cursor).toBe(1);
+    });
+
+    it("should handle home and end keys on single-line text", () => {
+      let result = buffer.handleInput("", { home: true } as any);
+      expect(result).toBe(true);
+      expect(buffer.cursor).toBe(0);
+
+      result = buffer.handleInput("", { end: true } as any);
+      expect(result).toBe(true);
+      expect(buffer.cursor).toBe(5);
+    });
+
+    it("should handle home and end keys on multi-line text", () => {
+      const text = "first line\nsecond line\nthird line";
+      buffer.setText(text);
+      const secondLineStart = text.indexOf("second line");
+      buffer.setCursor(secondLineStart + 4);
+
+      let result = buffer.handleInput("", { home: true } as any);
+      expect(result).toBe(true);
+      expect(buffer.cursor).toBe(secondLineStart);
+
+      result = buffer.handleInput("", { end: true } as any);
+      expect(result).toBe(true);
+      expect(buffer.cursor).toBe(secondLineStart + "second line".length);
+    });
+
+    it("should handle escape sequences for home, end, and delete", () => {
+      // Home sequence \u001b[1~
+      let result = buffer.handleInput("\u001b[1~", {} as any);
+      expect(result).toBe(true);
+      expect(buffer.cursor).toBe(0);
+
+      // End sequence \u001b[4~
+      result = buffer.handleInput("\u001b[4~", {} as any);
+      expect(result).toBe(true);
+      expect(buffer.cursor).toBe(5);
+
+      // Alternative Home sequence \u001b[H
+      result = buffer.handleInput("\u001b[H", {} as any);
+      expect(result).toBe(true);
+      expect(buffer.cursor).toBe(0);
+
+      // Alternative End sequence \u001b[F
+      result = buffer.handleInput("\u001b[F", {} as any);
+      expect(result).toBe(true);
+      expect(buffer.cursor).toBe(5);
+
+      // Forward delete sequence \u001b[3~
+      buffer.setCursor(2);
+      result = buffer.handleInput("\u001b[3~", {} as any);
+      expect(result).toBe(true);
+      expect(buffer.text).toBe("helo");
+      expect(buffer.cursor).toBe(2);
     });
 
     it("should handle meta key combinations", () => {

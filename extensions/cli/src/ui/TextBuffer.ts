@@ -177,6 +177,16 @@ export class TextBuffer {
     this._cursor = this._text.length;
   }
 
+  moveToLineStart(): void {
+    const lastNewline = this._text.lastIndexOf("\n", this._cursor - 1);
+    this._cursor = lastNewline === -1 ? 0 : lastNewline + 1;
+  }
+
+  moveToLineEnd(): void {
+    const nextNewline = this._text.indexOf("\n", this._cursor);
+    this._cursor = nextNewline === -1 ? this._text.length : nextNewline;
+  }
+
   moveLeft(): void {
     this._cursor = Math.max(0, this._cursor - 1);
   }
@@ -420,6 +430,19 @@ export class TextBuffer {
       this.deleteWordBackward();
       return true;
     }
+    // Standard terminal escape sequences for navigation / editing
+    if (sequence === "[1~" || sequence === "[H" || sequence === "OH") {
+      this.moveToLineStart();
+      return true;
+    }
+    if (sequence === "[4~" || sequence === "[F" || sequence === "OF") {
+      this.moveToLineEnd();
+      return true;
+    }
+    if (sequence === "[3~") {
+      this.deleteForward();
+      return true;
+    }
     return true; // Consume other option sequences
   }
 
@@ -477,6 +500,19 @@ export class TextBuffer {
     return false;
   }
 
+  private handleNavigationKeys(key: Key): boolean {
+    const navKey = key as Key & { home?: boolean; end?: boolean };
+    if (navKey.home && !key.meta) {
+      this.moveToLineStart();
+      return true;
+    }
+    if (navKey.end && !key.meta) {
+      this.moveToLineEnd();
+      return true;
+    }
+    return false;
+  }
+
   private handleArrowKeys(key: Key): boolean {
     if (key.leftArrow && !key.meta) {
       this.moveLeft();
@@ -490,8 +526,14 @@ export class TextBuffer {
   }
 
   private handleDeleteKeys(key: Key): boolean {
-    // On Mac, backspace key registers as key.delete, so treat it as backward deletion
-    if ((key.delete || key.backspace) && !key.meta) {
+    if (key.meta) {
+      return false;
+    }
+    if (key.delete) {
+      this.deleteForward();
+      return true;
+    }
+    if (key.backspace) {
       this.deleteBackward();
       return true;
     }
@@ -514,6 +556,11 @@ export class TextBuffer {
 
     // Handle meta key combinations (cmd on Mac)
     if (key.meta && this.handleMetaKey(input, key)) {
+      return true;
+    }
+
+    // Handle home / end navigation keys
+    if (this.handleNavigationKeys(key)) {
       return true;
     }
 
