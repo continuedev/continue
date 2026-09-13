@@ -223,4 +223,76 @@ describe("Ollama", () => {
       expect(result[1].role).toBe("tool");
     });
   });
+
+  describe("_streamChat tools preservation", () => {
+    let ollama: Ollama;
+
+    beforeEach(() => {
+      ollama = createOllama();
+      (ollama as any).ensureModelInfo = jest.fn().mockResolvedValue(undefined);
+      (ollama as any)._getModel = jest.fn().mockReturnValue("test-model");
+      (ollama as any)._getModelFileParams = jest.fn().mockReturnValue({});
+      (ollama as any).getEndpoint = jest.fn().mockReturnValue("http://localhost:11434/api/chat");
+    });
+
+    it("should include tools even when the last message role is 'tool'", async () => {
+      let capturedBody: any = null;
+      (ollama as any).fetch = jest.fn().mockImplementation((url: string, init: any) => {
+        capturedBody = JSON.parse(init.body);
+        return Promise.resolve({
+          ok: true,
+          body: {
+            getReader: () => ({
+              read: () => Promise.resolve({ done: true, value: undefined }),
+            }),
+          },
+        });
+      });
+
+      const messages: ChatMessage[] = [
+        { role: "user", content: "What is the weather?" },
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "1",
+              type: "function",
+              function: { name: "get_weather", arguments: "{}" },
+            },
+          ],
+        },
+        { role: "tool", content: "Sunny", toolCallId: "1" },
+      ];
+
+      const options = {
+        tools: [
+          {
+            type: "function" as const,
+            function: {
+              name: "get_weather",
+              description: "Get weather",
+              parameters: {},
+            },
+          },
+        ],
+      };
+
+      const generator = (ollama as any)._streamChat(
+        messages,
+        new AbortController().signal,
+        options,
+      );
+      try {
+        for await (const _ of generator) {
+        }
+      } catch {
+        // Stream reading may fail on dummy response, but request body was already captured
+      }
+
+      expect(capturedBody).not.toBeNull();
+      expect(capturedBody.tools).toHaveLength(1);
+      expect(capturedBody.tools[0].function.name).toBe("get_weather");
+    });
+  });
 });
