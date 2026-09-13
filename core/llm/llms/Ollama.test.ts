@@ -232,22 +232,26 @@ describe("Ollama", () => {
       (ollama as any).ensureModelInfo = jest.fn().mockResolvedValue(undefined);
       (ollama as any)._getModel = jest.fn().mockReturnValue("test-model");
       (ollama as any)._getModelFileParams = jest.fn().mockReturnValue({});
-      (ollama as any).getEndpoint = jest.fn().mockReturnValue("http://localhost:11434/api/chat");
+      (ollama as any).getEndpoint = jest
+        .fn()
+        .mockReturnValue("http://localhost:11434/api/chat");
     });
 
     it("should include tools even when the last message role is 'tool'", async () => {
       let capturedBody: any = null;
-      (ollama as any).fetch = jest.fn().mockImplementation((url: string, init: any) => {
-        capturedBody = JSON.parse(init.body);
-        return Promise.resolve({
-          ok: true,
-          body: {
-            getReader: () => ({
-              read: () => Promise.resolve({ done: true, value: undefined }),
-            }),
-          },
+      (ollama as any).fetch = jest
+        .fn()
+        .mockImplementation((url: string, init: any) => {
+          capturedBody = JSON.parse(init.body);
+          return Promise.resolve({
+            ok: true,
+            body: {
+              getReader: () => ({
+                read: () => Promise.resolve({ done: true, value: undefined }),
+              }),
+            },
+          });
         });
-      });
 
       const messages: ChatMessage[] = [
         { role: "user", content: "What is the weather?" },
