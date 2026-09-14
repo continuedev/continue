@@ -1277,7 +1277,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     description:
       "API Route is an OpenAI-compatible API gateway providing access to Claude, GPT, DeepSeek, Gemini, and more.",
     longDescription:
-      "To get started with API-Route, create an account and obtain an API key from [API Route](https://www.api-route.com/api-keys).",
+      "To get started with API Route, create an account and obtain an API key from [API Route](https://www.api-route.com/api-keys).",
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     collectInputFor: [
       {
