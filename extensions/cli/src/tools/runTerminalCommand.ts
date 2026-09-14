@@ -68,7 +68,15 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
     // Windows: Use PowerShell
     return {
       shell: "powershell.exe",
-      args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
+      args: [
+        "-NoLogo",
+        "-NoProfile",
+        "-NonInteractive",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        command,
+      ],
     };
   }
 
@@ -190,12 +198,14 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
       // Use same shell logic as core implementation
       const { shell, args } = getShellCommand(command);
       const child = spawn(shell, args);
+      // Close stdin immediately as this tool runs non-interactively and should not wait on stdin
+      child.stdin?.end();
       let stdout = "";
       let stderr = "";
       let timeoutId: NodeJS.Timeout;
       let isResolved = false;
 
-      // Determine timeout: use provided timeout (capped at 600s), test env variable, or default 120s
+      // Determine timeout: use provided timeout (capped at 600s), test env variable, or default 180s
       let TIMEOUT_MS = 180000; // 180 seconds default
       if (timeout !== undefined) {
         // Cap at 600 seconds (10 minutes)
@@ -206,6 +216,8 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         process.env.TEST_TERMINAL_TIMEOUT
       ) {
         TIMEOUT_MS = parseInt(process.env.TEST_TERMINAL_TIMEOUT, 10);
+      } else if (process.env.NODE_ENV === "test") {
+        TIMEOUT_MS = 15000;
       }
 
       /**
@@ -330,9 +342,10 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           moveToBackground,
         );
 
-        // Only reject on non-zero exit code if there's also stderr
-        if (code !== 0 && stderr) {
-          reject(`Error (exit code ${code}): ${stderr}`);
+        // Reject on non-zero exit code
+        if (code !== 0 && code !== null) {
+          const errorMessage = stderr || stdout || "Command failed";
+          reject(`Error (exit code ${code}): ${errorMessage}`);
           return;
         }
 

@@ -27,7 +27,15 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
     // Windows: Use PowerShell
     return {
       shell: "powershell.exe",
-      args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
+      args: [
+        "-NoLogo",
+        "-NoProfile",
+        "-NonInteractive",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        command,
+      ],
     };
   } else {
     // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
@@ -150,6 +158,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
             cwd,
             env: getColorEnv(), // Add enhanced environment for colors
           });
+          childProc.stdin?.end();
 
           // Track this process for foreground cancellation
           if (toolCallId && waitForCompletion) {

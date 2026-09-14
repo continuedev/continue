@@ -77,6 +77,14 @@ describe("runTerminalCommandTool", () => {
         /Error \(exit code|Command timed out|not found|not recognized/,
       );
     });
+
+    it("should reject on non-zero exit code even with empty stderr", async () => {
+      const command = "exit 42";
+
+      await expect(runTerminalCommandTool.run({ command })).rejects.toMatch(
+        /Error \(exit code 42\)/,
+      );
+    });
   });
 
   describe("platform-specific features", () => {
