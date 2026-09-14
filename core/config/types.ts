@@ -306,6 +306,7 @@ declare global {
   
   export interface ToolCallDelta {
     id?: string;
+    index?: number;
     type?: "function";
     function?: {
       name?: string;
