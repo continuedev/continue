@@ -1,0 +1,93 @@
+---
+title: "API Route"
+description: "Configure API Route with Continue to access Claude, GPT, DeepSeek, Gemini, and other models through an aggregated high-concurrency API gateway"
+---
+
+[API Route](https://www.api-route.com) is an OpenAI-compatible aggregating API gateway that provides high-availability, low-latency access to Claude, OpenAI, DeepSeek, Google Gemini, and other top-tier models with unified billing and developer tooling.
+
+<Info>
+  You can obtain your API key from the
+  [API Route Console](https://www.api-route.com/api-keys).
+</Info>
+
+## Chat Model
+
+We recommend configuring **claude-3-7-sonnet-20250219** or **gpt-4o** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Claude 3.7 Sonnet
+        provider: api-route
+        model: claude-3-7-sonnet-20250219
+        apiKey: <YOUR_API_ROUTE_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Claude 3.7 Sonnet",
+          "provider": "api-route",
+          "model": "claude-3-7-sonnet-20250219",
+          "apiKey": "<YOUR_API_ROUTE_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: DeepSeek V3
+        provider: api-route
+        model: deepseek-chat
+        apiKey: <YOUR_API_ROUTE_API_KEY>
+        roles:
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "DeepSeek V3",
+          "provider": "api-route",
+          "model": "deepseek-chat",
+          "apiKey": "<YOUR_API_ROUTE_API_KEY>"
+        }
+      ],
+      "tabAutocompleteModel": {
+        "title": "DeepSeek V3",
+        "provider": "api-route",
+        "model": "deepseek-chat",
+        "apiKey": "<YOUR_API_ROUTE_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Embeddings Model
+
+API Route provides access to OpenAI and open-weight embedding models (e.g. `text-embedding-3-small`, `text-embedding-3-large`).
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/ApiRoute.ts)
