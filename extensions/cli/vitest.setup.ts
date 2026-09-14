@@ -6,6 +6,9 @@ import { resetConsoleOverrides } from "./src/init.js";
 process.env.CONTINUE_CLI_ENABLE_TELEMETRY = "0";
 process.env.CONTINUE_ALLOW_ANONYMOUS_TELEMETRY = "0";
 
+// Ensure terminal command timeout in tests fires before vitest's 30s test timeout
+process.env.TEST_TERMINAL_TIMEOUT = "15000";
+
 // Mock fetch to prevent actual API calls in tests
 const originalFetch = global.fetch;
 global.fetch = vi
