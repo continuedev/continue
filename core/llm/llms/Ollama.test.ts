@@ -298,7 +298,10 @@ describe("Ollama", () => {
             {
               id: "tc_1",
               type: "function",
-              function: { name: "read_file", arguments: '{"filepath":"test_1.py"}' },
+              function: {
+                name: "read_file",
+                arguments: '{"filepath":"test_1.py"}',
+              },
             },
           ],
         },
@@ -319,7 +322,10 @@ describe("Ollama", () => {
       // This is the full sequence from the task: two sequential tool calls
       // must both have native tool definitions available, not just the first.
       const messages: ChatMessage[] = [
-        { role: "user", content: "Change test_1.py to 123, then read it back." },
+        {
+          role: "user",
+          content: "Change test_1.py to 123, then read it back.",
+        },
         {
           role: "assistant",
           content: "",
@@ -342,7 +348,10 @@ describe("Ollama", () => {
             {
               id: "tc_2",
               type: "function",
-              function: { name: "read_file", arguments: '{"filepath":"test_1.py"}' },
+              function: {
+                name: "read_file",
+                arguments: '{"filepath":"test_1.py"}',
+              },
             },
           ],
         },
