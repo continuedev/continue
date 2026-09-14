@@ -1,4 +1,8 @@
-import { toResponsesInput, isItemType } from "./openaiTypeConverters";
+import {
+  toResponsesInput,
+  isItemType,
+  fromChatCompletionChunk,
+} from "./openaiTypeConverters";
 import { ChatMessage } from "..";
 import type {
   EasyInputMessage,
@@ -845,6 +849,28 @@ describe("openaiTypeConverters", () => {
         const devMessages = getMessagesByRole(result, "developer");
         expect(devMessages.length).toBe(1);
       });
+    });
+  });
+
+  describe("fromChatCompletionChunk", () => {
+    it("should preserve tool_call.index so id-less fragments correlate (issue #13223)", () => {
+      const chunk: any = {
+        choices: [
+          {
+            delta: {
+              tool_calls: [
+                {
+                  index: 1,
+                  function: { name: "tool_b", arguments: '{"target":"B"}' },
+                },
+              ],
+            },
+          },
+        ],
+      };
+      const msg = fromChatCompletionChunk(chunk) as any;
+      expect(msg?.toolCalls?.[0]?.index).toBe(1);
+      expect(msg?.toolCalls?.[0]?.function?.arguments).toBe('{"target":"B"}');
     });
   });
 });
