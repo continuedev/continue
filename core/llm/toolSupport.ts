@@ -485,6 +485,26 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
 
       return false;
     },
+    "y-api": (model) => {
+      // Y-API relays to several labs, so support is per-model. Verified against
+      // the live API on 2026-09-16 by sending one request with a single
+      // function tool and checking for a tool_calls response.
+      //
+      // The openai/* models do accept tools, but only when reasoning_effort is
+      // set explicitly -- with the parameter absent the upstream rejects the
+      // request ("Function tools with reasoning_effort are not supported",
+      // 3/3 calls), and with it present the tool call succeeds (3/3 at
+      // low/none/high). Continue has no way to send reasoning_effort, so
+      // advertising tools for them would only produce a 400 in agent mode.
+      const unsupported = [
+        "openai/gpt-6-astra",
+        "openai/gpt-5.6-sol",
+        "openai/gpt-5.6-terra",
+        "openai/gpt-5.6-luna",
+      ];
+
+      return !unsupported.includes(model.toLowerCase());
+    },
   };
 
 export function isRecommendedAgentModel(modelName: string): boolean {
