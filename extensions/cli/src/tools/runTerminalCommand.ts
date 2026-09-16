@@ -68,7 +68,7 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
     // Windows: Use PowerShell
     return {
       shell: "powershell.exe",
-      args: ["-NoLogo", "-ExecutionPolicy", "Bypass", "-Command", command],
+      args: ["-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command],
     };
   }
 
@@ -330,9 +330,13 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           moveToBackground,
         );
 
-        // Only reject on non-zero exit code if there's also stderr
-        if (code !== 0 && stderr) {
-          reject(`Error (exit code ${code}): ${stderr}`);
+        // Reject on any non-zero exit code; include stderr or stdout
+        // for diagnostics. Previously this required stderr to be non-empty,
+        // which left the promise hanging on Windows when PowerShell flushed
+        // CommandNotFoundException to stdout instead of stderr (see #13273).
+        if (code !== 0) {
+          const errorDetail = stderr || stdout || `Process exited with code ${code}`;
+          reject(`Error (exit code ${code}): ${errorDetail}`);
           return;
         }
 
