@@ -223,4 +223,150 @@ describe("Ollama", () => {
       expect(result[1].role).toBe("tool");
     });
   });
+
+  describe("_streamChat tool attachment across a multi-step tool loop", () => {
+    let ollama: Ollama;
+
+    const tool = {
+      type: "function" as const,
+      function: {
+        name: "read_file",
+        description: "Read a file.",
+        parameters: {
+          type: "object" as const,
+          properties: { filepath: { type: "string" } },
+        },
+      },
+    };
+
+    beforeEach(() => {
+      ollama = createOllama();
+      (ollama as any).modelInfoPromise = Promise.resolve();
+      // createOllama() uses Object.create(prototype), bypassing the
+      // constructor, so class-field initializers like `modelMap` never run.
+      (ollama as any).modelMap = {};
+      (ollama as any).apiBase = "http://localhost:11434/";
+    });
+
+    async function sendChatAndCaptureRequestBody(
+      messages: ChatMessage[],
+    ): Promise<any> {
+      const fetchMock = jest.fn().mockResolvedValue({
+        status: 200,
+        json: async () => ({
+          message: { role: "assistant", content: "ok" },
+        }),
+      });
+      (ollama as any).fetch = fetchMock;
+
+      const gen = (ollama as any)._streamChat(
+        messages,
+        new AbortController().signal,
+        { tools: [tool], stream: false },
+      );
+      for await (const _ of gen) {
+        // drain
+      }
+
+      const [, init] = fetchMock.mock.calls[0];
+      return JSON.parse(init.body);
+    }
+
+    it("attaches tools on the first turn (last message role = user)", async () => {
+      const messages: ChatMessage[] = [
+        { role: "user", content: "Read test_1.py and tell me its value." },
+      ];
+
+      const body = await sendChatAndCaptureRequestBody(messages);
+
+      expect(body.tools).toBeDefined();
+      expect(body.tools).toHaveLength(1);
+      expect(body.tools[0].function.name).toBe("read_file");
+    });
+
+    it("still attaches tools on the continuation turn immediately after a tool result (last message role = tool)", async () => {
+      // Simulates: user -> assistant tool_call #1 -> tool result
+      // This is the request Continue sends to get the model's next move,
+      // which must still offer tools so the model can either answer or
+      // issue tool_call #2 natively instead of falling back to raw text.
+      const messages: ChatMessage[] = [
+        { role: "user", content: "Read test_1.py and tell me its value." },
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "tc_1",
+              type: "function",
+              function: {
+                name: "read_file",
+                arguments: '{"filepath":"test_1.py"}',
+              },
+            },
+          ],
+        },
+        { role: "tool", content: "42", toolCallId: "tc_1" },
+      ];
+
+      const body = await sendChatAndCaptureRequestBody(messages);
+
+      expect(body.tools).toBeDefined();
+      expect(body.tools).toHaveLength(1);
+      expect(body.tools[0].function.name).toBe("read_file");
+      // The request itself must remain well-formed for Ollama:
+      // the last message sent is still the tool result.
+      expect(body.messages.at(-1).role).toBe("tool");
+    });
+
+    it("still attaches tools through a second tool call in the same loop (user -> tool_call#1 -> result -> tool_call#2 -> result)", async () => {
+      // This is the full sequence from the task: two sequential tool calls
+      // must both have native tool definitions available, not just the first.
+      const messages: ChatMessage[] = [
+        {
+          role: "user",
+          content: "Change test_1.py to 123, then read it back.",
+        },
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "tc_1",
+              type: "function",
+              function: {
+                name: "edit_existing_file",
+                arguments: '{"filepath":"test_1.py","changes":"123"}',
+              },
+            },
+          ],
+        },
+        { role: "tool", content: "ok", toolCallId: "tc_1" },
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "tc_2",
+              type: "function",
+              function: {
+                name: "read_file",
+                arguments: '{"filepath":"test_1.py"}',
+              },
+            },
+          ],
+        },
+        { role: "tool", content: "123", toolCallId: "tc_2" },
+      ];
+
+      const body = await sendChatAndCaptureRequestBody(messages);
+
+      // The request for the model's final answer (after tool_call #2's
+      // result) must still carry the tools array — this is the exact
+      // request that used to silently lose `tools` under the old
+      // `ollamaMessages.at(-1)?.role === "user"` gate.
+      expect(body.tools).toBeDefined();
+      expect(body.tools).toHaveLength(1);
+      expect(body.messages.at(-1).role).toBe("tool");
+    });
+  });
 });
