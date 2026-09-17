@@ -199,3 +199,60 @@ describe("BaseLLM", () => {
     });
   });
 });
+
+describe("BaseLLM error annotation", () => {
+  class ErrorLLM extends BaseLLM {
+    static providerName = "openai";
+    // parseError is private; these tests are about what it leaves on the error
+    // for llm/utils/retry.ts to read.
+    parse(resp: unknown): Promise<Error> {
+      return (this as any).parseError(resp);
+    }
+  }
+
+  const llm = () => new ErrorLLM({ model: "dummy-model" });
+
+  const response = (init: { status: number; headers?: Record<string, string> }) => ({
+    status: init.status,
+    statusText: "Too Many Requests",
+    url: "https://api.test-api-dummy.com/v1/chat/completions",
+    headers: new Headers(init.headers ?? {}),
+    text: async () => "rate limited",
+  });
+
+  it("puts the provider's retry-after where the backoff reads it", async () => {
+    // calculateDelay() in llm/utils/retry.ts looks for error.headers["retry-after"]
+    // to wait exactly as long as the provider asked. Nothing was setting it, so
+    // every rate limit fell through to exponential backoff -- a guess, when the
+    // provider had already said the answer.
+    const error = (await llm().parse(
+      response({ status: 429, headers: { "Retry-After": "17" } }),
+    )) as Error & { status?: number; headers?: Record<string, string> };
+
+    expect(error.status).toBe(429);
+    expect(error.headers?.["retry-after"]).toBe("17");
+  });
+
+  it("lower-cases the names the reader looks for", async () => {
+    const error = (await llm().parse(
+      response({
+        status: 429,
+        headers: { "X-RateLimit-Reset": "1789621158", "X-RateLimit-Remaining": "0" },
+      }),
+    )) as Error & { headers?: Record<string, string> };
+
+    expect(error.headers?.["x-ratelimit-reset"]).toBe("1789621158");
+    expect(error.headers?.["x-ratelimit-remaining"]).toBe("0");
+  });
+
+  it("leaves headers unset when the response carried none", async () => {
+    // An empty object would read as "the provider answered with no limits";
+    // absent says it never answered at all.
+    const error = (await llm().parse(response({ status: 500 }))) as Error & {
+      headers?: Record<string, string>;
+    };
+
+    expect(error.headers).toBeUndefined();
+    expect(error.status).toBe(500);
+  });
+});

@@ -402,7 +402,39 @@ export abstract class BaseLLM implements ILLM {
     }
   }
 
+  /**
+   * Copies the response's status and headers onto the error.
+   *
+   * `calculateDelay` in llm/utils/retry.ts reads `error.headers["retry-after"]`
+   * and friends to back off for as long as the provider asked. Nothing was ever
+   * putting them there, so that path could not fire and every rate limit fell
+   * through to exponential backoff -- a guess, when the provider had already
+   * said the answer.
+   *
+   * Header names are lower-cased because that is how `Headers` yields them and
+   * how the reader spells the ones it looks for first.
+   */
+  private annotateError(error: Error, resp: any): Error {
+    const annotated = error as Error & {
+      status?: number;
+      headers?: Record<string, string>;
+    };
+    annotated.status = resp?.status;
+    const headers: Record<string, string> = {};
+    resp?.headers?.forEach?.((value: string, name: string) => {
+      headers[name.toLowerCase()] = value;
+    });
+    if (Object.keys(headers).length > 0) {
+      annotated.headers = headers;
+    }
+    return annotated;
+  }
+
   private async parseError(resp: any): Promise<Error> {
+    return this.annotateError(await this.buildError(resp), resp);
+  }
+
+  private async buildError(resp: any): Promise<Error> {
     let text = await resp.text();
 
     if (resp.status === 404 && !resp.url.includes("/v1")) {
