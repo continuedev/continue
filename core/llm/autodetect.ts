@@ -237,6 +237,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "cohere",
   "sagemaker",
   "deepinfra",
+  "gitgot",
   "gemini",
   "huggingface-inference-api",
   "huggingface-tgi",

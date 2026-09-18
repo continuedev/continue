@@ -291,6 +291,36 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     packages: [models.llama31Chat, models.deepseek],
     apiKeyUrl: "https://function.network/join-waitlist",
   },
+  gitgot: {
+    title: "GitGot",
+    provider: "gitgot",
+    refPage: "gitgot",
+    description:
+      "GitGot is an OpenAI-compatible endpoint serving open-weight models, including several with few other providers.",
+    longDescription: `To get started, create an API key at [gitgot.ai](https://gitgot.ai/). Prices and context limits are published at \`https://inference.gitgot.ai/v1/models\`.`,
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API key",
+        placeholder: "Enter your GitGot API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    icon: "gitgot.png",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    packages: [
+      models.gptOss120B,
+      models.kimiK27Code,
+      models.deepseekV4Flash,
+      models.llama3370bChat,
+    ],
+    apiKeyUrl: "https://gitgot.ai/dashboard",
+  },
   ovhcloud: {
     title: "OVHcloud",
     provider: "ovhcloud",

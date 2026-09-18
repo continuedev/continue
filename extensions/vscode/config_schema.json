@@ -233,6 +233,7 @@
             "scaleway",
             "relace",
             "morph",
+            "gitgot",
             "ovhcloud",
             "venice",
             "inception",
@@ -535,6 +536,7 @@
                   "xAI",
                   "kindo",
                   "scaleway",
+                  "gitgot",
                   "ovhcloud",
                   "venice"
                 ]
@@ -2873,6 +2875,7 @@
                 "tensorix",
                 "function-network",
                 "scaleway",
+                "gitgot",
                 "ovhcloud"
               ]
             },

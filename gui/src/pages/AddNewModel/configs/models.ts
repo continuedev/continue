@@ -213,10 +213,15 @@ export const models: { [key: string]: ModelPackage } = {
             title: "gpt-oss-120b (OVHcloud)",
             contextLength: 131072,
           },
+          gitgot: {
+            model: "openai/gpt-oss-120b",
+            title: "gpt-oss-120b (GitGot)",
+            contextLength: 131072,
+          },
         },
       },
     ],
-    providerOptions: ["vllm", "ovhcloud"],
+    providerOptions: ["vllm", "ovhcloud", "gitgot"],
     isOpenSource: true,
   },
   llama318BChat: {
@@ -697,8 +702,53 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 65536,
     },
     icon: "meta.png",
-    providerOptions: ["ovhcloud"],
+    dimensions: [
+      {
+        name: "Provider",
+        description: "The provider to use for this model",
+        options: {
+          ovhcloud: {
+            model: "llama3.3-70b",
+            title: "Llama3.3-70b (OVHcloud)",
+          },
+          gitgot: {
+            model: "meta-llama/Llama-3.3-70B-Instruct",
+            title: "Llama3.3-70b (GitGot)",
+            contextLength: 131072,
+          },
+        },
+      },
+    ],
+    providerOptions: ["ovhcloud", "gitgot"],
     isOpenSource: false,
+  },
+  kimiK27Code: {
+    title: "Kimi K2.7 Code",
+    description:
+      "Moonshot AI's code-tuned Kimi K2.7, with a 262k context for whole-repository work",
+    refUrl: "https://huggingface.co/moonshotai/Kimi-K2.7-Code",
+    params: {
+      title: "Kimi K2.7 Code",
+      model: "moonshotai/Kimi-K2.7-Code",
+      contextLength: 262144,
+    },
+    icon: "moonshot.png",
+    providerOptions: ["gitgot"],
+    isOpenSource: true,
+  },
+  deepseekV4Flash: {
+    title: "DeepSeek V4 Flash",
+    description:
+      "DeepSeek's fast open-weight MoE, with reasoning available on request",
+    refUrl: "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash",
+    params: {
+      title: "DeepSeek V4 Flash",
+      model: "deepseek-ai/DeepSeek-V4-Flash",
+      contextLength: 163840,
+    },
+    icon: "deepseek.png",
+    providerOptions: ["gitgot"],
+    isOpenSource: true,
   },
   llama3170bChat: {
     title: "Llama3.1 70b Chat",

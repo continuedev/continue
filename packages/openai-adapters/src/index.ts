@@ -137,6 +137,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.mistral.ai/v1/", config);
     case "deepinfra":
       return openAICompatible("https://api.deepinfra.com/v1/openai/", config);
+    case "gitgot":
+      return openAICompatible("https://inference.gitgot.ai/v1/", config);
     case "vllm":
       return openAICompatible("http://localhost:8000/v1/", config);
     case "groq":

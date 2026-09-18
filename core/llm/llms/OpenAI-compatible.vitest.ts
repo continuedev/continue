@@ -13,6 +13,7 @@ import Mimo from "./Mimo.js";
 import LMStudio from "./LMStudio.js";
 import Cerebras from "./Cerebras.js";
 import DeepInfra from "./DeepInfra.js";
+import GitGot from "./GitGot.js";
 import Nvidia from "./Nvidia.js";
 import SambaNova from "./SambaNova.js";
 import Scaleway from "./Scaleway.js";
@@ -333,6 +334,11 @@ createOpenAISubclassTests(DeepInfra, {
   customEmbeddingsBody: {
     inputs: ["Hello", "World"],
   },
+});
+
+createOpenAISubclassTests(GitGot, {
+  providerName: "gitgot",
+  defaultApiBase: "https://inference.gitgot.ai/v1/",
 });
 
 createOpenAISubclassTests(Nvidia, {
