@@ -11,19 +11,19 @@ type ButtonProps = React.ComponentProps<"button"> & {
 
 const buttonVariants = {
   primary:
-    "border-none text-primary-foreground bg-primary hover:enabled:brightness-125",
+    "border-none text-primary-foreground bg-primary hover:enabled:bg-primary-hover active:enabled:brightness-95 shadow-sm",
   secondary:
-    "border-none text-foreground bg-border hover:enabled:brightness-125",
+    "border border-solid border-border text-foreground bg-secondary hover:enabled:bg-secondary-hover active:enabled:brightness-95",
   outline:
-    "border border-solid border-description text-foreground bg-transparent hover:enabled:bg-input",
+    "border border-solid border-border text-foreground bg-transparent hover:enabled:bg-secondary hover:enabled:border-description-muted",
   ghost:
-    "border-none text-foreground bg-inherit hover:enabled:brightness-125 hover:enabled:bg-input",
-  icon: "border border-solid border-description text-description bg-transparent hover:enabled:text-foreground hover:enabled:bg-input hover:enabled:border-description rounded-full p-0 flex items-center justify-center",
+    "border-none text-description bg-transparent hover:enabled:text-foreground hover:enabled:bg-list-hover",
+  icon: "border border-solid border-border text-description bg-transparent hover:enabled:text-foreground hover:enabled:bg-list-hover hover:enabled:border-description-muted rounded-full p-0 flex items-center justify-center",
 };
 
 const buttonSizes = {
-  sm: "px-1.5 py-0.5 text-2xs",
-  lg: "px-2 py-1 text-sm",
+  sm: "px-2 py-1 text-2xs",
+  lg: "px-3 py-1.5 text-sm",
 };
 
 const iconButtonSizes = {
@@ -38,19 +38,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "cursor-pointer transition-all duration-200",
+          "ease-ruckus cursor-pointer font-medium transition-[background-color,border-color,color,box-shadow,transform] duration-150",
           "hover:enabled:cursor-pointer",
+          // Keyboard focus is a violet ring rather than the browser default
+          "focus-visible:ring-accent outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
           "disabled:cursor-not-allowed disabled:opacity-50",
           buttonVariants[variant],
           isIcon
             ? iconButtonSizes[size]
-            : `my-1.5 rounded ${buttonSizes[size]}`,
+            : `my-1.5 rounded-default ${buttonSizes[size]}`,
           className,
         )}
-        style={{
-          fontFamily: "system-ui, -apple-system, sans-serif",
-          ...props.style,
-        }}
         {...props}
       />
     );

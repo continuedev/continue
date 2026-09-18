@@ -149,6 +149,7 @@ export const ADDITIONAL_INDEXING_IGNORE_FILETYPES = [
   "*.gitignore",
   "*.gitkeep",
   "*.continueignore",
+  "*.ruckusignore",
   "*.csv",
   "*.uasset",
   "*.pdb",

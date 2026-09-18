@@ -113,7 +113,7 @@ export function AddModelForm({ onDone }: { onDone: () => void }) {
         </p>
       )}
       <p className="text-description text-xs">
-        Your key is saved in your local Continue configuration. Other model
+        Your key is saved in your local Ruckus configuration. Other model
         roles can be assigned in the config file.
       </p>
       <Button

@@ -45,9 +45,11 @@ function getSessionDir(): string {
     return sessionDir;
   }
 
-  // Use CONTINUE_GLOBAL_DIR if set (for testing)
+  // Use RUCKUS_GLOBAL_DIR (or the legacy CONTINUE_GLOBAL_DIR) if set (for testing)
   const continueHome =
-    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
+    process.env.RUCKUS_GLOBAL_DIR ||
+    process.env.CONTINUE_GLOBAL_DIR ||
+    path.join(os.homedir(), ".ruckus");
   const sessionDir = path.join(continueHome, "sessions");
 
   // Create directory if it doesn't exist

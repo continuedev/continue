@@ -1,8 +1,8 @@
-export const EXTENSION_NAME = "continue";
+export const EXTENSION_NAME = "ruckus";
 
 export const NEW_SESSION_TITLE = "New Session";
 
 export const GITHUB_LINK =
-  "https://github.com/continuedev/continue/issues/new/choose";
+  "https://github.com/jakesixtyoneeighty/ruckuside/issues/new/choose";
 export const DISCUSSIONS_LINK =
-  "https://github.com/continuedev/continue/discussions";
+  "https://github.com/jakesixtyoneeighty/ruckuside/discussions";

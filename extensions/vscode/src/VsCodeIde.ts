@@ -569,6 +569,8 @@ class VsCodeIde implements IDE {
           "--iglob",
           pattern,
           "--ignore-file",
+          ".ruckusignore",
+          "--ignore-file",
           ".continueignore",
           "--ignore-file",
           ".gitignore",
@@ -600,6 +602,8 @@ class VsCodeIde implements IDE {
     for (const dir of await this.getWorkspaceDirs()) {
       const dirResults = await this.runRipgrepQuery(dir, [
         "-i", // Case-insensitive search
+        "--ignore-file",
+        ".ruckusignore",
         "--ignore-file",
         ".continueignore",
         "--ignore-file",

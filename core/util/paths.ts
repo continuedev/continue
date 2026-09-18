@@ -24,15 +24,43 @@ export function setConfigFilePermissions(filePath: string): void {
   }
 }
 
-const CONTINUE_GLOBAL_DIR = (() => {
-  const configPath = process.env.CONTINUE_GLOBAL_DIR;
+export const RUCKUS_GLOBAL_DIR_NAME = ".ruckus";
+export const LEGACY_GLOBAL_DIR_NAME = ".continue";
+
+/**
+ * Copies a pre-rebrand `~/.continue` directory into `~/.ruckus` the first time
+ * Ruckus runs, so existing configs, sessions and models carry over. The legacy
+ * directory is left untouched — an older Continue install keeps working, and a
+ * failed copy is never fatal.
+ */
+function migrateLegacyGlobalDir(target: string): void {
+  const legacy = path.join(os.homedir(), LEGACY_GLOBAL_DIR_NAME);
+  if (fs.existsSync(target) || !fs.existsSync(legacy)) {
+    return;
+  }
+  try {
+    fs.cpSync(legacy, target, { recursive: true, errorOnExist: false });
+    console.log(`Migrated Continue settings from ${legacy} to ${target}`);
+  } catch (error) {
+    console.warn(`Failed to migrate settings from ${legacy}:`, error);
+    // Leave the fresh directory to be created normally below.
+  }
+}
+
+const RUCKUS_GLOBAL_DIR = (() => {
+  // RUCKUS_GLOBAL_DIR is canonical; CONTINUE_GLOBAL_DIR stays supported so
+  // existing shells, CI and test harnesses keep working after the rebrand.
+  const configPath =
+    process.env.RUCKUS_GLOBAL_DIR || process.env.CONTINUE_GLOBAL_DIR;
   if (configPath) {
     // Convert relative path to absolute paths based on current working directory
     return path.isAbsolute(configPath)
       ? configPath
       : path.resolve(process.cwd(), configPath);
   }
-  return path.join(os.homedir(), ".continue");
+  const target = path.join(os.homedir(), RUCKUS_GLOBAL_DIR_NAME);
+  migrateLegacyGlobalDir(target);
+  return target;
 })();
 
 // export const DEFAULT_CONFIG_TS_CONTENTS = `import { Config } from "./types"\n\nexport function modifyConfig(config: Config): Config {
@@ -56,10 +84,14 @@ export function getContinueUtilsPath(): string {
 }
 
 export function getGlobalContinueIgnorePath(): string {
-  const continueIgnorePath = path.join(
-    getContinueGlobalPath(),
-    ".continueignore",
-  );
+  const globalDir = getContinueGlobalPath();
+  // A migrated ~/.continue may already carry the legacy file; keep using it
+  // rather than stranding the user's patterns in a file nothing reads.
+  const legacyPath = path.join(globalDir, ".continueignore");
+  if (fs.existsSync(legacyPath)) {
+    return legacyPath;
+  }
+  const continueIgnorePath = path.join(globalDir, ".ruckusignore");
   if (!fs.existsSync(continueIgnorePath)) {
     fs.writeFileSync(continueIgnorePath, "");
   }
@@ -67,8 +99,8 @@ export function getGlobalContinueIgnorePath(): string {
 }
 
 export function getContinueGlobalPath(): string {
-  // This is ~/.continue on mac/linux
-  const continuePath = CONTINUE_GLOBAL_DIR;
+  // This is ~/.ruckus on mac/linux
+  const continuePath = RUCKUS_GLOBAL_DIR;
   if (!fs.existsSync(continuePath)) {
     fs.mkdirSync(continuePath);
   }
@@ -209,7 +241,12 @@ export function getTsConfigPath(): string {
 
 export function getContinueRcPath(): string {
   // Disable indexing of the config folder to prevent infinite loops
-  const continuercPath = path.join(getContinueGlobalPath(), ".continuerc.json");
+  const globalDir = getContinueGlobalPath();
+  const legacyRcPath = path.join(globalDir, ".continuerc.json");
+  if (fs.existsSync(legacyRcPath)) {
+    return legacyRcPath;
+  }
+  const continuercPath = path.join(globalDir, ".ruckusrc.json");
   if (!fs.existsSync(continuercPath)) {
     fs.writeFileSync(
       continuercPath,

@@ -70,6 +70,7 @@ import { myersDiff } from "./diff/myers";
 import { ApplyAbortManager } from "./edit/applyAbortManager";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
+import { IGNORE_FILE_NAMES } from "./indexing/continueignore";
 import { walkDirCache } from "./indexing/walkDir";
 import { LLMLogger } from "./llm/logger";
 import { llmStreamChat } from "./llm/streamChat";
@@ -1282,7 +1283,7 @@ export class Core {
             "Local config-related file updated",
           );
         } else if (
-          uri.endsWith(".continueignore") ||
+          IGNORE_FILE_NAMES.some((name) => uri.endsWith(name)) ||
           uri.endsWith(".gitignore")
         ) {
           // Reindex the workspaces

@@ -1,7 +1,8 @@
 // All vscode variables https://gist.github.com/estruyf/ba49203e1a7d6868e9320a4ea480c27a
 // Examples for vscode https://github.com/githubocto/tailwind-vscode/blob/main/index.js
 
-// The current default theme is dark with blue accents
+// Ruckus default theme: deep slate surfaces with electric violet accents.
+// These are fallbacks only — when the host IDE reports a theme, it wins.
 export const THEME_COLORS = {
   background: {
     vars: [
@@ -9,7 +10,7 @@ export const THEME_COLORS = {
       "--vscode-editor-background",
       "--vscode-panel-background",
     ],
-    default: "#1e1e1e", // dark gray
+    default: "#0f1117", // deep slate
   },
   foreground: {
     vars: [
@@ -17,19 +18,19 @@ export const THEME_COLORS = {
       "--vscode-editor-foreground",
       "--vscode-panel-foreground",
     ],
-    default: "#e6e6e6", // light gray
+    default: "#e4e6ed", // soft white
   },
   "editor-background": {
     vars: ["--vscode-editor-background"],
-    default: "#1e1e1e", // dark gray
+    default: "#0b0d12", // near-black slate
   },
   "editor-foreground": {
     vars: ["--vscode-editor-foreground"],
-    default: "#e6e6e6", // light gray
+    default: "#e4e6ed", // soft white
   },
   "primary-background": {
     vars: ["--vscode-button-background"],
-    default: "#2c5aa0", // medium blue
+    default: "#7c5cff", // electric violet
   },
   "primary-foreground": {
     vars: ["--vscode-button-foreground"],
@@ -37,60 +38,60 @@ export const THEME_COLORS = {
   },
   "primary-hover": {
     vars: ["--vscode-button-hoverBackground"],
-    default: "#3a6db3", // lighter blue
+    default: "#8f73ff", // lifted violet
   },
   "secondary-background": {
     vars: ["--vscode-button-secondaryBackground"],
-    default: "#303030", // medium dark gray
+    default: "#1a1d27", // raised slate
   },
   "secondary-foreground": {
     vars: ["--vscode-button-secondaryForeground"],
-    default: "#e6e6e6", // light gray
+    default: "#d7dae5", // muted white
   },
   "secondary-hover": {
     vars: ["--vscode-button-secondaryHoverBackground"],
-    default: "#3a3a3a", // medium gray
+    default: "#232733", // hover slate
   },
   border: {
     vars: ["--vscode-sideBar-border", "--vscode-panel-border"],
-    default: "#2a2a2a", // dark gray border
+    default: "#232733", // hairline slate
   },
   "border-focus": {
     vars: ["--vscode-focusBorder"],
-    default: "#3a6db3", // lighter blue
+    default: "#7c5cff", // electric violet
   },
   // Command styles are used for tip-tap editor
   "command-background": {
     vars: ["--vscode-commandCenter-background"],
-    default: "#252525", // dark gray
+    default: "#141721", // sunken slate
   },
   "command-foreground": {
     vars: ["--vscode-commandCenter-foreground"],
-    default: "#e6e6e6", // light gray
+    default: "#e4e6ed", // soft white
   },
   "command-border": {
     vars: ["--vscode-commandCenter-inactiveBorder"],
-    default: "#555555", // medium gray
+    default: "#272b38", // subtle slate
   },
   "command-border-focus": {
     vars: ["--vscode-commandCenter-activeBorder"],
-    default: "#4d8bf0", // bright blue
+    default: "#7c5cff", // electric violet
   },
   description: {
     vars: ["--vscode-descriptionForeground"],
-    default: "#b3b3b3", // medium light gray
+    default: "#9aa1b5", // cool gray
   },
   "description-muted": {
     vars: ["--vscode-list-deemphasizedForeground"],
-    default: "#8c8c8c", // medium gray
+    default: "#6b7285", // dim slate gray
   },
   "input-background": {
     vars: ["--vscode-input-background"],
-    default: "#2d2d2d", // dark gray
+    default: "#141721", // sunken slate
   },
   "input-foreground": {
     vars: ["--vscode-input-foreground"],
-    default: "#e6e6e6", // light gray
+    default: "#e4e6ed", // soft white
   },
   "input-border": {
     vars: [
@@ -98,30 +99,30 @@ export const THEME_COLORS = {
       "--vscode-commandCenter-inactiveBorder",
       "vscode-border",
     ],
-    default: "#555555", // medium gray
+    default: "#272b38", // subtle slate
   },
   "input-placeholder": {
     vars: ["--vscode-input-placeholderForeground"],
-    default: "#9e9e9e", // medium light gray
+    default: "#6b7285", // dim slate gray
   },
   "table-oddRow": {
     vars: ["--vscode-tree-tableOddRowsBackground"],
-    default: "#2d2d2d", // dark gray
+    default: "#141721", // sunken slate
   },
   "badge-background": {
     vars: ["--vscode-badge-background"],
-    default: "#4d4d4d", // medium dark gray
+    default: "#2a2f3f", // elevated slate
   },
   "badge-foreground": {
     vars: ["--vscode-badge-foreground"],
-    default: "#ffffff", // white
+    default: "#e4e6ed", // soft white
   },
   info: {
     vars: [
       "--vscode-charts-blue",
       "--vscode-notebookStatusRunningIcon-foreground",
     ],
-    default: "#2196f3", // blue
+    default: "#5b9dff", // azure
   },
   success: {
     vars: [
@@ -130,51 +131,51 @@ export const THEME_COLORS = {
       "--vscode-gitDecoration-addedResourceForeground",
       "--vscode-charts-green",
     ],
-    default: "#4caf50", // green
+    default: "#3ddc97", // mint
   },
   warning: {
     vars: [
       "--vscode-editorWarning-foreground",
       "--vscode-list-warningForeground",
     ],
-    default: "#ffb74d", // amber/yellow
+    default: "#ffb454", // amber
   },
   error: {
     vars: ["--vscode-editorError-foreground", "--vscode-list-errorForeground"],
-    default: "#f44336", // red
+    default: "#ff5c6c", // coral
   },
   link: {
     vars: ["--vscode-textLink-foreground"],
-    default: "#5c9ce6", // medium blue
+    default: "#a78bfa", // light violet
   },
   terminal: {
     vars: ["--vscode-terminal-ansiGreen"],
-    default: "#0dbc79", // green
+    default: "#3ddc97", // mint
   },
   textCodeBlockBackground: {
     vars: ["--vscode-textCodeBlock-background"],
-    default: "#1e1e1e", // same as editor-background
+    default: "#141721", // sunken slate
   },
   accent: {
     vars: ["--vscode-tab-activeBorderTop", "--vscode-focusBorder"],
-    default: "#4d8bf0", // bright blue
+    default: "#7c5cff", // electric violet
   },
   "find-match": {
     vars: ["--vscode-editor-findMatchBackground"], // Can't get "var(--vscode-editor-findMatchBackground, rgba(237, 18, 146, 0.5))" to work
-    default: "#264f7840", // translucent blue
+    default: "#7c5cff40", // translucent violet
   },
   "find-match-selected": {
     vars: ["--vscode-editor-findMatchHighlightBackground"],
-    default: "#ffb74d40", // translucent amber
+    default: "#a78bfa50", // translucent light violet
   },
   "list-hover": {
     // --vscode-tab-hoverBackground
     vars: ["--vscode-list-hoverBackground"],
-    default: "#383838", // medium dark gray
+    default: "#1a1d27", // raised slate
   },
   "list-active": {
     vars: ["--vscode-list-activeSelectionBackground"],
-    default: "#2c5aa050", // translucent medium blue
+    default: "#7c5cff33", // translucent violet
   },
   "list-active-foreground": {
     vars: ["--vscode-list-activeSelectionForeground"],

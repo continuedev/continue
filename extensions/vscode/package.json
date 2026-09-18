@@ -1,34 +1,34 @@
 {
-  "name": "continue",
+  "name": "ruckus",
   "icon": "media/icon.png",
-  "author": "Continue Dev, Inc",
+  "author": "Ruckus",
   "version": "1.3.40",
   "repository": {
     "type": "git",
-    "url": "https://github.com/continuedev/continue"
+    "url": "https://github.com/jakesixtyoneeighty/ruckuside"
   },
   "extensionKind": [
     "ui",
     "workspace"
   ],
   "bugs": {
-    "url": "https://github.com/continuedev/continue/issues",
-    "email": "nate@continue.dev"
+    "url": "https://github.com/jakesixtyoneeighty/ruckuside/issues",
+    "email": "jake@sixtyoneeighty.com"
   },
-  "homepage": "https://continue.dev",
-  "qna": "https://github.com/continuedev/continue/issues/new/choose",
+  "homepage": "https://github.com/jakesixtyoneeighty/ruckuside",
+  "qna": "https://github.com/jakesixtyoneeighty/ruckuside/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - open-source AI code agent",
+  "displayName": "Ruckus - AI coding agent",
   "pricing": "Free",
-  "description": "The leading open-source AI code agent",
-  "publisher": "Continue",
+  "description": "A fast, modern AI coding agent for VS Code",
+  "publisher": "ruckus",
   "engines": {
     "vscode": "^1.70.0",
     "node": ">=20.20.1"
   },
   "engine-strict": true,
   "galleryBanner": {
-    "color": "#1E1E1E",
+    "color": "#0f1117",
     "theme": "dark"
   },
   "categories": [
@@ -53,7 +53,7 @@
   "activationEvents": [
     "onUri",
     "onStartupFinished",
-    "onView:continueGUIView"
+    "onView:ruckusGUIView"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -61,6 +61,7 @@
       {
         "filenames": [
           "config.json",
+          ".ruckusrc.json",
           ".continuerc.json"
         ],
         "id": "jsonc"
@@ -84,66 +85,66 @@
       }
     ],
     "configuration": {
-      "title": "Continue",
+      "title": "Ruckus",
       "properties": {
-        "continue.telemetryEnabled": {
+        "ruckus.telemetryEnabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry).",
+          "markdownDescription": "Ruckus collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry).",
           "markdownDeprecationMessage": "This setting is deprecated and will be removed in a later version. Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page.",
           "deprecationMessage": "Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page."
         },
-        "continue.showInlineTip": {
+        "ruckus.showInlineTip": {
           "type": "boolean",
           "default": true,
-          "description": "Show inline suggestion to use the Continue keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
+          "description": "Show inline suggestion to use the Ruckus keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
         },
-        "continue.disableQuickFix": {
+        "ruckus.disableQuickFix": {
           "type": "boolean",
           "default": false,
           "description": "Disable the quick fix feature."
         },
-        "continue.enableQuickActions": {
+        "ruckus.enableQuickActions": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Quick Actions (experimental)](https://docs.continue.dev/customize/deep-dives/vscode-actions#quick-actions)"
         },
-        "continue.enableTabAutocomplete": {
+        "ruckus.enableTabAutocomplete": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/features/tab-autocomplete)"
+          "markdownDescription": "Enable Ruckus's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/features/tab-autocomplete)"
         },
-        "continue.enableNextEdit": {
+        "ruckus.enableNextEdit": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's next edit feature. Read our docs to learn about configuration and how to share feedback: [continue.dev › Features › Autocomplete › Next Edit (experimental)](https://docs.continue.dev/features/autocomplete/next-edit)"
+          "markdownDescription": "Enable Ruckus's next edit feature. Read our docs to learn about configuration and how to share feedback: [continue.dev › Features › Autocomplete › Next Edit (experimental)](https://docs.continue.dev/features/autocomplete/next-edit)"
         },
-        "continue.pauseTabAutocompleteOnBattery": {
+        "ruckus.pauseTabAutocompleteOnBattery": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
+          "markdownDescription": "Pause Ruckus's tab autocomplete feature when your battery is low."
         },
-        "continue.pauseCodebaseIndexOnStart": {
+        "ruckus.pauseCodebaseIndexOnStart": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Pause Continue's codebase index on start."
+          "markdownDescription": "Pause Ruckus's codebase index on start."
         },
-        "continue.enableConsole": {
+        "ruckus.enableConsole": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "Enable a console to log and explore model inputs and outputs. It can be found in the bottom panel."
         },
-        "continue.remoteConfigServerUrl": {
+        "ruckus.remoteConfigServerUrl": {
           "type": "string",
           "default": null,
           "markdownDescription": "If your team is set up to use shared configuration, enter the server URL here and your user token below to enable automatic syncing."
         },
-        "continue.userToken": {
+        "ruckus.userToken": {
           "type": "string",
           "default": null,
           "markdownDescription": "If your team is set up to use shared configuration, enter your user token here and your server URL above to enable automatic syncing."
         },
-        "continue.remoteConfigSyncPeriod": {
+        "ruckus.remoteConfigSyncPeriod": {
           "type": "number",
           "default": 60,
           "description": "The period of time in minutes between automatic syncs."
@@ -152,443 +153,443 @@
     },
     "commands": [
       {
-        "command": "continue.applyCodeFromChat",
-        "category": "Continue",
+        "command": "ruckus.applyCodeFromChat",
+        "category": "Ruckus",
         "title": "Apply code from chat",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.acceptDiff",
-        "category": "Continue",
+        "command": "ruckus.acceptDiff",
+        "category": "Ruckus",
         "title": "Accept Diff",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.rejectDiff",
-        "category": "Continue",
+        "command": "ruckus.rejectDiff",
+        "category": "Ruckus",
         "title": "Reject Diff",
-        "group": "Continue",
+        "group": "Ruckus",
         "icon": "$(stop)"
       },
       {
-        "command": "continue.acceptVerticalDiffBlock",
-        "category": "Continue",
+        "command": "ruckus.acceptVerticalDiffBlock",
+        "category": "Ruckus",
         "title": "Accept Vertical Diff Block",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.rejectVerticalDiffBlock",
-        "category": "Continue",
+        "command": "ruckus.rejectVerticalDiffBlock",
+        "category": "Ruckus",
         "title": "Reject Vertical Diff Block",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.focusEdit",
-        "category": "Continue",
+        "command": "ruckus.focusEdit",
+        "category": "Ruckus",
         "title": "Add to Edit",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.focusContinueInput",
-        "category": "Continue",
+        "command": "ruckus.focusRuckusInput",
+        "category": "Ruckus",
         "title": "Add Highlighted Code to Context and Clear Chat",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.focusContinueInputWithoutClear",
-        "category": "Continue",
+        "command": "ruckus.focusRuckusInputWithoutClear",
+        "category": "Ruckus",
         "title": "Add to Chat",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.debugTerminal",
-        "category": "Continue",
+        "command": "ruckus.debugTerminal",
+        "category": "Ruckus",
         "title": "Debug Terminal",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.exitEditMode",
-        "category": "Continue",
+        "command": "ruckus.exitEditMode",
+        "category": "Ruckus",
         "title": "Exit Edit Mode",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.openConfigPage",
-        "category": "Continue",
+        "command": "ruckus.openConfigPage",
+        "category": "Ruckus",
         "title": "Open Settings",
         "icon": "$(gear)",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.toggleTabAutocompleteEnabled",
-        "category": "Continue",
+        "command": "ruckus.toggleTabAutocompleteEnabled",
+        "category": "Ruckus",
         "title": "Toggle Autocomplete Enabled",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.forceAutocomplete",
-        "title": "Continue: Force Autocomplete",
-        "category": "Continue"
+        "command": "ruckus.forceAutocomplete",
+        "title": "Ruckus: Force Autocomplete",
+        "category": "Ruckus"
       },
       {
-        "command": "continue.selectFilesAsContext",
-        "category": "Continue",
+        "command": "ruckus.selectFilesAsContext",
+        "category": "Ruckus",
         "title": "Select Files as Context",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.newSession",
-        "category": "Continue",
+        "command": "ruckus.newSession",
+        "category": "Ruckus",
         "title": "New Session",
         "icon": "$(add)",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.shareSession",
-        "category": "Continue",
+        "command": "ruckus.shareSession",
+        "category": "Ruckus",
         "title": "Share Current Chat Session as Markdown",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.viewHistory",
-        "category": "Continue",
+        "command": "ruckus.viewHistory",
+        "category": "Ruckus",
         "title": "View History",
         "icon": "$(history)",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.viewLogs",
-        "category": "Continue",
+        "command": "ruckus.viewLogs",
+        "category": "Ruckus",
         "title": "View Logs",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.clearConsole",
-        "category": "Continue",
+        "command": "ruckus.clearConsole",
+        "category": "Ruckus",
         "title": "Clear Console",
         "icon": "$(clear-all)",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.navigateTo",
-        "category": "Continue",
+        "command": "ruckus.navigateTo",
+        "category": "Ruckus",
         "title": "Navigate to a path",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.writeCommentsForCode",
-        "category": "Continue",
+        "command": "ruckus.writeCommentsForCode",
+        "category": "Ruckus",
         "title": "Write Comments for this Code",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.writeDocstringForCode",
-        "category": "Continue",
+        "command": "ruckus.writeDocstringForCode",
+        "category": "Ruckus",
         "title": "Write a Docstring for this Code",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.fixCode",
-        "category": "Continue",
+        "command": "ruckus.fixCode",
+        "category": "Ruckus",
         "title": "Fix this Code",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.optimizeCode",
-        "category": "Continue",
+        "command": "ruckus.optimizeCode",
+        "category": "Ruckus",
         "title": "Optimize this Code",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.fixGrammar",
-        "category": "Continue",
+        "command": "ruckus.fixGrammar",
+        "category": "Ruckus",
         "title": "Fix Grammar / Spelling",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.codebaseForceReIndex",
-        "category": "Continue",
+        "command": "ruckus.codebaseForceReIndex",
+        "category": "Ruckus",
         "title": "Codebase Force Re-Index",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.rebuildCodebaseIndex",
-        "category": "Continue",
+        "command": "ruckus.rebuildCodebaseIndex",
+        "category": "Ruckus",
         "title": "Rebuild codebase index",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.docsIndex",
-        "category": "Continue",
+        "command": "ruckus.docsIndex",
+        "category": "Ruckus",
         "title": "Docs Index",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.docsReIndex",
-        "category": "Continue",
+        "command": "ruckus.docsReIndex",
+        "category": "Ruckus",
         "title": "Docs Force Re-Index",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.focusContinueInput",
-        "category": "Continue",
-        "title": "Focus Continue Chat",
-        "group": "Continue"
+        "command": "ruckus.focusRuckusInput",
+        "category": "Ruckus",
+        "title": "Focus Ruckus Chat",
+        "group": "Ruckus"
       },
       {
-        "command": "continue.enterEnterpriseLicenseKey",
-        "category": "Continue",
+        "command": "ruckus.enterEnterpriseLicenseKey",
+        "category": "Ruckus",
         "title": "Enter Enterprise License Key",
-        "group": "Continue"
+        "group": "Ruckus"
       },
       {
-        "command": "continue.toggleNextEditEnabled",
-        "title": "Continue: Toggle Next Edit"
+        "command": "ruckus.toggleNextEditEnabled",
+        "title": "Ruckus: Toggle Next Edit"
       },
       {
-        "command": "continue.nextEditWindow.hideNextEditSuggestion",
-        "category": "Continue",
+        "command": "ruckus.nextEditWindow.hideNextEditSuggestion",
+        "category": "Ruckus",
         "title": "Hide Next Edit Suggestion"
       },
       {
-        "command": "continue.nextEditWindow.acceptNextEditSuggestion",
-        "category": "Continue",
+        "command": "ruckus.nextEditWindow.acceptNextEditSuggestion",
+        "category": "Ruckus",
         "title": "Accept Next Edit Suggestion"
       },
       {
-        "command": "continue.forceNextEdit",
-        "category": "Continue",
-        "title": "Continue: Force Next Edit"
+        "command": "ruckus.forceNextEdit",
+        "category": "Ruckus",
+        "title": "Ruckus: Force Next Edit"
       },
       {
-        "command": "continue.acceptJump",
-        "category": "Continue",
-        "title": "Continue: Accept Jump Suggestion"
+        "command": "ruckus.acceptJump",
+        "category": "Ruckus",
+        "title": "Ruckus: Accept Jump Suggestion"
       },
       {
-        "command": "continue.rejectJump",
-        "category": "Continue",
-        "title": "Continue: Reject Jump Suggestion"
+        "command": "ruckus.rejectJump",
+        "category": "Ruckus",
+        "title": "Ruckus: Reject Jump Suggestion"
       },
       {
-        "command": "continue.openInNewWindow",
-        "category": "Continue",
+        "command": "ruckus.openInNewWindow",
+        "category": "Ruckus",
         "title": "Open in new window",
-        "group": "Continue"
+        "group": "Ruckus"
       }
     ],
     "keybindings": [
       {
-        "command": "continue.focusContinueInput",
+        "command": "ruckus.focusRuckusInput",
         "mac": "cmd+l",
         "key": "ctrl+l"
       },
       {
-        "command": "continue.focusContinueInputWithoutClear",
+        "command": "ruckus.focusRuckusInputWithoutClear",
         "mac": "cmd+shift+l",
         "key": "ctrl+shift+l"
       },
       {
-        "command": "continue.acceptDiff",
+        "command": "ruckus.acceptDiff",
         "mac": "shift+cmd+enter",
         "key": "shift+ctrl+enter",
-        "when": "continue.diffVisible"
+        "when": "ruckus.diffVisible"
       },
       {
-        "command": "continue.rejectDiff",
+        "command": "ruckus.rejectDiff",
         "mac": "shift+cmd+backspace",
         "key": "shift+ctrl+backspace",
-        "when": "continue.diffVisible"
+        "when": "ruckus.diffVisible"
       },
       {
-        "command": "continue.rejectDiff",
+        "command": "ruckus.rejectDiff",
         "mac": "cmd+z",
         "key": "ctrl+z",
-        "when": "continue.diffVisible"
+        "when": "ruckus.diffVisible"
       },
       {
-        "command": "continue.quickEditHistoryUp",
+        "command": "ruckus.quickEditHistoryUp",
         "mac": "up",
         "key": "up",
-        "when": "false && continue.quickEditHistoryFocused"
+        "when": "false && ruckus.quickEditHistoryFocused"
       },
       {
-        "command": "continue.quickEditHistoryDown",
+        "command": "ruckus.quickEditHistoryDown",
         "mac": "down",
         "key": "down",
-        "when": "false && continue.quickEditHistoryFocused"
+        "when": "false && ruckus.quickEditHistoryFocused"
       },
       {
-        "command": "continue.acceptVerticalDiffBlock",
+        "command": "ruckus.acceptVerticalDiffBlock",
         "mac": "alt+cmd+y",
         "key": "alt+ctrl+y"
       },
       {
-        "command": "continue.rejectVerticalDiffBlock",
+        "command": "ruckus.rejectVerticalDiffBlock",
         "mac": "alt+cmd+n",
         "key": "alt+ctrl+n"
       },
       {
-        "command": "continue.focusEdit",
+        "command": "ruckus.focusEdit",
         "title": "Edit code with natural language",
         "mac": "cmd+i",
         "key": "ctrl+i"
       },
       {
-        "command": "continue.exitEditMode",
+        "command": "ruckus.exitEditMode",
         "mac": "escape",
         "key": "escape",
-        "when": "continue.inEditMode && editorFocus"
+        "when": "ruckus.inEditMode && editorFocus"
       },
       {
-        "command": "continue.debugTerminal",
+        "command": "ruckus.debugTerminal",
         "mac": "cmd+shift+r",
         "key": "ctrl+shift+r"
       },
       {
-        "command": "continue.openInNewWindow",
+        "command": "ruckus.openInNewWindow",
         "mac": "cmd+k cmd+m",
         "key": "ctrl+k ctrl+m",
         "when": "!terminalFocus"
       },
       {
-        "command": "continue.toggleTabAutocompleteEnabled",
+        "command": "ruckus.toggleTabAutocompleteEnabled",
         "mac": "cmd+k cmd+a",
         "key": "ctrl+k ctrl+a",
         "when": "!terminalFocus"
       },
       {
-        "command": "continue.forceAutocomplete",
+        "command": "ruckus.forceAutocomplete",
         "key": "ctrl+alt+space",
         "mac": "cmd+alt+space",
         "when": "editorTextFocus && !editorHasSelection && !editorReadOnly && !inSnippetMode"
       },
       {
-        "command": "continue.applyCodeFromChat",
+        "command": "ruckus.applyCodeFromChat",
         "mac": "alt+a",
         "key": "alt+a"
       },
       {
-        "command": "continue.toggleNextEditEnabled",
+        "command": "ruckus.toggleNextEditEnabled",
         "key": "ctrl+k ctrl+n",
         "mac": "cmd+k cmd+n",
         "when": "editorTextFocus"
       },
       {
-        "command": "continue.nextEditWindow.hideNextEditSuggestion",
+        "command": "ruckus.nextEditWindow.hideNextEditSuggestion",
         "key": "escape",
-        "when": "editorTextFocus && nextEditWindowActive && !continue.jumpDecorationVisible"
+        "when": "editorTextFocus && nextEditWindowActive && !ruckus.jumpDecorationVisible"
       },
       {
-        "command": "continue.nextEditWindow.acceptNextEditSuggestion",
+        "command": "ruckus.nextEditWindow.acceptNextEditSuggestion",
         "key": "tab",
-        "when": "editorTextFocus && nextEditWindowActive && !continue.jumpDecorationVisible"
+        "when": "editorTextFocus && nextEditWindowActive && !ruckus.jumpDecorationVisible"
       },
       {
-        "command": "continue.acceptJump",
+        "command": "ruckus.acceptJump",
         "key": "tab",
-        "when": "editorTextFocus && continue.jumpDecorationVisible"
+        "when": "editorTextFocus && ruckus.jumpDecorationVisible"
       },
       {
-        "command": "continue.rejectJump",
+        "command": "ruckus.rejectJump",
         "key": "escape",
-        "when": "editorTextFocus && continue.jumpDecorationVisible"
+        "when": "editorTextFocus && ruckus.jumpDecorationVisible"
       }
     ],
     "submenus": [
       {
-        "id": "continue.continueSubMenu",
-        "label": "Continue"
+        "id": "ruckus.ruckusSubMenu",
+        "label": "Ruckus"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "continue.focusContinueInput"
+          "command": "ruckus.focusRuckusInput"
         },
         {
-          "command": "continue.focusContinueInputWithoutClear"
+          "command": "ruckus.focusRuckusInputWithoutClear"
         },
         {
-          "command": "continue.debugTerminal"
+          "command": "ruckus.debugTerminal"
         },
         {
-          "command": "continue.newSession"
+          "command": "ruckus.newSession"
         },
         {
-          "command": "continue.enterEnterpriseLicenseKey"
+          "command": "ruckus.enterEnterpriseLicenseKey"
         },
         {
-          "command": "continue.openInNewWindow"
+          "command": "ruckus.openInNewWindow"
         }
       ],
       "editor/context": [
         {
-          "submenu": "continue.continueSubMenu",
-          "group": "0_acontinue"
+          "submenu": "ruckus.ruckusSubMenu",
+          "group": "0_aruckus"
         }
       ],
       "editor/title/run": [
         {
-          "command": "continue.rejectDiff",
-          "group": "Continue",
-          "when": "continue.streamingDiff"
+          "command": "ruckus.rejectDiff",
+          "group": "Ruckus",
+          "when": "ruckus.streamingDiff"
         }
       ],
-      "continue.continueSubMenu": [
+      "ruckus.ruckusSubMenu": [
         {
-          "command": "continue.focusContinueInputWithoutClear",
-          "group": "Continue"
+          "command": "ruckus.focusRuckusInputWithoutClear",
+          "group": "Ruckus"
         },
         {
-          "command": "continue.focusEdit",
-          "group": "Continue",
+          "command": "ruckus.focusEdit",
+          "group": "Ruckus",
           "when": "!editorReadonly"
         }
       ],
       "explorer/context": [
         {
-          "command": "continue.selectFilesAsContext",
+          "command": "ruckus.selectFilesAsContext",
           "group": "1_debug@1"
         }
       ],
       "view/title": [
         {
-          "command": "continue.newSession",
+          "command": "ruckus.newSession",
           "group": "navigation@1",
-          "when": "view == continue.continueGUIView"
+          "when": "view == ruckus.ruckusGUIView"
         },
         {
-          "command": "continue.viewHistory",
+          "command": "ruckus.viewHistory",
           "group": "navigation@2",
-          "when": "view == continue.continueGUIView"
+          "when": "view == ruckus.ruckusGUIView"
         },
         {
-          "command": "continue.openConfigPage",
+          "command": "ruckus.openConfigPage",
           "group": "navigation@4",
-          "when": "view == continue.continueGUIView"
+          "when": "view == ruckus.ruckusGUIView"
         },
         {
-          "command": "continue.clearConsole",
+          "command": "ruckus.clearConsole",
           "group": "navigation@1",
-          "when": "view == continue.continueConsoleView"
+          "when": "view == ruckus.ruckusConsoleView"
         }
       ],
       "editor/title": [
         {
-          "command": "continue.newSession",
+          "command": "ruckus.newSession",
           "group": "navigation@1",
-          "when": "activeWebviewPanelId == continue.continueGUIView"
+          "when": "activeWebviewPanelId == ruckus.ruckusGUIView"
         },
         {
-          "command": "continue.viewHistory",
+          "command": "ruckus.viewHistory",
           "group": "navigation@2",
-          "when": "activeWebviewPanelId == continue.continueGUIView"
+          "when": "activeWebviewPanelId == ruckus.ruckusGUIView"
         }
       ],
       "terminal/context": [
         {
-          "command": "continue.debugTerminal",
+          "command": "ruckus.debugTerminal",
           "group": "navigation@top"
         }
       ]
@@ -596,47 +597,47 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "continue",
-          "title": "Continue",
+          "id": "ruckus",
+          "title": "Ruckus",
           "icon": "media/sidebar-icon.png"
         }
       ],
       "panel": [
         {
-          "id": "continueConsole",
-          "title": "Continue Console",
+          "id": "ruckusConsole",
+          "title": "Ruckus Console",
           "icon": "$(window)"
         }
       ]
     },
     "views": {
-      "continue": [
+      "ruckus": [
         {
           "type": "webview",
-          "id": "continue.continueGUIView",
-          "name": "Continue",
+          "id": "ruckus.ruckusGUIView",
+          "name": "Ruckus",
           "icon": "media/sidebar-icon.png",
           "visibility": "visible"
         }
       ],
-      "continueConsole": [
+      "ruckusConsole": [
         {
           "type": "webview",
-          "id": "continue.continueConsoleView",
-          "name": "Continue Console",
+          "id": "ruckus.ruckusConsoleView",
+          "name": "Ruckus Console",
           "icon": "$(window)",
           "visibility": "visible",
-          "when": "config.continue.enableConsole"
+          "when": "config.ruckus.enableConsole"
         }
       ]
     },
     "jsonValidation": [
       {
-        "fileMatch": "**/.continue*/config.json",
+        "fileMatch": "**/.{ruckus,continue}*/config.json",
         "url": "./config_schema.json"
       },
       {
-        "fileMatch": ".continuerc.json",
+        "fileMatch": "{.ruckusrc.json,.continuerc.json}",
         "url": "./continue_rc_schema.json"
       },
       {

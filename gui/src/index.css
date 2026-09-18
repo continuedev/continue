@@ -17,27 +17,42 @@
 }
 
 :root {
-  --example-var: rgb(30, 30, 30);
+  /* Ruckus type stack — Inter Display where available, crisp native UI otherwise */
+  --ruckus-font-sans:
+    "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI Variable",
+    "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --ruckus-font-mono:
+    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* Elevation — soft, tight shadows rather than heavy dividers */
+  --ruckus-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.28);
+  --ruckus-shadow-md:
+    0 4px 12px -2px rgb(0 0 0 / 0.36), 0 2px 4px -2px rgb(0 0 0 / 0.24);
+  --ruckus-shadow-lg:
+    0 16px 32px -8px rgb(0 0 0 / 0.46), 0 4px 10px -4px rgb(0 0 0 / 0.3);
+
+  /* Violet glow used for focus rings and active accents */
+  --ruckus-glow-accent: 0 0 0 1px rgb(124 92 255 / 0.55),
+    0 0 14px -2px rgb(124 92 255 / 0.4);
+
+  --ruckus-ease: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 html,
 body,
 #root {
   height: 100%;
-  line-height: 1.3;
+  line-height: 1.45;
   background-color: var(--vscode-editor-background);
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Open Sans",
-    "Helvetica Neue",
-    sans-serif;
+  font-family: var(--ruckus-font-sans);
+  font-feature-settings:
+    "cv05" 1,
+    "ss01" 1;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
@@ -102,18 +117,19 @@ body {
 }
 
 .scroll-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: transparent;
 }
 
 .scroll-container::-webkit-scrollbar-thumb {
-  background-color: #888;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
+  background-color: rgb(154 161 181 / 0.22);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+  transition: background-color 0.18s var(--ruckus-ease);
 }
 
 .scroll-container::-webkit-scrollbar-thumb:hover {
-  background-color: #555;
+  background-color: rgb(154 161 181 / 0.42);
 }
 
 .scroll-container:is(:hover, :focus)::-webkit-scrollbar {

@@ -3,7 +3,7 @@ import ignore, { Ignore } from "ignore";
 import type { FileType, IDE } from "..";
 
 import { joinPathsToUri } from "../util/uri";
-import { getGlobalContinueIgArray } from "./continueignore";
+import { getGlobalContinueIgArray, isIgnoreFileName } from "./continueignore";
 import { defaultIgnoreFileAndDir, gitIgArrayFromFile } from "./ignore";
 
 export interface WalkerOptions {
@@ -307,11 +307,9 @@ export async function getIgnoreContext(
     .map(([name, _]) => name);
 
   // Find ignore files and get ignore arrays from their contexts
-  // These are done separately so that .continueignore can override .gitignore
+  // These are done separately so that the ignore file can override .gitignore
   const gitIgnoreFile = dirFiles.find((name) => name === ".gitignore");
-  const continueIgnoreFile = dirFiles.find(
-    (name) => name === ".continueignore",
-  );
+  const continueIgnoreFiles = dirFiles.filter(isIgnoreFileName);
 
   const getGitIgnorePatterns = async () => {
     if (gitIgnoreFile) {
@@ -321,11 +319,12 @@ export async function getIgnoreContext(
     return [];
   };
   const getContinueIgnorePatterns = async () => {
-    if (continueIgnoreFile) {
-      const contents = await ide.readFile(`${currentDir}/.continueignore`);
-      return gitIgArrayFromFile(contents);
+    const patterns: string[] = [];
+    for (const fileName of continueIgnoreFiles) {
+      const contents = await ide.readFile(`${currentDir}/${fileName}`);
+      patterns.push(...gitIgArrayFromFile(contents));
     }
-    return [];
+    return patterns;
   };
 
   const ignoreArrays = await Promise.all([

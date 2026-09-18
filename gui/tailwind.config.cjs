@@ -28,6 +28,23 @@ module.exports = {
       },
       borderRadius: {
         default: "0.5rem",
+        // Ruckus radius scale — tighter, more deliberate than a single default
+        xs: "0.25rem",
+        card: "0.75rem",
+        panel: "1rem",
+      },
+      fontFamily: {
+        sans: "var(--ruckus-font-sans)",
+        mono: "var(--ruckus-font-mono)",
+      },
+      boxShadow: {
+        sm: "var(--ruckus-shadow-sm)",
+        md: "var(--ruckus-shadow-md)",
+        lg: "var(--ruckus-shadow-lg)",
+        accent: "var(--ruckus-glow-accent)",
+      },
+      transitionTimingFunction: {
+        ruckus: "var(--ruckus-ease)",
       },
       fontSize: {
         "2xs": "0.6875rem", // 11px

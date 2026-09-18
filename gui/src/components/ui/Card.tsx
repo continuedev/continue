@@ -8,7 +8,10 @@ export function Card({ children, className = "", ...props }: CardProps) {
   return (
     <div
       {...props}
-      className={cn("bg-editor rounded-default space-y-0 px-4 py-3", className)}
+      className={cn(
+        "bg-editor border-border rounded-card shadow-sm space-y-0 border border-solid px-4 py-3",
+        className,
+      )}
     >
       {children}
     </div>

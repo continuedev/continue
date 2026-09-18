@@ -38,7 +38,7 @@ export function OnboardingProvidersTab({ isDialog }: { isDialog?: boolean }) {
       </a>
       <p className="text-description text-xs">
         Connecting replaces legacy provider entries with Gateway defaults. Your
-        key is saved in your local Continue configuration.
+        key is saved in your local Ruckus configuration.
       </p>
       <Button
         className="w-full"

@@ -1,5 +1,5 @@
 import { SecondaryButton } from "../..";
-import ContinueLogo from "../../svg/ContinueLogo";
+import RuckusLogo from "../../svg/RuckusLogo";
 
 export function OnboardingCardLanding({
   onSelectConfigure,
@@ -11,7 +11,7 @@ export function OnboardingCardLanding({
   return (
     <div className="xs:px-0 max-full flex w-full flex-col items-center justify-center px-4 text-center">
       <div className="xs:flex hidden">
-        <ContinueLogo height={75} />
+        <RuckusLogo height={44} />
       </div>
 
       <p className="mb-5 mt-0 w-full text-sm">
