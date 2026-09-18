@@ -1,128 +1,52 @@
 import { OnboardingModes } from "core/protocol/core";
-import { FormProvider, useForm } from "react-hook-form";
-import { AddModelForm } from "../../../forms/AddModelForm";
+import { useState } from "react";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
-import { useAppDispatch } from "../../../redux/hooks";
-import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { Button, Input } from "../../index";
 import { useSubmitOnboarding } from "../hooks/useSubmitOnboarding";
 
-interface OnboardingProvidersTabProps {
-  /** Whether this is being shown in a dialog context */
-  isDialog?: boolean;
-}
-
-export function OnboardingProvidersTab({
-  isDialog,
-}: OnboardingProvidersTabProps) {
-  const formMethods = useForm();
-  const dispatch = useAppDispatch();
+export function OnboardingProvidersTab({ isDialog }: { isDialog?: boolean }) {
+  const [apiKey, setApiKey] = useState("");
   const { submitOnboarding } = useSubmitOnboarding(
     OnboardingModes.API_KEY,
     isDialog,
   );
-
-  const providerConfigs = [
-    providers["openai"],
-    providers["anthropic"],
-    providers["gemini"],
-  ];
-
-  const handleFormSubmit = () => {
-    // Find the first provider with an API key entered
-    for (const config of providerConfigs) {
-      const apiKey = formMethods.watch(`${config?.provider}_apiKey`);
-      if (apiKey?.trim()) {
-        submitOnboarding(config?.provider, apiKey);
-        return;
-      }
-    }
-  };
-
-  const handleClickMoreProviders = () => {
-    dispatch(setShowDialog(true));
-    dispatch(
-      setDialogMessage(
-        <AddModelForm
-          onDone={() => {
-            dispatch(setShowDialog(false));
-            submitOnboarding();
-          }}
-        />,
-      ),
-    );
-  };
-
-  const hasAnyApiKey = providerConfigs.some((config) => {
-    const apiKey = formMethods.watch(`${config?.provider}_apiKey`);
-    return apiKey?.trim();
-  });
-
   return (
-    <div className="flex h-full w-full items-center justify-center">
-      <div className="w-full max-w-md">
-        <FormProvider {...formMethods}>
-          <div className="mt-5 space-y-6">
-            <div className="space-y-4">
-              {providerConfigs.map((config) => (
-                <div key={config?.provider}>
-                  <label className="text-foreground mb-1 flex items-center gap-3 text-sm font-medium">
-                    {window.vscMediaUrl && (
-                      <img
-                        src={`${window.vscMediaUrl}/logos/${config?.icon}`}
-                        alt={config?.provider}
-                        className="h-4 w-4 object-contain"
-                      />
-                    )}
-                    {config?.title}
-                  </label>
-                  <Input
-                    id={`${config?.provider}_apiKey`}
-                    type="password"
-                    placeholder={`Enter your ${config?.title} API key`}
-                    className="w-full"
-                    {...formMethods.register(`${config?.provider}_apiKey`)}
-                  />
-                  <span className="text-description-muted text-input-placeholder mt-1 block text-xs">
-                    <a
-                      href={config?.apiKeyUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="cursor-pointer text-inherit underline hover:text-inherit hover:brightness-125"
-                    >
-                      Click here
-                    </a>{" "}
-                    to create a {config?.title} API key
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div>
-              <Button
-                type="button"
-                onClick={handleFormSubmit}
-                disabled={!hasAnyApiKey}
-                className="w-full cursor-pointer hover:opacity-90"
-              >
-                Connect
-              </Button>
-
-              <div className="w-full text-center">
-                <span className="text-description text-input-placeholder">
-                  <span
-                    className="cursor-pointer underline hover:brightness-125"
-                    onClick={handleClickMoreProviders}
-                  >
-                    Click here
-                  </span>{" "}
-                  to view more providers
-                </span>
-              </div>
-            </div>
-          </div>
-        </FormProvider>
-      </div>
+    <div className="mx-auto w-full max-w-md py-4">
+      <h2 className="mt-0 text-lg">Connect Vercel AI Gateway</h2>
+      <p className="text-description text-sm">
+        One API key for chat, editing, autocomplete, and codebase embeddings.
+        Model usage is billed to your Vercel Gateway account.
+      </p>
+      <label htmlFor="gateway-api-key" className="mb-2 block text-sm">
+        Gateway API key
+      </label>
+      <Input
+        id="gateway-api-key"
+        type="password"
+        className="w-full"
+        value={apiKey}
+        onChange={(event) => setApiKey(event.target.value)}
+        placeholder="Enter your Vercel AI Gateway API key"
+      />
+      <a
+        href={providers["vercel-ai-gateway"]!.apiKeyUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="my-3 block text-sm underline"
+      >
+        Create a Gateway API key
+      </a>
+      <p className="text-description text-xs">
+        Connecting replaces legacy provider entries with Gateway defaults. Your
+        key is saved in your local Continue configuration.
+      </p>
+      <Button
+        className="w-full"
+        disabled={!apiKey.trim()}
+        onClick={() => submitOnboarding("vercel-ai-gateway", apiKey.trim())}
+      >
+        Connect Gateway
+      </Button>
     </div>
   );
 }

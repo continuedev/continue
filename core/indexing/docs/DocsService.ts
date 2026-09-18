@@ -15,7 +15,6 @@ import {
 import { ConfigHandler } from "../../config/ConfigHandler";
 import { isSupportedLanceDbCpuTargetForLinux } from "../../config/util";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
-import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import { IMessenger } from "../../protocol/messenger";
 import { fetchFavicon } from "../../util/fetchFavicon";
@@ -168,8 +167,6 @@ export default class DocsService {
   private static lance: typeof LanceType | null = null;
   static lanceTableName = "docs";
   static sqlitebTableName = "docs";
-
-  static defaultEmbeddingsProvider = new TransformersJsEmbeddingsProvider();
 
   public isInitialized: Promise<void>;
   public isSyncing: boolean = false;
@@ -346,14 +343,6 @@ export default class DocsService {
     if (this.config.selectedModelByRole.embed) {
       return {
         provider: this.config.selectedModelByRole.embed,
-      };
-    }
-
-    // Fall back to transformers if supported
-    const canUseTransformers = await this.canUseTransformersEmbeddings();
-    if (canUseTransformers) {
-      return {
-        provider: DocsService.defaultEmbeddingsProvider,
       };
     }
 

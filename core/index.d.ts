@@ -829,6 +829,8 @@ export type FileStatsMap = {
 };
 
 export interface IDE {
+  /** Optional host-owned directory shipped with the IDE extension. */
+  getBundledSkillsDir?(): Promise<string | undefined>;
   getIdeInfo(): Promise<IdeInfo>;
 
   getIdeSettings(): Promise<IdeSettings>;
@@ -1939,6 +1941,11 @@ export interface Skill {
   path: string;
   content: string;
   files: string[];
+  compatibility?: string;
+  metadata?: Record<string, string>;
+  "allowed-tools"?: string;
+  "disable-model-invocation"?: boolean;
+  "argument-hint"?: string;
   license?: string;
 }
 

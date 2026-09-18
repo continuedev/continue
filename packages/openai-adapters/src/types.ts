@@ -32,6 +32,7 @@ export const BasePlusConfig = BaseConfig.extend({
 export const OpenAIConfigSchema = BasePlusConfig.extend({
   useResponsesApi: z.boolean().optional(),
   provider: z.union([
+    z.literal("vercel-ai-gateway"),
     z.literal("openai"),
     z.literal("mistral"),
     z.literal("voyage"),

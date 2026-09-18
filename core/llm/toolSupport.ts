@@ -2,6 +2,16 @@ import { ModelDescription } from "..";
 
 export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
   {
+    "vercel-ai-gateway": (model) => {
+      const [publisher, ...rest] = model.split("/");
+      const provider =
+        publisher === "google"
+          ? "gemini"
+          : publisher === "xai"
+            ? "xAI"
+            : publisher;
+      return PROVIDER_TOOL_SUPPORT[provider]?.(rest.join("/")) ?? false;
+    },
     anthropic: (model) => {
       if (model.includes("claude-2") || model.includes("claude-instant")) {
         return false;

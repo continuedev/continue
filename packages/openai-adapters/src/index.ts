@@ -1,3 +1,4 @@
+import { VercelAIGatewayApi } from "./apis/VercelAIGateway.js";
 import dotenv from "dotenv";
 import { z } from "zod";
 import { AiSdkApi } from "./apis/AiSdk.js";
@@ -95,6 +96,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
   }
 
   switch (config.provider) {
+    case "vercel-ai-gateway":
+      return new VercelAIGatewayApi(config);
     case "openai":
       return new OpenAIApi(config);
     case "azure":
@@ -243,3 +246,9 @@ export {
 export { isResponsesModel } from "./apis/openaiResponses.js";
 export { OPENROUTER_HEADERS } from "./apis/OpenRouter.js";
 export { extractBase64FromDataUrl, parseDataUrl } from "./util/url.js";
+
+export {
+  VercelAIGatewayApi,
+  AI_GATEWAY_BASE_URL,
+  assertGatewayBaseUrl,
+} from "./apis/VercelAIGateway.js";

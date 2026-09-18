@@ -3,6 +3,7 @@ const fs = require("fs");
 const { writeBuildTimestamp } = require("./utils");
 
 const esbuild = require("esbuild");
+const { buildBundledSkills } = require("../../../scripts/build-bundled-skills");
 
 const flags = process.argv.slice(2);
 
@@ -29,6 +30,9 @@ const esbuildConfig = {
     {
       name: "on-end-plugin",
       setup(build) {
+        build.onStart(() => {
+          buildBundledSkills();
+        });
         build.onEnd((result) => {
           if (result.errors.length > 0) {
             console.error("Build failed with errors:", result.errors);

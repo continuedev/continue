@@ -43,6 +43,9 @@ vi.mock("../getWorkspaceContinueRuleDotFiles", () => ({
 vi.mock("../markdown/loadMarkdownRules", () => ({
   loadMarkdownRules: vi.fn().mockResolvedValue({ rules: [], errors: [] }),
 }));
+vi.mock("../markdown/loadMarkdownSkills", () => ({
+  loadMarkdownSkills: vi.fn().mockResolvedValue({ skills: [], errors: [] }),
+}));
 vi.mock("../markdown/loadCodebaseRules", () => ({
   CodebaseRulesCache: { getInstance: () => ({ rules: [], errors: [] }) },
 }));

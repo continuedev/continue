@@ -1,3 +1,6 @@
+> **Ruckus IDE fork:** Gateway-only model routing and expanded Agent Skills support.
+> See [setup, migration, and testing](docs/development/ruckuside-gateway-skills.md).
+
 <h1 align="center">Continue</h1>
 
 <p align="center">Pioneering open-source coding agent</p>

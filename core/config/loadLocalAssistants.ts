@@ -1,3 +1,4 @@
+import { isSkillFileUri } from "./markdown/loadMarkdownSkills";
 import { BLOCK_TYPES } from "@continuedev/config-yaml";
 import ignore from "ignore";
 import * as URI from "uri-js";
@@ -15,6 +16,7 @@ import { SYSTEM_PROMPT_DOT_FILE } from "./getWorkspaceContinueRuleDotFiles";
 import { SUPPORTED_AGENT_FILES } from "./markdown";
 export function isContinueConfigRelatedUri(uri: string): boolean {
   return (
+    isSkillFileUri(uri) ||
     uri.endsWith(".continuerc.json") ||
     uri.endsWith(".prompt") ||
     !!SUPPORTED_AGENT_FILES.find((file) => uri.endsWith(`/${file}`)) ||

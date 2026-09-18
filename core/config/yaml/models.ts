@@ -5,7 +5,7 @@ import {
 
 import { ContinueConfig, ILLMLogger, LLMOptions } from "../..";
 import { BaseLLM } from "../../llm";
-import { LLMClasses } from "../../llm/llms";
+import { assertGatewayProvider, LLMClasses } from "../../llm/llms";
 
 const AUTODETECT = "AUTODETECT";
 
@@ -44,6 +44,7 @@ function applyEnvOptions(
 function getModelClass(
   model: ModelConfig,
 ): (typeof LLMClasses)[number] | undefined {
+  assertGatewayProvider(model.provider);
   return LLMClasses.find((llm) => llm.providerName === model.provider);
 }
 

@@ -1,0 +1,14 @@
+{
+  "version": "1.2.0",
+  "organization": "Vercel Engineering",
+  "date": "May 2026",
+  "abstract": "Deep cost and performance optimization for supported Vercel projects. Pulls observability metrics, billing, and project config from the Vercel CLI, then investigates the codebase only where those metrics point. Produces ranked, verified recommendations with before/after code grounded in version-aware documentation citations. Avoids precise dollar projections (cost framed as order-of-magnitude) and avoids invented documentation URLs (curated allow-list).",
+  "references": [
+    "https://vercel.com/docs/cli/metrics",
+    "https://vercel.com/docs/cli/usage",
+    "https://vercel.com/docs/cli/api",
+    "https://vercel.com/docs/observability/observability-plus",
+    "https://nextjs.org/docs/app/building-your-application/caching",
+    "https://vercel.com/docs/frameworks/full-stack/sveltekit"
+  ]
+}

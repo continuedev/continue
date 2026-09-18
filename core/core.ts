@@ -14,9 +14,7 @@ import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
-import Lemonade from "./llm/llms/Lemonade";
 import { fetchModels } from "./llm/fetchModels";
-import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
 import { createNewPromptFileV2 } from "./promptFiles/createNewPromptFile";
 import { callTool } from "./tools/callTool";
@@ -1323,18 +1321,10 @@ export class Core {
       if (model) {
         return await model.listModels();
       } else {
-        if (msg.data.title === "Ollama") {
-          const models = await new Ollama({ model: "" }).listModels();
-          return models;
-        } else if (msg.data.title === "Lemonade") {
-          const models = await new Lemonade({ model: "" }).listModels();
-          return models;
-        } else {
-          return undefined;
-        }
+        return undefined;
       }
     } catch (e) {
-      console.debug(`Error listing Ollama models: ${e}`);
+      console.debug(`Error listing Gateway models: ${e}`);
       return undefined;
     }
   }

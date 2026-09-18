@@ -179,3 +179,6 @@ keys
 .copy-status
 .copy-log
 
+# Generated from skillstoadd during extension builds
+/extensions/vscode/bundled-skills/
+/extensions/vscode/bundled-skills.tmp/

@@ -10,6 +10,8 @@ import {
   JSONModelDescription,
   PromptTemplate,
 } from "../";
+import { assertGatewayProvider } from "../llm/llms";
+import VercelAIGateway from "../llm/llms/VercelAIGateway";
 import { GlobalContext } from "../util/GlobalContext";
 import { editConfigFile } from "../util/paths";
 
@@ -27,6 +29,12 @@ export function addModel(
   model: JSONModelDescription,
   role?: keyof ExperimentalModelRoles,
 ) {
+  assertGatewayProvider(model.provider);
+  // Validate the endpoint, key and model ID before saving it. This does not make a request.
+  new VercelAIGateway({
+    ...model,
+    completionOptions: { ...model.completionOptions, model: model.model },
+  });
   editConfigFile(
     (config) => {
       if (config.models?.some((m) => stringify(m) === stringify(model))) {

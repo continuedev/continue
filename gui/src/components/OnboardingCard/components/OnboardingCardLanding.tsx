@@ -15,11 +15,11 @@ export function OnboardingCardLanding({
       </div>
 
       <p className="mb-5 mt-0 w-full text-sm">
-        Get started with AI-powered coding by configuring your models
+        Get started with AI-powered coding through Vercel AI Gateway
       </p>
 
       <SecondaryButton onClick={onSelectConfigure} className="w-full">
-        Configure your models
+        Connect Gateway
       </SecondaryButton>
     </div>
   );

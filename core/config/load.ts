@@ -37,10 +37,13 @@ import { convertCustomCommandToSlashCommand } from "../commands/slash/customSlas
 import { slashCommandFromPromptFile } from "../commands/slash/promptFileSlashCommand";
 import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import { BaseLLM } from "../llm";
-import { LLMClasses, llmFromDescription } from "../llm/llms";
+import {
+  assertGatewayProvider,
+  LLMClasses,
+  llmFromDescription,
+} from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import { LLMReranker } from "../llm/llms/llm";
-import TransformersJsEmbeddingsProvider from "../llm/llms/TransformersJsEmbeddingsProvider";
 import { getAllPromptFiles } from "../promptFiles/getPromptFiles";
 import { copyOf } from "../util";
 import { GlobalContext } from "../util/GlobalContext";
@@ -249,6 +252,34 @@ async function intermediateToFinalConfig({
   loadPromptFiles?: boolean;
 }): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   const errors: ConfigValidationError[] = [];
+  // Reject legacy/custom model paths before constructing any network clients.
+  const autocomplete = config.tabAutocompleteModel
+    ? Array.isArray(config.tabAutocompleteModel)
+      ? config.tabAutocompleteModel
+      : [config.tabAutocompleteModel]
+    : [];
+  for (const model of [...config.models, ...autocomplete]) {
+    if (!("provider" in model))
+      throw new Error(
+        "Custom model implementations are disabled. Use provider: vercel-ai-gateway.",
+      );
+    assertGatewayProvider(model.provider);
+  }
+  if (config.embeddingsProvider) {
+    if ("providerName" in config.embeddingsProvider)
+      throw new Error(
+        "Custom embedding implementations are disabled. Configure a Gateway embedding model.",
+      );
+    assertGatewayProvider(config.embeddingsProvider.provider);
+  }
+  if (config.reranker) {
+    if ("providerName" in config.reranker)
+      throw new Error(
+        "Custom rerank implementations are disabled. Configure a Gateway reranker.",
+      );
+    if (config.reranker.name !== "llm")
+      assertGatewayProvider(config.reranker.name);
+  }
   const workspaceDirs = await ide.getWorkspaceDirs();
   const getUriFromPath = (path: string) => {
     return resolveRelativePathInDir(path, ide, workspaceDirs);
@@ -403,27 +434,12 @@ async function intermediateToFinalConfig({
         return embedConfig;
       }
       const { provider, ...options } = embedConfig;
-      if (provider === "transformers.js") {
-        return new TransformersJsEmbeddingsProvider();
-      } else {
-        const cls = LLMClasses.find((c) => c.providerName === provider);
-        if (cls) {
-          const llmOptions: LLMOptions = {
-            model: options.model ?? "UNSPECIFIED",
-            ...options,
-          };
-          return new cls(llmOptions);
-        } else {
-          errors.push({
-            fatal: false,
-            message: `Embeddings provider ${provider} not found`,
-          });
-        }
+      const cls = LLMClasses.find((c) => c.providerName === provider);
+      if (cls) {
+        return new cls({ model: options.model ?? "UNSPECIFIED", ...options });
       }
     }
-    if (ideInfo.ideType === "vscode") {
-      return new TransformersJsEmbeddingsProvider();
-    }
+
     return null;
   }
   const newEmbedder = getEmbeddingsILLM(config.embeddingsProvider);
@@ -578,18 +594,6 @@ async function intermediateToFinalConfig({
         message: `experimental.modelRoles.applyCodeBlock model title ${inlineEditModel} not found in models array`,
       });
     }
-  }
-
-  // Add transformers JS to the embed models list if not already added
-  if (
-    ideInfo.ideType === "vscode" &&
-    !continueConfig.modelsByRole.embed.find(
-      (m) => m.providerName === "transformers.js",
-    )
-  ) {
-    continueConfig.modelsByRole.embed.push(
-      new TransformersJsEmbeddingsProvider(),
-    );
   }
 
   return { config: continueConfig, errors };

@@ -29,3 +29,6 @@ server/exe/**
 # Do not ship esbuild in VSIX
 out/node_modules/esbuild/**
 out/node_modules/@esbuild/**
+
+# Skill source/reference TypeScript is a runtime resource, not extension source.
+!bundled-skills/**/*.ts

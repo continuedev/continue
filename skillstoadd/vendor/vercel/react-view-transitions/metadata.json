@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "organization": "Vercel Engineering",
+  "date": "March 2026",
+  "abstract": "Guide for implementing smooth, native-feeling animations using React's View Transition API. Covers the <ViewTransition> component, addTransitionType, CSS view transition pseudo-elements, shared element transitions, JavaScript animations via Web Animations API, and Next.js integration including the transitionTypes prop on next/link. Includes ready-to-use CSS animation recipes and real-world patterns from production Next.js apps.",
+  "references": [
+    "https://react.dev/reference/react/ViewTransition",
+    "https://react.dev/reference/react/addTransitionType",
+    "https://nextjs.org/docs/app/api-reference/config/next-config-js/viewTransition",
+    "https://github.com/vercel/next-app-router-playground/tree/main/app/view-transitions"
+  ]
+}

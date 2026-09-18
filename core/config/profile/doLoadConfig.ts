@@ -33,6 +33,7 @@ import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDot
 import { loadContinueConfigFromJson } from "../load";
 import { CodebaseRulesCache } from "../markdown/loadCodebaseRules";
 import { loadMarkdownRules } from "../markdown/loadMarkdownRules";
+import { loadMarkdownSkills } from "../markdown/loadMarkdownSkills";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
@@ -152,6 +153,8 @@ export default async function doLoadConfig(options: {
   // Load rules and always include the RulesContextProvider
   const { rules, errors: rulesErrors } = await loadRules(ide);
   errors.push(...rulesErrors);
+  const { errors: skillErrors } = await loadMarkdownSkills(ide, false);
+  errors.push(...skillErrors);
   newConfig.rules.unshift(...rules);
 
   // Convert invokable rules to slash commands

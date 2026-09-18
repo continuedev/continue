@@ -64,6 +64,13 @@ class VsCodeIde implements IDE {
     );
   }
 
+  async getBundledSkillsDir(): Promise<string> {
+    return vscode.Uri.joinPath(
+      this.context.extensionUri,
+      "bundled-skills",
+    ).toString();
+  }
+
   async writeSecrets(secrets: { [key: string]: string }): Promise<void> {
     for (const [key, value] of Object.entries(secrets)) {
       await this.secretStorage.store(key, value);

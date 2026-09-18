@@ -1,417 +1,131 @@
-import {
-  ArrowPathIcon,
-  ArrowTopRightOnSquareIcon,
-} from "@heroicons/react/24/outline";
-import { useCallback, useContext, useEffect, useState } from "react";
-import { FormProvider, useForm } from "react-hook-form";
-import { Button, Input, StyledActionButton } from "../components";
-import Alert from "../components/gui/Alert";
-import ModelSelectionListbox from "../components/modelSelection/ModelSelectionListbox";
-import { ModelProviderTags } from "../components/modelSelection/utils";
-import { useAuth } from "../context/Auth";
+import { useContext, useState } from "react";
+import { Button, Input } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
-import {
-  fetchProviderModels,
-  initializeDynamicModels,
-} from "../pages/AddNewModel/configs/fetchProviderModels";
-import { DisplayInfo, ModelPackage } from "../pages/AddNewModel/configs/models";
-import {
-  ProviderInfo,
-  providers,
-} from "../pages/AddNewModel/configs/providers";
+import { fetchProviderModels } from "../pages/AddNewModel/configs/fetchProviderModels";
+import type { ModelPackage } from "../pages/AddNewModel/configs/models";
 
-interface AddModelFormProps {
-  onDone: () => void;
-}
-
-const MODEL_PROVIDERS_URL =
-  "https://docs.continue.dev/customize/model-providers";
-const CODESTRAL_URL = "https://console.mistral.ai/codestral";
-const CONTINUE_SETUP_URL = "https://docs.continue.dev/setup/overview";
-
-export function AddModelForm({ onDone }: AddModelFormProps) {
-  const [selectedProvider, setSelectedProvider] = useState<ProviderInfo>(
-    providers["openai"]!,
-  );
-  const { selectedProfile } = useAuth();
-  const [selectedModel, setSelectedModel] = useState(
-    selectedProvider.packages[0],
-  );
-  const formMethods = useForm();
+export function AddModelForm({ onDone }: { onDone: () => void }) {
   const ideMessenger = useContext(IdeMessengerContext);
+  const [apiKey, setApiKey] = useState("");
+  const [model, setModel] = useState("anthropic/claude-sonnet-4.6");
+  const [models, setModels] = useState<ModelPackage[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
-  const [fetchedModelsList, setFetchedModelsList] = useState<ModelPackage[]>(
-    [],
-  );
-  const [isFetchingModels, setIsFetchingModels] = useState(false);
-
-  useEffect(() => {
-    void initializeDynamicModels(ideMessenger);
-  }, []);
-
-  useEffect(() => {
-    setFetchedModelsList([]);
-  }, [selectedProvider]);
-
-  const handleFetchModels = useCallback(async () => {
-    const apiKey = formMethods.watch("apiKey");
-    const apiBase = formMethods.watch("apiBase");
-    if (!apiKey) return;
-
-    const providerAtFetchTime = selectedProvider.provider;
-    setIsFetchingModels(true);
+  async function loadModels() {
+    setBusy(true);
+    setError("");
     try {
-      const models = await fetchProviderModels(
+      const result = await fetchProviderModels(
         ideMessenger,
-        providerAtFetchTime,
-        apiKey,
-        apiBase,
+        "vercel-ai-gateway",
+        apiKey.trim(),
       );
-      setFetchedModelsList((prev) =>
-        selectedProvider.provider === providerAtFetchTime ? models : prev,
-      );
-    } catch (error) {
-      console.error("Failed to fetch models:", error);
+      setModels(result);
+      if (!result.length)
+        setError(
+          "No models returned. Check your Gateway API key and connection.",
+        );
+    } catch (err) {
+      setError(String(err));
     } finally {
-      setIsFetchingModels(false);
+      setBusy(false);
     }
-  }, [ideMessenger, selectedProvider, formMethods]);
-
-  const popularProviderTitles = [
-    providers["openai"]?.title || "",
-    providers["anthropic"]?.title || "",
-    providers["mistral"]?.title || "",
-    providers["gemini"]?.title || "",
-    providers["azure"]?.title || "",
-    providers["ollama"]?.title || "",
-    providers["openrouter"]?.title || "",
-  ];
-
-  const allProviders = Object.entries(providers)
-    .filter(([key]) => !["openai-aiohttp"].includes(key))
-    .map(([, provider]) => provider)
-    .filter((provider) => !!provider)
-    .map((provider) => provider!); // for type checking
-
-  const popularProviders = allProviders
-    .filter((provider) => popularProviderTitles.includes(provider.title))
-    .sort((a, b) => a.title.localeCompare(b.title));
-
-  const otherProviders = allProviders
-    .filter((provider) => !popularProviderTitles.includes(provider.title))
-    .sort((a, b) => a.title.localeCompare(b.title));
-
-  const selectedProviderApiKeyUrl =
-    selectedModel && selectedModel.params.model.startsWith("codestral")
-      ? CODESTRAL_URL
-      : selectedProvider.apiKeyUrl;
-
-  function isDisabled() {
-    if (selectedProvider.downloadUrl) {
-      return false;
-    }
-
-    const required = selectedProvider.collectInputFor
-      ?.filter((input) => input.required)
-      .map((input) => {
-        const value = formMethods.watch(input.key);
-        return value;
-      });
-
-    return !required?.every((value) => value !== undefined && value.length > 0);
   }
 
-  useEffect(() => {
-    setSelectedModel(selectedProvider.packages[0]);
-    if (!selectedProvider.tags?.includes(ModelProviderTags.RequiresApiKey)) {
-      formMethods.setValue("apiKey", "");
-    }
-  }, [selectedProvider]);
-
-  const requiresSkPrefix =
-    selectedProvider.provider === "openai" ||
-    selectedProvider.provider === "anthropic";
-
-  const apiKeyValue = formMethods.watch("apiKey");
-  const apiKeyWarning =
-    requiresSkPrefix &&
-    apiKeyValue &&
-    apiKeyValue.length > 0 &&
-    !apiKeyValue.startsWith("sk-")
-      ? "API key usually starts with sk-"
-      : undefined;
-
-  function onSubmit() {
-    const apiKey = formMethods.watch("apiKey");
-    const hasValidApiKey = apiKey !== undefined && apiKey !== "";
-
-    const reqInputFields: Record<string, any> = {};
-    for (let input of selectedProvider.collectInputFor ?? []) {
-      reqInputFields[input.key] = formMethods.watch(input.key);
-    }
-
-    const model = {
-      ...selectedProvider.params,
-      ...selectedModel.params,
-      ...reqInputFields,
-      provider: selectedProvider.provider,
-      title: selectedModel.title,
-      ...(hasValidApiKey ? { apiKey } : {}),
-    };
-
-    ideMessenger.post("config/addModel", { model });
-
-    ideMessenger.post("config/openProfile", {
-      profileId: "local",
-    });
-
-    if (selectedProfile) {
-      ideMessenger.post("config/updateSelectedModel", {
-        profileId: selectedProfile.id,
-        role: "chat",
-        title: model.title,
+  async function connect() {
+    setBusy(true);
+    setError("");
+    try {
+      const selected = models.find(
+        (entry) => entry.params.model === model.trim(),
+      );
+      const response = await ideMessenger.request("config/addModel", {
+        model: {
+          ...selected?.params,
+          title: `${model.trim()} (Gateway)`,
+          provider: "vercel-ai-gateway",
+          underlyingProviderName: "vercel-ai-gateway",
+          model: model.trim(),
+          apiKey: apiKey.trim(),
+        },
       });
+      if (response.status === "error") throw new Error(response.error);
+      onDone();
+    } catch (err) {
+      setError(String(err));
+    } finally {
+      setBusy(false);
     }
-
-    formMethods.setValue("apiKey", "");
-    onDone();
-  }
-
-  function onClickDownloadProvider() {
-    selectedProvider.downloadUrl &&
-      ideMessenger.post("openUrl", selectedProvider.downloadUrl);
   }
 
   return (
-    <FormProvider {...formMethods}>
-      <form onSubmit={formMethods.handleSubmit(onSubmit)}>
-        <div className="mx-auto max-w-md p-6">
-          <h1 className="mb-0 text-center text-2xl">Add Chat model</h1>
-
-          <div className="my-8 flex flex-col gap-6">
-            <div>
-              <label className="block text-sm font-medium">Provider</label>
-              <ModelSelectionListbox
-                selectedProvider={selectedProvider}
-                setSelectedProvider={(val: DisplayInfo) => {
-                  const match = [...popularProviders, ...otherProviders].find(
-                    (provider) => provider.title === val.title,
-                  );
-                  if (match) {
-                    setSelectedProvider(match);
-                  }
-                }}
-                topOptions={popularProviders}
-                otherOptions={otherProviders}
-                searchPlaceholder="Search providers..."
-              />
-              <span className="text-description-muted mt-1 block text-xs">
-                Don't see your provider?{" "}
-                <a
-                  className="cursor-pointer text-inherit underline hover:text-inherit"
-                  onClick={() =>
-                    ideMessenger.post("openUrl", MODEL_PROVIDERS_URL)
-                  }
-                >
-                  Click here
-                </a>{" "}
-                to view the full list
-              </span>
-            </div>
-
-            {selectedProvider.downloadUrl && (
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Install provider
-                </label>
-                <StyledActionButton onClick={onClickDownloadProvider}>
-                  <p className="text-sm underline">
-                    {selectedProvider.downloadUrl}
-                  </p>
-                  <ArrowTopRightOnSquareIcon width={24} height={24} />
-                </StyledActionButton>
-              </div>
-            )}
-
-            <div>
-              <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium">Model</label>
-                <button
-                  type="button"
-                  title="Use entered API key to fetch available models"
-                  className={`cursor-pointer border-none bg-transparent p-0 ${
-                    apiKeyValue &&
-                    apiKeyValue.length > 0 &&
-                    selectedProvider.provider !== "ollama" &&
-                    selectedProvider.provider !== "openrouter"
-                      ? `text-description-muted hover:text-foreground`
-                      : "invisible"
-                  }`}
-                  onClick={handleFetchModels}
-                  disabled={isFetchingModels}
-                >
-                  <ArrowPathIcon
-                    className={`h-3.5 w-3.5 ${isFetchingModels ? "animate-spin" : ""}`}
-                  />
-                </button>
-              </div>
-              <ModelSelectionListbox
-                selectedProvider={selectedModel}
-                setSelectedProvider={(val: DisplayInfo) => {
-                  const options =
-                    Object.entries(providers).find(
-                      ([, provider]) =>
-                        provider?.title === selectedProvider.title,
-                    )?.[1]?.packages ?? [];
-                  const allOptions = [...options, ...fetchedModelsList];
-                  const match = allOptions.find(
-                    (option) => option.title === val.title,
-                  );
-                  if (match) {
-                    setSelectedModel(match);
-                  }
-                }}
-                topOptions={(() => {
-                  const providerInfo = Object.entries(providers).find(
-                    ([, provider]) =>
-                      provider?.title === selectedProvider.title,
-                  )?.[1];
-                  return (
-                    providerInfo?.popularPackages ?? providerInfo?.packages
-                  );
-                })()}
-                otherOptions={(() => {
-                  const providerInfo = Object.entries(providers).find(
-                    ([, provider]) =>
-                      provider?.title === selectedProvider.title,
-                  )?.[1];
-                  const staticOther = providerInfo?.popularPackages
-                    ? providerInfo.packages.filter(
-                        (p) =>
-                          !new Set(
-                            providerInfo.popularPackages!.map((pp) => pp.title),
-                          ).has(p.title),
-                      )
-                    : undefined;
-                  // Merge dynamically fetched models (deduplicated)
-                  if (fetchedModelsList.length > 0) {
-                    const existingTitles = new Set(
-                      (providerInfo?.packages ?? []).map((p) => p.title),
-                    );
-                    const newModels = fetchedModelsList.filter(
-                      (m) => !existingTitles.has(m.title),
-                    );
-                    return [...(staticOther ?? []), ...newModels];
-                  }
-                  return staticOther;
-                })()}
-                otherOptionsLabel="Additional models"
-              />
-            </div>
-
-            {selectedModel.params.model.startsWith("codestral") && (
-              <div className="my-2">
-                <Alert>
-                  <p className="m-0 text-sm font-bold">Codestral API key</p>
-                  <p className="m-0 mt-1">
-                    Note that codestral requires a different API key from other
-                    Mistral models
-                  </p>
-                </Alert>
-              </div>
-            )}
-
-            {selectedProvider.apiKeyUrl && (
-              <div>
-                <>
-                  <label className="mb-1 block text-sm font-medium">
-                    API key
-                  </label>
-                  <Input
-                    id="apiKey"
-                    className={
-                      apiKeyWarning ? "border-warning w-full" : "w-full"
-                    }
-                    type="password"
-                    placeholder={`Enter your ${selectedProvider.title} API key`}
-                    {...formMethods.register("apiKey")}
-                  />
-                  {apiKeyWarning && (
-                    <span className="text-warning mt-1 block text-xs">
-                      {apiKeyWarning}
-                    </span>
-                  )}
-                  <span className="text-description-muted mt-1 block text-xs">
-                    <a
-                      className="cursor-pointer text-inherit underline hover:text-inherit hover:brightness-125"
-                      onClick={() => {
-                        if (selectedProviderApiKeyUrl) {
-                          ideMessenger.post(
-                            "openUrl",
-                            selectedProviderApiKeyUrl,
-                          );
-                        }
-                      }}
-                    >
-                      Click here
-                    </a>{" "}
-                    to create a {selectedProvider.title} API key
-                  </span>
-                </>
-              </div>
-            )}
-
-            {selectedProvider.collectInputFor &&
-              selectedProvider.collectInputFor
-                .filter(
-                  (field) =>
-                    !Object.values(completionParamsInputs).some(
-                      (input) => input.key === field.key,
-                    ) &&
-                    field.required &&
-                    field.key !== "apiKey",
-                )
-                .map((field) => (
-                  <div key={field.key}>
-                    <>
-                      <label className="mb-1 block text-sm font-medium">
-                        {field.label}
-                      </label>
-                      <Input
-                        id={field.key}
-                        className="w-full"
-                        defaultValue={field.defaultValue}
-                        placeholder={`${field.placeholder}`}
-                        {...formMethods.register(field.key)}
-                      />
-                    </>
-                  </div>
-                ))}
-          </div>
-
-          <div className="mt-4 w-full">
-            <Button type="submit" className="w-full" disabled={isDisabled()}>
-              Connect
-            </Button>
-
-            <span className="text-description-muted block w-full text-center text-xs">
-              This will update your{" "}
-              <span
-                className="cursor-pointer underline hover:brightness-125"
-                onClick={() =>
-                  ideMessenger.post("config/openProfile", {
-                    profileId: undefined,
-                  })
-                }
-              >
-                config file
-              </span>
-            </span>
-          </div>
-        </div>
-      </form>
-    </FormProvider>
+    <form
+      className="mx-auto max-w-md space-y-4 p-6"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void connect();
+      }}
+    >
+      <h1 className="text-xl">Add Gateway chat model</h1>
+      <p className="text-description text-sm">
+        Choose a model from Vercel AI Gateway. All inference uses your Gateway
+        account.
+      </p>
+      <label className="block text-sm">
+        Gateway API key
+        <Input
+          className="mt-1 w-full"
+          type="password"
+          value={apiKey}
+          onChange={(event) => setApiKey(event.target.value)}
+          required
+        />
+      </label>
+      <Button
+        type="button"
+        disabled={busy || !apiKey.trim()}
+        onClick={() => void loadModels()}
+      >
+        Load available models
+      </Button>
+      <label className="block text-sm">
+        Model ID
+        <Input
+          className="mt-1 w-full"
+          list="gateway-models"
+          value={model}
+          onChange={(event) => setModel(event.target.value)}
+          placeholder="publisher/model"
+          required
+        />
+      </label>
+      <datalist id="gateway-models">
+        {models.map((entry) => (
+          <option key={entry.params.model} value={entry.params.model}>
+            {entry.title}
+          </option>
+        ))}
+      </datalist>
+      {error && (
+        <p role="alert" className="text-error text-sm">
+          {error}
+        </p>
+      )}
+      <p className="text-description text-xs">
+        Your key is saved in your local Continue configuration. Other model
+        roles can be assigned in the config file.
+      </p>
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={
+          busy || !apiKey.trim() || !/^[a-z0-9-]+\/[^\s]+$/.test(model.trim())
+        }
+      >
+        {busy ? "Working…" : "Add model"}
+      </Button>
+    </form>
   );
 }
 

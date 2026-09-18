@@ -6,7 +6,7 @@ import { getStringArg } from "../parseArgs";
 export const readSkillImpl: ToolImpl = async (args, extras) => {
   const skillName = getStringArg(args, "skillName");
 
-  const { skills } = await loadMarkdownSkills(extras.ide);
+  const { skills } = await loadMarkdownSkills(extras.ide, true, skillName);
 
   const skill = skills.find((s) => s.name === skillName);
 
@@ -18,7 +18,7 @@ export const readSkillImpl: ToolImpl = async (args, extras) => {
     );
   }
 
-  let content = skill.content;
+  let content = `Skill: ${skill.name}\nBase directory: ${skill.path.slice(0, skill.path.lastIndexOf("/"))}\nResolve relative resource and script paths against this directory. Script execution uses the normal terminal tool and approval policy. References to a Skill tool mean read_skill here. Use only tools actually provided by this IDE; if a skill requires an unavailable tool, explain the limitation instead of inventing a tool call.\n\n${skill.content}`;
 
   if (skill.files.length > 0) {
     content += `\n

@@ -3,8 +3,6 @@ import { useEffect } from "react";
 import { useAppSelector } from "../../redux/hooks";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { ReusableCard } from "../ReusableCard";
-import { OnboardingCardTabs } from "./components/OnboardingCardTabs";
-import { OnboardingLocalTab } from "./components/OnboardingLocalTab";
 import { OnboardingProvidersTab } from "./components/OnboardingProvidersTab";
 import { useOnboardingCard } from "./hooks/useOnboardingCard";
 
@@ -31,27 +29,13 @@ export function OnboardingCard({ isDialog }: OnboardingCardProps) {
     }
   }, [activeTab, setActiveTab]);
 
-  function renderTabContent() {
-    switch (activeTab) {
-      case OnboardingModes.API_KEY:
-        return <OnboardingProvidersTab />;
-      case OnboardingModes.LOCAL:
-        return <OnboardingLocalTab />;
-      default:
-        return <OnboardingProvidersTab />;
-    }
-  }
-
-  const currentTab = activeTab || OnboardingModes.API_KEY;
-
   return (
     <ReusableCard
       showCloseButton={!isDialog && !!config.modelsByRole.chat.length}
       onClose={close}
       testId="onboarding-card"
     >
-      <OnboardingCardTabs activeTab={currentTab} onTabClick={setActiveTab} />
-      {renderTabContent()}
+      <OnboardingProvidersTab isDialog={isDialog} />
     </ReusableCard>
   );
 }

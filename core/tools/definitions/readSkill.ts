@@ -3,7 +3,7 @@ import { loadMarkdownSkills } from "../../config/markdown/loadMarkdownSkills";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
 export const readSkillTool: GetTool = async (params) => {
-  const { skills } = await loadMarkdownSkills(params.ide);
+  const { skills } = await loadMarkdownSkills(params.ide, false);
   return {
     type: "function",
     displayTitle: "Read Skill",
@@ -15,9 +15,9 @@ export const readSkillTool: GetTool = async (params) => {
     group: BUILT_IN_GROUP_NAME,
     function: {
       name: BuiltInToolNames.ReadSkill,
-      description: `
-Use this tool to read the content of a skill by its name. Skills contain detailed instructions for specific tasks. The skill name should match one of the available skills listed below: 
-${skills.map((skill) => `\nname: ${skill.name}\ndescription: ${skill.description}\n`)}`,
+      description: `Read the full instructions for an available skill before carrying out a matching task. When the user asks to use a skill by name (including $skill-name), load that skill first. Follow its instructions and read supporting resources only when needed. Skills marked manualOnly must only be loaded when the user explicitly asks for that skill. Skills do not grant tool permissions; normal approval policies still apply.
+Available skills:
+${skills.map((skill) => JSON.stringify({ name: skill.name, description: skill.description, path: skill.path, manualOnly: skill["disable-model-invocation"] ?? false, argumentHint: skill["argument-hint"] })).join("\n")}`,
       parameters: {
         type: "object",
         required: ["skillName"],

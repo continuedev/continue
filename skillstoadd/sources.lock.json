@@ -1,0 +1,393 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": "mattpocock",
+      "url": "https://github.com/mattpocock/skills",
+      "revision": "3cca18b368ae95cdbdebbff572ccafa662551015"
+    },
+    {
+      "id": "superpowers",
+      "url": "https://github.com/obra/superpowers",
+      "revision": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+    },
+    {
+      "id": "vercel",
+      "url": "https://github.com/vercel-labs/agent-skills",
+      "revision": "063bee94c3f4df8453406c830b0a7df0f2860278"
+    }
+  ],
+  "skills": [
+    {
+      "id": "mattpocock/ask-matt",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/ask-matt",
+      "upstreamPath": "skills/engineering/ask-matt",
+      "sha256": "2573e1b4a9921e6720ab4da121c40f9ee302d0f9cbbe28037204fb7c40863e11"
+    },
+    {
+      "id": "mattpocock/code-review",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/code-review",
+      "upstreamPath": "skills/engineering/code-review",
+      "sha256": "2bf54bc5e5eed6f8c78b2dbe99bfcfcc0e0221e0c11dbf07ff0f27effb2aed76"
+    },
+    {
+      "id": "mattpocock/codebase-design",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/codebase-design",
+      "upstreamPath": "skills/engineering/codebase-design",
+      "sha256": "826e65f8d718794b0647dd50122d3c388c6e860c608d6aa313d7d716ff535933"
+    },
+    {
+      "id": "mattpocock/diagnosing-bugs",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/diagnosing-bugs",
+      "upstreamPath": "skills/engineering/diagnosing-bugs",
+      "sha256": "3eaddfa5b028a2d4ca47731bb7a64cae28a0e8cb1ca802d201e754a1cc23d5a3"
+    },
+    {
+      "id": "mattpocock/domain-modeling",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/domain-modeling",
+      "upstreamPath": "skills/engineering/domain-modeling",
+      "sha256": "2cc88b237a4704f9fe2057492024856a48ea803a5b9257b1c1e3174eb1f13a09"
+    },
+    {
+      "id": "mattpocock/grill-with-docs",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/grill-with-docs",
+      "upstreamPath": "skills/engineering/grill-with-docs",
+      "sha256": "2dff19547f0f72000f8b88868e21b7d76c27cf5c7ececc6edf4042bbe06157ac"
+    },
+    {
+      "id": "mattpocock/implement",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/implement",
+      "upstreamPath": "skills/engineering/implement",
+      "sha256": "1a7a56bca542f46ff8e42fa5ddd293dab21b38b6dad57e1bf3e76d12e41c5fc2"
+    },
+    {
+      "id": "mattpocock/improve-codebase-architecture",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/improve-codebase-architecture",
+      "upstreamPath": "skills/engineering/improve-codebase-architecture",
+      "sha256": "86096700ab48a5fb3d8b8dd73b60b4474925d63e4b3585ec07e5979a04e9ce2d"
+    },
+    {
+      "id": "mattpocock/prototype",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/prototype",
+      "upstreamPath": "skills/engineering/prototype",
+      "sha256": "c4efd5e0f1c302b6225be83e8e42abdb05e13fde900484e4e2240e90b4e83eb6"
+    },
+    {
+      "id": "mattpocock/research",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/research",
+      "upstreamPath": "skills/engineering/research",
+      "sha256": "b1976e3b4a7cdcee2f7ade52c0cf072bafdbac9cf3284568cab1aa258e584e69"
+    },
+    {
+      "id": "mattpocock/resolving-merge-conflicts",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/resolving-merge-conflicts",
+      "upstreamPath": "skills/engineering/resolving-merge-conflicts",
+      "sha256": "9072fa5a56004c0c6abfa073dfb2629c9ac49118d38406b65f6313f0b8f45711"
+    },
+    {
+      "id": "mattpocock/setup-matt-pocock-skills",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/setup-matt-pocock-skills",
+      "upstreamPath": "skills/engineering/setup-matt-pocock-skills",
+      "sha256": "570d12b3caf6c468d77e0aba8602efc7a5346697a77cb5372f623cf67247784b"
+    },
+    {
+      "id": "mattpocock/tdd",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/tdd",
+      "upstreamPath": "skills/engineering/tdd",
+      "sha256": "2da488cb71308948f58928bbbae6d55d060d5414d5bb3ec7ee7d4bb73c670442"
+    },
+    {
+      "id": "mattpocock/to-spec",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/to-spec",
+      "upstreamPath": "skills/engineering/to-spec",
+      "sha256": "f525dab8b9bd3961aa4813d8568ef6184f6e24aad5a020e129165ca6c220f836"
+    },
+    {
+      "id": "mattpocock/to-tickets",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/to-tickets",
+      "upstreamPath": "skills/engineering/to-tickets",
+      "sha256": "5c1691ddf02291d5189213f8ffc82d2b05451131929bbc9e99052f912a05c300"
+    },
+    {
+      "id": "mattpocock/triage",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/triage",
+      "upstreamPath": "skills/engineering/triage",
+      "sha256": "69a9c32839882c53bf8cae65b53ab309e75b873960144fc7cd55e3215adbf9ed"
+    },
+    {
+      "id": "mattpocock/wayfinder",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/wayfinder",
+      "upstreamPath": "skills/engineering/wayfinder",
+      "sha256": "fa164901a041cab31d281288ea4b5af5aeb0a0d557b586cf6b341998a3fb3eb3"
+    },
+    {
+      "id": "mattpocock/wizard",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/wizard",
+      "upstreamPath": "skills/engineering/wizard",
+      "sha256": "fd918004158f826ab85f20a69b75677be74dcbcea19066c4f2511b52fcd5af3a"
+    },
+    {
+      "id": "mattpocock/claude-handoff",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/claude-handoff",
+      "upstreamPath": "skills/in-progress/claude-handoff",
+      "sha256": "a10e11149e9528724c89c3fc060a79602df73ea37d3e54498363b5bfedadd358"
+    },
+    {
+      "id": "mattpocock/implement-spec",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/implement-spec",
+      "upstreamPath": "skills/in-progress/implement-spec",
+      "sha256": "72831ec425699dd16d41827c5dcf6ac4b0dbbd32ce0c419d30f52ded735cf0ad"
+    },
+    {
+      "id": "mattpocock/loop-me",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/loop-me",
+      "upstreamPath": "skills/in-progress/loop-me",
+      "sha256": "35bbb6c42c82d9e828df5a07224289a39e54b3d0825689337f71224fe69ac975"
+    },
+    {
+      "id": "mattpocock/retro",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/retro",
+      "upstreamPath": "skills/in-progress/retro",
+      "sha256": "482c9a4e65f781f7202cf8c07a7b10276f5db0e02a2be28bd8bf36e28565f848"
+    },
+    {
+      "id": "mattpocock/setup-ts-deep-modules",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/setup-ts-deep-modules",
+      "upstreamPath": "skills/in-progress/setup-ts-deep-modules",
+      "sha256": "f5e00a15b6051b0b875a3eb90f398184894e2039d871b31972ec45b039ecdaac"
+    },
+    {
+      "id": "mattpocock/writing-beats",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/writing-beats",
+      "upstreamPath": "skills/in-progress/writing-beats",
+      "sha256": "72f5a763b2f22caaa8752d17cfda4348f3ea858a617a80fd48041d157d0e7608"
+    },
+    {
+      "id": "mattpocock/writing-fragments",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/writing-fragments",
+      "upstreamPath": "skills/in-progress/writing-fragments",
+      "sha256": "8e1db53eb63bb8859da8838356353f0f3fc0e328c61537557a7b3bbf3a2d8f32"
+    },
+    {
+      "id": "mattpocock/writing-shape",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/writing-shape",
+      "upstreamPath": "skills/in-progress/writing-shape",
+      "sha256": "993da7a7ab4f92c0746d0261165271773bc3d253ec78871a22af4e6f42272e2e"
+    },
+    {
+      "id": "mattpocock/git-guardrails-claude-code",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/git-guardrails-claude-code",
+      "upstreamPath": "skills/misc/git-guardrails-claude-code",
+      "sha256": "8d9c6499217ae7cebd8aba75d529bcb96e54a80e91157976149c502075fc31ab"
+    },
+    {
+      "id": "mattpocock/migrate-to-shoehorn",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/migrate-to-shoehorn",
+      "upstreamPath": "skills/misc/migrate-to-shoehorn",
+      "sha256": "292b384215d803b52e07a7f463586a4a4e9d1ad89ac0019600ec80af258a648d"
+    },
+    {
+      "id": "mattpocock/scaffold-exercises",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/scaffold-exercises",
+      "upstreamPath": "skills/misc/scaffold-exercises",
+      "sha256": "30b24d603cdb7e0c82263f264e0a9b52f01188683f7083df88512457b5a9ecb6"
+    },
+    {
+      "id": "mattpocock/setup-pre-commit",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/setup-pre-commit",
+      "upstreamPath": "skills/misc/setup-pre-commit",
+      "sha256": "3b77ee3d6c0d69ecb5fcb700a84b857976dec4f9312b3ec249c79ff27a765328"
+    },
+    {
+      "id": "mattpocock/grill-me",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/grill-me",
+      "upstreamPath": "skills/productivity/grill-me",
+      "sha256": "14c292fe16c0aed833cbbabb0983515c8d665fb6061d9755b13dba870363323b"
+    },
+    {
+      "id": "mattpocock/grilling",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/grilling",
+      "upstreamPath": "skills/productivity/grilling",
+      "sha256": "d5833e50e0081bbf5133b6c6b61aa8ba9ffae66e9071404b61e45b18f4cdb57e"
+    },
+    {
+      "id": "mattpocock/handoff",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/handoff",
+      "upstreamPath": "skills/productivity/handoff",
+      "sha256": "fe287d0ae54ed66c99522e272af1020323ba4d4698ef60fe1fa63f042dffd313"
+    },
+    {
+      "id": "mattpocock/teach",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/teach",
+      "upstreamPath": "skills/productivity/teach",
+      "sha256": "d9fbfb966d425f19cdbeb34cceab6ead62041ccacd00da29b55412333cf9748a"
+    },
+    {
+      "id": "mattpocock/to-questionnaire",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/to-questionnaire",
+      "upstreamPath": "skills/productivity/to-questionnaire",
+      "sha256": "560491db9f48174ca9f7b5dd1444bc9c3cb7ac2d9e3e673e48289ef3221f164e"
+    },
+    {
+      "id": "mattpocock/wait-what",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/wait-what",
+      "upstreamPath": "skills/productivity/wait-what",
+      "sha256": "d8c5157780c8b4933f887639779f807c51f18e0564bf6236e1a4cb2c793bd73c"
+    },
+    {
+      "id": "mattpocock/writing-for-agents",
+      "source": "mattpocock",
+      "path": "skills/vendor/mattpocock/writing-for-agents",
+      "upstreamPath": "skills/productivity/writing-for-agents",
+      "sha256": "dc53f07d1f662137317789b9b5d74cfcc26dbcfc15038a7faf676c844d8638e8"
+    },
+    {
+      "id": "superpowers/finishing-a-development-branch",
+      "source": "superpowers",
+      "path": "skills/vendor/superpowers/finishing-a-development-branch",
+      "upstreamPath": "skills/finishing-a-development-branch",
+      "sha256": "1da9182001d887c0fb8c62aeee35c8f65b438b32a30b79104baedcca9e0ebef6"
+    },
+    {
+      "id": "superpowers/receiving-code-review",
+      "source": "superpowers",
+      "path": "skills/vendor/superpowers/receiving-code-review",
+      "upstreamPath": "skills/receiving-code-review",
+      "sha256": "e5dd23be2d93f751c8b28d647c4b139754aedfe75648cd8e1100e47f5da0c3c5"
+    },
+    {
+      "id": "superpowers/using-git-worktrees",
+      "source": "superpowers",
+      "path": "skills/vendor/superpowers/using-git-worktrees",
+      "upstreamPath": "skills/using-git-worktrees",
+      "sha256": "98dc7da4ead1fe3c523c7ac314082f1f85114ad5e6ec39d4426b4a7f76ed9d0c"
+    },
+    {
+      "id": "superpowers/verification-before-completion",
+      "source": "superpowers",
+      "path": "skills/vendor/superpowers/verification-before-completion",
+      "upstreamPath": "skills/verification-before-completion",
+      "sha256": "d8a53168f152b6163bd3447f7d4c20b6b4cddf6bd907f9aa5856b514c032db0e"
+    },
+    {
+      "id": "superpowers/writing-skills",
+      "source": "superpowers",
+      "path": "skills/vendor/superpowers/writing-skills",
+      "upstreamPath": "skills/writing-skills",
+      "sha256": "36da006f1b8402200fcae0f6c0edfac3220eb16fe015b75dc81d16caf6505d7e"
+    },
+    {
+      "id": "vercel/composition-patterns",
+      "source": "vercel",
+      "path": "skills/vendor/vercel/composition-patterns",
+      "upstreamPath": "skills/composition-patterns",
+      "sha256": "646f870906914c3787efa7403ec4716dfddf78fc17a12ec1f0556caf2143ac66"
+    },
+    {
+      "id": "vercel/deploy-to-vercel",
+      "source": "vercel",
+      "path": "skills/vendor/vercel/deploy-to-vercel",
+      "upstreamPath": "skills/deploy-to-vercel",
+      "sha256": "8e95b408c650467aef6ea3b82d25814ffe53f3de2564b63e1f8b341ca402021c"
+    },
+    {
+      "id": "vercel/react-best-practices",
+      "source": "vercel",
+      "path": "skills/vendor/vercel/react-best-practices",
+      "upstreamPath": "skills/react-best-practices",
+      "sha256": "e3f2294574b469c7c198373a443a86571012769d0bbeed68854bd55642ec0d7b"
+    },
+    {
+      "id": "vercel/react-native-skills",
+      "source": "vercel",
+      "path": "skills/vendor/vercel/react-native-skills",
+      "upstreamPath": "skills/react-native-skills",
+      "sha256": "7a13afc40d6cf74e431d845f5c19a3047caf4fdfe2d1fed1dbd0c77ed2db7b0b"
+    },
+    {
+      "id": "vercel/react-view-transitions",
+      "source": "vercel",
+      "path": "skills/vendor/vercel/react-view-transitions",
+      "upstreamPath": "skills/react-view-transitions",
+      "sha256": "4a17116903578657ae3d472e79cfe2785cd0cc84eb440af153f1dcfc6a999b49"
+    },
+    {
+      "id": "vercel/vercel-cli-with-tokens",
+      "source": "vercel",
+      "path": "skills/vendor/vercel/vercel-cli-with-tokens",
+      "upstreamPath": "skills/vercel-cli-with-tokens",
+      "sha256": "eb16b20dcbe6ce51e0372083d624e0847af1b09487ec99249227d5a8eddebfc0"
+    },
+    {
+      "id": "vercel/vercel-optimize",
+      "source": "vercel",
+      "path": "skills/vendor/vercel/vercel-optimize",
+      "upstreamPath": "skills/vercel-optimize",
+      "sha256": "c75179c844eee289c90149cec78c3968b73010565eccbd747f00d338241b890f"
+    },
+    {
+      "id": "vercel/web-design-guidelines",
+      "source": "vercel",
+      "path": "skills/vendor/vercel/web-design-guidelines",
+      "upstreamPath": "skills/web-design-guidelines",
+      "sha256": "f3bc47f890f42a44db1007ab390709ec368e4b8c089baee6b0007182236ac474"
+    },
+    {
+      "id": "vercel/writing-guidelines",
+      "source": "vercel",
+      "path": "skills/vendor/vercel/writing-guidelines",
+      "upstreamPath": "skills/writing-guidelines",
+      "sha256": "25aa3a33a97bddbcb1847ce4a6169106ec25e5b19b15b99c66e75ab383866ef2"
+    }
+  ],
+  "excludedSuperpowers": {
+    "brainstorming": "Covered by mattpocock/grilling, grill-with-docs and prototype.",
+    "executing-plans": "Covered by mattpocock/implement and the enforced Ruckus project phases.",
+    "requesting-code-review": "Covered by mattpocock/code-review and independent Foreman review.",
+    "systematic-debugging": "Covered by mattpocock/diagnosing-bugs.",
+    "test-driven-development": "Covered by mattpocock/tdd.",
+    "writing-plans": "Covered by mattpocock/to-spec, to-tickets and wayfinder.",
+    "dispatching-parallel-agents": "Ruckus has exactly Foreman and Builder; arbitrary agent fan-out is unsupported.",
+    "subagent-driven-development": "Covered by mattpocock/implement; Ruckus owns delegation and review.",
+    "using-superpowers": "Ruckus owns skill discovery and protocol; the global Superpowers bootstrap would conflict."
+  },
+  "excludedResources": [
+    "skills/vendor/vercel/deploy-to-vercel/Archive.zip (redundant upstream distribution archive; no skill references it)"
+  ]
+}
