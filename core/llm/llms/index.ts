@@ -19,6 +19,7 @@ import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import CometAPI from "./CometAPI";
 import DeepInfra from "./DeepInfra";
+import GitGot from "./GitGot";
 import Deepseek from "./Deepseek";
 import Docker from "./Docker";
 import Fireworks from "./Fireworks";
@@ -99,6 +100,7 @@ export const LLMClasses = [
   BedrockImport,
   SageMaker,
   DeepInfra,
+  GitGot,
   Flowise,
   Groq,
   Fireworks,

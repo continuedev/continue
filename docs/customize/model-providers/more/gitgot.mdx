@@ -1,0 +1,61 @@
+---
+title: "GitGot"
+description: "Configure GitGot with Continue to use open-weight models on an OpenAI-compatible endpoint, including Kimi K2.7 Code and DeepSeek V4"
+---
+
+<Info>
+  Get an API key from [gitgot.ai](https://gitgot.ai/)
+</Info>
+
+GitGot is an OpenAI-compatible endpoint serving open-weight models, several of
+which have few other providers — `moonshotai/Kimi-K2.7-Code`,
+`moonshotai/Kimi-K2.6`, `deepseek-ai/DeepSeek-V4-Pro` and `-Flash`,
+`openai/gpt-oss-120b` and `meta-llama/Llama-3.3-70B-Instruct`.
+
+Current prices, context limits and max output tokens are published at
+[`https://inference.gitgot.ai/v1/models`](https://inference.gitgot.ai/v1/models),
+which needs no key.
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Kimi K2.7 Code
+      provider: gitgot
+      model: moonshotai/Kimi-K2.7-Code
+      apiKey: <YOUR_GITGOT_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Kimi K2.7 Code",
+        "provider": "gitgot",
+        "model": "moonshotai/Kimi-K2.7-Code",
+        "apiKey": "<YOUR_GITGOT_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Reasoning
+
+`reasoning_effort` behaves differently per model, because the models do:
+
+- `openai/gpt-oss-120b` takes `low`, `medium` or `high` and the value grades how
+  much reasoning it does.
+- The DeepSeek V4 models treat it as an on/off switch — send it to turn
+  reasoning on, omit it to turn it off. The value itself changes nothing.
+- The Kimi models reason regardless, and nothing you send changes that.
+
+Reasoning arrives in `reasoning_content` on every model that produces it.
