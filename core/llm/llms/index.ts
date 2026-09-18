@@ -30,6 +30,7 @@ import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTEIEmbeddingsProvider from "./HuggingFaceTEI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
 import Inception from "./Inception";
+import InferenceAPIs from "./InferenceAPIs";
 import Kindo from "./Kindo";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
@@ -125,6 +126,7 @@ export const LLMClasses = [
   xAI,
   SiliconFlow,
   Tensorix,
+  InferenceAPIs,
   Scaleway,
   Relace,
   Inception,
