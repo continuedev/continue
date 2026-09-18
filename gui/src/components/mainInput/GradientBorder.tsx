@@ -9,6 +9,22 @@ const gradient = keyframes`
   }
 `;
 
+/**
+ * Ruckus streaming sweep — violet through indigo to azure and back, so the
+ * band reads as one hue in motion rather than a rainbow. Kept in sync with
+ * the accent tokens in styles/theme.ts.
+ */
+const STREAMING_SWEEP = `repeating-linear-gradient(
+      101.79deg,
+      #6344e8 0%,
+      #7c5cff 18%,
+      #a78bfa 34%,
+      #5b9dff 50%,
+      #a78bfa 66%,
+      #7c5cff 82%,
+      #6344e8 100%
+    )`;
+
 export const GradientBorder = styled.div<{
   borderRadius?: string;
   borderColor?: string;
@@ -16,19 +32,7 @@ export const GradientBorder = styled.div<{
 }>`
   border-radius: ${(props) => props.borderRadius || "0"};
   padding: 1px;
-  background: ${(props) =>
-    props.borderColor
-      ? props.borderColor
-      : `repeating-linear-gradient(
-      101.79deg,
-      #1BBE84 0%,
-      #331BBE 16%,
-      #BE1B55 33%,
-      #A6BE1B 55%,
-      #BE1B55 67%,
-      #331BBE 85%,
-      #1BBE84 99%
-    )`};
+  background: ${(props) => props.borderColor || STREAMING_SWEEP};
   animation: ${(props) => (props.loading ? gradient : "")} 6s linear infinite;
   background-size: 200% 200%;
   width: 100%;
@@ -36,4 +40,10 @@ export const GradientBorder = styled.div<{
   flex-direction: row;
   align-items: center;
   margin-top: ${(props) => (props.loading ? "8px" : "")};
+  /* Soft violet bloom while streaming, nothing at rest */
+  box-shadow: ${(props) =>
+    props.loading ? "0 0 18px -6px rgb(124 92 255 / 0.55)" : "none"};
+  transition:
+    box-shadow 0.25s var(--ruckus-ease),
+    background 0.25s var(--ruckus-ease);
 `;

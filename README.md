@@ -1,66 +1,75 @@
-> **Ruckus IDE fork:** Gateway-only model routing and expanded Agent Skills support.
-> See [setup, migration, and testing](docs/development/ruckuside-gateway-skills.md).
+<h1 align="center">Ruckus</h1>
 
-<h1 align="center">Continue</h1>
-
-<p align="center">Pioneering open-source coding agent</p>
+<p align="center">A fast, modern AI coding agent for your IDE</p>
 
 <div align="center">
 
-<a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" /></a>
-<a href="https://docs.continue.dev"><img src="https://img.shields.io/badge/Docs-docs.continue.dev-blue" /></a>
-<a href="https://github.com/continuedev/continue/releases"><img src="https://img.shields.io/badge/Changelog-GitHub_Releases-blue" /></a>
+<a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache_2.0-7c5cff.svg" /></a>
+<a href="https://github.com/jakesixtyoneeighty/ruckuside/releases"><img src="https://img.shields.io/badge/Changelog-GitHub_Releases-7c5cff" /></a>
 
 </div>
 
-<p align="center">
-  <img src="media/github-readme.png" alt="Banner" />
-</p>
+## What is Ruckus?
 
-## What is Continue?
+Ruckus is a coding agent that runs inside your editor. It reads your codebase,
+edits files, runs tools, and works from the models you point it at.
 
-> _Note: The `continuedev/continue` repository is no longer actively maintained and is read-only for all users._
+Two things make it different from where it started:
 
-Continue is a coding agent available as a [CLI](#cli), [VS Code extension](#vs-code), and [JetBrains plugin](#jetbrains).
+- **Gateway-only model routing.** Models resolve through a single gateway
+  rather than a provider grab-bag, so adding or swapping a model is a config
+  change, not a code change.
+- **Expanded Agent Skills.** Skills are first-class and bundled, so the agent
+  can pick up repeatable workflows without bespoke prompting.
 
-## Documentation
+See [setup, migration, and testing](docs/development/ruckuside-gateway-skills.md).
 
-To learn how to configure Continue, how it works, and how to customize it, check out the [Continue Docs](https://docs.continue.dev).
-
-## Final 2.0.0 Release
-
-We polished Continue and did a final 2.0.0 release of the VS Code extension, CLI, and JetBrains plugin.
-
-This included removing anonymous telemetry, pulling out authentication, squashing bugs, and more.
+## Install
 
 ### VS Code
 
-[![VS Code Marketplace](https://img.shields.io/badge/VS_Code_Marketplace-007ACC?logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=Continue.continue) [![OpenVSX Registry](https://img.shields.io/badge/OpenVSX_Registry-C160EF?logo=eclipseide&logoColor=white)](https://open-vsx.org/extension/Continue/continue) [![View source](https://img.shields.io/badge/View_source-181717?logo=github&logoColor=white)](extensions/vscode)
+Build and install the extension from source:
+
+```bash
+cd extensions/vscode && npm install && npm run package
+```
+
+Then install the generated `.vsix` from the VS Code Extensions view
+(**⋯ → Install from VSIX…**).
 
 ### CLI
 
-[![npm](https://img.shields.io/badge/npm-CB3837?logo=npm&logoColor=white)](https://www.npmjs.com/package/@continuedev/cli) [![View source](https://img.shields.io/badge/View_source-181717?logo=github&logoColor=white)](extensions/cli)
+```bash
+cd extensions/cli && npm install && npm run build
+```
 
-### JetBrains
+## Configuration
 
-> _Note: We recommend using the Continue CLI instead of the JetBrains plugin._
+Ruckus keeps its configuration in `~/.ruckus`.
 
-[![GitHub Releases](https://img.shields.io/badge/GitHub_Releases-181717?logo=github&logoColor=white)](https://github.com/continuedev/continue/releases) [![View source](https://img.shields.io/badge/View_source-181717?logo=github&logoColor=white)](extensions/intellij)
+If you previously used Continue, your `~/.continue` directory is copied over
+automatically the first time Ruckus runs — configs, sessions, and models come
+with you. The old directory is left untouched, so an existing Continue install
+keeps working.
 
-## Contributors
+Workspace files are read under either name: `.ruckusignore` or
+`.continueignore`, `.ruckusrc.json` or `.continuerc.json`.
 
-Thank you to the entire Continue community for helping us create a pioneering coding agent.
+To point Ruckus somewhere else, set `RUCKUS_GLOBAL_DIR`.
 
-What we built together pushed the boundaries of what AI developer tooling could be.
+## Contributing
 
-We hope this codebase continues to serve as a foundation for others.
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [TESTING.md](TESTING.md).
 
-## Code friends
+## Attribution
 
-<a href="https://github.com/continuedev/continue/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=continuedev/continue&max=500" />
-</a>
+Ruckus is a fork of [Continue](https://github.com/continuedev/continue) by
+Continue Dev, Inc., used under the Apache 2.0 license. The original project is
+no longer actively maintained. Enormous credit to the Continue team and its
+contributors — this codebase is their work, and Ruckus builds on it.
 
 ## License
 
-Apache 2.0 © 2023-2026 Continue Dev, Inc.
+Apache 2.0
+
+Portions © 2023-2026 Continue Dev, Inc. See [LICENSE](LICENSE).

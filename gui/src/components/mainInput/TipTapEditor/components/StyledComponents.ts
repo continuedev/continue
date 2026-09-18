@@ -21,9 +21,19 @@ export const InputBoxDiv = styled.div<{}>`
   color: ${vscForeground};
 
   border: 1px solid ${vscCommandCenterInactiveBorder};
-  transition: border-color 0.15s ease-in-out;
+  transition:
+    border-color 0.18s var(--ruckus-ease),
+    box-shadow 0.18s var(--ruckus-ease);
+
+  /* Neutral lift on hover; violet is reserved for focus */
+  &:hover:not(:focus-within) {
+    border-color: rgb(154 161 181 / 0.45);
+  }
+
+  /* Focus reads as a soft violet bloom rather than a hard second border */
   &:focus-within {
     border: 1px solid ${vscCommandCenterActiveBorder};
+    box-shadow: 0 0 0 3px rgb(124 92 255 / 0.16);
   }
 
   outline: none;
@@ -31,8 +41,7 @@ export const InputBoxDiv = styled.div<{}>`
 
   &:focus {
     outline: none;
-
-    border: 0.5px solid ${vscInputBorderFocus};
+    border: 1px solid ${vscInputBorderFocus};
   }
 
   &::placeholder {
