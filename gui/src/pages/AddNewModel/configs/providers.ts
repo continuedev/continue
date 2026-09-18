@@ -1270,6 +1270,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  inferenceapis: {
+    title: "Inference APIs",
+    provider: "inferenceapis",
+    description:
+      "Inference APIs hosts open-weight models (DeepSeek V4, GLM 5.3, Kimi K2.7, MiniMax M3, GPT-OSS, Qwen3-VL) in the United States with zero data retention, billed per token with no subscription.",
+    longDescription:
+      "To get started with Inference APIs, create an account and get an API key at [inferenceapis.com/api-keys](https://inferenceapis.com/api-keys).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Inference APIs API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://inferenceapis.com/api-keys",
+  },
   venice: {
     title: "Venice",
     provider: "venice",

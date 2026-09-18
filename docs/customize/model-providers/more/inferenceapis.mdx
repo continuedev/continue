@@ -1,0 +1,126 @@
+---
+title: "Inference APIs"
+description: "Configure Inference APIs with Continue to access DeepSeek, GLM, Kimi, MiniMax, GPT-OSS, and Qwen3-VL models through a single OpenAI-compatible API"
+---
+
+[Inference APIs](https://inferenceapis.com) hosts open-weight models (DeepSeek V4, GLM 5.3, Kimi K2.7, MiniMax M3, GPT-OSS, Qwen3-VL) in the United States with zero data retention, billed per token with no subscription.
+
+<Info>
+  You can get an API key from
+  [inferenceapis.com/api-keys](https://inferenceapis.com/api-keys).
+</Info>
+
+## Chat Model
+
+We recommend configuring **zai-org/GLM-5.3** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: GLM 5.3
+        provider: inferenceapis
+        model: zai-org/GLM-5.3
+        apiKey: <YOUR_INFERENCEAPIS_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "GLM 5.3",
+          "provider": "inferenceapis",
+          "model": "zai-org/GLM-5.3",
+          "apiKey": "<YOUR_INFERENCEAPIS_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+We recommend configuring **deepseek-ai/DeepSeek-V4-Flash** as your autocomplete model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: DeepSeek V4 Flash
+        provider: inferenceapis
+        model: deepseek-ai/DeepSeek-V4-Flash
+        apiKey: <YOUR_INFERENCEAPIS_API_KEY>
+        roles:
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "DeepSeek V4 Flash",
+          "provider": "inferenceapis",
+          "model": "deepseek-ai/DeepSeek-V4-Flash",
+          "apiKey": "<YOUR_INFERENCEAPIS_API_KEY>"
+        }
+      ],
+      "tabAutocompleteModel": {
+        "title": "DeepSeek V4 Flash",
+        "provider": "inferenceapis",
+        "model": "deepseek-ai/DeepSeek-V4-Flash",
+        "apiKey": "<YOUR_INFERENCEAPIS_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Embeddings Model
+
+We recommend configuring **BAAI/bge-m3** as your embeddings model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: BGE M3
+        provider: inferenceapis
+        model: BAAI/bge-m3
+        apiKey: <YOUR_INFERENCEAPIS_API_KEY>
+        roles:
+          - embed
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "embeddingsProvider": {
+        "provider": "inferenceapis",
+        "model": "BAAI/bge-m3",
+        "apiKey": "<YOUR_INFERENCEAPIS_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+Inference APIs also provides the Qwen/Qwen3-Embedding-8B embeddings model. [Click here](https://inferenceapis.com/models) to see the full list of available models.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/InferenceAPIs.ts)
