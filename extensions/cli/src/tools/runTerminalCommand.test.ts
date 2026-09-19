@@ -131,7 +131,7 @@ describe("runTerminalCommandTool", () => {
       it("completes when a background child keeps stdio open", async () => {
         const started = Date.now();
         const result = await runTerminalCommandTool.run({
-          command: 'sleep 30 >/dev/null 2>&1 & echo DONE',
+          command: "sleep 30 >/dev/null 2>&1 & echo DONE",
           timeout: 15,
         });
         const elapsedMs = Date.now() - started;
@@ -153,5 +153,4 @@ describe("runTerminalCommandTool", () => {
       }, 20000);
     }
   });
-
 });

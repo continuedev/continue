@@ -1,10 +1,7 @@
 import { ChildProcess, spawn } from "child_process";
 import fs from "fs";
 
-import {
-  getToolSpawnOptions,
-  killProcessTree,
-} from "../util/processTree.js";
+import { getToolSpawnOptions, killProcessTree } from "../util/processTree.js";
 
 import {
   evaluateTerminalCommandSecurity,
