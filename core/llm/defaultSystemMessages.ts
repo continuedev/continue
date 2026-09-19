@@ -1,91 +1,179 @@
-export const DEFAULT_SYSTEM_MESSAGES_URL =
-  "https://github.com/continuedev/continue/blob/main/core/llm/defaultSystemMessages.ts";
+# PROJECT RULES AND HARDENING ADDENDUM
 
-export const CODEBLOCK_FORMATTING_INSTRUCTIONS = `\
-  Always include the language and file name in the info string when you write code blocks.
-  If you are editing "src/main.py" for example, your code block should start with '\`\`\`python src/main.py'
-`;
-
-export const EDIT_CODE_INSTRUCTIONS = `\
-  When addressing code modification requests, present a concise code snippet that
-  emphasizes only the necessary changes and uses abbreviated placeholders for
-  unmodified sections. For example:
-
-  \`\`\`language /path/to/file
-  // ... existing code ...
-
-  {{ modified code here }}
-
-  // ... existing code ...
-
-  {{ another modification }}
-
-  // ... rest of code ...
-  \`\`\`
-
-  In existing files, you should always restate the function or class that the snippet belongs to:
-
-  \`\`\`language /path/to/file
-  // ... existing code ...
-
-  function exampleFunction() {
-    // ... existing code ...
-
-    {{ modified code here }}
-
-    // ... rest of function ...
-  }
-
-  // ... rest of code ...
-  \`\`\`
-
-  Since users have access to their complete file, they prefer reading only the
-  relevant modifications. It's perfectly acceptable to omit unmodified portions
-  at the beginning, middle, or end of files using these "lazy" comments. Only
-  provide the complete file when explicitly requested. Include a concise explanation
-  of changes unless the user specifically asks for code only.
-`;
-
-const BRIEF_LAZY_INSTRUCTIONS = `For larger codeblocks (>20 lines), use brief language-appropriate placeholders for unmodified sections, e.g. '// ... existing code ...'`;
-
-export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
-<important_rules>
-  You are in chat mode.
-
-  If the user asks to make changes to files offer that they can use the Apply Button on the code block, or switch to Agent Mode to make the suggested updates automatically.
-  If needed concisely explain to the user they can switch to agent mode using the Mode Selector dropdown and provide no other details.
-
-${CODEBLOCK_FORMATTING_INSTRUCTIONS}
-${EDIT_CODE_INSTRUCTIONS}
-</important_rules>`;
-
-export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
-<important_rules>
-  You are in agent mode.
-
-  If you need to use multiple tools, you can call multiple read-only tools simultaneously.
-
-${CODEBLOCK_FORMATTING_INSTRUCTIONS}
-
-${BRIEF_LAZY_INSTRUCTIONS}
-
-However, only output codeblocks for suggestion and demonstration purposes, for example, when enumerating multiple hypothetical options. For implementing changes, use the edit tools.
-
-</important_rules>`;
-
-// The note about read-only tools is for MCP servers
-// For now, all MCP tools are included so model can decide if they are read-only
-export const DEFAULT_PLAN_SYSTEM_MESSAGE = `\
-<important_rules>
-  You are in plan mode, in which you help the user understand and construct a plan.
-  Only use read-only tools. Do not use any tools that would write to non-temporary files.
-  If the user wants to make changes, offer that they can switch to Agent mode to give you access to write tools to make the suggested updates.
-
-${CODEBLOCK_FORMATTING_INSTRUCTIONS}
-
-${BRIEF_LAZY_INSTRUCTIONS}
-
-However, only output codeblocks for suggestion and planning purposes. When ready to implement changes, request to switch to Agent mode.
-
-  In plan mode, only write code when directly suggesting changes. Prioritize understanding and developing a plan.
-</important_rules>`;
+## HARDENING MODE ADDENDUM
+When modifying, debugging, extending, or correcting systems:
+The objective is not only to make code work.
+The objective is to make code remain stable under future expansion.
+=================================================================
+STABILITY FIRST
+=================================================================
+Prefer:
+Stable > Clever
+Predictable > Elegant
+Maintainable > Compact
+Testable > Optimized
+The engine must remain understandable six months from now.
+=================================================================
+NO MAGIC VALUES
+=================================================================
+Never introduce unexplained numbers.
+Incorrect:
+speed *= 1.37
+Correct:
+const SHIFT_PROTECTION_RADIUS = 250
+All constants must have names.
+All named values should be centralized where practical.
+=================================================================
+CONFIGURATION OVER HARDCODING
+=================================================================
+If a value is expected to be tuned later:
+Place it in configuration.
+Avoid burying gameplay values inside logic.
+Examples:
+- Hunger rates
+- Shift timing
+- Road multipliers
+- Caravan intervals
+- Affinity gains
+Should all be configurable.
+=================================================================
+FAIL SAFE NOT FAIL DEAD
+=================================================================
+When unexpected conditions occur:
+Prefer graceful degradation.
+Example:
+Incorrect
+Crash.
+Correct
+Fallback behavior.
+Warning logged.
+System continues running.
+=================================================================
+NULL SAFETY
+=================================================================
+Before accessing:
+Objects
+Entities
+Villages
+Companions
+Road nodes
+Chunk references
+Verify existence.
+Never assume references exist.
+=================================================================
+DEFENSIVE SYSTEM BOUNDARIES
+=================================================================
+Managers should validate incoming data.
+Do not trust external callers.
+Validate:
+Types
+Ranges
+Expected state
+Required properties
+=================================================================
+FUTURE SYSTEM RULE
+=================================================================
+Before implementing ask:
+Could a planned future system interact with this?
+Examples:
+- Arcane Door Network
+- Property Ownership
+- Noble Houses
+- Romance
+- Businesses
+- Multiplayer
+- Career Systems
+- Crow Narrator
+- Epoch Shifts
+Avoid solutions that block future expansion.
+=================================================================
+EXPLICIT OWNERSHIP
+=================================================================
+Every system should clearly own its data.
+Avoid:
+Shared mutable ownership.
+Always identify:
+Who creates it?
+Who updates it?
+Who consumes it?
+Who destroys it?
+=================================================================
+NO SILENT BEHAVIOR
+=================================================================
+Unexpected behavior should log.
+Important state transitions should log.
+Examples:
+Epoch shift.
+Village relocation.
+Road regeneration.
+Caravan destruction.
+Barrier collapse.
+Do not silently fail.
+=================================================================
+SINGLE RESPONSIBILITY RULE
+=================================================================
+Functions should ideally have one purpose.
+If a function:
+Loads data
+Calculates paths
+Moves a village
+Updates UI
+It is doing too much.
+Document concerns before expanding it further.
+=================================================================
+REPEATED LOGIC DETECTION
+=================================================================
+Before adding logic:
+Search for existing implementation.
+Never duplicate:
+Pathfinding
+Inventory logic
+Village ownership
+Road generation
+Relationship calculations
+Extend existing systems instead.
+=================================================================
+TESTABILITY RULE
+=================================================================
+Every fix or enhancement should answer:
+How can a tester verify this?
+Provide:
+Expected outcome.
+Testing steps.
+Success condition.
+=================================================================
+TECHNICAL DEBT WARNING
+=================================================================
+If a solution is temporary:
+Clearly label it.
+Examples:
+TODO
+TEMP FIX
+REVISIT AFTER PHASE X
+Never hide known debt.
+=================================================================
+HARDENING CHECKLIST
+=================================================================
+Before completion verify:
+[ ] No magic values introduced
+[ ] Configurable where appropriate
+[ ] Null-safe
+[ ] Defensive validation present
+[ ] Clear ownership maintained
+[ ] No duplicated logic
+[ ] No silent failure paths
+[ ] Future systems considered
+[ ] Testing instructions provided
+[ ] Technical debt documented
+=================================================================
+DARK FOREST ENGINE HARDENING PRINCIPLE
+=================================================================
+Build systems as if:
+- More careers will be added.
+- More villages will be added.
+- More factions will be added.
+- More businesses will be added.
+- More AI will be added.
+- More content will be added.
+The solution should survive growth.
+Optimize for future expansion without introducing unnecessary complexity.
