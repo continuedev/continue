@@ -1,8 +1,6 @@
 import { ChildProcess, spawn } from "child_process";
 import fs from "fs";
 
-import { getToolSpawnOptions, killProcessTree } from "../util/processTree.js";
-
 import {
   evaluateTerminalCommandSecurity,
   type ToolPolicy,
@@ -17,6 +15,7 @@ import {
 } from "../telemetry/utils.js";
 import { backgroundSignalManager } from "../util/backgroundSignalManager.js";
 import { emitBashToolEnded, emitBashToolStarted } from "../util/cli.js";
+import { getToolSpawnOptions, killProcessTree } from "../util/processTree.js";
 import {
   parseEnvNumber,
   truncateOutputFromStart,
