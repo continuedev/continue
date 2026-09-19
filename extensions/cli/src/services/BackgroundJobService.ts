@@ -1,6 +1,10 @@
 import { ChildProcess, spawn } from "child_process";
 
 import { logger } from "../util/logger.js";
+import {
+  getToolSpawnOptions,
+  killProcessTree,
+} from "../util/processTree.js";
 
 export type BackgroundJobStatus =
   | "pending"
@@ -65,7 +69,7 @@ export class BackgroundJobService {
 
     job.status = "running";
 
-    const child = spawn(shell, args, { stdio: "pipe" });
+    const child = spawn(shell, args, getToolSpawnOptions());
     this.processes.set(jobId, child);
 
     child.stdout?.setEncoding("utf8");
@@ -79,7 +83,9 @@ export class BackgroundJobService {
       this.appendOutput(jobId, data);
     });
 
-    child.on("close", (code: number | null) => {
+    child.on("exit", (code: number | null) => {
+      // Finish on exit so inherited stdio from detached descendants cannot keep
+      // the job marked running after the shell itself has exited.
       this.completeJob(jobId, code ?? 0);
     });
 
@@ -128,7 +134,7 @@ export class BackgroundJobService {
       this.appendOutput(id, data);
     });
 
-    child.on("close", (code: number | null) => {
+    child.on("exit", (code: number | null) => {
       this.completeJob(id, code ?? 0);
     });
 
@@ -181,7 +187,7 @@ export class BackgroundJobService {
     if (!job) return false;
 
     if (process) {
-      process.kill();
+      killProcessTree(process, "SIGTERM");
       this.processes.delete(jobId);
     }
 
@@ -210,7 +216,7 @@ export class BackgroundJobService {
 
   killAllJobs(): void {
     for (const [jobId, process] of this.processes) {
-      process.kill();
+      killProcessTree(process, "SIGTERM");
       const job = this.jobs.get(jobId);
       if (job) {
         job.status = "cancelled";

@@ -121,4 +121,37 @@ describe("runTerminalCommandTool", () => {
       });
     }
   });
+
+  describe("background and detached child cleanup (#12699)", () => {
+    const isWindows = process.platform === "win32";
+
+    // These reproduce the hang: shell exits while a grandchild keeps inherited
+    // stdio open. Resolving on process "exit" (not "close") is required.
+    if (!isWindows) {
+      it("completes when a background child keeps stdio open", async () => {
+        const started = Date.now();
+        const result = await runTerminalCommandTool.run({
+          command: 'sleep 30 >/dev/null 2>&1 & echo DONE',
+          timeout: 15,
+        });
+        const elapsedMs = Date.now() - started;
+        expect(result).toContain("DONE");
+        // Must not wait for the background sleep (would be ~30s on close-based wait).
+        expect(elapsedMs).toBeLessThan(10000);
+      }, 20000);
+
+      it("completes for a detached nohup child that writes a pid file", async () => {
+        const started = Date.now();
+        const result = await runTerminalCommandTool.run({
+          command:
+            'PIDFILE=$(mktemp); (sleep 30 >/dev/null 2>&1 & echo $! > "$PIDFILE"); cat "$PIDFILE"; echo DONE',
+          timeout: 15,
+        });
+        const elapsedMs = Date.now() - started;
+        expect(result).toContain("DONE");
+        expect(elapsedMs).toBeLessThan(10000);
+      }, 20000);
+    }
+  });
+
 });
