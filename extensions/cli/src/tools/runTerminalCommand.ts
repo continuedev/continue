@@ -15,6 +15,7 @@ import {
 } from "../telemetry/utils.js";
 import { backgroundSignalManager } from "../util/backgroundSignalManager.js";
 import { emitBashToolEnded, emitBashToolStarted } from "../util/cli.js";
+import { getToolSpawnOptions, killProcessTree } from "../util/processTree.js";
 import {
   parseEnvNumber,
   truncateOutputFromStart,
@@ -189,11 +190,12 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
     const terminalOutput: string = await new Promise((resolve, reject) => {
       // Use same shell logic as core implementation
       const { shell, args } = getShellCommand(command);
-      const child = spawn(shell, args);
+      const child = spawn(shell, args, getToolSpawnOptions());
       let stdout = "";
       let stderr = "";
       let timeoutId: NodeJS.Timeout;
       let isResolved = false;
+      let exitCode: number | null = null;
 
       // Determine timeout: use provided timeout (capped at 600s), test env variable, or default 120s
       let TIMEOUT_MS = 180000; // 180 seconds default
@@ -234,8 +236,8 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         // Detach stdout/stderr listeners so they don't accumulate in local
         // buffers or trigger chat history updates after the tool call resolves.
         // BackgroundJobService.createJobWithProcess attaches its own listeners.
-        child.stdout.removeListener("data", onStdout);
-        child.stderr.removeListener("data", onStderr);
+        child.stdout?.removeListener("data", onStdout);
+        child.stderr?.removeListener("data", onStderr);
 
         const job = backgroundJobService.createJobWithProcess(
           command,
@@ -270,7 +272,10 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         timeoutId = setTimeout(() => {
           if (isResolved) return;
           isResolved = true;
-          child.kill();
+          backgroundSignalManager.off("backgroundRequested", moveToBackground);
+          killProcessTree(child, "SIGTERM");
+          // Escalate if the group ignores SIGTERM.
+          setTimeout(() => killProcessTree(child, "SIGKILL"), 1000);
           let output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           output += `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`;
 
@@ -314,50 +319,59 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         showCurrentOutput();
       };
 
-      child.stdout.on("data", onStdout);
-      child.stderr.on("data", onStderr);
+      child.stdout?.on("data", onStdout);
+      child.stderr?.on("data", onStderr);
 
-      child.on("close", (code) => {
+      // Resolve on process exit (not close). Detached/background grandchildren can
+      // keep inherited stdio pipes open after the shell exits, which would otherwise
+      // leave the tool call hanging forever on the "close" event.
+      child.on("exit", (code) => {
+        exitCode = code;
         if (isResolved) return;
-        isResolved = true;
 
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
+        // Allow pending stdout/stderr data events to flush before finishing.
+        setImmediate(() => {
+          if (isResolved) return;
+          isResolved = true;
 
-        backgroundSignalManager.removeListener(
-          "backgroundRequested",
-          moveToBackground,
-        );
-
-        // Only reject on non-zero exit code if there's also stderr
-        if (code !== 0 && stderr) {
-          reject(`Error (exit code ${code}): ${stderr}`);
-          return;
-        }
-
-        // Track specific git operations only after successful execution
-        if (code === 0) {
-          if (isGitCommitCommand(command)) {
-            telemetryService.recordCommitCreated();
-          } else if (isPullRequestCommand(command)) {
-            telemetryService.recordPullRequestCreated();
+          if (timeoutId) {
+            clearTimeout(timeoutId);
           }
-        }
 
-        let output = stdout;
-        if (stderr) {
-          output = stdout + `\nStderr: ${stderr}`;
-        }
+          backgroundSignalManager.removeListener(
+            "backgroundRequested",
+            moveToBackground,
+          );
 
-        const truncationResult = truncateOutputFromStart(output, {
-          maxChars,
-          maxLines,
+          // Only reject on non-zero exit code if there's also stderr
+          if (exitCode !== 0 && stderr) {
+            reject(`Error (exit code ${exitCode}): ${stderr}`);
+            return;
+          }
+
+          // Track specific git operations only after successful execution
+          if (exitCode === 0) {
+            if (isGitCommitCommand(command)) {
+              telemetryService.recordCommitCreated();
+            } else if (isPullRequestCommand(command)) {
+              telemetryService.recordPullRequestCreated();
+            }
+          }
+
+          let output = stdout;
+          if (stderr) {
+            output = stdout + `\nStderr: ${stderr}`;
+          }
+
+          const truncationResult = truncateOutputFromStart(output, {
+            maxChars,
+            maxLines,
+          });
+          const finalOutput = truncationResult.wasTruncated
+            ? appendParallelLimitNote(truncationResult.output)
+            : truncationResult.output;
+          resolve(finalOutput);
         });
-        const finalOutput = truncationResult.wasTruncated
-          ? appendParallelLimitNote(truncationResult.output)
-          : truncationResult.output;
-        resolve(finalOutput);
       });
 
       child.on("error", (error) => {
