@@ -122,12 +122,11 @@ describe("runTerminalCommandTool", () => {
     }
   });
 
-  describe("background and detached child cleanup (#12699)", () => {
-    const isWindows = process.platform === "win32";
-
-    // These reproduce the hang: shell exits while a grandchild keeps inherited
-    // stdio open. Resolving on process "exit" (not "close") is required.
-    if (!isWindows) {
+  describe.skipIf(process.platform === "win32")(
+    "background and detached child cleanup (#12699)",
+    () => {
+      // These reproduce the hang: shell exits while a grandchild keeps inherited
+      // stdio open. Resolving on process "exit" (not "close") is required.
       it("completes when a background child keeps stdio open", async () => {
         const started = Date.now();
         const result = await runTerminalCommandTool.run({
@@ -151,6 +150,6 @@ describe("runTerminalCommandTool", () => {
         expect(result).toContain("DONE");
         expect(elapsedMs).toBeLessThan(10000);
       }, 20000);
-    }
-  });
+    },
+  );
 });
