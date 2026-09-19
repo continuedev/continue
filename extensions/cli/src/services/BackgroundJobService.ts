@@ -4,7 +4,11 @@ import { logger } from "../util/logger.js";
 import { getToolSpawnOptions, killProcessTree } from "../util/processTree.js";
 
 export type BackgroundJobStatus =
-  "pending" | "running" | "completed" | "failed" | "cancelled";
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "cancelled";
 
 export interface BackgroundJob {
   id: string;
