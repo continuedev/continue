@@ -3,6 +3,7 @@ import { z } from "zod";
 import { AiSdkApi } from "./apis/AiSdk.js";
 import { AnthropicApi } from "./apis/Anthropic.js";
 import { AskSageApi } from "./apis/AskSage.js";
+import { AtlasCloudApi } from "./apis/AtlasCloud.js";
 import { AzureApi } from "./apis/Azure.js";
 import { BedrockApi } from "./apis/Bedrock.js";
 import { CohereApi } from "./apis/Cohere.js";
@@ -143,6 +144,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.groq.com/openai/v1/", config);
     case "minimax":
       return new MiniMaxApi(config);
+    case "atlascloud":
+      return new AtlasCloudApi(config);
     case "sambanova":
       return openAICompatible("https://api.sambanova.ai/v1/", config);
     case "text-gen-webui":

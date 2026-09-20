@@ -11,6 +11,7 @@ import { renderTemplatedString } from "../../util/handlebars/renderTemplatedStri
 import { BaseLLM } from "../index";
 import Anthropic from "./Anthropic";
 import Asksage from "./Asksage";
+import AtlasCloud from "./AtlasCloud";
 import Azure from "./Azure";
 import Bedrock from "./Bedrock";
 import BedrockImport from "./BedrockImport";
@@ -95,6 +96,7 @@ export const LLMClasses = [
   Mistral,
   Mimo,
   MiniMax,
+  AtlasCloud,
   Bedrock,
   BedrockImport,
   SageMaker,

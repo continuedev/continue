@@ -589,6 +589,43 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://platform.minimax.io",
   },
+  atlascloud: {
+    title: "Atlas Cloud",
+    provider: "atlascloud",
+    description:
+      "Atlas Cloud is an OpenAI-compatible gateway to 300+ models — OpenAI, Anthropic, DeepSeek, Qwen, GLM, Kimi, and more — behind one endpoint.",
+    longDescription:
+      "To get started with Atlas Cloud, obtain an API key from the [Atlas Cloud Platform](https://www.atlascloud.ai/).",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Atlas Cloud API key",
+        required: true,
+      },
+    ],
+    packages: [
+      models.atlasCloudGpt41Mini,
+      models.atlasCloudGpt54Mini,
+      models.atlasCloudClaudeSonnet46,
+      models.atlasCloudDeepseekV32,
+      models.atlasCloudQwen3235b,
+      models.atlasCloudQwen35_35b,
+      models.atlasCloudGlm46,
+      models.atlasCloudKimiK25,
+      models.atlasCloudMinimaxM25,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "Atlas Cloud",
+        },
+      },
+    ],
+    apiKeyUrl: "https://www.atlascloud.ai/",
+  },
   inception: {
     title: "Inception Labs",
     provider: "inception",

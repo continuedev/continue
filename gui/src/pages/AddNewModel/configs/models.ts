@@ -2734,6 +2734,116 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
 
+  // Atlas Cloud Models
+  atlasCloudGpt41Mini: {
+    title: "GPT-4.1 Mini (Atlas Cloud)",
+    description:
+      "OpenAI GPT-4.1 Mini, served through the Atlas Cloud gateway. 1M context window.",
+    params: {
+      title: "GPT-4.1 Mini (Atlas Cloud)",
+      model: "openai/gpt-4.1-mini",
+      contextLength: 1_047_576,
+    },
+    providerOptions: ["atlascloud"],
+    isOpenSource: false,
+  },
+  atlasCloudGpt54Mini: {
+    title: "GPT-5.4 Mini (Atlas Cloud)",
+    description:
+      "OpenAI GPT-5.4 Mini, served through the Atlas Cloud gateway. 400K context window.",
+    params: {
+      title: "GPT-5.4 Mini (Atlas Cloud)",
+      model: "openai/gpt-5.4-mini",
+      contextLength: 400_000,
+    },
+    providerOptions: ["atlascloud"],
+    isOpenSource: false,
+  },
+  atlasCloudClaudeSonnet46: {
+    title: "Claude Sonnet 4.6 (Atlas Cloud)",
+    description:
+      "Anthropic Claude Sonnet 4.6, served through the Atlas Cloud gateway. 200K context window.",
+    params: {
+      title: "Claude Sonnet 4.6 (Atlas Cloud)",
+      model: "anthropic/claude-sonnet-4.6",
+      contextLength: 200_000,
+    },
+    providerOptions: ["atlascloud"],
+    isOpenSource: false,
+  },
+  atlasCloudDeepseekV32: {
+    title: "DeepSeek V3.2 (Atlas Cloud)",
+    description:
+      "DeepSeek V3.2, served through the Atlas Cloud gateway. 164K context window.",
+    params: {
+      title: "DeepSeek V3.2 (Atlas Cloud)",
+      model: "deepseek-ai/deepseek-v3.2",
+      contextLength: 163_840,
+    },
+    providerOptions: ["atlascloud"],
+    isOpenSource: false,
+  },
+  atlasCloudQwen3235b: {
+    title: "Qwen3 235B Instruct (Atlas Cloud)",
+    description:
+      "Qwen3-235B-A22B-Instruct, served through the Atlas Cloud gateway. 131K context window.",
+    params: {
+      title: "Qwen3 235B Instruct (Atlas Cloud)",
+      model: "Qwen/Qwen3-235B-A22B-Instruct-2507",
+      contextLength: 131_072,
+    },
+    providerOptions: ["atlascloud"],
+    isOpenSource: false,
+  },
+  atlasCloudQwen35_35b: {
+    title: "Qwen3.5 35B A3B (Atlas Cloud)",
+    description:
+      "Qwen3.5 35B A3B, served through the Atlas Cloud gateway. 262K context window.",
+    params: {
+      title: "Qwen3.5 35B A3B (Atlas Cloud)",
+      model: "qwen/qwen3.5-35b-a3b",
+      contextLength: 262_144,
+    },
+    providerOptions: ["atlascloud"],
+    isOpenSource: false,
+  },
+  atlasCloudGlm46: {
+    title: "GLM-4.6 (Atlas Cloud)",
+    description:
+      "Z.AI GLM-4.6, served through the Atlas Cloud gateway. 203K context window.",
+    params: {
+      title: "GLM-4.6 (Atlas Cloud)",
+      model: "zai-org/GLM-4.6",
+      contextLength: 202_752,
+    },
+    providerOptions: ["atlascloud"],
+    isOpenSource: false,
+  },
+  atlasCloudKimiK25: {
+    title: "Kimi K2.5 (Atlas Cloud)",
+    description:
+      "Moonshot Kimi K2.5, served through the Atlas Cloud gateway. 262K context window.",
+    params: {
+      title: "Kimi K2.5 (Atlas Cloud)",
+      model: "moonshotai/kimi-k2.5",
+      contextLength: 262_144,
+    },
+    providerOptions: ["atlascloud"],
+    isOpenSource: false,
+  },
+  atlasCloudMinimaxM25: {
+    title: "MiniMax M2.5 (Atlas Cloud)",
+    description:
+      "MiniMax M2.5, served through the Atlas Cloud gateway. 197K context window.",
+    params: {
+      title: "MiniMax M2.5 (Atlas Cloud)",
+      model: "minimaxai/minimax-m2.5",
+      contextLength: 196_608,
+    },
+    providerOptions: ["atlascloud"],
+    isOpenSource: false,
+  },
+
   // ClawRouter Models
   clawrouterAuto: {
     title: "ClawRouter Auto",

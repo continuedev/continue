@@ -1,0 +1,60 @@
+---
+title: "How to Configure Atlas Cloud with Continue"
+sidebarTitle: "Atlas Cloud"
+---
+
+<Info>
+  Get your API key from the [Atlas Cloud Platform](https://www.atlascloud.ai/)
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: GPT-4.1 Mini (Atlas Cloud)
+      provider: atlascloud
+      model: openai/gpt-4.1-mini
+      apiKey: <YOUR_ATLASCLOUD_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GPT-4.1 Mini (Atlas Cloud)",
+        "provider": "atlascloud",
+        "model": "openai/gpt-4.1-mini",
+        "apiKey": "<YOUR_ATLASCLOUD_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+Atlas Cloud is an OpenAI-compatible gateway to 300+ models from a single endpoint, identified by `vendor/model` ids. `GET https://api.atlascloud.ai/v1/models` lists every model currently routable; a few commonly used ones:
+
+| Model                                 | Description                                        |
+| :------------------------------------- | :-------------------------------------------------- |
+| `openai/gpt-4.1-mini`                  | OpenAI GPT-4.1 Mini. 1M context window.             |
+| `openai/gpt-5.4-mini`                  | OpenAI GPT-5.4 Mini. 400K context window.           |
+| `anthropic/claude-sonnet-4.6`          | Anthropic Claude Sonnet 4.6. 200K context window.   |
+| `deepseek-ai/deepseek-v3.2`            | DeepSeek V3.2. 164K context window.                 |
+| `qwen/qwen3.5-35b-a3b`                 | Qwen3.5 35B A3B. 262K context window.               |
+| `zai-org/GLM-4.6`                      | Z.AI GLM-4.6. 203K context window.                  |
+| `moonshotai/kimi-k2.5`                 | Moonshot Kimi K2.5. 262K context window.            |
+| `minimaxai/minimax-m2.5`               | MiniMax M2.5. 197K context window.                  |
+
+## Notes
+
+- Atlas Cloud uses an OpenAI-compatible API at `https://api.atlascloud.ai/v1`
+- Set the `ATLASCLOUD_API_KEY` environment variable or configure `apiKey` in your config
