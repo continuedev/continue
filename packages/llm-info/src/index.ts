@@ -1,4 +1,5 @@
 import { Anthropic } from "./providers/anthropic.js";
+import { AtlasCloud } from "./providers/atlascloud.js";
 import { Azure } from "./providers/azure.js";
 import { Bedrock } from "./providers/bedrock.js";
 import { Cohere } from "./providers/cohere.js";
@@ -19,6 +20,7 @@ export const allModelProviders: ModelProvider[] = [
   OpenAi,
   Gemini,
   Anthropic,
+  AtlasCloud,
   Mistral,
   Voyage,
   Azure,

@@ -82,6 +82,11 @@ export const MiniMaxConfigSchema = OpenAIConfigSchema.extend({
 });
 export type MiniMaxConfig = z.infer<typeof MiniMaxConfigSchema>;
 
+export const AtlasCloudConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("atlascloud"),
+});
+export type AtlasCloudConfig = z.infer<typeof AtlasCloudConfigSchema>;
+
 export const BedrockConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("bedrock"),
   // cacheBehavior: z.object({
@@ -261,6 +266,7 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   MoonshotConfigSchema,
   DeepseekConfigSchema,
   MiniMaxConfigSchema,
+  AtlasCloudConfigSchema,
   CohereConfigSchema,
   AzureConfigSchema,
   GeminiConfigSchema,
