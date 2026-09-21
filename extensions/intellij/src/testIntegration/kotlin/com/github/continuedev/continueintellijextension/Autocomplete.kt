@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension
 import com.automation.remarks.junit5.Video
 import com.intellij.driver.sdk.ui.components.*
 import com.intellij.driver.sdk.wait
+import com.intellij.driver.sdk.waitFor
 import com.intellij.ide.starter.driver.engine.runIdeWithDriver
 import com.intellij.ide.starter.ide.IdeProductProvider
 import com.intellij.ide.starter.models.TestCase
@@ -38,6 +39,9 @@ class Autocomplete {
                     wait(2.seconds)
                     keyboard {
                         tab()
+                    }
+                    waitFor("autocomplete response from core binary", timeout = 30.seconds) {
+                        text.contains("TEST_LLM_RESPONSE_0")
                     }
                     assertTrue(text.contains("TEST_LLM_RESPONSE_0"))
                 }
