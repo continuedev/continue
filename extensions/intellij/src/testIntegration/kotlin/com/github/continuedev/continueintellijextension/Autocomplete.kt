@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension
 import com.automation.remarks.junit5.Video
 import com.intellij.driver.sdk.ui.components.*
 import com.intellij.driver.sdk.wait
+import com.intellij.driver.sdk.waitFor
 import com.intellij.ide.starter.driver.engine.runIdeWithDriver
 import com.intellij.ide.starter.ide.IdeProductProvider
 import com.intellij.ide.starter.models.TestCase
@@ -39,11 +40,8 @@ class Autocomplete {
                     keyboard {
                         tab()
                     }
-                    // Poll for autocomplete response from core binary (async via stdin/stdout);
-                    // CI runners can be slow, so use a generous timeout with frequent polling.
-                    val deadline = System.currentTimeMillis() + 30_000L
-                    while (!text.contains("TEST_LLM_RESPONSE_0") && System.currentTimeMillis() < deadline) {
-                        Thread.sleep(500)
+                    waitFor("autocomplete response from core binary", timeout = 30.seconds) {
+                        text.contains("TEST_LLM_RESPONSE_0")
                     }
                     assertTrue(text.contains("TEST_LLM_RESPONSE_0"))
                 }
