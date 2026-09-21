@@ -41,11 +41,13 @@ runs:
         distribution: zulu
         java-version: 17
 
-    - name: Setup FFmpeg
-      uses: AnimMouse/setup-ffmpeg@v1
-      with:
-        version: 7.1
-        token: ${{ inputs.github-token }}
+    - name: Install FFmpeg
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends ffmpeg
+        command -v ffmpeg
+        ffmpeg -version
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
