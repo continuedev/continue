@@ -113,7 +113,7 @@ export function handleToolCallsInMessage(
  * @param toolCallDelta - The incoming tool call delta from the LLM stream
  * @param toolCallStates - Array of existing tool call states (modified in place)
  */
-function applyToolCallDelta(
+export function applyToolCallDelta(
   toolCallDelta: ToolCallDelta,
   toolCallStates: ToolCallState[],
 ): void {
@@ -127,6 +127,13 @@ function applyToolCallDelta(
     existingStateIndex = toolCallStates.findIndex(
       (state) => state.toolCallId === toolCallDelta.id,
     );
+  } else if (toolCallDelta.index !== undefined) {
+    // No ID but a stream index is present (OpenAI parallel tool calls):
+    // initial fragments carry both, continuation fragments carry index only.
+    // Match by the position in the toolCalls array so one call's args
+    // are never applied to another call.
+    existingStateIndex =
+      toolCallDelta.index < toolCallStates.length ? toolCallDelta.index : -1;
   } else {
     // No ID in delta (common in OpenAI streaming fragments)
     // Strategy: Update the most recently added tool call that's still being generated
