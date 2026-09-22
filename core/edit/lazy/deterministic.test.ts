@@ -84,6 +84,46 @@ async function expectDiff(file: string) {
 }
 
 describe("deterministicApplyLazyEdit(", () => {
+  test("onlyFullFileRewrite rejects a bare un-anchored snippet", async () => {
+    // The edit tool streams whatever the model produced; a bare changed
+    // line without `// ... existing code ...` anchors must not be
+    // accepted as a full-file rewrite (it deletes the rest of the file).
+    const oldFile = Array.from(
+      { length: 100 },
+      (_, i) => `line ${i + 1}: existing content`,
+    ).join("\n");
+    const newLazyFile = "line 50: existing content (fixed)";
+
+    const result = await deterministicApplyLazyEdit({
+      oldFile,
+      newLazyFile,
+      filename: "test.js",
+      onlyFullFileRewrite: true,
+    });
+
+    expect(result).toBeUndefined();
+  });
+
+  test("onlyFullFileRewrite still accepts a genuine small fix", async () => {
+    const lines = Array.from(
+      { length: 100 },
+      (_, i) => `line ${i + 1}: existing content`,
+    );
+    const newFile = [...lines];
+    newFile[49] = "line 50: existing content (fixed)";
+
+    const result = await deterministicApplyLazyEdit({
+      oldFile: lines.join("\n"),
+      newLazyFile: newFile.join("\n"),
+      filename: "test.js",
+      onlyFullFileRewrite: true,
+    });
+
+    expect(result).toBeDefined();
+    expect(result!.filter((l) => l.type === "old")).toHaveLength(1);
+    expect(result!.filter((l) => l.type === "new")).toHaveLength(1);
+  });
+
   test("no changes", async () => {
     const file = dedent`
         function test() {

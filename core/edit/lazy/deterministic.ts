@@ -101,7 +101,12 @@ function reconstructNewFile(
 const REMOVAL_PERCENTAGE_THRESHOLD = 0.3;
 function shouldRejectDiff(diff: DiffLine[]): boolean {
   const numRemovals = diff.filter((line) => line.type === "old").length;
-  if (numRemovals / diff.length > REMOVAL_PERCENTAGE_THRESHOLD) {
+  const numKept = diff.filter((line) => line.type === "same").length;
+  const oldFileLines = numRemovals + numKept;
+  if (oldFileLines === 0) {
+    return false;
+  }
+  if (numRemovals / oldFileLines > REMOVAL_PERCENTAGE_THRESHOLD) {
     return true;
   }
   return false;
