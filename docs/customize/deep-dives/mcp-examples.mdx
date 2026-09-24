@@ -1,6 +1,6 @@
 ---
 title: "Example MCP Servers"
-keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify, atlassian, github, sanity, snyk, dlt, chrome-devtools]
+keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify, atlassian, github, sanity, snyk, dlt, chrome-devtools, myspec]
 ---
 
 Ready-to-use MCP server configurations for popular tools and services. Copy these into your `config.yaml` to get started.
@@ -182,6 +182,22 @@ mcpServers:
 ```
 
 See also: [Chrome DevTools MCP guide](/guides/chrome-devtools-mcp-performance)
+
+
+## MySpec
+
+[MySpec](https://myspec.dev) is an interactive Spec-Driven Development (SDD) platform that provides structured architectural context (`constitution.md`, `requirements.md`, `solution.md`, `tasks.md`) to prevent context drift and hallucinated scope creep in Continue agent workflows.
+
+**Local (stdio)**:
+
+```yaml
+mcpServers:
+  - name: MySpec
+    command: npx
+    args:
+      - "-y"
+      - "@myspec/mcp-server"
+```
 
 ## Other guides
 
