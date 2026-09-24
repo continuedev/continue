@@ -1,10 +1,9 @@
 import type { ChatHistoryItem } from "core";
 
 import { services } from "../services/index.js";
-import { serviceContainer } from "../services/ServiceContainer.js";
-import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
-import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
+import { ModelServiceState } from "../services/types.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
+import type { ToolCallPreview } from "../tools/types.js";
 import { escapeEvents } from "../util/cli.js";
 import { logger } from "../util/logger.js";
 
@@ -17,6 +16,12 @@ export interface SubAgentExecutionOptions {
   parentSessionId: string;
   abortController: AbortController;
   onOutputUpdate?: (output: string) => void;
+  onToolPermissionRequest?: (
+    toolName: string,
+    toolArgs: any,
+    requestId: string,
+    preview?: ToolCallPreview[],
+  ) => void;
 }
 
 /**
@@ -54,16 +59,16 @@ async function buildAgentSystemMessage(
 /**
  * Execute a subagent in a child session
  */
-// eslint-disable-next-line complexity
 export async function executeSubAgent(
   options: SubAgentExecutionOptions,
 ): Promise<SubAgentResult> {
-  const { agent: subAgent, prompt, abortController, onOutputUpdate } = options;
-
-  const mainAgentPermissionsState =
-    await serviceContainer.get<ToolPermissionServiceState>(
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-    );
+  const {
+    agent: subAgent,
+    prompt,
+    abortController,
+    onOutputUpdate,
+    onToolPermissionRequest,
+  } = options;
 
   try {
     logger.debug("Starting subagent execution", {
@@ -75,18 +80,9 @@ export async function executeSubAgent(
       throw new Error("Model or LLM API not available");
     }
 
-    // allow all tools for now
-    // todo: eventually we want to show the same prompt in a dialog whether asking whether that tool call is allowed or not
-
-    serviceContainer.set<ToolPermissionServiceState>(
-      SERVICE_NAMES.TOOL_PERMISSIONS,
-      {
-        ...mainAgentPermissionsState,
-        permissions: {
-          policies: [{ tool: "*", permission: "allow" }],
-        },
-      },
-    );
+    // The subagent runs under the parent session's tool permissions.
+    // "ask"-policy tool calls surface the same approval dialog through
+    // onToolPermissionRequest instead of being silently allowed or denied.
 
     // Build agent system message
     const systemMessage = await buildAgentSystemMessage(subAgent, services);
@@ -157,6 +153,7 @@ export async function executeSubAgent(
               onOutputUpdate(accumulatedOutput);
             }
           },
+          onToolPermissionRequest,
         },
         false, // Not compacting
       );
@@ -192,11 +189,6 @@ export async function executeSubAgent(
         chatHistorySvc.isReady = originalIsReady;
       }
 
-      // Restore original main agent tool permissions
-      serviceContainer.set<ToolPermissionServiceState>(
-        SERVICE_NAMES.TOOL_PERMISSIONS,
-        mainAgentPermissionsState,
-      );
     }
   } catch (error: any) {
     logger.error("Subagent execution failed", {

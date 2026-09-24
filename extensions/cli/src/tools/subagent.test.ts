@@ -118,4 +118,33 @@ describe("subagentTool", () => {
       "subagent-output\n<task_metadata>\nstatus: completed\n</task_metadata>",
     );
   });
+
+  it("run forwards the permission request callback to the executor", async () => {
+    vi.mocked(getAgentNames).mockReturnValue(["code-agent"]);
+    vi.mocked(getSubagent).mockReturnValue({
+      model: { name: "test-model" },
+    } as any);
+    vi.mocked(executeSubAgent).mockResolvedValue({
+      success: true,
+      response: "subagent-output",
+    } as any);
+
+    const tool = await subagentTool();
+    const onToolPermissionRequest = vi.fn();
+
+    await tool.run(
+      {
+        prompt: "Subagent prompt",
+        subagent_name: "code-agent",
+      },
+      {
+        toolCallId: "tool-call-id",
+        parallelToolCallCount: 1,
+        onToolPermissionRequest,
+      },
+    );
+
+    const [options] = vi.mocked(executeSubAgent).mock.calls[0];
+    expect(options.onToolPermissionRequest).toBe(onToolPermissionRequest);
+  });
 });
