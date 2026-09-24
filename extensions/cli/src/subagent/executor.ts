@@ -188,7 +188,6 @@ export async function executeSubAgent(
       if (chatHistorySvc && originalIsReady) {
         chatHistorySvc.isReady = originalIsReady;
       }
-
     }
   } catch (error: any) {
     logger.error("Subagent execution failed", {
