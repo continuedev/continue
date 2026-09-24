@@ -39,6 +39,17 @@ export interface ToolRunContext {
    * Tools should divide their output limits by this number to avoid context overflow.
    */
   parallelToolCallCount: number;
+  /**
+   * Surfaces a tool permission prompt to the user. Forwarded to nested
+   * execution contexts (e.g. subagents) so their "ask"-policy tool calls
+   * show the same approval dialog as top-level tool calls.
+   */
+  onToolPermissionRequest?: (
+    toolName: string,
+    toolArgs: any,
+    requestId: string,
+    preview?: ToolCallPreview[],
+  ) => void;
 }
 
 export interface Tool {

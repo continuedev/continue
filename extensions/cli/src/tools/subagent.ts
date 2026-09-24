@@ -10,7 +10,7 @@ import {
 import { SUBAGENT_TOOL_META } from "../subagent/index.js";
 import { logger } from "../util/logger.js";
 
-import { Tool } from "./types.js";
+import { Tool, ToolRunContext } from "./types.js";
 
 export const subagentTool = async (): Promise<Tool> => {
   const modelServiceState = await serviceContainer.get<ModelServiceState>(
@@ -60,7 +60,7 @@ export const subagentTool = async (): Promise<Tool> => {
       };
     },
 
-    run: async (args: any, context?: { toolCallId: string }) => {
+    run: async (args: any, context?: ToolRunContext) => {
       const { prompt, subagent_name } = args;
 
       logger.debug("subagent args", { args, context });
@@ -83,6 +83,7 @@ export const subagentTool = async (): Promise<Tool> => {
         prompt,
         parentSessionId,
         abortController: new AbortController(),
+        onToolPermissionRequest: context?.onToolPermissionRequest,
         onOutputUpdate: context?.toolCallId
           ? (output: string) => {
               try {

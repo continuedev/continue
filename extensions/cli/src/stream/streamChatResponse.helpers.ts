@@ -566,6 +566,7 @@ export async function executeStreamedToolCalls(
 
             const toolResult = await executeToolCall(call, {
               parallelToolCallCount,
+              onToolPermissionRequest: callbacks?.onToolPermissionRequest,
             });
             const entry: ToolResultWithStatus = {
               role: "tool",
