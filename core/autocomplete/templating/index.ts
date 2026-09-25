@@ -200,13 +200,18 @@ function buildPrompt(
   return { prompt, prefix, suffix };
 }
 
+const MIN_AUTOCOMPLETE_PROMPT_TOKENS = 256;
+
 function pruneLength(llm: ILLM, prompt: string): number {
   const contextLength = llm.contextLength;
   const reservedTokens = llm.completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS;
   const safetyBuffer = getTokenCountingBufferSafety(contextLength);
-  const maxAllowedPromptTokens = contextLength - reservedTokens - safetyBuffer;
+  const maxAllowedPromptTokens = Math.max(
+    MIN_AUTOCOMPLETE_PROMPT_TOKENS,
+    contextLength - reservedTokens - safetyBuffer,
+  );
   const promptTokenCount = countTokens(prompt, llm.model);
-  return promptTokenCount - maxAllowedPromptTokens;
+  return Math.max(0, promptTokenCount - maxAllowedPromptTokens);
 }
 
 export function renderPromptWithTokenLimit({
