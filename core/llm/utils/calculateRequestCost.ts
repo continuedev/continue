@@ -86,56 +86,52 @@ function calculateAnthropicCost(
   }
 
   if (!modelPricing) {
-    return null; // Unknown model
+    return null;
   }
 
-  // Calculate costs
-  const inputCost = (usage.promptTokens / 1_000_000) * modelPricing.input;
+  const cachedTokens = usage.promptTokensDetails?.cachedTokens ?? 0;
+  const cacheWriteTokens = usage.promptTokensDetails?.cacheWriteTokens ?? 0;
+  const uncachedInputTokens = Math.max(
+    0,
+    usage.promptTokens - cachedTokens - cacheWriteTokens,
+  );
+
+  const uncachedInputCost =
+    (uncachedInputTokens / 1_000_000) * modelPricing.input;
+  const cacheWriteCost =
+    (cacheWriteTokens / 1_000_000) * modelPricing.cacheWrite;
+  const cacheReadCost = (cachedTokens / 1_000_000) * modelPricing.cacheRead;
   const outputCost = (usage.completionTokens / 1_000_000) * modelPricing.output;
 
-  // Build breakdown components
+  const totalCost =
+    uncachedInputCost + cacheWriteCost + cacheReadCost + outputCost;
+
   const breakdownParts: string[] = [];
 
-  // Input tokens breakdown
-  if (usage.promptTokens > 0) {
+  if (uncachedInputTokens > 0) {
     breakdownParts.push(
-      `Input: ${usage.promptTokens.toLocaleString()} tokens × $${modelPricing.input}/MTok = $${inputCost.toFixed(6)}`,
+      `Input: ${uncachedInputTokens.toLocaleString()} tokens × $${modelPricing.input}/MTok = $${uncachedInputCost.toFixed(6)}`,
     );
   }
 
-  // Output tokens breakdown
+  if (cacheWriteTokens > 0) {
+    breakdownParts.push(
+      `Cache Write: ${cacheWriteTokens.toLocaleString()} tokens × $${modelPricing.cacheWrite}/MTok = $${cacheWriteCost.toFixed(6)}`,
+    );
+  }
+
+  if (cachedTokens > 0) {
+    breakdownParts.push(
+      `Cache Read: ${cachedTokens.toLocaleString()} tokens × $${modelPricing.cacheRead}/MTok = $${cacheReadCost.toFixed(6)}`,
+    );
+  }
+
   if (usage.completionTokens > 0) {
     breakdownParts.push(
       `Output: ${usage.completionTokens.toLocaleString()} tokens × $${modelPricing.output}/MTok = $${outputCost.toFixed(6)}`,
     );
   }
 
-  // Handle prompt caching costs if available
-  let cacheCost = 0;
-  if (usage.promptTokensDetails) {
-    const { cachedTokens, cacheWriteTokens } = usage.promptTokensDetails;
-
-    if (cacheWriteTokens && cacheWriteTokens > 0) {
-      const cacheWriteCost =
-        (cacheWriteTokens / 1_000_000) * modelPricing.cacheWrite;
-      cacheCost += cacheWriteCost;
-      breakdownParts.push(
-        `Cache Write: ${cacheWriteTokens.toLocaleString()} tokens × $${modelPricing.cacheWrite}/MTok = $${cacheWriteCost.toFixed(6)}`,
-      );
-    }
-
-    if (cachedTokens && cachedTokens > 0) {
-      const cacheReadCost = (cachedTokens / 1_000_000) * modelPricing.cacheRead;
-      cacheCost += cacheReadCost;
-      breakdownParts.push(
-        `Cache Read: ${cachedTokens.toLocaleString()} tokens × $${modelPricing.cacheRead}/MTok = $${cacheReadCost.toFixed(6)}`,
-      );
-    }
-  }
-
-  const totalCost = inputCost + outputCost + cacheCost;
-
-  // Build final breakdown string
   let breakdown = `Model: ${model}\n`;
   breakdown += breakdownParts.join("\n");
   if (breakdownParts.length > 1) {
@@ -152,28 +148,21 @@ function calculateOpenAICost(
   model: string,
   usage: Usage,
 ): CostBreakdown | null {
-  // Normalize model name
   const normalizedModel = model.toLowerCase();
 
-  // Define pricing per million tokens (MTok) by model family prefix
-  const pricing: Record<string, { input: number; output: number }> = {
-    // GPT-4o models (most specific first)
-    "gpt-4o-mini": { input: 0.15, output: 0.6 },
-    "gpt-4o": { input: 2.5, output: 10 },
-
-    // GPT-4 Turbo models
-    "gpt-4-turbo": { input: 10, output: 30 },
-
-    // GPT-3.5 Turbo models (most specific first)
-    "gpt-3.5-turbo-0125": { input: 0.5, output: 1.5 },
-    "gpt-3.5-turbo-1106": { input: 1, output: 2 },
-    "gpt-3.5-turbo": { input: 1.5, output: 2 },
-
-    // Base GPT-4 (fallback for other gpt-4 variants)
-    "gpt-4": { input: 30, output: 60 },
+  const pricing: Record<
+    string,
+    { input: number; output: number; cachedInput: number }
+  > = {
+    "gpt-4o-mini": { input: 0.15, output: 0.6, cachedInput: 0.075 },
+    "gpt-4o": { input: 2.5, output: 10, cachedInput: 1.25 },
+    "gpt-4-turbo": { input: 10, output: 30, cachedInput: 5 },
+    "gpt-3.5-turbo-0125": { input: 0.5, output: 1.5, cachedInput: 0.25 },
+    "gpt-3.5-turbo-1106": { input: 1, output: 2, cachedInput: 0.5 },
+    "gpt-3.5-turbo": { input: 1.5, output: 2, cachedInput: 0.75 },
+    "gpt-4": { input: 30, output: 60, cachedInput: 15 },
   };
 
-  // Sort keys by length (longest first) to match most specific patterns first
   const sortedKeys = Object.keys(pricing).sort((a, b) => b.length - a.length);
 
   let modelPricing = null;
@@ -185,19 +174,32 @@ function calculateOpenAICost(
   }
 
   if (!modelPricing) {
-    return null; // Unknown model
+    return null;
   }
 
-  // Calculate costs
-  const inputCost = (usage.promptTokens / 1_000_000) * modelPricing.input;
+  const cachedTokens = usage.promptTokensDetails?.cachedTokens ?? 0;
+  const uncachedInputTokens = Math.max(0, usage.promptTokens - cachedTokens);
+
+  const uncachedInputCost =
+    (uncachedInputTokens / 1_000_000) * modelPricing.input;
+  const cachedInputCost =
+    (cachedTokens / 1_000_000) * modelPricing.cachedInput;
   const outputCost = (usage.completionTokens / 1_000_000) * modelPricing.output;
 
-  // Build breakdown components
+  const inputCost = uncachedInputCost + cachedInputCost;
+  const totalCost = inputCost + outputCost;
+
   const breakdownParts: string[] = [];
 
-  if (usage.promptTokens > 0) {
+  if (uncachedInputTokens > 0) {
     breakdownParts.push(
-      `Input: ${usage.promptTokens.toLocaleString()} tokens × $${modelPricing.input}/MTok = $${inputCost.toFixed(6)}`,
+      `Input: ${uncachedInputTokens.toLocaleString()} tokens × $${modelPricing.input}/MTok = $${uncachedInputCost.toFixed(6)}`,
+    );
+  }
+
+  if (cachedTokens > 0) {
+    breakdownParts.push(
+      `Cached Input: ${cachedTokens.toLocaleString()} tokens × $${modelPricing.cachedInput}/MTok = $${cachedInputCost.toFixed(6)}`,
     );
   }
 
@@ -207,9 +209,6 @@ function calculateOpenAICost(
     );
   }
 
-  const totalCost = inputCost + outputCost;
-
-  // Build final breakdown string
   let breakdown = `Model: ${model}\n`;
   breakdown += breakdownParts.join("\n");
   if (breakdownParts.length > 1) {
