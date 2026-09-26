@@ -1,0 +1,31 @@
+---
+title: "How to Configure Bourse with Continue"
+sidebarTitle: "Bourse"
+---
+
+<Info>
+  Bourse provides access to models through an OpenAI-compatible API. Get an API
+  key and review the models currently listed in the live catalogue at
+  [bourse.run](https://bourse.run).
+</Info>
+
+## Configuration
+
+Add a model with the `openai` provider and set `apiBase` to the Bourse API
+endpoint:
+
+```yaml title="config.yaml"
+name: My Config
+version: 0.0.1
+schema: v1
+
+models:
+  - name: A Bourse model
+    provider: openai
+    model: <MODEL_ID>
+    apiBase: https://api.bourse.run/v1
+    apiKey: <YOUR_BOURSE_API_KEY>
+```
+
+Replace `<MODEL_ID>` with a model identifier currently listed in the Bourse
+catalogue.
