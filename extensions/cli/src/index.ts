@@ -318,6 +318,16 @@ program
   )
   .option("--port <port>", "Port to run the server on (default: 8000)", "8000")
   .option(
+    "--host <host>",
+    "Host to bind the server to (default: 127.0.0.1)",
+    "127.0.0.1",
+  )
+  .option(
+    "--auth-token <token>",
+    "Bearer token required to authenticate requests to the server (default: generated)",
+  )
+  .option("--no-auth", "Disable authentication requirement for the server")
+  .option(
     "--id <storageId>",
     "Upload session snapshots to Continue-managed storage using the provided identifier",
   )
