@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 import chalk from "chalk";
 import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
@@ -46,6 +48,9 @@ import {
 interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
   port?: string;
+  host?: string;
+  authToken?: string;
+  noAuth?: boolean;
   /** Storage identifier for remote sync */
   id?: string;
 }
@@ -88,6 +93,15 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const timeoutSeconds = parseInt(options.timeout || "300", 10);
   const timeoutMs = timeoutSeconds * 1000;
   const port = parseInt(options.port || "8000", 10);
+  const host = options.host || process.env.CONTINUE_SERVER_HOST || "127.0.0.1";
+  const authDisabled =
+    options.noAuth || process.env.CONTINUE_ALLOW_UNAUTHENTICATED === "true";
+  const authToken = authDisabled
+    ? null
+    : options.authToken ||
+      process.env.CONTINUE_SERVER_TOKEN ||
+      process.env.CONTINUE_API_KEY ||
+      crypto.randomBytes(24).toString("hex");
 
   // Environment install script will be deferred until after server startup to avoid blocking
 
@@ -210,6 +224,24 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   const app = express();
   app.use(express.json());
+
+  // Require authentication token unless explicitly disabled
+  if (authToken) {
+    app.use((req: Request, res: Response, next) => {
+      const authHeader = req.headers.authorization;
+      const bearerToken = authHeader?.startsWith("Bearer ")
+        ? authHeader.slice(7).trim()
+        : (req.headers["x-continue-token"] as string | undefined) ||
+          (req.query.token as string | undefined);
+
+      if (!bearerToken || bearerToken !== authToken) {
+        return res.status(401).json({
+          error: "Unauthorized: Invalid or missing authentication token",
+        });
+      }
+      next();
+    });
+  }
 
   // GET /state - Return the current state
   app.get("/state", (_req: Request, res: Response) => {
@@ -385,8 +417,16 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     setTimeout(handleExitResponse, 100);
   });
 
-  const server = app.listen(port, async () => {
-    console.log(chalk.green(`Server started on http://localhost:${port}`));
+  const server = app.listen(port, host, async () => {
+    console.log(chalk.green(`Server started on http://${host}:${port}`));
+    if (authToken) {
+      console.log(chalk.yellow(`Authentication token: ${authToken}`));
+      console.log(
+        chalk.dim(
+          "Requests require header: 'Authorization: Bearer <token>' or 'x-continue-token: <token>'",
+        ),
+      );
+    }
     console.log(chalk.dim("Endpoints:"));
     console.log(chalk.dim("  GET  /state      - Get current agent state"));
     console.log(
