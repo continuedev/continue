@@ -2,12 +2,6 @@ import chalk from "chalk";
 import type { ChatHistoryItem } from "core/index.js";
 import express, { Request, Response } from "express";
 
-import {
-  createAuthMiddleware,
-  getServeAuthToken,
-  getServeHost,
-} from "./serveSecurity.js";
-
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 import { prependPrompt } from "src/util/promptProcessor.js";
 
@@ -48,6 +42,11 @@ import {
   streamChatResponseWithInterruption,
   type ServerState,
 } from "./serve.helpers.js";
+import {
+  createAuthMiddleware,
+  getServeAuthToken,
+  getServeHost,
+} from "./serveSecurity.js";
 
 interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
@@ -405,7 +404,11 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     console.log(chalk.green(`Server started on http://${host}:${port}`));
     if (authToken) {
       console.log(chalk.yellow(`Authentication token: ${authToken}`));
-      console.log(chalk.dim("Requests require header: 'Authorization: Bearer <token>' or 'x-continue-token: <token>'"));
+      console.log(
+        chalk.dim(
+          "Requests require header: 'Authorization: Bearer <token>' or 'x-continue-token: <token>'",
+        ),
+      );
     }
     console.log(chalk.dim("Endpoints:"));
     console.log(chalk.dim("  GET  /state      - Get current agent state"));
