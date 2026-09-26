@@ -1,4 +1,5 @@
 import crypto from "crypto";
+
 import type { NextFunction, Request, Response } from "express";
 
 export function getServeHost(options: { host?: string }): string {

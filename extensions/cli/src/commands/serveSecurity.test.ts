@@ -14,9 +14,9 @@ describe("serveSecurity", () => {
 
   it("handles getServeAuthToken correctly", () => {
     expect(getServeAuthToken({ noAuth: true })).toBeNull();
-    expect(
-      getServeAuthToken({ authToken: "custom-secret" }),
-    ).toBe("custom-secret");
+    expect(getServeAuthToken({ authToken: "custom-secret" })).toBe(
+      "custom-secret",
+    );
     const generated = getServeAuthToken({});
     expect(generated).toBeTruthy();
     expect(generated!.length).toBeGreaterThan(16);
