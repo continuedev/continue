@@ -5,7 +5,8 @@ sidebarTitle: "Bourse"
 
 <Info>
   Bourse provides access to models through an OpenAI-compatible API. Get an API
-  key and review the available models and pricing at [bourse.run](https://bourse.run).
+  key and review the models currently listed in the live catalogue at
+  [bourse.run](https://bourse.run).
 </Info>
 
 ## Configuration
@@ -19,12 +20,12 @@ version: 0.0.1
 schema: v1
 
 models:
-  - name: Claude Opus 5 (Bourse)
+  - name: A Bourse model
     provider: openai
-    model: claude-opus-5
+    model: <MODEL_ID>
     apiBase: https://api.bourse.run/v1
     apiKey: <YOUR_BOURSE_API_KEY>
 ```
 
-Replace `claude-opus-5` with the model identifier listed in the Bourse
-catalogue when selecting another model.
+Replace `<MODEL_ID>` with a model identifier currently listed in the Bourse
+catalogue.
