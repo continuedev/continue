@@ -326,10 +326,7 @@ program
     "--auth-token <token>",
     "Bearer token required to authenticate requests to the server (default: generated)",
   )
-  .option(
-    "--no-auth",
-    "Disable authentication requirement for the server",
-  )
+  .option("--no-auth", "Disable authentication requirement for the server")
   .option(
     "--id <storageId>",
     "Upload session snapshots to Continue-managed storage using the provided identifier",
