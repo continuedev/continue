@@ -42,10 +42,18 @@ import {
   streamChatResponseWithInterruption,
   type ServerState,
 } from "./serve.helpers.js";
+import {
+  createAuthMiddleware,
+  getServeAuthToken,
+  getServeHost,
+} from "./serveSecurity.js";
 
 interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
   port?: string;
+  host?: string;
+  authToken?: string;
+  noAuth?: boolean;
   /** Storage identifier for remote sync */
   id?: string;
 }
@@ -88,6 +96,8 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const timeoutSeconds = parseInt(options.timeout || "300", 10);
   const timeoutMs = timeoutSeconds * 1000;
   const port = parseInt(options.port || "8000", 10);
+  const host = getServeHost(options);
+  const authToken = getServeAuthToken(options);
 
   // Environment install script will be deferred until after server startup to avoid blocking
 
@@ -210,6 +220,11 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   const app = express();
   app.use(express.json());
+
+  // Require authentication token unless explicitly disabled
+  if (authToken) {
+    app.use(createAuthMiddleware(authToken));
+  }
 
   // GET /state - Return the current state
   app.get("/state", (_req: Request, res: Response) => {
@@ -385,8 +400,16 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     setTimeout(handleExitResponse, 100);
   });
 
-  const server = app.listen(port, async () => {
-    console.log(chalk.green(`Server started on http://localhost:${port}`));
+  const server = app.listen(port, host, async () => {
+    console.log(chalk.green(`Server started on http://${host}:${port}`));
+    if (authToken) {
+      console.log(chalk.yellow(`Authentication token: ${authToken}`));
+      console.log(
+        chalk.dim(
+          "Requests require header: 'Authorization: Bearer <token>' or 'x-continue-token: <token>'",
+        ),
+      );
+    }
     console.log(chalk.dim("Endpoints:"));
     console.log(chalk.dim("  GET  /state      - Get current agent state"));
     console.log(
