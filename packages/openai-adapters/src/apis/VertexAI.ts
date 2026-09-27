@@ -57,21 +57,26 @@ export class VertexAIApi implements BaseLlmApi {
 
   private setupGenAI(): void {
     const { apiKey, env } = this.config;
+    const region = this.config.region ?? env?.region;
+    const projectId = this.config.projectId ?? env?.projectId;
 
     if (apiKey) {
       this.genAI = new GoogleGenAI({ apiKey });
-    } else if (env?.projectId && env?.region) {
+    } else if (projectId && region) {
       this.genAI = new GoogleGenAI({
         vertexai: true,
-        project: env.projectId,
-        location: env.region,
+        project: projectId,
+        location: region,
       });
     }
   }
 
   private setupAuthentication(): void {
     const { apiKey, env } = this.config;
-    const { region, projectId, keyFile, keyJson } = env || {};
+    const region = this.config.region ?? env?.region;
+    const projectId = this.config.projectId ?? env?.projectId;
+    const keyFile = env?.keyFile;
+    const keyJson = env?.keyJson;
 
     // Validate authentication configuration
     if (apiKey) {
@@ -153,7 +158,8 @@ export class VertexAIApi implements BaseLlmApi {
       return "https://aiplatform.googleapis.com/v1/";
     } else {
       // Standard mode
-      const { region, projectId } = env!;
+      const region = this.config.region ?? env?.region;
+      const projectId = this.config.projectId ?? env?.projectId;
       const host =
         region === "global"
           ? "aiplatform.googleapis.com"

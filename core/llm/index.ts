@@ -316,7 +316,18 @@ export abstract class BaseLLM implements ILLM {
       apiKey: this.apiKey ?? "",
       apiBase: this.apiBase,
       requestOptions: this.requestOptions,
-      env: this._llmOptions.env,
+      region: this.apiKey ? undefined : this.region,
+      projectId: this.apiKey ? undefined : this.projectId,
+      env: this.apiKey
+        ? this._llmOptions.env
+        : {
+            region: this.region,
+            projectId: this.projectId,
+            profile: this.profile,
+            accessKeyId: this.accessKeyId,
+            secretAccessKey: this.secretAccessKey,
+            ...this._llmOptions.env,
+          },
       useResponsesApi: this._llmOptions.useResponsesApi,
     });
   }

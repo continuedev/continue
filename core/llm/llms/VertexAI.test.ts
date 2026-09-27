@@ -1,4 +1,4 @@
-import VertexAI from "./VertexAI.js";
+import VertexAI from "./VertexAI";
 
 describe("VertexAI", () => {
   describe("apiBase construction", () => {

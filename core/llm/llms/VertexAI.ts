@@ -181,6 +181,8 @@ class VertexAI extends BaseLLM {
       }
     }
 
+    this.openaiAdapter = this.createOpenAiAdapter();
+
     // Uses instances of other LLMs since underlying functionality is the same
     this.anthropicInstance = new Anthropic(_options);
     this.geminiInstance = new Gemini(_options);
