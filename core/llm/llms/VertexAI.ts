@@ -23,6 +23,8 @@ class VertexAI extends BaseLLM {
   };
 
   private clientPromise?: Promise<AuthClient | void>;
+  private keyFile?: string | number | boolean;
+  private keyJson?: string | number | boolean;
 
   private getClientPromise(): Promise<AuthClient | void> {
     if (!this.clientPromise) {
@@ -90,6 +92,8 @@ class VertexAI extends BaseLLM {
     const { apiKey, region, projectId, env } = _options;
     const keyFile = env?.keyFile;
     const keyJson = env?.keyJson;
+    this.keyFile = keyFile;
+    this.keyJson = keyJson;
 
     // Acceptable authentication methods:
     // apiKey only
@@ -514,9 +518,9 @@ class VertexAI extends BaseLLM {
   }
 
   private initClient(): Promise<AuthClient | void> {
-    const { apiKey, env } = this._llmOptions;
-    const keyFile = env?.keyFile;
-    const keyJson = env?.keyJson;
+    const apiKey = this.apiKey;
+    const keyFile = this.keyFile;
+    const keyJson = this.keyJson;
 
     if (keyJson) {
       if (typeof keyJson !== "string") {
