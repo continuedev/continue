@@ -30,12 +30,13 @@ export class VertexAIApi implements BaseLlmApi {
   anthropicInstance: AnthropicApi;
   geminiInstance: GeminiApi;
   mistralInstance: OpenAIApi;
-  private _clientPromise?: Promise<AuthClient | void>;
-  private get clientPromise(): Promise<AuthClient | void> {
-    if (!this._clientPromise) {
-      this._clientPromise = this.initClient();
+  private clientPromise?: Promise<AuthClient | void>;
+
+  private getClientPromise(): Promise<AuthClient | void> {
+    if (!this.clientPromise) {
+      this.clientPromise = this.initClient();
     }
-    return this._clientPromise;
+    return this.clientPromise;
   }
   private genAI?: GoogleGenAI;
   static AUTH_SCOPES = "https://www.googleapis.com/auth/cloud-platform";
@@ -212,7 +213,7 @@ export class VertexAIApi implements BaseLlmApi {
       return headers;
     } else {
       // Standard mode - use OAuth token
-      const client = await this.clientPromise;
+      const client = await this.getClientPromise();
       const result = await client?.getAccessToken();
       if (!result?.token) {
         throw new Error(

@@ -22,12 +22,13 @@ class VertexAI extends BaseLLM {
     region: "us-central1",
   };
 
-  private _clientPromise?: Promise<AuthClient | void>;
-  private get clientPromise(): Promise<AuthClient | void> {
-    if (!this._clientPromise) {
-      this._clientPromise = this.initClient();
+  private clientPromise?: Promise<AuthClient | void>;
+
+  private getClientPromise(): Promise<AuthClient | void> {
+    if (!this.clientPromise) {
+      this.clientPromise = this.initClient();
     }
-    return this._clientPromise;
+    return this.clientPromise;
   }
 
   protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [
@@ -152,7 +153,7 @@ class VertexAI extends BaseLLM {
     if (this.apiKey) {
       url.searchParams.set("key", this.apiKey);
     } else {
-      const client = await this.clientPromise;
+      const client = await this.getClientPromise();
       const result = await client?.getAccessToken();
       if (!result?.token) {
         throw new Error(
@@ -480,7 +481,7 @@ class VertexAI extends BaseLLM {
   }
 
   protected async _embed(chunks: string[]): Promise<number[][]> {
-    const client = await this.clientPromise;
+    const client = await this.getClientPromise();
     const result = await client?.getAccessToken();
     if (!result?.token) {
       throw new Error(
