@@ -236,6 +236,8 @@ export type InceptionConfig = z.infer<typeof InceptionConfigSchema>;
 
 export const VertexAIConfigSchema = BasePlusConfig.extend({
   provider: z.literal("vertexai"),
+  region: z.string().optional(),
+  projectId: z.string().optional(),
   env: z
     .object({
       region: z.string().optional(),

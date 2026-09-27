@@ -31,6 +31,13 @@ export class VertexAIApi implements BaseLlmApi {
   geminiInstance: GeminiApi;
   mistralInstance: OpenAIApi;
   private clientPromise?: Promise<AuthClient | void>;
+
+  private getClientPromise(): Promise<AuthClient | void> {
+    if (!this.clientPromise) {
+      this.clientPromise = this.initClient();
+    }
+    return this.clientPromise;
+  }
   private genAI?: GoogleGenAI;
   static AUTH_SCOPES = "https://www.googleapis.com/auth/cloud-platform";
 
@@ -57,21 +64,26 @@ export class VertexAIApi implements BaseLlmApi {
 
   private setupGenAI(): void {
     const { apiKey, env } = this.config;
+    const region = this.config.region ?? env?.region;
+    const projectId = this.config.projectId ?? env?.projectId;
 
     if (apiKey) {
       this.genAI = new GoogleGenAI({ apiKey });
-    } else if (env?.projectId && env?.region) {
+    } else if (projectId && region) {
       this.genAI = new GoogleGenAI({
         vertexai: true,
-        project: env.projectId,
-        location: env.region,
+        project: projectId,
+        location: region,
       });
     }
   }
 
   private setupAuthentication(): void {
     const { apiKey, env } = this.config;
-    const { region, projectId, keyFile, keyJson } = env || {};
+    const region = this.config.region ?? env?.region;
+    const projectId = this.config.projectId ?? env?.projectId;
+    const keyFile = env?.keyFile;
+    const keyJson = env?.keyJson;
 
     // Validate authentication configuration
     if (apiKey) {
@@ -94,8 +106,13 @@ export class VertexAIApi implements BaseLlmApi {
         );
       }
     }
+  }
 
-    // Set up authentication client
+  private initClient(): Promise<AuthClient | void> {
+    const { apiKey, env } = this.config;
+    const keyFile = env?.keyFile;
+    const keyJson = env?.keyJson;
+
     if (keyJson) {
       try {
         const parsed = JSON.parse(keyJson);
@@ -109,7 +126,7 @@ export class VertexAIApi implements BaseLlmApi {
         } else {
           throw new Error("VertexAI: keyJson must be a valid JWT");
         }
-        this.clientPromise = Promise.resolve(jsonClient);
+        return Promise.resolve(jsonClient);
       } catch (e) {
         throw new Error("VertexAI: Failed to parse keyJson");
       }
@@ -117,7 +134,7 @@ export class VertexAIApi implements BaseLlmApi {
       if (typeof keyFile !== "string") {
         throw new Error("VertexAI: keyFile must be a string");
       }
-      this.clientPromise = new GoogleAuth({
+      return new GoogleAuth({
         scopes: VertexAIApi.AUTH_SCOPES,
         keyFile,
       })
@@ -128,8 +145,7 @@ export class VertexAIApi implements BaseLlmApi {
           );
         });
     } else if (!apiKey) {
-      // Application Default Credentials
-      this.clientPromise = new GoogleAuth({
+      return new GoogleAuth({
         scopes: VertexAIApi.AUTH_SCOPES,
       })
         .getClient()
@@ -139,6 +155,8 @@ export class VertexAIApi implements BaseLlmApi {
           );
         });
     }
+
+    return Promise.resolve();
   }
 
   private getApiBase(): string {
@@ -153,8 +171,15 @@ export class VertexAIApi implements BaseLlmApi {
       return "https://aiplatform.googleapis.com/v1/";
     } else {
       // Standard mode
-      const { region, projectId } = env!;
-      return `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/`;
+      const region = this.config.region ?? env?.region;
+      const projectId = this.config.projectId ?? env?.projectId;
+      const host =
+        region === "global"
+          ? "aiplatform.googleapis.com"
+          : region === "us" || region === "eu"
+            ? `aiplatform.${region}.rep.googleapis.com`
+            : `${region}-aiplatform.googleapis.com`;
+      return `https://${host}/v1/projects/${projectId}/locations/${region}/`;
     }
   }
 
@@ -188,7 +213,7 @@ export class VertexAIApi implements BaseLlmApi {
       return headers;
     } else {
       // Standard mode - use OAuth token
-      const client = await this.clientPromise;
+      const client = await this.getClientPromise();
       const result = await client?.getAccessToken();
       if (!result?.token) {
         throw new Error(
