@@ -30,7 +30,13 @@ export class VertexAIApi implements BaseLlmApi {
   anthropicInstance: AnthropicApi;
   geminiInstance: GeminiApi;
   mistralInstance: OpenAIApi;
-  private clientPromise?: Promise<AuthClient | void>;
+  private _clientPromise?: Promise<AuthClient | void>;
+  private get clientPromise(): Promise<AuthClient | void> {
+    if (!this._clientPromise) {
+      this._clientPromise = this.initClient();
+    }
+    return this._clientPromise;
+  }
   private genAI?: GoogleGenAI;
   static AUTH_SCOPES = "https://www.googleapis.com/auth/cloud-platform";
 
@@ -99,8 +105,13 @@ export class VertexAIApi implements BaseLlmApi {
         );
       }
     }
+  }
 
-    // Set up authentication client
+  private initClient(): Promise<AuthClient | void> {
+    const { apiKey, env } = this.config;
+    const keyFile = env?.keyFile;
+    const keyJson = env?.keyJson;
+
     if (keyJson) {
       try {
         const parsed = JSON.parse(keyJson);
@@ -114,7 +125,7 @@ export class VertexAIApi implements BaseLlmApi {
         } else {
           throw new Error("VertexAI: keyJson must be a valid JWT");
         }
-        this.clientPromise = Promise.resolve(jsonClient);
+        return Promise.resolve(jsonClient);
       } catch (e) {
         throw new Error("VertexAI: Failed to parse keyJson");
       }
@@ -122,7 +133,7 @@ export class VertexAIApi implements BaseLlmApi {
       if (typeof keyFile !== "string") {
         throw new Error("VertexAI: keyFile must be a string");
       }
-      this.clientPromise = new GoogleAuth({
+      return new GoogleAuth({
         scopes: VertexAIApi.AUTH_SCOPES,
         keyFile,
       })
@@ -133,8 +144,7 @@ export class VertexAIApi implements BaseLlmApi {
           );
         });
     } else if (!apiKey) {
-      // Application Default Credentials
-      this.clientPromise = new GoogleAuth({
+      return new GoogleAuth({
         scopes: VertexAIApi.AUTH_SCOPES,
       })
         .getClient()
@@ -144,6 +154,8 @@ export class VertexAIApi implements BaseLlmApi {
           );
         });
     }
+
+    return Promise.resolve();
   }
 
   private getApiBase(): string {

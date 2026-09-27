@@ -22,7 +22,13 @@ class VertexAI extends BaseLLM {
     region: "us-central1",
   };
 
-  private clientPromise: Promise<AuthClient | void>;
+  private _clientPromise?: Promise<AuthClient | void>;
+  private get clientPromise(): Promise<AuthClient | void> {
+    if (!this._clientPromise) {
+      this._clientPromise = this.initClient();
+    }
+    return this._clientPromise;
+  }
 
   protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [
     "chat",
@@ -114,55 +120,6 @@ class VertexAI extends BaseLLM {
           "VertexAI credentials can be configured with either keyFile or keyJson but not both",
         );
       }
-    }
-
-    if (keyJson) {
-      // Loading keys from manually set JSON
-      if (typeof keyJson !== "string") {
-        throw new Error("VertexAI: keyJson must be a JSON string");
-      }
-      try {
-        const parsed = JSON.parse(keyJson);
-        if (!parsed?.private_key) {
-          throw new Error("VertexAI: keyJson must contain a valid private key");
-        }
-        parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
-        const jsonClient = auth.fromJSON(parsed);
-        if (jsonClient instanceof JWT) {
-          jsonClient.scopes = [VertexAI.AUTH_SCOPES];
-        } else {
-          throw new Error("VertexAI: keyJson must be a valid JWT");
-        }
-        this.clientPromise = Promise.resolve(jsonClient);
-      } catch (e) {
-        throw new Error("VertexAI: Failed to parse keyJson");
-      }
-    } else if (keyFile) {
-      // Loading keys from manually set file path
-      if (typeof keyFile !== "string") {
-        throw new Error("VertexAI: keyFile must be a string");
-      }
-      this.clientPromise = new GoogleAuth({
-        scopes: VertexAI.AUTH_SCOPES,
-        keyFile,
-      })
-        .getClient()
-        .catch((e) => {
-          console.warn(
-            `Failed to load credentials for Vertex AI: ${e.message}`,
-          );
-        });
-    } else {
-      // Loading keys from local credentials or environment variable
-      this.clientPromise = new GoogleAuth({
-        scopes: VertexAI.AUTH_SCOPES,
-      })
-        .getClient()
-        .catch((e) => {
-          console.warn(
-            `Failed to load credentials for Vertex AI: ${e.message}`,
-          );
-        });
     }
 
     // Set api base
@@ -553,6 +510,60 @@ class VertexAI extends BaseLLM {
     return data.predictions.map(
       (prediction: any) => prediction.embeddings.values,
     );
+  }
+
+  private initClient(): Promise<AuthClient | void> {
+    const { apiKey, env } = this._llmOptions;
+    const keyFile = env?.keyFile;
+    const keyJson = env?.keyJson;
+
+    if (keyJson) {
+      if (typeof keyJson !== "string") {
+        throw new Error("VertexAI: keyJson must be a JSON string");
+      }
+      try {
+        const parsed = JSON.parse(keyJson);
+        if (!parsed?.private_key) {
+          throw new Error("VertexAI: keyJson must contain a valid private key");
+        }
+        parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
+        const jsonClient = auth.fromJSON(parsed);
+        if (jsonClient instanceof JWT) {
+          jsonClient.scopes = [VertexAI.AUTH_SCOPES];
+        } else {
+          throw new Error("VertexAI: keyJson must be a valid JWT");
+        }
+        return Promise.resolve(jsonClient);
+      } catch (e) {
+        throw new Error("VertexAI: Failed to parse keyJson");
+      }
+    } else if (keyFile) {
+      if (typeof keyFile !== "string") {
+        throw new Error("VertexAI: keyFile must be a string");
+      }
+      return new GoogleAuth({
+        scopes: VertexAI.AUTH_SCOPES,
+        keyFile,
+      })
+        .getClient()
+        .catch((e) => {
+          console.warn(
+            `Failed to load credentials for Vertex AI: ${e.message}`,
+          );
+        });
+    } else if (!apiKey) {
+      return new GoogleAuth({
+        scopes: VertexAI.AUTH_SCOPES,
+      })
+        .getClient()
+        .catch((e) => {
+          console.warn(
+            `Failed to load credentials for Vertex AI: ${e.message}`,
+          );
+        });
+    }
+
+    return Promise.resolve();
   }
 }
 
