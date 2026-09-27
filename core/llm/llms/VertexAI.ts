@@ -171,7 +171,13 @@ class VertexAI extends BaseLLM {
         // Express mode
         this.apiBase = `https://aiplatform.googleapis.com/v1/`;
       } else {
-        this.apiBase = `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/`;
+        const host =
+          region === "global"
+            ? "aiplatform.googleapis.com"
+            : region === "us" || region === "eu"
+              ? `aiplatform.${region}.rep.googleapis.com`
+              : `${region}-aiplatform.googleapis.com`;
+        this.apiBase = `https://${host}/v1/projects/${projectId}/locations/${region}/`;
       }
     }
 

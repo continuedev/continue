@@ -154,7 +154,13 @@ export class VertexAIApi implements BaseLlmApi {
     } else {
       // Standard mode
       const { region, projectId } = env!;
-      return `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/`;
+      const host =
+        region === "global"
+          ? "aiplatform.googleapis.com"
+          : region === "us" || region === "eu"
+            ? `aiplatform.${region}.rep.googleapis.com`
+            : `${region}-aiplatform.googleapis.com`;
+      return `https://${host}/v1/projects/${projectId}/locations/${region}/`;
     }
   }
 
