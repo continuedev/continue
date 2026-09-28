@@ -1,0 +1,65 @@
+---
+title: "How to Configure DemonRoute with Continue"
+sidebarTitle: "DemonRoute"
+---
+
+[DemonRoute](https://demonroute.com) is an OpenAI-compatible API gateway for open-weight text models, including Hermes, Dolphin, and Qwen2.5-Coder finetunes. Pricing is prepaid and pay-as-you-go.
+
+<Info>
+  Get your API key from [demonroute.com](https://demonroute.com). Accounts can
+  be created with an email, or anonymously with a username and password. See the
+  [privacy page](https://demonroute.com/privacy) for details.
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Hermes 4 70B
+      provider: demonroute
+      model: NousResearch/Hermes-4-70B
+      apiKey: <YOUR_DEMONROUTE_API_KEY>
+      roles:
+        - chat
+        - edit
+        - apply
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Hermes 4 70B",
+        "provider": "demonroute",
+        "model": "NousResearch/Hermes-4-70B",
+        "apiKey": "<YOUR_DEMONROUTE_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+Model IDs are used exactly as listed in the [DemonRoute model catalog](https://demonroute.com/models), for example `NousResearch/Hermes-4-70B` or `Sao10K/L3.3-70B-Euryale-v2.3`. You can also list the models available to your key with the API:
+
+```bash
+curl https://api.demonroute.com/v1/models \
+  -H "Authorization: Bearer $DEMONROUTE_API_KEY"
+```
+
+## Notes
+
+- DemonRoute uses an OpenAI-compatible API at `https://api.demonroute.com/v1/`, which is set as the default `apiBase`
+- DemonRoute serves the Chat Completions API (no FIM or legacy completions), so use DemonRoute models for chat, edit, and apply roles
+- The catalog contains text-only models, so image inputs are not supported
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/DemonRoute.ts)
