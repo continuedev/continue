@@ -1270,6 +1270,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  demonroute: {
+    title: "DemonRoute",
+    provider: "demonroute",
+    description:
+      "DemonRoute is an OpenAI-compatible API gateway for open-weight models such as Hermes, Dolphin, and Qwen2.5-Coder finetunes.",
+    longDescription:
+      "To get started with DemonRoute, create an account and get an API key at [demonroute.com](https://demonroute.com). Browse available model IDs in the [model catalog](https://demonroute.com/models).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your DemonRoute API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://demonroute.com/dashboard",
+  },
   venice: {
     title: "Venice",
     provider: "venice",

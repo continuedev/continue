@@ -33,6 +33,7 @@ import NCompass from "./NCompass.js";
 import LlamaStack from "./LlamaStack.js";
 import Nebius from "./Nebius.js";
 import OVHcloud from "./OVHcloud.js";
+import DemonRoute from "./DemonRoute.js";
 
 // Base OpenAI tests
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -379,6 +380,11 @@ createOpenAISubclassTests(Novita, {
 createOpenAISubclassTests(SiliconFlow, {
   providerName: "siliconflow",
   defaultApiBase: "https://api.siliconflow.cn/v1/",
+});
+
+createOpenAISubclassTests(DemonRoute, {
+  providerName: "demonroute",
+  defaultApiBase: "https://api.demonroute.com/v1/",
 });
 
 createOpenAISubclassTests(Kindo, {

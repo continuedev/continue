@@ -20,6 +20,7 @@ import Cohere from "./Cohere";
 import CometAPI from "./CometAPI";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
+import DemonRoute from "./DemonRoute";
 import Docker from "./Docker";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
@@ -125,6 +126,7 @@ export const LLMClasses = [
   xAI,
   SiliconFlow,
   Tensorix,
+  DemonRoute,
   Scaleway,
   Relace,
   Inception,
