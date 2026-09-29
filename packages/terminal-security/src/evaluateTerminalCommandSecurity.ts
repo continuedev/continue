@@ -503,19 +503,6 @@ function isCriticalCommand(baseCommand: string, args: string[]): boolean {
     }
   }
 
-  // Find -delete (destructive file deletion via find)
-  if (baseCommand === "find" && args.some((arg) => arg === "-delete")) {
-    return true;
-  }
-
-  // Destructive disk/file commands
-  if (
-    baseCommand === "shred" ||
-    baseCommand === "wipefs"
-  ) {
-    return true;
-  }
-
   // pkexec privilege escalation
   if (baseCommand === "pkexec") {
     return true;
@@ -770,6 +757,14 @@ function isHighRiskSystemService(baseCommand: string): boolean {
  * Checks if command is file operation to sensitive location
  */
 function isHighRiskFileOperation(baseCommand: string, args: string[]): boolean {
+  // Destructive deletion via find -delete: require permission, don't hard-block
+  if (baseCommand === "find" && args.some((arg) => arg === "-delete")) {
+    return true;
+  }
+  // Destructive disk/file commands: require permission, don't hard-block
+  if (baseCommand === "shred" || baseCommand === "wipefs") {
+    return true;
+  }
   if (baseCommand === "mv" || baseCommand === "cp" || baseCommand === "copy") {
     const sensitiveLocations = [
       "/etc/",
