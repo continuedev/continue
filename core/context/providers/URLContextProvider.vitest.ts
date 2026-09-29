@@ -19,7 +19,9 @@ afterEach(() => {
 describe("getUrlContextItems SSRF guard", () => {
   test("does not fetch when assertPublicHttpUrl rejects", async () => {
     (assertPublicHttpUrl as any).mockRejectedValue(
-      new Error("Blocked URL fetch to private or local network address: 127.0.0.1"),
+      new Error(
+        "Blocked URL fetch to private or local network address: 127.0.0.1",
+      ),
     );
     const fetchFn = vi.fn();
 
@@ -36,10 +38,14 @@ describe("getUrlContextItems SSRF guard", () => {
     (assertPublicHttpUrl as any).mockResolvedValue(undefined);
     const fetchFn = vi.fn().mockResolvedValue({
       ok: true,
-      text: async () => "<html><body><article><h1>Hi</h1><p>Hello</p></article></body></html>",
+      text: async () =>
+        "<html><body><article><h1>Hi</h1><p>Hello</p></article></body></html>",
     });
 
-    const items = await getUrlContextItems("https://example.com/", fetchFn as any);
+    const items = await getUrlContextItems(
+      "https://example.com/",
+      fetchFn as any,
+    );
     expect(assertPublicHttpUrl).toHaveBeenCalled();
     expect(fetchFn).toHaveBeenCalled();
     expect(items).toHaveLength(1);
