@@ -37,6 +37,9 @@ const StyledMarkdown = styled.div<{
   whiteSpace: string;
   bgColor: string;
 }>`
+  min-width: 0;
+  max-width: 100%;
+
   h1 {
     font-size: 1.25em;
   }
@@ -63,11 +66,16 @@ const StyledMarkdown = styled.div<{
 
   pre {
     white-space: ${(props) => props.whiteSpace};
+    overflow-wrap: ${(props) =>
+      props.whiteSpace === "pre-wrap" ? "anywhere" : "normal"};
+    word-break: ${(props) =>
+      props.whiteSpace === "pre-wrap" ? "break-word" : "normal"};
     background-color: ${vscEditorBackground};
     border-radius: ${defaultBorderRadius};
 
-    max-width: calc(100vw - 24px);
-    overflow-x: scroll;
+    max-width: 100%;
+    overflow-x: ${(props) =>
+      props.whiteSpace === "pre-wrap" ? "hidden" : "auto"};
     overflow-y: hidden;
 
     padding: 8px;

@@ -76,6 +76,27 @@ describe("UnifiedTerminalCommand", () => {
     expect(container.textContent).toMatch(/Test 3 failed/);
   });
 
+  test("wraps long terminal lines within the sidebar", async () => {
+    const longLine = "x".repeat(500);
+    const { container } = await renderWithProviders(
+      <UnifiedTerminalCommand command={longLine} output={longLine} />,
+    );
+
+    const terminalContainer = screen.getByTestId("terminal-container");
+    const terminalContent = container.querySelector("pre");
+
+    expect(terminalContainer).toHaveStyle({
+      minWidth: "0",
+      maxWidth: "100%",
+    });
+    expect(terminalContent).toHaveStyle({
+      whiteSpace: "pre-wrap",
+      overflowWrap: "anywhere",
+      maxWidth: "100%",
+      overflowX: "hidden",
+    });
+  });
+
   test("shows running state with blinking cursor", async () => {
     const mockToolCallState: ToolCallState = {
       status: "calling",
