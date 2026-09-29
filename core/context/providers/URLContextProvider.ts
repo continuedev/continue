@@ -9,6 +9,7 @@ import {
   ContextProviderExtras,
   FetchFunction,
 } from "../../index.js";
+import { assertPublicHttpUrl } from "../../util/assertPublicUrl";
 import { fetchFavicon } from "../../util/fetchFavicon";
 
 class URLContextProvider extends BaseContextProvider {
@@ -34,6 +35,8 @@ export async function getUrlContextItems(
   fetchFn: FetchFunction,
 ): Promise<ContextItem[]> {
   const url = new URL(query);
+  // Reject private/local destinations before favicon or content fetch (SSRF).
+  await assertPublicHttpUrl(url);
   const icon = await fetchFavicon(url);
   const resp = await fetchFn(url);
 
