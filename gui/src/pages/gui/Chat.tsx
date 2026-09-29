@@ -70,6 +70,8 @@ function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
 
 const StepsDiv = styled.div`
   position: relative;
+  min-width: 0;
+  max-width: 100%;
   background-color: transparent;
 
   & > * {
@@ -77,6 +79,8 @@ const StepsDiv = styled.div`
   }
 
   .thread-message {
+    min-width: 0;
+    max-width: 100%;
     margin: 0 0 0 1px;
   }
 `;

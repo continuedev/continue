@@ -64,6 +64,8 @@ const AnsiLink = styled.a`
 const StyledTerminalContainer = styled.div<{
   fontSize?: number;
 }>`
+  min-width: 0;
+  max-width: 100%;
   background-color: var(--background);
   font-family:
     ui-sans-serif,
@@ -86,10 +88,15 @@ const StyledTerminalContainer = styled.div<{
 `;
 
 const TerminalContent = styled.div`
+  min-width: 0;
+  max-width: 100%;
+
   pre {
     white-space: pre-wrap;
-    max-width: calc(100vw - 24px);
-    overflow-x: scroll;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+    overflow-x: hidden;
     overflow-y: hidden;
     padding: 8px;
     margin: 0;
