@@ -95,7 +95,11 @@ Ollama models usually have their capabilities auto-detected correctly. However, 
 
 ### "Model requires more system memory"
 
-Continue may set a higher default context length than other Ollama tools, causing this error even when the model works elsewhere. Fix by reducing `contextLength`:
+Continue sends `num_ctx` with every request, so the context length Ollama loads the model with comes from Continue, not from `OLLAMA_CONTEXT_LENGTH` or Ollama's own default. If `contextLength` is not set, Continue uses the model's `num_ctx` parameter when the model defines one (see `ollama show <model> --parameters`), and `8192` otherwise.
+
+Ollama reserves the KV cache for the whole context when it loads the model, so a larger context needs more memory even for short prompts. For Llama 3.1 8B with the default `f16` KV cache, that is 128 KiB per token: 1 GiB at 8192 tokens and 4 GiB at 32768 tokens, on top of about 4.9 GB of weights for `llama3.1:8b`. After sending a request, `ollama ps` shows the loaded context in `CONTEXT`. If `PROCESSOR` shows less than `100% GPU`, the model did not fit and part of it runs on the CPU. [ModelVRAM](https://modelvram.com/llm-vram-calculator/llama-3.1-8b-instruct/) shows the weights and KV cache for other context lengths and quantizations.
+
+If you get this error, or the model runs partly on the CPU, reduce `contextLength`:
 
 ```yaml title="config.yaml"
 models:
@@ -107,3 +111,7 @@ models:
 ```
 
 You can also try a smaller model variant.
+
+On a GPU with 24 GiB of VRAM or more, Ollama's own default is larger than `8192` (32768 tokens from 24 GiB, 262144 from 48 GiB), so set `contextLength` explicitly if you want Continue to use a longer context.
+
+Continue also keeps the model loaded for 30 minutes after the last request. To free the memory sooner, set `keepAlive` (in seconds) under `defaultCompletionOptions`.
