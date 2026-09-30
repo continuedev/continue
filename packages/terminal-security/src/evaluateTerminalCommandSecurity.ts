@@ -1,5 +1,6 @@
 import { parse } from "shell-quote";
-type ToolPolicy = "disabled" | "allowedWithPermission" | "allowedWithoutPermission";
+type ToolPolicy =
+  "disabled" | "allowedWithPermission" | "allowedWithoutPermission";
 
 /**
  * Token types from shell-quote
