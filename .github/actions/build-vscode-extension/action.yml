@@ -35,7 +35,11 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-python@v6
+      with:
+        python-version: "3.11"
+
+    - uses: actions/setup-node@v6
       with:
         node-version-file: ".nvmrc"
         
@@ -146,6 +150,11 @@ runs:
 
         # Verify the change
         echo "✅ New version: $(node -p "require('./package.json').version")"
+
+    - name: Setup packaging runtime
+      uses: actions/setup-node@v6
+      with:
+        node-version: 24
 
     - name: Package extension (build artifacts)
       shell: bash

@@ -2,7 +2,8 @@ package com.github.continuedev.continueintellijextension
 
 import com.automation.remarks.junit5.Video
 import com.intellij.driver.sdk.ui.components.*
-import com.intellij.driver.sdk.wait
+import com.intellij.driver.sdk.waitFor
+import com.intellij.driver.sdk.waitForProjectOpen
 import com.intellij.ide.starter.driver.engine.runIdeWithDriver
 import com.intellij.ide.starter.ide.IdeProductProvider
 import com.intellij.ide.starter.models.TestCase
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertTrue
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 
 class Autocomplete {
 
@@ -26,20 +28,39 @@ class Autocomplete {
                 createNewProjectButton.click()
                 button("Create").click()
             }
+            waitForProjectOpen(1.minutes)
             ideFrame {
                 editorTabs {
                     clickTab("Main.java")
                 }
                 codeEditor {
+                    click()
                     keyboard {
                         enterText("TEST_USER_MESSAGE_0")
                         space()
                     }
-                    wait(2.seconds)
+                    waitFor(
+                        message = "Test autocomplete suggestion",
+                        timeout = 30.seconds,
+                        errorMessage = { "Editor text: $text; inlay hints: ${getInlayHints().map { it.text }}" }
+                    ) {
+                        // Driver 243 reports the inline renderer identity instead of suggestion text.
+                        getInlayHints().any {
+                            it.text.contains("TEST_LLM_RESPONSE_0") ||
+                                it.text.contains("InlineCompletionLineRenderer")
+                        }
+                    }
                     keyboard {
                         tab()
                     }
-                    assertTrue(text.contains("TEST_LLM_RESPONSE_0"))
+                    waitFor(
+                        message = "Accepted test autocomplete",
+                        timeout = 10.seconds,
+                        errorMessage = { "Editor text: $text" }
+                    ) {
+                        text.contains("TEST_LLM_RESPONSE_0")
+                    }
+                    assertTrue(text.contains("TEST_LLM_RESPONSE_0"), "Editor text: $text")
                 }
             }
         }

@@ -202,6 +202,11 @@ jobs:
           # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
+      - name: Setup binary packager runtime
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
       # npm install binary
       - name: Install binary node_modules
         run: |
@@ -390,6 +395,11 @@ jobs:
         run: |
           cd ../../core
           npm ci
+
+      - name: Setup binary packager runtime
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
 
       - name: Install Binary Dependencies
         run: |

@@ -1,5 +1,6 @@
 const { spawn } = require("child_process");
 const path = require("path");
+const os = require("os");
 const fs = require("fs");
 const fsPromises = require("fs/promises");
 
@@ -10,8 +11,18 @@ function runCommand(command, cwd, packageName) {
     console.log(`Starting ${packageName}: ${command}`);
 
     const [cmd, ...args] = command.split(" ");
+    const env = { ...process.env };
+    if (process.env.CI === "true" && command === npmInstallCmd) {
+      // Parallel installs must not share npm's cache temporary files.
+      env.NPM_CONFIG_CACHE = path.join(
+        os.tmpdir(),
+        "continue-npm-cache",
+        path.basename(cwd),
+      );
+    }
     const child = spawn(cmd, args, {
       cwd,
+      env,
       stdio: "pipe",
       shell: true,
     });

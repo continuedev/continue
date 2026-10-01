@@ -28,6 +28,12 @@ import { PreprocessedToolCall, ToolCall } from "../tools/types.js";
 import { logger } from "../util/logger.js";
 
 import { StreamCallbacks } from "./streamChatResponse.types.js";
+import {
+  getPermissionDeniedMessage,
+  resolveUserPermissionResult,
+  type ToolPermissionApprovalResult,
+  type ToolPermissionDenialReason,
+} from "./toolPermissionResult.js";
 
 export interface ToolResultWithStatus extends ChatCompletionToolMessageParam {
   status: ToolStatus;
@@ -38,12 +44,9 @@ export function handlePermissionDenied(
   toolCall: PreprocessedToolCall,
   chatHistoryEntries: ChatCompletionToolMessageParam[],
   callbacks?: StreamCallbacks,
-  reason: "user" | "policy" = "user",
+  reason: ToolPermissionDenialReason = "user",
 ): void {
-  const deniedMessage =
-    reason === "policy"
-      ? `Command blocked by security policy`
-      : `Permission denied by user`;
+  const deniedMessage = getPermissionDeniedMessage(reason);
 
   logger.info("Tool call denied", {
     name: toolCall.name,
@@ -65,9 +68,13 @@ export function handlePermissionDenied(
 export async function requestUserPermission(
   toolCall: PreprocessedToolCall,
   callbacks?: StreamCallbacks,
-): Promise<boolean> {
+): Promise<boolean | undefined> {
   if (!callbacks?.onToolPermissionRequest) {
-    return false;
+    logger.error("Cannot request interactive tool permission", {
+      name: toolCall.name,
+      reason: "onToolPermissionRequest callback is missing",
+    });
+    return undefined;
   }
 
   const toolCallRequest: ToolCallRequest = {
@@ -115,7 +122,7 @@ export async function checkToolPermissionApproval(
   toolCall: PreprocessedToolCall,
   callbacks?: StreamCallbacks,
   isHeadless?: boolean,
-): Promise<{ approved: boolean; denialReason?: "user" | "policy" }> {
+): Promise<ToolPermissionApprovalResult> {
   const permissionCheck = checkToolPermission(toolCall, permissions);
 
   if (permissionCheck.permission === "allow") {
@@ -126,9 +133,7 @@ export async function checkToolPermissionApproval(
       return { approved: false, denialReason: "policy" };
     }
     const userApproved = await requestUserPermission(toolCall, callbacks);
-    return userApproved
-      ? { approved: true }
-      : { approved: false, denialReason: "user" };
+    return resolveUserPermissionResult(userApproved);
   } else if (permissionCheck.permission === "exclude") {
     // Tool blocked by security policy
     return { approved: false, denialReason: "policy" };
@@ -520,10 +525,7 @@ export async function executeStreamedToolCalls(
       if (!permissionResult.approved) {
         // Permission denied: create entry with canceled status
         const denialReason = permissionResult.denialReason || "user";
-        const deniedMessage =
-          denialReason === "policy"
-            ? `Command blocked by security policy`
-            : `Permission denied by user`;
+        const deniedMessage = getPermissionDeniedMessage(denialReason);
 
         const deniedEntry: ToolResultWithStatus = {
           role: "tool",

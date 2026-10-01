@@ -43,6 +43,12 @@ runs:
       shell: bash
       run: npm ci
 
+    - name: Setup binary packager runtime
+      if: inputs.component == 'binary'
+      uses: actions/setup-node@v6
+      with:
+        node-version: 22
+
     - uses: actions/cache@v4
       id: component-cache
       with:
