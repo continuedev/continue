@@ -88,6 +88,11 @@ runs:
         # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
         GITHUB_TOKEN: ${{ inputs.ci-github-token }}
 
+    - name: Setup binary packager runtime
+      uses: actions/setup-node@v6
+      with:
+        node-version: 22
+
     - uses: actions/cache@v4
       id: binary-cache
       with:
@@ -106,6 +111,12 @@ runs:
       run: |
         cd binary
         npm run build
+
+    - name: Test the packaged binary
+      shell: bash
+      run: |
+        cd binary
+        npm test -- --runInBand
 
     - name: Run tests
       shell: bash
