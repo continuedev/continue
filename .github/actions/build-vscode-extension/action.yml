@@ -35,6 +35,10 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - uses: actions/setup-python@v6
+      with:
+        python-version: "3.11"
+
     - uses: actions/setup-node@v6
       with:
         node-version: 24
