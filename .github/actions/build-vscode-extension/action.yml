@@ -35,9 +35,9 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v6
       with:
-        node-version-file: ".nvmrc"
+        node-version: 24
         
     - name: Set target variable
       id: set-target
