@@ -14,6 +14,7 @@ import Cerebras from "./Cerebras.js";
 import DeepInfra from "./DeepInfra.js";
 import Nvidia from "./Nvidia.js";
 import CometAPI from "./CometAPI.js";
+import TokenLab from "./TokenLab.js";
 
 // Base OpenAI tests
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -238,6 +239,11 @@ createOpenAISubclassTests(xAI, {
     "grok-beta": "grok-beta",
   },
   modelConversionContent: "hello",
+});
+
+createOpenAISubclassTests(TokenLab, {
+  providerName: "tokenlab",
+  defaultApiBase: "https://api.tokenlab.sh/v1/",
 });
 
 createOpenAISubclassTests(Mistral, {
