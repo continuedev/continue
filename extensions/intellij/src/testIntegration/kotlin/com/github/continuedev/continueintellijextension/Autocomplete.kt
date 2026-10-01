@@ -2,9 +2,8 @@ package com.github.continuedev.continueintellijextension
 
 import com.automation.remarks.junit5.Video
 import com.intellij.driver.sdk.ui.components.*
-import com.intellij.driver.sdk.wait
 import com.intellij.driver.sdk.waitFor
-import com.intellij.driver.sdk.waitForIndicators
+import com.intellij.driver.sdk.waitForProjectOpen
 import com.intellij.ide.starter.driver.engine.runIdeWithDriver
 import com.intellij.ide.starter.ide.IdeProductProvider
 import com.intellij.ide.starter.models.TestCase
@@ -29,7 +28,7 @@ class Autocomplete {
                 createNewProjectButton.click()
                 button("Create").click()
             }
-            waitForIndicators(1.minutes)
+            waitForProjectOpen(1.minutes)
             ideFrame {
                 editorTabs {
                     clickTab("Main.java")
@@ -40,11 +39,21 @@ class Autocomplete {
                         enterText("TEST_USER_MESSAGE_0")
                         space()
                     }
-                    wait(2.seconds)
+                    waitFor(
+                        message = "Test autocomplete suggestion",
+                        timeout = 30.seconds,
+                        errorMessage = { "Editor text: $text; inlay hints: ${getInlayHints().map { it.text }}" }
+                    ) {
+                        getInlayHints().any { it.text.contains("TEST_LLM_RESPONSE_0") }
+                    }
                     keyboard {
                         tab()
                     }
-                    waitFor(message = "Accepted test autocomplete", timeout = 10.seconds) {
+                    waitFor(
+                        message = "Accepted test autocomplete",
+                        timeout = 10.seconds,
+                        errorMessage = { "Editor text: $text" }
+                    ) {
                         text.contains("TEST_LLM_RESPONSE_0")
                     }
                     assertTrue(text.contains("TEST_LLM_RESPONSE_0"), "Editor text: $text")
