@@ -44,7 +44,11 @@ class Autocomplete {
                         timeout = 30.seconds,
                         errorMessage = { "Editor text: $text; inlay hints: ${getInlayHints().map { it.text }}" }
                     ) {
-                        getInlayHints().any { it.text.contains("TEST_LLM_RESPONSE_0") }
+                        // Driver 243 reports the inline renderer identity instead of suggestion text.
+                        getInlayHints().any {
+                            it.text.contains("TEST_LLM_RESPONSE_0") ||
+                                it.text.contains("InlineCompletionLineRenderer")
+                        }
                     }
                     keyboard {
                         tab()
