@@ -41,7 +41,7 @@ runs:
 
     - uses: actions/setup-node@v6
       with:
-        node-version: 24
+        node-version-file: ".nvmrc"
         
     - name: Set target variable
       id: set-target
@@ -150,6 +150,11 @@ runs:
 
         # Verify the change
         echo "✅ New version: $(node -p "require('./package.json').version")"
+
+    - name: Setup packaging runtime
+      uses: actions/setup-node@v6
+      with:
+        node-version: 24
 
     - name: Package extension (build artifacts)
       shell: bash

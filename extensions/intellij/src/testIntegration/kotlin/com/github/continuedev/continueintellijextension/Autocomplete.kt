@@ -3,6 +3,8 @@ package com.github.continuedev.continueintellijextension
 import com.automation.remarks.junit5.Video
 import com.intellij.driver.sdk.ui.components.*
 import com.intellij.driver.sdk.wait
+import com.intellij.driver.sdk.waitFor
+import com.intellij.driver.sdk.waitForIndicators
 import com.intellij.ide.starter.driver.engine.runIdeWithDriver
 import com.intellij.ide.starter.ide.IdeProductProvider
 import com.intellij.ide.starter.models.TestCase
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertTrue
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 
 class Autocomplete {
 
@@ -26,11 +29,13 @@ class Autocomplete {
                 createNewProjectButton.click()
                 button("Create").click()
             }
+            waitForIndicators(1.minutes)
             ideFrame {
                 editorTabs {
                     clickTab("Main.java")
                 }
                 codeEditor {
+                    click()
                     keyboard {
                         enterText("TEST_USER_MESSAGE_0")
                         space()
@@ -39,7 +44,10 @@ class Autocomplete {
                     keyboard {
                         tab()
                     }
-                    assertTrue(text.contains("TEST_LLM_RESPONSE_0"))
+                    waitFor(message = "Accepted test autocomplete", timeout = 10.seconds) {
+                        text.contains("TEST_LLM_RESPONSE_0")
+                    }
+                    assertTrue(text.contains("TEST_LLM_RESPONSE_0"), "Editor text: $text")
                 }
             }
         }
