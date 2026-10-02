@@ -1,6 +1,6 @@
 import { Readable } from "stream";
 import { describe, expect, it, test } from "vitest";
-import { parseDataLine, streamSse } from "./stream.js";
+import { parseDataLine, streamJSON, streamSse } from "./stream.js";
 
 function createMockResponse(sseLines: string[]): Response {
   // Create a Readable stream that emits the SSE lines
@@ -14,6 +14,23 @@ function createMockResponse(sseLines: string[]): Response {
   }) as any;
 
   // Minimal Response mock
+  return {
+    status: 200,
+    body: stream,
+    text: async () => "",
+  } as unknown as Response;
+}
+
+function createRawMockResponse(chunks: string[]): Response {
+  const stream = new Readable({
+    read() {
+      for (const chunk of chunks) {
+        this.push(chunk);
+      }
+      this.push(null);
+    },
+  }) as any;
+
   return {
     status: 200,
     body: stream,
@@ -60,6 +77,50 @@ describe("streamSse", () => {
 
     const iterator = streamSse(response)[Symbol.asyncIterator]();
     await expect(iterator.next()).rejects.toThrow(/Malformed JSON/);
+  });
+});
+
+describe("streamJSON", () => {
+  it("yields the final JSON object even without a trailing newline", async () => {
+    const response = createRawMockResponse(['{"foo":"bar"}\n', '{"baz":42}']);
+
+    const results = [];
+    for await (const data of streamJSON(response)) {
+      results.push(data);
+    }
+
+    expect(results).toEqual([{ foo: "bar" }, { baz: 42 }]);
+  });
+
+  it("reports malformed JSON in the final buffer", async () => {
+    const response = createRawMockResponse(['{"foo":']);
+
+    await expect(streamJSON(response).next()).rejects.toThrow(
+      'Malformed JSON sent from server: {"foo":',
+    );
+  });
+
+  it("discards an incomplete final buffer when the request is aborted", async () => {
+    let controller: ReadableStreamDefaultController<Uint8Array>;
+    const body = new ReadableStream<Uint8Array>({
+      start(value) {
+        controller = value;
+        value.enqueue(new TextEncoder().encode('{"foo":"bar"}\n{"baz":'));
+      },
+    });
+    const iterator = streamJSON(new Response(body));
+
+    await expect(iterator.next()).resolves.toEqual({
+      value: { foo: "bar" },
+      done: false,
+    });
+    controller!.error(
+      new DOMException("The request was aborted", "AbortError"),
+    );
+    await expect(iterator.next()).resolves.toEqual({
+      value: undefined,
+      done: true,
+    });
   });
 });
 
