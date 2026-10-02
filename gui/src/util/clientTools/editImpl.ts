@@ -1,5 +1,5 @@
 import { resolveRelativePathInDir } from "core/util/ideUtils";
-import { isLazyText } from "core/edit/lazy/deterministic";
+import { isLazyText } from "core/edit/lazy/isLazyText";
 import { v4 as uuid } from "uuid";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
@@ -38,14 +38,21 @@ export const editToolImpl: ClientToolImpl = async (
     throw new Error(`${filepath} does not exist`);
   }
 
-  const existingContent = await extras.ideMessenger.ide.readFile(firstUriMatch);
-  const existingLines = existingContent.split("\n");
-  const changesLines = args.changes.split("\n");
+  if (args.overwrite !== true) {
+    const existingContent =
+      await extras.ideMessenger.ide.readFile(firstUriMatch);
+    const existingLines = existingContent.split("\n");
+    const changesLines = args.changes.split("\n");
 
-  if (!isLazyText(args.changes) && existingLines.length > 10 && changesLines.length < existingLines.length * 0.5) {
-    throw new Error(
-      `The \`changes\` argument must contain anchor markers (e.g. "// ... existing code ...") to indicate which parts of the file to keep. Without anchors, Continue cannot safely determine which portions of the existing ${existingLines.length}-line file to preserve. Use single_find_and_replace for small targeted changes, or include proper lazy-anchor markers in the \`changes\` argument.`,
-    );
+    if (
+      !isLazyText(args.changes) &&
+      existingLines.length > 10 &&
+      changesLines.length < existingLines.length * 0.5
+    ) {
+      throw new Error(
+        `The \`changes\` argument must contain anchor markers (e.g. "// ... existing code ...") to indicate which parts of the file to keep. Without anchors, Continue cannot safely determine which portions of the existing ${existingLines.length}-line file to preserve. Use single_find_and_replace for small targeted changes, include lazy-anchor markers, or set \`overwrite: true\` only when the user explicitly requested replacing the entire file.`,
+      );
+    }
   }
 
   const streamId = uuid();
