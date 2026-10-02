@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { getGitBranch, getGitRemoteUrl, isGitRepo } from "../../util/git.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
@@ -118,34 +118,6 @@ export function useIntroMessage(
   }, [isRemoteMode]);
 
   return [showIntroMessage, setShowIntroMessage] as const;
-}
-
-// Custom hook for login handling
-export function useLoginHandlers(
-  navigateTo: any,
-  navState: any,
-  closeCurrentScreen: () => void,
-) {
-  const handleLoginPrompt = useCallback(
-    (promptText: string): Promise<string> => {
-      return new Promise((resolve) => {
-        navigateTo("login", { text: promptText, resolve });
-      });
-    },
-    [navigateTo],
-  );
-
-  const handleLoginTokenSubmit = useCallback(
-    (token: string) => {
-      if (navState.screenData?.resolve) {
-        navState.screenData.resolve(token);
-        closeCurrentScreen();
-      }
-    },
-    [navState.screenData, closeCurrentScreen],
-  );
-
-  return { handleLoginPrompt, handleLoginTokenSubmit };
 }
 
 // Custom hook to combine all selector logic
