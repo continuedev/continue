@@ -480,6 +480,10 @@ export class LanceDbIndex implements CodebaseIndex {
       .sort((a, b) => a._distance - b._distance)
       .slice(0, n);
 
+    if (allResults.length === 0) {
+      return [];
+    }
+
     const sqliteDb = await SqliteDb.get();
     const data = await sqliteDb.all(
       `SELECT * FROM lance_db_cache WHERE uuid in (${allResults
