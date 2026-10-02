@@ -1,0 +1,51 @@
+---
+title: "How to Configure Denizen Blu with Continue"
+sidebarTitle: "Denizen Blu"
+---
+
+<Info>
+  Denizen Blu is an OpenAI-compatible model gateway. Get an API key from your
+  Denizen Blu administrator.
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Qwen2.5 Coder 1.5B
+      provider: denizenblu
+      model: qwen2.5-coder-1.5b-instruct
+      apiKey: <YOUR_DENIZENBLU_API_KEY>
+    - name: Qwen3 0.6B
+      provider: denizenblu
+      model: qwen3-0.6b
+      apiKey: <YOUR_DENIZENBLU_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Qwen2.5 Coder 1.5B",
+        "provider": "denizenblu",
+        "model": "qwen2.5-coder-1.5b-instruct",
+        "apiKey": "<YOUR_DENIZENBLU_API_KEY>"
+      },
+      {
+        "title": "Qwen3 0.6B",
+        "provider": "denizenblu",
+        "model": "qwen3-0.6b",
+        "apiKey": "<YOUR_DENIZENBLU_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

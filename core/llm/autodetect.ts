@@ -133,6 +133,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "watsonx",
   "zAI",
   "tensorix",
+  "denizenblu",
 ];
 
 const MODEL_SUPPORTS_IMAGES: RegExp[] = [
