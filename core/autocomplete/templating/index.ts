@@ -206,10 +206,14 @@ function pruneLength(llm: ILLM, prompt: string): number {
   const contextLength = llm.contextLength;
   const reservedTokens = llm.completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS;
   const safetyBuffer = getTokenCountingBufferSafety(contextLength);
-  const maxAllowedPromptTokens = Math.max(
-    MIN_AUTOCOMPLETE_PROMPT_TOKENS,
-    contextLength - reservedTokens - safetyBuffer,
-  );
+  const availablePromptTokens = contextLength - reservedTokens - safetyBuffer;
+  const maxAllowedPromptTokens =
+    availablePromptTokens > 0
+      ? availablePromptTokens
+      : Math.min(
+          MIN_AUTOCOMPLETE_PROMPT_TOKENS,
+          Math.max(0, contextLength - safetyBuffer),
+        );
   const promptTokenCount = countTokens(prompt, llm.model);
   return Math.max(0, promptTokenCount - maxAllowedPromptTokens);
 }

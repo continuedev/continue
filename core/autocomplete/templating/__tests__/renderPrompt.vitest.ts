@@ -254,6 +254,24 @@ describe("renderPromptWithTokenLimit parity & pruning", () => {
 
     expect(compiledPrefix.length).toBeLessThan(120);
   });
+
+  it("keeps the fallback prompt budget within the model context", () => {
+    const helper = makeHelper({ prunedPrefix: "A".repeat(300) });
+    const llmStub = {
+      contextLength: 120,
+      completionOptions: { maxTokens: 4096 },
+      model: "test-model",
+    } as any;
+
+    const { prefix: compiledPrefix } = renderPromptWithTokenLimit({
+      snippetPayload: emptySnippetPayload,
+      workspaceDirs: ["file:///workspace"],
+      helper,
+      llm: llmStub,
+    });
+
+    expect(compiledPrefix.length).toBeLessThanOrEqual(120);
+  });
 });
 
 describe("stop-token merging", () => {
