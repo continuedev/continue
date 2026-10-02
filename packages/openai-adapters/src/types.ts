@@ -31,6 +31,7 @@ export const BasePlusConfig = BaseConfig.extend({
 // OpenAI and compatible
 export const OpenAIConfigSchema = BasePlusConfig.extend({
   useResponsesApi: z.boolean().optional(),
+  streamOptions: z.boolean().optional(),
   provider: z.union([
     z.literal("openai"),
     z.literal("mistral"),

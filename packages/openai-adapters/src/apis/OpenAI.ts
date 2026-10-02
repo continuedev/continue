@@ -50,7 +50,7 @@ export class OpenAIApi implements BaseLlmApi {
   }
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
     // Add stream_options to include usage in streaming responses
-    if (body.stream) {
+    if (body.stream && this.config.streamOptions !== false) {
       (body as any).stream_options = { include_usage: true };
     }
 

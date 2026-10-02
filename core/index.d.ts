@@ -677,6 +677,7 @@ export interface LLMOptions {
 
   useLegacyCompletionsEndpoint?: boolean;
   useResponsesApi?: boolean;
+  streamOptions?: boolean;
 
   // Embedding options
   embeddingId?: string;
@@ -1733,6 +1734,7 @@ export interface JSONModelDescription {
   aiGatewaySlug?: string;
   useLegacyCompletionsEndpoint?: boolean;
   useResponsesApi?: boolean;
+  streamOptions?: boolean;
   deploymentId?: string;
   isFromAutoDetect?: boolean;
 }
