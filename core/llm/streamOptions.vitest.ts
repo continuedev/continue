@@ -35,9 +35,13 @@ describe("streamOptions model configuration", () => {
       streamOptions: false,
     });
 
-    expect(new TestOpenAI(model).streamingBody()).not.toHaveProperty(
-      "stream_options",
-    );
+    const llm = new TestOpenAI({
+      model: model.model,
+      apiKey: model.apiKey,
+      streamOptions: model.streamOptions,
+    });
+
+    expect(llm.streamingBody()).not.toHaveProperty("stream_options");
   });
 
   it("includes streaming usage when the setting is omitted", () => {
