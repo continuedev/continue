@@ -1,3 +1,6 @@
+import { fetchwithRequestOptions } from "@continuedev/fetch";
+
+import type { RequestOptions } from "../../index.js";
 import type {
   ArtifactType,
   EmbeddingsCacheResponse,
@@ -10,6 +13,7 @@ export class ContinueServerClient implements IContinueServerClient {
   constructor(
     serverUrl: string | undefined,
     private readonly userToken: string | undefined,
+    private readonly requestOptions?: RequestOptions,
   ) {
     try {
       this.url =
@@ -32,18 +36,22 @@ export class ContinueServerClient implements IContinueServerClient {
 
   public async getConfig(): Promise<{ configJson: string }> {
     const userToken = await this.userToken;
-    const response = await fetch(new URL("sync", this.url).href, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${userToken}`,
+    const response = await fetchwithRequestOptions(
+      new URL("sync", this.url).href,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       },
-    });
+      this.requestOptions,
+    );
     if (!response.ok) {
       throw new Error(
         `Failed to sync remote config (HTTP ${response.status}): ${response.statusText}`,
       );
     }
-    const data = await response.json();
+    const data = (await response.json()) as { configJson: string };
     return data;
   }
 
@@ -66,17 +74,21 @@ export class ContinueServerClient implements IContinueServerClient {
     const url = new URL("indexing/cache", this.url);
 
     try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${await this.userToken}`,
+      const response = await fetchwithRequestOptions(
+        url,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${await this.userToken}`,
+          },
+          body: JSON.stringify({
+            keys,
+            artifactId,
+            repo: repoName ?? "NONE",
+          }),
         },
-        body: JSON.stringify({
-          keys,
-          artifactId,
-          repo: repoName ?? "NONE",
-        }),
-      });
+        this.requestOptions,
+      );
 
       if (!response.ok) {
         const text = await response.text();
@@ -88,7 +100,7 @@ export class ContinueServerClient implements IContinueServerClient {
         };
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as EmbeddingsCacheResponse<T>;
       return data;
     } catch (e) {
       console.warn("Failed to retrieve from remote cache", e);
@@ -105,15 +117,19 @@ export class ContinueServerClient implements IContinueServerClient {
 
     const url = new URL("feedback", this.url);
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${await this.userToken}`,
+    const response = await fetchwithRequestOptions(
+      url,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${await this.userToken}`,
+        },
+        body: JSON.stringify({
+          feedback,
+          data,
+        }),
       },
-      body: JSON.stringify({
-        feedback,
-        data,
-      }),
-    });
+      this.requestOptions,
+    );
   }
 }

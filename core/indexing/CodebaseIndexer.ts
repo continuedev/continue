@@ -161,6 +161,7 @@ export class CodebaseIndexer {
     const continueServerClient = new ContinueServerClient(
       ideSettings.remoteConfigServerUrl,
       ideSettings.userToken,
+      config.requestOptions,
     );
     if (!continueServerClient) {
       return [];
