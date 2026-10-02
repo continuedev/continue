@@ -29,7 +29,7 @@ describe("calculateRequestCost", () => {
     {
       provider: "anthropic",
       model: "claude-3-5-sonnet-20241022",
-      promptTokens: 1000,
+      promptTokens: 3000,
       completionTokens: 500,
       cachedTokens: 2000,
       expectedCost: 0.0111,
@@ -38,7 +38,7 @@ describe("calculateRequestCost", () => {
     {
       provider: "anthropic",
       model: "claude-3-5-sonnet-20241022",
-      promptTokens: 1000,
+      promptTokens: 1300,
       completionTokens: 500,
       cacheWriteTokens: 300,
       expectedCost: 0.011625,

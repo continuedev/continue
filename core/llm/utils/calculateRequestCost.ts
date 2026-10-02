@@ -182,8 +182,7 @@ function calculateOpenAICost(
 
   const uncachedInputCost =
     (uncachedInputTokens / 1_000_000) * modelPricing.input;
-  const cachedInputCost =
-    (cachedTokens / 1_000_000) * modelPricing.cachedInput;
+  const cachedInputCost = (cachedTokens / 1_000_000) * modelPricing.cachedInput;
   const outputCost = (usage.completionTokens / 1_000_000) * modelPricing.output;
 
   const inputCost = uncachedInputCost + cachedInputCost;
