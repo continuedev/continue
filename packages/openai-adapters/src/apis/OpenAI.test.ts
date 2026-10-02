@@ -16,6 +16,16 @@ describe("OpenAIApi requestOptions.timeout", () => {
     expect(api.openai.timeout).toBe(300_000);
   });
 
+  it("preserves an explicitly configured zero timeout", () => {
+    const api = new OpenAIApi({
+      provider: "openai",
+      apiKey: "test-key",
+      requestOptions: { timeout: 0 },
+    });
+
+    expect(api.openai.timeout).toBe(0);
+  });
+
   it("leaves the SDK default in place when no timeout is set", () => {
     const api = new OpenAIApi({
       provider: "openai",
