@@ -10,6 +10,7 @@ import { OSAutoDetect } from "./OSAutoDetect";
 import { CodeBlock } from "./CodeBlock";
 import { CodeGroup } from "./CodeGroup";
 import { MdxLink } from "./MdxLink";
+import { withBasePath } from "@/lib/basePath";
 
 export const mdxComponents: MDXComponents = {
   // Mintlify callout variants
@@ -62,8 +63,12 @@ export const mdxComponents: MDXComponents = {
 
   // Rewrite image paths — images are copied to public/images/docs/ at build time
   img: ({ src, alt, ...props }: any) => {
-    if (src && src.startsWith("/images/")) {
+    if (src && src.startsWith("/images/") && !src.startsWith("/images/docs/")) {
       src = `/images/docs${src.slice("/images".length)}`;
+    }
+    // Prefix the deploy base path for raw absolute asset paths (GitHub Pages).
+    if (src && src.startsWith("/")) {
+      src = withBasePath(src);
     }
     return <img src={src} alt={alt || ""} {...props} />;
   },
