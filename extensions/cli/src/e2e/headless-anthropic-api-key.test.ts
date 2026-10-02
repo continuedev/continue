@@ -94,10 +94,12 @@ models:
       timeout: 15000,
     });
 
-    // The CLI should fail because auto-config from ANTHROPIC_API_KEY no longer creates a model
+    // The CLI auto-creates an explicit Anthropic model from ANTHROPIC_API_KEY,
+    // so it now reaches the provider and fails on the invalid key rather than
+    // failing earlier with "no model specified".
     expect(result.exitCode).toBe(1);
 
-    // Should contain error about no model being specified
-    expect(result.stderr).toContain("No model specified in headless mode");
+    // Should contain an authentication error from the invalid API key
+    expect(result.stderr).toContain("invalid x-api-key");
   }, 20000);
 });
