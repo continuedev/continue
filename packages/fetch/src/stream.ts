@@ -9,6 +9,7 @@ export async function* toAsyncIterable(
 
 export async function* streamResponse(
   response: Response,
+  onComplete?: () => void,
 ): AsyncGenerator<string> {
   if (response.status === 499) {
     return; // In case of client-side cancellation, just return
@@ -70,6 +71,8 @@ export async function* streamResponse(
     }
     throw e;
   }
+
+  onComplete?.();
 }
 
 // Export for testing purposes
@@ -151,7 +154,10 @@ export async function* streamSse(response: Response): AsyncGenerator<any> {
 
 export async function* streamJSON(response: Response): AsyncGenerator<any> {
   let buffer = "";
-  for await (const value of streamResponse(response)) {
+  let completed = false;
+  for await (const value of streamResponse(response, () => {
+    completed = true;
+  })) {
     buffer += value;
 
     let position;
@@ -167,7 +173,7 @@ export async function* streamJSON(response: Response): AsyncGenerator<any> {
     }
   }
 
-  if (buffer.length > 0) {
+  if (completed && buffer.length > 0) {
     try {
       const data = JSON.parse(buffer);
       yield data;

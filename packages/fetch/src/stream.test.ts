@@ -91,6 +91,37 @@ describe("streamJSON", () => {
 
     expect(results).toEqual([{ foo: "bar" }, { baz: 42 }]);
   });
+
+  it("reports malformed JSON in the final buffer", async () => {
+    const response = createRawMockResponse(['{"foo":']);
+
+    await expect(streamJSON(response).next()).rejects.toThrow(
+      'Malformed JSON sent from server: {"foo":',
+    );
+  });
+
+  it("discards an incomplete final buffer when the request is aborted", async () => {
+    let controller: ReadableStreamDefaultController<Uint8Array>;
+    const body = new ReadableStream<Uint8Array>({
+      start(value) {
+        controller = value;
+        value.enqueue(new TextEncoder().encode('{"foo":"bar"}\n{"baz":'));
+      },
+    });
+    const iterator = streamJSON(new Response(body));
+
+    await expect(iterator.next()).resolves.toEqual({
+      value: { foo: "bar" },
+      done: false,
+    });
+    controller!.error(
+      new DOMException("The request was aborted", "AbortError"),
+    );
+    await expect(iterator.next()).resolves.toEqual({
+      value: undefined,
+      done: true,
+    });
+  });
 });
 
 describe("parseDataLine", () => {
