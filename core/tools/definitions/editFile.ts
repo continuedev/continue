@@ -5,6 +5,7 @@ import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 export interface EditToolArgs {
   filepath: string;
   changes: string;
+  overwrite?: boolean;
 }
 
 export const NO_PARALLEL_TOOL_CALLING_INSTRUCTION =
@@ -38,6 +39,11 @@ export const editFileTool: Tool = {
           type: "string",
           description: CHANGES_DESCRIPTION,
         },
+        overwrite: {
+          type: "boolean",
+          description:
+            "Set to true only when the user explicitly requested replacing the entire existing file.",
+        },
       },
     },
   },
@@ -46,6 +52,7 @@ export const editFileTool: Tool = {
     prefix: `To edit an EXISTING file, use the ${BuiltInToolNames.EditExistingFile} tool with
 - filepath: the relative filepath to the file.
 - changes: ${CHANGES_DESCRIPTION}
+  - overwrite: optional; set to true only when the user explicitly requested replacing the entire existing file.
 Only use this tool if you already know the contents of the file. Otherwise, use the ${BuiltInToolNames.ReadFile} or ${BuiltInToolNames.ReadCurrentlyOpenFile} tool to read it first.
 For example:`,
     exampleArgs: [

@@ -9,16 +9,14 @@ import { myersDiff } from "../../diff/myers";
 import { getParserForFile } from "../../util/treeSitter";
 
 import { findInAst } from "./findInAst";
+import { isLazyText } from "./isLazyText";
+
+export { isLazyText } from "./isLazyText";
 
 type AstReplacements = Array<{
   nodeToReplace: Parser.SyntaxNode;
   replacementNodes: Parser.SyntaxNode[];
 }>;
-
-const LAZY_COMMENT_REGEX = /\.{3}\s*(.+?)\s*\.{3}/;
-export function isLazyText(text: string): boolean {
-  return LAZY_COMMENT_REGEX.test(text);
-}
 
 function reconstructNewFile(
   oldFile: string,
