@@ -5,7 +5,6 @@ import { Divider } from "../../components/ui/Divider";
 import { TabGroup } from "../../components/ui/TabGroup";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { bottomTabSections, getAllTabs, topTabSections } from "./configTabs";
-import { CliInstallBanner } from "../../components/CliInstallBanner";
 import { DeprecationBanner } from "../../components/DeprecationBanner";
 import { AccountDropdown } from "./features/account/AccountDropdown";
 
@@ -84,7 +83,6 @@ function ConfigPage() {
           <div className="space-y-6 px-4 py-4">
             {allTabs.find((tab) => tab.id === activeTab)?.component}
           </div>
-          <CliInstallBanner permanentDismissal={true} />
         </div>
       </div>
     </div>
