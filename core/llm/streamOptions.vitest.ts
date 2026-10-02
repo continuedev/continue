@@ -1,7 +1,7 @@
+import { modelSchema } from "@continuedev/config-yaml";
+import type { OpenAIApi } from "@continuedev/openai-adapters/dist/apis/OpenAI.js";
 import { describe, expect, it, vi } from "vitest";
 
-import { OpenAIApi } from "../../packages/openai-adapters/src/apis/OpenAI.js";
-import { modelSchema } from "../../packages/config-yaml/src/schemas/models.js";
 import { BaseLLM } from "./index.js";
 
 vi.mock("../data/devdataSqlite.js", () => ({ DevDataSqliteDb: {} }));
