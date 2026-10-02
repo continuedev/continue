@@ -1135,10 +1135,12 @@ export class Core {
 
     on("models/fetch", async (msg) => {
       try {
+        const { config } = await this.configHandler.loadConfig();
         return await fetchModels(
           msg.data.provider,
           msg.data.apiKey,
           msg.data.apiBase,
+          config?.requestOptions,
         );
       } catch (error: any) {
         void this.ide.showToast("error", error.message);
