@@ -195,6 +195,16 @@ In VS Code, if you don't want to be shown suggestions automatically you can:
 4. Press the key combination you want to use to trigger suggestions (e.g. <kbd>cmd/ctrl</kbd> + <kbd>space</kbd>)
 5. Now whenever you want to see a suggestion, you can press your key binding (e.g. <kbd>cmd/ctrl</kbd> + <kbd>space</kbd>) to trigger suggestions manually
 
+The setting is evaluated for the active document, so you can also configure it for specific languages with VS Code's language-scoped settings. For example:
+
+```json
+"[python]": {
+  "editor.inlineSuggest.enabled": false
+}
+```
+
+Continue honors the manual trigger while automatic inline suggestions are disabled.
+
 ### Shortcut for Accepting One Line at a Time in Autocomplete
 
 This is a built-in feature of VS Code, but it's just a bit hidden. Follow these settings to reassign the keyboard shortcuts in VS Code:
