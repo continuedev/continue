@@ -69,6 +69,7 @@ import Vllm from "./Vllm";
 import Voyage from "./Voyage";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
+import YApi from "./YApi";
 import zAI from "./zAI";
 export const LLMClasses = [
   Anthropic,
@@ -132,6 +133,7 @@ export const LLMClasses = [
   LlamaStack,
   TARS,
   zAI,
+  YApi,
 ];
 
 export async function llmFromDescription(

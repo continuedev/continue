@@ -1,0 +1,108 @@
+---
+title: "Y-API"
+description: "Configure Y-API with Continue to access DeepSeek, GLM, Kimi, Qwen, GPT, and other models through a single OpenAI-compatible endpoint"
+---
+
+[Y-API](https://y-api.bestvirtualgoods.com) is an OpenAI-compatible API gateway that provides access to DeepSeek, GLM, Kimi, Qwen, Tencent Hunyuan, Xiaomi MiMo, and OpenAI models. One balance and one API key cover every model, with no subscription and no monthly minimum.
+
+<Info>
+  You can get an API key from
+  [y-api.bestvirtualgoods.com](https://y-api.bestvirtualgoods.com). The full
+  model list and per-model prices are on the
+  [pricing page](https://y-api.bestvirtualgoods.com/pricing).
+</Info>
+
+## Chat Model
+
+We recommend configuring **deepseek/deepseek-v4-pro** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: DeepSeek V4 Pro
+        provider: y-api
+        model: deepseek/deepseek-v4-pro
+        apiKey: <YOUR_Y_API_API_KEY>
+        roles:
+          - chat
+          - edit
+          - apply
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "DeepSeek V4 Pro",
+          "provider": "y-api",
+          "model": "deepseek/deepseek-v4-pro",
+          "apiKey": "<YOUR_Y_API_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+**deepseek/deepseek-v4-flash** is free of charge on Y-API, which makes it a good default for autocomplete.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: DeepSeek V4 Flash
+        provider: y-api
+        model: deepseek/deepseek-v4-flash
+        apiKey: <YOUR_Y_API_API_KEY>
+        roles:
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "DeepSeek V4 Flash",
+          "provider": "y-api",
+          "model": "deepseek/deepseek-v4-flash",
+          "apiKey": "<YOUR_Y_API_API_KEY>"
+        }
+      ],
+      "tabAutocompleteModel": {
+        "title": "DeepSeek V4 Flash",
+        "provider": "y-api",
+        "model": "deepseek/deepseek-v4-flash",
+        "apiKey": "<YOUR_Y_API_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Agent Mode
+
+Y-API passes function tools through to the upstream model. Verified against the live API on 2026-09-16 by sending one request with a single function tool and checking for a `tool_calls` response:
+
+- **Works**: `deepseek/deepseek-v4-flash`, `deepseek/deepseek-v4-flash-0731`, `deepseek/deepseek-v4-pro`, `deepseek/deepseek-v4.1-flash`, `z-ai/glm-5.2`, `z-ai/glm-5.3`, `z-ai/glm-5.3-flash`, `moonshotai/kimi-k3`, `tencent/hy3`, `xiaomi/mimo-v2.5`.
+- **Not usable for tools**: `openai/gpt-6-astra`, `openai/gpt-5.6-sol`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-luna`. These accept tools only when `reasoning_effort` is set explicitly — with the parameter absent the upstream rejects the request with `Function tools with reasoning_effort are not supported`, and with it present the tool call succeeds. Continue does not send `reasoning_effort`, so these four are reported as not supporting native tools.
+
+The `openai/gpt-*` models also require `max_completion_tokens` instead of `max_tokens`; Continue handles that automatically.
+
+## Embeddings Model
+
+Y-API serves chat models only, so there is no embeddings model to configure.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/YApi.ts)

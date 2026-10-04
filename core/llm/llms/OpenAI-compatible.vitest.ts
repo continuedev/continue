@@ -33,6 +33,7 @@ import NCompass from "./NCompass.js";
 import LlamaStack from "./LlamaStack.js";
 import Nebius from "./Nebius.js";
 import OVHcloud from "./OVHcloud.js";
+import YApi from "./YApi.js";
 
 // Base OpenAI tests
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -456,4 +457,9 @@ createOpenAISubclassTests(Nebius, {
 createOpenAISubclassTests(OVHcloud, {
   providerName: "ovhcloud",
   defaultApiBase: "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/",
+});
+
+createOpenAISubclassTests(YApi, {
+  providerName: "y-api",
+  defaultApiBase: "https://api.y-api.bestvirtualgoods.com/v1/",
 });
