@@ -54,6 +54,7 @@ They are concerned with:
 - [ ] !Ollama
 - [x] OVHCLoud
 - [ ] Replicate
+- [x] RunInfra
 - [ ] SageMaker
 - [x] SambaNova
 - [x] Scaleway

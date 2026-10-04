@@ -54,6 +54,7 @@ import ClawRouter from "./ClawRouter";
 import OVHcloud from "./OVHcloud";
 import { Relace } from "./Relace";
 import Replicate from "./Replicate";
+import RunInfra from "./RunInfra";
 import SageMaker from "./SageMaker";
 import SambaNova from "./SambaNova";
 import Scaleway from "./Scaleway";
@@ -126,6 +127,7 @@ export const LLMClasses = [
   SiliconFlow,
   Tensorix,
   Scaleway,
+  RunInfra,
   Relace,
   Inception,
   Voyage,
