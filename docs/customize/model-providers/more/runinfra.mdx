@@ -1,0 +1,54 @@
+---
+title: "RunInfra"
+description: "Configure RunInfra with Continue to access fast, low-cost open models like DeepSeek, GLM, Qwen, and Nemotron through a single OpenAI-compatible API"
+---
+
+[RunInfra](https://runinfra.ai) is an OpenAI-compatible inference API that serves optimized open models, including DeepSeek, GLM, Qwen, and Nemotron. Pay-as-you-go with no subscription required.
+
+<Info>
+  You can get an API key by creating a workspace at
+  [runinfra.ai](https://runinfra.ai). See every available model and its pricing
+  on the [pricing page](https://runinfra.ai/pricing).
+</Info>
+
+## Chat Model
+
+We recommend configuring **DeepSeek V4.1 Flash** as your chat model.
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: DeepSeek V4.1 Flash
+      provider: runinfra
+      model: deepseek-v4-1-flash
+      apiKey: <YOUR_RUNINFRA_API_KEY>
+      roles:
+        - chat
+        - edit
+        - apply
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "DeepSeek V4.1 Flash",
+        "provider": "runinfra",
+        "model": "deepseek-v4-1-flash",
+        "apiKey": "<YOUR_RUNINFRA_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+Other available models include GLM 5.3 Flash (`glm-5-3-flash`), Qwen3.8 27B (`qwen3-8-27b`), Ornith 1.5 35B (`ornith-1-5-35b`), and Nemotron 3.5 Lightning 30B (`nemotron-3-5-lightning-30b`). Per-model context windows and modality support are listed on each model's page, linked from the [pricing page](https://runinfra.ai/pricing).
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/RunInfra.ts)

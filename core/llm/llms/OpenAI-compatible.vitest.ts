@@ -33,6 +33,7 @@ import NCompass from "./NCompass.js";
 import LlamaStack from "./LlamaStack.js";
 import Nebius from "./Nebius.js";
 import OVHcloud from "./OVHcloud.js";
+import RunInfra from "./RunInfra.js";
 
 // Base OpenAI tests
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -358,6 +359,11 @@ createOpenAISubclassTests(SambaNova, {
 createOpenAISubclassTests(Scaleway, {
   providerName: "scaleway",
   defaultApiBase: "https://api.scaleway.ai/v1/",
+});
+
+createOpenAISubclassTests(RunInfra, {
+  providerName: "runinfra",
+  defaultApiBase: "https://api.runinfra.ai/v1/",
 });
 
 createOpenAISubclassTests(Venice, {

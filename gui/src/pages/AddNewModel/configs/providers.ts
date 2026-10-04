@@ -1270,6 +1270,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  runinfra: {
+    title: "RunInfra",
+    provider: "runinfra",
+    description:
+      "RunInfra is an OpenAI-compatible API for fast, low-cost open models like DeepSeek, GLM, Qwen, and Nemotron.",
+    longDescription:
+      "To get started with RunInfra, create a workspace and get an API key at [runinfra.ai](https://runinfra.ai).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your RunInfra API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://runinfra.ai",
+  },
   venice: {
     title: "Venice",
     provider: "venice",

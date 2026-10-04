@@ -59,6 +59,7 @@ export const modelDescriptionSchema = z.object({
     "ovhcloud",
     "nebius",
     "scaleway",
+    "runinfra",
     "watsonx",
     "minimax",
   ]),
