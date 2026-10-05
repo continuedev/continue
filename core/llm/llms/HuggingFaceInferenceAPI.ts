@@ -3,6 +3,7 @@ import { CompletionOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
 class HuggingFaceInferenceAPI extends BaseLLM {
+  private static MAX_STOP_TOKENS = 4;
   static providerName = "huggingface-inference-api";
 
   private _convertArgs(options: CompletionOptions) {
@@ -11,6 +12,10 @@ class HuggingFaceInferenceAPI extends BaseLLM {
       temperature: options.temperature,
       top_k: options.topK,
       top_p: options.topP,
+      stop: options.stop?.slice(
+        0,
+        this.maxStopWords ?? HuggingFaceInferenceAPI.MAX_STOP_TOKENS,
+      ),
     };
   }
 
