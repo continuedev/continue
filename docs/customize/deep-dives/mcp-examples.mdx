@@ -1,6 +1,6 @@
 ---
 title: "Example MCP Servers"
-keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify, atlassian, github, sanity, snyk, dlt, chrome-devtools]
+keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify, atlassian, github, sanity, snyk, dlt, chrome-devtools, misarmail, misarblog, misarreach, email, blogging, sales, outreach]
 ---
 
 Ready-to-use MCP server configurations for popular tools and services. Copy these into your `config.yaml` to get started.
@@ -182,6 +182,93 @@ mcpServers:
 ```
 
 See also: [Chrome DevTools MCP guide](/guides/chrome-devtools-mcp-performance)
+
+## MisarMail
+
+MisarMail's MCP server provides 55 tools for sending email, running campaigns, managing contacts and automations, A/B testing, and auditing deliverability.
+
+**Remote (Streamable HTTP)**:
+
+```yaml
+mcpServers:
+  - name: MisarMail
+    type: streamable-http
+    url: https://api.misar.io/mail/mcp
+    apiKey: ${{ secrets.MISARMAIL_API_KEY }}
+```
+
+**Local (stdio)**:
+
+```yaml
+mcpServers:
+  - name: MisarMail
+    command: npx
+    args:
+      - "-y"
+      - "@misarmail/mcp@latest"
+    env:
+      MISARMAIL_API_KEY: ${{ secrets.MISARMAIL_API_KEY }}
+```
+
+Get your API key at [mail.misar.io/developers](https://mail.misar.io/developers).
+
+## Misar.Blog
+
+Misar.Blog's MCP server provides 23 tools for publishing articles, managing series, generating AI cover images, sending newsletters, and viewing analytics.
+
+**Remote (Streamable HTTP)**:
+
+```yaml
+mcpServers:
+  - name: MisarBlog
+    type: streamable-http
+    url: https://www.misar.blog/api/mcp
+    apiKey: ${{ secrets.MISARBLOG_API_KEY }}
+```
+
+**Local (stdio)**:
+
+```yaml
+mcpServers:
+  - name: MisarBlog
+    command: npx
+    args:
+      - "-y"
+      - "@misarblog/mcp@latest"
+    env:
+      MISARBLOG_API_KEY: ${{ secrets.MISARBLOG_API_KEY }}
+```
+
+Get your API key at [misar.blog/dashboard/settings/api-keys](https://www.misar.blog/dashboard/settings/api-keys).
+
+## MisarReach
+
+MisarReach's MCP server provides 27 tools for finding and enriching leads, verifying emails, running multi-channel outreach sequences, and managing the sales pipeline.
+
+**Remote (Streamable HTTP)**:
+
+```yaml
+mcpServers:
+  - name: MisarReach
+    type: streamable-http
+    url: https://api.misar.io/reach/mcp
+    apiKey: ${{ secrets.MISARREACH_API_KEY }}
+```
+
+**Local (stdio)**:
+
+```yaml
+mcpServers:
+  - name: MisarReach
+    command: npx
+    args:
+      - "-y"
+      - "@misarreach/mcp@latest"
+    env:
+      MISARREACH_API_KEY: ${{ secrets.MISARREACH_API_KEY }}
+```
+
+Get your API key at [reach.misar.io/settings/api-keys](https://reach.misar.io/settings/api-keys).
 
 ## Other guides
 
