@@ -115,9 +115,6 @@ function parseSseLine(line: string): { done: boolean; data: any } {
   if (line.startsWith("data:")) {
     return { done: false, data: parseDataLine(line) };
   }
-  if (line.startsWith(": ping")) {
-    return { done: true, data: undefined };
-  }
   return { done: false, data: undefined };
 }
 

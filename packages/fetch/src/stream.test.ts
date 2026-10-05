@@ -54,6 +54,51 @@ describe("streamSse", () => {
     expect(results).toEqual([{ foo: "bar" }, { baz: 42 }]);
   });
 
+  it.each([
+    {
+      name: "a leading ping",
+      chunks: [': ping\n\ndata: {"foo":"bar"}\n\ndata: {"baz":42}\n\n'],
+    },
+    {
+      name: "an interleaved ping",
+      chunks: ['data: {"foo":"bar"}\n\n: ping\n\ndata: {"baz":42}\n\n'],
+    },
+    {
+      name: "a ping split across chunks",
+      chunks: [": pi", 'ng\n\ndata: {"foo":"bar"}\n\ndata: {"baz":42}\n\n'],
+    },
+    {
+      name: "consecutive pings",
+      chunks: [
+        ': ping\n\n: ping\n\ndata: {"foo":"bar"}\n\ndata: {"baz":42}\n\n',
+      ],
+    },
+    {
+      name: "a trailing ping",
+      chunks: ['data: {"foo":"bar"}\n\ndata: {"baz":42}\n\n: ping\n\n'],
+    },
+    {
+      name: "another comment",
+      chunks: [': heartbeat\n\ndata: {"foo":"bar"}\n\ndata: {"baz":42}\n\n'],
+    },
+  ])("keeps draining data after $name", async ({ chunks }) => {
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        const encoder = new TextEncoder();
+        for (const chunk of chunks) {
+          controller.enqueue(encoder.encode(chunk));
+        }
+        controller.close();
+      },
+    });
+    const results = [];
+    for await (const data of streamSse(new Response(body))) {
+      results.push(data);
+    }
+
+    expect(results).toEqual([{ foo: "bar" }, { baz: 42 }]);
+  });
+
   it("throws on malformed JSON", async () => {
     const sseLines = ['data: {"foo": "bar"', "data:[DONE]"];
     const response = createMockResponse(sseLines);
