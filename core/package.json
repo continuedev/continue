@@ -81,7 +81,7 @@
     "filtrex": "^3.1.0",
     "follow-redirects": "^1.15.5",
     "google-auth-library": "^10.4.1",
-    "handlebars": "^4.7.8",
+    "handlebars": "^4.7.10",
     "http-proxy-agent": "^7.0.1",
     "https-proxy-agent": "^7.0.3",
     "iconv-lite": "^0.6.3",
