@@ -1,5 +1,7 @@
+import type { ToolPermissions } from "../permissions/types.js";
 import { services } from "../services/index.js";
 import { serviceContainer } from "../services/ServiceContainer.js";
+import type { ToolPermissionServiceState } from "../services/ToolPermissionService.js";
 import { ModelServiceState, SERVICE_NAMES } from "../services/types.js";
 import { executeSubAgent } from "../subagent/executor.js";
 import {
@@ -10,7 +12,33 @@ import {
 import { SUBAGENT_TOOL_META } from "../subagent/index.js";
 import { logger } from "../util/logger.js";
 
-import { Tool } from "./types.js";
+import { Tool, ToolRunContext } from "./types.js";
+
+function deepFreeze<T>(value: T): Readonly<T> {
+  if (value && typeof value === "object" && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const key of Object.keys(value as object)) {
+      deepFreeze((value as Record<string, unknown>)[key]);
+    }
+  }
+  return value;
+}
+
+/**
+ * The policy a subagent runs under. A nested spawn reuses the snapshot of the
+ * run that spawned it; a top-level spawn copies the live session policy once.
+ */
+async function resolvePermissionSnapshot(
+  context?: ToolRunContext,
+): Promise<Readonly<ToolPermissions>> {
+  if (context?.permissionSnapshot) {
+    return context.permissionSnapshot;
+  }
+  const state = await serviceContainer.get<ToolPermissionServiceState>(
+    SERVICE_NAMES.TOOL_PERMISSIONS,
+  );
+  return deepFreeze(structuredClone(state.permissions));
+}
 
 export const subagentTool = async (): Promise<Tool> => {
   const modelServiceState = await serviceContainer.get<ModelServiceState>(
@@ -60,7 +88,7 @@ export const subagentTool = async (): Promise<Tool> => {
       };
     },
 
-    run: async (args: any, context?: { toolCallId: string }) => {
+    run: async (args: any, context?: ToolRunContext) => {
       const { prompt, subagent_name } = args;
 
       logger.debug("subagent args", { args, context });
@@ -77,12 +105,16 @@ export const subagentTool = async (): Promise<Tool> => {
         throw new Error("No active session found");
       }
 
+      const permissionSnapshot = await resolvePermissionSnapshot(context);
+
       // Execute subagent with output streaming
       const result = await executeSubAgent({
         agent,
         prompt,
         parentSessionId,
         abortController: new AbortController(),
+        onToolPermissionRequest: context?.onToolPermissionRequest,
+        permissionSnapshot,
         onOutputUpdate: context?.toolCallId
           ? (output: string) => {
               try {

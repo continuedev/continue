@@ -1,5 +1,7 @@
 import type { ToolPolicy } from "@continuedev/terminal-security";
 
+import type { ToolPermissions } from "../permissions/types.js";
+
 // JSON Schema compatible parameter definition
 export interface ParameterSchema {
   type: string;
@@ -39,6 +41,23 @@ export interface ToolRunContext {
    * Tools should divide their output limits by this number to avoid context overflow.
    */
   parallelToolCallCount: number;
+  /**
+   * Surfaces a tool permission prompt to the user. Forwarded to nested
+   * execution contexts (e.g. subagents) so their "ask"-policy tool calls
+   * show the same approval dialog as top-level tool calls.
+   */
+  onToolPermissionRequest?: (
+    toolName: string,
+    toolArgs: any,
+    requestId: string,
+    preview?: ToolCallPreview[],
+  ) => void;
+  /**
+   * Immutable permission policy the current run is checked against. A subagent
+   * spawned from this run inherits it, so nested spawns stay under the
+   * original policy.
+   */
+  permissionSnapshot?: Readonly<ToolPermissions>;
 }
 
 export interface Tool {

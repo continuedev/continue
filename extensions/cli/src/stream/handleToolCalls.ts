@@ -3,6 +3,7 @@ import { stripImages } from "core/util/messageContent.js";
 import { createHistoryItem } from "core/util/messageConversion.js";
 
 import { checkToolPermission } from "src/permissions/permissionChecker.js";
+import type { ToolPermissions } from "src/permissions/types.js";
 
 import {
   SERVICE_NAMES,
@@ -169,7 +170,10 @@ export async function handleToolCalls(
   return false;
 }
 
-export async function getRequestTools(isHeadless: boolean) {
+export async function getRequestTools(
+  isHeadless: boolean,
+  permissionSnapshot?: Readonly<ToolPermissions>,
+) {
   const availableTools = await getAllAvailableTools(isHeadless);
 
   const permissionsState =
@@ -181,7 +185,7 @@ export async function getRequestTools(isHeadless: boolean) {
   for (const tool of availableTools) {
     const result = checkToolPermission(
       { name: tool.name, arguments: {} },
-      permissionsState.permissions,
+      permissionSnapshot ?? permissionsState.permissions,
     );
 
     if (

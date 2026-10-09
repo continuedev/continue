@@ -125,6 +125,10 @@ export async function checkToolPermissionApproval(
       // "ask" tools are excluded in headless so can only get here by policy evaluation
       return { approved: false, denialReason: "policy" };
     }
+    // Fail closed: with no way to ask the user, "ask" is a denial
+    if (!callbacks?.onToolPermissionRequest) {
+      return { approved: false, denialReason: "policy" };
+    }
     const userApproved = await requestUserPermission(toolCall, callbacks);
     return userApproved
       ? { approved: true }
@@ -510,8 +514,9 @@ export async function executeStreamedToolCalls(
         await serviceContainer.get<ToolPermissionServiceState>(
           SERVICE_NAMES.TOOL_PERMISSIONS,
         );
+      // A run with its own snapshot (subagents) ignores the live state
       const permissionResult = await checkToolPermissionApproval(
-        permissionState.permissions,
+        callbacks?.permissionSnapshot ?? permissionState.permissions,
         call,
         callbacks,
         isHeadless,
@@ -566,6 +571,8 @@ export async function executeStreamedToolCalls(
 
             const toolResult = await executeToolCall(call, {
               parallelToolCallCount,
+              onToolPermissionRequest: callbacks?.onToolPermissionRequest,
+              permissionSnapshot: callbacks?.permissionSnapshot,
             });
             const entry: ToolResultWithStatus = {
               role: "tool",

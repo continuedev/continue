@@ -451,7 +451,10 @@ export async function streamChatResponse(
     );
 
     // Recompute tools on each iteration to handle mode changes during streaming
-    const rawTools = await getRequestTools(isHeadless);
+    const rawTools = await getRequestTools(
+      isHeadless,
+      callbacks?.permissionSnapshot,
+    );
     const tools = applyChatCompletionToolOverrides(
       rawTools,
       model.chatOptions?.toolOverrides,
