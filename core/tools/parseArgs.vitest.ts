@@ -7,6 +7,7 @@ import {
   getOptionalStringArg,
   getStringArg,
   safeParseToolCallArgs,
+  stringifyFileContents,
 } from "./parseArgs";
 
 describe("safeParseToolCallArgs", () => {
@@ -188,6 +189,20 @@ describe("getStringArg", () => {
     expect(() => getStringArg(args, "contents")).toThrowError(
       "`contents` argument is required and must not be empty or whitespace-only. (type string)",
     );
+  });
+});
+
+describe("stringifyFileContents", () => {
+  it("should write a JSON value as indented JSON", () => {
+    expect(stringifyFileContents({ name: "app", deps: ["a"] })).toBe(
+      '{\n  "name": "app",\n  "deps": [\n    "a"\n  ]\n}',
+    );
+  });
+
+  it("should keep a string unchanged and turn a missing value into empty text", () => {
+    expect(stringifyFileContents("const x = 1;\n")).toBe("const x = 1;\n");
+    expect(stringifyFileContents(undefined)).toBe("");
+    expect(stringifyFileContents(null)).toBe("");
   });
 });
 

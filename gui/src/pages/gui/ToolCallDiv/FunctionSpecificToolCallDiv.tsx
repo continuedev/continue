@@ -1,6 +1,7 @@
 import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { EditOperation } from "core/tools/definitions/multiEdit";
+import { stringifyFileContents } from "core/tools/parseArgs";
 import { CreateFile } from "./CreateFile";
 import { EditFile } from "./EditFile";
 import { FindAndReplaceDisplay } from "./FindAndReplace";
@@ -22,7 +23,7 @@ function FunctionSpecificToolCallDiv({
       return (
         <CreateFile
           relativeFilepath={args?.filepath ?? ""}
-          fileContents={args?.contents ?? ""}
+          fileContents={stringifyFileContents(args?.contents)}
           historyIndex={historyIndex}
         />
       );

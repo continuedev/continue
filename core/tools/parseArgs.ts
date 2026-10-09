@@ -62,6 +62,26 @@ export function coerceArgsToSchema(
   return coerced;
 }
 
+/**
+ * The contents of a file a tool is about to write, as text.
+ * Some models send the contents of a JSON file as a JSON value rather than a string,
+ * so the parsed arguments hold an object or array. Write it as indented JSON, the way
+ * the file would normally look, rather than on one line.
+ */
+export function stringifyFileContents(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (value === null || value === undefined) {
+    return "";
+  }
+  try {
+    return JSON.stringify(value, null, 2) ?? String(value);
+  } catch {
+    return String(value);
+  }
+}
+
 export function getStringArg(
   args: any,
   argName: string,
