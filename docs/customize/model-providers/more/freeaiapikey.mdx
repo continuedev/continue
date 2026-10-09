@@ -1,0 +1,62 @@
+---
+title: FreeAIapikey
+slug: ../freeaiapikey
+---
+
+<Info>
+  [FreeAIapikey](https://freeaiapikey.com) is an OpenAI-compatible API gateway for frontier models at reduced prices: GPT-5.5, GPT-5.6 Sol, GPT-6 Sol, GPT-6 Astra, Claude Opus 4.7/4.8/5/5.5 and Claude Sonnet 5. $2 free credit on signup.
+</Info>
+
+<Tip>
+  Get your API key from the [FreeAIapikey dashboard](https://freeaiapikey.com/dashboard). The live model catalog is available at `GET https://api.freeaiapikey.com/v1/models`.
+</Tip>
+
+## Available Models
+
+Model IDs below are pulled from the live `/v1/models` endpoint:
+
+| Model | Provider API base |
+|-------|------------------|
+| `openai/gpt-5.5` | `https://api.freeaiapikey.com/v1` |
+| `openai/gpt-5.6-sol` | `https://api.freeaiapikey.com/v1` |
+| `openai/gpt-6-sol` | `https://api.freeaiapikey.com/v1` |
+| `openai/gpt-6-Astra` | `https://api.freeaiapikey.com/v1` |
+| `anthropic/claude-opus-4.7` | `https://api.freeaiapikey.com/v1` |
+| `anthropic/claude-opus-4.8` | `https://api.freeaiapikey.com/v1` |
+| `anthropic/claude-opus-5` | `https://api.freeaiapikey.com/v1` |
+| `anthropic/claude-opus-5.5` | `https://api.freeaiapikey.com/v1` |
+| `anthropic/claude-sonnet-5` | `https://api.freeaiapikey.com/v1` |
+
+## Configuration
+
+<Tabs>
+   <Tab title="YAML">
+   ```yaml title="config.yaml"
+   name: My Config
+   version: 0.0.1
+   schema: v1
+
+   models:
+     - name: GPT-6 Sol via FreeAIapikey
+       provider: openai
+       model: openai/gpt-6-sol
+       apiKey: <YOUR_FREEAIKEY_API_KEY>
+       apiBase: https://api.freeaiapikey.com/v1
+   ```
+   </Tab>
+   <Tab title="JSON">
+   ```json title="config.json"
+   {
+     "models": [
+       {
+         "name": "GPT-6 Sol via FreeAIapikey",
+         "provider": "openai",
+         "model": "openai/gpt-6-sol",
+         "apiKey": "<YOUR_FREEAIKEY_API_KEY>",
+         "apiBase": "https://api.freeaiapikey.com/v1"
+       }
+     ]
+   }
+   ```
+   </Tab>
+</Tabs>
