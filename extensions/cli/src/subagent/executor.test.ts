@@ -75,4 +75,21 @@ describe("executeSubAgent", () => {
     const callbacks = vi.mocked(streamChatResponse).mock.calls[0][4];
     expect(callbacks?.onToolPermissionRequest).toBe(onToolPermissionRequest);
   });
+
+  it("passes the permission snapshot to the subagent stream callbacks", async () => {
+    const permissionSnapshot = Object.freeze({
+      policies: [{ tool: "Bash", permission: "ask" as const }],
+    });
+
+    await executeSubAgent({
+      agent,
+      prompt: "do a thing",
+      parentSessionId: "parent-session",
+      abortController: new AbortController(),
+      permissionSnapshot,
+    });
+
+    const callbacks = vi.mocked(streamChatResponse).mock.calls[0][4];
+    expect(callbacks?.permissionSnapshot).toBe(permissionSnapshot);
+  });
 });
