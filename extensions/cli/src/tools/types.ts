@@ -1,5 +1,7 @@
 import type { ToolPolicy } from "@continuedev/terminal-security";
 
+import type { ToolPermissions } from "../permissions/types.js";
+
 // JSON Schema compatible parameter definition
 export interface ParameterSchema {
   type: string;
@@ -50,6 +52,12 @@ export interface ToolRunContext {
     requestId: string,
     preview?: ToolCallPreview[],
   ) => void;
+  /**
+   * Immutable permission policy the current run is checked against. A subagent
+   * spawned from this run inherits it, so nested spawns stay under the
+   * original policy.
+   */
+  permissionSnapshot?: Readonly<ToolPermissions>;
 }
 
 export interface Tool {
