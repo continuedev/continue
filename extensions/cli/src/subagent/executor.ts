@@ -1,5 +1,6 @@
 import type { ChatHistoryItem } from "core";
 
+import type { ToolPermissions } from "../permissions/types.js";
 import { services } from "../services/index.js";
 import { ModelServiceState } from "../services/types.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
@@ -22,6 +23,11 @@ export interface SubAgentExecutionOptions {
     requestId: string,
     preview?: ToolCallPreview[],
   ) => void;
+  /**
+   * Immutable policy the subagent runs under. Computed when the subagent is
+   * spawned, so later changes to the shared session state do not affect it.
+   */
+  permissionSnapshot?: Readonly<ToolPermissions>;
 }
 
 /**
@@ -68,6 +74,7 @@ export async function executeSubAgent(
     abortController,
     onOutputUpdate,
     onToolPermissionRequest,
+    permissionSnapshot,
   } = options;
 
   try {
@@ -80,9 +87,9 @@ export async function executeSubAgent(
       throw new Error("Model or LLM API not available");
     }
 
-    // The subagent runs under the parent session's tool permissions.
-    // "ask"-policy tool calls surface the same approval dialog through
-    // onToolPermissionRequest instead of being silently allowed or denied.
+    // The subagent runs under the permission snapshot taken at spawn time.
+    // "ask"-policy tool calls surface the approval dialog through
+    // onToolPermissionRequest; with no callback they are denied.
 
     // Build agent system message
     const systemMessage = await buildAgentSystemMessage(subAgent, services);
@@ -154,6 +161,7 @@ export async function executeSubAgent(
             }
           },
           onToolPermissionRequest,
+          permissionSnapshot,
         },
         false, // Not compacting
       );
