@@ -216,6 +216,7 @@ export async function executeToolCall(
   options: {
     parallelToolCallCount: number;
     onToolPermissionRequest?: ToolRunContext["onToolPermissionRequest"];
+    permissionSnapshot?: ToolRunContext["permissionSnapshot"];
   } = { parallelToolCallCount: 1 },
 ): Promise<string> {
   const startTime = Date.now();
@@ -234,6 +235,7 @@ export async function executeToolCall(
       toolCallId: toolCall.id,
       parallelToolCallCount: options.parallelToolCallCount,
       onToolPermissionRequest: options.onToolPermissionRequest,
+      permissionSnapshot: options.permissionSnapshot,
     };
 
     // IMPORTANT: if preprocessed args are present, uses preprocessed args instead of original args
