@@ -147,4 +147,75 @@ describe("subagentTool", () => {
     const [options] = vi.mocked(executeSubAgent).mock.calls[0];
     expect(options.onToolPermissionRequest).toBe(onToolPermissionRequest);
   });
+
+  describe("permission snapshot", () => {
+    const askBash = {
+      policies: [{ tool: "Bash", permission: "ask" as const }],
+    };
+    const allowAll = {
+      policies: [{ tool: "*", permission: "allow" as const }],
+    };
+
+    function mockLivePermissions(permissions: unknown) {
+      vi.mocked(serviceContainer.get).mockImplementation(async (name: any) =>
+        name === "toolPermissions"
+          ? ({ permissions } as any)
+          : modelServiceState,
+      );
+    }
+
+    beforeEach(() => {
+      vi.mocked(getAgentNames).mockReturnValue(["code-agent"]);
+      vi.mocked(getSubagent).mockReturnValue({
+        model: { name: "test-model" },
+      } as any);
+      vi.mocked(executeSubAgent).mockResolvedValue({
+        success: true,
+        response: "ok",
+      } as any);
+    });
+
+    it("gives the subagent a frozen copy of the policy taken at spawn", async () => {
+      const live = structuredClone(askBash);
+      mockLivePermissions(live);
+      const tool = await subagentTool();
+
+      await tool.run(
+        { prompt: "p", subagent_name: "code-agent" },
+        { toolCallId: "id", parallelToolCallCount: 1 },
+      );
+
+      const [options] = vi.mocked(executeSubAgent).mock.calls[0];
+      const snapshot = options.permissionSnapshot!;
+      expect(snapshot).toEqual(askBash);
+      expect(snapshot).not.toBe(live);
+      expect(Object.isFrozen(snapshot)).toBe(true);
+      expect(Object.isFrozen(snapshot.policies[0])).toBe(true);
+
+      // Later changes to the shared state do not reach the snapshot
+      live.policies = [{ tool: "*", permission: "allow" }] as any;
+      expect(snapshot).toEqual(askBash);
+    });
+
+    it("keeps the original policy for a nested spawn", async () => {
+      // The live state now allows everything, but the spawning run was
+      // started under the ask policy.
+      mockLivePermissions(allowAll);
+      const tool = await subagentTool();
+      const parentSnapshot = Object.freeze(structuredClone(askBash));
+
+      await tool.run(
+        { prompt: "grandchild task", subagent_name: "code-agent" },
+        {
+          toolCallId: "id",
+          parallelToolCallCount: 1,
+          permissionSnapshot: parentSnapshot,
+        },
+      );
+
+      const [options] = vi.mocked(executeSubAgent).mock.calls[0];
+      expect(options.permissionSnapshot).toBe(parentSnapshot);
+      expect(options.permissionSnapshot).toEqual(askBash);
+    });
+  });
 });
