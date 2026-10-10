@@ -1,6 +1,8 @@
 import { parse } from "shell-quote";
 type ToolPolicy =
-  "disabled" | "allowedWithPermission" | "allowedWithoutPermission";
+  | "disabled"
+  | "allowedWithPermission"
+  | "allowedWithoutPermission";
 
 /**
  * Token types from shell-quote
