@@ -1,5 +1,8 @@
 import { parse } from "shell-quote";
-import { ToolPolicy } from "./types.js";
+type ToolPolicy =
+  | "disabled"
+  | "allowedWithPermission"
+  | "allowedWithoutPermission";
 
 /**
  * Token types from shell-quote
@@ -428,10 +431,17 @@ function isCriticalCommand(baseCommand: string, args: string[]): boolean {
       arg === "/etc" ||
       arg === "/bin" ||
       arg === "/sbin" ||
+      arg === "/home" ||
+      arg === "/root" ||
+      arg === "$HOME" ||
       arg.startsWith("/usr/") ||
       arg.startsWith("/etc/") ||
       arg.startsWith("/bin/") ||
-      arg.startsWith("/sbin/"),
+      arg.startsWith("/sbin/") ||
+      arg.startsWith("/home/") ||
+      arg.startsWith("/root/") ||
+      arg.startsWith("$HOME") ||
+      arg.startsWith("${HOME}"),
   );
 
   // If we have rm flags with dangerous paths, it's critical regardless of command
@@ -457,6 +467,10 @@ function isCriticalCommand(baseCommand: string, args: string[]): boolean {
       "/usr/sbin/",
       "/lib/",
       "/lib64/",
+      "/home/",
+      "/root/",
+      "$HOME",
+      "${HOME}",
     ];
     if (args.some((arg) => criticalPaths.some((path) => arg.includes(path)))) {
       return true;
@@ -490,6 +504,11 @@ function isCriticalCommand(baseCommand: string, args: string[]): boolean {
     ) {
       return true;
     }
+  }
+
+  // pkexec privilege escalation
+  if (baseCommand === "pkexec") {
+    return true;
   }
 
   // Privilege escalation
@@ -741,6 +760,14 @@ function isHighRiskSystemService(baseCommand: string): boolean {
  * Checks if command is file operation to sensitive location
  */
 function isHighRiskFileOperation(baseCommand: string, args: string[]): boolean {
+  // Destructive deletion via find -delete: require permission, don't hard-block
+  if (baseCommand === "find" && args.some((arg) => arg === "-delete")) {
+    return true;
+  }
+  // Destructive disk/file commands: require permission, don't hard-block
+  if (baseCommand === "shred" || baseCommand === "wipefs") {
+    return true;
+  }
   if (baseCommand === "mv" || baseCommand === "cp" || baseCommand === "copy") {
     const sensitiveLocations = [
       "/etc/",

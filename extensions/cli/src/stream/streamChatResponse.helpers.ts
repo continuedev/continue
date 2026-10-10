@@ -197,6 +197,14 @@ export function processToolCallDelta(
   } else if (toolCallDelta.index !== undefined) {
     // No ID, but we have an index - look up the ID from our map
     toolCallId = indexToIdMap.get(toolCallDelta.index);
+    if (!toolCallId) {
+      // Some providers (e.g. Ollama) stream tool-call deltas with an index
+      // but no id. Generate a stable synthetic ID so the entry is created on
+      // the first delta and later fragments accumulate instead of being
+      // dropped as plain assistant text.
+      toolCallId = `call_${toolCallDelta.index}`;
+      indexToIdMap.set(toolCallDelta.index, toolCallId);
+    }
   }
 
   if (!toolCallId) {
