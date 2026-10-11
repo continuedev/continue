@@ -183,11 +183,20 @@ export function checkToolPermission(
     // Convert CLI permission to core policy
     const basePolicy = permissionPolicyToToolPolicy(basePermission);
 
-    // Evaluate the dynamic policy
-    const evaluatedPolicy = tool.evaluateToolCallPolicy(
-      basePolicy,
-      toolCall.arguments,
-    );
+    // Evaluate the dynamic policy. Fail closed: if the evaluator throws or
+    // returns an invalid value, deny the tool call.
+    let evaluatedPolicy: ToolPolicy;
+    try {
+      evaluatedPolicy = tool.evaluateToolCallPolicy(
+        basePolicy,
+        toolCall.arguments,
+      );
+    } catch {
+      return {
+        permission: "exclude",
+        matchedPolicy,
+      };
+    }
 
     const validPolicies: ToolPolicy[] = [
       "allowedWithoutPermission",
@@ -197,7 +206,7 @@ export function checkToolPermission(
 
     if (!validPolicies.includes(evaluatedPolicy)) {
       return {
-        permission: basePermission,
+        permission: "exclude",
         matchedPolicy,
       };
     }

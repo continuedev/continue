@@ -484,6 +484,9 @@ describe("Permission Checker", () => {
     });
 
     it("should match Bash command patterns in checkToolPermission", () => {
+      // Dynamic evaluation keeps the base policy; an unset mock is invalid output
+      mockEvaluateToolCallPolicy.mockImplementation((basePolicy) => basePolicy);
+
       const permissions: ToolPermissions = {
         policies: [
           { tool: "Bash(ls*)", permission: "allow" },
@@ -811,6 +814,72 @@ describe("Permission Checker", () => {
 
           expect(result.permission).toBe(expected);
         });
+      });
+    });
+
+    describe("Invalid evaluator output (fail closed)", () => {
+      const invalidOutputs: Array<[string, unknown]> = [
+        ["undefined", undefined],
+        ["null", null],
+        ["empty string", ""],
+        ["unknown string", "allow"],
+        ["wrong case", "AllowedWithoutPermission"],
+        ["number", 1],
+        ["object", { policy: "allowedWithoutPermission" }],
+      ];
+
+      const basePermissions = ["allow", "ask"] as const;
+
+      for (const basePermission of basePermissions) {
+        for (const [label, output] of invalidOutputs) {
+          it(`should exclude on ${label} output with static "${basePermission}"`, () => {
+            mockEvaluateToolCallPolicy.mockReturnValue(output);
+
+            const result = checkToolPermission(
+              { name: "Bash", arguments: { command: "echo hello" } },
+              { policies: [{ tool: "Bash", permission: basePermission }] },
+            );
+
+            expect(result.permission).toBe("exclude");
+          });
+        }
+      }
+
+      it("should exclude when the evaluator throws", () => {
+        mockEvaluateToolCallPolicy.mockImplementationOnce(() => {
+          throw new Error("evaluator failure");
+        });
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "echo hello" } },
+          { policies: [{ tool: "Bash", permission: "allow" }] },
+        );
+
+        expect(result.permission).toBe("exclude");
+      });
+
+      it("should exclude on invalid output when no policy matches", () => {
+        mockEvaluateToolCallPolicy.mockReturnValue(undefined);
+
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "echo hello" } },
+          { policies: [] },
+        );
+
+        expect(result.permission).toBe("exclude");
+      });
+
+      it("should keep the matched policy in the result on invalid output", () => {
+        mockEvaluateToolCallPolicy.mockReturnValue(null);
+
+        const policy = { tool: "Bash", permission: "allow" as const };
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command: "echo hello" } },
+          { policies: [policy] },
+        );
+
+        expect(result.permission).toBe("exclude");
+        expect(result.matchedPolicy).toBe(policy);
       });
     });
 
