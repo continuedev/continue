@@ -34,6 +34,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
   provider: z.union([
     z.literal("openai"),
     z.literal("mistral"),
+    z.literal("mixlayer"),
     z.literal("voyage"),
     z.literal("deepinfra"),
     z.literal("groq"),

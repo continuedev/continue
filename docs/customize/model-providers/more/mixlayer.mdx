@@ -1,0 +1,62 @@
+---
+title: "How to Configure Mixlayer with Continue"
+sidebarTitle: "Mixlayer"
+---
+
+<Info>
+  Get your API key from the [Mixlayer console](https://console.mixlayer.com/app/api-keys)
+</Info>
+
+[Mixlayer](https://mixlayer.com) serves open-source models (Qwen, DeepSeek, GLM) behind an OpenAI-compatible API, with zero data retention.
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: GLM 5.3
+      provider: mixlayer
+      model: z-ai/glm-5.3
+      apiKey: ${{ secrets.MIXLAYER_API_KEY }}
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GLM 5.3",
+        "provider": "mixlayer",
+        "model": "z-ai/glm-5.3",
+        "apiKey": "<YOUR_MIXLAYER_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+| Model | Context | Input | Notes |
+| :---- | :------ | :---- | :---- |
+| `z-ai/glm-5.3` | 262,144 | text | Tools. Reasoning is always on (Low/High/Max; `none` is rejected). |
+| `qwen/qwen3.8-27b` | 262,144 | text, image | Tools. Optional thinking (default on; `none` disables). |
+| `qwen/qwen3.6-35b-a3b` | 131,072 | text, image | Tools. Optional thinking (default on; `none` disables). |
+| `deepseek/deepseek-v4.1-flash` | 262,144 | text | Tools. Optional thinking (default High; `none` disables). |
+| `qwen/qwen3.5-9b` | 131,072 | text, image | Tools. Optional thinking (default on; `none` disables). |
+| `qwen/qwen3.5-4b-free` | 131,072 | text, image | Free. Tools. Optional thinking (default on; `none` disables). |
+
+## Notes
+
+- OpenAI-compatible API at `https://mixlayer.ai/v1` (nearest edge). Set `apiBase` to `https://<region>.mixlayer.ai/v1` for a specific region.
+- In `config.yaml`, reference the key with `${{ secrets.MIXLAYER_API_KEY }}`. Continue resolves that from a `.env` file, or from the process environment when using the CLI.
+- Prompts and outputs are processed in memory and discarded after inference (zero data retention). They are not stored or used for training.
+- Chat Completions does not support `tool_choice`.
+- Max output tokens per model are not published.
+- Pricing: [mixlayer.com/pricing](https://mixlayer.com/pricing)

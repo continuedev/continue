@@ -6,6 +6,7 @@ import { CometAPI } from "./providers/cometapi.js";
 import { Gemini } from "./providers/gemini.js";
 import { Inception } from "./providers/inception.js";
 import { MiniMax } from "./providers/minimax.js";
+import { Mixlayer } from "./providers/mixlayer.js";
 import { Mistral } from "./providers/mistral.js";
 import { Ollama } from "./providers/ollama.js";
 import { OpenAi } from "./providers/openai.js";
@@ -29,6 +30,7 @@ export const allModelProviders: ModelProvider[] = [
   CometAPI,
   Inception,
   MiniMax,
+  Mixlayer,
   xAI,
   zAI,
 ];

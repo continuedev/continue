@@ -68,6 +68,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "deepseek",
   "xAI",
   "minimax",
+  "mixlayer",
   "groq",
   "gemini",
   "docker",
@@ -133,6 +134,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "watsonx",
   "zAI",
   "tensorix",
+  "mixlayer",
 ];
 
 const MODEL_SUPPORTS_IMAGES: RegExp[] = [
@@ -153,6 +155,10 @@ const MODEL_SUPPORTS_IMAGES: RegExp[] = [
   /\bgemma-?[34](?!n)/, // gemma3/gemma4 support vision, but gemma3n doesn't!
   /\b(pali|med)gemma/,
   /qwen(.*)vl/,
+  /qwen\/qwen3\.8-27b$/,
+  /qwen\/qwen3\.6-35b-a3b$/,
+  /qwen\/qwen3\.5-9b$/,
+  /qwen\/qwen3\.5-4b-free$/,
   /mistral-small/,
   /mistral-medium/,
 ];
@@ -252,6 +258,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "function-network",
   "scaleway",
   "minimax",
+  "mixlayer",
   "tensorix",
 ];
 
