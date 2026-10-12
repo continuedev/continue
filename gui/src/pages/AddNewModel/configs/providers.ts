@@ -589,6 +589,40 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://platform.minimax.io",
   },
+  mixlayer: {
+    title: "Mixlayer",
+    provider: "mixlayer",
+    description:
+      "OpenAI-compatible inference for open-source models, with zero data retention.",
+    longDescription:
+      "Mixlayer serves Qwen, DeepSeek, and GLM models at https://mixlayer.ai/v1. Get an API key from the [Mixlayer console](https://console.mixlayer.com/app/api-keys). A free Qwen 3.5 4B model is available.",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Mixlayer API key",
+        required: true,
+      },
+    ],
+    packages: [
+      models.mixlayerGlm53,
+      models.mixlayerQwen3827b,
+      models.mixlayerQwen3635bA3b,
+      models.mixlayerDeepseekV41Flash,
+      models.mixlayerQwen359b,
+      models.mixlayerQwen354bFree,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "Mixlayer",
+        },
+      },
+    ],
+    apiKeyUrl: "https://console.mixlayer.com/app/api-keys",
+  },
   inception: {
     title: "Inception Labs",
     provider: "inception",

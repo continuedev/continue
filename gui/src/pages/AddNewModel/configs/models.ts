@@ -3327,4 +3327,78 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "inception.png",
     isOpenSource: false,
   },
+
+  // Mixlayer models
+  mixlayerGlm53: {
+    title: "GLM 5.3",
+    description:
+      "Text model with tool calling. Reasoning is always on. 262,144 token context window.",
+    params: {
+      title: "GLM 5.3",
+      model: "z-ai/glm-5.3",
+      contextLength: 262_144,
+    },
+    providerOptions: ["mixlayer"],
+    isOpenSource: true,
+  },
+  mixlayerQwen3827b: {
+    title: "Qwen3.8 27B",
+    description:
+      "Text and image model with tool calling and optional thinking. 262,144 token context window.",
+    params: {
+      title: "Qwen3.8 27B",
+      model: "qwen/qwen3.8-27b",
+      contextLength: 262_144,
+    },
+    providerOptions: ["mixlayer"],
+    isOpenSource: true,
+  },
+  mixlayerQwen3635bA3b: {
+    title: "Qwen3.6 35B A3B",
+    description:
+      "Text and image model with tool calling and optional thinking. 131,072 token context window.",
+    params: {
+      title: "Qwen3.6 35B A3B",
+      model: "qwen/qwen3.6-35b-a3b",
+      contextLength: 131_072,
+    },
+    providerOptions: ["mixlayer"],
+    isOpenSource: true,
+  },
+  mixlayerDeepseekV41Flash: {
+    title: "DeepSeek V4.1 Flash",
+    description:
+      "Text model with tool calling and optional thinking. 262,144 token context window.",
+    params: {
+      title: "DeepSeek V4.1 Flash",
+      model: "deepseek/deepseek-v4.1-flash",
+      contextLength: 262_144,
+    },
+    providerOptions: ["mixlayer"],
+    isOpenSource: true,
+  },
+  mixlayerQwen359b: {
+    title: "Qwen3.5 9B",
+    description:
+      "Text and image model with tool calling and optional thinking. 131,072 token context window.",
+    params: {
+      title: "Qwen3.5 9B",
+      model: "qwen/qwen3.5-9b",
+      contextLength: 131_072,
+    },
+    providerOptions: ["mixlayer"],
+    isOpenSource: true,
+  },
+  mixlayerQwen354bFree: {
+    title: "Qwen3.5 4B (Free)",
+    description:
+      "Free text and image model with tool calling and optional thinking. 131,072 token context window.",
+    params: {
+      title: "Qwen3.5 4B (Free)",
+      model: "qwen/qwen3.5-4b-free",
+      contextLength: 131_072,
+    },
+    providerOptions: ["mixlayer"],
+    isOpenSource: true,
+  },
 };

@@ -135,6 +135,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.voyageai.com/v1/", config);
     case "mistral":
       return openAICompatible("https://api.mistral.ai/v1/", config);
+    case "mixlayer":
+      return openAICompatible("https://mixlayer.ai/v1/", config);
     case "deepinfra":
       return openAICompatible("https://api.deepinfra.com/v1/openai/", config);
     case "vllm":
