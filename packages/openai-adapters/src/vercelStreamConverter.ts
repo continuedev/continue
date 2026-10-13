@@ -238,9 +238,27 @@ export async function* convertVercelStream(
   stream: AsyncIterable<VercelStreamPart>,
   options: VercelStreamConverterOptions,
 ): AsyncGenerator<ChatCompletionChunk, void, unknown> {
+  const toolCallIndices = new Map<string, number>();
+
   for await (const part of stream) {
     const chunk = convertVercelStreamPart(part, options);
     if (chunk !== null) {
+      if (
+        part.type === "tool-input-start" ||
+        part.type === "tool-input-delta" ||
+        part.type === "tool-call"
+      ) {
+        const id = part.type === "tool-call" ? part.toolCallId : part.id;
+        let index = toolCallIndices.get(id);
+        if (index === undefined) {
+          index = toolCallIndices.size;
+          toolCallIndices.set(id, index);
+        }
+        const toolCall = chunk.choices[0].delta.tool_calls?.[0];
+        if (toolCall) {
+          toolCall.index = index;
+        }
+      }
       yield chunk;
     }
   }
