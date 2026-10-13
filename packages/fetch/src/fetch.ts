@@ -95,7 +95,11 @@ export async function fetchwithRequestOptions(
   const proxy = getProxy(url.protocol, requestOptions);
 
   // Check if should bypass proxy based on requestOptions or NO_PROXY env var
-  const shouldBypass = shouldBypassProxy(url.hostname, requestOptions);
+  const port = url.port || (url.protocol === "https:" ? "443" : "80");
+  const shouldBypass = shouldBypassProxy(
+    `${url.hostname}:${port}`,
+    requestOptions,
+  );
 
   // Create agent
   const protocol = url.protocol === "https:" ? https : http;

@@ -274,6 +274,58 @@ describe("fetchwithRequestOptions E2E tests", () => {
     });
   });
 
+  describe("Proxy bypass", () => {
+    test.each([
+      ["request options", true],
+      ["environment", true],
+      ["different port", false],
+      ["hostname only", true],
+    ])("routes %s entries correctly", async (source, direct) => {
+      await startHttpServer();
+      const proxy = http.createServer((_req, res) => {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ proxied: true }));
+      });
+      await new Promise<void>((resolve) =>
+        proxy.listen(0, "127.0.0.1", resolve),
+      );
+      serversToCleanup.push(proxy);
+      const proxyPort = (proxy.address() as { port: number }).port;
+      const oldNoProxy = process.env.NO_PROXY;
+      const oldLowerNoProxy = process.env.no_proxy;
+      delete process.env.NO_PROXY;
+      delete process.env.no_proxy;
+      process.env.NO_PROXY =
+        source === "environment" ? `localhost:${HTTP_PORT}` : "";
+
+      try {
+        const pattern =
+          source === "hostname only"
+            ? "localhost"
+            : `localhost:${source === "different port" ? HTTP_PORT + 1 : HTTP_PORT}`;
+        const response = await fetchwithRequestOptions(
+          `http://localhost:${HTTP_PORT}/json`,
+          undefined,
+          {
+            proxy: `http://127.0.0.1:${proxyPort}`,
+            noProxy: source === "environment" ? [] : [pattern],
+          },
+        );
+
+        expect(await response.json()).toEqual(
+          direct
+            ? { message: "Hello from HTTP server", method: "GET" }
+            : { proxied: true },
+        );
+      } finally {
+        if (oldNoProxy === undefined) delete process.env.NO_PROXY;
+        else process.env.NO_PROXY = oldNoProxy;
+        if (oldLowerNoProxy === undefined) delete process.env.no_proxy;
+        else process.env.no_proxy = oldLowerNoProxy;
+      }
+    });
+  });
+
   describe("Request options integration", () => {
     test("should merge extra body properties", async () => {
       await startHttpServer();
