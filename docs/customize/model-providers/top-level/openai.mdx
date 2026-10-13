@@ -165,3 +165,41 @@ By default, Continue uses OpenAI's `/responses` endpoint for o-series and gpt-5 
   ```
   </Tab>
 </Tabs>
+
+### How to Disable `stream_options`
+
+By default, Continue adds `stream_options: { include_usage: true }` to streaming requests to get token usage. Some strict OpenAI-compatible endpoints, for example Databricks serving endpoints, reject this field with `400 Bad request: json: unknown field "stream_options"`. To remove the field from requests, set `streamOptions: false`:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: <OPENAI_API_COMPATIBLE_PROVIDER_MODEL>
+      provider: openai
+      model: <MODEL_NAME>
+      apiBase: <API_BASE>
+      apiKey: <API_KEY>
+      streamOptions: false
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "<OPENAI_API_COMPATIBLE_PROVIDER_MODEL>",
+        "provider": "openai",
+        "model": "<MODEL_NAME>",
+        "apiBase": "<API_BASE>",
+        "apiKey": "<API_KEY>",
+        "streamOptions": false
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
