@@ -96,8 +96,13 @@ export function encodePackageIdentifier(identifier: PackageIdentifier): string {
 }
 
 export function decodePackageIdentifier(identifier: string): PackageIdentifier {
-  // Shorthand: if it starts with . or /, then it's a path
-  if (identifier.startsWith(".") || identifier.startsWith("/")) {
+  // Shorthand for local paths, including Windows drive and UNC paths.
+  if (
+    identifier.startsWith(".") ||
+    identifier.startsWith("/") ||
+    /^[a-z]:[\\/]/i.test(identifier) ||
+    identifier.startsWith("\\\\")
+  ) {
     return {
       uriType: "file",
       fileUri: identifier,
