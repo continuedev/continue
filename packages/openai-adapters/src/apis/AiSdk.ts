@@ -143,6 +143,9 @@ export class AiSdkApi implements BaseLlmApi {
         : undefined,
       tools: vercelTools,
       toolChoice: convertToolChoiceToVercel(body.tool_choice),
+      providerOptions: this.config.providerOptions as Parameters<
+        typeof generateText
+      >[0]["providerOptions"],
       abortSignal: signal,
     });
 
@@ -229,6 +232,9 @@ export class AiSdkApi implements BaseLlmApi {
         : undefined,
       tools: vercelTools,
       toolChoice: convertToolChoiceToVercel(body.tool_choice),
+      providerOptions: this.config.providerOptions as Parameters<
+        typeof streamText
+      >[0]["providerOptions"],
       abortSignal: signal,
     });
 
