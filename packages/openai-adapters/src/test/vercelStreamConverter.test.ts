@@ -1,3 +1,4 @@
+import type { ChatCompletionChunk } from "openai/resources/index";
 import { describe, expect, test } from "vitest";
 import {
   convertVercelStream,
@@ -265,6 +266,82 @@ describe("convertVercelStream", () => {
     );
     expect(chunks[4].usage).toBeDefined();
   });
+
+  test.each(["sequential", "interleaved"] as const)(
+    "keeps tool call indices stable for %s calls",
+    async (order) => {
+      const first: VercelStreamPart[] = [
+        { type: "tool-input-start", id: "call_a", toolName: "readFile" },
+        { type: "tool-input-delta", id: "call_a", delta: '{"path":"' },
+        { type: "tool-input-delta", id: "call_a", delta: 'a.txt"}' },
+        {
+          type: "tool-call",
+          toolCallId: "call_a",
+          toolName: "readFile",
+          input: { path: "a.txt" },
+          providerMetadata: { google: { thoughtSignature: "sig_a" } },
+        },
+      ];
+      const second: VercelStreamPart[] = [
+        { type: "tool-input-start", id: "call_b", toolName: "readFile" },
+        { type: "tool-input-delta", id: "call_b", delta: '{"path":"' },
+        { type: "tool-input-delta", id: "call_b", delta: 'b.txt"}' },
+        {
+          type: "tool-call",
+          toolCallId: "call_b",
+          toolName: "readFile",
+          input: { path: "b.txt" },
+          providerMetadata: { vertex: { thoughtSignature: "sig_b" } },
+        },
+      ];
+      const parts =
+        order === "sequential"
+          ? [...first, ...second]
+          : [
+              first[0],
+              first[1],
+              second[0],
+              second[1],
+              first[2],
+              second[2],
+              second[3],
+              first[3],
+            ];
+
+      async function* streamParts() {
+        yield* parts;
+      }
+
+      const toolCalls: NonNullable<
+        ChatCompletionChunk.Choice["delta"]["tool_calls"]
+      > = [];
+      for await (const chunk of convertVercelStream(streamParts(), options)) {
+        toolCalls.push(chunk.choices[0].delta.tool_calls![0]);
+      }
+
+      expect(toolCalls.map((call) => call.index)).toEqual(
+        order === "sequential"
+          ? [0, 0, 0, 0, 1, 1, 1, 1]
+          : [0, 0, 1, 1, 0, 1, 1, 0],
+      );
+      expect(
+        [0, 1].map((index) =>
+          toolCalls
+            .filter((call) => call.index === index)
+            .map((call) => call.function?.arguments ?? "")
+            .join(""),
+        ),
+      ).toEqual(['{"path":"a.txt"}', '{"path":"b.txt"}']);
+      expect(toolCalls).toContainEqual({
+        index: 0,
+        extra_content: { google: { thought_signature: "sig_a" } },
+      });
+      expect(toolCalls).toContainEqual({
+        index: 1,
+        extra_content: { google: { thought_signature: "sig_b" } },
+      });
+    },
+  );
 
   test("throws error when stream contains error event", async () => {
     const parts: VercelStreamPart[] = [
