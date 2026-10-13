@@ -28,7 +28,10 @@ type AiSdkProviderCreator = (options: {
   apiKey?: string;
   baseURL?: string;
   fetch?: typeof fetch;
-}) => (modelId: string) => any;
+}) => {
+  (modelId: string): any;
+  embeddingModel(modelId: string): any;
+};
 
 const PROVIDER_MAP: Record<string, AiSdkProviderCreator> = {
   openai: createOpenAI,
@@ -49,7 +52,7 @@ const PROVIDER_MAP: Record<string, AiSdkProviderCreator> = {
 };
 
 export class AiSdkApi implements BaseLlmApi {
-  private provider?: (modelId: string) => any;
+  private provider?: ReturnType<AiSdkProviderCreator>;
   private config: AiSdkConfig;
   private providerId: string;
   private modelId: string;
@@ -267,8 +270,8 @@ export class AiSdkApi implements BaseLlmApi {
 
     const { embed: aiEmbed, embedMany } = await import("ai");
 
-    const modelId = typeof body.model === "string" ? body.model : body.model;
-    const model = this.provider!(modelId);
+    const modelId = this.modelId;
+    const model = this.provider!.embeddingModel(modelId);
 
     const inputs = Array.isArray(body.input) ? body.input : [body.input];
     const stringInputs = inputs.map((input) =>
