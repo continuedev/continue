@@ -86,6 +86,8 @@ describe("config", () => {
       provider: "openai",
       model: "strict-endpoint",
       apiKey: "test-key",
+      // Keep a developer's HTTP_PROXY away from the local mock server.
+      requestOptions: { noProxy: ["127.0.0.1"] },
     };
 
     test("omits stream_options when the model sets streamOptions: false", async () => {
