@@ -52,6 +52,7 @@ export function createLlmApi(
     apiBase: model.apiBase,
     requestOptions: model.requestOptions,
     env: model.env,
+    streamOptions: model.streamOptions,
   };
 
   return constructLlmApi(config) ?? null;

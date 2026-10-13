@@ -318,6 +318,7 @@ export abstract class BaseLLM implements ILLM {
       requestOptions: this.requestOptions,
       env: this._llmOptions.env,
       useResponsesApi: this._llmOptions.useResponsesApi,
+      streamOptions: this._llmOptions.streamOptions,
     });
   }
 
