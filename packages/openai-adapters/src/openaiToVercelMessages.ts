@@ -56,7 +56,24 @@ export function convertOpenAIMessagesToVercel(
       case "user":
         vercelMessages.push({
           role: "user",
-          content: msg.content,
+          content:
+            typeof msg.content === "string"
+              ? msg.content
+              : msg.content.map((part) =>
+                  part.type === "image_url"
+                    ? {
+                        type: "image",
+                        image: part.image_url.url,
+                        ...(part.image_url.detail
+                          ? {
+                              providerOptions: {
+                                openai: { imageDetail: part.image_url.detail },
+                              },
+                            }
+                          : {}),
+                      }
+                    : part,
+                ),
         });
         break;
 
