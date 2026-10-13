@@ -138,6 +138,19 @@ describe("PackageIdentifier", () => {
     expect(decoded).toEqual(testIdentifier);
   });
 
+  it.each([
+    String.raw`C:\project\rule.yaml`,
+    "C:/project/rule.yaml",
+    String.raw`d:\project\rule.yaml`,
+    String.raw`\\server\share\rule.yaml`,
+  ])("should round-trip Windows file path %s", (fileUri) => {
+    const identifier = { uriType: "file" as const, fileUri };
+
+    expect(
+      decodePackageIdentifier(encodePackageIdentifier(identifier)),
+    ).toEqual(identifier);
+  });
+
   it("should decode file-based package identifier with file:// protocol", () => {
     const encoded = "file:///path/to/package.yaml";
     const decoded = decodePackageIdentifier(encoded);
