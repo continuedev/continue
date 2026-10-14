@@ -254,6 +254,88 @@ describe("renderPromptWithTokenLimit parity & pruning", () => {
 
     expect(compiledPrefix.length).toBeLessThan(120);
   });
+
+  it("does not prune prompt to empty when contextLength equals DEFAULT_MAX_TOKENS (4096) with default completionOptions", () => {
+    const prefix =
+      "def hello():\n    print('Hello, world!')\n\nif __name__ == '__main__':\n    ";
+    const helper = makeHelper({ prunedPrefix: prefix, fullPrefix: prefix });
+
+    const llmStub = {
+      contextLength: 4096,
+      completionOptions: {}, // No explicit maxTokens set, falls back to default
+      model: "test-model",
+    } as any;
+
+    const { prefix: compiledPrefix } = renderPromptWithTokenLimit({
+      snippetPayload: emptySnippetPayload,
+      workspaceDirs: ["file:///workspace"],
+      helper,
+      llm: llmStub,
+    });
+
+    expect(compiledPrefix).not.toBe("");
+    expect(compiledPrefix).toContain("def hello()");
+  });
+
+  it("handles models with small contextLength (2048) without negative budget", () => {
+    const prefix = "function add(a, b) {\n  return a + b;\n}\n";
+    const helper = makeHelper({ prunedPrefix: prefix, fullPrefix: prefix });
+
+    const llmStub = {
+      contextLength: 2048,
+      completionOptions: {},
+      model: "test-model",
+    } as any;
+
+    const { prefix: compiledPrefix } = renderPromptWithTokenLimit({
+      snippetPayload: emptySnippetPayload,
+      workspaceDirs: ["file:///workspace"],
+      helper,
+      llm: llmStub,
+    });
+
+    expect(compiledPrefix).toContain("function add");
+  });
+
+  it("safely caps reservedTokens when llm.completionOptions.maxTokens exceeds context window", () => {
+    const prefix = "const x = 42;\nconst y = 84;\n";
+    const helper = makeHelper({ prunedPrefix: prefix, fullPrefix: prefix });
+
+    const llmStub = {
+      contextLength: 2048,
+      completionOptions: { maxTokens: 8192 }, // Misconfigured maxTokens exceeding context
+      model: "test-model",
+    } as any;
+
+    const { prefix: compiledPrefix } = renderPromptWithTokenLimit({
+      snippetPayload: emptySnippetPayload,
+      workspaceDirs: ["file:///workspace"],
+      helper,
+      llm: llmStub,
+    });
+
+    expect(compiledPrefix).toContain("const x = 42;");
+  });
+
+  it("respects explicit small maxTokens option in completionOptions", () => {
+    const prefix = "let count = 0;\n";
+    const helper = makeHelper({ prunedPrefix: prefix, fullPrefix: prefix });
+
+    const llmStub = {
+      contextLength: 4096,
+      completionOptions: { maxTokens: 64 },
+      model: "test-model",
+    } as any;
+
+    const { prefix: compiledPrefix } = renderPromptWithTokenLimit({
+      snippetPayload: emptySnippetPayload,
+      workspaceDirs: ["file:///workspace"],
+      helper,
+      llm: llmStub,
+    });
+
+    expect(compiledPrefix).toContain("let count = 0;");
+  });
 });
 
 describe("stop-token merging", () => {

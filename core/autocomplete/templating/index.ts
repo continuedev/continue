@@ -5,7 +5,6 @@ import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo"
 import { HelperVars } from "../util/HelperVars";
 
 import { ILLM } from "../../index.js";
-import { DEFAULT_MAX_TOKENS } from "../../llm/constants.js";
 import {
   countTokens,
   getTokenCountingBufferSafety,
@@ -200,13 +199,26 @@ function buildPrompt(
   return { prompt, prefix, suffix };
 }
 
+export const DEFAULT_AUTOCOMPLETE_MAX_TOKENS = 256;
+
 function pruneLength(llm: ILLM, prompt: string): number {
   const contextLength = llm.contextLength;
-  const reservedTokens = llm.completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS;
+  // For autocomplete, completion output is short (typically < 256 tokens).
+  // Falling back to chat DEFAULT_MAX_TOKENS (4096) exhausts the entire context window
+  // on models with num_ctx <= 4096 (e.g. Ollama coder models), leading to negative
+  // prompt budgets and completely blank prompts (Issue #13038).
+  const requestedMaxTokens =
+    llm.completionOptions?.maxTokens ?? DEFAULT_AUTOCOMPLETE_MAX_TOKENS;
+  const maxReservedTokens = Math.max(16, Math.floor(contextLength * 0.25));
+  const reservedTokens = Math.min(requestedMaxTokens, maxReservedTokens);
+
   const safetyBuffer = getTokenCountingBufferSafety(contextLength);
-  const maxAllowedPromptTokens = contextLength - reservedTokens - safetyBuffer;
+  const maxAllowedPromptTokens = Math.max(
+    0,
+    contextLength - reservedTokens - safetyBuffer,
+  );
   const promptTokenCount = countTokens(prompt, llm.model);
-  return promptTokenCount - maxAllowedPromptTokens;
+  return Math.max(0, promptTokenCount - maxAllowedPromptTokens);
 }
 
 export function renderPromptWithTokenLimit({
