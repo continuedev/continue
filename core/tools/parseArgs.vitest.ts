@@ -403,6 +403,89 @@ describe("coerceArgsToSchema", () => {
     expect(result.flag).toBe(true);
   });
 
+  it("should coerce stringified JSON array when schema expects array", () => {
+    const args = {
+      paths:
+        '["frontend/src/pages/Accounts.jsx", "frontend/src/components/Translate.jsx"]',
+    };
+    const schema = {
+      type: "object",
+      properties: {
+        paths: { type: "array", items: { type: "string" } },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.paths).toEqual([
+      "frontend/src/pages/Accounts.jsx",
+      "frontend/src/components/Translate.jsx",
+    ]);
+  });
+
+  it("should coerce stringified JSON object when schema expects object", () => {
+    const args = {
+      options: '{"timeout": 5000, "retries": 3}',
+    };
+    const schema = {
+      type: "object",
+      properties: {
+        options: { type: "object" },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.options).toEqual({ timeout: 5000, retries: 3 });
+  });
+
+  it("should coerce string boolean values when schema expects boolean", () => {
+    const args = {
+      dryRun: "false",
+      verbose: "TRUE",
+    };
+    const schema = {
+      type: "object",
+      properties: {
+        dryRun: { type: "boolean" },
+        verbose: { type: "boolean" },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.dryRun).toBe(false);
+    expect(result.verbose).toBe(true);
+  });
+
+  it("should coerce numeric strings when schema expects number or integer", () => {
+    const args = {
+      count: "42",
+      ratio: "3.14",
+    };
+    const schema = {
+      type: "object",
+      properties: {
+        count: { type: "integer" },
+        ratio: { type: "number" },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.count).toBe(42);
+    expect(result.ratio).toBe(3.14);
+  });
+
+  it("should coerce types under anyOf and oneOf schema definitions", () => {
+    const args = {
+      paths: '["file1.ts", "file2.ts"]',
+      active: "true",
+    };
+    const schema = {
+      type: "object",
+      properties: {
+        paths: { anyOf: [{ type: "array" }, { type: "null" }] },
+        active: { oneOf: [{ type: "boolean" }, { type: "null" }] },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.paths).toEqual(["file1.ts", "file2.ts"]);
+    expect(result.active).toBe(true);
+  });
+
   it("should not mutate the original args object", () => {
     const args = { content: { key: "value" } };
     const schema = {
