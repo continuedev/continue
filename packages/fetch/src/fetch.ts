@@ -85,8 +85,9 @@ export async function fetchwithRequestOptions(
   requestOptions?: RequestOptions,
 ): Promise<Response> {
   const url = typeof url_ === "string" ? new URL(url_) : url_;
-  if (url.host === "localhost") {
-    url.host = "127.0.0.1";
+  const originalHost = url.host;
+  if (url.hostname === "localhost") {
+    url.hostname = "127.0.0.1";
   }
 
   const agentOptions = await getAgentOptions(requestOptions);
@@ -95,7 +96,9 @@ export async function fetchwithRequestOptions(
   const proxy = getProxy(url.protocol, requestOptions);
 
   // Check if should bypass proxy based on requestOptions or NO_PROXY env var
-  const shouldBypass = shouldBypassProxy(url.hostname, requestOptions);
+  const shouldBypass =
+    shouldBypassProxy(url.host, requestOptions) ||
+    shouldBypassProxy(originalHost, requestOptions);
 
   // Create agent
   const protocol = url.protocol === "https:" ? https : http;

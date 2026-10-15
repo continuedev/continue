@@ -218,3 +218,16 @@ test("shouldBypassProxy handles non-string NO_PROXY value", () => {
   (process.env as any).NO_PROXY = 1234;
   expect(shouldBypassProxy("example.com", undefined)).toBe(false);
 });
+
+test("shouldBypassProxy discriminates between ports on the same IP", () => {
+  const options = { noProxy: ["127.0.0.1:11434"] };
+  expect(shouldBypassProxy("127.0.0.1:11434", options)).toBe(true);
+  expect(shouldBypassProxy("127.0.0.1:8000", options)).toBe(false);
+  expect(shouldBypassProxy("127.0.0.1", options)).toBe(false);
+});
+
+test("shouldBypassProxy with port-specific localhost pattern", () => {
+  const options = { noProxy: ["localhost:11434"] };
+  expect(shouldBypassProxy("localhost:11434", options)).toBe(true);
+  expect(shouldBypassProxy("localhost:8080", options)).toBe(false);
+});
