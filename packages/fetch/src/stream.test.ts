@@ -54,6 +54,50 @@ describe("streamSse", () => {
     expect(results).toEqual([{ foo: "bar" }, { baz: 42 }]);
   });
 
+  it("ignores SSE comment lines that share a chunk with data events", async () => {
+    // Servers and proxies send SSE comments (e.g. `: ping`) as keep-alives.
+    // When one arrives in the same chunk as the following data events, those
+    // events must still be yielded rather than silently dropped.
+    const stream = new Readable({
+      read() {
+        this.push(
+          ': ping\n\ndata: {"foo": "bar"}\n\ndata: {"baz": 42}\n\ndata: [DONE]\n\n',
+        );
+        this.push(null); // End of stream
+      },
+    }) as any;
+    const response = {
+      status: 200,
+      body: stream,
+      text: async () => "",
+    } as unknown as Response;
+
+    const results = [];
+    for await (const data of streamSse(response)) {
+      results.push(data);
+    }
+
+    expect(results).toEqual([{ foo: "bar" }, { baz: 42 }]);
+  });
+
+  it("ignores interleaved SSE comments between data events", async () => {
+    const sseLines = [
+      'data: {"first": 1}',
+      ": ping",
+      ": heartbeat keep-alive",
+      'data: {"second": 2}',
+      "data: [DONE]",
+    ];
+    const response = createMockResponse(sseLines);
+
+    const results = [];
+    for await (const data of streamSse(response)) {
+      results.push(data);
+    }
+
+    expect(results).toEqual([{ first: 1 }, { second: 2 }]);
+  });
+
   it("throws on malformed JSON", async () => {
     const sseLines = ['data: {"foo": "bar"', "data:[DONE]"];
     const response = createMockResponse(sseLines);
