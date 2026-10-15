@@ -103,7 +103,7 @@ describe("calculateRequestCost", () => {
     {
       provider: "anthropic",
       model: "claude-opus-4-5-20251101",
-      promptTokens: 1000,
+      promptTokens: 3000,
       completionTokens: 500,
       cachedTokens: 2000,
       expectedCost: 0.0185,
@@ -112,7 +112,7 @@ describe("calculateRequestCost", () => {
     {
       provider: "anthropic",
       model: "claude-opus-4-5-20251101",
-      promptTokens: 1000,
+      promptTokens: 1300,
       completionTokens: 500,
       cacheWriteTokens: 300,
       expectedCost: 0.019375,
