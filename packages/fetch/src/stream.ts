@@ -115,8 +115,9 @@ function parseSseLine(line: string): { done: boolean; data: any } {
   if (line.startsWith("data:")) {
     return { done: false, data: parseDataLine(line) };
   }
-  if (line.startsWith(": ping")) {
-    return { done: true, data: undefined };
+  if (line.startsWith(":")) {
+    // Comment line (e.g. the `: ping` keep-alive), ignored per the SSE spec
+    return { done: false, data: undefined };
   }
   return { done: false, data: undefined };
 }
