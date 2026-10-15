@@ -272,6 +272,20 @@ describe("fetchwithRequestOptions E2E tests", () => {
       expect(response.status).toBe(404);
       expect(response.ok).toBe(false);
     });
+
+    test("should preserve localhost hostname without rewriting to 127.0.0.1 (#13339)", async () => {
+      await startHttpServer();
+
+      const inputUrl = new URL(`http://localhost:${HTTP_PORT}/headers`);
+      const response = await fetchwithRequestOptions(inputUrl);
+
+      expect(response.status).toBe(200);
+      expect(inputUrl.hostname).toBe("localhost");
+      const data = (await response.json()) as {
+        headers: Record<string, string>;
+      };
+      expect(data.headers.host).toBe(`localhost:${HTTP_PORT}`);
+    });
   });
 
   describe("Request options integration", () => {

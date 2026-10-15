@@ -84,10 +84,8 @@ export async function fetchwithRequestOptions(
   init?: RequestInit,
   requestOptions?: RequestOptions,
 ): Promise<Response> {
-  const url = typeof url_ === "string" ? new URL(url_) : url_;
-  if (url.host === "localhost") {
-    url.host = "127.0.0.1";
-  }
+  const url =
+    typeof url_ === "string" ? new URL(url_) : new URL(url_.toString());
 
   const agentOptions = await getAgentOptions(requestOptions);
 
@@ -135,11 +133,6 @@ export async function fetchwithRequestOptions(
     ...headers,
     ...requestOptions?.headers,
   };
-
-  // Replace localhost with 127.0.0.1
-  if (url.hostname === "localhost") {
-    url.hostname = "127.0.0.1";
-  }
 
   // add extra body properties if provided
   let updatedBody: string | undefined = undefined;
