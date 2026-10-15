@@ -5,7 +5,7 @@ import { BaseLLM } from "../index.js";
 class LlamaCpp extends BaseLLM {
   static providerName = "llama.cpp";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://127.0.0.1:8080/",
+    apiBase: "http://localhost:8080/",
   };
 
   private _convertArgs(options: CompletionOptions, prompt: string) {
