@@ -121,22 +121,28 @@ class DFSWalker {
 
       section = Date.now();
       let entries: [string, FileType][] = [];
-      const cachedListdir = walkDirCache.dirListCache.get(
-        cur.walkableEntry.uri,
-      );
-      if (
-        cachedListdir &&
-        cachedListdir.time > Date.now() - LIST_DIR_CACHE_TIME
-      ) {
-        entries = await cachedListdir.entries;
-        listDirCacheHits++;
-      } else {
-        const promise = this.ide.listDir(cur.walkableEntry.uri);
-        walkDirCache.dirListCache.set(cur.walkableEntry.uri, {
-          time: Date.now(),
-          entries: promise,
-        });
-        entries = await promise;
+      try {
+        const cachedListdir = walkDirCache.dirListCache.get(
+          cur.walkableEntry.uri,
+        );
+        if (
+          cachedListdir &&
+          cachedListdir.time > Date.now() - LIST_DIR_CACHE_TIME
+        ) {
+          entries = await cachedListdir.entries;
+          listDirCacheHits++;
+        } else {
+          const promise = this.ide.listDir(cur.walkableEntry.uri);
+          promise.catch(() => {});
+          walkDirCache.dirListCache.set(cur.walkableEntry.uri, {
+            time: Date.now(),
+            entries: promise,
+          });
+          entries = await promise;
+        }
+      } catch (e) {
+        walkDirCache.dirListCache.delete(cur.walkableEntry.uri);
+        continue;
       }
       listDirTime += Date.now() - section;
 
