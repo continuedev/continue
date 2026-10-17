@@ -1,0 +1,63 @@
+---
+title: "Use Ace Data Cloud in Continue"
+sidebarTitle: "Ace Data Cloud"
+description: "Choose Ace Data Cloud, add your API token, and select an exact chat model."
+keywords: [Ace Data Cloud, acedatacloud, models, API token]
+---
+
+Ace Data Cloud connects Continue to the chat model you select using the Chat Completions API. Each request uses your own account's access and balance. Model IDs are sent unchanged; the provider does not select a substitute model.
+
+## Select the provider
+
+Open **Add Chat model**, search for **Ace Data Cloud** in **Provider**, and paste your API token in **API key**. The API base is already configured. Select a model, or use the refresh control beside **Model** to retrieve the current catalog. Check that the exact model supports your intended use before clicking **Connect**.
+
+<Note>
+This named provider requires a Continue build containing the integration. It is not an extension Marketplace listing or a Continue Hub package. A source contribution is not proof that an installed release includes it.
+</Note>
+
+## Get your API token
+
+1. [Register or sign in to Ace Data Cloud](https://platform.acedata.cloud/console/applications?utm_source=continue&utm_medium=integration&utm_campaign=ecosystem-growth&utm_content=provider_register).
+2. Open **Applications → General application**. If it is absent, choose **Initialize General Application**.
+3. Copy the API key, or open **Manage Keys → Create** for a separate key named `Continue`. Check the selected model's access, expiration, allowed APIs, usage limit and balance. For model discovery and chat, allow `/openai/models` and `/openai/chat/completions` when using API restrictions.
+4. Paste the raw token in Continue's password field; do not add `Bearer ` or use an account-management `platform-...` token.
+
+![Copy an API key or open Manage Keys](https://raw.githubusercontent.com/AceDataCloud/SunoDify/8d3d03570e73324220f111f7fe343da0792a8071/_assets/tutorial/get-api-key-en.png)
+
+![Create a separately named API token](https://raw.githubusercontent.com/AceDataCloud/SunoDify/8d3d03570e73324220f111f7fe343da0792a8071/_assets/tutorial/create-api-key-en.png)
+
+These Ace account screenshots are reference images from the published Suno for Dify guide; the account Key controls are shared. Keep actual tokens out of screenshots, prompts and shared configuration. [Review current pricing](https://platform.acedata.cloud/models?utm_source=continue&utm_medium=integration&utm_campaign=ecosystem-growth&utm_content=provider_pricing); an example does not grant free usage.
+
+## Configure a local secret
+
+For a local YAML configuration, store `ACEDATACLOUD_API_KEY` in your own `~/.continue/.env` and use:
+
+```yaml
+name: Ace Data Cloud
+version: 1.0.0
+schema: v1
+models:
+  - name: My selected Ace chat model
+    provider: acedatacloud
+    model: MODEL_ID
+    apiKey: ${{ secrets.ACEDATACLOUD_API_KEY }}
+    roles:
+      - chat
+```
+
+Replace `MODEL_ID` with the exact ID selected from the current catalog. Existing official releases that do not contain this contribution need their generic OpenAI-compatible configuration; that is a separate manual route.
+
+## Verify your model
+
+Send `Reply only OK` in Chat mode. Then use Plan mode with a model that supports tools to read a non-sensitive test file. Verify the exact model and usage in your account. Chat success does not prove tool support or every model is compatible.
+
+## Keep media tools separate
+
+Suno, Seedance, HappyHorse, GPT Image and Nano Banana are separate MCP tools, not chat models to add to this provider's selector. Current Continue source has removed Hub package loading. A locally loaded MCP block does not mean the service is searchable in an official directory. For asynchronous tools, retrieve the same task ID until it reaches a terminal result; resubmitting generation creates another request and can cost more.
+
+## Troubleshoot
+
+- **401:** check the raw token, expiry, allowed APIs and model access.
+- **Unknown model:** use the complete catalog ID, including its suffix; do not rename a model to bypass a protocol restriction.
+- **Empty catalog or insufficient balance:** inspect the account and [current pricing](https://platform.acedata.cloud/models?utm_source=continue&utm_medium=integration&utm_campaign=ecosystem-growth&utm_content=provider_troubleshooting). A catalog response alone does not guarantee permission to generate.
+- **Provider missing:** the installed Continue release does not include the contribution. Do not infer release inclusion from a passing test or an open PR.
