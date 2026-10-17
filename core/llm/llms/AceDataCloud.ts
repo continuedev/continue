@@ -11,7 +11,18 @@ class AceDataCloud extends OpenAI {
   };
 
   constructor(options: LLMOptions) {
-    super({ ...options, useResponsesApi: false });
+    super({
+      ...options,
+      useLegacyCompletionsEndpoint: false,
+      useResponsesApi: false,
+    });
+  }
+
+  async listModels(): Promise<string[]> {
+    if (!this.openaiAdapter) {
+      throw new Error("Ace Data Cloud adapter is not configured");
+    }
+    return (await this.openaiAdapter.list()).map(({ id }) => id);
   }
 }
 

@@ -23,6 +23,14 @@ export function createAceDataCloudApi(
     fimStream: api.fimStream.bind(api),
     embed: api.embed.bind(api),
     rerank: api.rerank.bind(api),
-    list: api.list.bind(api),
+    list: async () => {
+      const models = await api.list();
+      // The shared catalog includes media/embedding models that cannot answer
+      // Chat Completions. Keep exact chat IDs and never substitute a fallback.
+      return models.filter(
+        ({ id }) =>
+          !/(?:^|[-/])(images?|embeddings?|whisper|tts)(?:[-/]|$)/i.test(id),
+      );
+    },
   };
 }

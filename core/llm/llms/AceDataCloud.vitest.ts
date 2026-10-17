@@ -14,8 +14,13 @@ describe("AceDataCloud", () => {
   });
 
   it("uses Chat Completions even if inherited settings request Responses", () => {
-    const llm = new AceDataCloud({ model: "gpt-5.5", useResponsesApi: true });
+    const llm = new AceDataCloud({
+      model: "gpt-5.5",
+      useResponsesApi: true,
+      useLegacyCompletionsEndpoint: true,
+    });
     expect(llm["openaiAdapter"]?.responsesStream).toBeUndefined();
     expect(llm["openaiAdapter"]?.chatCompletionStream).toBeTypeOf("function");
+    expect(llm.useLegacyCompletionsEndpoint).toBe(false);
   });
 });
