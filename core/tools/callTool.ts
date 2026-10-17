@@ -243,7 +243,8 @@ export async function callTool(
   mcpUiState?: McpUiState;
 }> {
   try {
-    const args = safeParseToolCallArgs(toolCall);
+    const rawArgs = safeParseToolCallArgs(toolCall);
+    const args = coerceArgsToSchema(rawArgs, tool.function?.parameters);
     const { contextItems, mcpUiState } = tool.uri
       ? await callToolFromUri(tool.uri, args, extras)
       : {

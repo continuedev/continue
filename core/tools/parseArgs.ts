@@ -24,12 +24,45 @@ export function safeParseToolCallArgs(
   }
 }
 
+function schemaMatchesType(
+  propSchema: Record<string, any>,
+  targetType: string,
+): boolean {
+  if (propSchema.type === targetType) {
+    return true;
+  }
+  if (Array.isArray(propSchema.type) && propSchema.type.includes(targetType)) {
+    return true;
+  }
+  if (Array.isArray(propSchema.anyOf)) {
+    return propSchema.anyOf.some(
+      (sub: any) =>
+        typeof sub === "object" &&
+        sub !== null &&
+        schemaMatchesType(sub, targetType),
+    );
+  }
+  if (Array.isArray(propSchema.oneOf)) {
+    return propSchema.oneOf.some(
+      (sub: any) =>
+        typeof sub === "object" &&
+        sub !== null &&
+        schemaMatchesType(sub, targetType),
+    );
+  }
+  return false;
+}
+
 /**
  * Coerce parsed args to match the tool's input schema types.
- * JSON.parse() deeply parses all values, so string-typed parameters
- * that contain valid JSON (e.g. file content for a .json file) get
- * converted to objects. This checks the schema and re-stringifies
- * any values that should be strings.
+ *
+ * Models and parsers frequently return argument values with mismatched types:
+ * - String parameters containing valid JSON get parsed into objects/arrays;
+ *   these need to be re-stringified.
+ * - Array/object parameters containing serialized JSON strings (common with
+ *   Ollama/Qwen tool calls); these need to be parsed into actual arrays/objects.
+ * - Boolean/number parameters formatted as strings (e.g. "true", "false", "42");
+ *   these need to be coerced to primitive booleans and numbers.
  */
 export function coerceArgsToSchema(
   args: Record<string, any>,
@@ -42,12 +75,14 @@ export function coerceArgsToSchema(
   const coerced = { ...args };
   for (const [key, value] of Object.entries(coerced)) {
     const propSchema = schema.properties[key];
-    if (!propSchema) {
+    if (!propSchema || typeof propSchema !== "object") {
       continue;
     }
 
     if (
-      propSchema.type === "string" &&
+      schemaMatchesType(propSchema, "string") &&
+      !schemaMatchesType(propSchema, "object") &&
+      !schemaMatchesType(propSchema, "array") &&
       typeof value === "object" &&
       value !== null
     ) {
@@ -55,6 +90,61 @@ export function coerceArgsToSchema(
         coerced[key] = JSON.stringify(value);
       } catch {
         // leave as-is if stringify fails
+      }
+    } else if (
+      schemaMatchesType(propSchema, "array") &&
+      typeof value === "string"
+    ) {
+      try {
+        const parsed = JSON.parse(value.trim());
+        if (Array.isArray(parsed)) {
+          coerced[key] = parsed;
+        }
+      } catch {
+        // leave as-is if parsing fails
+      }
+    } else if (
+      schemaMatchesType(propSchema, "object") &&
+      !schemaMatchesType(propSchema, "string") &&
+      typeof value === "string"
+    ) {
+      try {
+        const parsed = JSON.parse(value.trim());
+        if (
+          typeof parsed === "object" &&
+          parsed !== null &&
+          !Array.isArray(parsed)
+        ) {
+          coerced[key] = parsed;
+        }
+      } catch {
+        // leave as-is if parsing fails
+      }
+    } else if (
+      schemaMatchesType(propSchema, "boolean") &&
+      !schemaMatchesType(propSchema, "string") &&
+      typeof value === "string"
+    ) {
+      const lower = value.trim().toLowerCase();
+      if (lower === "true") {
+        coerced[key] = true;
+      } else if (lower === "false") {
+        coerced[key] = false;
+      }
+    } else if (
+      (schemaMatchesType(propSchema, "number") ||
+        schemaMatchesType(propSchema, "integer")) &&
+      !schemaMatchesType(propSchema, "string") &&
+      typeof value === "string"
+    ) {
+      const trimmed = value.trim();
+      if (trimmed !== "" && !isNaN(Number(trimmed))) {
+        const num = Number(trimmed);
+        coerced[key] =
+          schemaMatchesType(propSchema, "integer") &&
+          !schemaMatchesType(propSchema, "number")
+            ? Math.floor(num)
+            : num;
       }
     }
   }
