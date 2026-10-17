@@ -4,6 +4,23 @@ import { osModelsEditPrompt } from "../templates/edit.js";
 
 import OpenAI from "./OpenAI.js";
 
+// Bases already rooted at /beta only need `completions`. Other bases keep the
+// historical `beta/completions` suffix, including when the slash is omitted.
+function deepseekFimEndpoint(apiBase: string | undefined): URL {
+  if (!apiBase) {
+    return new URL("beta/completions", apiBase);
+  }
+
+  const baseUrl = new URL(apiBase);
+  const pathname = baseUrl.pathname.replace(/\/+$/, "") || "/";
+  if (pathname.endsWith("/beta")) {
+    baseUrl.pathname = `${pathname}/`;
+    return new URL("completions", baseUrl);
+  }
+
+  return new URL("beta/completions", apiBase);
+}
+
 class Deepseek extends OpenAI {
   static providerName = "deepseek";
   protected supportsReasoningField = false;
@@ -29,7 +46,7 @@ class Deepseek extends OpenAI {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    const endpoint = new URL("beta/completions", this.apiBase);
+    const endpoint = deepseekFimEndpoint(this.apiBase);
     const resp = await this.fetch(endpoint, {
       method: "POST",
       body: JSON.stringify({

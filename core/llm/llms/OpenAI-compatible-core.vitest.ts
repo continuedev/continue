@@ -303,3 +303,66 @@ createOpenAISubclassTests(CometAPI, {
   },
   modelConversionContent: "hello",
 });
+
+describe("Deepseek FIM fallback", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("streamFim appends completions when apiBase is normalized to /beta/", async () => {
+    const deepseek = new Deepseek({
+      apiKey: "test-api-key",
+      model: "deepseek-coder",
+      apiBase: "https://api.deepseek.com/beta/",
+    });
+
+    const sse = [
+      { choices: [{ text: "return " }] },
+      { choices: [{ text: "1;" }] },
+    ]
+      .map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`)
+      .join("");
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(sse, {
+        headers: { "Content-Type": "text/event-stream" },
+      }),
+    );
+    (deepseek as any).fetch = mockFetch;
+    (deepseek as any).useOpenAIAdapterFor = [];
+
+    const chunks: string[] = [];
+    for await (const chunk of deepseek.streamFim(
+      "function f() {",
+      "}",
+      new AbortController().signal,
+      {
+        maxTokens: 32,
+        temperature: 0.2,
+        topP: 0.95,
+        frequencyPenalty: 0.1,
+        presencePenalty: 0,
+        stop: ["\n"],
+      },
+    )) {
+      chunks.push(chunk);
+    }
+
+    expect(chunks.join("")).toBe("return 1;");
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url.toString()).toBe("https://api.deepseek.com/beta/completions");
+    expect(options.method).toBe("POST");
+    expect(JSON.parse(options.body)).toEqual({
+      model: "deepseek-coder",
+      prompt: "function f() {",
+      suffix: "}",
+      max_tokens: 32,
+      temperature: 0.2,
+      top_p: 0.95,
+      frequency_penalty: 0.1,
+      presence_penalty: 0,
+      stop: ["\n"],
+      stream: true,
+    });
+  });
+});

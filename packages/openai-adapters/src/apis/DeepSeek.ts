@@ -6,6 +6,24 @@ import { OpenAIApi } from "./OpenAI.js";
 import { FimCreateParamsStreaming } from "./base.js";
 
 export const DEEPSEEK_API_BASE = "https://api.deepseek.com/";
+
+// Bases already rooted at /beta only need `completions`. Other bases keep the
+// historical `beta/completions` suffix, including when the slash is omitted.
+function deepseekFimEndpoint(apiBase: string | undefined): URL {
+  if (!apiBase) {
+    return new URL("beta/completions", apiBase);
+  }
+
+  const baseUrl = new URL(apiBase);
+  const pathname = baseUrl.pathname.replace(/\/+$/, "") || "/";
+  if (pathname.endsWith("/beta")) {
+    baseUrl.pathname = `${pathname}/`;
+    return new URL("completions", baseUrl);
+  }
+
+  return new URL("beta/completions", apiBase);
+}
+
 export class DeepSeekApi extends OpenAIApi {
   constructor(config: DeepseekConfig) {
     super({
@@ -19,7 +37,7 @@ export class DeepSeekApi extends OpenAIApi {
     body: FimCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
-    const endpoint = new URL("beta/completions", this.apiBase);
+    const endpoint = deepseekFimEndpoint(this.apiBase);
     const resp = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify({
