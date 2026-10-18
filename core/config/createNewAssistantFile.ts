@@ -23,9 +23,9 @@ models:
       - autocomplete
       - chat
       - edit
-  - name: Claude 4 Sonnet
+  - name: Claude Sonnet 4.6
     provider: anthropic
-    model: claude-sonnet-4-20250514
+    model: claude-sonnet-4-6
     apiKey: \${{ secrets.ANTHROPIC_API_KEY }}
     roles:
       - chat
