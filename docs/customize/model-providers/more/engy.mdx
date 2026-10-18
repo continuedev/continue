@@ -1,0 +1,57 @@
+---
+title: "How to Configure Engy with Continue"
+sidebarTitle: "Engy"
+---
+
+<Info>
+  Get an API key from [Engy](https://engy.ai/).
+</Info>
+
+[Engy](https://engy.ai/) is an OpenAI-compatible Inference API with zero data retention by default. Use Continue's existing OpenAI provider with `apiBase: https://api.engy.ai/v1`. See the [Engy docs](https://engy.ai/docs) for API details.
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Kimi K3
+      provider: openai
+      model: kimi-k3
+      apiBase: https://api.engy.ai/v1
+      apiKey: <YOUR_ENGY_API_KEY>
+      roles: [chat, edit, apply]
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Kimi K3",
+        "provider": "openai",
+        "model": "kimi-k3",
+        "apiBase": "https://api.engy.ai/v1",
+        "apiKey": "<YOUR_ENGY_API_KEY>",
+        "roles": ["chat", "edit", "apply"]
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+The live model catalog and pricing are at [`https://api.engy.ai/v1/models`](https://api.engy.ai/v1/models). Flagship model ids:
+
+| Model | Description |
+| :---- | :---------- |
+| `kimi-k3` | Flagship Kimi K3. 1M context window. |
+| `glm-5.3` | Flagship GLM 5.3. 328K context window. |
+| `glm-5.3-flash` | Fast GLM 5.3. 328K context window. |
+| `deepseek-v4.1-flash-1017` | Fast DeepSeek V4.1. 1M context window. |
