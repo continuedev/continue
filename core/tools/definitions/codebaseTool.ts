@@ -1,19 +1,22 @@
+```typescript
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
 export const codebaseTool: Tool = {
   type: "function",
   displayTitle: "Codebase Search",
-  wouldLikeTo: "search the codebase for: {{{ query }}}",
+  wouldLike: "search the codebase for: {{{ query }}}",
   isCurrently: "searching the codebase for: {{{ query }}}",
   hasAlready: "searched the codebase for: {{{ query }}}",
   readonly: true,
   isInstant: false,
   group: BUILT_IN_GROUP_NAME,
+
   function: {
     name: BuiltInToolNames.CodebaseTool,
     description:
-      "Use this tool to semantically search through the codebase and retrieve relevant code snippets based on a natural language query. This helps find relevant code context for understanding or working with the codebase.",
+      "Semantically search the codebase using a natural language query and retrieve relevant code snippets. Use this tool to locate implementations, trace application behavior, understand dependencies, identify relevant files, and investigate existing patterns without modifying any files.",
+
     parameters: {
       type: "object",
       required: ["query"],
@@ -21,16 +24,19 @@ export const codebaseTool: Tool = {
         query: {
           type: "string",
           description:
-            "Natural language description of what you're looking for in the codebase (e.g., 'authentication logic', 'database connection setup', 'error handling')",
+            "A clear, specific natural language question describing the code or behavior to find. Include relevant features, components, functions, dependencies, or expected behavior when useful. Examples: 'How is user authentication implemented?', 'Where is the database connection configured?', 'How are API errors handled?', or 'Which files implement the background job queue?'",
         },
       },
     },
   },
+
   defaultToolPolicy: "allowedWithPermission",
+
   systemMessageDescription: {
-    prefix: `To search the codebase, use the ${BuiltInToolNames.CodebaseTool} tool with a natural language query. For example, to find authentication logic, you might respond with:`,
+    prefix: `To search the codebase, use the ${BuiltInToolNames.CodebaseTool} tool with a clear, specific natural language query. Describe the implementation, behavior, or code context you need to find. For example:`,
     exampleArgs: [
-      ["query", "How is user authentication handled in this codebase?"],
+      ["query", "How is user authentication implemented, including middleware, routes, and session handling?"],
     ],
   },
 };
+```
