@@ -1,0 +1,93 @@
+---
+title: "Synap"
+description: "Configure Synap (Linkrra) with Continue to access an auto-routing OpenAI-compatible inference API billed per token"
+---
+
+[Synap](https://synap.linkrra.com) is a hosted OpenAI-compatible inference API from Linkrra. The `synap-v1` model auto-routes each request to the cheapest model that can handle it (tools, code, or reasoning), billed at the price of whichever model actually ran. A free daily tier is available with no card required.
+
+<Info>
+  You can get an API key by signing in with Google at
+  [synap.linkrra.com](https://synap.linkrra.com).
+</Info>
+
+## Chat Model
+
+We recommend configuring **synap-v1** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Synap
+        provider: synap
+        model: synap-v1
+        apiKey: <YOUR_SYNAP_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Synap",
+          "provider": "synap",
+          "model": "synap-v1",
+          "apiKey": "<YOUR_SYNAP_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Autocomplete Model
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Synap
+        provider: synap
+        model: synap-v1
+        apiKey: <YOUR_SYNAP_API_KEY>
+        roles:
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Synap",
+          "provider": "synap",
+          "model": "synap-v1",
+          "apiKey": "<YOUR_SYNAP_API_KEY>"
+        }
+      ],
+      "tabAutocompleteModel": {
+        "title": "Synap",
+        "provider": "synap",
+        "model": "synap-v1",
+        "apiKey": "<YOUR_SYNAP_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Available Models
+
+[Click here](https://pool.linkrra.com/v1/models) to see the live list of available models, or use `synap-v1` to let Synap pick automatically.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Synap.ts)
