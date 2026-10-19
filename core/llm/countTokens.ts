@@ -493,6 +493,17 @@ function compileChatMessages({
   inputTokensAvailable -= systemMsgTokens;
   inputTokensAvailable -= lastMessagesTokens;
 
+  // Pin the latest user message if the trailing toolSequence does not already contain a user message
+  const hasUserInToolSequence = toolSequence.some((m) => m.role === "user");
+  const pinnedUserMsg = hasUserInToolSequence
+    ? undefined
+    : [...msgsCopy].reverse().find((m) => m.role === "user");
+  const pinnedUserTokens = pinnedUserMsg
+    ? countChatMessageTokens(modelName, pinnedUserMsg)
+    : 0;
+
+  inputTokensAvailable -= pinnedUserTokens;
+
   // Make sure there's enough context for the non-excludable items
   if (knownContextLength !== undefined && inputTokensAvailable < 0) {
     throw new Error(
@@ -508,26 +519,40 @@ function compileChatMessages({
   }
 
   // Now remove messages till we're under the limit
+  const pinnedIndex = pinnedUserMsg ? msgsCopy.indexOf(pinnedUserMsg) : -1;
+  const historyEntries: (ChatMessage & { tokens: number })[] = [];
   let currentTotal = 0;
-  const historyWithTokens = msgsCopy.map((message) => {
-    const tokens = countChatMessageTokens(modelName, message);
-    currentTotal += tokens;
-    return {
-      ...message,
-      tokens,
-    };
-  });
+  let pinnedEntry: (ChatMessage & { tokens: number }) | undefined;
 
-  while (historyWithTokens.length > 0 && currentTotal > inputTokensAvailable) {
-    const message = historyWithTokens.shift()!;
+  for (let i = 0; i < msgsCopy.length; i++) {
+    const message = msgsCopy[i];
+    const tokens = countChatMessageTokens(modelName, message);
+    if (i === pinnedIndex) {
+      pinnedEntry = { ...message, tokens };
+    } else {
+      currentTotal += tokens;
+      historyEntries.push({ ...message, tokens });
+    }
+  }
+
+  let prunedCount = 0;
+  while (historyEntries.length > 0 && currentTotal > inputTokensAvailable) {
+    const message = historyEntries.shift()!;
     currentTotal -= message.tokens;
     didPrune = true;
+    prunedCount++;
 
     // At this point make sure no latent tool response without corresponding call
-    while (historyWithTokens[0]?.role === "tool") {
-      const message = historyWithTokens.shift()!;
+    while (historyEntries[0]?.role === "tool") {
+      const message = historyEntries.shift()!;
       currentTotal -= message.tokens;
+      prunedCount++;
     }
+  }
+
+  if (pinnedEntry) {
+    const targetIndex = Math.max(0, pinnedIndex - prunedCount);
+    historyEntries.splice(targetIndex, 0, pinnedEntry);
   }
 
   // Now reassemble
@@ -535,11 +560,15 @@ function compileChatMessages({
   if (systemMsg) {
     reassembled.push(systemMsg);
   }
-  reassembled.push(...historyWithTokens.map(({ tokens, ...rest }) => rest));
+  reassembled.push(...historyEntries.map(({ tokens, ...rest }) => rest));
   reassembled.push(...toolSequence);
 
   const inputTokens =
-    currentTotal + systemMsgTokens + toolTokens + lastMessagesTokens;
+    currentTotal +
+    pinnedUserTokens +
+    systemMsgTokens +
+    toolTokens +
+    lastMessagesTokens;
   const availableTokens =
     contextLength - countingSafetyBuffer - minOutputTokens;
   const contextPercentage = inputTokens / availableTokens;
