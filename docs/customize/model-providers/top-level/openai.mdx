@@ -61,6 +61,7 @@ OpenAI API compatible providers include
 - [vLLM](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html)
 - [BerriAI/litellm](https://github.com/BerriAI/litellm)
 - [Tetrate Agent Router Service](https://router.tetrate.ai)
+- [Fikra API](https://fikraapi.co.ke)
 
 If you are using an OpenAI API compatible providers, you can change the `apiBase` like this:
 
@@ -95,6 +96,44 @@ If you are using an OpenAI API compatible providers, you can change the `apiBase
   ```
   </Tab>
 </Tabs>
+
+### Fikra API
+
+[Fikra](https://fikraapi.co.ke/v1) is an OpenAI-compatible inference API serving DeepSeek, GLM and Kimi models, among others. Its headline model is DeepSeek V4.1 Flash, at $0.045 per 1M input tokens and $0.09 per 1M output tokens, with a 1M token context. Get an API key from [fikraapi.co.ke](https://fikraapi.co.ke), then:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: DeepSeek V4.1 Flash
+      provider: openai
+      model: deepseek-v4.1-flash
+      apiBase: https://fikraapi.co.ke/v1
+      apiKey: <YOUR_FIKRA_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "DeepSeek V4.1 Flash",
+        "provider": "openai",
+        "model": "deepseek-v4.1-flash",
+        "apiKey": "<YOUR_FIKRA_API_KEY>",
+        "apiBase": "https://fikraapi.co.ke/v1"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+Fikra also serves GLM 5.3, GLM 5.3 Flash, GLM 5.2, Kimi K3, StepFun Step 5, Qwen 3.8 27B (cached input $0.10/M), Xiaomi MiMo V2.6 Pro, NVIDIA Nemotron 3.5 Super VL, plus Fikra house lanes. The full catalog is at https://fikraapi.co.ke/v1/models and https://fikraapi.co.ke. Per-token USD, $1 minimum top-up, M-Pesa and card payment.
 
 ### How to Force Legacy Completions Endpoint Usage
 
