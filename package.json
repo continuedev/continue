@@ -14,6 +14,7 @@
     "*.{js,jsx,ts,tsx,json,css,md}": "prettier --write"
   },
   "devDependencies": {
+    "@types/node": "^20.11.19",
     "@typescript-eslint/parser": "^8.40.0",
     "concurrently": "^9.1.2",
     "eslint": "^8",

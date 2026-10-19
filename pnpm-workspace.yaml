@@ -1,0 +1,7 @@
+packages:
+  - 'core'
+  - 'gui'
+  - 'binary'
+  - 'extensions/*'
+  - 'packages/*'
+  - 'packages/continue-sdk/typescript'
