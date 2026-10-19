@@ -1270,6 +1270,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  synap: {
+    title: "Synap",
+    provider: "synap",
+    description:
+      "Synap (Linkrra) is a hosted OpenAI-compatible inference API. The synap-v1 model auto-routes each request to the cheapest model that can handle it, billed per token.",
+    longDescription:
+      "To get started with Synap, sign in with Google at [synap.linkrra.com](https://synap.linkrra.com) for a free daily tier (no card required).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Synap API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://synap.linkrra.com",
+  },
   venice: {
     title: "Venice",
     provider: "venice",
