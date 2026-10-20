@@ -1,0 +1,140 @@
+---
+title: "Plan GPU Workloads with Dreamtune MCP"
+description: "Connect Dreamtune to Continue, inspect GPU options, and prepare a workload plan without launching compute."
+sidebarTitle: "Dreamtune MCP Cookbook"
+---
+
+Use [Dreamtune MCP](https://docs.dreamtunelabs.com/connect/mcp) with Continue's
+Agent mode to inspect tool definitions and GPU options while working on your
+application. This cookbook connects an existing Continue agent to Dreamtune's
+tools; your configured Continue model still runs the conversation.
+
+The example workflow compares GPU options for a development workload and produces
+a plan for review. It does not launch a job.
+
+## Prerequisites
+
+- Continue installed with a model that supports [Agent mode](/ide-extensions/agent/how-it-works).
+- A Dreamtune workspace API key. See [Dreamtune authentication](https://docs.dreamtunelabs.com/authentication).
+- For the optional local server, Node.js 22.20 or later on the machine where Continue runs.
+
+## Store your workspace key
+
+Add the key to your private `~/.continue/.env` file:
+
+```dotenv title="~/.continue/.env"
+DREAMTUNE_API_KEY=YOUR_DREAMTUNE_WORKSPACE_KEY
+```
+
+Continue resolves the secret reference in the configuration below. You can also
+use a private workspace `.continue/.env` file; exclude that file from version
+control. See [Working with secrets](/guides/configuring-models-rules-tools#working-with-secrets)
+for resolution order.
+
+## Connect the hosted server
+
+Create `.continue/mcpServers/dreamtune.yaml` in your workspace:
+
+```yaml title=".continue/mcpServers/dreamtune.yaml"
+name: Dreamtune
+version: 1.0.0
+schema: v1
+mcpServers:
+  - name: Dreamtune
+    type: streamable-http
+    url: https://mcp.dreamtunelabs.com/mcp
+    connectionTimeout: 60000
+    requestOptions:
+      headers:
+        X-Dreamtune-API-Key: ${{ secrets.DREAMTUNE_API_KEY }}
+```
+
+Dreamtune uses the `X-Dreamtune-API-Key` header. Keep the header configuration
+rather than setting Continue's `apiKey` property, which sends a bearer token.
+
+### Alternative: run the local stdio server
+
+To use the published local server instead, replace the contents of the same YAML
+file with this configuration. Choose one transport so tools are not registered
+twice.
+
+```yaml title=".continue/mcpServers/dreamtune.yaml"
+name: Dreamtune
+version: 1.0.0
+schema: v1
+mcpServers:
+  - name: Dreamtune
+    type: stdio
+    command: npx
+    args:
+      - "-y"
+      - "--package"
+      - "@dreamtune/sdk@0.1.2"
+      - "dreamtune-mcp"
+    env:
+      DREAMTUNE_API_KEY: ${{ secrets.DREAMTUNE_API_KEY }}
+      DREAMTUNE_API_ORIGIN: https://api.dreamtunelabs.com
+      DREAMTUNE_REQUEST_TIMEOUT_MS: "60000"
+    connectionTimeout: 60000
+```
+
+The pinned version makes the local tool definitions reproducible. Review the
+[local MCP setup guide](https://docs.dreamtunelabs.com/connect/local-mcp) before
+updating it. Continue starts and manages this process; you do not need to start a
+separate server in a terminal.
+
+## Verify tool discovery
+
+Switch Continue to Agent mode. Confirm that Dreamtune's tools appear in the tool
+list, including `list_tools` and `compute_catalog`.
+
+Tool discovery verifies the MCP connection. It does not run a model, create a
+compute job, or prove that your key can execute every tool. The local stdio server
+can expose its definitions before making an authenticated API request.
+
+Use Continue's [tool policies](/ide-extensions/agent/how-to-customize#how-to-configure-tool-policies) to review
+calls before they execute. For this workflow, keep model execution, compute
+creation, and other write tools disabled or subject to approval.
+
+## Compare GPU options for your project
+
+Ask the agent to inspect the current catalog:
+
+```text
+Use Dreamtune's compute_catalog tool to find GPU options for testing a 7B model.
+Compare up to three options using the returned VRAM, region, and price data.
+State when a requested field is missing, and distinguish hourly price from a
+total cost estimate. Do not create, start, or stop any compute jobs.
+```
+
+Expand the tool call in Continue and inspect the returned data. Check that the
+comparison uses actual catalog results rather than assumed hardware or prices.
+An empty result is useful too: ask the agent to explain which requirement could
+be relaxed instead of inventing an available machine.
+
+Then use your repository as context to prepare a plan:
+
+```text
+Using the GPU options you just retrieved and this repository's dependencies,
+draft a setup plan for one short development experiment. Include the selected
+hardware, runtime requirements, expected duration, and a shutdown step. Label
+cost estimates as estimates and list any missing information. Return the plan
+in chat for review; do not execute commands or launch compute.
+```
+
+To add tool discovery to the same workflow, ask the agent to use `list_tools` and
+`inspect_tool` to find an appropriate API tool and inspect its input schema before
+proposing a call. See the [Dreamtune MCP tool reference](https://docs.dreamtunelabs.com/reference/mcp-tools)
+for the distinction between catalog reads and execution tools.
+
+## Troubleshooting
+
+- **No tools appear:** Check Agent mode, the YAML file's location, and Continue's MCP connection errors.
+- **Unresolved secret:** Verify that `DREAMTUNE_API_KEY` is in one of Continue's supported private secret locations.
+- **Authentication fails:** Use a workspace API key and the exact `X-Dreamtune-API-Key` header for hosted MCP.
+- **The local command cannot start:** Confirm Node.js 22.20 or later and `npx` are available to the IDE process. Restart the IDE after changing its environment.
+- **Discovery succeeds but a call fails:** Check the workspace key's permissions, balance, and the tool's required inputs. Do not repeatedly retry a paid write to diagnose connectivity.
+
+Model and tool execution can incur usage charges, and running compute can
+continue to accrue charges until it is stopped. Review the specific operation
+and its inputs before extending this planning workflow to execution.
