@@ -148,14 +148,12 @@ describe("isSecurityConcern", () => {
     it("should handle Windows-style paths", () => {
       expect(isSecurityConcern("C:\\Users\\user\\.env")).toBe(true);
       expect(isSecurityConcern("D:\\projects\\app\\secrets\\")).toBe(true);
-      expect(isSecurityConcern("C:\\Users\\user\\.aws\\prod\\credentials")).toBe(
-        true,
-      );
+      expect(
+        isSecurityConcern("C:\\Users\\user\\.aws\\prod\\credentials"),
+      ).toBe(true);
       expect(isSecurityConcern("project\\config\\.env")).toBe(true);
       expect(isSecurityConcern("file:///C:/Users/user/.env")).toBe(true);
-      expect(
-        isSecurityConcern("file:///C:/Users/user/.ssh/id_rsa"),
-      ).toBe(true);
+      expect(isSecurityConcern("file:///C:/Users/user/.ssh/id_rsa")).toBe(true);
     });
   });
 
