@@ -87,9 +87,6 @@ cn ls --json
 
 - `cn`: Start an interactive chat session
 - `cn ls`: List recent sessions with TUI selector to choose one to resume
-- `cn login`: Authenticate with Continue
-- `cn logout`: Sign out of current session
-- `cn remote`: Launch a remote instance
 - `cn serve`: Start HTTP server mode
 
 ### Session Listing (`cn ls`)
