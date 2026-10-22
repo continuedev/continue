@@ -265,8 +265,10 @@ function TipTapEditorInner(props: TipTapEditorProps) {
       }}
     >
       <div className="px-2.5 pb-1 pt-2">
+        {/* In short panels (e.g. VS Code's bottom panel) 70vh plus the input
+            chrome would push the toolbar off-screen, so leave room for it */}
         <EditorContent
-          className={`scroll-container overflow-y-scroll ${props.isMainInput ? "max-h-[70vh]" : ""}`}
+          className={`scroll-container overflow-y-scroll ${props.isMainInput ? "max-h-[max(3em,min(70vh,calc(100vh_-_140px)))]" : ""}`}
           spellCheck={false}
           editor={editor}
           onClick={(event) => {

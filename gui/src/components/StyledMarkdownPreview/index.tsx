@@ -66,7 +66,7 @@ const StyledMarkdown = styled.div<{
     background-color: ${vscEditorBackground};
     border-radius: ${defaultBorderRadius};
 
-    max-width: calc(100vw - 24px);
+    max-width: 100%;
     overflow-x: scroll;
     overflow-y: hidden;
 
@@ -365,6 +365,15 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               title={imgProps.title}
               className={imgProps.className}
             />
+          );
+        },
+        // Tables that can't shrink to the chat width scroll on their own
+        // instead of making the whole conversation scroll horizontally
+        table: ({ ...tableProps }) => {
+          return (
+            <div className="overflow-x-auto">
+              <table {...tableProps} />
+            </div>
           );
         },
       },

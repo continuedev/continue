@@ -127,11 +127,11 @@ export function ContextItemsPeekItem({
       data-testid="context-items-peek-item"
     >
       {getContextItemIcon()}
-      <span className={`line-clamp-1 max-w-[130px] flex-shrink-0`}>
+      <span className={`line-clamp-1 max-w-[min(130px,50%)] flex-shrink-0`}>
         {contextItem.name}
       </span>
       <div
-        className={`text-description-muted group flex flex-row items-center gap-1.5 pr-1.5 text-xs ${isUrl ? "hover:underline" : ""}`}
+        className={`text-description-muted group flex min-w-0 flex-row items-center gap-1.5 pr-1.5 text-xs ${isUrl ? "hover:underline" : ""}`}
         onClick={
           isUrl
             ? (e) => {
