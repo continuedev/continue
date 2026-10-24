@@ -1225,6 +1225,32 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://studio.nebius.ai/settings/api-keys",
   },
+  dothoosh: {
+    title: "DotHoosh",
+    provider: "dothoosh",
+    refPage: "dothoosh",
+    description:
+      "Iranian AI gateway billed in Toman from a prepaid wallet — GPT, Gemini, DeepSeek, Kimi and Claude with one key",
+    longDescription: `DotHoosh is an Iranian AI gateway billed in Toman (IRT) from a prepaid wallet. To get started with DotHoosh:\n1. Create an API key at [gateway.dothoosh.com](https://gateway.dothoosh.com/api-keys)\n2. Paste below\n3. Select a model preset`,
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your DotHoosh API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    icon: "dothoosh.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    // Filled at runtime from the live DotHoosh catalog (see initializeDynamicModels).
+    packages: [],
+    apiKeyUrl: "https://gateway.dothoosh.com/api-keys",
+  },
   siliconflow: {
     title: "SiliconFlow",
     provider: "siliconflow",

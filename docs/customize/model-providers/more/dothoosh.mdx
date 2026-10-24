@@ -1,0 +1,80 @@
+---
+title: "DotHoosh"
+description: "Configure DotHoosh with Continue to access GPT, Gemini, DeepSeek, Kimi and Claude models through one Iranian AI gateway billed in Toman"
+---
+
+DotHoosh is an Iranian AI gateway billed in Toman (IRT) from a prepaid wallet. One API key serves GPT, Gemini, DeepSeek, Kimi and Claude models. Create a key at [gateway.dothoosh.com](https://gateway.dothoosh.com/api-keys).
+
+The model list in the Add Model form is read live from DotHoosh's public catalog (no key needed to see it), including each model's context window, output limit and tool support. If the catalog cannot be reached, the form lets you type a model ID instead.
+
+## Chat Model
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: DeepSeek Flash
+      provider: dothoosh
+      model: deepseek-flash
+      apiKey: <YOUR_DOTHOOSH_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "DeepSeek Flash",
+        "provider": "dothoosh",
+        "model": "deepseek-flash",
+        "apiKey": "<YOUR_DOTHOOSH_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Claude models
+
+Claude is served on DotHoosh's Anthropic-compatible endpoint, not the OpenAI-compatible one. The Add Model form handles this: it saves Claude models with the `anthropic` provider and the DotHoosh base URL. In `config.yaml`, set them up the same way:
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Claude Sonnet 5.5
+      provider: anthropic
+      model: claude-sonnet-5-5
+      apiBase: https://gateway.dothoosh.com/anthropic/v1/
+      apiKey: <YOUR_DOTHOOSH_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude Sonnet 5.5",
+        "provider": "anthropic",
+        "model": "claude-sonnet-5-5",
+        "apiBase": "https://gateway.dothoosh.com/anthropic/v1/",
+        "apiKey": "<YOUR_DOTHOOSH_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Known limitation
+
+GPT-6 models accept function tools only on the OpenAI Responses API, which Continue uses for the `openai` provider only. Through the `dothoosh` provider they run on Chat Completions, so use DeepSeek, Kimi, Gemini or Claude models for agent mode with tools.

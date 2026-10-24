@@ -12,6 +12,9 @@ interface FetchedModel {
   contextLength?: number;
   maxTokens?: number;
   supportsTools?: boolean;
+  /** Continue provider that must run the model (Claude on DotHoosh uses "anthropic"). */
+  provider?: string;
+  apiBase?: string;
 }
 
 function modelParams(model: FetchedModel): Record<string, any> {
@@ -23,6 +26,8 @@ function modelParams(model: FetchedModel): Record<string, any> {
   if (model.supportsTools) {
     params.capabilities = { tools: true };
   }
+  if (model.provider) params.provider = model.provider;
+  if (model.apiBase) params.apiBase = model.apiBase;
   return params;
 }
 
@@ -58,6 +63,22 @@ function toOpenRouterPackage(model: FetchedModel): ModelPackage {
     tags: [ModelProviderTags.RequiresApiKey],
     providerOptions: ["openrouter"],
     icon: model.icon ?? "openrouter.png",
+  };
+}
+
+function toDotHooshPackage(model: FetchedModel): ModelPackage {
+  const id = model.modelId ?? model.name;
+  return {
+    title: model.name,
+    description: `${model.name}, served through the DotHoosh gateway`,
+    params: {
+      title: model.name,
+      model: id,
+      ...modelParams(model),
+    },
+    isOpenSource: false,
+    providerOptions: [model.provider ?? "dothoosh"],
+    icon: model.icon ?? "dothoosh.png",
   };
 }
 
@@ -100,7 +121,11 @@ export async function fetchProviderModels(
   apiBase?: string,
 ): Promise<ModelPackage[]> {
   const models = await fetchModels(ideMessenger, provider, apiKey, apiBase);
-  return models.map((m) => toGenericPackage(m, provider));
+  return models.map((m) =>
+    provider === "dothoosh"
+      ? toDotHooshPackage(m)
+      : toGenericPackage(m, provider),
+  );
 }
 
 export async function initializeDynamicModels(ideMessenger: IIdeMessenger) {
@@ -140,5 +165,15 @@ export async function initializeDynamicModels(ideMessenger: IIdeMessenger) {
     }
   } catch (error) {
     console.error("Failed to initialize OpenRouter models:", error);
+  }
+
+  try {
+    const fetched = await fetchModels(ideMessenger, "dothoosh");
+    const packages = fetched.map(toDotHooshPackage);
+    if (packages.length > 0 && providers.dothoosh) {
+      providers.dothoosh.packages = packages;
+    }
+  } catch (error) {
+    console.error("Failed to initialize DotHoosh models:", error);
   }
 }
