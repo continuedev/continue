@@ -109,6 +109,7 @@
                       "customize/model-providers/more/clawrouter",
                       "customize/model-providers/more/deepseek",
                       "customize/model-providers/more/deepinfra",
+                      "customize/model-providers/more/empiriolabs",
                       "customize/model-providers/more/groq",
                       "customize/model-providers/more/llamacpp",
                       "customize/model-providers/more/llamastack",
