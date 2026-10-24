@@ -39,6 +39,7 @@ import {
   TextMessagePart,
   ThinkingChatMessage,
   ToolCallDelta,
+  Usage,
 } from "..";
 import { stripImages } from "../util/messageContent";
 
@@ -153,7 +154,8 @@ export function toChatMessage(
               .map((part) => part as TextMessagePart),
     };
 
-    // Add tool calls if present
+    // Add tool calls if present. Keep provider extras such as Gemini's
+    // extra_content.thought_signature so the next request is not rejected.
     if (message.toolCalls) {
       msg.tool_calls = message.toolCalls.map((toolCall) => ({
         id: toolCall.id!,
@@ -162,7 +164,19 @@ export function toChatMessage(
           name: toolCall.function?.name!,
           arguments: toolCall.function?.arguments || "{}",
         },
+        ...((toolCall as { extra_content?: unknown }).extra_content
+          ? {
+              extra_content: (toolCall as { extra_content?: unknown })
+                .extra_content,
+            }
+          : {}),
       }));
+    }
+
+    if ((message as { extra_content?: unknown }).extra_content) {
+      (msg as { extra_content?: unknown }).extra_content = (
+        message as { extra_content?: unknown }
+      ).extra_content;
     }
 
     // Preserving reasoning blocks
@@ -332,6 +346,9 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage[] {
             name: (tc as any).function?.name,
             arguments: (tc as any).function?.arguments,
           },
+          ...((tc as any).extra_content
+            ? { extra_content: (tc as any).extra_content }
+            : {}),
         })),
     });
   } else {
@@ -344,6 +361,61 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage[] {
   return messages;
 }
 
+function usageFromOpenAI(
+  usage: ChatCompletionChunk["usage"] | null | undefined,
+): Usage | undefined {
+  if (!usage) {
+    return undefined;
+  }
+
+  const promptDetails = usage.prompt_tokens_details;
+  const completionDetails = usage.completion_tokens_details;
+
+  return {
+    promptTokens: usage.prompt_tokens ?? 0,
+    completionTokens: usage.completion_tokens ?? 0,
+    ...(promptDetails
+      ? {
+          promptTokensDetails: {
+            cachedTokens: promptDetails.cached_tokens ?? undefined,
+            audioTokens: promptDetails.audio_tokens ?? undefined,
+          },
+        }
+      : {}),
+    ...(completionDetails
+      ? {
+          completionTokensDetails: {
+            reasoningTokens: completionDetails.reasoning_tokens ?? undefined,
+            acceptedPredictionTokens:
+              completionDetails.accepted_prediction_tokens ?? undefined,
+            rejectedPredictionTokens:
+              completionDetails.rejected_prediction_tokens ?? undefined,
+            audioTokens: completionDetails.audio_tokens ?? undefined,
+          },
+        }
+      : {}),
+  };
+}
+
+function toolCallsFromDelta(
+  toolCalls: ChatCompletionChunk.Choice.Delta["tool_calls"] | undefined,
+): ToolCallDelta[] {
+  return (toolCalls ?? [])
+    .filter((toolCall) => !toolCall.type || toolCall.type === "function")
+    .map((toolCall) => {
+      const extra = (toolCall as { extra_content?: unknown }).extra_content;
+      return {
+        id: toolCall.id,
+        type: "function" as const,
+        function: {
+          name: toolCall.function?.name,
+          arguments: toolCall.function?.arguments,
+        },
+        ...(extra ? { extra_content: extra } : {}),
+      };
+    });
+}
+
 export function fromChatCompletionChunk(
   chunk: ChatCompletionChunk,
 ): ChatMessage | undefined {
@@ -354,34 +426,39 @@ export function fromChatCompletionChunk(
         reasoning_details?: {
           signature?: string;
         }[];
+        extra_content?: unknown;
       })
     | undefined;
 
-  if (delta?.content) {
+  const usage = usageFromOpenAI(chunk.usage);
+  const toolCalls = toolCallsFromDelta(delta?.tool_calls);
+
+  // A signature sometimes arrives on the delta rather than the tool call.
+  if (
+    delta?.extra_content &&
+    toolCalls.length > 0 &&
+    !(toolCalls[0] as { extra_content?: unknown }).extra_content
+  ) {
+    (toolCalls[0] as { extra_content?: unknown }).extra_content =
+      delta.extra_content;
+  }
+
+  // Content and tool_calls can share a chunk (Gemini does this, and also
+  // attaches usage). Keep both. Unknown fields like extra_content stay on
+  // the tool call instead of being rejected.
+  if (delta?.content || toolCalls.length > 0) {
     return {
       role: "assistant",
-      content: delta.content,
-    };
-  } else if (delta?.tool_calls) {
-    const toolCalls = delta?.tool_calls
-      .filter((tool_call) => !tool_call.type || tool_call.type === "function")
-      .map((tool_call) => ({
-        id: tool_call.id,
-        type: "function" as const,
-        function: {
-          name: (tool_call as any).function?.name,
-          arguments: (tool_call as any).function?.arguments,
-        },
-      }));
+      content: delta?.content ?? "",
+      ...(toolCalls.length > 0 ? { toolCalls } : {}),
+      ...(usage ? { usage } : {}),
+      ...(delta?.extra_content && toolCalls.length === 0
+        ? { extra_content: delta.extra_content }
+        : {}),
+    } as ChatMessage;
+  }
 
-    if (toolCalls.length > 0) {
-      return {
-        role: "assistant",
-        content: "",
-        toolCalls,
-      };
-    }
-  } else if (
+  if (
     delta?.reasoning_content ||
     delta?.reasoning ||
     delta?.reasoning_details?.length
@@ -393,6 +470,15 @@ export function fromChatCompletionChunk(
       reasoning_details: delta?.reasoning_details as any[],
     };
     return message;
+  }
+
+  // Spec usage chunk: empty choices, no delta. Still record usage.
+  if (usage) {
+    return {
+      role: "assistant",
+      content: "",
+      usage,
+    };
   }
 
   return undefined;
