@@ -32,6 +32,7 @@ import FunctionNetwork from "./FunctionNetwork.js";
 import NCompass from "./NCompass.js";
 import LlamaStack from "./LlamaStack.js";
 import Nebius from "./Nebius.js";
+import DotHoosh from "./DotHoosh.js";
 import OVHcloud from "./OVHcloud.js";
 
 // Base OpenAI tests
@@ -451,6 +452,11 @@ createOpenAISubclassTests(LlamaStack, {
 createOpenAISubclassTests(Nebius, {
   providerName: "nebius",
   defaultApiBase: "https://api.studio.nebius.ai/v1/",
+});
+
+createOpenAISubclassTests(DotHoosh, {
+  providerName: "dothoosh",
+  defaultApiBase: "https://gateway.dothoosh.com/v1/",
 });
 
 createOpenAISubclassTests(OVHcloud, {

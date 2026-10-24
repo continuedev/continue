@@ -21,6 +21,7 @@ import CometAPI from "./CometAPI";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
 import Docker from "./Docker";
+import DotHoosh from "./DotHoosh";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
 import FunctionNetwork from "./FunctionNetwork";
@@ -119,6 +120,7 @@ export const LLMClasses = [
   Cerebras,
   Asksage,
   Nebius,
+  DotHoosh,
   Nous,
   Venice,
   VertexAI,

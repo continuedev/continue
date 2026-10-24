@@ -2,6 +2,7 @@ import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/outline";
+import { JSONModelDescription } from "core";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button, Input, StyledActionButton } from "../components";
@@ -20,6 +21,7 @@ import {
   ProviderInfo,
   providers,
 } from "../pages/AddNewModel/configs/providers";
+import { buildAddedModel } from "./buildAddedModel";
 
 interface AddModelFormProps {
   onDone: () => void;
@@ -35,7 +37,9 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
     providers["openai"]!,
   );
   const { selectedProfile } = useAuth();
-  const [selectedModel, setSelectedModel] = useState(
+  // Undefined when the provider has no packages (a live catalog that could not be read); the
+  // user then types the model id.
+  const [selectedModel, setSelectedModel] = useState<ModelPackage | undefined>(
     selectedProvider.packages[0],
   );
   const formMethods = useForm();
@@ -119,6 +123,10 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
         return value;
       });
 
+    if (!selectedModel && !formMethods.watch("typedModel")?.trim()) {
+      return true;
+    }
+
     return !required?.every((value) => value !== undefined && value.length > 0);
   }
 
@@ -151,16 +159,21 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
       reqInputFields[input.key] = formMethods.watch(input.key);
     }
 
-    const model = {
-      ...selectedProvider.params,
-      ...selectedModel.params,
-      ...reqInputFields,
+    const model = buildAddedModel({
       provider: selectedProvider.provider,
-      title: selectedModel.title,
-      ...(hasValidApiKey ? { apiKey } : {}),
-    };
+      providerParams: selectedProvider.params,
+      selectedModel,
+      typedModel: formMethods.watch("typedModel"),
+      inputs: reqInputFields,
+      apiKey: hasValidApiKey ? apiKey : undefined,
+    });
+    if (!model) {
+      return;
+    }
 
-    ideMessenger.post("config/addModel", { model });
+    ideMessenger.post("config/addModel", {
+      model: model as JSONModelDescription,
+    });
 
     ideMessenger.post("config/openProfile", {
       profileId: "local",
@@ -256,61 +269,72 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                   />
                 </button>
               </div>
-              <ModelSelectionListbox
-                selectedProvider={selectedModel}
-                setSelectedProvider={(val: DisplayInfo) => {
-                  const options =
-                    Object.entries(providers).find(
+              {selectedModel ? (
+                <ModelSelectionListbox
+                  selectedProvider={selectedModel}
+                  setSelectedProvider={(val: DisplayInfo) => {
+                    const options =
+                      Object.entries(providers).find(
+                        ([, provider]) =>
+                          provider?.title === selectedProvider.title,
+                      )?.[1]?.packages ?? [];
+                    const allOptions = [...options, ...fetchedModelsList];
+                    const match = allOptions.find(
+                      (option) => option.title === val.title,
+                    );
+                    if (match) {
+                      setSelectedModel(match);
+                    }
+                  }}
+                  topOptions={(() => {
+                    const providerInfo = Object.entries(providers).find(
                       ([, provider]) =>
                         provider?.title === selectedProvider.title,
-                    )?.[1]?.packages ?? [];
-                  const allOptions = [...options, ...fetchedModelsList];
-                  const match = allOptions.find(
-                    (option) => option.title === val.title,
-                  );
-                  if (match) {
-                    setSelectedModel(match);
-                  }
-                }}
-                topOptions={(() => {
-                  const providerInfo = Object.entries(providers).find(
-                    ([, provider]) =>
-                      provider?.title === selectedProvider.title,
-                  )?.[1];
-                  return (
-                    providerInfo?.popularPackages ?? providerInfo?.packages
-                  );
-                })()}
-                otherOptions={(() => {
-                  const providerInfo = Object.entries(providers).find(
-                    ([, provider]) =>
-                      provider?.title === selectedProvider.title,
-                  )?.[1];
-                  const staticOther = providerInfo?.popularPackages
-                    ? providerInfo.packages.filter(
-                        (p) =>
-                          !new Set(
-                            providerInfo.popularPackages!.map((pp) => pp.title),
-                          ).has(p.title),
-                      )
-                    : undefined;
-                  // Merge dynamically fetched models (deduplicated)
-                  if (fetchedModelsList.length > 0) {
-                    const existingTitles = new Set(
-                      (providerInfo?.packages ?? []).map((p) => p.title),
+                    )?.[1];
+                    return (
+                      providerInfo?.popularPackages ?? providerInfo?.packages
                     );
-                    const newModels = fetchedModelsList.filter(
-                      (m) => !existingTitles.has(m.title),
-                    );
-                    return [...(staticOther ?? []), ...newModels];
-                  }
-                  return staticOther;
-                })()}
-                otherOptionsLabel="Additional models"
-              />
+                  })()}
+                  otherOptions={(() => {
+                    const providerInfo = Object.entries(providers).find(
+                      ([, provider]) =>
+                        provider?.title === selectedProvider.title,
+                    )?.[1];
+                    const staticOther = providerInfo?.popularPackages
+                      ? providerInfo.packages.filter(
+                          (p) =>
+                            !new Set(
+                              providerInfo.popularPackages!.map(
+                                (pp) => pp.title,
+                              ),
+                            ).has(p.title),
+                        )
+                      : undefined;
+                    // Merge dynamically fetched models (deduplicated)
+                    if (fetchedModelsList.length > 0) {
+                      const existingTitles = new Set(
+                        (providerInfo?.packages ?? []).map((p) => p.title),
+                      );
+                      const newModels = fetchedModelsList.filter(
+                        (m) => !existingTitles.has(m.title),
+                      );
+                      return [...(staticOther ?? []), ...newModels];
+                    }
+                    return staticOther;
+                  })()}
+                  otherOptionsLabel="Additional models"
+                />
+              ) : (
+                <Input
+                  id="typedModel"
+                  className="w-full"
+                  placeholder="Model ID, as listed on the provider"
+                  {...formMethods.register("typedModel")}
+                />
+              )}
             </div>
 
-            {selectedModel.params.model.startsWith("codestral") && (
+            {selectedModel?.params.model.startsWith("codestral") && (
               <div className="my-2">
                 <Alert>
                   <p className="m-0 text-sm font-bold">Codestral API key</p>
