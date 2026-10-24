@@ -159,19 +159,36 @@ export class OpenAIApi implements BaseLlmApi {
         signal,
       },
     );
-    let lastChunkWithUsage: ChatCompletionChunk | undefined;
+    // OpenAI puts usage on a final chunk with an empty choices array.
+    // Gemini's OpenAI-compat endpoint (and some gateways) attach usage to
+    // every chunk next to real deltas, and may add unknown fields such as
+    // extra_content. Those deltas still have to be streamed. Usage is
+    // remembered as we go and a choices-less usage chunk, if any, is emitted
+    // last so the latest usage wins.
+    let pendingUsageOnly: ChatCompletionChunk | undefined;
     for await (const result of response) {
-      // Check if this chunk contains usage information
+      const hasChoices =
+        Array.isArray(result.choices) && result.choices.length > 0;
+
+      if (!hasChoices) {
+        if (result.usage) {
+          pendingUsageOnly = result;
+        } else {
+          yield result;
+        }
+        continue;
+      }
+
+      yield result;
+
+      // Usage carried on a delta is newer than a usage-only chunk we have
+      // not emitted yet. Drop that held chunk so it cannot overwrite this.
       if (result.usage) {
-        // Store it to emit after all content chunks
-        lastChunkWithUsage = result;
-      } else {
-        yield result;
+        pendingUsageOnly = undefined;
       }
     }
-    // Emit the usage chunk at the end if we have one
-    if (lastChunkWithUsage) {
-      yield lastChunkWithUsage;
+    if (pendingUsageOnly) {
+      yield pendingUsageOnly;
     }
   }
   async completionNonStream(
