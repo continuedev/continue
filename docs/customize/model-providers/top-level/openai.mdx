@@ -96,6 +96,21 @@ If you are using an OpenAI API compatible providers, you can change the `apiBase
   </Tab>
 </Tabs>
 
+### API base paths and request parameters
+
+Set `apiBase` to the server's API base, including any required path prefix.
+For example, a server with a chat endpoint at
+`http://localhost:8000/team/v1/chat/completions` needs
+`apiBase: http://localhost:8000/team/v1`. Do not append `/chat/completions`
+to `apiBase`.
+
+For a server that supports Chat Completions but not the Responses API, use
+`useResponsesApi: false` and leave `useLegacyCompletionsEndpoint` disabled.
+Changing the base URL does not configure the model's output limit or reasoning
+behavior. Set the output limit with `defaultCompletionOptions.maxTokens`.
+Server-specific JSON fields can be supplied through
+`requestOptions.extraBodyProperties`; use only fields supported by that server.
+
 ### How to Force Legacy Completions Endpoint Usage
 
 To force usage of `completions` instead of `chat/completions` endpoint you can set:
