@@ -416,6 +416,418 @@ describe("coerceArgsToSchema", () => {
   });
 });
 
+describe("coerceArgsToSchema with JSON-serialized values", () => {
+  // Some providers return non-string arguments as JSON text, e.g.
+  // {"paths": "[\"a.jsx\"]"}; strict MCP servers reject those (#13350)
+  it("should decode a serialized array when the schema expects an array", () => {
+    const args = {
+      paths:
+        '["frontend/src/pages/Accounts.jsx","frontend/src/components/Translate.jsx"]',
+    };
+    const schema = {
+      type: "object",
+      properties: {
+        paths: { type: "array", items: { type: "string" } },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.paths).toEqual([
+      "frontend/src/pages/Accounts.jsx",
+      "frontend/src/components/Translate.jsx",
+    ]);
+  });
+
+  it("should decode nested arrays", () => {
+    const args = { matrix: " [[1, 2], [3, [4, 5]], []] " };
+    const schema = {
+      type: "object",
+      properties: {
+        matrix: { type: "array", items: { type: "array" } },
+      },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.matrix).toEqual([[1, 2], [3, [4, 5]], []]);
+  });
+
+  it("should decode a serialized object, keeping nested values native", () => {
+    const args = {
+      settings:
+        '{"enabled": true, "mode": "fast", "size": {"width": 800, "scale": 1.5}, "tags": ["a", "b"], "parent": null}',
+    };
+    const schema = {
+      type: "object",
+      properties: { settings: { type: "object" } },
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result.settings).toEqual({
+      enabled: true,
+      mode: "fast",
+      size: { width: 800, scale: 1.5 },
+      tags: ["a", "b"],
+      parent: null,
+    });
+  });
+
+  it("should decode serialized integers, numbers, booleans and null", () => {
+    const args = {
+      count: "42",
+      negative: "-7",
+      ratio: "3.14",
+      exponent: "1e3",
+      dryRun: "false",
+      verbose: "TRUE",
+      limit: "null",
+      flag: "null",
+    };
+    const schema = {
+      type: "object",
+      properties: {
+        count: { type: "integer" },
+        negative: { type: "integer" },
+        ratio: { type: "number" },
+        exponent: { type: "number" },
+        dryRun: { type: "boolean" },
+        verbose: { type: "boolean" },
+        limit: { anyOf: [{ type: "integer" }, { type: "null" }] },
+        flag: { type: ["boolean", "null"] },
+      },
+    };
+    expect(coerceArgsToSchema(args, schema)).toEqual({
+      count: 42,
+      negative: -7,
+      ratio: 3.14,
+      exponent: 1000,
+      dryRun: false,
+      verbose: true,
+      limit: null,
+      flag: null,
+    });
+  });
+
+  it("should leave strings unchanged when the schema accepts a string", () => {
+    const args = {
+      content: '{"key": [1, 2]}',
+      list: "[1, 2]",
+      either: '["a"]',
+      nullableText: "null",
+      choice: "true",
+      anything: "42",
+      described: "[3]",
+    };
+    const schema = {
+      type: "object",
+      properties: {
+        content: { type: "string" },
+        list: { type: ["string", "array"] },
+        either: { anyOf: [{ type: "array" }, { type: "string" }] },
+        nullableText: { anyOf: [{ type: "string" }, { type: "null" }] },
+        choice: { enum: ["true", "false", "auto"] },
+        anything: {},
+        described: { description: "no type constraint" },
+      },
+    };
+    expect(coerceArgsToSchema(args, schema)).toEqual(args);
+  });
+
+  it("should not truncate, round or reinterpret numeric strings", () => {
+    const args = {
+      fraction: "3.7",
+      unsafe: "9007199254740993",
+      overflow: "1e400",
+      hex: "0x1A",
+      nan: "NaN",
+      infinity: "Infinity",
+      empty: "",
+      leadingZero: "042",
+      suffix: "12px",
+    };
+    const integer = { type: "integer" };
+    const number = { type: "number" };
+    const schema = {
+      type: "object",
+      properties: {
+        fraction: integer,
+        unsafe: integer,
+        overflow: number,
+        hex: integer,
+        nan: number,
+        infinity: number,
+        empty: number,
+        leadingZero: integer,
+        suffix: integer,
+      },
+    };
+    expect(coerceArgsToSchema(args, schema)).toEqual(args);
+  });
+
+  it("should not decode a value into a type the schema does not accept", () => {
+    const args = {
+      paths: '{"a": 1}',
+      config: "[1, 2]",
+      enabled: "yes",
+      toggle: "1",
+      count: "true",
+      broken: '["unterminated"',
+    };
+    const schema = {
+      type: "object",
+      properties: {
+        paths: { type: "array" },
+        config: { anyOf: [{ type: "object" }, { type: "null" }] },
+        enabled: { type: "boolean" },
+        toggle: { type: "boolean" },
+        count: { type: "integer" },
+        broken: { type: "array" },
+      },
+    };
+    expect(coerceArgsToSchema(args, schema)).toEqual(args);
+  });
+
+  it("should resolve $ref, anyOf, oneOf and allOf", () => {
+    const args = {
+      config: '{"depth": 2, "targets": ["a"]}',
+      retries: "3",
+      mode: "[1]",
+      edits: '[{"oldText": "a", "newText": "b"}]',
+    };
+    // Pydantic/FastMCP style: Optional[Model] -> anyOf [$ref, null]
+    const schema = {
+      type: "object",
+      $defs: {
+        ProbeConfig: {
+          type: "object",
+          properties: { depth: { type: "integer" } },
+        },
+        Edit: { type: "object" },
+      },
+      properties: {
+        config: { anyOf: [{ $ref: "#/$defs/ProbeConfig" }, { type: "null" }] },
+        retries: { oneOf: [{ type: "integer" }, { type: "null" }] },
+        mode: { allOf: [{ type: ["string", "array"] }, { type: "array" }] },
+        edits: { type: "array", items: { $ref: "#/$defs/Edit" } },
+      },
+    };
+    expect(coerceArgsToSchema(args, schema)).toEqual({
+      config: { depth: 2, targets: ["a"] },
+      retries: 3,
+      mode: [1],
+      edits: [{ oldText: "a", newText: "b" }],
+    });
+  });
+
+  it("should leave values unchanged when a $ref cannot be resolved", () => {
+    const args = { missing: "[1]", remote: "[2]", cycle: "[3]", text: "[4]" };
+    const schema = {
+      type: "object",
+      definitions: {
+        Loop: { $ref: "#/definitions/Loop" },
+        Text: { type: "string" },
+      },
+      properties: {
+        missing: { $ref: "#/definitions/Missing" },
+        remote: { $ref: "https://example.com/schema.json" },
+        cycle: { $ref: "#/definitions/Loop" },
+        text: { $ref: "#/definitions/Text" },
+      },
+    };
+    expect(coerceArgsToSchema(args, schema)).toEqual(args);
+  });
+
+  it("should preserve sibling, optional and unknown arguments", () => {
+    const args = {
+      path: "frontend/src/App.jsx",
+      edits: '[{"oldText": "a", "newText": "b"}]',
+      dryRun: "false",
+      unknownJson: "[1, 2]",
+      nativeList: ["x"],
+    };
+    const schema = {
+      type: "object",
+      properties: {
+        path: { type: "string" },
+        edits: { type: "array" },
+        dryRun: { type: "boolean" },
+        nativeList: { type: "array" },
+        optionalLimit: { type: "integer" },
+      },
+      required: ["path", "edits"],
+    };
+    const result = coerceArgsToSchema(args, schema);
+    expect(result).toEqual({
+      path: "frontend/src/App.jsx",
+      edits: [{ oldText: "a", newText: "b" }],
+      dryRun: false,
+      unknownJson: "[1, 2]",
+      nativeList: ["x"],
+    });
+    expect(Object.keys(result)).toEqual(Object.keys(args));
+    expect(result.nativeList).toBe(args.nativeList);
+  });
+
+  it("should coerce a streamed provider payload against a strict object schema", () => {
+    // Raw arguments string as streamed by an OpenAI-compatible provider
+    const toolCall: ToolCallDelta = {
+      id: "1",
+      function: {
+        name: "example_run_job",
+        arguments:
+          '{"settings": "{\\"enabled\\": true, \\"mode\\": \\"fast\\"}", "target": "{\\"id\\": \\"t1\\"}", "steps": "[{\\"name\\": \\"first\\", \\"retries\\": 2}]"}',
+      },
+    };
+    const schema = {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      type: "object",
+      properties: {
+        settings: { type: "object" },
+        target: { type: "object" },
+        steps: {
+          type: "array",
+          items: { type: ["null", "boolean", "object", "array"], items: {} },
+        },
+      },
+      required: ["settings", "target", "steps"],
+      additionalProperties: false,
+    };
+    const result = coerceArgsToSchema(safeParseToolCallArgs(toolCall), schema);
+    expect(result).toEqual({
+      settings: { enabled: true, mode: "fast" },
+      target: { id: "t1" },
+      steps: [{ name: "first", retries: 2 }],
+    });
+  });
+
+  it("should give the same result for repeated calls without mutating inputs", () => {
+    const schema = {
+      type: "object",
+      $defs: { Limit: { anyOf: [{ type: "integer" }, { type: "null" }] } },
+      properties: {
+        fields: { type: "array", items: { type: "string" } },
+        limit: { $ref: "#/$defs/Limit" },
+        path: { type: "string" },
+      },
+    };
+    const schemaBefore = structuredClone(schema);
+    const calls = [
+      { path: "a.txt", fields: '["id"]', limit: "5" },
+      { path: "b.txt", fields: ["name"], limit: 7 },
+      { path: "c.txt", fields: '["created", "updated"]', limit: "null" },
+    ];
+    const callsBefore = structuredClone(calls);
+    for (let round = 0; round < 2; round++) {
+      expect(calls.map((args) => coerceArgsToSchema(args, schema))).toEqual([
+        { path: "a.txt", fields: ["id"], limit: 5 },
+        { path: "b.txt", fields: ["name"], limit: 7 },
+        { path: "c.txt", fields: ["created", "updated"], limit: null },
+      ]);
+    }
+    expect(schema).toEqual(schemaBefore);
+    expect(calls).toEqual(callsBefore);
+  });
+});
+
+describe("coerceArgsToSchema with adversarial schemas", () => {
+  it("should expand a shared $ref only once", () => {
+    // Each level references the next twice: 2^40 paths, 41 distinct schemas
+    const $defs: Record<string, unknown> = { D40: { type: "array" } };
+    for (let i = 0; i < 40; i++) {
+      $defs[`D${i}`] = {
+        anyOf: [{ $ref: `#/$defs/D${i + 1}` }, { $ref: `#/$defs/D${i + 1}` }],
+      };
+    }
+    const schema = {
+      type: "object",
+      $defs,
+      properties: { list: { $ref: "#/$defs/D0" } },
+    };
+    expect(coerceArgsToSchema({ list: "[1]" }, schema)).toEqual({ list: [1] });
+  });
+
+  it("should keep an argument whose schema exceeds the traversal budget", () => {
+    let nested: Record<string, unknown> = { type: "array" };
+    for (let i = 0; i < 20000; i++) {
+      nested = { allOf: [nested] };
+    }
+    const $defs: Record<string, unknown> = { C2000: { type: "array" } };
+    for (let i = 0; i < 2000; i++) {
+      $defs[`C${i}`] = { $ref: `#/$defs/C${i + 1}` };
+    }
+    const schema = {
+      type: "object",
+      $defs,
+      properties: {
+        nested,
+        chained: { $ref: "#/$defs/C0" },
+        wide: {
+          anyOf: Array.from({ length: 5000 }, () => ({ type: "array" })),
+        },
+        list: { type: "array" },
+      },
+    };
+    const args = { nested: "[1]", chained: "[2]", wide: "[3]", list: "[4]" };
+    // The budget is per argument, so list is still decoded
+    expect(coerceArgsToSchema(args, schema)).toEqual({ ...args, list: [4] });
+  });
+
+  it("should keep arguments with recursive references", () => {
+    const schema = {
+      type: "object",
+      $defs: {
+        A: { anyOf: [{ $ref: "#/$defs/B" }, { type: "array" }] },
+        B: { anyOf: [{ $ref: "#/$defs/A" }, { type: "null" }] },
+        Self: { allOf: [{ $ref: "#/$defs/Self" }, { type: "array" }] },
+      },
+      properties: {
+        mutual: { $ref: "#/$defs/A" },
+        self: { $ref: "#/$defs/Self" },
+      },
+    };
+    const args = { mutual: "[1]", self: "[2]" };
+    expect(coerceArgsToSchema(args, schema)).toEqual(args);
+  });
+
+  it("should not resolve references across nested schema resources", () => {
+    // Inside a schema with its own $id, "#/$defs/T" refers to that schema's
+    // T, which accepts strings, so these strings are already valid
+    const subResource = (id: string) => ({
+      $id: id,
+      $defs: { T: { type: ["string", "array"] } },
+      allOf: [{ $ref: "#/$defs/T" }],
+    });
+    const schema = {
+      $id: "urn:example:root",
+      type: "object",
+      $defs: {
+        T: { type: "array" },
+        Sub: subResource("urn:example:sub"),
+        Legacy: { id: "urn:example:legacy", type: "array" },
+      },
+      properties: {
+        embedded: subResource("urn:example:embedded"),
+        viaRef: { $ref: "#/$defs/Sub" },
+        intoResource: { $ref: "#/$defs/Sub/$defs/T" },
+        draft4: { $ref: "#/$defs/Legacy" },
+        dynamic: { $dynamicRef: "#/$defs/T" },
+        malformed: { $ref: 42 },
+        rootRelative: { $ref: "#/$defs/T" },
+      },
+    };
+    const args = {
+      embedded: "[1]",
+      viaRef: "[2]",
+      intoResource: "[3]",
+      draft4: "[4]",
+      dynamic: "[5]",
+      malformed: "[6]",
+      rootRelative: "[7]",
+    };
+    // Only the reference resolved within the root resource is decoded
+    expect(coerceArgsToSchema(args, schema)).toEqual({
+      ...args,
+      rootRelative: [7],
+    });
+  });
+});
+
 describe("getNumberArg", () => {
   it("should return number argument when valid", () => {
     const args = { count: 42 };
