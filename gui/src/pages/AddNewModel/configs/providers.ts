@@ -253,7 +253,14 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       "Z.ai (formerly Zhipu AI) provides the GLM family of large language models. Get your API key from the [Z.ai platform](https://z.ai/manage-apikey/apikey-list).",
     icon: "zai.svg",
     tags: [ModelProviderTags.RequiresApiKey],
-    packages: [models.glm5, models.glm47, models.glm45],
+    packages: [
+      models.glm53,
+      models.glm53Flash,
+      models.glm5vTurbo,
+      models.glm5,
+      models.glm47,
+      models.glm45,
+    ],
     collectInputFor: [
       {
         inputType: "text",

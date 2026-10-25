@@ -380,6 +380,31 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("zAI", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["zAI"];
+
+    it("should return true for GLM models (glm-4 through glm-9)", () => {
+      expect(supportsFn("glm-4")).toBe(true);
+      expect(supportsFn("glm-4.5")).toBe(true);
+      expect(supportsFn("glm-4.7")).toBe(true);
+      expect(supportsFn("glm-5")).toBe(true);
+      expect(supportsFn("glm-5.3")).toBe(true);
+      expect(supportsFn("glm-5.3-flash")).toBe(true);
+      expect(supportsFn("glm-5v-turbo")).toBe(true);
+    });
+
+    it("should handle case insensitivity", () => {
+      expect(supportsFn("GLM-5.3")).toBe(true);
+      expect(supportsFn("GLM-5.3-Flash")).toBe(true);
+      expect(supportsFn("GLM-5V-Turbo")).toBe(true);
+    });
+
+    it("should return false for unsupported models", () => {
+      expect(supportsFn("glm-3-turbo")).toBe(false);
+      expect(supportsFn("other-model")).toBe(false);
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle empty model names", () => {
       expect(PROVIDER_TOOL_SUPPORT["anthropic"]("")).toBe(false);
