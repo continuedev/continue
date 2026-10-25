@@ -1270,6 +1270,27 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  gisoo: {
+    title: "Gisoo",
+    provider: "gisoo",
+    description:
+      "Gisoo is an OpenAI-compatible API gateway with access to Claude, GPT, Gemini, DeepSeek, and more.",
+    longDescription:
+      "To get started with Gisoo, create an account and get an API key at [gisoo.pro](https://gisoo.pro).",
+    icon: "gisoo.svg",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Gisoo API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://gisoo.pro",
+  },
   venice: {
     title: "Venice",
     provider: "venice",

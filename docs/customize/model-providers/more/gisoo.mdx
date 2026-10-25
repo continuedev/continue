@@ -1,0 +1,90 @@
+---
+title: "Gisoo"
+description: "Configure Gisoo with Continue to access Claude, GPT, Gemini, DeepSeek, and other models through a single OpenAI-compatible API"
+---
+
+[Gisoo](https://gisoo.pro) is an OpenAI-compatible API gateway that provides access to Claude, GPT, Gemini, DeepSeek, and other models, plus embeddings, with usage-based pricing.
+
+<Info>
+  Create an API key at [gisoo.pro](https://gisoo.pro). The list of available
+  model ids (with context length, capabilities and pricing) is public at
+  [gisoo.pro/api/v1/models](https://gisoo.pro/api/v1/models) and documented at
+  [gisoo.pro/docs/models](https://gisoo.pro/docs/models).
+</Info>
+
+## Chat Model
+
+We recommend configuring **claude-sonnet-5-5** as your chat model. Other current ids include `deepseek-v4-flash`, `gpt-5` and `gemini-3.5-flash`. Models listed with tool support also work in Agent mode.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Gisoo Claude Sonnet
+        provider: gisoo
+        model: claude-sonnet-5-5
+        apiKey: <YOUR_GISOO_API_KEY>
+        roles:
+          - chat
+          - edit
+          - apply
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Gisoo Claude Sonnet",
+          "provider": "gisoo",
+          "model": "claude-sonnet-5-5",
+          "apiKey": "<YOUR_GISOO_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Embeddings Model
+
+Gisoo serves embedding models such as **text-embedding-3-small** through the same endpoint.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Gisoo Embeddings
+        provider: gisoo
+        model: text-embedding-3-small
+        apiKey: <YOUR_GISOO_API_KEY>
+        roles:
+          - embed
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "embeddingsProvider": {
+        "provider": "gisoo",
+        "model": "text-embedding-3-small",
+        "apiKey": "<YOUR_GISOO_API_KEY>"
+      }
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Base URL
+
+The default `apiBase` is `https://gisoo.pro/api/v1/`. Servers and users inside Iran can set `apiBase: https://ir.gisoo.pro/api/v1/` instead; the key, models and paths are identical.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Gisoo.ts)
