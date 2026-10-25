@@ -20,6 +20,7 @@ import Venice from "./Venice.js";
 import Moonshot from "./Moonshot.js";
 import Novita from "./Novita.js";
 import SiliconFlow from "./SiliconFlow.js";
+import Gisoo from "./Gisoo.js";
 import Kindo from "./Kindo.js";
 import Azure from "./Azure.js";
 import Inception from "./Inception.js";
@@ -379,6 +380,11 @@ createOpenAISubclassTests(Novita, {
 createOpenAISubclassTests(SiliconFlow, {
   providerName: "siliconflow",
   defaultApiBase: "https://api.siliconflow.cn/v1/",
+});
+
+createOpenAISubclassTests(Gisoo, {
+  providerName: "gisoo",
+  defaultApiBase: "https://gisoo.pro/api/v1/",
 });
 
 createOpenAISubclassTests(Kindo, {
