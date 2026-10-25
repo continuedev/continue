@@ -43,6 +43,7 @@ import MockLLM from "./Mock";
 import Moonshot from "./Moonshot";
 import Msty from "./Msty";
 import NCompass from "./NCompass";
+import Mallard from "./Mallard";
 import Nebius from "./Nebius";
 import Nous from "./Nous";
 import Novita from "./Novita";
@@ -118,6 +119,7 @@ export const LLMClasses = [
   TestLLM,
   Cerebras,
   Asksage,
+  Mallard,
   Nebius,
   Nous,
   Venice,
