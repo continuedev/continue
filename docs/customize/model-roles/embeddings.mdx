@@ -95,7 +95,15 @@ See [here](../model-providers/top-level/ollama) for instructions on how to use O
 
 ### Text Embeddings Inference
 
-[Hugging Face Text Embeddings Inference](https://huggingface.co/docs/text-embeddings-inference/en/index) enables you to host your own embeddings endpoint. You can configure embeddings to use your endpoint as follows:
+[Hugging Face Text Embeddings Inference](https://huggingface.co/docs/text-embeddings-inference/en/index) enables you to host your own embeddings endpoint. For codebases, you can serve open code embedding models such as [`divakantpandey/code-embed-v2`](https://huggingface.co/divakantpandey/code-embed-v2):
+
+```bash
+docker run --gpus all -p 8080:80 \
+  ghcr.io/huggingface/text-embeddings-inference:latest \
+  --model-id divakantpandey/code-embed-v2
+```
+
+You can configure embeddings to use your endpoint as follows:
 
 <Tabs>
   <Tab title="YAML">
@@ -105,10 +113,10 @@ See [here](../model-providers/top-level/ollama) for instructions on how to use O
   schema: v1
 
   models:
-    - name: Huggingface TEI Embedder
+    - name: Code-Embed v2
       provider: huggingface-tei
+      model: divakantpandey/code-embed-v2
       apiBase: http://localhost:8080
-      apiKey: <YOUR_TEI_API_KEY>
       roles: [embed]
   ```
   </Tab>
@@ -117,8 +125,8 @@ See [here](../model-providers/top-level/ollama) for instructions on how to use O
   {
     "embeddingsProvider": {
       "provider": "huggingface-tei",
-      "apiBase": "http://localhost:8080",
-      "apiKey": "<YOUR_TEI_API_KEY>"
+      "model": "divakantpandey/code-embed-v2",
+      "apiBase": "http://localhost:8080"
     }
   }
   ```

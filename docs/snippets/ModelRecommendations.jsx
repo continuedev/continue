@@ -99,6 +99,7 @@ export const ModelRecommendations = ({ role = "all" }) => {
       open: [
         "[Nomic Embed Text](https://continue.dev/ollama/nomic-embed-text-latest)",
         "Qwen3 Embedding",
+        "[Code-Embed v2](https://huggingface.co/divakantpandey/code-embed-v2)",
       ],
       closed: [
         "[Voyage Code 3](https://continue.dev/voyageai/voyage-code-3)",
