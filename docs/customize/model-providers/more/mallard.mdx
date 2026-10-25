@@ -1,0 +1,70 @@
+---
+title: "Mallard AI"
+description: "Configure Mallard AI with Continue to use open models through an OpenAI-compatible API, processed only in the UK with zero data retention"
+---
+
+<Info>
+  Mallard AI serves open models through an OpenAI-compatible API, processed
+  only in the UK with zero data retention. Create an account and an API key at
+  [mallardai.co.uk](https://mallardai.co.uk/account/). The [quick
+  start](https://mallardai.co.uk/docs/) covers the API.
+</Info>
+
+## Chat Model
+
+We recommend configuring **Qwen3.6 35B A3B** as your chat model: 262K context window, tool calling and image input.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Qwen3.6 35B A3B
+        provider: mallard
+        model: qwen/qwen3.6-35b-a3b
+        apiKey: <YOUR_MALLARD_API_KEY>
+        capabilities:
+          - tool_use
+          - image_input
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Qwen3.6 35B A3B",
+          "provider": "mallard",
+          "model": "qwen/qwen3.6-35b-a3b",
+          "apiKey": "<YOUR_MALLARD_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Reasoning
+
+Reasoning is on by default. To switch it off, send `reasoning.enabled: false` with each request:
+
+```yaml title="config.yaml"
+models:
+  - name: Qwen3.6 35B A3B
+    provider: mallard
+    model: qwen/qwen3.6-35b-a3b
+    apiKey: <YOUR_MALLARD_API_KEY>
+    requestOptions:
+      extraBodyProperties:
+        reasoning:
+          enabled: false
+```
+
+## Autocomplete Model
+
+Mallard AI doesn't offer an autocomplete model.
+
+[Click here](../../model-roles/autocomplete) to see a list of autocomplete model providers.

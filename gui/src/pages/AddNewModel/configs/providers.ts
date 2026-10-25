@@ -1182,6 +1182,30 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://chat.asksage.ai/",
   },
+  mallard: {
+    title: "Mallard AI",
+    provider: "mallard",
+    refPage: "mallard",
+    description: "Open models processed only in the UK, with zero data retention",
+    longDescription: `Mallard AI serves open models through an OpenAI-compatible API, processed only in the UK with zero data retention. To get started with Mallard AI:\n1. Create an account and an API key at [mallardai.co.uk](https://mallardai.co.uk/account/)\n2. Paste it below\n3. Select a model preset`,
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Mallard AI API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    icon: "mallard.png",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    packages: [models.qwen36_35b_a3b],
+    apiKeyUrl: "https://mallardai.co.uk/account/",
+  },
   nebius: {
     title: "Nebius AI Studio",
     provider: "nebius",

@@ -2052,6 +2052,20 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["ovhcloud"],
     isOpenSource: true,
   },
+  qwen36_35b_a3b: {
+    title: "Qwen3.6 35B A3B",
+    description:
+      "Qwen3.6-35B-A3B is Qwen's open mixture-of-experts model for agents and coding, with image input and a 262K context window.",
+    refUrl: "https://huggingface.co/Qwen/Qwen3.6-35B-A3B",
+    params: {
+      title: "Qwen3.6 35B A3B",
+      model: "qwen/qwen3.6-35b-a3b",
+      contextLength: 262144,
+    },
+    icon: "qwen.png",
+    providerOptions: ["mallard"],
+    isOpenSource: true,
+  },
   MistralSmall32: {
     title: "Mistral Small 3.2 24B",
     description:
