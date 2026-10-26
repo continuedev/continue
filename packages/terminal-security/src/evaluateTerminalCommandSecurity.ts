@@ -141,7 +141,7 @@ function evaluateTokensSecurity(
     const hasVariablePatterns = /\$[\w{]/.test(originalCommand);
 
     if (!hasEmptyQuotes || hasVariablePatterns) {
-      // Variable expansion detected - evaluate both interpretations
+      // Variable expansion detected - evaluate interpretations
 
       // 1. Evaluate with empty strings as-is
       const policyWithEmpty = evaluateTokens(
@@ -157,12 +157,43 @@ function evaluateTokensSecurity(
           ? evaluateTokens(tokensWithoutEmpty, basePolicy, originalCommand)
           : basePolicy;
 
+      // 3. Evaluate with variables preserved
+      let policyWithEnv: ToolPolicy = basePolicy;
+      try {
+        const tokensWithEnv = parse(originalCommand, (key) => `$${key}`);
+        policyWithEnv = evaluateTokens(
+          tokensWithEnv,
+          basePolicy,
+          originalCommand,
+        );
+      } catch {
+        // Fallback to existing policies if parsing fails
+      }
+
       // Variable expansion always requires at least permission
       return getMostRestrictive(
         policyWithEmpty,
         policyWithoutEmpty,
+        policyWithEnv,
         "allowedWithPermission",
       );
+    }
+  }
+
+  // Also check if originalCommand has variable patterns without empty strings
+  if (/\$[\w{]/.test(originalCommand)) {
+    try {
+      const tokensWithEnv = parse(originalCommand, (key) => `$${key}`);
+      const policyWithEnv = evaluateTokens(
+        tokensWithEnv,
+        basePolicy,
+        originalCommand,
+      );
+      if (policyWithEnv === "disabled") {
+        return "disabled";
+      }
+    } catch {
+      // Ignore
     }
   }
 
@@ -372,7 +403,7 @@ function evaluateSingleCommand(
   const args = commandTokens.slice(1);
 
   // Check for critical commands that should always be disabled
-  if (isCriticalCommand(baseCommand, args)) {
+  if (isCriticalCommand(baseCommand, args, originalCommand)) {
     return "disabled";
   }
 
@@ -399,40 +430,188 @@ function evaluateSingleCommand(
 /**
  * Checks if a command is critical and should always be disabled
  */
-function isCriticalCommand(baseCommand: string, args: string[]): boolean {
-  // System destruction commands - check if base command starts with mkfs
-  if (baseCommand.startsWith("mkfs")) {
+function isCriticalCommand(
+  baseCommand: string,
+  args: string[],
+  originalCommand?: string,
+): boolean {
+  // System destruction commands - check if base command starts with mkfs, shred, or wipefs
+  if (
+    baseCommand.startsWith("mkfs") ||
+    baseCommand === "shred" ||
+    baseCommand === "wipefs"
+  ) {
     return true;
+  }
+
+  // find with destructive flags (-delete or -exec rm)
+  if (baseCommand === "find") {
+    if (args.includes("-delete")) {
+      return true;
+    }
+    const hasExecRm = args.some((arg, idx) => {
+      if (
+        arg === "-exec" ||
+        arg === "-execdir" ||
+        arg === "-ok" ||
+        arg === "-okdir"
+      ) {
+        const nextArg = args[idx + 1];
+        return (
+          nextArg === "rm" ||
+          nextArg?.endsWith("/rm") ||
+          nextArg === "shred" ||
+          nextArg?.endsWith("/shred")
+        );
+      }
+      return false;
+    });
+    if (hasExecRm) {
+      return true;
+    }
+  }
+
+  // truncate to zero size (file wiping)
+  if (baseCommand === "truncate") {
+    const hasZeroSize = args.some((arg, idx) => {
+      if (arg === "-s" || arg === "--size") {
+        const nextArg = args[idx + 1];
+        return (
+          nextArg === "0" ||
+          nextArg === "+0" ||
+          nextArg === "-0" ||
+          nextArg?.startsWith("0")
+        );
+      }
+      return (
+        arg === "-s0" ||
+        arg.startsWith("-s=0") ||
+        arg === "--size=0" ||
+        arg.startsWith("--size=0")
+      );
+    });
+    if (hasZeroSize) {
+      return true;
+    }
   }
 
   // Check for dangerous rm patterns - even if rm is hidden in a variable
   // Combine all tokens to check for dangerous patterns
   const allTokens = [baseCommand, ...args];
+  const hasRecursive = allTokens.some(
+    (arg) =>
+      arg === "-r" ||
+      arg === "-R" ||
+      arg === "--recursive" ||
+      (arg.startsWith("-") &&
+        !arg.startsWith("--") &&
+        (arg.includes("r") || arg.includes("R"))),
+  );
+  const hasForce = allTokens.some(
+    (arg) =>
+      arg === "-f" ||
+      arg === "--force" ||
+      (arg.startsWith("-") &&
+        !arg.startsWith("--") &&
+        (arg.includes("f") || arg.includes("F"))),
+  );
   const hasRf =
+    (hasRecursive && hasForce) ||
     allTokens.some(
       (arg) =>
         arg === "-rf" ||
         arg === "-fr" ||
-        (arg.startsWith("-") && arg.includes("r") && arg.includes("f")),
-    ) ||
-    (allTokens.includes("-r") && allTokens.includes("-f")) ||
-    (allTokens.includes("--recursive") && allTokens.includes("--force"));
+        arg === "-Rf" ||
+        arg === "-rF" ||
+        arg === "-RF" ||
+        (arg.startsWith("-") &&
+          !arg.startsWith("--") &&
+          (arg.includes("r") || arg.includes("R")) &&
+          (arg.includes("f") || arg.includes("F"))),
+    );
 
-  const hasDangerousPath = allTokens.some(
-    (arg) =>
-      arg === "/" ||
-      arg === "/*" ||
-      arg === "~" ||
-      arg === "~/*" ||
-      arg === "/usr" ||
-      arg === "/etc" ||
-      arg === "/bin" ||
-      arg === "/sbin" ||
-      arg.startsWith("/usr/") ||
-      arg.startsWith("/etc/") ||
-      arg.startsWith("/bin/") ||
-      arg.startsWith("/sbin/"),
-  );
+  const criticalPrefixes = [
+    "/usr",
+    "/etc",
+    "/bin",
+    "/sbin",
+    "/home",
+    "/root",
+    "/var",
+    "/opt",
+    "/srv",
+    "/boot",
+    "/sys",
+    "/proc",
+    "/dev",
+    "/lib",
+    "/lib64",
+  ];
+
+  const hasDangerousPath = allTokens.some((arg) => {
+    if (typeof arg !== "string") {
+      return false;
+    }
+    const normalized = arg.trim();
+
+    // Direct root and home representations
+    if (
+      normalized === "/" ||
+      normalized === "/*" ||
+      normalized === "/." ||
+      normalized === "/.." ||
+      normalized === "~" ||
+      normalized === "~/" ||
+      normalized === "~/*" ||
+      normalized === "~root" ||
+      normalized.startsWith("~root/") ||
+      normalized === "$HOME" ||
+      normalized === "${HOME}" ||
+      normalized === "$HOME/" ||
+      normalized === "${HOME}/" ||
+      normalized === "$HOME/*" ||
+      normalized === "${HOME}/*" ||
+      normalized === "$USERPROFILE" ||
+      normalized === "${USERPROFILE}" ||
+      normalized === "$HOMEPATH" ||
+      normalized === "${HOMEPATH}" ||
+      normalized.startsWith("$HOME/") ||
+      normalized.startsWith("${HOME}/")
+    ) {
+      return true;
+    }
+
+    // Empty string resulting from variable expansion (e.g. unexpanded $HOME in shell-quote)
+    if (
+      normalized === "" &&
+      originalCommand &&
+      /\$[\w{]/.test(originalCommand)
+    ) {
+      return true;
+    }
+
+    // Critical system root directories and their subdirectories
+    for (const prefix of criticalPrefixes) {
+      if (
+        normalized === prefix ||
+        normalized === prefix + "/" ||
+        normalized === prefix + "/*" ||
+        normalized.startsWith(prefix + "/")
+      ) {
+        return true;
+      }
+    }
+
+    // Windows drive roots
+    if (
+      /^[a-zA-Z]:[/\\]?(\*)?$/i.test(normalized) ||
+      /^[a-zA-Z]:[/\\]windows/i.test(normalized)
+    ) {
+      return true;
+    }
+
+    return false;
+  });
 
   // If we have rm flags with dangerous paths, it's critical regardless of command
   if (hasRf && hasDangerousPath) {
@@ -493,7 +672,15 @@ function isCriticalCommand(baseCommand: string, args: string[]): boolean {
   }
 
   // Privilege escalation
-  const privEscCommands = ["sudo", "su", "doas", "runas", "gsudo", "psexec"];
+  const privEscCommands = [
+    "sudo",
+    "su",
+    "doas",
+    "runas",
+    "gsudo",
+    "psexec",
+    "pkexec",
+  ];
   if (privEscCommands.includes(baseCommand)) {
     return true;
   }
