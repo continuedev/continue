@@ -151,6 +151,31 @@ describe("isSecurityConcern", () => {
       expect(isSecurityConcern("styles/main.css")).toBe(false);
     });
 
+    it("should not flag C++ source files in Unreal Engine and Private directories", () => {
+      expect(
+        isSecurityConcern("Source/ExampleModule/Private/ExampleActor.cpp"),
+      ).toBe(false);
+      expect(
+        isSecurityConcern("Source/ExampleModule/Private/ExampleActor.h"),
+      ).toBe(false);
+      expect(
+        isSecurityConcern(
+          "Source/ExampleModule/Private/Subdir/ExampleActor.cpp",
+        ),
+      ).toBe(false);
+      expect(
+        isSecurityConcern(
+          "c:/Users/name/Documents/ExampleProject/Source/ExampleModule/Private/ExampleActor.cpp",
+        ),
+      ).toBe(false);
+      expect(isSecurityConcern("Private/MyActor.cpp")).toBe(false);
+      expect(isSecurityConcern("Private/MyActor.h")).toBe(false);
+      expect(isSecurityConcern("Source/ExampleModule/Private/secret.key")).toBe(
+        true,
+      );
+      expect(isSecurityConcern("Private/.env")).toBe(true);
+    });
+
     it("should not flag regular configuration files", () => {
       expect(isSecurityConcern("package.json")).toBe(false);
       expect(isSecurityConcern("tsconfig.json")).toBe(false);
