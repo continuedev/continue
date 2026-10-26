@@ -108,6 +108,15 @@ const StyledMarkdown = styled.div<{
     font-family: var(--vscode-editor-font-family);
   }
 
+  /* Symbol links keep their link color */
+  code:not(pre > code):not(.text-link) {
+    color: var(--vscode-textPreformat-foreground, ${vscForeground});
+    background-color: var(
+      --vscode-textPreformat-background,
+      ${vscEditorBackground}
+    );
+  }
+
   background-color: ${(props) => props.bgColor};
   font-family:
     var(--vscode-font-family),
