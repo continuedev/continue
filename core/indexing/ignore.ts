@@ -247,7 +247,9 @@ export function isSecurityConcern(filePathOrUri: string) {
   const normalized = filepath.replace(/\\/g, "/");
   const isSourceInPrivate =
     /(?:^|\/)Source\/[^/]+\/Private\//i.test(normalized) ||
-    /(?:^|\/)Private\/.*?\.(?:cpp|cc|cxx|c|h|hpp|hxx|inl|cs)$/i.test(normalized);
+    /(?:^|\/)Private\/.*?\.(?:cpp|cc|cxx|c|h|hpp|hxx|inl|cs)$/i.test(
+      normalized,
+    );
 
   if (isSourceInPrivate) {
     const basename = path.basename(filepath);

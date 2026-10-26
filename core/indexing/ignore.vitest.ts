@@ -170,9 +170,9 @@ describe("isSecurityConcern", () => {
       ).toBe(false);
       expect(isSecurityConcern("Private/MyActor.cpp")).toBe(false);
       expect(isSecurityConcern("Private/MyActor.h")).toBe(false);
-      expect(
-        isSecurityConcern("Source/ExampleModule/Private/secret.key"),
-      ).toBe(true);
+      expect(isSecurityConcern("Source/ExampleModule/Private/secret.key")).toBe(
+        true,
+      );
       expect(isSecurityConcern("Private/.env")).toBe(true);
     });
 
