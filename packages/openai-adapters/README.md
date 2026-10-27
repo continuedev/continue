@@ -35,6 +35,7 @@ They are concerned with:
 - [x] Cohere
 - [x] DeepInfra
 - [x] Deepseek
+- [x] Fantastico
 - [ ] Flowise
 - [x] Function Network
 - [x] Gemini

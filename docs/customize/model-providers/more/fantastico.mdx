@@ -1,0 +1,64 @@
+---
+title: "Fantastico"
+description: "Configure Fantastico with Continue to give each developer a dedicated key with a preallocated budget, paid from one company account"
+---
+
+[Fantastico](https://fantastico.cc) lets a company roll out Continue to its developers with spend under control:
+
+- **One account per developer, with a preallocated budget.** The company funds a single project reserve and splits it into per-developer accounts, each with its own spending limit.
+- **A dedicated key for each developer.** An account key (`ck-fant-…`) can only spend its own account's credit. If it leaks, the most it can cost is that account's remaining budget. It can be rotated or revoked for one person without affecting anyone else.
+- **One bill.** The company pays once, sees spend per developer, and tops up or caps accounts individually.
+- **No proxy.** Fantastico only measures and controls spend. Requests go directly from Continue to the model provider, so Fantastico adds no latency and never sees your prompts or code.
+
+<Info>
+  Ask your Fantastico administrator for an account key (`ck-fant-…`).
+  Administrators issue account keys from the [Fantastico console](https://fantastico.cc).
+</Info>
+
+## Chat Model
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Claude Sonnet 4.5
+        provider: fantastico
+        model: anthropic/claude-sonnet-4.5
+        apiKey: <YOUR_FANTASTICO_ACCOUNT_KEY>
+        roles:
+          - chat
+          - edit
+          - apply
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Claude Sonnet 4.5",
+          "provider": "fantastico",
+          "model": "anthropic/claude-sonnet-4.5",
+          "apiKey": "<YOUR_FANTASTICO_ACCOUNT_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## How it works
+
+Continue exchanges your account key for a short-lived runtime key, capped to your account's remaining credit, and then calls the model provider directly with it. When the runtime key expires or reaches its cap, Continue requests a new one automatically.
+
+If your account runs out of credit, requests fail with an error from Fantastico. Ask your administrator to top up your account.
+
+## Project keys
+
+A project key (`sk-fant-…`) also works, and spend is charged to the project owner's account. Keep project keys out of developer machines: a project key can draw on the whole project reserve, while an account key is limited to a single account.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Fantastico.ts)
