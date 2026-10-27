@@ -21,6 +21,7 @@ import CometAPI from "./CometAPI";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
 import Docker from "./Docker";
+import Fantastico from "./Fantastico";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
 import FunctionNetwork from "./FunctionNetwork";
@@ -101,6 +102,7 @@ export const LLMClasses = [
   DeepInfra,
   Flowise,
   Groq,
+  Fantastico,
   Fireworks,
   NCompass,
   Cloudflare,

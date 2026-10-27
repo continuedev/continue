@@ -9,6 +9,7 @@ import { CohereApi } from "./apis/Cohere.js";
 import { CometAPIApi } from "./apis/CometAPI.js";
 
 import { DeepSeekApi } from "./apis/DeepSeek.js";
+import { FantasticoApi } from "./apis/Fantastico.js";
 import { GeminiApi } from "./apis/Gemini.js";
 import { InceptionApi } from "./apis/Inception.js";
 import { JinaApi } from "./apis/Jina.js";
@@ -180,6 +181,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new OpenRouterApi(config);
     case "clawrouter":
       return new ClawRouterApi(config);
+    case "fantastico":
+      return new FantasticoApi(config);
     case "llama.cpp":
     case "llamafile":
       return openAICompatible("http://localhost:8000/", config);

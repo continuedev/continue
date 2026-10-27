@@ -1270,6 +1270,27 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  fantastico: {
+    title: "Fantastico",
+    provider: "fantastico",
+    icon: "fantastico.svg",
+    description:
+      "Per-developer account keys with preallocated budgets and one company bill. No proxy: requests go straight to the model provider.",
+    longDescription:
+      "Fantastico lets a company give each developer their own account key, capped to a preallocated budget, while paying a single bill. It only measures and controls spend: it never sits on the request path, so it adds no latency and never sees your prompts or code. Ask your Fantastico administrator for an account key (`ck-fant-…`).",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "Account Key",
+        placeholder: "Enter your Fantastico account key (ck-fant-…)",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://fantastico.cc",
+  },
   venice: {
     title: "Venice",
     provider: "venice",
