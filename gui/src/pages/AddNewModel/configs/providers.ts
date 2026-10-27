@@ -1273,6 +1273,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
   fantastico: {
     title: "Fantastico",
     provider: "fantastico",
+    icon: "fantastico.svg",
     description:
       "Per-developer account keys with preallocated budgets and one company bill. No proxy: requests go straight to the model provider.",
     longDescription:

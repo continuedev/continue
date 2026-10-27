@@ -16,6 +16,21 @@ class Fantastico extends OpenAI {
   };
 
   protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = ["*"];
+
+  /**
+   * The catalog is served by the control plane, not by the inference endpoint:
+   * account keys read it from `/edge/models`, project keys from `/runtime/models`.
+   */
+  async listModels(): Promise<string[]> {
+    const route = this.apiKey?.startsWith("sk-fant-") ? "runtime" : "edge";
+    const controlPlane = (this.apiBase ?? "").replace(/\/+$/, "");
+    const response = await this.fetch(`${controlPlane}/${route}/models`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${this.apiKey}` },
+    });
+    const data = (await response.json()) as { models?: { id: string }[] };
+    return (data.models ?? []).map((m) => m.id);
+  }
 }
 
 export default Fantastico;
