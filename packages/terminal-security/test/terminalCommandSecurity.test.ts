@@ -44,6 +44,162 @@ describe("evaluateTerminalCommandSecurity", () => {
         expect(result).toBe("disabled");
       });
 
+      it("should disable rm -rf on /home, /root, /var, /opt, /srv", () => {
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "rm -rf /home",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "rm -rf /root",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "rm -rf /var",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "rm -rf /opt",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "rm -rf /srv",
+          ),
+        ).toBe("disabled");
+      });
+
+      it("should disable rm -rf on $HOME and variations", () => {
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "rm -rf $HOME",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            'rm -rf "$HOME"',
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "rm -rf ${HOME}",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "rm -rf $HOME/*",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "rm -rf ~/",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "rm -rf ~/*",
+          ),
+        ).toBe("disabled");
+      });
+
+      it("should disable find with -delete or -exec rm", () => {
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "find / -delete",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "find . -name '*.tmp' -delete",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "find . -name '*.txt' -exec rm {} \\;",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "find . -execdir rm -rf {} +",
+          ),
+        ).toBe("disabled");
+      });
+
+      it("should disable shred and wipefs commands", () => {
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "shred -u /dev/sda",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "wipefs -a /dev/sda",
+          ),
+        ).toBe("disabled");
+      });
+
+      it("should disable truncate with zero size", () => {
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "truncate -s 0 /etc/passwd",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "truncate --size 0 /home/user/file",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "truncate --size=0 file.txt",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "truncate -s0 file.txt",
+          ),
+        ).toBe("disabled");
+      });
+
+      it("should disable pkexec commands", () => {
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "pkexec rm -rf /",
+          ),
+        ).toBe("disabled");
+        expect(
+          evaluateTerminalCommandSecurity(
+            "allowedWithoutPermission",
+            "pkexec apt update",
+          ),
+        ).toBe("disabled");
+      });
+
       it("should disable Windows format command", () => {
         const result = evaluateTerminalCommandSecurity(
           "allowedWithoutPermission",
@@ -788,17 +944,17 @@ describe("evaluateTerminalCommandSecurity", () => {
     it("should require permission for find with -exec", () => {
       const result = evaluateTerminalCommandSecurity(
         "allowedWithPermission",
-        "find . -name '*.txt' -exec rm {} \\;",
+        "find . -name '*.txt' -exec cat {} \\;",
       );
       expect(result).toBe("allowedWithPermission");
     });
 
-    it("should require permission for find with -delete", () => {
+    it("should disable find with -delete", () => {
       const result = evaluateTerminalCommandSecurity(
         "allowedWithPermission",
         "find /tmp -name '*.tmp' -delete",
       );
-      expect(result).toBe("allowedWithPermission");
+      expect(result).toBe("disabled");
     });
   });
 
@@ -1571,12 +1727,12 @@ describe("evaluateTerminalCommandSecurity", () => {
       expect(result).toBe("allowedWithPermission");
     });
 
-    it("should require permission for shred command", () => {
+    it("should disable shred command", () => {
       const result = evaluateTerminalCommandSecurity(
         "allowedWithoutPermission",
         "shred -vfz /var/log/secure",
       );
-      expect(result).toBe("allowedWithPermission");
+      expect(result).toBe("disabled");
     });
   });
 
