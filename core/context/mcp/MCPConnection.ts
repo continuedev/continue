@@ -14,6 +14,7 @@ import {
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { Agent as HttpsAgent } from "https";
 import {
   IDE,
@@ -314,11 +315,17 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
 
                   this.resourceTemplates = resourceTemplates;
                 } catch (e) {
-                  let errorMessage = `Error loading resource templates for MCP Server ${this.options.name}`;
-                  if (e instanceof Error) {
-                    errorMessage += `: ${e.message}`;
+                  // Templates are optional: servers can advertise resources without serving this method
+                  const isUnsupported =
+                    e instanceof McpError &&
+                    e.code === ErrorCode.MethodNotFound;
+                  if (!isUnsupported) {
+                    let errorMessage = `Error loading resource templates for MCP Server ${this.options.name}`;
+                    if (e instanceof Error) {
+                      errorMessage += `: ${e.message}`;
+                    }
+                    this.errors.push(errorMessage);
                   }
-                  this.errors.push(errorMessage);
                 }
               }
 
