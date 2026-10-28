@@ -1,5 +1,9 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   InternalSseMcpOptions,
   InternalStdioMcpOptions,
@@ -358,6 +362,286 @@ describe("MCPConnection", () => {
       } finally {
         await conn.disconnect();
       }
+    });
+  });
+
+  describe("resource template discovery (stdio SDK server)", () => {
+    const fixture = path.join(__dirname, "fixtures", "stdioResourceServer.mjs");
+    const connections: MCPConnection[] = [];
+    let tmpDir: string;
+
+    const fixtureOptions = (
+      id: string,
+      flags: string[] = [],
+      timeout?: number,
+    ): InternalStdioMcpOptions => ({
+      id,
+      name: id,
+      type: "stdio",
+      command: process.execPath,
+      args: [fixture, ...flags],
+      timeout,
+    });
+
+    const connect = async (options: InternalStdioMcpOptions) => {
+      const conn = new MCPConnection(options);
+      connections.push(conn);
+      await conn.connectClient(true, new AbortController().signal);
+      return conn;
+    };
+
+    const toolNames = (conn: MCPConnection) => conn.tools.map((t) => t.name);
+
+    beforeEach(() => {
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "mcp-templates-"));
+    });
+
+    afterEach(async () => {
+      await Promise.all(
+        connections.splice(0).map((conn) => conn.disconnect().catch(() => {})),
+      );
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
+    it("keeps a server usable when it does not serve resources/templates/list", async () => {
+      const conn = await connect(fixtureOptions("no-templates"));
+
+      expect(conn.status).toBe("connected");
+      expect(conn.errors).toEqual([]);
+      expect(conn.resources.map((r) => r.uri)).toEqual([
+        "synthetic://alpha",
+        "synthetic://beta",
+      ]);
+      expect(conn.resourceTemplates).toEqual([]);
+      expect(toolNames(conn)).toEqual(["echo_types", "stats"]);
+      expect(conn.tools[0].inputSchema).toEqual({
+        type: "object",
+        properties: { text: { type: "string" }, count: { type: "integer" } },
+      });
+
+      const result = await conn.client.callTool({
+        name: "stats",
+        arguments: {},
+      });
+      expect(result.content).toEqual([{ type: "text", text: "items: 2" }]);
+    });
+
+    it("preserves resources and valid resource templates", async () => {
+      const conn = await connect(
+        fixtureOptions("valid-templates", ["--templates=valid"]),
+      );
+
+      expect(conn.status).toBe("connected");
+      expect(conn.errors).toEqual([]);
+      expect(conn.resources).toHaveLength(2);
+      expect(conn.resourceTemplates).toEqual([
+        { uriTemplate: "synthetic://item/{id}", name: "Item" },
+      ]);
+    });
+
+    it("reports internal errors from template listing", async () => {
+      const conn = await connect(
+        fixtureOptions("internal-error", ["--templates=internal-error"]),
+      );
+
+      expect(conn.status).toBe("connected");
+      expect(conn.errors).toHaveLength(1);
+      expect(conn.errors[0]).toMatch(
+        /^Error loading resource templates for MCP Server internal-error: MCP error -32603: .*synthetic failure$/,
+      );
+      expect(conn.resources).toHaveLength(2);
+      expect(toolNames(conn)).toEqual(["echo_types", "stats"]);
+    });
+
+    it("reports malformed template listings", async () => {
+      const conn = await connect(
+        fixtureOptions("malformed", ["--templates=malformed"]),
+      );
+
+      expect(conn.errors).toHaveLength(1);
+      expect(conn.errors[0]).toMatch(
+        /^Error loading resource templates for MCP Server malformed: /,
+      );
+      expect(conn.resourceTemplates).toEqual([]);
+      expect(conn.resources).toHaveLength(2);
+      expect(toolNames(conn)).toEqual(["echo_types", "stats"]);
+    });
+
+    it("does not ignore a template listing that times out", async () => {
+      const conn = await connect(
+        fixtureOptions("hang", ["--templates=hang"], 1500),
+      );
+
+      // Status is not asserted: discovery still in flight when the connection
+      // timeout fires can overwrite "error" with "connected" (pre-existing)
+      expect(conn.errors).toContainEqual(
+        expect.stringContaining("Connection timed out"),
+      );
+      expect(conn.errors).toContainEqual(
+        expect.stringMatching(
+          /^Error loading resource templates for MCP Server hang: MCP error -32001: /,
+        ),
+      );
+      expect(conn.resourceTemplates).toEqual([]);
+    });
+
+    it("reports tool discovery failures and keeps resources", async () => {
+      const conn = await connect(
+        fixtureOptions("tools-error", ["--tools=internal-error"]),
+      );
+
+      expect(conn.status).toBe("connected");
+      expect(conn.errors).toHaveLength(1);
+      expect(conn.errors[0]).toMatch(
+        /^Error loading tools for MCP Server tools-error: MCP error -32603: .*synthetic tools failure$/,
+      );
+      expect(conn.tools).toEqual([]);
+      expect(conn.resources).toHaveLength(2);
+    });
+
+    it("fails the connection when the server exits during initialization", async () => {
+      const marker = path.join(tmpDir, "crashed");
+      const conn = await connect(
+        fixtureOptions("crash", [`--crash-once=${marker}`]),
+      );
+
+      expect(conn.status).toBe("error");
+      expect(conn.errors).toHaveLength(1);
+      expect(conn.errors[0]).toMatch(/^Failed to connect to "crash"/);
+      expect(conn.tools).toEqual([]);
+    });
+
+    it("reconnects after a failed connection without stale errors or duplicate tools", async () => {
+      const marker = path.join(tmpDir, "crashed");
+      const conn = await connect(
+        fixtureOptions("reconnect", [`--crash-once=${marker}`]),
+      );
+      expect(conn.status).toBe("error");
+
+      await conn.connectClient(true, new AbortController().signal);
+
+      expect(conn.status).toBe("connected");
+      expect(conn.errors).toEqual([]);
+      expect(toolNames(conn)).toEqual(["echo_types", "stats"]);
+      expect(conn.resources).toHaveLength(2);
+    });
+
+    it("keeps discovery state independent across servers", async () => {
+      const [unsupported, failing] = await Promise.all([
+        connect(fixtureOptions("server-a")),
+        connect(fixtureOptions("server-b", ["--templates=internal-error"])),
+      ]);
+
+      expect(unsupported.errors).toEqual([]);
+      expect(failing.errors).toHaveLength(1);
+      expect(failing.errors[0]).toMatch(
+        /^Error loading resource templates for MCP Server server-b: MCP error -32603: /,
+      );
+      expect(unsupported.tools).not.toBe(failing.tools);
+      expect(toolNames(unsupported)).toEqual(["echo_types", "stats"]);
+      expect(toolNames(failing)).toEqual(["echo_types", "stats"]);
+    });
+  });
+
+  describe("resource template discovery errors", () => {
+    const options: InternalStdioMcpOptions = {
+      name: "test-mcp",
+      id: "test-id",
+      type: "stdio",
+      command: "test-cmd",
+      args: [],
+    };
+
+    const mockServer = (capabilities: Record<string, object>) => {
+      vi.spyOn(Client.prototype, "connect").mockResolvedValue(undefined);
+      vi.spyOn(Client.prototype, "getServerCapabilities").mockReturnValue(
+        capabilities,
+      );
+      vi.spyOn(Client.prototype, "listResources").mockResolvedValue({
+        resources: [{ name: "test-resource", uri: "test-uri" }],
+      });
+      vi.spyOn(Client.prototype, "listTools").mockResolvedValue({
+        tools: [{ name: "test-tool", inputSchema: { type: "object" } }],
+      });
+    };
+
+    it("treats a structured MethodNotFound error as unsupported", async () => {
+      mockServer({ resources: {}, tools: {} });
+      vi.spyOn(Client.prototype, "listResourceTemplates").mockRejectedValue(
+        new McpError(ErrorCode.MethodNotFound, "Method not found"),
+      );
+
+      const conn = new MCPConnection(options);
+      await conn.connectClient(false, new AbortController().signal);
+
+      expect(conn.status).toBe("connected");
+      expect(conn.errors).toEqual([]);
+      expect(conn.resources).toHaveLength(1);
+      expect(conn.tools).toHaveLength(1);
+    });
+
+    it.each([
+      [
+        "an unstructured error with the same text",
+        new Error("MCP error -32601: Method not found"),
+      ],
+      [
+        "invalid params",
+        new McpError(ErrorCode.InvalidParams, "Invalid params"),
+      ],
+      [
+        "a request timeout",
+        new McpError(ErrorCode.RequestTimeout, "Request timed out"),
+      ],
+      [
+        "a closed connection",
+        new McpError(ErrorCode.ConnectionClosed, "Connection closed"),
+      ],
+    ])("still reports %s", async (_, error) => {
+      mockServer({ resources: {}, tools: {} });
+      vi.spyOn(Client.prototype, "listResourceTemplates").mockRejectedValue(
+        error,
+      );
+
+      const conn = new MCPConnection(options);
+      await conn.connectClient(false, new AbortController().signal);
+
+      expect(conn.errors).toEqual([
+        `Error loading resource templates for MCP Server test-mcp: ${error.message}`,
+      ]);
+      expect(conn.tools).toHaveLength(1);
+    });
+
+    it("still reports MethodNotFound from resources/list", async () => {
+      mockServer({ resources: {}, tools: {} });
+      vi.spyOn(Client.prototype, "listResources").mockRejectedValue(
+        new McpError(ErrorCode.MethodNotFound, "Method not found"),
+      );
+      vi.spyOn(Client.prototype, "listResourceTemplates").mockResolvedValue({
+        resourceTemplates: [],
+      });
+
+      const conn = new MCPConnection(options);
+      await conn.connectClient(false, new AbortController().signal);
+
+      expect(conn.errors).toEqual([
+        "Error loading resources for MCP Server test-mcp: MCP error -32601: Method not found",
+      ]);
+    });
+
+    it("does not request templates from a tools-only server", async () => {
+      mockServer({ tools: {} });
+      const listResourceTemplates = vi.spyOn(
+        Client.prototype,
+        "listResourceTemplates",
+      );
+
+      const conn = new MCPConnection(options);
+      await conn.connectClient(false, new AbortController().signal);
+
+      expect(listResourceTemplates).not.toHaveBeenCalled();
+      expect(conn.errors).toEqual([]);
+      expect(conn.tools).toHaveLength(1);
     });
   });
 
