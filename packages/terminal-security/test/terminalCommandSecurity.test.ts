@@ -289,6 +289,34 @@ describe("evaluateTerminalCommandSecurity", () => {
       ]);
     });
 
+    it("should check the target of an npm alias, not the alias name", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "npm install lodash@npm:lodahs",
+        { includeWarnings: true },
+      );
+
+      expect(result.policy).toBe("allowedWithPermission");
+      expect(result.warnings).toEqual([
+        expect.objectContaining({
+          type: "typosquat-target",
+          packageName: "lodahs",
+          suspectedPackageName: "lodash",
+        }),
+      ]);
+    });
+
+    it("should not warn for an npm alias whose target is the real package", () => {
+      const result = evaluateTerminalCommandSecurity(
+        "allowedWithoutPermission",
+        "npm install lodahs@npm:lodash@4.17.21",
+        { includeWarnings: true },
+      );
+
+      expect(result.policy).toBe("allowedWithPermission");
+      expect(result.warnings).toBeUndefined();
+    });
+
     it("should require permission for npm i", () => {
       const result = evaluateTerminalCommandSecurity(
         "allowedWithoutPermission",

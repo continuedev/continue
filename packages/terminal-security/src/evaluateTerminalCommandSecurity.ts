@@ -991,6 +991,15 @@ function getLevenshteinDistance(
 function normalizePackageTarget(target: string): string | null {
   let packageName = target.trim();
 
+  // An npm alias (`name@npm:target@version`) installs the target, not the name.
+  const aliasStart = packageName.indexOf(
+    "@npm:",
+    packageName.startsWith("@") ? 1 : 0,
+  );
+  if (aliasStart > 0) {
+    packageName = packageName.slice(aliasStart + "@npm:".length);
+  }
+
   if (
     packageName === "" ||
     packageName.startsWith(".") ||
