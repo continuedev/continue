@@ -526,7 +526,8 @@ export const models: { [key: string]: ModelPackage } = {
   },
   glm53: {
     title: "GLM-5.3",
-    description: "Z.ai's latest flagship GLM-5.3 model with 128k context and enhanced reasoning",
+    description:
+      "Z.ai's latest flagship GLM-5.3 model with 128k context and enhanced reasoning",
     refUrl: "https://z.ai/model-api",
     params: {
       title: "GLM-5.3",
