@@ -1,0 +1,77 @@
+---
+title: "llamay"
+description: "Configure llamay with Continue to run models locally on macOS, Windows and Linux through its Ollama-compatible API"
+---
+
+<Info>
+  Get started with [llamay](https://llamay.com) - a local LLM runtime that serves Ollama's API, so Continue's `ollama` provider talks to it unchanged
+</Info>
+
+## Installation
+
+Download llamay from [llamay.com/download](https://llamay.com/download/), then start the server with the model you want. A model it does not have yet is downloaded first, including GGUF repositories on Hugging Face:
+
+```bash
+llamay serve -m qwen2.5-coder:1.5b
+```
+
+llamay listens on `http://localhost:11435`, next to Ollama's 11434, so the two can run side by side.
+
+## Configuration
+
+Use the `ollama` provider and point `apiBase` at llamay:
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: llamay
+        provider: ollama
+        model: qwen2.5-coder:1.5b
+        apiBase: http://localhost:11435
+        roles:
+          - chat
+          - edit
+          - apply
+          - autocomplete
+    ```
+    </Tab>
+    <Tab title="JSON (Deprecated)">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "llamay",
+          "provider": "ollama",
+          "model": "qwen2.5-coder:1.5b",
+          "apiBase": "http://localhost:11435"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+`model` can be any name llamay serves: an Ollama-style name such as `qwen2.5-coder:1.5b`, or a Hugging Face repository such as `hf.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF:Q4_K_M`. `llamay models` lists what is on the machine.
+
+## Embeddings
+
+llamay serves embeddings from an encoder loaded beside the chat model:
+
+```bash
+llamay serve -m qwen2.5-coder:1.5b -embed all-minilm:latest
+```
+
+```yaml title="config.yaml"
+models:
+  - name: llamay embeddings
+    provider: ollama
+    model: all-minilm:latest
+    apiBase: http://localhost:11435
+    roles:
+      - embed
+```
