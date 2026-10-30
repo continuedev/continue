@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { logger } from "src/util/logger.js";
 
 import { DEFAULT_SESSION_TITLE } from "../../constants/session.js";
+import { fireUserPromptSubmit } from "../../hooks/fireHook.js";
 import { loadSession, startNewSession } from "../../session.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 
@@ -231,11 +232,16 @@ export async function formatMessageWithFiles(
 }
 
 /**
- * Track telemetry for user message
+ * Track telemetry for user message and fire UserPromptSubmit hook
  */
-export function trackUserMessage(message: string, _model?: any): void {
+export async function trackUserMessage(
+  message: string,
+  _model?: any,
+): Promise<{ blocked: boolean }> {
   telemetryService.startActiveTime();
   telemetryService.logUserPrompt(message.length, message);
+  const hookResult = await fireUserPromptSubmit(message);
+  return { blocked: hookResult.blocked };
 }
 
 interface HandleSpecialCommandsOptions {

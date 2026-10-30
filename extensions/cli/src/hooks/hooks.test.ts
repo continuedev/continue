@@ -8,8 +8,21 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { services } from "../services/index.js";
+
+import {
+  fireNotification,
+  firePostToolUse,
+  firePostToolUseFailure,
+  firePreCompact,
+  firePreToolUse,
+  fireSessionEnd,
+  fireSessionStart,
+  fireStop,
+  fireUserPromptSubmit,
+} from "./fireHook.js";
 import { getMatchingHookGroups, loadHooksConfig } from "./hookConfig.js";
 import { runHooks } from "./hookRunner.js";
 import type {
@@ -384,7 +397,7 @@ describeUnix("hookRunner", () => {
                 type: "command",
                 // Read stdin and echo tool_name field
                 command:
-                  "cat | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d['tool_name'])\"",
+                  "node -e \"const fs=require('fs'); const d=JSON.parse(fs.readFileSync(0,'utf-8')); console.log(d.tool_name);\"",
               },
             ],
           },
@@ -890,6 +903,317 @@ describeUnix("hookRunner", () => {
       expect(result.blocked).toBe(false);
       // Exit code should be non-zero (127 for command not found)
       expect(result.results[0].exitCode).not.toBe(0);
+    });
+  });
+
+  describe("runHooks - PreToolUse permission decision restriction", () => {
+    it("preserves most restrictive decision when a later hook returns allow after deny", async () => {
+      const denyOutput = JSON.stringify({
+        hookSpecificOutput: {
+          hookEventName: "PreToolUse",
+          permissionDecision: "deny",
+          permissionDecisionReason: "Blocked by security policy",
+        },
+      });
+      const allowOutput = JSON.stringify({
+        hookSpecificOutput: {
+          hookEventName: "PreToolUse",
+          permissionDecision: "allow",
+        },
+      });
+
+      const config: HooksConfig = {
+        PreToolUse: [
+          {
+            hooks: [
+              {
+                type: "command",
+                command: `node -e 'console.log(${JSON.stringify(denyOutput)})'`,
+              },
+              {
+                type: "command",
+                command: `node -e 'console.log(${JSON.stringify(allowOutput)})'`,
+              },
+            ],
+          },
+        ],
+      };
+
+      const input: PreToolUseInput = {
+        session_id: "test-session",
+        transcript_path: "",
+        cwd: process.cwd(),
+        hook_event_name: "PreToolUse",
+        tool_name: "Bash",
+        tool_input: {},
+        tool_use_id: "test-id",
+      };
+
+      const result = await runHooks(config, input);
+      expect(result.blocked).toBe(true);
+      expect(result.permissionDecision).toBe("deny");
+      expect(result.permissionDecisionReason).toBe("Blocked by security policy");
+    });
+
+    it("clears timeout in finally block when HTTP hook fetch throws", async () => {
+      const origFetch = globalThis.fetch;
+      const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
+      globalThis.fetch = vi.fn().mockRejectedValue(new Error("Network failed"));
+
+      try {
+        const config: HooksConfig = {
+          PreToolUse: [
+            {
+              hooks: [
+                {
+                  type: "http",
+                  url: "https://example.com/hook",
+                  timeout: 5,
+                },
+              ],
+            },
+          ],
+        };
+
+        const input: PreToolUseInput = {
+          session_id: "test-session",
+          transcript_path: "",
+          cwd: process.cwd(),
+          hook_event_name: "PreToolUse",
+          tool_name: "Bash",
+          tool_input: {},
+          tool_use_id: "test-id",
+        };
+
+        const result = await runHooks(config, input);
+        expect(result.blocked).toBe(false);
+        expect(clearTimeoutSpy).toHaveBeenCalled();
+      } finally {
+        globalThis.fetch = origFetch;
+        clearTimeoutSpy.mockRestore();
+      }
+    });
+  });
+
+  describe("fireHook integration with HookService", () => {
+    const origIsInitialized = (services.hooks as any).isInitialized;
+    const origState = (services.hooks as any).currentState;
+
+    afterEach(() => {
+      (services.hooks as any).isInitialized = origIsInitialized;
+      (services.hooks as any).currentState = origState;
+    });
+
+    it("returns no-op result when HookService is not initialized", async () => {
+      (services.hooks as any).isInitialized = false;
+
+      const sessionStartResult = await fireSessionStart("startup");
+      expect(sessionStartResult.blocked).toBe(false);
+      expect(sessionStartResult.results).toEqual([]);
+
+      const userPromptResult = await fireUserPromptSubmit("test prompt");
+      expect(userPromptResult.blocked).toBe(false);
+      expect(userPromptResult.results).toEqual([]);
+
+      const preToolResult = await firePreToolUse("Bash", { command: "ls" }, "call-1");
+      expect(preToolResult.blocked).toBe(false);
+      expect(preToolResult.results).toEqual([]);
+
+      const postToolResult = await firePostToolUse("Bash", { command: "ls" }, "output", "call-1");
+      expect(postToolResult.blocked).toBe(false);
+      expect(postToolResult.results).toEqual([]);
+
+      const failureResult = await firePostToolUseFailure("Bash", { command: "ls" }, "call-1", "err");
+      expect(failureResult.blocked).toBe(false);
+      expect(failureResult.results).toEqual([]);
+
+      const sessionEndResult = await fireSessionEnd("other");
+      expect(sessionEndResult.blocked).toBe(false);
+      expect(sessionEndResult.results).toEqual([]);
+    });
+
+    it("fires fireSessionStart when HookService is initialized", async () => {
+      (services.hooks as any).isInitialized = true;
+      (services.hooks as any).currentState = {
+        config: {
+          SessionStart: [
+            {
+              hooks: [
+                {
+                  type: "command",
+                  command: "echo session-started",
+                },
+              ],
+            },
+          ],
+        },
+        disabled: false,
+        onceKeys: new Set(),
+      };
+
+      const result = await fireSessionStart("startup", "claude-3-5-sonnet");
+      expect(result.blocked).toBe(false);
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].stdout).toBe("session-started");
+    });
+
+    it("fires fireUserPromptSubmit and handles prompt blocking", async () => {
+      (services.hooks as any).isInitialized = true;
+      (services.hooks as any).currentState = {
+        config: {
+          UserPromptSubmit: [
+            {
+              hooks: [
+                {
+                  type: "command",
+                  command: "echo 'prompt policy violated' >&2; exit 2",
+                },
+              ],
+            },
+          ],
+        },
+        disabled: false,
+        onceKeys: new Set(),
+      };
+
+      const result = await fireUserPromptSubmit("forbidden prompt");
+      expect(result.blocked).toBe(true);
+      expect(result.blockReason).toContain("prompt policy violated");
+    });
+
+    it("fires firePreToolUse and applies updatedInput", async () => {
+      const outputJson = JSON.stringify({
+        hookSpecificOutput: {
+          hookEventName: "PreToolUse",
+          updatedInput: { command: "safe command" },
+        },
+      });
+
+      (services.hooks as any).isInitialized = true;
+      (services.hooks as any).currentState = {
+        config: {
+          PreToolUse: [
+            {
+              hooks: [
+                {
+                  type: "command",
+                  command: `node -e 'console.log(${JSON.stringify(outputJson)})'`,
+                },
+              ],
+            },
+          ],
+        },
+        disabled: false,
+        onceKeys: new Set(),
+      };
+
+      const result = await firePreToolUse("Bash", { command: "raw command" }, "call-1");
+      expect(result.blocked).toBe(false);
+      expect(result.updatedInput).toEqual({ command: "safe command" });
+    });
+
+    it("fires firePreToolUse and handles blocking", async () => {
+      (services.hooks as any).isInitialized = true;
+      (services.hooks as any).currentState = {
+        config: {
+          PreToolUse: [
+            {
+              hooks: [
+                {
+                  type: "command",
+                  command: "echo 'tool forbidden' >&2; exit 2",
+                },
+              ],
+            },
+          ],
+        },
+        disabled: false,
+        onceKeys: new Set(),
+      };
+
+      const result = await firePreToolUse("Bash", { command: "dangerous" }, "call-1");
+      expect(result.blocked).toBe(true);
+      expect(result.blockReason).toContain("tool forbidden");
+    });
+
+    it("fires firePostToolUse on successful tool execution", async () => {
+      (services.hooks as any).isInitialized = true;
+      (services.hooks as any).currentState = {
+        config: {
+          PostToolUse: [
+            {
+              hooks: [
+                {
+                  type: "command",
+                  command: "echo post-tool-success",
+                },
+              ],
+            },
+          ],
+        },
+        disabled: false,
+        onceKeys: new Set(),
+      };
+
+      const result = await firePostToolUse("Bash", { command: "ls" }, "file.txt", "call-1");
+      expect(result.blocked).toBe(false);
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].stdout).toBe("post-tool-success");
+    });
+
+    it("fires firePostToolUseFailure on tool execution failure or denial", async () => {
+      (services.hooks as any).isInitialized = true;
+      (services.hooks as any).currentState = {
+        config: {
+          PostToolUseFailure: [
+            {
+              hooks: [
+                {
+                  type: "command",
+                  command: "echo recorded-failure",
+                },
+              ],
+            },
+          ],
+        },
+        disabled: false,
+        onceKeys: new Set(),
+      };
+
+      const result = await firePostToolUseFailure(
+        "Bash",
+        { command: "ls /nonexistent" },
+        "call-1",
+        "Directory not found",
+      );
+      expect(result.blocked).toBe(false);
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].stdout).toBe("recorded-failure");
+    });
+
+    it("fires fireSessionEnd on session exit", async () => {
+      (services.hooks as any).isInitialized = true;
+      (services.hooks as any).currentState = {
+        config: {
+          SessionEnd: [
+            {
+              hooks: [
+                {
+                  type: "command",
+                  command: "echo session-ended",
+                },
+              ],
+            },
+          ],
+        },
+        disabled: false,
+        onceKeys: new Set(),
+      };
+
+      const result = await fireSessionEnd("other");
+      expect(result.blocked).toBe(false);
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].stdout).toBe("session-ended");
     });
   });
 });
