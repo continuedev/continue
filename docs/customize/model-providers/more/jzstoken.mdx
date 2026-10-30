@@ -1,0 +1,42 @@
+---
+title: "How to Configure JZSTOKEN with Continue"
+sidebarTitle: "JZSTOKEN"
+slug: ../jzstoken
+---
+
+<Info>
+  Get an API key from the [JZSTOKEN API Keys page](https://jzstoken.com/dashboard/keys). JZSTOKEN exposes an OpenAI-compatible Chat Completions API at `https://jzstoken.com/api/v1`.
+</Info>
+
+JZSTOKEN is an API gateway that provides access to OpenAI, Anthropic, Google, Kimi, DeepSeek, and other models through one endpoint. Continue connects to it using its existing OpenAI provider.
+
+## Configuration
+
+Use a model ID from the [JZSTOKEN model catalog](https://jzstoken.com/model-pricing) and add the following model to `config.yaml`:
+
+```yaml title="config.yaml"
+name: My Config
+version: 0.0.1
+schema: v1
+
+models:
+  - name: Claude Sonnet 5 (JZSTOKEN)
+    provider: openai
+    model: claude-sonnet-5
+    apiBase: https://jzstoken.com/api/v1
+    apiKey: ${{ secrets.JZSTOKEN_API_KEY }}
+    useResponsesApi: false
+    roles:
+      - chat
+      - edit
+      - apply
+```
+
+Set `JZSTOKEN_API_KEY` in Continue's secrets, or replace the `apiKey` placeholder for local-only testing. Use a **Standard** key for general models; a key created for `jzs-max-3.0` can only access that model.
+
+## Notes
+
+- JZSTOKEN supports Chat Completions, so `useResponsesApi` is set to `false`.
+- Choose chat-capable model IDs from JZSTOKEN's current catalog. The example uses `claude-sonnet-5`; other available IDs can be added as separate entries in `models`.
+- JZSTOKEN does not document a completion, embeddings, or reranking API. Use another provider for `autocomplete`, `embed`, or `rerank` roles.
+- See the [JZSTOKEN quick start](https://jzstoken.com/docs/quick-start) for current key requirements and API setup.
