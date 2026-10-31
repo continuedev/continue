@@ -1,0 +1,79 @@
+---
+title: "Nivana"
+description: "Configure Nivana, a hosted LLM router, with Continue through its OpenAI-compatible API"
+---
+
+[Nivana](https://nivana.one) is a hosted LLM router. Each request is routed to the model that measures best for it across Claude, GPT, Gemini, DeepSeek and others, so you configure one model and the router chooses per request.
+
+<Info>
+  Create an API key in the Nivana app under **API keys**. New accounts get 2,000 free credits.
+</Info>
+
+## Chat, edit and apply
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Nivana
+      provider: openai
+      model: nivana/auto
+      apiBase: https://nivana.one/v1
+      apiKey: ${{ secrets.NIVANA_API_KEY }}
+      roles:
+        - chat
+        - edit
+        - apply
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Nivana",
+        "provider": "openai",
+        "model": "nivana/auto",
+        "apiBase": "https://nivana.one/v1",
+        "apiKey": "<YOUR_NIVANA_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Agent mode
+
+The endpoint supports tool calling, and each agent step is routed on its own. Add `agent` to `roles` and declare tool use:
+
+```yaml title="config.yaml"
+models:
+  - name: Nivana
+    provider: openai
+    model: nivana/auto
+    apiBase: https://nivana.one/v1
+    apiKey: ${{ secrets.NIVANA_API_KEY }}
+    roles:
+      - chat
+      - edit
+      - apply
+      - agent
+    capabilities:
+      - tool_use
+```
+
+## Routing preferences
+
+Use `nivana/quality`, `nivana/best`, `nivana/speed` or `nivana/cost` as the model to lean the router one way. None of them pins a specific model. See [how routing works](https://nivana.one/docs/routing).
+
+## Limits
+
+- `temperature`, `max_tokens` and JSON mode are ignored.
+- Without tools the endpoint is text only.
+- Nivana is not suited to autocomplete. Use a dedicated autocomplete model for that role.
+- The response's `model` field names the model that answered.

@@ -115,6 +115,7 @@
                       "customize/model-providers/more/mimo",
                       "customize/model-providers/more/mistral",
                       "customize/model-providers/more/moonshot",
+                      "customize/model-providers/more/nivana",
                       "customize/model-providers/more/nous",
                       "customize/model-providers/more/nvidia",
                       "customize/model-providers/more/tensorix",
