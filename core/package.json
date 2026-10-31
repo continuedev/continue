@@ -31,6 +31,7 @@
     "@types/json-schema": "^7.0.15",
     "@types/mozilla-readability": "^0.2.1",
     "@types/mustache": "^4.2.5",
+    "@types/node": "^20.19.43",
     "@types/node-fetch": "^2.6.11",
     "@types/pg": "^8.11.6",
     "@types/plist": "^3.0.5",
