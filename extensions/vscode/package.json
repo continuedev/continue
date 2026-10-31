@@ -1,27 +1,26 @@
 {
-  "name": "continue",
+  "name": "continued",
   "icon": "media/icon.png",
-  "author": "Continue Dev, Inc",
+  "author": "b1tninja",
   "version": "1.3.36",
   "repository": {
     "type": "git",
-    "url": "https://github.com/continuedev/continue"
+    "url": "https://github.com/b1tninja/continued"
   },
   "extensionKind": [
     "ui",
     "workspace"
   ],
   "bugs": {
-    "url": "https://github.com/continuedev/continue/issues",
-    "email": "nate@continue.dev"
+    "url": "https://github.com/b1tninja/continued/issues"
   },
-  "homepage": "https://continue.dev",
-  "qna": "https://github.com/continuedev/continue/issues/new/choose",
+  "homepage": "https://github.com/b1tninja/continued",
+  "qna": "https://github.com/b1tninja/continued/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - open-source AI code agent",
+  "displayName": "Continued - open-source AI code agent",
   "pricing": "Free",
-  "description": "The leading open-source AI code agent",
-  "publisher": "Continue",
+  "description": "Community-maintained fork of Continue: the open-source AI code agent",
+  "publisher": "b1tninja",
   "engines": {
     "vscode": "^1.70.0",
     "node": ">=20.20.1"

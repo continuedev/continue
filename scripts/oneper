@@ -155,7 +155,7 @@ install_from_main() {
 
     # Extract version from the original VSIX filename (e.g., continue-1.1.66.vsix -> 1.1.66)
     local original_filename=$(basename "$vsix_file")
-    local version=$(echo "$original_filename" | sed 's/continue-\(.*\)\.vsix/\1/')
+    local version=$(echo "$original_filename" | sed 's/continued\{0,1\}-\(.*\)\.vsix/\1/')
 
     if [ -z "$version" ]; then
         echo "⚠️  Could not extract version from filename: $original_filename"
@@ -273,7 +273,7 @@ install_from_pr() {
 
     # Extract full version from the original VSIX filename (e.g., continue-1.1.66-a1b2c3d.vsix -> 1.1.66-a1b2c3d)
     local original_filename=$(basename "$vsix_file")
-    local full_version=$(echo "$original_filename" | sed 's/continue-\(.*\)\.vsix/\1/')
+    local full_version=$(echo "$original_filename" | sed 's/continued\{0,1\}-\(.*\)\.vsix/\1/')
 
     if [ -z "$full_version" ]; then
         echo "⚠️  Could not extract version from filename: $original_filename"
