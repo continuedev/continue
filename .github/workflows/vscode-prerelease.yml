@@ -15,6 +15,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 jobs:
   create-prerelease:
@@ -213,6 +214,16 @@ jobs:
             --target main
 
           echo "Created pre-release: ${{ steps.version.outputs.tag_name }}"
+
+      # Releases created with GITHUB_TOKEN do not fire `release` events, so
+      # start the build/publish workflow explicitly on the new tag.
+      - name: Trigger pre-release build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run preview.yaml \
+            --ref "${{ steps.version.outputs.tag_name }}" \
+            -f publish_build=true
 
       - name: Summary
         run: |
