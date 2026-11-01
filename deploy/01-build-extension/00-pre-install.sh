@@ -183,6 +183,15 @@ _ext_nm_is_valid() {
   [[ -d "${EXT_DIR}/node_modules" ]] || return 1
   [[ -d "${EXT_DIR}/node_modules/@vscode/ripgrep" ]] || return 1
   [[ -d "${EXT_DIR}/node_modules/esbuild" ]] || return 1
+  # Sanity check: cac packages core phai co package.json (detect corrupted install)
+  # Neu thieu package.json -> node_modules bi partial/corrupt -> phai reinstall
+  for _pkg in rimraf ncp @vscode/vsce; do
+    local _pkgdir="${EXT_DIR}/node_modules/${_pkg}"
+    if [[ -d "$_pkgdir" && ! -f "${_pkgdir}/package.json" ]]; then
+      warn "Corrupted package detected: ${_pkg} (missing package.json) — will reinstall"
+      return 1  # trigger fresh npm install
+    fi
+  done
   # Kiem tra sqlite3 binding neu target la linux
   if [[ "$OS" == "linux" ]]; then
     local sqlite_src="${REPO_ROOT}/core/node_modules/sqlite3/build/Release/node_sqlite3.node"
@@ -215,6 +224,23 @@ if [[ "$CHECK_ONLY" == "false" ]]; then
       fi
     }
     success "npm install done"
+  fi
+
+  # Đảm bảo 'yaml' package có mặt — source code dùng `import * as YAML from "yaml"`
+  # nhưng package này không được khai báo trong extensions/vscode/package.json
+  # (nó là transitive dep của core/config-yaml). Thiếu nó → esbuild crash khi bundle.
+  if [[ ! -f "${EXT_DIR}/node_modules/yaml/package.json" ]]; then
+    info "Installing missing 'yaml' package (used by src/commands.ts)..."
+    run_npm_cmd bash -c "
+      cd '${EXT_DIR}'
+      npm install yaml --registry '${NPM_REGISTRY}' --no-save --no-package-lock 2>&1 | tail -3
+    " || run_npm_cmd bash -c "
+      cd '${EXT_DIR}'
+      npm install yaml --registry '${PUBLIC_REGISTRY}' --no-save --no-package-lock 2>&1 | tail -3
+    "
+    success "yaml installed"
+  else
+    success "yaml package present"
   fi
 fi
 
@@ -305,30 +331,47 @@ fi
 # =============================================================================
 # STEP 3b: Fix sqlite3 native binding (node_sqlite3.node)
 #
-# prepackage.js copy binding từ core/node_modules/sqlite3/build → vsix.
-# core/node_modules thường npm install trên Windows → binding là PE32 →
-# VS Code Linux/WSL fail "invalid ELF header" khi activate extension.
-# (SKIP_INSTALLS=true làm copySqlite download prebuilt bị skip — xem prepackage.js)
+# prepackage.js (SKIP_INSTALLS=true) copy binding từ:
+#   core/node_modules/sqlite3/build/Release/node_sqlite3.node
 #
-# Fix: rebuild binding bằng node-gyp TRÊN MÁY BUILD (đúng platform),
-# đặt vào core/node_modules/sqlite3/build/Release/ trước khi build.
+# Nếu core/node_modules được npm install trên Windows → binding là PE32 →
+# VS Code Linux/WSL activate fail: "invalid ELF header".
 #
-# Air-gap: node-gyp cần node headers. Nếu nodejs.org không tới được trực tiếp,
-# script thử: (1) cache sẵn có ~/.cache/node-gyp/<ver>/, (2) NODE_HEADERS_TGZ env,
-# (3) download qua proxy_windows (WSL).
+# Fix: download prebuilt binary từ TryGhost/node-sqlite3 GitHub releases
+# (đúng approach của copySqlite() trong prepackage.js — KHÔNG dùng node-gyp).
+# URL: https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/
+#      sqlite3-v5.1.7-napi-v6-{target}.tar.gz
+#
+# Đảm bảo core/node_modules tồn tại trước: nếu chưa có (fresh Linux build),
+# chạy core npm install để lấy đúng package.json + folder structure.
 # =============================================================================
 CORE_SQLITE="${REPO_ROOT}/core/node_modules/sqlite3"
 SQLITE_BINDING="${CORE_SQLITE}/build/Release/node_sqlite3.node"
+SQLITE_VERSION="5.1.7"
+
+# Ensure core/node_modules exists (fresh Linux build — node_modules not synced)
+# Dùng --ignore-scripts để tránh sqlite3 tự compile (sẽ fail trên NTFS / air-gap).
+# Prebuilt binary sẽ được download riêng ở bước dưới.
+if [[ "$CHECK_ONLY" == "false" && ! -d "${REPO_ROOT}/core/node_modules" ]]; then
+  info "[sqlite3] core/node_modules chưa có — chạy core npm install --ignore-scripts..."
+  run_npm_cmd bash -c "
+    cd '${REPO_ROOT}/core'
+    npm install --ignore-scripts --registry '${NPM_REGISTRY}' 2>&1 | tail -3
+  " || run_npm_cmd bash -c "
+    cd '${REPO_ROOT}/core'
+    npm install --ignore-scripts --registry '${PUBLIC_REGISTRY}' 2>&1 | tail -3
+  "
+  success "core/node_modules installed (--ignore-scripts)"
+fi
 
 echo ""
 info "[sqlite3] target binding: ${SQLITE_BINDING}"
 
 sqlite_binding_is_target_platform() {
-  # $1: file path. Return 0 nếu đúng platform của target
   local f="$1"
   [[ -f "$f" ]] || return 1
   local ftype
-  ftype=$(file -b "$f")
+  ftype=$(file -b "$f" 2>/dev/null)
   case "$OS" in
     linux)  echo "$ftype" | grep -q "ELF" ;;
     win32)  echo "$ftype" | grep -q "PE32" ;;
@@ -342,190 +385,67 @@ elif [[ "$CHECK_ONLY" == "true" ]]; then
   echo -e "  ${RED}[WRONG PLATFORM]${NC} sqlite3 binding: $(file -b "$SQLITE_BINDING" 2>/dev/null || echo 'missing')"
   FAILED=$((FAILED+1))
 else
-  warn "sqlite3 binding sai platform hoặc thiếu — rebuilding từ source cho $OS..."
+  warn "sqlite3 binding sai platform hoặc thiếu — downloading prebuilt cho $OS..."
 
+  # Ensure sqlite3 package folder exists (sau --ignore-scripts, folder có thể thiếu)
   if [[ ! -d "$CORE_SQLITE" ]]; then
-    error "core/node_modules/sqlite3 chưa tồn tại. Chạy: (cd core && npm install)"
+    info "sqlite3 package folder missing — installing sqlite3 package only (--ignore-scripts)..."
+    run_npm_cmd bash -c "
+      cd '${REPO_ROOT}/core'
+      npm install sqlite3 --ignore-scripts --registry '${NPM_REGISTRY}' 2>&1 | tail -3
+    " || run_npm_cmd bash -c "
+      cd '${REPO_ROOT}/core'
+      npm install sqlite3 --ignore-scripts --registry '${PUBLIC_REGISTRY}' 2>&1 | tail -3
+    "
+    [[ -d "$CORE_SQLITE" ]] || error "core/node_modules/sqlite3 vẫn không tồn tại sau npm install"
+    success "sqlite3 package installed (no native build)"
   fi
 
-  # Kiem tra build tools (gcc/g++/make) — bat buoc cho node-gyp
-  if [[ "$OS" == "linux" ]]; then
-    MISSING_TOOLS=()
-    for tool in gcc g++ make; do
-      command -v "$tool" &>/dev/null || MISSING_TOOLS+=("$tool")
-    done
-    if [[ ${#MISSING_TOOLS[@]} -gt 0 ]]; then
-      error "Build tools missing: ${MISSING_TOOLS[*]}\n  Fix: sudo apt install -y build-essential\n  Or:  sudo yum install -y gcc gcc-c++ make"
-    fi
-    success "Build tools present (gcc/g++/make)"
+  # Download prebuilt binary từ GitHub releases (N-API — ABI-stable)
+  # Đây là cách prepackage.js dùng (copySqlite), không cần build-from-source / node-gyp
+  SQLITE_URL="https://github.com/TryGhost/node-sqlite3/releases/download/v${SQLITE_VERSION}/sqlite3-v${SQLITE_VERSION}-napi-v6-${TARGET}.tar.gz"
+  SQLITE_TGZ="/tmp/sqlite3-${TARGET}.tar.gz"
+
+  info "Downloading prebuilt sqlite3 from: $SQLITE_URL"
+  DOWNLOAD_OK=false
+
+  # Thử trực tiếp trước
+  if curl -sfL --connect-timeout 10 --max-time 120 -o "$SQLITE_TGZ" "$SQLITE_URL" 2>/dev/null \
+     && file "$SQLITE_TGZ" 2>/dev/null | grep -q gzip; then
+    DOWNLOAD_OK=true
+    success "Downloaded directly"
   fi
 
-  NODE_VER_NUM=$($NODE_PREFIX node --version 2>/dev/null | sed 's/^v//' || node --version | sed 's/^v//')
-  GYP_CACHE="${HOME}/.cache/node-gyp/${NODE_VER_NUM}"
-
-  # 1) Đảm bảo node headers trong node-gyp cache
-  if [[ ! -f "${GYP_CACHE}/config.gypi" ]]; then
-    info "Node headers chưa có trong cache (${GYP_CACHE}) — chuẩn bị..."
-    mkdir -p "$GYP_CACHE"
-
-    HEADERS_TGZ="${NODE_HEADERS_TGZ:-}"
-    if [[ -z "$HEADERS_TGZ" || ! -f "$HEADERS_TGZ" ]]; then
-      HEADERS_URL="https://nodejs.org/download/release/v${NODE_VER_NUM}/node-v${NODE_VER_NUM}-headers.tar.gz"
-      # Air-gap: thử trực tiếp trước, fallback proxy_windows (WSL)
-      info "Downloading node headers: $HEADERS_URL"
-      if ! curl -sfL --connect-timeout 5 --max-time 120 -o /tmp/node-headers.tar.gz "$HEADERS_URL" 2>/dev/null; then
-        warn "Trực tiếp thất bại — thử qua proxy_windows..."
-        bash -ic "proxy_windows >/dev/null 2>&1; curl -sL -o /tmp/node-headers.tar.gz '$HEADERS_URL'" || true
-      fi
-      if [[ -s /tmp/node-headers.tar.gz ]] && file /tmp/node-headers.tar.gz | grep -q gzip; then
-        HEADERS_TGZ=/tmp/node-headers.tar.gz
-      else
-        error "Không lấy được node headers. Download thủ công rồi set NODE_HEADERS_TGZ=<path>:
-  ${HEADERS_URL}"
-      fi
+  # Fallback: proxy_windows (air-gap WSL)
+  if [[ "$DOWNLOAD_OK" == "false" ]]; then
+    warn "Direct download failed — trying proxy_windows..."
+    bash -ic "proxy_windows >/dev/null 2>&1; curl -sL --max-time 120 -o '$SQLITE_TGZ' '$SQLITE_URL'" 2>/dev/null || true
+    if file "$SQLITE_TGZ" 2>/dev/null | grep -q gzip; then
+      DOWNLOAD_OK=true
+      success "Downloaded via proxy_windows"
     fi
-    tar -xzf "$HEADERS_TGZ" -C "$GYP_CACHE" --strip-components=1
-    # node-gyp 8.x yêu cầu 2 file gypi cạnh include/
-    if [[ ! -f "${GYP_CACHE}/common.gypi" ]]; then
-      cat > "${GYP_CACHE}/common.gypi" << 'GYPI'
-{
-  'variables': {
-    'configuring%': 0,
-    'host_arch%': 'x64',
-    'node_install_npm%': 'false',
-    'node_prefix%': '',
-    'node_shared%': 'false',
-    'node_shared_cares%': 'false',
-    'node_shared_http_parser%': 'false',
-    'node_shared_libuv%': 'false',
-    'node_shared_openssl%': 'false',
-    'node_shared_v8%': 'false',
-    'node_shared_zlib%': 'false',
-    'node_tag%': '',
-    'node_unsafe_optimizations%': 0,
-    'node_use_dtrace%': 'false',
-    'node_use_etw%': 'false',
-    'node_use_systemtap%': 'false',
-    'target_arch%': 'x64',
-    'v8_enable_gdbjit%': 0,
-    'v8_no_strict_aliasing%': 1,
-    'v8_use_snapshot%': 'true'
-  }
-}
-GYPI
-    fi
-    if [[ ! -f "${GYP_CACHE}/config.gypi" ]]; then
-      cat > "${GYP_CACHE}/config.gypi" << 'GYPI'
-{
-  'target_defaults': {
-    'default_configuration': 'Release',
-    'variables': {
-      'configuring%': 1,
-      'host_arch%': 'x64',
-      'node_install_npm%': 'false',
-      'node_shared%': 'false',
-      'node_shared_cares%': 'false',
-      'node_shared_openssl%': 'false',
-      'node_shared_v8%': 'false',
-      'node_shared_zlib%': 'false',
-      'node_use_dtrace%': 'false',
-      'node_use_etw%': 'false',
-      'node_use_node_code_cache%': 'true',
-      'node_use_node_snapshot%': 'false',
-      'node_use_v8_platform%': 'true',
-      'target_arch%': 'x64'
-    }
-  },
-  'variables': {
-    'asan%': 'false',
-    'build_v8_with_gn%': 'false',
-    'debug_nghttp2%': 'false',
-    'enable_lto%': 'false',
-    'llvm_version%': '0.0',
-    'node_enable_d8%': 'false',
-    'node_enable_v8_vtunejit%': 'false',
-    'node_install_npm%': 'false',
-    'node_module_version%': 115,
-    'node_no_browser_globals%': 'false',
-    'node_prefix%': '/usr/local',
-    'node_release_urlbase%': 'download/release/',
-    'node_section_ordering_info%': '',
-    'node_shared%': 'false',
-    'node_shared_brotli%': 'false',
-    'node_shared_cares%': 'false',
-    'node_shared_http_parser%': 'false',
-    'node_shared_libuv%': 'false',
-    'node_shared_nghttp2%': 'false',
-    'node_shared_nghttp3%': 'false',
-    'node_shared_ngtcp2%': 'false',
-    'node_shared_openssl%': 'false',
-    'node_shared_zlib%': 'false',
-    'node_tag%': '',
-    'node_target_type%': 'executable',
-    'node_use_bundled_v8%': 'true',
-    'node_use_dtrace%': 'false',
-    'node_use_etw%': 'false',
-    'node_use_node_code_cache%': 'true',
-    'node_use_node_snapshot%': 'false',
-    'node_use_openssl%': 'true',
-    'node_use_v8_platform%': 'true',
-    'node_with_ltcg%': 'false',
-    'node_without_node_options%': 'false',
-    'openssl_is_fips%': 'false',
-    'openssl_quic%': 'true',
-    'ossfuzz%': 'false',
-    'shlib_suffix%': 'so.115',
-    'v8_enable_31bit_smis_on_64bit_arch%': 'false',
-    'v8_enable_gdbjit%': 'false',
-    'v8_enable_hugepage%': 'false',
-    'v8_enable_i18n_support%': 1,
-    'v8_enable_inspector%': 1,
-    'v8_enable_javascript_promise_hooks%': 1,
-    'v8_enable_lite_mode%': 'false',
-    'v8_enable_object_print%': 'true',
-    'v8_enable_pointer_compression%': 'false',
-    'v8_enable_webassembly%': 1,
-    'v8_no_strict_aliasing%': 1,
-    'v8_optimized_debug%': 1,
-    'v8_promise_internal_field_count%': 1,
-    'v8_random_seed%': 0,
-    'v8_trace_maps%': 0,
-    'v8_use_siphash%': 1,
-    'want_separate_host_toolset%': 0,
-    'cc_target%': 'host',
-    'default_configuration%': 'Release'
-  }
-}
-GYPI
-    fi
-    success "Node headers ready tại ${GYP_CACHE}"
-  else
-    success "Node headers đã có trong cache: ${GYP_CACHE}"
   fi
 
-  # 2) Build sqlite3 bằng node-gyp trong core/node_modules/sqlite3
-  info "Running node-gyp rebuild trong core/node_modules/sqlite3..."
-  # Backup binding cũ (thường là platform khác, vd PE32 khi build linux target)
-  if [[ -f "$SQLITE_BINDING" ]]; then
-    cp -f "$SQLITE_BINDING" "${SQLITE_BINDING}.prev"
-    info "Backup binding cũ: ${SQLITE_BINDING}.prev"
+  if [[ "$DOWNLOAD_OK" == "false" ]]; then
+    error "Không download được prebuilt sqlite3.
+  URL: $SQLITE_URL
+  Air-gap: download thủ công rồi đặt vào $SQLITE_TGZ"
   fi
-  run_npm_cmd bash -c "
-    cd '${CORE_SQLITE}'
-    npx node-gyp rebuild --release --nodedir='${GYP_CACHE}' 2>&1 | tail -5
-  " || {
-    # rollback để không bỏ trống build/Release
-    [[ -f "${SQLITE_BINDING}.prev" ]] && cp -f "${SQLITE_BINDING}.prev" "$SQLITE_BINDING"
-    error "node-gyp rebuild sqlite3 thất bại"
-  }
 
-  # 3) Verify đúng platform
+  # Extract prebuilt vào core/node_modules/sqlite3 (giống copySqlite)
+  info "Extracting prebuilt sqlite3 binding..."
+  rm -rf "${CORE_SQLITE}/build"
+  tar -xzf "$SQLITE_TGZ" -C "$CORE_SQLITE"
+  rm -f "$SQLITE_TGZ"
+
+  # Verify đúng platform sau extract
   if sqlite_binding_is_target_platform "$SQLITE_BINDING"; then
-    success "sqlite3 binding rebuilt đúng platform: $(file -b "$SQLITE_BINDING" | cut -d, -f1-2)"
+    success "sqlite3 prebuilt extracted: $(file -b "$SQLITE_BINDING" | cut -d, -f1-2)"
   else
-    error "sqlite3 binding sau rebuild vẫn sai platform: $(file -b "$SQLITE_BINDING" 2>/dev/null || echo missing)"
+    error "sqlite3 binding sau extract vẫn sai platform: $(file -b "$SQLITE_BINDING" 2>/dev/null || echo missing)"
   fi
 fi
+
 
 # =============================================================================
 # STEP 3c: Fix esbuild platform binary (@esbuild/<platform>)
