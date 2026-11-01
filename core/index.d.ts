@@ -1414,13 +1414,20 @@ export type InternalStreamableHttpMcpOptions = BaseInternalMCPOptions & {
   type?: "streamable-http";
   url: string;
   apiKey?: string;
+  oauth?: McpOauthSettings;
 };
 
 export type InternalSseMcpOptions = BaseInternalMCPOptions & {
   type?: "sse";
   url: string;
   apiKey?: string;
+  oauth?: McpOauthSettings;
 };
+
+export interface McpOauthSettings {
+  /** Port of the local redirect server used while signing in (default 3000). */
+  callbackPort?: number;
+}
 
 export type InternalWebsocketMcpOptions = BaseInternalMCPOptions & {
   type: "websocket"; // websocket requires explicit type

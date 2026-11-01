@@ -1,3 +1,4 @@
+import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { homedir } from "os";
@@ -12,7 +13,10 @@ import {
   SseError,
 } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import {
+  StreamableHTTPClientTransport,
+  StreamableHTTPError,
+} from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
 import { Agent as HttpsAgent } from "https";
 import {
@@ -31,7 +35,12 @@ import {
 } from "../..";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
 import { getEnvPathFromUserShell } from "../../util/shellPath";
-import { getOauthToken } from "./MCPOauth";
+import {
+  DEFAULT_OAUTH_CALLBACK_PORT,
+  MCPConnectionOauthProvider,
+  createSignedInOauthProvider,
+  getOauthCallbackUrl,
+} from "./MCPOauth";
 
 const DEFAULT_MCP_TIMEOUT = 20_000; // 20 seconds
 
@@ -48,11 +57,30 @@ const WINDOWS_BATCH_COMMANDS = [
 
 const COMMONS_ENV_VARS = ["HOME", "USER", "USERPROFILE", "LOGNAME", "USERNAME"];
 
-function is401Error(error: unknown) {
+/**
+ * Did the server answer 401? Looks at the status code the transports expose
+ * (and at wrapped causes) rather than the message text, because servers answer
+ * with bodies like "invalid_token" or "Invalid or expired token" that never
+ * mention 401. The message check stays as a fallback for other transports.
+ */
+export function isUnauthorizedError(error: unknown): boolean {
+  let current: any = error;
+  for (let depth = 0; current && depth < 4; depth++) {
+    if (
+      current instanceof UnauthorizedError ||
+      (current instanceof SseError && current.code === 401) ||
+      (current instanceof StreamableHTTPError && current.code === 401) ||
+      current.code === 401 ||
+      current.status === 401 ||
+      current.statusCode === 401
+    ) {
+      return true;
+    }
+    current = current.cause;
+  }
   return (
-    (error instanceof SseError && error.code === 401) ||
-    (error instanceof Error && error.message.includes("401")) ||
-    (error instanceof Error && error.message.includes("Unauthorized"))
+    error instanceof Error &&
+    (error.message.includes("401") || /unauthori[sz]ed/i.test(error.message))
   );
 }
 
@@ -65,6 +93,8 @@ class MCPConnection {
   public abortController: AbortController;
   public status: MCPConnectionStatus = "not-connected";
   public isProtectedResource = false;
+  /** A request in the current connection attempt was answered with 401. */
+  private sawUnauthorized = false;
   public errors: string[] = [];
   public infos: string[] = [];
   public prompts: MCPPrompt[] = [];
@@ -148,25 +178,10 @@ class MCPConnection {
     this.abortController.abort();
     this.abortController = new AbortController();
 
-    // currently support oauth for sse transports only
-    if (this.options.type === "sse") {
-      if (!this.options.requestOptions) {
-        this.options.requestOptions = {
-          headers: {},
-        };
-      }
-      const accessToken = await getOauthToken(
-        this.options.url,
-        this.extras?.ide!,
-      );
-      if (accessToken) {
-        this.isProtectedResource = true;
-        this.options.requestOptions.headers = {
-          ...this.options.requestOptions.headers,
-          Authorization: `Bearer ${accessToken}`,
-        };
-      }
-    }
+    this.sawUnauthorized = false;
+    // OAuth for SSE and streamable-http: if the user has signed in, hand the
+    // SDK a provider so it sends the token and refreshes it when it expires.
+    const authProvider = await this.getAuthProvider();
 
     const vars = getTemplateVariables(JSON.stringify(this.options));
     const unrendered = vars.map((v) => {
@@ -239,11 +254,17 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
               } else {
                 // SSE/HTTP: if type isn't explicit: try http and fall back to sse
                 if (this.options.type === "sse") {
-                  const transport = this.constructSseTransport(this.options);
+                  const transport = this.constructSseTransport(
+                    this.options,
+                    authProvider,
+                  );
                   await this.client.connect(transport, {});
                   this.transport = transport;
                 } else if (this.options.type === "streamable-http") {
-                  const transport = this.constructHttpTransport(this.options);
+                  const transport = this.constructHttpTransport(
+                    this.options,
+                    authProvider,
+                  );
                   await this.client.connect(transport, {});
                   this.transport = transport;
                 } else if (this.options.type === "websocket") {
@@ -258,21 +279,35 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
                   );
                 } else {
                   try {
-                    const transport = this.constructHttpTransport({
-                      ...this.options,
-                      type: "streamable-http",
-                    });
+                    const transport = this.constructHttpTransport(
+                      {
+                        ...this.options,
+                        type: "streamable-http",
+                      },
+                      authProvider,
+                    );
                     await this.client.connect(transport, {});
                     this.transport = transport;
-                  } catch (e) {
+                  } catch (httpError) {
+                    // Remember a 401 from the first attempt: the final error
+                    // below is a plain Error that no longer carries the status.
+                    if (isUnauthorizedError(httpError)) {
+                      this.sawUnauthorized = true;
+                    }
                     try {
-                      const transport = this.constructSseTransport({
-                        ...this.options,
-                        type: "sse",
-                      });
+                      const transport = this.constructSseTransport(
+                        {
+                          ...this.options,
+                          type: "sse",
+                        },
+                        authProvider,
+                      );
                       await this.client.connect(transport, {});
                       this.transport = transport;
                     } catch (e) {
+                      if (isUnauthorizedError(e)) {
+                        this.sawUnauthorized = true;
+                      }
                       throw new Error(
                         `MCP config with URL and no type specified failed both SSE and HTTP connection: ${e instanceof Error ? e.message : String(e)}`,
                       );
@@ -382,8 +417,9 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
             }
           }
 
-          if (is401Error(error)) {
+          if (this.sawUnauthorized || isUnauthorizedError(error)) {
             this.isProtectedResource = true;
+            this.infos.push(this.signInGuidance(!!authProvider));
           }
 
           // Include stdio output if available for stdio transport
@@ -410,6 +446,46 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
     ]);
 
     await this.connectionPromise;
+  }
+
+  /** Where OAuth settings for this server live, if it is a remote one. */
+  private get oauthSettings() {
+    return "oauth" in this.options ? this.options.oauth : undefined;
+  }
+
+  /**
+   * Provider for servers the user has signed in to. Undefined when there is no
+   * stored sign-in (or no IDE to talk to), so a first connection never starts
+   * OAuth on its own.
+   */
+  private async getAuthProvider(): Promise<
+    MCPConnectionOauthProvider | undefined
+  > {
+    if (
+      !("url" in this.options) ||
+      this.options.type === "websocket" ||
+      !this.extras?.ide
+    ) {
+      return undefined;
+    }
+    const provider = await createSignedInOauthProvider(
+      this.options.url,
+      this.extras.ide,
+      { callbackPort: this.oauthSettings?.callbackPort },
+    );
+    if (provider) {
+      this.isProtectedResource = true;
+    }
+    return provider;
+  }
+
+  private signInGuidance(hadSignIn: boolean): string {
+    const callback = getOauthCallbackUrl(
+      this.oauthSettings?.callbackPort ?? DEFAULT_OAUTH_CALLBACK_PORT,
+    );
+    return hadSignIn
+      ? `Your sign-in to ${this.options.name} has expired or was revoked. Use Sign in to authenticate again. (OAuth callback: ${callback})`
+      : `${this.options.name} requires sign-in. Use Sign in to authenticate. (OAuth callback: ${callback})`;
   }
 
   /**
@@ -499,6 +575,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
 
   private constructSseTransport(
     options: InternalSseMcpOptions,
+    authProvider?: MCPConnectionOauthProvider,
   ): SSEClientTransport {
     const sseAgent =
       options.requestOptions?.verifySsl === false
@@ -512,6 +589,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
     };
 
     return new SSEClientTransport(new URL(options.url), {
+      authProvider,
       eventSourceInit: {
         fetch: (input, init) =>
           fetch(input, {
@@ -532,6 +610,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
 
   private constructHttpTransport(
     options: InternalStreamableHttpMcpOptions,
+    authProvider?: MCPConnectionOauthProvider,
   ): StreamableHTTPClientTransport {
     const { url, requestOptions } = options;
     const streamableAgent =
@@ -546,6 +625,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
     };
 
     return new StreamableHTTPClientTransport(new URL(url), {
+      authProvider,
       requestInit: {
         headers,
         ...(streamableAgent && { agent: streamableAgent }),
