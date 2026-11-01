@@ -23,6 +23,42 @@ function stringify(obj: any, indentation?: number): string {
   );
 }
 
+/** Provider-specific settings that live under `env:` in a YAML model. */
+const YAML_ENV_KEYS = [
+  "region",
+  "profile",
+  "accessKeyId",
+  "secretAccessKey",
+  "sessionToken",
+  "crossRegionInference",
+  "modelArn",
+  "apiType",
+  "apiVersion",
+  "deployment",
+  "deploymentId",
+  "projectId",
+  "accountId",
+  "aiGatewaySlug",
+] as const;
+
+/**
+ * Collect the provider-specific fields (AWS region/profile/credentials, Azure
+ * deployment, ...) of a model description into a YAML `env` block, so adding a
+ * model from the GUI doesn't silently drop them.
+ */
+export function modelEnvFromDescription(
+  model: JSONModelDescription,
+): Record<string, string> | undefined {
+  const env: Record<string, string> = {};
+  for (const key of YAML_ENV_KEYS) {
+    const value = (model as Record<string, any>)[key];
+    if (typeof value === "string" && value !== "") {
+      env[key] = value;
+    }
+  }
+  return Object.keys(env).length > 0 ? env : undefined;
+}
+
 export function addModel(
   model: JSONModelDescription,
   role?: keyof ExperimentalModelRoles,
@@ -78,6 +114,7 @@ export function addModel(
         apiBase: model.apiBase,
         maxStopWords: model.maxStopWords,
         defaultCompletionOptions: model.completionOptions,
+        env: modelEnvFromDescription(model),
       };
       config.models.push(desc);
       return config;

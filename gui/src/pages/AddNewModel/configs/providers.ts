@@ -15,8 +15,18 @@ export interface InputDescriptor {
   max?: number;
   step?: number;
   options?: string[];
+  /** For inputType "select": value/label pairs (takes precedence over `options`). */
+  choices?: { value: string; label: string }[];
   required?: boolean;
   description?: string;
+  /** Only show (and require / save) this field when another field has this value. */
+  showWhen?: { key: string; equals: string };
+  /** Form-only field (e.g. an auth-method picker): never written to the config. */
+  uiOnly?: boolean;
+  /** Don't save the field when its value equals this (e.g. "off", ""). */
+  omitWhen?: string;
+  /** Render even though the field is optional. */
+  showAlways?: boolean;
   [key: string]: any;
 }
 
@@ -34,6 +44,26 @@ export interface ProviderInfo {
   apiKeyUrl?: string;
   downloadUrl?: string;
 }
+
+const BEDROCK_REGIONS = [
+  "us-east-1",
+  "us-east-2",
+  "us-west-2",
+  "us-gov-east-1",
+  "us-gov-west-1",
+  "ca-central-1",
+  "eu-west-1",
+  "eu-west-2",
+  "eu-west-3",
+  "eu-central-1",
+  "eu-north-1",
+  "ap-northeast-1",
+  "ap-northeast-2",
+  "ap-south-1",
+  "ap-southeast-1",
+  "ap-southeast-2",
+  "sa-east-1",
+];
 
 const completionParamsInputsConfigs = Object.values(completionParamsInputs);
 
@@ -379,6 +409,122 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       models.Qwen25Coder32b,
     ],
     apiKeyUrl: "https://console.scaleway.com/iam/api-keys",
+  },
+  bedrock: {
+    title: "Amazon Bedrock",
+    provider: "bedrock",
+    description:
+      "Use Claude, Nova and other models through your AWS account. Authenticate with a Bedrock API key, an AWS profile (including SSO), or access keys.",
+    longDescription: `Enable the models you want in the [Bedrock console](https://console.aws.amazon.com/bedrock) (**Model access**) in the region you choose below. See the [documentation](https://docs.continue.dev/customize/model-providers/top-level/bedrock) for help picking an authentication method.`,
+    tags: [ModelProviderTags.RequiresApiKey],
+    refPage: "bedrock",
+    packages: [
+      models.bedrockClaudeSonnet45,
+      models.bedrockClaudeSonnet4,
+      models.bedrockClaudeHaiku45,
+      models.bedrockClaudeOpus41,
+      models.bedrockClaudeSonnet37,
+      models.bedrockNovaPro,
+      models.bedrockNovaLite,
+    ],
+    params: {},
+    collectInputFor: [
+      {
+        inputType: "select",
+        key: "authMode",
+        label: "Authentication",
+        uiOnly: true,
+        defaultValue: "apiKey",
+        choices: [
+          { value: "apiKey", label: "Bedrock API key" },
+          { value: "profile", label: "AWS profile / SSO" },
+          { value: "keys", label: "Access keys" },
+          {
+            value: "default",
+            label: "Default AWS credentials (env vars, instance role)",
+          },
+        ],
+      },
+      {
+        inputType: "password",
+        key: "apiKey",
+        label: "Bedrock API key",
+        placeholder: "Paste your Bedrock API key",
+        required: true,
+        showWhen: { key: "authMode", equals: "apiKey" },
+        omitWhen: "",
+      },
+      {
+        inputType: "text",
+        key: "profile",
+        label: "AWS profile name",
+        placeholder:
+          "e.g. my-sso-profile (run `aws sso login --profile …` first)",
+        required: true,
+        showWhen: { key: "authMode", equals: "profile" },
+        omitWhen: "",
+      },
+      {
+        inputType: "text",
+        key: "accessKeyId",
+        label: "Access key ID",
+        placeholder: "AKIA…",
+        required: true,
+        showWhen: { key: "authMode", equals: "keys" },
+        omitWhen: "",
+      },
+      {
+        inputType: "password",
+        key: "secretAccessKey",
+        label: "Secret access key",
+        placeholder: "Enter your secret access key",
+        required: true,
+        showWhen: { key: "authMode", equals: "keys" },
+        omitWhen: "",
+      },
+      {
+        inputType: "password",
+        key: "sessionToken",
+        label: "Session token (temporary credentials only)",
+        placeholder: "Optional",
+        required: false,
+        showAlways: true,
+        showWhen: { key: "authMode", equals: "keys" },
+        omitWhen: "",
+      },
+      {
+        inputType: "select",
+        key: "region",
+        label: "AWS region",
+        required: true,
+        defaultValue: "us-east-1",
+        choices: BEDROCK_REGIONS.map((r) => ({ value: r, label: r })),
+      },
+      {
+        inputType: "select",
+        key: "crossRegionInference",
+        label: "Cross-region inference",
+        description:
+          "Required by many newer models. Automatic adds the us./eu./apac. prefix for your region.",
+        defaultValue: "auto",
+        omitWhen: "off",
+        choices: [
+          { value: "auto", label: "Automatic (recommended)" },
+          { value: "global", label: "Global" },
+          { value: "off", label: "Off (use the model ID as-is)" },
+        ],
+      },
+      {
+        inputType: "text",
+        key: "model",
+        label: "Custom model ID (optional)",
+        placeholder: "Overrides the model selected above",
+        required: false,
+        showAlways: true,
+        omitWhen: "",
+      },
+      ...completionParamsInputsConfigs,
+    ],
   },
   azure: {
     title: "Azure OpenAI",

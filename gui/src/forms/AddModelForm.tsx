@@ -6,7 +6,6 @@ import Alert from "../components/gui/Alert";
 import ModelSelectionListbox from "../components/modelSelection/ModelSelectionListbox";
 import { useAuth } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
 import { DisplayInfo } from "../pages/AddNewModel/configs/models";
 import {
   initializeOpenRouterModels,
@@ -15,6 +14,12 @@ import {
 } from "../pages/AddNewModel/configs/providers";
 import { useAppDispatch } from "../redux/hooks";
 import { updateSelectedModelByRole } from "../redux/thunks/updateSelectedModelByRole";
+import {
+  areRequiredFieldsFilled,
+  buildModelFromForm,
+  getRenderableFields,
+} from "./addModelFormUtils";
+import { FormSelect } from "./FormSelect";
 
 interface AddModelFormProps {
   onDone: () => void;
@@ -39,6 +44,8 @@ export function AddModelForm({
     selectedProvider.packages[0],
   );
   const formMethods = useForm();
+  // Subscribing to all values lets conditional fields (e.g. auth method) re-render.
+  const formValues = formMethods.watch();
   const ideMessenger = useContext(IdeMessengerContext);
 
   // Initialize OpenRouter models from API on component mount
@@ -80,14 +87,7 @@ export function AddModelForm({
       return false;
     }
 
-    const required = selectedProvider.collectInputFor
-      ?.filter((input) => input.required)
-      .map((input) => {
-        const value = formMethods.watch(input.key);
-        return value;
-      });
-
-    return !required?.every((value) => value !== undefined && value.length > 0);
+    return !areRequiredFieldsFilled(selectedProvider, formValues);
   }
 
   useEffect(() => {
@@ -108,22 +108,11 @@ export function AddModelForm({
       : undefined;
 
   function onSubmit() {
-    const apiKey = formMethods.watch("apiKey");
-    const hasValidApiKey = apiKey !== undefined && apiKey !== "";
-
-    const reqInputFields: Record<string, any> = {};
-    for (let input of selectedProvider.collectInputFor ?? []) {
-      reqInputFields[input.key] = formMethods.watch(input.key);
-    }
-
-    const model = {
-      ...selectedProvider.params,
-      ...selectedModel.params,
-      ...reqInputFields,
-      provider: selectedProvider.provider,
-      title: selectedModel.title,
-      ...(hasValidApiKey ? { apiKey } : {}),
-    };
+    const model = buildModelFromForm(
+      selectedProvider,
+      selectedModel,
+      formMethods.getValues(),
+    );
 
     ideMessenger.post("config/addModel", { model });
 
@@ -276,32 +265,46 @@ export function AddModelForm({
               </div>
             )}
 
-            {selectedProvider.collectInputFor &&
-              selectedProvider.collectInputFor
-                .filter(
-                  (field) =>
-                    !Object.values(completionParamsInputs).some(
-                      (input) => input.key === field.key,
-                    ) &&
-                    field.required &&
-                    field.key !== "apiKey",
-                )
-                .map((field) => (
-                  <div key={field.key}>
-                    <>
-                      <label className="mb-1 block text-sm font-medium">
-                        {field.label}
-                      </label>
-                      <Input
-                        id={field.key}
-                        className="w-full"
-                        defaultValue={field.defaultValue}
-                        placeholder={`${field.placeholder}`}
-                        {...formMethods.register(field.key)}
-                      />
-                    </>
-                  </div>
-                ))}
+            {getRenderableFields(selectedProvider, formValues).map((field) => (
+              <div key={`${selectedProvider.provider}-${field.key}`}>
+                <label
+                  className="mb-1 block text-sm font-medium"
+                  htmlFor={field.key}
+                >
+                  {field.label}
+                </label>
+                {field.inputType === "select" ? (
+                  <FormSelect
+                    id={field.key}
+                    defaultValue={field.defaultValue}
+                    {...formMethods.register(field.key)}
+                  >
+                    {(
+                      field.choices ??
+                      (field.options ?? []).map((o) => ({ value: o, label: o }))
+                    ).map((choice) => (
+                      <option key={choice.value} value={choice.value}>
+                        {choice.label}
+                      </option>
+                    ))}
+                  </FormSelect>
+                ) : (
+                  <Input
+                    id={field.key}
+                    className="w-full"
+                    type={field.inputType === "password" ? "password" : "text"}
+                    defaultValue={field.defaultValue}
+                    placeholder={`${field.placeholder ?? ""}`}
+                    {...formMethods.register(field.key)}
+                  />
+                )}
+                {field.description && (
+                  <span className="text-description-muted mt-1 block text-xs">
+                    {field.description}
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
 
           <div className="mt-4 w-full">
