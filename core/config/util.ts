@@ -30,6 +30,8 @@ const YAML_ENV_KEYS = [
   "accessKeyId",
   "secretAccessKey",
   "sessionToken",
+  "mantlePathPrefix",
+  "maxTokensParam",
   "crossRegionInference",
   "serviceTier",
   "latency",

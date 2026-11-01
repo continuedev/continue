@@ -84,6 +84,10 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         lowerCaseModel.includes("grok-code")
       );
     },
+    // Mantle hosts many tool-capable chat models (GPT OSS, Qwen, Kimi, Claude,
+    // ...). Only rule out non-chat models; override with `capabilities` if needed.
+    "bedrock-mantle": (model) =>
+      !/embed|rerank|image|whisper|tts|speech/i.test(model),
     bedrock: (model) => {
       if (model.includes("claude-2") || model.includes("claude-instant")) {
         return false;

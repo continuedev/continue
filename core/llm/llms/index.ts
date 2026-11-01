@@ -14,6 +14,7 @@ import Asksage from "./Asksage";
 import Azure from "./Azure";
 import Bedrock from "./Bedrock";
 import BedrockImport from "./BedrockImport";
+import BedrockMantle from "./BedrockMantle";
 import Cerebras from "./Cerebras";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
@@ -97,6 +98,7 @@ export const LLMClasses = [
   MiniMax,
   Bedrock,
   BedrockImport,
+  BedrockMantle,
   SageMaker,
   DeepInfra,
   Flowise,

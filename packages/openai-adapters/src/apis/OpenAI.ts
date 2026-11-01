@@ -40,12 +40,17 @@ export class OpenAIApi implements BaseLlmApi {
     this.apiBase = config.apiBase ?? this.apiBase;
 
     // Always create the original OpenAI client for fallback
-    this.openai = new OpenAI({
+    this.openai = this.createOpenAIClient();
+  }
+
+  /** Builds the client for the current `apiBase`; subclasses call it after changing the base. */
+  protected createOpenAIClient(): OpenAI {
+    return new OpenAI({
       // Necessary because `new OpenAI()` will throw an error if there is no API Key
-      apiKey: config.apiKey ?? "",
+      apiKey: this.config.apiKey ?? "",
       baseURL: this.apiBase,
-      fetch: customFetch(config.requestOptions),
-      timeout: config?.requestOptions?.timeout || undefined,
+      fetch: customFetch(this.config.requestOptions),
+      timeout: this.config?.requestOptions?.timeout || undefined,
     });
   }
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {

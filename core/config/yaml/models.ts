@@ -20,6 +20,8 @@ const ENV_STRING_KEYS = [
   "accessKeyId",
   "secretAccessKey",
   "sessionToken",
+  "mantlePathPrefix",
+  "maxTokensParam",
   "crossRegionInference",
   "serviceTier",
   "latency",

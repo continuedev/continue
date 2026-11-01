@@ -691,6 +691,8 @@ export interface LLMOptions {
   accessKeyId?: string;
   secretAccessKey?: string;
   sessionToken?: string;
+  mantlePathPrefix?: string;
+  maxTokensParam?: string;
   crossRegionInference?: string;
   serviceTier?: string;
   latency?: string;
@@ -1723,6 +1725,8 @@ export interface JSONModelDescription {
   accessKeyId?: string;
   secretAccessKey?: string;
   sessionToken?: string;
+  mantlePathPrefix?: string;
+  maxTokensParam?: string;
   crossRegionInference?: string;
   serviceTier?: string;
   latency?: string;

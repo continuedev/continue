@@ -1383,6 +1383,32 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
+  bedrockMantleGptOss120b: {
+    title: "GPT OSS 120B",
+    description:
+      "OpenAI's open-weight reasoning model on Amazon Bedrock Mantle. Use Test connection to discover every model your account can use.",
+    params: {
+      model: "openai.gpt-oss-120b",
+      contextLength: 128_000,
+      title: "GPT OSS 120B (Bedrock Mantle)",
+    },
+    providerOptions: ["bedrock-mantle"],
+    icon: "openai.png",
+    isOpenSource: true,
+  },
+  bedrockMantleGptOss20b: {
+    title: "GPT OSS 20B",
+    description:
+      "Smaller, faster OpenAI open-weight model on Amazon Bedrock Mantle.",
+    params: {
+      model: "openai.gpt-oss-20b",
+      contextLength: 128_000,
+      title: "GPT OSS 20B (Bedrock Mantle)",
+    },
+    providerOptions: ["bedrock-mantle"],
+    icon: "openai.png",
+    isOpenSource: true,
+  },
   bedrockClaudeSonnet46: {
     title: "Claude Sonnet 4.6",
     description:

@@ -405,7 +405,8 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
               </div>
             ))}
 
-            {selectedProvider.provider === "bedrock" && (
+            {(selectedProvider.provider === "bedrock" ||
+              selectedProvider.provider === "bedrock-mantle") && (
               <BedrockConnectionTester
                 connection={getBedrockConnectionParams(
                   selectedProvider,

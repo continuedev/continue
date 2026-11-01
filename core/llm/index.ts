@@ -181,6 +181,8 @@ export abstract class BaseLLM implements ILLM {
   accessKeyId?: string;
   secretAccessKey?: string;
   sessionToken?: string;
+  mantlePathPrefix?: string;
+  maxTokensParam?: string;
   crossRegionInference?: string;
   serviceTier?: string;
   latency?: string;
@@ -294,6 +296,8 @@ export abstract class BaseLLM implements ILLM {
     this.accessKeyId = options.accessKeyId;
     this.secretAccessKey = options.secretAccessKey;
     this.sessionToken = options.sessionToken;
+    this.mantlePathPrefix = options.mantlePathPrefix;
+    this.maxTokensParam = options.maxTokensParam;
     this.crossRegionInference = options.crossRegionInference;
     this.serviceTier = options.serviceTier;
     this.latency = options.latency;
