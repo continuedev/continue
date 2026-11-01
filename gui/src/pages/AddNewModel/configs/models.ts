@@ -1397,6 +1397,19 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
+  bedrockClaudeSonnet46: {
+    title: "Claude Sonnet 4.6",
+    description:
+      "Anthropic's balanced coding model, via Amazon Bedrock. Use Test connection to discover newer models available to your account.",
+    params: {
+      model: "anthropic.claude-sonnet-4-6",
+      contextLength: 200_000,
+      title: "Claude Sonnet 4.6 (Bedrock)",
+    },
+    providerOptions: ["bedrock"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
   bedrockClaudeSonnet45: {
     title: "Claude Sonnet 4.5",
     description:
@@ -1405,18 +1418,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
       contextLength: 200000,
       title: "Claude Sonnet 4.5 (Bedrock)",
-    },
-    providerOptions: ["bedrock"],
-    icon: "anthropic.png",
-    isOpenSource: false,
-  },
-  bedrockClaudeSonnet4: {
-    title: "Claude Sonnet 4",
-    description: "A strong all-round Claude model, via Amazon Bedrock.",
-    params: {
-      model: "anthropic.claude-sonnet-4-20250514-v1:0",
-      contextLength: 200000,
-      title: "Claude Sonnet 4 (Bedrock)",
     },
     providerOptions: ["bedrock"],
     icon: "anthropic.png",
@@ -1441,19 +1442,6 @@ export const models: { [key: string]: ModelPackage } = {
       model: "anthropic.claude-opus-4-1-20250805-v1:0",
       contextLength: 200000,
       title: "Claude Opus 4.1 (Bedrock)",
-    },
-    providerOptions: ["bedrock"],
-    icon: "anthropic.png",
-    isOpenSource: false,
-  },
-  bedrockClaudeSonnet37: {
-    title: "Claude 3.7 Sonnet",
-    description:
-      "Claude 3.7 Sonnet with extended thinking, via Amazon Bedrock.",
-    params: {
-      model: "anthropic.claude-3-7-sonnet-20250219-v1:0",
-      contextLength: 200000,
-      title: "Claude 3.7 Sonnet (Bedrock)",
     },
     providerOptions: ["bedrock"],
     icon: "anthropic.png",

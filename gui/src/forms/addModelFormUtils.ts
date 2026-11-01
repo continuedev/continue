@@ -74,6 +74,7 @@ export function buildModelFromForm(
   provider: ProviderInfo,
   selectedModel: ModelPackage,
   values: FormValues,
+  options: { title?: string } = {},
   // Loosely typed like the original inline code: provider/model params are free-form.
 ): any {
   const all = provider.collectInputFor ?? [];
@@ -103,7 +104,38 @@ export function buildModelFromForm(
     ...selectedModel.params,
     ...fields,
     provider: provider.provider,
-    title: selectedModel.title,
+    title: options.title ?? selectedModel.title,
     ...(hasValidApiKey ? { apiKey } : {}),
   };
+}
+
+const BEDROCK_CONNECTION_KEYS = [
+  "region",
+  "apiKey",
+  "apiBase",
+  "profile",
+  "accessKeyId",
+  "secretAccessKey",
+  "sessionToken",
+  "crossRegionInference",
+  "serviceTier",
+  "latency",
+  "guardrailIdentifier",
+  "guardrailVersion",
+] as const;
+
+/** Connection settings (no title/model) to send for "Test connection". */
+export function getBedrockConnectionParams(
+  provider: ProviderInfo,
+  selectedModel: ModelPackage,
+  values: FormValues,
+): Record<string, string> {
+  const model = buildModelFromForm(provider, selectedModel, values);
+  const params: Record<string, string> = {};
+  for (const key of BEDROCK_CONNECTION_KEYS) {
+    if (typeof model[key] === "string" && model[key] !== "") {
+      params[key] = model[key];
+    }
+  }
+  return params;
 }

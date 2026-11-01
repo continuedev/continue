@@ -14,11 +14,14 @@ import {
 } from "../pages/AddNewModel/configs/providers";
 import { useAppDispatch } from "../redux/hooks";
 import { updateSelectedModelByRole } from "../redux/thunks/updateSelectedModelByRole";
+import type { BedrockModelOptionInfo } from "core/protocol/core";
 import {
   areRequiredFieldsFilled,
   buildModelFromForm,
+  getBedrockConnectionParams,
   getRenderableFields,
 } from "./addModelFormUtils";
+import { BedrockConnectionTester } from "./BedrockConnectionTester";
 import { FormSelect } from "./FormSelect";
 
 interface AddModelFormProps {
@@ -46,6 +49,9 @@ export function AddModelForm({
   const formMethods = useForm();
   // Subscribing to all values lets conditional fields (e.g. auth method) re-render.
   const formValues = formMethods.watch();
+  // Model chosen from Bedrock's live model list (overrides the package default).
+  const [pickedBedrockModel, setPickedBedrockModel] =
+    useState<BedrockModelOptionInfo>();
   const ideMessenger = useContext(IdeMessengerContext);
 
   // Initialize OpenRouter models from API on component mount
@@ -112,6 +118,13 @@ export function AddModelForm({
       selectedProvider,
       selectedModel,
       formMethods.getValues(),
+      {
+        title:
+          pickedBedrockModel &&
+          formMethods.getValues("model") === pickedBedrockModel.id
+            ? `${pickedBedrockModel.name} (Bedrock)`
+            : undefined,
+      },
     );
 
     ideMessenger.post("config/addModel", { model });
@@ -305,6 +318,24 @@ export function AddModelForm({
                 )}
               </div>
             ))}
+
+            {selectedProvider.provider === "bedrock" && (
+              <BedrockConnectionTester
+                connection={getBedrockConnectionParams(
+                  selectedProvider,
+                  selectedModel,
+                  formValues,
+                )}
+                model={formValues.model || selectedModel.params.model}
+                canTest={areRequiredFieldsFilled(selectedProvider, formValues)}
+                onPickModel={(m) => {
+                  setPickedBedrockModel(m);
+                  formMethods.setValue("model", m?.id ?? "", {
+                    shouldDirty: true,
+                  });
+                }}
+              />
+            )}
           </div>
 
           <div className="mt-4 w-full">

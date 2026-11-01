@@ -3,6 +3,7 @@ import { providers } from "../pages/AddNewModel/configs/providers";
 import {
   areRequiredFieldsFilled,
   buildModelFromForm,
+  getBedrockConnectionParams,
   getRenderableFields,
 } from "./addModelFormUtils";
 
@@ -113,5 +114,28 @@ describe("legacy providers are unaffected", () => {
       deployment: "d",
       provider: "azure",
     });
+  });
+});
+
+describe("getBedrockConnectionParams", () => {
+  it("returns only the active auth flow's connection settings", () => {
+    const params = getBedrockConnectionParams(bedrock, sonnet, {
+      authMode: "profile",
+      profile: "work",
+      apiKey: "stale",
+      region: "eu-west-1",
+      crossRegionInference: "off",
+    });
+    expect(params).toEqual({ profile: "work", region: "eu-west-1" });
+  });
+
+  it("honours an overridden title via buildModelFromForm options", () => {
+    const model = buildModelFromForm(
+      bedrock,
+      sonnet,
+      { apiKey: "k" },
+      { title: "Nova Pro (Bedrock)" },
+    );
+    expect(model.title).toBe("Nova Pro (Bedrock)");
   });
 });

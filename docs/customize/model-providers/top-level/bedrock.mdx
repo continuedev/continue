@@ -26,7 +26,7 @@ schema: v1
 models:
   - name: Claude Sonnet
     provider: bedrock
-    model: anthropic.claude-sonnet-4-20250514-v1:0
+    model: anthropic.claude-sonnet-4-6
     apiKey: ${{ secrets.BEDROCK_API_KEY }}
     env:
       region: us-east-1
@@ -39,6 +39,18 @@ models:
   **Check out a more advanced configuration [here](https://continue.dev/amazon/us-anthropic-claude-sonnet-4-20250514-v1?view=config)**
 </Info>
 
+## Add Bedrock from the UI
+
+Open the model selector, choose **Add Chat model**, and pick **Amazon Bedrock**:
+
+1. Choose how to authenticate (API key, AWS profile / SSO, access keys, or default credentials) and fill in the fields that appear.
+2. Pick your **AWS region**.
+3. Click **Test connection**. Continue lists the models your account can use in that region, including inference profiles and your own application inference profiles. Choose one from **Available models**.
+4. Click **Send test message** to confirm the model actually answers (this catches missing model access and IAM problems before you save).
+5. Click **Connect**.
+
+Listing models needs `bedrock:ListFoundationModels` and `bedrock:ListInferenceProfiles`. If your credentials can't list models you can still type a model ID in **Custom model ID**.
+
 ## Which authentication method should I use?
 
 | Method | Best for | Fields |
@@ -49,6 +61,37 @@ models:
 | [Environment / default chain](#environment-variables-and-the-default-credential-chain) | Existing AWS setup, EC2/ECS/Lambda roles | nothing |
 
 If you configure nothing, Continue uses the standard AWS credential chain, so an existing `aws configure` or `aws sso login` setup works without any Continue-specific settings.
+
+## Regions and endpoints
+
+Pick the region where you have model access. Bedrock runtime is available in:
+
+| Area | Regions |
+| --- | --- |
+| US | `us-east-1`, `us-east-2`, `us-west-2` |
+| Canada | `ca-central-1` |
+| Europe | `eu-west-1`, `eu-west-2`, `eu-west-3`, `eu-central-1`, `eu-central-2`, `eu-south-1`, `eu-south-2`, `eu-north-1` |
+| Asia Pacific | `ap-northeast-1`, `ap-northeast-2`, `ap-northeast-3`, `ap-south-1`, `ap-south-2`, `ap-southeast-1`, `ap-southeast-2` |
+| South America | `sa-east-1` |
+| AWS GovCloud | `us-gov-east-1`, `us-gov-west-1` |
+
+Availability changes over time, so use **Test connection** (or `aws bedrock list-foundation-models --region <region>`) as the source of truth. Not every model is in every region, and models must be enabled per account and region.
+
+By default Continue calls `https://bedrock-runtime.<region>.amazonaws.com`. Set `apiBase` to override that:
+
+```yaml title="config.yaml"
+models:
+  - name: Claude via FIPS
+    provider: bedrock
+    model: us.anthropic.claude-sonnet-4-6
+    apiBase: https://bedrock-runtime-fips.us-east-1.amazonaws.com
+    env:
+      region: us-east-1
+```
+
+- **FIPS endpoints** (`bedrock-runtime-fips.<region>.amazonaws.com`) exist in `us-east-1`, `us-east-2`, `us-west-2`, `ca-central-1`, `us-gov-east-1` and `us-gov-west-1`.
+- **VPC / PrivateLink**: use the private DNS name of your `bedrock-runtime` interface endpoint as `apiBase`.
+- **Proxies and gateways**: any HTTPS endpoint that accepts Bedrock Runtime requests works.
 
 ## Cross-region inference
 
@@ -61,10 +104,10 @@ set `crossRegionInference` instead of editing the model ID by hand:
 models:
   - name: Claude Sonnet
     provider: bedrock
-    model: anthropic.claude-sonnet-4-20250514-v1:0
+    model: anthropic.claude-sonnet-4-6
     env:
       region: eu-west-1
-      crossRegionInference: auto # becomes eu.anthropic.claude-sonnet-4-20250514-v1:0
+      crossRegionInference: auto # becomes eu.anthropic.claude-sonnet-4-6
 ```
 
 | Value | Effect |
@@ -75,6 +118,53 @@ models:
 
 Model IDs that already start with a prefix (such as `us.anthropic...`) and
 inference profile ARNs are never modified.
+
+### Geographic or global?
+
+| | Geographic (`us.`, `eu.`, `apac.`, ...) | Global (`global.`) |
+| --- | --- | --- |
+| Where requests are processed | Inside that geography | Any supported commercial region |
+| Pricing | Standard | About 10% cheaper |
+| Choose when | You have data-residency requirements | You want the best cost and availability |
+
+Things to know:
+
+- `auto` picks `us`, `us-gov`, `eu` or `apac` from your `region`. Some models are only offered through narrower profiles (`jp.`, `au.`, `ca.`) or only globally. For those, set the value explicitly, or choose the exact ID from **Test connection** in the UI.
+- Profiles can route to different destination regions depending on the region you call from. For strict data residency, check the destinations with `aws bedrock get-inference-profile --region <region> --inference-profile-identifier <id>`.
+- If you use Service Control Policies, they must allow Bedrock inference in every destination region of the profile (for global profiles, `"aws:RequestedRegion": "unspecified"`).
+- Requests can be processed in regions you haven't enabled in your account; no opt-in is needed for cross-region inference.
+- Application inference profiles (your own, for cost tracking) can be used by ID or ARN as the `model`.
+
+
+## Advanced settings
+
+All of these go under `env:` and are optional.
+
+| Setting | Values | What it does |
+| --- | --- | --- |
+| `region` | AWS region | Region for requests and model listing |
+| `profile` | profile name | Named profile from `~/.aws/config` (SSO supported) |
+| `accessKeyId`, `secretAccessKey`, `sessionToken` | strings | Explicit credentials; add `sessionToken` for temporary ones |
+| `crossRegionInference` | `auto`, `us`, `us-gov`, `eu`, `apac`, `jp`, `au`, `ca`, `global` | Adds the inference profile prefix to the model ID |
+| `serviceTier` | `default`, `priority`, `flex`, `reserved` | Processing tier: `priority` is faster at a higher price, `flex` is cheaper but slower, `reserved` uses reserved capacity |
+| `latency` | `standard`, `optimized` | Use latency-optimized inference on models that support it |
+| `guardrailIdentifier`, `guardrailVersion` | ID or ARN, version | Apply a [Bedrock Guardrail](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) to every request (version defaults to `DRAFT`) |
+
+```yaml title="config.yaml"
+models:
+  - name: Claude (priority + guardrail)
+    provider: bedrock
+    model: anthropic.claude-sonnet-4-6
+    env:
+      region: us-east-1
+      crossRegionInference: auto
+      serviceTier: priority
+      latency: optimized
+      guardrailIdentifier: gr-abc123
+      guardrailVersion: "1"
+```
+
+Whether a model supports a given tier or latency mode depends on the model and region; Bedrock returns a clear validation error if it doesn't. Extended thinking and prompt caching are controlled with `defaultCompletionOptions` (`reasoning`, `reasoningBudgetTokens`, `promptCaching`).
 
 ## How to Enable Prompt Caching with Amazon Bedrock
 
@@ -108,7 +198,7 @@ Prompt caching is not supported in JSON configuration files, so use the YAML syn
 models:
   - name: Claude Sonnet
     provider: bedrock
-    model: anthropic.claude-sonnet-4-20250514-v1:0
+    model: anthropic.claude-sonnet-4-6
     apiKey: ${{ secrets.BEDROCK_API_KEY }}
     env:
       region: us-east-1
@@ -134,7 +224,7 @@ aws sso login --profile my-bedrock       # whenever the session expires
 models:
   - name: Claude Sonnet
     provider: bedrock
-    model: anthropic.claude-sonnet-4-20250514-v1:0
+    model: anthropic.claude-sonnet-4-6
     env:
       region: us-east-1
       profile: my-bedrock
@@ -196,7 +286,10 @@ named `bedrock` (for backwards compatibility) and then the standard AWS chain:
 Chat needs `bedrock:InvokeModel` and `bedrock:InvokeModelWithResponseStream`.
 For inference profiles, grant them on the profile ARN as well as the underlying
 foundation models in each region. Bedrock API keys additionally need
-`bedrock:CallWithBearerToken`.
+`bedrock:CallWithBearerToken`. Listing models in the UI needs
+`bedrock:ListFoundationModels` and `bedrock:ListInferenceProfiles`. Bedrock API keys
+only work with Bedrock and Bedrock Runtime actions, which covers everything Continue
+does.
 
 ## Troubleshooting
 
