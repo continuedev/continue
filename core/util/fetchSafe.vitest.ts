@@ -97,7 +97,9 @@ describe("assertPublicUrl", () => {
 
 describe("safeFetch", () => {
   test("passes a public URL through with manual redirect mode", async () => {
-    const fetchFn = vi.fn(async (_url: string | URL, _init?: any) => stubResponse({ status: 200 }));
+    const fetchFn = vi.fn(async (_url: string | URL, _init?: any) =>
+      stubResponse({ status: 200 }),
+    );
     const resp = await safeFetch(fetchFn, "http://93.184.216.34/");
     expect(resp.status).toBe(200);
     expect(fetchFn).toHaveBeenCalledTimes(1);
