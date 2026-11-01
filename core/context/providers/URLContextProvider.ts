@@ -10,6 +10,7 @@ import {
   FetchFunction,
 } from "../../index.js";
 import { fetchFavicon } from "../../util/fetchFavicon";
+import { safeFetch } from "../../util/fetchSafe";
 
 class URLContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -34,8 +35,10 @@ export async function getUrlContextItems(
   fetchFn: FetchFunction,
 ): Promise<ContextItem[]> {
   const url = new URL(query);
-  const icon = await fetchFavicon(url);
-  const resp = await fetchFn(url);
+  const icon = await fetchFavicon(url, (u, init) =>
+    safeFetch(fetchFn, u, init),
+  );
+  const resp = await safeFetch(fetchFn, url);
 
   // Check if the response is not OK
   if (!resp.ok) {
