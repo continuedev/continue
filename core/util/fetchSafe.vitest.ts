@@ -97,7 +97,7 @@ describe("assertPublicUrl", () => {
 
 describe("safeFetch", () => {
   test("passes a public URL through with manual redirect mode", async () => {
-    const fetchFn = vi.fn(async () => stubResponse({ status: 200 }));
+    const fetchFn = vi.fn(async (_url: string | URL, _init?: any) => stubResponse({ status: 200 }));
     const resp = await safeFetch(fetchFn, "http://93.184.216.34/");
     expect(resp.status).toBe(200);
     expect(fetchFn).toHaveBeenCalledTimes(1);
@@ -113,8 +113,8 @@ describe("safeFetch", () => {
   });
 
   test("refuses a redirect to a private address", async () => {
-    const fetchFn = vi.fn(async (url: URL) => {
-      if (url.hostname === "93.184.216.34") {
+    const fetchFn = vi.fn(async (url: string | URL) => {
+      if (new URL(url).hostname === "93.184.216.34") {
         return stubResponse({ status: 302, location: "http://127.0.0.1/" });
       }
       return stubResponse({ status: 200 });
@@ -126,8 +126,8 @@ describe("safeFetch", () => {
   });
 
   test("follows a redirect to a public address", async () => {
-    const fetchFn = vi.fn(async (url: URL) => {
-      if (url.hostname === "93.184.216.34") {
+    const fetchFn = vi.fn(async (url: string | URL) => {
+      if (new URL(url).hostname === "93.184.216.34") {
         return stubResponse({ status: 302, location: "http://8.8.8.8/" });
       }
       return stubResponse({ status: 200, text: "ok" });
