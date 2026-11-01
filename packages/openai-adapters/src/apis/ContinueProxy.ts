@@ -85,8 +85,7 @@ export class ContinueProxyApi extends OpenAIApi {
 
   modifyCompletionBody<
     T extends
-      | CompletionCreateParamsNonStreaming
-      | CompletionCreateParamsStreaming,
+      CompletionCreateParamsNonStreaming | CompletionCreateParamsStreaming,
   >(body: T): T {
     return this.modifyBodyWithContinueProperties(body);
   }

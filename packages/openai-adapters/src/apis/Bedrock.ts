@@ -29,6 +29,10 @@ import {
   Model,
 } from "openai/resources/index";
 
+import {
+  applyCrossRegionInference,
+  getBedrockErrorHint,
+} from "./bedrockHelpers.js";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { fromStatic } from "@aws-sdk/token-providers";
 import { BedrockConfig } from "../types.js";
@@ -76,35 +80,67 @@ export class BedrockApi implements BaseLlmApi {
     }
   }
 
+  /** Seam over the AWS SDK credential chain (overridden in tests). */
+  protected async credentialChain(profile: string | undefined) {
+    return fromNodeProviderChain({ profile, ignoreCache: true })();
+  }
+
+  private withHint(e: unknown): unknown {
+    if (!(e instanceof Error)) return e;
+    const hint = getBedrockErrorHint(e, {
+      profile: this.config.env?.profile,
+      region: this.config.env?.region,
+    });
+    if (hint && !e.message.includes(hint)) {
+      e.message = `${e.message}\n\n${hint}`;
+    }
+    return e;
+  }
+
   async getCreds() {
-    if (this.config?.env?.accessKeyId && this.config?.env?.secretAccessKey) {
+    const env = this.config.env;
+    if (env?.accessKeyId && env?.secretAccessKey) {
       return {
-        accessKeyId: this.config.env.accessKeyId,
-        secretAccessKey: this.config.env.secretAccessKey,
+        accessKeyId: env.accessKeyId,
+        secretAccessKey: env.secretAccessKey,
+        ...(env.sessionToken ? { sessionToken: env.sessionToken } : {}),
       };
     }
-    const profile = this.config.env?.profile ?? "bedrock";
     try {
-      return await fromNodeProviderChain({
-        profile: profile,
-        ignoreCache: true,
-      })();
+      if (env?.profile) {
+        // Explicitly requested profile: never silently use another one.
+        return await this.credentialChain(env.profile);
+      }
+      // Nothing configured: legacy "bedrock" profile, then the standard chain.
+      try {
+        return await this.credentialChain("bedrock");
+      } catch {
+        return await this.credentialChain(undefined);
+      }
     } catch (e) {
-      console.warn(
-        `AWS profile with name ${profile} not found in ~/.aws/credentials, using default profile`,
-      );
+      throw this.withHint(e);
     }
-    return await fromNodeProviderChain()();
   }
+
+  private resolveApiKey(): string | undefined {
+    if (this.config.apiKey) return this.config.apiKey;
+    const env = this.config.env;
+    if ((env?.accessKeyId && env?.secretAccessKey) || env?.profile) {
+      return undefined;
+    }
+    return process.env.AWS_BEARER_TOKEN_BEDROCK || undefined;
+  }
+
   async getClient(): Promise<BedrockRuntimeClient> {
     const region = this.config.env?.region;
 
     // If apiKey is provided, use bearer token authentication
-    if (this.config.apiKey) {
+    const apiKey = this.resolveApiKey();
+    if (apiKey) {
       return new BedrockRuntimeClient({
         region,
         token: fromStatic({
-          token: { token: this.config.apiKey },
+          token: { token: apiKey },
         }),
       });
     }
@@ -390,7 +426,11 @@ export class BedrockApi implements BaseLlmApi {
 
     // Build final request body
     const body: any = {
-      modelId: oaiBody.model,
+      modelId: applyCrossRegionInference(
+        oaiBody.model,
+        this.config.env?.crossRegionInference,
+        this.config.env?.region,
+      ),
       messages: convertedMessages,
       inferenceConfig: {
         temperature: oaiBody.temperature,
