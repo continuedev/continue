@@ -87,9 +87,6 @@ describe("DataLogger", () => {
             id: "test-profile-id",
           },
         },
-        controlPlaneClient: {
-          getAccessToken: vi.fn().mockResolvedValue("test-access-token"),
-        },
       },
     } as unknown as Core;
 

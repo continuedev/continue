@@ -26,5 +26,5 @@
       "core": ["../../core/dist/index.js"]
     }
   },
-  "include": ["src/**/*", "vitest.setup.ts"]
+  "include": ["src/**/*", "vitest.setup.ts", "vitest.global-dir-setup.ts"]
 }

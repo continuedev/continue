@@ -1,5 +1,4 @@
 import { IndexingProgressUpdate } from "core";
-import { usePostHog } from "posthog-js/react";
 import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
@@ -25,7 +24,6 @@ export function getProgressPercentage(
 
 function IndexingProgress() {
   const ideMessenger = useContext(IdeMessengerContext);
-  const posthog = usePostHog();
   const dispatch = useDispatch();
   const [paused, setPaused] = useState<boolean | undefined>(undefined);
   const [update, setUpdate] = useState<IndexingProgressUpdate>({
@@ -71,7 +69,6 @@ function IndexingProgress() {
               "the Command Palette, and type out 'Continue: Force Codebase Re-Indexing'"
             }
             onConfirm={() => {
-              posthog.capture("rebuild_index_clicked");
               ideMessenger.post("index/forceReIndex", {
                 shouldClearIndexes: true,
               });

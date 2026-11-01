@@ -189,13 +189,8 @@ export class DataLogger {
           "Content-Type": "application/json",
         };
 
-        // If an API key is provided, use it, otherwise use the Continue access token
         if (dataConfig.apiKey) {
           headers["Authorization"] = `Bearer ${dataConfig.apiKey}`;
-        } else {
-          const accessToken =
-            await this.core?.configHandler.controlPlaneClient.getAccessToken();
-          headers["Authorization"] = `Bearer ${accessToken}`;
         }
 
         const profileId =

@@ -12,13 +12,7 @@ import type {
 import historyManager from "core/util/history.js";
 import { v4 as uuidv4 } from "uuid";
 
-import {
-  getAccessToken,
-  isAuthenticatedConfig,
-  loadAuthConfig,
-} from "./auth/workos.js";
 import { DEFAULT_SESSION_TITLE } from "./constants/session.js";
-import { env } from "./env.js";
 import { logger } from "./util/logger.js";
 
 // Re-export BaseSessionMetadata for external consumers
@@ -445,45 +439,10 @@ function getSessionMetadataWithPreview(
 }
 
 /**
- * Fetch remote agents/sessions from the API
+ * Remote sessions are no longer available (Hub integration removed).
  */
 export async function getRemoteSessions(): Promise<ExtendedSessionMetadata[]> {
-  try {
-    const authConfig = loadAuthConfig();
-    const accessToken = getAccessToken(authConfig);
-
-    if (!accessToken || !isAuthenticatedConfig(authConfig)) {
-      return [];
-    }
-
-    const response = await fetch(new URL("agents", env.apiBase), {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      logger.error(`Failed to fetch remote agents: ${response.status}`);
-      return [];
-    }
-
-    const agents = await response.json();
-
-    return agents.map((agent: any) => ({
-      sessionId: `remote-${agent.id}`,
-      title: agent.name || "Remote Agent",
-      dateCreated: new Date(agent.create_time_ms).toISOString(),
-      workspaceDirectory: "",
-      isRemote: true,
-      remoteId: agent.id,
-      firstUserMessage: "Remote agent session",
-    }));
-  } catch (error) {
-    logger.error("Error fetching remote sessions:", error);
-    return [];
-  }
+  return [];
 }
 
 /**

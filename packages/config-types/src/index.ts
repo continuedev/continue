@@ -57,7 +57,6 @@ export const modelDescriptionSchema = z.object({
     "cloudflare",
     "azure",
     "ovhcloud",
-    "continue-proxy",
     "nebius",
     "scaleway",
     "watsonx",
@@ -112,7 +111,6 @@ export const embeddingsProviderSchema = z.object({
     "cohere",
     "gemini",
     "ovhcloud",
-    "continue-proxy",
     "nebius",
     "scaleway",
     "watsonx",
@@ -188,21 +186,19 @@ export const contextProviderSchema = z.object({
 export type ContextProvider = z.infer<typeof contextProviderSchema>;
 
 export const rerankerSchema = z.object({
-  name: z.enum(["cohere", "voyage", "watsonx", "llm", "continue-proxy"]),
+  name: z.enum(["cohere", "voyage", "watsonx", "llm"]),
   params: z.record(z.any()).optional(),
 });
 export type Reranker = z.infer<typeof rerankerSchema>;
 
 export const analyticsSchema = z.object({
   provider: z.enum([
-    "posthog",
     "amplitude",
     "segment",
     "logstash",
     "mixpanel",
     "splunk",
     "datadog",
-    "continue-proxy",
   ]),
   url: z.string().optional(),
   clientKey: z.string().optional(),
@@ -224,11 +220,6 @@ export const siteIndexingConfigSchema = z.object({
   sourceFile: z.string().optional(),
 });
 
-export const controlPlaneConfigSchema = z.object({
-  useContinueForTeamsProxy: z.boolean().optional(),
-  proxyUrl: z.string().optional(),
-});
-
 export const configJsonSchema = z.object({
   models: z.array(modelDescriptionSchema),
   tabAutocompleteModel: modelDescriptionSchema.optional(),
@@ -247,6 +238,5 @@ export const configJsonSchema = z.object({
   tabAutocompleteOptions: tabAutocompleteOptionsSchema.optional(),
   ui: uiOptionsSchema.optional(),
   docs: z.array(siteIndexingConfigSchema).optional(),
-  controlPlane: controlPlaneConfigSchema.optional(),
 });
 export type ConfigJson = z.infer<typeof configJsonSchema>;

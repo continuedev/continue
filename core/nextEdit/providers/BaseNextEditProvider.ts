@@ -56,7 +56,6 @@ export abstract class BaseNextEditModelProvider {
     nextCompletion: string;
     promptMetadata: PromptMetadata;
     ide: IDE;
-    profileType?: "local" | "platform" | "control-plane";
   }): Promise<NextEditOutcome> {
     const {
       helper,
@@ -67,7 +66,6 @@ export abstract class BaseNextEditModelProvider {
       nextCompletion,
       promptMetadata,
       ide,
-      profileType,
     } = params;
     const oldEditRangeSlice = helper.fileContents
       .split("\n")
@@ -95,7 +93,6 @@ export abstract class BaseNextEditModelProvider {
       originalEditableRange: oldEditRangeSlice,
       diffLines: [],
       ide,
-      profileType,
     });
 
     return outcome;
@@ -110,7 +107,6 @@ export abstract class BaseNextEditModelProvider {
     nextCompletion: string;
     promptMetadata: PromptMetadata;
     ide: IDE;
-    profileType?: "local" | "platform" | "control-plane";
   }): Promise<NextEditOutcome | undefined> {
     const {
       helper,
@@ -121,7 +117,6 @@ export abstract class BaseNextEditModelProvider {
       nextCompletion,
       promptMetadata,
       ide,
-      profileType,
     } = params;
     const fileSlice = helper.fileLines
       .slice(editableRegionStartLine, editableRegionEndLine + 1)
@@ -145,7 +140,6 @@ export abstract class BaseNextEditModelProvider {
       prefetchQueue,
       promptMetadata,
       ide,
-      profileType,
     });
 
     if (cursorLocalDiffGroup) {
@@ -158,7 +152,6 @@ export abstract class BaseNextEditModelProvider {
         isCurrentCursorGroup: true,
         promptMetadata,
         ide,
-        profileType,
       });
     }
 
@@ -177,7 +170,6 @@ export abstract class BaseNextEditModelProvider {
     prefetchQueue: PrefetchQueue;
     promptMetadata: PromptMetadata;
     ide: IDE;
-    profileType?: "local" | "platform" | "control-plane";
   }): Promise<DiffGroup | undefined> {
     const {
       diffGroups,
@@ -188,7 +180,6 @@ export abstract class BaseNextEditModelProvider {
       prefetchQueue,
       promptMetadata,
       ide,
-      profileType,
     } = params;
     let cursorGroup: DiffGroup | undefined;
 
@@ -204,7 +195,6 @@ export abstract class BaseNextEditModelProvider {
           prefetchQueue,
           promptMetadata,
           ide,
-          profileType,
         });
       }
     }
@@ -220,7 +210,6 @@ export abstract class BaseNextEditModelProvider {
     prefetchQueue: PrefetchQueue;
     promptMetadata: PromptMetadata;
     ide: IDE;
-    profileType?: "local" | "platform" | "control-plane";
   }): Promise<void> {
     const {
       group,
@@ -230,7 +219,6 @@ export abstract class BaseNextEditModelProvider {
       prefetchQueue,
       promptMetadata,
       ide,
-      profileType,
     } = params;
     // Extract lines that are not old.
     const groupContent = group.lines
@@ -274,7 +262,6 @@ export abstract class BaseNextEditModelProvider {
       completionId: uuidv4(), // Generate a new ID for this prefetched item.
       diffLines: group.lines,
       ide,
-      profileType,
     });
 
     prefetchQueue.enqueueProcessed({
@@ -292,7 +279,6 @@ export abstract class BaseNextEditModelProvider {
     isCurrentCursorGroup: boolean;
     promptMetadata: PromptMetadata;
     ide: IDE;
-    profileType?: "local" | "platform" | "control-plane";
   }): Promise<NextEditOutcome> {
     const {
       diffGroup,
@@ -303,7 +289,6 @@ export abstract class BaseNextEditModelProvider {
       isCurrentCursorGroup,
       promptMetadata,
       ide,
-      profileType,
     } = params;
     const groupContent = diffGroup.lines
       .filter((l) => l.type !== "old")
@@ -342,7 +327,6 @@ export abstract class BaseNextEditModelProvider {
       completionId,
       diffLines: diffGroup.lines,
       ide,
-      profileType,
     });
 
     return outcomeNext;
@@ -364,7 +348,6 @@ export abstract class BaseNextEditModelProvider {
     completionId?: string;
     diffLines: DiffLine[];
     ide: IDE;
-    profileType?: "local" | "platform" | "control-plane";
   }): Promise<NextEditOutcome> {
     return {
       elapsed: Date.now() - outcomeCtx.startTime,
@@ -391,7 +374,6 @@ export abstract class BaseNextEditModelProvider {
       editableRegionStartLine: outcomeCtx.editableRegionStartLine,
       editableRegionEndLine: outcomeCtx.editableRegionEndLine,
       diffLines: outcomeCtx.diffLines,
-      profileType: outcomeCtx.profileType,
       ...outcomeCtx.helper.options,
     };
   }

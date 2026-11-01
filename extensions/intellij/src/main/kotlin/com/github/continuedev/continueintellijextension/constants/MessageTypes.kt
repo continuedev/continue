@@ -34,8 +34,6 @@ class MessageTypes {
             "getFileStats",
             "insertAtCursor",
             "applyToFile",
-            "getControlPlaneSessionInfo",
-            "logoutOfControlPlane",
             "showToast",
             "openUrl",
             "isWorkspaceRemote",
@@ -155,7 +153,8 @@ class MessageTypes {
             "isItemTooBig",
             "process/markAsBackgrounded",
             "process/isBackgrounded",
-            "process/killTerminalProcess"
+            "process/killTerminalProcess",
+            "models/fetch"
         )
     }
 }

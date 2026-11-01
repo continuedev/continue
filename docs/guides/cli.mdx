@@ -53,7 +53,7 @@ echo "$(git diff) Generate a conventional commit name for the current git change
 
 ## How to Configure Continue CLI
 
-`cn` uses [`config.yaml`](/reference), the exact same configuration file as Continue. This means that you can log in to [Continue Mission Control](/mission-control) or use your existing local configuration.
+`cn` uses [`config.yaml`](/reference), the exact same configuration file as Continue. This means that you can use your existing local configuration.
 
 To switch between configurations, you can use the `/config` slash command in `cn`, or you can start it with the `--config` flag (e.g. `cn --config continuedev/default-cli-config` or `cn --config ~/.continue/config.yaml`).
 
@@ -63,7 +63,7 @@ Learn how to add custom models [here](/customize/overview). Then, you can use th
 
 ### How to Configure Rules
 
-`cn` supports [rules](/customize/deep-dives/rules) in the same way as the Continue IDE extensions. You can also use the `--rule` flag to manually include a rule from Mission Control. For example, `cn --rule nate/spanish` will tell `cn` to use [this rule](https://continue.dev/nate/spanish) to always speak in Spanish.
+`cn` supports [rules](/customize/deep-dives/rules) in the same way as the Continue IDE extensions. You can also use the `--rule` flag to manually include a rule. For example, `cn --rule nate/spanish` will tell `cn` to always speak in Spanish.
 
 ### How to Configure Tools
 
@@ -86,14 +86,8 @@ cn --ask Bash(curl*)
 cn --exclude Fetch
 ```
 
-## API Key Authentication
-
-For automation in CI or other headless environments, you can use an API key to authenticate with Continue. First, obtain your personal API key [here](https://continue.dev/settings/api-keys). Then, set it as the `CONTINUE_API_KEY` environment variable. You can now use `cn -p` (headless mode) without needing to log in.
-
-If you wish to run an automation on behalf of your organization you can obtain an organization-scoped API key by going to [your organization's settings](https://continue.dev/settings/organizations) -> API Keys.
-
 ## Troubleshooting
 
 Run `cn` with the `--verbose` flag to see more detailed logs. These will be output to `~/.continue/logs/cn.log`.
 
-If you have feedback on the beta, please [leave feedback in the GitHub discussion](https://github.com/continuedev/continue/discussions/7307).
+If you have feedback on the beta, please [file a GitHub issue](https://github.com/continuedev/continue/issues).

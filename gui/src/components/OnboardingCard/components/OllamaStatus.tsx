@@ -38,9 +38,9 @@ export function OllamaStatus({ isOllamaConnected }: OllamaStatusProps) {
     case OllamaConnectionStatuses.WaitingToDownload:
       return (
         <StyledActionButton onClick={onClickDownload}>
-          <p className="text-link mr-1 line-clamp-1 text-sm underline">
+          <span className="text-link mr-1 line-clamp-1 py-2 text-sm underline">
             {downloadUrl}
-          </p>
+          </span>
           <ArrowTopRightOnSquareIcon width={16} height={16} />
         </StyledActionButton>
       );

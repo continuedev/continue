@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import {
-  decodeSecretLocation,
   FQSN,
   PackageIdentifier,
   packageIdentifierToShorthandSlug,
@@ -8,7 +7,6 @@ import {
   PlatformSecretStore,
   Registry,
   resolveFQSN,
-  resolveSecretLocationInProxy,
   SecretLocation,
   SecretResult,
   SecretStore,
@@ -73,7 +71,6 @@ describe("E2E Scenarios", () => {
         case SecretType.Organization:
           return orgSecrets[secretLocation.secretName];
         case SecretType.ModelsAddOn:
-        case SecretType.FreeTrial:
           if (
             secretLocation.blockSlug.ownerSlug === "test-org" &&
             secretLocation.blockSlug.packageSlug === "claude35sonnet" &&
@@ -115,9 +112,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
       },
     );
 
@@ -138,9 +133,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
       },
     );
 
@@ -153,19 +146,10 @@ describe("E2E Scenarios", () => {
     expect(openAiModel.apiKey).toBe("sk-123");
 
     const geminiModel = config?.models?.[1]!;
-    expect(geminiModel.provider).toBe("continue-proxy");
-    expect(geminiModel.apiKey).toBeUndefined();
-    const geminiSecretLocation = "organization:test-org/GEMINI_API_KEY";
-    expect((geminiModel as any).apiKeyLocation).toBe(geminiSecretLocation);
+    expect(geminiModel.provider).toBe("gemini");
 
     const anthropicModel = config?.models?.[2]!;
-    expect(anthropicModel.provider).toBe("continue-proxy");
-    expect(anthropicModel.apiKey).toBeUndefined();
-    const anthropicSecretLocation =
-      "models_add_on:test-org/claude35sonnet/ANTHROPIC_API_KEY";
-    expect((anthropicModel as any).apiKeyLocation).toBe(
-      anthropicSecretLocation,
-    );
+    expect(anthropicModel.provider).toBe("anthropic");
 
     const proxyOllamaModel = config?.models?.[3]!;
     expect(proxyOllamaModel.provider).toBe("ollama");
@@ -178,41 +162,6 @@ describe("E2E Scenarios", () => {
     expect(config?.docs?.[0]?.rootUrl).toBe(
       "https://docs.python.org/release/3.13.1",
     );
-
-    // Test that proxy can correctly resolve secrets
-    const decodedAnthropicSecretLocation = decodeSecretLocation(
-      anthropicSecretLocation,
-    );
-    const decodedGeminiSecretLocation =
-      decodeSecretLocation(geminiSecretLocation);
-
-    // With environment
-    const antSecretValue = await resolveSecretLocationInProxy(
-      decodedAnthropicSecretLocation,
-      platformSecretStore,
-      environmentSecretStore,
-    );
-    expect(antSecretValue).toBe("sk-ant-env");
-    const geminiSecretValue = await resolveSecretLocationInProxy(
-      decodedGeminiSecretLocation,
-      platformSecretStore,
-      environmentSecretStore,
-    );
-    expect(geminiSecretValue).toBe("gemini-api-key-env");
-
-    // Without environment
-    const antSecretValue2 = await resolveSecretLocationInProxy(
-      decodedAnthropicSecretLocation,
-      platformSecretStore,
-      undefined,
-    );
-    expect(antSecretValue2).toBe("sk-ant");
-    const geminiSecretValue2 = await resolveSecretLocationInProxy(
-      decodedGeminiSecretLocation,
-      platformSecretStore,
-      undefined,
-    );
-    expect(geminiSecretValue2).toBe("gemini-api-key");
   });
 
   it("should correctly unroll assistant with injected blocks", async () => {
@@ -229,9 +178,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
         // Add injected blocks
         injectBlocks: [
           {
@@ -277,9 +224,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
         // Add injected blocks
         injectBlocks: [
           {
@@ -324,9 +269,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
         blocklistedBlocks: [
           {
             ownerSlug: "test-org",
@@ -362,9 +305,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
         allowlistedBlocks: [
           {
             ownerSlug: "test-org",
@@ -408,9 +349,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
         allowlistedBlocks: [
           {
             ownerSlug: "test-org",
@@ -448,9 +387,7 @@ describe("E2E Scenarios", () => {
       {
         renderSecrets: true,
         platformClient,
-        orgScopeId: "test-org",
         currentUserSlug: "test-user",
-        onPremProxyUrl: null,
         blocklistedBlocks: [
           {
             ownerSlug: "test-org",

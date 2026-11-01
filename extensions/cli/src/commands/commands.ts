@@ -7,10 +7,7 @@ import {
 
 // Export command functions
 export { chat } from "./chat.js";
-export { login } from "./login.js";
-export { logout } from "./logout.js";
 export { listSessionsCommand } from "./ls.js";
-export { remote } from "./remote.js";
 export { review } from "./review.js";
 export { serve } from "./serve.js";
 
@@ -37,23 +34,8 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
-    name: "login",
-    description: "Authenticate with your account",
-    category: "system",
-  },
-  {
-    name: "logout",
-    description: "Sign out of your current session",
-    category: "system",
-  },
-  {
     name: "update",
     description: "Update the Continue CLI",
-    category: "system",
-  },
-  {
-    name: "whoami",
-    description: "Check who you're currently logged in as",
     category: "system",
   },
   {
@@ -68,7 +50,7 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   },
   {
     name: "config",
-    description: "Switch configuration or organization",
+    description: "Switch configuration",
     category: "system",
   },
   {
@@ -143,7 +125,6 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
   },
 ];
 
-// Remote mode specific commands
 export const REMOTE_MODE_SLASH_COMMANDS: SlashCommand[] = [
   {
     name: "exit",

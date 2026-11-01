@@ -49,14 +49,7 @@ describe("ModelService", () => {
       ],
     } as AssistantUnrolled;
 
-    mockAuthConfig = {
-      accessToken: "test-token",
-      refreshToken: "test-refresh",
-      userEmail: "test@example.com",
-      userId: "test-user",
-      organizationId: "test-org",
-      expiresAt: Date.now() + 3600000, // 1 hour from now
-    };
+    mockAuthConfig = null;
   });
 
   describe("State Management", () => {
@@ -146,6 +139,7 @@ describe("ModelService", () => {
     test("should handle continue-proxy provider specially", async () => {
       const proxyModel = {
         provider: "continue-proxy",
+        model: "proxy-model",
         name: "Proxy Model",
         apiBase: "https://proxy.continue.dev",
         apiKeyLocation: "env.PROXY_KEY",

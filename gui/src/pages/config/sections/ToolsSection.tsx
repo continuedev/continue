@@ -30,7 +30,6 @@ import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateConfig } from "../../../redux/slices/configSlice";
-import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
 import { ConfigHeader } from "../components/ConfigHeader";
 import { ToolPoliciesGroup } from "../components/ToolPoliciesGroup";
 
@@ -408,15 +407,13 @@ function MCPServerPreview({
 export function ToolsSection() {
   const availableTools = useAppSelector((state) => state.config.config.tools);
 
-  const currentOrg = useAppSelector(selectCurrentOrg);
   const mode = useAppSelector((store) => store.session.mode);
   const servers = useAppSelector(
     (store) => store.config.config.mcpServerStatuses,
   );
   const { selectedProfile } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
-  const disableMcp = currentOrg?.policy?.allowMcpServers === false;
-  const isLocal = selectedProfile?.profileType === "local";
+  const disableMcp = false;
 
   const duplicateDetection = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -454,16 +451,9 @@ export function ToolsSection() {
   }, [servers, selectedProfile]);
 
   const handleAddMcpServer = () => {
-    if (isLocal) {
-      void ideMessenger.request("config/addLocalWorkspaceBlock", {
-        blockType: "mcpServers",
-      });
-    } else {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: "?type=mcpServers",
-        orgSlug: undefined,
-      });
-    }
+    void ideMessenger.request("config/addLocalWorkspaceBlock", {
+      blockType: "mcpServers",
+    });
   };
 
   const allToolsOff = useMemo(() => {

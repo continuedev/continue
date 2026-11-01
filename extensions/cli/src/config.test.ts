@@ -13,14 +13,7 @@ describe("config", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockAuthConfig = {
-      accessToken: "test-token",
-      refreshToken: "test-refresh",
-      userEmail: "test@example.com",
-      userId: "test-user",
-      organizationId: "test-org",
-      expiresAt: Date.now() + 3600000,
-    };
+    mockAuthConfig = null;
   });
 
   describe("getLlmApi()", () => {

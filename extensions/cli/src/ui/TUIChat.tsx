@@ -9,7 +9,6 @@ import React, {
 
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 
-import { listUserOrganizations } from "../auth/workos.js";
 import { useServices } from "../hooks/useService.js";
 import {
   ApiClientServiceState,
@@ -32,11 +31,7 @@ import { useNavigation } from "./context/NavigationContext.js";
 import { useChat } from "./hooks/useChat.js";
 import { useContextPercentage } from "./hooks/useContextPercentage.js";
 import { useMessageRenderer } from "./hooks/useMessageRenderer.js";
-import {
-  useIntroMessage,
-  useLoginHandlers,
-  useSelectors,
-} from "./hooks/useTUIChatHooks.js";
+import { useIntroMessage, useSelectors } from "./hooks/useTUIChatHooks.js";
 
 interface TUIChatProps {
   // Remote mode props
@@ -113,40 +108,9 @@ function useTUIChatServices(remoteUrl?: string) {
   return { services, allServicesReady, isRemoteMode };
 }
 
-// Custom hook to fetch organization name
-function useOrganizationName(organizationId?: string): string | undefined {
-  const [organizationName, setOrganizationName] = useState<string | undefined>(
-    undefined,
-  );
-
-  useEffect(() => {
-    if (!organizationId) {
-      setOrganizationName(undefined);
-      return;
-    }
-
-    let isMounted = true;
-
-    async function fetchOrgName() {
-      try {
-        const orgs = await listUserOrganizations();
-        if (!isMounted) return;
-
-        const org = orgs?.find((o) => o.id === organizationId);
-        if (org) {
-          setOrganizationName(org.name);
-        }
-      } catch (error) {
-        logger.debug("Failed to fetch organization name", { error });
-      }
-    }
-
-    fetchOrgName();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [organizationId]);
+// Organization names are no longer available (Hub integration removed)
+function useOrganizationName(_organizationId?: string): string | undefined {
+  const organizationName = undefined;
 
   return organizationName;
 }
@@ -211,13 +175,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     isRemoteMode,
     services,
     allServicesReady,
-  );
-
-  // Use login handlers
-  const { handleLoginTokenSubmit } = useLoginHandlers(
-    navigateTo,
-    navState,
-    closeCurrentScreen,
   );
 
   // State to trigger static content refresh for /clear command
@@ -492,9 +449,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
         {/* All screen-specific content */}
         <ScreenContent
           isScreenActive={isScreenActive}
-          navState={navState}
           services={services}
-          handleLoginTokenSubmit={handleLoginTokenSubmit}
           handleConfigSelect={handleConfigSelect}
           handleModelSelect={handleModelSelect}
           handleSessionSelect={handleSessionSelect}
@@ -526,7 +481,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           <ResourceDebugBar visible={navState.currentScreen === "chat"} />
         )}
 
-        {/* Free trial status and Continue CLI info - always show */}
+        {/* Bottom status bar */}
         <BottomStatusBar
           currentMode={services?.toolPermissions?.currentMode ?? "normal"}
           remoteUrl={remoteUrl}

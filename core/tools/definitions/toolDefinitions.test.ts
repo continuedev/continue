@@ -7,7 +7,6 @@ describe("Tool Definitions", () => {
   const mockParams: ConfigDependentToolParams = {
     rules: [],
     enableExperimentalTools: false,
-    isSignedIn: false,
     isRemote: false,
     modelName: "a model",
     ide: {} as any,

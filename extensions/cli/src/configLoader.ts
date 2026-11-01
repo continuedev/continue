@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import * as path from "path";
 
 import {
@@ -15,17 +14,14 @@ import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import chalk from "chalk";
 
 import { uriToPath, uriToSlug } from "./auth/uriUtils.js";
+import type { AuthConfig } from "./auth/workos.js";
 import {
-  AuthConfig,
   getAccessToken,
-  getConfigUri,
   getOrganizationId,
-  isEnvironmentAuthConfig,
   updateConfigUri,
 } from "./auth/workos.js";
 import { CLIPlatformClient } from "./CLIPlatformClient.js";
 import { env } from "./env.js";
-import { logger } from "./util/logger.js";
 
 export interface ConfigLoadResult {
   config: AssistantUnrolled;
@@ -70,12 +66,10 @@ export async function loadConfiguration(
     injectBlocks,
   );
 
-  // Step 3: Save config URI for session continuity (only for file-based auth)
-  if (!isEnvironmentAuthConfig(authConfig) && authConfig !== null) {
-    const uri = getUriFromSource(configSource);
-    if (uri) {
-      updateConfigUri(uri);
-    }
+  // Step 3: Save config URI for session continuity
+  const uri = getUriFromSource(configSource);
+  if (uri) {
+    updateConfigUri(uri);
   }
 
   return { config, source: configSource };
@@ -90,54 +84,19 @@ export async function loadConfiguration(
 function determineConfigSource(
   authConfig: AuthConfig,
   cliConfigPath: string | undefined,
-  isHeadless: boolean | undefined,
+  _isHeadless: boolean | undefined,
 ): ConfigSource {
   // Priority 1: CLI --config flag
   if (cliConfigPath) {
     return { type: "cli-flag", path: cliConfigPath };
   }
 
-  // Priority 2: Saved config URI (only for file-based auth)
-  if (!isEnvironmentAuthConfig(authConfig) && authConfig !== null) {
-    const savedUri = getConfigUri(authConfig);
-
-    if (savedUri) {
-      if (savedUri.startsWith("file:")) {
-        let exists = false; // wrote like this for nested depth linting rule lol
-        try {
-          const filepath = fileURLToPath(savedUri);
-          exists = fs.existsSync(filepath);
-        } catch (e) {
-          logger.warn("Invalid saved file URI " + savedUri, e);
-        }
-        if (exists) {
-          return { type: "saved-uri", uri: savedUri };
-        } else {
-          logger.warn("Saved config URI does not exist: " + savedUri);
-        }
-      } else {
-        // slug
-        return { type: "saved-uri", uri: savedUri };
-      }
-    }
+  // Priority 2: Check for default config.yaml, then fallback to default config
+  const defaultConfigPath = path.join(env.continueHome, "config.yaml");
+  if (fs.existsSync(defaultConfigPath)) {
+    return { type: "local-config-yaml" };
   }
-
-  // Priority 3: Default resolution based on auth state
-  if (authConfig === null) {
-    // Unauthenticated: check for default config.yaml, then fallback to default config
-    const defaultConfigPath = path.join(env.continueHome, "config.yaml");
-    if (fs.existsSync(defaultConfigPath)) {
-      return { type: "local-config-yaml" };
-    }
-    return { type: "remote-default-config" };
-  } else {
-    // In headless, user assistant fallback behavior isn't supported
-    if (isHeadless) {
-      return { type: "remote-default-config" };
-    }
-    // Authenticated: try user assistants first
-    return { type: "user-assistant", slug: "" }; // Empty slug means "first available"
-  }
+  return { type: "remote-default-config" };
 }
 
 /**
@@ -408,14 +367,10 @@ export async function unrollPackageIdentifiersAsConfigYaml(
     },
     "name: Agent\nschema: v1\nversion: 0.0.1",
     new RegistryClient({
-      accessToken: accessToken ?? undefined,
-      apiBase: env.apiBase,
       rootPath: undefined, // TODO verify this doesn't cause issues with file blocks
     }),
     {
       currentUserSlug: "",
-      onPremProxyUrl: null,
-      orgScopeId: organizationId,
       platformClient: new CLIPlatformClient(organizationId, apiClient),
       renderSecrets: true,
       injectBlocks: packageIdentifiers,
@@ -444,8 +399,6 @@ async function unrollAssistantWithConfig(
   const unrollResult = await unrollAssistant(
     packageIdentifier,
     new RegistryClient({
-      accessToken: accessToken ?? undefined,
-      apiBase: env.apiBase,
       rootPath:
         packageIdentifier.uriType === "file"
           ? dirname(packageIdentifier.fileUri)
@@ -454,10 +407,8 @@ async function unrollAssistantWithConfig(
     {
       currentUserSlug: "",
       alwaysUseProxy: false,
-      orgScopeId: organizationId,
       renderSecrets: true,
       platformClient: new CLIPlatformClient(organizationId, apiClient),
-      onPremProxyUrl: null,
       injectBlocks,
     },
   );

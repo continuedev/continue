@@ -2858,7 +2858,6 @@
                 "ollama",
                 "openai",
                 "cohere",
-                "continue-proxy",
                 "gemini",
                 "voyage",
                 "nvidia",
@@ -3324,12 +3323,8 @@
           "properties": {
             "provider": {
               "type": "string",
-              "enum": ["posthog", "logstash"],
-              "description": "The 3rd party analytics provider to use.",
-              "default": "posthog",
-              "markdownEnumDescriptions": [
-                "### Posthog\nTo use Posthog, set up an account, obtain your client key, and enter it in the client key field."
-              ]
+              "enum": ["logstash"],
+              "description": "The 3rd party analytics provider to use."
             },
             "url": {
               "type": "string",
@@ -3342,18 +3337,6 @@
           },
           "required": ["provider"],
           "allOf": [
-            {
-              "if": {
-                "properties": {
-                  "provider": {
-                    "enum": ["posthog"]
-                  }
-                }
-              },
-              "then": {
-                "required": ["clientKey"]
-              }
-            },
             {
               "if": {
                 "properties": {

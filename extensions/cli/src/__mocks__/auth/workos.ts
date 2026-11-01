@@ -11,7 +11,6 @@ export const getOrganizationId = vi.fn(() => null);
 export const saveAuthConfig = vi.fn();
 export const listUserOrganizations = vi.fn();
 export const hasMultipleOrganizations = vi.fn();
-export const initWorkOS = vi.fn();
 export const getModelName = vi.fn(() => null);
 export const getAccessToken = vi.fn(() => null);
 export const getConfigUri = vi.fn(() => null);
@@ -21,3 +20,10 @@ export const updateConfigUri = vi.fn();
 export const updateModelName = vi.fn();
 export const updateAssistantSlug = vi.fn();
 export const updateLocalConfigPath = vi.fn();
+
+// Type re-exports for test compatibility
+export type AuthConfig = null;
+export type {
+  AuthenticatedConfig,
+  EnvironmentAuthConfig,
+} from "../../auth/workos.js";

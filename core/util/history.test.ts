@@ -74,6 +74,87 @@ describe("Full session lifecycle", () => {
   });
 });
 
+describe("Workspace directory filtering", () => {
+  beforeAll(() => {
+    historyManager.clearAll();
+    historyManager.save({
+      history: [],
+      title: "Project A session 1",
+      workspaceDirectory: "/home/user/project-a",
+      sessionId: "ws-a-1",
+    });
+    historyManager.save({
+      history: [],
+      title: "Project B session 1",
+      workspaceDirectory: "/home/user/project-b",
+      sessionId: "ws-b-1",
+    });
+    historyManager.save({
+      history: [],
+      title: "Project A session 2",
+      workspaceDirectory: "/home/user/project-a",
+      sessionId: "ws-a-2",
+    });
+    historyManager.save({
+      history: [],
+      title: "No workspace",
+      workspaceDirectory: "",
+      sessionId: "ws-none",
+    });
+  });
+
+  afterAll(() => {
+    historyManager.clearAll();
+  });
+
+  test("Filter sessions by workspace directory", () => {
+    const sessions = historyManager.list({
+      workspaceDirectory: "/home/user/project-a",
+    });
+    expect(sessions.length).toBe(2);
+    expect(
+      sessions.every((s) => s.workspaceDirectory === "/home/user/project-a"),
+    ).toBe(true);
+  });
+
+  test("Omitting workspace returns all sessions", () => {
+    const sessions = historyManager.list({});
+    expect(sessions.length).toBe(4);
+  });
+
+  test("Workspace filter is case-insensitive", () => {
+    const sessions = historyManager.list({
+      workspaceDirectory: "/HOME/USER/PROJECT-A",
+    });
+    expect(sessions.length).toBe(2);
+  });
+
+  test("Non-matching workspace returns empty list", () => {
+    const sessions = historyManager.list({
+      workspaceDirectory: "/home/user/nonexistent",
+    });
+    expect(sessions.length).toBe(0);
+  });
+
+  test("Workspace filter works with limit", () => {
+    const sessions = historyManager.list({
+      workspaceDirectory: "/home/user/project-a",
+      limit: 1,
+    });
+    expect(sessions.length).toBe(1);
+  });
+
+  test("Workspace filter works with limit and offset", () => {
+    const sessions = historyManager.list({
+      workspaceDirectory: "/home/user/project-a",
+      limit: 1,
+      offset: 1,
+    });
+    expect(sessions.length).toBe(1);
+    expect(sessions[0].sessionId).toBe("ws-a-1");
+  });
+});
+
 describe("Many sessions created", () => {
   test("Create 100 sessions and list all", () => {
     for (let i = 0; i < 100; i++) {

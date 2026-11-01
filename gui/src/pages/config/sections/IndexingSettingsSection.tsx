@@ -8,7 +8,6 @@ import { Card, Divider } from "../../../components/ui";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateConfig } from "../../../redux/slices/configSlice";
-import { selectCurrentOrg } from "../../../redux/slices/profilesSlice";
 import { ConfigHeader } from "../components/ConfigHeader";
 import { UserSetting } from "../components/UserSetting";
 import IndexingProgress from "../features/indexing";
@@ -42,7 +41,6 @@ function EnableIndexingSetting() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((state) => state.config.config);
-  const currentOrg = useAppSelector(selectCurrentOrg);
 
   function handleUpdate(sharedConfig: SharedConfigSchema) {
     const updatedConfig = modifyAnyConfigWithSharedConfig(config, sharedConfig);
@@ -51,8 +49,7 @@ function EnableIndexingSetting() {
   }
 
   const disableIndexing = config.disableIndexing ?? false;
-  const disableIndexingToggle =
-    currentOrg?.policy?.allowCodebaseIndexing === false;
+  const disableIndexingToggle = false;
 
   return (
     <div className="flex flex-col gap-4">

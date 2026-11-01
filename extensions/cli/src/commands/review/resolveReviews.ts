@@ -1,10 +1,5 @@
-import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-
-import { loadAuthConfig, getAccessToken } from "../../auth/workos.js";
-import { env } from "../../env.js";
-import { logger } from "../../util/logger.js";
 
 export interface ResolvedReview {
   /** Display name for the review */
@@ -49,61 +44,10 @@ export async function resolveReviews(
 }
 
 /**
- * Try to resolve reviews from the hub API based on the current repo.
+ * Hub review resolution has been removed.
  */
 async function resolveFromHub(): Promise<ResolvedReview[]> {
-  try {
-    const authConfig = loadAuthConfig();
-    if (!authConfig) {
-      return [];
-    }
-
-    const accessToken = getAccessToken(authConfig);
-    if (!accessToken) {
-      return [];
-    }
-
-    // Get the repo URL from git
-    let repoUrl: string;
-    try {
-      repoUrl = execSync("git config --get remote.origin.url", {
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-      }).trim();
-    } catch {
-      return [];
-    }
-
-    if (!repoUrl) {
-      return [];
-    }
-
-    const url = new URL("api/checks/resolve", env.apiBase);
-    url.searchParams.set("repoUrl", repoUrl);
-
-    const response = await fetch(url.toString(), {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      logger.debug(`Hub review resolution returned ${response.status}`);
-      return [];
-    }
-
-    const data = (await response.json()) as {
-      checks: Array<{ slug: string; name: string }>;
-    };
-    return (data.checks || []).map((c) => ({
-      name: c.name,
-      source: c.slug,
-      sourceType: "hub" as const,
-    }));
-  } catch (e) {
-    logger.debug("Hub review resolution failed", { error: e });
-    return [];
-  }
+  return [];
 }
 
 /**

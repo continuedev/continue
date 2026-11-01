@@ -1,7 +1,5 @@
 package com.github.continuedev.continueintellijextension.`continue`.process
 
-import com.github.continuedev.continueintellijextension.error.ContinueSentryService
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -32,13 +30,11 @@ class ContinueProcessHandler(
                             log.debug("Handle: $line")
                             handleMessage(line)
                         } catch (e: Exception) {
-                            service<ContinueSentryService>().report(e, "Error handling message: $line")
                         }
                     } else
                         delay(100)
                 }
             } catch (e: IOException) {
-                service<ContinueSentryService>().report(e)
             }
         }
         scope.launch(Dispatchers.IO) {

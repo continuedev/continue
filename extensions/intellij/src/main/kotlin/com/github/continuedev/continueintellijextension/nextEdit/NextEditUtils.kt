@@ -1,11 +1,6 @@
 package com.github.continuedev.continueintellijextension.nextEdit
 
 import com.github.continuedev.continueintellijextension.FimResult
-import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
-import com.github.continuedev.continueintellijextension.`continue`.ProfileInfoService
-import com.github.continuedev.continueintellijextension.utils.castNestedOrNull
-import com.intellij.openapi.components.service
-import com.intellij.openapi.project.Project
 
 
 object NextEditUtils {

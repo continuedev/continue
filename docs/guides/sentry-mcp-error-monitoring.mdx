@@ -9,24 +9,6 @@ import CLIInstall from '/snippets/cli-install.mdx'
 
 <OSAutoDetect />
 
-<Note>
-
-  **🚀 New: Sentry Mission Control Integration with Continuous AI**
-  
-  The new [Sentry Mission Control Integration](/mission-control/integrations/sentry) enables **[Continuous AI](/guides/continuous-ai)** for error monitoring - where AI agents autonomously detect, analyze, and fix production errors. When Sentry detects an issue, your agent automatically analyzes it, generates a fix, creates a PR, and validates the solution without manual intervention.
-  
-  **Mission Control Benefits:**
-  - **Webhook-based triggers** - Automatically respond when new errors occur in production
-  - **Centralized error workflows** - Manage all error monitoring Tasks from one dashboard
-  - **Dedicated inbox view** - Monitor all Sentry-related agent activity at [continue.dev/inbox?view=sentry](https://continue.dev/inbox?view=sentry)
-  - **Metrics & intervention rates** - Track how often agents successfully fix errors without human help
-  
-  This represents **[Level 2 Continuous AI](/guides/continuous-ai#the-continuous-ai-maturity-model)**: AI handles routine error analysis and fixes autonomously while developers focus on complex problems. As outlined in our [Continuous AI guide](/guides/continuous-ai#best-practices-for-sustainable-continuous-ai), this reduces mean time to resolution (MTTR) and improves application reliability.
-  
-  **Get Started:** Use this cookbook to understand error monitoring fundamentals, then [enable Mission Control](/mission-control/integrations/sentry) to deploy autonomous error-fixing agents across your organization.
-
-</Note>
-
 <Card title="What You'll Build" icon="bug">
   An automated error monitoring system that uses Continue CLI with Sentry MCP to analyze production errors, identify root causes with AI, and create detailed GitHub issues with suggested fixes.
 </Card>
@@ -140,11 +122,6 @@ First, you'll need to gather your Sentry and GitHub API credentials.
 </Tabs>
 ## Sentry Error Monitoring Workflow Options
 
-<Card title="Fastest Path to Success" icon="rocket">
-  Skip the manual setup and use our pre-built Sentry Continuous AI agent that includes
-  optimized prompts, rules, and the Sentry MCP for more consistent results.
-</Card>
-
 <Info>
   **How Sentry MCP Works**:
   - Connects to your Sentry organization via OAuth
@@ -153,82 +130,42 @@ First, you'll need to gather your Sentry and GitHub API credentials.
   - Automatically handles authentication and API interactions
 </Info>
 
-<Tabs>
-  <Tab title="⚡ Quick Start (Recommended)">
-    **Perfect for:** Immediate error analysis with AI-powered root cause detection and built-in debugging
+<Steps>
+  <Step title="Add Sentry MCP to Continue CLI">
+    Configure the [Sentry MCP](https://docs.sentry.io/product/sentry-mcp/) using OAuth:
 
-    <Steps>
-      <Step title="Add the Pre-Built Agent">
-        Visit the [Sentry Continuous AI Agent](https://continue.dev/continuedev/sentry-continuous-ai-agent) on Continue Mission Control and click **"Install Agent"** or run:
-        
-        ```bash
-        cn --agent continuedev/sentry-continuous-ai-agent
-        ```
+    The MCP server will automatically prompt for OAuth authentication when you first use it.
+  </Step>
 
-        This agent includes:
-        - **Optimized prompts** for Sentry error analysis and GitHub issue creation
-        - **Built-in rules** for consistent formatting and error handling
-        - **[Sentry MCP](https://docs.sentry.io/product/sentry-mcp/)** for more reliable API interactions
-        - **Automatic authentication** via OAuth flow
-      </Step>
+  <Step title="Verify Sentry Connection">
+    Test your Sentry MCP connection with this prompt:
 
-      <Step title="Run Error Analysis">
-        Navigate to your project directory and enter this prompt in the Continue CLI TUI:
-        
-        ```
-        Analyze recent Sentry errors and create GitHub issues for critical bugs with suggested fixes
-        ```
+    ```
+    List my Sentry organizations and projects
+    ```
+  </Step>
 
-        That's it! The agent handles everything automatically.
-      </Step>
-    </Steps>
+  <Step title="Create Custom Error Analysis Prompts">
+    Use this prompt template with Continue CLI to analyze Sentry errors:
 
-    <Info>
-      **Why Use the Agent?** Results are more consistent and debugging is easier thanks to the Sentry MCP integration and pre-tested prompts.
-    </Info>
-
-  </Tab>
-
-  <Tab title="🛠️ Manual Setup">
-    <Steps>
-      <Step title="Add Sentry MCP to Continue CLI">
-        Configure the [Sentry MCP](https://docs.sentry.io/product/sentry-mcp/) using OAuth:
-
-        The MCP server will automatically prompt for OAuth authentication when you first use it.
-      </Step>
-
-      <Step title="Verify Sentry Connection">
-        Test your Sentry MCP connection with this prompt:
-        
-        ```
-        List my Sentry organizations and projects
-        ```
-      </Step>
-
-      <Step title="Create Custom Error Analysis Prompts">
-        Use this prompt template with Continue CLI to analyze Sentry errors:
-
-        ```
-        Analyze Sentry errors from the past 24 hours:
-        - Group errors by root cause
-        - Identify the top 5 most critical issues by frequency and impact
-        - For each critical issue, provide:
-          * Stack trace analysis
-          * Affected user count
-          * First seen and last seen timestamps
-          * Suggested fix based on error context
-        - Create GitHub issues using gh CLI with:
-          * Title format: '🐛 [Sentry] [Error Type]: Brief description'
-          * Labels: 'bug', 'sentry', 'production'
-          * Priority labels based on severity
-          * Full error context and suggested fix in the body
-        Execute the commands and confirm each issue was created.
-        ```
-      </Step>
-    </Steps>
-
-  </Tab>
-</Tabs>
+    ```
+    Analyze Sentry errors from the past 24 hours:
+    - Group errors by root cause
+    - Identify the top 5 most critical issues by frequency and impact
+    - For each critical issue, provide:
+      * Stack trace analysis
+      * Affected user count
+      * First seen and last seen timestamps
+      * Suggested fix based on error context
+    - Create GitHub issues using gh CLI with:
+      * Title format: '🐛 [Sentry] [Error Type]: Brief description'
+      * Labels: 'bug', 'sentry', 'production'
+      * Priority labels based on severity
+      * Full error context and suggested fix in the body
+    Execute the commands and confirm each issue was created.
+    ```
+  </Step>
+</Steps>
 
 <Info>
   **Why GitHub CLI over GitHub MCP**: While GitHub MCP is available, it can be
@@ -236,17 +173,6 @@ First, you'll need to gather your Sentry and GitHub API credentials.
   (authenticated via `gh auth login`), and provides a cleaner command-line
   experience. GitHub MCP remains an option if you prefer full MCP integration.
 </Info>
-
-<Accordion title="Agent Requirements">
-  To use the pre-built agent, you need either:
-  - **Continue CLI Pro Plan** with the models add-on, OR
-  - **Your own API keys** added to Continue Mission Control secrets (same as Step 1)
-  
-  The agent will automatically detect and use your configuration. For Sentry MCP:
-  - **Sentry account** with at least one project
-  - **User Auth Token** with appropriate scopes (or OAuth flow)
-  - The MCP works with both Sentry's hosted service (`sentry.io`) and self-hosted instances
-</Accordion>
 
 ---
 
@@ -542,8 +468,6 @@ See the [Sentry MCP GitHub Issues](https://github.com/getsentry/sentry-mcp/issue
 
 - Set up [Sentry performance monitoring](https://docs.sentry.io/product/performance/)
 - Configure [Sentry release tracking](https://docs.sentry.io/product/releases/) for deployment correlation
-- Integrate [Slack MCP](https://continue.dev/slack/slack-mcp) for error alerts
-- Join the [GitHub Discussions](https://github.com/continuedev/continue/discussions) for support
 
 ## Resources
 

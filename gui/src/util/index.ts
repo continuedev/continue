@@ -84,6 +84,6 @@ export function isPrerelease() {
   return false;
 }
 
-export function isLocalProfile(profile: ProfileDescription): boolean {
-  return profile.profileType === "local";
+export function isLocalProfile(_profile: ProfileDescription): boolean {
+  return true;
 }

@@ -3,11 +3,9 @@ import React from "react";
 
 import { listSessions, loadSessionById } from "../session.js";
 import { SessionSelector } from "../ui/SessionSelector.js";
-import { ApiRequestError, post } from "../util/apiClient.js";
 import { logger } from "../util/logger.js";
 
 import { chat } from "./chat.js";
-import { remote } from "./remote.js";
 
 interface ListSessionsOptions {
   format?: "json";
@@ -23,22 +21,6 @@ function setSessionId(sessionId: string): void {
     "continue-cli-",
     "",
   );
-}
-
-export async function getTunnelForAgent(agentId: string): Promise<string> {
-  try {
-    const response = await post<{ url: string }>(
-      `agents/${encodeURIComponent(agentId)}/tunnel`,
-    );
-    return response.data.url;
-  } catch (error) {
-    if (error instanceof ApiRequestError) {
-      throw new Error(
-        `Failed to get tunnel for agent ${agentId}: ${error.response || error.statusText}`,
-      );
-    }
-    throw error;
-  }
 }
 
 /**
@@ -87,36 +69,24 @@ export async function listSessionsCommand(
       try {
         app.unmount();
 
-        // Find the selected session to check if it's remote
-        const selectedSession = sessions.find((s) => s.sessionId === sessionId);
-
-        if (selectedSession?.isRemote && selectedSession.remoteId) {
-          // Handle remote session - use the remote command with the agent URL
-          logger.info(`Opening remote session: ${selectedSession.remoteId}`);
-
-          const tunnelUrl = await getTunnelForAgent(selectedSession.remoteId);
-
-          await remote(undefined, { url: tunnelUrl });
-        } else {
-          // Handle local session
-          const sessionHistory = loadSessionById(sessionId);
-          if (!sessionHistory) {
-            logger.error(`Session ${sessionId} could not be loaded.`);
-            resolve();
-            return;
-          }
-
-          logger.info(`Loading session: ${sessionId}`);
-
-          // Set the session ID so that when chat() runs, it will load this session
-          setSessionId(sessionId);
-
-          // Start chat with resume flag to load the selected session
-          await chat(undefined, {
-            resume: true,
-            headless: false,
-          });
+        // Handle local session
+        const sessionHistory = loadSessionById(sessionId);
+        if (!sessionHistory) {
+          logger.error(`Session ${sessionId} could not be loaded.`);
+          resolve();
+          return;
         }
+
+        logger.info(`Loading session: ${sessionId}`);
+
+        // Set the session ID so that when chat() runs, it will load this session
+        setSessionId(sessionId);
+
+        // Start chat with resume flag to load the selected session
+        await chat(undefined, {
+          resume: true,
+          headless: false,
+        });
 
         resolve();
       } catch (error) {

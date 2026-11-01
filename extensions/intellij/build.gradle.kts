@@ -15,7 +15,6 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.7.2"
     id("org.jetbrains.changelog") version "2.1.2"
     id("org.jetbrains.qodana") version "0.1.13"
-    id("io.sentry.jvm.gradle") version "5.8.0"
 }
 
 group = pluginGroup
@@ -47,7 +46,6 @@ dependencies {
         testFramework(TestFrameworkType.Platform)
         testFramework(TestFrameworkType.Starter, "243.21565.193", configurationName = "testIntegrationImplementation")
     }
-    implementation("com.posthog.java:posthog:1.2.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("io.mockk:mockk:1.14.2") {

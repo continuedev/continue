@@ -3,22 +3,6 @@ vi.mock("./hooks/useTerminalSize.js", () => ({
   useTerminalSize: () => ({ columns: 80, rows: 24 }),
 }));
 
-// Mock sentry to prevent initialization issues
-vi.mock("../sentry.js", () => ({
-  sentryService: {
-    captureException: vi.fn(),
-    captureMessage: vi.fn(),
-    setUser: vi.fn(),
-    setTag: vi.fn(),
-    setContext: vi.fn(),
-    addBreadcrumb: vi.fn(),
-    startSpan: vi.fn(),
-    flush: vi.fn(),
-    close: vi.fn(),
-    isEnabled: vi.fn().mockReturnValue(false),
-  },
-}));
-
 import { render } from "ink-testing-library";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

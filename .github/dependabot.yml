@@ -17,7 +17,6 @@ updates:
       - "/packages/config-yaml"
       - "/packages/continue-sdk"
       - "/packages/fetch"
-      - "/packages/hub"
       - "/packages/llm-info"
       - "/packages/openai-adapters"
       - "/packages/terminal-security"

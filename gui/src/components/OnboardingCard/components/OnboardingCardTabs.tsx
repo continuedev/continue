@@ -1,6 +1,5 @@
 import { KeyIcon } from "@heroicons/react/24/outline";
 import { OnboardingModes } from "core/protocol/core";
-import ContinueSignet from "../../svg/ContinueSignet";
 import OllamaLogo from "../../svg/OllamaLogo";
 
 interface OnboardingCardTabsProps {
@@ -21,7 +20,7 @@ const renderTabButton = (
       <button
         className={baseButtonClass}
         key={tabTitle}
-        onClick={() => onTabClick(tabTitle as OnboardingModes)}
+        onClick={() => onTabClick(tabTitle)}
         data-testid={`onboarding-tab-${tabTitle}`}
       >
         <KeyIcon className="-mb-0.5 mr-2 h-4 w-4" />
@@ -35,25 +34,11 @@ const renderTabButton = (
       <button
         className={baseButtonClass}
         key={tabTitle}
-        onClick={() => onTabClick(tabTitle as OnboardingModes)}
+        onClick={() => onTabClick(tabTitle)}
         data-testid={`onboarding-tab-${tabTitle}`}
       >
         <OllamaLogo width={18} height={18} className="-mb-0.5 mr-2" />
         {tabTitle}
-      </button>
-    );
-  }
-
-  if (tabTitle === OnboardingModes.MODELS_ADD_ON) {
-    return (
-      <button
-        className={`${baseButtonClass} -ml-1.5`}
-        key={tabTitle}
-        onClick={() => onTabClick(tabTitle as OnboardingModes)}
-        data-testid={`onboarding-tab-${tabTitle}`}
-      >
-        <ContinueSignet width={32} height={32} className="-mb-2.5" />
-        Credits
       </button>
     );
   }
@@ -68,12 +53,7 @@ export function OnboardingCardTabs({
   activeTab,
   onTabClick,
 }: OnboardingCardTabsProps) {
-  // Show Models Add-On (Credits) first as the primary option
-  const tabs = [
-    OnboardingModes.MODELS_ADD_ON,
-    OnboardingModes.API_KEY,
-    OnboardingModes.LOCAL,
-  ];
+  const tabs = [OnboardingModes.API_KEY, OnboardingModes.LOCAL];
   return (
     <div>
       <div className="hidden sm:block">

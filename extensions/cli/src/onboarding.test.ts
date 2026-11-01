@@ -15,15 +15,8 @@ describe("onboarding config flag handling", () => {
     // Create a temporary directory for test config files
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "continue-test-"));
 
-    // Create a minimal auth config for testing
-    mockAuthConfig = {
-      userId: "test-user",
-      userEmail: "test@example.com",
-      accessToken: "test-token",
-      refreshToken: "test-refresh",
-      expiresAt: Date.now() + 3600000,
-      organizationId: "test-org",
-    };
+    // Auth config is always null after Hub removal
+    mockAuthConfig = null;
   });
 
   afterEach(() => {
@@ -187,14 +180,7 @@ describe("CONTINUE_USE_BEDROCK environment variable", () => {
     // Mock the config module
     vi.doMock("./config.js", () => ({ initialize: mockInitialize }));
 
-    mockAuthConfig = {
-      userId: "test-user",
-      userEmail: "test@example.com",
-      accessToken: "test-token",
-      refreshToken: "test-refresh",
-      expiresAt: Date.now() + 3600000,
-      organizationId: "test-org",
-    };
+    mockAuthConfig = null;
   });
 
   afterEach(() => {

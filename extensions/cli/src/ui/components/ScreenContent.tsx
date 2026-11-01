@@ -1,4 +1,3 @@
-import { Box, Text } from "ink";
 import React from "react";
 
 import { UpdateServiceState } from "src/services/types.js";
@@ -8,7 +7,6 @@ import { ConfigSelector } from "../ConfigSelector.js";
 import type { NavigationScreen } from "../context/NavigationContext.js";
 import { DiffViewer } from "../DiffViewer.js";
 import { EditMessageSelector } from "../EditMessageSelector.js";
-import { FreeTrialTransitionUI } from "../FreeTrialTransitionUI.js";
 import type {
   ActivePermissionRequest,
   ActiveQuizQuestion,
@@ -18,16 +16,13 @@ import { MCPSelector } from "../MCPSelector.js";
 import { ModelSelector } from "../ModelSelector.js";
 import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
 import { UpdateSelector } from "../UpdateSelector.js";
-import { UserInput } from "../UserInput.js";
 
 import { ChatScreenContent } from "./ChatScreenContent.js";
 import { SessionSelectorWithLoading } from "./SessionSelectorWithLoading.js";
 
 interface ScreenContentProps {
   isScreenActive: (screen: NavigationScreen) => boolean;
-  navState: any;
   services: any;
-  handleLoginTokenSubmit: (token: string) => void;
   handleConfigSelect: (config: ConfigOption) => Promise<void>;
   handleModelSelect: (model: ModelOption) => Promise<void>;
   handleSessionSelect: (sessionId: string) => Promise<void>;
@@ -69,14 +64,12 @@ function hideScreenContent(state?: UpdateServiceState) {
 
 export const ScreenContent: React.FC<ScreenContentProps> = ({
   isScreenActive,
-  navState,
   services,
-  handleLoginTokenSubmit,
   handleConfigSelect,
   handleModelSelect,
   handleSessionSelect,
   handleExportSession,
-  handleReload,
+  handleReload: _handleReload,
   closeCurrentScreen,
   activePermissionRequest,
   activeQuizQuestion,
@@ -99,33 +92,6 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
 }) => {
   if (hideScreenContent(services.update)) {
     return null;
-  }
-
-  // Login prompt
-  if (isScreenActive("login") && navState.screenData) {
-    return (
-      <Box
-        paddingX={1}
-        borderStyle="round"
-        borderColor="yellow"
-        flexDirection="column"
-        gap={1}
-      >
-        <Text color="yellow" bold>
-          Login Required
-        </Text>
-        <Text>{navState.screenData.text}</Text>
-        <UserInput
-          onSubmit={handleLoginTokenSubmit}
-          isWaitingForResponse={false}
-          inputMode={true}
-          assistant={services.config?.config || undefined}
-          disabled={false}
-          placeholder="Enter your token..."
-          hideNormalUI={true}
-        />
-      </Box>
-    );
   }
 
   // Config selector
@@ -179,11 +145,6 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   // Jobs selector
   if (isScreenActive("jobs")) {
     return <JobsSelector onCancel={closeCurrentScreen} />;
-  }
-
-  // Free trial transition UI
-  if (isScreenActive("free-trial")) {
-    return <FreeTrialTransitionUI onReload={handleReload} />;
   }
 
   // Diff viewer overlay

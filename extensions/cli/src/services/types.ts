@@ -10,7 +10,7 @@ import { AssistantConfig } from "@continuedev/sdk";
 import { DefaultApiInterface } from "@continuedev/sdk/dist/api/dist/index.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
-import { AuthConfig } from "../auth/workos.js";
+import type { AuthConfig } from "../auth/workos.js";
 import { BaseCommandOptions } from "../commands/BaseCommandOptions.js";
 import { PermissionMode } from "../permissions/types.js";
 

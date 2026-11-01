@@ -14,8 +14,6 @@ import type {
   TerminalOptions,
   Thread,
 } from "../";
-import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes";
-
 export interface GetGhTokenArgs {
   force?: boolean;
 }
@@ -88,11 +86,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getReferences: [{ location: Location }, RangeInFile[]];
   getDocumentSymbols: [{ textDocumentIdentifier: string }, DocumentSymbol[]];
 
-  getControlPlaneSessionInfo: [
-    { silent: boolean; useOnboarding: boolean },
-    ControlPlaneSessionInfo | undefined,
-  ];
-  logoutOfControlPlane: [undefined, void];
   reportError: [any, void];
   closeSidebar: [undefined, void];
 };

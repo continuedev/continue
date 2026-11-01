@@ -14,9 +14,6 @@
       "model": "this field is not used"
     }
   ],
-  "analytics": {
-    "provider": "continue-proxy"
-  },
   "tabAutocompleteModel": {
     "title": "TEST LLM",
     "provider": "test",

@@ -30,3 +30,37 @@ h6[id] {
     background-color: transparent;
   }
 }
+
+/* Fix: Cmd+K search modal dark mode - popover/background CSS vars unset */
+.dark [role="dialog"].bg-background {
+  background-color: #1a1a1a;
+  border-color: #333;
+}
+
+.dark .bg-popover {
+  background-color: #1a1a1a;
+}
+
+.dark .text-popover-foreground {
+  color: #e5e5e5;
+}
+
+.dark [cmdk-item] {
+  color: #e5e5e5;
+}
+
+.dark [cmdk-item][data-selected="true"] {
+  background-color: #333;
+}
+
+.dark [cmdk-input] {
+  color: #e5e5e5;
+}
+
+.dark [cmdk-separator] {
+  background-color: #333;
+}
+
+.dark [cmdk-group-heading] {
+  color: #999;
+}

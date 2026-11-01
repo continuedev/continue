@@ -18,18 +18,11 @@ import CLIInstall from '/snippets/cli-install.mdx'
   - Automate Atlassian workflows with headless CLI runs
 </Card>
 
-<Info>
-  The new [Atlassian Mission Control Integration](/mission-control/integrations/atlassian) enables **[Continuous AI](/guides/continuous-ai)** for project management and documentation - where AI agents autonomously manage Jira issues, sync Confluence documentation, and streamline development workflows. This cookbook focuses on CLI-based workflows, but you can also deploy autonomous agents through Mission Control.
-
-  **Get Started:** Use this cookbook to understand Atlassian MCP fundamentals, then [enable Mission Control](/mission-control/integrations/atlassian) to deploy autonomous project management agents across your organization.
-</Info>
 
 ## Prerequisites
 
 Before starting, ensure you have:
 
-- Continue account with **Hub access**
-  - Read: [Understanding Configs — How to get started with Hub configs](/guides/understanding-configs#how-to-get-started-with-hub-configs)
 - Node.js 18+ installed locally
 - An Atlassian Cloud site with Jira, Confluence, and/or Compass
 - Access to the Atlassian products you want to integrate with
@@ -75,7 +68,7 @@ For all options, first:
   <Tab title="📋 Jira Agent (Recommended for Issue Management)">
     <Steps>
       <Step title="Use the Jira Agent">
-        Visit the [Atlassian Continuous AI - Jira Agent](https://continue.dev/continuedev/atlassian-continuous-ai-jira-agent) on Continue Mission Control. This agent is optimized for:
+        Use the Atlassian Continuous AI - Jira Agent. This agent is optimized for:
         - Searching and filtering Jira issues
         - Creating and updating issues
         - Sprint planning and workload analysis
@@ -109,7 +102,7 @@ For all options, first:
   <Tab title="📄 Confluence Agent (Recommended for Documentation)">
     <Steps>
       <Step title="Use the Confluence Agent">
-        Visit the [Atlassian Continuous AI - Confluence Agent](https://continue.dev/continuedev/atlassian-continuous-ai-confluence-agent) on Continue Mission Control. This agent is optimized for:
+        Use the Atlassian Continuous AI - Confluence Agent. This agent is optimized for:
         - Searching and summarizing documentation
         - Creating and updating Confluence pages
         - Managing spaces and content
@@ -142,12 +135,8 @@ For all options, first:
 
   <Tab title="🛠️ Manual Setup">
     <Steps>
-      <Step title="Create a New Agent on Continue Mission Control">
-        Go to the [Continue Mission Control](https://continue.dev) and [create a new agent](https://continue.dev/agents/new).
-      </Step>
-
       <Step title="Add Atlassian MCP">
-        Install from Hub (recommended) or add YAML manually. Minimal YAML example:
+        Add the Atlassian MCP to your configuration. Minimal YAML example:
 
         ```yaml title="config.yaml"
         name: My Config
@@ -181,7 +170,7 @@ For all options, first:
 <Accordion title="Agent Requirements">
     To use Atlassian MCP with Continue CLI, you need either:
       - **Continue CLI Pro Plan** with the models add-on, OR
-      - **Your own API keys** added to Continue Mission Control secrets
+      - **Your own API keys** configured as environment variables
 
     The agent will automatically detect and use your configuration along with the Atlassian MCP for Jira, Confluence, and Compass operations.
 
@@ -498,8 +487,8 @@ After completing this guide, you have a complete **AI-powered Atlassian workflow
   <Card title="MCP in Continue" icon="book" href="/customize/deep-dives/mcp">
     How MCP works with Continue agents
   </Card>
-  <Card title="Continue Mission Control" icon="globe" href="https://continue.dev">
-    Create and manage your agents
+  <Card title="Continue Documentation" icon="book" href="https://docs.continue.dev">
+    Continue documentation and guides
   </Card>
   <Card title="Atlassian Community" icon="users" href="https://community.atlassian.com/">
     Get help and share feedback

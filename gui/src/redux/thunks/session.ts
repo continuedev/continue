@@ -1,6 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { BaseSessionMetadata, ChatMessage, Session } from "core";
-import { RemoteSessionMetadata } from "core/control-plane/client";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { renderChatMessage } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
@@ -32,19 +31,8 @@ export async function getSession(
   return result.content;
 }
 
-export async function getRemoteSession(
-  ideMessenger: IIdeMessenger,
-  remoteId: string,
-): Promise<Session> {
-  const result = await ideMessenger.request("history/loadRemote", { remoteId });
-  if (result.status === "error") {
-    throw new Error(result.error);
-  }
-  return result.content;
-}
-
 export const refreshSessionMetadata = createAsyncThunk<
-  RemoteSessionMetadata[] | BaseSessionMetadata[],
+  BaseSessionMetadata[],
   {
     offset?: number;
     limit?: number;
@@ -121,38 +109,6 @@ export const loadSession = createAsyncThunk<
     // Restore selected chat model from session, if present
     if (session.chatModelTitle) {
       void dispatch(selectChatModelForProfile(session.chatModelTitle));
-    }
-  },
-);
-
-export const loadRemoteSession = createAsyncThunk<
-  void,
-  {
-    remoteId: string;
-    saveCurrentSession: boolean;
-  },
-  ThunkApiType
->(
-  "session/loadRemote",
-  async (
-    { remoteId, saveCurrentSession: save },
-    { extra, dispatch, getState },
-  ) => {
-    if (save) {
-      const result = await dispatch(
-        saveCurrentSession({
-          openNewSession: false,
-          generateTitle: true,
-        }),
-      );
-      unwrapResult(result);
-    }
-    const session = await getRemoteSession(extra.ideMessenger, remoteId);
-    dispatch(newSession(session));
-
-    // Restore selected chat model from session, if present
-    if (session.chatModelTitle) {
-      dispatch(selectChatModelForProfile(session.chatModelTitle));
     }
   },
 );

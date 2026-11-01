@@ -14,7 +14,6 @@ export const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
   contextProviders: [],
   tools: [],
   mcpServerStatuses: [],
-  usePlatform: true,
   modelsByRole: {
     chat: [],
     apply: [],
