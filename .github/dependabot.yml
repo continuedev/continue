@@ -1,8 +1,91 @@
 version: 2
+
+# Every npm workspace in this monorepo has its own package-lock.json and is
+# installed independently, so each one must be listed explicitly.
+# `directories` lets a single entry (and a single set of groups) cover them all.
 updates:
-  - package-ecosystem: github-actions
-    directory: "/"
+  - package-ecosystem: npm
+    directories:
+      - "/"
+      - "/core"
+      - "/gui"
+      - "/binary"
+      - "/docs"
+      - "/extensions/vscode"
+      - "/extensions/cli"
+      - "/packages/config-types"
+      - "/packages/config-yaml"
+      - "/packages/continue-sdk"
+      - "/packages/fetch"
+      - "/packages/llm-info"
+      - "/packages/openai-adapters"
+      - "/packages/terminal-security"
     schedule:
-      interval: daily
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+    ignore:
+      # ink 6.8.0 breaks Esc/key handling in extensions/cli TUIChat tests
+      # (works through 6.7.0). Remove once the CLI is adapted.
+      - dependency-name: ink
+        versions: ["6.8.x"]
+    groups:
+      # Minor/patch bumps are batched into one PR per directory; majors stay
+      # individual so they can be reviewed (and reverted) on their own.
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directories:
+      - "/"
+      - "/.github/actions/*"
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+    groups:
+      github-actions:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: dtolnay/rust-toolchain
+
+  - package-ecosystem: cargo
+    directory: "/sync"
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+    groups:
+      cargo-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: gradle
+    directory: "/extensions/intellij"
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+
+  - package-ecosystem: docker
+    directory: "/manual-testing-sandbox"
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+
+  - package-ecosystem: pip
+    directory: "/manual-testing-sandbox"
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies

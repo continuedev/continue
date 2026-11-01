@@ -13,8 +13,8 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.44",
-    "@ai-sdk/google": "^3.0.30",
     "@ai-sdk/deepseek": "^2.0.20",
+    "@ai-sdk/google": "^3.0.30",
     "@ai-sdk/openai": "^3.0.29",
     "@ai-sdk/xai": "^3.0.57",
     "@anthropic-ai/sdk": "^0.67.0",
@@ -48,6 +48,7 @@
     "semantic-release": "^24.2.7",
     "ts-jest": "^29.2.3",
     "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },
   "overrides": {

@@ -20,7 +20,7 @@ jobs:
       - id: check
         working-directory: .
         run: |
-          if [[ "${{ github.event.release.tag_name }}" == v1.2.*-vscode ]]; then
+          if [[ "${{ github.event.release.tag_name }}" == v*-vscode ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
@@ -132,8 +132,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           files: |
             vsix-artifacts/*.vsix
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
-          repository: continuedev/continue
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
     runs-on: ubuntu-latest
@@ -142,6 +141,11 @@ jobs:
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true'
     permissions:
       contents: write
+    env:
+      # Marketplace publishing is optional: each step below is skipped unless
+      # the matching repository secret exists.
+      VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
+      OVSX_PAT: ${{ secrets.VSX_REGISTRY_TOKEN }}
     steps:
       # 0. Setup git
       - name: Checkout
@@ -164,15 +168,15 @@ jobs:
 
       # 2. Publish the extension to VS Code Marketplace
       - name: Publish to VS Code Marketplace
+        if: env.VSCE_PAT != ''
         run: |
           cd extensions/vscode
-          npx @vscode/vsce publish --packagePath ../../vsix-artifacts/*.vsix
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
+          for f in ../../vsix-artifacts/*.vsix; do npx @vscode/vsce publish --packagePath "$f"; done
 
       # 3. Publish the extension to Open VSX Registry
       - name: Publish (Open VSX Registry)
+        if: env.OVSX_PAT != ''
         continue-on-error: true
         run: |
           cd extensions/vscode
-          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../vsix-artifacts/*.vsix
+          for f in ../../vsix-artifacts/*.vsix; do npx ovsx publish --packagePath "$f"; done

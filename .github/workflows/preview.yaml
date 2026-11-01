@@ -20,7 +20,7 @@ jobs:
       - id: check
         working-directory: .
         run: |
-          if [[ "${{ github.event.release.tag_name }}" == v1.3.*-vscode ]]; then
+          if [[ "${{ github.event.release.tag_name }}" == v*-vscode ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
@@ -116,8 +116,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           files: |
             vsix-artifacts/*.vsix
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
-          repository: continuedev/continue
+          token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: true
 
   publish:
@@ -128,6 +127,11 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    env:
+      # Marketplace publishing is optional: each step below is skipped unless
+      # the matching repository secret exists.
+      VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
+      OVSX_PAT: ${{ secrets.VSX_REGISTRY_TOKEN }}
     steps:
       # 0. Setup git
       - name: Checkout
@@ -150,18 +154,18 @@ jobs:
 
       # 2. Publish the extension to VS Code Marketplace
       - name: Publish to VS Code Marketplace
+        if: env.VSCE_PAT != ''
         run: |
           cd extensions/vscode
-          npx @vscode/vsce publish --pre-release --packagePath ../../vsix-artifacts/*.vsix
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
+          for f in ../../vsix-artifacts/*.vsix; do npx @vscode/vsce publish --pre-release --packagePath "$f"; done
 
       # 3. Publish the extension to Open VSX Registry
       - name: Publish (Open VSX Registry)
+        if: env.OVSX_PAT != ''
         continue-on-error: true
         run: |
           cd extensions/vscode
-          npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../vsix-artifacts/*.vsix
+          for f in ../../vsix-artifacts/*.vsix; do npx ovsx publish --pre-release --packagePath "$f"; done
 
       # 4. Create PR with version bump
       - name: Setup Node.js
@@ -185,7 +189,9 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          # Falls back to GITHUB_TOKEN (requires "Allow GitHub Actions to create
+          # pull requests" in repo settings) when no PAT is configured.
+          token: ${{ secrets.CI_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           commit-message: "chore: bump vscode extension version to ${{ env.NEW_VERSION }}"
           title: "chore: bump vscode extension version to ${{ env.NEW_VERSION }}"
           body: |
