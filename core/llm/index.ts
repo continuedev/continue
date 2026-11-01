@@ -187,6 +187,8 @@ export abstract class BaseLLM implements ILLM {
   profile?: string | undefined;
   accessKeyId?: string;
   secretAccessKey?: string;
+  sessionToken?: string;
+  crossRegionInference?: string;
 
   // For IBM watsonx
   deploymentId?: string;
@@ -299,6 +301,8 @@ export abstract class BaseLLM implements ILLM {
     this.profile = options.profile;
     this.accessKeyId = options.accessKeyId;
     this.secretAccessKey = options.secretAccessKey;
+    this.sessionToken = options.sessionToken;
+    this.crossRegionInference = options.crossRegionInference;
 
     this.openaiAdapter = this.createOpenAiAdapter();
 

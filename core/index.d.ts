@@ -697,6 +697,8 @@ export interface LLMOptions {
   modelArn?: string;
   accessKeyId?: string;
   secretAccessKey?: string;
+  sessionToken?: string;
+  crossRegionInference?: string;
 
   // AWS and VertexAI Options
   region?: string;

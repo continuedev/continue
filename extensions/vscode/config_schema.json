@@ -365,6 +365,27 @@
           "description": "The AWS security profile to use",
           "type": "string"
         },
+        "sessionToken": {
+          "title": "Session Token",
+          "description": "AWS session token for temporary credentials (use together with accessKeyId and secretAccessKey)",
+          "type": "string"
+        },
+        "crossRegionInference": {
+          "title": "Cross-Region Inference",
+          "description": "Bedrock only. Prefix the model ID with a cross-region inference profile: 'auto' picks us/eu/apac from the region, or choose one explicitly. Leave unset if the model ID already includes a prefix like 'us.'",
+          "type": "string",
+          "enum": [
+            "auto",
+            "us",
+            "us-gov",
+            "eu",
+            "apac",
+            "jp",
+            "au",
+            "ca",
+            "global"
+          ]
+        },
         "accessKeyId": {
           "title": "Access Key ID",
           "description": "AWS access key id (can be used together with secretAccessKey in place of profile)",
@@ -2914,6 +2935,27 @@
               "title": "Profile",
               "description": "The AWS security profile to use",
               "type": "string"
+            },
+            "sessionToken": {
+              "title": "Session Token",
+              "description": "AWS session token for temporary credentials (use together with accessKeyId and secretAccessKey)",
+              "type": "string"
+            },
+            "crossRegionInference": {
+              "title": "Cross-Region Inference",
+              "description": "Bedrock only. Prefix the model ID with a cross-region inference profile: 'auto' picks us/eu/apac from the region, or choose one explicitly. Leave unset if the model ID already includes a prefix like 'us.'",
+              "type": "string",
+              "enum": [
+                "auto",
+                "us",
+                "us-gov",
+                "eu",
+                "apac",
+                "jp",
+                "au",
+                "ca",
+                "global"
+              ]
             },
             "accessKeyId": {
               "title": "Access Key ID",

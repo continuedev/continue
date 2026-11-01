@@ -19,6 +19,8 @@ const ENV_STRING_KEYS = [
   "profile",
   "accessKeyId",
   "secretAccessKey",
+  "sessionToken",
+  "crossRegionInference",
   "modelArn",
   "aiGatewaySlug",
   "accountId",

@@ -12,46 +12,69 @@ sidebarTitle: "Amazon Bedrock"
   Get started with [Amazon Bedrock](https://aws.amazon.com/bedrock/)
 </Info>
 
-## Configuration
+## Quick start
 
-<Tabs>
-  <Tab title="YAML">
-  ```yaml title="config.yaml"
-  name: My Config
-  version: 0.0.1
-  schema: v1
+1. In the [Bedrock console](https://console.aws.amazon.com/bedrock), open **Model access** and enable the models you want in your region.
+2. Pick an authentication method below (an API key is the fastest).
+3. Add a model to `config.yaml`:
 
-  models:
-    - name: <MODEL_NAME>
-      provider: bedrock
-      model: <MODEL_ID>
-      env:
-        region: us-east-1
-        profile: bedrock
-      roles:
-        - chat
-  ```
-  </Tab>
-  <Tab title="JSON (Deprecated)">
-  ```json title="config.json"
-  {
-    "models": [
-      {
-        "title": "<MODEL_NAME>",
-        "provider": "bedrock",
-        "model": "<MODEL_ID>",
-        "region": "us-east-1",
-        "profile": "bedrock"
-      }
-    ]
-  }
-  ```
-  </Tab>
-</Tabs>
+```yaml title="config.yaml"
+name: My Config
+version: 0.0.1
+schema: v1
+
+models:
+  - name: Claude Sonnet
+    provider: bedrock
+    model: anthropic.claude-sonnet-4-20250514-v1:0
+    apiKey: ${{ secrets.BEDROCK_API_KEY }}
+    env:
+      region: us-east-1
+      crossRegionInference: auto
+    roles:
+      - chat
+```
 
 <Info>
   **Check out a more advanced configuration [here](https://continue.dev/amazon/us-anthropic-claude-sonnet-4-20250514-v1?view=config)**
 </Info>
+
+## Which authentication method should I use?
+
+| Method | Best for | Fields |
+| --- | --- | --- |
+| [Bedrock API key](#bedrock-api-key) | Getting started quickly, personal use | `apiKey` |
+| [AWS profile / SSO](#aws-profile-and-sso) | Work accounts, SSO or federated roles (recommended for teams) | `env.profile` |
+| [Access keys](#access-keys) | CI, scripts, or temporary STS credentials | `env.accessKeyId`, `env.secretAccessKey`, `env.sessionToken` |
+| [Environment / default chain](#environment-variables-and-the-default-credential-chain) | Existing AWS setup, EC2/ECS/Lambda roles | nothing |
+
+If you configure nothing, Continue uses the standard AWS credential chain, so an existing `aws configure` or `aws sso login` setup works without any Continue-specific settings.
+
+## Cross-region inference
+
+Many newer models (for example Claude Sonnet 4) can only be invoked through an
+*inference profile*, which has a regional prefix such as `us.`, `eu.`, `apac.`
+or `global.`. If you see an error like "on-demand throughput isn't supported",
+set `crossRegionInference` instead of editing the model ID by hand:
+
+```yaml title="config.yaml"
+models:
+  - name: Claude Sonnet
+    provider: bedrock
+    model: anthropic.claude-sonnet-4-20250514-v1:0
+    env:
+      region: eu-west-1
+      crossRegionInference: auto # becomes eu.anthropic.claude-sonnet-4-20250514-v1:0
+```
+
+| Value | Effect |
+| --- | --- |
+| `auto` | Chooses `us`, `us-gov`, `eu` or `apac` from `region` |
+| `us`, `us-gov`, `eu`, `apac`, `jp`, `au`, `ca`, `global` | Uses that prefix explicitly |
+| *(unset)* | Model ID is used exactly as written |
+
+Model IDs that already start with a prefix (such as `us.anthropic...`) and
+inference profile ARNs are never modified.
 
 ## How to Enable Prompt Caching with Amazon Bedrock
 
@@ -75,53 +98,69 @@ models:
 
 Prompt caching is not supported in JSON configuration files, so use the YAML syntax above to enable it.
 
-## How to Set Up Authentication for Amazon Bedrock
+## Authentication
 
-### Bedrock API Keys
+### Bedrock API key
 
-[Bedrock API keys](https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html) let you authenticate without IAM credentials. Set your API key via the `apiKey` field:
+[Bedrock API keys](https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html) are the simplest option. Create a long-term key in the Bedrock console (**API keys**) and set it with `apiKey`:
 
 ```yaml title="config.yaml"
 models:
   - name: Claude Sonnet
     provider: bedrock
-    model: us.anthropic.claude-sonnet-4-20250514-v1:0
+    model: anthropic.claude-sonnet-4-20250514-v1:0
     apiKey: ${{ secrets.BEDROCK_API_KEY }}
     env:
       region: us-east-1
+      crossRegionInference: auto
     roles:
       - chat
 ```
 
-### AWS Credentials
+You can also export the key as `AWS_BEARER_TOKEN_BEDROCK` and omit `apiKey`. The
+variable is ignored if you set `profile` or access keys explicitly.
 
-Authentication will be through temporary or long-term credentials in
-`~/.aws/credentials` under a configured profile (e.g. "bedrock").
+### AWS profile and SSO
 
-```title="~/.aws/credentials
-[bedrock]
-aws_access_key_id = abcdefg
-aws_secret_access_key = hijklmno
-aws_session_token = pqrstuvwxyz # Optional: means short term creds.
+Use this for work accounts. Continue never sees your keys; it reads the profile
+from `~/.aws/config`.
+
+```bash
+aws configure sso --profile my-bedrock   # one-time setup
+aws sso login --profile my-bedrock       # whenever the session expires
 ```
 
-You can also use an AWS `accessKeyId` and `secretAccessKey` for authentication instead of a local credentials profile.
+```yaml title="config.yaml"
+models:
+  - name: Claude Sonnet
+    provider: bedrock
+    model: anthropic.claude-sonnet-4-20250514-v1:0
+    env:
+      region: us-east-1
+      profile: my-bedrock
+      crossRegionInference: auto
+    roles:
+      - chat
+```
+
+If you set `profile` and it can't be loaded, Continue reports an error (with an
+`aws sso login` hint when the SSO session has expired) rather than silently
+using a different profile.
+
+### Access keys
 
 <Tabs>
   <Tab title="YAML">
   ```yaml title="config.yaml"
-  name: My Config
-  version: 0.0.1
-  schema: v1
-
   models:
     - name: <MODEL_NAME>
       provider: bedrock
       model: <MODEL_ID>
       env:
         region: us-east-1
-        accessKeyId: ${{ secrets.AWS_ACCESS_KEY_ID }} # can also enter key inline here for local configs
-        secretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # can also enter key inline here for local configs
+        accessKeyId: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        secretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        sessionToken: ${{ secrets.AWS_SESSION_TOKEN }} # only for temporary credentials
       roles:
         - chat
   ```
@@ -136,13 +175,38 @@ You can also use an AWS `accessKeyId` and `secretAccessKey` for authentication i
         "model": "<MODEL_ID>",
         "region": "us-east-1",
         "accessKeyId": "<YOUR_ACCESS_KEY_ID>",
-        "secretAccessKey": "<YOUR_SECRET_ACCESS_KEY>" 
+        "secretAccessKey": "<YOUR_SECRET_ACCESS_KEY>",
+        "sessionToken": "<OPTIONAL_SESSION_TOKEN>"
       }
     ]
   }
   ```
   </Tab>
 </Tabs>
+
+### Environment variables and the default credential chain
+
+With no `apiKey`, `profile` or keys configured, Continue first tries a profile
+named `bedrock` (for backwards compatibility) and then the standard AWS chain:
+`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN`, the
+`[default]` profile, SSO, and container or instance roles.
+
+### Required permissions
+
+Chat needs `bedrock:InvokeModel` and `bedrock:InvokeModelWithResponseStream`.
+For inference profiles, grant them on the profile ARN as well as the underlying
+foundation models in each region. Bedrock API keys additionally need
+`bedrock:CallWithBearerToken`.
+
+## Troubleshooting
+
+| Error | Fix |
+| --- | --- |
+| "on-demand throughput isn't supported" | Set `crossRegionInference: auto` |
+| "You don't have access to the model" | Enable the model under **Model access** in the Bedrock console, in the same region |
+| AWS SSO session expired | Run `aws sso login --profile <name>` |
+| "Could not load credentials" | Configure one of the methods above |
+| Anthropic "use case details" prompt | Open the Bedrock Playground, choose an Anthropic model and submit the form |
 
 ## How to Configure Custom Imported Models with Amazon Bedrock
 

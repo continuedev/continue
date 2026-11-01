@@ -25,6 +25,10 @@ import { parseDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { getSecureID } from "../utils/getSecureID.js";
+import {
+  applyCrossRegionInference,
+  getBedrockErrorHint,
+} from "./bedrockHelpers.js";
 
 interface ModelConfig {
   formatPayload: (text: string) => any;
@@ -58,8 +62,12 @@ class Bedrock extends BaseLLM {
     headers?: Record<string, string>;
   };
 
+  /** True when the user configured `profile` (vs. the built-in default). */
+  private _profileExplicit: boolean;
+
   constructor(options: LLMOptions) {
     super(options);
+    this._profileExplicit = !!options.profile;
     if (!options.apiBase) {
       this.apiBase = `https://bedrock-runtime.${options.region}.amazonaws.com`;
     }
@@ -71,12 +79,13 @@ class Bedrock extends BaseLLM {
   }
 
   private async _getClient(): Promise<BedrockRuntimeClient> {
-    if (this.apiKey) {
+    const apiKey = this._resolveApiKey();
+    if (apiKey) {
       // Bedrock API key authentication (bearer token)
       return new BedrockRuntimeClient({
         region: this.region,
         endpoint: this.apiBase,
-        token: async () => ({ token: this.apiKey! }),
+        token: async () => ({ token: apiKey }),
       });
     }
 
@@ -88,9 +97,22 @@ class Bedrock extends BaseLLM {
       credentials: {
         accessKeyId: credentials.accessKeyId,
         secretAccessKey: credentials.secretAccessKey,
-        sessionToken: credentials.sessionToken || "",
+        sessionToken: credentials.sessionToken || undefined,
       },
     });
+  }
+
+  /**
+   * `apiKey` wins; otherwise fall back to the AWS_BEARER_TOKEN_BEDROCK env var
+   * (the same variable the AWS SDK/CLI use) unless the user chose IAM keys or
+   * a named profile explicitly.
+   */
+  private _resolveApiKey(): string | undefined {
+    if (this.apiKey) return this.apiKey;
+    if ((this.accessKeyId && this.secretAccessKey) || this._profileExplicit) {
+      return undefined;
+    }
+    return process.env.AWS_BEARER_TOKEN_BEDROCK || undefined;
   }
 
   protected async *_streamComplete(
@@ -105,6 +127,31 @@ class Bedrock extends BaseLLM {
   }
 
   protected async *_streamChat(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    try {
+      yield* this._streamChatInner(messages, signal, options);
+    } catch (e) {
+      throw this._withHint(e);
+    }
+  }
+
+  /** Append an actionable hint (SSO login, model access, ...) to known AWS errors. */
+  private _withHint(e: unknown): unknown {
+    if (!(e instanceof Error)) return e;
+    const hint = getBedrockErrorHint(e, {
+      profile: this._profileExplicit ? this.profile : undefined,
+      region: this.region,
+    });
+    if (hint && !e.message.includes(hint)) {
+      e.message = `${e.message}\n\n${hint}`;
+    }
+    return e;
+  }
+
+  private async *_streamChatInner(
     messages: ChatMessage[],
     signal: AbortSignal,
     options: CompletionOptions,
@@ -317,7 +364,11 @@ class Bedrock extends BaseLLM {
     const convertedMessages = this._convertMessages(messages, availableTools);
 
     return {
-      modelId: options.model,
+      modelId: applyCrossRegionInference(
+        options.model,
+        this.crossRegionInference,
+        this.region,
+      ),
       system: systemMessage
         ? shouldCacheSystemMessage
           ? [{ text: systemMessage }, { cachePoint: { type: "default" } }]
@@ -591,25 +642,37 @@ class Bedrock extends BaseLLM {
     return blocks;
   }
 
+  /** Seam over the AWS SDK credential chain (overridden in tests). */
+  protected async _credentialChain(profile: string | undefined) {
+    return fromNodeProviderChain({ profile, ignoreCache: true })();
+  }
+
   private async _getCredentials() {
     if (this.accessKeyId && this.secretAccessKey) {
       return {
         accessKeyId: this.accessKeyId,
         secretAccessKey: this.secretAccessKey,
+        ...(this.sessionToken ? { sessionToken: this.sessionToken } : {}),
       };
     }
-    const profile = this.profile ?? "bedrock";
+
     try {
-      return await fromNodeProviderChain({
-        profile: profile,
-        ignoreCache: true,
-      })();
+      if (this._profileExplicit) {
+        // The user asked for this profile: don't silently use another one.
+        return await this._credentialChain(this.profile);
+      }
+
+      // Nothing configured. Keep honouring the historical "bedrock" profile if
+      // it exists, then fall back to the standard AWS chain (env vars,
+      // [default] profile, SSO, container/instance roles, ...).
+      try {
+        return await this._credentialChain("bedrock");
+      } catch {
+        return await this._credentialChain(undefined);
+      }
     } catch (e) {
-      console.warn(
-        `AWS profile with name ${profile} not found in ~/.aws/credentials, using default profile`,
-      );
+      throw this._withHint(e);
     }
-    return await fromNodeProviderChain()();
   }
 
   // EMBED //
