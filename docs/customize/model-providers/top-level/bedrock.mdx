@@ -291,6 +291,39 @@ foundation models in each region. Bedrock API keys additionally need
 only work with Bedrock and Bedrock Runtime actions, which covers everything Continue
 does.
 
+## Corporate proxies and TLS inspection
+
+Bedrock requests use the same `requestOptions` as every other model, so they work behind an HTTP(S) proxy and a TLS-inspecting firewall without extra tooling:
+
+```yaml title="config.yaml"
+models:
+  - name: Claude Sonnet
+    provider: bedrock
+    model: us.anthropic.claude-sonnet-4-6
+    apiKey: ${{ secrets.BEDROCK_API_KEY }}
+    env:
+      region: us-east-1
+    requestOptions:
+      useSystemCa: true              # trust the OS certificate store (default on Windows and macOS)
+      # caBundlePath: /path/to/corp-root.pem   # or point at the root certificate directly
+      # proxy: http://proxy.corp:3128
+      # noProxy: [".internal.example.com"]
+```
+
+| Setting | What it does |
+| --- | --- |
+| `useSystemCa` | Also trusts the operating system's certificate store. On by default for Windows and macOS, off on Linux. Needs Node.js 22.15 or newer. |
+| `caBundlePath` | Trusts the certificates in a PEM file (or a list of files). `NODE_EXTRA_CA_CERTS` is honoured too. |
+| `proxy` / `noProxy` | Uses the given proxy; falls back to `HTTPS_PROXY` / `NO_PROXY` from the environment. Proxy credentials go in the URL (`http://user:pass@host:3128`). |
+| `verifySsl: false` | Skips certificate verification. Only for debugging. |
+| `clientCertificate` | Presents a client certificate (`cert`, `key`, optional `passphrase`). |
+
+These apply to model requests, model listing and **Test connection**.
+
+When none of these are needed Continue leaves the AWS SDK's own networking alone. When one is, it switches the SDK to HTTP/1.1 through Continue's proxy-aware agent; streaming works the same.
+
+If the certificate isn't trusted you'll see an error such as "unable to get local issuer certificate", followed by a hint pointing at `useSystemCa` and `caBundlePath`.
+
 ## Troubleshooting
 
 | Error | Fix |
@@ -299,6 +332,8 @@ does.
 | "You don't have access to the model" | Enable the model under **Model access** in the Bedrock console, in the same region |
 | AWS SSO session expired | Run `aws sso login --profile <name>` |
 | "Could not load credentials" | Configure one of the methods above |
+| "unable to get local issuer certificate" / "self-signed certificate" | Your network inspects TLS. Set `requestOptions.useSystemCa: true` or `caBundlePath` ([details](#corporate-proxies-and-tls-inspection)) |
+| 407 Proxy Authentication Required | Put credentials in the proxy URL, e.g. `requestOptions.proxy: http://user:pass@proxy:3128` |
 | Anthropic "use case details" prompt | Open the Bedrock Playground, choose an Anthropic model and submit the form |
 
 ## How to Configure Custom Imported Models with Amazon Bedrock

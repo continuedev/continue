@@ -80,3 +80,66 @@ describe("BedrockApi credentials", () => {
     expect(make().extraConverseFields()).toEqual({});
   });
 });
+
+describe("BedrockApi networking (requestOptions)", () => {
+  const SAVED = { ...process.env };
+  const clear = () => {
+    for (const k of [
+      "HTTPS_PROXY",
+      "https_proxy",
+      "HTTP_PROXY",
+      "http_proxy",
+      "NO_PROXY",
+      "no_proxy",
+    ]) {
+      delete process.env[k];
+    }
+  };
+  afterEach(() => {
+    process.env = { ...SAVED };
+  });
+
+  const handlerOf = async (config: any) => {
+    const api = new TestApi({
+      provider: "bedrock",
+      apiKey: "k",
+      ...config,
+    } as any) as any;
+    const client = await api.getClient();
+    return client.config.requestHandler;
+  };
+
+  it("keeps the SDK's default handler when nothing is configured (Linux)", async () => {
+    clear();
+    const handler = await handlerOf({});
+    if (process.platform === "linux") {
+      expect(handler.constructor.name).not.toBe("NodeHttpHandler");
+    }
+  });
+
+  it.each([
+    ["caBundlePath", { caBundlePath: "/does/not/matter.pem" }],
+    ["useSystemCa", { useSystemCa: true }],
+    ["verifySsl=false", { verifySsl: false }],
+    ["proxy", { proxy: "http://proxy.corp:3128" }],
+  ])("uses a custom handler for %s", async (_name, requestOptions) => {
+    clear();
+    const handler = await handlerOf({ requestOptions });
+    expect(handler.constructor.name).toBe("NodeHttpHandler");
+  });
+
+  it("picks up HTTPS_PROXY from the environment", async () => {
+    clear();
+    process.env.HTTPS_PROXY = "http://envproxy:8080";
+    const handler = await handlerOf({});
+    expect(handler.constructor.name).toBe("NodeHttpHandler");
+  });
+
+  it("does not proxy hosts listed in noProxy", async () => {
+    clear();
+    const handler = await handlerOf({
+      requestOptions: { proxy: "http://proxy:1", noProxy: ["*.amazonaws.com"] },
+    });
+    expect(handler.constructor.name).not.toBe("NodeHttpHandler");
+  });
+});
