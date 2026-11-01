@@ -11,69 +11,6 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Checks",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "icon": "rocket-launch",
-            "pages": [
-              "index",
-              "checks/quickstart",
-              "checks/running-locally",
-              "checks/running-in-ci"
-            ]
-          },
-          {
-            "group": "Writing Checks",
-            "icon": "pencil",
-            "pages": [
-              "checks/generating-checks",
-              "checks/best-practices",
-              "checks/iterating",
-              "checks/reference"
-            ]
-          },
-          {
-            "group": "Mission Control",
-            "icon": "globe",
-            "expanded": false,
-            "pages": [
-              "mission-control/beyond-checks",
-              {
-                "group": "Integrations",
-                "pages": [
-                  "mission-control/integrations/github",
-                  "mission-control/integrations/sentry",
-                  "mission-control/integrations/snyk",
-                  "mission-control/integrations/slack",
-                  "mission-control/integrations/posthog",
-                  "mission-control/integrations/atlassian",
-                  "mission-control/integrations/netlify",
-                  "mission-control/integrations/supabase"
-                ]
-              },
-              "mission-control/metrics"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "CLI",
-        "groups": [
-          {
-            "group": "CLI",
-            "icon": "terminal",
-            "pages": [
-              "cli/quickstart",
-              "cli/tui-mode",
-              "cli/headless-mode",
-              "cli/configuration",
-              "cli/tool-permissions"
-            ]
-          }
-        ]
-      },
-      {
         "tab": "IDE Extensions",
         "groups": [
           {
@@ -209,11 +146,11 @@
                   "customize/deep-dives/autocomplete",
                   "customize/deep-dives/development-data",
                   "customize/deep-dives/mcp",
+                  "customize/deep-dives/mcp-examples",
                   "customize/deep-dives/custom-providers",
                   "customize/deep-dives/model-capabilities"
                 ]
-              },
-              "customize/telemetry"
+              }
             ]
           },
           {
@@ -250,58 +187,33 @@
             "group": "Help",
             "icon": "book-open",
             "expanded": false,
-            "pages": ["faqs", "troubleshooting", "CONTRIBUTING"]
-          },
+            "pages": ["faqs", "troubleshooting"]
+          }
+        ]
+      },
+      {
+        "tab": "CLI",
+        "groups": [
           {
-            "group": "Continue Hub (deprecated)",
-            "expanded": false,
-            "icon": "box-archive",
+            "group": "CLI",
+            "icon": "terminal",
             "pages": [
-              {
-                "group": "Secrets",
-                "pages": [
-                  "mission-control/secrets/secret-types",
-                  "mission-control/secrets/secret-resolution"
-                ]
-              },
-              {
-                "group": "Configs",
-                "pages": [
-                  "mission-control/configs/intro",
-                  "mission-control/configs/use-a-config",
-                  "mission-control/configs/create-a-config",
-                  "mission-control/configs/edit-a-config"
-                ]
-              }
+              "cli/quickstart",
+              "cli/tui-mode",
+              "cli/headless-mode",
+              "cli/configuration",
+              "cli/tool-permissions"
             ]
           }
         ]
       }
     ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "About Us",
-          "href": "https://continue.dev/about-us",
-          "icon": "book-open"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://continue.dev/blog",
-          "icon": "newspaper"
-        },
-        {
-          "anchor": "Changelog",
-          "href": "https://changelog.continue.dev/",
-          "icon": "bullhorn"
-        }
-      ]
-    }
+    "global": {}
   },
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg",
-    "href": "https://continue.dev"
+    "href": "https://docs.continue.dev"
   },
   "background": {
     "color": {
@@ -309,12 +221,6 @@
     }
   },
   "navbar": {
-    "links": [
-      {
-        "label": "🚀 Get Started",
-        "href": "https://continue.dev/"
-      }
-    ],
     "primary": {
       "type": "github",
       "href": "https://github.com/continuedev/continue"
@@ -339,9 +245,6 @@
   "integrations": {
     "ga4": {
       "measurementId": "G-M3JWW8N2XQ"
-    },
-    "posthog": {
-      "apiKey": "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs"
     }
   },
   "custom": {
@@ -360,90 +263,6 @@
     {
       "source": "/changelog",
       "destination": "https://changelog.continue.dev"
-    },
-    {
-      "source": "/hub",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/hub/introduction",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/hub/configs/intro",
-      "destination": "/mission-control/configs/intro"
-    },
-    {
-      "source": "/hub/configs/use-a-config",
-      "destination": "/mission-control/configs/use-a-config"
-    },
-    {
-      "source": "/hub/configs/create-a-config",
-      "destination": "/mission-control/configs/create-a-config"
-    },
-    {
-      "source": "/hub/configs/edit-a-config",
-      "destination": "/mission-control/configs/edit-a-config"
-    },
-    {
-      "source": "/hub/governance",
-      "destination": "/mission-control/governance/org-permissions"
-    },
-    {
-      "source": "/hub/governance/creating-an-org",
-      "destination": "/mission-control/governance/creating-an-org"
-    },
-    {
-      "source": "/hub/governance/org-permissions",
-      "destination": "/mission-control/governance/org-permissions"
-    },
-    {
-      "source": "/hub/governance/pricing",
-      "destination": "/mission-control/governance/pricing"
-    },
-    {
-      "source": "/hub/secrets",
-      "destination": "/mission-control/secrets/secret-types"
-    },
-    {
-      "source": "/hub/secrets/secret-types",
-      "destination": "/mission-control/secrets/secret-types"
-    },
-    {
-      "source": "/hub/secrets/secret-resolution",
-      "destination": "/mission-control/secrets/secret-resolution"
-    },
-    {
-      "source": "/hub/sharing",
-      "destination": "/mission-control/sharing"
-    },
-    {
-      "source": "/hub/source-control",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/hub/blocks",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/hub/blocks/intro",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/hub/blocks/use-a-block",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/hub/blocks/block-types",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/hub/workflows/intro",
-      "destination": "/mission-control/beyond-checks"
-    },
-    {
-      "source": "/hub/blocks/create-a-block",
-      "destination": "/hub/introduction"
     },
     {
       "source": "/customization",
@@ -1151,11 +970,6 @@
       "destination": "/customize/overview"
     },
     {
-      "source": "/hub/blocks/bundles",
-      "destination": "/hub/introduction"
-    },
-
-    {
       "source": "/customize/custom-providers#@greptile-context-provider",
       "destination": "/reference/deprecated-context-providers"
     },
@@ -1296,34 +1110,6 @@
       "destination": "/ide-extensions/agent/plan-mode"
     },
     {
-      "source": "/hub/assistants/intro",
-      "destination": "/mission-control/configs/intro"
-    },
-    {
-      "source": "/hub/assistants/use-an-assistant",
-      "destination": "/mission-control/configs/use-a-config"
-    },
-    {
-      "source": "/hub/assistants/create-an-assistant",
-      "destination": "/mission-control/configs/create-a-config"
-    },
-    {
-      "source": "/hub/assistants/edit-an-assistant",
-      "destination": "/mission-control/configs/edit-a-config"
-    },
-    {
-      "source": "/hub/agents/use-an-agent",
-      "destination": "/mission-control/configs/use-a-config"
-    },
-    {
-      "source": "/hub/agents/create-an-agent",
-      "destination": "/mission-control/configs/create-a-config"
-    },
-    {
-      "source": "/hub/agents/edit-an-agent",
-      "destination": "/mission-control/configs/edit-a-config"
-    },
-    {
       "source": "/guides/understanding-assistants",
       "destination": "/guides/understanding-configs"
     },
@@ -1426,78 +1212,6 @@
     {
       "source": "/getting-started/quick-start",
       "destination": "/ide-extensions/quick-start"
-    },
-    {
-      "source": "/hub/agents/intro",
-      "destination": "/agents/intro"
-    },
-    {
-      "source": "/hub/agents/overview",
-      "destination": "/mission-control/beyond-checks"
-    },
-    {
-      "source": "/hub/agents/create-and-edit",
-      "destination": "/agents/create-and-edit"
-    },
-    {
-      "source": "/hub/agents/slack-agent",
-      "destination": "/mission-control/integrations/slack"
-    },
-    {
-      "source": "/hub/integrations/slack-agent",
-      "destination": "/mission-control/integrations/slack"
-    },
-    {
-      "source": "/mission-control/integrations/slack-agent",
-      "destination": "/mission-control/integrations/slack"
-    },
-    {
-      "source": "/hub/integrations/github",
-      "destination": "/mission-control/integrations/github"
-    },
-    {
-      "source": "/hub/integrations/sentry",
-      "destination": "/mission-control/integrations/sentry"
-    },
-    {
-      "source": "/mission-control/workflows",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/mission-control/sharing",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/mission-control/governance/creating-an-org",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/mission-control/governance/org-permissions",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/mission-control/governance/pricing",
-      "destination": "/mission-control"
-    },
-    {
-      "source": "/agents/overview",
-      "destination": "/mission-control/beyond-checks"
-    },
-    {
-      "source": "/agents/intro",
-      "destination": "/mission-control/beyond-checks"
-    },
-    {
-      "source": "/agents/create-and-edit",
-      "destination": "/mission-control/beyond-checks"
-    },
-    {
-      "source": "/mission-control/tasks",
-      "destination": "/mission-control/beyond-checks"
-    },
-    {
-      "source": "/guides/run-agents-locally",
-      "destination": "/checks/running-locally"
     },
     {
       "source": "/overview",

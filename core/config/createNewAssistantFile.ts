@@ -15,15 +15,28 @@ models:
     provider: openai
     model: gpt-5
     apiKey: YOUR_OPENAI_API_KEY_HERE
-  - uses: ollama/qwen2.5-coder-7b
-  - uses: anthropic/claude-4-sonnet
-    with:
-      ANTHROPIC_API_KEY: \${{ secrets.ANTHROPIC_API_KEY }}
-
-# MCP Servers that Continue can access
-# https://docs.continue.dev/customization/mcp-tools
-mcpServers:
-  - uses: anthropic/memory-mcp
+  - name: qwen2.5-coder 7b
+    provider: ollama
+    model: qwen2.5-coder:7b
+    roles:
+      - apply
+      - autocomplete
+      - chat
+      - edit
+  - name: Claude 4 Sonnet
+    provider: anthropic
+    model: claude-sonnet-4-20250514
+    apiKey: \${{ secrets.ANTHROPIC_API_KEY }}
+    roles:
+      - chat
+      - edit
+      - apply
+    defaultCompletionOptions:
+      contextLength: 200000
+      maxTokens: 64000
+    capabilities:
+      - tool_use
+      - image_input
 `;
 
 export async function createNewAssistantFile(

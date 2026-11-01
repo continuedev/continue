@@ -55,25 +55,6 @@ const ErrorPage: React.FC = () => {
         )}
         Continue
       </Button>
-
-      <p className="mb-0 mt-6 text-lg">
-        Report the issue on GitHub or Discussions:
-      </p>
-
-      <div className="mt-2 flex flex-row flex-wrap justify-center gap-2">
-        <SecondaryButton
-          onClick={() => openUrl(GITHUB_LINK)}
-          className="flex items-center justify-center space-x-2 rounded-lg px-4 py-2 text-base text-white"
-        >
-          <GithubIcon size={20} /> <span className="ml-2">GitHub Issues</span>
-        </SecondaryButton>
-        <SecondaryButton
-          onClick={() => openUrl(DISCUSSIONS_LINK)}
-          className="flex items-center justify-center rounded-lg text-base"
-        >
-          <GithubIcon size={20} /> <span className="ml-2">Discussions</span>
-        </SecondaryButton>
-      </div>
     </div>
   );
 };

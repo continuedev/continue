@@ -1,12 +1,5 @@
 // Mock API Client
 export class MockApiClient {
-  async getFreeTrialStatus() {
-    return {
-      optedInToFreeTrial: true,
-      chatCount: 5,
-      chatLimit: 100,
-    };
-  }
   async listAssistants() {
     return [];
   }

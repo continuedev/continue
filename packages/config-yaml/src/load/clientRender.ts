@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { PlatformClient, SecretStore } from "../interfaces/index.js";
 import {
   decodeSecretLocation,
@@ -22,8 +21,6 @@ export async function renderSecrets(
   packageIdentifier: PackageIdentifier,
   unrolledConfigContent: string,
   clientSecretStore: SecretStore,
-  orgScopeId: string | null, // The "scope" that the user is logged in with
-  onPremProxyUrl: string | null,
   platformClient?: PlatformClient,
 ): Promise<AssistantUnrolled> {
   // 1. First we need to get a list of all the FQSNs that are required to render the config
@@ -69,14 +66,18 @@ export async function renderSecrets(
   // 6. The rendered YAML is parsed and validated again
   const parsedYaml = parseAssistantUnrolled(renderedYaml);
 
-  // 7. We update any of the items with the proxy version if there are un-rendered secrets
-  const finalConfig = useProxyForUnrenderedSecrets(
-    parsedYaml,
-    packageIdentifier,
-    orgScopeId,
-    onPremProxyUrl,
-  );
-  return finalConfig;
+  return parsedYaml;
+}
+
+export function packageIdentifierToShorthandSlug(
+  id: PackageIdentifier,
+): string {
+  switch (id.uriType) {
+    case "slug":
+      return `${id.fullSlug.ownerSlug}/${id.fullSlug.packageSlug}`;
+    case "file":
+      return "/";
+  }
 }
 
 export function getUnrenderedSecretLocation(
@@ -102,87 +103,3 @@ export function getUnrenderedSecretLocation(
 
   return undefined;
 }
-
-export function packageIdentifierToShorthandSlug(
-  id: PackageIdentifier,
-): string {
-  switch (id.uriType) {
-    case "slug":
-      return `${id.fullSlug.ownerSlug}/${id.fullSlug.packageSlug}`;
-    case "file":
-      return "/";
-  }
-}
-
-function getContinueProxyModelName(
-  packageIdentifier: PackageIdentifier,
-  provider: string,
-  model: string,
-): string {
-  return `${packageIdentifierToShorthandSlug(packageIdentifier)}/${provider}/${model}`;
-}
-
-export function useProxyForUnrenderedSecrets(
-  config: AssistantUnrolled,
-  packageIdentifier: PackageIdentifier,
-  orgScopeId: string | null,
-  onPremProxyUrl: string | null,
-): AssistantUnrolled {
-  if (config.models) {
-    for (let i = 0; i < config.models.length; i++) {
-      const apiKeyLocation = getUnrenderedSecretLocation(
-        config.models[i]?.apiKey,
-      );
-      const encodedApiKeyLocation = apiKeyLocation
-        ? encodeSecretLocation(apiKeyLocation)
-        : undefined;
-
-      let encodedEnvSecretLocations: Record<string, string> | undefined =
-        undefined;
-      if (config.models[i]?.env) {
-        Object.entries(config.models[i]?.env!).forEach(([key, value]) => {
-          if (typeof value === "string") {
-            const secretLocation = getUnrenderedSecretLocation(value);
-            if (secretLocation) {
-              encodedEnvSecretLocations = {
-                ...encodedEnvSecretLocations,
-                [key]: encodeSecretLocation(secretLocation),
-              };
-            }
-          }
-        });
-      }
-
-      if (encodedApiKeyLocation || encodedEnvSecretLocations) {
-        config.models[i] = {
-          ...config.models[i],
-          name: config.models[i]?.name ?? "",
-          provider: "continue-proxy",
-          model: getContinueProxyModelName(
-            packageIdentifier,
-            config.models[i]?.provider ?? "",
-            config.models[i]?.model ?? "",
-          ),
-          apiKeyLocation: encodedApiKeyLocation,
-          envSecretLocations: encodedEnvSecretLocations,
-          orgScopeId,
-          onPremProxyUrl,
-          apiKey: undefined,
-        };
-      }
-    }
-  }
-
-  return config;
-}
-
-/** The additional properties that are added to the otherwise OpenAI-compatible body when requesting a Continue proxy */
-export const continuePropertiesSchema = z.object({
-  apiKeyLocation: z.string().optional(),
-  envSecretLocations: z.record(z.string(), z.string()).optional(),
-  apiBase: z.string().optional(),
-  orgScopeId: z.string().nullable(),
-  env: z.record(z.string(), z.any()).optional(),
-});
-
-export type ContinueProperties = z.infer<typeof continuePropertiesSchema>;

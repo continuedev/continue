@@ -21,8 +21,6 @@ import CLIInstall from '/snippets/cli-install.mdx'
 
 Before starting, ensure you have:
 
-- Continue account with **Hub access**
-  - Read: [Understanding Configs — How to get started with Hub configs](/guides/understanding-configs#how-to-get-started-with-hub-configs)
 - Node.js 22+ installed locally
 - A GitHub account and a repository to work with
 - A GitHub token with the appropriate scopes:
@@ -36,7 +34,10 @@ For all options, first:
   </Step>
 
 <Step title="Configure GitHub Token">
-  Add your `GITHUB_TOKEN` to your [Continue Mission Control agent's environment variables](https://continue.dev/settings).
+  Set your `GITHUB_TOKEN` as an environment variable:
+  ```bash
+  export GITHUB_TOKEN="your_token_here"
+  ```
   </Step>
 </Steps>
 
@@ -47,8 +48,8 @@ For all options, first:
 
 ## GitHub MCP Workflow Options
 
-<Card title="🚀 Fastest Path to Success" icon="rocket">
-  Use the GitHub MCP from Continue Mission Control for one-click setup, or add it via CLI.
+<Card title="Fastest Path to Success" icon="rocket">
+  Use the GitHub MCP with Continue CLI for quick setup.
 </Card>
 
 After ensuring you meet the **Prerequisites** above, you have two paths to get started:
@@ -56,10 +57,13 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 <Tabs>
   <Tab title="⚡ Quick Start (Recommended)">
     <Steps>
-      <Step title="Install GitHub MCP via Continue Mission Control">
-        Visit the [GitHub Project Manager Agent](https://continue.dev/continuedev/github-project-manager-agent) on Continue Mission Control and click **Install** to add it to your agent.
+      <Step title="Load the Pre-Built Agent">
+        Run:
+        ```bash
+        cn --agent continuedev/github-project-manager-agent
+        ```
 
-        The listing provides a pre-configured MCP block; add your `GITHUB_TOKEN` in Hub.
+        Make sure your `GITHUB_TOKEN` environment variable is set.
       </Step>
 
       <Step title="Launch the Agent">
@@ -78,12 +82,8 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 
   <Tab title="🛠️ Manual Setup">
     <Steps>
-      <Step title="Create a New Agent on Continue Mission Control">
-        Go to the [Continue Mission Control](https://continue.dev) and [create a new agent](https://continue.dev/agents/new).
-      </Step>
-
       <Step title="Add GitHub MCP">
-        Install from Hub (recommended) or add YAML manually. Minimal YAML example:
+        Add the GitHub MCP to your configuration. Minimal YAML example:
 
         ```yaml title="config.yaml"
         name: My Config
@@ -102,8 +102,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
         ```
 
         Notes:
-        - The exact `command`/`args` may differ based on the MCP you choose on Hub. Hub templates prefill these for you.
-        - Provide `GITHUB_TOKEN` via environment or Hub secrets.
+        - Provide `GITHUB_TOKEN` via environment variables.
       </Step>
 
       <Step title="Test the Connection">
@@ -119,7 +118,7 @@ After ensuring you meet the **Prerequisites** above, you have two paths to get s
 <Accordion title="Agent Requirements">
     To use GitHub MCP with Continue CLI, you need either:
       - **Continue CLI Pro Plan** with the models add-on, OR
-      - **Your own API keys** added to Continue Mission Control secrets
+      - **Your own API keys** configured as environment variables
 
     The agent will automatically detect and use your configuration along with the GitHub MCP for issue and PR operations.
 
@@ -305,7 +304,7 @@ jobs:
 - **Missing or invalid token:** Ensure `GITHUB_TOKEN` is set and has the required scopes. Try a minimal test: “List 3 open issues in this repo”.
 - **Permissions errors on comment:** Your token must include `public_repo` (public) or `repo` (private) to write comments.
 - **Rate limiting:** Reduce frequency or filter queries; consider using a PAT distinct from the default Actions token when running in CI.
-- **MCP connection timeout:** If using custom YAML, increase `connectionTimeout` or verify the `command`/`args` from Mission Control listing.
+- **MCP connection timeout:** If using custom YAML, increase `connectionTimeout` or verify the `command`/`args` in your configuration.
 
 ## What You've Built
 
@@ -334,14 +333,14 @@ After completing this guide, you have a complete **AI-powered GitHub workflow sy
 ## Additional Resources
 
 <CardGroup cols={2}>
-  <Card title="GitHub MCP (Anthropic)" icon="link" href="https://continue.dev/anthropic/github-mcp">
-    Anthropic GitHub MCP on Continue Mission Control
+  <Card title="GitHub MCP Server" icon="link" href="https://github.com/modelcontextprotocol/servers/tree/main/src/github">
+    Anthropic GitHub MCP server
   </Card>
   <Card title="MCP in Continue" icon="book" href="/customize/deep-dives/mcp">
     How MCP works with Continue agents
   </Card>
-  <Card title="GitHub Project Manager Agent" icon="robot" href="https://continue.dev/continuedev/github-project-manager-agent">
-    Pre-configured agent on Continue Mission Control
+  <Card title="GitHub Project Manager Agent" icon="robot" href="https://docs.continue.dev/guides/github-mcp-continue-cookbook">
+    Pre-configured agent for GitHub workflows
   </Card>
   <Card title="GitHub MCP Server" icon="link" href="https://github.com/github/github-mcp-server/blob/main/README.md">
     Official GitHub MCP server README

@@ -29,11 +29,7 @@ async function getContextProviderExtras(
   setUpTestDir();
   const ide = new FileSystemIde(TEST_DIR);
   const llmLogger = new LLMLogger();
-  const configHandler = new ConfigHandler(
-    ide,
-    llmLogger,
-    Promise.resolve(undefined),
-  );
+  const configHandler = new ConfigHandler(ide, llmLogger);
   await configHandler.isInitialized;
   const { config } = await configHandler.loadConfig();
   if (!config) {

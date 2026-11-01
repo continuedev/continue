@@ -9,13 +9,9 @@ import {
   DefaultApi,
 } from "@continuedev/sdk/dist/api/dist/index.js";
 
-import {
-  AuthConfig,
-  getAccessToken,
-  getOrganizationId,
-} from "./auth/workos.js";
+import { AuthConfig } from "./auth/workos.js";
 import { env } from "./env.js";
-import { posthogService } from "./telemetry/posthogService.js";
+import { getUniqueId } from "./util/uniqueId.js";
 import { getVersion } from "./version.js";
 
 /**
@@ -29,7 +25,7 @@ function getUserAgent(): string {
 /**
  * Merges user-agent header into request options
  */
-function mergeUserAgentIntoRequestOptions(
+function _mergeUserAgentIntoRequestOptions(
   requestOptions: ModelConfig["requestOptions"],
 ): ModelConfig["requestOptions"] {
   return {
@@ -37,47 +33,26 @@ function mergeUserAgentIntoRequestOptions(
     headers: {
       ...requestOptions?.headers,
       "user-agent": getUserAgent(),
-      "x-continue-unique-id": posthogService.uniqueId,
+      "x-continue-unique-id": getUniqueId(),
     },
   };
 }
 
 /**
  * Creates an LLM API instance from a ModelConfig and auth configuration
- * Handles special logic for continue-proxy provider and constructs the API
  */
 export function createLlmApi(
   model: ModelConfig,
-  authConfig: AuthConfig | null,
+  _authConfig: AuthConfig,
 ): BaseLlmApi | null {
-  const accessToken = getAccessToken(authConfig);
-  const organizationId = getOrganizationId(authConfig);
-
-  const config: LLMConfig =
-    model.provider === "continue-proxy"
-      ? {
-          provider: model.provider,
-          requestOptions: mergeUserAgentIntoRequestOptions(
-            model.requestOptions,
-          ),
-          apiBase: model.apiBase,
-          apiKey: accessToken ?? undefined,
-          env: {
-            apiKeyLocation: (model as any).apiKeyLocation,
-            orgScopeId: organizationId ?? null,
-            proxyUrl:
-              (model as { onPremProxyUrl: string | undefined })
-                .onPremProxyUrl ?? (env.apiBase ? env.apiBase : undefined),
-          },
-        }
-      : {
-          provider: model.provider as any,
-          model: model.model,
-          apiKey: model.apiKey,
-          apiBase: model.apiBase,
-          requestOptions: model.requestOptions,
-          env: model.env,
-        };
+  const config: LLMConfig = {
+    provider: model.provider as any,
+    model: model.model,
+    apiKey: model.apiKey,
+    apiBase: model.apiBase,
+    requestOptions: model.requestOptions,
+    env: model.env,
+  };
 
   return constructLlmApi(config) ?? null;
 }

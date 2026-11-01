@@ -29,8 +29,8 @@ export class ApiClientService
   /**
    * Initialize the API client service
    */
-  async doInitialize(authConfig: AuthConfig): Promise<ApiClientServiceState> {
-    const apiClient = getApiClient(authConfig?.accessToken);
+  async doInitialize(_authConfig: AuthConfig): Promise<ApiClientServiceState> {
+    const apiClient = getApiClient(undefined);
 
     return {
       apiClient,
@@ -40,11 +40,11 @@ export class ApiClientService
   /**
    * Update the API client with new auth config
    */
-  async update(authConfig: AuthConfig): Promise<ApiClientServiceState> {
+  async update(_authConfig: AuthConfig): Promise<ApiClientServiceState> {
     logger.debug("Updating ApiClientService");
 
     try {
-      const apiClient = getApiClient(authConfig?.accessToken);
+      const apiClient = getApiClient(undefined);
 
       this.setState({
         apiClient,

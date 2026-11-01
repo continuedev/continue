@@ -218,8 +218,8 @@ class OpenAI extends BaseLLM {
     return model;
   }
 
-  public isOSeriesOrGpt5Model(model?: string): boolean {
-    return !!model && (!!model.match(/^o[0-9]+/) || model.includes("gpt-5"));
+  public isOSeriesOrGpt5PlusModel(model?: string): boolean {
+    return !!model && (!!model.match(/^o[0-9]+/) || !!model.match(/gpt-[5-9]/));
   }
 
   private isFireworksAiModel(model?: string): boolean {
@@ -284,7 +284,7 @@ class OpenAI extends BaseLLM {
     finalOptions.stop = options.stop?.slice(0, this.getMaxStopWords());
 
     // OpenAI o1-preview and o1-mini or o3-mini:
-    if (this.isOSeriesOrGpt5Model(options.model)) {
+    if (this.isOSeriesOrGpt5PlusModel(options.model)) {
       // a) use max_completion_tokens instead of max_tokens
       finalOptions.max_completion_tokens = options.maxTokens;
       finalOptions.max_tokens = undefined;
@@ -400,7 +400,7 @@ class OpenAI extends BaseLLM {
   ) {
     if (!this.apiBase) {
       throw new Error(
-        "No API base URL provided. Please set the 'apiBase' option in config.json",
+        "No API base URL provided. Please set the 'apiBase' option in config.yaml",
       );
     }
 
@@ -440,7 +440,7 @@ class OpenAI extends BaseLLM {
     body.stop = body.stop?.slice(0, this.getMaxStopWords());
 
     // OpenAI o1-preview and o1-mini or o3-mini:
-    if (this.isOSeriesOrGpt5Model(body.model)) {
+    if (this.isOSeriesOrGpt5PlusModel(body.model)) {
       // a) use max_completion_tokens instead of max_tokens
       body.max_completion_tokens = body.max_tokens;
       body.max_tokens = undefined;
@@ -573,7 +573,7 @@ class OpenAI extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    if (!this.isOSeriesOrGpt5Model(options.model)) {
+    if (!this.isOSeriesOrGpt5PlusModel(options.model)) {
       return;
     }
 
@@ -624,7 +624,7 @@ class OpenAI extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): Promise<ChatMessage | ChatMessage[]> {
-    if (!this.isOSeriesOrGpt5Model(options.model)) {
+    if (!this.isOSeriesOrGpt5PlusModel(options.model)) {
       // Minimal draft: only handle supported models for now
       return { role: "assistant", content: "" };
     }
@@ -694,13 +694,14 @@ class OpenAI extends BaseLLM {
     });
 
     const data = await response.json();
-    return data.data.map((m: any) => m.id);
+    const models = Array.isArray(data) ? data : (data.data ?? []);
+    return models.map((m: any) => m.id);
   }
 
   private _getEmbedEndpoint() {
     if (!this.apiBase) {
       throw new Error(
-        "No API base URL provided. Please set the 'apiBase' option in config.json",
+        "No API base URL provided. Please set the 'apiBase' option in config.yaml",
       );
     }
 

@@ -5,7 +5,7 @@
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$/extensions/intellij" />
-        <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="gradleHome" value="/usr/local/Cellar/gradle/8.13/libexec" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/extensions/intellij" />

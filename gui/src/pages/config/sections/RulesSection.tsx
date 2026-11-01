@@ -286,7 +286,6 @@ function PromptsSubSection() {
   const { selectedProfile } = useAuth();
   const { isCommandBookmarked, toggleBookmark } = useBookmarkedSlashCommands();
   const ideMessenger = useContext(IdeMessengerContext);
-  const isLocal = selectedProfile?.profileType === "local";
 
   const slashCommands = useAppSelector(
     (state) => state.config.config.slashCommands ?? [],
@@ -299,16 +298,9 @@ function PromptsSubSection() {
   };
 
   const handleAddPrompt = () => {
-    if (isLocal) {
-      void ideMessenger.request("config/addLocalWorkspaceBlock", {
-        blockType: "prompts",
-      });
-    } else {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: "?type=prompts",
-        orgSlug: undefined,
-      });
-    }
+    void ideMessenger.request("config/addLocalWorkspaceBlock", {
+      blockType: "prompts",
+    });
   };
 
   const sortedCommands = useMemo(() => {
@@ -431,27 +423,19 @@ function RulesSubSection() {
   const mode = useAppSelector((store) => store.session.mode);
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
-  const isLocal = selectedProfile?.profileType === "local";
   const [globalRulesMode, setGlobalRulesMode] = useState<string>("workspace");
   const configLoading = useAppSelector((store) => store.config.loading);
 
   const handleAddRule = (mode?: string) => {
     const currentMode = mode || globalRulesMode;
-    if (isLocal) {
-      dispatch(setShowDialog(true));
-      dispatch(
-        setDialogMessage(
-          <AddRuleDialog
-            mode={currentMode === "global" ? "global" : "workspace"}
-          />,
-        ),
-      );
-    } else {
-      void ideMessenger.request("controlPlane/openUrl", {
-        path: "/hub?type=rules",
-        orgSlug: undefined,
-      });
-    }
+    dispatch(setShowDialog(true));
+    dispatch(
+      setDialogMessage(
+        <AddRuleDialog
+          mode={currentMode === "global" ? "global" : "workspace"}
+        />,
+      ),
+    );
   };
 
   const handleOptionClick = (value: string) => {
@@ -501,22 +485,13 @@ function RulesSubSection() {
 
   return (
     <div>
-      {isLocal ? (
-        <DropdownButton
-          title="Rules"
-          variant="sm"
-          options={globalRulesOptions}
-          onOptionClick={handleOptionClick}
-          addButtonTooltip="Add rules"
-        />
-      ) : (
-        <ConfigHeader
-          title="Rules"
-          variant="sm"
-          onAddClick={() => handleAddRule()}
-          addButtonTooltip="Add rules"
-        />
-      )}
+      <DropdownButton
+        title="Rules"
+        variant="sm"
+        options={globalRulesOptions}
+        onOptionClick={handleOptionClick}
+        addButtonTooltip="Add rules"
+      />
 
       <Card>
         {sortedRules.length > 0 ? (

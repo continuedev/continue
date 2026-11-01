@@ -19,11 +19,11 @@ that can be set up with custom tools.
 Currently custom tools can be configured using the Model Context
 Protocol standard to unify prompts, context, and tool use.
 
-MCP Servers can be added to hub configs using `mcpServers`. You can
-explore available MCP servers
-[here](https://continue.dev/explore/mcp).
+MCP Servers can be added to your config using `mcpServers`.
 
 <Info>MCP can only be used in the **agent** mode.</Info>
+
+For ready-to-use configurations for popular MCP servers, see [Example MCP Servers](/customize/deep-dives/mcp-examples).
 
 ## Quick Start: How to Set Up Your First MCP Server
 
@@ -71,8 +71,7 @@ For example, place your JSON MCP config file at `.continue/mcpServers/mcp.json` 
 ## How to Configure MCP Servers
 
 To set up your own MCP server, read the [MCP
-quickstart](https://modelcontextprotocol.io/quickstart) and then [create an
-`mcpServers`](https://continue.dev/new?type=block&blockType=mcpServers) or add a local MCP
+quickstart](https://modelcontextprotocol.io/quickstart) and then add an MCP
 server block to your [config file](./configuration.md):
 
 ```yaml title="config.yaml"
@@ -153,8 +152,7 @@ For detailed information about transport mechanisms and their use cases, refer t
 
 ### How to Work with Secrets in MCP Servers
 
-With some MCP servers you will need to use API keys or other secrets. You can leverage locally stored environments secrets
-as well as access hosted secrets in the Continue Mission Control. To leverage Hub secrets, you can use the `inputs` property in your MCP env block instead of `secrets`.
+With some MCP servers you will need to use API keys or other secrets. You can leverage locally stored environment secrets.
 
 ```yaml
 # ...

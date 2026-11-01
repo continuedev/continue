@@ -187,30 +187,6 @@ export function HelpSection() {
                   ideMessenger.post("openUrl", "https://docs.continue.dev/")
                 }
               />
-
-              <ConfigRow
-                title="Have an issue?"
-                description="Let us know on GitHub and we'll do our best to resolve it"
-                icon={LinkIcon}
-                onClick={() =>
-                  ideMessenger.post(
-                    "openUrl",
-                    "https://github.com/continuedev/continue/issues/new/choose",
-                  )
-                }
-              />
-
-              <ConfigRow
-                title="Join the community!"
-                description="Join us on GitHub Discussions to stay up-to-date on the latest developments"
-                icon={LinkIcon}
-                onClick={() =>
-                  ideMessenger.post(
-                    "openUrl",
-                    "https://github.com/continuedev/continue/discussions",
-                  )
-                }
-              />
             </div>
           </Card>
         </div>

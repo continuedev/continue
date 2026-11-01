@@ -21,56 +21,48 @@ describe("ApiClientService", () => {
   });
 
   describe("State Management", () => {
-    test("should initialize with null api client", async () => {
-      vi.mocked(config.getApiClient).mockReturnValue(null as any);
-
-      const state = await service.initialize({ accessToken: null } as any);
-
-      expect(state).toEqual({
-        apiClient: null,
-      });
-    });
-
-    test("should initialize with api client when token provided", async () => {
+    test("should initialize with api client", async () => {
       vi.mocked(config.getApiClient).mockReturnValue(mockApiClient as any);
 
-      const state = await service.initialize({
-        accessToken: "test-token",
-      } as any);
+      // Auth is always null now; doInitialize ignores the parameter
+      const state = await service.initialize(null);
 
       expect(state).toEqual({
         apiClient: mockApiClient,
       });
-      expect(vi.mocked(config.getApiClient)).toHaveBeenCalledWith("test-token");
+      // Should be called with undefined (no auth token)
+      expect(vi.mocked(config.getApiClient)).toHaveBeenCalledWith(undefined);
     });
   });
 
   describe("update()", () => {
-    test("should update api client with new auth config", async () => {
+    test("should update api client", async () => {
       // Initialize first
-      vi.mocked(config.getApiClient).mockReturnValue(null as any);
-      await service.initialize({ accessToken: null } as any);
-
-      // Update with new token
       vi.mocked(config.getApiClient).mockReturnValue(mockApiClient as any);
-      const state = await service.update({ accessToken: "new-token" } as any);
+      await service.initialize(null);
+
+      // Update
+      const newMockApiClient = { ...mockApiClient, extra: true };
+      vi.mocked(config.getApiClient).mockReturnValue(newMockApiClient as any);
+      const state = await service.update(null);
 
       expect(state).toEqual({
-        apiClient: mockApiClient,
+        apiClient: newMockApiClient,
       });
       expect(service.getState()).toEqual(state);
     });
 
     test("should handle update errors", async () => {
-      await service.initialize({ accessToken: null } as any);
+      vi.mocked(config.getApiClient).mockReturnValue(mockApiClient as any);
+      await service.initialize(null);
 
       vi.mocked(config.getApiClient).mockImplementation(() => {
         throw new Error("Failed to create client");
       });
 
-      await expect(
-        service.update({ accessToken: "bad-token" } as any),
-      ).rejects.toThrow("Failed to create client");
+      await expect(service.update(null)).rejects.toThrow(
+        "Failed to create client",
+      );
     });
   });
 
@@ -79,16 +71,9 @@ describe("ApiClientService", () => {
       expect(service.isReady()).toBe(false);
     });
 
-    test("should return false when api client is null", async () => {
-      vi.mocked(config.getApiClient).mockReturnValue(null as any);
-      await service.initialize({ accessToken: null } as any);
-
-      expect(service.isReady()).toBe(false);
-    });
-
     test("should return true when api client exists", async () => {
       vi.mocked(config.getApiClient).mockReturnValue(mockApiClient as any);
-      await service.initialize({ accessToken: "token" } as any);
+      await service.initialize(null);
 
       expect(service.isReady()).toBe(true);
     });
@@ -102,23 +87,25 @@ describe("ApiClientService", () => {
 
   describe("Event Emission", () => {
     test("should emit stateChanged on update", async () => {
-      vi.mocked(config.getApiClient).mockReturnValue(null as any);
-      await service.initialize({ accessToken: null } as any);
+      vi.mocked(config.getApiClient).mockReturnValue(mockApiClient as any);
+      await service.initialize(null);
 
       const listener = vi.fn();
       service.on("stateChanged", listener);
 
-      vi.mocked(config.getApiClient).mockReturnValue(mockApiClient as any);
-      await service.update({ accessToken: "new-token" } as any);
+      const newMockApiClient = { ...mockApiClient, extra: true };
+      vi.mocked(config.getApiClient).mockReturnValue(newMockApiClient as any);
+      await service.update(null);
 
       expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({ apiClient: newMockApiClient }),
         expect.objectContaining({ apiClient: mockApiClient }),
-        expect.objectContaining({ apiClient: null }),
       );
     });
 
     test("should emit error on update failure", async () => {
-      await service.initialize({ accessToken: null } as any);
+      vi.mocked(config.getApiClient).mockReturnValue(mockApiClient as any);
+      await service.initialize(null);
 
       const errorListener = vi.fn();
       service.on("error", errorListener);
@@ -128,9 +115,7 @@ describe("ApiClientService", () => {
         throw error;
       });
 
-      await expect(
-        service.update({ accessToken: "bad" } as any),
-      ).rejects.toThrow();
+      await expect(service.update(null)).rejects.toThrow();
       expect(errorListener).toHaveBeenCalledWith(error);
     });
   });

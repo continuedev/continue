@@ -31,7 +31,6 @@ import {
   selectDoneApplyStates,
   selectPendingToolCalls,
 } from "../../redux/selectors/selectToolCalls";
-import { selectCurrentOrg } from "../../redux/slices/profilesSlice";
 import {
   cancelToolCall,
   ChatHistoryItemWithMessageId,
@@ -45,10 +44,9 @@ import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import { ToolCallDiv } from "./ToolCallDiv";
 
 import { useStore } from "react-redux";
-import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundModeView";
-import { CliInstallBanner } from "../../components/CliInstallBanner";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 
+import { DeprecationBanner } from "../../components/DeprecationBanner";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
@@ -115,7 +113,6 @@ export function Chat() {
   );
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen] = useState<(boolean | undefined)[]>([]);
-  const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -127,14 +124,9 @@ export function Chat() {
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
-  const allSessionMetadata = useAppSelector(
-    (state) => state.session.allSessionMetadata,
-  );
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
-  const mode = useAppSelector((state) => state.session.mode);
-  const currentOrg = useAppSelector(selectCurrentOrg);
   const jetbrains = useMemo(() => {
     return isJetBrains();
   }, []);
@@ -180,56 +172,6 @@ export function Chat() {
       const selectedModelByRole =
         stateSnapshot.config.config.selectedModelByRole;
       const currentMode = stateSnapshot.session.mode;
-
-      // Handle background mode specially
-      if (currentMode === "background" && !isCurrentlyInEdit) {
-        // Background mode triggers agent creation instead of chat
-        const currentOrg = selectCurrentOrg(stateSnapshot);
-        const organizationId =
-          currentOrg?.id !== "personal" ? currentOrg?.id : undefined;
-
-        setIsCreatingAgent(true);
-
-        // Create agent and track loading state
-        void (async () => {
-          try {
-            // Resolve context items from editor content (same as normal chat)
-            const defaultContextProviders =
-              stateSnapshot.config.config.experimental?.defaultContext ?? [];
-
-            const { selectedContextItems, selectedCode, content } =
-              await resolveEditorContent({
-                editorState,
-                modifiers,
-                ideMessenger,
-                defaultContextProviders,
-                availableSlashCommands:
-                  stateSnapshot.config.config.slashCommands,
-                dispatch,
-                getState: () => reduxStore.getState(),
-              });
-
-            await ideMessenger.request("createBackgroundAgent", {
-              content,
-              contextItems: selectedContextItems,
-              selectedCode,
-              organizationId,
-            });
-
-            // Clear input only after successful API call
-            if (editorToClearOnSend) {
-              editorToClearOnSend.commands.clearContent();
-            }
-
-            setIsCreatingAgent(false);
-          } catch (error) {
-            console.error("Failed to create background agent:", error);
-            setIsCreatingAgent(false);
-          }
-        })();
-
-        return;
-      }
 
       // Cancel all pending tool calls
       latestPendingToolCalls.forEach((toolCallState) => {
@@ -285,7 +227,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [dispatch, ideMessenger, reduxStore, setIsCreatingAgent],
+    [dispatch, ideMessenger, reduxStore],
   );
 
   useWebviewListener(
@@ -444,8 +386,9 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "min-h-0 flex-1 overflow-y-scroll" : "shrink-0"}`}
       >
+        <DeprecationBanner dismissable={true} />
         {highlights}
         {history
           .filter((item) => item.message.role !== "system")
@@ -468,7 +411,7 @@ export function Chat() {
             </div>
           ))}
       </StepsDiv>
-      <div className={"relative"}>
+      <div className={"relative shrink-0"}>
         <ContinueInputBox
           isMainInput
           isLastUserInput={false}
@@ -476,12 +419,6 @@ export function Chat() {
             sendInput(editorState, modifiers, undefined, editor)
           }
           inputId={MAIN_EDITOR_INPUT_ID}
-        />
-
-        <CliInstallBanner
-          sessionCount={allSessionMetadata.length}
-          sessionThreshold={3}
-          permanentDismissal={true}
         />
 
         <div
@@ -506,12 +443,8 @@ export function Chat() {
           </div>
           <FatalErrorIndicator />
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
-          {mode === "background" ? (
-            <BackgroundModeView isCreatingAgent={isCreatingAgent} />
-          ) : (
-            history.length === 0 && (
-              <EmptyChatBody showOnboardingCard={onboardingCard.show} />
-            )
+          {history.length === 0 && (
+            <EmptyChatBody showOnboardingCard={onboardingCard.show} />
           )}
         </div>
       </div>

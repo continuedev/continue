@@ -2,11 +2,6 @@ import { execSync } from "child_process";
 
 import chalk from "chalk";
 
-import {
-  isAuthenticated,
-  isAuthenticatedConfig,
-  loadAuthConfig,
-} from "./auth/workos.js";
 import { services } from "./services/index.js";
 import {
   getCurrentSession,
@@ -25,28 +20,6 @@ function getVersionInfo(): string[] {
     `  Version: ${chalk.green(version)}`,
     `  Working Directory: ${chalk.blue(cwd)}`,
   ];
-}
-
-async function getAuthInfo(): Promise<string[]> {
-  const lines: string[] = ["", chalk.white("Authentication:")];
-
-  if (await isAuthenticated()) {
-    const config = loadAuthConfig();
-    if (config && isAuthenticatedConfig(config)) {
-      const email = config.userEmail || config.userId;
-      const orgId = config.organizationId;
-      lines.push(
-        `  Email: ${chalk.green(email)}`,
-        `  Org ID: ${chalk.cyan(orgId)}`,
-      );
-    } else {
-      lines.push(`  ${chalk.yellow("Authenticated via environment variable")}`);
-    }
-  } else {
-    lines.push(`  ${chalk.red("Not logged in")}`);
-  }
-
-  return lines;
 }
 
 function getConfigInfo(): string[] {
@@ -168,7 +141,6 @@ function getDiagnosticInfo(): string[] {
 export async function handleInfoSlashCommand() {
   const infoLines = [
     ...getVersionInfo(),
-    ...(await getAuthInfo()),
     ...getConfigInfo(),
     ...getSessionInfo(),
     ...getUsageInfo(),

@@ -156,13 +156,6 @@ export class NextEditProvider {
     if (llm instanceof OpenAI && llm.providerName !== "openrouter") {
       llm.useLegacyCompletionsEndpoint = true;
     }
-    // TODO: Resolve import error with TRIAL_FIM_MODEL
-    // else if (
-    //   llm.providerName === "free-trial" &&
-    //   llm.model !== TRIAL_FIM_MODEL
-    // ) {
-    //   llm.model = TRIAL_FIM_MODEL;
-    // }
 
     return llm;
   }
@@ -510,9 +503,6 @@ export class NextEditProvider {
     let outcome: NextEditOutcome | undefined;
 
     // Handle based on diff type.
-    const profileType =
-      this.configHandler.currentProfile?.profileDescription.profileType;
-
     if (opts?.usingFullFileDiff === false || !opts?.usingFullFileDiff) {
       outcome = await this.modelProvider.handlePartialFileDiff({
         helper,
@@ -523,7 +513,6 @@ export class NextEditProvider {
         nextCompletion,
         promptMetadata: this.promptMetadata!,
         ide: this.ide,
-        profileType,
       });
     } else {
       outcome = await this.modelProvider.handleFullFileDiff({
@@ -535,7 +524,6 @@ export class NextEditProvider {
         nextCompletion,
         promptMetadata: this.promptMetadata!,
         ide: this.ide,
-        profileType,
       });
     }
 

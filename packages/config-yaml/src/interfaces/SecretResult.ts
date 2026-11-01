@@ -6,7 +6,6 @@ export enum SecretType {
   Organization = "organization",
   NotFound = "not_found",
   ModelsAddOn = "models_add_on",
-  FreeTrial = "free_trial",
   LocalEnv = "local_env",
   ProcessEnv = "process_env",
 }
@@ -35,12 +34,6 @@ export interface ModelsAddOnSecretLocation {
   secretName: string;
 }
 
-export interface FreeTrialSecretLocation {
-  secretType: SecretType.FreeTrial;
-  blockSlug: PackageSlug;
-  secretName: string;
-}
-
 export interface LocalEnvSecretLocation {
   secretType: SecretType.LocalEnv;
   secretName: string;
@@ -55,7 +48,6 @@ export interface ProcessEnvSecretLocation {
  * If not found in user/package/org secrets, then there's a chance it's in
  * - the on-prem proxy
  * - models add-on
- * - free trial
  */
 export interface NotFoundSecretLocation {
   secretType: SecretType.NotFound;
@@ -68,7 +60,6 @@ export type SecretLocation =
   | UserSecretLocation
   | NotFoundSecretLocation
   | ModelsAddOnSecretLocation
-  | FreeTrialSecretLocation
   | LocalEnvSecretLocation
   | ProcessEnvSecretLocation;
 
@@ -83,8 +74,6 @@ export function encodeSecretLocation(secretLocation: SecretLocation): string {
     return `${SecretType.NotFound}:${secretLocation.secretName}`;
   } else if (secretLocation.secretType === SecretType.ModelsAddOn) {
     return `${SecretType.ModelsAddOn}:${encodePackageSlug(secretLocation.blockSlug)}/${secretLocation.secretName}`;
-  } else if (secretLocation.secretType === SecretType.FreeTrial) {
-    return `${SecretType.FreeTrial}:${encodePackageSlug(secretLocation.blockSlug)}/${secretLocation.secretName}`;
   } else if (secretLocation.secretType === SecretType.LocalEnv) {
     return `${SecretType.LocalEnv}:${secretLocation.secretName}`;
   } else if (secretLocation.secretType === SecretType.ProcessEnv) {
@@ -132,15 +121,6 @@ export function decodeSecretLocation(secretLocation: string): SecretLocation {
           packageSlug: parts[1],
         },
       };
-    case SecretType.FreeTrial:
-      return {
-        secretType: SecretType.FreeTrial,
-        secretName,
-        blockSlug: {
-          ownerSlug: parts[0],
-          packageSlug: parts[1],
-        },
-      };
     case SecretType.LocalEnv:
       return {
         secretType: SecretType.LocalEnv,
@@ -168,7 +148,6 @@ export interface FoundSecretResult {
     | OrgSecretLocation
     | PackageSecretLocation
     | ModelsAddOnSecretLocation
-    | FreeTrialSecretLocation
     | LocalEnvSecretLocation
     | ProcessEnvSecretLocation;
   fqsn: FQSN;

@@ -1,6 +1,6 @@
 ---
 title: "Configuring Models, Rules, and Tools"
-description: "Learn how to work with Continue's configuration system. Understand how to use hub models, rules, and tools, create local configurations, and organize your setup for maximum reusability."
+description: "Learn how to work with Continue's configuration system. Understand how to use models, rules, and tools, create local configurations, and organize your setup for maximum reusability."
 ---
 
 ## What Are Models, Rules, and Tools?
@@ -28,8 +28,8 @@ There are two places where you can define these configurations:
 Custom configurations you create and manage in your workspace or globally
 </Card>
 
-<Card title="Hub" icon="cloud">
-Pre-built models, rules, and tools from the Continue community that you can import and use immediately
+<Card title="Shared" icon="cloud">
+Pre-built models, rules, and tools that you can import and use
 </Card>
 </Columns>
 
@@ -50,13 +50,13 @@ Perfect for project-specific setups like TypeScript rules for web apps or the Pl
 
 </Columns>
 
-## Hub
+## Shared Blocks
 
-Continue hub uses a slug in the format of `owner/item-name` to resolve blocks.
+Continue uses a slug in the format of `owner/item-name` to resolve blocks.
 
-For example, to use the [Claude 4 Sonnet model](https://continue.dev/anthropic/claude-4-sonnet), you'd reference it as `anthropic/claude-4-sonnet`.
+For example, to use the Claude 4 Sonnet model, you'd reference it as `anthropic/claude-4-sonnet`.
 
-Import from Mission Control using the `uses` syntax alongside your custom configurations:
+Import community blocks using the `uses` syntax alongside your custom configurations:
 
 ```yaml config.yaml highlight={6}
 name: Team Config
@@ -66,7 +66,7 @@ schema: v1
 models:
   - uses: anthropic/claude-4-sonnet
     with:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # Use a hub secret
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # Use a secret from .env
 ```
 
 ### Organization
@@ -91,9 +91,7 @@ Organize your local configurations using these directories:
 
 Models, and many MCP servers, require a secret for things like API keys.
 
-On Mission Control, you can configure secrets when adding a model or MCP server.
-
-This will use mustache notation to pass the secret, eg `${{ secrets.SECRET_NAME }}`
+Use mustache notation to pass the secret, eg `${{ secrets.SECRET_NAME }}`
 
 When configuring a local model or MCP server, you can use the same mustache notation for secrets which are resolved from these sources in order:
 
@@ -178,6 +176,5 @@ models:
 Now that you understand how models, rules, and tools work, explore:
 
 - **[Config Reference](/reference)**: Detailed documentation of all available properties
-- **[Continue Mission Control](https://continue.dev)**: Browse community models, rules, and tools
 - **[Custom Context Providers](/customize/deep-dives/custom-providers)**: Create advanced context integrations
 - **[Model Roles](/customize/model-roles/intro)**: Understanding how different models work together

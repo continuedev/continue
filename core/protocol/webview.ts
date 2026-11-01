@@ -1,6 +1,4 @@
 import { ConfigResult } from "@continuedev/config-yaml";
-import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager.js";
-import { ControlPlaneSessionInfo } from "../control-plane/AuthTypes.js";
 import type {
   BrowserSerializedContinueConfig,
   ContextItemWithId,
@@ -8,14 +6,14 @@ import type {
   IndexingProgressUpdate,
   IndexingStatus,
 } from "../index.js";
+import type { ProfileDescription } from "../config/ProfileLifecycleManager.js";
 
 export type ToWebviewFromIdeOrCoreProtocol = {
   configUpdate: [
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
-      organizations: SerializedOrgWithProfiles[];
-      selectedOrgId: string | null;
+      profiles: ProfileDescription[];
     },
     void,
   ];
@@ -41,7 +39,6 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   getWebviewHistoryLength: [undefined, number];
   getCurrentSessionId: [undefined, string];
   "jetbrains/setColors": [Record<string, string | null | undefined>, void];
-  sessionUpdate: [{ sessionInfo: ControlPlaneSessionInfo | undefined }, void];
+  sessionUpdate: [{ sessionInfo: any | undefined }, void];
   toolCallPartialOutput: [{ toolCallId: string; contextItems: any[] }, void];
-  freeTrialExceeded: [undefined, void];
 };

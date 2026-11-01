@@ -6,7 +6,8 @@ import {
   KeyIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useMemo } from "react";
-import { GhostButton, SecondaryButton } from "../../components";
+
+import { GhostButton } from "../../components";
 import { useEditModel } from "../../components/mainInput/Lump/useEditBlock";
 import { useMainEditor } from "../../components/mainInput/TipTapEditor";
 import ToggleDiv from "../../components/ToggleDiv";
@@ -14,12 +15,9 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
-import { selectSelectedProfile } from "../../redux/slices/profilesSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
-import { isLocalProfile } from "../../util";
 import { analyzeError } from "../../util/errorAnalysis";
-import { OutOfCreditsDialog } from "./OutOfCreditsDialog";
 
 interface StreamErrorProps {
   error: unknown;
@@ -29,8 +27,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const selectedModel = useAppSelector(selectSelectedChatModel);
-  const selectedProfile = useAppSelector(selectSelectedProfile);
-  const { session, refreshProfiles } = useAuth();
+  const { refreshProfiles } = useAuth();
   const { mainEditor } = useMainEditor();
 
   const {
@@ -120,15 +117,6 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     </GhostButton>
   );
 
-  if (
-    parsedError.includes(
-      "You have no credits remaining on your Continue account",
-    ) ||
-    parsedError.includes("You're out of credits!")
-  ) {
-    return <OutOfCreditsDialog />;
-  }
-
   let errorContent = (
     <div className="mb-1 mt-3">
       <div className="m-0 p-0">
@@ -191,14 +179,6 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   if (statusCode === 401) {
     errorContent = (
       <div className="flex flex-col gap-2">
-        {session && selectedProfile && !isLocalProfile(selectedProfile) && (
-          <div className="flex flex-col gap-1">
-            <span>{`If your hub secret values may have changed, refresh your agents`}</span>
-            <SecondaryButton onClick={handleRefreshProfiles}>
-              Refresh agent secrets
-            </SecondaryButton>
-          </div>
-        )}
         <span>{`It's possible that your API key is invalid.`}</span>
         <div className="flex flex-row flex-wrap gap-2">
           {checkKeysButton}

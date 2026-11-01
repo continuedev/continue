@@ -82,9 +82,9 @@ ollama list
 
 There are multiple ways to configure Ollama models in Continue:
 
-### Method 1: Using Hub Model Blocks in Local config.yaml
+### Method 1: Using Model Blocks in config.yaml
 
-The easiest way is to use [pre-configured model blocks](/reference#models) from the Continue Mission Control in your local configuration:
+The easiest way is to use [pre-configured model blocks](/reference#models) in your configuration:
 
 ```yaml title="~/.continue/configs/config.yaml"
 name: My Local Config
@@ -103,7 +103,7 @@ models:
   ```bash
   # Check what the block expects (view on continue.dev)
   # Then pull that exact model tag locally
-  ollama pull deepseek-r1:32b  # Required for ollama/deepseek-r1-32b hub block
+  ollama pull deepseek-r1:32b  # Required for ollama/deepseek-r1-32b model block
   ```
   If the model isn't installed, Ollama will return:
   `404 model "deepseek-r1:32b" not found, try pulling it first`
@@ -146,7 +146,7 @@ You can update `apiBase` with the IP address of a remote machine serving Ollama.
 
 ### Method 3: Manual Configuration
 
-For custom configurations or models not in Mission Control:
+For fully custom configurations:
 
 ```yaml
 models:
@@ -280,7 +280,7 @@ Continue may use a higher default context length than other tools. Reduce `conte
 
 This error occurs when the model isn't installed locally:
 
-**Problem**: Using a hub block or config that references a model not yet pulled
+**Problem**: Using a model block or config that references a model not yet pulled
 **Solution**:
 
 ```bash
@@ -293,7 +293,7 @@ ollama pull model-name:tag  # e.g., deepseek-r1:32b
 
 #### Model Tag Mismatches
 
-**Problem**: `ollama pull deepseek-r1` installs `:latest` but hub block expects `:32b`
+**Problem**: `ollama pull deepseek-r1` installs `:latest` but model block expects `:32b`
 **Solution**: Always pull with the exact tag:
 
 ```bash
@@ -313,10 +313,10 @@ ollama pull deepseek-r1:32b
 2. If still not working, the model may not actually support tools
 3. Switch to a model with confirmed tool support (Llama 3.1, Mistral)
 
-#### Using Hub Blocks in Local Config
+#### Using Model Blocks in Config
 
-**Problem**: Unclear how to use hub models locally
-**Solution**: Create a local agent file:
+**Problem**: Unclear how to use model blocks
+**Solution**: Create a config file:
 
 ```yaml
 # ~/.continue/configs/config.yaml

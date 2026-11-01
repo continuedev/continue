@@ -6,16 +6,11 @@ import {
 } from "@continuedev/config-yaml";
 import * as dotenv from "dotenv";
 import { IDE } from "../..";
-import { ControlPlaneClient } from "../../control-plane/client";
 import { getContinueDotEnv } from "../../util/paths";
 import { joinPathsToUri } from "../../util/uri";
 
 export class LocalPlatformClient implements PlatformClient {
-  constructor(
-    private orgScopeId: string | null,
-    private readonly client: ControlPlaneClient,
-    private readonly ide: IDE,
-  ) {}
+  constructor(private readonly ide: IDE) {}
 
   /**
    * searches for the first valid secret file in order of ~/.continue/.env, <workspace>/.continue/.env, <workspace>/.env
@@ -97,41 +92,28 @@ export class LocalPlatformClient implements PlatformClient {
       return [];
     }
 
-    let results: (SecretResult | undefined)[] = [];
-    try {
-      results = await this.client.resolveFQSNs(fqsns, this.orgScopeId);
-    } catch (e) {
-      console.error("Error getting secrets from control plane", e);
-    }
+    const results: (SecretResult | undefined)[] = [];
 
-    // For any secret that isn't found, look in .env files, then process.env
-    for (let i = 0; i < results.length; i++) {
-      if (!results[i]?.found) {
-        let secretResult = await this.findSecretInEnvFiles(fqsns[i]);
+    for (let i = 0; i < fqsns.length; i++) {
+      let secretResult = await this.findSecretInEnvFiles(fqsns[i]);
 
-        // If not found in .env files, try process.env
-        if (!secretResult?.found) {
-          const secretValueFromProcessEnv = process.env[fqsns[i].secretName];
-          if (secretValueFromProcessEnv !== undefined) {
-            secretResult = {
-              found: true,
-              fqsn: fqsns[i],
-              value: secretValueFromProcessEnv,
-              secretLocation: {
-                secretName: fqsns[i].secretName,
-                // Cast to SecretType.ProcessEnv is necessary because the specific type
-                // ProcessEnvSecretLocation expects secretType to be exactly SecretType.ProcessEnv,
-                // not the general enum SecretType.
-                secretType: SecretType.ProcessEnv as SecretType.ProcessEnv,
-              },
-            };
-          }
-        }
-
-        if (secretResult?.found) {
-          results[i] = secretResult;
+      // If not found in .env files, try process.env
+      if (!secretResult?.found) {
+        const secretValueFromProcessEnv = process.env[fqsns[i].secretName];
+        if (secretValueFromProcessEnv !== undefined) {
+          secretResult = {
+            found: true,
+            fqsn: fqsns[i],
+            value: secretValueFromProcessEnv,
+            secretLocation: {
+              secretName: fqsns[i].secretName,
+              secretType: SecretType.ProcessEnv as SecretType.ProcessEnv,
+            },
+          };
         }
       }
+
+      results[i] = secretResult;
     }
 
     return results;
