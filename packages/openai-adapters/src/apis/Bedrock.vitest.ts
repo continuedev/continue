@@ -64,4 +64,19 @@ describe("BedrockApi credentials", () => {
       delete process.env.AWS_BEARER_TOKEN_BEDROCK;
     }
   });
+
+  it("builds service tier / latency / guardrail fields from env", () => {
+    const api = make({
+      serviceTier: "flex",
+      latency: "optimized",
+      guardrailIdentifier: "gr-1",
+      guardrailVersion: "2",
+    });
+    expect(api.extraConverseFields()).toEqual({
+      serviceTier: { type: "flex" },
+      performanceConfig: { latency: "optimized" },
+      guardrailConfig: { guardrailIdentifier: "gr-1", guardrailVersion: "2" },
+    });
+    expect(make().extraConverseFields()).toEqual({});
+  });
 });

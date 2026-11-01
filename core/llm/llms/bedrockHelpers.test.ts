@@ -1,5 +1,6 @@
 import {
   applyCrossRegionInference,
+  buildModelCatalog,
   getBedrockErrorHint,
   inferenceProfilePrefixForRegion,
 } from "./bedrockHelpers";
@@ -99,5 +100,137 @@ describe("getBedrockErrorHint", () => {
 
   it("returns undefined for unrelated errors", () => {
     expect(getBedrockErrorHint(new Error("boom"), {})).toBeUndefined();
+  });
+});
+
+describe("buildModelCatalog", () => {
+  const fms = [
+    {
+      modelId: "anthropic.claude-sonnet-4-6",
+      modelName: "Claude Sonnet 4.6",
+      providerName: "Anthropic",
+      outputModalities: ["TEXT"],
+      responseStreamingSupported: true,
+      inferenceTypesSupported: ["INFERENCE_PROFILE"],
+    },
+    {
+      modelId: "amazon.nova-pro-v1:0",
+      modelName: "Nova Pro",
+      providerName: "Amazon",
+      outputModalities: ["TEXT"],
+      responseStreamingSupported: true,
+      inferenceTypesSupported: ["ON_DEMAND", "INFERENCE_PROFILE"],
+    },
+    {
+      modelId: "amazon.titan-embed-text-v2:0",
+      modelName: "Titan Embeddings",
+      providerName: "Amazon",
+      outputModalities: ["EMBEDDING"],
+      inferenceTypesSupported: ["ON_DEMAND"],
+    },
+    {
+      modelId: "old.model-v1",
+      modelName: "Old Model",
+      providerName: "Zed",
+      outputModalities: ["TEXT"],
+      responseStreamingSupported: false,
+      inferenceTypesSupported: ["ON_DEMAND"],
+    },
+  ];
+  const profiles = [
+    {
+      inferenceProfileId: "us.anthropic.claude-sonnet-4-6",
+      type: "SYSTEM_DEFINED",
+      status: "ACTIVE",
+      models: [
+        {
+          modelArn:
+            "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-6",
+        },
+      ],
+    },
+    {
+      inferenceProfileId: "us.amazon.nova-pro-v1:0",
+      type: "SYSTEM_DEFINED",
+      status: "ACTIVE",
+      models: [
+        {
+          modelArn:
+            "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-pro-v1:0",
+        },
+      ],
+    },
+    {
+      inferenceProfileId: "us.embed.titan",
+      type: "SYSTEM_DEFINED",
+      status: "ACTIVE",
+      models: [
+        {
+          modelArn:
+            "arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-embed-text-v2:0",
+        },
+      ],
+    },
+    {
+      inferenceProfileId: "abc123",
+      inferenceProfileName: "team-sonnet",
+      type: "APPLICATION",
+      status: "ACTIVE",
+      models: [{ modelArn: "arn:aws:bedrock:us-east-1:1:inference-profile/x" }],
+    },
+    {
+      inferenceProfileId: "eu.anthropic.claude-sonnet-4-6",
+      type: "SYSTEM_DEFINED",
+      status: "INACTIVE",
+      models: [],
+    },
+  ];
+
+  const catalog = buildModelCatalog(fms, profiles);
+  const ids = catalog.map((m) => m.id);
+
+  it("offers profile IDs for profile-only models and base IDs for on-demand ones", () => {
+    expect(ids).toContain("us.anthropic.claude-sonnet-4-6");
+    expect(ids).not.toContain("anthropic.claude-sonnet-4-6");
+    expect(ids).toContain("amazon.nova-pro-v1:0");
+    expect(ids).toContain("us.amazon.nova-pro-v1:0");
+  });
+
+  it("excludes non-text, non-streaming and inactive entries", () => {
+    expect(ids).not.toContain("amazon.titan-embed-text-v2:0");
+    expect(ids).not.toContain("us.embed.titan");
+    expect(ids).not.toContain("old.model-v1");
+    expect(ids).not.toContain("eu.anthropic.claude-sonnet-4-6");
+  });
+
+  it("keeps the user's application profiles and labels kinds", () => {
+    const app = catalog.find((m) => m.id === "abc123");
+    expect(app).toMatchObject({
+      kind: "application-profile",
+      name: "team-sonnet (application profile)",
+    });
+    expect(
+      catalog.find((m) => m.id === "us.anthropic.claude-sonnet-4-6"),
+    ).toMatchObject({
+      kind: "inference-profile",
+      name: "Claude Sonnet 4.6 (us. cross-region)",
+    });
+  });
+});
+
+describe("getBedrockErrorHint (discovery)", () => {
+  it("explains missing list permissions", () => {
+    const e = new Error(
+      "User is not authorized to perform: bedrock:ListFoundationModels",
+    );
+    expect(getBedrockErrorHint(e, {})).toContain("type a model ID manually");
+  });
+  it("flags unreachable regions", () => {
+    const e = new Error(
+      "getaddrinfo ENOTFOUND bedrock.us-eest-1.amazonaws.com",
+    );
+    expect(getBedrockErrorHint(e, { region: "us-eest-1" })).toContain(
+      "us-eest-1",
+    );
   });
 });

@@ -57,6 +57,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.62.0",
+    "@aws-sdk/client-bedrock": "^3.1161.0",
     "@aws-sdk/client-bedrock-runtime": "^3.931.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.894.0",
     "@aws-sdk/credential-providers": "^3.974.0",

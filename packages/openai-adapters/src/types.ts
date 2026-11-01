@@ -96,6 +96,10 @@ export const BedrockConfigSchema = OpenAIConfigSchema.extend({
       profile: z.string().optional(),
       sessionToken: z.string().optional(),
       crossRegionInference: z.string().optional(),
+      serviceTier: z.string().optional(),
+      latency: z.string().optional(),
+      guardrailIdentifier: z.string().optional(),
+      guardrailVersion: z.string().optional(),
     })
     .optional(),
 });

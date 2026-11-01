@@ -122,6 +122,8 @@ class MessageTypes {
             "llm/complete",
             "llm/streamChat",
             "llm/listModels",
+            "bedrock/listModels",
+            "bedrock/testModel",
             "llm/compileChat",
             "streamDiffLines",
             "getDiffLines",

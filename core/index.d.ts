@@ -693,6 +693,10 @@ export interface LLMOptions {
   secretAccessKey?: string;
   sessionToken?: string;
   crossRegionInference?: string;
+  serviceTier?: string;
+  latency?: string;
+  guardrailIdentifier?: string;
+  guardrailVersion?: string;
 
   // AWS and VertexAI Options
   region?: string;
@@ -1726,6 +1730,10 @@ export interface JSONModelDescription {
   secretAccessKey?: string;
   sessionToken?: string;
   crossRegionInference?: string;
+  serviceTier?: string;
+  latency?: string;
+  guardrailIdentifier?: string;
+  guardrailVersion?: string;
   modelArn?: string;
   apiType?: "openai" | "azure";
   apiVersion?: string;

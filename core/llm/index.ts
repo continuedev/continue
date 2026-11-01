@@ -189,6 +189,10 @@ export abstract class BaseLLM implements ILLM {
   secretAccessKey?: string;
   sessionToken?: string;
   crossRegionInference?: string;
+  serviceTier?: string;
+  latency?: string;
+  guardrailIdentifier?: string;
+  guardrailVersion?: string;
 
   // For IBM watsonx
   deploymentId?: string;
@@ -303,6 +307,10 @@ export abstract class BaseLLM implements ILLM {
     this.secretAccessKey = options.secretAccessKey;
     this.sessionToken = options.sessionToken;
     this.crossRegionInference = options.crossRegionInference;
+    this.serviceTier = options.serviceTier;
+    this.latency = options.latency;
+    this.guardrailIdentifier = options.guardrailIdentifier;
+    this.guardrailVersion = options.guardrailVersion;
 
     this.openaiAdapter = this.createOpenAiAdapter();
 

@@ -205,6 +205,36 @@ describe("Bedrock", () => {
       }
     });
 
+    it("adds service tier, latency mode and guardrail settings to the request", () => {
+      const b: any = new TestBedrock({
+        ...base,
+        serviceTier: "priority",
+        latency: "optimized",
+        guardrailIdentifier: "gr-123",
+      });
+      const input = b._generateConverseInput(
+        [{ role: "user", content: "hi" }],
+        { model: base.model },
+      );
+      expect(input.serviceTier).toEqual({ type: "priority" });
+      expect(input.performanceConfig).toEqual({ latency: "optimized" });
+      expect(input.guardrailConfig).toEqual({
+        guardrailIdentifier: "gr-123",
+        guardrailVersion: "DRAFT",
+      });
+    });
+
+    it("omits those fields by default", () => {
+      const b: any = new TestBedrock(base);
+      const input = b._generateConverseInput(
+        [{ role: "user", content: "hi" }],
+        { model: base.model },
+      );
+      expect(input).not.toHaveProperty("serviceTier");
+      expect(input).not.toHaveProperty("performanceConfig");
+      expect(input).not.toHaveProperty("guardrailConfig");
+    });
+
     it("applies crossRegionInference to the Converse modelId", () => {
       const b: any = new TestBedrock({
         ...base,

@@ -4,6 +4,7 @@ import {
   ContentBlockDelta,
   ContentBlockStart,
   ContentBlockStartEvent,
+  ConverseCommand,
   ConversationRole,
   ConverseStreamCommand,
   ConverseStreamCommandOutput,
@@ -15,6 +16,11 @@ import {
   ToolUseBlock,
   ToolUseBlockDelta,
 } from "@aws-sdk/client-bedrock-runtime";
+import {
+  BedrockClient,
+  ListFoundationModelsCommand,
+  ListInferenceProfilesCommand,
+} from "@aws-sdk/client-bedrock";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
 import type { CompletionOptions } from "../../index.js";
@@ -27,6 +33,8 @@ import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { getSecureID } from "../utils/getSecureID.js";
 import {
   applyCrossRegionInference,
+  BedrockModelOption,
+  buildModelCatalog,
   getBedrockErrorHint,
 } from "./bedrockHelpers.js";
 
@@ -69,7 +77,7 @@ class Bedrock extends BaseLLM {
     super(options);
     this._profileExplicit = !!options.profile;
     if (!options.apiBase) {
-      this.apiBase = `https://bedrock-runtime.${options.region}.amazonaws.com`;
+      this.apiBase = `https://bedrock-runtime.${this.region ?? options.region}.amazonaws.com`;
     }
 
     this.requestOptions = {
@@ -78,28 +86,129 @@ class Bedrock extends BaseLLM {
     };
   }
 
-  private async _getClient(): Promise<BedrockRuntimeClient> {
+  /** Auth portion of an AWS SDK client config (shared by runtime and control-plane clients). */
+  private async _clientAuth(): Promise<
+    | { token: () => Promise<{ token: string }> }
+    | {
+        credentials: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          sessionToken?: string;
+        };
+      }
+  > {
     const apiKey = this._resolveApiKey();
     if (apiKey) {
       // Bedrock API key authentication (bearer token)
-      return new BedrockRuntimeClient({
-        region: this.region,
-        endpoint: this.apiBase,
-        token: async () => ({ token: apiKey }),
-      });
+      return { token: async () => ({ token: apiKey }) };
     }
-
     // IAM credential authentication
     const credentials = await this._getCredentials();
-    return new BedrockRuntimeClient({
-      region: this.region,
-      endpoint: this.apiBase,
+    return {
       credentials: {
         accessKeyId: credentials.accessKeyId,
         secretAccessKey: credentials.secretAccessKey,
         sessionToken: credentials.sessionToken || undefined,
       },
+    };
+  }
+
+  private async _getClient(): Promise<BedrockRuntimeClient> {
+    return new BedrockRuntimeClient({
+      region: this.region,
+      endpoint: this.apiBase,
+      ...(await this._clientAuth()),
     });
+  }
+
+  /** Control-plane client (model/profile listing). Uses the regional default endpoint. */
+  private async _getControlClient(): Promise<BedrockClient> {
+    return new BedrockClient({
+      region: this.region,
+      ...(await this._clientAuth()),
+    });
+  }
+
+  /**
+   * List the models this account can use in `region`: on-demand models by ID,
+   * and models that require it by inference profile ID.
+   */
+  async listAvailableModels(): Promise<BedrockModelOption[]> {
+    try {
+      const client = await this._getControlClient();
+
+      const models = await client.send(
+        new ListFoundationModelsCommand({ byOutputModality: "TEXT" }),
+      );
+
+      const profiles: any[] = [];
+      let nextToken: string | undefined;
+      do {
+        const page: any = await client.send(
+          new ListInferenceProfilesCommand({ maxResults: 1000, nextToken }),
+        );
+        profiles.push(...(page.inferenceProfileSummaries ?? []));
+        nextToken = page.nextToken;
+      } while (nextToken);
+
+      return buildModelCatalog(models.modelSummaries ?? [], profiles);
+    } catch (e) {
+      throw this._withHint(e);
+    }
+  }
+
+  /** Extra Converse fields driven by config: service tier, latency mode, guardrails. */
+  private _extraConverseFields(): Record<string, unknown> {
+    return {
+      ...(this.serviceTier ? { serviceTier: { type: this.serviceTier } } : {}),
+      ...(this.latency ? { performanceConfig: { latency: this.latency } } : {}),
+      ...(this.guardrailIdentifier
+        ? {
+            guardrailConfig: {
+              guardrailIdentifier: this.guardrailIdentifier,
+              guardrailVersion: this.guardrailVersion ?? "DRAFT",
+            },
+          }
+        : {}),
+    };
+  }
+
+  /** Send a tiny request to verify credentials, region and access to `model`. */
+  async testModel(): Promise<{
+    modelId: string;
+    latencyMs: number;
+    reply: string;
+  }> {
+    const modelId = applyCrossRegionInference(
+      this.model,
+      this.crossRegionInference,
+      this.region,
+    );
+    const started = Date.now();
+    try {
+      const client = await this._getClient();
+      const response = await client.send(
+        new ConverseCommand({
+          modelId,
+          messages: [
+            {
+              role: "user",
+              content: [{ text: "Reply with the single word: ok" }],
+            },
+          ],
+          inferenceConfig: { maxTokens: 16 },
+          ...this._extraConverseFields(),
+        } as any),
+      );
+      const reply =
+        response.output?.message?.content
+          ?.map((b) => ("text" in b ? b.text : ""))
+          .join("")
+          .trim() ?? "";
+      return { modelId, latencyMs: Date.now() - started, reply };
+    } catch (e) {
+      throw this._withHint(e);
+    }
   }
 
   /**
@@ -392,6 +501,7 @@ class Bedrock extends BaseLLM {
           ?.filter((stop) => stop.trim() !== "")
           .slice(0, 4),
       },
+      ...this._extraConverseFields(),
       additionalModelRequestFields: {
         thinking: options.reasoning
           ? {

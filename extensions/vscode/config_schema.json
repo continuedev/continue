@@ -365,6 +365,28 @@
           "description": "The AWS security profile to use",
           "type": "string"
         },
+        "serviceTier": {
+          "title": "Service Tier",
+          "description": "Bedrock only. Processing tier for requests: priority (faster, premium price), flex (cheaper, slower), reserved, or default.",
+          "type": "string",
+          "enum": ["default", "priority", "flex", "reserved"]
+        },
+        "latency": {
+          "title": "Latency Mode",
+          "description": "Bedrock only. Set to 'optimized' to use latency-optimized inference on models that support it.",
+          "type": "string",
+          "enum": ["standard", "optimized"]
+        },
+        "guardrailIdentifier": {
+          "title": "Guardrail Identifier",
+          "description": "Bedrock only. ID or ARN of a Bedrock Guardrail to apply to requests.",
+          "type": "string"
+        },
+        "guardrailVersion": {
+          "title": "Guardrail Version",
+          "description": "Bedrock only. Guardrail version to use (defaults to DRAFT).",
+          "type": "string"
+        },
         "sessionToken": {
           "title": "Session Token",
           "description": "AWS session token for temporary credentials (use together with accessKeyId and secretAccessKey)",
@@ -2934,6 +2956,28 @@
             "profile": {
               "title": "Profile",
               "description": "The AWS security profile to use",
+              "type": "string"
+            },
+            "serviceTier": {
+              "title": "Service Tier",
+              "description": "Bedrock only. Processing tier for requests: priority (faster, premium price), flex (cheaper, slower), reserved, or default.",
+              "type": "string",
+              "enum": ["default", "priority", "flex", "reserved"]
+            },
+            "latency": {
+              "title": "Latency Mode",
+              "description": "Bedrock only. Set to 'optimized' to use latency-optimized inference on models that support it.",
+              "type": "string",
+              "enum": ["standard", "optimized"]
+            },
+            "guardrailIdentifier": {
+              "title": "Guardrail Identifier",
+              "description": "Bedrock only. ID or ARN of a Bedrock Guardrail to apply to requests.",
+              "type": "string"
+            },
+            "guardrailVersion": {
+              "title": "Guardrail Version",
+              "description": "Bedrock only. Guardrail version to use (defaults to DRAFT).",
               "type": "string"
             },
             "sessionToken": {

@@ -122,6 +122,23 @@ export class BedrockApi implements BaseLlmApi {
     }
   }
 
+  /** Service tier, latency mode and guardrail settings from config. */
+  private extraConverseFields(): Record<string, unknown> {
+    const env = this.config.env;
+    return {
+      ...(env?.serviceTier ? { serviceTier: { type: env.serviceTier } } : {}),
+      ...(env?.latency ? { performanceConfig: { latency: env.latency } } : {}),
+      ...(env?.guardrailIdentifier
+        ? {
+            guardrailConfig: {
+              guardrailIdentifier: env.guardrailIdentifier,
+              guardrailVersion: env.guardrailVersion ?? "DRAFT",
+            },
+          }
+        : {}),
+    };
+  }
+
   private resolveApiKey(): string | undefined {
     if (this.config.apiKey) return this.config.apiKey;
     const env = this.config.env;
@@ -432,6 +449,7 @@ export class BedrockApi implements BaseLlmApi {
         this.config.env?.region,
       ),
       messages: convertedMessages,
+      ...this.extraConverseFields(),
       inferenceConfig: {
         temperature: oaiBody.temperature,
         topP: oaiBody.top_p,
