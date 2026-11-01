@@ -10,7 +10,11 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
 import { AddModelForm } from "../../forms/AddModelForm";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import {
+  setDialogMessage,
+  setModeModelOverride,
+  setShowDialog,
+} from "../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks/updateSelectedModelByRole";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { CONFIG_ROUTES } from "../../util/navigation";
@@ -128,6 +132,7 @@ function ModelSelect() {
   const [options, setOptions] = useState<Option[]>([]);
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
   const { selectedProfile } = useAuth();
+  const mode = useAppSelector((state) => state.session.mode);
   const tinyFont = useFontSize(-4);
 
   let selectedModel = null;
@@ -187,6 +192,7 @@ function ModelSelect() {
         if (nextIndex < 0) nextIndex = options.length - 1;
         const newModelTitle = options[nextIndex].value;
 
+        void dispatch(setModeModelOverride({ mode, title: newModelTitle }));
         void dispatch(
           updateSelectedModelByRole({
             selectedProfile,
@@ -236,6 +242,10 @@ function ModelSelect() {
     <Listbox
       onChange={async (val: string) => {
         if (val === selectedModel?.title) return;
+        // A manual pick wins over `modeModels` for this mode until reload.
+        if (!isInEdit) {
+          void dispatch(setModeModelOverride({ mode, title: val }));
+        }
         void dispatch(
           updateSelectedModelByRole({
             selectedProfile,

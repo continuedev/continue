@@ -11,10 +11,33 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setMode } from "../../redux/slices/sessionSlice";
 import { getFontSize, getMetaKeyLabel } from "../../util";
+import {
+  getModeModelTitle,
+  getModeReasoningEffort,
+} from "../../util/modeModels";
 import { ToolTip } from "../gui/Tooltip";
 import { useMainEditor } from "../mainInput/TipTapEditor";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 import { ModeIcon } from "./ModeIcon";
+
+/** Shows which model (and reasoning effort) a mode uses, when configured. */
+function ModeModelHint({ mode }: { mode: "chat" | "agent" | "plan" }) {
+  const config = useAppSelector((state) => state.config.config);
+  const overrides = useAppSelector((state) => state.ui.modeModelOverrides);
+  const title = getModeModelTitle(config, mode, overrides);
+  if (!title) return null;
+  const effort = getModeReasoningEffort(config, mode);
+  const label = effort && effort !== "off" ? `${title} · ${effort}` : title;
+  return (
+    <span
+      className="text-description-muted max-w-24 truncate text-xs"
+      title={`Model for ${mode} mode: ${label}`}
+      data-testid={`mode-model-${mode}`}
+    >
+      {label}
+    </span>
+  );
+}
 
 export function ModeSelect() {
   const dispatch = useAppDispatch();
@@ -107,6 +130,7 @@ export function ModeSelect() {
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="chat" />
               <span className="">Chat</span>
+              <ModeModelHint mode="chat" />
               <ToolTip
                 style={{
                   zIndex: 200001,
@@ -130,6 +154,7 @@ export function ModeSelect() {
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="plan" />
               <span className="">Plan</span>
+              <ModeModelHint mode="plan" />
               <ToolTip
                 style={{
                   zIndex: 200001,
@@ -149,6 +174,7 @@ export function ModeSelect() {
             <div className="flex flex-row items-center gap-1.5">
               <ModeIcon mode="agent" />
               <span className="">Agent</span>
+              <ModeModelHint mode="agent" />
               <ToolTip
                 style={{
                   zIndex: 200001,

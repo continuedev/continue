@@ -4,6 +4,10 @@ import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import { selectActiveTools } from "../selectors/selectActiveTools";
+import {
+  getModeReasoningEffort,
+  reasoningOptionsForEffort,
+} from "../../util/modeModels";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
@@ -126,11 +130,21 @@ export const streamNormalInput = createAsyncThunk<
       };
     }
 
-    completionOptions = buildReasoningCompletionOptions(
-      completionOptions,
-      state.session.hasReasoningEnabled,
-      selectedChatModel,
-    );
+    // An explicit reasoning toggle wins; otherwise use the mode's configured
+    // reasoning effort (`modeModels.<mode>.reasoningEffort`).
+    const modeReasoning =
+      state.session.hasReasoningEnabled === undefined
+        ? reasoningOptionsForEffort(
+            getModeReasoningEffort(state.config.config, state.session.mode),
+          )
+        : undefined;
+    completionOptions = modeReasoning
+      ? { ...completionOptions, ...modeReasoning }
+      : buildReasoningCompletionOptions(
+          completionOptions,
+          state.session.hasReasoningEnabled,
+          selectedChatModel,
+        );
 
     // Construct messages (excluding system message)
     const baseSystemMessage = getBaseSystemMessage(
