@@ -14,6 +14,7 @@ const { copySqlite } = require("./download-copy-sqlite");
 const { generateAndCopyConfigYamlSchema } = require("./generate-copy-config");
 const { installAndCopyNodeModules } = require("./install-copy-nodemodule");
 const { npmInstall } = require("./npm-install");
+const { installRipgrepBinary } = require("./ripgrep");
 const { writeBuildTimestamp, continueDir } = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
@@ -373,6 +374,11 @@ void (async () => {
         }
       },
     );
+  });
+
+  // ripgrep for the target (the npm platform package; no GitHub download), then copy it below
+  await installRipgrepBinary(target, {
+    projectDir: path.join(__dirname, ".."),
   });
 
   // Copy node_modules for pre-built binaries

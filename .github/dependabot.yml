@@ -36,11 +36,6 @@ updates:
       # @types/vscode must not be newer than engines.vscode in the extension's
       # package.json (vsce refuses to package otherwise); bump them together by hand.
       - dependency-name: "@types/vscode"
-      # @vscode/ripgrep >=1.16 stopped downloading bin/rg in a postinstall
-      # (binaries moved to optional platform packages); extension prepackage
-      # still expects node_modules/@vscode/ripgrep/bin/rg.
-      - dependency-name: "@vscode/ripgrep"
-        versions: [">=1.16.0"]
     groups:
       # Minor/patch bumps are batched into one PR per directory; majors stay
       # individual so they can be reviewed (and reverted) on their own.

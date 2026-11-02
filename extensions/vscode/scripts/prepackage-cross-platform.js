@@ -16,12 +16,12 @@ const {
 
 const { generateAndCopyConfigYamlSchema } = require("./generate-copy-config");
 const { npmInstall } = require("./npm-install");
+const { installRipgrepBinary } = require("./ripgrep");
 const {
   buildGui,
   copyOnnxRuntimeFromNodeModules,
   copyTreeSitterWasms,
   copyNodeModules,
-  downloadRipgrepBinary,
   copySqliteBinary,
   installNodeModuleInTempDirAndCopyToCurrent,
   downloadSqliteBinary,
@@ -116,7 +116,9 @@ async function package(target, os, arch, exe) {
   await downloadSqliteBinary(target);
   await copySqliteBinary();
 
-  await downloadRipgrepBinary(target);
+  await installRipgrepBinary(target, {
+    projectDir: path.join(__dirname, ".."),
+  });
 
   // copy node_modules to out/node_modules
   await copyNodeModules();

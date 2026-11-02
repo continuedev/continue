@@ -14,13 +14,13 @@ See [Environment Setup](../../CONTRIBUTING.md#environment-setup)
 The extension is published as `b1tninja.continued`. To build and install it from source (this mirrors `.github/actions/build-vscode-extension`):
 
 ```bash
-export GITHUB_TOKEN=<any GitHub token>   # avoids rate limits when @vscode/ripgrep downloads its binary
 node scripts/build-packages.js           # from the repo root
 (cd core && npm ci)
 (cd gui && npm ci && npm run build)
 cd extensions/vscode
-npm ci                                   # run install scripts: ripgrep and sqlite3 need them
-npm run prepackage -- --target linux-x64 # or darwin-arm64, darwin-x64, win32-x64, ...
+npm ci                                   # runs install scripts: sqlite3 needs them
+npm run prepackage -- --target linux-x64 # or darwin-arm64, darwin-x64, win32-x64, ... (fetches that platform's
+                                         # ripgrep from npm and checks it against package-lock.json)
 npm run package -- --target linux-x64    # writes build/continued-<version>.vsix
 code --install-extension build/continued-*.vsix
 ```

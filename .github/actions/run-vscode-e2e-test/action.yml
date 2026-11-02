@@ -18,7 +18,7 @@ inputs:
     required: false
     default: "false"
   github_token:
-    description: "GitHub token for authenticated API requests (e.g., @vscode/ripgrep download)"
+    description: "GitHub token for authenticated API requests"
     required: false
     default: ""
 

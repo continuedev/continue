@@ -257,43 +257,6 @@ async function copySqliteBinary() {
   });
 }
 
-async function downloadRipgrepBinary(target) {
-  console.log("[info] Downloading pre-built ripgrep binary");
-  rimrafSync("node_modules/@vscode/ripgrep/bin");
-  fs.mkdirSync("node_modules/@vscode/ripgrep/bin", { recursive: true });
-
-  const downloadUrl = {
-    "darwin-arm64":
-      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-apple-darwin.tar.gz",
-    "linux-arm64":
-      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-unknown-linux-gnu.tar.gz",
-    "win32-arm64":
-      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-pc-windows-msvc.zip",
-    "linux-x64":
-      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-unknown-linux-musl.tar.gz",
-    "darwin-x64":
-      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-apple-darwin.tar.gz",
-    "win32-x64":
-      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-pc-windows-msvc.zip",
-  }[target];
-
-  if (target.startsWith("win")) {
-    execCmdSync(
-      `curl -L -o node_modules/@vscode/ripgrep/bin/build.zip ${downloadUrl}`,
-    );
-    execCmdSync("cd node_modules/@vscode/ripgrep/bin && unzip build.zip");
-    fs.unlinkSync("node_modules/@vscode/ripgrep/bin/build.zip");
-  } else {
-    execCmdSync(
-      `curl -L -o node_modules/@vscode/ripgrep/bin/build.tar.gz ${downloadUrl}`,
-    );
-    execCmdSync(
-      "cd node_modules/@vscode/ripgrep/bin && tar -xvzf build.tar.gz",
-    );
-    fs.unlinkSync("node_modules/@vscode/ripgrep/bin/build.tar.gz");
-  }
-}
-
 async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
   console.log(`Copying ${packageName} to ${toCopy}`);
   // This is a way to install only one package without npm trying to install all the dependencies
@@ -386,7 +349,6 @@ module.exports = {
   copySqliteBinary,
   installNodeModuleInTempDirAndCopyToCurrent,
   downloadSqliteBinary,
-  downloadRipgrepBinary,
   copyTokenizers,
   copyScripts,
   writeBuildTimestamp,

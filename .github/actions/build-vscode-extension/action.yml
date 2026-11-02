@@ -19,8 +19,8 @@ inputs:
     required: false
     default: ''
   github-token:
-    description: 'GitHub token for downloading ripgrep'
-    required: true
+    description: 'Unused; kept so existing callers keep working (ripgrep now comes from npm)'
+    required: false
 outputs:
   target:
     description: 'The target string used for the build'
@@ -84,9 +84,6 @@ runs:
       run: |
         cd extensions/vscode
         npm ci
-      env:
-        # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
-        GITHUB_TOKEN: ${{ inputs.github-token }}
 
     - name: Install gui dependencies
       shell: bash
