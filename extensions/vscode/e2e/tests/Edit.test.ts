@@ -32,6 +32,11 @@ describe("Edit Test", () => {
 
     await GUIActions.toggleGui();
 
+    // Toggling the Continued view can leave keyboard focus inside its (possibly
+    // hidden) webview; give the editor focus explicitly before typing into it.
+    await VSBrowser.instance.driver.switchTo().defaultContent();
+    await TestUtils.waitForSuccess(() => editor.click());
+
     await editor.typeTextAt(1, 1, originalEditorText);
     await editor.selectText(originalEditorText);
 

@@ -69,6 +69,31 @@ describe("ContinueCompletionProvider triggering logic", () => {
     expect(mockNextEditProvider.deleteChain).not.toHaveBeenCalled();
   });
 
+  it("ignores next edit chains when next edit is not active", async () => {
+    const document = createDocument();
+    setActiveEditor(document);
+
+    // A chain left over from an earlier request must not make regular
+    // autocomplete drop this request.
+    mockNextEditProvider.chainExists.mockReturnValue(true);
+
+    const provider = buildProvider();
+    provider.deactivateNextEdit();
+
+    await provider.provideInlineCompletionItems(
+      document,
+      createPosition(),
+      createContext(),
+      createToken(),
+    );
+
+    expect(mockNextEditProvider.startChain).not.toHaveBeenCalled();
+    expect(mockNextEditProvider.deleteChain).not.toHaveBeenCalled();
+    expect(
+      mockNextEditProvider.provideInlineCompletionItems,
+    ).not.toHaveBeenCalled();
+  });
+
   it("clears an empty chain once in full file diff mode", async () => {
     const document = createDocument();
     setActiveEditor(document);

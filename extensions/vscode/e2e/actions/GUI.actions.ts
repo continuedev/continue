@@ -37,16 +37,27 @@ export class GUIActions {
     const view = new WebView();
     const driver = view.getDriver();
 
+    // The iframe is looked up from the top-level page, so this must work even
+    // when the driver is currently inside a webview.
+    await driver.switchTo().defaultContent();
+
     const iframes = await GUISelectors.getAllIframes(driver);
     let continueIFrame: WebElement | undefined = undefined;
+    let firstMatch: WebElement | undefined = undefined;
     for (let i = 0; i < iframes.length; i++) {
       const iframe = iframes[i];
       const src = await iframe.getAttribute("src");
       if (src?.includes("extensionId=b1tninja.continued")) {
-        continueIFrame = iframe;
-        break;
+        firstMatch ??= iframe;
+        // Newer VS Code versions keep hidden webviews around, so prefer the
+        // one that is actually showing.
+        if (await iframe.isDisplayed()) {
+          continueIFrame = iframe;
+          break;
+        }
       }
     }
+    continueIFrame ??= firstMatch;
 
     if (!continueIFrame) {
       throw new Error("Could not find Continue iframe");

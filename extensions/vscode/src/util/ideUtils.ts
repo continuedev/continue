@@ -517,6 +517,19 @@ export class VsCodeIdeUtils {
     }
   }
 
+  private _isGitInitialized(): boolean {
+    const extension =
+      vscode.extensions.getExtension<GitExtension>("vscode.git");
+    if (typeof extension === "undefined" || !extension.isActive) {
+      return false;
+    }
+    try {
+      return extension.exports.getAPI(1).state === "initialized";
+    } catch (e) {
+      return false;
+    }
+  }
+
   private _getRepositories(): Repository[] | undefined {
     const extension =
       vscode.extensions.getExtension<GitExtension>("vscode.git");
@@ -563,6 +576,14 @@ export class VsCodeIdeUtils {
     let i = 0;
     while (!repo?.state?.HEAD?.name) {
       if (this._repoWasNone) {
+        return undefined;
+      }
+
+      // Once the git extension has finished loading and knows of no repository
+      // for this directory, there is nothing to wait for. Polling here used to
+      // block anything that asks for the repo (e.g. every autocomplete request,
+      // which logs the repo name) for up to 20s in folders that aren't git repos.
+      if (!repo && this._isGitInitialized()) {
         return undefined;
       }
 

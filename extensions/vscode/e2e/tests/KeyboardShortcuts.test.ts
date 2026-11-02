@@ -72,6 +72,73 @@ describe("Keyboard Shortcuts", () => {
     }
   }
 
+  /**
+   * The Cmd+L command round-trips to the webview before it acts, so the result
+   * is not immediate: poll instead of asserting after a fixed delay.
+   */
+  async function waitForMainInputFocused(
+    timeout: number = DEFAULT_TIMEOUT.MD,
+  ): Promise<WebElement> {
+    return TestUtils.waitForSuccess(async () => {
+      await driver.switchTo().defaultContent();
+      ({ view } = await GUIActions.switchToReactIframe());
+      const textInput = await GUISelectors.getMessageInputFieldAtIndex(view, 0);
+      const activeElement: WebElement = await driver.switchTo().activeElement();
+      const textInputHtml = await textInput.getAttribute("outerHTML");
+      const activeElementHtml = await activeElement.getAttribute("outerHTML");
+      if (textInputHtml !== activeElementHtml) {
+        throw new Error("Main input is not focused yet");
+      }
+      return textInput;
+    }, timeout);
+  }
+
+  /**
+   * The Continued view is hidden when its iframe is no longer displayed in the
+   * workbench. Check from the outer window: from inside the iframe, elements
+   * still report themselves as displayed because VS Code keeps the hidden
+   * webview's page alive.
+   */
+  async function waitUntilContinueViewHidden(
+    timeout: number = DEFAULT_TIMEOUT.MD,
+  ) {
+    await TestUtils.waitForSuccess(async () => {
+      await driver.switchTo().defaultContent();
+      const iframes = await GUISelectors.getAllIframes(driver);
+      for (const iframe of iframes) {
+        const src = await iframe.getAttribute("src");
+        if (
+          src?.includes("extensionId=b1tninja.continued") &&
+          (await iframe.isDisplayed())
+        ) {
+          throw new Error("Continued view is still visible");
+        }
+      }
+    }, timeout);
+  }
+
+  /**
+   * Presses Cmd+L and waits for its effect, pressing again if it had none.
+   * Key presses sent while keyboard focus is stuck in a hidden webview never
+   * reach VS Code, so a single press is not reliable.
+   */
+  async function pressContinueShortcutUntil<T>(
+    effect: (timeout: number) => Promise<T>,
+    attempts: number = 3,
+  ): Promise<T> {
+    let lastError: unknown;
+    for (let i = 0; i < attempts; i++) {
+      await driver.switchTo().defaultContent();
+      await GUIActions.executeFocusContinueInputShortcut(driver);
+      try {
+        return await effect(DEFAULT_TIMEOUT.SM);
+      } catch (e) {
+        lastError = e;
+      }
+    }
+    throw lastError;
+  }
+
   it("Should correctly undo and redo using keyboard shortcuts when writing a chat message", async () => {
     await GUIActions.executeFocusContinueInputShortcut(driver);
     ({ view } = await GUIActions.switchToReactIframe());
@@ -139,25 +206,14 @@ describe("Keyboard Shortcuts", () => {
   }).timeout(DEFAULT_TIMEOUT.XL);
 
   it("Fresh VS Code window → sidebar closed → cmd+L with no code highlighted → opens sidebar and focuses input → cmd+L closes sidebar", async () => {
-    await GUIActions.executeFocusContinueInputShortcut(driver);
-    ({ view } = await GUIActions.switchToReactIframe());
-    const textInput = await TestUtils.waitForSuccess(() =>
-      GUISelectors.getMessageInputFieldAtIndex(view, 0),
-    );
-    const activeElement: WebElement = await driver.switchTo().activeElement();
-    const textInputHtml = await textInput.getAttribute("outerHTML");
-    const activeElementHtml = await activeElement.getAttribute("outerHTML");
-    expect(textInputHtml).to.equal(activeElementHtml);
+    const textInput = await pressContinueShortcutUntil(waitForMainInputFocused);
     expect(await textInput.isDisplayed()).to.equal(true);
 
-    await GUIActions.executeFocusContinueInputShortcut(driver);
-
-    await driver.wait(until.elementIsNotVisible(textInput), DEFAULT_TIMEOUT.XS);
-    expect(await textInput.isDisplayed()).to.equal(false);
+    await pressContinueShortcutUntil(waitUntilContinueViewHidden);
   }).timeout(DEFAULT_TIMEOUT.XL);
 
   it("Send a message → focus code editor (not sidebar) → cmd+L → should focus sidebar and start a new session", async () => {
-    await GUIActions.executeFocusContinueInputShortcut(driver);
+    await pressContinueShortcutUntil(waitForMainInputFocused);
     ({ view } = await GUIActions.switchToReactIframe());
 
     const { userMessage: userMessage0 } = TestUtils.generateTestMessagePair(0);
@@ -170,31 +226,21 @@ describe("Keyboard Shortcuts", () => {
 
     await view.switchBack();
 
-    KeyboardShortcutsActions.HACK__typeWithSelect(editor, "hello");
+    // The editor may have been re-laid out while the Continued view was open
+    editor = (await new EditorView().openEditor("Untitled-1")) as TextEditor;
+    await TestUtils.waitForSuccess(() => editor.click());
+    await KeyboardShortcutsActions.HACK__typeWithSelect(editor, "hello");
 
     await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XS);
 
-    await GUIActions.executeFocusContinueInputShortcut(driver);
+    // A new session is started and its (empty) input gets the focus
+    await pressContinueShortcutUntil(waitForMainInputFocused);
 
-    ({ view } = await GUIActions.switchToReactIframe());
-
-    await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XS);
-
-    const textInput = await TestUtils.waitForSuccess(() =>
-      GUISelectors.getMessageInputFieldAtIndex(view, 0),
-    );
-    const activeElement: WebElement = await driver.switchTo().activeElement();
-    const textInputHtml = await textInput.getAttribute("outerHTML");
-    const activeElementHtml = await activeElement.getAttribute("outerHTML");
-    expect(textInputHtml).to.equal(activeElementHtml);
-
-    await GUIActions.executeFocusContinueInputShortcut(driver);
-
-    await driver.wait(until.elementIsNotVisible(textInput), DEFAULT_TIMEOUT.XS);
-    expect(await textInput.isDisplayed()).to.equal(false);
+    await pressContinueShortcutUntil(waitUntilContinueViewHidden);
 
     // Make sure the view is visible again, so it can be cleared in afterEach()
-    await GUIActions.executeFocusContinueInputShortcut(driver);
+    await pressContinueShortcutUntil(waitForMainInputFocused);
+    ({ view } = await GUIActions.switchToReactIframe());
   }).timeout(DEFAULT_TIMEOUT.XL);
 
   it("Should create a code block when Cmd+L is pressed with text highlighted", async () => {
