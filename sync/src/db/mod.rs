@@ -202,6 +202,38 @@ mod tests {
     }
 
     #[test]
+    fn test_chunk_roundtrip_keeps_usize_columns() {
+        // start_line / end_line / index are usize columns; rusqlite 0.41 only
+        // supports usize with the `fallible_uint` feature, so make sure they
+        // still survive a write and read.
+        create_database();
+        let hash = format!("roundtrip-{}", std::process::id());
+        let tag = format!("tag-{}", std::process::id());
+        let chunk = Chunk {
+            hash: hash.clone(),
+            content: "fn main() {}".to_string(),
+            embedding: vec![0.25; 384], // retrieve() assumes 384-d embeddings
+            start_line: 3,
+            end_line: 1_000_000,
+            file_path: "src/main.rs".to_string(),
+            index: 7,
+        };
+        add_chunk(chunk, vec![tag.clone()]);
+
+        let found: Vec<Chunk> = retrieve(10, vec![tag.clone()], vec![0.25; 384])
+            .into_iter()
+            .filter(|c| c.hash == hash)
+            .collect();
+        remove_tag(hash.clone(), tag);
+
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].start_line, 3);
+        assert_eq!(found[0].end_line, 1_000_000);
+        assert_eq!(found[0].index, 7);
+        assert_eq!(found[0].file_path, "src/main.rs");
+    }
+
+    #[test]
     fn test_create_database() {
         create_database();
 
