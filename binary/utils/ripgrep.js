@@ -4,7 +4,9 @@ const { rimrafSync } = require("rimraf");
 const tar = require("tar");
 const { RIPGREP_VERSION, TARGET_TO_RIPGREP_RELEASE } = require("./targets");
 const AdmZip = require("adm-zip");
-const { ProxyAgent } = require("undici");
+// Use undici's own fetch with its ProxyAgent: a dispatcher from one undici major
+// is not compatible with the (older) undici bundled into Node's global fetch.
+const { ProxyAgent, fetch: undiciFetch } = require("undici");
 
 const RIPGREP_BASE_URL = `https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}`;
 
@@ -16,12 +18,11 @@ const RIPGREP_BASE_URL = `https://github.com/BurntSushi/ripgrep/releases/downloa
  * @returns {Promise<void>}
  */
 async function downloadFile(url, destPath) {
-  // Use the built-in fetch API instead of node-fetch
   // Use proxy if set in environment variables
   const proxy = process.env.https_proxy || process.env.HTTPS_PROXY;
   const agent = proxy ? new ProxyAgent(proxy) : undefined;
 
-  const response = await fetch(url, {
+  const response = await undiciFetch(url, {
     redirect: "follow", // Automatically follow redirects
     dispatcher: agent,
   });
