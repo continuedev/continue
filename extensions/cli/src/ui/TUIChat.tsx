@@ -148,7 +148,7 @@ function useChatHandlers(
   };
 }
 
-// eslint-disable-next-line complexity
+/* eslint-disable complexity -- ESLint >=9.34 reports this rule at the arrow, not the declaration line */
 const TUIChat: React.FC<TUIChatProps> = ({
   remoteUrl,
   configPath,
@@ -499,5 +499,6 @@ const TUIChat: React.FC<TUIChatProps> = ({
     </Box>
   );
 };
+/* eslint-enable complexity */
 
 export { TUIChat };
