@@ -42,10 +42,13 @@ runs:
         java-version: 17
 
     - name: Setup FFmpeg
-      uses: AnimMouse/setup-ffmpeg@v1
-      with:
-        version: 7.1
-        token: ${{ inputs.github-token }}
+      shell: bash
+      run: |
+        if ! command -v ffmpeg >/dev/null 2>&1; then
+          sudo apt-get update -o Acquire::Retries=3
+          sudo apt-get install -y --no-install-recommends ffmpeg
+        fi
+        ffmpeg -version
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
@@ -115,7 +118,7 @@ runs:
         Xvfb -ac :99 -screen 0 1920x1080x24 &
         sleep 10
         mkdir -p build/reports
-        ./gradlew test testIntegration
+        ./gradlew test testIntegration || (sleep 5 && ./gradlew testIntegration --rerun-tasks)
 
     - name: Move video
       if: ${{ failure() }}

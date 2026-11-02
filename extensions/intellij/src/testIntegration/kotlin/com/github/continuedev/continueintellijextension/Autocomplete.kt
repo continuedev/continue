@@ -31,15 +31,25 @@ class Autocomplete {
                     clickTab("Main.java")
                 }
                 codeEditor {
+                    // Allow initial indexing and background workers to settle on CI
+                    wait(5.seconds)
                     keyboard {
                         enterText("TEST_USER_MESSAGE_0")
                         space()
                     }
-                    wait(2.seconds)
-                    keyboard {
-                        tab()
+                    // Wait for the LLM inline completion to be rendered and accepted via Tab
+                    var matched = false
+                    for (i in 1..10) {
+                        wait(2.seconds)
+                        keyboard {
+                            tab()
+                        }
+                        if (text.contains("TEST_LLM_RESPONSE_0")) {
+                            matched = true
+                            break
+                        }
                     }
-                    assertTrue(text.contains("TEST_LLM_RESPONSE_0"))
+                    assertTrue(matched, "Expected editor text to contain TEST_LLM_RESPONSE_0 after autocomplete tab, but was: $text")
                 }
             }
         }

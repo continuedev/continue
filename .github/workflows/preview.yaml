@@ -20,8 +20,14 @@ jobs:
       - id: check
         working-directory: .
         run: |
-          if [[ "${{ github.event.release.tag_name }}" == v1.3.*-vscode ]]; then
-            echo "should_run=true" >> $GITHUB_OUTPUT
+          TAG="${{ github.event.release.tag_name }}"
+          if [[ "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)-vscode$ ]]; then
+            MINOR="${BASH_REMATCH[2]}"
+            if (( MINOR % 2 == 1 )); then
+              echo "should_run=true" >> $GITHUB_OUTPUT
+            else
+              echo "should_run=false" >> $GITHUB_OUTPUT
+            fi
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
           fi
@@ -116,7 +122,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           files: |
             vsix-artifacts/*.vsix
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           repository: continuedev/continue
           prerelease: true
 
@@ -138,8 +144,8 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-      - name: Pull latest changes from release
-        run: git fetch origin ${{ github.ref }} && git checkout ${{ github.ref }}
+      - name: Pull latest changes from main
+        run: git fetch origin main && git checkout -B main origin/main
 
       # 1. Download the artifacts
       - uses: actions/download-artifact@v8
@@ -169,10 +175,9 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - name: Create PR branch
+      - name: Set PR branch name
         run: |
           BRANCH_NAME="chore/bump-vscode-version-$(date +%Y%m%d-%H%M%S)"
-          git checkout -b $BRANCH_NAME
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Bump version in package.json
@@ -185,7 +190,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: bump vscode extension version to ${{ env.NEW_VERSION }}"
           title: "chore: bump vscode extension version to ${{ env.NEW_VERSION }}"
           body: |
