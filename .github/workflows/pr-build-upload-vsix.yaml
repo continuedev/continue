@@ -24,7 +24,7 @@ jobs:
       (github.event.pull_request.draft != true &&
       contains(github.event.pull_request.labels.*.name, 'build-vsix'))
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 10
+    timeout-minutes: 30
     strategy:
       matrix:
         include:
