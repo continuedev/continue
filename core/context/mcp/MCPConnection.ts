@@ -178,6 +178,14 @@ class MCPConnection {
     this.abortController.abort();
     this.abortController = new AbortController();
 
+    // Reconnecting (Refresh, or after signing in) must not leave the previous
+    // transport attached: the SDK refuses a second connect() otherwise.
+    try {
+      await this.client.close();
+    } catch {
+      // nothing to close, or it was already closed
+    }
+
     this.sawUnauthorized = false;
     // OAuth for SSE and streamable-http: if the user has signed in, hand the
     // SDK a provider so it sends the token and refreshes it when it expires.

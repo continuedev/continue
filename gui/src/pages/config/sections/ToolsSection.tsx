@@ -89,6 +89,14 @@ function MCPServerPreview({
     );
   };
 
+  // OAuth applies to the HTTP-based transports. Sign in is always offered for
+  // them (in the menu); it is also shown inline when the server needs it.
+  const isRemote = "url" in server && server.type !== "websocket";
+  const needsSignIn =
+    server.status === "authenticating" ||
+    (server.status !== "connected" &&
+      (server.isProtectedResource || server.status === "error"));
+
   const onAuthenticate = async () => {
     if ("url" in server) {
       updateMCPServerStatus("authenticating");
@@ -229,51 +237,53 @@ function MCPServerPreview({
         </div>
 
         <div className="flex items-center gap-1">
-          {server.isProtectedResource &&
-            "url" in server &&
-            server.status !== "connected" && (
-              <ToolTip
-                content={
-                  server.status === "error"
-                    ? "Authenticate"
-                    : server.status === "authenticating"
-                      ? "Authenticating..."
-                      : "Remove authentication"
+          {isRemote && needsSignIn && (
+            <ToolTip
+              content={
+                server.status === "authenticating" ? "Signing in..." : "Sign in"
+              }
+            >
+              <Button
+                onClick={
+                  server.status === "authenticating"
+                    ? undefined
+                    : onAuthenticate
                 }
+                variant="ghost"
+                size="sm"
+                className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0 pt-0.5"
+                disabled={server.status === "authenticating"}
+                data-testid="mcp-sign-in"
               >
-                <Button
-                  onClick={
-                    server.status === "error"
-                      ? onAuthenticate
-                      : server.status === "authenticating"
-                        ? undefined
-                        : onRemoveAuth
-                  }
-                  variant="ghost"
-                  size="sm"
-                  className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0 pt-0.5"
-                  disabled={server.status === "authenticating"}
-                >
-                  {server.status === "authenticating" ? (
-                    <GlobeAltIcon className="animate-spin-slow h-4 w-4 flex-shrink-0" />
-                  ) : (
-                    <UserCircleIcon className="h-4 w-4 flex-shrink-0" />
-                  )}
-                </Button>
-              </ToolTip>
-            )}
+                {server.status === "authenticating" ? (
+                  <GlobeAltIcon className="animate-spin-slow h-4 w-4 flex-shrink-0" />
+                ) : (
+                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" />
+                )}
+              </Button>
+            </ToolTip>
+          )}
           <Listbox>
             <ListboxButton>
               <EllipsisVerticalIcon className="h-4 w-4 flex-shrink-0" />
             </ListboxButton>
             <ListboxOptions className="min-w-fit" anchor="bottom end">
-              {server.isProtectedResource && server.status === "connected" && (
+              {isRemote && server.status !== "authenticating" && (
+                <ListboxOption
+                  value="sign in"
+                  onClick={onAuthenticate}
+                  className="justify-start gap-x-1.5"
+                >
+                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" /> Sign in
+                </ListboxOption>
+              )}
+              {isRemote && server.isProtectedResource && (
                 <ListboxOption
                   value="remove auth"
                   onClick={onRemoveAuth}
                   className="justify-start gap-x-1.5"
                 >
-                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" /> Logout
+                  <UserCircleIcon className="h-4 w-4 flex-shrink-0" /> Sign out
                 </ListboxOption>
               )}
 

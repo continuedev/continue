@@ -80,17 +80,20 @@ const createServerForOAuth = (port: number) =>
         const description =
           (parsedUrl.query["error_description"] as string | undefined) ??
           oauthError;
-        void handleMCPOauthFailure(
-          `Sign-in was not completed: ${description}`,
-          state,
-          port,
-        );
         res.writeHead(200, { "Content-Type": "text/html" });
         res.end(
           html(
             `Sign-in was not completed (${escapeHtml(description)}). You can close this page.`,
           ),
         );
+        // Only tear things down once the page has been delivered
+        res.once("finish", () => {
+          void handleMCPOauthFailure(
+            `Sign-in was not completed: ${description}`,
+            state,
+            port,
+          );
+        });
         return;
       }
 
@@ -100,12 +103,14 @@ const createServerForOAuth = (port: number) =>
 
       const code = parsedUrl.query["code"] as string;
 
-      void handleMCPOauthCode(code, state);
-
       res.writeHead(200, {
         "Content-Type": "text/html",
       });
       res.end(html("Authentication Complete. You can close this page now."));
+      // The code exchange closes this server, so wait until the page is sent
+      res.once("finish", () => {
+        void handleMCPOauthCode(code, state);
+      });
     } catch (error) {
       res.writeHead(400, { "Content-Type": "text/plain" });
       res.end(`Unexpected redirect error:  ${(error as Error).message}`);
@@ -153,8 +158,8 @@ async function stopCallbackServer(port: number): Promise<void> {
       console.debug("Server for MCP Oauth process was closed");
       resolve();
     });
-    // Don't wait on keep-alive connections from the browser
-    (server as any).closeAllConnections?.();
+    // Don't wait on idle keep-alive connections from the browser
+    (server as any).closeIdleConnections?.();
   });
 }
 
@@ -477,8 +482,19 @@ async function handleMCPOauthFailure(
   state: string | undefined,
   port: number,
 ) {
-  const serverUrl = state ? stateToServerUrl.get(state) : undefined;
+  let serverUrl = state ? stateToServerUrl.get(state) : undefined;
+  if (!serverUrl) {
+    // Servers/SDKs that send no `state` (the SDK only does when the provider
+    // defines one): fall back to the only sign-in waiting on this port.
+    const onPort = Array.from(authenticatingContexts.entries()).filter(
+      ([, c]) => c.port === port,
+    );
+    if (onPort.length === 1) {
+      serverUrl = onPort[0][0];
+    }
+  }
   const context = serverUrl ? authenticatingContexts.get(serverUrl) : undefined;
+  state = state ?? context?.state;
 
   if (serverUrl) {
     endAuthFlow(serverUrl, state);
