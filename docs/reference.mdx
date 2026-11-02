@@ -118,6 +118,8 @@ The `models` section defines the language models used in your configuration. Mod
 
   - `verifySsl`: Whether to verify SSL certificates for requests.
 
+  - `useSystemCa`: Also trust the operating system's certificate store, for example the root certificate of a TLS-inspecting corporate proxy. Defaults to `true` on Windows and macOS and `false` on Linux. Needs a Node.js runtime that provides `tls.getCACertificates` (22.15+); on older runtimes it has no effect.
+
   - `caBundlePath`: Path to a custom CA bundle for HTTP requests.
 
   - `proxy`: Proxy URL for HTTP requests.
@@ -352,6 +354,8 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 - `env`: An optional map of environment variables for the server process.
 - `cwd`: An optional working directory to run the command in. Can be absolute or relative path.
 - `requestOptions`: Optional request options for `sse` and `streamable-http` servers. Same format as [model requestOptions](#models).
+- `oauth`: Optional OAuth settings for `sse` and `streamable-http` servers.
+  - `callbackPort`: Port of the local server that receives the browser redirect while signing in (default `3000`).
 - `connectionTimeout`: Optional timeout for _initial_ connection to MCP server
 
 **Example:**

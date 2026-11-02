@@ -29,7 +29,18 @@ import {
   Model,
 } from "openai/resources/index";
 
+import {
+  applyCrossRegionInference,
+  getBedrockErrorHint,
+} from "./bedrockHelpers.js";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
+import {
+  createAgentForUrl,
+  defaultUseSystemCa,
+  getTlsErrorHint,
+  needsCustomAgent,
+} from "@continuedev/fetch";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { fromStatic } from "@aws-sdk/token-providers";
 import { BedrockConfig } from "../types.js";
 import { chatChunk, chatChunkFromDelta, embedding, rerank } from "../util.js";
@@ -76,35 +87,108 @@ export class BedrockApi implements BaseLlmApi {
     }
   }
 
+  /** Seam over the AWS SDK credential chain (overridden in tests). */
+  protected async credentialChain(profile: string | undefined) {
+    return fromNodeProviderChain({ profile, ignoreCache: true })();
+  }
+
+  private withHint(e: unknown): unknown {
+    if (!(e instanceof Error)) return e;
+    const hint = getBedrockErrorHint(e, {
+      profile: this.config.env?.profile,
+      region: this.config.env?.region,
+    });
+    if (hint && !e.message.includes(hint)) {
+      e.message = `${e.message}\n\n${hint}`;
+    }
+    return e;
+  }
+
   async getCreds() {
-    if (this.config?.env?.accessKeyId && this.config?.env?.secretAccessKey) {
+    const env = this.config.env;
+    if (env?.accessKeyId && env?.secretAccessKey) {
       return {
-        accessKeyId: this.config.env.accessKeyId,
-        secretAccessKey: this.config.env.secretAccessKey,
+        accessKeyId: env.accessKeyId,
+        secretAccessKey: env.secretAccessKey,
+        ...(env.sessionToken ? { sessionToken: env.sessionToken } : {}),
       };
     }
-    const profile = this.config.env?.profile ?? "bedrock";
     try {
-      return await fromNodeProviderChain({
-        profile: profile,
-        ignoreCache: true,
-      })();
+      if (env?.profile) {
+        // Explicitly requested profile: never silently use another one.
+        return await this.credentialChain(env.profile);
+      }
+      // Nothing configured: legacy "bedrock" profile, then the standard chain.
+      try {
+        return await this.credentialChain("bedrock");
+      } catch {
+        return await this.credentialChain(undefined);
+      }
     } catch (e) {
-      console.warn(
-        `AWS profile with name ${profile} not found in ~/.aws/credentials, using default profile`,
-      );
+      throw this.withHint(e);
     }
-    return await fromNodeProviderChain()();
   }
+
+  /** Service tier, latency mode and guardrail settings from config. */
+  private extraConverseFields(): Record<string, unknown> {
+    const env = this.config.env;
+    return {
+      ...(env?.serviceTier ? { serviceTier: { type: env.serviceTier } } : {}),
+      ...(env?.latency ? { performanceConfig: { latency: env.latency } } : {}),
+      ...(env?.guardrailIdentifier
+        ? {
+            guardrailConfig: {
+              guardrailIdentifier: env.guardrailIdentifier,
+              guardrailVersion: env.guardrailVersion ?? "DRAFT",
+            },
+          }
+        : {}),
+    };
+  }
+
+  private resolveApiKey(): string | undefined {
+    if (this.config.apiKey) return this.config.apiKey;
+    const env = this.config.env;
+    if ((env?.accessKeyId && env?.secretAccessKey) || env?.profile) {
+      return undefined;
+    }
+    return process.env.AWS_BEARER_TOKEN_BEDROCK || undefined;
+  }
+
+  private requestHandler?: Promise<NodeHttpHandler | undefined>;
+
+  /**
+   * Applies `requestOptions` (proxy, CA bundle, system CA store, client
+   * certificate, verifySsl) to the AWS SDK, which otherwise ignores them.
+   * Undefined when nothing needs customising.
+   */
+  private getRequestHandler(): Promise<NodeHttpHandler | undefined> {
+    this.requestHandler ??= (async () => {
+      const region = this.config.env?.region ?? "us-east-1";
+      const url = new URL(`https://bedrock-runtime.${region}.amazonaws.com`);
+      const options = this.config.requestOptions;
+      if (!needsCustomAgent(url, options, defaultUseSystemCa())) {
+        return undefined;
+      }
+      const { agent } = await createAgentForUrl(url, options);
+      return new NodeHttpHandler({ httpsAgent: agent });
+    })();
+    return this.requestHandler;
+  }
+
   async getClient(): Promise<BedrockRuntimeClient> {
     const region = this.config.env?.region;
+    const requestHandler = await this.getRequestHandler();
+    const networking = requestHandler ? { requestHandler } : {};
 
     // If apiKey is provided, use bearer token authentication
-    if (this.config.apiKey) {
+    const apiKey = this.resolveApiKey();
+    if (apiKey) {
       return new BedrockRuntimeClient({
         region,
+        ...networking,
         token: fromStatic({
-          token: { token: this.config.apiKey },
+          token: { token: apiKey },
         }),
       });
     }
@@ -113,6 +197,7 @@ export class BedrockApi implements BaseLlmApi {
     const creds = await this.getCreds();
     return new BedrockRuntimeClient({
       region,
+      ...networking,
       credentials: creds,
     });
   }
@@ -390,8 +475,13 @@ export class BedrockApi implements BaseLlmApi {
 
     // Build final request body
     const body: any = {
-      modelId: oaiBody.model,
+      modelId: applyCrossRegionInference(
+        oaiBody.model,
+        this.config.env?.crossRegionInference,
+        this.config.env?.region,
+      ),
       messages: convertedMessages,
+      ...this.extraConverseFields(),
       inferenceConfig: {
         temperature: oaiBody.temperature,
         topP: oaiBody.top_p,
@@ -557,13 +647,22 @@ export class BedrockApi implements BaseLlmApi {
         }
       }
     } catch (error) {
+      // TLS / proxy trouble (untrusted corporate CA, proxy auth) is common
+      // here; say how to fix it.
+      const hint = getTlsErrorHint(error);
+      const withHint = (message: string) =>
+        hint && !message.includes(hint) ? `${message}\n\n${hint}` : message;
       if (error instanceof Error) {
         if ("code" in error) {
           throw new Error(
-            `AWS Bedrock stream error (${(error as any).code}): ${error.message}`,
+            withHint(
+              `AWS Bedrock stream error (${(error as any).code}): ${error.message}`,
+            ),
           );
         }
-        throw new Error(`Error processing Bedrock stream: ${error.message}`);
+        throw new Error(
+          withHint(`Error processing Bedrock stream: ${error.message}`),
+        );
       }
       throw new Error(
         "Error processing Bedrock stream: Unknown error occurred",

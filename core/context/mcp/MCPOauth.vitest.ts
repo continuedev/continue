@@ -9,6 +9,13 @@ vi.mock("@modelcontextprotocol/sdk/client/auth.js", () => ({
   auth: vi.fn(),
 }));
 
+// Don't hit the network to probe the (fake) test servers
+vi.mock("./mcpAuthProbe", () => ({
+  probeResourceMetadataUrl: vi.fn(async () => undefined),
+  probeAuthRequirement: vi.fn(async () => ({ unauthorized: false })),
+  parseResourceMetadataUrl: vi.fn(),
+}));
+
 // Mock the MCPManagerSingleton to avoid circular imports
 vi.mock("./MCPManagerSingleton", () => ({
   MCPManagerSingleton: {

@@ -122,6 +122,133 @@ describe("Bedrock", () => {
     });
   });
 
+  describe("credentials", () => {
+    const base = { model: "anthropic.claude-3-sonnet-20240229-v1:0" };
+    const calls: Array<string | undefined> = [];
+    let chainImpl: (profile: string | undefined) => Promise<any>;
+
+    class ChainBedrock extends TestBedrock {
+      protected async _credentialChain(profile: string | undefined) {
+        calls.push(profile);
+        return chainImpl(profile);
+      }
+    }
+    const make = (o: any = {}) => new ChainBedrock({ ...base, ...o }) as any;
+
+    beforeEach(() => {
+      calls.length = 0;
+      chainImpl = async () => ({
+        accessKeyId: "chain-key",
+        secretAccessKey: "chain-secret",
+      });
+    });
+
+    it("passes sessionToken through with explicit keys", async () => {
+      const b = make({
+        accessKeyId: "AKIA",
+        secretAccessKey: "secret",
+        sessionToken: "tok",
+      });
+      await expect(b._getCredentials()).resolves.toEqual({
+        accessKeyId: "AKIA",
+        secretAccessKey: "secret",
+        sessionToken: "tok",
+      });
+      expect(calls).toEqual([]);
+    });
+
+    it("omits sessionToken when not provided", async () => {
+      const b = make({ accessKeyId: "AKIA", secretAccessKey: "secret" });
+      expect(await b._getCredentials()).not.toHaveProperty("sessionToken");
+    });
+
+    it("uses an explicitly configured profile strictly (no fallback)", async () => {
+      chainImpl = async () => {
+        throw new Error(
+          "The SSO session associated with this profile has expired",
+        );
+      };
+      const b = make({ profile: "work" });
+      await expect(b._getCredentials()).rejects.toThrow(
+        /aws sso login --profile work/,
+      );
+      expect(calls).toEqual(["work"]);
+    });
+
+    it("falls back from the legacy 'bedrock' profile to the default chain when unconfigured", async () => {
+      chainImpl = async (profile) => {
+        if (profile === "bedrock") throw new Error("profile not found");
+        return { accessKeyId: "default-key", secretAccessKey: "s" };
+      };
+      const b = make();
+      const creds = await b._getCredentials();
+      expect(creds.accessKeyId).toBe("default-key");
+      expect(calls).toEqual(["bedrock", undefined]);
+    });
+
+    it("reads AWS_BEARER_TOKEN_BEDROCK only when nothing else is configured", () => {
+      process.env.AWS_BEARER_TOKEN_BEDROCK = "env-token";
+      try {
+        expect((new TestBedrock(base) as any)._resolveApiKey()).toBe(
+          "env-token",
+        );
+        expect(
+          (
+            new TestBedrock({ ...base, profile: "work" }) as any
+          )._resolveApiKey(),
+        ).toBeUndefined();
+        expect(
+          (new TestBedrock({ ...base, apiKey: "cfg" }) as any)._resolveApiKey(),
+        ).toBe("cfg");
+      } finally {
+        delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+      }
+    });
+
+    it("adds service tier, latency mode and guardrail settings to the request", () => {
+      const b: any = new TestBedrock({
+        ...base,
+        serviceTier: "priority",
+        latency: "optimized",
+        guardrailIdentifier: "gr-123",
+      });
+      const input = b._generateConverseInput(
+        [{ role: "user", content: "hi" }],
+        { model: base.model },
+      );
+      expect(input.serviceTier).toEqual({ type: "priority" });
+      expect(input.performanceConfig).toEqual({ latency: "optimized" });
+      expect(input.guardrailConfig).toEqual({
+        guardrailIdentifier: "gr-123",
+        guardrailVersion: "DRAFT",
+      });
+    });
+
+    it("omits those fields by default", () => {
+      const b: any = new TestBedrock(base);
+      const input = b._generateConverseInput(
+        [{ role: "user", content: "hi" }],
+        { model: base.model },
+      );
+      expect(input).not.toHaveProperty("serviceTier");
+      expect(input).not.toHaveProperty("performanceConfig");
+      expect(input).not.toHaveProperty("guardrailConfig");
+    });
+
+    it("applies crossRegionInference to the Converse modelId", () => {
+      const b: any = new TestBedrock({
+        ...base,
+        region: "eu-west-1",
+        crossRegionInference: "auto",
+      });
+      const input = b._generateConverseInput(
+        [{ role: "user", content: "hi" }],
+        { model: base.model },
+      );
+      expect(input.modelId).toBe(`eu.${base.model}`);
+    });
+  });
+
   describe("streamChat", () => {
     let bedrock: TestBedrock;
     const mockAbortSignal = new AbortController().signal;

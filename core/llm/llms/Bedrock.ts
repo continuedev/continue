@@ -4,6 +4,7 @@ import {
   ContentBlockDelta,
   ContentBlockStart,
   ContentBlockStartEvent,
+  ConverseCommand,
   ConversationRole,
   ConverseStreamCommand,
   ConverseStreamCommandOutput,
@@ -15,16 +16,30 @@ import {
   ToolUseBlock,
   ToolUseBlockDelta,
 } from "@aws-sdk/client-bedrock-runtime";
+import {
+  BedrockClient,
+  ListFoundationModelsCommand,
+  ListInferenceProfilesCommand,
+} from "@aws-sdk/client-bedrock";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
+import { getTlsErrorHint } from "@continuedev/fetch";
+import type { NodeHttpHandler } from "@smithy/node-http-handler";
 
-import type { CompletionOptions } from "../../index.js";
+import type { CompletionOptions, RequestOptions } from "../../index.js";
 import { ChatMessage, Chunk, LLMOptions, MessageContent } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { parseDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
+import { createBedrockRequestHandler } from "./bedrockHttp.js";
 import { getSecureID } from "../utils/getSecureID.js";
+import {
+  applyCrossRegionInference,
+  BedrockModelOption,
+  buildModelCatalog,
+  getBedrockErrorHint,
+} from "./bedrockHelpers.js";
 
 interface ModelConfig {
   formatPayload: (text: string) => any;
@@ -58,10 +73,26 @@ class Bedrock extends BaseLLM {
     headers?: Record<string, string>;
   };
 
+  /** True when the user configured `profile` (vs. the built-in default). */
+  private _profileExplicit: boolean;
+
+  /**
+   * The HTTP-level `requestOptions` from config (proxy, CA bundle, ...).
+   * `this.requestOptions` is reused below for Bedrock-specific headers, so the
+   * user's options are kept here.
+   */
+  private _httpRequestOptions: RequestOptions | undefined;
+  private _requestHandlers = new Map<
+    string,
+    Promise<NodeHttpHandler | undefined>
+  >();
+
   constructor(options: LLMOptions) {
     super(options);
+    this._httpRequestOptions = options.requestOptions;
+    this._profileExplicit = !!options.profile;
     if (!options.apiBase) {
-      this.apiBase = `https://bedrock-runtime.${options.region}.amazonaws.com`;
+      this.apiBase = `https://bedrock-runtime.${this.region ?? options.region}.amazonaws.com`;
     }
 
     this.requestOptions = {
@@ -70,27 +101,160 @@ class Bedrock extends BaseLLM {
     };
   }
 
-  private async _getClient(): Promise<BedrockRuntimeClient> {
-    if (this.apiKey) {
+  /** Auth portion of an AWS SDK client config (shared by runtime and control-plane clients). */
+  private async _clientAuth(): Promise<
+    | { token: () => Promise<{ token: string }> }
+    | {
+        credentials: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          sessionToken?: string;
+        };
+      }
+  > {
+    const apiKey = this._resolveApiKey();
+    if (apiKey) {
       // Bedrock API key authentication (bearer token)
-      return new BedrockRuntimeClient({
-        region: this.region,
-        endpoint: this.apiBase,
-        token: async () => ({ token: this.apiKey! }),
-      });
+      return { token: async () => ({ token: apiKey }) };
     }
-
     // IAM credential authentication
     const credentials = await this._getCredentials();
-    return new BedrockRuntimeClient({
-      region: this.region,
-      endpoint: this.apiBase,
+    return {
       credentials: {
         accessKeyId: credentials.accessKeyId,
         secretAccessKey: credentials.secretAccessKey,
-        sessionToken: credentials.sessionToken || "",
+        sessionToken: credentials.sessionToken || undefined,
       },
+    };
+  }
+
+  /** One handler (and connection pool) per endpoint, shared by all clients. */
+  private _requestHandlerFor(
+    endpoint: string,
+  ): Promise<NodeHttpHandler | undefined> {
+    let handler = this._requestHandlers.get(endpoint);
+    if (!handler) {
+      handler = createBedrockRequestHandler(endpoint, this._httpRequestOptions);
+      this._requestHandlers.set(endpoint, handler);
+    }
+    return handler;
+  }
+
+  private async _getClient(): Promise<BedrockRuntimeClient> {
+    const requestHandler = await this._requestHandlerFor(this.apiBase!);
+    return new BedrockRuntimeClient({
+      region: this.region,
+      endpoint: this.apiBase,
+      ...(requestHandler ? { requestHandler } : {}),
+      ...(await this._clientAuth()),
     });
+  }
+
+  /** Control-plane client (model/profile listing). Uses the regional default endpoint. */
+  private async _getControlClient(): Promise<BedrockClient> {
+    const requestHandler = await this._requestHandlerFor(
+      `https://bedrock.${this.region}.amazonaws.com`,
+    );
+    return new BedrockClient({
+      region: this.region,
+      ...(requestHandler ? { requestHandler } : {}),
+      ...(await this._clientAuth()),
+    });
+  }
+
+  /**
+   * List the models this account can use in `region`: on-demand models by ID,
+   * and models that require it by inference profile ID.
+   */
+  async listAvailableModels(): Promise<BedrockModelOption[]> {
+    try {
+      const client = await this._getControlClient();
+
+      const models = await client.send(
+        new ListFoundationModelsCommand({ byOutputModality: "TEXT" }),
+      );
+
+      const profiles: any[] = [];
+      let nextToken: string | undefined;
+      do {
+        const page: any = await client.send(
+          new ListInferenceProfilesCommand({ maxResults: 1000, nextToken }),
+        );
+        profiles.push(...(page.inferenceProfileSummaries ?? []));
+        nextToken = page.nextToken;
+      } while (nextToken);
+
+      return buildModelCatalog(models.modelSummaries ?? [], profiles);
+    } catch (e) {
+      throw this._withHint(e);
+    }
+  }
+
+  /** Extra Converse fields driven by config: service tier, latency mode, guardrails. */
+  private _extraConverseFields(): Record<string, unknown> {
+    return {
+      ...(this.serviceTier ? { serviceTier: { type: this.serviceTier } } : {}),
+      ...(this.latency ? { performanceConfig: { latency: this.latency } } : {}),
+      ...(this.guardrailIdentifier
+        ? {
+            guardrailConfig: {
+              guardrailIdentifier: this.guardrailIdentifier,
+              guardrailVersion: this.guardrailVersion ?? "DRAFT",
+            },
+          }
+        : {}),
+    };
+  }
+
+  /** Send a tiny request to verify credentials, region and access to `model`. */
+  async testModel(): Promise<{
+    modelId: string;
+    latencyMs: number;
+    reply: string;
+  }> {
+    const modelId = applyCrossRegionInference(
+      this.model,
+      this.crossRegionInference,
+      this.region,
+    );
+    const started = Date.now();
+    try {
+      const client = await this._getClient();
+      const response = await client.send(
+        new ConverseCommand({
+          modelId,
+          messages: [
+            {
+              role: "user",
+              content: [{ text: "Reply with the single word: ok" }],
+            },
+          ],
+          inferenceConfig: { maxTokens: 16 },
+          ...this._extraConverseFields(),
+        } as any),
+      );
+      const reply =
+        response.output?.message?.content
+          ?.map((b) => ("text" in b ? b.text : ""))
+          .join("")
+          .trim() ?? "";
+      return { modelId, latencyMs: Date.now() - started, reply };
+    } catch (e) {
+      throw this._withHint(e);
+    }
+  }
+
+  /**
+   * `apiKey` wins; otherwise fall back to the AWS_BEARER_TOKEN_BEDROCK env var
+   * (the same variable the AWS SDK/CLI use) unless the user chose IAM keys or
+   * a named profile explicitly.
+   */
+  private _resolveApiKey(): string | undefined {
+    if (this.apiKey) return this.apiKey;
+    if ((this.accessKeyId && this.secretAccessKey) || this._profileExplicit) {
+      return undefined;
+    }
+    return process.env.AWS_BEARER_TOKEN_BEDROCK || undefined;
   }
 
   protected async *_streamComplete(
@@ -105,6 +269,33 @@ class Bedrock extends BaseLLM {
   }
 
   protected async *_streamChat(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    try {
+      yield* this._streamChatInner(messages, signal, options);
+    } catch (e) {
+      throw this._withHint(e);
+    }
+  }
+
+  /** Append an actionable hint (SSO login, model access, ...) to known AWS errors. */
+  private _withHint(e: unknown): unknown {
+    if (!(e instanceof Error)) return e;
+    const hint =
+      getTlsErrorHint(e) ??
+      getBedrockErrorHint(e, {
+        profile: this._profileExplicit ? this.profile : undefined,
+        region: this.region,
+      });
+    if (hint && !e.message.includes(hint)) {
+      e.message = `${e.message}\n\n${hint}`;
+    }
+    return e;
+  }
+
+  private async *_streamChatInner(
     messages: ChatMessage[],
     signal: AbortSignal,
     options: CompletionOptions,
@@ -317,7 +508,11 @@ class Bedrock extends BaseLLM {
     const convertedMessages = this._convertMessages(messages, availableTools);
 
     return {
-      modelId: options.model,
+      modelId: applyCrossRegionInference(
+        options.model,
+        this.crossRegionInference,
+        this.region,
+      ),
       system: systemMessage
         ? shouldCacheSystemMessage
           ? [{ text: systemMessage }, { cachePoint: { type: "default" } }]
@@ -341,6 +536,7 @@ class Bedrock extends BaseLLM {
           ?.filter((stop) => stop.trim() !== "")
           .slice(0, 4),
       },
+      ...this._extraConverseFields(),
       additionalModelRequestFields: {
         thinking: options.reasoning
           ? {
@@ -591,25 +787,37 @@ class Bedrock extends BaseLLM {
     return blocks;
   }
 
+  /** Seam over the AWS SDK credential chain (overridden in tests). */
+  protected async _credentialChain(profile: string | undefined) {
+    return fromNodeProviderChain({ profile, ignoreCache: true })();
+  }
+
   private async _getCredentials() {
     if (this.accessKeyId && this.secretAccessKey) {
       return {
         accessKeyId: this.accessKeyId,
         secretAccessKey: this.secretAccessKey,
+        ...(this.sessionToken ? { sessionToken: this.sessionToken } : {}),
       };
     }
-    const profile = this.profile ?? "bedrock";
+
     try {
-      return await fromNodeProviderChain({
-        profile: profile,
-        ignoreCache: true,
-      })();
+      if (this._profileExplicit) {
+        // The user asked for this profile: don't silently use another one.
+        return await this._credentialChain(this.profile);
+      }
+
+      // Nothing configured. Keep honouring the historical "bedrock" profile if
+      // it exists, then fall back to the standard AWS chain (env vars,
+      // [default] profile, SSO, container/instance roles, ...).
+      try {
+        return await this._credentialChain("bedrock");
+      } catch {
+        return await this._credentialChain(undefined);
+      }
     } catch (e) {
-      console.warn(
-        `AWS profile with name ${profile} not found in ~/.aws/credentials, using default profile`,
-      );
+      throw this._withHint(e);
     }
-    return await fromNodeProviderChain()();
   }
 
   // EMBED //

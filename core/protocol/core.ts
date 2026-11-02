@@ -60,6 +60,38 @@ export interface ListHistoryOptions {
   workspaceDirectory?: string;
 }
 
+/** Connection settings the add-model form sends to try out Bedrock before saving. */
+export interface BedrockConnectionParams {
+  region?: string;
+  apiKey?: string;
+  apiBase?: string;
+  profile?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  sessionToken?: string;
+  crossRegionInference?: string;
+  serviceTier?: string;
+  latency?: string;
+  guardrailIdentifier?: string;
+  guardrailVersion?: string;
+}
+
+export interface BedrockModelOptionInfo {
+  id: string;
+  name: string;
+  provider: string;
+  kind: "on-demand" | "inference-profile" | "application-profile";
+  baseModelId?: string;
+  legacy?: boolean;
+}
+
+export type BedrockListModelsResult =
+  { ok: true; models: BedrockModelOptionInfo[] } | { ok: false; error: string };
+
+export type BedrockTestModelResult =
+  | { ok: true; modelId: string; latencyMs: number; reply: string }
+  | { ok: false; error: string };
+
 export type ToCoreFromIdeOrWebviewProtocol = {
   // Special
   ping: [string, string];
@@ -218,6 +250,11 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     string,
   ];
   "llm/listModels": [{ title: string }, string[] | undefined];
+  "bedrock/listModels": [BedrockConnectionParams, BedrockListModelsResult];
+  "bedrock/testModel": [
+    BedrockConnectionParams & { model: string },
+    BedrockTestModelResult,
+  ];
   "llm/streamChat": [
     {
       messages: ChatMessage[];
