@@ -45,10 +45,30 @@ for (let i = 2; i < process.argv.length; i++) {
   }
 }
 
+// undici (used by fetch) loads `node:sqlite` for its optional SqliteCacheStore,
+// which we never use. `pkg` bundles every string-literal require and cannot
+// resolve builtins newer than the Node versions it ships ("ENOENT node:sqlite"),
+// which fails every target. Replace the import with a stub.
+const stubNodeSqlite = {
+  name: "stub-node-sqlite",
+  setup(build) {
+    build.onResolve({ filter: /^node:sqlite$/ }, () => ({
+      path: "node:sqlite",
+      namespace: "stub-node-sqlite",
+    }));
+    build.onLoad({ filter: /.*/, namespace: "stub-node-sqlite" }, () => ({
+      contents:
+        'module.exports = { DatabaseSync: class DatabaseSync { constructor() { throw new Error("node:sqlite is not available in this build"); } } };',
+      loader: "js",
+    }));
+  },
+};
+
 // Bundles the extension into one file
 async function buildWithEsbuild() {
   console.log("[info] Building with esbuild...");
   await esbuild.build({
+    plugins: [stubNodeSqlite],
     entryPoints: ["src/index.ts"],
     bundle: true,
     outfile: esbuildOutputFile,
