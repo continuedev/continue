@@ -13,7 +13,7 @@ import { IDE } from "../..";
 import http from "http";
 import url from "url";
 import { v4 as uuidv4 } from "uuid";
-import { GlobalContext, GlobalContextType } from "../../util/GlobalContext";
+import { McpOauthStore } from "./mcpOauthStore";
 import { getTlsErrorHint } from "@continuedev/fetch";
 import { probeResourceMetadataUrl } from "./mcpAuthProbe";
 
@@ -164,11 +164,8 @@ async function stopCallbackServer(port: number): Promise<void> {
   });
 }
 
-type MCPOauthStorage = GlobalContextType["mcpOauthStorage"][string];
-type MCPOauthStorageKey = keyof MCPOauthStorage;
-
 export class MCPConnectionOauthProvider implements OAuthClientProvider {
-  private globalContext: GlobalContext;
+  private store: McpOauthStore;
   private _redirectUrl: string;
   private _redirectUrlInitialized: Promise<void>;
   private port: number;
@@ -182,7 +179,7 @@ export class MCPConnectionOauthProvider implements OAuthClientProvider {
     private ide: IDE,
     private options: McpOauthOptions & { interactive?: boolean } = {},
   ) {
-    this.globalContext = new GlobalContext();
+    this.store = new McpOauthStore(oauthServerUrl, ide);
     this.port = options.callbackPort ?? DEFAULT_OAUTH_CALLBACK_PORT;
     // Set default redirect URL immediately for synchronous access
     this._redirectUrl = getOauthCallbackUrl(this.port);
@@ -240,75 +237,40 @@ export class MCPConnectionOauthProvider implements OAuthClientProvider {
     };
   }
 
-  private _getOauthStorage<K extends MCPOauthStorageKey>(key: K) {
-    return this.globalContext.get("mcpOauthStorage")?.[this.oauthServerUrl]?.[
-      key
-    ];
-  }
-
-  private _updateOauthStorage<K extends MCPOauthStorageKey>(
-    key: K,
-    value: MCPOauthStorage[K],
-  ) {
-    const existingStorage = this.globalContext.get("mcpOauthStorage") ?? {};
-    const existingServerStorage = existingStorage[this.oauthServerUrl] ?? {};
-
-    this.globalContext.update("mcpOauthStorage", {
-      ...existingStorage,
-      [this.oauthServerUrl]: {
-        ...existingServerStorage,
-        [key]: value,
-      },
-    });
-  }
-
-  private _clearOauthStorage() {
-    const existingStorage = this.globalContext.get("mcpOauthStorage") ?? {};
-    delete existingStorage[this.oauthServerUrl];
-    this.globalContext.update("mcpOauthStorage", existingStorage);
-  }
-
-  saveClientInformation(clientInformation: OAuthClientInformationFull) {
-    this._updateOauthStorage("clientInformation", clientInformation);
+  async saveClientInformation(clientInformation: OAuthClientInformationFull) {
+    await this.store.update((c) => ({ ...c, clientInformation }));
   }
 
   async clientInformation() {
-    const existingClientInformation =
-      this._getOauthStorage("clientInformation");
-    if (!existingClientInformation) {
+    const { clientInformation } = await this.store.load();
+    if (!clientInformation) {
       return undefined;
     }
-    return await OAuthClientInformationSchema.parseAsync(
-      existingClientInformation,
-    );
+    return await OAuthClientInformationSchema.parseAsync(clientInformation);
   }
 
   async tokens() {
-    const existingTokens = this._getOauthStorage("tokens");
-    if (!existingTokens) {
+    const { tokens } = await this.store.load();
+    if (!tokens) {
       return undefined;
     }
-    return await OAuthTokensSchema.parseAsync(existingTokens);
+    return await OAuthTokensSchema.parseAsync(tokens);
   }
 
-  saveTokens(tokens: OAuthTokens) {
-    this._updateOauthStorage("tokens", tokens);
+  async saveTokens(tokens: OAuthTokens) {
+    await this.store.update((c) => ({ ...c, tokens }));
   }
 
-  codeVerifier(): string | Promise<string> {
-    const existingCodeVerifier = this._getOauthStorage("codeVerifier");
-    if (!existingCodeVerifier) {
-      return "";
-    }
-    return existingCodeVerifier;
+  async codeVerifier(): Promise<string> {
+    return (await this.store.load()).codeVerifier ?? "";
   }
 
-  saveCodeVerifier(codeVerifier: string) {
-    this._updateOauthStorage("codeVerifier", codeVerifier);
+  async saveCodeVerifier(codeVerifier: string) {
+    await this.store.update((c) => ({ ...c, codeVerifier }));
   }
 
-  clear() {
-    this._clearOauthStorage();
+  clear(): Promise<void> {
+    return this.store.clear();
   }
 
   /**
@@ -316,19 +278,17 @@ export class MCPConnectionOauthProvider implements OAuthClientProvider {
    * example a revoked refresh token): drop what is stale instead of retrying
    * with it forever.
    */
-  invalidateCredentials(scope: "all" | "client" | "tokens" | "verifier") {
+  async invalidateCredentials(scope: "all" | "client" | "tokens" | "verifier") {
     if (scope === "all") {
-      this._clearOauthStorage();
+      await this.store.clear();
       return;
     }
-    const existing = this.globalContext.get("mcpOauthStorage") ?? {};
-    const server = { ...(existing[this.oauthServerUrl] ?? {}) };
-    if (scope === "client") delete server.clientInformation;
-    if (scope === "tokens") delete server.tokens;
-    if (scope === "verifier") delete server.codeVerifier;
-    this.globalContext.update("mcpOauthStorage", {
-      ...existing,
-      [this.oauthServerUrl]: server,
+    await this.store.update((current) => {
+      const next = { ...current };
+      if (scope === "client") delete next.clientInformation;
+      if (scope === "tokens") delete next.tokens;
+      if (scope === "verifier") delete next.codeVerifier;
+      return next;
     });
   }
 
@@ -466,7 +426,7 @@ export async function performAuth(
     // Clean up on error, including stale registration / verifier state that
     // would otherwise make the next attempt fail the same way
     endAuthFlow(url, state);
-    authProvider.clear();
+    await authProvider.clear();
     if (!portInUseByAnotherFlow(port)) {
       await stopCallbackServer(port);
     }
@@ -505,7 +465,7 @@ async function handleMCPOauthFailure(
 
   if (serverUrl) {
     endAuthFlow(serverUrl, state);
-    new MCPConnectionOauthProvider(
+    await new MCPConnectionOauthProvider(
       serverUrl,
       context?.ide ?? ({} as IDE),
     ).clear();
@@ -587,7 +547,7 @@ async function handleMCPOauthCode(authorizationCode: string, state?: string) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("OAuth authorization failed:", errorMessage);
     // Don't keep a half-finished registration / verifier around
-    new MCPConnectionOauthProvider(serverUrl, ide).clear();
+    await new MCPConnectionOauthProvider(serverUrl, ide).clear();
     if (context?.ide) {
       await context.ide.showToast("error", `OAuth failed: ${errorMessage}`);
       try {
@@ -603,7 +563,7 @@ async function handleMCPOauthCode(authorizationCode: string, state?: string) {
   }
 }
 
-export function removeMCPAuth(url: string, ide: IDE) {
+export async function removeMCPAuth(url: string, ide: IDE) {
   const authProvider = new MCPConnectionOauthProvider(url, ide);
-  authProvider.clear();
+  await authProvider.clear();
 }

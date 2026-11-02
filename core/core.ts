@@ -516,7 +516,7 @@ export class Core {
       }
     });
     on("mcp/removeAuthentication", async (msg) => {
-      removeMCPAuth(msg.data.serverUrl, this.ide);
+      await removeMCPAuth(msg.data.serverUrl, this.ide);
       await MCPManagerSingleton.getInstance().refreshConnection(
         msg.data.serverId,
       );

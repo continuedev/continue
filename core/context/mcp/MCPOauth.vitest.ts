@@ -127,7 +127,7 @@ describe("MCPOauth", () => {
   });
 
   describe("removeMCPAuth", () => {
-    test("should clear oauth storage for the server", () => {
+    test("should clear oauth storage for the server", async () => {
       const globalContext = new GlobalContext();
       globalContext.update("mcpOauthStorage", {
         "https://test-server.com": {
@@ -149,7 +149,7 @@ describe("MCPOauth", () => {
         },
       });
 
-      removeMCPAuth(mockMcpServerUrl, mockIde);
+      await removeMCPAuth(mockMcpServerUrl, mockIde);
 
       const updatedStorage = globalContext.get("mcpOauthStorage");
       expect(updatedStorage).toEqual({
@@ -162,7 +162,7 @@ describe("MCPOauth", () => {
       });
     });
 
-    test("should handle non-existent server gracefully", () => {
+    test("should handle non-existent server gracefully", async () => {
       const globalContext = new GlobalContext();
       globalContext.update("mcpOauthStorage", {
         "https://other-server.com": {
@@ -173,7 +173,7 @@ describe("MCPOauth", () => {
         },
       });
 
-      removeMCPAuth(mockMcpServerUrl, mockIde);
+      await removeMCPAuth(mockMcpServerUrl, mockIde);
 
       const updatedStorage = globalContext.get("mcpOauthStorage");
       expect(updatedStorage).toEqual({

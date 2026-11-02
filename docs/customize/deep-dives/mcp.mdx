@@ -182,8 +182,11 @@ mcpServers:
 If sign-in fails or is abandoned (denied in the browser, a wrong code, or no response for 5 minutes), the partial registration is cleared so the next attempt starts clean.
 
 <Note>
-  OAuth credentials are stored in `~/.continue/index/globalContext.json`. Treat
-  that file like any other credential store.
+  OAuth credentials (access and refresh tokens, client registration) are kept in
+  the editor's encrypted secret storage. Hosts that can't store secrets, such as
+  the CLI, fall back to `~/.continue/index/globalContext.json`; treat that file
+  like any other credential store. Credentials saved there by earlier versions
+  are moved into secret storage the first time they are used.
 </Note>
 
 ### How to Use MCP Servers Behind a Proxy or TLS Inspection
