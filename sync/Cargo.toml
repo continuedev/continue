@@ -28,6 +28,6 @@ tempfile = "3.8.1"
 tempfile = "3.8.1"
 
 [dependencies.neon]
-version = "0.10"
+version = "1.0"
 default-features = false
 features = ["napi-6"]

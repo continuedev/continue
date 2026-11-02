@@ -11,7 +11,7 @@ fn build_js_array<'a>(
     rs_array: Vec<(String, String)>,
     cx: &mut FunctionContext<'a>,
 ) -> Handle<'a, JsArray> {
-    let js_array = JsArray::new(cx, rs_array.len() as u32);
+    let js_array = JsArray::new(cx, rs_array.len());
     for (i, (name, hash)) in rs_array.iter().enumerate() {
         let js_object = JsObject::new(cx);
 
@@ -130,7 +130,7 @@ fn db_retrieve(mut cx: FunctionContext) -> JsResult<JsArray> {
 
     let results = db::retrieve(n, tags, v);
 
-    let js_array = JsArray::new(&mut cx, results.len() as u32);
+    let js_array = JsArray::new(&mut cx, results.len());
     for (i, chunk) in results.iter().enumerate() {
         let js_object = JsObject::new(&mut cx);
 
