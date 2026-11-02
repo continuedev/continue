@@ -1,57 +1,57 @@
 # Core packages
-numpy==1.21.2
-pandas==1.3.3
-scipy==1.7.1
+numpy==2.5.4
+pandas==3.1.0
+scipy==1.18.1
 
 # Web development
-flask==2.0.2
-django==4.2.27
+flask==3.1.3
+django==6.1.2
 
 # Request handling
-requests==2.26.0
-httpx==0.19.0
+requests==2.34.2
+httpx==0.28.1
 
 # Machine Learning
-scikit-learn==0.24.2
-tensorflow==2.6.0
+scikit-learn==1.9.1
+tensorflow==2.21.0
 
 # Data visualization
-matplotlib==3.4.3
-seaborn==0.11.2
-plotly==5.3.1
+matplotlib==3.11.2
+seaborn==0.13.2
+plotly==7.1.0
 
 # Natural Language Processing
-nltk==3.6.3
-spacy==3.1.2
+nltk==3.10.4
+spacy==3.8.18
 
 # Deep Learning
-torch==2.6.0
-keras==2.6.0
+torch==2.15.0
+keras==3.15.1
 
 # Image processing
-pillow==8.3.2
-opencv-python==4.5.3.56
+pillow==13.0.0
+opencv-python==5.0.0.93
 
 # Data handling and manipulation
-beautifulsoup4==4.10.0
-sqlalchemy==1.4.25
-xlrd==2.0.1
-openpyxl==3.0.9
+beautifulsoup4==4.15.0
+sqlalchemy==2.1.6
+xlrd==2.0.2
+openpyxl==3.1.5
 
 # Utilities
-pyyaml==5.4.1
-python-dotenv==0.19.0
+pyyaml==6.0.3
+python-dotenv==1.2.4
 
 # Testing
-pytest==6.2.5
+pytest==9.2.0
 
 # Logging and Debugging
-loguru==0.5.3
+loguru==0.7.3
 
 # Asynchronous Programming
-aiohttp==3.7.4
+aiohttp==3.14.5
 
 # Others
-jupyter==1.0.0
-gunicorn==20.1.0
-psycopg2==2.9.1
+jupyter==1.1.1
+gunicorn==26.2.0
+psycopg2-binary==2.9.13
