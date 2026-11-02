@@ -16,22 +16,22 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v7
       with:
         node-version-file: ".nvmrc"
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       with:
         path: ~/.npm
         key: ${{ runner.os }}-npm-cache-${{ inputs.component }}-${{ hashFiles(inputs.component == 'vscode' && 'extensions/vscode/package-lock.json' || format('{0}/package-lock.json', inputs.component)) }}
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       if: inputs.include-packages == 'true'
       with:
         path: |
           packages/*/node_modules
         key: ${{ runner.os }}-packages-node-modules-${{ hashFiles('packages/*/package-lock.json') }}
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       if: inputs.include-root == 'true'
       id: root-cache
       with:
@@ -43,7 +43,7 @@ runs:
       shell: bash
       run: npm ci
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       id: component-cache
       with:
         path: ${{ inputs.component == 'vscode' && 'extensions/vscode/node_modules' || format('{0}/node_modules', inputs.component) }}

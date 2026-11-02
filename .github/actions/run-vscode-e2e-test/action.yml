@@ -25,31 +25,31 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v7
       with:
         node-version-file: ".nvmrc"
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       id: vscode-node-modules-cache
       with:
         path: extensions/vscode/node_modules
         key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
     # We don't want to cache the Continue extension, so it is deleted at the end of the job
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       id: test-extensions-cache
       with:
         path: extensions/vscode/e2e/.test-extensions
         key: CONSTANT
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       id: storage-cache
       with:
         path: extensions/vscode/e2e/storage
         key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
     - name: Download build artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: vscode-extension-build-Linux
         path: extensions/vscode/build
@@ -121,7 +121,7 @@ runs:
 
     - name: Upload e2e test screenshots
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: e2e-failure-screenshots-${{ steps.sanitize_filename.outputs.sanitized_test_file || 'unknown' }}-${{ inputs.command == 'e2e:ci:run-yaml' && 'yaml' || 'json' }}
         path: extensions/vscode/e2e/storage/screenshots
@@ -135,7 +135,7 @@ runs:
 
     - name: Upload e2e logs
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: e2e-logs-${{ steps.sanitize_filename.outputs.sanitized_test_file || 'unknown' }}-${{ inputs.command == 'e2e:ci:run-yaml' && 'yaml' || 'json' }}
         path: extensions/vscode/e2e.log

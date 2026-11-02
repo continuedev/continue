@@ -27,7 +27,7 @@ jobs:
             name: cn-staging
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Publish ${{ matrix.name }} Blueprint to Runloop
         env:

@@ -21,19 +21,19 @@ jobs:
     runs-on: ubuntu-latest
     if: github.run_attempt > 1
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Track workflow rerun
         uses: ./.github/actions/track-rerun
 
   prettier-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         id: root-cache
         with:
           path: node_modules
@@ -49,7 +49,7 @@ jobs:
   core-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Needed for git diff to work
       - name: Setup packages
@@ -97,7 +97,7 @@ jobs:
   gui-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup packages
         uses: ./.github/actions/setup-packages
       - name: Setup core component
@@ -127,7 +127,7 @@ jobs:
   binary-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup packages
         uses: ./.github/actions/setup-packages
       - name: Setup core component
@@ -149,7 +149,7 @@ jobs:
   vscode-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup packages
         uses: ./.github/actions/setup-packages
       - name: Setup core component
@@ -182,7 +182,7 @@ jobs:
     outputs:
       packages: ${{ steps.get-packages.outputs.packages }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Get package list
         id: get-packages
         run: |
@@ -197,7 +197,7 @@ jobs:
       matrix:
         package: ${{ fromJson(needs.get-packages-matrix.outputs.packages) }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Needed for git diff to work
       - name: Setup packages
@@ -234,32 +234,32 @@ jobs:
     outputs:
       test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: ".nvmrc"
 
       - name: Cache npm
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: ${{ runner.os }}-npm-cache-matrix-${{ hashFiles('core/package-lock.json', 'extensions/vscode/package-lock.json') }}
 
       - name: Cache packages node_modules
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             packages/*/node_modules
           key: ${{ runner.os }}-packages-node-modules-${{ hashFiles('packages/*/package-lock.json') }}
 
       - name: Cache core node modules
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
       - name: Cache vscode extension node modules
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         id: vscode-cache
         with:
           path: extensions/vscode/node_modules
@@ -294,7 +294,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -326,7 +326,7 @@ jobs:
         test_file: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_matrix) }}
         command: ["e2e:ci:run", "e2e:ci:run-yaml"]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Run VS Code E2E test
         uses: ./.github/actions/run-vscode-e2e-test
         with:
@@ -352,7 +352,7 @@ jobs:
           docker-images: true
           swap-storage: true
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Run JetBrains tests
         uses: ./.github/actions/run-jetbrains-tests
         with:

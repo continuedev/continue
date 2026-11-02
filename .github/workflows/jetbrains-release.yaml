@@ -56,7 +56,7 @@ jobs:
   #   steps:
   #     # 0. Setup git
   #     - name: Checkout
-  #       uses: actions/checkout@v6
+  #       uses: actions/checkout@v7
 
   #     - name: Set up Git
   #       run: |
@@ -102,12 +102,12 @@ jobs:
     steps:
       # Check out current repository
       - name: Fetch Sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.release.tag_name }}
 
       - name: Import Apple certificate
-        uses: apple-actions/import-codesign-certs@v6
+        uses: apple-actions/import-codesign-certs@v7
         with:
           keychain: ${{ github.run_id }}
           keychain-password: ${{ github.run_id }}
@@ -120,7 +120,7 @@ jobs:
 
       # # Set up Java environment for the next steps
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: zulu
           java-version: 17
@@ -152,24 +152,24 @@ jobs:
 
       # # Setup Node.js
       - name: Use Node.js from .nvmrc
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: ".nvmrc"
 
       - name: Cache core node_modules
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: core/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
 
       - name: Cache binary node_modules
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
 
       - name: Cache gui node_modules
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
@@ -366,22 +366,22 @@ jobs:
     steps:
       # 1. Check-out repository
       - name: Check-out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # 2. Install npm dependencies
       - name: Use Node.js from .nvmrc
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: ".nvmrc"
 
       - name: Cache core node_modules
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: core/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
 
       - name: Cache binary node_modules
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
@@ -433,11 +433,11 @@ jobs:
     steps:
       # Check out current repository
       - name: Fetch Sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Set up Java environment for the next steps
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: zulu
           java-version: 17
@@ -480,18 +480,18 @@ jobs:
 
       # Check out current repository
       - name: Fetch Sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Set up Java environment for the next steps
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: zulu
           java-version: 17
 
       # Run Qodana inspections
       - name: Qodana - Code Inspection
-        uses: JetBrains/qodana-action@v2025.3.2
+        uses: JetBrains/qodana-action@v2026.2.2
         with:
           cache-default-branch-only: true
 
@@ -511,11 +511,11 @@ jobs:
 
       # Check out current repository
       - name: Fetch Sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Set up Java environment for the next steps
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: zulu
           java-version: 17
@@ -528,7 +528,7 @@ jobs:
 
       # Cache Plugin Verifier IDEs
       - name: Setup Plugin Verifier IDEs Cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ needs.build.outputs.pluginVerifierHomeDir }}/ides
           key: plugin-verifier-${{ hashFiles('build/printProductsReleases.txt') }}

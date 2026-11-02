@@ -12,7 +12,7 @@ jobs:
       issues: write
     steps:
       - name: "Auto-assign issue"
-        uses: pozil/auto-assign-issue@v2
+        uses: pozil/auto-assign-issue@v4
         with:
           repo-token: ${{ secrets.CI_GITHUB_TOKEN }}
           assignees: Patrick-Erichsen,tomasz-stefaniak,RomneyDa,tingwai,uinstinct

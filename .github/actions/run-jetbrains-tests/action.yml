@@ -12,11 +12,11 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v7
       with:
         node-version-file: ".nvmrc"
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       with:
         path: core/node_modules
         key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
@@ -36,7 +36,7 @@ runs:
         npm run build
 
     - name: Setup Java
-      uses: actions/setup-java@v4.5.0
+      uses: actions/setup-java@v6.1.0
       with:
         distribution: zulu
         java-version: 17
@@ -51,27 +51,27 @@ runs:
         token: ${{ inputs.github-token }}
 
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
+      uses: gradle/actions/setup-gradle@v6
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       with:
         path: ~/.npm
         key: ${{ runner.os }}-npm-cache-jetbrains-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       id: vscode-extension-cache
       with:
         path: extensions/vscode/node_modules
         key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       id: gui-cache
       with:
         path: gui/node_modules
         key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
     # Cache prepackaged extension build to share with other jobs
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       id: vscode-prepackage-cache
       with:
         path: extensions/vscode/build
@@ -91,7 +91,7 @@ runs:
         # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
         GITHUB_TOKEN: ${{ inputs.ci-github-token }}
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       id: binary-cache
       with:
         path: binary/node_modules
@@ -144,7 +144,7 @@ runs:
 
     - name: Save fails report
       if: ${{ failure() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: jb-failure-report
         path: |
