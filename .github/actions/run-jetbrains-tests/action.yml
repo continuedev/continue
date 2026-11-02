@@ -41,7 +41,10 @@ runs:
         distribution: zulu
         java-version: 17
 
+    # FFmpeg only records test videos. Its download has returned a non-xz file
+    # (making this step fail before any test runs), so don't let it fail the job.
     - name: Setup FFmpeg
+      continue-on-error: true
       uses: AnimMouse/setup-ffmpeg@v1
       with:
         version: 7.1
