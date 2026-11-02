@@ -10,7 +10,6 @@ import ModelSelectionListbox from "../components/modelSelection/ModelSelectionLi
 import { ModelProviderTags } from "../components/modelSelection/utils";
 import { useAuth } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
 import {
   fetchProviderModels,
   initializeDynamicModels,
@@ -20,6 +19,15 @@ import {
   ProviderInfo,
   providers,
 } from "../pages/AddNewModel/configs/providers";
+import type { BedrockModelOptionInfo } from "core/protocol/core";
+import {
+  areRequiredFieldsFilled,
+  buildModelFromForm,
+  getBedrockConnectionParams,
+  getRenderableFields,
+} from "./addModelFormUtils";
+import { BedrockConnectionTester } from "./BedrockConnectionTester";
+import { FormSelect } from "./FormSelect";
 
 interface AddModelFormProps {
   onDone: () => void;
@@ -39,6 +47,11 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
     selectedProvider.packages[0],
   );
   const formMethods = useForm();
+  // Subscribing to all values lets conditional fields (e.g. auth method) re-render.
+  const formValues = formMethods.watch();
+  // Model chosen from Bedrock's live model list (overrides the package default).
+  const [pickedBedrockModel, setPickedBedrockModel] =
+    useState<BedrockModelOptionInfo>();
   const ideMessenger = useContext(IdeMessengerContext);
 
   const [fetchedModelsList, setFetchedModelsList] = useState<ModelPackage[]>(
@@ -112,14 +125,7 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
       return false;
     }
 
-    const required = selectedProvider.collectInputFor
-      ?.filter((input) => input.required)
-      .map((input) => {
-        const value = formMethods.watch(input.key);
-        return value;
-      });
-
-    return !required?.every((value) => value !== undefined && value.length > 0);
+    return !areRequiredFieldsFilled(selectedProvider, formValues);
   }
 
   useEffect(() => {
@@ -143,22 +149,18 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
       : undefined;
 
   function onSubmit() {
-    const apiKey = formMethods.watch("apiKey");
-    const hasValidApiKey = apiKey !== undefined && apiKey !== "";
-
-    const reqInputFields: Record<string, any> = {};
-    for (let input of selectedProvider.collectInputFor ?? []) {
-      reqInputFields[input.key] = formMethods.watch(input.key);
-    }
-
-    const model = {
-      ...selectedProvider.params,
-      ...selectedModel.params,
-      ...reqInputFields,
-      provider: selectedProvider.provider,
-      title: selectedModel.title,
-      ...(hasValidApiKey ? { apiKey } : {}),
-    };
+    const model = buildModelFromForm(
+      selectedProvider,
+      selectedModel,
+      formMethods.getValues(),
+      {
+        title:
+          pickedBedrockModel &&
+          formMethods.getValues("model") === pickedBedrockModel.id
+            ? `${pickedBedrockModel.name} (Bedrock)`
+            : undefined,
+      },
+    );
 
     ideMessenger.post("config/addModel", { model });
 
@@ -362,32 +364,64 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
               </div>
             )}
 
-            {selectedProvider.collectInputFor &&
-              selectedProvider.collectInputFor
-                .filter(
-                  (field) =>
-                    !Object.values(completionParamsInputs).some(
-                      (input) => input.key === field.key,
-                    ) &&
-                    field.required &&
-                    field.key !== "apiKey",
-                )
-                .map((field) => (
-                  <div key={field.key}>
-                    <>
-                      <label className="mb-1 block text-sm font-medium">
-                        {field.label}
-                      </label>
-                      <Input
-                        id={field.key}
-                        className="w-full"
-                        defaultValue={field.defaultValue}
-                        placeholder={`${field.placeholder}`}
-                        {...formMethods.register(field.key)}
-                      />
-                    </>
-                  </div>
-                ))}
+            {getRenderableFields(selectedProvider, formValues).map((field) => (
+              <div key={`${selectedProvider.provider}-${field.key}`}>
+                <label
+                  className="mb-1 block text-sm font-medium"
+                  htmlFor={field.key}
+                >
+                  {field.label}
+                </label>
+                {field.inputType === "select" ? (
+                  <FormSelect
+                    id={field.key}
+                    defaultValue={field.defaultValue}
+                    {...formMethods.register(field.key)}
+                  >
+                    {(
+                      field.choices ??
+                      (field.options ?? []).map((o) => ({ value: o, label: o }))
+                    ).map((choice) => (
+                      <option key={choice.value} value={choice.value}>
+                        {choice.label}
+                      </option>
+                    ))}
+                  </FormSelect>
+                ) : (
+                  <Input
+                    id={field.key}
+                    className="w-full"
+                    type={field.inputType === "password" ? "password" : "text"}
+                    defaultValue={field.defaultValue}
+                    placeholder={`${field.placeholder ?? ""}`}
+                    {...formMethods.register(field.key)}
+                  />
+                )}
+                {field.description && (
+                  <span className="text-description-muted mt-1 block text-xs">
+                    {field.description}
+                  </span>
+                )}
+              </div>
+            ))}
+
+            {selectedProvider.provider === "bedrock" && (
+              <BedrockConnectionTester
+                connection={getBedrockConnectionParams(
+                  selectedProvider,
+                  selectedModel,
+                  formValues,
+                )}
+                model={formValues.model || selectedModel.params.model}
+                canTest={areRequiredFieldsFilled(selectedProvider, formValues)}
+                onPickModel={(m) => {
+                  setPickedBedrockModel(m);
+                  formMethods.setValue("model", m?.id ?? "", {
+                    shouldDirty: true,
+                  });
+                }}
+              />
+            )}
           </div>
 
           <div className="mt-4 w-full">

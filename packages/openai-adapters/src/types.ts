@@ -94,6 +94,12 @@ export const BedrockConfigSchema = OpenAIConfigSchema.extend({
       accessKeyId: z.string().optional(),
       secretAccessKey: z.string().optional(),
       profile: z.string().optional(),
+      sessionToken: z.string().optional(),
+      crossRegionInference: z.string().optional(),
+      serviceTier: z.string().optional(),
+      latency: z.string().optional(),
+      guardrailIdentifier: z.string().optional(),
+      guardrailVersion: z.string().optional(),
     })
     .optional(),
 });
@@ -145,9 +151,7 @@ export interface AskSageTool {
 }
 
 export type AskSageToolChoice =
-  | "auto"
-  | "none"
-  | { type: "function"; function: { name: string } };
+  "auto" | "none" | { type: "function"; function: { name: string } };
 
 export interface AskSageToolCall {
   id: string;

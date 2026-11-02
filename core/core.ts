@@ -14,6 +14,7 @@ import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
+import Bedrock from "./llm/llms/Bedrock";
 import Lemonade from "./llm/llms/Lemonade";
 import { fetchModels } from "./llm/fetchModels";
 import Ollama from "./llm/llms/Ollama";
@@ -597,6 +598,34 @@ export class Core {
       return completion;
     });
     on("llm/listModels", this.handleListModels.bind(this));
+
+    // Bedrock add-model form: discover available models / test a connection
+    // with the not-yet-saved settings.
+    on("bedrock/listModels", async (msg) => {
+      try {
+        const bedrock = new Bedrock({ ...msg.data, model: "" });
+        return {
+          ok: true as const,
+          models: await bedrock.listAvailableModels(),
+        };
+      } catch (e) {
+        return {
+          ok: false as const,
+          error: e instanceof Error ? e.message : String(e),
+        };
+      }
+    });
+    on("bedrock/testModel", async (msg) => {
+      try {
+        const bedrock = new Bedrock({ ...msg.data });
+        return { ok: true as const, ...(await bedrock.testModel()) };
+      } catch (e) {
+        return {
+          ok: false as const,
+          error: e instanceof Error ? e.message : String(e),
+        };
+      }
+    });
 
     on("llm/compileChat", async (msg) => {
       const { messages, options } = msg.data;
