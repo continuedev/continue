@@ -488,9 +488,9 @@ export class Core {
     });
     on("mcp/startAuthentication", async (msg) => {
       const manager = MCPManagerSingleton.getInstance();
+      const connection = manager.getConnection(msg.data.serverId);
       const callbackPort = (
-        manager.getConnection(msg.data.serverId)?.options as
-          { oauth?: { callbackPort?: number } } | undefined
+        connection?.options as { oauth?: { callbackPort?: number } } | undefined
       )?.oauth?.callbackPort;
       manager.setStatus(msg.data.serverId, "authenticating");
       try {
@@ -498,7 +498,8 @@ export class Core {
           msg.data.serverId,
           msg.data.serverUrl,
           this.ide,
-          { callbackPort },
+          // same proxy / CA settings as the connection itself
+          { callbackPort, fetchFn: connection?.getFetch() as any },
         );
         if (status === "AUTHORIZED") {
           // Already signed in (for example the token was still valid)

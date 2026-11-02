@@ -14,6 +14,7 @@ import http from "http";
 import url from "url";
 import { v4 as uuidv4 } from "uuid";
 import { GlobalContext, GlobalContextType } from "../../util/GlobalContext";
+import { getTlsErrorHint } from "@continuedev/fetch";
 import { probeResourceMetadataUrl } from "./mcpAuthProbe";
 
 export const DEFAULT_OAUTH_CALLBACK_PORT = 3000;
@@ -468,6 +469,12 @@ export async function performAuth(
     authProvider.clear();
     if (!portInUseByAnotherFlow(port)) {
       await stopCallbackServer(port);
+    }
+    // An untrusted certificate or proxy problem is the usual cause behind
+    // "fetch failed" here; say how to fix it.
+    const tlsHint = getTlsErrorHint(error);
+    if (error instanceof Error && tlsHint && !error.message.includes(tlsHint)) {
+      error.message = `${error.message}\n\n${tlsHint}`;
     }
     throw error;
   }

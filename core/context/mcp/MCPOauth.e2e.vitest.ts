@@ -1,7 +1,5 @@
-import crypto from "node:crypto";
 import fs from "node:fs";
-import http from "node:http";
-import net, { AddressInfo } from "node:net";
+import net from "node:net";
 import {
   afterAll,
   afterEach,
@@ -16,6 +14,12 @@ import { IDE } from "../..";
 import { GlobalContext } from "../../util/GlobalContext";
 import { getGlobalContextFilePath } from "../../util/paths";
 import { MCPManagerSingleton } from "./MCPManagerSingleton";
+import {
+  MockOAuthMcpServer,
+  MockOptions,
+  freePort,
+  waitFor,
+} from "./mockOAuthMcpServer";
 import { performAuth } from "./MCPOauth";
 
 // core's Vitest setup replaces the global fetch / Request / Response with
@@ -46,236 +50,6 @@ afterAll(() => {
  * code against a mock MCP server that demands a bearer token and a mock OAuth
  * authorization server (dynamic client registration, PKCE, refresh tokens).
  */
-
-interface MockOptions {
-  /** Send a WWW-Authenticate challenge pointing at the metadata URL. */
-  challenge?: boolean;
-  /** Serve OAuth metadata at a non-standard path (only the challenge reveals it). */
-  customMetadataPath?: string;
-  /** Body of the 401 response; real servers rarely say "401" or "Unauthorized". */
-  unauthorizedBody?: string;
-}
-
-class MockOAuthMcpServer {
-  server!: http.Server;
-  base = "";
-  port = 0;
-  readonly requests: string[] = [];
-  readonly grants: string[] = [];
-  private codes = new Map<string, { challenge: string }>();
-  validAccess = new Set<string>();
-  validRefresh = new Set<string>();
-  private counter = 0;
-
-  constructor(private options: MockOptions = {}) {}
-
-  async start() {
-    this.server = http.createServer((req, res) => void this.handle(req, res));
-    await new Promise<void>((r) => this.server.listen(0, "127.0.0.1", r));
-    this.port = (this.server.address() as AddressInfo).port;
-    this.base = `http://127.0.0.1:${this.port}`;
-  }
-
-  async stop() {
-    this.server.closeAllConnections?.();
-    await new Promise((r) => this.server.close(r));
-  }
-
-  get mcpUrl() {
-    return `${this.base}/mcp`;
-  }
-
-  private json(
-    res: http.ServerResponse,
-    status: number,
-    body: unknown,
-    headers = {},
-  ) {
-    res.writeHead(status, { "content-type": "application/json", ...headers });
-    res.end(JSON.stringify(body));
-  }
-
-  private async readBody(req: http.IncomingMessage) {
-    const chunks: Buffer[] = [];
-    for await (const c of req) chunks.push(c as Buffer);
-    return Buffer.concat(chunks).toString();
-  }
-
-  issueCode(challenge: string) {
-    const code = `code-${++this.counter}`;
-    this.codes.set(code, { challenge });
-    return code;
-  }
-
-  expireAccessTokens() {
-    this.validAccess.clear();
-  }
-
-  revokeRefreshTokens() {
-    this.validRefresh.clear();
-  }
-
-  private newTokens() {
-    const access = `access-${++this.counter}`;
-    const refresh = `refresh-${++this.counter}`;
-    this.validAccess.add(access);
-    this.validRefresh.add(refresh);
-    return {
-      access_token: access,
-      refresh_token: refresh,
-      token_type: "Bearer",
-      expires_in: 3600,
-    };
-  }
-
-  private metadataPath() {
-    return (
-      this.options.customMetadataPath ?? "/.well-known/oauth-protected-resource"
-    );
-  }
-
-  private async handle(req: http.IncomingMessage, res: http.ServerResponse) {
-    const path = (req.url ?? "").split("?")[0];
-    this.requests.push(`${req.method} ${path}`);
-
-    if (
-      path === this.metadataPath() ||
-      (!this.options.customMetadataPath &&
-        path.startsWith("/.well-known/oauth-protected-resource"))
-    ) {
-      return this.json(res, 200, {
-        resource: this.mcpUrl,
-        authorization_servers: [this.base],
-      });
-    }
-    if (path.startsWith("/.well-known/oauth-authorization-server")) {
-      return this.json(res, 200, {
-        issuer: this.base,
-        authorization_endpoint: `${this.base}/authorize`,
-        token_endpoint: `${this.base}/token`,
-        registration_endpoint: `${this.base}/register`,
-        response_types_supported: ["code"],
-        grant_types_supported: ["authorization_code", "refresh_token"],
-        code_challenge_methods_supported: ["S256"],
-        token_endpoint_auth_methods_supported: ["none"],
-      });
-    }
-    if (path === "/register" && req.method === "POST") {
-      const body = JSON.parse(await this.readBody(req));
-      return this.json(res, 201, { ...body, client_id: "mock-client" });
-    }
-    if (path === "/token" && req.method === "POST") {
-      const form = new URLSearchParams(await this.readBody(req));
-      const grant = form.get("grant_type") ?? "";
-      this.grants.push(grant);
-      if (grant === "authorization_code") {
-        const entry = this.codes.get(form.get("code") ?? "");
-        const verifier = form.get("code_verifier") ?? "";
-        const challenge = crypto
-          .createHash("sha256")
-          .update(verifier)
-          .digest("base64url");
-        if (!entry || entry.challenge !== challenge) {
-          return this.json(res, 400, {
-            error: "invalid_grant",
-            error_description: "bad code or PKCE verifier",
-          });
-        }
-        this.codes.delete(form.get("code")!);
-        return this.json(res, 200, this.newTokens());
-      }
-      if (grant === "refresh_token") {
-        const refresh = form.get("refresh_token") ?? "";
-        if (!this.validRefresh.has(refresh)) {
-          return this.json(res, 400, {
-            error: "invalid_grant",
-            error_description: "refresh token revoked",
-          });
-        }
-        this.validRefresh.delete(refresh);
-        return this.json(res, 200, this.newTokens());
-      }
-      return this.json(res, 400, { error: "unsupported_grant_type" });
-    }
-
-    if (path === "/mcp") {
-      const auth = req.headers.authorization ?? "";
-      const token = auth.replace(/^Bearer /i, "");
-      if (!this.validAccess.has(token)) {
-        req.resume();
-        return this.json(
-          res,
-          401,
-          { error: this.options.unauthorizedBody ?? "invalid_token" },
-          this.options.challenge
-            ? {
-                "www-authenticate": `Bearer resource_metadata="${this.base}${this.metadataPath()}"`,
-              }
-            : {},
-        );
-      }
-      if (req.method === "GET" || req.method === "DELETE") {
-        res.writeHead(405);
-        return res.end();
-      }
-      const message = JSON.parse(await this.readBody(req));
-      if (message.method === "initialize") {
-        return this.json(res, 200, {
-          jsonrpc: "2.0",
-          id: message.id,
-          result: {
-            protocolVersion: message.params.protocolVersion,
-            capabilities: { tools: {} },
-            serverInfo: { name: "mock-mcp", version: "1.0.0" },
-          },
-        });
-      }
-      if (message.method === "tools/list") {
-        return this.json(res, 200, {
-          jsonrpc: "2.0",
-          id: message.id,
-          result: {
-            tools: [
-              {
-                name: "echo",
-                description: "Echo",
-                inputSchema: { type: "object" },
-              },
-            ],
-          },
-        });
-      }
-      res.writeHead(202);
-      return res.end();
-    }
-
-    res.writeHead(404);
-    res.end();
-  }
-}
-
-async function freePort(): Promise<number> {
-  return await new Promise((resolve) => {
-    const s = net.createServer();
-    s.listen(0, "127.0.0.1", () => {
-      const { port } = s.address() as AddressInfo;
-      s.close(() => resolve(port));
-    });
-  });
-}
-
-async function waitFor(
-  check: () => boolean | Promise<boolean>,
-  what: string,
-  ms = 8000,
-) {
-  const deadline = Date.now() + ms;
-  while (Date.now() < deadline) {
-    if (await check()) return;
-    await new Promise((r) => setTimeout(r, 25));
-  }
-  throw new Error(`Timed out waiting for ${what}`);
-}
 
 describe("MCP OAuth end to end", { timeout: 20_000 }, () => {
   let mock: MockOAuthMcpServer;

@@ -18,7 +18,6 @@ import {
   StreamableHTTPError,
 } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
-import { Agent as HttpsAgent } from "https";
 import {
   IDE,
   InternalMcpOptions,
@@ -33,8 +32,15 @@ import {
   MCPServerStatus,
   MCPTool,
 } from "../..";
+import {
+  createWebFetch,
+  defaultUseSystemCa,
+  getTlsErrorHint,
+  needsCustomAgent,
+} from "@continuedev/fetch";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
 import { getEnvPathFromUserShell } from "../../util/shellPath";
+import { nodeSupportsSystemCa, withSystemCaNodeOption } from "./stdioSystemCa";
 import {
   DEFAULT_OAUTH_CALLBACK_PORT,
   MCPConnectionOauthProvider,
@@ -425,6 +431,11 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
             }
           }
 
+          const tlsHint = getTlsErrorHint(error);
+          if (tlsHint) {
+            errorMessage += `\n\n${tlsHint}`;
+          }
+
           if (this.sawUnauthorized || isUnauthorizedError(error)) {
             this.isProtectedResource = true;
             this.infos.push(this.signInGuidance(!!authProvider));
@@ -581,15 +592,29 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
     return new WebSocketClientTransport(new URL(options.url));
   }
 
+  /**
+   * A `fetch` that applies this server's `requestOptions` (proxy, CA bundle,
+   * the OS certificate store, client certificate, `verifySsl`), or undefined
+   * when the SDK's own networking is fine. Also used for OAuth discovery,
+   * registration, token requests and sign-in.
+   */
+  getFetch(): ReturnType<typeof createWebFetch> | undefined {
+    if (!("url" in this.options) || this.options.type === "websocket") {
+      return undefined;
+    }
+    const requestOptions = this.options.requestOptions;
+    if (
+      !needsCustomAgent(this.options.url, requestOptions, defaultUseSystemCa())
+    ) {
+      return undefined;
+    }
+    return createWebFetch(requestOptions);
+  }
+
   private constructSseTransport(
     options: InternalSseMcpOptions,
     authProvider?: MCPConnectionOauthProvider,
   ): SSEClientTransport {
-    const sseAgent =
-      options.requestOptions?.verifySsl === false
-        ? new HttpsAgent({ rejectUnauthorized: false })
-        : undefined;
-
     // Merge apiKey into headers if provided
     const headers = {
       ...options.requestOptions?.headers,
@@ -598,20 +623,9 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
 
     return new SSEClientTransport(new URL(options.url), {
       authProvider,
-      eventSourceInit: {
-        fetch: (input, init) =>
-          fetch(input, {
-            ...init,
-            headers: {
-              ...init?.headers,
-              ...headers,
-            },
-            ...(sseAgent && { agent: sseAgent }),
-          }),
-      },
+      fetch: this.getFetch(),
       requestInit: {
         headers,
-        ...(sseAgent && { agent: sseAgent }),
       },
     });
   }
@@ -621,10 +635,6 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
     authProvider?: MCPConnectionOauthProvider,
   ): StreamableHTTPClientTransport {
     const { url, requestOptions } = options;
-    const streamableAgent =
-      requestOptions?.verifySsl === false
-        ? new HttpsAgent({ rejectUnauthorized: false })
-        : undefined;
 
     // Merge apiKey into headers if provided
     const headers = {
@@ -634,9 +644,9 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
 
     return new StreamableHTTPClientTransport(new URL(url), {
       authProvider,
+      fetch: this.getFetch(),
       requestInit: {
         headers,
-        ...(streamableAgent && { agent: streamableAgent }),
       },
     });
   }
@@ -650,7 +660,7 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
       ),
     );
 
-    const env = {
+    let env: Record<string, string> = {
       ...commonEnvVars,
       ...(options.env ?? {}),
     };
@@ -676,6 +686,18 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
         }
       }
     }
+
+    // Node-based servers (npx ...) should trust the OS certificate store too,
+    // as Continue does, or they fail behind a TLS-inspecting proxy. Only when
+    // enabled (default on for Windows and macOS) and the node on PATH
+    // understands the flag.
+    const useSystemCa =
+      options.requestOptions?.useSystemCa ?? defaultUseSystemCa();
+    env = withSystemCaNodeOption(
+      env,
+      useSystemCa,
+      useSystemCa ? await nodeSupportsSystemCa(env) : false,
+    );
 
     const { command, args } = await this.resolveCommandForPlatform(
       options.command,
