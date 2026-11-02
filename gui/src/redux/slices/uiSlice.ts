@@ -1,6 +1,6 @@
 import { ToolPolicy } from "@continuedev/terminal-security";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RuleWithSource, Tool } from "core";
+import { MessageModes, RuleWithSource, Tool } from "core";
 import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import {
   defaultOnboardingCardState,
@@ -28,6 +28,8 @@ type UIState = {
   toolGroupSettings: ToolGroupPolicies;
   ruleSettings: RulePolicies;
   reasoningSettings: ReasoningSettings;
+  /** Model the user picked by hand per mode; wins over `modeModels` until reload. */
+  modeModelOverrides: Partial<Record<MessageModes, string>>;
   ttsActive: boolean;
 };
 
@@ -49,6 +51,7 @@ export const DEFAULT_UI_SLICE: UIState = {
   },
   ruleSettings: {},
   reasoningSettings: {},
+  modeModelOverrides: {},
 };
 
 export const uiSlice = createSlice({
@@ -149,6 +152,12 @@ export const uiSlice = createSlice({
       state.reasoningSettings[action.payload.modelTitle] =
         action.payload.enabled;
     },
+    setModeModelOverride: (
+      state,
+      action: PayloadAction<{ mode: MessageModes; title: string }>,
+    ) => {
+      state.modeModelOverrides[action.payload.mode] = action.payload.title;
+    },
   },
 });
 
@@ -166,6 +175,7 @@ export const {
   toggleRuleSetting,
   setTTSActive,
   setReasoningSetting,
+  setModeModelOverride,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

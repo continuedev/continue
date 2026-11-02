@@ -118,6 +118,8 @@ The `models` section defines the language models used in your configuration. Mod
 
   - `verifySsl`: Whether to verify SSL certificates for requests.
 
+  - `useSystemCa`: Also trust the operating system's certificate store, for example the root certificate of a TLS-inspecting corporate proxy. Defaults to `true` on Windows and macOS and `false` on Linux. Needs a Node.js runtime that provides `tls.getCACertificates` (22.15+); on older runtimes it has no effect.
+
   - `caBundlePath`: Path to a custom CA bundle for HTTP requests.
 
   - `proxy`: Proxy URL for HTTP requests.
@@ -186,6 +188,42 @@ models:
       - chat
       - edit
 ```
+
+---
+
+### `modeModels`
+
+Use a different chat model (and reasoning effort) in each mode, for example a stronger model to plan and a faster one to act. Each entry names a model defined under `models` (by its `name`).
+
+```yaml title="config.yaml"
+models:
+  - name: Claude Opus
+    provider: bedrock
+    model: us.anthropic.claude-opus-4-1-20250805-v1:0
+    env:
+      region: us-east-1
+  - name: Claude Sonnet
+    provider: bedrock
+    model: us.anthropic.claude-sonnet-4-6
+    env:
+      region: us-east-1
+
+modeModels:
+  plan:
+    model: Claude Opus
+    reasoningEffort: medium
+  agent:
+    model: Claude Sonnet
+    reasoningEffort: low
+```
+
+- `chat`, `agent`, `plan`: the modes you can set. Each takes:
+  - `model` (required): the `name` of one of your chat models.
+  - `reasoningEffort` (optional): `off`, `low`, `medium` or `high`. This maps to a thinking budget of about 1K, 4K or 16K tokens for models that support extended thinking.
+- Switching mode switches the selected chat model, and the mode menu shows which model and effort each mode uses.
+- A mode without an entry keeps whichever model is currently selected.
+- If you pick a model by hand in the model selector, that choice is used for the current mode until you reload the window. The reasoning toggle in the chat input overrides `reasoningEffort`.
+- An entry naming a model that doesn't exist is ignored, with a warning in the config errors.
 
 ---
 
@@ -316,6 +354,8 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 - `env`: An optional map of environment variables for the server process.
 - `cwd`: An optional working directory to run the command in. Can be absolute or relative path.
 - `requestOptions`: Optional request options for `sse` and `streamable-http` servers. Same format as [model requestOptions](#models).
+- `oauth`: Optional OAuth settings for `sse` and `streamable-http` servers.
+  - `callbackPort`: Port of the local server that receives the browser redirect while signing in (default `3000`).
 - `connectionTimeout`: Optional timeout for _initial_ connection to MCP server
 
 **Example:**

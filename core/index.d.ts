@@ -1064,6 +1064,8 @@ export type TemplateType =
 export interface RequestOptions {
   timeout?: number;
   verifySsl?: boolean;
+  /** Also trust the operating system certificate store (default: on for Windows and macOS). */
+  useSystemCa?: boolean;
   caBundlePath?: string | string[];
   proxy?: string;
   headers?: { [key: string]: string };
@@ -1413,13 +1415,20 @@ export type InternalStreamableHttpMcpOptions = BaseInternalMCPOptions & {
   type?: "streamable-http";
   url: string;
   apiKey?: string;
+  oauth?: McpOauthSettings;
 };
 
 export type InternalSseMcpOptions = BaseInternalMCPOptions & {
   type?: "sse";
   url: string;
   apiKey?: string;
+  oauth?: McpOauthSettings;
 };
+
+export interface McpOauthSettings {
+  /** Port of the local redirect server used while signing in (default 3000). */
+  callbackPort?: number;
+}
 
 export type InternalWebsocketMcpOptions = BaseInternalMCPOptions & {
   type: "websocket"; // websocket requires explicit type
@@ -1823,6 +1832,20 @@ export interface Config {
 }
 
 // in the actual Continue source code
+/** Reasoning effort requested for a chat mode. */
+export type ModeReasoningEffort = "off" | "low" | "medium" | "high";
+
+/** Chat model (by title) and reasoning effort to use in a mode. */
+export interface ModeModelSetting {
+  title: string;
+  reasoningEffort?: ModeReasoningEffort;
+}
+
+/** Per-mode model selection from `modeModels:` in config.yaml. */
+export type ModeModelsConfig = Partial<
+  Record<"chat" | "agent" | "plan", ModeModelSetting>
+>;
+
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;
   // systemMessage?: string;
@@ -1843,6 +1866,7 @@ export interface ContinueConfig {
   rules: RuleWithSource[];
   modelsByRole: Record<ModelRole, ILLM[]>;
   selectedModelByRole: Record<ModelRole, ILLM | null>;
+  modeModels?: ModeModelsConfig;
   data?: DataDestination[];
 }
 
@@ -1866,6 +1890,7 @@ export interface BrowserSerializedContinueConfig {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   modelsByRole: Record<ModelRole, ModelDescription[]>;
   selectedModelByRole: Record<ModelRole, ModelDescription | null>;
+  modeModels?: ModeModelsConfig;
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO

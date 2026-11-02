@@ -1,8 +1,8 @@
 import { RequestOptions } from "@continuedev/config-types";
 import * as followRedirects from "follow-redirects";
 import { HttpProxyAgent } from "http-proxy-agent";
-import { HttpsProxyAgent } from "https-proxy-agent";
 import { BodyInit, RequestInit, Response } from "node-fetch";
+import { HttpsProxyAgentWithTls } from "./agent.js";
 import { getAgentOptions } from "./getAgentOptions.js";
 import patchedFetch from "./node-fetch-patch.js";
 import { getProxy, shouldBypassProxy } from "./util.js";
@@ -102,7 +102,7 @@ export async function fetchwithRequestOptions(
   const agent =
     proxy && !shouldBypass
       ? protocol === https
-        ? new HttpsProxyAgent(proxy, agentOptions)
+        ? new HttpsProxyAgentWithTls(proxy, agentOptions)
         : new HttpProxyAgent(proxy, agentOptions)
       : new protocol.Agent(agentOptions);
 

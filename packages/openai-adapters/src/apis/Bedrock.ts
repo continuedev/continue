@@ -34,6 +34,13 @@ import {
   getBedrockErrorHint,
 } from "./bedrockHelpers.js";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
+import {
+  createAgentForUrl,
+  defaultUseSystemCa,
+  getTlsErrorHint,
+  needsCustomAgent,
+} from "@continuedev/fetch";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { fromStatic } from "@aws-sdk/token-providers";
 import { BedrockConfig } from "../types.js";
 import { chatChunk, chatChunkFromDelta, embedding, rerank } from "../util.js";
@@ -148,14 +155,38 @@ export class BedrockApi implements BaseLlmApi {
     return process.env.AWS_BEARER_TOKEN_BEDROCK || undefined;
   }
 
+  private requestHandler?: Promise<NodeHttpHandler | undefined>;
+
+  /**
+   * Applies `requestOptions` (proxy, CA bundle, system CA store, client
+   * certificate, verifySsl) to the AWS SDK, which otherwise ignores them.
+   * Undefined when nothing needs customising.
+   */
+  private getRequestHandler(): Promise<NodeHttpHandler | undefined> {
+    this.requestHandler ??= (async () => {
+      const region = this.config.env?.region ?? "us-east-1";
+      const url = new URL(`https://bedrock-runtime.${region}.amazonaws.com`);
+      const options = this.config.requestOptions;
+      if (!needsCustomAgent(url, options, defaultUseSystemCa())) {
+        return undefined;
+      }
+      const { agent } = await createAgentForUrl(url, options);
+      return new NodeHttpHandler({ httpsAgent: agent });
+    })();
+    return this.requestHandler;
+  }
+
   async getClient(): Promise<BedrockRuntimeClient> {
     const region = this.config.env?.region;
+    const requestHandler = await this.getRequestHandler();
+    const networking = requestHandler ? { requestHandler } : {};
 
     // If apiKey is provided, use bearer token authentication
     const apiKey = this.resolveApiKey();
     if (apiKey) {
       return new BedrockRuntimeClient({
         region,
+        ...networking,
         token: fromStatic({
           token: { token: apiKey },
         }),
@@ -166,6 +197,7 @@ export class BedrockApi implements BaseLlmApi {
     const creds = await this.getCreds();
     return new BedrockRuntimeClient({
       region,
+      ...networking,
       credentials: creds,
     });
   }
@@ -615,13 +647,22 @@ export class BedrockApi implements BaseLlmApi {
         }
       }
     } catch (error) {
+      // TLS / proxy trouble (untrusted corporate CA, proxy auth) is common
+      // here; say how to fix it.
+      const hint = getTlsErrorHint(error);
+      const withHint = (message: string) =>
+        hint && !message.includes(hint) ? `${message}\n\n${hint}` : message;
       if (error instanceof Error) {
         if ("code" in error) {
           throw new Error(
-            `AWS Bedrock stream error (${(error as any).code}): ${error.message}`,
+            withHint(
+              `AWS Bedrock stream error (${(error as any).code}): ${error.message}`,
+            ),
           );
         }
-        throw new Error(`Error processing Bedrock stream: ${error.message}`);
+        throw new Error(
+          withHint(`Error processing Bedrock stream: ${error.message}`),
+        );
       }
       throw new Error(
         "Error processing Bedrock stream: Unknown error occurred",

@@ -97,11 +97,34 @@ const envRecord = z.record(
   z.union([z.string(), z.number(), z.boolean()]),
 );
 
+/** Reasoning effort a mode asks for; mapped to a thinking budget by the client. */
+export const reasoningEffortSchema = z.enum(["off", "low", "medium", "high"]);
+export type ReasoningEffort = z.infer<typeof reasoningEffortSchema>;
+
+/**
+ * Model (by its `name` in `models:`) to use in a chat mode, plus an optional
+ * reasoning effort for that mode.
+ */
+export const modeModelSchema = z.object({
+  model: z.string(),
+  reasoningEffort: reasoningEffortSchema.optional(),
+});
+export type ModeModel = z.infer<typeof modeModelSchema>;
+
+/** Per-mode model selection. Modes without an entry keep the current model. */
+export const modeModelsSchema = z.object({
+  chat: modeModelSchema.optional(),
+  agent: modeModelSchema.optional(),
+  plan: modeModelSchema.optional(),
+});
+export type ModeModels = z.infer<typeof modeModelsSchema>;
+
 export const baseConfigYamlSchema = z.object({
   name: z.string(),
   version: z.string(),
   schema: z.string().optional(),
   metadata: z.record(z.string()).and(commonMetadataSchema.partial()).optional(),
+  modeModels: modeModelsSchema.optional(),
   env: envRecord.optional(),
   requestOptions: requestOptionsSchema.optional(),
 });

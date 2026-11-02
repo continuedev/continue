@@ -16,6 +16,9 @@ export function mergePackages(
     prompts: [...(current.prompts ?? []), ...(incoming.prompts ?? [])],
     docs: [...(current.docs ?? []), ...(incoming.docs ?? [])],
     env: { ...current.env, ...incoming.env },
+    ...(current.modeModels || incoming.modeModels
+      ? { modeModels: { ...current.modeModels, ...incoming.modeModels } }
+      : {}),
     requestOptions: mergeConfigYamlRequestOptions(
       current.requestOptions,
       incoming.requestOptions,
@@ -30,6 +33,9 @@ export function mergeUnrolledAssistants(
   const assistant: AssistantUnrolled = {
     ...current,
     env: { ...current.env, ...incoming.env },
+    ...(current.modeModels || incoming.modeModels
+      ? { modeModels: { ...current.modeModels, ...incoming.modeModels } }
+      : {}),
     requestOptions: mergeConfigYamlRequestOptions(
       current.requestOptions,
       incoming.requestOptions,

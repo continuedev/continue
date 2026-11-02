@@ -20,11 +20,21 @@ export function getCertificateContent(input: string): string {
   }
 }
 
+/**
+ * Whether the OS certificate store is trusted when `useSystemCa` is not set.
+ * On by default for Windows and macOS, where corporate TLS-inspection roots
+ * normally live in the OS store; elsewhere it must be asked for explicitly.
+ */
+export function defaultUseSystemCa(): boolean {
+  return process.platform === "win32" || process.platform === "darwin";
+}
+
 export class CertsCache {
   private static instance: CertsCache;
   private _fixedCa: string[] = [];
   private _initialized: boolean = false;
   private _customCerts: Map<string, string> = new Map();
+  private _systemCa: string[] | undefined;
 
   private constructor() {}
 
@@ -112,17 +122,55 @@ export class CertsCache {
     return certs;
   }
 
-  async getCa(caBundlePath: undefined | string | string[]): Promise<string[]> {
+  /**
+   * Certificates from the operating system store. Needs Node 22.15+ / 23.9+
+   * (`tls.getCACertificates`); returns [] on older runtimes.
+   */
+  get systemCa(): string[] {
+    if (this._systemCa) {
+      return this._systemCa;
+    }
+    const getCACertificates = (tls as any).getCACertificates;
+    if (typeof getCACertificates !== "function") {
+      if (process.env.VERBOSE_FETCH) {
+        console.warn(
+          "System CA requested, but this Node.js has no tls.getCACertificates (needs 22.15+).",
+        );
+      }
+      this._systemCa = [];
+      return this._systemCa;
+    }
+    try {
+      this._systemCa = getCACertificates.call(tls, "system") as string[];
+    } catch (error) {
+      if (process.env.VERBOSE_FETCH) {
+        console.error("Error loading system CA certificates:", error);
+      }
+      this._systemCa = [];
+    }
+    return this._systemCa;
+  }
+
+  async getCa(
+    caBundlePath: undefined | string | string[],
+    useSystemCa?: boolean,
+  ): Promise<string[]> {
+    const base =
+      (useSystemCa ?? defaultUseSystemCa())
+        ? Array.from(new Set([...this.fixedCa, ...this.systemCa]))
+        : this.fixedCa;
+
     if (!caBundlePath) {
-      return this.fixedCa;
+      return base;
     }
 
     const customCerts = await this.getAllCachedCustomCerts(caBundlePath);
-    return [...this.fixedCa, ...customCerts];
+    return [...base, ...customCerts];
   }
 
   async clear(): Promise<void> {
     this._customCerts.clear();
+    this._systemCa = undefined;
     this._initialized = false;
     this._fixedCa = [];
   }

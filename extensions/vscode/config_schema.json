@@ -125,6 +125,11 @@
           "description": "Whether to verify SSL certificates for requests.",
           "type": "boolean"
         },
+        "useSystemCa": {
+          "title": "Use System CA",
+          "description": "Also trust the operating system's certificate store, e.g. a corporate TLS-inspection root. Defaults to true on Windows and macOS.",
+          "type": "boolean"
+        },
         "caBundlePath": {
           "title": "Ca Bundle Path",
           "description": "Path to a custom CA bundle to use when making the HTTP request",

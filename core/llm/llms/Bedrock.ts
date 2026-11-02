@@ -22,14 +22,17 @@ import {
   ListInferenceProfilesCommand,
 } from "@aws-sdk/client-bedrock";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
+import { getTlsErrorHint } from "@continuedev/fetch";
+import type { NodeHttpHandler } from "@smithy/node-http-handler";
 
-import type { CompletionOptions } from "../../index.js";
+import type { CompletionOptions, RequestOptions } from "../../index.js";
 import { ChatMessage, Chunk, LLMOptions, MessageContent } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { parseDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
+import { createBedrockRequestHandler } from "./bedrockHttp.js";
 import { getSecureID } from "../utils/getSecureID.js";
 import {
   applyCrossRegionInference,
@@ -73,8 +76,20 @@ class Bedrock extends BaseLLM {
   /** True when the user configured `profile` (vs. the built-in default). */
   private _profileExplicit: boolean;
 
+  /**
+   * The HTTP-level `requestOptions` from config (proxy, CA bundle, ...).
+   * `this.requestOptions` is reused below for Bedrock-specific headers, so the
+   * user's options are kept here.
+   */
+  private _httpRequestOptions: RequestOptions | undefined;
+  private _requestHandlers = new Map<
+    string,
+    Promise<NodeHttpHandler | undefined>
+  >();
+
   constructor(options: LLMOptions) {
     super(options);
+    this._httpRequestOptions = options.requestOptions;
     this._profileExplicit = !!options.profile;
     if (!options.apiBase) {
       this.apiBase = `https://bedrock-runtime.${this.region ?? options.region}.amazonaws.com`;
@@ -113,18 +128,36 @@ class Bedrock extends BaseLLM {
     };
   }
 
+  /** One handler (and connection pool) per endpoint, shared by all clients. */
+  private _requestHandlerFor(
+    endpoint: string,
+  ): Promise<NodeHttpHandler | undefined> {
+    let handler = this._requestHandlers.get(endpoint);
+    if (!handler) {
+      handler = createBedrockRequestHandler(endpoint, this._httpRequestOptions);
+      this._requestHandlers.set(endpoint, handler);
+    }
+    return handler;
+  }
+
   private async _getClient(): Promise<BedrockRuntimeClient> {
+    const requestHandler = await this._requestHandlerFor(this.apiBase!);
     return new BedrockRuntimeClient({
       region: this.region,
       endpoint: this.apiBase,
+      ...(requestHandler ? { requestHandler } : {}),
       ...(await this._clientAuth()),
     });
   }
 
   /** Control-plane client (model/profile listing). Uses the regional default endpoint. */
   private async _getControlClient(): Promise<BedrockClient> {
+    const requestHandler = await this._requestHandlerFor(
+      `https://bedrock.${this.region}.amazonaws.com`,
+    );
     return new BedrockClient({
       region: this.region,
+      ...(requestHandler ? { requestHandler } : {}),
       ...(await this._clientAuth()),
     });
   }
@@ -250,10 +283,12 @@ class Bedrock extends BaseLLM {
   /** Append an actionable hint (SSO login, model access, ...) to known AWS errors. */
   private _withHint(e: unknown): unknown {
     if (!(e instanceof Error)) return e;
-    const hint = getBedrockErrorHint(e, {
-      profile: this._profileExplicit ? this.profile : undefined,
-      region: this.region,
-    });
+    const hint =
+      getTlsErrorHint(e) ??
+      getBedrockErrorHint(e, {
+        profile: this._profileExplicit ? this.profile : undefined,
+        region: this.region,
+      });
     if (hint && !e.message.includes(hint)) {
       e.message = `${e.message}\n\n${hint}`;
     }

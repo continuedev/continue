@@ -1,4 +1,4 @@
-import { RequestOptions } from "@continuedev/config-types";
+import { RequestOptions } from "./types.js";
 import { CertsCache, getCertificateContent } from "./certs.js";
 
 /**
@@ -13,7 +13,10 @@ export async function getAgentOptions(
   const timeout = (requestOptions?.timeout ?? TIMEOUT) * 1000; // measured in ms
 
   const certsCache = CertsCache.getInstance();
-  const ca = await certsCache.getCa(requestOptions?.caBundlePath);
+  const ca = await certsCache.getCa(
+    requestOptions?.caBundlePath,
+    requestOptions?.useSystemCa,
+  );
 
   const agentOptions: { [key: string]: any } = {
     ca,
@@ -39,7 +42,9 @@ export async function getAgentOptions(
     console.log(`Fetch agent options:`);
     console.log(`\tTotal CA certs: ${ca.length}`);
     console.log(`\tGlobal/Root CA certs: ${certsCache.fixedCa.length}`);
-    console.log(`\tCustom CA certs: ${ca.length - certsCache.fixedCa.length}`);
+    console.log(
+      `\tCustom/system CA certs: ${ca.length - certsCache.fixedCa.length}`,
+    );
     console.log(
       `\tClient certificate: ${requestOptions?.clientCertificate ? "Yes" : "No"}`,
     );

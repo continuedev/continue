@@ -1,3 +1,4 @@
+import { resolveModeModels } from "./modeModels";
 import {
   AssistantUnrolled,
   AssistantUnrolledNonNullable,
@@ -341,6 +342,13 @@ export async function configYamlToContinueConfig(options: {
       });
     }
   }
+
+  const modeModelsResult = resolveModeModels(
+    config.modeModels,
+    continueConfig.modelsByRole.chat,
+  );
+  continueConfig.modeModels = modeModelsResult.modeModels;
+  localErrors.push(...modeModelsResult.errors);
 
   // Add transformers js to the embed models in vs code if not already added
   if (

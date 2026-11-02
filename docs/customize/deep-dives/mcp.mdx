@@ -150,6 +150,65 @@ These remote transport options allow you to connect to MCP servers hosted on rem
 
 For detailed information about transport mechanisms and their use cases, refer to the official MCP documentation on [transports](https://modelcontextprotocol.io/docs/concepts/transports#server-sent-events-sse).
 
+### How to Sign In to Remote MCP Servers (OAuth)
+
+Remote servers (`sse` and `streamable-http`) that use OAuth need no extra configuration:
+
+```yaml
+mcpServers:
+  - name: Datadog
+    type: streamable-http
+    url: https://mcp.datadoghq.eu/api/unstable/mcp-server/mcp
+```
+
+1. If the server answers a request with HTTP 401, the server shows **Sign in required**. Continue never opens a browser by itself.
+2. Choose **Sign in** (the person icon next to the server, or the server's menu). Your browser opens the provider's sign-in page, and when you finish you are connected.
+3. The access token is refreshed automatically when it expires. If the provider revokes your session, the server goes back to **Sign in required**.
+4. **Sign out** (server menu) removes the stored credentials.
+
+**Sign in is always offered for remote servers**, including ones that reject a connection in a way Continue can't recognise as an OAuth challenge.
+
+The browser is sent back to a small local server while you sign in, on port `3000` by default. If that port is in use you'll see an error naming it; choose another with `oauth.callbackPort`. Some providers only accept a pre-registered redirect URL, so use the port that was registered:
+
+```yaml
+mcpServers:
+  - name: Atlassian
+    type: streamable-http
+    url: https://mcp.atlassian.com/v1/mcp/authv2
+    oauth:
+      callbackPort: 3456
+```
+
+If sign-in fails or is abandoned (denied in the browser, a wrong code, or no response for 5 minutes), the partial registration is cleared so the next attempt starts clean.
+
+<Note>
+  OAuth credentials are stored in `~/.continue/index/globalContext.json`. Treat
+  that file like any other credential store.
+</Note>
+
+### How to Use MCP Servers Behind a Proxy or TLS Inspection
+
+Remote MCP servers (`sse` and `streamable-http`) use the same `requestOptions` as models, so they work behind an HTTP(S) proxy and a TLS-inspecting firewall without tools like `mcp-remote`:
+
+```yaml
+mcpServers:
+  - name: Datadog
+    type: streamable-http
+    url: https://mcp.datadoghq.eu/api/unstable/mcp-server/mcp
+    requestOptions:
+      useSystemCa: true # trust the OS certificate store (default on Windows and macOS)
+      # caBundlePath: /path/to/corp-root.pem
+      # proxy: http://proxy.corp:3128
+      # noProxy: [".internal.example.com"]
+```
+
+- `useSystemCa`, `caBundlePath` (and `NODE_EXTRA_CA_CERTS`), `proxy` / `noProxy` (and `HTTPS_PROXY` / `NO_PROXY`), `clientCertificate` and `verifySsl` all apply. `verifySsl: false` now takes effect (it was previously ignored).
+- They apply to every request: the MCP connection itself, OAuth discovery, client registration, the sign-in token exchange and token refresh.
+- To set them once for everything, put `requestOptions` at the top level of `config.yaml`; per-server values take precedence.
+- If the certificate isn't trusted, the error says so and points at `useSystemCa` and `caBundlePath`.
+
+**stdio servers** run in their own process, so Continue can't change their networking. For Node-based servers (for example `npx ...`), Continue sets `NODE_OPTIONS=--use-system-ca` so they trust the OS certificate store too. This is on by default on Windows and macOS, can be turned off with `requestOptions: { useSystemCa: false }` at the top level, and is skipped when the `node` on your PATH is too old to know the flag (Node 22.15 or newer is needed). Anything you set in the server's own `env.NODE_OPTIONS` is kept.
+
 ### How to Work with Secrets in MCP Servers
 
 With some MCP servers you will need to use API keys or other secrets. You can leverage locally stored environment secrets.
