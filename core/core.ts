@@ -487,19 +487,29 @@ export class Core {
       };
     });
     on("mcp/startAuthentication", async (msg) => {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      MCPManagerSingleton.getInstance().setStatus(
-        msg.data.serverId,
-        "authenticating",
-      );
-      const status = await performAuth(
-        msg.data.serverId,
-        msg.data.serverUrl,
-        this.ide,
-      );
-      if (status === "AUTHORIZED") {
-        await MCPManagerSingleton.getInstance().refreshConnection(
+      const manager = MCPManagerSingleton.getInstance();
+      const callbackPort = (
+        manager.getConnection(msg.data.serverId)?.options as
+          { oauth?: { callbackPort?: number } } | undefined
+      )?.oauth?.callbackPort;
+      manager.setStatus(msg.data.serverId, "authenticating");
+      try {
+        const status = await performAuth(
           msg.data.serverId,
+          msg.data.serverUrl,
+          this.ide,
+          { callbackPort },
+        );
+        if (status === "AUTHORIZED") {
+          // Already signed in (for example the token was still valid)
+          await manager.refreshConnection(msg.data.serverId);
+        }
+      } catch (e) {
+        // Port busy, discovery failed, ...: show the cause and let the user retry
+        manager.setStatus(msg.data.serverId, "error");
+        await this.ide.showToast(
+          "error",
+          `Sign-in to ${msg.data.serverId} failed: ${e instanceof Error ? e.message : String(e)}`,
         );
       }
     });
