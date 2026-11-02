@@ -9,8 +9,8 @@
     "tsc:check": "tsc -p ./ --noEmit",
     "build": "tsc -p ./tsconfig.npm.json",
     "build:npm": "npm run build",
-    "lint": "eslint . --ext ts",
-    "lint:fix": "eslint . --ext ts --fix"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "type": "module",
   "author": "Continue Dev, Inc",
@@ -38,11 +38,9 @@
     "@types/shell-quote": "^1.7.5",
     "@types/uuid": "^9.0.7",
     "@types/win-ca": "^3.5.4",
-    "@typescript-eslint/eslint-plugin": "^8.40.0",
-    "@typescript-eslint/parser": "^8.40.0",
     "cross-env": "^7.0.3",
     "esbuild": "^0.28.2",
-    "eslint": "^8",
+    "eslint": "^10.13.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "myers-diff": "^2.1.0",
@@ -51,6 +49,7 @@
     "shiki": "^3.6.0",
     "ts-jest": "^29.1.1",
     "typescript": "^5.6.3",
+    "typescript-eslint": "^8.72.1",
     "vitest": "^3.1.4"
   },
   "dependencies": {

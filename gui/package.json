@@ -13,7 +13,7 @@
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
-    "lint": "eslint --ext ts"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@continuedev/config-yaml": "file:../packages/config-yaml",
@@ -103,9 +103,8 @@
     "@vitest/coverage-v8": "^3.1.0",
     "@vitest/ui": "^3.1.0",
     "autoprefixer": "^10.4.13",
-    "eslint": "^8",
+    "eslint": "^10.13.0",
     "eslint-plugin-no-barrel-files": "^1.2.1",
-    "eslint-plugin-react": "^7.37.2",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.2.7",
