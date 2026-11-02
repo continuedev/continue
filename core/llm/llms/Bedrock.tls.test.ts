@@ -156,8 +156,8 @@ maybeDescribe("Bedrock over TLS (local CA)", () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  beforeEach(() => {
-    CertsCache.getInstance().clear();
+  beforeEach(async () => {
+    await CertsCache.getInstance().clear();
     connects = [];
     savedEnv = {};
     for (const k of PROXY_ENV) {

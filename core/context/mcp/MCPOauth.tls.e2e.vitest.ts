@@ -146,7 +146,7 @@ describe.skipIf(!hasOpenssl())(
         savedEnv[k] = process.env[k];
         delete process.env[k];
       }
-      CertsCache.getInstance().clear();
+      await CertsCache.getInstance().clear();
     });
 
     afterEach(async () => {
