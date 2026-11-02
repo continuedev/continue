@@ -1062,6 +1062,8 @@ export type TemplateType =
 export interface RequestOptions {
   timeout?: number;
   verifySsl?: boolean;
+  /** Also trust the operating system certificate store (default: on for Windows and macOS). */
+  useSystemCa?: boolean;
   caBundlePath?: string | string[];
   proxy?: string;
   headers?: { [key: string]: string };
