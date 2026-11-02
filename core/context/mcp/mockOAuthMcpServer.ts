@@ -49,7 +49,8 @@ export class MockOAuthMcpServer {
   }
 
   async stop() {
-    this.server.closeAllConnections?.();
+    // Node 18.2+; older @types/node (the VS Code extension typechecks this file) lack it
+    (this.server as any).closeAllConnections?.();
     await new Promise((r) => this.server.close(r));
   }
 
@@ -352,7 +353,7 @@ export async function startConnectProxy(targetPort: number) {
     close: async () => {
       // CONNECT tunnels are detached from the HTTP server, so close them here
       sockets.forEach((socket) => socket.destroy());
-      proxy.closeAllConnections?.();
+      (proxy as any).closeAllConnections?.();
       await new Promise((r) => proxy.close(r));
     },
   };
