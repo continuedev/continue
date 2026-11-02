@@ -192,13 +192,13 @@ pub fn retrieve(n: usize, tags: Vec<String>, v: Vec<f32>) -> Vec<Chunk> {
 mod tests {
     use super::*;
     use ndarray::{Array1, Array2};
-    use rand::Rng;
+    use rand::RngExt;
     use rusqlite::Connection;
     use std::time::Instant;
 
     fn rand_embedding(n: i32) -> Vec<f32> {
-        let mut rng = rand::thread_rng();
-        (0..n).map(|_| rng.gen()).collect()
+        let mut rng = rand::rng();
+        (0..n).map(|_| rng.random()).collect()
     }
 
     #[test]
@@ -284,11 +284,11 @@ mod tests {
 
     #[test]
     fn benchmark_ndarray() {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let n = 10_000;
         let d = 384;
-        let a: Array2<f32> = Array2::from_shape_fn((n, d), |_| rng.gen::<f32>());
-        let b: Array1<f32> = Array1::from_shape_fn(d, |_| rng.gen::<f32>());
+        let a: Array2<f32> = Array2::from_shape_fn((n, d), |_| rng.random::<f32>());
+        let b: Array1<f32> = Array1::from_shape_fn(d, |_| rng.random::<f32>());
 
         let time = Instant::now();
 
