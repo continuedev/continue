@@ -27,9 +27,12 @@
     "@types/node": "^20.19.43",
     "semantic-release": "^24.2.7",
     "typescript": "^5.0.0",
-    "vitest": "^3.2.0"
+    "vitest": "^5.0.5"
   },
   "overrides": {
-    "picomatch": "^4.0.4"
+    "picomatch": "^4.0.4",
+    "vitest": {
+      "@types/node": "$@types/node"
+    }
   }
 }

@@ -715,7 +715,7 @@
     "rimraf": "^5.0.5",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.72.1",
-    "vite": "^4.5.14",
+    "vite": "^7.3.7",
     "vscode-extension-tester": "^8.14.1"
   },
   "dependencies": {
@@ -762,7 +762,7 @@
     "uuid": "^9.0.1",
     "uuidv4": "^6.2.13",
     "vectordb": "0.4.20",
-    "vitest": "^3.1.4",
+    "vitest": "^5.0.5",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.19.0",
     "yaml": "^2.9.1",
@@ -770,7 +770,7 @@
   },
   "overrides": {
     "vitest": {
-      "@types/node": "^16.18.119"
+      "@types/node": "$@types/node"
     },
     "mocha": {
       "serialize-javascript": "^7.0.5"
@@ -779,7 +779,8 @@
     "picomatch": "^4.0.2",
     "rollup": "^4.34.9",
     "vite": {
-      "esbuild": "^0.25.0"
+      "esbuild": "^0.25.0",
+      "@types/node": "$@types/node"
     },
     "tar": "^7.5.13",
     "undici-types@~7.18.0": "7.18.1"

@@ -330,7 +330,7 @@ describe("NextEditWindowManager", () => {
       executeCommand.mockClear();
 
       // Make executeCommand take random time and track completions
-      executeCommand.mockImplementation((cmd, key, value) => {
+      executeCommand.mockImplementation((cmd: any, key: any, value: any) => {
         const operationId = `${value ? "reserve" : "free"}-${Date.now()}-${Math.random()}`;
         return new Promise((resolve) => {
           setTimeout(() => {
@@ -442,7 +442,7 @@ describe("NextEditWindowManager", () => {
 
       // Track actual VS Code context values set
       const contextValues: boolean[] = [];
-      executeCommand.mockImplementation((cmd, key, value) => {
+      executeCommand.mockImplementation((cmd: any, key: any, value: any) => {
         if (cmd === "setContext") {
           //@ts-ignore
           contextValues.push(value);
@@ -473,7 +473,7 @@ describe("NextEditWindowManager", () => {
 
       // Track all setContext calls
       const contextCalls: boolean[] = [];
-      executeCommand.mockImplementation((cmd, key, value) => {
+      executeCommand.mockImplementation((cmd: any, key: any, value: any) => {
         if (cmd === "setContext" && key === "nextEditWindowActive") {
           //@ts-ignore
           contextCalls.push(value);
@@ -504,7 +504,7 @@ describe("NextEditWindowManager", () => {
 
       // Track all setContext calls
       const contextCalls: boolean[] = [];
-      executeCommand.mockImplementation((cmd, key, value) => {
+      executeCommand.mockImplementation((cmd: any, key: any, value: any) => {
         if (cmd === "setContext" && key === "nextEditWindowActive") {
           //@ts-ignore
           contextCalls.push(value);
@@ -543,7 +543,7 @@ describe("NextEditWindowManager", () => {
 
       // Track all setContext calls
       const contextCalls: boolean[] = [];
-      executeCommand.mockImplementation((cmd, key, value) => {
+      executeCommand.mockImplementation((cmd: any, key: any, value: any) => {
         if (cmd === "setContext" && key === "nextEditWindowActive") {
           //@ts-ignore
           contextCalls.push(value);
@@ -819,7 +819,7 @@ describe("NextEditWindowManager", () => {
         mockVscode.commands.registerCommand as MockedFunction<any>
       ).mock.calls;
       const acceptCall = registerCalls.find(
-        (call) => call[0] === ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND,
+        (call: any) => call[0] === ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND,
       );
       //@ts-ignore
       const acceptCallback = acceptCall[1];
@@ -842,7 +842,7 @@ describe("NextEditWindowManager", () => {
         mockVscode.commands.registerCommand as MockedFunction<any>
       ).mock.calls;
       const acceptCall = registerCalls.find(
-        (call) => call[0] === ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND,
+        (call: any) => call[0] === ACCEPT_NEXT_EDIT_SUGGESTION_COMMAND,
       );
       //@ts-ignore
       const acceptCallback = acceptCall[1];
@@ -872,7 +872,7 @@ describe("NextEditWindowManager", () => {
         mockVscode.commands.registerCommand as MockedFunction<any>
       ).mock.calls;
       const hideCall = registerCalls.find(
-        (call) => call[0] === HIDE_NEXT_EDIT_SUGGESTION_COMMAND,
+        (call: any) => call[0] === HIDE_NEXT_EDIT_SUGGESTION_COMMAND,
       );
       //@ts-ignore
       const hideCallback = hideCall[1];

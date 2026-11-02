@@ -75,10 +75,18 @@ describe("LocalPlatformClient", () => {
 
   describe("searches for secrets in local .env files", () => {
     let getContinueDotEnv: Mock;
+    let originalGetContinueDotEnv: typeof import("../../util/paths").getContinueDotEnv;
     beforeEach(async () => {
       const utilPaths = await import("../../util/paths");
+      originalGetContinueDotEnv = utilPaths.getContinueDotEnv;
       getContinueDotEnv = vi.fn(() => envKeyValues);
       utilPaths.getContinueDotEnv = getContinueDotEnv;
+    });
+    afterEach(async () => {
+      // The module object is shared between tests (vitest >= 4 no longer hides this), so put the
+      // original back instead of leaking the mock into the tests that follow.
+      const utilPaths = await import("../../util/paths");
+      utilPaths.getContinueDotEnv = originalGetContinueDotEnv;
     });
 
     test("should be able to get secrets from ~/.continue/.env files", async () => {

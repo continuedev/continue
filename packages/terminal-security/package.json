@@ -17,9 +17,14 @@
     "@types/node": "^20.11.19",
     "@types/shell-quote": "^1.7.5",
     "typescript": "^5.5.2",
-    "vitest": "^3.2.4"
+    "vitest": "^5.0.5"
   },
   "dependencies": {
     "shell-quote": "^1.8.1"
+  },
+  "overrides": {
+    "vitest": {
+      "@types/node": "$@types/node"
+    }
   }
 }

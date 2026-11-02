@@ -50,7 +50,7 @@
     "ts-jest": "^29.1.1",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.72.1",
-    "vitest": "^3.1.4"
+    "vitest": "^5.0.5"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.62.0",
@@ -131,6 +131,9 @@
     "node": ">=20.20.1"
   },
   "overrides": {
-    "tar": "^7.5.13"
+    "tar": "^7.5.13",
+    "vitest": {
+      "@types/node": "$@types/node"
+    }
   }
 }

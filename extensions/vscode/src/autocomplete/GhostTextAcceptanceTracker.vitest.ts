@@ -4,14 +4,19 @@ import { GhostTextAcceptanceTracker } from "./GhostTextAcceptanceTracker";
 
 // Mock the vscode module
 vi.mock("vscode", () => ({
-  Position: vi.fn((line: number, character: number) => ({
-    line,
-    character,
-    isEqual: vi.fn(
-      (other: any) => other.line === line && other.character === character,
-    ),
-  })),
-  Range: vi.fn((start: any, end: any) => ({ start, end })),
+  // vitest >= 4: a mock used with `new` must be implemented with `function` or `class`
+  Position: vi.fn(function (line: number, character: number) {
+    return {
+      line,
+      character,
+      isEqual: vi.fn(
+        (other: any) => other.line === line && other.character === character,
+      ),
+    };
+  }),
+  Range: vi.fn(function (start: any, end: any) {
+    return { start, end };
+  }),
 }));
 
 describe("GhostTextAcceptanceTracker", () => {

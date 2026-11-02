@@ -105,7 +105,7 @@ describe("runTerminalCommand timeout functionality", () => {
       fetch: vi.fn() as any,
       tool: {} as any,
       config: {} as any,
-      onPartialOutput: mockOnPartialOutput,
+      onPartialOutput: mockOnPartialOutput as any,
       toolCallId: "test-tool-call-id",
       ...overrides,
     };
