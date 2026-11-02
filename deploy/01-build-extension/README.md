@@ -107,6 +107,33 @@ bash deploy/01-build-extension/00-pre-install.sh --target darwin-arm64 --check-o
 | Đã build thành công, chỉ thay đổi code                              | ❌ dùng `--only-ext` |
 | Sau `npm install` thủ công trên đúng platform                       |          ❌          |
 
+### sqlite3 platform binding (linux target) — QUAN TRỌNG
+
+`prepackage.js` copy `node_sqlite3.node` từ `core/node_modules/sqlite3/build/` vào vsix.
+Đây là **native binding compile theo máy** (không phải platform package như ripgrep/lancedb):
+
+- `core/node_modules` install trên Windows → binding là **PE32** → vsix linux cài vào
+  VS Code WSL fail khi activate: `Error: ... node_sqlite3.node: invalid ELF header`
+  (extension import `sqlite3` ngay lúc activate để mở `devdata.sqlite`)
+- Cơ chế download prebuilt của upstream (`copySqlite`) bị **skip** vì build scripts đặt
+  `SKIP_INSTALLS=true`
+
+**Fix (tự động trong `00-pre-install.sh` — STEP 3b):**
+
+1. Detect platform binding hiện có bằng `file` (ELF/PE32/Mach-O theo target)
+2. Nếu sai platform → `node-gyp rebuild --release` trong `core/node_modules/sqlite3`
+   trên đúng máy build (cần gcc/g++, có sẵn trên Ubuntu)
+3. Node headers: dùng cache `~/.cache/node-gyp/<ver>/` → fallback download
+   (trực tiếp → `proxy_windows` khi air-gap) → override bằng `NODE_HEADERS_TGZ=<path>`
+4. Backup binding cũ thành `node_sqlite3.node.prev`; rollback nếu build fail
+5. STEP 4 verify ELF/PE32/Mach-O đúng target trước khi cho phép build
+
+**Hệ quả phụ cần biết:** rebuild để lại binding **Linux** trong `core/node_modules`.
+Nếu sau đó build `win32-x64` trên Windows, chạy `00-pre-install.ps1` (hoặc
+`npm rebuild sqlite3` trong `core/`) để trả binding Windows. Xem
+[`../04-wsl-native-vscode/01-continue-extension-sqlite3-issue.md`](../04-wsl-native-vscode/01-continue-extension-sqlite3-issue.md)
+để biết full trace của sự cố.
+
 ---
 
 ## Build theo platform
@@ -326,5 +353,6 @@ grep -c "rejectUnauthorized"      packages/fetch/src/getAgentOptions.ts       # 
 ## Xem thêm
 
 - [`troubleshooting.md`](./troubleshooting.md) — Lỗi thường gặp và cách xử lý
+- [`../04-wsl-native-vscode/01-continue-extension-sqlite3-issue.md`](../04-wsl-native-vscode/01-continue-extension-sqlite3-issue.md) — Sự cố Continue trên VS Code native WSL (full trace)
 - [`../../.patches/README.md`](../../.patches/README.md) — Custom patches documentation
 - [`../README.md`](../README.md) — Deploy workflow tổng quát

@@ -5,15 +5,18 @@
 # Requirements:
 #   - Miniconda with env 'node20' (Node.js v20.17.0)
 #   - conda create -n node20 -y nodejs=20
+#   - gcc/g++/make (cho sqlite3 rebuild): sudo apt install -y build-essential
 #
 # Usage:
-#   bash build-linux.sh [--target linux-x64|win32-x64|darwin-arm64|darwin-x64]
-#                       [--skip-packages] [--only-ext]
+#   bash deploy/01-build-extension/build-linux.sh
+#   bash deploy/01-build-extension/build-linux.sh --target linux-x64
+#   bash deploy/01-build-extension/build-linux.sh --skip-packages
+#   bash deploy/01-build-extension/build-linux.sh --only-ext
 # =============================================================================
 set -euo pipefail
 
-# --- Defaults ---
-TARGET="${1:-linux-x64}"
+# --- Defaults (NO positional $1 shorthand — use --target flag only) ---
+TARGET="linux-x64"
 SKIP_PACKAGES=false
 ONLY_EXT=false
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -37,123 +40,163 @@ error()   { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
 timer()   { echo -e "${BLUE}[$(date +%H:%M:%S)]${NC} $*"; }
 
 START_TIME=$(date +%s)
+elapsed() { echo "$(( $(date +%s) - START_TIME ))s"; }
 
 echo ""
 echo "================================================"
 echo "  Continue Extension Build — Linux/WSL"
 echo "  Target:  $TARGET"
 echo "  Repo:    $REPO_ROOT"
+echo "  Started: $(date +%H:%M:%S)"
 echo "================================================"
 echo ""
 
 cd "$REPO_ROOT"
 
-# --- Run pre-install if ripgrep not ready ---
-RIPGREP_CHECK="extensions/vscode/node_modules/@vscode/ripgrep/bin/rg"
-if [[ "$TARGET" == "win32-x64" ]]; then RIPGREP_CHECK="${RIPGREP_CHECK}.exe"; fi
-if [[ ! -e "$RIPGREP_CHECK" ]]; then
-  warn "ripgrep binary missing — running pre-install first..."
-  bash "$(dirname "${BASH_SOURCE[0]}")/00-pre-install.sh" --target "$TARGET"
-fi
+# =============================================================================
+# Step 1: ALWAYS run pre-install
+# (do NOT gate on ripgrep only — sqlite3 binding may be wrong platform even
+#  when ripgrep exists from a previous Windows build)
+# =============================================================================
+timer "Running pre-install for $TARGET..."
+bash "$(dirname "${BASH_SOURCE[0]}")/00-pre-install.sh" --target "$TARGET"
 
-# --- Verify conda node20 ---
+# =============================================================================
+# Step 2: Verify conda node20
+# =============================================================================
 info "Checking conda env 'node20'..."
 if ! conda env list 2>/dev/null | grep -q "^node20"; then
-  error "conda env 'node20' not found. Run: conda create -n node20 -y nodejs=20"
+  error "conda env 'node20' not found.\n  Fix: conda create -n node20 -y nodejs=20"
 fi
 NODE_VER=$(conda run -n node20 node --version 2>/dev/null)
 NPM_VER=$(conda run -n node20 npm --version 2>/dev/null)
 success "Node: $NODE_VER | npm: $NPM_VER"
 
-# --- Verify branch ---
-BRANCH=$(git branch --show-current)
+BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 info "Branch: $BRANCH"
 if [[ "$BRANCH" != "develop" && "$BRANCH" != release/* ]]; then
-  warn "Not on develop/release branch. Continuing anyway..."
+  warn "Not on develop/release branch — continuing anyway"
 fi
 
-# --- Verify critical dependencies ---
-info "Checking critical build dependencies..."
-MISSING=0
-
-EXE=""
-if [[ "$TARGET" == "win32-x64" ]]; then EXE=".exe"; fi
-
-# node_modules
-if [[ ! -d "$REPO_ROOT/extensions/vscode/node_modules" ]]; then
-  warn "Missing: extensions/vscode/node_modules/"
-  MISSING=$((MISSING+1))
-fi
-
-# ripgrep
-if [[ ! -f "$REPO_ROOT/extensions/vscode/node_modules/@vscode/ripgrep/bin/rg${EXE}" ]]; then
-  warn "Missing: @vscode/ripgrep binary (rg${EXE})"
-  MISSING=$((MISSING+1))
-fi
-
-# lancedb
-LANCEDB_SUFFIX=""
-if [[ "$TARGET" == linux-* ]]; then LANCEDB_SUFFIX="-gnu"; fi
-if [[ "$TARGET" == win32-* ]]; then LANCEDB_SUFFIX="-msvc"; fi
-if [[ ! -f "$REPO_ROOT/extensions/vscode/node_modules/@lancedb/vectordb-${TARGET}${LANCEDB_SUFFIX}/index.node" ]]; then
-  warn "Missing: @lancedb/vectordb-${TARGET}${LANCEDB_SUFFIX}"
-  MISSING=$((MISSING+1))
-fi
-
-if [[ $MISSING -gt 0 ]]; then
-  error "Missing $MISSING critical dependencies. Run:\n" \
-        "  bash deploy/01-build-extension/00-pre-install.sh --target $TARGET"
-fi
-success "All critical dependencies present"
-
-# --- Build packages (unless skipped) ---
-if [[ "$SKIP_PACKAGES" == "false" ]]; then
-  timer "Building packages..."
-  PACKAGES=(config-types llm-info fetch openai-adapters config-yaml terminal-security)
-  for pkg in "${PACKAGES[@]}"; do
-    timer "  packages/$pkg"
-    conda run -n node20 bash -c "cd packages/$pkg && npm run build 2>&1 | tail -2"
-  done
-  success "Packages built"
-fi
-
-# --- Build core (unless only-ext) ---
+# =============================================================================
+# Step 3: npm install all workspaces (skip individual if node_modules present
+# AND symlinks look correct for this machine)
+# =============================================================================
 if [[ "$ONLY_EXT" == "false" ]]; then
-  timer "Building core..."
-  conda run -n node20 bash -c "cd core && npm run build 2>&1 | tail -3"
-  success "Core built"
+  timer "Checking/installing npm dependencies... $(elapsed)"
 
-  timer "Building gui..."
-  conda run -n node20 bash -c "cd gui && npm run build 2>&1 | tail -3"
-  success "GUI built"
+  # Helper: check if node_modules exists AND symlinks in @continuedev/* point
+  # to THIS repo root (not a stale path from a different machine/rename)
+  nm_is_valid() {
+    local dir="$1"
+    local nm="${REPO_ROOT}/${dir}/node_modules"
+    [[ -d "$nm" ]] || return 1
+    # For core: verify @continuedev symlinks point to correct repo root
+    if [[ "$dir" == "core" ]]; then
+      local link
+      link=$(readlink "${nm}/@continuedev/config-yaml" 2>/dev/null || true)
+      [[ "$link" == "${REPO_ROOT}/packages/config-yaml"* ]] || return 1
+    fi
+    return 0
+  }
+
+  INSTALL_DIRS=(
+    "packages/config-types"
+    "packages/terminal-security"
+    "packages/llm-info"
+    "packages/fetch"
+    "packages/openai-adapters"
+    "packages/config-yaml"
+    "core"
+    "gui"
+  )
+
+  for d in "${INSTALL_DIRS[@]}"; do
+    if nm_is_valid "$d"; then
+      info "[$d] node_modules valid — skip install"
+    else
+      info "[$d] npm install..."
+      conda run -n node20 bash -c "
+        cd '${REPO_ROOT}/${d}'
+        npm install --registry '${NPM_REGISTRY:-https://registry.npmjs.org/}' 2>&1 | tail -3
+      "
+      success "[$d] installed"
+    fi
+  done
 fi
 
-# --- Build VSCode extension ---
-# NOTE: We avoid `npm run prepackage` and `npm run package` because:
-#   1. npmInstall() in prepackage.js forks child processes that run `npm install`
-#      which can hang indefinitely when node_modules already exist
-#   2. npm lifecycle auto-runs "prepackage" before "package" (naming convention)
-#   3. package.js calls vsce directly without vscode:prepublish → missing esbuild
-#
-# Instead: SKIP_INSTALLS=true + npx @vscode/vsce (triggers vscode:prepublish)
+# extensions/vscode: already handled by pre-install, just confirm
+if [[ ! -d "$REPO_ROOT/extensions/vscode/node_modules" ]]; then
+  warn "extensions/vscode/node_modules missing after pre-install — re-running..."
+  bash "$(dirname "${BASH_SOURCE[0]}")/00-pre-install.sh" --target "$TARGET"
+fi
 
-timer "Prepackage (target: $TARGET)..."
+# =============================================================================
+# Step 4: Build packages (parallel via build-packages.js)
+# =============================================================================
+if [[ "$SKIP_PACKAGES" == "false" ]]; then
+  timer "Building packages (parallel)... $(elapsed)"
+  conda run -n node20 node "${REPO_ROOT}/scripts/build-packages.js"
+  success "Packages built  $(elapsed)"
+fi
+
+# =============================================================================
+# Step 5: Build core
+# =============================================================================
+if [[ "$ONLY_EXT" == "false" ]]; then
+  timer "Building core... $(elapsed)"
+  conda run -n node20 bash -c "cd '${REPO_ROOT}/core' && npm run build 2>&1 | tail -3"
+  success "Core built  $(elapsed)"
+
+  timer "Building GUI... $(elapsed)"
+  conda run -n node20 bash -c "cd '${REPO_ROOT}/gui' && npm run build 2>&1 | tail -3"
+  success "GUI built  $(elapsed)"
+fi
+
+# =============================================================================
+# Step 6: Prepackage
+# NOTE: SKIP_INSTALLS=true — prepackage.js ko chay npm install (se hang).
+#       sqlite3 binding da duoc pre-install fix sang ELF (linux) truoc buoc nay.
+# =============================================================================
+timer "Prepackage (target: $TARGET)... $(elapsed)"
+
+# Clean stale out/ nếu thiếu rg (out/ được copy từ lần build trước platform khác)
+OUT_DIR="${REPO_ROOT}/extensions/vscode/out"
+OUT_RG="${OUT_DIR}/node_modules/@vscode/ripgrep/bin/rg"
+if [[ "$TARGET" == "win32-x64" ]]; then OUT_RG="${OUT_RG}.exe"; fi
+if [[ -d "$OUT_DIR" && ! -f "$OUT_RG" ]]; then
+  warn "Stale out/ detected (missing rg binary) — removing..."
+  rm -rf "$OUT_DIR"
+  success "Removed stale out/"
+fi
+
+mkdir -p "${REPO_ROOT}/extensions/vscode/build"
+
 conda run -n node20 bash -c "
-  cd extensions/vscode &&
+  cd '${REPO_ROOT}/extensions/vscode'
   SKIP_INSTALLS=true node scripts/prepackage.js --target $TARGET 2>&1 | tail -10
 "
-success "Prepackage done"
+success "Prepackage done  $(elapsed)"
 
-timer "Packaging VSIX (target: $TARGET)..."
+# =============================================================================
+# Step 7: Package VSIX via vsce
+# NOTE: npx @vscode/vsce trực tiếp (KHÔNG dùng npm run package) vì:
+#   - npm run package tự trigger prepackage lifecycle → chạy lại 2 lần
+#   - package.js không trigger vscode:prepublish (thiếu esbuild minify)
+#   - npx @vscode/vsce trigger đúng vscode:prepublish hook
+# =============================================================================
+timer "Packaging VSIX (target: $TARGET)... $(elapsed)"
 conda run -n node20 bash -c "
-  cd extensions/vscode &&
-  npx @vscode/vsce package --out ./build --no-dependencies --target $TARGET 2>&1 | tail -10
+  cd '${REPO_ROOT}/extensions/vscode'
+  npx @vscode/vsce package --out ./build --no-dependencies --target $TARGET 2>&1 | tail -12
 "
 
-# --- Result ---
-VSIX=$(ls "$REPO_ROOT/extensions/vscode/build/continue-${TARGET}-"*.vsix 2>/dev/null | head -1)
+# =============================================================================
+# Result
+# =============================================================================
+VSIX=$(ls "${REPO_ROOT}/extensions/vscode/build/continue-${TARGET}-"*.vsix 2>/dev/null | sort -t- -k5 -V | tail -1)
 if [[ -z "$VSIX" ]]; then
-  error "Build failed — no VSIX found"
+  error "Build failed — no VSIX found in extensions/vscode/build/"
 fi
 
 END_TIME=$(date +%s)
@@ -161,8 +204,7 @@ ELAPSED=$(( END_TIME - START_TIME ))
 
 echo ""
 echo "================================================"
-echo -e "${GREEN}  BUILD COMPLETE${NC}"
-printf "  Time:    %dm %ds\n" $((ELAPSED/60)) $((ELAPSED%60))
+echo -e "${GREEN}  BUILD COMPLETE  ${NC}$(printf '%dm%ds' $((ELAPSED/60)) $((ELAPSED%60)))"
 echo "  Output:  $(basename "$VSIX")"
 echo "  Size:    $(du -sh "$VSIX" | cut -f1)"
 echo "================================================"
