@@ -1,0 +1,2 @@
+# Git hooks are run by sh, so keep LF on every checkout
+.husky/* text eol=lf
