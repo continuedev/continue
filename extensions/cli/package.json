@@ -120,7 +120,7 @@
     "node-machine-id": "^1.1.12",
     "open": "^10.1.0",
     "prettier": "^3.6.2",
-    "prettier-plugin-tailwindcss": "^0.6.14",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "react": "^19.1.0",
     "semantic-release": "^24.2.7",
     "shell-quote": "^1.8.3",
@@ -144,11 +144,11 @@
     "picomatch": "^4.0.2"
   },
   "optionalDependencies": {
-    "@img/sharp-darwin-arm64": "^0.33.5",
-    "@img/sharp-darwin-x64": "^0.33.5",
-    "@img/sharp-linux-arm": "^0.33.5",
-    "@img/sharp-linux-arm64": "^0.33.5",
-    "@img/sharp-linux-x64": "^0.33.5",
-    "@img/sharp-win32-x64": "^0.33.5"
+    "@img/sharp-darwin-arm64": "^0.35.5",
+    "@img/sharp-darwin-x64": "^0.35.5",
+    "@img/sharp-linux-arm": "^0.35.5",
+    "@img/sharp-linux-arm64": "^0.35.5",
+    "@img/sharp-linux-x64": "^0.35.5",
+    "@img/sharp-win32-x64": "^0.35.5"
   }
 }

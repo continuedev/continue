@@ -33,6 +33,9 @@ updates:
       # (works through 6.7.0). Remove once the CLI is adapted.
       - dependency-name: ink
         versions: ["6.8.x"]
+      # @types/vscode must not be newer than engines.vscode in the extension's
+      # package.json (vsce refuses to package otherwise); bump them together by hand.
+      - dependency-name: "@types/vscode"
       # @vscode/ripgrep >=1.16 stopped downloading bin/rg in a postinstall
       # (binaries moved to optional platform packages); extension prepackage
       # still expects node_modules/@vscode/ripgrep/bin/rg.
