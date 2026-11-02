@@ -98,6 +98,19 @@ describe("getBedrockErrorHint", () => {
     );
   });
 
+  it("does not blame model access when a policy explicitly denies it", () => {
+    const e = Object.assign(
+      new Error(
+        "User: arn:aws:sts::1:assumed-role/dev is not authorized to perform: bedrock:InvokeModel on resource: arn:aws:bedrock:us-east-1:1:inference-profile/us.openai.example with an explicit deny in a service control policy",
+      ),
+      { name: "AccessDeniedException" },
+    );
+    const hint = getBedrockErrorHint(e, { region: "us-east-1" })!;
+    expect(hint).toContain("explicitly denied");
+    expect(hint).toContain("administrator");
+    expect(hint).not.toContain("make sure the model is enabled");
+  });
+
   it("returns undefined for unrelated errors", () => {
     expect(getBedrockErrorHint(new Error("boom"), {})).toBeUndefined();
   });

@@ -34,6 +34,11 @@ export interface ModelPackage {
   dimensions?: PackageDimension[];
   providerOptions?: string[];
   isOpenSource: boolean;
+  /**
+   * Provider the saved model should use, when it differs from the form's
+   * provider (a Bedrock model served only by the Mantle endpoint).
+   */
+  endpointProvider?: string;
   /** ISO release date reported by the provider (live lists only). */
   createdAt?: string;
   /** Provider reports this model as deprecated/legacy (live lists only). */

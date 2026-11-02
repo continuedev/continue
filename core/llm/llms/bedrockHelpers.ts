@@ -105,13 +105,24 @@ export function getBedrockErrorHint(
       ctx.region ? ` in ${ctx.region}` : ""
     }. Check the region name, your network/proxy, and any custom endpoint (apiBase).`;
   }
+  // An explicit deny is a policy decision (identity policy, permissions
+  // boundary or service control policy). Enabling the model in the console
+  // does not change it, so don't send the user there.
+  if (
+    /AccessDenied|not authorized/i.test(text) &&
+    /explicit deny/i.test(text)
+  ) {
+    return `Access to this model is explicitly denied by an IAM or organization policy (identity policy, permissions boundary or service control policy)${
+      ctx.region ? ` in ${ctx.region}` : ""
+    }. Enabling the model in the Bedrock console will not fix this: ask your AWS administrator to allow it. Restricted models can also need separate approval from the model provider.`;
+  }
   if (
     /AccessDeniedException/i.test(text) &&
     /model|bedrock:Invoke/i.test(text)
   ) {
     return `Access denied. Make sure the model is enabled for your account in the Bedrock console${
       ctx.region ? ` (region ${ctx.region})` : ""
-    } and that your IAM identity allows bedrock:InvokeModel and bedrock:InvokeModelWithResponseStream.`;
+    } and that your IAM identity allows bedrock:InvokeModel and bedrock:InvokeModelWithResponseStream. If it is already enabled, a policy may be denying it, or the model may need separate approval from its provider.`;
   }
   return undefined;
 }

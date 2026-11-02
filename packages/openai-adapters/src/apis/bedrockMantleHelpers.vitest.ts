@@ -8,6 +8,7 @@ import {
   mantleModelOptions,
   maxTokensParamFromError,
   normalizeMantlePrefix,
+  prettyMantleModelName,
 } from "./bedrockMantleHelpers.js";
 
 describe("mantle URLs", () => {
@@ -103,6 +104,28 @@ describe("mantleModelOptions", () => {
     ]);
     expect(opts[0].provider).toBe("OpenAI");
     expect(opts[2].provider).toBe("Other");
+  });
+
+  it("shows readable names and drops non-chat models", () => {
+    const opts = mantleModelOptions([
+      "openai.gpt-oss-120b",
+      "qwen.qwen3-235b",
+      "amazon.titan-embed-text-v2",
+      "openai.whisper-large",
+    ]);
+    expect(opts.map((o) => o.id)).toEqual([
+      "openai.gpt-oss-120b",
+      "qwen.qwen3-235b",
+    ]);
+    expect(opts[0].name).toBe("GPT OSS 120B");
+    expect(opts[1].name).toBe("Qwen3 235B");
+  });
+});
+
+describe("prettyMantleModelName", () => {
+  it("handles ids without a vendor prefix and version-like tokens", () => {
+    expect(prettyMantleModelName("weird")).toBe("Weird");
+    expect(prettyMantleModelName("openai.gpt-6.1-sol")).toBe("GPT 6.1 Sol");
   });
 });
 

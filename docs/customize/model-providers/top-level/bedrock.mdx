@@ -45,7 +45,9 @@ Open the model selector, choose **Add Chat model**, and pick **Amazon Bedrock**:
 
 1. Choose how to authenticate (API key, AWS profile / SSO, access keys, or default credentials) and fill in the fields that appear.
 2. Pick your **AWS region**.
-3. Click **Test connection**. Continue lists the models your account can use in that region, including inference profiles and your own application inference profiles. Choose one from **Available models**.
+3. Click **Test connection**. Continue lists the models your account can use in that region, including inference profiles and your own application inference profiles, and the **Model** list above fills with them (newest first, legacy models last). The refresh icon next to **Model** reloads the list.
+
+   If you signed in with a **Bedrock API key**, Continue also asks the Mantle endpoint (see [Bedrock Mantle](#bedrock-mantle-openai-compatible-endpoint)) and adds the models that only it serves, labelled **· Mantle**. A model both endpoints serve is listed once, on the standard endpoint. When you pick a Mantle-only model, Continue saves it with the `bedrock-mantle` provider using the same key and region, so you do not need to switch providers. Profile, SSO and access-key sign-ins cannot call Mantle, so those lists show standard-endpoint models only.
 4. Click **Send test message** to confirm the model actually answers (this catches missing model access and IAM problems before you save).
 5. Click **Connect**.
 
@@ -352,7 +354,17 @@ models:
       - chat
 ```
 
-You can also add it from the UI: **Add Chat model**, then **Amazon Bedrock (Mantle)**, then **Test connection** to list the models your key can use.
+You can also add it from the UI: **Add Chat model**, then **Amazon Bedrock (Mantle)**, then **Test connection** to list the models your key can use. The **Model** list then shows them with readable names; embedding and speech models are left out. You usually do not need this entry: the plain **Amazon Bedrock** entry also lists Mantle-only models when you use an API key.
+
+### Models that need approval
+
+Some models are gated: your account can see the endpoint but not the model, or a policy denies it. The error text tells you which:
+
+- **"explicit deny"**: an IAM identity policy, permissions boundary or service control policy blocks it. Enabling the model in the console will not help; ask your AWS administrator.
+- **Not in the Test connection list**: your key is not entitled to it in that region. Restricted models (for example security-focused or limited-preview models) can also need separate approval from the model provider, so check the provider's access program as well as AWS.
+- **Present in the list but the request is rejected**: check the path prefix (`mantlePathPrefix`) and the token parameter (`maxTokensParam`) below.
+
+If a model you expect is missing from the list, type its ID into **Custom model ID (optional)**; the model card lists the ID and path prefix.
 
 To use every model your key can access without listing them by hand, set `model: AUTODETECT`; Continue fills in the list from `GET /v1/models`.
 
@@ -366,7 +378,7 @@ To use every model your key can access without listing them by hand, set `model:
 | Regions | 22 | 15 (see below) |
 | IAM permission | `bedrock:InvokeModel*` | `bedrock-mantle:CreateInference` |
 
-Per-token prices are the same on both endpoints. AWS recommends the standard endpoint for new applications and Mantle when you need a model or capability only available there.
+Per-token prices are the same on both endpoints. AWS recommends the standard endpoint for new applications and Mantle when you need a model or capability only available there. Which models each endpoint serves is listed in AWS's [Endpoint availability](https://docs.aws.amazon.com/bedrock/latest/userguide/models-endpoint-availability.html) table: most models are on both, some are on only one (for example, at the time of writing, Claude Mythos 5 and the Gemma 4 models are Mantle-only, while Kimi K3 and Claude Opus 4.6 are standard-endpoint-only). That table changes often, so use **Test connection**, which asks the endpoints directly.
 
 **Mantle regions:** `us-east-1`, `us-east-2`, `us-west-2`, `eu-central-1`, `eu-north-1`, `eu-south-1`, `eu-west-1`, `eu-west-2`, `ap-northeast-1`, `ap-south-1`, `ap-southeast-2`, `ap-southeast-3`, `sa-east-1`, `us-gov-east-1`, `us-gov-west-1`. Regions such as `eu-west-3` or `ap-southeast-1` have no Mantle endpoint.
 

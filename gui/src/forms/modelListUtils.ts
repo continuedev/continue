@@ -19,6 +19,58 @@ function normalizeModelId(id: string): string {
   return id.replace(BEDROCK_GEO_PREFIX, "");
 }
 
+/**
+ * Key for recognising the same model on both Bedrock endpoints. The two
+ * endpoints do not always spell an id the same way (version and snapshot-date
+ * suffixes differ), so those are ignored. Only used to merge the two endpoint
+ * lists, never to collapse entries within one endpoint.
+ */
+export function crossEndpointKey(id: string): string {
+  return normalizeModelId(id)
+    .toLowerCase()
+    .replace(/-v?\d+:\d+$/, "")
+    .replace(/-\d{8}$/, "");
+}
+
+export type BedrockEndpoint = "runtime" | "mantle";
+
+/** A model Bedrock reports, tagged with the endpoint that serves it. */
+export interface BedrockEndpointModel extends BedrockModelOptionInfo {
+  endpoint: BedrockEndpoint;
+  /** Standard-endpoint entry that Mantle also serves. */
+  alsoOnMantle?: boolean;
+}
+
+/**
+ * Combine the standard (bedrock-runtime) and Mantle model lists into one.
+ * A model on both endpoints appears once, as a standard-endpoint entry: AWS
+ * recommends it for new applications and only it supports Guardrails. Models
+ * served only by Mantle are kept and tagged so they are routed there.
+ */
+export function mergeBedrockEndpoints(
+  runtime: BedrockModelOptionInfo[],
+  mantle: BedrockModelOptionInfo[],
+): BedrockEndpointModel[] {
+  const mantleKeys = new Set(mantle.map((m) => crossEndpointKey(m.id)));
+  const runtimeKeys = new Set(
+    runtime.map((o) => crossEndpointKey(o.baseModelId ?? o.id)),
+  );
+
+  const merged: BedrockEndpointModel[] = runtime.map((o) => ({
+    ...o,
+    endpoint: "runtime" as const,
+    ...(mantleKeys.has(crossEndpointKey(o.baseModelId ?? o.id))
+      ? { alsoOnMantle: true }
+      : {}),
+  }));
+  for (const m of mantle) {
+    if (!runtimeKeys.has(crossEndpointKey(m.id))) {
+      merged.push({ ...m, endpoint: "mantle" });
+    }
+  }
+  return merged;
+}
+
 function createdAtMs(pkg: ModelPackage): number {
   const t = pkg.createdAt ? Date.parse(pkg.createdAt) : NaN;
   return Number.isNaN(t) ? 0 : t;
@@ -33,12 +85,16 @@ function createdAtMs(pkg: ModelPackage): number {
 export function bedrockOptionsToPackages(
   options: BedrockModelOptionInfo[],
   provider: "bedrock" | "bedrock-mantle" = "bedrock",
+  /** Label Mantle entries so it is clear why they are separate (merged lists). */
+  markEndpoint = false,
 ): ModelPackage[] {
   const onDemandBases = new Set(
     options
       .filter((o) => o.kind === "on-demand")
       .map((o) => normalizeModelId(o.baseModelId ?? o.id)),
   );
+  const isMantle = provider === "bedrock-mantle";
+  const mark = isMantle && markEndpoint;
 
   return options
     .filter(
@@ -47,17 +103,35 @@ export function bedrockOptionsToPackages(
         !onDemandBases.has(normalizeModelId(o.baseModelId ?? o.id)),
     )
     .map((o) => ({
-      title: o.name,
-      description: `${o.provider} · ${o.id}`,
+      title: mark ? `${o.name} · Mantle` : o.name,
+      description: `${o.provider} · ${o.id}${mark ? " · via Mantle" : ""}`,
       params: {
         model: o.id,
-        title: `${o.name} (${provider === "bedrock-mantle" ? "Bedrock Mantle" : "Bedrock"})`,
+        title: `${o.name} (${isMantle ? "Bedrock Mantle" : "Bedrock"})`,
       },
       providerOptions: [provider],
+      endpointProvider: provider,
       icon: o.provider === "Anthropic" ? "anthropic.png" : undefined,
       isOpenSource: false,
       deprecated: o.legacy ? true : undefined,
     }));
+}
+
+/** Packages for a merged two-endpoint list, each routed to its own provider. */
+export function bedrockEndpointModelsToPackages(
+  models: BedrockEndpointModel[],
+): ModelPackage[] {
+  return [
+    ...bedrockOptionsToPackages(
+      models.filter((m) => m.endpoint === "runtime"),
+      "bedrock",
+    ),
+    ...bedrockOptionsToPackages(
+      models.filter((m) => m.endpoint === "mantle"),
+      "bedrock-mantle",
+      true,
+    ),
+  ];
 }
 
 /**
@@ -78,6 +152,8 @@ export function mergeLiveModels(
     return match
       ? {
           ...match,
+          // The live entry knows which endpoint actually serves the model.
+          endpointProvider: l.endpointProvider ?? match.endpointProvider,
           createdAt: l.createdAt ?? match.createdAt,
           deprecated: l.deprecated,
         }

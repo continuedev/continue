@@ -100,14 +100,44 @@ const VENDOR_NAMES: Record<string, string> = {
   amazon: "Amazon",
 };
 
+const TOKEN_CASE: Record<string, string> = {
+  gpt: "GPT",
+  oss: "OSS",
+  glm: "GLM",
+  llm: "LLM",
+  vl: "VL",
+  ai: "AI",
+};
+
+// Ids that are not chat models (Mantle also serves embeddings and speech).
+const NON_CHAT_MANTLE_ID =
+  /embed|rerank|image|whisper|tts|speech|moderation|transcribe/i;
+
+/** `openai.gpt-oss-120b` -> `GPT OSS 120B`; falls back to the id's shape. */
+export function prettyMantleModelName(id: string): string {
+  const base = id.includes(".") ? id.slice(id.indexOf(".") + 1) : id;
+  const words = base
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((token) => {
+      const lower = token.toLowerCase();
+      if (TOKEN_CASE[lower]) return TOKEN_CASE[lower];
+      // Sizes such as 120b / 20b / 235b
+      if (/^\d+(\.\d+)?b$/i.test(token)) return token.toUpperCase();
+      return token.charAt(0).toUpperCase() + token.slice(1);
+    });
+  return words.length > 0 ? words.join(" ") : id;
+}
+
 /** Turn `GET /models` ids (`openai.gpt-oss-120b`) into picker options. */
 export function mantleModelOptions(ids: string[]): MantleModelOption[] {
   return [...new Set(ids)]
+    .filter((id) => !NON_CHAT_MANTLE_ID.test(id))
     .map((id) => {
       const vendor = id.includes(".") ? id.split(".")[0] : "other";
       return {
         id,
-        name: id,
+        name: prettyMantleModelName(id),
         provider:
           VENDOR_NAMES[vendor] ??
           vendor.charAt(0).toUpperCase() + vendor.slice(1),

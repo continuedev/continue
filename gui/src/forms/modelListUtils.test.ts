@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { ModelPackage } from "../pages/AddNewModel/configs/models";
 import {
+  bedrockEndpointModelsToPackages,
   bedrockOptionsToPackages,
   computeModelLists,
+  crossEndpointKey,
   isLikelyChatModelId,
+  mergeBedrockEndpoints,
   mergeLiveModels,
   splitPopular,
 } from "./modelListUtils";
@@ -159,5 +162,114 @@ describe("computeModelLists", () => {
       (m) => m.params.model,
     );
     expect(all.sort()).toEqual(["three", "two"]);
+  });
+});
+
+describe("crossEndpointKey", () => {
+  it("ignores geography prefixes, version and snapshot suffixes", () => {
+    expect(crossEndpointKey("us.anthropic.claude-sonnet-4-6")).toBe(
+      "anthropic.claude-sonnet-4-6",
+    );
+    expect(crossEndpointKey("anthropic.claude-sonnet-4-5-20250929-v1:0")).toBe(
+      "anthropic.claude-sonnet-4-5",
+    );
+    expect(crossEndpointKey("anthropic.claude-sonnet-4-5")).toBe(
+      "anthropic.claude-sonnet-4-5",
+    );
+    expect(crossEndpointKey("OpenAI.GPT-OSS-120B")).toBe("openai.gpt-oss-120b");
+  });
+});
+
+describe("mergeBedrockEndpoints", () => {
+  const opt = (id: string, name = id) => ({
+    id,
+    name,
+    provider: "X",
+    kind: "on-demand" as const,
+  });
+
+  it("lists a model on both endpoints once, as a standard-endpoint entry", () => {
+    const merged = mergeBedrockEndpoints(
+      [opt("openai.gpt-oss-120b")],
+      [opt("openai.gpt-oss-120b")],
+    );
+    expect(merged).toHaveLength(1);
+    expect(merged[0]).toMatchObject({
+      endpoint: "runtime",
+      alsoOnMantle: true,
+    });
+  });
+
+  it("keeps Mantle-only models and tags them", () => {
+    const merged = mergeBedrockEndpoints(
+      [opt("anthropic.claude-sonnet-5-5")],
+      [opt("openai.gpt-daybreak-blue-5.6-sol")],
+    );
+    expect(merged.map((m) => `${m.endpoint}:${m.id}`)).toEqual([
+      "runtime:anthropic.claude-sonnet-5-5",
+      "mantle:openai.gpt-daybreak-blue-5.6-sol",
+    ]);
+    expect(merged[0].alsoOnMantle).toBeUndefined();
+  });
+
+  it("matches a profile-only standard model to its Mantle twin", () => {
+    const merged = mergeBedrockEndpoints(
+      [
+        {
+          id: "us.anthropic.claude-opus-4-7",
+          name: "Claude Opus 4.7 (us.)",
+          provider: "Anthropic",
+          kind: "inference-profile" as const,
+          baseModelId: "anthropic.claude-opus-4-7",
+        },
+      ],
+      [opt("anthropic.claude-opus-4-7")],
+    );
+    expect(merged).toHaveLength(1);
+    expect(merged[0].endpoint).toBe("runtime");
+  });
+
+  it("works with only one endpoint", () => {
+    expect(mergeBedrockEndpoints([], [opt("a.b")])[0].endpoint).toBe("mantle");
+    expect(mergeBedrockEndpoints([opt("a.b")], [])[0].endpoint).toBe("runtime");
+    expect(mergeBedrockEndpoints([], [])).toEqual([]);
+  });
+});
+
+describe("bedrockEndpointModelsToPackages", () => {
+  it("routes each model to its own provider and labels Mantle-only ones", () => {
+    const pkgs = bedrockEndpointModelsToPackages([
+      {
+        id: "anthropic.claude-sonnet-5-5",
+        name: "Claude Sonnet 5.5",
+        provider: "Anthropic",
+        kind: "on-demand",
+        endpoint: "runtime",
+      },
+      {
+        id: "openai.gpt-daybreak-blue-5.6-sol",
+        name: "GPT Daybreak Blue 5.6 Sol",
+        provider: "OpenAI",
+        kind: "on-demand",
+        endpoint: "mantle",
+      },
+    ]);
+    expect(pkgs.map((p) => p.endpointProvider)).toEqual([
+      "bedrock",
+      "bedrock-mantle",
+    ]);
+    expect(pkgs[0].title).toBe("Claude Sonnet 5.5");
+    expect(pkgs[1].title).toBe("GPT Daybreak Blue 5.6 Sol · Mantle");
+    expect(pkgs[1].params.title).toBe(
+      "GPT Daybreak Blue 5.6 Sol (Bedrock Mantle)",
+    );
+  });
+
+  it("does not add the Mantle label on the dedicated Mantle form", () => {
+    const [p] = bedrockOptionsToPackages(
+      [{ id: "a.b", name: "B", provider: "A", kind: "on-demand" }],
+      "bedrock-mantle",
+    );
+    expect(p.title).toBe("B");
   });
 });

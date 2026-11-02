@@ -19,19 +19,21 @@ import {
   ProviderInfo,
   providers,
 } from "../pages/AddNewModel/configs/providers";
-import type { BedrockModelOptionInfo } from "core/protocol/core";
+import type { BedrockEndpointModel } from "./modelListUtils";
 import {
   areRequiredFieldsFilled,
   buildModelFromForm,
   getBedrockConnectionParams,
   getRenderableFields,
 } from "./addModelFormUtils";
-import {
-  BedrockConnectionTester,
-  listBedrockModels,
-} from "./BedrockConnectionTester";
+import { listBedrockModelsFor } from "./bedrockModels";
+import { BedrockConnectionTester } from "./BedrockConnectionTester";
 import { FormSelect } from "./FormSelect";
-import { bedrockOptionsToPackages, computeModelLists } from "./modelListUtils";
+import {
+  bedrockEndpointModelsToPackages,
+  bedrockOptionsToPackages,
+  computeModelLists,
+} from "./modelListUtils";
 
 interface AddModelFormProps {
   onDone: () => void;
@@ -44,6 +46,20 @@ const CONTINUE_SETUP_URL = "https://docs.continue.dev/setup/overview";
 
 const isBedrockProvider = (provider: string) =>
   provider === "bedrock" || provider === "bedrock-mantle";
+
+/**
+ * Packages for a live Bedrock list. The combined "Amazon Bedrock" entry shows
+ * models from both endpoints (Mantle-only ones are labelled); the dedicated
+ * Mantle entry shows just Mantle's models.
+ */
+function bedrockPackagesFor(
+  formProvider: string,
+  models: BedrockEndpointModel[],
+) {
+  return formProvider === "bedrock-mantle"
+    ? bedrockOptionsToPackages(models, "bedrock-mantle")
+    : bedrockEndpointModelsToPackages(models);
+}
 
 export function AddModelForm({ onDone }: AddModelFormProps) {
   const [selectedProvider, setSelectedProvider] = useState<ProviderInfo>(
@@ -61,6 +77,7 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
   // Models the provider reports for the entered credentials. Empty until a
   // connection test or refresh succeeds; then it replaces the curated list.
   const [liveModels, setLiveModels] = useState<ModelPackage[]>([]);
+  const [liveNotes, setLiveNotes] = useState<string[]>([]);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [refreshError, setRefreshError] = useState<string>();
   const providerRef = useRef(selectedProvider.provider);
@@ -72,6 +89,7 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
 
   useEffect(() => {
     setLiveModels([]);
+    setLiveNotes([]);
     setRefreshError(undefined);
   }, [selectedProvider]);
 
@@ -80,6 +98,11 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
   const bedrockConnection = isBedrock
     ? getBedrockConnectionParams(selectedProvider, selectedModel, formValues)
     : undefined;
+  // The selected model is served only by the Mantle endpoint while the form is
+  // the combined "Amazon Bedrock" entry.
+  const usesMantleEndpoint =
+    selectedProvider.provider === "bedrock" &&
+    selectedModel.endpointProvider === "bedrock-mantle";
   const canRefresh = isBedrock
     ? areRequiredFieldsFilled(selectedProvider, formValues)
     : !!formValues.apiKey &&
@@ -87,9 +110,14 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
       selectedProvider.provider !== "openrouter";
 
   /** Show a freshly loaded live list, keeping the current pick when it is still offered. */
-  function applyLiveModels(packages: ModelPackage[], forProvider: string) {
+  function applyLiveModels(
+    packages: ModelPackage[],
+    forProvider: string,
+    notes: string[] = [],
+  ) {
     if (providerRef.current !== forProvider) return;
     setLiveModels(packages);
+    setLiveNotes(notes);
     if (packages.length === 0) return;
     const lists = computeModelLists(selectedProvider, packages);
     const all = [...lists.top, ...(lists.other ?? [])];
@@ -104,7 +132,7 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
     setRefreshError(undefined);
     try {
       if (isBedrockProvider(providerAtFetchTime)) {
-        const result = await listBedrockModels(
+        const result = await listBedrockModelsFor(
           ideMessenger,
           bedrockConnection ?? {},
         );
@@ -113,11 +141,9 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
           return;
         }
         applyLiveModels(
-          bedrockOptionsToPackages(
-            result.models,
-            providerAtFetchTime as "bedrock" | "bedrock-mantle",
-          ),
+          bedrockPackagesFor(providerAtFetchTime, result.models),
           providerAtFetchTime,
+          result.notes,
         );
         return;
       }
@@ -217,8 +243,13 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
       : undefined;
 
   function onSubmit() {
+    // A Mantle-only model picked in the combined Bedrock form is saved with the
+    // Mantle provider; the credentials and region are the same.
+    const saveProvider = usesMantleEndpoint
+      ? (providers["bedrock-mantle"] ?? selectedProvider)
+      : selectedProvider;
     const model = buildModelFromForm(
-      selectedProvider,
+      saveProvider,
       selectedModel,
       formMethods.getValues(),
       {
@@ -354,6 +385,14 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                   Couldn't refresh the model list: {refreshError}
                 </span>
               )}
+              {liveNotes.map((note) => (
+                <span
+                  key={note}
+                  className="mt-1 block text-xs text-description-muted"
+                >
+                  {note}
+                </span>
+              ))}
             </div>
 
             {selectedModel.params.model.startsWith("codestral") && (
@@ -454,19 +493,19 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                 connection={bedrockConnection ?? {}}
                 model={formValues.model || selectedModel.params.model}
                 canTest={areRequiredFieldsFilled(selectedProvider, formValues)}
-                onModelsLoaded={(models) => {
+                testEndpoint={usesMantleEndpoint ? "mantle" : undefined}
+                onModelsLoaded={(models, notes) => {
                   setRefreshError(undefined);
                   const forProvider = selectedProvider.provider;
                   if (!models) {
                     setLiveModels([]);
+                    setLiveNotes([]);
                     return;
                   }
                   applyLiveModels(
-                    bedrockOptionsToPackages(
-                      models,
-                      forProvider as "bedrock" | "bedrock-mantle",
-                    ),
+                    bedrockPackagesFor(forProvider, models),
                     forProvider,
+                    notes,
                   );
                 }}
               />

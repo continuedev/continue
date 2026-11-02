@@ -1,13 +1,13 @@
 import { useContext, useState } from "react";
 import type {
   BedrockConnectionParams,
-  BedrockListModelsResult,
-  BedrockModelOptionInfo,
   BedrockTestModelResult,
 } from "core/protocol/core";
 import { Button } from "../components/ui/Button";
 import Alert from "../components/gui/Alert";
-import { IdeMessengerContext, IIdeMessenger } from "../context/IdeMessenger";
+import { IdeMessengerContext } from "../context/IdeMessenger";
+import { BedrockAllModelsResult, listBedrockModelsFor } from "./bedrockModels";
+import type { BedrockEndpointModel } from "./modelListUtils";
 
 interface Props {
   /** Connection settings built from the current form values. */
@@ -16,45 +16,34 @@ interface Props {
   model: string;
   /** Required fields are filled in. */
   canTest: boolean;
+  /** Send the test message through Mantle (the selected model is Mantle-only). */
+  testEndpoint?: "mantle";
   /**
-   * Called with the models available to these credentials once the connection
-   * works, and with `undefined` when a new test starts or it fails.
+   * Called with the models available to these credentials (from every endpoint
+   * that could be queried) once the connection works, and with `undefined`
+   * when a new test starts or it fails. `notes` explains anything left out.
    */
-  onModelsLoaded: (models: BedrockModelOptionInfo[] | undefined) => void;
-}
-
-/** Ask core which models the entered credentials/region can use. */
-export async function listBedrockModels(
-  ideMessenger: IIdeMessenger,
-  connection: Record<string, string>,
-): Promise<BedrockListModelsResult> {
-  try {
-    const res = await ideMessenger.request(
-      "bedrock/listModels",
-      connection as BedrockConnectionParams,
-    );
-    return res.status === "success"
-      ? res.content
-      : { ok: false, error: String(res.error ?? "Request failed") };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
-  }
+  onModelsLoaded: (
+    models: BedrockEndpointModel[] | undefined,
+    notes: string[],
+  ) => void;
 }
 
 /**
  * "Test connection" for the Bedrock add-model form: lists the models available
- * to the entered credentials/region (which then populate the Model picker), and
- * can send a one-word test message.
+ * to the entered credentials/region on both Bedrock endpoints (which then
+ * populate the Model picker), and can send a one-word test message.
  */
 export function BedrockConnectionTester({
   connection,
   model,
   canTest,
+  testEndpoint,
   onModelsLoaded,
 }: Props) {
   const ideMessenger = useContext(IdeMessengerContext);
   const [listing, setListing] = useState(false);
-  const [listResult, setListResult] = useState<BedrockListModelsResult>();
+  const [listResult, setListResult] = useState<BedrockAllModelsResult>();
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<BedrockTestModelResult>();
 
@@ -62,11 +51,13 @@ export function BedrockConnectionTester({
     setListing(true);
     setListResult(undefined);
     setTestResult(undefined);
-    onModelsLoaded(undefined);
+    onModelsLoaded(undefined, []);
     try {
-      const result = await listBedrockModels(ideMessenger, connection);
+      const result = await listBedrockModelsFor(ideMessenger, connection);
       setListResult(result);
-      onModelsLoaded(result.ok ? result.models : undefined);
+      if (result.ok) {
+        onModelsLoaded(result.models, result.notes);
+      }
     } finally {
       setListing(false);
     }
@@ -78,6 +69,7 @@ export function BedrockConnectionTester({
     try {
       const res = await ideMessenger.request("bedrock/testModel", {
         ...(connection as BedrockConnectionParams),
+        ...(testEndpoint ? { endpoint: testEndpoint } : {}),
         model,
       });
       setTestResult(
@@ -96,6 +88,7 @@ export function BedrockConnectionTester({
   }
 
   const models = listResult?.ok ? listResult.models : [];
+  const mantleOnly = models.filter((m) => m.endpoint === "mantle").length;
 
   return (
     <div className="flex flex-col gap-2">
@@ -132,7 +125,8 @@ export function BedrockConnectionTester({
           <span className="text-xs">
             Connected. {models.length} model
             {models.length === 1 ? "" : "s"} available
-            {connection.region ? ` in ${connection.region}` : ""}. The Model
+            {connection.region ? ` in ${connection.region}` : ""}
+            {mantleOnly > 0 ? ` (${mantleOnly} only on Mantle)` : ""}. The Model
             list above now shows them.
           </span>
         </Alert>
