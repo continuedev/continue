@@ -114,6 +114,12 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   }
 
   async retrieve(config: RetrieveConfig): Promise<Chunk[]> {
+    if (config.text.trim().length === 0) {
+      // An empty MATCH string is a syntax error in FTS5; there is nothing to
+      // full-text search for, so return no results instead of throwing.
+      return [];
+    }
+
     const db = await SqliteDb.get();
 
     const query = this.buildRetrieveQuery(config);
