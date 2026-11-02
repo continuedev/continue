@@ -42,10 +42,13 @@ runs:
         java-version: 17
 
     - name: Setup FFmpeg
-      uses: AnimMouse/setup-ffmpeg@v1
-      with:
-        version: 7.1
-        token: ${{ inputs.github-token }}
+      shell: bash
+      run: |
+        if ! command -v ffmpeg >/dev/null 2>&1; then
+          sudo apt-get update -o Acquire::Retries=3
+          sudo apt-get install -y --no-install-recommends ffmpeg
+        fi
+        ffmpeg -version
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3

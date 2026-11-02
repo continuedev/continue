@@ -84,6 +84,11 @@ jobs:
           RELACE_API_KEY: ${{ secrets.RELACE_API_KEY }}
           INCEPTION_API_KEY: ${{ secrets.INCEPTION_API_KEY }}
 
+      - name: Setup Node.js 24 for semantic-release
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_GITHUB_TOKEN }}

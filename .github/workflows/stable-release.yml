@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+          token: ${{ secrets.SEMANTIC_RELEASE_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -77,12 +77,12 @@ jobs:
 
       - name: Create release on GitHub
         env:
-          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git tag "v${{ inputs.stable_version }}"
-          git push origin "v${{ inputs.stable_version }}"
+          git tag -f "v${{ inputs.stable_version }}"
+          git push origin "refs/tags/v${{ inputs.stable_version }}" --force
 
           gh release create "v${{ inputs.stable_version }}" \
             --title "CLI Release v${{ inputs.stable_version }}" \

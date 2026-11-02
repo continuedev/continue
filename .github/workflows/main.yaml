@@ -20,8 +20,14 @@ jobs:
       - id: check
         working-directory: .
         run: |
-          if [[ "${{ github.event.release.tag_name }}" == v1.2.*-vscode ]]; then
-            echo "should_run=true" >> $GITHUB_OUTPUT
+          TAG="${{ github.event.release.tag_name }}"
+          if [[ "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)-vscode$ ]]; then
+            MINOR="${BASH_REMATCH[2]}"
+            if (( MINOR % 2 == 0 )); then
+              echo "should_run=true" >> $GITHUB_OUTPUT
+            else
+              echo "should_run=false" >> $GITHUB_OUTPUT
+            fi
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
           fi
@@ -35,6 +41,7 @@ jobs:
           fetch-depth: 0 # This ensures all tags are fetched
 
       - name: Checkout tag
+        if: github.event_name == 'release'
         run: git checkout ${GITHUB_REF#refs/tags/}
 
       - name: Make sure version isn't odd
@@ -132,7 +139,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           files: |
             vsix-artifacts/*.vsix
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           repository: continuedev/continue
 
   publish:

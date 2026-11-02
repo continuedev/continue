@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        platform: [Linux, macOS]
+        platform: [Linux]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -27,13 +27,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Get PR number for the current commit using GitHub API
-          COMMIT_SHA=$(git rev-parse HEAD)
-          echo "Getting PR for commit: $COMMIT_SHA"
+          if [ -n "${{ inputs.test_pr_number }}" ]; then
+            PR_NUMBER="${{ inputs.test_pr_number }}"
+            echo "Using workflow_dispatch input PR number: $PR_NUMBER"
+          else
+            # Get PR number for the current commit using GitHub API
+            COMMIT_SHA=$(git rev-parse HEAD)
+            echo "Getting PR for commit: $COMMIT_SHA"
 
-          PR_NUMBER=$(curl -s -H "Authorization: token $GH_TOKEN" \
-            "https://api.github.com/repos/${{ github.repository }}/commits/$COMMIT_SHA/pulls" \
-            | jq -r '.[0].number // empty')
+            PR_NUMBER=$(curl -s -H "Authorization: token $GH_TOKEN" \
+              "https://api.github.com/repos/${{ github.repository }}/commits/$COMMIT_SHA/pulls" \
+              | jq -r '.[0].number // empty')
+          fi
 
           if [ -z "$PR_NUMBER" ]; then
             echo "❌ Could not find PR for commit $COMMIT_SHA"
@@ -64,7 +69,7 @@ jobs:
           # Get the latest successful workflow run for the branch
           RUN_ID=$(gh run list \
             --repo "${{ github.repository }}" \
-            --workflow="pr_checks.yaml" \
+            --workflow="pr-checks.yaml" \
             --branch="$BRANCH_NAME" \
             --json databaseId,status,conclusion \
             --jq ".[] | select(.status == \"completed\" and .conclusion == \"success\") | .databaseId" \
