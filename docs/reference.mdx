@@ -191,6 +191,42 @@ models:
 
 ---
 
+### `modeModels`
+
+Use a different chat model (and reasoning effort) in each mode, for example a stronger model to plan and a faster one to act. Each entry names a model defined under `models` (by its `name`).
+
+```yaml title="config.yaml"
+models:
+  - name: Claude Opus
+    provider: bedrock
+    model: us.anthropic.claude-opus-4-1-20250805-v1:0
+    env:
+      region: us-east-1
+  - name: Claude Sonnet
+    provider: bedrock
+    model: us.anthropic.claude-sonnet-4-6
+    env:
+      region: us-east-1
+
+modeModels:
+  plan:
+    model: Claude Opus
+    reasoningEffort: medium
+  agent:
+    model: Claude Sonnet
+    reasoningEffort: low
+```
+
+- `chat`, `agent`, `plan`: the modes you can set. Each takes:
+  - `model` (required): the `name` of one of your chat models.
+  - `reasoningEffort` (optional): `off`, `low`, `medium` or `high`. This maps to a thinking budget of about 1K, 4K or 16K tokens for models that support extended thinking.
+- Switching mode switches the selected chat model, and the mode menu shows which model and effort each mode uses.
+- A mode without an entry keeps whichever model is currently selected.
+- If you pick a model by hand in the model selector, that choice is used for the current mode until you reload the window. The reasoning toggle in the chat input overrides `reasoningEffort`.
+- An entry naming a model that doesn't exist is ignored, with a warning in the config errors.
+
+---
+
 ### `context`
 
 The `context` section defines context providers, which supply additional information or context to the language models. Each context provider can be configured with specific parameters.
