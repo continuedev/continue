@@ -33,6 +33,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
   useResponsesApi: z.boolean().optional(),
   provider: z.union([
     z.literal("openai"),
+    z.literal("cheaper-inference"),
     z.literal("mistral"),
     z.literal("voyage"),
     z.literal("deepinfra"),

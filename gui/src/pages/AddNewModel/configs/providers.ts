@@ -54,6 +54,24 @@ export const apiBaseInput: InputDescriptor = {
 };
 
 export const providers: Partial<Record<string, ProviderInfo>> = {
+  "cheaper-inference": {
+    title: "Cheaper Inference",
+    provider: "cheaper-inference",
+    description: "Access chat models through an OpenAI-compatible API.",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Cheaper Inference API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    refPage: "cheaper-inference",
+    apiKeyUrl: "https://www.cheaperinference.com/dashboard/api-keys",
+  },
   cometapi: {
     title: "CometAPI",
     provider: "cometapi",

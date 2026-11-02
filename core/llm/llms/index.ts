@@ -15,6 +15,7 @@ import Azure from "./Azure";
 import Bedrock from "./Bedrock";
 import BedrockImport from "./BedrockImport";
 import Cerebras from "./Cerebras";
+import CheaperInference from "./CheaperInference";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import CometAPI from "./CometAPI";
@@ -117,6 +118,7 @@ export const LLMClasses = [
   MockLLM,
   TestLLM,
   Cerebras,
+  CheaperInference,
   Asksage,
   Nebius,
   Nous,
