@@ -12,8 +12,8 @@ val isEap get() = environment("RELEASE_CHANNEL").orNull == "eap"
 
 plugins {
     kotlin("jvm") version "2.1.0"
-    id("org.jetbrains.intellij.platform") version "2.7.2"
-    id("org.jetbrains.changelog") version "2.1.2"
+    id("org.jetbrains.intellij.platform") version "2.19.0"
+    id("org.jetbrains.changelog") version "2.5.0"
     id("org.jetbrains.qodana") version "0.1.13"
 }
 
@@ -48,16 +48,19 @@ dependencies {
     }
 
     testImplementation("junit:junit:4.13.2")
-    testImplementation("io.mockk:mockk:1.14.2") {
+    testImplementation("io.mockk:mockk:1.14.11") {
         // this transitive dependency (1.6.4) conflicts with built-in version (1.7.3)
         // otherwise e2e tests (runIdeForUiTests) will have linkage errors
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
     testImplementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     testImplementation("com.automation-remarks:video-recorder-junit5:2.0")
-    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.0") // required to run both JUnit 5 and JUnit 3
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:6.1.3") // required to run both JUnit 5 and JUnit 3
+    // Gradle 9 no longer supplies the JUnit Platform launcher itself
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.3")
 
-    testIntegrationImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+    testIntegrationImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
+    "testIntegrationRuntimeOnly"("org.junit.platform:junit-platform-launcher:6.1.3")
     testIntegrationImplementation("org.kodein.di:kodein-di-jvm:7.20.2")
     testIntegrationImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.1")
 }
