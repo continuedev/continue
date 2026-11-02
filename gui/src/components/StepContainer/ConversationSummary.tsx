@@ -28,8 +28,8 @@ export default function ConversationSummary(props: ConversationSummaryProps) {
   if (isLoading) {
     return (
       <div className="mx-1.5 mb-4 mt-2">
-        <div className="bg-vsc-input-background rounded-md shadow-sm">
-          <div className="text-description flex items-center justify-start px-3 py-2 text-xs">
+        <div className="rounded-md bg-vsc-input-background shadow-sm">
+          <div className="flex items-center justify-start px-3 py-2 text-xs text-description">
             <span>Generating conversation summary</span>
             <AnimatedEllipsis />
           </div>
@@ -41,9 +41,9 @@ export default function ConversationSummary(props: ConversationSummaryProps) {
   // Normal state with content
   return (
     <div className="mx-1.5 mb-4 mt-2">
-      <div className="bg-vsc-input-background rounded-md shadow-sm">
+      <div className="rounded-md bg-vsc-input-background shadow-sm">
         <div
-          className="text-description flex cursor-pointer items-center gap-2 px-3 py-2 text-xs transition-colors duration-200 hover:brightness-105"
+          className="flex cursor-pointer items-center gap-2 px-3 py-2 text-xs text-description transition-colors duration-200 hover:brightness-105"
           onClick={() => setOpen(!open)}
         >
           {open ? (
@@ -59,12 +59,12 @@ export default function ConversationSummary(props: ConversationSummaryProps) {
               deleteCompaction(props.index);
             }}
           >
-            <TrashIcon className="text-description-muted h-3 w-3" />
+            <TrashIcon className="h-3 w-3 text-description-muted" />
           </HeaderButtonWithToolTip>
         </div>
         {open && (
           <>
-            <div className="border-border border-0 border-t border-solid"></div>
+            <div className="border-0 border-t border-solid border-border"></div>
             <div className="max-h-[400px] overflow-y-auto px-3 pb-3 pt-2">
               <StyledMarkdownPreview
                 isRenderingInStepContainer

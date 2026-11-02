@@ -54,7 +54,7 @@ export function ConversationStarterCards() {
       </div>
       {bookmarkedSlashCommands.length > NUM_CARDS_TO_RENDER && (
         <span
-          className="text-lightgray mt-1 cursor-pointer text-xs hover:underline"
+          className="mt-1 cursor-pointer text-xs text-lightgray hover:underline"
           onClick={() => setShowAll(!showAll)}
         >
           {showAll ? "Show less" : `Show ${remainingCount} more...`}

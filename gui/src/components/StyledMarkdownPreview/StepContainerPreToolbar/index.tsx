@@ -247,7 +247,7 @@ export function StepContainerPreToolbar({
       const plural = numLines === 1 ? "" : "s";
       if (isGeneratingCodeBlock) {
         return (
-          <span className="text-lightgray inline-flex items-center gap-2 text-right">
+          <span className="inline-flex items-center gap-2 text-right text-lightgray">
             <div>
               <Spinner />
             </div>
@@ -255,7 +255,7 @@ export function StepContainerPreToolbar({
         );
       } else {
         return (
-          <span className="text-lightgray inline-flex items-center gap-2 text-right">
+          <span className="inline-flex items-center gap-2 text-right text-lightgray">
             {`${numLines} line${plural} pending`}
           </span>
         );
@@ -292,9 +292,9 @@ export function StepContainerPreToolbar({
   }
 
   return (
-    <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor !my-2 flex min-w-0 flex-col outline outline-1">
+    <div className="!my-2 flex min-w-0 flex-col rounded-default bg-editor outline outline-1 -outline-offset-0.5 outline-command-border">
       <div
-        className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex items-center justify-between gap-3 px-1.5 py-1 ${isExpanded ? "rounded-t-default border-command-border border-b" : "rounded-default"}`}
+        className={`find-widget-skip sticky -top-2 z-10 m-0 flex items-center justify-between gap-3 bg-editor px-1.5 py-1 ${isExpanded ? "rounded-t-default border-b border-command-border" : "rounded-default"}`}
         style={{ fontSize: `${getFontSize() - 2}px` }}
       >
         <div className="flex max-w-[50%] flex-row items-center">
@@ -302,7 +302,7 @@ export function StepContainerPreToolbar({
           <ChevronDownIcon
             data-testid="toggle-codeblock"
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer hover:brightness-125 ${
+            className={`h-3.5 w-3.5 flex-shrink-0 cursor-pointer text-lightgray hover:brightness-125 ${
               isExpanded ? "rotate-0" : "-rotate-90"
             }`}
           />
@@ -313,7 +313,7 @@ export function StepContainerPreToolbar({
               onClick={fileExists ? onClickFilename : undefined}
             />
           ) : (
-            <span className="text-lightgray ml-2 select-none capitalize">
+            <span className="ml-2 select-none capitalize text-lightgray">
               {language}
             </span>
           )}
@@ -321,7 +321,7 @@ export function StepContainerPreToolbar({
 
         <div className="flex items-center gap-2.5">
           {!isGeneratingCodeBlock && (
-            <div className="xs:flex hidden items-center gap-2.5">
+            <div className="hidden items-center gap-2.5 xs:flex">
               <InsertButton onInsert={onClickInsertAtCursor} />
               <CopyButton text={codeBlockContent} />
             </div>

@@ -15,7 +15,7 @@ export const IsApplyingToolbar = () => {
       <GeneratingIndicator text="Applying" testId={"notch-applying-text"} />
       <div
         data-testid="notch-applying-cancel-button"
-        className="text-description text-2xs cursor-pointer p-0.5 pr-1 hover:brightness-125"
+        className="cursor-pointer p-0.5 pr-1 text-2xs text-description hover:brightness-125"
         onClick={() => {
           // Note that this will NOT stop generation but once apply is cancelled will show the Generating/cancel option
           // Apply is prioritized because it can be more catastrophic

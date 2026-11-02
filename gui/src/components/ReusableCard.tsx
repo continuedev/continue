@@ -28,7 +28,7 @@ export function ReusableCard({
 }: ReusableCardProps) {
   return (
     <StyledCard
-      className={`xs:py-4 xs:px-4 relative px-2 !pt-0 pb-3 ${className}`}
+      className={`relative px-2 !pt-0 pb-3 xs:px-4 xs:py-4 ${className}`}
       data-testid={testId}
     >
       {showCloseButton && (

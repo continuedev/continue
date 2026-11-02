@@ -32,7 +32,7 @@ const MAX_SAME_LINES = 2;
 
 function EllipsisLine() {
   return (
-    <div className="text-description-muted px-3 py-1 text-left font-mono">
+    <div className="px-3 py-1 text-left font-mono text-description-muted">
       ⋯
     </div>
   );
@@ -57,7 +57,7 @@ function DiffLines({
         return (
           <div
             key={lineIndex}
-            className={cn("text-foreground px-3 py-px font-mono", className)}
+            className={cn("px-3 py-px font-mono text-foreground", className)}
           >
             <span className={cn("mr-2 select-none", diffCharClass)}>
               {diffChar}
@@ -206,9 +206,9 @@ export function FindAndReplaceDisplay({
 
   // Unified container component that always renders the same structure
   const renderContainer = (content: React.ReactNode) => (
-    <div className="outline-command-border -outline-offset-0.5 rounded-default bg-editor mx-2 my-1 flex min-w-0 flex-col outline outline-1">
+    <div className="mx-2 my-1 flex min-w-0 flex-col rounded-default bg-editor outline outline-1 -outline-offset-0.5 outline-command-border">
       <div
-        className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex cursor-pointer items-center justify-between gap-3 px-1.5 py-1 ${showContent ? "rounded-t-default border-command-border border-b" : "rounded-default"}`}
+        className={`find-widget-skip sticky -top-2 z-10 m-0 flex cursor-pointer items-center justify-between gap-3 bg-editor px-1.5 py-1 ${showContent ? "rounded-t-default border-b border-command-border" : "rounded-default"}`}
         onClick={() => {
           setIsExpanded(!showContent);
         }}
@@ -218,7 +218,7 @@ export function FindAndReplaceDisplay({
             {statusIcon}
             <ChevronDownIcon
               data-testid="toggle-find-and-replace-diff"
-              className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer select-none transition-all hover:brightness-125 ${
+              className={`h-3.5 w-3.5 flex-shrink-0 cursor-pointer select-none text-lightgray transition-all hover:brightness-125 ${
                 showContent ? "rotate-0" : "-rotate-90"
               }`}
             />
@@ -261,7 +261,7 @@ export function FindAndReplaceDisplay({
 
   if (diffResult?.error) {
     return (
-      <div className="text-description mt-2 px-3">
+      <div className="mt-2 px-3 text-description">
         The searched string was not found in the file
       </div>
     );
@@ -274,7 +274,7 @@ export function FindAndReplaceDisplay({
       !diffResult.diff[0].removed)
   ) {
     return renderContainer(
-      <div className="text-description-muted p-3">No changes to display</div>,
+      <div className="p-3 text-description-muted">No changes to display</div>,
     );
   }
 
@@ -283,7 +283,7 @@ export function FindAndReplaceDisplay({
       className={`${config?.ui?.showChatScrollbar ? "thin-scrollbar" : "no-scrollbar"} max-h-72 overflow-auto`}
     >
       <pre
-        className={`bg-editor m-0 w-fit min-w-full text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
+        className={`m-0 w-fit min-w-full bg-editor text-xs leading-tight ${config?.ui?.codeWrap ? "whitespace-pre-wrap" : "whitespace-pre"}`}
       >
         {diffResult.diff?.map((part, index) => {
           if (part.removed) {

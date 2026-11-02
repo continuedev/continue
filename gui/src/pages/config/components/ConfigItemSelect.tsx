@@ -33,7 +33,7 @@ export function ConfigItemSelect({
         <div
           style={{ fontSize: fontSize(-2) }}
           key={item.id}
-          className={`hover:bg-vsc-input-background flex cursor-pointer items-center justify-center gap-1.5 rounded-md px-2 py-2 ${
+          className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-md px-2 py-2 hover:bg-vsc-input-background ${
             activeId === item.id ? "" : "text-gray-400"
           }`}
           onClick={() => onSelect(item.id)}
@@ -61,11 +61,11 @@ export function ConfigItemSelect({
         </PopoverButton>
 
         <Transition>
-          <PopoverPanel className="bg-vsc-input-background absolute z-10 mt-1 w-full rounded-md border border-zinc-700 py-1">
+          <PopoverPanel className="absolute z-10 mt-1 w-full rounded-md border border-zinc-700 bg-vsc-input-background py-1">
             {items.map((item) => (
               <div
                 key={item.id}
-                className={`hover:bg-vsc-input-background flex cursor-pointer items-center gap-2 px-3 py-2 ${
+                className={`flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-vsc-input-background ${
                   activeId === item.id ? "bg-vsc-input-background" : ""
                 }`}
                 onClick={() => {

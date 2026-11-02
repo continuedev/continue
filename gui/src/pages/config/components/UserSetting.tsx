@@ -75,7 +75,7 @@ export function UserSetting(props: UserSettingProps) {
 
       case "number":
         return (
-          <div className="border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-border-focus flex w-20 items-center rounded-md border border-solid focus-within:ring-1">
+          <div className="flex w-20 items-center rounded-md border border-solid border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-1 focus-within:ring-border-focus">
             <input
               type="number"
               value={props.value}
@@ -116,7 +116,7 @@ export function UserSetting(props: UserSettingProps) {
               min={props.min ?? 0}
               max={props.max ?? 100}
               disabled={disabled}
-              className="text-vsc-foreground flex-1 border-none bg-transparent px-2 py-1 text-right outline-none focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="flex-1 border-none bg-transparent px-2 py-1 text-right text-vsc-foreground outline-none focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           </div>
         );
@@ -128,7 +128,7 @@ export function UserSetting(props: UserSettingProps) {
             onChange={props.onChange}
             disabled={disabled}
           >
-            <ListboxButton className="border-command-border !w-20 w-20 !flex-none justify-between !rounded-md px-2 py-1">
+            <ListboxButton className="!w-20 w-20 !flex-none justify-between !rounded-md border-command-border px-2 py-1">
               {props.options.find((opt) => opt.value === props.value)?.label ||
                 props.value}
               <ChevronDownIcon className="h-3 w-3" />
@@ -154,7 +154,7 @@ export function UserSetting(props: UserSettingProps) {
             >
               <div className="flex items-center gap-2">
                 <div
-                  className={`border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-border-focus flex w-full flex-row overflow-hidden rounded-md border border-solid focus-within:ring-1 ${
+                  className={`flex w-full flex-row overflow-hidden rounded-md border border-solid border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-1 focus-within:ring-border-focus ${
                     props.isDirty
                       ? !props.isValid
                         ? "outline outline-red-500"
@@ -168,7 +168,7 @@ export function UserSetting(props: UserSettingProps) {
                     onChange={(e) => props.onChange(e.target.value)}
                     placeholder={props.placeholder}
                     disabled={disabled}
-                    className="text-vsc-foreground flex-1 border-none bg-inherit px-1.5 py-1 outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
+                    className="flex-1 border-none bg-inherit px-1.5 py-1 text-vsc-foreground outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
                   />
                 </div>
                 {props.isDirty && (
@@ -191,14 +191,14 @@ export function UserSetting(props: UserSettingProps) {
         }
         return (
           <div
-            className={`border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-border-focus flex w-full flex-row overflow-hidden rounded-md border border-solid focus-within:ring-1 ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+            className={`flex w-full flex-row overflow-hidden rounded-md border border-solid border-command-border bg-vsc-input-background focus-within:border-border-focus focus-within:ring-1 focus-within:ring-border-focus ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
           >
             <input
               type="text"
               value={props.value}
               onChange={(e) => props.onChange(e.target.value)}
               disabled={disabled}
-              className="text-vsc-foreground flex-1 border-none bg-inherit px-1.5 py-1 outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
+              className="flex-1 border-none bg-inherit px-1.5 py-1 text-vsc-foreground outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
             />
           </div>
         );

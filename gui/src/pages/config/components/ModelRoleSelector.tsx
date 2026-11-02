@@ -71,7 +71,7 @@ const ModelRoleSelector = ({
           {models.length === 0 ? (
             <ListboxButton
               onClick={() => ideMessenger.post("openUrl", setupURL)}
-              className="bg-input border-command-border hover:bg-list-active hover:text-list-active-foreground text-description w-full justify-between rounded border px-2 py-1.5 underline hover:underline"
+              className="w-full justify-between rounded border border-command-border bg-input px-2 py-1.5 text-description underline hover:bg-list-active hover:text-list-active-foreground hover:underline"
             >
               <span className="line-clamp-1" style={{ fontSize: fontSize(-1) }}>
                 Setup {displayName} model
@@ -81,10 +81,10 @@ const ModelRoleSelector = ({
             <>
               <ListboxButton
                 disabled={models.length === 0}
-                className="bg-input border-command-border hover:bg-list-active hover:text-list-active-foreground w-full justify-between rounded border px-2 py-1.5"
+                className="w-full justify-between rounded border border-command-border bg-input px-2 py-1.5 hover:bg-list-active hover:text-list-active-foreground"
               >
                 {models.length === 0 || noConfiguredModels ? (
-                  <span className="text-lightgray line-clamp-1 italic">
+                  <span className="line-clamp-1 italic text-lightgray">
                     {`No ${models.length === 0 ? "" : "valid "}${displayName} models${
                       ["Chat", "Apply", "Edit"].includes(displayName)
                         ? ". Using Chat model"

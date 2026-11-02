@@ -276,7 +276,7 @@ export function DocsShell({
               <ThemeToggle />
               {/* Mobile menu button */}
               <button
-                className="p-2 text-black/40 transition-colors hover:text-black/70 md:hidden dark:text-white/40 dark:hover:text-white/70"
+                className="p-2 text-black/40 transition-colors hover:text-black/70 dark:text-white/40 dark:hover:text-white/70 md:hidden"
                 onClick={() => setMobileMenuOpen((prev) => !prev)}
                 aria-label="Toggle menu"
               >
@@ -357,7 +357,7 @@ export function DocsShell({
 
       {/* ---- Mobile sidebar ---- */}
       <button
-        className="fixed bottom-4 left-4 z-50 rounded-full bg-black/80 p-3 text-white shadow-lg lg:hidden dark:bg-white/80 dark:text-black"
+        className="fixed bottom-4 left-4 z-50 rounded-full bg-black/80 p-3 text-white shadow-lg dark:bg-white/80 dark:text-black lg:hidden"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Toggle sidebar"
       >
@@ -367,10 +367,10 @@ export function DocsShell({
       {mobileOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/20 lg:hidden dark:bg-black/50"
+            className="fixed inset-0 z-40 bg-black/20 dark:bg-black/50 lg:hidden"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="fixed inset-y-0 left-0 z-40 w-72 overflow-y-auto border-r border-black/[0.06] bg-white px-4 pb-8 pt-4 shadow-xl lg:hidden dark:border-white/[0.06] dark:bg-[#0a0a0a]">
+          <aside className="fixed inset-y-0 left-0 z-40 w-72 overflow-y-auto border-r border-black/[0.06] bg-white px-4 pb-8 pt-4 shadow-xl dark:border-white/[0.06] dark:bg-[#0a0a0a] lg:hidden">
             <div className="mb-4 flex gap-4 border-b border-black/[0.06] pb-2 dark:border-white/[0.06]">
               {docsNav.map((tab) => (
                 <button

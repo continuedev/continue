@@ -78,12 +78,12 @@ function InputToolbar(props: InputToolbarProps) {
     <>
       <div
         onClick={props.onClick}
-        className={`find-widget-skip bg-vsc-input-background flex select-none flex-row items-center justify-between gap-1 pt-1 ${props.hidden ? "pointer-events-none h-0 cursor-default opacity-0" : "pointer-events-auto mt-2 cursor-text opacity-100"}`}
+        className={`find-widget-skip flex select-none flex-row items-center justify-between gap-1 bg-vsc-input-background pt-1 ${props.hidden ? "pointer-events-none h-0 cursor-default opacity-0" : "pointer-events-auto mt-2 cursor-text opacity-100"}`}
         style={{
           fontSize: smallFont,
         }}
       >
-        <div className="xs:gap-1.5 flex flex-row items-center gap-1">
+        <div className="flex flex-row items-center gap-1 xs:gap-1.5">
           {!isInEdit && (
             <ToolTip place="top" content="Select Mode">
               <HoverItem className="!p-0">
@@ -96,7 +96,7 @@ function InputToolbar(props: InputToolbarProps) {
               <ModelSelect />
             </HoverItem>
           </ToolTip>
-          <div className="xs:flex text-description -mb-1 hidden items-center transition-colors duration-200">
+          <div className="-mb-1 hidden items-center text-description transition-colors duration-200 xs:flex">
             {props.toolbarOptions?.hideImageUpload ||
               (supportsImages && (
                 <>
@@ -169,7 +169,7 @@ function InputToolbar(props: InputToolbarProps) {
         </div>
 
         <div
-          className="text-description flex items-center gap-2 whitespace-nowrap"
+          className="flex items-center gap-2 whitespace-nowrap text-description"
           style={{
             fontSize: tinyFont,
           }}

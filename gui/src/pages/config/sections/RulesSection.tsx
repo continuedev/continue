@@ -91,7 +91,7 @@ function PromptRow({
 
   return (
     <div
-      className="hover:bg-list-active hover:text-list-active-foreground flex items-center justify-between gap-3 rounded-md px-2 py-1 hover:cursor-pointer"
+      className="flex items-center justify-between gap-3 rounded-md px-2 py-1 hover:cursor-pointer hover:bg-list-active hover:text-list-active-foreground"
       onClick={handlePromptClick}
       style={{
         fontSize: fontSize(-3),
@@ -199,7 +199,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const tinyFont = fontSize(-3);
   return (
     <div
-      className={`border-border flex flex-col rounded-sm px-2 py-1.5 transition-colors ${isDisabled ? "opacity-50" : ""}`}
+      className={`flex flex-col rounded-sm border-border px-2 py-1.5 transition-colors ${isDisabled ? "opacity-50" : ""}`}
     >
       <div className="flex flex-col">
         <div className="flex flex-row justify-between gap-1">

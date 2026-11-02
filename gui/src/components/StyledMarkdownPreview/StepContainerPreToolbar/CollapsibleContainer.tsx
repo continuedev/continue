@@ -28,13 +28,13 @@ export function CollapsibleContainer({
       </div>
 
       {!isExpanded && (
-        <div className="from-editor absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-editor to-transparent">
           <div
             onClick={() => setIsExpanded(true)}
             className="group flex h-full cursor-pointer items-end justify-center pb-2"
           >
             <span title="Expand to show full content">
-              <ChevronDownIcon className="text-lightgray group-hover:text-foreground h-4 w-4" />
+              <ChevronDownIcon className="h-4 w-4 text-lightgray group-hover:text-foreground" />
             </span>
           </div>
         </div>
@@ -46,7 +46,7 @@ export function CollapsibleContainer({
           className="group mt-2 flex cursor-pointer justify-center"
         >
           <span title="Collapse to compact view">
-            <ChevronDownIcon className="text-lightgray group-hover:text-foreground h-4 w-4 rotate-180" />
+            <ChevronDownIcon className="h-4 w-4 rotate-180 text-lightgray group-hover:text-foreground" />
           </span>
         </div>
       )}

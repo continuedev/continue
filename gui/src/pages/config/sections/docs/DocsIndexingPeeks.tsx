@@ -21,14 +21,14 @@ function DocsIndexingPeek({ status }: DocsIndexingPeekProps) {
 
   return (
     <div
-      className="text-lightgray flex cursor-pointer flex-row items-center gap-2 rounded-md px-1 hover:bg-gray-700/10"
+      className="flex cursor-pointer flex-row items-center gap-2 rounded-md px-1 text-lightgray hover:bg-gray-700/10"
       onClick={() => {
         // navigate("/more"); TODO
         dispatch(setShowDialog(false));
         dispatch(setDialogMessage(undefined));
       }}
     >
-      <p className="text-lightgray m-0 p-0 group-hover:underline">
+      <p className="m-0 p-0 text-lightgray group-hover:underline">
         {status.title}
       </p>
       <div className="my-2 h-1.5 flex-1 rounded-md border border-solid border-gray-400">
@@ -39,7 +39,7 @@ function DocsIndexingPeek({ status }: DocsIndexingPeekProps) {
           }}
         />
       </div>
-      <div className="xs:flex text-lightgray hidden flex-row items-center gap-1">
+      <div className="hidden flex-row items-center gap-1 text-lightgray xs:flex">
         <span className="text-xs no-underline">
           {progressPercentage.toFixed(0)}%
         </span>
@@ -57,7 +57,7 @@ interface DocsIndexingPeeksProps {
 
 function DocsIndexingPeekList({ statuses }: DocsIndexingPeeksProps) {
   return (
-    <div className="border-vsc-input-border mt-2 flex flex-col border-0 border-t border-solid pt-2">
+    <div className="mt-2 flex flex-col border-0 border-t border-solid border-vsc-input-border pt-2">
       <div className="max-h-[100px] overflow-y-auto pr-2">
         {statuses.map((status) => {
           return <DocsIndexingPeek key={status.id} status={status} />;

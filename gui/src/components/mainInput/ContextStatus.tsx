@@ -65,14 +65,14 @@ const ContextStatus = () => {
               <div className="flex flex-col gap-1 whitespace-pre">
                 <div>
                   <span
-                    className="hover:text-link inline-block cursor-pointer underline"
+                    className="inline-block cursor-pointer underline hover:text-link"
                     onClick={() => compactConversation(history.length - 1)}
                   >
                     Compact conversation
                   </span>
                   {"\n"}
                   <span
-                    className="hover:text-link inline-block cursor-pointer underline"
+                    className="inline-block cursor-pointer underline hover:text-link"
                     onClick={() => {
                       void dispatch(
                         saveCurrentSession({
@@ -90,7 +90,7 @@ const ContextStatus = () => {
           </div>
         }
       >
-        <div className="border-command-border relative h-[14px] w-[7px] rounded-[1px] border-[0.5px] border-solid md:h-[10px] md:w-[5px]">
+        <div className="relative h-[14px] w-[7px] rounded-[1px] border-[0.5px] border-solid border-command-border md:h-[10px] md:w-[5px]">
           <div
             className={`transition-height absolute bottom-0 left-0 w-full duration-300 ease-in-out ${barColorClass}`}
             style={{ height: `${percent}%` }}

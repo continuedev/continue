@@ -104,7 +104,7 @@ export function DocsSearch({ resolve }: { resolve: (path: string) => string }) {
       >
         <Search className="h-4 w-4 flex-shrink-0" />
         <span className="flex-1 text-left">Search...</span>
-        <kbd className="hidden h-5 items-center gap-0.5 rounded border border-black/10 bg-black/[0.03] px-1.5 font-mono text-[10px] text-black/40 sm:inline-flex dark:border-white/10 dark:bg-white/[0.06] dark:text-white/40">
+        <kbd className="hidden h-5 items-center gap-0.5 rounded border border-black/10 bg-black/[0.03] px-1.5 font-mono text-[10px] text-black/40 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/40 sm:inline-flex">
           <span className="text-xs">&#8984;</span>K
         </kbd>
       </button>

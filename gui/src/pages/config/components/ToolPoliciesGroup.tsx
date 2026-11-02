@@ -67,7 +67,7 @@ export function ToolPoliciesGroup({
       >
         <div className="flex items-center gap-3">
           <ChevronDownIcon
-            className={`text-description h-3 w-3 transition-transform ${
+            className={`h-3 w-3 text-description transition-transform ${
               isExpanded ? "rotate-180" : ""
             }`}
           />

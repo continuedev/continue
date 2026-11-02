@@ -60,14 +60,14 @@ export default function AcceptRejectAllButtons({
     >
       <ToolTip content={`Reject All (${rejectShortcut})`}>
         <button
-          className="text-foreground flex cursor-pointer flex-row flex-wrap justify-center gap-1 border-none bg-transparent p-0 text-xs opacity-80 hover:opacity-100 hover:brightness-125"
+          className="flex cursor-pointer flex-row flex-wrap justify-center gap-1 border-none bg-transparent p-0 text-xs text-foreground opacity-80 hover:opacity-100 hover:brightness-125"
           onClick={() => handleAcceptOrReject("rejectDiff")}
           data-testid="edit-reject-button"
         >
           <div className="flex flex-row items-center gap-1">
-            <XMarkIcon className="text-error h-4 w-4" />
+            <XMarkIcon className="h-4 w-4 text-error" />
             <span className="hidden sm:inline">Reject</span>
-            <span className="text-lightgray -ml-1.5 hidden scale-75 text-xs md:inline">
+            <span className="-ml-1.5 hidden scale-75 text-xs text-lightgray md:inline">
               {rejectShortcut}
             </span>
           </div>
@@ -76,14 +76,14 @@ export default function AcceptRejectAllButtons({
 
       <ToolTip content={`Accept All (${acceptShortcut})`}>
         <button
-          className="text-foreground flex cursor-pointer flex-row flex-wrap justify-center gap-1 border-none bg-transparent p-0 text-xs opacity-80 hover:opacity-100 hover:brightness-125"
+          className="flex cursor-pointer flex-row flex-wrap justify-center gap-1 border-none bg-transparent p-0 text-xs text-foreground opacity-80 hover:opacity-100 hover:brightness-125"
           onClick={() => handleAcceptOrReject("acceptDiff")}
           data-testid="edit-accept-button"
         >
           <div className="flex flex-row items-center gap-1">
-            <CheckIcon className="text-success h-4 w-4" />
+            <CheckIcon className="h-4 w-4 text-success" />
             <span className="hidden sm:inline">Accept</span>
-            <span className="text-lightgray -ml-1.5 hidden scale-75 text-xs md:inline">
+            <span className="-ml-1.5 hidden scale-75 text-xs text-lightgray md:inline">
               {acceptShortcut}
             </span>
           </div>

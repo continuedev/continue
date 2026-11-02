@@ -69,7 +69,7 @@ function DocsDetailsDialog({ startUrl }: DocsDetailsDialogProps) {
           ) : (
             <div className="relative mt-2 h-[300px] overflow-auto">
               <table className="w-full border-collapse">
-                <thead className="bg-vsc-background sticky top-0 text-left">
+                <thead className="sticky top-0 bg-vsc-background text-left">
                   <tr>
                     <th className="py-1">Filepath</th>
                     <th>Content</th>
@@ -142,7 +142,7 @@ function DocsDetailsDialog({ startUrl }: DocsDetailsDialogProps) {
     <div className="px-2 py-4 sm:px-4">
       <h3>Docs index</h3>
       <p
-        className="text-lightgray m-0 mt-1 cursor-pointer p-0 hover:underline"
+        className="m-0 mt-1 cursor-pointer p-0 text-lightgray hover:underline"
         onClick={(e) => {
           e.stopPropagation();
           ideMessenger.post("openUrl", startUrl);

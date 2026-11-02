@@ -38,7 +38,7 @@ export function OllamaStatus({ isOllamaConnected }: OllamaStatusProps) {
     case OllamaConnectionStatuses.WaitingToDownload:
       return (
         <StyledActionButton onClick={onClickDownload}>
-          <span className="text-link mr-1 line-clamp-1 py-2 text-sm underline">
+          <span className="mr-1 line-clamp-1 py-2 text-sm text-link underline">
             {downloadUrl}
           </span>
           <ArrowTopRightOnSquareIcon width={16} height={16} />
@@ -50,7 +50,7 @@ export function OllamaStatus({ isOllamaConnected }: OllamaStatusProps) {
           <p className="lines mr-1 w-3/4 font-mono text-sm">
             Checking for connection to Ollama at http://localhost:11434
           </p>
-          <ArrowPathIcon className="animate-spin-slow mr-1 h-3 w-3" />
+          <ArrowPathIcon className="mr-1 h-3 w-3 animate-spin-slow" />
         </div>
       );
     case OllamaConnectionStatuses.Connected:

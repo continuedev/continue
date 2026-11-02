@@ -19,7 +19,7 @@ export function EditToolbar() {
   };
 
   return (
-    <div className="text-description-muted flex items-center justify-between gap-3 text-xs">
+    <div className="flex items-center justify-between gap-3 text-xs text-description-muted">
       <span
         className="flex cursor-pointer items-center whitespace-nowrap hover:brightness-125"
         onClick={handleBackClick}

@@ -30,7 +30,7 @@ function ModeModelHint({ mode }: { mode: "chat" | "agent" | "plan" }) {
   const label = effort && effort !== "off" ? `${title} · ${effort}` : title;
   return (
     <span
-      className="text-description-muted max-w-24 truncate text-xs"
+      className="max-w-24 truncate text-xs text-description-muted"
       title={`Model for ${mode} mode: ${label}`}
       data-testid={`mode-model-${mode}`}
     >
@@ -104,7 +104,7 @@ export function ModeSelect() {
         className="flex items-center gap-1"
         content={`${mode} might not work well with this model.`}
       >
-        <ExclamationTriangleIcon className="text-warning h-2.5 w-2.5" />
+        <ExclamationTriangleIcon className="h-2.5 w-2.5 text-warning" />
       </ToolTip>
     </>
   );
@@ -114,7 +114,7 @@ export function ModeSelect() {
       <div className="relative">
         <ListboxButton
           data-testid="mode-select-button"
-          className="xs:px-2 text-description bg-lightgray/20 gap-1 rounded-full border-none px-1.5 py-0.5 transition-colors duration-200 hover:brightness-110"
+          className="gap-1 rounded-full border-none bg-lightgray/20 px-1.5 py-0.5 text-description transition-colors duration-200 hover:brightness-110 xs:px-2"
         >
           <ModeIcon mode={mode} />
           <span className="hidden sm:block">
@@ -190,7 +190,7 @@ export function ModeSelect() {
             />
           </ListboxOption>
 
-          <div className="text-description-muted px-2 py-1">
+          <div className="px-2 py-1 text-description-muted">
             {`${metaKeyLabel} . for next mode`}
           </div>
         </ListboxOptions>

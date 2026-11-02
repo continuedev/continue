@@ -150,7 +150,7 @@ export function History() {
     >
       <div className="relative my-2 mt-4 flex justify-center space-x-2">
         <input
-          className="bg-vsc-input-background text-vsc-foreground flex-1 rounded-md border border-none py-1 pl-2 pr-8 text-sm outline-none focus:outline-none"
+          className="flex-1 rounded-md border border-none bg-vsc-input-background py-1 pl-2 pr-8 text-sm text-vsc-foreground outline-none focus:outline-none"
           ref={searchInputRef}
           placeholder="Search past sessions"
           type="text"
@@ -159,7 +159,7 @@ export function History() {
         />
         {searchTerm && (
           <XMarkIcon
-            className="text-vsc-foreground hover:bg-vsc-background duration-50 absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform cursor-pointer rounded-full p-0.5 transition-colors"
+            className="duration-50 absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform cursor-pointer rounded-full p-0.5 text-vsc-foreground transition-colors hover:bg-vsc-background"
             onClick={() => {
               setSearchTerm("");
               if (searchInputRef.current) {
@@ -209,12 +209,12 @@ export function History() {
         </table>
       </div>
 
-      <div className="border-border flex flex-col items-end justify-center border-0 border-t border-solid px-2 py-3 text-xs">
+      <div className="flex flex-col items-end justify-center border-0 border-t border-solid border-border px-2 py-3 text-xs">
         <Button variant="secondary" size="sm" onClick={showClearSessionsDialog}>
           Clear chats
         </Button>
         <span
-          className="text-description text-2xs"
+          className="text-2xs text-description"
           data-testid="history-sessions-note"
         >
           Chat history is saved to{" "}

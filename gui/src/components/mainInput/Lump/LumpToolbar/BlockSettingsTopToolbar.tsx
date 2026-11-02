@@ -86,7 +86,7 @@ export function BlockSettingsTopToolbar() {
               className="relative flex cursor-pointer select-none items-center rounded-full px-1.5 py-1 sm:px-1.5"
             >
               <ExclamationTriangleIcon
-                className="text-warning h-[13px] w-[13px] flex-shrink-0"
+                className="h-[13px] w-[13px] flex-shrink-0 text-warning"
                 aria-hidden="true"
               />
             </div>
@@ -97,19 +97,19 @@ export function BlockSettingsTopToolbar() {
           <div className="flex items-center gap-1.5">
             <ToolTip content="Configure rules">
               <HoverItem onClick={handleRulesClick} px={2}>
-                <PencilIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
+                <PencilIcon className="h-3 w-3 text-description-muted hover:brightness-125" />
               </HoverItem>
             </ToolTip>
 
             <ToolTip content="Configure tools">
               <HoverItem onClick={handleToolsClick} px={2}>
-                <WrenchScrewdriverIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
+                <WrenchScrewdriverIcon className="h-3 w-3 text-description-muted hover:brightness-125" />
               </HoverItem>
             </ToolTip>
 
             <ToolTip content="Configure models">
               <HoverItem onClick={handleModelsClick} px={2}>
-                <CubeIcon className="text-description-muted h-3 w-3 hover:brightness-125" />
+                <CubeIcon className="h-3 w-3 text-description-muted hover:brightness-125" />
               </HoverItem>
             </ToolTip>
           </div>

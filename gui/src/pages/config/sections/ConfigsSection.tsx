@@ -71,7 +71,7 @@ export function ConfigsSection() {
                               key={errorIndex}
                               className={`${
                                 error.fatal
-                                  ? "text-error bg-error/10"
+                                  ? "bg-error/10 text-error"
                                   : "bg-yellow-500/10 text-yellow-500"
                               } break-all rounded border border-solid border-transparent px-2 py-1 text-xs ${error.uri ? "cursor-pointer " + (error.fatal ? "hover:border-error" : "hover:border-yellow-500") : ""}`}
                             >
@@ -87,7 +87,7 @@ export function ConfigsSection() {
                       onClick={() => handleConfigureAgent(profile.id)}
                       variant="ghost"
                       size="sm"
-                      className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0"
+                      className="my-0 h-6 w-6 p-0 text-description-muted hover:enabled:text-foreground"
                     >
                       <Cog6ToothIcon className="h-4 w-4 flex-shrink-0" />
                     </Button>

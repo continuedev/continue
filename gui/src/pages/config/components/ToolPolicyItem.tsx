@@ -77,7 +77,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
             onClick={() => setIsExpanded((val) => !val)}
           >
             <ChevronRightIcon
-              className={`xs:flex hidden h-3 w-3 flex-shrink-0 pt-1 transition-all duration-200 ${isExpanded ? "rotate-90" : ""}`}
+              className={`hidden h-3 w-3 flex-shrink-0 pt-1 transition-all duration-200 xs:flex ${isExpanded ? "rotate-90" : ""}`}
             />
 
             <div className="flex flex-col gap-1">
@@ -111,7 +111,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
                   {props.tool.originalFunctionName ?? props.tool.function.name}
                 </span>
               </div>
-              <div className="text-description line-clamp-3 text-sm">
+              <div className="line-clamp-3 text-sm text-description">
                 {props.tool.function.description}
               </div>
             </div>
@@ -134,7 +134,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
             >
               <div className="relative">
                 <ListboxButton
-                  className={`border-command-border h-7 w-full justify-between px-3 ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+                  className={`h-7 w-full justify-between border-command-border px-3 ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
                   data-testid={`tool-policy-item-${props.tool.function.name}`}
                   data-tooltip-id={disabled ? disabledTooltipId : undefined}
                 >
@@ -173,7 +173,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
       <div
         className={`flex flex-col overflow-hidden ${isExpanded ? "h-min" : "h-0 opacity-0"} gap-x-1 gap-y-2 pl-2 transition-all`}
       >
-        <span className="text-2xs mt-1.5 font-bold">Description:</span>
+        <span className="mt-1.5 text-2xs font-bold">Description:</span>
         <span className="text-2xs italic">
           {props.tool.function.description}
         </span>
@@ -181,7 +181,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
           <>
             <span className="text-2xs font-bold">Arguments:</span>
             {parameters.map((param, idx) => (
-              <div key={idx} className="text-2xs block">
+              <div key={idx} className="block text-2xs">
                 <code className="">{param[0]}</code>
                 <span className="ml-1">{`(${param[1].type ?? "unknown"}):`}</span>
                 <span className="ml-1 italic">

@@ -109,47 +109,47 @@ function ThemePage() {
       <h2 className="mb-2 mt-0 p-0 text-center text-xl font-semibold">
         Theme Tester
       </h2>
-      <div className="bg-background border-border grid grid-cols-1 gap-4 rounded-md border border-solid p-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 rounded-md border border-solid border-border bg-background p-4 md:grid-cols-2">
         <div className="col-span-2 flex gap-4">
           <p className="">Normal text</p>
           <p className="text-description">Description text</p>
           <p className="text-description-muted">Muted text</p>
         </div>
 
-        <button className="bg-primary text-primary-foreground hover:bg-primary-hover cursor-pointer rounded border-none px-4 py-2 disabled:cursor-not-allowed disabled:brightness-75">
+        <button className="cursor-pointer rounded border-none bg-primary px-4 py-2 text-primary-foreground hover:bg-primary-hover disabled:cursor-not-allowed disabled:brightness-75">
           Primary Button
         </button>
-        <button className="bg-secondary text-secondary-foreground hover:bg-secondary-hover cursor-pointer rounded border-none px-4 py-2 disabled:cursor-not-allowed disabled:brightness-75">
+        <button className="cursor-pointer rounded border-none bg-secondary px-4 py-2 text-secondary-foreground hover:bg-secondary-hover disabled:cursor-not-allowed disabled:brightness-75">
           Secondary Button
         </button>
 
-        <div className="border-border rounded-md border border-solid p-3">
+        <div className="rounded-md border border-solid border-border p-3">
           Normal border
         </div>
 
-        <div className="border-border-focus rounded-md border border-solid p-3">
+        <div className="rounded-md border border-solid border-border-focus p-3">
           Focus border
         </div>
 
         <input
-          className="bg-input text-input-foreground border-input-border placeholder:text-input-placeholder focus:border-border-focus rounded-md border border-solid p-2 focus:outline-none"
+          className="rounded-md border border-solid border-input-border bg-input p-2 text-input-foreground placeholder:text-input-placeholder focus:border-border-focus focus:outline-none"
           placeholder="Input example"
         />
 
-        <div className="bg-badge text-badge-foreground border-border inline-block rounded-full border border-solid p-2">
+        <div className="inline-block rounded-full border border-solid border-border bg-badge p-2 text-badge-foreground">
           <span className="px-2">Badge</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <CheckCircleIcon className="text-success h-4 w-4" />
+          <CheckCircleIcon className="h-4 w-4 text-success" />
           <span className="text-success">Success</span>
         </div>
         <div className="flex items-center gap-2">
-          <ExclamationCircleIcon className="text-warning h-4 w-4" />
+          <ExclamationCircleIcon className="h-4 w-4 text-warning" />
           <span className="text-warning">Warning</span>
         </div>
         <div className="flex items-center gap-2">
-          <ExclamationTriangleIcon className="text-error h-4 w-4" />
+          <ExclamationTriangleIcon className="h-4 w-4 text-error" />
           <span className="text-error">Error</span>
         </div>
 
@@ -159,18 +159,18 @@ function ThemePage() {
         >
           List item (clickable)
         </div>
-        <div className="bg-editor text-editor-foreground border-border rounded-sm border border-solid p-2">
+        <div className="rounded-sm border border-solid border-border bg-editor p-2 text-editor-foreground">
           <span>Editor</span>
         </div>
         <table>
           <tbody>
             <tr>
-              <td className="border-border border-b border-solid p-2">
+              <td className="border-b border-solid border-border p-2">
                 <span>even table row</span>
               </td>
             </tr>
             <tr className="bg-table-oddRow">
-              <td className="border-border border-b border-solid p-2">
+              <td className="border-b border-solid border-border p-2">
                 <span>odd table row</span>
               </td>
             </tr>
@@ -185,7 +185,7 @@ function ThemePage() {
         </div>
         <div className="flex items-center gap-2">
           <span className="">Accent</span>
-          <div className="bg-accent h-3 w-3" />
+          <div className="h-3 w-3 bg-accent" />
         </div>
       </div>
       <h2 className="mb-2 mt-6 text-xl font-semibold">Manage Theme</h2>

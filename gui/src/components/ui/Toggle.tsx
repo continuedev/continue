@@ -29,7 +29,7 @@ export function Toggle({
         <div>
           <span>{title}</span>
           {subtitle && (
-            <p className="text-description my-1 text-xs font-normal">
+            <p className="my-1 text-xs font-normal text-description">
               {subtitle}
             </p>
           )}

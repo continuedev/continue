@@ -17,11 +17,11 @@ export function StreamingToolbar({
       <GeneratingIndicator />
       <div
         onClick={onStop}
-        className="text-2xs cursor-pointer px-1.5 py-0.5 hover:brightness-125"
+        className="cursor-pointer px-1.5 py-0.5 text-2xs hover:brightness-125"
       >
         <span className="text-description">{displayText}</span>
         {/* JetBrains overrides cmd+backspace, so we have to use another shortcut */}
-        <span className="text-description-muted ml-1 opacity-75">
+        <span className="ml-1 text-description-muted opacity-75">
           {jetbrains ? getAltKeyLabel() : getMetaKeyLabel()}⌫
         </span>
       </div>

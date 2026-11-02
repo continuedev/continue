@@ -158,7 +158,7 @@ const OSRContextMenu = () => {
   }
   return (
     <div
-      className="bg-vsc-editor-background absolute flex flex-col gap-1.5 overflow-hidden rounded-md border border-solid border-gray-500 px-3 py-1.5"
+      className="absolute flex flex-col gap-1.5 overflow-hidden rounded-md border border-solid border-gray-500 bg-vsc-editor-background px-3 py-1.5"
       style={{
         ...position,
         zIndex: 9999,

@@ -161,7 +161,7 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
       contentEditable={false}
     >
       <div
-        className="border-b-command-border m-0 flex cursor-pointer items-center justify-between break-all border-0 border-b-[1px] border-solid px-[5px] py-1.5 hover:opacity-90"
+        className="m-0 flex cursor-pointer items-center justify-between break-all border-0 border-b-[1px] border-solid border-b-command-border px-[5px] py-1.5 hover:opacity-90"
         style={{
           fontSize: getFontSize() - 3,
         }}

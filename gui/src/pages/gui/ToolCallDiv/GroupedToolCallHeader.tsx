@@ -19,7 +19,7 @@ export function GroupedToolCallHeader({
   return (
     <div className="mb-2">
       <div
-        className="text-description flex cursor-pointer items-center gap-1.5 transition-colors duration-200 ease-in-out hover:brightness-125"
+        className="flex cursor-pointer items-center gap-1.5 text-description transition-colors duration-200 ease-in-out hover:brightness-125"
         data-testid="performing-actions"
         onClick={onToggle}
       >

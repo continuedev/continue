@@ -28,7 +28,7 @@ function ToggleDiv({
       }}
     >
       <div
-        className="text-description flex cursor-pointer items-center justify-start text-xs hover:brightness-125"
+        className="flex cursor-pointer items-center justify-start text-xs text-description hover:brightness-125"
         onClick={() => setOpen((prev) => !prev)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}

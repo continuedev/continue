@@ -136,10 +136,10 @@ export default function MermaidDiagram({ code }: { code: string }) {
   return (
     <>
       {isLoading && (
-        <div className="text-vsc-foreground text-xs">Generating diagram...</div>
+        <div className="text-xs text-vsc-foreground">Generating diagram...</div>
       )}
       {!!error ? (
-        <div className="text-error whitespace-pre text-sm">{error}</div>
+        <div className="whitespace-pre text-sm text-error">{error}</div>
       ) : (
         <div className="mermaid relative">
           <div className="absolute right-0 z-10 m-2 flex items-center gap-x-1">

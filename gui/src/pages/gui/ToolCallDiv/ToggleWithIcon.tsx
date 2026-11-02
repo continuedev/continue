@@ -35,14 +35,14 @@ export function ToggleWithIcon({
     if (showChevron) {
       return (
         <ChevronRightIcon
-          className={`text-description h-4 w-4 transition-transform duration-200 ease-in-out ${
+          className={`h-4 w-4 text-description transition-transform duration-200 ease-in-out ${
             open ? "rotate-90" : "rotate-0"
           }`}
         />
       );
     }
 
-    return Icon ? <Icon className="text-description h-4 w-4" /> : null;
+    return Icon ? <Icon className="h-4 w-4 text-description" /> : null;
   }
 
   return (

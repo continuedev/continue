@@ -251,7 +251,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   return (
     <div className="flex flex-col gap-4 px-3 pb-3 pt-3">
       {/* Concise error title */}
-      <h3 className="text-error m-0 p-0 text-lg font-medium">
+      <h3 className="m-0 p-0 text-lg font-medium text-error">
         Error handling model response
       </h3>
 
@@ -266,7 +266,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
             defaultOpen
           >
             <div className="flex flex-col gap-0 rounded-sm">
-              <code className="text-editor-foreground block max-h-48 overflow-y-auto p-3 font-mono text-xs">
+              <code className="block max-h-48 overflow-y-auto p-3 font-mono text-xs text-editor-foreground">
                 {parsedError}
               </code>
 

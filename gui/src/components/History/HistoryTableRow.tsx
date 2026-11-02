@@ -82,7 +82,7 @@ export function HistoryTableRow({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       data-testid={`history-row-${index}`}
-      className="hover:bg-input relative mb-2 box-border flex w-full cursor-pointer overflow-hidden rounded-lg p-3"
+      className="relative mb-2 box-border flex w-full cursor-pointer overflow-hidden rounded-lg p-3 hover:bg-input"
       onClick={async () => {
         await dispatch(exitEdit({}));
         if (sessionMetadata.sessionId !== currentSessionId) {
@@ -121,7 +121,7 @@ export function HistoryTableRow({
                   sessionMetadata.messageCount === 1 ? " is" : "s are"
                 } present in this session`}
               >
-                <span className="bg-vsc-background text-secondary-foreground ml-auto inline-flex items-center rounded-full px-2 py-1 text-xs font-medium">
+                <span className="ml-auto inline-flex items-center rounded-full bg-vsc-background px-2 py-1 text-xs font-medium text-secondary-foreground">
                   {sessionMetadata.messageCount}
                 </span>
               </ToolTip>
@@ -129,7 +129,7 @@ export function HistoryTableRow({
           </div>
         )}
 
-        <div className="text-description-muted flex">
+        <div className="flex text-description-muted">
           <span className="line-clamp-1 break-all text-xs">
             {getUriPathBasename(sessionMetadata.workspaceDirectory || "")}
           </span>
@@ -148,7 +148,7 @@ export function HistoryTableRow({
       </td>
 
       {hovered && !editing && (
-        <td className="bg-input absolute right-2 top-12 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full px-2 py-1 shadow-md">
+        <td className="absolute right-2 top-12 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full bg-input px-2 py-1 shadow-md">
           {
             <>
               <HeaderButtonWithToolTip

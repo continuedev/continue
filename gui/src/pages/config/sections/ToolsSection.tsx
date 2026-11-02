@@ -177,7 +177,7 @@ function MCPServerPreview({
         >
           <div className="flex items-center gap-3">
             <ChevronDownIcon
-              className={`text-description h-3 w-3 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+              className={`h-3 w-3 text-description transition-transform ${isExpanded ? "rotate-180" : ""}`}
             />
             <div className="flex items-center gap-2">
               {icon}
@@ -197,7 +197,7 @@ function MCPServerPreview({
                   return (
                     <div
                       key={idx}
-                      className="text-description rounded bg-gray-50 bg-opacity-5 px-2 py-1 text-xs"
+                      className="rounded bg-gray-50 bg-opacity-5 px-2 py-1 text-xs text-description"
                     >
                       <code>{item.name}</code>
                       {item.description && (
@@ -251,12 +251,12 @@ function MCPServerPreview({
                 }
                 variant="ghost"
                 size="sm"
-                className="text-description-muted hover:enabled:text-foreground my-0 h-6 w-6 p-0 pt-0.5"
+                className="my-0 h-6 w-6 p-0 pt-0.5 text-description-muted hover:enabled:text-foreground"
                 disabled={server.status === "authenticating"}
                 data-testid="mcp-sign-in"
               >
                 {server.status === "authenticating" ? (
-                  <GlobeAltIcon className="animate-spin-slow h-4 w-4 flex-shrink-0" />
+                  <GlobeAltIcon className="h-4 w-4 flex-shrink-0 animate-spin-slow" />
                 ) : (
                   <UserCircleIcon className="h-4 w-4 flex-shrink-0" />
                 )}
@@ -351,7 +351,7 @@ function MCPServerPreview({
             title="Prompts"
             items={server.prompts}
             icon={
-              <CommandLineIcon className="text-description h-4 w-4 flex-shrink-0" />
+              <CommandLineIcon className="h-4 w-4 flex-shrink-0 text-description" />
             }
             sectionKey={`${server.id}-prompts`}
           />
@@ -362,7 +362,7 @@ function MCPServerPreview({
             title="Resources"
             items={[...server.resources, ...server.resourceTemplates]}
             icon={
-              <CircleStackIcon className="text-description h-4 w-4 flex-shrink-0" />
+              <CircleStackIcon className="h-4 w-4 flex-shrink-0 text-description" />
             }
             sectionKey={`${server.id}-resources`}
           />

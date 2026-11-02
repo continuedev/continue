@@ -9,8 +9,8 @@ export function OnboardingCardLanding({
   isDialog?: boolean;
 }) {
   return (
-    <div className="xs:px-0 max-full flex w-full flex-col items-center justify-center px-4 text-center">
-      <div className="xs:flex hidden">
+    <div className="max-full flex w-full flex-col items-center justify-center px-4 text-center xs:px-0">
+      <div className="hidden xs:flex">
         <ContinueLogo height={75} />
       </div>
 

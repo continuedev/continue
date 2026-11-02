@@ -15,7 +15,7 @@ export const FormSelect = forwardRef<
     <select
       ref={ref}
       {...props}
-      className={cn("rounded-default w-full border px-3 py-1.5", className)}
+      className={cn("w-full rounded-default border px-3 py-1.5", className)}
       style={{
         borderColor: vscCommandCenterInactiveBorder,
         backgroundColor: vscInputBackground,

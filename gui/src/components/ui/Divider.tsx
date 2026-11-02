@@ -5,7 +5,7 @@ interface DividerProps {
 export function Divider({ className }: DividerProps) {
   return (
     <div
-      className={`border-command-border my-2 border-[0.5px] border-b border-solid opacity-20 ${className || ""}`}
+      className={`my-2 border-[0.5px] border-b border-solid border-command-border opacity-20 ${className || ""}`}
     />
   );
 }

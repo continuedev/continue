@@ -311,7 +311,7 @@ function CollapsibleOutputContainer({
     <div className="relative">
       {/* Gradient overlay when collapsed */}
       {!isExpanded && (
-        <div className="from-editor pointer-events-none absolute left-0 right-0 top-0 z-[5] h-[100px] rounded-t-md bg-gradient-to-b to-transparent" />
+        <div className="pointer-events-none absolute left-0 right-0 top-0 z-[5] h-[100px] rounded-t-md bg-gradient-to-b from-editor to-transparent" />
       )}
 
       <div onClick={onToggle} className="cursor-pointer">
@@ -422,12 +422,12 @@ export function UnifiedTerminalCommand({
       className="mx-2 mb-4"
       data-testid="terminal-container"
     >
-      <div className="outline-command-border rounded-default bg-editor !my-2 flex min-w-0 flex-col outline outline-1">
+      <div className="!my-2 flex min-w-0 flex-col rounded-default bg-editor outline outline-1 outline-command-border">
         {/* Toolbar */}
         <div
-          className={`find-widget-skip bg-editor sticky -top-2 z-10 m-0 flex items-center justify-between gap-3 px-1.5 py-1 ${
+          className={`find-widget-skip sticky -top-2 z-10 m-0 flex items-center justify-between gap-3 bg-editor px-1.5 py-1 ${
             isExpanded
-              ? "rounded-t-default border-command-border border-b"
+              ? "rounded-t-default border-b border-command-border"
               : "rounded-default"
           }`}
           style={{ fontSize: `${getFontSize() - 2}px` }}
@@ -435,16 +435,16 @@ export function UnifiedTerminalCommand({
           <div className="flex max-w-[50%] flex-row items-center">
             <ChevronDownIcon
               onClick={() => setIsExpanded(!isExpanded)}
-              className={`text-description h-3.5 w-3.5 flex-shrink-0 cursor-pointer hover:brightness-125 ${
+              className={`h-3.5 w-3.5 flex-shrink-0 cursor-pointer text-description hover:brightness-125 ${
                 isExpanded ? "rotate-0" : "-rotate-90"
               }`}
             />
-            <span className="text-description ml-2 select-none">Terminal</span>
+            <span className="ml-2 select-none text-description">Terminal</span>
           </div>
 
           <div className="flex items-center gap-2.5">
             {!isRunning && (
-              <div className="xs:flex hidden items-center gap-2.5">
+              <div className="hidden items-center gap-2.5 xs:flex">
                 <CopyButton text={copyContent} />
                 <RunInTerminalButton command={command} />
               </div>
@@ -458,7 +458,7 @@ export function UnifiedTerminalCommand({
             <pre className="bg-editor">
               <code>
                 {/* Command is always visible */}
-                <div className="text-terminal pb-2">{command}</div>
+                <div className="pb-2 text-terminal">{command}</div>
 
                 {/* Running state with cursor */}
                 {isRunning && !hasOutput && (
@@ -509,7 +509,7 @@ export function UnifiedTerminalCommand({
         {/* Status information */}
         {(statusMessage || isRunning) && (
           <div
-            className="text-description flex items-center px-2 pb-2 pt-2 text-xs"
+            className="flex items-center px-2 pb-2 pt-2 text-xs text-description"
             style={{
               borderTop:
                 "1px solid var(--vscode-commandCenter-inactiveBorder, #555555)",
@@ -524,7 +524,7 @@ export function UnifiedTerminalCommand({
                   e.preventDefault();
                   handleMoveToBackground();
                 }}
-                className="text-link ml-3 cursor-pointer text-xs no-underline hover:underline"
+                className="ml-3 cursor-pointer text-xs text-link no-underline hover:underline"
               >
                 Move to background
               </a>

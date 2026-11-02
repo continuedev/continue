@@ -28,7 +28,7 @@ function IndexingProgressSubtext({
   return (
     <div className="flex justify-between">
       <span
-        className={`text-lightgray inline-block cursor-pointer text-xs underline`}
+        className={`inline-block cursor-pointer text-xs text-lightgray underline`}
         onClick={onClick}
       >
         {STATUS_TO_SUBTITLE_TEXT[update.status]}
@@ -36,7 +36,7 @@ function IndexingProgressSubtext({
 
       <div className={`${showIndexingDesc ? "w-2/3" : "flex-1"}`}>
         {showIndexingDesc && (
-          <span className="text-lightgray block truncate text-right text-xs">
+          <span className="block truncate text-right text-xs text-lightgray">
             {update.desc}
           </span>
         )}

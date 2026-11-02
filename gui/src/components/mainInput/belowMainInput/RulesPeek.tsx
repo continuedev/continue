@@ -26,9 +26,9 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
     >
       <div className="flex w-full items-center">
         {isGlobal ? (
-          <GlobeAltIcon className="text-description-muted mr-2 h-4 w-4 flex-shrink-0" />
+          <GlobeAltIcon className="mr-2 h-4 w-4 flex-shrink-0 text-description-muted" />
         ) : (
-          <DocumentTextIcon className="text-description-muted mr-2 h-4 w-4 flex-shrink-0" />
+          <DocumentTextIcon className="mr-2 h-4 w-4 flex-shrink-0 text-description-muted" />
         )}
 
         <div className="flex min-w-0 flex-1 gap-2 text-xs">

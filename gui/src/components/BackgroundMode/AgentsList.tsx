@@ -4,7 +4,7 @@ interface AgentsListProps {
 
 export function AgentsList({ isCreatingAgent = false }: AgentsListProps) {
   return (
-    <div className="text-description-muted px-2 py-4 text-center text-sm">
+    <div className="px-2 py-4 text-center text-sm text-description-muted">
       Background agents are not available.
     </div>
   );

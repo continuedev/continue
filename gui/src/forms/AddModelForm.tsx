@@ -208,7 +208,7 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                 otherOptions={otherProviders}
                 searchPlaceholder="Search providers..."
               />
-              <span className="text-description-muted mt-1 block text-xs">
+              <span className="mt-1 block text-xs text-description-muted">
                 Don't see your provider?{" "}
                 <a
                   className="cursor-pointer text-inherit underline hover:text-inherit"
@@ -333,18 +333,18 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                   <Input
                     id="apiKey"
                     className={
-                      apiKeyWarning ? "border-warning w-full" : "w-full"
+                      apiKeyWarning ? "w-full border-warning" : "w-full"
                     }
                     type="password"
                     placeholder={`Enter your ${selectedProvider.title} API key`}
                     {...formMethods.register("apiKey")}
                   />
                   {apiKeyWarning && (
-                    <span className="text-warning mt-1 block text-xs">
+                    <span className="mt-1 block text-xs text-warning">
                       {apiKeyWarning}
                     </span>
                   )}
-                  <span className="text-description-muted mt-1 block text-xs">
+                  <span className="mt-1 block text-xs text-description-muted">
                     <a
                       className="cursor-pointer text-inherit underline hover:text-inherit hover:brightness-125"
                       onClick={() => {
@@ -398,7 +398,7 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                   />
                 )}
                 {field.description && (
-                  <span className="text-description-muted mt-1 block text-xs">
+                  <span className="mt-1 block text-xs text-description-muted">
                     {field.description}
                   </span>
                 )}
@@ -430,7 +430,7 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
               Connect
             </Button>
 
-            <span className="text-description-muted block w-full text-center text-xs">
+            <span className="block w-full text-center text-xs text-description-muted">
               This will update your{" "}
               <span
                 className="cursor-pointer underline hover:brightness-125"

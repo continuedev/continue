@@ -37,7 +37,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       <div className="flex flex-row items-center gap-1">
         {isToggled && !!showIfToggled && showIfToggled}
         <div
-          className={`border-command-border bg-vsc-input-background relative flex items-center rounded-full border border-solid`}
+          className={`relative flex items-center rounded-full border border-solid border-command-border bg-vsc-input-background`}
           onClick={
             disabled
               ? undefined

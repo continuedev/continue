@@ -37,7 +37,7 @@ export function DeprecationBanner({
   return (
     <div className="px-4 py-4">
       <div
-        className="border-info relative rounded-md border-[0.5px] border-solid px-3 py-2.5 shadow-sm"
+        className="relative rounded-md border-[0.5px] border-solid border-info px-3 py-2.5 shadow-sm"
         style={{
           backgroundColor: `color-mix(in srgb, ${varWithFallback("info")} 20%, transparent)`,
         }}
@@ -57,7 +57,7 @@ export function DeprecationBanner({
           <div className="flex gap-2">
             <button
               onClick={() => ideMessenger.post("openUrl", REPO_URL)}
-              className="border-description text-foreground flex-1 cursor-pointer rounded border-[0.5px] border-solid bg-transparent px-2 py-1 text-[11px] font-medium hover:brightness-125"
+              className="flex-1 cursor-pointer rounded border-[0.5px] border-solid border-description bg-transparent px-2 py-1 text-[11px] font-medium text-foreground hover:brightness-125"
             >
               Learn more
             </button>

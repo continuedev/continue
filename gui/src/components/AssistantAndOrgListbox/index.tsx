@@ -107,7 +107,7 @@ export function AssistantAndOrgListbox({
             style={{ zIndex: 200 }}
           >
             <div className="flex items-center justify-between px-1.5 py-1">
-              <span className="text-description text-2xs font-medium">
+              <span className="text-2xs font-medium text-description">
                 Configs
               </span>
               <div className="flex items-center gap-0.5">
@@ -120,7 +120,7 @@ export function AssistantAndOrgListbox({
                   size="sm"
                   className="my-0 h-5 w-5 p-0"
                 >
-                  <PlusIcon className="text-description h-3.5 w-3.5" />
+                  <PlusIcon className="h-3.5 w-3.5 text-description" />
                 </Button>
                 <Button
                   onClick={(e) => {
@@ -131,7 +131,7 @@ export function AssistantAndOrgListbox({
                   size="sm"
                   className="my-0 h-5 w-5 p-0"
                 >
-                  <Cog6ToothIcon className="text-description h-3.5 w-3.5" />
+                  <Cog6ToothIcon className="h-3.5 w-3.5 text-description" />
                 </Button>
               </div>
             </div>
@@ -151,7 +151,7 @@ export function AssistantAndOrgListbox({
                   }}
                   variant="ghost"
                   size="sm"
-                  className="text-description hover:bg-input my-0 w-full justify-start py-1.5 pl-1 text-left"
+                  className="my-0 w-full justify-start py-1.5 pl-1 text-left text-description hover:bg-input"
                 >
                   <div className="flex w-full items-center">
                     <ArrowPathIcon
@@ -168,7 +168,7 @@ export function AssistantAndOrgListbox({
 
             {/* Bottom Actions */}
             <div>
-              <div className="text-description flex items-center justify-start px-2 py-1">
+              <div className="flex items-center justify-start px-2 py-1 text-description">
                 <span className="block" style={{ fontSize: tinyFont }}>
                   <code>{getMetaKeyLabel()} ⇧ '</code> to toggle config
                 </span>

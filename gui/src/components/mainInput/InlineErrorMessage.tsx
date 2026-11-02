@@ -14,12 +14,12 @@ export default function InlineErrorMessage() {
   if (inlineErrorMessage === "out-of-context") {
     return (
       <div
-        className={`border-border relative m-2 flex flex-col rounded-md border border-solid bg-transparent p-4`}
+        className={`relative m-2 flex flex-col rounded-md border border-solid border-border bg-transparent p-4`}
       >
-        <p className={`thread-message text-error text-center`}>
+        <p className={`thread-message text-center text-error`}>
           {`Message exceeds context limit.`}
         </p>
-        <div className="text-description flex flex-row items-center justify-center gap-1.5 px-3">
+        <div className="flex flex-row items-center justify-center gap-1.5 px-3 text-description">
           <div
             className="cursor-pointer text-xs hover:underline"
             onClick={() => {
@@ -28,7 +28,7 @@ export default function InlineErrorMessage() {
               });
             }}
           >
-            <span className="xs:flex hidden">Open config</span>
+            <span className="hidden xs:flex">Open config</span>
             <span className="xs:hidden">Config</span>
           </div>
           |

@@ -12,17 +12,17 @@ export function ConversationStarterCard({
 }: ConversationStarterCardProps) {
   return (
     <div
-      className="bg-vsc-input-background mb-2 w-full rounded-md shadow-md hover:cursor-pointer hover:brightness-110"
+      className="mb-2 w-full rounded-md bg-vsc-input-background shadow-md hover:cursor-pointer hover:brightness-110"
       onClick={() => onClick(command)}
     >
       <div className="flex px-3 py-1.5">
         <div className="mr-3 flex-shrink-0 self-start pt-0.5">
-          <ChatBubbleLeftIcon className="text-lightgray h-5 w-5" />
+          <ChatBubbleLeftIcon className="h-5 w-5 text-lightgray" />
         </div>
         <div className="flex flex-1 flex-col justify-center">
           <div className="text-xs font-medium">{command.name}</div>
           {command.description && (
-            <div className="text-lightgray text-xs">{command.description}</div>
+            <div className="text-xs text-lightgray">{command.description}</div>
           )}
         </div>
       </div>

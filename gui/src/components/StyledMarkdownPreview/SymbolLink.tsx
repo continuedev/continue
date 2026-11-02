@@ -47,7 +47,7 @@ function SymbolLink({ symbol, content }: SymbolLinkProps) {
         onClick={onClick}
         data-tooltip-delay-show={500}
       >
-        <code className="text-link align-middle">{content}</code>
+        <code className="align-middle text-link">{content}</code>
       </span>
     </ToolTip>
   );
