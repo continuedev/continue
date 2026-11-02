@@ -31,6 +31,11 @@ updates:
       # (works through 6.7.0). Remove once the CLI is adapted.
       - dependency-name: ink
         versions: ["6.8.x"]
+      # @vscode/ripgrep >=1.16 stopped downloading bin/rg in a postinstall
+      # (binaries moved to optional platform packages); extension prepackage
+      # still expects node_modules/@vscode/ripgrep/bin/rg.
+      - dependency-name: "@vscode/ripgrep"
+        versions: [">=1.16.0"]
     groups:
       # Minor/patch bumps are batched into one PR per directory; majors stay
       # individual so they can be reviewed (and reverted) on their own.
