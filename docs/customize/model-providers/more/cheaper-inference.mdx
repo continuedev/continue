@@ -1,0 +1,45 @@
+---
+title: "Cheaper Inference"
+---
+
+Use [Cheaper Inference](https://www.cheaperinference.com/docs) with an API key from your dashboard and a funded wallet.
+
+## Chat model
+
+Add this model to your `config.yaml` and replace the API key placeholder:
+
+```yaml title="config.yaml"
+name: My Config
+version: 0.0.1
+schema: v1
+
+models:
+  - name: Cheaper Inference GPT-4o
+    provider: cheaper-inference
+    model: gpt-4o
+    apiKey: <YOUR_CHEAPER_INFERENCE_API_KEY>
+    roles:
+      - chat
+      - edit
+      - apply
+```
+
+The provider uses `https://api.cheaperinference.com/v1/` by default. Set `apiBase` to override it.
+
+Use an exact model ID from the [model catalog](https://www.cheaperinference.com/models) that supports `/v1/chat/completions`. Set `model: AUTODETECT` to list chat models available to your API key. Image, audio, embedding, and Responses-only models are excluded from chat discovery.
+
+## Embeddings
+
+Configure an embedding model separately:
+
+```yaml
+models:
+  - name: Cheaper Inference embeddings
+    provider: cheaper-inference
+    model: text-embedding-3-small
+    apiKey: <YOUR_CHEAPER_INFERENCE_API_KEY>
+    roles:
+      - embed
+```
+
+Model capabilities and availability vary. Check the catalog before selecting a model for image input or tool use.
