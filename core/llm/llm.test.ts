@@ -36,6 +36,8 @@ const retryOnce = (testFn: () => Promise<any>) => async () => {
   }
 };
 
+let anyLiveProviderTested = false;
+
 function testLLM(
   llm: BaseLLM,
   {
@@ -53,6 +55,15 @@ function testLLM(
   if (skip) {
     return;
   }
+  // These tests call the real provider APIs. Without a key (a fork's push builds, local
+  // runs) there is nothing to test, so skip instead of failing with authentication errors.
+  if (!llm.apiKey) {
+    console.log(
+      `Skipping ${llm.providerName}/${llm.model}: no API key configured`,
+    );
+    return;
+  }
+  anyLiveProviderTested = true;
 
   beforeAll(() => {
     llm.completionOptions = { ...llm.completionOptions, ...COMPLETION_OPTIONS };
@@ -264,4 +275,13 @@ describe("LLM", () => {
     }),
     { testFim: false, skip: true, timeout: 20000 }, // Skipped - timing out in CI
   );
+
+  // Jest fails a suite with no tests; keep it green when every provider was skipped.
+  test("live provider tests (skipped without API keys)", () => {
+    if (!anyLiveProviderTested) {
+      console.log(
+        "No provider API keys configured; live LLM tests were skipped",
+      );
+    }
+  });
 });

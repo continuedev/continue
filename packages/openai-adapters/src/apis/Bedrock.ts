@@ -190,6 +190,9 @@ export class BedrockApi implements BaseLlmApi {
         token: fromStatic({
           token: { token: apiKey },
         }),
+        // Select bearer auth explicitly: otherwise the SDK may pick SigV4 and look for AWS
+        // credentials (failing with "Could not load credentials") for key-only setups.
+        authSchemePreference: ["httpBearerAuth"],
       });
     }
 

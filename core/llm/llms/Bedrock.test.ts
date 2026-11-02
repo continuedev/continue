@@ -143,6 +143,18 @@ describe("Bedrock", () => {
       });
     });
 
+    it("selects bearer auth for an API key and never asks for IAM credentials", async () => {
+      // Without authSchemePreference the AWS SDK may choose SigV4 and fail with "Could not
+      // load credentials" on machines that only have a Bedrock API key.
+      const b = make({ apiKey: "bedrock-api-key" });
+      const auth = await b._clientAuth();
+
+      expect(auth.authSchemePreference).toEqual(["httpBearerAuth"]);
+      expect(await auth.token()).toEqual({ token: "bedrock-api-key" });
+      expect(auth.credentials).toBeUndefined();
+      expect(calls).toEqual([]); // the credential chain was not consulted
+    });
+
     it("passes sessionToken through with explicit keys", async () => {
       const b = make({
         accessKeyId: "AKIA",

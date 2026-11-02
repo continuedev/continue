@@ -103,7 +103,10 @@ class Bedrock extends BaseLLM {
 
   /** Auth portion of an AWS SDK client config (shared by runtime and control-plane clients). */
   private async _clientAuth(): Promise<
-    | { token: () => Promise<{ token: string }> }
+    | {
+        token: () => Promise<{ token: string }>;
+        authSchemePreference: string[];
+      }
     | {
         credentials: {
           accessKeyId: string;
@@ -115,7 +118,12 @@ class Bedrock extends BaseLLM {
     const apiKey = this._resolveApiKey();
     if (apiKey) {
       // Bedrock API key authentication (bearer token)
-      return { token: async () => ({ token: apiKey }) };
+      // Select bearer auth explicitly: otherwise the SDK may pick SigV4 and go looking for
+      // AWS credentials (failing with "Could not load credentials") for key-only setups.
+      return {
+        token: async () => ({ token: apiKey }),
+        authSchemePreference: ["httpBearerAuth"],
+      };
     }
     // IAM credential authentication
     const credentials = await this._getCredentials();
