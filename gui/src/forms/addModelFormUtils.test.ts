@@ -139,3 +139,57 @@ describe("getBedrockConnectionParams", () => {
     expect(model.title).toBe("Nova Pro (Bedrock)");
   });
 });
+
+describe("Amazon Bedrock (Mantle) wizard entry", () => {
+  const mantle = providers["bedrock-mantle"]!;
+  const gptOss = mantle.packages[0];
+
+  it("needs an API key and region", () => {
+    expect(areRequiredFieldsFilled(mantle, {})).toBe(false);
+    expect(areRequiredFieldsFilled(mantle, { apiKey: "k" })).toBe(true);
+  });
+
+  it("only offers Mantle regions, defaulting to us-east-1", () => {
+    const region = mantle.collectInputFor!.find((f) => f.key === "region")!;
+    const values = region.choices!.map((c) => c.value);
+    expect(region.defaultValue).toBe("us-east-1");
+    expect(values).toContain("eu-west-1");
+    expect(values).not.toContain("eu-west-3"); // Paris has no Mantle endpoint
+    expect(values).not.toContain("ap-southeast-1");
+  });
+
+  it("saves a bedrock-mantle model with the key and region", () => {
+    const model = buildModelFromForm(mantle, gptOss, {
+      apiKey: "bedrock-key",
+      region: "eu-west-1",
+    });
+    expect(model).toMatchObject({
+      provider: "bedrock-mantle",
+      model: "openai.gpt-oss-120b",
+      apiKey: "bedrock-key",
+      region: "eu-west-1",
+    });
+  });
+
+  it("honours a custom model ID", () => {
+    const model = buildModelFromForm(mantle, gptOss, {
+      apiKey: "k",
+      model: "qwen.qwen3-coder",
+    });
+    expect(model.model).toBe("qwen.qwen3-coder");
+  });
+
+  it("tests the connection against the Mantle endpoint", () => {
+    expect(
+      getBedrockConnectionParams(mantle, gptOss, {
+        apiKey: "k",
+        region: "us-west-2",
+      }),
+    ).toEqual({ apiKey: "k", region: "us-west-2", endpoint: "mantle" });
+  });
+
+  it("does not mark standard Bedrock connections as Mantle", () => {
+    const params = getBedrockConnectionParams(bedrock, sonnet, { apiKey: "k" });
+    expect(params).not.toHaveProperty("endpoint");
+  });
+});

@@ -70,6 +70,24 @@ const BEDROCK_REGIONS = [
   "us-gov-west-1",
 ];
 
+const MANTLE_REGIONS = [
+  "us-east-1",
+  "us-east-2",
+  "us-west-2",
+  "eu-central-1",
+  "eu-north-1",
+  "eu-south-1",
+  "eu-west-1",
+  "eu-west-2",
+  "ap-northeast-1",
+  "ap-south-1",
+  "ap-southeast-2",
+  "ap-southeast-3",
+  "sa-east-1",
+  "us-gov-east-1",
+  "us-gov-west-1",
+];
+
 const completionParamsInputsConfigs = Object.values(completionParamsInputs);
 
 const openSourceModels = Object.values(models).filter(
@@ -499,6 +517,48 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
           { value: "global", label: "Global" },
           { value: "off", label: "Off (use the model ID as-is)" },
         ],
+      },
+      {
+        inputType: "text",
+        key: "model",
+        label: "Custom model ID (optional)",
+        placeholder: "Overrides the model selected above",
+        required: false,
+        showAlways: true,
+        omitWhen: "",
+      },
+      ...completionParamsInputsConfigs,
+    ],
+  },
+  "bedrock-mantle": {
+    title: "Amazon Bedrock (Mantle)",
+    provider: "bedrock-mantle",
+    icon: "bedrock.svg",
+    description:
+      "OpenAI-compatible endpoint for models on Amazon Bedrock, used with a Bedrock API key.",
+    longDescription: `Bedrock Mantle serves open-weight and partner models (GPT OSS, Qwen, Kimi and more) through an OpenAI-compatible API. Create a [Bedrock API key](https://console.aws.amazon.com/bedrock/home#/api-keys) in the same region. Mantle is available in fewer regions than the standard Bedrock endpoint, and some models are served under a different path prefix, which Continue detects automatically.`,
+    tags: [ModelProviderTags.RequiresApiKey],
+    refPage: "bedrock",
+    apiKeyUrl: "https://console.aws.amazon.com/bedrock/home#/api-keys",
+    packages: [models.bedrockMantleGptOss120b, models.bedrockMantleGptOss20b],
+    params: {},
+    collectInputFor: [
+      {
+        inputType: "password",
+        key: "apiKey",
+        label: "Bedrock API key",
+        placeholder: "Paste your Bedrock API key",
+        required: true,
+      },
+      {
+        inputType: "select",
+        key: "region",
+        label: "AWS region",
+        description: "Only regions with a bedrock-mantle endpoint are listed.",
+        required: true,
+        defaultValue: "us-east-1",
+        // Keep in sync with MANTLE_REGIONS in packages/openai-adapters (a test checks this).
+        choices: MANTLE_REGIONS.map((r) => ({ value: r, label: r })),
       },
       {
         inputType: "text",

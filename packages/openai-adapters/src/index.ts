@@ -5,6 +5,7 @@ import { AnthropicApi } from "./apis/Anthropic.js";
 import { AskSageApi } from "./apis/AskSage.js";
 import { AzureApi } from "./apis/Azure.js";
 import { BedrockApi } from "./apis/Bedrock.js";
+import { BedrockMantleApi } from "./apis/BedrockMantle.js";
 import { CohereApi } from "./apis/Cohere.js";
 import { CometAPIApi } from "./apis/CometAPI.js";
 
@@ -101,6 +102,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new AzureApi(config);
     case "bedrock":
       return new BedrockApi(config);
+    case "bedrock-mantle":
+      return new BedrockMantleApi(config);
     case "cohere":
       return new CohereApi(config);
     case "cometapi":
@@ -240,6 +243,22 @@ export {
   getAnthropicMediaTypeFromDataUrl,
 } from "./apis/AnthropicUtils.js";
 
+export {
+  alternateMantlePrefix,
+  getMantleErrorHint,
+  isMantleRegion,
+  isWrongRouteError,
+  mantleBaseUrl,
+  mantleModelOptions,
+  MANTLE_PATH_PREFIXES,
+  MANTLE_REGIONS,
+  maxTokensParamFromError,
+  normalizeMantlePrefix,
+} from "./apis/bedrockMantleHelpers.js";
+export type {
+  MantleModelOption,
+  MaxTokensParam,
+} from "./apis/bedrockMantleHelpers.js";
 export { isResponsesModel } from "./apis/openaiResponses.js";
 export { OPENROUTER_HEADERS } from "./apis/OpenRouter.js";
 export { extractBase64FromDataUrl, parseDataUrl } from "./util/url.js";

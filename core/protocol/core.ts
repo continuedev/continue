@@ -62,6 +62,10 @@ export interface ListHistoryOptions {
 
 /** Connection settings the add-model form sends to try out Bedrock before saving. */
 export interface BedrockConnectionParams {
+  /** "mantle" targets the OpenAI-compatible bedrock-mantle endpoint; default is bedrock-runtime. */
+  endpoint?: "mantle";
+  mantlePathPrefix?: string;
+  maxTokensParam?: string;
   region?: string;
   apiKey?: string;
   apiBase?: string;

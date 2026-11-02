@@ -15,6 +15,7 @@ import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Bedrock from "./llm/llms/Bedrock";
+import BedrockMantle, { mantleRegionError } from "./llm/llms/BedrockMantle";
 import Lemonade from "./llm/llms/Lemonade";
 import { fetchModels } from "./llm/fetchModels";
 import Ollama from "./llm/llms/Ollama";
@@ -604,7 +605,17 @@ export class Core {
     // with the not-yet-saved settings.
     on("bedrock/listModels", async (msg) => {
       try {
-        const bedrock = new Bedrock({ ...msg.data, model: "" });
+        const { endpoint, ...params } = msg.data;
+        if (endpoint === "mantle") {
+          const unavailable = mantleRegionError(params.region);
+          if (unavailable) return { ok: false as const, error: unavailable };
+          const mantle = new BedrockMantle({ ...params, model: "" });
+          return {
+            ok: true as const,
+            models: await mantle.listAvailableModels(),
+          };
+        }
+        const bedrock = new Bedrock({ ...params, model: "" });
         return {
           ok: true as const,
           models: await bedrock.listAvailableModels(),
@@ -618,7 +629,14 @@ export class Core {
     });
     on("bedrock/testModel", async (msg) => {
       try {
-        const bedrock = new Bedrock({ ...msg.data });
+        const { endpoint, ...params } = msg.data;
+        if (endpoint === "mantle") {
+          const unavailable = mantleRegionError(params.region);
+          if (unavailable) return { ok: false as const, error: unavailable };
+          const mantle = new BedrockMantle({ ...params });
+          return { ok: true as const, ...(await mantle.testModel()) };
+        }
+        const bedrock = new Bedrock({ ...params });
         return { ok: true as const, ...(await bedrock.testModel()) };
       } catch (e) {
         return {

@@ -336,6 +336,72 @@ If the certificate isn't trusted you'll see an error such as "unable to get loca
 | 407 Proxy Authentication Required | Put credentials in the proxy URL, e.g. `requestOptions.proxy: http://user:pass@proxy:3128` |
 | Anthropic "use case details" prompt | Open the Bedrock Playground, choose an Anthropic model and submit the form |
 
+## Bedrock Mantle (OpenAI-compatible endpoint)
+
+Bedrock also serves models through an OpenAI-compatible API at `bedrock-mantle.<region>.api.aws`, called **Mantle**. Use the `bedrock-mantle` provider with a [Bedrock API key](#bedrock-api-key) when a model you want (for example GPT OSS, Qwen or Kimi) is available there, or to use features that only exist on Mantle.
+
+```yaml title="config.yaml"
+models:
+  - name: GPT OSS 120B
+    provider: bedrock-mantle
+    model: openai.gpt-oss-120b
+    apiKey: ${{ secrets.BEDROCK_API_KEY }}
+    env:
+      region: us-east-1
+    roles:
+      - chat
+```
+
+You can also add it from the UI: **Add Chat model**, then **Amazon Bedrock (Mantle)**, then **Test connection** to list the models your key can use.
+
+To use every model your key can access without listing them by hand, set `model: AUTODETECT`; Continue fills in the list from `GET /v1/models`.
+
+### Mantle vs standard Bedrock
+
+| | `bedrock` (Converse API) | `bedrock-mantle` |
+| --- | --- | --- |
+| Authentication | API key, profile / SSO, access keys | Bedrock API key (or `AWS_BEARER_TOKEN_BEDROCK`) |
+| Cross-region inference profiles | Yes | No |
+| Guardrails, service tier, latency mode | Yes | No |
+| Regions | 22 | 15 (see below) |
+| IAM permission | `bedrock:InvokeModel*` | `bedrock-mantle:CreateInference` |
+
+Per-token prices are the same on both endpoints. AWS recommends the standard endpoint for new applications and Mantle when you need a model or capability only available there.
+
+**Mantle regions:** `us-east-1`, `us-east-2`, `us-west-2`, `eu-central-1`, `eu-north-1`, `eu-south-1`, `eu-west-1`, `eu-west-2`, `ap-northeast-1`, `ap-south-1`, `ap-southeast-2`, `ap-southeast-3`, `sa-east-1`, `us-gov-east-1`, `us-gov-west-1`. Regions such as `eu-west-3` or `ap-southeast-1` have no Mantle endpoint.
+
+### Per-model quirks (handled automatically)
+
+- **Path prefix.** Most models are served under `/v1`, some under `/openai/v1`. If a request is rejected with "isn't supported on this route", Continue retries on the other prefix and remembers it. To set it yourself, use `mantlePathPrefix` (the model card lists it under Programmatic Access).
+- **Token limit parameter.** Some models reject `max_tokens`. Continue switches to `max_completion_tokens` when it sees that error. To force it, set `maxTokensParam: max_completion_tokens` (or `max_tokens`).
+
+```yaml title="config.yaml"
+models:
+  - name: Custom route
+    provider: bedrock-mantle
+    model: openai.some-model
+    apiKey: ${{ secrets.BEDROCK_API_KEY }}
+    env:
+      region: us-east-1
+      mantlePathPrefix: /openai/v1
+      maxTokensParam: max_completion_tokens
+```
+
+### Using the OpenAI-compatible API on the standard endpoint
+
+`bedrock-runtime` also serves the OpenAI Chat Completions and Responses APIs at `https://bedrock-runtime.<region>.amazonaws.com/openai/v1`, with Guardrails and cross-region inference profiles (for example `global.openai.gpt-5.6-sol`). Point the same provider at it with `apiBase`:
+
+```yaml title="config.yaml"
+models:
+  - name: GPT via bedrock-runtime
+    provider: bedrock-mantle
+    model: global.openai.gpt-5.6-sol
+    apiBase: https://bedrock-runtime.us-east-1.amazonaws.com/openai/v1/
+    apiKey: ${{ secrets.BEDROCK_API_KEY }}
+```
+
+That endpoint has no `GET /models`, so list models with **Test connection** on the standard Bedrock provider instead. When `apiBase` is set, Continue does not auto-detect the path prefix.
+
 ## How to Configure Custom Imported Models with Amazon Bedrock
 
 To setup Bedrock using custom imported models, add the following to your config file:

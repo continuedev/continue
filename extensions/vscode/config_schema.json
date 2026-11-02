@@ -197,6 +197,7 @@
             "cohere",
             "bedrock",
             "bedrockimport",
+            "bedrock-mantle",
             "sagemaker",
             "together",
             "novita",
@@ -391,6 +392,17 @@
           "title": "Guardrail Version",
           "description": "Bedrock only. Guardrail version to use (defaults to DRAFT).",
           "type": "string"
+        },
+        "mantlePathPrefix": {
+          "title": "Mantle Path Prefix",
+          "description": "bedrock-mantle only. Path prefix the model is served under: /v1 (most models) or /openai/v1. Detected automatically when unset.",
+          "type": "string"
+        },
+        "maxTokensParam": {
+          "title": "Max Tokens Parameter",
+          "description": "bedrock-mantle only. Name of the token-limit request parameter, for models that reject max_tokens. Detected automatically when unset.",
+          "type": "string",
+          "enum": ["max_tokens", "max_completion_tokens"]
         },
         "sessionToken": {
           "title": "Session Token",
@@ -2983,6 +2995,17 @@
               "title": "Guardrail Version",
               "description": "Bedrock only. Guardrail version to use (defaults to DRAFT).",
               "type": "string"
+            },
+            "mantlePathPrefix": {
+              "title": "Mantle Path Prefix",
+              "description": "bedrock-mantle only. Path prefix the model is served under: /v1 (most models) or /openai/v1. Detected automatically when unset.",
+              "type": "string"
+            },
+            "maxTokensParam": {
+              "title": "Max Tokens Parameter",
+              "description": "bedrock-mantle only. Name of the token-limit request parameter, for models that reject max_tokens. Detected automatically when unset.",
+              "type": "string",
+              "enum": ["max_tokens", "max_completion_tokens"]
             },
             "sessionToken": {
               "title": "Session Token",

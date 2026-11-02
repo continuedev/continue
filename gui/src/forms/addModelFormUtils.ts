@@ -122,6 +122,8 @@ const BEDROCK_CONNECTION_KEYS = [
   "latency",
   "guardrailIdentifier",
   "guardrailVersion",
+  "mantlePathPrefix",
+  "maxTokensParam",
 ] as const;
 
 /** Connection settings (no title/model) to send for "Test connection". */
@@ -136,6 +138,9 @@ export function getBedrockConnectionParams(
     if (typeof model[key] === "string" && model[key] !== "") {
       params[key] = model[key];
     }
+  }
+  if (provider.provider === "bedrock-mantle") {
+    params.endpoint = "mantle";
   }
   return params;
 }

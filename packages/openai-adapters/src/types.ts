@@ -105,6 +105,18 @@ export const BedrockConfigSchema = OpenAIConfigSchema.extend({
 });
 export type BedrockConfig = z.infer<typeof BedrockConfigSchema>;
 
+export const BedrockMantleConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("bedrock-mantle"),
+  env: z
+    .object({
+      region: z.string().optional(),
+      mantlePathPrefix: z.string().optional(),
+      maxTokensParam: z.string().optional(),
+    })
+    .optional(),
+});
+export type BedrockMantleConfig = z.infer<typeof BedrockMantleConfigSchema>;
+
 export const LlamastackConfigSchema = OpenAIConfigSchema.extend({
   provider: z.literal("llamastack"),
 });
@@ -262,6 +274,7 @@ export type AiSdkConfig = z.infer<typeof AiSdkConfigSchema>;
 export const LLMConfigSchema = z.discriminatedUnion("provider", [
   OpenAIConfigSchema,
   BedrockConfigSchema,
+  BedrockMantleConfigSchema,
   MoonshotConfigSchema,
   DeepseekConfigSchema,
   MiniMaxConfigSchema,

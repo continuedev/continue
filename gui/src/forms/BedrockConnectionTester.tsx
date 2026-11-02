@@ -1,5 +1,6 @@
 import { useContext, useState } from "react";
 import type {
+  BedrockConnectionParams,
   BedrockListModelsResult,
   BedrockModelOptionInfo,
   BedrockTestModelResult,
@@ -49,7 +50,10 @@ export function BedrockConnectionTester({
     setTestResult(undefined);
     onPickModel(undefined);
     try {
-      const res = await ideMessenger.request("bedrock/listModels", connection);
+      const res = await ideMessenger.request(
+        "bedrock/listModels",
+        connection as BedrockConnectionParams,
+      );
       setListResult(
         res.status === "success"
           ? res.content
@@ -70,7 +74,7 @@ export function BedrockConnectionTester({
     setTestResult(undefined);
     try {
       const res = await ideMessenger.request("bedrock/testModel", {
-        ...connection,
+        ...(connection as BedrockConnectionParams),
         model,
       });
       setTestResult(
