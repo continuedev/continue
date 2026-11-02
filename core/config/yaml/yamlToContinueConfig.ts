@@ -54,14 +54,15 @@ export function convertYamlMcpConfigToInternalMcpOptions(
       args,
       cwd,
       env,
+      // Only `useSystemCa` applies to stdio servers (see MCPConnection)
+      requestOptions: globalRequestOptions,
     };
     return stdioOptions;
   }
   // HTTP/SSE
   const { type, url, apiKey, requestOptions, oauth } = config;
   const httpSseConfig:
-    | InternalStreamableHttpMcpOptions
-    | InternalSseMcpOptions = {
+    InternalStreamableHttpMcpOptions | InternalSseMcpOptions = {
     ...shared,
     type,
     url,
