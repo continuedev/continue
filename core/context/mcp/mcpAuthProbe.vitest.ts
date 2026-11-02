@@ -15,7 +15,9 @@ describe("isUnauthorizedError", () => {
         new StreamableHTTPError(401, "Invalid or expired token"),
       ),
     ).toBe(true);
-    expect(isUnauthorizedError(new SseError(401, "nope", {} as any))).toBe(true);
+    expect(isUnauthorizedError(new SseError(401, "nope", {} as any))).toBe(
+      true,
+    );
     expect(isUnauthorizedError(new UnauthorizedError())).toBe(true);
     expect(
       isUnauthorizedError(Object.assign(new Error("x"), { status: 401 })),
