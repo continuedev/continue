@@ -161,6 +161,4 @@ export interface FoundUserSecretResult {
 }
 
 export type SecretResult =
-  | FoundSecretResult
-  | FoundUserSecretResult
-  | NotFoundSecretResult;
+  FoundSecretResult | FoundUserSecretResult | NotFoundSecretResult;

@@ -11,7 +11,9 @@ vi.mock("../../../../../context/MockIdeMessenger", async (importOriginal) => {
   const original = (await importOriginal()) as any;
   return {
     ...original,
-    MockIdeMessenger: class MockedMockIdeMessenger extends original.MockIdeMessenger {
+    MockIdeMessenger: class MockedMockIdeMessenger
+      extends original.MockIdeMessenger
+    {
       post(...args: any[]) {
         postIde(...args);
       }

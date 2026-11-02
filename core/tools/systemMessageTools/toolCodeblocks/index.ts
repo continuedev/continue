@@ -2,9 +2,7 @@ import { Tool, ToolCallState } from "../../..";
 import { SystemMessageToolsFramework } from "../types";
 import { handleToolCallBuffer } from "./parseSystemToolCall";
 
-export class SystemMessageToolCodeblocksFramework
-  implements SystemMessageToolsFramework
-{
+export class SystemMessageToolCodeblocksFramework implements SystemMessageToolsFramework {
   // Poor models are really bad at following instructions, alternate starts allowed:
   acceptedToolCallStarts: [string, string][] = [
     ["```tool\n", "```tool\n"],

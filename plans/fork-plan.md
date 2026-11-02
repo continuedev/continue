@@ -6,11 +6,11 @@ Status: **plan only, implementation not started.** Written 2026-10-27. The fork 
 
 `continuedev/continue` is read-only and no longer maintained (README note; final release is VS Code extension 2.0.0, the version installed here). We use it with AWS Bedrock models and remote MCP servers (Datadog, Atlassian, Wiz) behind an enterprise TLS-inspecting proxy. Three gaps block that, and upstream will not fix them:
 
-| # | Gap | Evidence |
-|---|-----|----------|
-| 1 | MCP OAuth tokens are only attached to `type: sse` servers. `streamable-http` servers complete sign-in but then connect with no `Authorization` header and fail with `Unauthorized`. | `core/context/mcp/MCPConnection.ts`, `connectClient()`: the comment "currently support oauth for sse transports only" guards the `getOauthToken()` call. |
-| 2 | The "Authenticate" button only appears when the connection error contains `401` or `Unauthorized`. Servers that answer `invalid_token` (Atlassian) or `Invalid or expired token` (Wiz) never show it. | `is401Error()` in `MCPConnection.ts`. |
-| 3 | No way to use the OS trust store. MCP transports and OAuth discovery run on Node's built-in CA list, so proxy-signed endpoints fail with `UNABLE_TO_GET_ISSUER_CERT_LOCALLY`. | Reproduced with `node -e fetch(...)`; fixed by `NODE_OPTIONS=--use-system-ca`. `packages/fetch/src/certs.ts` builds CA lists from `tls.rootCertificates` plus `NODE_EXTRA_CA_CERTS` only. |
+| #   | Gap                                                                                                                                                                                                   | Evidence                                                                                                                                                                                  |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | MCP OAuth tokens are only attached to `type: sse` servers. `streamable-http` servers complete sign-in but then connect with no `Authorization` header and fail with `Unauthorized`.                   | `core/context/mcp/MCPConnection.ts`, `connectClient()`: the comment "currently support oauth for sse transports only" guards the `getOauthToken()` call.                                  |
+| 2   | The "Authenticate" button only appears when the connection error contains `401` or `Unauthorized`. Servers that answer `invalid_token` (Atlassian) or `Invalid or expired token` (Wiz) never show it. | `is401Error()` in `MCPConnection.ts`.                                                                                                                                                     |
+| 3   | No way to use the OS trust store. MCP transports and OAuth discovery run on Node's built-in CA list, so proxy-signed endpoints fail with `UNABLE_TO_GET_ISSUER_CERT_LOCALLY`.                         | Reproduced with `node -e fetch(...)`; fixed by `NODE_OPTIONS=--use-system-ca`. `packages/fetch/src/certs.ts` builds CA lists from `tls.rootCertificates` plus `NODE_EXTRA_CA_CERTS` only. |
 
 Current workaround: run each server through `mcp-remote@0.15.2` as a `stdio` entry with `NODE_OPTIONS: --use-system-ca`. It works but is an extra moving part per server.
 
@@ -27,6 +27,7 @@ Recommendation: spend half a day evaluating Roo Code and Kilo Code first. Fork o
 ## 3. Scope
 
 In scope:
+
 1. MCP OAuth for `streamable-http` (and keep it for `sse`).
 2. A reliable "sign in" trigger for any 401-like failure, plus a manual "Authenticate" action.
 3. System-trust-store support for MCP transports, OAuth discovery/token calls, and model requests.
@@ -38,26 +39,33 @@ Out of scope: JetBrains plugin, CLI, hub/auth features (already removed upstream
 ## 4. Work breakdown
 
 ### 4.1 Repo setup (about 0.5 day)
+
 - Done 2026-10-27: forked to `b1tninja/continued` (public, a GitHub fork of `continuedev/continue`, default branch `main`), cloned to `C:\github\b1tninja\continued`, `upstream` remote added. Next: branch from the `v2.0.0-vscode` tag (section 11, item 1) and change the VS Code publisher and extension ID so it cannot collide with, or be auto-updated by, the original marketplace listing. Ownership of the repo is an open question (section 10).
 - Follow `BUILD_DEPENDENCIES.md` and `CONTRIBUTING.md` to build `extensions/vscode` and produce a `.vsix`. Confirm a clean build on Windows with the proxy root installed.
 - Disable or remove telemetry, auto-update, and marketplace publishing workflows in `.github/`.
 - Decide on distribution: internal `.vsix` file share vs. private marketplace. Document how users install and update.
 
 ### 4.2 Gap 1: OAuth on streamable-http (about 1-2 days)
+
 Files: `core/context/mcp/MCPConnection.ts`, `core/context/mcp/MCPOauth.ts`.
+
 - In `connectClient()`, change the `if (this.options.type === "sse")` guard so it applies to both `sse` and `streamable-http`. Also handle the case where `type` is omitted (the code tries HTTP first, then falls back to SSE).
 - Prefer the MCP SDK's native `authProvider` option on `StreamableHTTPClientTransport` and `SSEClientTransport` instead of hand-copying a bearer header. The SDK then handles 401, discovery, refresh and token expiry. `MCPConnectionOauthProvider` already implements `OAuthClientProvider`, so wiring it in is small.
 - Tokens expire (Datadog issues 3600 s tokens). Verify refresh-token use and that a refreshed token is saved back through `saveTokens()`.
 - `mcpOauthStorage` is keyed by server URL. Clear the stored entry when a sign-in fails, so stale state does not repeat the problem seen on 2026-10-27 (a leftover token, client registration and PKCE verifier).
 
 ### 4.3 Gap 2: sign-in trigger (about 0.5-1 day)
+
 Files: `MCPConnection.ts` (`is401Error`), the GUI MCP server list (search `isProtectedResource` in `gui/src`), protocol messages `mcp/startAuthentication` and `mcp/removeAuthentication` in `core/protocol/core.ts`, handlers in `core/core.ts`.
+
 - Treat HTTP 401 as "needs auth" regardless of body text. Best signal is the status code or a `WWW-Authenticate: Bearer` header on the transport error, not string matching on the message.
 - Add an always-available "Sign in / Sign out" action per remote server, so a user is never left without a button.
 - Show the real error and the callback URL in use.
 
 ### 4.4 Gap 3: system CA support (about 1-2 days)
+
 Files: `packages/fetch/src/certs.ts`, `packages/fetch/src/getAgentOptions.ts`, `MCPConnection.ts` (transports), `MCPOauth.ts` (the SDK's discovery and token fetches).
+
 - Add a request option, for example `useSystemCa: true` (default on for Windows and macOS), to `requestOptionsSchema` in `packages/config-yaml/src/schemas/models.ts`, next to `caBundlePath`, `verifySsl` and `clientCertificate`. Update `packages/config-types` as well.
 - Implementation: Node 22+ exposes the OS store through `tls.getCACertificates('system')` (the in-process equivalent of `--use-system-ca`). Merge the result into `CertsCache.fixedCa`. Check which Node version VS Code's extension host runs, and keep a fallback loader if the API is missing.
 - Apply the resulting agent to every network path. Today `StreamableHTTPClientTransport` gets only `requestInit.headers` and an optional insecure agent:
@@ -66,8 +74,8 @@ Files: `packages/fetch/src/certs.ts`, `packages/fetch/src/getAgentOptions.ts`, `
   - `stdio` transports: set `NODE_OPTIONS=--use-system-ca` in the child environment by default, so `npx`-launched servers also trust the proxy CA.
 - Make `mcpServers[].requestOptions` honour `caBundlePath`, `verifySsl` and `useSystemCa`. The schema already allows `requestOptions` on SSE and HTTP servers, but the code only reads `verifySsl` and `headers`.
 
-
 ### 4.5 Config surface (about 0.5 day)
+
 Document in the fork's README:
 
 ```yaml
@@ -82,6 +90,7 @@ mcpServers:
 OAuth sign-in would be automatic on a 401. Optional extra: a configurable OAuth callback port instead of the fixed `3000` (`PORT` in `MCPOauth.ts`), because a fixed port can clash and some providers register only one redirect URI.
 
 ### 4.6 Tests and validation (about 1-2 days)
+
 - Unit tests for `MCPConnection` and `MCPOauth` against a mock MCP server that demands a bearer token and returns 401 with and without a `WWW-Authenticate` header.
 - A local mock OAuth authorization server (dynamic registration, PKCE, refresh) to test the whole flow end to end.
 - A TLS test using a locally generated CA that is trusted only through the OS store (or `NODE_EXTRA_CA_CERTS`) to prove `useSystemCa` works and that it fails when disabled.
@@ -89,10 +98,13 @@ OAuth sign-in would be automatic on a 401. Optional extra: a configurable OAuth 
   - Datadog (EU): connects, lists tools, and survives a token refresh (wait more than an hour).
   - Atlassian: `https://mcp.atlassian.com/v1/mcp/authv2` today. Plan a move to `/v2/mcp` before Atlassian's stated v1 cut-off of 2027-03-01.
   - Wiz: `https://mcp.app.wiz.io`.
+
 ### 4.7 Bedrock, Mantle and per-mode models (about 3-5 days)
+
 Goal: the model setup we have today in Cline, available in the fork as first-class config.
 
 What exists upstream, from reading `core/llm/llms/Bedrock.ts` on `main`:
+
 - A `bedrock` provider using `BedrockRuntimeClient` with the `ConverseStream` and `InvokeModel` commands.
 - Bedrock API-key (bearer token) auth, long-term access keys, and `fromNodeProviderChain` with a named `profile` (default `bedrock`).
 - Reasoning (`thinking` with `budget_tokens`) and prompt caching through `defaultCompletionOptions.promptCaching`.
@@ -107,9 +119,9 @@ Work items:
    - Add a mode-to-model mapping, in `config.yaml`, e.g.
      ```yaml
      modeModels:
-       plan:  { model: Claude Opus 5.5 (Bedrock), reasoningEffort: medium }
+       plan: { model: Claude Opus 5.5 (Bedrock), reasoningEffort: medium }
        agent: { model: Claude Sonnet 5.5 (Bedrock), reasoningEffort: low }
-       chat:  { model: Claude Haiku 5.5 (Bedrock) }
+       chat: { model: Claude Haiku 5.5 (Bedrock) }
      ```
    - Resolve the active model from the current `MessageModes` value instead of only `selectedModelByRole.chat`. Switching mode switches the model, and the model picker shows which one each mode uses. Keep a manual override for the session.
    - This mirrors Cline's Plan/Act setup (`planModeApiModelId`, `actModeApiModelId`, `planActSeparateModelsSetting`, per-mode reasoning effort). Cline's own docs describe using different models per mode.
@@ -138,24 +150,23 @@ Work items:
    - Import of Cline's MCP settings file (`cline_mcp_settings.json`) so servers do not have to be configured twice.
 
 Acceptance:
+
 - Switching from Plan to Agent switches from Opus to Sonnet without touching the picker, with the reasoning effort set per mode.
 - Bedrock Claude models and a Mantle model both work with only an API key and a region in the YAML, under TLS inspection, with no proxy tooling.
 - The model picker lists models discovered from the account instead of typed IDs.
-
-
 
 ## 5. Estimate and risks
 
 Total: roughly **9-14 working days** for one engineer familiar with TypeScript and the VS Code extension model (sections 4.1-4.6 about 6-9 days, section 4.7 about 3-5 days). This is a rough estimate; I did not build the project to measure it. Section 4.7 is the most uncertain, because the per-mode model change touches the chat request path and the GUI, which I only read at the type level.
 
-| Risk | Mitigation |
-|------|------------|
-| Large unfamiliar codebase, slow builds | Scope to `extensions/vscode`; get a green build before any change. |
-| `tls.getCACertificates` unavailable in the extension host's Node version | Check VS Code's Node version up front; keep a fallback loader. |
-| The pinned MCP SDK version may lack `authProvider` or custom fetch hooks | Check the pinned `@modelcontextprotocol/sdk` version; budget for an SDK bump. |
-| Vendors reject Continue's dynamic client registration or the `localhost:3000` redirect | Test early with each real server; add the configurable callback port. |
-| Maintenance burden of a fork nobody upstream supports | Keep the diff small (about 5 files); document how to rebase; name an owner. |
-| Marketplace or identity collision with the original extension | Change the extension ID and publisher in `package.json`. |
+| Risk                                                                                   | Mitigation                                                                    |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Large unfamiliar codebase, slow builds                                                 | Scope to `extensions/vscode`; get a green build before any change.            |
+| `tls.getCACertificates` unavailable in the extension host's Node version               | Check VS Code's Node version up front; keep a fallback loader.                |
+| The pinned MCP SDK version may lack `authProvider` or custom fetch hooks               | Check the pinned `@modelcontextprotocol/sdk` version; budget for an SDK bump. |
+| Vendors reject Continue's dynamic client registration or the `localhost:3000` redirect | Test early with each real server; add the configurable callback port.         |
+| Maintenance burden of a fork nobody upstream supports                                  | Keep the diff small (about 5 files); document how to rebase; name an owner.   |
+| Marketplace or identity collision with the original extension                          | Change the extension ID and publisher in `package.json`.                      |
 
 ## 6. Open questions
 
@@ -169,7 +180,6 @@ Total: roughly **9-14 working days** for one engineer familiar with TypeScript a
 - `%USERPROFILE%\.continue\mcpServers\remote-mcp.yaml` runs Atlassian, Datadog and Wiz through `mcp-remote@0.15.2` as `stdio` servers, each with `NODE_OPTIONS: --use-system-ca`.
 - The Windows user environment variable `NODE_OPTIONS=--use-system-ca` is also set.
 - Models live in `%USERPROFILE%\.continue\config.yaml`: Bedrock Claude Sonnet, Opus and Haiku 5.5, Kimi K3, and the Mantle OpenAI-compatible endpoint for Daybreak Blue.
-
 
 ## 8. Definition of done
 
@@ -208,7 +218,6 @@ Start state: stock VS Code, the built `.vsix`, a `config.yaml`, and the proxy ro
 - [ ] README (what it is, why, "unofficial fork" notice, install), config reference for the new options, troubleshooting, migration from Continue, `NOTICE`, `CHANGELOG.md`.
 - [ ] A named owner, a security contact in `SECURITY.md`, branch protection on `main`, Dependabot, CodeQL and secret scanning enabled.
 
-
 ## 9. CI/CD and packaging
 
 ### 9.1 What upstream already has (read from the fork at `main`)
@@ -224,20 +233,20 @@ Start state: stock VS Code, the built `.vsix`, a `config.yaml`, and the proxy ro
 
 Decided from file names only. Read each file before deleting it.
 
-| Action | Files |
-|--------|-------|
-| Keep and trim | `pr-checks.yaml` (drop JetBrains, CLI, Runloop and rerun-tracking jobs), `pr-build-upload-vsix.yaml`, composite actions `build-vscode-extension`, `setup-component`, `setup-packages`, `run-vscode-e2e-test`, `dependabot.yml` |
-| Remove | `jetbrains-release`, `run-continue-agent`, `continue-agents`, `runloop-*`, `upload-runloop-blueprint`, `snyk-agent`, `metrics`, `similar-issues`, `auto-assign-issue`, `auto-fix-failed-tests`, `tidy-up-codebase`, `cla.yaml`, `docs-gh-pages`, `stable-release`, `release-*` (npm packages), `label-merged-prs`, `stale-issue-helper`, `delete-stale-branches`, `preview`, `main.yaml`, `main-build.yaml` unless read and found useful |
+| Action        | Files                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Keep and trim | `pr-checks.yaml` (drop JetBrains, CLI, Runloop and rerun-tracking jobs), `pr-build-upload-vsix.yaml`, composite actions `build-vscode-extension`, `setup-component`, `setup-packages`, `run-vscode-e2e-test`, `dependabot.yml`                                                                                                                                                                                                           |
+| Remove        | `jetbrains-release`, `run-continue-agent`, `continue-agents`, `runloop-*`, `upload-runloop-blueprint`, `snyk-agent`, `metrics`, `similar-issues`, `auto-assign-issue`, `auto-fix-failed-tests`, `tidy-up-codebase`, `cla.yaml`, `docs-gh-pages`, `stable-release`, `release-*` (npm packages), `label-merged-prs`, `stale-issue-helper`, `delete-stale-branches`, `preview`, `main.yaml`, `main-build.yaml` unless read and found useful |
 
 ### 9.3 New workflows
 
-| File | Trigger | What it does |
-|------|---------|--------------|
-| `ci.yml` | pull request, push to `main` | Format, lint and `tsc:check`; unit tests for core, gui, packages and vscode; one smoke build of the `.vsix` on Linux; a single required `gate` job for branch protection. |
-| `build-vsix.yml` | `workflow_call` | Reusable build matrix (win32-x64, linux-x64, darwin-arm64 to start; add arm64 targets when needed). Native modules (sqlite, onnx, lancedb, ripgrep, esbuild) are per-platform, so each target builds on its own runner. Uploads the `.vsix`. |
-| `release.yml` | tag `v*` (or manual dispatch) | Calls `build-vsix.yml`, generates `SHA256SUMS` and an SBOM, creates a build provenance attestation, publishes a GitHub Release. Marketplace publishing is a separate job behind a protected environment. |
-| `codeql.yml` | PR, weekly | CodeQL for JavaScript/TypeScript. |
-| `dependency-review.yml` | PR | Fails PRs that add vulnerable or disallowed-license dependencies. |
+| File                    | Trigger                       | What it does                                                                                                                                                                                                                                 |
+| ----------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci.yml`                | pull request, push to `main`  | Format, lint and `tsc:check`; unit tests for core, gui, packages and vscode; one smoke build of the `.vsix` on Linux; a single required `gate` job for branch protection.                                                                    |
+| `build-vsix.yml`        | `workflow_call`               | Reusable build matrix (win32-x64, linux-x64, darwin-arm64 to start; add arm64 targets when needed). Native modules (sqlite, onnx, lancedb, ripgrep, esbuild) are per-platform, so each target builds on its own runner. Uploads the `.vsix`. |
+| `release.yml`           | tag `v*` (or manual dispatch) | Calls `build-vsix.yml`, generates `SHA256SUMS` and an SBOM, creates a build provenance attestation, publishes a GitHub Release. Marketplace publishing is a separate job behind a protected environment.                                     |
+| `codeql.yml`            | PR, weekly                    | CodeQL for JavaScript/TypeScript.                                                                                                                                                                                                            |
+| `dependency-review.yml` | PR                            | Fails PRs that add vulnerable or disallowed-license dependencies.                                                                                                                                                                            |
 
 ### 9.4 Practices to apply
 
@@ -251,20 +260,19 @@ Decided from file names only. Read each file before deleting it.
 - Dependabot for `github-actions` and `npm`, grouped weekly, so a dead upstream does not leave us on stale dependencies.
 - Branch protection (or a ruleset) on `main`: require the `gate` job, require review, block force pushes.
 
-
 ## 10. License and compliance
 
 What the fork contains (checked in `b1tninja/continued` at `main`, which GitHub reports as Apache License 2.0):
 
-| Item | Finding |
-|------|---------|
-| `LICENSE` | Apache License 2.0, copyright line "Copyright 2023 Continue Dev, Inc." |
-| `extensions/vscode/LICENSE.txt` | Apache 2.0 notice, "Copyright 2023 Continue". Not byte-identical to the root file. Ships inside the `.vsix`. |
-| `NOTICE` | None exists upstream. |
-| `core/vendor/modules/@xenova/transformers/LICENSE` | Vendored Apache 2.0 code. |
-| `gui/public/fonts/Inter/LICENSE.txt` | Inter font under the SIL Open Font License 1.1. Keep the license file with the font. |
-| `CLA.md` and `.github/workflows/cla.yaml` | Upstream's CLA grants rights to Continue Dev, Inc. for contributions made to the upstream project. It does not bind our fork. |
-| Dependencies | Not audited. Hundreds of npm packages plus native binaries (ripgrep, sqlite, onnx runtime, lancedb). Needs a generated inventory (section 11). |
+| Item                                               | Finding                                                                                                                                        |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LICENSE`                                          | Apache License 2.0, copyright line "Copyright 2023 Continue Dev, Inc."                                                                         |
+| `extensions/vscode/LICENSE.txt`                    | Apache 2.0 notice, "Copyright 2023 Continue". Not byte-identical to the root file. Ships inside the `.vsix`.                                   |
+| `NOTICE`                                           | None exists upstream.                                                                                                                          |
+| `core/vendor/modules/@xenova/transformers/LICENSE` | Vendored Apache 2.0 code.                                                                                                                      |
+| `gui/public/fonts/Inter/LICENSE.txt`               | Inter font under the SIL Open Font License 1.1. Keep the license file with the font.                                                           |
+| `CLA.md` and `.github/workflows/cla.yaml`          | Upstream's CLA grants rights to Continue Dev, Inc. for contributions made to the upstream project. It does not bind our fork.                  |
+| Dependencies                                       | Not audited. Hundreds of npm packages plus native binaries (ripgrep, sqlite, onnx runtime, lancedb). Needs a generated inventory (section 11). |
 
 Conclusion: the license permits forking, modifying and redistributing, including commercially, with conditions. I am not a lawyer, so treat this as a checklist for review and not legal advice.
 

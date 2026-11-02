@@ -84,10 +84,7 @@ export interface AgentHookHandler extends HookHandlerBase {
 }
 
 export type HookHandler =
-  | CommandHookHandler
-  | HttpHookHandler
-  | PromptHookHandler
-  | AgentHookHandler;
+  CommandHookHandler | HttpHookHandler | PromptHookHandler | AgentHookHandler;
 
 /** A matcher group: a regex filter + one or more handlers */
 export interface HookMatcherGroup {

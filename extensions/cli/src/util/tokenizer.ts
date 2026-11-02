@@ -255,8 +255,7 @@ function countSingleToolTokens(tool: ChatCompletionTool): number {
   }
 
   const params = tool.function.parameters as
-    | { properties?: Record<string, unknown> }
-    | undefined;
+    { properties?: Record<string, unknown> } | undefined;
   const props = params?.properties;
 
   if (props) {

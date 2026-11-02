@@ -18,8 +18,7 @@ export default class LocalProfileLoader implements IProfileLoader {
     private ide: IDE,
     private llmLogger: ILLMLogger,
     private overrideAssistantFile?:
-      | { path: string; content: string }
-      | undefined,
+      { path: string; content: string } | undefined,
   ) {
     this.description = {
       id: overrideAssistantFile?.path ?? LocalProfileLoader.ID,

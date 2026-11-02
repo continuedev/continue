@@ -293,8 +293,7 @@ export interface GeminiChatResponseError {
 }
 
 export type GeminiChatResponse =
-  | GeminiChatResponseError
-  | GeminiChatResponseSuccess;
+  GeminiChatResponseError | GeminiChatResponseSuccess;
 
 interface PromptFeedback {
   blockReason?: BlockReason;

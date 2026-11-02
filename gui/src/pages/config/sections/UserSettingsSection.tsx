@@ -181,9 +181,7 @@ export function UserSettingsSection() {
                   onChange={(value) =>
                     handleUpdate({
                       useAutocompleteMultilineCompletions: value as
-                        | "auto"
-                        | "always"
-                        | "never",
+                        "auto" | "always" | "never",
                     })
                   }
                   options={[

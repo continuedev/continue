@@ -1,12 +1,6 @@
 // Valid config tab names
 export type ConfigTab =
-  | "models"
-  | "rules"
-  | "tools"
-  | "configs"
-  | "indexing"
-  | "settings"
-  | "help";
+  "models" | "rules" | "tools" | "configs" | "indexing" | "settings" | "help";
 
 // TODO: Move all the routes here
 export const ROUTES = {

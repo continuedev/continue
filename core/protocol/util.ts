@@ -13,8 +13,7 @@ export interface SuccessWebviewSingleMessage<T> {
 }
 
 export type WebviewSingleMessage<T> =
-  | ErrorWebviewMessage
-  | SuccessWebviewSingleMessage<T>;
+  ErrorWebviewMessage | SuccessWebviewSingleMessage<T>;
 
 export type WebviewSingleProtocolMessage<T extends keyof FromWebviewProtocol> =
   WebviewSingleMessage<FromWebviewProtocol[T][1]>;
@@ -38,8 +37,7 @@ type SuccessWebviewGeneratorMessage<T, R> =
     };
 
 export type WebviewGeneratorMessage<T, R> =
-  | SuccessWebviewGeneratorMessage<T, R>
-  | ErrorWebviewMessage;
+  SuccessWebviewGeneratorMessage<T, R> | ErrorWebviewMessage;
 
 export type WebviewProtocolGeneratorMessage<
   T extends keyof FromWebviewProtocol,
@@ -49,5 +47,4 @@ export type WebviewProtocolGeneratorMessage<
 >;
 
 export type WebviewMessage<T = unknown, R = unknown> =
-  | WebviewSingleMessage<T>
-  | WebviewGeneratorMessage<T, R>;
+  WebviewSingleMessage<T> | WebviewGeneratorMessage<T, R>;

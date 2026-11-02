@@ -42,7 +42,7 @@ export class GUIActions {
     for (let i = 0; i < iframes.length; i++) {
       const iframe = iframes[i];
       const src = await iframe.getAttribute("src");
-      if (src.includes("extensionId=b1tninja.continued")) {
+      if (src?.includes("extensionId=b1tninja.continued")) {
         continueIFrame = iframe;
         break;
       }

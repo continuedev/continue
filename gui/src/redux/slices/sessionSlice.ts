@@ -94,8 +94,7 @@ export function handleToolCallsInMessage(
     // Update the message's toolCalls array to reflect the processed tool calls
     // We can safely cast because we verified the role above
     const curMessage = lastItem.message as
-      | AssistantChatMessage
-      | ThinkingChatMessage;
+      AssistantChatMessage | ThinkingChatMessage;
     curMessage.toolCalls = lastItem.toolCallStates.map(
       (state) => state.toolCall,
     );

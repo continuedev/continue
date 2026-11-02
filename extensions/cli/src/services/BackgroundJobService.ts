@@ -3,11 +3,7 @@ import { ChildProcess, spawn } from "child_process";
 import { logger } from "../util/logger.js";
 
 export type BackgroundJobStatus =
-  | "pending"
-  | "running"
-  | "completed"
-  | "failed"
-  | "cancelled";
+  "pending" | "running" | "completed" | "failed" | "cancelled";
 
 export interface BackgroundJob {
   id: string;

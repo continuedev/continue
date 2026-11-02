@@ -8,8 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 class IPCMessengerBase<
   ToProtocol extends IProtocol,
   FromProtocol extends IProtocol,
-> implements IMessenger<ToProtocol, FromProtocol>
-{
+> implements IMessenger<ToProtocol, FromProtocol> {
   _sendMsg(message: Message) {
     throw new Error("Not implemented");
   }
@@ -178,9 +177,9 @@ class IPCMessengerBase<
 }
 
 export class IpcMessenger<
-    ToProtocol extends IProtocol,
-    FromProtocol extends IProtocol,
-  >
+  ToProtocol extends IProtocol,
+  FromProtocol extends IProtocol,
+>
   extends IPCMessengerBase<ToProtocol, FromProtocol>
   implements IMessenger<ToProtocol, FromProtocol>
 {
@@ -211,9 +210,9 @@ export class IpcMessenger<
 }
 
 export class CoreBinaryMessenger<
-    ToProtocol extends IProtocol,
-    FromProtocol extends IProtocol,
-  >
+  ToProtocol extends IProtocol,
+  FromProtocol extends IProtocol,
+>
   extends IPCMessengerBase<ToProtocol, FromProtocol>
   implements IMessenger<ToProtocol, FromProtocol>
 {
@@ -246,9 +245,9 @@ export class CoreBinaryMessenger<
 }
 
 export class CoreBinaryTcpMessenger<
-    ToProtocol extends IProtocol,
-    FromProtocol extends IProtocol,
-  >
+  ToProtocol extends IProtocol,
+  FromProtocol extends IProtocol,
+>
   extends IPCMessengerBase<ToProtocol, FromProtocol>
   implements IMessenger<ToProtocol, FromProtocol>
 {

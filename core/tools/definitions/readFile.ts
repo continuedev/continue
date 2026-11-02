@@ -50,9 +50,7 @@ export const readFileTool: Tool = {
     processedArgs?: Record<string, unknown>,
   ): ToolPolicy => {
     const resolvedPath = processedArgs?.resolvedPath as
-      | ResolvedPath
-      | null
-      | undefined;
+      ResolvedPath | null | undefined;
     if (!resolvedPath) return basePolicy;
 
     return evaluateFileAccessPolicy(basePolicy, resolvedPath.isWithinWorkspace);

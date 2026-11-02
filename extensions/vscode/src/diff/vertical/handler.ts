@@ -374,8 +374,8 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     // Then, we insert our diff lines
     await this.editor.edit((editBuilder) => {
-      editBuilder.replace(this.range, replaceContent),
-        { undoStopAfter: false, undoStopBefore: false };
+      (editBuilder.replace(this.range, replaceContent),
+        { undoStopAfter: false, undoStopBefore: false });
     });
 
     // Lastly, we apply decorations

@@ -3,11 +3,7 @@
 
 // Types and Interfaces
 type ProductStatus =
-  | "active"
-  | "inactive"
-  | "discontinued"
-  | "out_of_stock"
-  | "backorder";
+  "active" | "inactive" | "discontinued" | "out_of_stock" | "backorder";
 type UserRole = "admin" | "manager" | "staff" | "customer";
 
 interface Product {

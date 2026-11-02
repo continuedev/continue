@@ -148,8 +148,7 @@ export class CapturedTerminal {
   private seenClear = false;
   private commandPromptString: string | undefined = undefined;
   private resolveMeWhenCommandPromptStringFound:
-    | ((_: unknown) => void)
-    | undefined = undefined;
+    ((_: unknown) => void) | undefined = undefined;
 
   private async refreshCommandPromptString(): Promise<string | undefined> {
     // Sends a message that will be received by the terminal to get the command prompt string, see the onData method below in constructor.

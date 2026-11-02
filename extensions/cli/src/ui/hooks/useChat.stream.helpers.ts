@@ -261,9 +261,8 @@ export async function executeStreaming({
   currentCompactionIndex,
 }: ExecuteStreamingOptions): Promise<void> {
   const { getHistoryForLLM } = await import("../../compaction.js");
-  const { streamChatResponse } = await import(
-    "../../stream/streamChatResponse.js"
-  );
+  const { streamChatResponse } =
+    await import("../../stream/streamChatResponse.js");
 
   if (model && llmApi) {
     if (

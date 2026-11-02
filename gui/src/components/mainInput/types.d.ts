@@ -1,12 +1,7 @@
 import { ContextProviderDescription, SlashCommandSource } from "core";
 
 export type ComboBoxItemType =
-  | "contextProvider"
-  | "slashCommand"
-  | "file"
-  | "query"
-  | "folder"
-  | "action";
+  "contextProvider" | "slashCommand" | "file" | "query" | "folder" | "action";
 
 export interface ComboBoxSubAction {
   label: string;

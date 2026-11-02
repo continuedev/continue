@@ -104,9 +104,8 @@ describe("TUIChat - Stream Stopping on Tool Rejection", () => {
 
   it("validates permission manager handles rejection correctly", async () => {
     // Import the permission manager to test its behavior
-    const { toolPermissionManager } = await import(
-      "../../permissions/permissionManager.js"
-    );
+    const { toolPermissionManager } =
+      await import("../../permissions/permissionManager.js");
 
     const mockResolve = vi.fn();
 

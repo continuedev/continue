@@ -204,10 +204,7 @@ class Asksage extends BaseLLM {
       tools,
       tool_choice: toolChoice,
       reasoning_effort: options.reasoningEffort as
-        | "low"
-        | "medium"
-        | "high"
-        | undefined,
+        "low" | "medium" | "high" | undefined,
       deep_agent_id: options.deepAgentId as number | undefined,
       streaming: options.streaming as boolean | undefined,
       file: options.file,

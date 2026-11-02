@@ -166,7 +166,8 @@ export class CodebaseIndexer {
       return [];
     }
 
-    const indexTypesToBuild = new Set( // use set to remove duplicates
+    const indexTypesToBuild = new Set(
+      // use set to remove duplicates
       config.contextProviders
         .map((provider) => provider.description.dependsOnIndexing)
         .filter((indexType) => Array.isArray(indexType)) // remove undefined indexTypes

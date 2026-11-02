@@ -3,12 +3,7 @@
 
 // Types
 export type EventType =
-  | "click"
-  | "hover"
-  | "scroll"
-  | "keypress"
-  | "resize"
-  | "load";
+  "click" | "hover" | "scroll" | "keypress" | "resize" | "load";
 export type EventData = Record<string, any>;
 export type EventCallback = (data: EventData) => void;
 export type ThemeType = "light" | "dark";

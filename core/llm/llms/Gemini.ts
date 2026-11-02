@@ -145,8 +145,7 @@ class Gemini extends BaseLLM {
         const contentArray: Array<MessagePart> =
           userMessage.content as Array<MessagePart>;
         const textPart = contentArray.find((part) => part.type === "text") as
-          | TextMessagePart
-          | undefined;
+          TextMessagePart | undefined;
 
         if (textPart) {
           textPart.text = prefix + textPart.text;

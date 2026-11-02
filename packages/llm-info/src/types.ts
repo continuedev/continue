@@ -59,11 +59,7 @@ export interface ApiProviderInfo {
 }
 
 export type ModelProviderCapability =
-  | "stream"
-  | "fim"
-  | "image"
-  | "template_chat"
-  | "tools";
+  "stream" | "fim" | "image" | "template_chat" | "tools";
 
 export interface ModelProvider {
   id: string;
