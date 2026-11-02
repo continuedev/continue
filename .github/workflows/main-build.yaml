@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        platform: [Linux, macOS]
+        platform: [Linux]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -64,7 +64,7 @@ jobs:
           # Get the latest successful workflow run for the branch
           RUN_ID=$(gh run list \
             --repo "${{ github.repository }}" \
-            --workflow="pr_checks.yaml" \
+            --workflow="pr-checks.yaml" \
             --branch="$BRANCH_NAME" \
             --json databaseId,status,conclusion \
             --jq ".[] | select(.status == \"completed\" and .conclusion == \"success\") | .databaseId" \

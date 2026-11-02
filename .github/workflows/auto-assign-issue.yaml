@@ -6,6 +6,7 @@ on:
 
 jobs:
   auto-assign:
+    if: github.repository == 'continuedev/continue'
     runs-on: ubuntu-latest
     permissions:
       issues: write
