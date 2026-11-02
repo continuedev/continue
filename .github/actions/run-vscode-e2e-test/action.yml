@@ -46,7 +46,7 @@ runs:
       id: storage-cache
       with:
         path: extensions/vscode/e2e/storage
-        key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
+        key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json', 'extensions/vscode/package.json') }}
 
     - name: Download build artifact
       uses: actions/download-artifact@v8
