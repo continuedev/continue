@@ -83,19 +83,19 @@
       }
     ],
     "configuration": {
-      "title": "Continue",
+      "title": "Continued",
       "properties": {
         "continue.telemetryEnabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry).",
+          "markdownDescription": "Continued collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry).",
           "markdownDeprecationMessage": "This setting is deprecated and will be removed in a later version. Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page.",
           "deprecationMessage": "Please use the _Telemetry > Allow Anonymous Telemetry_ setting in the extension's User Settings page."
         },
         "continue.showInlineTip": {
           "type": "boolean",
           "default": true,
-          "description": "Show inline suggestion to use the Continue keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
+          "description": "Show inline suggestion to use the Continued keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
         },
         "continue.disableQuickFix": {
           "type": "boolean",
@@ -110,22 +110,22 @@
         "continue.enableTabAutocomplete": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/features/tab-autocomplete)"
+          "markdownDescription": "Enable Continued's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/features/tab-autocomplete)"
         },
         "continue.enableNextEdit": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's next edit feature. Read our docs to learn about configuration and how to share feedback: [continue.dev › Features › Autocomplete › Next Edit (experimental)](https://docs.continue.dev/features/autocomplete/next-edit)"
+          "markdownDescription": "Enable Continued's next edit feature. Read our docs to learn about configuration and how to share feedback: [continue.dev › Features › Autocomplete › Next Edit (experimental)](https://docs.continue.dev/features/autocomplete/next-edit)"
         },
         "continue.pauseTabAutocompleteOnBattery": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
+          "markdownDescription": "Pause Continued's tab autocomplete feature when your battery is low."
         },
         "continue.pauseCodebaseIndexOnStart": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Pause Continue's codebase index on start."
+          "markdownDescription": "Pause Continued's codebase index on start."
         },
         "continue.enableConsole": {
           "type": "boolean",
@@ -152,226 +152,226 @@
     "commands": [
       {
         "command": "continue.applyCodeFromChat",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Apply code from chat",
         "group": "Continue"
       },
       {
         "command": "continue.acceptDiff",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Accept Diff",
         "group": "Continue"
       },
       {
         "command": "continue.rejectDiff",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Reject Diff",
         "group": "Continue",
         "icon": "$(stop)"
       },
       {
         "command": "continue.acceptVerticalDiffBlock",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Accept Vertical Diff Block",
         "group": "Continue"
       },
       {
         "command": "continue.rejectVerticalDiffBlock",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Reject Vertical Diff Block",
         "group": "Continue"
       },
       {
         "command": "continue.focusEdit",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Add to Edit",
         "group": "Continue"
       },
       {
         "command": "continue.focusContinueInput",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Add Highlighted Code to Context and Clear Chat",
         "group": "Continue"
       },
       {
         "command": "continue.focusContinueInputWithoutClear",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Add to Chat",
         "group": "Continue"
       },
       {
         "command": "continue.debugTerminal",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Debug Terminal",
         "group": "Continue"
       },
       {
         "command": "continue.exitEditMode",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Exit Edit Mode",
         "group": "Continue"
       },
       {
         "command": "continue.openConfigPage",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Open Settings",
         "icon": "$(gear)",
         "group": "Continue"
       },
       {
         "command": "continue.toggleTabAutocompleteEnabled",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Toggle Autocomplete Enabled",
         "group": "Continue"
       },
       {
         "command": "continue.forceAutocomplete",
-        "title": "Continue: Force Autocomplete",
-        "category": "Continue"
+        "title": "Continued: Force Autocomplete",
+        "category": "Continued"
       },
       {
         "command": "continue.selectFilesAsContext",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Select Files as Context",
         "group": "Continue"
       },
       {
         "command": "continue.newSession",
-        "category": "Continue",
+        "category": "Continued",
         "title": "New Session",
         "icon": "$(add)",
         "group": "Continue"
       },
       {
         "command": "continue.shareSession",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Share Current Chat Session as Markdown",
         "group": "Continue"
       },
       {
         "command": "continue.viewHistory",
-        "category": "Continue",
+        "category": "Continued",
         "title": "View History",
         "icon": "$(history)",
         "group": "Continue"
       },
       {
         "command": "continue.viewLogs",
-        "category": "Continue",
+        "category": "Continued",
         "title": "View Logs",
         "group": "Continue"
       },
       {
         "command": "continue.clearConsole",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Clear Console",
         "icon": "$(clear-all)",
         "group": "Continue"
       },
       {
         "command": "continue.navigateTo",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Navigate to a path",
         "group": "Continue"
       },
       {
         "command": "continue.writeCommentsForCode",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Write Comments for this Code",
         "group": "Continue"
       },
       {
         "command": "continue.writeDocstringForCode",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Write a Docstring for this Code",
         "group": "Continue"
       },
       {
         "command": "continue.fixCode",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Fix this Code",
         "group": "Continue"
       },
       {
         "command": "continue.optimizeCode",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Optimize this Code",
         "group": "Continue"
       },
       {
         "command": "continue.fixGrammar",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Fix Grammar / Spelling",
         "group": "Continue"
       },
       {
         "command": "continue.codebaseForceReIndex",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Codebase Force Re-Index",
         "group": "Continue"
       },
       {
         "command": "continue.rebuildCodebaseIndex",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Rebuild codebase index",
         "group": "Continue"
       },
       {
         "command": "continue.docsIndex",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Docs Index",
         "group": "Continue"
       },
       {
         "command": "continue.docsReIndex",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Docs Force Re-Index",
         "group": "Continue"
       },
       {
         "command": "continue.focusContinueInput",
-        "category": "Continue",
-        "title": "Focus Continue Chat",
+        "category": "Continued",
+        "title": "Focus Continued Chat",
         "group": "Continue"
       },
       {
         "command": "continue.enterEnterpriseLicenseKey",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Enter Enterprise License Key",
         "group": "Continue"
       },
       {
         "command": "continue.toggleNextEditEnabled",
-        "title": "Continue: Toggle Next Edit"
+        "title": "Continued: Toggle Next Edit"
       },
       {
         "command": "continue.nextEditWindow.hideNextEditSuggestion",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Hide Next Edit Suggestion"
       },
       {
         "command": "continue.nextEditWindow.acceptNextEditSuggestion",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Accept Next Edit Suggestion"
       },
       {
         "command": "continue.forceNextEdit",
-        "category": "Continue",
-        "title": "Continue: Force Next Edit"
+        "category": "Continued",
+        "title": "Continued: Force Next Edit"
       },
       {
         "command": "continue.acceptJump",
-        "category": "Continue",
-        "title": "Continue: Accept Jump Suggestion"
+        "category": "Continued",
+        "title": "Continued: Accept Jump Suggestion"
       },
       {
         "command": "continue.rejectJump",
-        "category": "Continue",
-        "title": "Continue: Reject Jump Suggestion"
+        "category": "Continued",
+        "title": "Continued: Reject Jump Suggestion"
       },
       {
         "command": "continue.openInNewWindow",
-        "category": "Continue",
+        "category": "Continued",
         "title": "Open in new window",
         "group": "Continue"
       }
@@ -497,7 +497,7 @@
     "submenus": [
       {
         "id": "continue.continueSubMenu",
-        "label": "Continue"
+        "label": "Continued"
       }
     ],
     "menus": {
@@ -596,14 +596,14 @@
       "activitybar": [
         {
           "id": "continue",
-          "title": "Continue",
+          "title": "Continued",
           "icon": "media/sidebar-icon.png"
         }
       ],
       "panel": [
         {
           "id": "continueConsole",
-          "title": "Continue Console",
+          "title": "Continued Console",
           "icon": "$(window)"
         }
       ]
@@ -613,7 +613,7 @@
         {
           "type": "webview",
           "id": "continue.continueGUIView",
-          "name": "Continue",
+          "name": "Continued",
           "icon": "media/sidebar-icon.png",
           "visibility": "visible"
         }
@@ -622,7 +622,7 @@
         {
           "type": "webview",
           "id": "continue.continueConsoleView",
-          "name": "Continue Console",
+          "name": "Continued Console",
           "icon": "$(window)",
           "visibility": "visible",
           "when": "config.continue.enableConsole"

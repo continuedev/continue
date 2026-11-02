@@ -142,7 +142,7 @@ export class GlobalActions {
     console.log("hasNE:", hasNE);
 
     if (hasNE !== enabled) {
-      await workbench.executeCommand("Continue: Toggle Next Edit");
+      await workbench.executeCommand("Continued: Toggle Next Edit");
       // Clear any resulting notifications
       await TestUtils.waitForTimeout(500);
       await GlobalActions.clearAllNotifications();

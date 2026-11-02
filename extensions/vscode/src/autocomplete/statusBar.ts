@@ -55,9 +55,9 @@ const statusBarItemText = (
   switch (status) {
     case undefined:
       if (loading) {
-        text = "$(loading~spin) Continue";
+        text = "$(loading~spin) Continued";
       } else {
-        text = "Continue";
+        text = "Continued";
       }
       break;
     case StatusBarStatus.Disabled:
@@ -70,7 +70,7 @@ const statusBarItemText = (
       text = "$(debug-pause) Continue";
       break;
     default:
-      text = "Continue";
+      text = "Continued";
   }
 
   // Append Next Edit indicator if enabled.
