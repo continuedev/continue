@@ -50,12 +50,9 @@ describe("AddModelForm - Amazon Bedrock", () => {
       expect((connect as HTMLButtonElement).disabled).toBe(false),
     );
 
-    // Discover models and pick one
+    // Discover models: the Model picker is repopulated from the live list
     await user.click(screen.getByRole("button", { name: "Test connection" }));
-    await user.selectOptions(
-      await screen.findByLabelText("Available models"),
-      "amazon.nova-pro-v1:0",
-    );
+    expect(await screen.findByText(/Showing 1 model available/)).toBeTruthy();
 
     await user.click(connect);
     const call = post.mock.calls.find(([type]) => type === "config/addModel");
@@ -64,7 +61,7 @@ describe("AddModelForm - Amazon Bedrock", () => {
     expect(model).toMatchObject({
       provider: "bedrock",
       model: "amazon.nova-pro-v1:0",
-      title: "Nova Pro (Bedrock)",
+      title: "Amazon Nova Pro (Bedrock)",
       profile: "work",
       region: "eu-west-1",
       crossRegionInference: "auto",

@@ -384,6 +384,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       contextLength?: number;
       maxTokens?: number;
       supportsTools?: boolean;
+      createdAt?: string;
+      deprecated?: boolean;
     }[],
   ];
 };

@@ -29,8 +29,19 @@ import {
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { extractBase64FromDataUrl } from "../../util/url.js";
-import { DEFAULT_REASONING_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
+import {
+  AnthropicThinkingParams,
+  getAnthropicThinkingParams,
+} from "./anthropicThinking.js";
+
+// The pinned @anthropic-ai/sdk types do not yet include adaptive thinking or
+// output_config, so the request is typed with these extra fields.
+export type AnthropicRequestParams = Omit<
+  MessageCreateParams,
+  "messages" | "thinking"
+> &
+  AnthropicThinkingParams;
 
 class Anthropic extends BaseLLM {
   static providerName = "anthropic";
@@ -55,9 +66,7 @@ class Anthropic extends BaseLLM {
   }
 
   // Public for use within VertexAI
-  public convertArgs(
-    options: CompletionOptions,
-  ): Omit<MessageCreateParams, "messages"> {
+  public convertArgs(options: CompletionOptions): AnthropicRequestParams {
     const finalOptions = {
       top_k: options.topK,
       top_p: options.topP,
@@ -67,13 +76,7 @@ class Anthropic extends BaseLLM {
       stop_sequences: options.stop?.filter((x) => x.trim() !== ""),
       stream: options.stream ?? true,
       tools: options.tools?.map(this.convertToolToAnthropicTool),
-      thinking: options.reasoning
-        ? {
-            type: "enabled" as const,
-            budget_tokens:
-              options.reasoningBudgetTokens ?? DEFAULT_REASONING_TOKENS,
-          }
-        : undefined,
+      ...getAnthropicThinkingParams(options),
       tool_choice: options.toolChoice
         ? {
             type: "tool" as const,
@@ -429,7 +432,8 @@ class Anthropic extends BaseLLM {
       this.apiBase,
     );
 
-    const body: MessageCreateParams = {
+    const body: AnthropicRequestParams &
+      Pick<MessageCreateParams, "messages" | "system"> = {
       ...this.convertArgs(options),
       messages: msgs,
       system: shouldCacheSystemMessage

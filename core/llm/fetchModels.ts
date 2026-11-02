@@ -8,6 +8,10 @@ export interface FetchedModel {
   contextLength?: number;
   maxTokens?: number;
   supportsTools?: boolean;
+  /** ISO release date, when the provider reports one (used to rank by recency). */
+  createdAt?: string;
+  /** True when the provider reports the model as deprecated or retired. */
+  deprecated?: boolean;
 }
 
 const OLLAMA_EXCLUDED_CAPABILITIES = ["vision", "audio", "embedding"];
@@ -167,9 +171,13 @@ async function fetchAnthropicModels(apiKey?: string): Promise<FetchedModel[]> {
     name: m.display_name ?? m.id,
     modelId: m.id,
     icon: "anthropic.png",
-    contextLength: m.max_input_tokens,
-    maxTokens: m.max_tokens,
+    contextLength: m.max_input_tokens ?? undefined,
+    maxTokens: m.max_tokens ?? undefined,
     supportsTools: true,
+    createdAt: m.created_at ?? undefined,
+    // `lifecycle` is only returned by newer API versions; leave unset otherwise.
+    deprecated:
+      typeof m.lifecycle === "string" ? m.lifecycle !== "active" : undefined,
   }));
 }
 

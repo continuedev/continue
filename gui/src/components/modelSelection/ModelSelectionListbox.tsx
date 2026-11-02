@@ -19,6 +19,8 @@ interface ModelSelectionListboxProps {
   selectedProvider: DisplayInfo;
   setSelectedProvider: (val: DisplayInfo) => void;
   topOptions?: DisplayInfo[];
+  /** Heading of the top section (defaults to "Popular"). */
+  topOptionsLabel?: string;
   otherOptions?: DisplayInfo[];
   otherOptionsLabel?: string;
   searchPlaceholder?: string;
@@ -55,6 +57,7 @@ function ModelSelectionListbox({
   selectedProvider,
   setSelectedProvider,
   topOptions = [],
+  topOptionsLabel = "Popular",
   otherOptions = [],
   otherOptionsLabel = "Additional providers",
   searchPlaceholder = "Search models...",
@@ -154,7 +157,7 @@ function ModelSelectionListbox({
                   {filteredTopOptions.length > 0 && (
                     <div className="py-1">
                       <div className="px-3 py-1 text-xs font-medium uppercase tracking-wider text-description-muted">
-                        Popular
+                        {topOptionsLabel}
                       </div>
                       {filteredTopOptions.map((option, index) => (
                         <ListboxOption

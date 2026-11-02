@@ -506,6 +506,8 @@ export function isRecommendedAgentModel(modelName: string): boolean {
     [/grok-code/],
     [/grok-[4-9][\.-]\d/],
     [/claude/, /[4-9]-[5-9]/],
+    [/claude/, /fable|mythos/],
+    [/gemini-(?:[4-9]|3\.[5-9])/],
   ];
   for (const combo of recs) {
     if (combo.every((regex) => modelName.toLowerCase().match(regex))) {

@@ -1,5 +1,6 @@
 import { ModelProviderTags } from "../../../components/modelSelection/utils";
 import { IIdeMessenger } from "../../../context/IdeMessenger";
+import { isLikelyChatModelId } from "../../../forms/modelListUtils";
 import { ModelPackage } from "./models";
 import { models } from "./models";
 import { ollamaStaticModels, providers } from "./providers";
@@ -12,6 +13,8 @@ interface FetchedModel {
   contextLength?: number;
   maxTokens?: number;
   supportsTools?: boolean;
+  createdAt?: string;
+  deprecated?: boolean;
 }
 
 function modelParams(model: FetchedModel): Record<string, any> {
@@ -65,7 +68,7 @@ function toGenericPackage(model: FetchedModel, provider: string): ModelPackage {
   const id = model.modelId ?? model.name;
   return {
     title: model.name,
-    description: model.name,
+    description: model.description || id,
     params: {
       title: model.name,
       model: id,
@@ -73,6 +76,9 @@ function toGenericPackage(model: FetchedModel, provider: string): ModelPackage {
     },
     isOpenSource: false,
     providerOptions: [provider],
+    ...(model.icon ? { icon: model.icon } : {}),
+    ...(model.createdAt ? { createdAt: model.createdAt } : {}),
+    ...(model.deprecated ? { deprecated: true } : {}),
   };
 }
 
@@ -100,7 +106,9 @@ export async function fetchProviderModels(
   apiBase?: string,
 ): Promise<ModelPackage[]> {
   const models = await fetchModels(ideMessenger, provider, apiKey, apiBase);
-  return models.map((m) => toGenericPackage(m, provider));
+  return models
+    .filter((m) => isLikelyChatModelId(m.modelId ?? m.name))
+    .map((m) => toGenericPackage(m, provider));
 }
 
 export async function initializeDynamicModels(ideMessenger: IIdeMessenger) {

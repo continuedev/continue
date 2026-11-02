@@ -34,6 +34,10 @@ export interface ModelPackage {
   dimensions?: PackageDimension[];
   providerOptions?: string[];
   isOpenSource: boolean;
+  /** ISO release date reported by the provider (live lists only). */
+  createdAt?: string;
+  /** Provider reports this model as deprecated/legacy (live lists only). */
+  deprecated?: boolean;
 }
 
 export const models: { [key: string]: ModelPackage } = {
@@ -1327,6 +1331,65 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
+  claude51Fable: {
+    title: "Claude Fable 5.1",
+    description:
+      "Anthropic's model for demanding reasoning and long-horizon agentic work.",
+    params: {
+      model: "claude-fable-5-1",
+      contextLength: 1_000_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "Claude Fable 5.1",
+      apiKey: "",
+    },
+    providerOptions: ["anthropic"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  claude55Opus: {
+    title: "Claude Opus 5.5",
+    description:
+      "Anthropic's recommended starting point for long-running agentic coding and knowledge work.",
+    params: {
+      model: "claude-opus-5-5",
+      contextLength: 1_000_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "Claude Opus 5.5",
+      apiKey: "",
+    },
+    providerOptions: ["anthropic"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  claude55Sonnet: {
+    title: "Claude Sonnet 5.5",
+    description: "Anthropic's best combination of speed and intelligence.",
+    params: {
+      model: "claude-sonnet-5-5",
+      contextLength: 1_000_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "Claude Sonnet 5.5",
+      apiKey: "",
+    },
+    providerOptions: ["anthropic"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  claude55Haiku: {
+    title: "Claude Haiku 5.5",
+    description:
+      "Anthropic's fastest model, for high-volume, latency-sensitive tasks.",
+    params: {
+      model: "claude-haiku-5-5",
+      contextLength: 1_000_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "Claude Haiku 5.5",
+      apiKey: "",
+    },
+    providerOptions: ["anthropic"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
   claude46Sonnet: {
     title: "Claude Sonnet 4.6",
     description:
@@ -1380,6 +1443,58 @@ export const models: { [key: string]: ModelPackage } = {
       apiKey: "",
     },
     providerOptions: ["anthropic"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  bedrockClaudeFable51: {
+    title: "Claude Fable 5.1",
+    description:
+      "Anthropic's model for demanding reasoning and long-horizon agentic work, via Amazon Bedrock. Use Test connection to see exactly what your account can use.",
+    params: {
+      model: "anthropic.claude-fable-5-1",
+      contextLength: 1_000_000,
+      title: "Claude Fable 5.1 (Bedrock)",
+    },
+    providerOptions: ["bedrock"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  bedrockClaudeOpus55: {
+    title: "Claude Opus 5.5",
+    description:
+      "Anthropic's model for long-running agentic coding and knowledge work, via Amazon Bedrock.",
+    params: {
+      model: "anthropic.claude-opus-5-5",
+      contextLength: 1_000_000,
+      title: "Claude Opus 5.5 (Bedrock)",
+    },
+    providerOptions: ["bedrock"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  bedrockClaudeSonnet55: {
+    title: "Claude Sonnet 5.5",
+    description:
+      "Anthropic's best combination of speed and intelligence, via Amazon Bedrock.",
+    params: {
+      model: "anthropic.claude-sonnet-5-5",
+      contextLength: 1_000_000,
+      title: "Claude Sonnet 5.5 (Bedrock)",
+    },
+    providerOptions: ["bedrock"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  bedrockClaudeHaiku55: {
+    title: "Claude Haiku 5.5",
+    description:
+      "Anthropic's fastest model for high-volume tasks, via Amazon Bedrock.",
+    params: {
+      model: "anthropic.claude-haiku-5-5",
+      contextLength: 1_000_000,
+      title: "Claude Haiku 5.5 (Bedrock)",
+    },
+    providerOptions: ["bedrock"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -2325,6 +2440,61 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
+  gpt6Astra: {
+    title: "GPT-6 Astra",
+    description:
+      "OpenAI's flagship model for the most demanding reasoning and coding work.",
+    params: {
+      model: "gpt-6-astra",
+      contextLength: 1_050_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-6 Astra",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt61Sol: {
+    title: "GPT-6.1 Sol",
+    description: "Near-Astra performance for complex work at a lower cost.",
+    params: {
+      model: "gpt-6.1-sol",
+      contextLength: 1_050_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-6.1 Sol",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt61Terra: {
+    title: "GPT-6.1 Terra",
+    description:
+      "Fast, efficient model for visual reasoning, precise computer use, and natural writing.",
+    params: {
+      model: "gpt-6.1-terra",
+      contextLength: 1_050_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-6.1 Terra",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt6Luna: {
+    title: "GPT-6 Luna",
+    description:
+      "OpenAI's most efficient model for focused, high-volume tasks.",
+    params: {
+      model: "gpt-6-luna",
+      contextLength: 1_050_000,
+      completionOptions: { maxTokens: 128_000 },
+      title: "GPT-6 Luna",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
   gpt5_4Pro: {
     title: "GPT-5.4 Pro",
     description:
@@ -2450,7 +2620,64 @@ export const models: { [key: string]: ModelPackage } = {
     description: "Cost-efficient model optimized for high-volume tasks.",
     params: {
       title: "Gemini 3.1 Flash Lite",
-      model: "gemini-3.1-flash-lite-preview",
+      // The "-preview" ID was shut down; the stable ID replaces it.
+      model: "gemini-3.1-flash-lite",
+      contextLength: 1_048_576,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
+  gemini4Argon: {
+    title: "Gemini 4 Argon",
+    description:
+      "Google's flagship reasoning model for coding, reasoning, and agents, with a 1M context window.",
+    params: {
+      title: "Gemini 4 Argon",
+      model: "gemini-4-argon",
+      contextLength: 1_048_576,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
+  gemini38Flash: {
+    title: "Gemini 3.8 Flash",
+    description:
+      "Google's most intelligent Flash model, built for long-horizon software engineering and autonomous agents.",
+    params: {
+      title: "Gemini 3.8 Flash",
+      model: "gemini-3.8-flash",
+      contextLength: 1_048_576,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
+  gemini36Flash: {
+    title: "Gemini 3.6 Flash",
+    description:
+      "Previous-generation Flash model balancing speed and multimodal capability.",
+    params: {
+      title: "Gemini 3.6 Flash",
+      model: "gemini-3.6-flash",
+      contextLength: 1_048_576,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
+  gemini35FlashLite: {
+    title: "Gemini 3.5 Flash-Lite",
+    description:
+      "Google's fastest, most cost-effective 3.5 model for high-throughput work.",
+    params: {
+      title: "Gemini 3.5 Flash-Lite",
+      model: "gemini-3.5-flash-lite",
       contextLength: 1_048_576,
       apiKey: "<API_KEY>",
     },

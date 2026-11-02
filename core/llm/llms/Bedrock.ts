@@ -31,6 +31,7 @@ import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { parseDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
+import { getAnthropicThinkingParams } from "./anthropicThinking.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { createBedrockRequestHandler } from "./bedrockHttp.js";
 import { getSecureID } from "../utils/getSecureID.js";
@@ -546,12 +547,7 @@ class Bedrock extends BaseLLM {
       },
       ...this._extraConverseFields(),
       additionalModelRequestFields: {
-        thinking: options.reasoning
-          ? {
-              type: "enabled",
-              budget_tokens: options.reasoningBudgetTokens,
-            }
-          : undefined,
+        ...getAnthropicThinkingParams(options),
         anthropic_beta: options.model.includes("claude")
           ? ["fine-grained-tool-streaming-2025-05-14"]
           : undefined,
