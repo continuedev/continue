@@ -39,6 +39,7 @@ import { renderChatMessage } from "../util/messageContent.js";
 import { isOllamaInstalled } from "../util/ollamaHelper.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 
+import { applyToolOverrides } from "../tools/applyToolOverrides.js";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -66,7 +67,10 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
-import { applyToolOverrides } from "../tools/applyToolOverrides.js";
+import {
+  processMessagesWithVisionProxy,
+  VisionProxyOptions,
+} from "./visionProxy.js";
 
 export class LLMError extends Error {
   constructor(
@@ -197,6 +201,9 @@ export abstract class BaseLLM implements ILLM {
   /** Tool overrides for this model */
   toolOverrides?: ToolOverride[];
 
+  /** Vision proxy configuration — route images through VLM */
+  visionProxy?: VisionProxyOptions;
+
   lastRequestId: string | undefined;
 
   private _llmOptions: LLMOptions;
@@ -300,6 +307,7 @@ export abstract class BaseLLM implements ILLM {
     this.sourceFile = options.sourceFile;
     this.isFromAutoDetect = options.isFromAutoDetect;
     this.toolOverrides = options.toolOverrides;
+    this.visionProxy = options.visionProxy as VisionProxyOptions | undefined;
   }
 
   get contextLength() {
@@ -1142,6 +1150,24 @@ export abstract class BaseLLM implements ILLM {
       });
 
       messages = compiledChatMessages;
+    }
+
+    // Vision Proxy: Route image messages through VLM for text description
+    // before sending to the main LLM (enables text-only LLMs to "see" images)
+    if (this.visionProxy?.endpoint && this.visionProxy?.model) {
+      const hasImages = messages.some(
+        (m) =>
+          m.role === "user" &&
+          Array.isArray(m.content) &&
+          m.content.some((p) => p.type === "imageUrl"),
+      );
+      if (hasImages) {
+        messages = await processMessagesWithVisionProxy(
+          messages,
+          this.visionProxy,
+          signal,
+        );
+      }
     }
 
     const messagesCopy = [...messages]; // templateMessages may modify messages.

@@ -1,0 +1,15 @@
+{
+  "name": "mcp-remote-ssh",
+  "version": "1.0.0",
+  "description": "MCP server that executes commands on remote SSH server and captures output",
+  "main": "server.js",
+  "bin": {
+    "mcp-remote-ssh": "./server.js"
+  },
+  "scripts": {
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

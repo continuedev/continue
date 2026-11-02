@@ -14,6 +14,11 @@ import {
 } from "vitest";
 import { IDE, ToolExtras } from "../..";
 import * as processTerminalStates from "../../util/processTerminalStates";
+import {
+  MAX_CAPTURE_FAILURES_BEFORE_DISABLE,
+  SHELL_INTEGRATION_MISSING_MARKER,
+  SHELL_INTEGRATION_MISSING_MESSAGE,
+} from "../../util/remoteTerminal";
 import { runTerminalCommandTool } from "../definitions/runTerminalCommand";
 import { runTerminalCommandImpl } from "./runTerminalCommand";
 
@@ -27,6 +32,7 @@ describe("runTerminalCommandImpl", () => {
   const mockGetWorkspaceDirs = vi.fn();
   const mockOnPartialOutput = vi.fn();
   const mockRunCommand = vi.fn();
+  const mockRunCommandWithOutput = vi.fn();
 
   // Use a simple approach to ensure background processes are terminated
   let testPid: number | null = null;
@@ -95,6 +101,7 @@ describe("runTerminalCommandImpl", () => {
       getIdeInfo: mockGetIdeInfo,
       getWorkspaceDirs: mockGetWorkspaceDirs,
       runCommand: mockRunCommand,
+      runCommandWithOutput: mockRunCommandWithOutput,
       // Add stubs for other required IDE methods
       getIdeSettings: vi.fn(),
       getDiff: vi.fn(),
@@ -616,6 +623,7 @@ describe("runTerminalCommandImpl", () => {
         );
 
         expect(mockRunCommand).toHaveBeenCalledWith("echo test");
+        expect(mockRunCommandWithOutput).not.toHaveBeenCalled();
         expect(result[0].content).toContain(
           "Command executed in remote terminal",
         );
@@ -632,8 +640,13 @@ describe("runTerminalCommandImpl", () => {
         ).resolves.toBeDefined();
       });
 
-      it("should use ide.runCommand for WSL environment", async () => {
-        // WSL is a remote — commands should execute in WSL, not on the host
+      it("should capture output via runCommandWithOutput for WSL", async () => {
+        // WSL is a remote — commands must execute in WSL, not on the host,
+        // and their output must come back to the model.
+        mockRunCommandWithOutput.mockResolvedValue({
+          output: "wsl output",
+          exitCode: 0,
+        });
         const extras = createMockExtras({ remoteName: "wsl" });
 
         const result = await runTerminalCommandImpl(
@@ -641,9 +654,193 @@ describe("runTerminalCommandImpl", () => {
           extras,
         );
 
+        expect(mockRunCommandWithOutput).toHaveBeenCalledWith(
+          "echo test",
+          expect.any(Number),
+        );
+        expect(mockRunCommand).not.toHaveBeenCalled();
+        expect(result[0].content).toBe("wsl output");
+        expect(result[0].status).toBe("Command completed");
+      });
+
+      it("should capture output via runCommandWithOutput for ssh-remote", async () => {
+        // Remote-SSH is the case added by patch 13.
+        mockRunCommandWithOutput.mockResolvedValue({
+          output: "ssh output",
+          exitCode: 0,
+        });
+        const extras = createMockExtras({ remoteName: "ssh-remote" });
+
+        const result = await runTerminalCommandImpl(
+          { command: "hostname" },
+          extras,
+        );
+
+        expect(mockRunCommandWithOutput).toHaveBeenCalledWith(
+          "hostname",
+          expect.any(Number),
+        );
+        expect(mockRunCommand).not.toHaveBeenCalled();
+        expect(result[0].content).toBe("ssh output");
+        expect(result[0].status).toBe("Command completed");
+      });
+
+      it.each(["dev-container", "codespaces"])(
+        "should capture output for %s",
+        async (remoteName) => {
+          mockRunCommandWithOutput.mockResolvedValue({
+            output: "ok",
+            exitCode: 0,
+          });
+
+          const result = await runTerminalCommandImpl(
+            { command: "echo test" },
+            createMockExtras({ remoteName }),
+          );
+
+          expect(mockRunCommandWithOutput).toHaveBeenCalled();
+          expect(result[0].content).toBe("ok");
+        },
+      );
+
+      it("should report a non-zero exit code from a remote command", async () => {
+        mockRunCommandWithOutput.mockResolvedValue({
+          output: "boom",
+          exitCode: 3,
+        });
+
+        const result = await runTerminalCommandImpl(
+          { command: "false" },
+          createMockExtras({ remoteName: "ssh-remote" }),
+        );
+
+        expect(result[0].content).toBe("boom");
+        expect(result[0].status).toBe("Command exited with code 3");
+      });
+
+      it("should return '(no output)' for a successful silent remote command", async () => {
+        mockRunCommandWithOutput.mockResolvedValue({
+          output: "",
+          exitCode: 0,
+        });
+
+        const result = await runTerminalCommandImpl(
+          { command: "true" },
+          createMockExtras({ remoteName: "ssh-remote" }),
+        );
+
+        expect(result[0].content).toBe("(no output)");
+        expect(result[0].status).toBe("Command completed");
+      });
+
+      it("should name the unsupported remote in the fallback message", async () => {
+        const result = await runTerminalCommandImpl(
+          { command: "echo test" },
+          createMockExtras({ remoteName: "weird-remote" }),
+        );
+
+        expect(result[0].content).toContain("weird-remote");
+        expect(result[0].status).toBe("Command executed");
+      });
+
+      it("should base64-wrap multi-line commands sent without capture", async () => {
+        // Unsupported remotes get a single-line command so a heredoc can't be
+        // mangled by sendText() pasting line-by-line.
+        const command = "cat <<'EOF'\nhello\nEOF";
+        const expected = `echo ${Buffer.from(command, "utf8").toString(
+          "base64",
+        )} | base64 -d | bash`;
+
+        await runTerminalCommandImpl(
+          { command },
+          createMockExtras({ remoteName: "weird-remote" }),
+        );
+
+        expect(mockRunCommand).toHaveBeenCalledWith(expected);
+      });
+
+      it("should fall back to runCommand once capture fails repeatedly", async () => {
+        // A remote whose shell can't run the capture wrapper must not make every
+        // subsequent call pay the full capture timeout.
+        mockRunCommandWithOutput.mockResolvedValue({
+          output: SHELL_INTEGRATION_MISSING_MESSAGE,
+          exitCode: null,
+        });
+        const extras = createMockExtras({ remoteName: "ssh-remote" });
+
+        // First two attempts still try to capture (budget = 2).
+        for (let i = 0; i < MAX_CAPTURE_FAILURES_BEFORE_DISABLE; i++) {
+          const res = await runTerminalCommandImpl(
+            { command: "echo test" },
+            extras,
+          );
+          expect(res[0].content).toContain(SHELL_INTEGRATION_MISSING_MARKER);
+        }
+        expect(mockRunCommandWithOutput).toHaveBeenCalledTimes(
+          MAX_CAPTURE_FAILURES_BEFORE_DISABLE,
+        );
+
+        // Third attempt gives up on capture and fires-and-forgets.
+        const res = await runTerminalCommandImpl(
+          { command: "echo test" },
+          extras,
+        );
+        expect(mockRunCommandWithOutput).toHaveBeenCalledTimes(
+          MAX_CAPTURE_FAILURES_BEFORE_DISABLE,
+        );
         expect(mockRunCommand).toHaveBeenCalledWith("echo test");
-        expect(result[0].content).toContain(
-          "Command executed in remote terminal",
+        expect(res[0].content).toContain("capture was attempted but failed");
+      });
+
+      it("should reset the failure budget after a successful capture", async () => {
+        const extras = createMockExtras({ remoteName: "dev-container" });
+        mockRunCommandWithOutput.mockResolvedValue({
+          output: SHELL_INTEGRATION_MISSING_MESSAGE,
+          exitCode: null,
+        });
+
+        // One failure, then a success, then it should keep capturing.
+        await runTerminalCommandImpl({ command: "a" }, extras);
+        mockRunCommandWithOutput.mockResolvedValue({
+          output: "fine",
+          exitCode: 0,
+        });
+        await runTerminalCommandImpl({ command: "b" }, extras);
+
+        mockRunCommandWithOutput.mockResolvedValue({
+          output: SHELL_INTEGRATION_MISSING_MESSAGE,
+          exitCode: null,
+        });
+        await runTerminalCommandImpl({ command: "c" }, extras);
+
+        // a, b, c all attempted capture => the success reset the counter.
+        expect(mockRunCommandWithOutput).toHaveBeenCalledTimes(3);
+        expect(mockRunCommand).not.toHaveBeenCalled();
+      });
+
+      it("should isolate the failure budget per remote", async () => {
+        mockRunCommandWithOutput.mockResolvedValue({
+          output: SHELL_INTEGRATION_MISSING_MESSAGE,
+          exitCode: null,
+        });
+
+        // Exhaust the budget for ssh-remote.
+        for (let i = 0; i < MAX_CAPTURE_FAILURES_BEFORE_DISABLE; i++) {
+          await runTerminalCommandImpl(
+            { command: "x" },
+            createMockExtras({ remoteName: "ssh-remote" }),
+          );
+        }
+        const callsAfterExhaust =
+          mockRunCommandWithOutput.mock.calls.length;
+
+        // A different remote must still get capture attempts.
+        await runTerminalCommandImpl(
+          { command: "y" },
+          createMockExtras({ remoteName: "wsl" }),
+        );
+        expect(mockRunCommandWithOutput).toHaveBeenCalledTimes(
+          callsAfterExhaust + 1,
         );
       });
 
@@ -655,10 +852,7 @@ describe("runTerminalCommandImpl", () => {
           extras,
         );
 
-        expect(mockRunCommand).toHaveBeenCalledWith("echo test");
-        expect(result[0].content).toContain(
-          "Command executed in remote terminal",
-        );
+        expect(result[0].status).toBeDefined();
       });
     });
 

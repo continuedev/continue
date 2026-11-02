@@ -45,6 +45,14 @@ import {
   removeRunningProcess,
   updateProcessOutput,
 } from "../../util/processTerminalStates";
+import {
+  nextCaptureFailureCount,
+  remoteCommandStatus,
+  remoteOutputUnavailableMessage,
+  SHELL_INTEGRATION_MISSING_MARKER,
+  shouldAttemptCapture,
+  supportsRemoteTerminalOutput,
+} from "../../util/remoteTerminal";
 import { getBooleanArg, getStringArg } from "../parseArgs";
 
 /**
@@ -102,9 +110,19 @@ const getColorEnv = () => ({
 // runs on the local machine. childProcess.spawn() executes on the extension
 // host, so for any remote workspace it would run commands on the wrong machine
 // (or fail with ENOENT when the local shell doesn't match the remote OS).
-// All remote types delegate to ide.runCommand() which routes through VS Code's
-// integrated terminal and executes in the correct remote environment.
+// All remote types delegate to the integrated terminal, which executes in the
+// correct remote environment.
+//
+// Remotes listed in OUTPUT_CAPTURE_CAPABLE_REMOTES additionally get *output
+// capture* via ide.runCommandWithOutput(); everything else is fire-and-forget.
+// See .patches/10-wsl-remote-terminal-output-capture.md and
+// .patches/13-ssh-remote-terminal-output-capture.md
 const LOCAL_ONLY = ["", "local"];
+
+// Per-remote consecutive capture-failure counters, used to stop hammering a
+// remote whose shell can't run our capture wrapper. Keyed by remoteName so a
+// broken SSH host doesn't disable capture for WSL in the same session.
+const captureFailureCounts = new Map<string, number>();
 
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const command = getStringArg(args, "command");
@@ -553,16 +571,86 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
     }
   }
 
-  // For remote environments (SSH, WSL, Dev Container, Codespaces, etc.),
-  // delegate to VS Code's integrated terminal which handles remote execution.
-  // Note: output capture and waitForCompletion are not yet supported for remotes.
-  await extras.ide.runCommand(command);
+  // ---------------------------------------------------------------------------
+  // Remote environments (WSL, SSH, Dev Container, Codespaces, ...): the command
+  // must run in the integrated terminal, which executes on the remote machine.
+  //
+  // For capture-capable remotes (see OUTPUT_CAPTURE_CAPABLE_REMOTES) we use
+  // ide.runCommandWithOutput(), which redirects the command's output to a temp
+  // file on the *remote* and reads it back through the authority-scoped
+  // vscode.workspace.fs — deterministic, no PTY timing race.
+  // ---------------------------------------------------------------------------
+  const remoteName = ideInfo.remoteName;
+  const captureCapable = supportsRemoteTerminalOutput(remoteName);
+  const failures = captureFailureCounts.get(remoteName) ?? 0;
+
+  if (captureCapable && shouldAttemptCapture(failures, false)) {
+    try {
+      const { output, exitCode } = await extras.ide.runCommandWithOutput(
+        command,
+        DEFAULT_TOOL_TIMEOUT_MS,
+      );
+
+      // A response without the shell-integration caveat counts as a successful
+      // capture; anything else keeps the failure budget ticking down.
+      const captured = !output.includes(SHELL_INTEGRATION_MISSING_MARKER);
+      captureFailureCounts.set(
+        remoteName,
+        nextCaptureFailureCount(failures, captured),
+      );
+
+      const status = remoteCommandStatus(exitCode);
+
+      // Stream partial output if callback available
+      if (extras.onPartialOutput && output) {
+        extras.onPartialOutput({
+          toolCallId,
+          contextItems: [
+            {
+              name: "Terminal",
+              description: "Terminal command output",
+              content: output,
+              status,
+            },
+          ],
+        });
+      }
+
+      return [
+        {
+          name: "Terminal",
+          description: "Terminal command output",
+          content: output || "(no output)",
+          status,
+        },
+      ];
+    } catch (err: any) {
+      captureFailureCounts.set(
+        remoteName,
+        nextCaptureFailureCount(failures, false),
+      );
+      return [
+        {
+          name: "Terminal",
+          description: "Terminal command output",
+          content: `Command failed: ${err?.message ?? String(err)}`,
+          status: "Command failed",
+        },
+      ];
+    }
+  }
+
+  // Either an unsupported remote, or a capable remote that repeatedly failed to
+  // capture. Still run the command — just without output.
+  const normalizedCommand = /\r|\n/.test(command)
+    ? `echo ${Buffer.from(command, "utf8").toString("base64")} | base64 -d | bash`
+    : command;
+  await extras.ide.runCommand(normalizedCommand);
   return [
     {
       name: "Terminal",
       description: "Terminal command output",
-      content:
-        "Command executed in remote terminal. Output capture is not yet available for remote environments.",
+      content: remoteOutputUnavailableMessage(remoteName),
       status: "Command executed",
     },
   ];

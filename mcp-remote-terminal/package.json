@@ -1,0 +1,19 @@
+{
+  "name": "mcp-remote-terminal",
+  "version": "1.0.0",
+  "description": "MCP server that captures terminal command output on remote SSH environments",
+  "main": "server.js",
+  "bin": {
+    "mcp-remote-terminal": "./server.js"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.2"
+  },
+  "engines": {
+    "node": ">=20.20.1"
+  }
+}

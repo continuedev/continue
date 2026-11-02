@@ -104,6 +104,14 @@ export const baseConfigYamlSchema = z.object({
   metadata: z.record(z.string()).and(commonMetadataSchema.partial()).optional(),
   env: envRecord.optional(),
   requestOptions: requestOptionsSchema.optional(),
+  // Global boolean/flag settings that were only supported in config.json.
+  // Declared here so config.yaml doesn't silently strip them (zod strips
+  // unknown keys by default).
+  allowAnonymousTelemetry: z.boolean().optional(),
+  disableIndexing: z.boolean().optional(),
+  disableSessionTitles: z.boolean().optional(),
+  // Prepended to `rules` as the first rule (see configYamlToContinueConfig)
+  systemMessage: z.string().optional(),
 });
 
 const modelsUsesSchema = z

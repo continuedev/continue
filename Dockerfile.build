@@ -1,0 +1,30 @@
+FROM node:20-bookworm
+
+RUN apt-get update && apt-get install -y python3 make g++ git curl && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+COPY . .
+
+# Step 1: Install root deps
+RUN npm install --ignore-scripts
+
+# Step 2: Install and build internal packages (dependencies for core & gui)
+RUN cd packages/config-types && npm install && npm run build
+RUN cd packages/llm-info && npm install && npm run build
+RUN cd packages/fetch && npm install && npm run build
+RUN cd packages/openai-adapters && npm install && npm run build
+RUN cd packages/config-yaml && npm install && npm run build
+RUN cd packages/terminal-security && npm install && npm run build
+
+# Step 3: Install and build core
+RUN cd core && npm install
+
+# Step 4: Install and build GUI
+RUN cd gui && npm install && npm run build
+
+# Step 5: Build and package VS Code extension for darwin-arm64
+RUN cd extensions/vscode && npm install && \
+    npm run prepackage -- --target darwin-arm64 && \
+    npm run package -- --target darwin-arm64
+
+CMD ["ls", "-la", "extensions/vscode/build/"]

@@ -2,21 +2,21 @@ import * as fs from "node:fs";
 
 import { fileURLToPath } from "node:url";
 import {
-  DocumentSymbol,
-  FileStatsMap,
-  FileType,
-  IDE,
-  IdeInfo,
-  IdeSettings,
-  IndexTag,
-  Location,
-  Problem,
-  Range,
-  RangeInFile,
-  SignatureHelp,
-  TerminalOptions,
-  Thread,
-  ToastType,
+    DocumentSymbol,
+    FileStatsMap,
+    FileType,
+    IDE,
+    IdeInfo,
+    IdeSettings,
+    IndexTag,
+    Location,
+    Problem,
+    Range,
+    RangeInFile,
+    SignatureHelp,
+    TerminalOptions,
+    Thread,
+    ToastType,
 } from "../index.js";
 
 class FileSystemIde implements IDE {
@@ -230,6 +230,13 @@ class FileSystemIde implements IDE {
 
   runCommand(command: string, options?: TerminalOptions): Promise<void> {
     return Promise.resolve();
+  }
+
+  runCommandWithOutput(
+    _command: string,
+    _timeoutMs?: number,
+  ): Promise<{ output: string; exitCode: number | null }> {
+    return Promise.resolve({ output: "", exitCode: null });
   }
 
   saveFile(fileUri: string): Promise<void> {

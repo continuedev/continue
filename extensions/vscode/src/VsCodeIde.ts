@@ -2,8 +2,9 @@ import * as child_process from "node:child_process";
 import { exec } from "node:child_process";
 
 import { Range } from "core";
-import { EXTENSION_NAME } from "core/util/constants";
 import { DEFAULT_IGNORES, defaultIgnoresGlob } from "core/indexing/ignore";
+import { EXTENSION_NAME } from "core/util/constants";
+import { SHELL_INTEGRATION_MISSING_MESSAGE } from "core/util/remoteTerminal";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
@@ -353,6 +354,395 @@ class VsCodeIde implements IDE {
     }
     terminal.show();
     terminal.sendText(command, false);
+  }
+
+  /**
+   * Run a command in the remote terminal and capture its output.
+   *
+   * STABLE-API-ONLY STRATEGY (works in published extensions, no proposed APIs):
+   *
+   * IMPORTANT: VS Code's `onDidWriteTerminalData` is a PROPOSED API — it only works in
+   * extension development / Insiders builds and THROWS in published extensions:
+   *   "Extension 'continue.continue' CANNOT use API proposal: terminalDataWriteEvent."
+   * We therefore do NOT use it. We rely only on the STABLE shell integration API
+   * (available since VS Code 1.93):
+   *   - terminal.shellIntegration.executeCommand()        [stable]
+   *   - window.onDidEndTerminalShellExecution             [stable]
+   *   - execution.read()  (async iterable of output)      [stable]
+   *
+   * Completion detection combines THREE signals (first to fire wins):
+   *   A. onDidEndTerminalShellExecution for OUR execution  → precise exitCode
+   *   B. read() stream completes (for-await loop ends)     → output done
+   *   C. graceful timeout                                   → return partial output
+   *
+   * This fixes the hang on ssh/pipe/multiline commands where any single signal may
+   * never fire (microsoft/vscode#324392, #316556): if the stream ends but the end
+   * event doesn't (or vice-versa), we still resolve.
+   *
+   * If shell integration is unavailable (shell not yet instrumented), we fall back to
+   * fire-and-forget sendText() + fixed delay — no output, but never hangs and never
+   * throws a proposed-API error.
+   */
+  /**
+   * Deterministic, race-free command capture via temp files.
+   *
+   * Writes the command's combined stdout+stderr to a temp file and its exit code to a
+   * "done" marker file. Polls (via vscode.workspace.fs — not the terminal) until the
+   * marker file exists, then reads the output file. Because we read a FILE rather than
+   * the shell-integration stream, there is no PTY/IPC timing race: when the marker file
+   * is present, the output file is guaranteed fully written.
+   *
+   * Returns null if a temp directory/URI could not be resolved (caller falls back to
+   * the shell-integration stream approach).
+   */
+  private async runViaFileCapture(
+    terminal: vscode.Terminal,
+    command: string,
+    timeoutMs: number,
+  ): Promise<{ output: string; exitCode: number | null } | null> {
+    // Resolve a base URI that shares the remote authority (wsl+.../ssh-remote+...).
+    const wsDirs = await this.getWorkspaceDirs();
+    if (!wsDirs.length) return null;
+
+    let baseUri: vscode.Uri;
+    try {
+      baseUri = vscode.Uri.parse(wsDirs[0]);
+    } catch {
+      return null;
+    }
+    if (!/^(file|vscode-remote)$/.test(baseUri.scheme)) return null;
+
+    // Resolve a writable temp dir on the REMOTE side.
+    //
+    // `/tmp` is the right default and is world-writable on Linux/macOS remotes
+    // (wsl, ssh-remote, dev-container, codespaces). But some hardened SSH targets
+    // mount /tmp noexec/nosuid or restrict it, and Windows-based SSH hosts have no
+    // /tmp at all — so probe with `fileExists` and fall back to the workspace root,
+    // which is always writable because that is where the user is editing files.
+    const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const tmpOutPath = `/tmp/continue_out_${id}`;
+
+    let tmpWritable = false;
+    try {
+      tmpWritable = await vscode.workspace.fs.stat(
+        baseUri.with({ path: "/tmp" }),
+      ).then(
+        () => true,
+        () => false,
+      );
+    } catch {
+      tmpWritable = false;
+    }
+
+    // Strip any trailing slash so we don't build "//continue_out_x".
+    const workspaceRootPath = (baseUri.path || "/").replace(/\/+$/, "") || "/";
+    const outPath = tmpWritable
+      ? tmpOutPath
+      : `${workspaceRootPath}/.continue_out_${id}`;
+    const donePath = tmpWritable
+      ? `/tmp/continue_done_${id}`
+      : `${workspaceRootPath}/.continue_done_${id}`;
+
+    const outUri = baseUri.with({ path: outPath });
+    const doneUri = baseUri.with({ path: donePath });
+
+    // Read the user's output-mode preference.
+    // "silent"  (default) — redirect to file only; terminal shows base64 one-liner.
+    // "visible"           — tee so output is visible in terminal AND captured in file.
+    const outputMode = vscode.workspace
+      .getConfiguration("continue")
+      .get<string>("remoteTerminalOutputMode", "silent");
+
+    // base64-encode so ALL command shapes (heredoc, quotes, $VAR, pipes, &&, ssh) run
+    // verbatim inside a subshell without escaping hazards.
+    const b64 = Buffer.from(command, "utf8").toString("base64");
+
+    let wrapped: string;
+    if (outputMode === "visible") {
+      // "visible" mode: tee duplicates output → terminal panel + file simultaneously.
+      //
+      // POSIX-safe exit-code capture — works on bash, dash, sh (busybox, slim containers):
+      //
+      //   { cmd ; printf '%s\n' "$?" > donefile ; } 2>&1 | tee outfile
+      //
+      // The key insight: write the exit code INSIDE the left-hand group, before the pipe
+      // to tee. This avoids both bash-only constructs:
+      //   - `${PIPESTATUS[0]}` → "Bad substitution" on dash/sh
+      //   - `set -o pipefail`  → "Illegal option" on dash (exit 2, subshell aborts before
+      //                          tee runs, done-file is never written → stalls until timeout)
+      //
+      // tee always exits 0 so we cannot use the outer `$?`. Reading rc from inside the
+      // group is deterministic: the done-file is written synchronously before tee finishes.
+      //
+      // The original command is echoed as a comment so it stays readable in the terminal.
+      const preview = command.length > 120 ? command.slice(0, 120) + "…" : command;
+      wrapped =
+        // Print the original command as a comment so users can read it in the terminal.
+        `echo '# ${preview.replace(/'/g, "'\\''")}' ; ` +
+        `{ echo ${b64} | base64 -d | bash ; printf '%s\\n' "$?" > ${donePath} ; } 2>&1 | tee ${outPath}`;
+    } else {
+      // "silent" mode (default): no terminal output, pure file capture.
+      wrapped =
+        `{ echo ${b64} | base64 -d | bash ; } > ${outPath} 2>&1 ; ` +
+        `printf '%s\\n' "$?" > ${donePath}`;
+    }
+
+    terminal.show(false);
+    terminal.sendText(wrapped, true);
+
+    // Poll for the done-file via the filesystem API (deterministic).
+    const pollInterval = 200;
+    const deadline = Date.now() + timeoutMs;
+    let exitCode: number | null = null;
+
+    const readTextFile = async (uri: vscode.Uri): Promise<string | null> => {
+      try {
+        const bytes = await vscode.workspace.fs.readFile(uri);
+        return new TextDecoder().decode(bytes);
+      } catch {
+        return null;
+      }
+    };
+
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, pollInterval));
+      const doneContent = await readTextFile(doneUri);
+      if (doneContent !== null) {
+        const parsed = parseInt(doneContent.trim(), 10);
+        exitCode = Number.isNaN(parsed) ? null : parsed;
+        break;
+      }
+    }
+
+    // Read the output file (may be empty for commands with no output — that's valid).
+    const outContent = (await readTextFile(outUri)) ?? "";
+
+    // Best-effort cleanup of temp files (don't block on failures).
+    const rm = async (uri: vscode.Uri) => {
+      try {
+        await vscode.workspace.fs.delete(uri);
+      } catch {
+        /* ignore */
+      }
+    };
+    void rm(outUri);
+    void rm(doneUri);
+
+    if (exitCode === null && outContent === "") {
+      // Timed out with no done-file and no output — treat as capture failure, let caller
+      // fall back. (Rare: /tmp not writable, etc.)
+      return null;
+    }
+
+    return { output: outContent.replace(/\r\n/g, "\n").trimEnd(), exitCode };
+  }
+
+  async runCommandWithOutput(
+    command: string,
+    timeoutMs = 120_000,
+  ): Promise<{ output: string; exitCode: number | null }> {
+    // --- Find or create a terminal ---
+    let terminal =
+      vscode.window.activeTerminal ?? vscode.window.terminals[0];
+    if (!terminal) {
+      terminal = vscode.window.createTerminal("Continue");
+    }
+    terminal.show(false); // show without stealing focus
+
+    const si = (terminal as any).shellIntegration;
+    const onDidEnd = (vscode.window as any).onDidEndTerminalShellExecution;
+
+    // =========================================================================
+    // PRIMARY STRATEGY: file-based capture (deterministic, race-free)
+    //
+    // The VS Code shell-integration read() stream is NOT reliable for timing: the
+    // OSC 633;D "command finished" marker is delivered asynchronously from the PTY,
+    // and read() can end BEFORE VS Code has gathered all output bytes — intermittently
+    // returning empty/partial output for fast commands (microsoft/vscode#221405 and
+    // related). No amount of event juggling fully eliminates this race.
+    //
+    // Instead, we redirect the command's output to a temp file and read the file back.
+    // File I/O via vscode.workspace.fs is deterministic — once the shell writes a
+    // "done" marker file, the output file is guaranteed complete. Zero race.
+    //
+    // Flow (single shell line, works for ssh/pipe/heredoc via base64):
+    //   { <cmd> } > <out> 2>&1 ; echo $? > <done>
+    // We poll for <done> to appear, then read <out>, then clean up.
+    // =========================================================================
+    const fileResult = await this.runViaFileCapture(terminal, command, timeoutMs);
+    if (fileResult) {
+      return fileResult;
+    }
+
+    // =========================================================================
+    // FALLBACK STRATEGY: shell-integration stream (only if file capture unavailable,
+    // e.g. cannot resolve a writable temp dir). Kept for resilience.
+    // =========================================================================
+
+    // --- Normalize multi-line / heredoc commands to a SINGLE logical line ---
+    let effectiveCommand = command;
+    if (/\r|\n/.test(command)) {
+      const b64 = Buffer.from(command, "utf8").toString("base64");
+      effectiveCommand = `echo ${b64} | base64 -d | bash`;
+    }
+
+    // --- Fallback: shell integration not ready → fire-and-forget (never hangs) ---
+    if (!si || typeof si.executeCommand !== "function" || typeof onDidEnd !== "function") {
+      terminal.sendText(effectiveCommand, true);
+      await new Promise((r) => setTimeout(r, 1500));
+      return {
+        output: SHELL_INTEGRATION_MISSING_MESSAGE,
+        exitCode: null,
+      };
+    }
+
+    const result = await new Promise<{ output: string; exitCode: number | null }>(
+      (resolve) => {
+        let settled = false;
+        let output = "";
+        let execution: any = null;
+        let streamEnded = false;
+        let exitFromEvent: number | null = null;
+        let endEventFired = false;
+
+        const disposables: Array<{ dispose: () => void }> = [];
+        const cleanup = () => {
+          for (const d of disposables) {
+            try {
+              d.dispose();
+            } catch {
+              /* ignore */
+            }
+          }
+        };
+
+        const stripAnsi = (s: string) =>
+          s
+            .replace(/\x1b\[[0-9;?]*[a-zA-Z]/g, "")
+            .replace(/\x1b\][^\x07]*\x07/g, "")
+            .replace(/\r\n/g, "\n")
+            .replace(/\r/g, "\n");
+
+        // Fallback timer: armed only when the end event fires BEFORE the stream finishes.
+        // Gives the read() stream a bounded window to flush remaining output, then resolves
+        // even if the stream never formally ends (defensive against stuck streams).
+        let flushTimer: ReturnType<typeof setTimeout> | undefined;
+
+        const finish = (exitCode: number | null) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeout);
+          if (flushTimer) clearTimeout(flushTimer);
+          cleanup();
+          resolve({ output: stripAnsi(output).trim(), exitCode });
+        };
+
+        const timeout = setTimeout(() => {
+          // Graceful timeout — return whatever we have.
+          finish(exitFromEvent);
+        }, timeoutMs);
+
+        // Register end-event listener BEFORE executeCommand to avoid missing fast commands.
+        const endDisposable = onDidEnd((e: any) => {
+          if (settled) return;
+          // Match our execution if known; otherwise match the terminal.
+          const matches = execution ? e.execution === execution : e.terminal === terminal;
+          if (!matches) return;
+          endEventFired = true;
+          if (typeof e.exitCode === "number") {
+            exitFromEvent = e.exitCode;
+          }
+
+          // CRITICAL for fast commands: the end event often fires BEFORE read() has
+          // emitted (or finished emitting) the output chunks. Resolving here immediately
+          // would return empty/partial output. So:
+          //   - If the stream already ended → safe to resolve now.
+          //   - Otherwise → WAIT for the stream to end (the `finally` block calls finish).
+          //     Arm a bounded safety timer only as a last resort in case the stream
+          //     never ends (observed for some shell-integration edge cases).
+          if (streamEnded) {
+            finish(exitFromEvent);
+          } else if (!flushTimer) {
+            // Safety net: if the stream is stuck, resolve after a generous flush window.
+            flushTimer = setTimeout(() => finish(exitFromEvent), 3000);
+          }
+        });
+        disposables.push(endDisposable);
+
+        // Start the command (normalized to single-line for multi-line/heredoc inputs).
+        try {
+          execution = si.executeCommand(effectiveCommand);
+        } catch (err) {
+          // executeCommand threw — fall back to fire-and-forget.
+          finish(null);
+          terminal!.sendText(effectiveCommand, true);
+          return;
+        }
+
+        // Consume the output stream.
+        (async () => {
+          try {
+            const stream = execution.read();
+            for await (const chunk of stream) {
+              if (settled) break;
+              output += chunk;
+            }
+          } catch {
+            // stream error — rely on end event / timeout
+          } finally {
+            streamEnded = true;
+            // Stream finished → we now have the complete output.
+            // Resolve if the end event already fired (we have exitCode), OR if it hasn't
+            // fired yet (rare): give it a brief moment, then resolve regardless so we
+            // never hang. The stream ending is the authoritative "output complete" signal.
+            if (endEventFired) {
+              finish(exitFromEvent);
+            } else if (!settled) {
+              setTimeout(() => finish(exitFromEvent), 300);
+            }
+          }
+        })();
+      },
+    );
+
+    return result;
+  }
+
+  /**
+   * Extract command output from raw terminal data captured in the sentinel fallback.
+   * Strips ANSI/OSC escapes, removes the echoed command input line, the echoed sentinel
+   * input line, and the sentinel output line itself.
+   */
+  private cleanOutputHelper(raw: string, token: string): string {
+    const clean = raw
+      .replace(/\x1b\[[0-9;?]*[a-zA-Z]/g, "") // CSI escapes
+      .replace(/\x1b\][^\x07]*\x07/g, "") // OSC escapes
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n");
+
+    const lines = clean.split("\n");
+
+    // Find the sentinel OUTPUT line (token followed by :EXIT=<digits>).
+    const sentinelOutIdx = lines.findIndex((l) =>
+      new RegExp(`${token}:EXIT=\\d+`).test(l),
+    );
+
+    // Keep only lines that are neither the echoed input (containing `echo "<token>`)
+    // nor the sentinel output line, and stop at the sentinel output.
+    const upto = sentinelOutIdx >= 0 ? sentinelOutIdx : lines.length;
+    const kept: string[] = [];
+    for (let i = 0; i < upto; i++) {
+      const line = lines[i];
+      // Skip the line where we typed the sentinel echo command.
+      if (line.includes(`echo "${token}`)) continue;
+      // Skip any line still containing the token (defensive).
+      if (line.includes(token)) continue;
+      kept.push(line);
+    }
+
+    // The first kept line is usually the prompt + the primary command echo.
+    // Drop it only if it clearly contains the command prompt artifacts; otherwise keep.
+    return kept.join("\n").trim();
   }
 
   async saveFile(fileUri: string): Promise<void> {

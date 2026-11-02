@@ -134,12 +134,34 @@ export class OpenAIApi implements BaseLlmApi {
       const response = await this.responsesNonStream(body, signal);
       return responseToChatCompletion(response);
     }
-    const response = await this.openai.chat.completions.create(
+    let response = await this.openai.chat.completions.create(
       this.modifyChatBody(body),
       {
         signal,
       },
     );
+
+    // Some OpenAI-compatible servers (e.g. NIM, vLLM) return content: null
+    // with an empty tool_calls array when tools are provided but the model
+    // decides not to call any. This is effectively an empty response that
+    // the GUI renders as blank. Retry without tools so the model responds
+    // with text content instead.
+    const msg = response.choices?.[0]?.message;
+    if (
+      msg &&
+      !msg.content &&
+      (!msg.tool_calls || msg.tool_calls.length === 0) &&
+      body.tools?.length
+    ) {
+      const { tools, tool_choice, ...bodyWithoutTools } = body;
+      response = await this.openai.chat.completions.create(
+        this.modifyChatBody(
+          bodyWithoutTools as ChatCompletionCreateParamsNonStreaming,
+        ),
+        { signal },
+      );
+    }
+
     return response;
   }
 

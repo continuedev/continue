@@ -8,6 +8,8 @@ import * as vscode from "vscode";
 export { default as buildTimestamp } from "./.buildTimestamp";
 
 async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
+  // Allow self-signed certificates for on-prem GenAI Gateway
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
   await setupCa();
   const { activateExtension } = await import("./activation/activate");
   return await activateExtension(context);

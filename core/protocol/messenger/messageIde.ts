@@ -2,20 +2,20 @@ import { FromIdeProtocol } from "..";
 import { ToIdeFromWebviewOrCoreProtocol } from "../ide";
 
 import type {
-  DocumentSymbol,
-  FileStatsMap,
-  FileType,
-  IDE,
-  IdeInfo,
-  IdeSettings,
-  IndexTag,
-  Location,
-  Problem,
-  Range,
-  RangeInFile,
-  SignatureHelp,
-  TerminalOptions,
-  Thread,
+    DocumentSymbol,
+    FileStatsMap,
+    FileType,
+    IDE,
+    IdeInfo,
+    IdeSettings,
+    IndexTag,
+    Location,
+    Problem,
+    Range,
+    RangeInFile,
+    SignatureHelp,
+    TerminalOptions,
+    Thread,
 } from "../..";
 
 export class MessageIde implements IDE {
@@ -186,6 +186,13 @@ export class MessageIde implements IDE {
 
   async runCommand(command: string, options?: TerminalOptions): Promise<void> {
     await this.request("runCommand", { command, options });
+  }
+
+  async runCommandWithOutput(
+    command: string,
+    timeoutMs?: number,
+  ): Promise<{ output: string; exitCode: number | null }> {
+    return await this.request("runCommandWithOutput", { command, timeoutMs });
   }
 
   async saveFile(fileUri: string): Promise<void> {

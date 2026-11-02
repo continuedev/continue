@@ -170,11 +170,17 @@ export const loadLastSession = createAsyncThunk<void, void, ThunkApiType>(
 );
 
 function getChatTitleFromMessage(message: ChatMessage) {
+  // Use the FIRST non-empty line: with `disableSessionTitles` this makes the
+  // session title come from the start of the user's opening message, which is
+  // where naming conventions (e.g. "01-my-task") are written.
   const text =
     renderChatMessage(message)
       .split("\n")
-      .filter((l) => l.trim() !== "")
-      .slice(-1)[0] || "";
+      .map((l) => l.trim())
+      .filter((l) => l !== "")
+      .map((l) => l.replace(/^[#>\-*]+\s*/, "").trim())
+      .filter((l) => l !== "" && !/^-+$/.test(l))
+      .slice(0, 1)[0] || "";
 
   // Truncate
   if (text.length > MAX_TITLE_LENGTH) {

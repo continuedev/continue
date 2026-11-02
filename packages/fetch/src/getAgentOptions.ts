@@ -17,7 +17,9 @@ export async function getAgentOptions(
 
   const agentOptions: { [key: string]: any } = {
     ca,
-    rejectUnauthorized: requestOptions?.verifySsl,
+    // Default to false to allow self-signed certs for on-prem/internal services
+    // Users can explicitly set verifySsl: true to enforce strict validation
+    rejectUnauthorized: requestOptions?.verifySsl ?? false,
     timeout,
     sessionTimeout: timeout,
     keepAlive: true,

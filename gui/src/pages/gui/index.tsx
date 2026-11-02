@@ -7,7 +7,7 @@ export default function GUI() {
       <aside className="4xl:flex border-vsc-input-border no-scrollbar hidden min-h-0 w-96 overflow-y-auto border-0 border-r border-solid">
         <History />
       </aside>
-      <main className="no-scrollbar flex min-h-0 flex-1 flex-col">
+      <main className="no-scrollbar flex min-h-0 min-w-0 flex-1 flex-col">
         <Chat />
       </main>
     </div>

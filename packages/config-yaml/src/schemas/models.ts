@@ -196,6 +196,18 @@ const baseModelFields = {
     .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
     .optional(),
   autocompleteOptions: autocompleteOptionsSchema.optional(),
+  visionProxy: z
+    .object({
+      endpoint: z.string(),
+      model: z.string(),
+      apiKey: z.string().optional(),
+      maxTokens: z.number().optional(),
+      promptTemplate: z.string().optional(),
+      temperature: z.number().optional(),
+      timeout: z.number().optional(),
+      enabled: z.boolean().optional(),
+    })
+    .optional(),
 };
 
 export const modelSchema = z.object({

@@ -1,0 +1,12 @@
+# VSCode binaries — download locally, không commit
+*.tar.gz
+*.zip
+vscode-portable/
+vscode-linux-x64*/
+VSCode-win32-x64*/
+
+# VSIX output — generated, không commit
+*.vsix
+
+# Portable data dirs
+*/data/

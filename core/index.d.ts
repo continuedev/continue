@@ -713,6 +713,26 @@ export interface LLMOptions {
 
   /** Tool overrides for this model */
   toolOverrides?: ToolOverride[];
+
+  /** Vision proxy — route images through a VLM before sending to this model */
+  visionProxy?: {
+    /** VLM endpoint (OpenAI-compatible), e.g. http://171.232.252.166:7002/v1 */
+    endpoint: string;
+    /** VLM model name, e.g. Qwen/Qwen2.5-VL-32B-Instruct */
+    model: string;
+    /** API key for VLM endpoint */
+    apiKey?: string;
+    /** Max tokens for VLM description response (default: 2048) */
+    maxTokens?: number;
+    /** Prompt template: "code" | "ui" | "diagram" | "auto" | custom string */
+    promptTemplate?: string;
+    /** Temperature for VLM (default: 0.2) */
+    temperature?: number;
+    /** Request timeout in ms (default: 30000) */
+    timeout?: number;
+    /** Enable/disable (default: true) */
+    enabled?: boolean;
+  };
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -871,6 +891,18 @@ export interface IDE {
   getExternalUri?(uri: string): Promise<string>;
 
   runCommand(command: string, options?: TerminalOptions): Promise<void>;
+
+  /**
+   * Run a command in the remote terminal and capture its output.
+   * Uses VS Code shellIntegration API (VSCode 1.93+).
+   * Falls back to clipboard-based capture if shellIntegration is unavailable.
+   * Primarily used for WSL/SSH remote environments where childProcess.spawn() cannot execute.
+   * Returns { output, exitCode } — output is stdout+stderr combined, exitCode is null if unknown.
+   */
+  runCommandWithOutput(
+    command: string,
+    timeoutMs?: number,
+  ): Promise<{ output: string; exitCode: number | null }>;
 
   saveFile(fileUri: string): Promise<void>;
 
@@ -1915,6 +1947,7 @@ export type RuleSource =
   | "rules-block"
   | "colocated-markdown"
   | "json-systemMessage"
+  | "config-yaml-systemMessage"
   | ".continuerules"
   | "agentFile";
 

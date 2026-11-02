@@ -1,18 +1,18 @@
 import type {
-  DocumentSymbol,
-  FileStatsMap,
-  FileType,
-  IDE,
-  IdeInfo,
-  IdeSettings,
-  IndexTag,
-  Location,
-  Problem,
-  Range,
-  RangeInFile,
-  SignatureHelp,
-  TerminalOptions,
-  Thread,
+    DocumentSymbol,
+    FileStatsMap,
+    FileType,
+    IDE,
+    IdeInfo,
+    IdeSettings,
+    IndexTag,
+    Location,
+    Problem,
+    Range,
+    RangeInFile,
+    SignatureHelp,
+    TerminalOptions,
+    Thread,
 } from "../";
 export interface GetGhTokenArgs {
   force?: boolean;
@@ -28,6 +28,10 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   openFile: [{ path: string }, void];
   openUrl: [string, void];
   runCommand: [{ command: string; options?: TerminalOptions }, void];
+  runCommandWithOutput: [
+    { command: string; timeoutMs?: number },
+    { output: string; exitCode: number | null },
+  ];
   getSearchResults: [{ query: string; maxResults?: number }, string];
   getFileResults: [{ pattern: string; maxResults?: number }, string[]];
   subprocess: [{ command: string; cwd?: string }, [string, string]];

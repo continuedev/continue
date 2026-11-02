@@ -46,10 +46,9 @@ import { ToolCallDiv } from "./ToolCallDiv";
 import { useStore } from "react-redux";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 
-import { DeprecationBanner } from "../../components/DeprecationBanner";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
+import { DeprecationBanner } from "../../components/DeprecationBanner";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
-import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
@@ -71,6 +70,7 @@ function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
 const StepsDiv = styled.div`
   position: relative;
   background-color: transparent;
+  overflow-x: hidden;
 
   & > * {
     position: relative;

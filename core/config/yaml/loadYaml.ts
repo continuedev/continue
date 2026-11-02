@@ -191,9 +191,22 @@ export async function configYamlToContinueConfig(options: {
     },
     rules: [],
     requestOptions: { ...unrolledAssistant.requestOptions },
+    // Carry over global flags that config.yaml now supports
+    allowAnonymousTelemetry: unrolledAssistant.allowAnonymousTelemetry,
+    disableIndexing: unrolledAssistant.disableIndexing,
+    disableSessionTitles: unrolledAssistant.disableSessionTitles,
   };
 
   const config = nonNullifyConfigYaml(unrolledAssistant);
+
+  // `systemMessage` is added before `rules` blocks so it lands first in the
+  // concatenated system prompt, matching the deprecated config.json path
+  if (config.systemMessage) {
+    continueConfig.rules.push({
+      rule: config.systemMessage,
+      source: "config-yaml-systemMessage",
+    });
+  }
 
   for (const rule of config.rules ?? []) {
     const convertedRule = convertYamlRuleToContinueRule(rule);

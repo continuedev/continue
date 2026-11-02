@@ -2,17 +2,17 @@ import { ConfigHandler } from "core/config/ConfigHandler";
 import { DataLogger } from "core/data/log";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import {
-  FromCoreProtocol,
-  FromWebviewProtocol,
-  ToCoreProtocol,
+    FromCoreProtocol,
+    FromWebviewProtocol,
+    ToCoreProtocol,
 } from "core/protocol";
 import { ToWebviewFromCoreProtocol } from "core/protocol/coreWebview";
 import { ToIdeFromWebviewOrCoreProtocol } from "core/protocol/ide";
 import { ToIdeFromCoreProtocol } from "core/protocol/ideCore";
 import { InProcessMessenger, Message } from "core/protocol/messenger";
 import {
-  CORE_TO_WEBVIEW_PASS_THROUGH,
-  WEBVIEW_TO_CORE_PASS_THROUGH,
+    CORE_TO_WEBVIEW_PASS_THROUGH,
+    WEBVIEW_TO_CORE_PASS_THROUGH,
 } from "core/protocol/passThrough";
 import { stripImages } from "core/util/messageContent";
 import * as vscode from "vscode";
@@ -328,6 +328,9 @@ export class VsCodeMessenger {
     });
     this.onWebviewOrCore("runCommand", async (msg) => {
       await ide.runCommand(msg.data.command);
+    });
+    this.onWebviewOrCore("runCommandWithOutput", async (msg) => {
+      return await ide.runCommandWithOutput(msg.data.command, msg.data.timeoutMs);
     });
     this.onWebviewOrCore("getSearchResults", async (msg) => {
       return ide.getSearchResults(msg.data.query, msg.data.maxResults);

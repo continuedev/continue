@@ -42,6 +42,25 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
         return true;
       }
 
+      // Self-hosted vLLM / NIM models with OpenAI-compatible tool calling.
+      // These models support native function calling when served with
+      // --enable-auto-tool-choice on vLLM or via NVIDIA NIM containers.
+      if (
+        [
+          "nemotron",
+          "deepseek",
+          "mistral",
+          "glm",
+          "qwen",
+          "llama",
+          "hermes",
+          "command",
+          "cogito",
+        ].some((part) => lower.includes(part))
+      ) {
+        return true;
+      }
+
       // firworks-ai https://docs.fireworks.ai/guides/function-calling
       if (model.startsWith("accounts/fireworks/models/")) {
         switch (model.substring(26)) {

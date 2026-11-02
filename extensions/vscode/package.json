@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.3.40",
+  "version": "2.2.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -18,9 +18,9 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - open-source AI code agent",
+  "displayName": "Continue OnPrem — AI code agent (custom)",
   "pricing": "Free",
-  "description": "The leading open-source AI code agent",
+  "description": "Custom build with Vision Proxy, NIM/vLLM fixes, 524K context (based on upstream v2.0.0)",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.70.0",
@@ -86,6 +86,16 @@
     "configuration": {
       "title": "Continue",
       "properties": {
+        "continue.remoteTerminalOutputMode": {
+          "type": "string",
+          "enum": ["silent", "visible"],
+          "enumDescriptions": [
+            "Silent (default): redirect output to a temp file only. Command runs as base64-encoded one-liner — output does NOT appear in the terminal panel, but Continue captures it reliably with zero race condition.",
+            "Visible: use `tee` so output appears BOTH in the terminal panel AND is captured by Continue. Slightly less efficient but easier to observe what's running."
+          ],
+          "default": "silent",
+          "description": "Controls how Continue displays terminal command output when running in a WSL/SSH remote workspace. 'silent' is the most reliable (file-based capture). 'visible' shows output in the terminal using tee."
+        },
         "continue.telemetryEnabled": {
           "type": "boolean",
           "default": true,
@@ -723,7 +733,7 @@
     "@continuedev/fetch": "file:../../packages/fetch",
     "@electron/rebuild": "^4.0.3",
     "@reduxjs/toolkit": "^1.9.3",
-    "@vscode/ripgrep": "^1.15.9",
+    "@vscode/ripgrep": "^1.18.0",
     "axios": "^1.13.1",
     "core": "file:../../core",
     "cors": "^2.8.5",

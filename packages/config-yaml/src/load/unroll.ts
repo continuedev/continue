@@ -378,6 +378,15 @@ export async function unrollBlocks(
     name: assistant.name,
     version: assistant.version,
     requestOptions: assistant.requestOptions,
+    // Scalar global settings are not "blocks" - copy them verbatim so they
+    // survive the unroll step
+    schema: assistant.schema,
+    metadata: assistant.metadata,
+    env: assistant.env,
+    allowAnonymousTelemetry: assistant.allowAnonymousTelemetry,
+    disableIndexing: assistant.disableIndexing,
+    disableSessionTitles: assistant.disableSessionTitles,
+    systemMessage: assistant.systemMessage,
   };
 
   if (injectRequestOptions) {
@@ -398,6 +407,12 @@ export async function unrollBlocks(
     | "metadata"
     | "env"
     | "requestOptions"
+    // Scalar global settings - not block arrays, so they are copied verbatim
+    // rather than unrolled section-by-section
+    | "allowAnonymousTelemetry"
+    | "disableIndexing"
+    | "disableSessionTitles"
+    | "systemMessage"
   >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 
   // Process all sections in parallel

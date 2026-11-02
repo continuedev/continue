@@ -179,3 +179,96 @@ keys
 .copy-status
 .copy-log
 
+
+# Local bare repo & ignored folders
+.bare-repo.git/
+
+# Deploy artifacts (air-gap packaging — generated binaries, not source)
+# Source code trong deploy/ được track; artifacts/binaries bị ignore
+deploy/package/
+deploy/vscode-portable/
+deploy.zip
+*.vsix
+*.exe
+*.dll
+*.dylib
+*.a
+*.lib
+*.o
+*.obj
+*.class
+*.jar
+*.war
+*.ear
+*.pyc
+*.pyo
+*.bin
+*.dat
+*.img
+*.iso
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.gz
+*.bz2
+*.xz
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.ico
+*.svg
+*.webp
+*.mp3
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wav
+*.flac
+*.min.js
+*.min.css
+*.map
+
+# VS Code (keep essential files)
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# Ollama local models
+.ollama/
+
+# IDE (additional)
+.idea/
+
+# Environment files (keep example)
+.env.*
+!.env.example
+
+# Logs (additional)
+logs/
+
+# OS (additional)
+Thumbs.db
+desktop.ini
+
+# Agent scratch files - never commit (temp manifests, backups, config copies)
+.continue/tmp/
+
+# NOTE: package-lock.json files are intentionally TRACKED (reproducible builds).
+# Lock files must use the canonical "https://registry.npmjs.org" host, never the
+# internal Nexus host (localhost:7081). npm rewrites the resolved host per-env via
+# --registry / .npmrc (replace-registry-host=npmjs), so the same lock works on
+# macOS (public registry) and Windows (Nexus). Do NOT commit a lock generated
+# against Nexus. See deploy/01-build-extension/README.md.
