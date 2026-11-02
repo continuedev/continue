@@ -71,14 +71,17 @@ jobs:
             | head -1)
 
           if [ -z "$RUN_ID" ]; then
-            echo "❌ No successful workflow run found for PR #$PR_NUMBER (branch: $BRANCH_NAME)"
-            exit 1
+            # PR Checks is skipped for docs-only and draft PRs, so there may be no run
+            echo "::notice::No successful PR Checks run for PR #$PR_NUMBER (branch: $BRANCH_NAME); skipping artifact republish"
+            echo "run_id=" >> $GITHUB_OUTPUT
+            exit 0
           fi
 
           echo "Found successful workflow run: $RUN_ID"
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
 
       - name: Download PR artifact
+        if: steps.find-run.outputs.run_id != ''
         env:
           RUN_ID: ${{ steps.find-run.outputs.run_id }}
           PLATFORM: ${{ matrix.platform }}
@@ -101,6 +104,7 @@ jobs:
           echo "✅ Successfully downloaded artifact"
 
       - name: Republish as main branch artifact
+        if: steps.find-run.outputs.run_id != ''
         uses: actions/upload-artifact@v7
         with:
           name: vscode-extension-build-${{ matrix.platform }}

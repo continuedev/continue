@@ -1,8 +1,20 @@
 name: CLI PR Checks
 
+# PRs run one OS and one Node version (fast); the full OS x Node matrix runs nightly.
 on:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - "docs/**"
+      - "docs-site/**"
+      - "plans/**"
+      - "**/*.md"
+      - "**/*.mdx"
+      - "LICENSE"
+  schedule:
+    - cron: "41 5 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -18,13 +30,14 @@ concurrency:
 jobs:
   track-rerun:
     runs-on: ubuntu-latest
-    if: github.run_attempt > 1
+    if: (github.run_attempt > 1) && github.event.pull_request.draft != true
     steps:
       - uses: actions/checkout@v7
       - name: Track workflow rerun
         uses: ./.github/actions/track-rerun
 
   lint:
+    if: github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -61,10 +74,11 @@ jobs:
           npm run lint
 
   test:
+    if: github.event.pull_request.draft != true
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [18, 20, 22, 24]
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["ubuntu-latest","windows-latest","macos-latest"]') }}
+        node-version: ${{ fromJSON(github.event_name == 'pull_request' && '[22]' || '[18,20,22,24]') }}
       fail-fast: false
     runs-on: ${{ matrix.os }}
 
@@ -127,7 +141,7 @@ jobs:
 
   smoke-api:
     # Only runs when secrets are available (not on fork PRs)
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: (github.event.pull_request.head.repo.full_name == github.repository) && github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -175,7 +189,7 @@ jobs:
   # This action at least lets us manage the list of required tests via source control
   # so that creators of new jobs can add them to this list
   require-all-checks-to-pass-cli:
-    if: always()
+    if: (always()) && github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     needs:
       - lint

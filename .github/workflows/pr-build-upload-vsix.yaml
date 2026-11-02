@@ -1,10 +1,15 @@
 name: PR Build And Upload VSIX
 
 # Builds and uploads VSIX artifacts for the `oneper` script across Linux, Windows, and macOS ARM platforms
+# On request only: it builds three platforms (two of them on the slow Windows and macOS
+# runners). Add the `build-vsix` label to a PR (it then rebuilds on every push) or run this
+# workflow manually on any branch. The Linux package build in PR Checks runs on every PR.
 on:
   pull_request:
     branches:
       - main
+    types: [labeled, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
 
 # A newer push to the same branch/PR supersedes the run in flight; without this
 # the fork's runner pool fills with stale runs and nothing starts.
@@ -14,6 +19,10 @@ concurrency:
 
 jobs:
   build-and-upload-vsix:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.draft != true &&
+      contains(github.event.pull_request.labels.*.name, 'build-vsix'))
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
     strategy:
