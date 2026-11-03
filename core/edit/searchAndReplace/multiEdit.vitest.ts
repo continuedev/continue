@@ -22,6 +22,16 @@ describe("multiEdit shared validation", () => {
       );
     });
 
+    it("should throw a named error for a non-object edit entry", () => {
+      for (const bad of [null, undefined, "old_string"]) {
+        expect(() => validateMultiEdit({ edits: [bad] })).toThrowError(
+          expect.objectContaining({
+            reason: ContinueErrorReason.MultiEditEditsArrayRequired,
+          })
+        );
+      }
+    });
+
     it("should throw error if edits array is empty", () => {
       expect(() => validateMultiEdit({ edits: [] })).toThrowError(
         expect.objectContaining({
