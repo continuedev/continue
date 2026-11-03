@@ -145,6 +145,9 @@ export function ProviderSetupFlow({
         if (cancelled || res.status !== "success") return;
         setSetup(res.content);
         setStorage(res.content.preferredKeyStorage);
+      })
+      .catch(() => {
+        // The setup info only refines defaults; the flow works without it.
       });
     return () => {
       cancelled = true;

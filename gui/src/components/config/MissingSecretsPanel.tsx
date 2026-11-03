@@ -7,6 +7,7 @@ import { useContext } from "react";
 
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { MissingSecret, providerLabel } from "../../util/missingSecrets";
+import { useProviderSetupDialog } from "../ProviderSetup/useProviderSetupDialog";
 import { Button } from "../ui";
 
 interface MissingSecretsPanelProps {
@@ -24,9 +25,18 @@ export function MissingSecretsPanel({
   onDone,
 }: MissingSecretsPanelProps) {
   const ideMessenger = useContext(IdeMessengerContext);
+  const { openEnterKey } = useProviderSetupDialog();
 
   const open = (secretName: string, target: "env" | "configLine") => {
     ideMessenger.post("config/openSecretLocation", { secretName, target });
+    onDone?.();
+  };
+
+  const enterKey = (secret: MissingSecret) => {
+    openEnterKey({
+      secretName: secret.secretName,
+      provider: secret.providers[0],
+    });
     onDone?.();
   };
 
@@ -67,6 +77,16 @@ export function MissingSecretsPanel({
             )}
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
+            <Button
+              variant="primary"
+              size="sm"
+              className="my-0 flex items-center gap-1"
+              onClick={() => enterKey(secret)}
+              data-testid={`enter-key-${secret.secretName}`}
+            >
+              <KeyIcon className="h-3 w-3" />
+              Enter key
+            </Button>
             <Button
               variant="secondary"
               size="sm"

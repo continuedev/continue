@@ -31,7 +31,21 @@ export function useSubmitOnboarding(mode: OnboardingModes, isDialog = false) {
     ideMessenger.post("config/openProfile", { profileId: undefined });
   }
 
+  /**
+   * The provider setup flow has already written config.yaml, so only the
+   * card and the first-run bookkeeping are left.
+   */
+  function finishOnboarding() {
+    const onboardingStatus = getLocalStorage("onboardingStatus");
+    closeOnboardingCard(isDialog);
+    if (onboardingStatus === "Started") {
+      setLocalStorage("onboardingStatus", "Completed");
+      ideMessenger.post("showTutorial", undefined);
+    }
+  }
+
   return {
     submitOnboarding,
+    finishOnboarding,
   };
 }

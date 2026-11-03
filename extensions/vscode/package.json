@@ -219,6 +219,12 @@
         "group": "Continued"
       },
       {
+        "command": "continue.openModelSetup",
+        "category": "Continued",
+        "title": "Manage Models and Providers",
+        "group": "Continued"
+      },
+      {
         "command": "continue.toggleTabAutocompleteEnabled",
         "category": "Continued",
         "title": "Toggle Autocomplete Enabled",

@@ -437,6 +437,11 @@ const getCommandsMap: (
     "continue.openConfigPage": () => {
       vscode.commands.executeCommand("continue.navigateTo", "/config", false);
     },
+    "continue.openModelSetup": () => {
+      // Opens the shared provider setup flow (credentials, models, review).
+      void sidebar.webviewProtocol.request("setupApiKey", undefined);
+      focusGUI();
+    },
     "continue.selectFilesAsContext": async (
       firstUri: vscode.Uri,
       uris: vscode.Uri[],

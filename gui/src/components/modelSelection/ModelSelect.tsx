@@ -8,13 +8,9 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
-import { AddModelForm } from "../../forms/AddModelForm";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import {
-  setDialogMessage,
-  setModeModelOverride,
-  setShowDialog,
-} from "../../redux/slices/uiSlice";
+import { useProviderSetupDialog } from "../ProviderSetup/useProviderSetupDialog";
+import { setModeModelOverride } from "../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks/updateSelectedModelByRole";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import {
@@ -140,6 +136,7 @@ function ModelOption({
 
 function ModelSelect() {
   const dispatch = useAppDispatch();
+  const { openSetup } = useProviderSetupDialog();
   const navigate = useNavigate();
 
   const isInEdit = useAppSelector((store) => store.session.isInEdit);
@@ -248,16 +245,7 @@ function ModelSelect() {
 
     closeDropDown(buttonRef.current);
 
-    dispatch(setShowDialog(true));
-    dispatch(
-      setDialogMessage(
-        <AddModelForm
-          onDone={() => {
-            dispatch(setShowDialog(false));
-          }}
-        />,
-      ),
-    );
+    openSetup();
   }
 
   function onClickConfigureModels(e: React.MouseEvent) {
@@ -402,7 +390,7 @@ function ModelSelect() {
               >
                 <span className="flex flex-row items-center text-2xs text-description">
                   <PlusIcon className="mr-1.5 h-3.5 w-3.5" />
-                  Add Chat model
+                  Manage models...
                 </span>
               </ListboxOption>
 
