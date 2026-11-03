@@ -18,6 +18,49 @@ describe("decideToolCall: files", () => {
     expect(d.policy).toBe(OFF);
   });
 
+  it("ignores case, because .ENV is the same file as .env on Windows and macOS", () => {
+    const perms = { deny: ["readFile(**/.env)"] };
+    for (const p of [".ENV", "Config/.Env", "CONFIG/PROD/.env", "a/B/.eNv"]) {
+      expect(decide(perms, read(p)).policy, p).toBe(OFF);
+    }
+    // Still exact about the name: .env.local and .environment are different files.
+    expect(decide(perms, read("x/.env.local")).policy).toBe(ASK);
+    expect(decide(perms, read("x/.environment")).policy).toBe(ASK);
+  });
+
+  it("ask rules ignore case too", () => {
+    expect(
+      decide(
+        { ask: ["writeFile(.github/**)"] },
+        {
+          toolName: "create_new_file",
+          parsedArgs: { filepath: ".GitHub/Workflows/x.yml" },
+          base: ALLOW,
+          evaluated: ALLOW,
+        },
+      ).policy,
+    ).toBe(ASK);
+  });
+
+  it("allow rules stay exact, so a near-miss never loosens anything", () => {
+    const perms = { allow: ["readFile(src/**)"] };
+    expect(decide(perms, read("src/a.ts")).policy).toBe(ALLOW);
+    expect(decide(perms, read("SRC/a.ts")).policy).toBe(ASK);
+  });
+
+  it("allow rules cannot ride on the wrong case of a denied path", () => {
+    const perms = { allow: ["readFile(**)"], deny: ["readFile(**/.env)"] };
+    expect(decide(perms, read("app/.ENV")).policy).toBe(OFF);
+  });
+
+  it("the resolved path is matched without case too", () => {
+    const d = decide(
+      { deny: ["readFile(**/.env)"] },
+      { ...read("secrets"), resolvedPath: "/Home/Me/Proj/.ENV" },
+    );
+    expect(d.policy).toBe(OFF);
+  });
+
   it("the readFile rule covers read_file_range and the snake_case name", () => {
     expect(
       decide(

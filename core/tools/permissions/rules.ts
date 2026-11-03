@@ -55,8 +55,17 @@ export function parseToolPermissions(perms: ToolPermissions): ParsedRule[] {
   return out;
 }
 
-/** Glob match where `*` matches any run of characters except `/`, and `**` matches across `/`. */
-export function globMatch(pattern: string, value: string): boolean {
+/**
+ * Glob match where `*` matches any run of characters except `/`, and `**`
+ * matches across `/`. Pass `ignoreCase` for file paths: Windows and macOS
+ * volumes are case-insensitive, so `.ENV` is the same file as `.env` there and
+ * a deny rule must not be bypassed by changing the case.
+ */
+export function globMatch(
+  pattern: string,
+  value: string,
+  ignoreCase = false,
+): boolean {
   let re = "^";
   for (let i = 0; i < pattern.length; i++) {
     const c = pattern[i];
@@ -79,7 +88,7 @@ export function globMatch(pattern: string, value: string): boolean {
       re += c.replace(/[.+^${}()|[\]\\]/g, "\\$&");
     }
   }
-  return new RegExp(re + "$").test(value);
+  return new RegExp(re + "$", ignoreCase ? "i" : "").test(value);
 }
 
 /** MCP tool names are `mcp__<server>__<tool>`; a trailing `*` matches the rest. */

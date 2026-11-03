@@ -1,4 +1,5 @@
 import { ConfigValidationError } from "@continuedev/config-yaml";
+import * as posix from "node:path/posix";
 import { BuiltInToolNames } from "../builtIn";
 import { mcpServerSlug } from "../mcpToolName";
 import {
@@ -67,6 +68,16 @@ export function normalizeRelative(p: string | undefined): string | undefined {
   let out = p.trim().replace(/\\/g, "/");
   while (out.startsWith("./")) out = out.slice(2);
   return out;
+}
+
+/** Resolve `.`/`..` and use forward slashes. A path that leaves the root keeps its `..`. */
+export function cleanPath(p: string): string {
+  return posix.normalize(normalizeRelative(p) ?? "");
+}
+
+/** True for a path an allow rule may be matched against: relative, inside the root. */
+export function staysInside(p: string): boolean {
+  return !(p === ".." || p.startsWith("../") || /^([a-zA-Z]:)?\//.test(p));
 }
 
 /**

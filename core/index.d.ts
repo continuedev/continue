@@ -514,6 +514,8 @@ interface ToolCallState {
   status: ToolStatus;
   parsedArgs: any;
   processedArgs?: Record<string, any>; // Added in preprocesing step
+  /** Why this call is waiting for approval, when a rule or protected path says so. */
+  policyNote?: string;
   output?: ContextItem[];
   tool?: Tool;
   mcpUiState?: McpUiState;

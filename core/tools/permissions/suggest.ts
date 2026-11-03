@@ -1,7 +1,13 @@
 import { BuiltInToolNames } from "../builtIn";
 import { parseCommand } from "./command";
-import { cleanPath, staysInside } from "./decide";
-import { canonicalRuleName, mcpRuleName, ruleTargetsFor } from "./names";
+import { findProtected } from "./protectedCall";
+import {
+  canonicalRuleName,
+  cleanPath,
+  mcpRuleName,
+  ruleTargetsFor,
+  staysInside,
+} from "./names";
 
 /**
  * The rule "Always allow" would write for a pending tool call, or why there is
@@ -18,7 +24,19 @@ import { canonicalRuleName, mcpRuleName, ruleTargetsFor } from "./names";
  *   anything (read-only searches). Never for edits, URLs or unknown tools.
  */
 export type SuggestedRule =
-  { ok: true; rule: string; summary: string } | { ok: false; reason: string };
+  | {
+      ok: true;
+      rule: string;
+      summary: string;
+      /**
+       * True when the tool's own safety check would still ask for this call,
+       * so saving the rule switches that check off for it. The caller that has
+       * the tool sets this; `suggestAllowRule` alone cannot know. The UI shows
+       * the exact rule and asks for a second yes.
+       */
+      loosensCheck?: boolean;
+    }
+  | { ok: false; reason: string };
 
 export interface SuggestInput {
   toolName: string;
@@ -36,8 +54,54 @@ function hasGlobChars(text: string): boolean {
   return /[*?]/.test(text);
 }
 
+/**
+ * Add `loosensCheck` to a rule suggestion: would the tool's own safety check
+ * still ask for this call? If so, saving the rule switches that check off for
+ * it, and the user should see exactly what they are saving and say yes again.
+ * The tool is asked as if the user's own setting were "allow", so the answer
+ * reflects the tool's judgement and not the current setting.
+ */
+export function withLoosensCheck(
+  suggestion: SuggestedRule,
+  tool:
+    | {
+        evaluateToolCallPolicy?: (
+          base: "allowedWithoutPermission",
+          args: Record<string, unknown>,
+          processed?: Record<string, unknown>,
+        ) => string;
+      }
+    | undefined,
+  parsedArgs: Record<string, unknown>,
+): SuggestedRule {
+  if (!suggestion.ok) return suggestion;
+  let asks = false;
+  try {
+    asks =
+      tool?.evaluateToolCallPolicy?.(
+        "allowedWithoutPermission",
+        parsedArgs,
+        undefined,
+      ) === "allowedWithPermission";
+  } catch {
+    // If the tool's check cannot run, assume it would have asked: the safe side.
+    asks = true;
+  }
+  return { ...suggestion, loosensCheck: asks };
+}
+
 export function suggestAllowRule(input: SuggestInput): SuggestedRule {
   const { toolName, parsedArgs, mcp } = input;
+
+  // A protected path always asks, and no allow rule can change that. Saving
+  // one would look like it worked and then ask again, so say so up front.
+  const protectedHit = findProtected({ toolName, parsedArgs });
+  if (protectedHit) {
+    return {
+      ok: false,
+      reason: `${protectedHit.path} is a protected path, so it always asks first and cannot be always-allowed.`,
+    };
+  }
 
   if (mcp) {
     const rule = mcpRuleName(mcp.serverName, mcp.toolName);

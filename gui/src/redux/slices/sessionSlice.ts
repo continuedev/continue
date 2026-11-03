@@ -956,6 +956,18 @@ export const sessionSlice = createSlice({
         toolCallState.status = "calling";
       }
     },
+    setToolCallPolicyNote: (
+      state,
+      action: PayloadAction<{ toolCallId: string; note: string }>,
+    ) => {
+      const toolCallState = findToolCallById(
+        state.history,
+        action.payload.toolCallId,
+      );
+      if (toolCallState) {
+        toolCallState.policyNote = action.payload.note;
+      }
+    },
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
@@ -1070,6 +1082,7 @@ export const {
   updateApplyState,
   abortStream,
   setToolCallCalling,
+  setToolCallPolicyNote,
   cancelToolCall,
   errorToolCall,
   acceptToolCall,

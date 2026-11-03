@@ -1,10 +1,11 @@
 import type { ToolPolicy } from "@continuedev/terminal-security";
-import * as posix from "node:path/posix";
+import { ProtectedHit, protectedReason } from "./protected";
 import {
   canonicalRuleName,
+  cleanPath,
   mcpRuleName,
-  normalizeRelative,
   ruleTargetsFor,
+  staysInside,
 } from "./names";
 import {
   globMatch,
@@ -19,6 +20,7 @@ export type DecisionSource =
   | "deny-rule"
   | "ask-rule"
   | "allow-rule"
+  | "protected-path"
   | "safety-floor"
   | "tool-setting"
   | "default";
@@ -44,16 +46,8 @@ export interface DecideInput {
   /** The policy after the tool's own checks (safety floor, workspace). */
   evaluated: ToolPolicy;
   rules: ParsedRule[];
-}
-
-/** Resolve `.`/`..`, use forward slashes. A path that leaves the root keeps its `..`. */
-export function cleanPath(p: string): string {
-  return posix.normalize(normalizeRelative(p) ?? "");
-}
-
-/** True for a path an allow rule may be matched against: relative, inside the root. */
-export function staysInside(p: string): boolean {
-  return !(p === ".." || p.startsWith("../") || /^([a-zA-Z]:)?\//.test(p));
+  /** A protected path the call touches (see protected.ts); makes the call ask. */
+  protectedHit?: ProtectedHit;
 }
 
 export function findRuleMatch(input: DecideInput): RuleMatch | undefined {
@@ -91,8 +85,13 @@ export function findRuleMatch(input: DecideInput): RuleMatch | undefined {
     ? raw.map(cleanPath).find(staysInside)
     : raw[0];
 
+  // Deny and ask ignore case for file paths: on Windows and macOS `.ENV` is
+  // the same file as `.env`, and a protection must not be one keystroke away
+  // from bypassed. Allow stays exact: loosening on a near-miss is the wrong
+  // direction to be forgiving in.
   const hit = (r: ParsedRule, ts: string[]) =>
-    r.pattern === undefined || ts.some((t) => globMatch(r.pattern!, t));
+    r.pattern === undefined ||
+    ts.some((t) => globMatch(r.pattern!, t, isPathTool));
 
   for (const decision of ["deny", "ask"] as RuleDecision[]) {
     const rule = named.find((r) => r.decision === decision && hit(r, targets));
@@ -121,8 +120,9 @@ function matchMcp(rules: ParsedRule[], name: string): RuleMatch | undefined {
 /**
  * Apply the user's rules on top of the tool's own policy, in this order:
  * deny rules; anything already `disabled` (a tool switched off or a command
- * the safety floor refuses); ask rules; allow rules; otherwise the evaluated
- * policy. Nothing after the first two steps can loosen them.
+ * the safety floor refuses); a protected path (always asks); ask rules; allow
+ * rules; otherwise the evaluated policy. Nothing after the first two steps can
+ * loosen them, and no allow rule can loosen a protected path.
  */
 export function decideToolCall(input: DecideInput): ToolDecision {
   const { base, evaluated } = input;
@@ -144,6 +144,13 @@ export function decideToolCall(input: DecideInput): ToolDecision {
       reason: off
         ? "This tool is turned off in your tool settings."
         : "This command is refused by the built-in safety check.",
+    };
+  }
+  if (input.protectedHit) {
+    return {
+      policy: "allowedWithPermission",
+      source: "protected-path",
+      reason: protectedReason(input.protectedHit),
     };
   }
   if (match?.decision === "ask") {

@@ -1,18 +1,15 @@
 import { ToolPolicy } from "@continuedev/terminal-security";
 import { Tool, ToolCallState } from "core";
+import type { DecisionSource } from "core/tools/permissions/decide";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { isEditTool } from "../../util/toolCallState";
-import { errorToolCall, updateToolCallOutput } from "../slices/sessionSlice";
+import {
+  errorToolCall,
+  setToolCallPolicyNote,
+  updateToolCallOutput,
+} from "../slices/sessionSlice";
 import { DEFAULT_TOOL_SETTING, ToolPolicies } from "../slices/uiSlice";
 import { AppThunkDispatch } from "../store";
-
-type DecisionSource =
-  | "deny-rule"
-  | "ask-rule"
-  | "allow-rule"
-  | "safety-floor"
-  | "tool-setting"
-  | "default";
 
 interface EvaluatedPolicy {
   policy: ToolPolicy;
@@ -38,8 +35,10 @@ async function evaluateToolPolicy(
 
   // Edit tools are reviewed as a diff the user accepts or rejects, so they
   // are not asked about up front. They still go through core so a deny rule
-  // (for example writeFile(.github/**)) can refuse them. An "ask" rule is not
-  // needed here: the diff review already is the ask.
+  // (for example writeFile(.github/**)) can refuse them, and so an edit to a
+  // protected file (a workflow, a git hook, .env) is held for approval instead
+  // of being applied as soon as the diff is ready. An ordinary ask or allow
+  // rule changes nothing here: the diff review already is the ask.
   if (isEditTool(toolName)) {
     try {
       const result = await ideMessenger.request("tools/evaluatePolicy", {
@@ -48,8 +47,14 @@ async function evaluateToolPolicy(
         parsedArgs: toolCallState.parsedArgs,
         processedArgs: toolCallState.processedArgs,
       });
-      if (result.status === "success" && result.content.policy === "disabled") {
-        return { ...result.content, toolCallState };
+      if (result.status === "success") {
+        const { policy, source } = result.content;
+        if (policy === "disabled") {
+          return { ...result.content, toolCallState };
+        }
+        if (source === "protected-path") {
+          return { ...result.content, toolCallState };
+        }
       }
     } catch (e) {
       // Edits never depended on core before, so an unreachable core must not
@@ -150,6 +155,23 @@ export async function evaluateToolPolicies(
   const disabledResults = policyResults.filter(
     ({ policy }) => policy === "disabled",
   );
+
+  // Say why a call is waiting, when a rule or protected path made it wait, so
+  // the prompt is not a mystery for a tool the user set to run on its own.
+  for (const { policy, source, reason, toolCallState } of policyResults) {
+    if (
+      policy === "allowedWithPermission" &&
+      reason &&
+      (source === "protected-path" || source === "ask-rule")
+    ) {
+      dispatch(
+        setToolCallPolicyNote({
+          toolCallId: toolCallState.toolCallId,
+          note: reason,
+        }),
+      );
+    }
+  }
 
   for (const {
     displayValue,

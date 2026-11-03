@@ -126,6 +126,27 @@ describe("suggestAllowRule: files", () => {
   });
 });
 
+describe("suggestAllowRule: protected paths", () => {
+  it.each([
+    ["a secret read", read(".env")],
+    [
+      "a home secret directory",
+      { toolName: "ls", parsedArgs: { dirPath: "~/.ssh" } },
+    ],
+    ["a command that touches a secret", term("cat ~/.aws/credentials")],
+    ["a command that touches .env", term("cat .env")],
+  ])("offers no rule for %s, because it always asks", (_l, call) => {
+    const s = suggestAllowRule(call as any);
+    expect(s.ok).toBe(false);
+    expect((s as any).reason).toMatch(/protected path/);
+  });
+
+  it("still offers a rule for a look-alike that is not protected", () => {
+    expect(suggestAllowRule(read(".env.example")).ok).toBe(true);
+    expect(suggestAllowRule(term("cat README.md")).ok).toBe(true);
+  });
+});
+
 describe("suggestAllowRule: MCP and others", () => {
   const mcp = { serverName: "Datadog", toolName: "query_metrics" };
 

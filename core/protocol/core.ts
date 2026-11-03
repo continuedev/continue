@@ -151,7 +151,16 @@ export type ToCoreFromIdeOrWebviewProtocol = {
    */
   "tools/suggestAllowRule": [
     { toolName: string; parsedArgs: Record<string, unknown> },
-    { ok: true; rule: string; summary: string } | { ok: false; reason: string },
+    (
+      | {
+          ok: true;
+          rule: string;
+          summary: string;
+          /** The tool's own safety check would still ask; confirm before saving. */
+          loosensCheck?: boolean;
+        }
+      | { ok: false; reason: string }
+    ),
   ];
   "config/refreshProfiles": [
     (

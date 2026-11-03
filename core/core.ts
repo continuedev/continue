@@ -11,7 +11,10 @@ import { ConfigHandler } from "./config/ConfigHandler";
 import { addModel, deleteModel } from "./config/util";
 import { evaluateToolPolicyWithRules } from "./tools/permissions/evaluate";
 import { addToolRule } from "./tools/permissions/addRule";
-import { suggestAllowRule } from "./tools/permissions/suggest";
+import {
+  suggestAllowRule,
+  withLoosensCheck,
+} from "./tools/permissions/suggest";
 import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
@@ -378,7 +381,7 @@ export class Core {
       const tool = config?.tools.find((t) => t.function.name === toolName);
       const isMcp =
         !!tool?.uri?.startsWith("mcp:") && !!tool.originalFunctionName;
-      return suggestAllowRule({
+      const suggestion = suggestAllowRule({
         toolName,
         parsedArgs,
         readonly: tool?.readonly,
@@ -387,6 +390,7 @@ export class Core {
             ? { serverName: tool.group, toolName: tool.originalFunctionName! }
             : undefined,
       });
+      return withLoosensCheck(suggestion, tool, parsedArgs);
     });
 
     on("config/addToolRule", async (msg) => {

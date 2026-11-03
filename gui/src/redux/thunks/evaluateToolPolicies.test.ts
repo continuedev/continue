@@ -113,6 +113,34 @@ describe("evaluateToolPolicies: rules from core", () => {
   });
 });
 
+describe("evaluateToolPolicies: notes for calls that wait", () => {
+  it("records the reason for a protected-path wait and an ask rule", async () => {
+    for (const source of ["protected-path", "ask-rule"] as const) {
+      const { dispatch } = await run("read_file", {
+        policy: ASK,
+        source,
+        reason: `because ${source}`,
+      });
+      expect(JSON.stringify(dispatch.mock.calls)).toContain(
+        `because ${source}`,
+      );
+    }
+  });
+
+  it("records nothing for an ordinary wait or a refusal", async () => {
+    for (const reply of [
+      { policy: ASK, source: "tool-setting", reason: "x" },
+      { policy: OFF, source: "deny-rule", reason: "y" },
+    ]) {
+      const { dispatch } = await run("read_file", reply);
+      expect(JSON.stringify(dispatch.mock.calls)).not.toContain("policyNote");
+      expect(JSON.stringify(dispatch.mock.calls)).not.toContain(
+        "setToolCallPolicyNote",
+      );
+    }
+  });
+});
+
 describe("evaluateToolPolicies: edit tools", () => {
   it("are still allowed without asking when no rule objects", async () => {
     const { result } = await run("edit_existing_file", {
@@ -121,7 +149,7 @@ describe("evaluateToolPolicies: edit tools", () => {
     expect(result.policy).toBe(ALLOW);
   });
 
-  it("an ask or allow rule on an edit does not change the diff review flow", async () => {
+  it("an ordinary ask or allow rule on an edit does not change the diff review flow", async () => {
     for (const reply of [
       { policy: ASK, source: "ask-rule" },
       { policy: ALLOW, source: "allow-rule" },
@@ -129,6 +157,26 @@ describe("evaluateToolPolicies: edit tools", () => {
       const { result } = await run("multi_edit", reply);
       expect(result.policy).toBe(ALLOW);
     }
+  });
+
+  it("an edit to a protected file is held for approval, not applied on diff", async () => {
+    const { result } = await run("edit_existing_file", {
+      policy: ASK,
+      source: "protected-path",
+      reason:
+        "This touches .github/workflows/ci.yml, which can change what runs later, so it always asks first.",
+    });
+    expect(result.policy).toBe(ASK);
+    expect(result.source).toBe("protected-path");
+  });
+
+  it("the protected reason survives, so the prompt can show it", async () => {
+    const { result } = await run("create_new_file", {
+      policy: ASK,
+      source: "protected-path",
+      reason: "touches .env",
+    });
+    expect(result.reason).toBe("touches .env");
   });
 
   it("a deny rule refuses an edit and says which rule", async () => {

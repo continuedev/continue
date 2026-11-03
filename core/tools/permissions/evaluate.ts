@@ -3,6 +3,7 @@ import type { Tool } from "../..";
 import type { ResolvedPath } from "../../util/pathResolver";
 import { DecisionSource, decideToolCall } from "./decide";
 import { parsePermissions, uriToPath } from "./names";
+import { findProtected } from "./protectedCall";
 import type { ToolPermissions } from "./rules";
 
 export interface ToolPolicyResult {
@@ -55,11 +56,20 @@ export function evaluateToolPolicyWithRules(
     ? tool.evaluateToolCallPolicy(basePolicy, parsedArgs, processedArgs)
     : basePolicy;
 
-  const rules = parsePermissions(input.permissions);
-  if (rules.length === 0) return { policy: evaluated, displayValue };
-
   const resolved = processedArgs?.resolvedPath as
     ResolvedPath | null | undefined;
+  const resolvedPath = resolved ? uriToPath(resolved.uri) : undefined;
+
+  // Credentials and files that change what runs later always ask, with or
+  // without rules, so this runs for every user and not only those with rules.
+  // It only ever tightens: a call that is already refused stays refused.
+  const protectedHit = findProtected({ toolName, parsedArgs, resolvedPath });
+
+  const rules = parsePermissions(input.permissions);
+  if (rules.length === 0 && !protectedHit) {
+    return { policy: evaluated, displayValue };
+  }
+
   const isMcp = !!tool.uri?.startsWith("mcp:") && !!tool.originalFunctionName;
 
   const decision = decideToolCall({
@@ -68,10 +78,11 @@ export function evaluateToolPolicyWithRules(
       ? { serverName: tool.group, toolName: tool.originalFunctionName! }
       : undefined,
     parsedArgs,
-    resolvedPath: resolved ? uriToPath(resolved.uri) : undefined,
+    resolvedPath,
     base: basePolicy,
     evaluated,
     rules,
+    protectedHit,
   });
 
   return {
