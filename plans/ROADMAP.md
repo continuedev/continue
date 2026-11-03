@@ -1,6 +1,6 @@
 # Roadmap
 
-Last updated: 2026-11-03 (at `origin/main` eccd7c562, after #93).
+Last updated: 2026-11-03 (at `origin/main` 880f72bd4, after #125).
 
 This is the place to check what is done, what is in flight and what comes next. `fork-plan.md` stays as the original design record (why we forked, scope, risks, licensing, CI). Detailed plans for new work live next to this file.
 
@@ -21,16 +21,17 @@ PR numbers are from `b1tninja/continued`, read from `git log` and `gh pr list`. 
 
 ## In progress
 
-| Item                                 | State                                                                                                                                                                                         |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fork install guide, README, new icon | PR #92, open, branch `chore/rebrand-and-install-docs`                                                                                                                                         |
-| Missing-secret indicator (A0)        | PR #98, open. Detection, toolbar and gear indicators, panel with Open .env / Open config line / Copy name. Tested at unit and component level only; not yet clicked through in a real editor. |
-| Session cost tracking                | Branch `feat/session-cost-tracking` exists but has no commits of its own yet (same commit as `main`). No plan written yet.                                                                    |
-| Dependency updates                   | Open Dependabot PRs (for example #65-#69, #71-#79, #85). Merge in groups; rerun the CI gates after major bumps.                                                                               |
+| Item                                 | State                                                                                                                                                                                                                        |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fork install guide, README, new icon | PR #92, open, branch `chore/rebrand-and-install-docs`                                                                                                                                                                        |
+| Missing-secret indicator (A0)        | PR #98, open. Detection, toolbar and gear indicators, panel with Open .env / Open config line / Copy name. Tested at unit and component level only; not yet clicked through in a real editor.                                |
+| Session cost tracking                | Branch `feat/session-cost-tracking` exists but has no commits of its own yet (same commit as `main`). No plan written yet.                                                                                                   |
+| Prompt caching controls (Track C)    | C0 to C3 built on branches `feat/cache-visibility` and `feat/cache-toolbar`, PRs to follow. Toolbar menu, Auto lifetime, switch-cost notice, Bedrock cache fix (confirmed live). Default stays off. See `prompt-caching.md`. |
+| Dependency updates                   | Open Dependabot PRs (for example #65-#69, #71-#79, #85). Merge in groups; rerun the CI gates after major bumps.                                                                                                              |
 
 ## Next
 
-Two independent tracks. They share no code, so different people can build them in parallel. Each track is a series of small PRs, one concern per PR.
+Three independent tracks. They share no code, so different people can build them in parallel. Each track is a series of small PRs, one concern per PR.
 
 ### Track A: model and provider setup
 
@@ -58,6 +59,21 @@ Problem: tool approval is a three-way switch per tool, stored in the webview rat
 | B2  | Approval selector (Manual / Auto-approve / YOLO), Cline-style category toggles, per-server MCP switches, "Always allow"                           | B1         |
 | B3  | A `reviewer` model role and the optional "Auto" mode that uses it, with deny-and-continue and refusal caps, behind an experimental setting        | B1         |
 | B4  | Evaluation set; confirm or change the suggested reviewer defaults; documentation; the experimental flag is removed only if the quality bar is met | B3         |
+
+### Track C: prompt caching controls
+
+Plan: [`prompt-caching.md`](./prompt-caching.md)
+
+Problem: cached prompts expire after 5 minutes by default, so a session that pauses for a long command or a long read re-reads its whole history at full price. There is no switch for it, no way to choose the lifetime, no cost shown, and two placement bugs mean some sessions do not hit the cache at all. Independent of Tracks A and B.
+
+| PR  | Scope                                                                                                                                                   | Depends on |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| C0  | Measure: Bedrock usage, the 5m/1h write split, 1-hour price and missing Claude models in the cost table, hit rate against API counts, miss-cause report | none       |
+| C1  | Fix cache marker placement for Agent loops (tool results) and Bedrock's rewritten messages                                                              | C0         |
+| C2  | One policy function, `cacheBehavior.ttl`, `ttl` sent on Anthropic, Vertex, Bedrock and OpenRouter; default stays off                                    | C1         |
+| C3  | Toolbar menu (Auto / 5 minutes / 1 hour / Off), warm-or-expired tooltip, switch-cost notice, usage panel                                                | C2         |
+| C4  | Default on for Claude models with Auto, after a week of C0 data                                                                                         | C3         |
+| C5  | Documentation for the new fields and a page on cache lifetime and cost                                                                                  | C2         |
 
 ## Later
 
