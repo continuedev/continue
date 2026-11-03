@@ -48,11 +48,16 @@ Problem: the setup wizard cannot be reopened to edit a configuration; each provi
 
 ### Track B: tool auto-approval and Auto mode
 
-Plan: written in the follow-up PR `docs/tool-auto-approval-plan` (it adds `tool-auto-approval.md` and links it here).
+Plan: [`tool-auto-approval.md`](./tool-auto-approval.md)
 
 Problem: tool approval is a three-way switch per tool, stored in the webview rather than in config. There is no way to say "allow `npm test`, ask for `git push`, never read `.env`", MCP tools cannot be told apart, and nothing judges a command by its effect (for example, whether it touches production).
 
-Planned PRs: B1 rule engine and config schema; B2 Cline-style category toggles, an approval mode switch and "Always allow"; B3 an optional reviewer-model "Auto" mode; B4 an evaluation set and documentation.
+| PR  | Scope                                                                                                                                             | Depends on |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| B1  | `toolPermissions` rules in config.yaml, a rule engine in core, named refusal reasons, protected paths                                             | none       |
+| B2  | Approval selector (Manual / Auto-approve / YOLO), Cline-style category toggles, per-server MCP switches, "Always allow"                           | B1         |
+| B3  | A `reviewer` model role and the optional "Auto" mode that uses it, with deny-and-continue and refusal caps, behind an experimental setting        | B1         |
+| B4  | Evaluation set; confirm or change the suggested reviewer defaults; documentation; the experimental flag is removed only if the quality bar is met | B3         |
 
 ## Later
 
@@ -65,14 +70,14 @@ Carried over from `fork-plan.md` section 4.7, item 4. None started:
 
 ## Open decisions
 
-| Decision                                                   | Default used for planning                                                                                                             | Needs an owner |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| Where per-mode model lists live                            | `modeModels.<mode>.models` in config.yaml                                                                                             | no             |
-| Which config file GUI setup edits                          | the global `~/.continue/config.yaml` only (other profiles: open file)                                                                 | no             |
-| API key storage                                            | a user setting in the setup flow; default secure storage, else `~/.continue/.env` (see `model-config-ux.md` section 4.5)              | no             |
-| Where tool-approval rules live                             | config.yaml under `toolPermissions`                                                                                                   | no             |
-| Reviewer model for Auto mode                               | a user setting: a new `reviewer` model role, unset by default, so Auto stays unavailable until one is chosen (plan in the Track B PR) | no             |
-| Distribution channel for the `.vsix` (fork-plan section 6) | open                                                                                                                                  | yes            |
+| Decision                                                   | Default used for planning                                                                                                                          | Needs an owner |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| Where per-mode model lists live                            | `modeModels.<mode>.models` in config.yaml                                                                                                          | no             |
+| Which config file GUI setup edits                          | the global `~/.continue/config.yaml` only (other profiles: open file)                                                                              | no             |
+| API key storage                                            | a user setting in the setup flow; default secure storage, else `~/.continue/.env` (see `model-config-ux.md` section 4.5)                           | no             |
+| Where tool-approval rules live                             | config.yaml under `toolPermissions`                                                                                                                | no             |
+| Reviewer model for Auto mode                               | a user setting: a new `reviewer` model role, unset by default, so Auto stays unavailable until one is chosen (`tool-auto-approval.md` section 7.3) | no             |
+| Distribution channel for the `.vsix` (fork-plan section 6) | open                                                                                                                                               | yes            |
 
 ## How to use this file
 
