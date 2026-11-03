@@ -224,9 +224,13 @@ export class AnthropicApi implements BaseLlmApi {
         } else {
           const text = part.type === "text" ? part.text : part.refusal;
           if (text) {
+            // A caller (Vertex AI in core) may have marked the part with
+            // Anthropic's cache_control; keep it.
+            const cache_control = (part as any).cache_control;
             blocks.push({
               type: "text",
               text,
+              ...(cache_control ? { cache_control } : {}),
             });
           }
         }
@@ -246,6 +250,10 @@ export class AnthropicApi implements BaseLlmApi {
             type: "tool_result",
             tool_use_id: message.tool_call_id,
             content: message.content,
+            // Tool messages carry cache_control on the message itself.
+            ...((message as any).cache_control
+              ? { cache_control: (message as any).cache_control }
+              : {}),
           },
         ];
       case "user":

@@ -56,7 +56,8 @@ export function modelSupportsPromptCacheControl(
   return (
     (provider === "anthropic" ||
       provider === "bedrock" ||
-      provider === "openrouter") &&
+      provider === "openrouter" ||
+      provider === "vertexai") &&
     normalizeClaudeModelId(model.model) !== undefined
   );
 }

@@ -110,14 +110,14 @@ The `models` section defines the language models used in your configuration. Mod
   - `stop`: An array of stop tokens that will terminate the completion.
   - `reasoning`: Boolean to enable thinking/reasoning for Anthropic Claude 3.7+ and some Ollama models.
   - `reasoningBudgetTokens`: Budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models.
-  - `promptCaching`: Boolean to cache the tool definitions, system prompt and conversation for Claude models on Anthropic, Amazon Bedrock and OpenRouter. Off unless set. `false` also overrides `cacheBehavior`. See [Prompt Caching](/customize/deep-dives/prompt-caching).
+  - `promptCaching`: Boolean to cache the tool definitions, system prompt and conversation for Claude models on Anthropic, Amazon Bedrock, Vertex AI and OpenRouter. Off unless set. `false` also overrides `cacheBehavior`. See [Prompt Caching](/customize/deep-dives/prompt-caching).
   - `keepAlive`: For Ollama, the number of seconds to keep the model loaded after the last request (default: `1800`).
 
 - `cacheBehavior`: Which parts of a request to cache. Read only when `defaultCompletionOptions.promptCaching` is not set. The toolbar in the chat window can override the lifetime. See [Prompt Caching](/customize/deep-dives/prompt-caching).
 
   - `cacheSystemMessage`: If `true`, cache the system prompt.
   - `cacheConversation`: If `true`, cache the conversation history.
-  - `ttl`: Lifetime of cache entries: `5m`, `1h` or `auto` (starts at 5 minutes, moves to 1 hour after a pause of 5 to 55 minutes). Does not turn caching on by itself. Honoured for Claude models on Anthropic, Amazon Bedrock and OpenRouter. `1h` is sent only for models known to accept it.
+  - `ttl`: Lifetime of cache entries: `5m`, `1h` or `auto` (starts at 5 minutes, moves to 1 hour after a pause of 5 to 55 minutes). Does not turn caching on by itself. Honoured for Claude models on Anthropic, Amazon Bedrock, Vertex AI and OpenRouter. `1h` is sent only for models known to accept it.
 
 - `requestOptions`: HTTP request options specific to the model.
 

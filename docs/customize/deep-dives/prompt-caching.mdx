@@ -3,7 +3,7 @@ title: "Prompt Caching"
 keywords: [prompt caching, cache, ttl, cost, anthropic, bedrock, claude]
 ---
 
-Prompt caching lets a provider keep the start of your prompt (tool definitions, system prompt and conversation so far) and charge a fraction of the input price when the next request begins with the same text. Continued supports it for Claude models on Anthropic, Amazon Bedrock and OpenRouter.
+Prompt caching lets a provider keep the start of your prompt (tool definitions, system prompt and conversation so far) and charge a fraction of the input price when the next request begins with the same text. Continued supports it for Claude models on Anthropic, Amazon Bedrock, Vertex AI and OpenRouter.
 
 Caching is off unless you turn it on. Either set it per model in `config.yaml`:
 
@@ -32,6 +32,8 @@ A cached prefix expires after a period without use. Each request that reads it s
 | Config default | none                  | 1.25x          | Follows `config.yaml`: on only if the model enables caching there. |
 
 On OpenRouter the lifetime travels as `cache_control: {"type": "ephemeral", "ttl": "1h"}` on the message content, which OpenRouter [passes to Claude models](https://openrouter.ai/docs/guides/best-practices/prompt-caching).
+
+On Vertex AI the marker is the same `cache_control` object on the Anthropic request that Continued sends to `publishers/anthropic/models/...:streamRawPredict`. [Google lists](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/claude/prompt-caching) Claude 3.7 Sonnet, 3.5 Sonnet v2, 3.5 Sonnet and 3 Opus as unable to take the 1-hour lifetime; those get the 5-minute default.
 
 Reading a cached prefix costs 0.1x the input price whatever the lifetime.
 
@@ -85,20 +87,19 @@ The usage panel shows cost estimates for Claude models on Anthropic, Bedrock, Ve
 
 ## Toolbar button
 
-The button is shown only for Claude models on the `anthropic`, `bedrock` and `openrouter` providers. A filled icon means requests carry cache markers; a brighter one means an entry should still be alive. The tooltip says whether the cache is warm, which lifetime applies, and about how long is left. Warm is Continued's estimate from the time of your last request; the provider does not report it.
+The button is shown only for Claude models on the `anthropic`, `bedrock`, `vertexai` and `openrouter` providers. A filled icon means requests carry cache markers; a brighter one means an entry should still be alive. The tooltip says whether the cache is warm, which lifetime applies, and about how long is left. Warm is Continued's estimate from the time of your last request; the provider does not report it.
 
 The setting is stored per model and survives restarts.
 
 ## Bedrock
 
-On Bedrock and OpenRouter, `1 hour` is offered only for models known to accept it: Claude Haiku 4.5, Sonnet 4.5, 4.6 and 5, and Opus 4.5 to 4.8 and 5. For any other Claude model the menu has no 1-hour entry, and a request that asks for it is sent with the 5-minute default, because an unsupported `ttl` can fail the request.
+On Bedrock, Vertex AI and OpenRouter, `1 hour` is offered only for models known to accept it: Claude Haiku 4.5, Sonnet 4.5, 4.6 and 5, and Opus 4.5 to 4.8 and 5. For any other Claude model the menu has no 1-hour entry, and a request that asks for it is sent with the 5-minute default, because an unsupported `ttl` can fail the request.
 
 Continued also adds a per-process ID to the first user message so that two people sharing an AWS account do not read each other's cached conversation. The system prompt comes before it and can still be shared.
 
 ## Not supported
 
 - Caching on by default. Existing and new configs are unchanged until you enable it.
-- Caching, and therefore lifetimes, on Vertex AI. Chat requests to Claude models on Vertex go through a converter that adds no cache markers, so `promptCaching`, `cacheBehavior` and `ttl` have no effect there, and the toolbar button is hidden.
 - Non-Claude models, including OpenAI and Gemini. Providers that cache automatically do so without any setting here.
 - Keeping the cache alive while a command runs, or warming it when you open a saved session.
 - Control over the provider's minimum cacheable size. A prompt below the model's minimum is processed uncached without an error.

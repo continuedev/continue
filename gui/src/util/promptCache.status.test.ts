@@ -34,7 +34,8 @@ describe("modelSupportsPromptCacheControl", () => {
     [bedrockSonnet, true],
     [model("bedrock", "amazon.nova-pro-v1:0"), false],
     [model("openai", "gpt-4o"), false],
-    [model("vertexai", "claude-sonnet-4-5@20250929"), false],
+    [model("vertexai", "claude-sonnet-4-5@20250929"), true],
+    [model("vertexai", "gemini-2.5-pro"), false],
     [model("openrouter", "anthropic/claude-sonnet-4.5"), true],
     [model("openrouter", "openai/gpt-4o"), false],
   ])("%j", (m, expected) => {

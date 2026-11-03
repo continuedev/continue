@@ -1,6 +1,8 @@
 import { AuthClient, GoogleAuth, JWT, auth } from "google-auth-library";
 
 import { streamResponse, streamSse } from "@continuedev/fetch";
+import { ChatCompletionCreateParams } from "openai/resources/index";
+
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
@@ -8,6 +10,9 @@ import { BaseLLM } from "../index.js";
 import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import Anthropic from "./Anthropic.js";
 import Gemini from "./Gemini.js";
+import { resolveCacheParts, resolvePromptCacheTtl } from "./anthropicCache.js";
+import { bedrockCacheTtl } from "./bedrockHelpers.js";
+import { applyCacheControlToOpenAIBody } from "./openaiCacheControl.js";
 
 class VertexAI extends BaseLLM {
   static providerName = "vertexai";
@@ -203,6 +208,45 @@ class VertexAI extends BaseLLM {
         ...init?.headers,
         ...headers,
       },
+    });
+  }
+
+  /**
+   * Prompt caching for Claude on Vertex. Chat requests go through the
+   * openai-adapters Vertex converter, which turns this body into an Anthropic
+   * Messages body and keeps the `cache_control` marks added here.
+   * (`StreamChatAnthropic` below is only reached by `streamComplete`.)
+   */
+  protected modifyChatBody(
+    body: ChatCompletionCreateParams,
+    options?: CompletionOptions,
+  ): ChatCompletionCreateParams {
+    if (this.vertexProvider !== "anthropic") {
+      return body;
+    }
+    // `options` includes the model's configured default, so an explicit
+    // `promptCaching: false` (for example from the toolbar) wins.
+    const hasSystem = body.messages.some(
+      (m) => m.role === "system" && !!m.content,
+    );
+    const parts = resolveCacheParts(
+      options?.promptCaching ?? this.completionOptions.promptCaching,
+      this.cacheBehavior,
+      hasSystem,
+    );
+    if (!parts.tools && !parts.system && !parts.conversation) {
+      return body;
+    }
+    // Vertex accepts ttl "1h" except on Claude 3.x models, which the
+    // allowlist leaves out; the default 5 minutes is sent as no ttl.
+    const ttl = bedrockCacheTtl(
+      body.model,
+      resolvePromptCacheTtl(options?.promptCacheTtl, this.cacheBehavior?.ttl),
+    );
+    return applyCacheControlToOpenAIBody(body, {
+      ...parts,
+      roles: ["user", "tool"],
+      ttl,
     });
   }
 

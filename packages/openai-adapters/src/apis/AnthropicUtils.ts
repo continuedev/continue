@@ -161,6 +161,10 @@ export function openaiToolToAnthropicTool(tool: ChatCompletionTool): Tool {
       name: tool.function.name,
       description: tool.function.description,
       input_schema: tool.function.parameters as Tool.InputSchema, // TODO unsafe cast, may be differences between openai tool schema and anthropic tool schema,
+      // Set by callers that mark the tool list for prompt caching.
+      ...((tool as any).cache_control
+        ? { cache_control: (tool as any).cache_control }
+        : {}),
     };
   } else {
     throw new Error(`Unsupported tool type in Anthropic: ${tool.type}`);
