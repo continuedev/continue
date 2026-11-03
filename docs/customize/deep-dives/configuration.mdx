@@ -24,6 +24,15 @@ When editing this file, you can see the available options suggested as you type,
 
 See the full reference for `config.yaml` [here](/reference).
 
+### When the app edits `config.yaml` for you
+
+Some actions in the app write to this file (adding a model, finishing onboarding, indexing documentation). Those edits change only what they need to: your comments, key order and `${{ secrets.* }}` references are kept. Two side effects are worth knowing:
+
+- Runs of blank lines are collapsed to one, and the space before a trailing comment is normalised.
+- The first time the app edits the file, it saves a copy of what was there as `config.yaml.bak` next to it, and does not overwrite that copy later. Delete it whenever you like. If you keep `~/.continue` in version control, add `config.yaml.bak` to `.gitignore`, because the copy contains whatever the file contained, including any API key written directly into it.
+
+If the file cannot be parsed, the app leaves it untouched and logs a warning instead of overwriting it.
+
 ## Legacy Configuration Methods (Deprecated)
 
 <Info>

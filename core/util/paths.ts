@@ -11,6 +11,7 @@ import dotenv from "dotenv";
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig } from "../config/default";
 import Types from "../config/types";
+import { editYamlText } from "./yamlEdit";
 
 dotenv.config();
 
@@ -264,16 +265,63 @@ function editConfigJson(
 
 function editConfigYaml(callback: (config: ConfigYaml) => ConfigYaml): void {
   const configPath = getConfigYamlPath();
-  const config = fs.readFileSync(configPath, "utf8");
-  let configYaml = YAML.parse(config);
-  // Check if it's an object
-  if (typeof configYaml === "object" && configYaml !== null) {
-    configYaml = callback(configYaml as any) as any;
-    fs.writeFileSync(configPath, YAML.stringify(configYaml));
-    setConfigFilePermissions(configPath);
-  } else {
-    console.warn("config.yaml is not a valid object");
+  const source = fs.readFileSync(configPath, "utf8");
+  // Edit the parsed document so comments and key order survive. The old
+  // parse -> stringify round trip dropped every comment on each GUI save.
+  const { text, error } = editYamlText<ConfigYaml>(source, callback);
+  if (error) {
+    console.warn(`Not editing config.yaml: ${error}`);
+    return;
   }
+  if (text === undefined) return; // nothing changed, skip the write
+
+  // Keep one copy from before the first GUI edit, for users who version the file.
+  const backupPath = `${configPath}.bak`;
+  if (!fs.existsSync(backupPath)) {
+    try {
+      fs.writeFileSync(backupPath, source);
+      setConfigFilePermissions(backupPath);
+    } catch (e) {
+      console.warn(`Could not write ${backupPath}:`, e);
+    }
+  }
+  writeFileAtomically(configPath, text);
+}
+
+/**
+ * Write via a temp file and rename, so a crash mid-write cannot leave a
+ * truncated config.yaml. A symlinked config (common with dotfiles repos) is
+ * written through to its real target, so the link survives.
+ */
+function writeFileAtomically(filePath: string, text: string): void {
+  let target = filePath;
+  try {
+    target = fs.realpathSync(filePath);
+  } catch {
+    // Does not exist yet; write the path as given.
+  }
+  const tmp = `${target}.${process.pid}.tmp`;
+  try {
+    fs.writeFileSync(tmp, text);
+    setConfigFilePermissions(tmp);
+    fs.renameSync(tmp, target);
+  } catch (e) {
+    try {
+      fs.rmSync(tmp, { force: true });
+    } catch {
+      // Nothing more to clean up.
+    }
+    // Windows refuses to replace a file another process has open (an editor,
+    // antivirus or indexer): EPERM/EBUSY/EACCES. Losing the user's edit is
+    // worse than a non-atomic write, so fall back to writing in place.
+    const code = (e as NodeJS.ErrnoException).code;
+    if (code === "EPERM" || code === "EBUSY" || code === "EACCES") {
+      fs.writeFileSync(target, text);
+    } else {
+      throw e;
+    }
+  }
+  setConfigFilePermissions(target);
 }
 
 export function editConfigFile(
