@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const ncp = require("ncp").ncp;
+const ncp = require("./copy-dir").ncp;
 const { rimrafSync } = require("rimraf");
 
 const { execCmdSync } = require("../../../scripts/util/index");

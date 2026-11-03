@@ -1,7 +1,7 @@
 const esbuild = require("esbuild");
 const fs = require("fs");
 const path = require("path");
-const ncp = require("ncp").ncp;
+const ncp = require("./utils/copy-dir").ncp;
 const { rimrafSync } = require("rimraf");
 const { validateFilesPresent } = require("../scripts/util");
 const { ALL_TARGETS, TARGET_TO_LANCEDB } = require("./utils/targets");
