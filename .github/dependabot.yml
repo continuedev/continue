@@ -42,6 +42,12 @@ updates:
       - dependency-name: web-tree-sitter
         update-types:
           ["version-update:semver-minor", "version-update:semver-major"]
+      # @types/node must match the Node major the code actually runs on (the VS Code
+      # extension host and the binary use Node 20/22, see .nvmrc and CI), otherwise code
+      # compiles against APIs that do not exist at runtime. Bump it by hand together with
+      # the Node runtime; minor/patch updates still flow.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
       # Needs Jest 30; core is on Jest 29 (see the Jest -> Vitest migration).
       - dependency-name: jest-environment-jsdom
         update-types: ["version-update:semver-major"]
