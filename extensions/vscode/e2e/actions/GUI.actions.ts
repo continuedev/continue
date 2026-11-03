@@ -33,7 +33,13 @@ export class GUIActions {
     await GUIActions.executeFocusContinueInputShortcut(driver);
   };
 
-  public static switchToReactIframe = async () => {
+  /**
+   * @param requireDisplayed throw (so a caller can retry) unless the Continued
+   *   webview is actually showing, instead of falling back to a hidden one.
+   */
+  public static switchToReactIframe = async (
+    opts: { requireDisplayed?: boolean } = {},
+  ) => {
     const view = new WebView();
     const driver = view.getDriver();
 
@@ -57,6 +63,9 @@ export class GUIActions {
         }
       }
     }
+    if (!continueIFrame && opts.requireDisplayed) {
+      throw new Error("Continue iframe is not displayed yet");
+    }
     continueIFrame ??= firstMatch;
 
     if (!continueIFrame) {
@@ -65,11 +74,13 @@ export class GUIActions {
 
     await driver.switchTo().frame(continueIFrame);
 
-    await new Promise((res) => {
-      setTimeout(res, 500);
-    });
-
-    const reactIFrame = await GUISelectors.getReactIframe(driver);
+    // The inner React iframe appears once the webview has loaded: wait for it
+    // rather than sleeping for a fixed time.
+    const reactIFrame = await TestUtils.waitForSuccess(
+      () => GUISelectors.getReactIframe(driver),
+      DEFAULT_TIMEOUT.SM,
+      100,
+    ).catch(() => undefined);
 
     if (!reactIFrame) {
       throw new Error("Could not find React iframe");

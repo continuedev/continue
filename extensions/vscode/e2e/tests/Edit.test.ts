@@ -40,9 +40,7 @@ describe("Edit Test", () => {
     await editor.typeTextAt(1, 1, originalEditorText);
     await editor.selectText(originalEditorText);
 
-    await EditActions.invokeEditShortcut(editor);
-
-    ({ view } = await GUIActions.switchToReactIframe());
+    ({ view } = await openEditInputWithRetry());
 
     await GUIActions.sendMessage({
       view,
@@ -61,16 +59,52 @@ describe("Edit Test", () => {
   afterEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
 
+    await VSBrowser.instance.driver.switchTo().defaultContent();
     await editor.clearText();
 
-    ({ view } = await GUIActions.switchToReactIframe());
-
-    const tipTapEditor = await GUISelectors.getMessageInputFieldAtIndex(
-      view,
-      0,
-    );
-    await tipTapEditor.clear();
+    // Best effort: the next beforeEach opens a fresh edit input anyway, and the
+    // webview may legitimately be hidden here (e.g. after accepting an edit).
+    try {
+      ({ view } = await GUIActions.switchToReactIframe({
+        requireDisplayed: true,
+      }));
+      const tipTapEditor = await GUISelectors.getMessageInputFieldAtIndex(
+        view,
+        0,
+      );
+      await tipTapEditor.clear();
+    } catch (e) {
+      console.error(`Failed to clear the edit input: ${e}`);
+    } finally {
+      await VSBrowser.instance.driver.switchTo().defaultContent();
+    }
   });
+
+  /**
+   * Cmd+I is dropped when keyboard focus is stuck in a hidden webview, and the
+   * webview takes a moment to show and render its input. Press the shortcut and
+   * wait until the visible Continued webview has its input; press again if not.
+   */
+  async function openEditInputWithRetry(attempts = 3) {
+    const driver = VSBrowser.instance.driver;
+    let lastError: unknown;
+    for (let i = 0; i < attempts; i++) {
+      await driver.switchTo().defaultContent();
+      await EditActions.invokeEditShortcut(editor);
+      try {
+        return await TestUtils.waitForSuccess(async () => {
+          const result = await GUIActions.switchToReactIframe({
+            requireDisplayed: true,
+          });
+          await GUISelectors.getMessageInputFieldAtIndex(result.view, 0);
+          return result;
+        }, DEFAULT_TIMEOUT.SM);
+      } catch (e) {
+        lastError = e;
+      }
+    }
+    throw lastError;
+  }
 
   async function getCodeLensWithRetry(editor: TextEditor, text: string) {
     let codeLens: CodeLens | undefined;
@@ -81,7 +115,7 @@ describe("Edit Test", () => {
     return codeLens;
   }
 
-  it.only("Accepts an Edit in the GUI", async () => {
+  it("Accepts an Edit in the GUI", async () => {
     ({ view } = await GUIActions.switchToReactIframe());
 
     await EditActions.acceptEditInGUI(view);

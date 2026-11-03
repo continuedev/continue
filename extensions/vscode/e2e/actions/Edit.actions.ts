@@ -5,7 +5,9 @@ import { TestUtils } from "../TestUtils";
 
 export class EditActions {
   static async invokeEditShortcut(editor: TextEditor) {
-    editor
+    // Await the key presses: returning before perform() finishes let the test
+    // go on while the shortcut was still being sent.
+    await editor
       .getDriver()
       .actions()
       .keyDown(TestUtils.osControlKey)

@@ -4,11 +4,14 @@ import {
   InputBox,
   Key,
   TextEditor,
+  VSBrowser,
   Workbench,
+  By,
 } from "vscode-extension-tester";
 
 import { GlobalActions } from "../actions/Global.actions";
 import { DEFAULT_TIMEOUT } from "../constants";
+import { TestUtils } from "../TestUtils";
 
 describe("Prompt file", () => {
   let editor: TextEditor;
@@ -27,8 +30,30 @@ describe("Prompt file", () => {
     const inputBox = await new InputBox();
     await inputBox.setText("Prompt Language");
     await inputBox.confirm();
-    editor = (await new EditorView().openEditor("Untitled-1")) as TextEditor;
+    editor = (await TestUtils.waitForSuccess(
+      () => new EditorView().openEditor("Untitled-1"),
+      DEFAULT_TIMEOUT.SM,
+    )) as TextEditor;
   });
+
+  /**
+   * Wait until the suggest widget is open and its first (the one Tab accepts)
+   * entry is the expected provider, rather than sleeping and hoping the
+   * completion list has arrived and settled.
+   */
+  async function waitForFirstSuggestion(provider: string) {
+    const driver = VSBrowser.instance.driver;
+    await TestUtils.waitForSuccess(async () => {
+      const rows = await driver.findElements(
+        By.css(".suggest-widget.visible .monaco-list-row"),
+      );
+      if (rows.length === 0) throw new Error("No suggestions shown yet");
+      const label = (await rows[0].getAttribute("aria-label")) ?? "";
+      if (!label.includes(provider)) {
+        throw new Error(`First suggestion is "${label}", not ${provider}`);
+      }
+    }, DEFAULT_TIMEOUT.SM);
+  }
 
   afterEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
@@ -52,20 +77,18 @@ describe("Prompt file", () => {
       // Type the @ symbol to trigger completion
       await editor.typeText("@");
 
-      // Wait a moment for the completion to appear
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       // Type the first few characters
       await editor.typeText(provider.slice(0, 2));
 
-      // Wait for completion popup to update
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Wait for the completion popup to show the provider first
+      await waitForFirstSuggestion(provider);
 
       // Use Tab to accept completion instead of Enter
       await editor.typeText(Key.TAB);
 
-      const text = await editor.getText();
-      expect(text).to.include("@" + provider);
+      await TestUtils.waitForSuccess(async () => {
+        expect(await editor.getText()).to.include("@" + provider);
+      }, DEFAULT_TIMEOUT.SM);
       await editor.clearText();
     }
 
