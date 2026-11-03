@@ -54,21 +54,23 @@ export function modelSupportsPromptCacheControl(
   if (!model) return false;
   const provider = model.provider?.toLowerCase();
   return (
-    (provider === "anthropic" || provider === "bedrock") &&
+    (provider === "anthropic" ||
+      provider === "bedrock" ||
+      provider === "openrouter") &&
     normalizeClaudeModelId(model.model) !== undefined
   );
 }
 
 /**
  * Whether a 1-hour lifetime would actually be sent for this model. Anthropic
- * accepts it on every model that supports caching; on Bedrock only the models
- * in the allowlist do, and others silently get 5 minutes.
+ * accepts it on every model that supports caching; on Bedrock and OpenRouter
+ * only the models in the allowlist get it, and others silently get 5 minutes.
  */
 export function modelSupportsOneHourCache(model: ModelDescription): boolean {
   if (!modelSupportsPromptCacheControl(model)) return false;
-  return model.provider.toLowerCase() === "bedrock"
-    ? bedrockSupportsOneHourCache(model.model)
-    : true;
+  return model.provider.toLowerCase() === "anthropic"
+    ? true
+    : bedrockSupportsOneHourCache(model.model);
 }
 
 /** Whether config.yaml turns caching on for this model without the toolbar. */

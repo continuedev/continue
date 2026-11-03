@@ -35,7 +35,8 @@ describe("modelSupportsPromptCacheControl", () => {
     [model("bedrock", "amazon.nova-pro-v1:0"), false],
     [model("openai", "gpt-4o"), false],
     [model("vertexai", "claude-sonnet-4-5@20250929"), false],
-    [model("openrouter", "anthropic/claude-sonnet-4.5"), false],
+    [model("openrouter", "anthropic/claude-sonnet-4.5"), true],
+    [model("openrouter", "openai/gpt-4o"), false],
   ])("%j", (m, expected) => {
     expect(modelSupportsPromptCacheControl(m)).toBe(expected);
   });
@@ -50,6 +51,19 @@ describe("modelSupportsOneHourCache", () => {
   it("is true for Anthropic and for allowlisted Bedrock models", () => {
     expect(modelSupportsOneHourCache(sonnet)).toBe(true);
     expect(modelSupportsOneHourCache(bedrockSonnet)).toBe(true);
+  });
+
+  it("follows the allowlist on OpenRouter", () => {
+    expect(
+      modelSupportsOneHourCache(
+        model("openrouter", "anthropic/claude-sonnet-4.5"),
+      ),
+    ).toBe(true);
+    expect(
+      modelSupportsOneHourCache(
+        model("openrouter", "anthropic/claude-3.5-sonnet"),
+      ),
+    ).toBe(false);
   });
 
   it("is false for Bedrock models that only take 5 minutes", () => {

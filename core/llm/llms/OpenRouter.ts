@@ -2,10 +2,16 @@ import { ChatCompletionCreateParams } from "openai/resources/index";
 
 import { OPENROUTER_HEADERS } from "@continuedev/openai-adapters";
 
-import { LLMOptions } from "../../index.js";
+import { CompletionOptions, LLMOptions } from "../../index.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
 
 import OpenAI from "./OpenAI.js";
+import {
+  cacheControlFor,
+  PromptCacheTtl,
+  resolvePromptCacheTtl,
+} from "./anthropicCache.js";
+import { bedrockCacheTtl } from "./bedrockHelpers.js";
 
 class OpenRouter extends OpenAI {
   static providerName = "openrouter";
@@ -79,15 +85,20 @@ class OpenRouter extends OpenAI {
     return body;
   }
 
-  private addCacheControlToContent(content: any, addCaching: boolean): any {
+  private addCacheControlToContent(
+    content: any,
+    addCaching: boolean,
+    ttl?: PromptCacheTtl,
+  ): any {
     if (!addCaching) return content;
+    const cache_control = cacheControlFor(ttl);
 
     if (typeof content === "string") {
       return [
         {
           type: "text",
           text: content,
-          cache_control: { type: "ephemeral" },
+          cache_control,
         },
       ];
     }
@@ -98,7 +109,7 @@ class OpenRouter extends OpenAI {
         if (part.type === "text" && idx === content.length - 1) {
           return {
             ...part,
-            cache_control: { type: "ephemeral" },
+            cache_control,
           };
         }
         return part;
@@ -110,6 +121,7 @@ class OpenRouter extends OpenAI {
 
   protected modifyChatBody(
     body: ChatCompletionCreateParams,
+    options?: CompletionOptions,
   ): ChatCompletionCreateParams {
     body = super.modifyChatBody(body);
 
@@ -117,19 +129,31 @@ class OpenRouter extends OpenAI {
       body = this.addGeminiThoughtSignatures(body);
     }
 
+    // The request's own setting (for example from the toolbar) wins over the
+    // model's configured default; an explicit false turns caching off.
+    const promptCaching =
+      options?.promptCaching ?? this.completionOptions.promptCaching;
+
     if (
       !this.isAnthropicModel(body.model) ||
-      (!this.cacheBehavior && !this.completionOptions.promptCaching)
+      promptCaching === false ||
+      (!this.cacheBehavior && !promptCaching)
     ) {
       return body;
     }
 
     const shouldCacheConversation =
-      this.cacheBehavior?.cacheConversation ||
-      this.completionOptions.promptCaching;
+      this.cacheBehavior?.cacheConversation || promptCaching;
     const shouldCacheSystemMessage =
-      this.cacheBehavior?.cacheSystemMessage ||
-      this.completionOptions.promptCaching;
+      this.cacheBehavior?.cacheSystemMessage || promptCaching;
+
+    // Anthropic-style cache_control, including ttl, is passed through to Claude
+    // models. The 1-hour lifetime is sent only for models known to take it
+    // (Claude 3.x models are 5 minutes only); otherwise the field is omitted.
+    const ttl = bedrockCacheTtl(
+      body.model,
+      resolvePromptCacheTtl(options?.promptCacheTtl, this.cacheBehavior?.ttl),
+    );
 
     if (!shouldCacheConversation && !shouldCacheSystemMessage) {
       return body;
@@ -162,7 +186,7 @@ class OpenRouter extends OpenAI {
       if (message.role === "system" && shouldCacheSystemMessage) {
         return {
           ...message,
-          content: this.addCacheControlToContent(message.content, true),
+          content: this.addCacheControlToContent(message.content, true, ttl),
         };
       }
 
@@ -177,7 +201,7 @@ class OpenRouter extends OpenAI {
       ) {
         return {
           ...message,
-          content: this.addCacheControlToContent(message.content, true),
+          content: this.addCacheControlToContent(message.content, true, ttl),
         };
       }
 

@@ -1003,8 +1003,14 @@ export abstract class BaseLLM implements ILLM {
     });
   }
 
+  /**
+   * Last chance to change a chat body before it goes to the OpenAI adapter.
+   * `options` are the request's completion options, with the model's configured
+   * defaults already merged in.
+   */
   protected modifyChatBody(
     body: ChatCompletionCreateParams,
+    options?: CompletionOptions,
   ): ChatCompletionCreateParams {
     return body;
   }
@@ -1233,7 +1239,7 @@ export abstract class BaseLLM implements ILLM {
             includeReasoningDetailsField: this.supportsReasoningDetailsField,
             includeReasoningContentField: this.supportsReasoningContentField,
           });
-          body = this.modifyChatBody(body);
+          body = this.modifyChatBody(body, completionOptions);
 
           if (logEnabled) {
             interaction?.logItem({
