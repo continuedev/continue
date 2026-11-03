@@ -1,21 +1,26 @@
 import * as os from "node:os";
-import { parseCommand, ruleCandidates } from "./command";
+import { commandCandidates } from "./candidates";
 import { ProtectedHit, ProtectedKind, protectedPathHit } from "./protected";
+import { isNetworkPath, secretWordLabel } from "./secretCommands";
+
+const strip = (s: string) =>
+  s.replace(/^[<>&|]+/, "").replace(/^['"]+|['"]+$/g, "");
+
+/** Words of a command, per candidate, so a command name knows whether it has arguments. */
+function candidateWords(command: string): string[][] {
+  return commandCandidates(command).map((c) =>
+    c.split(/\s+/).map(strip).filter(Boolean),
+  );
+}
 
 /** The words of a command worth testing as paths: quotes, redirects and `--opt=` stripped. */
 function pathWords(command: string): string[] {
   const words = new Set<string>();
-  for (const part of parseCommand(command).parts) {
-    for (const candidate of ruleCandidates(part)) {
-      for (const raw of candidate.split(" ")) {
-        const w = raw.replace(/^[<>&|]+/, "").replace(/^['"]+|['"]+$/g, "");
-        if (!w) continue;
-        words.add(w);
-        const eq = w.indexOf("=");
-        if (eq > 0 && eq < w.length - 1) {
-          words.add(w.slice(eq + 1).replace(/^['"]+|['"]+$/g, ""));
-        }
-      }
+  for (const list of candidateWords(command)) {
+    for (const w of list) {
+      words.add(w);
+      const eq = w.indexOf("=");
+      if (eq > 0 && eq < w.length - 1) words.add(strip(w.slice(eq + 1)));
     }
   }
   return [...words];
@@ -26,6 +31,10 @@ function pathWords(command: string): string[] {
  * on purpose, like deny rules: `echo .env` asks. A command can use a path in
  * ways this cannot see (a variable, a glob, `cd` then a bare name), so this
  * is a guard against accidents, not a sandbox.
+ *
+ * It also catches commands that print credentials without naming a file
+ * (`printenv`, `echo $AWS_SECRET_ACCESS_KEY`, `dir env:`) and network paths
+ * (`\\host\share`), which contact another computer.
  */
 export function protectedCommandHit(
   command: string,
@@ -34,6 +43,22 @@ export function protectedCommandHit(
   for (const word of pathWords(command)) {
     const hit = protectedPathHit(word, ["secret", "config"], home);
     if (hit) return hit;
+  }
+  for (const word of command.split(/\s+/)) {
+    if (isNetworkPath(word)) {
+      return { kind: "network", path: strip(word) };
+    }
+  }
+  for (const words of candidateWords(command)) {
+    for (let i = 0; i < words.length; i++) {
+      const label = secretWordLabel(
+        words[i],
+        i === 0,
+        words.length > 1,
+        i > 0 ? words[i - 1] : undefined,
+      );
+      if (label) return { kind: "secret", path: label };
+    }
   }
   return undefined;
 }

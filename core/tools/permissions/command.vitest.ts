@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { commandGlobMatch, parseCommand, ruleCandidates } from "./command";
+import { commandCandidates, ruleCandidates } from "./candidates";
+import { commandGlobMatch, parseCommand } from "./command";
 
 describe("parseCommand", () => {
   it("splits on unquoted separators and collapses spaces", () => {

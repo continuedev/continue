@@ -96,21 +96,24 @@ export function mcpNameMatch(pattern: string, toolName: string): boolean {
   return globMatch(pattern, toolName);
 }
 
+import { commandCandidates } from "./candidates";
 import {
   commandGlobMatch,
   hasUnsafeShellConstruct,
   parseCommand,
-  ruleCandidates,
 } from "./command";
 
 export { hasUnsafeShellConstruct, splitCommandParts } from "./command";
 
 /**
  * Terminal commands are split into parts (quotes respected). A deny rule on
- * any part, or on anything `ruleCandidates` finds inside it, refuses the
- * command. Ask rules work the same way. An allow rule applies only when the
- * scanner fully understands the command (no substitution, no file redirect,
- * no unterminated quote) and every part is covered by an allow rule.
+ * any part, or on anything `commandCandidates` finds in the command, refuses
+ * it: that is the command as the shell will read it, with quotes removed,
+ * directories and `.exe` dropped, case folded, wrappers skipped and nested
+ * scripts opened. Ask rules work the same way. An allow rule applies only when
+ * the scanner fully understands the command (no substitution, unsafe
+ * expansion, file redirect or unterminated quote) and every part is covered by
+ * an allow rule, matched exactly as written.
  *
  * Patterns use `*` for any run of characters, including `/`, because a
  * command is not a path (`terraform apply*` must match `terraform apply -var-file=a/b`).
@@ -121,12 +124,12 @@ export function matchTerminalCommand(
 ): RuleMatch | undefined {
   const toolRules = rules.filter((r) => r.toolName === "runTerminalCommand");
   const parsed = parseCommand(command);
-  const candidatesPerPart = parsed.parts.map((p) => ruleCandidates(p));
+  const candidates = commandCandidates(command);
+  // Deny and ask ignore case: `GIT push` is `git push` on Windows, and a
+  // protection must not depend on how a command is capitalised.
   const hits = (rule: ParsedRule) =>
     rule.pattern === undefined ||
-    [command, ...candidatesPerPart.flat()].some((c) =>
-      commandGlobMatch(rule.pattern!, c),
-    );
+    candidates.some((c) => commandGlobMatch(rule.pattern!, c, true));
 
   for (const rule of toolRules) {
     if (rule.decision === "deny" && hits(rule))
