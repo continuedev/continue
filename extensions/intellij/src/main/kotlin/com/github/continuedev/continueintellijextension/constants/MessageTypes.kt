@@ -91,6 +91,7 @@ class MessageTypes {
             "config/openProfile",
             "config/updateSharedConfig",
             "config/updateSelectedModel",
+            "config/openSecretLocation",
             "mcp/reloadServer",
             "mcp/startAuthentication",
             "mcp/removeAuthentication",

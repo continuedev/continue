@@ -26,7 +26,11 @@ import { ChatDescriber } from "./util/chatDescriber";
 import { compactConversation } from "./util/conversationCompaction";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
+import {
+  editConfigFile,
+  getContinueGlobalPath,
+  migrateV1DevDataFiles,
+} from "./util/paths";
 
 import {
   isProcessBackgrounded,
@@ -59,6 +63,7 @@ import {
   isContinueConfigRelatedUri,
 } from "./config/loadLocalAssistants";
 import { CodebaseRulesCache } from "./config/markdown/loadCodebaseRules";
+import { openSecretLocation } from "./config/openSecretLocation";
 import {
   setupLocalConfig,
   setupProviderConfig,
@@ -429,6 +434,16 @@ export class Core {
 
     on("config/openProfile", async (msg) => {
       await this.configHandler.openConfigProfile(msg.data.profileId);
+    });
+
+    on("config/openSecretLocation", async (msg) => {
+      await openSecretLocation({
+        ide: this.ide,
+        secretName: msg.data.secretName,
+        target: msg.data.target,
+        continueDir: getContinueGlobalPath(),
+        configUri: this.configHandler.currentProfile?.profileDescription.uri,
+      });
     });
 
     on("config/ideSettingsUpdate", async (msg) => {

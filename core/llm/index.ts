@@ -37,6 +37,10 @@ import { Logger } from "../util/Logger.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
 import { isOllamaInstalled } from "../util/ollamaHelper.js";
+import {
+  MissingSecretError,
+  unresolvedSecretNamesOfLlm,
+} from "../util/unresolvedSecrets.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 
 import {
@@ -322,8 +326,25 @@ export abstract class BaseLLM implements ILLM {
     return this._contextLength ?? DEFAULT_CONTEXT_LENGTH;
   }
 
-  getConfigurationStatus() {
+  getConfigurationStatus(): LLMConfigurationStatuses {
+    // A credential that is still a `${{ secrets.NAME }}` reference was never
+    // given a value on this machine.
+    if (unresolvedSecretNamesOfLlm(this).length > 0) {
+      return LLMConfigurationStatuses.MISSING_ENV_SECRET;
+    }
     return LLMConfigurationStatuses.VALID;
+  }
+
+  /**
+   * Refuse to call the provider when a credential is an unresolved secret
+   * reference. Sending it would only produce a confusing authentication error
+   * from the provider.
+   */
+  protected assertCredentialsResolved(): void {
+    const names = unresolvedSecretNamesOfLlm(this);
+    if (names.length > 0) {
+      throw new MissingSecretError(this.title ?? this.model, names);
+    }
   }
 
   protected createOpenAiAdapter() {
@@ -607,6 +628,7 @@ export abstract class BaseLLM implements ILLM {
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<string> {
     this.lastRequestId = undefined;
+    this.assertCredentialsResolved();
     const { completionOptions, logEnabled } =
       this._parseCompletionOptions(options);
     const interaction = logEnabled
@@ -722,6 +744,7 @@ export abstract class BaseLLM implements ILLM {
     options: LLMFullCompletionOptions = {},
   ) {
     this.lastRequestId = undefined;
+    this.assertCredentialsResolved();
     const { completionOptions, logEnabled, raw } =
       this._parseCompletionOptions(options);
     const interaction = logEnabled
@@ -855,6 +878,7 @@ export abstract class BaseLLM implements ILLM {
     options: LLMFullCompletionOptions = {},
   ) {
     this.lastRequestId = undefined;
+    this.assertCredentialsResolved();
     const { completionOptions, logEnabled, raw } =
       this._parseCompletionOptions(options);
     const interaction = logEnabled
@@ -1115,6 +1139,7 @@ export abstract class BaseLLM implements ILLM {
     messageOptions?: MessageOption,
   ): AsyncGenerator<ChatMessage, PromptLog> {
     this.lastRequestId = undefined;
+    this.assertCredentialsResolved();
 
     // Apply per-model tool overrides if configured
     let effectiveTools = options.tools;
@@ -1362,6 +1387,7 @@ export abstract class BaseLLM implements ILLM {
   }
 
   async embed(chunks: string[]): Promise<number[][]> {
+    this.assertCredentialsResolved();
     const batches = this.getBatchedChunks(chunks);
 
     return (
@@ -1392,6 +1418,7 @@ export abstract class BaseLLM implements ILLM {
   }
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
+    this.assertCredentialsResolved();
     if (this.shouldUseOpenAIAdapter("rerank") && this.openaiAdapter) {
       const results = await this.openaiAdapter.rerank({
         model: this.model,

@@ -8,6 +8,7 @@ import {
 import { useContext, useMemo } from "react";
 
 import { GhostButton } from "../../components";
+import { MissingSecretsPanel } from "../../components/config/MissingSecretsPanel";
 import { useEditModel } from "../../components/mainInput/Lump/useEditBlock";
 import { useMainEditor } from "../../components/mainInput/TipTapEditor";
 import ToggleDiv from "../../components/ToggleDiv";
@@ -18,6 +19,7 @@ import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { analyzeError } from "../../util/errorAnalysis";
+import { parseMissingSecretNames } from "core/util/unresolvedSecrets";
 
 interface StreamErrorProps {
   error: unknown;
@@ -129,6 +131,32 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       </div>
     </div>
   );
+
+  // The request was refused before it was sent because the key is a
+  // `${{ secrets.* }}` reference with no value on this machine.
+  const missingSecretNames = parseMissingSecretNames(message);
+  if (missingSecretNames.length > 0) {
+    errorContent = (
+      <div className="flex flex-col gap-2" data-testid="missing-secret-error">
+        <span>
+          {`The key for ${selectedModel?.title ?? "this model"} is not set on this machine. Nothing was sent to ${providerName}.`}
+        </span>
+        <MissingSecretsPanel
+          missing={missingSecretNames.map((secretName) => ({
+            secretName,
+            providers: selectedModel?.underlyingProviderName
+              ? [selectedModel.underlyingProviderName]
+              : [],
+            modelNames: selectedModel?.title ? [selectedModel.title] : [],
+          }))}
+          onDone={() => {
+            dispatch(setShowDialog(false));
+            dispatch(setDialogMessage(undefined));
+          }}
+        />
+      </div>
+    );
+  }
 
   // Display components for specific errors
   if (statusCode === 429) {

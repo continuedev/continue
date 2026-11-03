@@ -19,6 +19,12 @@ import HoverItem from "../../InputToolbar/HoverItem";
 import { useAuth } from "../../../../context/Auth";
 import { CONFIG_ROUTES } from "../../../../util/navigation";
 import { AssistantAndOrgListbox } from "../../../AssistantAndOrgListbox";
+import { MissingSecretsPopover } from "../../../config/MissingSecretsPopover";
+import {
+  missingSecretsFromErrors,
+  missingSecretSummary,
+  otherErrors,
+} from "../../../../util/missingSecrets";
 
 export function BlockSettingsTopToolbar() {
   const navigate = useNavigate();
@@ -36,6 +42,13 @@ export function BlockSettingsTopToolbar() {
     pendingToolCalls.length > 0 || callingToolCalls.length > 0;
 
   const shouldShowError = configError && configError?.length > 0;
+
+  const missingSecrets = missingSecretsFromErrors(configError);
+  const otherConfigErrors = otherErrors(configError);
+  // Only a missing key is wrong: say which one, and offer the fix right here.
+  // Any other error keeps today's behaviour (open the Configs tab).
+  const onlyMissingSecrets =
+    missingSecrets.length > 0 && otherConfigErrors.length === 0;
 
   const handleRulesClick = () => {
     if (selectedProfile) {
@@ -70,8 +83,36 @@ export function BlockSettingsTopToolbar() {
   return (
     <div className="flex flex-1 items-center justify-between gap-3">
       <div className="flex items-center gap-1">
-        {shouldShowError && (
-          <ToolTip delayShow={700} content="View configuration errors">
+        {shouldShowError && onlyMissingSecrets && (
+          <ToolTip
+            delayShow={700}
+            content={missingSecretSummary(missingSecrets)}
+          >
+            <div data-testid="block-settings-toolbar-icon-missing-secret">
+              <MissingSecretsPopover
+                missing={missingSecrets}
+                ariaLabel={missingSecretSummary(missingSecrets)}
+                buttonTestId="block-settings-toolbar-icon-error"
+                className="flex items-center rounded-full px-1.5 py-1 sm:px-1.5"
+              >
+                <ExclamationTriangleIcon
+                  className="h-[13px] w-[13px] flex-shrink-0 text-warning"
+                  aria-hidden="true"
+                />
+              </MissingSecretsPopover>
+            </div>
+          </ToolTip>
+        )}
+
+        {shouldShowError && !onlyMissingSecrets && (
+          <ToolTip
+            delayShow={700}
+            content={
+              missingSecrets.length > 0
+                ? `${missingSecretSummary(missingSecrets)}. View configuration errors`
+                : "View configuration errors"
+            }
+          >
             <div
               role="button"
               tabIndex={0}

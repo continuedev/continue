@@ -39,6 +39,7 @@ import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { unrollLocalYamlBlocks } from "./loadLocalYamlBlocks";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
+import { unresolvedSecretErrors } from "./unresolvedSecretErrors";
 import {
   convertYamlMcpConfigToInternalMcpOptions,
   convertYamlRuleToContinueRule,
@@ -349,6 +350,21 @@ export async function configYamlToContinueConfig(options: {
   );
   continueConfig.modeModels = modeModelsResult.modeModels;
   localErrors.push(...modeModelsResult.errors);
+
+  // Secrets that no .env file or environment variable provided are still
+  // `${{ secrets.NAME }}` here. Say so, instead of letting the literal text be
+  // sent to the provider as an API key.
+  localErrors.push(
+    ...unresolvedSecretErrors(
+      (config.models ?? []).map((m) => ({
+        name: m.name,
+        provider: m.provider,
+        apiKey: m.apiKey,
+        env: m.env,
+        requestOptions: m.requestOptions,
+      })),
+    ),
+  );
 
   // Add transformers js to the embed models in vs code if not already added
   if (

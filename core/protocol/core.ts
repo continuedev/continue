@@ -156,6 +156,15 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     GlobalContextModelSelections,
   ];
+  /**
+   * Take the user to where a secret that is missing on this machine must be
+   * set: the .env file (created with an empty `NAME=` line), or the line of
+   * the config that uses it.
+   */
+  "config/openSecretLocation": [
+    { secretName: string; target: "env" | "configLine" },
+    void,
+  ];
   "context/getContextItems": [
     {
       name: string;

@@ -1,9 +1,28 @@
 import { ConfigYaml, configYamlSchema } from "./schemas/index.js";
 
+/**
+ * Something the GUI can offer to do about an error. Optional, so existing
+ * producers and consumers of ConfigValidationError are unaffected.
+ */
+export type ConfigErrorAction = {
+  /**
+   * A `${{ secrets.NAME }}` reference in a model's credentials has no value on
+   * this machine (not in ~/.continue/.env, the workspace .env files or the
+   * environment).
+   */
+  kind: "setSecret";
+  secretName: string;
+  /** Providers of the models that use the secret, for a readable message. */
+  providers: string[];
+  /** Names (titles) of the models that use the secret. */
+  modelNames: string[];
+};
+
 export interface ConfigValidationError {
   fatal: boolean;
   message: string;
   uri?: string;
+  action?: ConfigErrorAction;
 }
 
 export interface ConfigResult<T> {

@@ -1,9 +1,20 @@
 import { ModelRole } from "@continuedev/config-yaml";
-import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+import {
+  Cog6ToothIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 import { ModelDescription } from "core";
 import { ReactNode } from "react";
+import { MissingSecretsPopover } from "../../../components/config/MissingSecretsPopover";
 import { ToolTip } from "../../../components/gui/Tooltip";
 import { Button } from "../../../components/ui";
+import { useAppSelector } from "../../../redux/hooks";
+import {
+  missingSecretsForModel,
+  missingSecretsFromErrors,
+  missingSecretSummary,
+  modelHasMissingSecret,
+} from "../../../util/missingSecrets";
 import ModelRoleSelector from "./ModelRoleSelector";
 
 interface ModelRoleRowProps {
@@ -29,6 +40,15 @@ export function ModelRoleRow({
   setupURL,
   shortcut,
 }: ModelRoleRowProps) {
+  const configError = useAppSelector((state) => state.config.configError);
+  // Show the warning only when the model picked for this role is affected.
+  const missing = modelHasMissingSecret(selectedModel)
+    ? missingSecretsForModel(
+        missingSecretsFromErrors(configError),
+        selectedModel?.title,
+      )
+    : [];
+
   return (
     <div className="py-6 first:pt-0 last:pb-0">
       <div className="mb-2">
@@ -61,6 +81,22 @@ export function ModelRoleRow({
               <Cog6ToothIcon className="h-4 w-4 flex-shrink-0" />
             </Button>
           </ToolTip>
+        )}
+        {missing.length > 0 && (
+          <MissingSecretsPopover
+            missing={missing}
+            ariaLabel={missingSecretSummary(missing)}
+            buttonTestId={`model-row-key-not-set-${role}`}
+          >
+            <ToolTip content={missingSecretSummary(missing)}>
+              <span>
+                <ExclamationTriangleIcon
+                  className="h-4 w-4 flex-shrink-0 text-warning"
+                  aria-hidden="true"
+                />
+              </span>
+            </ToolTip>
+          </MissingSecretsPopover>
         )}
       </div>
     </div>
