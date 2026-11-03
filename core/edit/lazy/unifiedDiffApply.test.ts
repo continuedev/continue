@@ -441,3 +441,35 @@ missing3`;
     );
   });
 });
+
+describe("applyUnifiedDiff with hunk lines that look like file headers", () => {
+  it("removes a line that starts with --", () => {
+    const sourceCode = ["-- setup", "doSomething()"].join("\n");
+    const diffText = [
+      "--- a.txt",
+      "+++ b.txt",
+      "@@ -1,2 +1 @@",
+      "--- setup",
+      " doSomething()",
+    ].join("\n");
+
+    const result = applyUnifiedDiff(sourceCode, diffText);
+
+    expect(result).toContainEqual({ type: "old", line: "-- setup" });
+  });
+
+  it("adds a line that starts with ++", () => {
+    const sourceCode = "doSomething()";
+    const diffText = [
+      "--- a.txt",
+      "+++ b.txt",
+      "@@ -1,1 +1,2 @@",
+      " doSomething()",
+      "+++ plus",
+    ].join("\n");
+
+    const result = applyUnifiedDiff(sourceCode, diffText);
+
+    expect(result).toContainEqual({ type: "new", line: "++ plus" });
+  });
+});
