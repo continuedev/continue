@@ -745,7 +745,6 @@
     "lru-cache": "^11.2.4",
     "minisearch": "^7.0.0",
     "mocha": "^11.7.5",
-    "monaco-editor": "^0.57.0",
     "monaco-vscode-textmate-theme-converter": "^0.1.7",
     "node-fetch": "^3.3.2",
     "node-machine-id": "^1.1.12",
