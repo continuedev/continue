@@ -372,7 +372,9 @@ jobs:
   jetbrains-tests:
     if: github.event.pull_request.draft != true
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Cold Gradle/npm caches make a run take ~13 min; the Gradle step itself is bounded
+    # (10 min, see the run-jetbrains-tests action) so a hang cannot reach this limit.
+    timeout-minutes: 25
     steps:
       - name: Free disk space
         uses: jlumbroso/free-disk-space@main

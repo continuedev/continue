@@ -115,10 +115,21 @@ runs:
       run: |
         cd extensions/intellij
         export DISPLAY=:99.0
-        Xvfb -ac :99 -screen 0 1920x1080x24 &
+        Xvfb -ac :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
         sleep 10
         mkdir -p build/reports
-        ./gradlew test testIntegration
+
+        # When an integration test fails, the IDE under test is left running and Gradle never
+        # finishes. That used to hold this step until the job timeout, so the failure showed up
+        # as "cancelled" and the failure-only steps below (logs, video, report upload) were
+        # skipped. Bound the run so a failure is reported as a failure and those steps run.
+        status=0
+        timeout --kill-after=30s 10m ./gradlew test testIntegration || status=$?
+        if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
+          echo "::error::Gradle did not finish within 10 minutes (a failed integration test usually leaves the IDE running; see the test report artifact)"
+        fi
+        ./gradlew --stop > /dev/null 2>&1 || true
+        exit "$status"
 
     - name: Move video
       if: ${{ failure() }}
