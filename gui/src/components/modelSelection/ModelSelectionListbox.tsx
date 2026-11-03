@@ -30,7 +30,7 @@ interface ModelSelectionListboxProps {
  * Simple fuzzy search algorithm
  * Returns a score based on how well the query matches the text
  */
-function fuzzyScore(query: string, text: string): number {
+export function fuzzyScore(query: string, text: string): number {
   const q = query.toLowerCase();
   const t = text.toLowerCase();
 
