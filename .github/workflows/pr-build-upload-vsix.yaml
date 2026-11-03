@@ -10,6 +10,11 @@ on:
       - main
     types: [labeled, synchronize, reopened, ready_for_review]
   workflow_dispatch:
+    inputs:
+      darwin_runner:
+        description: "Runner for the darwin build. ubuntu-latest builds the macOS package on Linux (prepackage is target-aware) when no macOS runner is available."
+        required: false
+        default: macos-latest
 
 # A newer push to the same branch/PR supersedes the run in flight; without this
 # the fork's runner pool fills with stale runs and nothing starts.
@@ -36,7 +41,7 @@ jobs:
             runner: windows-latest
           - platform: darwin
             arch: arm64
-            runner: macos-latest
+            runner: ${{ inputs.darwin_runner || 'macos-latest' }}
 
     steps:
       - uses: actions/checkout@v7
