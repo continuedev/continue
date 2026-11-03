@@ -323,6 +323,13 @@ class Anthropic extends BaseLLM {
             startEvent.message.usage.cache_read_input_tokens ?? undefined;
           usage.promptTokensDetails!.cacheWriteTokens =
             startEvent.message.usage.cache_creation_input_tokens ?? undefined;
+          // The per-lifetime split is absent on older API versions and proxies.
+          if (startEvent.message.usage.cache_creation) {
+            usage.promptTokensDetails!.cacheWriteTokens5m =
+              startEvent.message.usage.cache_creation.ephemeral_5m_input_tokens;
+            usage.promptTokensDetails!.cacheWriteTokens1h =
+              startEvent.message.usage.cache_creation.ephemeral_1h_input_tokens;
+          }
           break;
         case "message_delta":
           // Update usage information during streaming

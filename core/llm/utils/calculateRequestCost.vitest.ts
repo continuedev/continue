@@ -1,8 +1,14 @@
+import { allLlms } from "@continuedev/llm-info";
 import { describe, expect, it } from "vitest";
 
 import type { Usage } from "../..";
 
-import { calculateRequestCost, CostBreakdown } from "./calculateRequestCost";
+import {
+  calculateRequestCost,
+  CostBreakdown,
+  findAnthropicPricing,
+  normalizeClaudeModelId,
+} from "./calculateRequestCost";
 
 interface TestCase {
   provider: string;
@@ -253,4 +259,142 @@ describe("calculateRequestCost", () => {
       });
     },
   );
+});
+
+describe("calculateRequestCost cache lifetimes and providers", () => {
+  // Sonnet 4.6: $3 in, $15 out, 5m write $3.75, 1h write $6, read $0.30 per MTok.
+  it("prices 1-hour writes at 2x the input price", () => {
+    const result = calculateRequestCost("anthropic", "claude-sonnet-4-6", {
+      promptTokens: 0,
+      completionTokens: 0,
+      promptTokensDetails: {
+        cacheWriteTokens: 1_000_000,
+        cacheWriteTokens5m: 0,
+        cacheWriteTokens1h: 1_000_000,
+      },
+    });
+    expect(result!.cost).toBeCloseTo(6, 6);
+    expect(result!.breakdown).toContain("Cache Write (1h)");
+  });
+
+  it("prices a mixed write at each lifetime's rate", () => {
+    const result = calculateRequestCost("anthropic", "claude-sonnet-4-6", {
+      promptTokens: 0,
+      completionTokens: 0,
+      promptTokensDetails: {
+        cacheWriteTokens: 1_000_000,
+        cacheWriteTokens5m: 400_000,
+        cacheWriteTokens1h: 600_000,
+      },
+    });
+    // 0.4 * 3.75 + 0.6 * 6 = 5.1
+    expect(result!.cost).toBeCloseTo(5.1, 6);
+  });
+
+  it("prices all writes as 5-minute when no split is reported", () => {
+    const result = calculateRequestCost("anthropic", "claude-sonnet-4-6", {
+      promptTokens: 0,
+      completionTokens: 0,
+      promptTokensDetails: { cacheWriteTokens: 1_000_000 },
+    });
+    expect(result!.cost).toBeCloseTo(3.75, 6);
+  });
+
+  it("does not price more 1-hour tokens than the total written", () => {
+    const result = calculateRequestCost("anthropic", "claude-sonnet-4-6", {
+      promptTokens: 0,
+      completionTokens: 0,
+      promptTokensDetails: {
+        cacheWriteTokens: 1_000_000,
+        cacheWriteTokens1h: 5_000_000,
+      },
+    });
+    expect(result!.cost).toBeCloseTo(6, 6);
+  });
+
+  it.each([
+    // [model, input $/MTok, output $/MTok]
+    ["claude-haiku-4-5-20251001", 1, 5],
+    ["claude-sonnet-4-5-20250929", 3, 15],
+    ["claude-sonnet-4-20250514", 3, 15],
+    ["claude-opus-4-8", 5, 25],
+    ["claude-opus-4-7", 5, 25],
+    ["claude-opus-4-1-20250805", 15, 75],
+    ["claude-opus-4-20250514", 15, 75],
+  ])("has a price for %s", (model, input, output) => {
+    const result = calculateRequestCost("anthropic", model, {
+      promptTokens: 1_000_000,
+      completionTokens: 1_000_000,
+    });
+    expect(result).not.toBeNull();
+    expect(result!.cost).toBeCloseTo(input + output, 6);
+  });
+
+  it("does not price a future Opus 4 version at an older version's price", () => {
+    expect(
+      calculateRequestCost("anthropic", "claude-opus-4-9", {
+        promptTokens: 1000,
+        completionTokens: 1000,
+      }),
+    ).toBeNull();
+  });
+
+  it.each([
+    ["bedrock", "us.anthropic.claude-sonnet-4-5-20250929-v1:0"],
+    ["bedrock", "anthropic.claude-opus-4-6-v1"],
+    ["vertexai", "claude-sonnet-4-5@20250929"],
+    ["openrouter", "anthropic/claude-sonnet-4.5"],
+  ])("prices Claude on %s as %s", (provider, model) => {
+    const result = calculateRequestCost(provider, model, {
+      promptTokens: 1_000_000,
+      completionTokens: 0,
+    });
+    expect(result).not.toBeNull();
+    expect(result!.cost).toBeGreaterThan(0);
+  });
+
+  it("returns null for non-Claude models on those providers", () => {
+    expect(
+      calculateRequestCost("bedrock", "amazon.nova-pro-v1:0", {
+        promptTokens: 1000,
+        completionTokens: 1000,
+      }),
+    ).toBeNull();
+    expect(
+      calculateRequestCost("openrouter", "openai/gpt-4o", {
+        promptTokens: 1000,
+        completionTokens: 1000,
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("normalizeClaudeModelId", () => {
+  it.each([
+    ["claude-sonnet-4-6", "claude-sonnet-4-6"],
+    [
+      "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "claude-sonnet-4-5-20250929",
+    ],
+    ["anthropic.claude-opus-4-6-v1", "claude-opus-4-6"],
+    ["claude-sonnet-4-5@20250929", "claude-sonnet-4-5"],
+    ["anthropic/claude-sonnet-4.5", "claude-sonnet-4-5"],
+    ["gpt-4o", undefined],
+  ])("%s -> %s", (model, expected) => {
+    expect(normalizeClaudeModelId(model)).toBe(expected);
+  });
+});
+
+describe("every Claude model in llm-info has a price", () => {
+  const claudeIds = allLlms
+    .filter((m) => m.provider === "anthropic" || m.provider === "bedrock")
+    .map((m) => m.model)
+    .filter((id) => normalizeClaudeModelId(id) !== undefined)
+    // llm-info keeps entries for retired Claude 2 models and a bare alias; the
+    // cost table only covers Claude 3 and later.
+    .filter((id) => !/claude-(2|instant)/.test(id));
+
+  it.each(claudeIds)("%s", (id) => {
+    expect(findAnthropicPricing(id)).not.toBeNull();
+  });
 });

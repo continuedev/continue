@@ -406,6 +406,14 @@ export interface Usage {
     cachedTokens?: number;
     /** This an Anthropic-specific property */
     cacheWriteTokens?: number;
+    /**
+     * Part of `cacheWriteTokens` written with the 5-minute lifetime. Only set
+     * when the provider reports the split (Anthropic `cache_creation`, Bedrock
+     * `cacheDetails`); when absent, treat all writes as 5-minute.
+     */
+    cacheWriteTokens5m?: number;
+    /** Part of `cacheWriteTokens` written with the 1-hour lifetime. */
+    cacheWriteTokens1h?: number;
     audioTokens?: number;
   };
   completionTokensDetails?: {

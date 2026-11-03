@@ -27,6 +27,7 @@ import type { NodeHttpHandler } from "@smithy/node-http-handler";
 
 import type { CompletionOptions, RequestOptions } from "../../index.js";
 import { ChatMessage, Chunk, LLMOptions, MessageContent } from "../../index.js";
+import type { Usage } from "../../index.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { parseDataUrl } from "../../util/url.js";
@@ -38,6 +39,7 @@ import { getSecureID } from "../utils/getSecureID.js";
 import {
   applyCrossRegionInference,
   BedrockModelOption,
+  bedrockUsageToUsage,
   buildModelCatalog,
   getBedrockErrorHint,
 } from "./bedrockHelpers.js";
@@ -353,9 +355,10 @@ class Bedrock extends BaseLLM {
     };
 
     try {
+      let usage: Usage | undefined;
       for await (const chunk of response.stream) {
         if (chunk.metadata?.usage) {
-          console.log(`${JSON.stringify(chunk.metadata.usage)}`);
+          usage = bedrockUsageToUsage(chunk.metadata.usage);
         }
 
         const contentBlockDelta: ContentBlockDelta | undefined =
@@ -448,6 +451,11 @@ class Bedrock extends BaseLLM {
             }
           }
         }
+      }
+      if (usage) {
+        // The metadata event arrives after the content; BaseLLM picks the
+        // usage up from the last assistant chunk that carries it.
+        yield { role: "assistant", content: "", usage };
       }
     } catch (error: unknown) {
       // Clean up state and let the original error bubble up for retry handling

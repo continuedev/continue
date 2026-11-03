@@ -236,3 +236,53 @@ export function buildModelCatalog(
       a.name.localeCompare(b.name),
   );
 }
+
+/** The fields of Bedrock's `TokenUsage` that the provider reads. */
+export interface BedrockTokenUsageLike {
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheReadInputTokens?: number;
+  cacheWriteInputTokens?: number;
+  cacheDetails?: { ttl?: string; inputTokens?: number }[];
+}
+
+/**
+ * Map Bedrock's usage to Continue's `Usage`. With caching on, Bedrock's
+ * `inputTokens` counts only tokens that were neither read from nor written to
+ * the cache, which is the same meaning as Anthropic's `input_tokens`, so
+ * `promptTokens` keeps that meaning on both paths.
+ */
+export function bedrockUsageToUsage(usage: BedrockTokenUsageLike): {
+  promptTokens: number;
+  completionTokens: number;
+  promptTokensDetails: {
+    cachedTokens: number;
+    cacheWriteTokens: number;
+    cacheWriteTokens5m?: number;
+    cacheWriteTokens1h?: number;
+  };
+} {
+  const details: {
+    cachedTokens: number;
+    cacheWriteTokens: number;
+    cacheWriteTokens5m?: number;
+    cacheWriteTokens1h?: number;
+  } = {
+    cachedTokens: usage.cacheReadInputTokens ?? 0,
+    cacheWriteTokens: usage.cacheWriteInputTokens ?? 0,
+  };
+  // `cacheDetails` is empty when nothing was written.
+  if (usage.cacheDetails?.length) {
+    details.cacheWriteTokens5m = 0;
+    details.cacheWriteTokens1h = 0;
+    for (const d of usage.cacheDetails) {
+      if (d.ttl === "1h") details.cacheWriteTokens1h += d.inputTokens ?? 0;
+      else if (d.ttl === "5m") details.cacheWriteTokens5m += d.inputTokens ?? 0;
+    }
+  }
+  return {
+    promptTokens: usage.inputTokens ?? 0,
+    completionTokens: usage.outputTokens ?? 0,
+    promptTokensDetails: details,
+  };
+}

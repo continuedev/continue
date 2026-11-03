@@ -466,6 +466,86 @@ describe("Anthropic", () => {
     });
   });
 
+  describe("Usage", () => {
+    // The suite's Response is node-fetch's, which cannot wrap a web
+    // ReadableStream (it would send "[object ReadableStream]"), so the SSE
+    // body is passed as a string.
+    async function collectUsage(events: any[]) {
+      const anthropic = new Anthropic({
+        apiKey: "test-api-key",
+        model: "claude-sonnet-4-5",
+        apiBase: "https://api.anthropic.com/v1/",
+      });
+      const sse = events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join("");
+      (anthropic as any).fetch = vi.fn().mockResolvedValue(
+        new Response(sse, {
+          headers: { "Content-Type": "text/event-stream" },
+        }),
+      );
+
+      let usage: any;
+      for await (const chunk of anthropic.streamChat(
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+      )) {
+        if (chunk.role === "assistant" && chunk.usage) {
+          usage = chunk.usage;
+        }
+      }
+      return usage;
+    }
+
+    test("keeps the 5-minute and 1-hour cache write split", async () => {
+      const usage = await collectUsage([
+        {
+          type: "message_start",
+          message: {
+            usage: {
+              input_tokens: 12,
+              cache_read_input_tokens: 9000,
+              cache_creation_input_tokens: 700,
+              cache_creation: {
+                ephemeral_5m_input_tokens: 200,
+                ephemeral_1h_input_tokens: 500,
+              },
+            },
+          },
+        },
+        { type: "message_delta", usage: { output_tokens: 33 } },
+        { type: "content_block_stop" },
+      ]);
+
+      expect(usage.promptTokens).toBe(12);
+      expect(usage.completionTokens).toBe(33);
+      expect(usage.promptTokensDetails).toEqual({
+        cachedTokens: 9000,
+        cacheWriteTokens: 700,
+        cacheWriteTokens5m: 200,
+        cacheWriteTokens1h: 500,
+      });
+    });
+
+    test("leaves the split unset when the API does not report it", async () => {
+      const usage = await collectUsage([
+        {
+          type: "message_start",
+          message: {
+            usage: {
+              input_tokens: 12,
+              cache_read_input_tokens: 0,
+              cache_creation_input_tokens: 700,
+            },
+          },
+        },
+        { type: "content_block_stop" },
+      ]);
+
+      expect(usage.promptTokensDetails.cacheWriteTokens).toBe(700);
+      expect(usage.promptTokensDetails.cacheWriteTokens5m).toBeUndefined();
+      expect(usage.promptTokensDetails.cacheWriteTokens1h).toBeUndefined();
+    });
+  });
+
   describe("Error handling", () => {
     test("should throw error when API key is missing", async () => {
       const anthropic = new Anthropic({

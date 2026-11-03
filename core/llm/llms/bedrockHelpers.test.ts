@@ -1,5 +1,6 @@
 import {
   applyCrossRegionInference,
+  bedrockUsageToUsage,
   buildModelCatalog,
   getBedrockErrorHint,
   inferenceProfilePrefixForRegion,
@@ -245,5 +246,52 @@ describe("getBedrockErrorHint (discovery)", () => {
     expect(getBedrockErrorHint(e, { region: "us-eest-1" })).toContain(
       "us-eest-1",
     );
+  });
+});
+
+describe("bedrockUsageToUsage", () => {
+  it("maps tokens and cache reads and writes", () => {
+    expect(
+      bedrockUsageToUsage({
+        inputTokens: 40,
+        outputTokens: 7,
+        cacheReadInputTokens: 9000,
+        cacheWriteInputTokens: 600,
+      }),
+    ).toEqual({
+      promptTokens: 40,
+      completionTokens: 7,
+      promptTokensDetails: { cachedTokens: 9000, cacheWriteTokens: 600 },
+    });
+  });
+
+  it("splits writes by lifetime from cacheDetails", () => {
+    const usage = bedrockUsageToUsage({
+      inputTokens: 1,
+      outputTokens: 1,
+      cacheWriteInputTokens: 600,
+      cacheDetails: [
+        { ttl: "1h", inputTokens: 500 },
+        { ttl: "5m", inputTokens: 100 },
+      ],
+    });
+    expect(usage.promptTokensDetails.cacheWriteTokens1h).toBe(500);
+    expect(usage.promptTokensDetails.cacheWriteTokens5m).toBe(100);
+  });
+
+  it("leaves the split unset when cacheDetails is empty or absent", () => {
+    for (const cacheDetails of [undefined, []]) {
+      const usage = bedrockUsageToUsage({ inputTokens: 1, cacheDetails });
+      expect(usage.promptTokensDetails.cacheWriteTokens5m).toBeUndefined();
+      expect(usage.promptTokensDetails.cacheWriteTokens1h).toBeUndefined();
+    }
+  });
+
+  it("defaults missing fields to zero", () => {
+    expect(bedrockUsageToUsage({})).toEqual({
+      promptTokens: 0,
+      completionTokens: 0,
+      promptTokensDetails: { cachedTokens: 0, cacheWriteTokens: 0 },
+    });
   });
 });

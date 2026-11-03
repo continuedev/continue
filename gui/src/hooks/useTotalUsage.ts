@@ -2,15 +2,23 @@ import {
   calculateRequestCost,
   CostBreakdown,
 } from "core/llm/utils/calculateRequestCost";
+import { totalInputTokens } from "core/llm/utils/cacheStats";
 import { useMemo } from "react";
 import { LLMLog } from "./useLLMLog";
 
 export interface TotalUsage {
   totalPromptTokens: number;
+  /**
+   * Input tokens as the API counted them (including cache reads and writes for
+   * Claude models), summed over interactions that reported usage. Unlike
+   * `totalPromptTokens`, which is a local estimate of the whole log.
+   */
+  totalApiInputTokens: number;
   totalGeneratedTokens: number;
   totalThinkingTokens: number;
   totalCachedTokens: number;
   totalCacheWriteTokens: number;
+  totalCacheWriteTokens1h: number;
   totalInteractions: number;
   totalSuccessfulInteractions: number;
   totalErrorInteractions: number;
@@ -25,10 +33,12 @@ export interface TotalUsage {
 export default function useTotalUsage(llmLog: LLMLog): TotalUsage {
   return useMemo(() => {
     let totalPromptTokens = 0;
+    let totalApiInputTokens = 0;
     let totalGeneratedTokens = 0;
     let totalThinkingTokens = 0;
     let totalCachedTokens = 0;
     let totalCacheWriteTokens = 0;
+    let totalCacheWriteTokens1h = 0;
     let totalInteractions = 0;
     let totalSuccessfulInteractions = 0;
     let totalErrorInteractions = 0;
@@ -52,6 +62,13 @@ export default function useTotalUsage(llmLog: LLMLog): TotalUsage {
           totalCachedTokens += usage.promptTokensDetails?.cachedTokens || 0;
           totalCacheWriteTokens +=
             usage.promptTokensDetails?.cacheWriteTokens || 0;
+          totalCacheWriteTokens1h +=
+            usage.promptTokensDetails?.cacheWriteTokens1h || 0;
+          totalApiInputTokens += totalInputTokens(
+            interaction.start?.provider ?? "",
+            interaction.start?.options?.model ?? "",
+            usage,
+          );
 
           // Calculate cost if we have the necessary information
           if (
@@ -87,10 +104,12 @@ export default function useTotalUsage(llmLog: LLMLog): TotalUsage {
 
     return {
       totalPromptTokens,
+      totalApiInputTokens,
       totalGeneratedTokens,
       totalThinkingTokens,
       totalCachedTokens,
       totalCacheWriteTokens,
+      totalCacheWriteTokens1h,
       totalInteractions,
       totalSuccessfulInteractions,
       totalErrorInteractions,

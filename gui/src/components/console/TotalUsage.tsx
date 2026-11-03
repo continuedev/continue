@@ -309,17 +309,21 @@ const TotalUsage: React.FC<TotalUsageProps> = ({ llmLog }) => {
       {totalUsage.totalCacheWriteTokens > 0 && (
         <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2">
           <StatCard
-            label="Cache Write"
+            label={
+              totalUsage.totalCacheWriteTokens1h > 0
+                ? `Cache Write (${totalUsage.totalCacheWriteTokens1h.toLocaleString()} at 1h)`
+                : "Cache Write"
+            }
             value={totalUsage.totalCacheWriteTokens}
             color="var(--vscode-charts-red)"
           />
           <div className="flex items-center justify-center rounded-lg border border-[color:var(--vscode-panel-border)] bg-[color:var(--vscode-editor-background)] p-3">
             <div className="text-sm text-[color:var(--vscode-descriptionForeground)]">
               Cache Hit Rate:{" "}
-              {totalUsage.totalPromptTokens > 0
+              {totalUsage.totalApiInputTokens > 0
                 ? (
                     (totalUsage.totalCachedTokens /
-                      totalUsage.totalPromptTokens) *
+                      totalUsage.totalApiInputTokens) *
                     100
                   ).toFixed(1)
                 : "0"}
