@@ -16,7 +16,7 @@
   "author": "Continue Dev, Inc",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@biomejs/biome": "1.6.4",
+    "@biomejs/biome": "2.6.4",
     "@google/generative-ai": "^0.24.1",
     "@modelcontextprotocol/ext-apps": "^1.0.1",
     "@shikijs/colorized-brackets": "^4.5.0",
