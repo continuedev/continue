@@ -1,5 +1,9 @@
 import { BLOCK_TYPES, RequestOptions } from "../browser.js";
-import { AssistantUnrolled, ConfigYaml } from "../schemas/index.js";
+import {
+  AssistantUnrolled,
+  ConfigYaml,
+  ToolPermissions,
+} from "../schemas/index.js";
 import { BlockDuplicationDetector } from "./blockDuplicationDetector.js";
 
 export function mergePackages(
@@ -19,11 +23,42 @@ export function mergePackages(
     ...(current.modeModels || incoming.modeModels
       ? { modeModels: { ...current.modeModels, ...incoming.modeModels } }
       : {}),
+    ...mergeToolPermissionsField(current, incoming),
     requestOptions: mergeConfigYamlRequestOptions(
       current.requestOptions,
       incoming.requestOptions,
     ),
   };
+}
+
+/**
+ * Rules from both sides apply. Lists are concatenated, never replaced, so a
+ * shared config cannot silently drop a deny rule from a personal one (or the
+ * other way round). Order does not matter: deny beats ask beats allow.
+ */
+export function mergeToolPermissions(
+  current: ToolPermissions | undefined,
+  incoming: ToolPermissions | undefined,
+): ToolPermissions | undefined {
+  if (!current && !incoming) return undefined;
+  const merged: ToolPermissions = {};
+  for (const kind of ["allow", "ask", "deny"] as const) {
+    const list = [...(current?.[kind] ?? []), ...(incoming?.[kind] ?? [])];
+    const unique = list.filter((r, i) => list.indexOf(r) === i);
+    if (unique.length > 0) merged[kind] = unique;
+  }
+  return Object.keys(merged).length > 0 ? merged : undefined;
+}
+
+function mergeToolPermissionsField(
+  current: { toolPermissions?: ToolPermissions },
+  incoming: { toolPermissions?: ToolPermissions },
+): { toolPermissions?: ToolPermissions } {
+  const merged = mergeToolPermissions(
+    current.toolPermissions,
+    incoming.toolPermissions,
+  );
+  return merged ? { toolPermissions: merged } : {};
 }
 
 export function mergeUnrolledAssistants(
@@ -36,6 +71,7 @@ export function mergeUnrolledAssistants(
     ...(current.modeModels || incoming.modeModels
       ? { modeModels: { ...current.modeModels, ...incoming.modeModels } }
       : {}),
+    ...mergeToolPermissionsField(current, incoming),
     requestOptions: mergeConfigYamlRequestOptions(
       current.requestOptions,
       incoming.requestOptions,

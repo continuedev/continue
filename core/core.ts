@@ -9,6 +9,7 @@ import {
 } from "./autocomplete/util/openedFilesLruCache";
 import { ConfigHandler } from "./config/ConfigHandler";
 import { addModel, deleteModel } from "./config/util";
+import { evaluateToolPolicyWithRules } from "./tools/permissions/evaluate";
 import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
@@ -1130,25 +1131,14 @@ export class Core {
         }
 
         const tool = config.tools.find((t) => t.function.name === toolName);
-        if (!tool) {
-          return { policy: basePolicy };
-        }
-
-        // Extract display value for specific tools
-        let displayValue: string | undefined;
-        if (toolName === "runTerminalCommand" && parsedArgs.command) {
-          displayValue = parsedArgs.command as string;
-        }
-
-        if (tool.evaluateToolCallPolicy) {
-          const evaluatedPolicy = tool.evaluateToolCallPolicy(
-            basePolicy,
-            parsedArgs,
-            processedArgs,
-          );
-          return { policy: evaluatedPolicy, displayValue };
-        }
-        return { policy: basePolicy, displayValue };
+        return evaluateToolPolicyWithRules({
+          tool,
+          toolName,
+          basePolicy,
+          parsedArgs,
+          processedArgs,
+          permissions: config.toolPermissions,
+        });
       },
     );
 

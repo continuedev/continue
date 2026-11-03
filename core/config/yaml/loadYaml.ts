@@ -1,4 +1,5 @@
 import { resolveModeModels } from "./modeModels";
+import { validateToolPermissions } from "../../tools/permissions/names";
 import {
   AssistantUnrolled,
   AssistantUnrolledNonNullable,
@@ -350,6 +351,11 @@ export async function configYamlToContinueConfig(options: {
   );
   continueConfig.modeModels = modeModelsResult.modeModels;
   localErrors.push(...modeModelsResult.errors);
+
+  // Tool rules. Kept even when some entries are unreadable: those are skipped
+  // and reported, rather than failing the config.
+  continueConfig.toolPermissions = config.toolPermissions;
+  localErrors.push(...validateToolPermissions(config.toolPermissions));
 
   // Secrets that no .env file or environment variable provided are still
   // `${{ secrets.NAME }}` here. Say so, instead of letting the literal text be

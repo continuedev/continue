@@ -12,6 +12,7 @@ import {
 } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
+import type { DecisionSource as ToolDecisionSource } from "../tools/permissions/decide";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 import {
@@ -366,7 +367,16 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       parsedArgs: Record<string, unknown>;
       processedArgs?: Record<string, unknown>;
     },
-    { policy: ToolPolicy; displayValue?: string },
+    {
+      policy: ToolPolicy;
+      displayValue?: string;
+      /** Set only when the user has toolPermissions rules. */
+      source?: ToolDecisionSource;
+      /** A sentence saying why, for the prompt or the refusal. */
+      reason?: string;
+      /** The rule that decided, as written in config.yaml. */
+      rule?: string;
+    },
   ];
   "tools/preprocessArgs": [
     { toolName: string; args: Record<string, unknown> },

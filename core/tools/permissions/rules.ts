@@ -87,70 +87,66 @@ export function mcpNameMatch(pattern: string, toolName: string): boolean {
   return globMatch(pattern, toolName);
 }
 
-/** True when the command contains a construct the rule engine will not trust. */
-export function hasUnsafeShellConstruct(command: string): boolean {
-  // Command substitution, backticks, and process substitution.
-  return /\$\(|`|<\(|>\(/.test(command);
-}
+import {
+  commandGlobMatch,
+  hasUnsafeShellConstruct,
+  parseCommand,
+  ruleCandidates,
+} from "./command";
 
-/** Split a shell command into the parts a rule must match, on `&&`, `||`, `;`, `|` and newlines. */
-export function splitCommandParts(command: string): string[] {
-  return command
-    .split(/\s*(?:&&|\|\||;|\||\n)\s*/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-}
+export { hasUnsafeShellConstruct, splitCommandParts } from "./command";
 
 /**
- * Terminal commands match on the whole command string, so a chained command
- * is only allowed when every part matches an allow rule. A deny rule on any
- * part refuses it. Substitution and unparsable input never match an allow rule.
+ * Terminal commands are split into parts (quotes respected). A deny rule on
+ * any part, or on anything `ruleCandidates` finds inside it, refuses the
+ * command. Ask rules work the same way. An allow rule applies only when the
+ * scanner fully understands the command (no substitution, no file redirect,
+ * no unterminated quote) and every part is covered by an allow rule.
+ *
+ * Patterns use `*` for any run of characters, including `/`, because a
+ * command is not a path (`terraform apply*` must match `terraform apply -var-file=a/b`).
  */
 export function matchTerminalCommand(
   rules: ParsedRule[],
   command: string,
 ): RuleMatch | undefined {
   const toolRules = rules.filter((r) => r.toolName === "runTerminalCommand");
-  const parts = splitCommandParts(command);
+  const parsed = parseCommand(command);
+  const candidatesPerPart = parsed.parts.map((p) => ruleCandidates(p));
+  const hits = (rule: ParsedRule) =>
+    rule.pattern === undefined ||
+    [command, ...candidatesPerPart.flat()].some((c) =>
+      commandGlobMatch(rule.pattern!, c),
+    );
 
   for (const rule of toolRules) {
-    if (rule.decision !== "deny") continue;
-    if (rule.pattern === undefined) return { decision: "deny", rule };
-    if (
-      globMatch(rule.pattern, command) ||
-      parts.some((p) => globMatch(rule.pattern!, p))
-    ) {
+    if (rule.decision === "deny" && hits(rule))
       return { decision: "deny", rule };
-    }
   }
-
-  if (hasUnsafeShellConstruct(command) || parts.length === 0) return undefined;
-
   for (const rule of toolRules) {
-    if (rule.decision !== "ask") continue;
-    if (
-      rule.pattern === undefined ||
-      globMatch(rule.pattern, command) ||
-      parts.some((p) => globMatch(rule.pattern!, p))
-    ) {
-      return { decision: "ask", rule };
-    }
+    if (rule.decision === "ask" && hits(rule)) return { decision: "ask", rule };
   }
 
-  // Allow only when every part is covered by an allow rule.
+  // Allow only what is fully understood.
+  if (
+    hasUnsafeShellConstruct(command) ||
+    parsed.unparsable ||
+    parsed.hasFileRedirect ||
+    parsed.parts.length === 0
+  ) {
+    return undefined;
+  }
   const allowRules = toolRules.filter((r) => r.decision === "allow");
   if (allowRules.length === 0) return undefined;
-  const coveredBy = (part: string) =>
-    allowRules.find(
-      (r) => r.pattern === undefined || globMatch(r.pattern, part),
+  let first: ParsedRule | undefined;
+  for (const part of parsed.parts) {
+    const hit = allowRules.find(
+      (r) => r.pattern === undefined || commandGlobMatch(r.pattern, part),
     );
-  let firstRule: ParsedRule | undefined;
-  for (const part of parts) {
-    const hit = coveredBy(part);
     if (!hit) return undefined;
-    firstRule ??= hit;
+    first ??= hit;
   }
-  return firstRule ? { decision: "allow", rule: firstRule } : undefined;
+  return first ? { decision: "allow", rule: first } : undefined;
 }
 
 /** Match a non-terminal tool call by name (and path, for file tools). */

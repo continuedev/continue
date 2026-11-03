@@ -228,6 +228,60 @@ modeModels:
 
 ---
 
+### `toolPermissions`
+
+Rules that decide which tool calls run without asking, which always ask, and which are refused. They are checked on every tool call. Chat mode has no tools, and Plan mode has only read-only ones, so in practice rules matter most in Agent mode.
+
+```yaml title="config.yaml"
+toolPermissions:
+  allow:
+    - runTerminalCommand(npm test*)
+    - readFile(src/**)
+    - mcp__datadog__*
+  ask:
+    - runTerminalCommand(git push*)
+    - writeFile(.github/**)
+  deny:
+    - readFile(**/.env)
+    - runTerminalCommand(terraform apply*)
+```
+
+A rule is `toolName(pattern)` or just `toolName` (any call to that tool).
+
+| Rule name                                                                                              | Covers                                                                      | Pattern is matched against        |
+| ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | --------------------------------- |
+| `runTerminalCommand`                                                                                   | `run_terminal_command`                                                      | the command                       |
+| `readFile`                                                                                             | `read_file`, `read_file_range`, `read_currently_open_file`                  | the file path                     |
+| `writeFile`                                                                                            | `create_new_file`, `edit_existing_file`, `single_find_and_replace`, `multi_edit` | the file path                |
+| `listDirectory`                                                                                        | `ls`, `view_subdirectory`                                                   | the directory (`.` if none given) |
+| `fetchUrl`, `grepSearch`, `globSearch`, `searchWeb`                                                    | the matching tool                                                           | the URL, query or glob            |
+| `mcp__<server>__<tool>`, `mcp__<server>__*`                                                            | an MCP server's tools                                                       | (no pattern; use the name)        |
+
+The snake_case tool name also works as a rule name, for example `read_file(**/.env)`. For MCP, `<server>` is the server's name in lowercase with other characters turned into `_` (the server "My Server" is `my_server`).
+
+**Which rule wins.** Deny beats ask, and ask beats allow, whatever order you write them in. A deny rule refuses the call in every case. Nothing loosens a tool you switched off in the Tools tab, or a command the built-in safety check refuses: an allow rule does not override those. With no matching rule, nothing changes from before.
+
+**Patterns.** In file and directory rules, `*` matches within one folder and `**` matches across folders (`**/.env` matches `.env` and `a/b/.env`). Paths are compared with forward slashes, so one rule works on Windows and macOS. A file rule is matched against both the path the model wrote and the full path it resolves to. In command rules, `*` matches anything, including `/`.
+
+**Commands are handled carefully.**
+
+- A command is split on `&&`, `||`, `;`, `|`, `&` and newlines, but not inside quotes, so `echo "a && b"` is one command.
+- An **allow** rule applies only if every part of the command is covered and the command is fully understood: no `$(...)` or backticks, no redirect to a file (`> out.txt`; `2>&1` is fine), and no unterminated quote. So `npm test; rm -rf /` is not allowed by `runTerminalCommand(npm test*)`. An allow rule does not look inside `sudo` or `bash -c`.
+- **Deny** and **ask** rules look wider on purpose: they also match after a prefix such as `sudo` or `env X=1`, and inside `bash -c '...'`. A side effect is that a command that merely mentions the text, such as `echo git push`, is also caught by `git push*`.
+- Allow rules for files never apply to a path that climbs out of the project (`../`) or is absolute.
+
+**These rules are a guard against mistakes, not a sandbox.** They do not see aliases, shell functions, `eval`, or a script that runs a denied command inside itself (`npm run deploy` can do anything its script does), and command names are case-sensitive. Use deny rules for things you never want to happen by accident, and keep real secrets out of reach by other means too.
+
+**Edits.** File edits are normally shown as a diff for you to accept or reject. A `writeFile` deny rule refuses them before that. An `ask` or `allow` rule on edits changes nothing, because the diff review is already the check.
+
+**Mistakes in rules.** A rule that cannot be read is ignored and shown in the config errors, with its position (for example `toolPermissions.deny[2]`). So is a tool name this version does not know, which would otherwise quietly protect nothing.
+
+**Shared configs.** If a shared assistant and your own config both set `toolPermissions`, the lists are combined. A deny rule in either one stays in force.
+
+**When a call is refused,** the chat shows which rule did it, and the model is told not to retry or work around it.
+
+---
+
 ### `context`
 
 The `context` section defines context providers, which supply additional information or context to the language models. Each context provider can be configured with specific parameters.
