@@ -81,7 +81,7 @@ class MCPContextProvider extends BaseContextProvider {
       contents.map(async (resource) => {
         if (!("text" in resource) || typeof resource.text !== "string") {
           throw new Error(
-            "Continue currently only supports text resources from MCP",
+            "Continued currently only supports text resources from MCP",
           );
         }
         return {

@@ -19,7 +19,7 @@
   "license": "Apache-2.0",
   "displayName": "Continued - open-source AI code agent",
   "pricing": "Free",
-  "description": "Community-maintained fork of Continue: the open-source AI code agent",
+  "description": "Continued: a community-maintained fork of the Continue open-source AI code agent",
   "publisher": "b1tninja",
   "engines": {
     "vscode": "^1.70.0",
@@ -154,75 +154,75 @@
         "command": "continue.applyCodeFromChat",
         "category": "Continued",
         "title": "Apply code from chat",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.acceptDiff",
         "category": "Continued",
         "title": "Accept Diff",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.rejectDiff",
         "category": "Continued",
         "title": "Reject Diff",
-        "group": "Continue",
+        "group": "Continued",
         "icon": "$(stop)"
       },
       {
         "command": "continue.acceptVerticalDiffBlock",
         "category": "Continued",
         "title": "Accept Vertical Diff Block",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.rejectVerticalDiffBlock",
         "category": "Continued",
         "title": "Reject Vertical Diff Block",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.focusEdit",
         "category": "Continued",
         "title": "Add to Edit",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.focusContinueInput",
         "category": "Continued",
         "title": "Add Highlighted Code to Context and Clear Chat",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.focusContinueInputWithoutClear",
         "category": "Continued",
         "title": "Add to Chat",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.debugTerminal",
         "category": "Continued",
         "title": "Debug Terminal",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.exitEditMode",
         "category": "Continued",
         "title": "Exit Edit Mode",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.openConfigPage",
         "category": "Continued",
         "title": "Open Settings",
         "icon": "$(gear)",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.toggleTabAutocompleteEnabled",
         "category": "Continued",
         "title": "Toggle Autocomplete Enabled",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.forceAutocomplete",
@@ -233,112 +233,112 @@
         "command": "continue.selectFilesAsContext",
         "category": "Continued",
         "title": "Select Files as Context",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.newSession",
         "category": "Continued",
         "title": "New Session",
         "icon": "$(add)",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.shareSession",
         "category": "Continued",
         "title": "Share Current Chat Session as Markdown",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.viewHistory",
         "category": "Continued",
         "title": "View History",
         "icon": "$(history)",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.viewLogs",
         "category": "Continued",
         "title": "View Logs",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.clearConsole",
         "category": "Continued",
         "title": "Clear Console",
         "icon": "$(clear-all)",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.navigateTo",
         "category": "Continued",
         "title": "Navigate to a path",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.writeCommentsForCode",
         "category": "Continued",
         "title": "Write Comments for this Code",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.writeDocstringForCode",
         "category": "Continued",
         "title": "Write a Docstring for this Code",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.fixCode",
         "category": "Continued",
         "title": "Fix this Code",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.optimizeCode",
         "category": "Continued",
         "title": "Optimize this Code",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.fixGrammar",
         "category": "Continued",
         "title": "Fix Grammar / Spelling",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.codebaseForceReIndex",
         "category": "Continued",
         "title": "Codebase Force Re-Index",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.rebuildCodebaseIndex",
         "category": "Continued",
         "title": "Rebuild codebase index",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.docsIndex",
         "category": "Continued",
         "title": "Docs Index",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.docsReIndex",
         "category": "Continued",
         "title": "Docs Force Re-Index",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.focusContinueInput",
         "category": "Continued",
         "title": "Focus Continued Chat",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.enterEnterpriseLicenseKey",
         "category": "Continued",
         "title": "Enter Enterprise License Key",
-        "group": "Continue"
+        "group": "Continued"
       },
       {
         "command": "continue.toggleNextEditEnabled",
@@ -373,7 +373,7 @@
         "command": "continue.openInNewWindow",
         "category": "Continued",
         "title": "Open in new window",
-        "group": "Continue"
+        "group": "Continued"
       }
     ],
     "keybindings": [
@@ -530,18 +530,18 @@
       "editor/title/run": [
         {
           "command": "continue.rejectDiff",
-          "group": "Continue",
+          "group": "Continued",
           "when": "continue.streamingDiff"
         }
       ],
       "continue.continueSubMenu": [
         {
           "command": "continue.focusContinueInputWithoutClear",
-          "group": "Continue"
+          "group": "Continued"
         },
         {
           "command": "continue.focusEdit",
-          "group": "Continue",
+          "group": "Continued",
           "when": "!editorReadonly"
         }
       ],
@@ -597,7 +597,7 @@
         {
           "id": "continue",
           "title": "Continued",
-          "icon": "media/sidebar-icon.png"
+          "icon": "media/sidebar-icon.svg"
         }
       ],
       "panel": [
@@ -614,7 +614,7 @@
           "type": "webview",
           "id": "continue.continueGUIView",
           "name": "Continued",
-          "icon": "media/sidebar-icon.png",
+          "icon": "media/sidebar-icon.svg",
           "visibility": "visible"
         }
       ],

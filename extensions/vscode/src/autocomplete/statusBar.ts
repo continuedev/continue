@@ -48,7 +48,7 @@ const statusBarItemText = (
   error?: boolean,
 ) => {
   if (error) {
-    return "$(alert) Continue (config error)";
+    return "$(alert) Continued (config error)";
   }
 
   let text: string;
@@ -61,13 +61,13 @@ const statusBarItemText = (
       }
       break;
     case StatusBarStatus.Disabled:
-      text = "$(circle-slash) Continue";
+      text = "$(circle-slash) Continued";
       break;
     case StatusBarStatus.Enabled:
-      text = "$(check) Continue";
+      text = "$(check) Continued";
       break;
     case StatusBarStatus.Paused:
-      text = "$(debug-pause) Continue";
+      text = "$(debug-pause) Continued";
       break;
     default:
       text = "Continued";

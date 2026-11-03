@@ -135,7 +135,7 @@ export class ContinueGUIWebviewViewProvider
         <script>const vscode = acquireVsCodeApi();</script>
         <link href="${styleMainUri}" rel="stylesheet">
 
-        <title>Continue</title>
+        <title>Continued</title>
       </head>
       <body>
         <div id="root"></div>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Continued mark: a forward chevron trailing off into dots ("to be continued").
+       Regenerate every derived asset with: node brand-src/render.js -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0D9488"/>
+      <stop offset="1" stop-color="#115E59"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#bg)"/>
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#shine)"/>
+  <path d="M142 150 L248 256 L142 362" fill="none" stroke="#F0FDFA" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="324" cy="256" r="30" fill="#99F6E4"/>
+  <circle cx="400" cy="256" r="21" fill="#99F6E4" fill-opacity="0.6"/>
+</svg>
+

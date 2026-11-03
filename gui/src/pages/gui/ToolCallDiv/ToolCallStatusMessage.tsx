@@ -56,7 +56,7 @@ export function ToolCallStatusMessage({
       className="line-clamp-4 min-w-0 break-words text-description"
       data-testid="tool-call-title"
     >
-      {`Continue ${intro} ${message}`}
+      {`Continued ${intro} ${message}`}
     </div>
   );
 }
