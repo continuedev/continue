@@ -17,7 +17,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@biomejs/biome": "2.6.4",
-    "@modelcontextprotocol/ext-apps": "^1.0.1",
+    "@modelcontextprotocol/ext-apps": "^2.0.4",
     "@shikijs/colorized-brackets": "^4.5.0",
     "@shikijs/transformers": "^4.5.0",
     "@types/jest": "^29.5.12",
