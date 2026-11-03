@@ -227,10 +227,41 @@ export class MockOAuthMcpServer {
   }
 }
 
+// Ports handed out by freePort in this process, so two tests never share one.
+const handedOutPorts = new Set<number>();
+
+function canListen(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const s = net.createServer();
+    s.once("error", () => resolve(false));
+    // Bind the way the OAuth callback server does (all interfaces), not only
+    // 127.0.0.1, so a port held on another interface is also rejected.
+    s.listen(port, () => s.close(() => resolve(true)));
+  });
+}
+
+/**
+ * A port that is free right now and unlikely to be taken before the caller
+ * binds it. Asking the OS for port 0 hands out an ephemeral port (32768+ on
+ * Linux), which parallel test files then reuse as the source port of their own
+ * outbound connections, so it can be taken between close() and the caller's
+ * listen(). Pick from a range below the ephemeral range instead, and verify it.
+ */
 export async function freePort(): Promise<number> {
+  const LOW = 20000;
+  const HIGH = 30000;
+  for (let i = 0; i < 100; i++) {
+    const port = LOW + crypto.randomInt(HIGH - LOW);
+    if (handedOutPorts.has(port)) continue;
+    if (await canListen(port)) {
+      handedOutPorts.add(port);
+      return port;
+    }
+  }
+  // Fall back to whatever the OS offers.
   return await new Promise((resolve) => {
     const s = net.createServer();
-    s.listen(0, "127.0.0.1", () => {
+    s.listen(0, () => {
       const { port } = s.address() as AddressInfo;
       s.close(() => resolve(port));
     });
