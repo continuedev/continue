@@ -1088,6 +1088,12 @@ export interface RequestOptions {
 export interface CacheBehavior {
   cacheSystemMessage?: boolean;
   cacheConversation?: boolean;
+  /**
+   * Lifetime of prompt cache entries: "5m", "1h", or "auto" (5 minutes, then
+   * 1 hour after a pause a 1-hour entry would have covered). Does not turn
+   * caching on. A choice in the chat toolbar overrides it.
+   */
+  ttl?: "auto" | "5m" | "1h";
 }
 
 export interface ClientCertificateOptions {

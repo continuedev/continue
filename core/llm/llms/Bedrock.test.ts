@@ -322,6 +322,22 @@ describe("Bedrock", () => {
       }
     });
 
+    it("uses cacheBehavior.ttl when the request does not choose", () => {
+      const cfg = { cacheBehavior: { ttl: "1h" } };
+      const p = points(build(sonnet45, { promptCaching: true }, cfg));
+      for (const c of [...p.tools, ...p.system, ...p.messages]) {
+        expect(c.cachePoint).toEqual({ type: "default", ttl: "1h" });
+      }
+      // The request's choice wins over config.
+      const q = points(
+        build(sonnet45, { promptCaching: true, promptCacheTtl: "5m" }, cfg),
+      );
+      expect(q.system[0].cachePoint).toEqual({ type: "default" });
+      // Config "1h" still never reaches a 5-minute-only model.
+      const o = points(build(old, { promptCaching: true }, cfg));
+      expect(o.system[0].cachePoint).toEqual({ type: "default" });
+    });
+
     it("never sends ttl to a model that only takes 5 minutes", () => {
       const p = points(
         build(old, { promptCaching: true, promptCacheTtl: "1h" }),

@@ -35,6 +35,7 @@ import {
   markLastToolForCache,
   PromptCacheTtl,
   resolveCacheParts,
+  resolvePromptCacheTtl,
 } from "./anthropicCache.js";
 import {
   AnthropicThinkingParams,
@@ -436,7 +437,10 @@ class Anthropic extends BaseLLM {
       this.cacheBehavior,
       !!systemMessage,
     );
-    const ttl = options.promptCacheTtl;
+    const ttl = resolvePromptCacheTtl(
+      options.promptCacheTtl,
+      this.cacheBehavior?.ttl,
+    );
     const anyCaching = parts.tools || parts.system || parts.conversation;
 
     const msgs = this.convertMessages(messages, parts.conversation, ttl);

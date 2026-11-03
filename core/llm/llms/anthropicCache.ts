@@ -8,6 +8,22 @@ import type {
 export type PromptCacheTtl = "5m" | "1h";
 
 /**
+ * The lifetime to send: the per-request choice (toolbar) wins over the model's
+ * `cacheBehavior.ttl`. "auto" in config is not a lifetime, it is a policy the
+ * chat window turns into "5m" or "1h" for each request, so here it (and any
+ * unrecognised value) means "send nothing", which is the 5-minute default.
+ */
+export function resolvePromptCacheTtl(
+  requested: unknown,
+  configured: unknown,
+): PromptCacheTtl | undefined {
+  for (const value of [requested, configured]) {
+    if (value === "5m" || value === "1h") return value;
+  }
+  return undefined;
+}
+
+/**
  * The `cache_control` value for a lifetime. The default lifetime is left
  * implicit, which keeps requests identical to what was sent before lifetimes
  * were configurable.

@@ -36,7 +36,7 @@ import { getAnthropicThinkingParams } from "./anthropicThinking.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { createBedrockRequestHandler } from "./bedrockHttp.js";
 import { getSecureID } from "../utils/getSecureID.js";
-import { resolveCacheParts } from "./anthropicCache.js";
+import { resolveCacheParts, resolvePromptCacheTtl } from "./anthropicCache.js";
 import {
   applyCrossRegionInference,
   BedrockModelOption,
@@ -487,7 +487,10 @@ class Bedrock extends BaseLLM {
       this.cacheBehavior,
       !!systemMessage,
     );
-    const cacheTtl = bedrockCacheTtl(options.model, options.promptCacheTtl);
+    const cacheTtl = bedrockCacheTtl(
+      options.model,
+      resolvePromptCacheTtl(options.promptCacheTtl, this.cacheBehavior?.ttl),
+    );
     const cachePoint = {
       cachePoint: {
         type: "default" as const,

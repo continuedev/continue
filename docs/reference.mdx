@@ -113,10 +113,11 @@ The `models` section defines the language models used in your configuration. Mod
   - `promptCaching`: Boolean to cache the tool definitions, system prompt and conversation for Claude models on Anthropic and Amazon Bedrock. Off unless set. `false` also overrides `cacheBehavior`. See [Prompt Caching](/customize/deep-dives/prompt-caching).
   - `keepAlive`: For Ollama, the number of seconds to keep the model loaded after the last request (default: `1800`).
 
-- `cacheBehavior`: Which parts of a request to cache. Read only when `defaultCompletionOptions.promptCaching` is not set. There is no lifetime (`ttl`) field; choose 5 minutes, 1 hour or Auto from the chat toolbar. See [Prompt Caching](/customize/deep-dives/prompt-caching).
+- `cacheBehavior`: Which parts of a request to cache. Read only when `defaultCompletionOptions.promptCaching` is not set. The toolbar in the chat window can override the lifetime. See [Prompt Caching](/customize/deep-dives/prompt-caching).
 
   - `cacheSystemMessage`: If `true`, cache the system prompt.
   - `cacheConversation`: If `true`, cache the conversation history.
+  - `ttl`: Lifetime of cache entries: `5m`, `1h` or `auto` (starts at 5 minutes, moves to 1 hour after a pause of 5 to 55 minutes). Does not turn caching on by itself. Honoured for Claude models on Anthropic and Amazon Bedrock.
 
 - `requestOptions`: HTTP request options specific to the model.
 

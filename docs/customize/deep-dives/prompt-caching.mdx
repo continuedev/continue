@@ -35,7 +35,21 @@ Reading a cached prefix costs 0.1x the input price whatever the lifetime.
 
 Auto compares the start times of consecutive requests in the current session. If the gap was more than 5 minutes and at most 55 minutes (a pause a 1-hour entry would have covered), the session uses 1 hour from the next request on. A session that never pauses that long stays on 5 minutes. Auto keeps this per session and does not save it. The 55 minute limit is a guess, not a measured value.
 
-The lifetime is chosen from the toolbar only. There is no `cacheBehavior.ttl` or `promptCacheTtl` field in `config.yaml`.
+To set the lifetime in config, use `cacheBehavior.ttl`:
+
+```yaml title="config.yaml"
+models:
+  - name: Claude Sonnet
+    provider: anthropic
+    model: claude-sonnet-4-6
+    apiKey: ${{ secrets.ANTHROPIC_API_KEY }}
+    defaultCompletionOptions:
+      promptCaching: true
+    cacheBehavior:
+      ttl: auto # auto | 5m | 1h
+```
+
+`ttl` accepts `5m`, `1h` or `auto` (the Auto row above). It only chooses the lifetime and does not turn caching on; `promptCaching: true` (or the toolbar) does that. A choice in the toolbar other than "Config default" overrides it for that session. If the model cannot take a 1-hour lifetime (see Bedrock below), `1h` is sent as the 5-minute default. In JSON configuration the same field is `cacheBehavior.ttl`.
 
 ## What gets cached
 
@@ -81,7 +95,6 @@ Continued also adds a per-process ID to the first user message so that two peopl
 
 ## Not supported
 
-- Choosing the lifetime in `config.yaml`, or in JSON configuration. Only `promptCaching` and `cacheBehavior` are read from config.
 - Caching on by default. Existing and new configs are unchanged until you enable it.
 - Lifetimes on Vertex AI and OpenRouter. They use `promptCaching` and `cacheBehavior` but never send a `ttl`, and the toolbar button is hidden for them.
 - Non-Claude models, including OpenAI and Gemini. Providers that cache automatically do so without any setting here.

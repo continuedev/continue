@@ -658,6 +658,38 @@ describe("Anthropic", () => {
       }
     });
 
+    test("uses cacheBehavior.ttl when the request does not choose", async () => {
+      const { body } = await sentBody(
+        { promptCaching: true },
+        { cacheBehavior: { ttl: "1h" } },
+      );
+      expect(body.system[0].cache_control).toEqual({
+        type: "ephemeral",
+        ttl: "1h",
+      });
+    });
+
+    test("the request's lifetime wins over cacheBehavior.ttl", async () => {
+      const { body } = await sentBody(
+        { promptCaching: true, promptCacheTtl: "5m" },
+        { cacheBehavior: { ttl: "1h" } },
+      );
+      expect(body.system[0].cache_control).toEqual({ type: "ephemeral" });
+    });
+
+    test('cacheBehavior.ttl "auto" sends no lifetime on its own', async () => {
+      const { body } = await sentBody(
+        { promptCaching: true },
+        { cacheBehavior: { ttl: "auto" } },
+      );
+      expect(body.system[0].cache_control).toEqual({ type: "ephemeral" });
+    });
+
+    test("cacheBehavior.ttl does not turn caching on", async () => {
+      const { body } = await sentBody({}, { cacheBehavior: { ttl: "1h" } });
+      expect(marked(body).system).toBe(false);
+    });
+
     test("keeps the default lifetime implicit for 5 minutes", async () => {
       const { body } = await sentBody({
         promptCaching: true,

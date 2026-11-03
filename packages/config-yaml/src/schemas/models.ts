@@ -79,6 +79,10 @@ export type EmbeddingPrefixes = z.infer<typeof embeddingPrefixesSchema>;
 export const cacheBehaviorSchema = z.object({
   cacheSystemMessage: z.boolean().optional(),
   cacheConversation: z.boolean().optional(),
+  // Lifetime of cache entries. "auto" starts at 5 minutes and moves to 1 hour
+  // after a pause that a 1-hour entry would have covered. Does not turn
+  // caching on by itself.
+  ttl: z.enum(["auto", "5m", "1h"]).optional(),
 });
 export type CacheBehavior = z.infer<typeof cacheBehaviorSchema>;
 

@@ -5,7 +5,26 @@ import {
   markCacheBreakpoints,
   markLastToolForCache,
   resolveCacheParts,
+  resolvePromptCacheTtl,
 } from "./anthropicCache";
+
+describe("resolvePromptCacheTtl", () => {
+  it.each([
+    // [request (toolbar), config cacheBehavior.ttl, expected]
+    [undefined, undefined, undefined],
+    ["5m", undefined, "5m"],
+    ["1h", undefined, "1h"],
+    [undefined, "1h", "1h"],
+    [undefined, "5m", "5m"],
+    [undefined, "auto", undefined],
+    ["5m", "1h", "5m"],
+    ["1h", "5m", "1h"],
+    ["bogus", "1h", "1h"],
+    [undefined, "30m", undefined],
+  ])("request %s, config %s -> %s", (requested, configured, expected) => {
+    expect(resolvePromptCacheTtl(requested, configured)).toBe(expected);
+  });
+});
 
 /** Which blocks of each message carry a breakpoint, as "type" or "type+CACHE". */
 function shape(messages: MessageParam[]) {

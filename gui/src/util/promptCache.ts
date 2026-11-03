@@ -81,6 +81,17 @@ export function configEnablesPromptCaching(model: ModelDescription): boolean {
   );
 }
 
+/**
+ * The lifetime policy config.yaml asks for when the toolbar says "Config
+ * default": `cacheBehavior.ttl`, with anything unrecognised ignored.
+ */
+export function configTtlPolicy(
+  model: ModelDescription,
+): "auto" | PromptCacheTtl | undefined {
+  const ttl = model.cacheBehavior?.ttl;
+  return ttl === "auto" || ttl === "5m" || ttl === "1h" ? ttl : undefined;
+}
+
 export interface PromptCacheResolution {
   /** Fields to merge into the request's completion options. */
   options: { promptCaching?: boolean; promptCacheTtl?: PromptCacheTtl };
@@ -134,12 +145,20 @@ export function resolvePromptCache(
       ttl = escalated ? "1h" : "5m";
       options = { promptCaching: true, promptCacheTtl: ttl };
       break;
-    default:
-      // Follow config.yaml, which has caching on: send nothing, so the request
-      // is what config alone would produce. Track warmth with the 5-minute
-      // default lifetime.
-      options = {};
-      ttl = "5m";
+    default: {
+      // Follow config.yaml, which has caching on: send nothing about whether
+      // to cache, so the request is what config alone would produce. A fixed
+      // `cacheBehavior.ttl` is applied by the provider itself; "auto" needs
+      // the session state, so it is sent as a lifetime.
+      const configured = configTtlPolicy(model);
+      if (configured === "auto") {
+        ttl = escalated ? "1h" : "5m";
+        options = { promptCacheTtl: ttl };
+      } else {
+        ttl = configured ?? "5m";
+        options = {};
+      }
+    }
   }
 
   // The lifetime the provider will really apply: Bedrock quietly falls back to
@@ -221,8 +240,9 @@ export function promptCacheStatus(
     setting === undefined
       ? configEnablesPromptCaching(model)
       : setting !== "off";
+  const policy = setting ?? configTtlPolicy(model);
   const ttl: PromptCacheTtl =
-    setting === "1h" || (setting === "auto" && state.escalated) ? "1h" : "5m";
+    policy === "1h" || (policy === "auto" && state.escalated) ? "1h" : "5m";
 
   let warm = false;
   let msLeft: number | undefined;

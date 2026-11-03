@@ -859,6 +859,7 @@ declare global {
   export interface CacheBehavior {
     cacheSystemMessage?: boolean;
     cacheConversation?: boolean;
+    ttl?: "auto" | "5m" | "1h";
   }
   
   export interface ClientCertificateOptions {
