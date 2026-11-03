@@ -53,6 +53,7 @@ const saveSubsetFilters = [
   ]),
   createFilter("config", []),
   createFilter("ui", [
+    "approvalMode",
     "toolSettings",
     "toolGroupSettings",
     "ruleSettings",

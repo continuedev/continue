@@ -35,7 +35,11 @@ type UIState = {
   /** Model the user picked by hand per mode; wins over `modeModels` until reload. */
   modeModelOverrides: Partial<Record<MessageModes, string>>;
   ttsActive: boolean;
+  /** "auto" needs the experimental flag and a reviewer model; see selectAutoApproval. */
+  approvalMode: ApprovalMode;
 };
+
+export type ApprovalMode = "manual" | "auto";
 
 export const DEFAULT_TOOL_SETTING: ToolPolicy = "allowedWithPermission";
 export const DEFAULT_RULE_SETTING: RulePolicy = "on";
@@ -49,6 +53,7 @@ export const DEFAULT_UI_SLICE: UIState = {
     getLocalStorage(LocalStorageKey.HasDismissedExploreDialog) ?? false,
   shouldAddFileForEditing: false,
   ttsActive: false,
+  approvalMode: "manual",
   toolSettings: {},
   toolGroupSettings: {
     [BUILT_IN_GROUP_NAME]: "include",
@@ -147,6 +152,9 @@ export const uiSlice = createSlice({
           break;
       }
     },
+    setApprovalMode: (state, { payload }: PayloadAction<ApprovalMode>) => {
+      state.approvalMode = payload;
+    },
     setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
       state.ttsActive = payload;
     },
@@ -192,6 +200,7 @@ export const {
   addTool,
   addRule,
   toggleRuleSetting,
+  setApprovalMode,
   setTTSActive,
   setReasoningSetting,
   setPromptCacheSetting,

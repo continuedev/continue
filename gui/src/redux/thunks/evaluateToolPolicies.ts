@@ -1,5 +1,7 @@
 import { ToolPolicy } from "@continuedev/terminal-security";
-import { Tool, ToolCallState } from "core";
+import { ChatHistoryItem, Tool, ToolCallState } from "core";
+import type { AutoReviewReply } from "core/tools/permissions/auto/handler";
+import type { ReviewHistory } from "core/tools/permissions/auto/prompt";
 import type { DecisionSource } from "core/tools/permissions/decide";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { isEditTool } from "../../util/toolCallState";
@@ -11,11 +13,19 @@ import {
 import { DEFAULT_TOOL_SETTING, ToolPolicies } from "../slices/uiSlice";
 import { AppThunkDispatch } from "../store";
 
+/** Set when Auto mode is on and usable (see selectAutoApproval). */
+export interface AutoReviewContext {
+  sessionId: string;
+  history: ReviewHistory;
+}
+
 interface EvaluatedPolicy {
   policy: ToolPolicy;
   displayValue?: string;
-  /** Why core decided, when the user has toolPermissions rules. */
-  source?: DecisionSource;
+  /** Why core decided, when the user has toolPermissions rules. "auto" means the reviewer model. */
+  source?: DecisionSource | "auto";
+  /** The reviewer's named reason (Auto mode). */
+  category?: string;
   reason?: string;
   rule?: string;
   toolCallState: ToolCallState;
@@ -103,13 +113,123 @@ async function evaluateToolPolicy(
   return { ...details, policy: dynamicPolicy, toolCallState };
 }
 
+/**
+ * What the reviewer is shown of the conversation: the user's own messages and
+ * the earlier tool calls (name and arguments), never the agent's prose or any
+ * tool output.
+ */
+export function buildReviewHistory(history: ChatHistoryItem[]): ReviewHistory {
+  const userMessages: string[] = [];
+  const toolCalls: ReviewHistory["toolCalls"] = [];
+  for (const item of history) {
+    const { message } = item;
+    if (message.role === "user") {
+      const text =
+        typeof message.content === "string"
+          ? message.content
+          : message.content
+              .map((p) => (p.type === "text" ? p.text : ""))
+              .join("");
+      if (text.trim()) userMessages.push(text);
+    }
+    for (const call of item.toolCallStates ?? []) {
+      toolCalls.push({
+        name: call.toolCall.function.name,
+        args: call.parsedArgs,
+      });
+    }
+  }
+  return { userMessages, toolCalls };
+}
+
+/**
+ * Auto mode: ask core's reviewer about calls that wait for approval. Core runs
+ * the rules again first, so a deny rule, protected path or ask rule comes back
+ * unchanged and the model is never asked. The reviewer can allow a call, leave
+ * it for the user, or refuse it; anything that goes wrong leaves it for the user.
+ */
+async function reviewOpenCalls(
+  ideMessenger: IIdeMessenger,
+  results: EvaluatedPolicy[],
+  auto: AutoReviewContext,
+  toolPolicies: ToolPolicies,
+  activeTools: Tool[],
+): Promise<EvaluatedPolicy[]> {
+  return Promise.all(
+    results.map(async (r) => {
+      const toolName = r.toolCallState.toolCall.function.name;
+      const open =
+        r.policy === "allowedWithPermission" &&
+        !isEditTool(toolName) &&
+        r.source !== "ask-rule" &&
+        r.source !== "protected-path";
+      if (!open) return r;
+
+      const basePolicy =
+        toolPolicies[toolName] ??
+        activeTools.find((t) => t.function.name === toolName)
+          ?.defaultToolPolicy ??
+        DEFAULT_TOOL_SETTING;
+      let reply: AutoReviewReply;
+      try {
+        const res = await ideMessenger.request("tools/autoReview", {
+          sessionId: auto.sessionId,
+          toolName,
+          basePolicy,
+          parsedArgs: r.toolCallState.parsedArgs,
+          processedArgs: r.toolCallState.processedArgs,
+          history: auto.history,
+        });
+        if (res.status !== "success") return r;
+        reply = res.content;
+      } catch (e) {
+        console.error(`Auto review failed for ${toolName}`, e);
+        return r;
+      }
+
+      // The reviewer only ever acts on a call that was waiting for the user.
+      if (reply.by === "rules") return r;
+      switch (reply.decision) {
+        case "allow":
+          return {
+            ...r,
+            policy: "allowedWithoutPermission" as const,
+            source: "auto" as const,
+            reason: `Allowed by Auto: ${reply.reason}`,
+          };
+        case "deny":
+          return {
+            ...r,
+            policy: "disabled" as const,
+            source: "auto" as const,
+            category: reply.category,
+            reason: reply.reason,
+          };
+        default:
+          return {
+            ...r,
+            source: "auto" as const,
+            category: reply.category,
+            reason: `Auto: ${reply.reason}${reply.category ? ` [${reply.category}]` : ""}`,
+          };
+      }
+    }),
+  );
+}
+
 /** The text the model sees when a call is refused, naming who refused it. */
 export function refusalMessage(
   command: string,
-  source: DecisionSource | undefined,
+  source: DecisionSource | "auto" | undefined,
   reason: string | undefined,
+  category?: string,
 ): { description: string; content: string } {
   switch (source) {
+    case "auto":
+      return {
+        description: `Blocked by Auto${category ? ` [${category}]` : ""}`,
+        content: `A reviewer model refused this call${category ? ` (${category})` : ""}: ${reason ?? "no reason given"}\n\n${command}\n\nDo not retry it or reach the same result another way. Find a safer route to the user's request, or tell the user what you need and ask how they want to proceed.`,
+      };
     case "deny-rule":
       return {
         description: "Blocked by your rule",
@@ -139,9 +259,10 @@ export async function evaluateToolPolicies(
   activeTools: Tool[],
   generatedToolCalls: ToolCallState[],
   toolPolicies: ToolPolicies,
+  auto?: AutoReviewContext,
 ): Promise<EvaluatedPolicy[]> {
   // Check if ALL tool calls are auto-approved using dynamic evaluation
-  const policyResults = await Promise.all(
+  let policyResults = await Promise.all(
     generatedToolCalls.map((toolCallState) =>
       evaluateToolPolicy(
         ideMessenger,
@@ -151,6 +272,15 @@ export async function evaluateToolPolicies(
       ),
     ),
   );
+  if (auto) {
+    policyResults = await reviewOpenCalls(
+      ideMessenger,
+      policyResults,
+      auto,
+      toolPolicies,
+      activeTools,
+    );
+  }
 
   const disabledResults = policyResults.filter(
     ({ policy }) => policy === "disabled",
@@ -162,7 +292,9 @@ export async function evaluateToolPolicies(
     if (
       policy === "allowedWithPermission" &&
       reason &&
-      (source === "protected-path" || source === "ask-rule")
+      (source === "protected-path" ||
+        source === "ask-rule" ||
+        source === "auto")
     ) {
       dispatch(
         setToolCallPolicyNote({
@@ -177,13 +309,19 @@ export async function evaluateToolPolicies(
     displayValue,
     source,
     reason,
+    category,
     toolCallState,
   } of disabledResults) {
     dispatch(errorToolCall({ toolCallId: toolCallState.toolCallId }));
 
     // Use the displayValue from the policy evaluation, or fallback to function name
     const command = displayValue || toolCallState.toolCall.function.name;
-    const { description, content } = refusalMessage(command, source, reason);
+    const { description, content } = refusalMessage(
+      command,
+      source,
+      reason,
+      category,
+    );
 
     // Add error message explaining why it's disabled
     dispatch(
