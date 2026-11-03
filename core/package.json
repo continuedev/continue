@@ -102,7 +102,7 @@
     "partial-json": "^0.1.7",
     "pg": "^8.11.3",
     "puppeteer": "^24.15.0",
-    "puppeteer-chromium-resolver": "^23.0.0",
+    "puppeteer-chromium-resolver": "^25.0.0",
     "quick-lru": "^7.0.0",
     "replicate": "^1.4.0",
     "shell-quote": "^1.8.3",

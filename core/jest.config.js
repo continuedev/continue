@@ -20,6 +20,8 @@ export default {
     "^uuid$": "uuid", // https://stackoverflow.com/a/73626360
     "^@azure/(.*)$": "<rootDir>/node_modules/@azure/$1",
     "^mssql$": "<rootDir>/node_modules/mssql",
+    "^puppeteer-chromium-resolver$":
+      "<rootDir>/test/stubs/puppeteer-chromium-resolver.js",
   },
   extensionsToTreatAsEsm: [".ts"],
   preset: "ts-jest/presets/default-esm",
