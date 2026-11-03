@@ -125,16 +125,6 @@ updates:
       day: monday
     labels:
       - dependencies
-    ignore:
-      # Kotlin 2.4.21 (#67) makes the JetBrains integration test Autocomplete.testAutocomplete
-      # fail consistently (it passes on 2.1.0), and the job then hangs until its timeout.
-      # The plugin supports IDEs from build 241 (2024.1), whose bundled Kotlin runtime is far
-      # older; moving the compiler needs a deliberate change (pin apiVersion/languageVersion
-      # to the platform's Kotlin) rather than an automatic bump.
-      - dependency-name: "org.jetbrains.kotlin.jvm"
-      # kodein-di 7.33 (#68) is built with Kotlin 2.4 metadata and cannot be compiled by
-      # Kotlin 2.1. Bump it together with the Kotlin compiler.
-      - dependency-name: "org.kodein.di:kodein-di-jvm"
 
   - package-ecosystem: docker
     directory: "/manual-testing-sandbox"
