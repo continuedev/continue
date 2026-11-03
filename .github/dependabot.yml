@@ -48,6 +48,14 @@ updates:
       # Bump uuid itself (types are then bundled) and drop @types/uuid together.
       - dependency-name: "@types/uuid"
         update-types: ["version-update:semver-major"]
+      # onnxruntime-* are exact-pinned (1.14.0) to match @xenova/transformers. Dependabot files
+      # 1.14 -> 1.31 as a "minor", but it changes the native layout the extension/binary
+      # packaging expects (bin/napi-v3/<os>/<arch>/libonnxruntime.so.1.14.0 ...): the
+      # vscode-package-extension and jetbrains jobs fail with "The following files were missing".
+      # Move them with the @xenova/transformers -> @huggingface/transformers migration.
+      - dependency-name: onnxruntime-node
+      - dependency-name: onnxruntime-common
+      - dependency-name: onnxruntime-web
       # The binary and the extension package a prebuilt native sqlite3 pinned to v5.1.7
       # (extensions/vscode/scripts/download-copy-sqlite.js); the JS package must not
       # move ahead of it. Revisit together with a move to node:sqlite.
