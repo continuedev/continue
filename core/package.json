@@ -98,7 +98,7 @@
     "ollama": "^0.6.4",
     "onnxruntime-node": "1.14.0",
     "openai": "^5.13.1",
-    "p-limit": "^6.1.0",
+    "p-limit": "^7.3.3",
     "partial-json": "^0.1.7",
     "pg": "^8.11.3",
     "puppeteer": "^24.15.0",
