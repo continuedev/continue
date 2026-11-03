@@ -1837,7 +1837,13 @@ export type ModeReasoningEffort = "off" | "low" | "medium" | "high";
 
 /** Chat model (by title) and reasoning effort to use in a mode. */
 export interface ModeModelSetting {
+  /** The default model: selected when switching into the mode. */
   title: string;
+  /**
+   * Every model offered in the mode, default first. Absent when the config sets
+   * only `model`, in which case all models are offered as before.
+   */
+  titles?: string[];
   reasoningEffort?: ModeReasoningEffort;
 }
 

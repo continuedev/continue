@@ -105,10 +105,20 @@ export type ReasoningEffort = z.infer<typeof reasoningEffortSchema>;
  * Model (by its `name` in `models:`) to use in a chat mode, plus an optional
  * reasoning effort for that mode.
  */
-export const modeModelSchema = z.object({
-  model: z.string(),
-  reasoningEffort: reasoningEffortSchema.optional(),
-});
+export const modeModelSchema = z
+  .object({
+    /** Default model when switching into the mode (by `name`). */
+    model: z.string().optional(),
+    /**
+     * Models offered while in the mode (by `name`). When `model` is not set the
+     * default is the first entry that exists. The default is always offered.
+     */
+    models: z.array(z.string()).optional(),
+    reasoningEffort: reasoningEffortSchema.optional(),
+  })
+  .refine((m) => m.model !== undefined || (m.models?.length ?? 0) > 0, {
+    message: "Set `model`, or a non-empty `models` list",
+  });
 export type ModeModel = z.infer<typeof modeModelSchema>;
 
 /** Per-mode model selection. Modes without an entry keep the current model. */

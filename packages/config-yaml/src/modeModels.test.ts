@@ -17,6 +17,30 @@ describe("modeModels schema", () => {
     ).toThrow();
   });
 
+  it("accepts a list of models, with or without a default", () => {
+    const parsed = modeModelsSchema.parse({
+      plan: { model: "Opus", models: ["Opus", "GPT"] },
+      agent: { models: ["Sonnet"] },
+    });
+    expect(parsed.plan?.models).toEqual(["Opus", "GPT"]);
+    expect(parsed.agent?.model).toBeUndefined();
+    expect(parsed.agent?.models).toEqual(["Sonnet"]);
+  });
+
+  it("rejects an entry with neither a model nor a non-empty list", () => {
+    expect(() => modeModelsSchema.parse({ plan: {} })).toThrow();
+    expect(() => modeModelsSchema.parse({ plan: { models: [] } })).toThrow();
+    expect(() =>
+      modeModelsSchema.parse({ plan: { reasoningEffort: "low" } }),
+    ).toThrow();
+  });
+
+  it("rejects a non-string in the list", () => {
+    expect(() =>
+      modeModelsSchema.parse({ plan: { models: ["ok", 3] } }),
+    ).toThrow();
+  });
+
   it("is part of config.yaml", () => {
     const cfg = configYamlSchema.parse({
       name: "c",
