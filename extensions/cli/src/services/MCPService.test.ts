@@ -1,7 +1,9 @@
 import { AssistantConfig } from "@continuedev/sdk";
+import { StreamableHTTPError } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MCPService } from "./MCPService.js";
+import * as mcpTransports from "./mcpTransports.js";
 
 // Mock the MCP SDK
 const mockClient = {
@@ -21,13 +23,24 @@ vi.mock("@modelcontextprotocol/sdk/client/stdio.js", () => ({
   StdioClientTransport: vi.fn(),
 }));
 
-vi.mock("@modelcontextprotocol/sdk/client/sse.js", () => ({
-  SSEClientTransport: vi.fn(),
-}));
+vi.mock("@modelcontextprotocol/sdk/client/sse.js", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@modelcontextprotocol/sdk/client/sse.js")
+    >();
+  return { ...actual, SSEClientTransport: vi.fn() };
+});
 
-vi.mock("@modelcontextprotocol/sdk/client/streamableHttp.js", () => ({
-  StreamableHTTPClientTransport: vi.fn(),
-}));
+vi.mock(
+  "@modelcontextprotocol/sdk/client/streamableHttp.js",
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import("@modelcontextprotocol/sdk/client/streamableHttp.js")
+      >();
+    return { ...actual, StreamableHTTPClientTransport: vi.fn() };
+  },
+);
 
 vi.mock("https", () => ({
   Agent: vi.fn().mockImplementation(() => ({
@@ -164,6 +177,76 @@ describe("MCPService", () => {
       await mcpService.initialize(mockAssistant);
       await mcpService.cleanup();
       await expect(mcpService.cleanup()).resolves.not.toThrow();
+    });
+  });
+
+  describe("OAuth fallback", () => {
+    beforeEach(() => {
+      mockClient.connect.mockResolvedValue(undefined);
+      vi.spyOn(mcpTransports, "constructStdioTransport");
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it.each([
+      { url: "https://example.com/mcp", extraArgs: [] },
+      {
+        url: "https://mcp.supabase.com/mcp",
+        extraArgs: [
+          "--static-oauth-client-metadata",
+          JSON.stringify({
+            scope:
+              "organizations:read projects:read database:read analytics:read secrets:read edge_functions:read environment:read storage:read",
+          }),
+        ],
+      },
+    ])(
+      "should pin mcp-remote after an interactive HTTP 401 for $url",
+      async ({ url, extraArgs }) => {
+        mockAssistant.mcpServers = [
+          { name: "oauth-server", type: "streamable-http", url },
+        ];
+        mockClient.connect.mockRejectedValueOnce(
+          new StreamableHTTPError(401, "Unauthorized"),
+        );
+
+        const state = await mcpService.initialize(mockAssistant, true, false);
+
+        expect(
+          mcpTransports.constructStdioTransport,
+        ).toHaveBeenCalledExactlyOnceWith(
+          {
+            name: "oauth-server",
+            command: "npx",
+            args: ["-y", "mcp-remote@0.16.0", url, ...extraArgs],
+          },
+          expect.objectContaining({ config: mockAssistant.mcpServers[0] }),
+        );
+        expect(mockClient.connect).toHaveBeenCalledTimes(2);
+        expect(state.connections[0].status).toBe("connected");
+      },
+    );
+
+    it("should not start mcp-remote after an HTTP 401 in headless mode", async () => {
+      mockAssistant.mcpServers = [
+        {
+          name: "oauth-server",
+          type: "streamable-http",
+          url: "https://example.com/mcp",
+        },
+      ];
+      mockClient.connect.mockRejectedValueOnce(
+        new StreamableHTTPError(401, "Unauthorized"),
+      );
+
+      await expect(
+        mcpService.initialize(mockAssistant, true, true),
+      ).rejects.toThrow("Unauthorized");
+
+      expect(mcpTransports.constructStdioTransport).not.toHaveBeenCalled();
+      expect(mockClient.connect).toHaveBeenCalledTimes(1);
     });
   });
 

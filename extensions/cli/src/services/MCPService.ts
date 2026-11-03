@@ -20,6 +20,8 @@ import {
   SERVICE_NAMES,
 } from "./types.js";
 
+const MCP_REMOTE_VERSION = "0.16.0";
+
 interface ServerConnection extends MCPConnectionInfo {
   client: Client | null;
 }
@@ -442,7 +444,11 @@ Org-level secrets can only be used for MCP by Background Agents (https://docs.co
         // If token refresh didn't work and it's a 401, fall back to mcp-remote
         if (isAuthError(error) && !this.isHeadless) {
           // Build mcp-remote args with Supabase-specific OAuth scopes if needed
-          const mcpRemoteArgs = ["-y", "mcp-remote", serverConfig.url];
+          const mcpRemoteArgs = [
+            "-y",
+            `mcp-remote@${MCP_REMOTE_VERSION}`,
+            serverConfig.url,
+          ];
 
           // Detect Supabase MCP and add custom OAuth scopes
           if (serverConfig.url.includes("mcp.supabase.com")) {
