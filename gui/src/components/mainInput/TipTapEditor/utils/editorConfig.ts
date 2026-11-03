@@ -1,10 +1,9 @@
 import { Editor, JSONContent } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
-import History from "@tiptap/extension-history";
 import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
-import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
+import { Placeholder, UndoRedo } from "@tiptap/extensions";
 import { Plugin } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { useEditor } from "@tiptap/react";
@@ -105,6 +104,9 @@ export function createEditorConfig(options: {
     props.availableSlashCommands,
   );
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
+  const placeholderTextRef = useRef(
+    getPlaceholderText(props.placeholder, historyLengthRef.current),
+  );
 
   const enterSubmenu = async (editor: Editor, providerId: string) => {
     const contents = editor.getText();
@@ -150,7 +152,7 @@ export function createEditorConfig(options: {
   const editor: Editor | null = useEditor({
     extensions: [
       Document,
-      History,
+      UndoRedo,
       Image.extend({
         addProseMirrorPlugins() {
           const pastePlugin = new Plugin({
@@ -223,10 +225,10 @@ export function createEditorConfig(options: {
         },
       }),
       Placeholder.configure({
-        placeholder: getPlaceholderText(
-          props.placeholder,
-          historyLengthRef.current,
-        ),
+        // Read lazily so TipTapEditor can change the text after creation.
+        // Tiptap 3 returns a fresh `options` object from extensions, so
+        // mutating the extension's options no longer reaches the plugin.
+        placeholder: () => placeholderTextRef.current,
       }),
       Paragraph.extend({
         addKeyboardShortcuts() {
@@ -294,7 +296,9 @@ export function createEditorConfig(options: {
                 this.editor.state.toJSON().doc,
               );
               if (previousInput) {
-                this.editor.commands.setContent(previousInput);
+                this.editor.commands.setContent(previousInput, {
+                  emitUpdate: false,
+                });
                 setTimeout(() => {
                   this.editor.commands.blur();
                   this.editor.commands.focus("start");
@@ -333,7 +337,9 @@ export function createEditorConfig(options: {
               }
               const nextInput = nextRef.current();
               if (nextInput) {
-                this.editor.commands.setContent(nextInput);
+                this.editor.commands.setContent(nextInput, {
+                  emitUpdate: false,
+                });
                 setTimeout(() => {
                   this.editor.commands.blur();
                   this.editor.commands.focus("end");
@@ -385,6 +391,10 @@ export function createEditorConfig(options: {
     },
     content: props.editorState,
     editable: !isStreaming || props.isMainInput,
+    // Tiptap 3 stopped re-rendering on every transaction by default. Keep the
+    // tiptap 2 behaviour: components read editor state during render.
+    shouldRerenderOnTransaction: true,
+    immediatelyRender: true,
   });
 
   const onEnter = (modifiers: InputModifiers) => {
@@ -409,5 +419,5 @@ export function createEditorConfig(options: {
     props.onEnter(json, modifiers, editor);
   };
 
-  return { editor, onEnter };
+  return { editor, onEnter, placeholderTextRef };
 }

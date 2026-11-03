@@ -1,16 +1,17 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { z } from "zod";
 import { configYamlSchema } from "../schemas/index.js";
 
 // Get the directory name of the current module
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Convert Zod schema to JSON schema
-const jsonSchema = zodToJsonSchema(configYamlSchema, {
-  $refStrategy: "none",
-  name: "ConfigYaml",
+const jsonSchema = z.toJSONSchema(configYamlSchema, {
+  target: "draft-7",
+  io: "input",
+  unrepresentable: "any",
 });
 
 // Output directory and file path

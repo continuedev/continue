@@ -60,7 +60,9 @@ export const MainEditorProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (mainEditor && mainEditorContentTrigger) {
       queueMicrotask(() => {
-        mainEditor.commands.setContent(mainEditorContentTrigger);
+        mainEditor.commands.setContent(mainEditorContentTrigger, {
+          emitUpdate: false,
+        });
       });
       // Clear the trigger after using it
       dispatch(setMainEditorContentTrigger(undefined));

@@ -11,8 +11,8 @@ export const RequestOptionsSchema = z.object({
   verifySsl: z.boolean().optional(),
   caBundlePath: z.union([z.string(), z.array(z.string())]).optional(),
   proxy: z.string().optional(),
-  headers: z.record(z.string()).optional(),
-  extraBodyProperties: z.record(z.unknown()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
+  extraBodyProperties: z.record(z.string(), z.unknown()).optional(),
   noProxy: z.array(z.string()).optional(),
   clientCertificate: z.lazy(() => ClientCertificateOptionsSchema).optional(),
 });
@@ -266,7 +266,7 @@ export type VertexAIConfig = z.infer<typeof VertexAIConfigSchema>;
 export const AiSdkConfigSchema = BasePlusConfig.extend({
   provider: z.literal("ai-sdk"),
   model: z.string(),
-  providerOptions: z.record(z.unknown()).optional(),
+  providerOptions: z.record(z.string(), z.unknown()).optional(),
 });
 export type AiSdkConfig = z.infer<typeof AiSdkConfigSchema>;
 

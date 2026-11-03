@@ -17,7 +17,13 @@
     "types": ["node", "jest"],
     "outDir": "dist",
     "declaration": true,
-    "sourceMap": true
+    "sourceMap": true,
+    // Use this package's zod for every import, including the one inside the
+    // linked @continuedev/config-types; otherwise declaration emit can end up
+    // naming types through ../config-types/node_modules/zod.
+    "paths": {
+      "zod": ["./node_modules/zod/index.d.cts"]
+    }
   },
   "include": ["src/**/*"]
 }

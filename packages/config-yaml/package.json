@@ -23,24 +23,18 @@
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
   "dependencies": {
-    "@continuedev/config-types": "^1.0.14",
+    "@continuedev/config-types": "file:../config-types",
     "yaml": "^2.8.2",
-    "zod": "^3.25.76"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^9.2.6",
-    "@semantic-release/npm": "^13.1.5",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.0.0",
     "cross-env": "^7.0.3",
     "jest": "^29.7.0",
-    "semantic-release": "^24.2.7",
     "ts-jest": "^29.2.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3",
-    "zod-to-json-schema": "^3.24.5"
+    "typescript": "^5.9.3"
   },
   "overrides": {
     "picomatch": "^4.0.4"

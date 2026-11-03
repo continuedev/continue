@@ -1,5 +1,5 @@
 import * as YAML from "yaml";
-import z from "zod";
+import { z } from "zod";
 import { parseMarkdownRule } from "./markdownToRule.js";
 
 /* 

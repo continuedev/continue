@@ -9,5 +9,6 @@ export const chatFeedbackEventAllSchema = baseDevDataAllSchema.extend({
   prompt: z.string(),
   completion: z.string(),
   feedback: z.boolean().optional(),
-  sessionId: z.string().uuid(),
+  // guid() matches zod 3 uuid(): any 8-4-4-4-12 hex string, no version check
+  sessionId: z.string().guid(),
 });

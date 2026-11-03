@@ -10,7 +10,7 @@ vi.mock("uuid");
 vi.mock("core/util/messageContent");
 vi.mock("../../util/toolCallState");
 
-const mockUuidv4 = vi.mocked(uuidv4);
+const mockUuidv4 = vi.mocked(uuidv4 as () => string);
 const mockRenderChatMessage = vi.mocked(renderChatMessage);
 const mockAddToolCallDeltaToState = vi.mocked(addToolCallDeltaToState);
 

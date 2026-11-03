@@ -16,7 +16,7 @@ export class BaseService<TState> extends EventEmitter {
   }
 
   // Mock the abstract method
-  doInitialize = vi.fn<any>();
+  doInitialize = vi.fn<(...args: any[]) => any>();
 
   async initialize(...args: any[]): Promise<TState> {
     this.emit("initializing");

@@ -5,7 +5,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { UserInput } from "../UserInput.js";
 
 describe("Ctrl+C input clearing", () => {
-  let mockOnSubmit: ReturnType<typeof vi.fn>;
+  let mockOnSubmit: ReturnType<typeof vi.fn<(...args: any[]) => any>>;
   let mockProcessKill: any;
 
   beforeEach(() => {

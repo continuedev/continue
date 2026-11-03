@@ -34,8 +34,8 @@ export const requestOptionsSchema = z.object({
   useSystemCa: z.boolean().optional(),
   caBundlePath: z.union([z.string(), z.array(z.string())]).optional(),
   proxy: z.string().optional(),
-  headers: z.record(z.string()).optional(),
-  extraBodyProperties: z.record(z.any()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
+  extraBodyProperties: z.record(z.string(), z.any()).optional(),
   noProxy: z.array(z.string()).optional(),
   clientCertificate: clientCertificateOptionsSchema.optional(),
 });
@@ -96,12 +96,12 @@ export const modelDescriptionSchema = z.object({
       verifySsl: z.boolean().optional(),
       caBundlePath: z.union([z.string(), z.array(z.string())]).optional(),
       proxy: z.string().optional(),
-      headers: z.record(z.string()).optional(),
-      extraBodyProperties: z.record(z.any()).optional(),
+      headers: z.record(z.string(), z.string()).optional(),
+      extraBodyProperties: z.record(z.string(), z.any()).optional(),
       noProxy: z.array(z.string()).optional(),
     })
     .optional(),
-  promptTemplates: z.record(z.string()).optional(),
+  promptTemplates: z.record(z.string(), z.string()).optional(),
 });
 export type ModelDescription = z.infer<typeof modelDescriptionSchema>;
 
@@ -170,14 +170,14 @@ export type TabAutocompleteOptions = z.infer<
 export const slashCommandSchema = z.object({
   name: z.string(),
   description: z.string(),
-  params: z.record(z.any()).optional(),
+  params: z.record(z.string(), z.any()).optional(),
 });
 export type SlashCommand = z.infer<typeof slashCommandSchema>;
 
 export const customCommandSchema = z.object({
   name: z.string(),
   description: z.string(),
-  params: z.record(z.any()).optional(),
+  params: z.record(z.string(), z.any()).optional(),
 });
 export type CustomCommand = z.infer<typeof customCommandSchema>;
 
@@ -189,7 +189,7 @@ export type ContextProvider = z.infer<typeof contextProviderSchema>;
 
 export const rerankerSchema = z.object({
   name: z.enum(["cohere", "voyage", "watsonx", "llm"]),
-  params: z.record(z.any()).optional(),
+  params: z.record(z.string(), z.any()).optional(),
 });
 export type Reranker = z.infer<typeof rerankerSchema>;
 

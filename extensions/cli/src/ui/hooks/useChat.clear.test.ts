@@ -14,8 +14,8 @@ vi.mock("../../session.js", () => ({
 }));
 
 describe("useChat clear command", () => {
-  let mockSetChatHistory: ReturnType<typeof vi.fn>;
-  let mockOnClear: ReturnType<typeof vi.fn>;
+  let mockSetChatHistory: ReturnType<typeof vi.fn<(...args: any[]) => any>>;
+  let mockOnClear: ReturnType<typeof vi.fn<(...args: any[]) => any>>;
 
   beforeEach(() => {
     // Clear all mocks to prevent call history leaking between tests

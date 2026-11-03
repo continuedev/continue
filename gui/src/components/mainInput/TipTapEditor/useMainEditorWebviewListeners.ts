@@ -56,7 +56,7 @@ export function useMainEditorWebviewListeners({
   );
 
   useWebviewListener("jetbrains/editorInsetRefresh", async () => {
-    editor?.chain().clearContent().focus().run();
+    editor?.chain().clearContent(false).focus().run();
   });
 
   useWebviewListener(

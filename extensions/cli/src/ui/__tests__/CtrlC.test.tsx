@@ -6,8 +6,8 @@ import { ConfigSelector } from "../ConfigSelector.js";
 import { Selector } from "../Selector.js";
 
 describe("Ctrl+C behavior", () => {
-  let mockOnCancel: ReturnType<typeof vi.fn>;
-  let mockOnSelect: ReturnType<typeof vi.fn>;
+  let mockOnCancel: ReturnType<typeof vi.fn<(...args: any[]) => any>>;
+  let mockOnSelect: ReturnType<typeof vi.fn<(...args: any[]) => any>>;
   let mockProcess: any;
 
   beforeEach(() => {

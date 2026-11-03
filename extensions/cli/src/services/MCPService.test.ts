@@ -14,7 +14,10 @@ const mockClient = {
 };
 
 vi.mock("@modelcontextprotocol/sdk/client/index.js", () => ({
-  Client: vi.fn(() => mockClient),
+  // vitest 4 mocks invoked with `new` need a function, not an arrow
+  Client: vi.fn(function () {
+    return mockClient;
+  }),
 }));
 
 vi.mock("@modelcontextprotocol/sdk/client/stdio.js", () => ({
@@ -30,9 +33,9 @@ vi.mock("@modelcontextprotocol/sdk/client/streamableHttp.js", () => ({
 }));
 
 vi.mock("https", () => ({
-  Agent: vi.fn().mockImplementation(() => ({
-    rejectUnauthorized: false,
-  })),
+  Agent: vi.fn().mockImplementation(function () {
+    return { rejectUnauthorized: false };
+  }),
 }));
 
 describe("MCPService", () => {

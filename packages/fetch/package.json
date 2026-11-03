@@ -12,20 +12,15 @@
   "author": "Nate Sesti and Ty Dunn",
   "license": "Apache-2.0",
   "dependencies": {
-    "@continuedev/config-types": "^1.0.14",
+    "@continuedev/config-types": "file:../config-types",
     "follow-redirects": "^1.15.6",
     "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.5",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^9.2.6",
-    "@semantic-release/npm": "^13.1.5",
     "@types/follow-redirects": "^1.14.4",
     "@types/node": "^20.19.43",
-    "semantic-release": "^24.2.7",
     "typescript": "^5.0.0",
     "vitest": "^5.0.5"
   },

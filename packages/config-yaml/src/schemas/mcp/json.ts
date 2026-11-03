@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 // This is the schema for an entry in e.g. Claude Desktop, Claude code mcp config
 const httpOrSseMcpJsonSchema = z.object({

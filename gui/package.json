@@ -23,19 +23,18 @@
     "@modelcontextprotocol/ext-apps": "^1.0.1",
     "@panzoom/panzoom": "^4.6.0",
     "@reduxjs/toolkit": "^2.11.2",
-    "@tiptap/core": "^2.27.0",
-    "@tiptap/extension-document": "^2.27.0",
-    "@tiptap/extension-dropcursor": "^2.27.0",
-    "@tiptap/extension-history": "^2.27.1",
-    "@tiptap/extension-image": "^2.27.1",
-    "@tiptap/extension-mention": "^2.27.1",
-    "@tiptap/extension-paragraph": "^2.27.1",
-    "@tiptap/extension-placeholder": "^2.27.1",
-    "@tiptap/extension-text": "^2.27.1",
-    "@tiptap/pm": "^2.1.13",
-    "@tiptap/react": "^2.1.13",
-    "@tiptap/starter-kit": "^2.1.13",
-    "@tiptap/suggestion": "^2.1.13",
+    "@tiptap/core": "^3.32.2",
+    "@tiptap/extension-document": "^3.32.2",
+    "@tiptap/extension-dropcursor": "^3.32.2",
+    "@tiptap/extension-image": "^3.32.2",
+    "@tiptap/extension-mention": "^3.32.2",
+    "@tiptap/extension-paragraph": "^3.32.2",
+    "@tiptap/extension-text": "^3.32.2",
+    "@tiptap/extensions": "^3.32.2",
+    "@tiptap/pm": "^3.32.2",
+    "@tiptap/react": "^3.32.2",
+    "@tiptap/starter-kit": "^3.32.2",
+    "@tiptap/suggestion": "^3.32.2",
     "@types/diff": "^7.0.2",
     "@types/uuid": "^10.0.0",
     "anser": "^2.3.2",
@@ -59,7 +58,7 @@
     "react-markdown": "^9.0.1",
     "react-redux": "^8.0.5",
     "react-remark": "^2.1.0",
-    "react-router-dom": "^6.30.3",
+    "react-router-dom": "^7.18.5",
     "react-switch": "^7.0.0",
     "react-syntax-highlighter": "^16.1.1",
     "react-tooltip": "^5.18.0",
@@ -79,7 +78,7 @@
     "tailwind-merge": "^3.0.2",
     "tippy.js": "^6.3.7",
     "unist-util-visit": "^5.0.0",
-    "uuid": "^9.0.1"
+    "uuid": "^11.1.1"
   },
   "devDependencies": {
     "@swc/cli": "^0.8.0",
@@ -120,6 +119,7 @@
   "overrides": {
     "vitest": {
       "@types/node": "$@types/node"
-    }
+    },
+    "katex": "^0.18.2"
   }
 }

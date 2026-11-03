@@ -25,61 +25,96 @@ function getSuggestion(
     render: () => {
       let component: any;
       let popup: any;
+      // Tiptap 3 calls onStart/onUpdate with `loading: true` and empty items
+      // before `items` resolves, then onUpdate again with the results.
+      // Tiptap 2 only called them once the items had resolved. Ignore the
+      // loading calls and open the dropdown on the first resolved update so
+      // the list doesn't flash empty or reset its selection on each keystroke.
+      let started = false;
+      // Set once the dropdown has been closed (by the suggestion ending, or by
+      // the dropdown itself via its onClose prop). Like tiptap 2, it stays
+      // closed until the next suggestion session starts.
+      let closed = false;
 
       const onExit = () => {
         popup?.[0]?.destroy();
         component?.destroy();
+        popup = undefined;
+        component = undefined;
+        closed = true;
         onClose();
+      };
+
+      const onStart = (props: any) => {
+        started = true;
+        component = new ReactRenderer(AtMentionDropdown, {
+          props: { ...props, enterSubmenu, onClose: onExit },
+          editor: props.editor,
+        });
+
+        if (!props.clientRect) {
+          console.log("no client rect");
+          return;
+        }
+
+        const container = document.getElementById(TIPPY_DIV_ID);
+
+        if (!container) {
+          console.log("no container");
+          return;
+        }
+
+        popup = tippy("body", {
+          getReferenceClientRect: props.clientRect,
+          appendTo: () => container,
+          content: component.element,
+          showOnCreate: true,
+          interactive: true,
+          trigger: "manual",
+          placement: "bottom-start",
+          maxWidth: `${window.innerWidth - 24}px`,
+        });
+
+        onOpen();
+      };
+
+      const onUpdate = (props: any) => {
+        if (closed || props.loading) {
+          return;
+        }
+
+        if (!started) {
+          onStart(props);
+          return;
+        }
+
+        component.updateProps({ ...props, enterSubmenu });
+
+        if (!props.clientRect) {
+          return;
+        }
+
+        popup[0].setProps({
+          getReferenceClientRect: props.clientRect,
+        });
       };
 
       return {
         onStart: (props: any) => {
-          component = new ReactRenderer(AtMentionDropdown, {
-            props: { ...props, enterSubmenu, onClose: onExit },
-            editor: props.editor,
-          });
-
-          if (!props.clientRect) {
-            console.log("no client rect");
-            return;
-          }
-
-          const container = document.getElementById(TIPPY_DIV_ID);
-
-          if (!container) {
-            console.log("no container");
-            return;
-          }
-
-          popup = tippy("body", {
-            getReferenceClientRect: props.clientRect,
-            appendTo: () => container,
-            content: component.element,
-            showOnCreate: true,
-            interactive: true,
-            trigger: "manual",
-            placement: "bottom-start",
-            maxWidth: `${window.innerWidth - 24}px`,
-          });
-
-          onOpen();
+          started = false;
+          closed = false;
+          onUpdate(props);
         },
 
-        onUpdate(props: any) {
-          component.updateProps({ ...props, enterSubmenu });
-
-          if (!props.clientRect) {
-            return;
-          }
-
-          popup[0].setProps({
-            getReferenceClientRect: props.clientRect,
-          });
-        },
+        onUpdate,
 
         onKeyDown(props: any) {
+          if (!started || closed) {
+            return false;
+          }
+
           if (props.event.key === "Escape") {
-            popup[0].hide();
+            popup?.[0]?.hide();
 
             return true;
           }

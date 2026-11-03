@@ -10,17 +10,19 @@ keywords = ["OpenAPI", "OpenAPI-Generator", "Continue Hub IDE API"]
 include = ["openapi_client/py.typed"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.11"
 
-urllib3 = ">= 1.25.3, < 3.0.0"
+urllib3 = ">= 2.8.0, < 3.0.0"
 python-dateutil = ">= 2.8.2"
 pydantic = ">= 2"
 typing-extensions = ">= 4.7.1"
 
 [tool.poetry.dev-dependencies]
-pytest = ">= 7.2.1"
+pytest = ">= 9.0.3"
 pytest-cov = ">= 2.8.1"
 tox = ">= 3.9.0"
+virtualenv = ">= 21.14.9"
+filelock = ">= 4.2.1"
 flake8 = ">= 4.0.0"
 types-python-dateutil = ">= 2.8.19.14"
 mypy = ">= 1.5"

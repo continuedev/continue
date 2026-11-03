@@ -15,8 +15,8 @@ export const requestOptionsSchema = z.object({
   useSystemCa: z.boolean().optional(),
   caBundlePath: z.union([z.string(), z.array(z.string())]).optional(),
   proxy: z.string().optional(),
-  headers: z.record(z.string()).optional(),
-  extraBodyProperties: z.record(z.any()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
+  extraBodyProperties: z.record(z.string(), z.any()).optional(),
   noProxy: z.array(z.string()).optional(),
   clientCertificate: clientCertificateOptionsSchema.optional(),
 });

@@ -13,12 +13,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^22.15.29",
-    "typescript": "^5.5.2",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^9.2.6",
-    "@semantic-release/npm": "^13.1.5",
-    "semantic-release": "^24.2.7"
+    "typescript": "^5.5.2"
   },
   "overrides": {
     "picomatch": "^4.0.4"

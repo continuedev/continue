@@ -46,5 +46,10 @@
     "tailwindcss": "^3.3.5",
     "tsx": "^4.23.15",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@tailwindcss/typography": {
+      "postcss-selector-parser": "^6.1.5"
+    }
   }
 }
