@@ -16,7 +16,6 @@
   "author": "Continue Dev, Inc",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@babel/preset-env": "^7.24.7",
     "@biomejs/biome": "1.6.4",
     "@google/generative-ai": "^0.24.1",
     "@modelcontextprotocol/ext-apps": "^1.0.1",
