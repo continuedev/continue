@@ -16,7 +16,7 @@ crate-type = ["cdylib"]
 dirs = "7.0.0"
 homedir = "0.3.6"
 ignore = "0.4.20"
-ndarray = "0.15.6"
+ndarray = "0.17.2"
 rand = "0.10.3"
 rusqlite = { version = "0.41.1", features = ["bundled", "fallible_uint"] }
 serde = { version = "1.0.192", features = ["derive"] }
