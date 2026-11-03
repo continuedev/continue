@@ -409,6 +409,107 @@ describe("Bedrock", () => {
       }
     });
 
+    describe("on rewritten messages (agent loop)", () => {
+      const toolCall = (id: string) => ({
+        id,
+        type: "function" as const,
+        function: { name: "ls", arguments: "{}" },
+      });
+      // Bedrock rewrites this history: consecutive tool results are folded
+      // into ONE user message, so Continue has 9 messages and Bedrock gets 8.
+      const loop: ChatMessage[] = [
+        { role: "system", content: "You are an agent." },
+        { role: "user", content: "fix it" },
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [toolCall("a"), toolCall("b")],
+        },
+        { role: "tool", content: "out a", toolCallId: "a" },
+        { role: "tool", content: "out b", toolCallId: "b" },
+        { role: "assistant", content: "", toolCalls: [toolCall("c")] },
+        { role: "tool", content: "out c", toolCallId: "c" },
+        { role: "assistant", content: "done" },
+        { role: "user", content: "next" },
+      ];
+
+      function convert(history: ChatMessage[]) {
+        const b: any = new TestBedrock({
+          apiKey: "k",
+          model: sonnet45,
+          region: "us-east-1",
+        });
+        b.capabilities = { tools: true };
+        return b._generateConverseInput(history, {
+          model: sonnet45,
+          tools,
+          promptCaching: true,
+        }).messages as any[];
+      }
+      const markerIndexes = (messages: any[]) =>
+        messages.flatMap((m, i) =>
+          m.content.some((c: any) => c.cachePoint) ? [i] : [],
+        );
+
+      it("marks the last two Bedrock user messages, not Continue messages", () => {
+        const messages = convert(loop);
+        expect(messages.map((m) => m.role)).toEqual([
+          "user",
+          "assistant",
+          "user", // tool results a and b, merged
+          "assistant",
+          "user", // tool result c
+          "assistant",
+          "user", // "next"
+        ]);
+        // Markers on the tool-result message for c and on "next". Not on the
+        // merged a+b message, and never on an assistant message.
+        expect(markerIndexes(messages)).toEqual([4, 6]);
+      });
+
+      it("puts the marker after the last block of the message, outside toolResult", () => {
+        const messages = convert(loop);
+        for (const i of [4, 6]) {
+          const blocks = messages[i].content;
+          expect(blocks.filter((c: any) => c.cachePoint)).toHaveLength(1);
+          expect(blocks[blocks.length - 1].cachePoint).toEqual({
+            type: "default",
+          });
+        }
+        const toolResultMessage = messages[4].content;
+        expect(toolResultMessage[0].toolResult.toolUseId).toBe("c");
+        expect(JSON.stringify(toolResultMessage[0].toolResult)).not.toContain(
+          "cachePoint",
+        );
+      });
+
+      it("moves the marker to the new last two user messages when the loop grows", () => {
+        const grown = convert([
+          ...loop,
+          { role: "assistant", content: "", toolCalls: [toolCall("d")] },
+          { role: "tool", content: "out d", toolCallId: "d" },
+        ]);
+        // user messages are now 0, 2, 4, 6, 8; the last two are 6 and 8
+        expect(markerIndexes(grown)).toEqual([6, 8]);
+        // A message that left the window is unchanged except for the marker.
+        const before = convert(loop);
+        const strip = (m: any) => m.content.filter((c: any) => !c.cachePoint);
+        expect(strip(grown[4])).toEqual(strip(before[4]));
+      });
+
+      it("counts a single tool-only user message as one marker", () => {
+        const messages = convert([
+          { role: "system", content: "s" },
+          { role: "user", content: "go" },
+          { role: "assistant", content: "", toolCalls: [toolCall("a")] },
+          { role: "tool", content: "out a", toolCallId: "a" },
+        ]);
+        expect(markerIndexes(messages)).toEqual([0, 2]);
+        expect(messages[2].content.at(-1).cachePoint).toBeDefined();
+        expect(messages[2].content[0].toolResult).toBeDefined();
+      });
+    });
+
     it("adds no ID when caching is off", () => {
       const b: any = new TestBedrock({
         apiKey: "k",
