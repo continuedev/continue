@@ -36,6 +36,23 @@ updates:
       # @types/vscode must not be newer than engines.vscode in the extension's
       # package.json (vsce refuses to package otherwise); bump them together by hand.
       - dependency-name: "@types/vscode"
+      # web-tree-sitter 0.x minor releases change the API (SyntaxNode/Parser moved,
+      # QueryMatch.pattern renamed...). Dependabot files them as "minor" and the
+      # grouped PR then fails tsc across core. Migrate by hand, then remove this.
+      - dependency-name: web-tree-sitter
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      # Needs Jest 30; core is on Jest 29 (see the Jest -> Vitest migration).
+      - dependency-name: jest-environment-jsdom
+        update-types: ["version-update:semver-major"]
+      # @types/uuid 11 is a stub for uuid >= 11; core uses uuid 9, which needs @types/uuid 9.
+      # Bump uuid itself (types are then bundled) and drop @types/uuid together.
+      - dependency-name: "@types/uuid"
+        update-types: ["version-update:semver-major"]
+      # The binary and the extension package a prebuilt native sqlite3 pinned to v5.1.7
+      # (extensions/vscode/scripts/download-copy-sqlite.js); the JS package must not
+      # move ahead of it. Revisit together with a move to node:sqlite.
+      - dependency-name: sqlite3
+        update-types: ["version-update:semver-major"]
     groups:
       # Minor/patch bumps are batched into one PR per directory; majors stay
       # individual so they can be reviewed (and reverted) on their own.
