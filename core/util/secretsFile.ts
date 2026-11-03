@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import * as dotenv from "dotenv";
+
 import { isValidSecretName } from "./unresolvedSecrets";
 
 /**
@@ -28,4 +30,69 @@ export function ensureSecretPlaceholder(dir: string, name: string): string {
   }
 
   return file;
+}
+
+/**
+ * Format a value for a .env file so `dotenv.parse` reads back the same text.
+ * Throws for values .env cannot hold (line breaks, or all three quote kinds).
+ * The value is never included in an error message.
+ */
+export function formatEnvValue(value: string): string {
+  if (/[\r\n]/.test(value)) {
+    throw new Error("A secret value cannot contain line breaks");
+  }
+  if (value === "") return "";
+  if (/^[A-Za-z0-9_.:/+=@%,-]+$/.test(value)) return value;
+  for (const quote of ["'", '"', "`"]) {
+    if (!value.includes(quote)) return `${quote}${value}${quote}`;
+  }
+  throw new Error("This secret value cannot be stored in a .env file");
+}
+
+/**
+ * Set `NAME=value` in `<dir>/.env`: replaces the line for NAME if there is
+ * one, otherwise appends it. Other lines, comments and order are kept. The file
+ * is created (and kept) readable by the owner only. Returns the file path.
+ */
+export function setSecretInEnvFile(
+  dir: string,
+  name: string,
+  value: string,
+): string {
+  if (!isValidSecretName(name)) {
+    throw new Error(`"${name}" is not a valid secret name`);
+  }
+  const formatted = formatEnvValue(value);
+
+  const file = path.join(dir, ".env");
+  const existing = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
+  const eol = existing.includes("\r\n") ? "\r\n" : "\n";
+  const lines = existing === "" ? [] : existing.split(/\r?\n/);
+  if (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
+
+  const assignment = new RegExp(`^\\s*(export\\s+)?${name}\\s*=`);
+  const line = `${name}=${formatted}`;
+  const index = lines.findIndex((l) => assignment.test(l));
+  if (index >= 0) lines[index] = line;
+  else lines.push(line);
+
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(file, lines.join(eol) + eol, { mode: 0o600 });
+  try {
+    fs.chmodSync(file, 0o600);
+  } catch {
+    // Not supported on every file system (Windows); the write above succeeded.
+  }
+  return file;
+}
+
+/** True when `<dir>/.env` already has a non-empty value for the secret. */
+export function envFileHasValue(dir: string, name: string): boolean {
+  try {
+    const file = path.join(dir, ".env");
+    if (!fs.existsSync(file)) return false;
+    return !!dotenv.parse(fs.readFileSync(file, "utf8"))[name];
+  } catch {
+    return false;
+  }
 }

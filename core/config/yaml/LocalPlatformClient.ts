@@ -87,6 +87,33 @@ export class LocalPlatformClient implements PlatformClient {
     }
   }
 
+  /** The IDE's secret storage; hosts without one return nothing. */
+  private async findSecretInSecureStorage(
+    fqsn: FQSN,
+  ): Promise<SecretResult | undefined> {
+    try {
+      if (typeof this.ide.readSecrets !== "function") return undefined;
+      const value = (await this.ide.readSecrets([fqsn.secretName]))?.[
+        fqsn.secretName
+      ];
+      if (!value) return undefined;
+      return {
+        found: true,
+        fqsn,
+        value,
+        secretLocation: {
+          secretName: fqsn.secretName,
+          secretType: SecretType.LocalEnv,
+        },
+      };
+    } catch (error) {
+      console.warn(
+        `Error reading secure storage: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return undefined;
+    }
+  }
+
   async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
     if (fqsns.length === 0) {
       return [];
@@ -97,7 +124,12 @@ export class LocalPlatformClient implements PlatformClient {
     for (let i = 0; i < fqsns.length; i++) {
       let secretResult = await this.findSecretInEnvFiles(fqsns[i]);
 
-      // If not found in .env files, try process.env
+      // Then the IDE's secure storage (where the setup flow keeps a key)
+      if (!secretResult?.found) {
+        secretResult = await this.findSecretInSecureStorage(fqsns[i]);
+      }
+
+      // If not found in .env files or secure storage, try process.env
       if (!secretResult?.found) {
         const secretValueFromProcessEnv = process.env[fqsns[i].secretName];
         if (secretValueFromProcessEnv !== undefined) {

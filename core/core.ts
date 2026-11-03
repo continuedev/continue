@@ -72,6 +72,13 @@ import {
 import { CodebaseRulesCache } from "./config/markdown/loadCodebaseRules";
 import { openSecretLocation } from "./config/openSecretLocation";
 import {
+  defaultSecretName,
+  readProviderConnections,
+  saveProviderModels,
+  validateSaveRequest,
+} from "./config/providerSetup";
+import { isSecureStorageAvailable, storeSecret } from "./config/secretStorage";
+import {
   setupLocalConfig,
   setupProviderConfig,
   setupQuickstartConfig,
@@ -498,6 +505,89 @@ export class Core {
         continueDir: getContinueGlobalPath(),
         configUri: this.configHandler.currentProfile?.profileDescription.uri,
       });
+    });
+
+    on("config/getProviderSetup", async () => {
+      const secureStorageAvailable = await isSecureStorageAvailable(this.ide);
+      const remembered = this.globalContext.get("preferredKeyStorage");
+      const { connections, editable } = readProviderConnections();
+      return {
+        connections,
+        secureStorageAvailable,
+        preferredKeyStorage:
+          remembered === "env" || !secureStorageAvailable
+            ? ("env" as const)
+            : ("secure" as const),
+        editable,
+      };
+    });
+
+    on("config/saveProviderModels", async (msg) => {
+      const req = msg.data;
+      const invalid = validateSaveRequest(req);
+      if (invalid) {
+        return { saved: false, error: invalid };
+      }
+
+      let warning: string | undefined;
+      const key = req.key;
+      if (key && key.storage !== "inline" && key.storage !== "envVar") {
+        if (key.value) {
+          // The value is stored first; if that fails, config.yaml is untouched.
+          const stored = await storeSecret({
+            ide: this.ide,
+            name: key.secretName!,
+            value: key.value,
+            storage: key.storage,
+            continueDir: getContinueGlobalPath(),
+          });
+          if (!stored.stored) {
+            return { saved: false, error: stored.error };
+          }
+          warning = stored.warning;
+        }
+        this.globalContext.update("preferredKeyStorage", key.storage);
+      }
+
+      // The value goes no further than the secret store, unless the user
+      // chose to keep it in config.yaml.
+      const toSave =
+        key && key.storage !== "inline"
+          ? {
+              ...req,
+              key: { storage: key.storage, secretName: key.secretName },
+            }
+          : req;
+      const saved = saveProviderModels(toSave);
+      if (!saved) {
+        void this.ide.showToast(
+          "warning",
+          "Models are saved in config.yaml, and this profile has none.",
+        );
+        return { saved: false, error: "There is no config.yaml to edit" };
+      }
+      await this.configHandler.reloadConfig(
+        "Provider models changed (config/saveProviderModels message)",
+      );
+      return { saved: true, ...(warning ? { warning } : {}) };
+    });
+
+    on("config/setSecret", async (msg) => {
+      const { secretName, value, storage } = msg.data;
+      const result = await storeSecret({
+        ide: this.ide,
+        name: secretName,
+        value,
+        storage,
+        continueDir: getContinueGlobalPath(),
+      });
+      if (result.stored) {
+        this.globalContext.update("preferredKeyStorage", storage);
+        await this.configHandler.reloadConfig(
+          "Secret stored (config/setSecret message)",
+        );
+      }
+      return result;
     });
 
     on("config/ideSettingsUpdate", async (msg) => {

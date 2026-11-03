@@ -30,6 +30,8 @@ export type GlobalContextType = {
   selectedModelsByProfileId: {
     [profileId: string]: GlobalContextModelSelections;
   };
+  /** Where the model setup flow last stored an API key. */
+  preferredKeyStorage?: "secure" | "env";
   cliSelectedModel?: string; // CLI-specific model selection for unauthenticated users
 
   /**
