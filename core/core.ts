@@ -10,6 +10,8 @@ import {
 import { ConfigHandler } from "./config/ConfigHandler";
 import { addModel, deleteModel } from "./config/util";
 import { evaluateToolPolicyWithRules } from "./tools/permissions/evaluate";
+import { addToolRule } from "./tools/permissions/addRule";
+import { suggestAllowRule } from "./tools/permissions/suggest";
 import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { DataLogger } from "./data/log";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
@@ -369,6 +371,37 @@ export class Core {
       void this.configHandler.reloadConfig(
         "Model removed (config/deleteModel message)",
       );
+    });
+
+    on("tools/suggestAllowRule", async ({ data: { toolName, parsedArgs } }) => {
+      const { config } = await this.configHandler.loadConfig();
+      const tool = config?.tools.find((t) => t.function.name === toolName);
+      const isMcp =
+        !!tool?.uri?.startsWith("mcp:") && !!tool.originalFunctionName;
+      return suggestAllowRule({
+        toolName,
+        parsedArgs,
+        readonly: tool?.readonly,
+        mcp:
+          isMcp && tool
+            ? { serverName: tool.group, toolName: tool.originalFunctionName! }
+            : undefined,
+      });
+    });
+
+    on("config/addToolRule", async (msg) => {
+      const result = addToolRule(msg.data.decision, msg.data.rule);
+      if (result === "added") {
+        await this.configHandler.reloadConfig(
+          "Tool rule added (config/addToolRule message)",
+        );
+      } else if (result === "no-config") {
+        void this.ide.showToast(
+          "warning",
+          "Tool rules are saved in config.yaml, and this profile has none.",
+        );
+      }
+      return { result };
     });
 
     on("config/newPromptFile", async (msg) => {

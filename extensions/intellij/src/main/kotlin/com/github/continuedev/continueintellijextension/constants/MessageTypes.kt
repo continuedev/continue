@@ -87,6 +87,8 @@ class MessageTypes {
             "config/deleteRule",
             "config/getSerializedProfileInfo",
             "config/deleteModel",
+            "config/addToolRule",
+            "tools/suggestAllowRule",
             "config/refreshProfiles",
             "config/openProfile",
             "config/updateSharedConfig",

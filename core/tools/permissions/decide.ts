@@ -47,16 +47,16 @@ export interface DecideInput {
 }
 
 /** Resolve `.`/`..`, use forward slashes. A path that leaves the root keeps its `..`. */
-function cleanPath(p: string): string {
+export function cleanPath(p: string): string {
   return posix.normalize(normalizeRelative(p) ?? "");
 }
 
 /** True for a path an allow rule may be matched against: relative, inside the root. */
-function staysInside(p: string): boolean {
+export function staysInside(p: string): boolean {
   return !(p === ".." || p.startsWith("../") || /^([a-zA-Z]:)?\//.test(p));
 }
 
-function findMatch(input: DecideInput): RuleMatch | undefined {
+export function findRuleMatch(input: DecideInput): RuleMatch | undefined {
   const { toolName, mcp, parsedArgs, resolvedPath, rules } = input;
   if (rules.length === 0) return undefined;
 
@@ -126,7 +126,7 @@ function matchMcp(rules: ParsedRule[], name: string): RuleMatch | undefined {
  */
 export function decideToolCall(input: DecideInput): ToolDecision {
   const { base, evaluated } = input;
-  const match = findMatch(input);
+  const match = findRuleMatch(input);
 
   if (match?.decision === "deny") {
     return {

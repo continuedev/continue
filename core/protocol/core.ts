@@ -137,6 +137,22 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
   ];
   "config/deleteModel": [{ title: string }, void];
+  /**
+   * Add one rule to `toolPermissions` in the global config.yaml (comments
+   * kept). "no-config" means there was no config.yaml to edit.
+   */
+  "config/addToolRule": [
+    { decision: "allow" | "ask" | "deny"; rule: string },
+    { result: "added" | "exists" | "no-config" | "invalid" },
+  ];
+  /**
+   * The narrowest allow rule for a pending tool call, or why there is none.
+   * Nothing is written; "Always allow" then sends the rule to config/addToolRule.
+   */
+  "tools/suggestAllowRule": [
+    { toolName: string; parsedArgs: Record<string, unknown> },
+    { ok: true; rule: string; summary: string } | { ok: false; reason: string },
+  ];
   "config/refreshProfiles": [
     (
       | undefined
