@@ -12,7 +12,6 @@ import {
 } from "@anthropic-ai/sdk/resources/messages.mjs";
 import { streamSse } from "@continuedev/fetch";
 import {
-  addCacheControlToLastTwoUserMessages,
   getAnthropicErrorMessage,
   getAnthropicHeaders,
   getAnthropicMediaTypeFromDataUrl,
@@ -30,6 +29,13 @@ import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { extractBase64FromDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
+import {
+  cacheControlFor,
+  markCacheBreakpoints,
+  markLastToolForCache,
+  PromptCacheTtl,
+  resolveCacheParts,
+} from "./anthropicCache.js";
 import {
   AnthropicThinkingParams,
   getAnthropicThinkingParams,
@@ -217,6 +223,7 @@ class Anthropic extends BaseLLM {
   public convertMessages(
     msgs: ChatMessage[],
     cachePrompt: boolean,
+    ttl?: PromptCacheTtl,
   ): MessageParam[] {
     const nonSystemMessages = msgs.filter((m) => m.role !== "system");
 
@@ -248,7 +255,7 @@ class Anthropic extends BaseLLM {
     flushCurrentMessage();
 
     if (cachePrompt) {
-      addCacheControlToLastTwoUserMessages(convertedMessages);
+      markCacheBreakpoints(convertedMessages, ttl);
     }
 
     return convertedMessages;
@@ -424,31 +431,32 @@ class Anthropic extends BaseLLM {
     const systemMessage = stripImages(
       messages.filter((m) => m.role === "system")[0]?.content ?? "",
     );
-    const shouldCacheSystemMessage = !!(
-      this.cacheBehavior?.cacheSystemMessage && systemMessage
+    const parts = resolveCacheParts(
+      options.promptCaching,
+      this.cacheBehavior,
+      !!systemMessage,
     );
-    const shouldCachePrompt = !!(
-      this.cacheBehavior?.cacheConversation ||
-      this.completionOptions.promptCaching
-    );
+    const ttl = options.promptCacheTtl;
+    const anyCaching = parts.tools || parts.system || parts.conversation;
 
-    const msgs = this.convertMessages(messages, shouldCachePrompt);
-    const headers = getAnthropicHeaders(
-      this.apiKey,
-      shouldCacheSystemMessage || shouldCachePrompt,
-      this.apiBase,
-    );
+    const msgs = this.convertMessages(messages, parts.conversation, ttl);
+    const headers = getAnthropicHeaders(this.apiKey, anyCaching, this.apiBase);
+
+    const convertedArgs = this.convertArgs(options);
+    if (parts.tools) {
+      markLastToolForCache(convertedArgs.tools, ttl);
+    }
 
     const body: AnthropicRequestParams &
       Pick<MessageCreateParams, "messages" | "system"> = {
-      ...this.convertArgs(options),
+      ...convertedArgs,
       messages: msgs,
-      system: shouldCacheSystemMessage
+      system: parts.system
         ? [
             {
               type: "text",
               text: systemMessage,
-              cache_control: { type: "ephemeral" },
+              cache_control: cacheControlFor(ttl),
             },
           ]
         : systemMessage,

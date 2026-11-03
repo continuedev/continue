@@ -1,3 +1,5 @@
+import { normalizeClaudeModelId } from "../utils/calculateRequestCost.js";
+
 /**
  * Pure helpers for the Bedrock provider (kept separate from Bedrock.ts so they
  * can be unit tested without the AWS SDK).
@@ -285,4 +287,30 @@ export function bedrockUsageToUsage(usage: BedrockTokenUsageLike): {
     completionTokens: usage.outputTokens ?? 0,
     promptTokensDetails: details,
   };
+}
+
+/**
+ * Claude models on Bedrock that accept a 1-hour cache lifetime (`ttl: "1h"` on a
+ * cache point). From the Bedrock prompt caching table (checked 2026-11-02).
+ * Sending `ttl` to a model that only supports 5 minutes can fail the request
+ * with a ValidationException, so anything not listed here gets the default.
+ * Rows for older Sonnet 4 and Opus 4 / 4.1 models were not visible when the
+ * table was read, so they are left out.
+ */
+const ONE_HOUR_CACHE_MODELS =
+  /^claude-(haiku-4-5|haiku-5|sonnet-4-5|sonnet-4-6|sonnet-5|opus-4-5|opus-4-6|opus-4-7|opus-4-8|opus-5|fable|mythos)/;
+
+export function bedrockSupportsOneHourCache(modelId: string): boolean {
+  const id = normalizeClaudeModelId(modelId);
+  return !!id && ONE_HOUR_CACHE_MODELS.test(id);
+}
+
+/** The `ttl` to put on a cache point, or undefined for the default. */
+export function bedrockCacheTtl(
+  modelId: string,
+  requested: "5m" | "1h" | undefined,
+): "1h" | undefined {
+  return requested === "1h" && bedrockSupportsOneHourCache(modelId)
+    ? "1h"
+    : undefined;
 }

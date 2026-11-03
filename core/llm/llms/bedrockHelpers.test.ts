@@ -1,5 +1,7 @@
 import {
   applyCrossRegionInference,
+  bedrockCacheTtl,
+  bedrockSupportsOneHourCache,
   bedrockUsageToUsage,
   buildModelCatalog,
   getBedrockErrorHint,
@@ -293,5 +295,39 @@ describe("bedrockUsageToUsage", () => {
       completionTokens: 0,
       promptTokensDetails: { cachedTokens: 0, cacheWriteTokens: 0 },
     });
+  });
+});
+
+describe("bedrockSupportsOneHourCache", () => {
+  it.each([
+    ["us.anthropic.claude-sonnet-4-5-20250929-v1:0", true],
+    ["anthropic.claude-sonnet-4-6", true],
+    ["anthropic.claude-haiku-4-5-20251001-v1:0", true],
+    ["anthropic.claude-opus-4-6-v1", true],
+    ["global.anthropic.claude-opus-4-5-20251101-v1:0", true],
+    // Listed as 5 minutes only, or not listed: never send a ttl.
+    ["anthropic.claude-3-7-sonnet-20250219-v1:0", false],
+    ["anthropic.claude-3-5-sonnet-20241022-v2:0", false],
+    ["anthropic.claude-sonnet-4-20250514-v1:0", false],
+    ["anthropic.claude-opus-4-1-20250805-v1:0", false],
+    ["amazon.nova-pro-v1:0", false],
+    ["openai.gpt-5.6-sol", false],
+  ])("%s -> %s", (id, expected) => {
+    expect(bedrockSupportsOneHourCache(id)).toBe(expected);
+  });
+});
+
+describe("bedrockCacheTtl", () => {
+  const ok = "anthropic.claude-sonnet-4-5-20250929-v1:0";
+  const old = "anthropic.claude-3-7-sonnet-20250219-v1:0";
+
+  it("returns 1h only when asked for and supported", () => {
+    expect(bedrockCacheTtl(ok, "1h")).toBe("1h");
+    expect(bedrockCacheTtl(old, "1h")).toBeUndefined();
+  });
+
+  it("omits the ttl for the default lifetime", () => {
+    expect(bedrockCacheTtl(ok, "5m")).toBeUndefined();
+    expect(bedrockCacheTtl(ok, undefined)).toBeUndefined();
   });
 });

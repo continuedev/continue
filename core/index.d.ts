@@ -1230,6 +1230,12 @@ export interface BaseCompletionOptions {
   reasoning?: boolean;
   reasoningBudgetTokens?: number;
   promptCaching?: boolean;
+  /**
+   * Lifetime of prompt cache entries written by this request. Only honoured by
+   * providers that support it (Anthropic and Claude models on Bedrock); omit
+   * for the provider's default of 5 minutes.
+   */
+  promptCacheTtl?: "5m" | "1h";
 }
 
 export interface ModelCapability {

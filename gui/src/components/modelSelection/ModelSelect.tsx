@@ -33,6 +33,7 @@ import {
   useFontSize,
 } from "../ui";
 import { Divider } from "../ui/Divider";
+import { ModelSwitchCacheNotice } from "./ModelSwitchCacheNotice";
 
 interface ModelOptionProps {
   option: Option;
@@ -390,6 +391,7 @@ function ModelSelect() {
 
           {!isConfigLoading && (
             <>
+              <ModelSwitchCacheNotice />
               <Divider className="!mb-0" />
               <ListboxOption
                 key={options.length}

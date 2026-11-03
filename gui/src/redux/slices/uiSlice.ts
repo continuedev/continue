@@ -7,6 +7,7 @@ import {
   OnboardingCardState,
 } from "../../components/OnboardingCard";
 import { getLocalStorage, LocalStorageKey } from "../../util/localStorage";
+import type { PromptCacheSetting } from "../../util/promptCache";
 
 export type RulePolicy = "on" | "off";
 
@@ -16,6 +17,7 @@ export type ToolPolicies = { [toolName: string]: ToolPolicy };
 export type RulePolicies = { [ruleName: string]: RulePolicy };
 export type ToolGroupPolicies = { [toolGroupName: string]: ToolGroupPolicy };
 export type ReasoningSettings = { [modelTitle: string]: boolean };
+export type PromptCacheSettings = { [modelTitle: string]: PromptCacheSetting };
 
 type UIState = {
   showDialog: boolean;
@@ -28,6 +30,8 @@ type UIState = {
   toolGroupSettings: ToolGroupPolicies;
   ruleSettings: RulePolicies;
   reasoningSettings: ReasoningSettings;
+  /** Prompt cache choice per model title; absent means follow config.yaml. */
+  promptCacheSettings: PromptCacheSettings;
   /** Model the user picked by hand per mode; wins over `modeModels` until reload. */
   modeModelOverrides: Partial<Record<MessageModes, string>>;
   ttsActive: boolean;
@@ -51,6 +55,7 @@ export const DEFAULT_UI_SLICE: UIState = {
   },
   ruleSettings: {},
   reasoningSettings: {},
+  promptCacheSettings: {},
   modeModelOverrides: {},
 };
 
@@ -152,6 +157,20 @@ export const uiSlice = createSlice({
       state.reasoningSettings[action.payload.modelTitle] =
         action.payload.enabled;
     },
+    setPromptCacheSetting: (
+      state,
+      action: PayloadAction<{
+        modelTitle: string;
+        setting: PromptCacheSetting | undefined;
+      }>,
+    ) => {
+      if (action.payload.setting === undefined) {
+        delete state.promptCacheSettings[action.payload.modelTitle];
+      } else {
+        state.promptCacheSettings[action.payload.modelTitle] =
+          action.payload.setting;
+      }
+    },
     setModeModelOverride: (
       state,
       action: PayloadAction<{ mode: MessageModes; title: string }>,
@@ -175,6 +194,7 @@ export const {
   toggleRuleSetting,
   setTTSActive,
   setReasoningSetting,
+  setPromptCacheSetting,
   setModeModelOverride,
 } = uiSlice.actions;
 

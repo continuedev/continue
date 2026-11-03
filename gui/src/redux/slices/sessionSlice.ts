@@ -37,6 +37,10 @@ import { v4 as uuidv4 } from "uuid";
 import { type InlineErrorMessageType } from "../../components/mainInput/InlineErrorMessage";
 import { toolCallCtxItemToCtxItemWithId } from "../../pages/gui/ToolCallDiv/utils";
 import { addToolCallDeltaToState, isEditTool } from "../../util/toolCallState";
+import {
+  INITIAL_PROMPT_CACHE_STATE,
+  type PromptCacheSessionState,
+} from "../../util/promptCache";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findChatHistoryItemByToolCallId, findToolCallById } from "../util";
@@ -218,6 +222,8 @@ type SessionState = {
   };
   newestToolbarPreviewForInput: Record<string, string>;
   hasReasoningEnabled?: boolean;
+  /** What Auto learned about this session's pauses; see util/promptCache.ts. */
+  promptCache?: PromptCacheSessionState;
   isPruned?: boolean;
   contextPercentage?: number;
   inlineErrorMessage?: InlineErrorMessageType;
@@ -242,6 +248,7 @@ export const INITIAL_SESSION_STATE: SessionState = {
   lastSessionId: undefined,
   newestToolbarPreviewForInput: {},
   compactionLoading: {},
+  promptCache: { ...INITIAL_PROMPT_CACHE_STATE },
 };
 
 export const sessionSlice = createSlice({
@@ -977,6 +984,18 @@ export const sessionSlice = createSlice({
     setHasReasoningEnabled: (state, action: PayloadAction<boolean>) => {
       state.hasReasoningEnabled = action.payload;
     },
+    setPromptCacheState: (
+      state,
+      action: PayloadAction<PromptCacheSessionState>,
+    ) => {
+      state.promptCache = action.payload;
+    },
+    setPromptCacheInputTokens: (state, action: PayloadAction<number>) => {
+      state.promptCache = {
+        ...(state.promptCache ?? INITIAL_PROMPT_CACHE_STATE),
+        lastInputTokens: action.payload,
+      };
+    },
     setNewestToolbarPreviewForInput: (
       state,
       {
@@ -1098,6 +1117,8 @@ export const {
   setNewestToolbarPreviewForInput,
   setIsInEdit,
   setHasReasoningEnabled,
+  setPromptCacheState,
+  setPromptCacheInputTokens,
   setInlineErrorMessage,
   setIsPruned,
   setContextPercentage,

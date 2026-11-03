@@ -25,6 +25,7 @@ import { Button } from "../ui";
 import { useFontSize } from "../ui/font";
 import ContextStatus from "./ContextStatus";
 import HoverItem from "./InputToolbar/HoverItem";
+import { PromptCacheButton } from "./PromptCacheButton";
 
 export interface ToolbarOptions {
   hideUseCodebase?: boolean;
@@ -165,6 +166,7 @@ function InputToolbar(props: InputToolbarProps) {
                 </ToolTip>
               </HoverItem>
             )}
+            <PromptCacheButton />
           </div>
         </div>
 

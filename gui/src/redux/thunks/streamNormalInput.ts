@@ -19,9 +19,16 @@ import {
   setInactive,
   setInlineErrorMessage,
   setIsPruned,
+  setPromptCacheInputTokens,
+  setPromptCacheState,
   setToolGenerated,
   streamUpdate,
 } from "../slices/sessionSlice";
+import {
+  resolvePromptCache,
+  INITIAL_PROMPT_CACHE_STATE,
+} from "../../util/promptCache";
+import { totalInputTokens } from "core/llm/utils/cacheStats";
 import { ThunkApiType } from "../store";
 import { constructMessages } from "../util/constructMessages";
 
@@ -146,6 +153,19 @@ export const streamNormalInput = createAsyncThunk<
           selectedChatModel,
         );
 
+    // Prompt caching: the toolbar choice for this model, or config.yaml when
+    // there is none. Auto learns from the pauses between requests this session.
+    const cacheResolution = resolvePromptCache(
+      selectedChatModel,
+      state.ui.promptCacheSettings?.[selectedChatModel.title],
+      state.session.promptCache ?? INITIAL_PROMPT_CACHE_STATE,
+      Date.now(),
+    );
+    completionOptions = { ...completionOptions, ...cacheResolution.options };
+    if (cacheResolution.nextState !== state.session.promptCache) {
+      dispatch(setPromptCacheState(cacheResolution.nextState));
+    }
+
     // Construct messages (excluding system message)
     const baseSystemMessage = getBaseSystemMessage(
       state.session.mode,
@@ -236,6 +256,21 @@ export const streamNormalInput = createAsyncThunk<
         }
 
         dispatch(streamUpdate(next.value));
+
+        // The final chunk carries the API's token counts. Remember the input
+        // size so the cache button can say what throwing the cache away costs.
+        for (const message of next.value) {
+          if (message.role === "assistant" && message.usage) {
+            const total = totalInputTokens(
+              selectedChatModel.provider,
+              selectedChatModel.model,
+              message.usage,
+            );
+            if (total > 0) {
+              dispatch(setPromptCacheInputTokens(total));
+            }
+          }
+        }
         next = await gen.next();
       }
 
