@@ -71,7 +71,7 @@
     "async-mutex": "^0.5.0",
     "axios": "^1.6.7",
     "cheerio": "^1.0.0-rc.12",
-    "commander": "^12.0.0",
+    "commander": "^15.0.0",
     "comment-json": "^5.0.0",
     "dbinfoz": "^0.14.0",
     "diff": "^8.0.3",
