@@ -25,6 +25,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/deleteRule",
     "config/getSerializedProfileInfo",
     "config/deleteModel",
+    "config/setModeModels",
     "config/addToolRule",
     "tools/suggestAllowRule",
     "config/refreshProfiles",

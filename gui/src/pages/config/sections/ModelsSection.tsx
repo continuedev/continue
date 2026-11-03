@@ -13,6 +13,7 @@ import { updateSelectedModelByRole } from "../../../redux/thunks/updateSelectedM
 import { getMetaKeyLabel, isJetBrains } from "../../../util";
 import { ConfigHeader } from "../components/ConfigHeader";
 import { ModelRoleRow } from "../components/ModelRoleRow";
+import { ModeModelsTable } from "../components/ModeModelsTable";
 
 const MODEL_DOCS_URLS = {
   chat: {
@@ -168,6 +169,8 @@ export function ModelsSection() {
           </>
         )}
       </Card>
+
+      {!jetbrains && <ModeModelsTable />}
 
       <Card>
         <Toggle

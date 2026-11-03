@@ -9,6 +9,7 @@ import {
 } from "./autocomplete/util/openedFilesLruCache";
 import { ConfigHandler } from "./config/ConfigHandler";
 import { addModel, deleteModel } from "./config/util";
+import { saveModeModels } from "./config/yaml/saveModeModels";
 import { evaluateToolPolicyWithRules } from "./tools/permissions/evaluate";
 import { addToolRule } from "./tools/permissions/addRule";
 import {
@@ -374,6 +375,21 @@ export class Core {
       void this.configHandler.reloadConfig(
         "Model removed (config/deleteModel message)",
       );
+    });
+
+    on("config/setModeModels", async (msg) => {
+      const saved = saveModeModels(msg.data);
+      if (!saved) {
+        void this.ide.showToast(
+          "warning",
+          "Per-mode models are saved in config.yaml, and this profile has none.",
+        );
+        return { saved: false };
+      }
+      await this.configHandler.reloadConfig(
+        "Mode models changed (config/setModeModels message)",
+      );
+      return { saved: true };
     });
 
     on("tools/suggestAllowRule", async ({ data: { toolName, parsedArgs } }) => {

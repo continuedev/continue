@@ -12,6 +12,7 @@ import {
 } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
+import type { ModeModelsInput } from "../config/yaml/saveModeModels";
 import type { DecisionSource as ToolDecisionSource } from "../tools/permissions/decide";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
@@ -137,6 +138,11 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
   ];
   "config/deleteModel": [{ title: string }, void];
+  /**
+   * Write `modeModels` in the global config.yaml (comments kept). Returns
+   * whether a config.yaml was edited; false means there was none to edit.
+   */
+  "config/setModeModels": [ModeModelsInput, { saved: boolean }];
   /**
    * Add one rule to `toolPermissions` in the global config.yaml (comments
    * kept). "no-config" means there was no config.yaml to edit.

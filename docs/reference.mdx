@@ -219,12 +219,13 @@ modeModels:
 
 - `chat`, `agent`, `plan`: the modes you can set. Each takes:
   - `model`: the `name` of one of your chat models, selected when you switch into the mode.
-  - `models` (optional): a list of model `name`s to offer in the mode. Give `model`, `models`, or both. With only `models`, the default is the first entry that exists. The default is always part of the list and is listed first, and duplicates are removed. Today the loaded config carries this list; the model picker does not use it yet, so every model is still shown.
+  - `models` (optional): a list of model `name`s to offer in the mode. Give `model`, `models`, or both. With only `models`, the default is the first entry that exists. The default is always part of the list and is listed first, and duplicates are removed. The model picker shows these first, and the model shortcut cycles only through them.
   - `reasoningEffort` (optional): `off`, `low`, `medium` or `high`. This maps to a thinking budget of about 1K, 4K or 16K tokens for models that support extended thinking.
 - Switching mode switches the selected chat model, and the mode menu shows which model and effort each mode uses.
 - A mode without an entry keeps whichever model is currently selected.
 - If you pick a model by hand in the model selector, that choice is used for the current mode until you reload the window. The reasoning toggle in the chat input overrides `reasoningEffort`.
 - A name that doesn't match one of your models is ignored, with a warning in the config errors. If nothing in an entry matches, the entry is ignored.
+- You can also set all of this from **Settings > Models > Models per mode**: tick the models each mode offers, star the default, pick a reasoning effort and press Save. Saving edits `config.yaml` in place and keeps your comments. It needs a `config.yaml` (not a `config.json`), and is not shown in the JetBrains plugin yet.
 
 ---
 
