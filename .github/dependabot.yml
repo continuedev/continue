@@ -40,7 +40,8 @@ updates:
       # QueryMatch.pattern renamed...). Dependabot files them as "minor" and the
       # grouped PR then fails tsc across core. Migrate by hand, then remove this.
       - dependency-name: web-tree-sitter
-        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+        update-types:
+          ["version-update:semver-minor", "version-update:semver-major"]
       # Needs Jest 30; core is on Jest 29 (see the Jest -> Vitest migration).
       - dependency-name: jest-environment-jsdom
         update-types: ["version-update:semver-major"]
@@ -56,6 +57,25 @@ updates:
       - dependency-name: onnxruntime-node
       - dependency-name: onnxruntime-common
       - dependency-name: onnxruntime-web
+      # The OpenTelemetry 0.x packages (sdk-node, exporters, instrumentation) version together and
+      # their peer range on @opentelemetry/api moves with every 0.x minor: sdk-node 0.300 needs
+      # api >=1.10 while @opentelemetry/resources 2.12 needs api <1.10, so `npm ci` in
+      # extensions/cli fails with ERESOLVE. Bump them by hand, as a set; patches still flow.
+      - dependency-name: "@opentelemetry/sdk-node"
+        update-types:
+          ["version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "@opentelemetry/exporter-metrics-otlp-grpc"
+        update-types:
+          ["version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "@opentelemetry/exporter-metrics-otlp-http"
+        update-types:
+          ["version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "@opentelemetry/instrumentation-http"
+        update-types:
+          ["version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "@opentelemetry/instrumentation-fs"
+        update-types:
+          ["version-update:semver-minor", "version-update:semver-major"]
       # The binary and the extension package a prebuilt native sqlite3 pinned to v5.1.7
       # (extensions/vscode/scripts/download-copy-sqlite.js); the JS package must not
       # move ahead of it. Revisit together with a move to node:sqlite.
