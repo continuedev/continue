@@ -177,7 +177,7 @@ export function ModelsSection() {
           isOpen={showAdditionalRoles}
           onToggle={() => setShowAdditionalRoles(!showAdditionalRoles)}
           title="Additional model roles"
-          subtitle="Apply, Embed, Rerank"
+          subtitle="Apply, Embed, Rerank, Reviewer"
         >
           <div className="flex flex-col">
             <ModelRoleRow
@@ -216,6 +216,25 @@ export function ModelsSection() {
               onConfigure={handleConfigureModel}
               setupURL="https://docs.continue.dev/customize/model-roles/reranking"
             />
+
+            {config.experimental?.enableAutoApproval && (
+              <>
+                <Divider />
+
+                <ModelRoleRow
+                  role="reviewer"
+                  displayName="Reviewer (experimental)"
+                  description="Reviews tool calls in Auto approval mode. Your messages and the tool calls are sent to this model's provider. Add roles: [reviewer] to a model in config.yaml to list it here."
+                  models={config.modelsByRole.reviewer}
+                  selectedModel={
+                    config.selectedModelByRole.reviewer ?? undefined
+                  }
+                  onSelect={(model) => handleRoleUpdate("reviewer", model)}
+                  onConfigure={handleConfigureModel}
+                  setupURL="https://docs.continue.dev/customize/model-roles/reviewer"
+                />
+              </>
+            )}
           </div>
         </Toggle>
       </Card>

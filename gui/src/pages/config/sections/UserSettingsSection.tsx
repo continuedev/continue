@@ -63,6 +63,7 @@ export function UserSettingsSection() {
     config.experimental?.onlyUseSystemMessageTools ?? false;
   const codebaseToolCallingOnly =
     config.experimental?.codebaseToolCallingOnly ?? false;
+  const enableAutoApproval = config.experimental?.enableAutoApproval ?? false;
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
 
   const useAutocompleteMultilineCompletions =
@@ -270,6 +271,15 @@ export function UserSettingsSection() {
                     value={codebaseToolCallingOnly}
                     onChange={(value) =>
                       handleUpdate({ codebaseToolCallingOnly: value })
+                    }
+                  />
+                  <UserSetting
+                    type="toggle"
+                    title="Auto approval with a reviewer model"
+                    description=" lets a reviewer model approve or refuse tool calls your rules leave open. Needs a model with roles: [reviewer]. Your messages and tool calls are sent to that model's provider."
+                    value={enableAutoApproval}
+                    onChange={(value) =>
+                      handleUpdate({ enableAutoApproval: value })
                     }
                   />
                   <UserSetting

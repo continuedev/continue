@@ -19,6 +19,12 @@ export interface ToolPermissions {
   allow?: string[];
   ask?: string[];
   deny?: string[];
+  /** Settings for the experimental reviewer (Auto mode). Never loosens a rule. */
+  auto?: {
+    environment?: { trustedDomains?: string[]; productionMarkers?: string[] };
+    guidance?: { block?: string[]; allow?: string[] };
+    limits?: { consecutiveDenials?: number; totalDenials?: number };
+  };
 }
 
 export interface RuleMatch {

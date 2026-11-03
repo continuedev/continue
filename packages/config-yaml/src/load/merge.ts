@@ -47,7 +47,67 @@ export function mergeToolPermissions(
     const unique = list.filter((r, i) => list.indexOf(r) === i);
     if (unique.length > 0) merged[kind] = unique;
   }
+  const auto = mergeAuto(current?.auto, incoming?.auto);
+  if (auto) merged.auto = auto;
   return Object.keys(merged).length > 0 ? merged : undefined;
+}
+
+type AutoSettings = NonNullable<ToolPermissions["auto"]>;
+
+function unionList(a?: string[], b?: string[]): string[] | undefined {
+  const list = [...(a ?? []), ...(b ?? [])];
+  const unique = list.filter((r, i) => list.indexOf(r) === i);
+  return unique.length > 0 ? unique : undefined;
+}
+
+function smaller(a?: number, b?: number): number | undefined {
+  return a === undefined ? b : b === undefined ? a : Math.min(a, b);
+}
+
+/**
+ * Lists are concatenated; for the refusal limits the lower number wins, so a
+ * shared config cannot raise a limit a personal config set (or the reverse).
+ */
+function mergeAuto(
+  a: AutoSettings | undefined,
+  b: AutoSettings | undefined,
+): AutoSettings | undefined {
+  if (!a && !b) return undefined;
+  const out: AutoSettings = {};
+  const trusted = unionList(
+    a?.environment?.trustedDomains,
+    b?.environment?.trustedDomains,
+  );
+  const markers = unionList(
+    a?.environment?.productionMarkers,
+    b?.environment?.productionMarkers,
+  );
+  if (trusted || markers) {
+    out.environment = {
+      ...(trusted ? { trustedDomains: trusted } : {}),
+      ...(markers ? { productionMarkers: markers } : {}),
+    };
+  }
+  const block = unionList(a?.guidance?.block, b?.guidance?.block);
+  const allow = unionList(a?.guidance?.allow, b?.guidance?.allow);
+  if (block || allow) {
+    out.guidance = {
+      ...(block ? { block } : {}),
+      ...(allow ? { allow } : {}),
+    };
+  }
+  const consecutive = smaller(
+    a?.limits?.consecutiveDenials,
+    b?.limits?.consecutiveDenials,
+  );
+  const total = smaller(a?.limits?.totalDenials, b?.limits?.totalDenials);
+  if (consecutive !== undefined || total !== undefined) {
+    out.limits = {
+      ...(consecutive !== undefined ? { consecutiveDenials: consecutive } : {}),
+      ...(total !== undefined ? { totalDenials: total } : {}),
+    };
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 function mergeToolPermissionsField(

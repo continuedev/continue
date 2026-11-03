@@ -131,12 +131,38 @@ export type ModeModels = z.infer<typeof modeModelsSchema>;
 
 /**
  * Rules for tool calls, written `toolName(pattern)` or a bare `toolName`.
- * Deny always wins over ask, and ask over allow. See plans/tool-auto-approval.md.
+ * Deny always wins over ask, and ask over allow. `auto` only configures the
+ * experimental reviewer (Auto mode) and never loosens a rule. See plans/tool-auto-approval.md.
  */
 export const toolPermissionsSchema = z.object({
   allow: z.array(z.string()).optional(),
   ask: z.array(z.string()).optional(),
   deny: z.array(z.string()).optional(),
+  auto: z
+    .object({
+      /** Facts the reviewer model is told about, to judge "unknown destination" and "production". */
+      environment: z
+        .object({
+          trustedDomains: z.array(z.string()).optional(),
+          productionMarkers: z.array(z.string()).optional(),
+        })
+        .optional(),
+      /** Plain-language guidance added to the reviewer's prompt. */
+      guidance: z
+        .object({
+          block: z.array(z.string()).optional(),
+          allow: z.array(z.string()).optional(),
+        })
+        .optional(),
+      /** Stop the agent and ask after this many refusals in a row, or in total. */
+      limits: z
+        .object({
+          consecutiveDenials: z.number().int().min(1).optional(),
+          totalDenials: z.number().int().min(1).optional(),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 export type ToolPermissions = z.infer<typeof toolPermissionsSchema>;
 

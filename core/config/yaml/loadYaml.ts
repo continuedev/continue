@@ -181,6 +181,7 @@ export async function configYamlToContinueConfig(options: {
       rerank: [],
       summarize: [],
       subagent: [],
+      reviewer: [],
     },
     selectedModelByRole: {
       chat: null,
@@ -191,6 +192,7 @@ export async function configYamlToContinueConfig(options: {
       rerank: null,
       summarize: null,
       subagent: null,
+      reviewer: null,
     },
     rules: [],
     requestOptions: { ...unrolledAssistant.requestOptions },
@@ -336,6 +338,12 @@ export async function configYamlToContinueConfig(options: {
 
       if (model.roles?.includes("subagent")) {
         continueConfig.modelsByRole.subagent.push(...llms);
+      }
+
+      // Only a model that lists `reviewer` itself; it is not in the default
+      // roles, so no model becomes a reviewer by accident.
+      if (model.roles?.includes("reviewer")) {
+        continueConfig.modelsByRole.reviewer.push(...llms);
       }
     } catch (e) {
       localErrors.push({

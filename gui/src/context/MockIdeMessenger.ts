@@ -57,6 +57,7 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
           rerank: [],
           embed: [],
           subagent: [],
+          reviewer: [],
         },
         selectedModelByRole: {
           chat: null,
@@ -67,6 +68,7 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
           rerank: null,
           embed: null,
           subagent: null,
+          reviewer: null,
         },
         rules: [],
       },
