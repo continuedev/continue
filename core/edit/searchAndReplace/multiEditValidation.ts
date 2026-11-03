@@ -38,6 +38,16 @@ export function validateMultiEdit(args: unknown): {
   for (let i = 0; i < edits.length; i++) {
     const edit = edits[i];
 
+    // A malformed tool call can carry a non-object entry (null, undefined, a
+    // string); reading old_string from it would throw a bare TypeError instead
+    // of the ContinueError every other failure path raises.
+    if (typeof edit !== "object" || edit === null || Array.isArray(edit)) {
+      throw new ContinueError(
+        ContinueErrorReason.MultiEditEditsArrayRequired,
+        `Edit at index ${i}: each edit must be an object with old_string and new_string`
+      );
+    }
+
     // Use existing single edit validation
     validateSingleEdit(edit.old_string, edit.new_string, edit.replace_all, i);
 
