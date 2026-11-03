@@ -22,6 +22,7 @@ export default {
     "^mssql$": "<rootDir>/node_modules/mssql",
     "^puppeteer-chromium-resolver$":
       "<rootDir>/test/stubs/puppeteer-chromium-resolver.js",
+    "^jsdom$": "<rootDir>/test/stubs/jsdom.js",
   },
   extensionsToTreatAsEsm: [".ts"],
   preset: "ts-jest/presets/default-esm",

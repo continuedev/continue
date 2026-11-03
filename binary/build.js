@@ -4,6 +4,9 @@ const path = require("path");
 const ncp = require("./utils/copy-dir").ncp;
 const { rimrafSync } = require("rimraf");
 const { validateFilesPresent } = require("../scripts/util");
+const {
+  jsdomDefaultStylesheetPlugin,
+} = require("../scripts/util/esbuild-jsdom-stylesheet");
 const { ALL_TARGETS, TARGET_TO_LANCEDB } = require("./utils/targets");
 const { fork } = require("child_process");
 const {
@@ -68,7 +71,7 @@ const stubNodeSqlite = {
 async function buildWithEsbuild() {
   console.log("[info] Building with esbuild...");
   await esbuild.build({
-    plugins: [stubNodeSqlite],
+    plugins: [stubNodeSqlite, jsdomDefaultStylesheetPlugin],
     entryPoints: ["src/index.ts"],
     bundle: true,
     outfile: esbuildOutputFile,

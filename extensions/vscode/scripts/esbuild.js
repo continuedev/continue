@@ -1,6 +1,9 @@
 const fs = require("fs");
 
 const { writeBuildTimestamp } = require("./utils");
+const {
+  jsdomDefaultStylesheetPlugin,
+} = require("../../../scripts/util/esbuild-jsdom-stylesheet");
 
 const esbuild = require("esbuild");
 
@@ -26,6 +29,7 @@ const esbuildConfig = {
   supported: { "dynamic-import": false },
   metafile: true,
   plugins: [
+    jsdomDefaultStylesheetPlugin,
     {
       name: "on-end-plugin",
       setup(build) {

@@ -2,6 +2,7 @@
 
 import * as esbuild from "esbuild";
 import { chmodSync, copyFileSync, writeFileSync } from "fs";
+import { createRequire } from "module";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
@@ -10,6 +11,11 @@ const args = process.argv.slice(2);
 const noMinify = args.includes("--no-minify");
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// jsdom >= 25 reads its default stylesheet from disk, which breaks in a bundle
+const { jsdomDefaultStylesheetPlugin } = createRequire(import.meta.url)(
+  "../../scripts/util/esbuild-jsdom-stylesheet.js",
+);
 
 // List of packages to mark as external (ONLY native modules that cannot be bundled)
 // Note: Everything else will be bundled to create a self-contained CLI
@@ -44,7 +50,7 @@ try {
     sourcemap: true,
     minify: !noMinify, // Use --no-minify flag to control minification
     metafile: true,
-    plugins: [optionalDevtoolsPlugin],
+    plugins: [optionalDevtoolsPlugin, jsdomDefaultStylesheetPlugin],
 
     // Handle .js extensions in imports
     resolveExtensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
