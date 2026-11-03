@@ -12,6 +12,8 @@ import { addModel, deleteModel } from "./config/util";
 import { saveModeModels } from "./config/yaml/saveModeModels";
 import { evaluateToolPolicyWithRules } from "./tools/permissions/evaluate";
 import { addToolRule } from "./tools/permissions/addRule";
+import { autoReviewToolCall } from "./tools/permissions/auto/handler";
+import { AutoReviewSessions } from "./tools/permissions/auto/state";
 import {
   suggestAllowRule,
   withLoosensCheck,
@@ -114,6 +116,7 @@ export class Core {
   nextEditProvider: NextEditProvider;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
+  private autoReviewSessions = new AutoReviewSessions();
   llmLogger = new LLMLogger();
 
   private messageAbortControllers = new Map<string, AbortController>();
@@ -1284,6 +1287,30 @@ export class Core {
         });
       },
     );
+
+    on("tools/autoReview", async ({ data }) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Config not loaded");
+      }
+      const dirs = await this.ide.getWorkspaceDirs();
+      const repo = dirs[0] ? await this.ide.getRepoName(dirs[0]) : undefined;
+      return autoReviewToolCall(
+        {
+          tool: config.tools.find((t) => t.function.name === data.toolName),
+          permissions: config.toolPermissions,
+          enabled: config.experimental?.enableAutoApproval === true,
+          reviewer: config.selectedModelByRole.reviewer,
+          environment: {
+            workspaceDirs: dirs,
+            gitRemotes: repo ? [repo] : undefined,
+            os: process.platform,
+          },
+          sessions: this.autoReviewSessions,
+        },
+        data,
+      );
+    });
 
     on("tools/preprocessArgs", async ({ data: { toolName, args } }) => {
       const { config } = await this.configHandler.loadConfig();

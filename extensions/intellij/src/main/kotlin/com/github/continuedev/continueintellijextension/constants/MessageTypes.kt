@@ -155,6 +155,7 @@ class MessageTypes {
             "didChangeSelectedOrg",
             "tools/call",
             "tools/evaluatePolicy",
+            "tools/autoReview",
             "tools/preprocessArgs",
             "controlPlane/getEnvironment",
             "controlPlane/getCreditStatus",
