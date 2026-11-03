@@ -1,0 +1,89 @@
+---
+title: "Prompt Caching"
+keywords: [prompt caching, cache, ttl, cost, anthropic, bedrock, claude]
+---
+
+Prompt caching lets a provider keep the start of your prompt (tool definitions, system prompt and conversation so far) and charge a fraction of the input price when the next request begins with the same text. Continued supports it for Claude models on Anthropic and Amazon Bedrock.
+
+Caching is off unless you turn it on. Either set it per model in `config.yaml`:
+
+```yaml title="config.yaml"
+models:
+  - name: Claude Sonnet
+    provider: anthropic
+    model: claude-sonnet-4-6
+    apiKey: ${{ secrets.ANTHROPIC_API_KEY }}
+    defaultCompletionOptions:
+      promptCaching: true
+```
+
+or choose a setting from the prompt cache button in the chat toolbar, next to the reasoning button.
+
+## Lifetime
+
+A cached prefix expires after a period without use. Each request that reads it starts the period again at no charge.
+
+| Setting     | Lifetime sent            | Write price    | Notes                                                              |
+| ----------- | ------------------------ | -------------- | ------------------------------------------------------------------ |
+| 5 minutes   | none (provider default)  | 1.25x input    | Cheapest write. Expires if you pause longer than 5 minutes.        |
+| 1 hour      | `ttl: "1h"`              | 2x input       | Survives long commands and breaks.                                 |
+| Auto        | starts at 5 minutes      | 1.25x, then 2x | Switches to 1 hour for the rest of the session, see below.         |
+| Off         | caching disabled         | none           | Every request is sent and billed at the full input price.          |
+| Config default | none                  | 1.25x          | Follows `config.yaml`: on only if the model enables caching there. |
+
+Reading a cached prefix costs 0.1x the input price whatever the lifetime.
+
+Auto compares the start times of consecutive requests in the current session. If the gap was more than 5 minutes and at most 55 minutes (a pause a 1-hour entry would have covered), the session uses 1 hour from the next request on. A session that never pauses that long stays on 5 minutes. Auto keeps this per session and does not save it. The 55 minute limit is a guess, not a measured value.
+
+The lifetime is chosen from the toolbar only. There is no `cacheBehavior.ttl` or `promptCacheTtl` field in `config.yaml`.
+
+## What gets cached
+
+With caching on, Continued asks the provider to cache the last tool definition, the system prompt, and the last block of each of the last two user-role messages. In an Agent session those messages are mostly tool results, and they are cached too.
+
+`defaultCompletionOptions.promptCaching` is the switch. `promptCaching: false` turns caching off even if `cacheBehavior` is set. When `promptCaching` is not set, the older `cacheBehavior` fields apply:
+
+```yaml
+cacheBehavior:
+  cacheSystemMessage: true # cache the system prompt
+  cacheConversation: true # cache the conversation
+```
+
+## Cost
+
+Prices are multiples of the model's input price. These are the figures Continued uses; they are Anthropic list prices as of 2026-11-02, and Bedrock or a reseller can differ.
+
+| Model        | Input | 5-minute write | 1-hour write | Read    |
+| ------------ | ----- | -------------- | ------------ | ------- |
+| Sonnet 4.6   | $3    | $3.75          | $6           | $0.30   |
+| Opus 4.5-4.8 | $5    | $6.25          | $10          | $0.50   |
+| Haiku 4.5    | $1    | $1.25          | $2           | $0.10   |
+
+Dollars per million tokens. Claude 4 Opus and 4.1 are $15 input; Claude 3 Haiku has its own cache prices. The table in `core/llm/utils/calculateRequestCost.ts` has every model.
+
+A cached session costs more than an uncached one on its first request and less on every request after that, as long as the entry has not expired. Switching the model, changing reasoning settings, or anything that changes the system prompt (such as a rule that starts to match) misses the cache, and the next request writes the prefix again. A one-prompt session never pays back the write.
+
+While the cache is warm and you open the model picker, Continued shows how many tokens switching model would re-read and an estimated extra cost. It does not warn about changes to reasoning or mode.
+
+The usage panel shows cost estimates for Claude models on Anthropic, Bedrock, Vertex AI and OpenRouter, split into 5-minute writes, 1-hour writes and reads when the provider reports the split. Its cache hit rate is cache-read tokens divided by the input tokens the API reports.
+
+## Toolbar button
+
+The button is shown only for Claude models on the `anthropic` and `bedrock` providers. A filled icon means requests carry cache markers; a brighter one means an entry should still be alive. The tooltip says whether the cache is warm, which lifetime applies, and about how long is left. Warm is Continued's estimate from the time of your last request; the provider does not report it.
+
+The setting is stored per model and survives restarts.
+
+## Bedrock
+
+On Bedrock, `1 hour` is offered only for models known to accept it: Claude Haiku 4.5, Sonnet 4.5, 4.6 and 5, and Opus 4.5 to 4.8 and 5. For any other Claude model the menu has no 1-hour entry, and a request that asks for it is sent with the 5-minute default, because an unsupported `ttl` can fail the request.
+
+Continued also adds a per-process ID to the first user message so that two people sharing an AWS account do not read each other's cached conversation. The system prompt comes before it and can still be shared.
+
+## Not supported
+
+- Choosing the lifetime in `config.yaml`, or in JSON configuration. Only `promptCaching` and `cacheBehavior` are read from config.
+- Caching on by default. Existing and new configs are unchanged until you enable it.
+- Lifetimes on Vertex AI and OpenRouter. They use `promptCaching` and `cacheBehavior` but never send a `ttl`, and the toolbar button is hidden for them.
+- Non-Claude models, including OpenAI and Gemini. Providers that cache automatically do so without any setting here.
+- Keeping the cache alive while a command runs, or warming it when you open a saved session.
+- Control over the provider's minimum cacheable size. A prompt below the model's minimum is processed uncached without an error.

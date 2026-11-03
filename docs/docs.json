@@ -148,7 +148,8 @@
                   "customize/deep-dives/mcp",
                   "customize/deep-dives/mcp-examples",
                   "customize/deep-dives/custom-providers",
-                  "customize/deep-dives/model-capabilities"
+                  "customize/deep-dives/model-capabilities",
+                  "customize/deep-dives/prompt-caching"
                 ]
               }
             ]
