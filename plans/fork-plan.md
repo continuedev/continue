@@ -1,6 +1,6 @@
 # Plan: Maintained fork of Continue with working MCP OAuth and enterprise TLS
 
-Status: **plan only, implementation not started.** Written 2026-10-27. The fork `https://github.com/b1tninja/continued` exists but contains no changes yet. Sections 8-11 define done, CI/CD, licensing and supporting work.
+Status: **in progress; see [`ROADMAP.md`](./ROADMAP.md) for what has shipped and what is next.** Written 2026-10-27 as the original design record; the sections below are left as written and were not re-audited against the code that has since merged. The fork `https://github.com/b1tninja/continued` now contains the work listed in the roadmap. Sections 8-11 define done, CI/CD, licensing and supporting work.
 
 ## 1. Why
 
@@ -143,7 +143,7 @@ Work items:
    - Optionally support the Anthropic Messages API on Mantle for Claude models.
 
 4. **Other Cline-style conveniences worth considering** (each optional, ranked by value):
-   - Auto-approve tool policies with per-tool "ask / allow / deny" (Continue already has per-tool policies in the Tools panel; extend to MCP tools and add a global YOLO toggle).
+   - Auto-approve tool policies with per-tool "ask / allow / deny" (Continue already has per-tool policies in the Tools panel; extend to MCP tools and add a global YOLO toggle). Now tracked as Track B in `ROADMAP.md`.
    - Checkpoints for file edits, so an Agent run can be rolled back.
    - A `.continuerules`-style global rules toggle per mode.
    - Context-window and cost display per model, using the pricing seen on OpenRouter as a reference.
