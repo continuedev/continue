@@ -25,35 +25,24 @@ export function getRangeInString(content: string, range: Range): string {
 }
 
 export function intersection(a: Range, b: Range): Range | null {
-  const startLine = Math.max(a.start.line, b.start.line);
-  const endLine = Math.min(a.end.line, b.end.line);
+  // The intersection starts at the later of the two start positions and ends at
+  // the earlier of the two end positions. Picking the character from whichever
+  // range owns the shared line is wrong when both ranges start (or end) on the
+  // same line, and when one range starts on an earlier line but at a later
+  // character than the other.
+  const start = maxPosition(a.start, b.start);
+  const end = minPosition(a.end, b.end);
 
-  if (startLine > endLine) {
+  if (
+    start.line > end.line ||
+    (start.line === end.line && start.character > end.character)
+  ) {
     return null;
   }
 
-  if (startLine === endLine) {
-    const startCharacter = Math.max(a.start.character, b.start.character);
-    const endCharacter = Math.min(a.end.character, b.end.character);
-
-    if (startCharacter > endCharacter) {
-      return null;
-    }
-
-    return {
-      start: { line: startLine, character: startCharacter },
-      end: { line: endLine, character: endCharacter },
-    };
-  }
-
-  const startCharacter =
-    startLine === a.start.line ? a.start.character : b.start.character;
-  const endCharacter =
-    endLine === a.end.line ? a.end.character : b.end.character;
-
   return {
-    start: { line: startLine, character: startCharacter },
-    end: { line: endLine, character: endCharacter },
+    start,
+    end,
   };
 }
 

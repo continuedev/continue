@@ -301,8 +301,7 @@ describe("intersection", () => {
     expect(result).toBeNull();
   });
 
-  // TODO
-  test.skip("returns correct intersection for single line overlap", () => {
+  test("returns correct intersection for single line overlap", () => {
     rangeA = {
       start: { line: 1, character: 0 },
       end: { line: 1, character: 5 },
@@ -368,6 +367,62 @@ describe("intersection", () => {
     expect(result).toEqual({
       start: { line: 2, character: 0 },
       end: { line: 2, character: 0 },
+    });
+  });
+
+  test("returns correct intersection when ranges start on the same line", () => {
+    rangeA = {
+      start: { line: 1, character: 0 },
+      end: { line: 3, character: 5 },
+    };
+
+    rangeB = {
+      start: { line: 1, character: 3 },
+      end: { line: 2, character: 2 },
+    };
+
+    const result = intersection(rangeA, rangeB);
+    expect(result).toEqual({
+      start: { line: 1, character: 3 },
+      end: { line: 2, character: 2 },
+    });
+  });
+
+  test("returns correct intersection when only the end lines overlap", () => {
+    // rangeA starts on an earlier line but at a later character than rangeB:
+    // comparing characters alone on the shared line is invalid.
+    rangeA = {
+      start: { line: 0, character: 10 },
+      end: { line: 1, character: 5 },
+    };
+
+    rangeB = {
+      start: { line: 1, character: 0 },
+      end: { line: 1, character: 8 },
+    };
+
+    const result = intersection(rangeA, rangeB);
+    expect(result).toEqual({
+      start: { line: 1, character: 0 },
+      end: { line: 1, character: 5 },
+    });
+  });
+
+  test("returns correct intersection when ranges end on the same line", () => {
+    rangeA = {
+      start: { line: 1, character: 0 },
+      end: { line: 3, character: 7 },
+    };
+
+    rangeB = {
+      start: { line: 2, character: 0 },
+      end: { line: 3, character: 5 },
+    };
+
+    const result = intersection(rangeA, rangeB);
+    expect(result).toEqual({
+      start: { line: 2, character: 0 },
+      end: { line: 3, character: 5 },
     });
   });
 });
