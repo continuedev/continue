@@ -107,8 +107,14 @@ function parseUnifiedDiff(diffText: string): Hunk[] {
   let currentHunk: Hunk | null = null;
 
   for (const line of lines) {
-    if (line.startsWith("---") || line.startsWith("+++")) {
-      // Skip file header lines.
+    if (
+      !currentHunk &&
+      (line.startsWith("---") || line.startsWith("+++"))
+    ) {
+      // Skip file header lines, but only before the first hunk: inside a hunk
+      // a line starting with "---" removes a line starting with "--" (a Lua
+      // or SQL comment, for instance) and "+++" adds one starting with "++".
+      // Skipping them dropped the change without a word.
       continue;
     }
     if (line.startsWith("@@")) {
