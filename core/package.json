@@ -94,7 +94,7 @@
     "socket.io-client": "^4.7.3",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
-    "system-ca": "^1.0.3",
+    "system-ca": "^3.0.0",
     "tree-sitter-wasms": "^0.1.11",
     "untildify": "^6.0.0",
     "uuid": "^11.1.1",
