@@ -20,7 +20,7 @@
     "@biomejs/biome": "1.6.4",
     "@google/generative-ai": "^0.24.1",
     "@modelcontextprotocol/ext-apps": "^1.0.1",
-    "@shikijs/colorized-brackets": "^3.7.0",
+    "@shikijs/colorized-brackets": "^4.5.0",
     "@shikijs/transformers": "^4.5.0",
     "@types/diff": "^7.0.1",
     "@types/follow-redirects": "^1.14.4",
