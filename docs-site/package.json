@@ -42,7 +42,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "autoprefixer": "^10.6.2",
-    "postcss": "^8.4.31",
+    "postcss": "^8.5.32",
     "tailwindcss": "^3.3.5",
     "tsx": "^4.23.15",
     "typescript": "^5"
