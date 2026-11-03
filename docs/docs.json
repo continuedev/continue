@@ -134,7 +134,8 @@
                   "customize/model-roles/edit",
                   "customize/model-roles/apply",
                   "customize/model-roles/embeddings",
-                  "customize/model-roles/reranking"
+                  "customize/model-roles/reranking",
+                  "customize/model-roles/reviewer"
                 ]
               },
               {

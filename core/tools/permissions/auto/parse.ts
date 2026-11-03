@@ -12,6 +12,8 @@ export interface ReviewResult {
   category?: ReviewCategory;
   /** One sentence, shown to the person and returned to the agent. */
   reason: string;
+  /** The reply could not be read at all (counted by the evaluation). */
+  unusable?: boolean;
 }
 
 const MAX_REASON = 300;
@@ -21,6 +23,7 @@ function unusable(why: string): ReviewResult {
     decision: "ask",
     category: "uncertain",
     reason: `The reviewer's answer could not be used (${why}).`,
+    unusable: true,
   };
 }
 

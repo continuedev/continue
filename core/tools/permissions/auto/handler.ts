@@ -40,6 +40,8 @@ export interface AutoReviewReply {
   /** The command or path, for showing a refusal. */
   displayValue?: string;
   cached?: boolean;
+  /** The reviewer's reply could not be read, so the call was left for the user. */
+  unusable?: boolean;
 }
 
 export interface AutoReviewDeps {
