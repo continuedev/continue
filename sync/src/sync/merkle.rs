@@ -1,4 +1,3 @@
-use homedir::my_home;
 use ignore::{Walk, WalkBuilder};
 use serde::{Deserialize, Serialize};
 use sha1::{Digest, Sha1};
@@ -420,7 +419,7 @@ const GLOBAL_IGNORE_PATTERNS: &[&str] = &[
 ];
 
 fn global_ignore_path() -> PathBuf {
-    let mut path = my_home().unwrap().unwrap();
+    let mut path = dirs::home_dir().unwrap();
     path.push(".continue");
     path.push(".continueignore");
     path

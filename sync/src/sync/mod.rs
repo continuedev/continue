@@ -1,5 +1,4 @@
 mod merkle;
-use homedir::my_home;
 use merkle::{compute_tree_for_dir, diff, hash_string};
 use std::{
     collections::HashMap,
@@ -43,7 +42,7 @@ fn remove_seps_from_path(dir: &Path) -> String {
 }
 
 fn path_for_tag(tag: &Tag) -> PathBuf {
-    let mut path = my_home().unwrap().unwrap();
+    let mut path = dirs::home_dir().unwrap();
     path.push(".continue/index/tags");
     path.push(remove_seps_from_path(tag.dir));
     path.push(tag.branch);
@@ -208,7 +207,7 @@ impl<'a> IndexCache<'a> {
     }
 
     fn provider_dir(provider_id: &str) -> PathBuf {
-        let mut path = my_home().unwrap().unwrap();
+        let mut path = dirs::home_dir().unwrap();
         path.push(".continue/index/providers");
         path.push(provider_id);
         return path;

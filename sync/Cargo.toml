@@ -14,7 +14,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 dirs = "7.0.0"
-homedir = "0.3.6"
 ignore = "0.4.20"
 ndarray = "0.17.2"
 rand = "0.10.3"
