@@ -36,11 +36,9 @@
   },
   "devDependencies": {
     "@types/follow-redirects": "^1.14.4",
-    "@types/jest": "^29.5.14",
     "@types/json-schema": "^7.0.15",
     "@types/node": "^24.3.0",
     "cross-env": "^7.0.3",
-    "ts-jest": "^29.2.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "vitest": "^5.0.5"
