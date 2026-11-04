@@ -100,6 +100,8 @@ class MessageTypes {
             "config/openSecretLocation",
             "config/getProviderSetup",
             "config/saveProviderModels",
+            "config/previewMcpImport",
+            "config/importMcpServers",
             "config/setSecret",
             "config/removeEnvSecret",
             "config/moveKeyToSecureStorage",

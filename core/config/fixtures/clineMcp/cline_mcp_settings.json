@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_fixturetoken123",
+        "LOG_LEVEL": "debug"
+      },
+      "autoApprove": ["list_issues", "get_issue"],
+      "timeout": 30
+    },
+    "remote-sse": {
+      "url": "https://mcp.example.com/sse?api_key=abc123&region=eu",
+      "type": "sse",
+      "headers": {
+        "Authorization": "Bearer fixture-bearer-value",
+        "X-Team": "platform"
+      }
+    },
+    "remote-http": {
+      "type": "streamableHttp",
+      "url": "https://mcp.example.com/mcp",
+      "headers": { "X-API-Key": "fixture-api-key" }
+    },
+    "sleepy": {
+      "command": "node",
+      "args": ["server.js"],
+      "disabled": true
+    },
+    "existing-one": {
+      "command": "echo"
+    },
+    "broken": { "args": ["no-command"] },
+    "weird": { "type": "websocket", "url": "ws://x" }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "alwaysAllow": ["read_file"],
+      "disabled": false,
+      "env": { "HOME_DIR": "/tmp" }
+    },
+    "docs": {
+      "type": "streamable-http",
+      "url": "https://docs.example.com/mcp"
+    }
+  }
+}
