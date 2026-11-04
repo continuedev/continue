@@ -84,6 +84,18 @@ updates:
       # move ahead of it. Revisit together with a move to node:sqlite.
       - dependency-name: sqlite3
         update-types: ["version-update:semver-major"]
+      # Tailwind 4 drops tailwind.config.js and the tailwindcss PostCSS plugin
+      # (config moves to CSS, plugin to @tailwindcss/postcss); the GUI and docs-site
+      # need a hand migration. A bare version bump fails the GUI build.
+      - dependency-name: tailwindcss
+        update-types: ["version-update:semver-major"]
+      # vitest 5 needs vite 8, whose esbuild peer (^0.27) conflicts with the CLI's
+      # esbuild 0.25, and @vitest/ui must match vitest exactly. Bump vitest,
+      # @vitest/* and esbuild together by hand.
+      - dependency-name: vitest
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitest/*"
+        update-types: ["version-update:semver-major"]
     groups:
       # Minor/patch bumps are batched into one PR per directory; majors stay
       # individual so they can be reviewed (and reverted) on their own.
