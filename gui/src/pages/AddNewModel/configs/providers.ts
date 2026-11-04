@@ -1270,6 +1270,27 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  hopbase: {
+    title: "HopBase",
+    provider: "hopbase",
+    icon: "hopbase.png",
+    description:
+      "HopBase is an enterprise AI gateway for GPT, Gemini, DeepSeek, Qwen, GLM, Kimi, Doubao Seed, Grok, and more behind one API key.",
+    longDescription:
+      "To get started with HopBase, create an API key in the [HopBase console](https://api.hop-base.com/login). The model list is loaded from `/v1/models` and shows the models available to your key.",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your HopBase API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://api.hop-base.com/login",
+  },
   venice: {
     title: "Venice",
     provider: "venice",

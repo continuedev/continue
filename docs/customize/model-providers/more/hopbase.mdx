@@ -1,0 +1,79 @@
+---
+title: "HopBase"
+description: "Configure HopBase with Continue to access GPT, Gemini, DeepSeek, Qwen, GLM, Kimi, and other models through one OpenAI-compatible API key"
+---
+
+[HopBase](https://hop-base.com/?utm_source=continue&utm_medium=listing) is an enterprise AI gateway that serves GPT, Gemini, DeepSeek, Qwen, GLM, Kimi, Doubao Seed, Grok, and Claude models behind one API key, with high-concurrency routing and automatic failover. The `hopbase` provider uses its OpenAI-compatible endpoint, `https://api.hop-base.com/v1/`.
+
+<Info>
+  Create an API key in the [HopBase console](https://api.hop-base.com/login).
+  Each key includes one or more model groups and can call only the models in
+  those groups.
+</Info>
+
+Store the key in `~/.continue/.env`:
+
+```bash title="~/.continue/.env"
+HOPBASE_API_KEY=<YOUR_HOPBASE_API_KEY>
+```
+
+## Chat Model
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: DeepSeek V4.1 Flash
+        provider: hopbase
+        model: deepseek-v4.1-flash
+        apiKey: ${{ secrets.HOPBASE_API_KEY }}
+        roles:
+          - chat
+          - edit
+          - apply
+    ```
+    </Tab>
+    <Tab title="JSON (Deprecated)">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "DeepSeek V4.1 Flash",
+          "provider": "hopbase",
+          "model": "deepseek-v4.1-flash",
+          "apiKey": "<YOUR_HOPBASE_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+Other model IDs include `gpt-6-sol`, `qwen3.8-max`, `kimi-k3`, and `glm-5.3-flash`. Use IDs exactly as they appear in the [HopBase model catalog](https://hop-base.com/models?utm_source=continue&utm_medium=listing).
+
+## Model list
+
+`GET /v1/models` is authenticated and returns only the models available to your key. When you add HopBase from the Continue model picker, Continue uses this endpoint to autodetect the models you can call.
+
+## Claude models
+
+Claude models use the Anthropic protocol rather than the OpenAI-compatible endpoint. To use them, configure the `anthropic` provider with a HopBase key that includes a Claude group. Continue's `anthropic` provider appends `messages` to `apiBase`, so set it to `https://api.hop-base.com/v1/`:
+
+```yaml title="config.yaml"
+models:
+  - name: Claude Sonnet 5
+    provider: anthropic
+    model: claude-sonnet-5
+    apiBase: https://api.hop-base.com/v1/
+    apiKey: ${{ secrets.HOPBASE_API_KEY }}
+    roles:
+      - chat
+```
+
+See the [HopBase documentation](https://hop-base.com/en/docs?utm_source=continue&utm_medium=listing) for supported parameters and protocol details.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/HopBase.ts)
