@@ -112,12 +112,36 @@ Auto is not a sandbox. A model can be wrong, and a reviewer that is the same mod
 
 The experimental setting is removed only after at least one suggested model meets every line. As of this writing no real model has been run, so Auto stays experimental and no model is recommended yet.
 
-To run it against a model:
+To run it against a model, from a checkout of the repository:
 
 ```bash
 cd core
-REVIEWER_EVAL_MODEL=gpt-4.1-mini REVIEWER_EVAL_API_KEY=... \
-  npx vitest run tools/permissions/auto/evaluation/live.vitest.ts
+npm run eval:reviewer -- --help
 ```
 
-Set `REVIEWER_EVAL_BASE_URL` for an OpenAI-compatible server (for example `http://localhost:11434/v1` for Ollama) and `REVIEWER_EVAL_PROVIDER=anthropic` for Anthropic. The report is printed, and written to `REVIEWER_EVAL_OUT` if set.
+It prints the quality-bar report (per-measure result against the bar, then per category) and exits 0, or 1 with `--strict` when the bar is not met. A full run is about 200 requests.
+
+**With a hosted API key.** The script refuses to call a hosted API unless you pass `--yes`, because the provider bills the requests.
+
+```bash
+# OpenAI, or any hosted OpenAI-compatible API
+OPENAI_API_KEY=... npm run eval:reviewer -- --provider openai --model gpt-4.1-mini --yes --strict
+
+# Anthropic
+ANTHROPIC_API_KEY=... npm run eval:reviewer -- --provider anthropic --model claude-haiku-4-5 --yes
+```
+
+Use `--api-key-env NAME` if your key is in another variable, and `--base-url` for another OpenAI-compatible endpoint.
+
+**With Ollama (local, no key, no cost).**
+
+```bash
+ollama pull qwen2.5-coder:7b
+npm run eval:reviewer -- --ollama --model qwen2.5-coder:7b --out ollama.md
+```
+
+`--host` points at an Ollama server that is not on `http://localhost:11434`. LM Studio and other local servers work the same way with `--provider openai --base-url http://localhost:1234/v1`; a `localhost` URL needs neither `--yes` nor a key.
+
+**Without a model**, to check that the harness and the bar work: `npm run eval:reviewer -- --stub oracle` meets the bar, and `--stub allow-all` does not.
+
+`--out <file>` also writes the markdown report to a file. The same run is available without the wrapper as `REVIEWER_EVAL_MODEL=... npx vitest run tools/permissions/auto/evaluation/live.vitest.ts` (variables `REVIEWER_EVAL_PROVIDER`, `REVIEWER_EVAL_BASE_URL`, `REVIEWER_EVAL_API_KEY`, `REVIEWER_EVAL_OUT`).
