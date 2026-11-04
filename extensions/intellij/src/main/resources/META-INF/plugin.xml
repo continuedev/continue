@@ -155,6 +155,14 @@
             <override-text place="GoToAction" text="Settings"/>
         </action>
 
+        <action id="continue.openModelSetup"
+                class="com.github.continuedev.continueintellijextension.actions.OpenModelSetupAction"
+                text="Manage Models and Providers"
+                description="Add providers, choose models and set API keys">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <override-text place="GoToAction" text="Continue: Manage Models and Providers"/>
+        </action>
+
         <action id="continue.reloadPage"
                 class="com.github.continuedev.continueintellijextension.actions.ReloadBrowserAction"
                 icon="AllIcons.Actions.Refresh"

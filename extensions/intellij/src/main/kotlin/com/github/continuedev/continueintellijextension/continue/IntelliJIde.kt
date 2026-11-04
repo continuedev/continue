@@ -22,6 +22,9 @@ import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.impl.DocumentMarkupModel
 import com.intellij.openapi.extensions.PluginId
+import com.github.continuedev.continueintellijextension.secrets.PasswordSafeSecretStore
+import com.github.continuedev.continueintellijextension.secrets.SecretStore
+import com.github.continuedev.continueintellijextension.secrets.Secrets
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
@@ -45,6 +48,8 @@ class IntelliJIDE(
 
     ) : IDE {
     
+    private val secretStore: SecretStore = PasswordSafeSecretStore()
+
     // Security-focused ignore patterns - should always be excluded for security reasons
     private val DEFAULT_SECURITY_IGNORE_FILETYPES = listOf(
         // Environment and configuration files with secrets
@@ -163,6 +168,13 @@ class IntelliJIDE(
     suspend fun enableHubContinueDev(): Boolean {
         return true
     }
+
+    // Password Safe may block on the system keychain, so keep it off the UI thread.
+    override suspend fun readSecrets(keys: List<String>): Map<String, String> =
+        withContext(Dispatchers.IO) { Secrets.read(secretStore, keys) }
+
+    override suspend fun writeSecrets(secrets: Map<String, String>) =
+        withContext(Dispatchers.IO) { Secrets.write(secretStore, secrets) }
 
     override suspend fun getIdeSettings(): IdeSettings {
         val settings = service<ContinueExtensionSettings>()

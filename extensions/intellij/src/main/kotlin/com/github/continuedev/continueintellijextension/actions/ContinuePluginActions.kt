@@ -92,6 +92,13 @@ class OpenConfigAction : ContinueToolbarAction() {
     }
 }
 
+/** Opens the provider setup flow: the same message the VS Code command `continue.openModelSetup` sends. */
+class OpenModelSetupAction : ContinueToolbarAction() {
+    override fun toolbarActionPerformed(project: Project) {
+        project.getBrowser()?.sendToWebview("setupApiKey")
+    }
+}
+
 class ReloadBrowserAction: ContinueToolbarAction() {
     override fun toolbarActionPerformed(project: Project) {
         val toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Continue")

@@ -147,8 +147,21 @@ data class TerminalOptions(
     val waitForCompletion: Boolean?
 )
 
+data class ReadSecretsParams(
+    val keys: List<String>
+)
+
+data class WriteSecretsParams(
+    val secrets: Map<String, String>
+)
+
 interface IDE {
     suspend fun getIdeInfo(): IdeInfo
+
+    /** The stored values for [keys]; names with no value are left out. */
+    suspend fun readSecrets(keys: List<String>): Map<String, String>
+
+    suspend fun writeSecrets(secrets: Map<String, String>)
 
     suspend fun getIdeSettings(): IdeSettings
 

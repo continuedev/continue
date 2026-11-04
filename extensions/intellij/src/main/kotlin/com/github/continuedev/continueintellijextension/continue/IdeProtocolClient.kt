@@ -98,6 +98,34 @@ class IdeProtocolClient(
                         respond(settings)
                     }
 
+                    // Core answers nothing without a reply, so these always respond.
+                    // Neither the keys' values nor the exception text is logged.
+                    "readSecrets" -> {
+                        val result = try {
+                            val params = gsonService.gson.fromJson(
+                                dataElement.toString(),
+                                ReadSecretsParams::class.java
+                            )
+                            ide.readSecrets(params.keys)
+                        } catch (e: Exception) {
+                            emptyMap<String, String>()
+                        }
+                        respond(result)
+                    }
+
+                    "writeSecrets" -> {
+                        try {
+                            val params = gsonService.gson.fromJson(
+                                dataElement.toString(),
+                                WriteSecretsParams::class.java
+                            )
+                            ide.writeSecrets(params.secrets)
+                        } catch (e: Exception) {
+                            // Core reads the value back and reports that it was not kept.
+                        }
+                        respond(null)
+                    }
+
                     "getControlPlaneSessionInfo" -> {
                         respond(null)
                     }

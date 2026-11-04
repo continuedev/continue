@@ -37,6 +37,8 @@ class MessageTypes {
             "showToast",
             "openUrl",
             "isWorkspaceRemote",
+            "readSecrets",
+            "writeSecrets",
 
             // These only come from the GUI for now but should be here to prevent confusion
             "toggleDevTools",

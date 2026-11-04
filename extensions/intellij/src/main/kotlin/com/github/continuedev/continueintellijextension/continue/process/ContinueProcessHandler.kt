@@ -27,7 +27,7 @@ class ContinueProcessHandler(
                     val line = reader.readLine()
                     if (line != null && line.isNotEmpty()) {
                         try {
-                            log.debug("Handle: $line")
+                            log.debug("Handle: ${LogRedaction.forLog(line)}")
                             handleMessage(line)
                         } catch (e: Exception) {
                         }
@@ -40,7 +40,7 @@ class ContinueProcessHandler(
         scope.launch(Dispatchers.IO) {
             for (message in pendingWrites) {
                 try {
-                    log.debug("Write: $message")
+                    log.debug("Write: ${LogRedaction.forLog(message)}")
                     writer.write(message)
                     writer.write("\r\n")
                     writer.flush()
