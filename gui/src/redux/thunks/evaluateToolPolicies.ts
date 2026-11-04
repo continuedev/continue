@@ -3,6 +3,7 @@ import { ChatHistoryItem, Tool, ToolCallState } from "core";
 import type { ApprovalSettings } from "core/tools/permissions/approval";
 import type { AutoReviewReply } from "core/tools/permissions/auto/handler";
 import type { ReviewHistory } from "core/tools/permissions/auto/prompt";
+import { isFlaggedOutput } from "core/tools/permissions/injection";
 import type { DecisionSource } from "core/tools/permissions/decide";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { isEditTool } from "../../util/toolCallState";
@@ -151,6 +152,10 @@ export function buildReviewHistory(history: ChatHistoryItem[]): ReviewHistory {
       toolCalls.push({
         name: call.toolCall.function.name,
         args: call.parsedArgs,
+        // Only the fact, never the text: the reviewer must not read outputs.
+        ...(call.output?.some((o) => isFlaggedOutput(o.content))
+          ? { outputFlagged: true }
+          : {}),
       });
     }
   }

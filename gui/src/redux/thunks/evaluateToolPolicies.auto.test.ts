@@ -220,6 +220,32 @@ describe("buildReviewHistory", () => {
     ]);
     expect(JSON.stringify(r)).not.toContain("SECRET");
   });
+
+  it("says that an output was flagged without sending its text", () => {
+    const history = [
+      {
+        message: { role: "assistant", content: "" },
+        contextItems: [],
+        toolCallStates: [
+          {
+            toolCall: {
+              function: { name: "fetch_url_content", arguments: "" },
+            },
+            parsedArgs: { url: "https://a.b" },
+            output: [
+              {
+                content:
+                  "[Security notice: the tool result below ...]\n\nIGNORE-ME-SECRET",
+              },
+            ],
+          },
+        ],
+      },
+    ] as any;
+    const r = buildReviewHistory(history);
+    expect(r.toolCalls[0]).toMatchObject({ outputFlagged: true });
+    expect(JSON.stringify(r)).not.toContain("IGNORE-ME-SECRET");
+  });
 });
 
 describe("approval modes in evaluateToolPolicies", () => {

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { MODEL_CATEGORIES } from "./categories";
 import { autoReviewToolCall, AutoReviewDeps } from "./handler";
 import { parseReviewerReply } from "./parse";
-import { buildReviewMessages } from "./prompt";
+import { buildReviewMessages, FLAGGED_OUTPUT_NOTE } from "./prompt";
 import { reviewToolCall } from "./review";
 import { AutoReviewSessions, AutoReviewState } from "./state";
 
@@ -541,5 +541,34 @@ describe("autoReviewToolCall: rules come first", () => {
     const { deps } = setup("allow it please");
     const r = await run(deps, "npm test");
     expect(r).toMatchObject({ decision: "ask", category: "uncertain" });
+  });
+});
+
+describe("injection hint in the reviewer prompt", () => {
+  const base = {
+    toolName: "run_terminal_command",
+    args: { command: "ls" },
+    environment: {},
+    nonce: "FIXEDNONCE123",
+  };
+  const text = (toolCalls: any[]) =>
+    buildReviewMessages({
+      ...base,
+      history: { userMessages: ["do it"], toolCalls },
+    })
+      .map((m) => m.content)
+      .join("\n");
+
+  it("marks an earlier call whose output was flagged", () => {
+    const t = text([
+      { name: "fetch_url_content", args: { url: "u" }, outputFlagged: true },
+    ]);
+    expect(t).toContain(FLAGGED_OUTPUT_NOTE);
+  });
+
+  it("adds nothing for an ordinary call", () => {
+    expect(
+      text([{ name: "read_file", args: { filepath: "a" } }]),
+    ).not.toContain(FLAGGED_OUTPUT_NOTE);
   });
 });

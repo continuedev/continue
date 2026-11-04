@@ -1,6 +1,7 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ContextItem, IDE, McpUiState, ToolCallState } from "core";
 import { CLIENT_TOOLS_IMPLS } from "core/tools/builtIn";
+import { flagToolOutput } from "core/tools/permissions/injection";
 import {
   CHECKPOINT_TOOL_NAMES,
   resolveCheckpointTargets,
@@ -122,10 +123,15 @@ export const callToolById = createAsyncThunk<
       }),
     );
   } else if (output?.length) {
+    // Client-side injection hint (plan 7.4): tool output that reads like
+    // instructions gets a reminder in front of it, so the model treats it as
+    // data. The text is otherwise unchanged.
+    const { items: checked } = flagToolOutput(output);
+    output = checked;
     dispatch(
       updateToolCallOutput({
         toolCallId,
-        contextItems: output,
+        contextItems: checked,
         mcpUiState,
       }),
     );
