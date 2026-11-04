@@ -37,6 +37,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/getProviderSetup",
     "config/saveProviderModels",
     "config/setSecret",
+    "config/removeEnvSecret",
     "mcp/reloadServer",
     "mcp/getPrompt",
     "mcp/startAuthentication",

@@ -89,6 +89,11 @@ export interface SaveProviderModelsResult {
   saved: boolean;
   error?: string;
   warning?: string;
+  /**
+   * The key went to secure storage, and ~/.continue/.env still has a plaintext
+   * copy under this name. The GUI offers to remove it (`config/removeEnvSecret`).
+   */
+  envShadowedSecret?: string;
 }
 
 const SECRET_REFERENCE =

@@ -224,6 +224,64 @@ describe("ProviderSetupFlow", () => {
     expect(saves).toEqual([]);
   });
 
+  it("asks before removing a plaintext copy from ~/.continue/.env", async () => {
+    const { messenger, secrets } = messengerWith();
+    messenger.responseHandlers["config/setSecret"] = async (req) => {
+      secrets.push(req);
+      return { stored: true, envShadowed: true };
+    };
+    const removals: any[] = [];
+    messenger.responseHandlers["config/removeEnvSecret"] = async (req) => {
+      removals.push(req);
+      return { removed: true };
+    };
+    const onDone = vi.fn();
+    const { user } = await renderWithProviders(
+      <ProviderSetupFlow
+        initialProvider="anthropic"
+        enterKey={{ secretName: "CONTINUED_ANTHROPIC_API_KEY" }}
+        onDone={onDone}
+      />,
+      { mockIdeMessenger: messenger },
+    );
+    await user.type(screen.getByLabelText("API key"), "sk-ant-new");
+    await user.click(screen.getByRole("button", { name: "Save key" }));
+
+    // Nothing is removed, and the flow stays open, until the user answers.
+    expect(await screen.findByTestId("env-copy-prompt")).toBeDefined();
+    expect(removals).toEqual([]);
+    expect(onDone).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Remove from .env" }));
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect(removals).toEqual([{ secretName: "CONTINUED_ANTHROPIC_API_KEY" }]);
+  });
+
+  it("keeps the .env line when the user says so", async () => {
+    const { messenger } = messengerWith();
+    messenger.responseHandlers["config/saveProviderModels"] = async () => ({
+      saved: true,
+      envShadowedSecret: "CONTINUED_ANTHROPIC_API_KEY",
+    });
+    const removals: any[] = [];
+    messenger.responseHandlers["config/removeEnvSecret"] = async (req) => {
+      removals.push(req);
+      return { removed: true };
+    };
+    const onDone = vi.fn();
+    const { user } = await renderWithProviders(
+      <ProviderSetupFlow initialProvider="anthropic" onDone={onDone} />,
+      { mockIdeMessenger: messenger },
+    );
+    await user.type(screen.getByLabelText("API key"), "k");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(await screen.findByRole("button", { name: "Review" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(await screen.findByRole("button", { name: "Keep it" }));
+    expect(onDone).toHaveBeenCalled();
+    expect(removals).toEqual([]);
+  });
+
   it("edits a connection's endpoint in place instead of adding a new connection", async () => {
     const { messenger, saves } = messengerWith({
       ...EMPTY_SETUP,

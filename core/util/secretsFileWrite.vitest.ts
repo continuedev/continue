@@ -8,6 +8,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   envFileHasValue,
   formatEnvValue,
+  readSecretFromEnvFile,
+  removeSecretFromEnvFile,
   setSecretInEnvFile,
 } from "./secretsFile";
 
@@ -105,5 +107,47 @@ describe("envFileHasValue", () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe("removeSecretFromEnvFile and readSecretFromEnvFile", () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), "secrets-remove-"));
+  });
+  afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const file = () => path.join(dir, ".env");
+
+  it("removes the line (with or without export) and keeps the rest", () => {
+    fs.writeFileSync(file(), "# c\nA=1\nexport K=secret\nB=2\n");
+    expect(removeSecretFromEnvFile(dir, "K")).toBe(true);
+    expect(fs.readFileSync(file(), "utf8")).toBe("# c\nA=1\nB=2\n");
+  });
+
+  it("keeps CRLF line endings and does not match a longer name", () => {
+    fs.writeFileSync(file(), "K_LONG=1\r\nK=2\r\n");
+    expect(removeSecretFromEnvFile(dir, "K")).toBe(true);
+    expect(fs.readFileSync(file(), "utf8")).toBe("K_LONG=1\r\n");
+  });
+
+  it("returns false when there is no such line or no file", () => {
+    expect(removeSecretFromEnvFile(dir, "K")).toBe(false);
+    fs.writeFileSync(file(), "A=1\n");
+    expect(removeSecretFromEnvFile(dir, "K")).toBe(false);
+    expect(fs.readFileSync(file(), "utf8")).toBe("A=1\n");
+  });
+
+  it("refuses, leaving the file alone, when the value spans lines", () => {
+    const text = 'K="line1\nB=2\nline3"\nA=1\n';
+    fs.writeFileSync(file(), text);
+    expect(() => removeSecretFromEnvFile(dir, "K")).toThrow(/by hand/);
+    expect(fs.readFileSync(file(), "utf8")).toBe(text);
+  });
+
+  it("reads a value back, and nothing for an empty or missing one", () => {
+    expect(readSecretFromEnvFile(dir, "K")).toBeUndefined();
+    fs.writeFileSync(file(), "K='a b'\nE=\n");
+    expect(readSecretFromEnvFile(dir, "K")).toBe("a b");
+    expect(readSecretFromEnvFile(dir, "E")).toBeUndefined();
   });
 });

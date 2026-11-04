@@ -1,11 +1,23 @@
 import type { IDE } from "..";
-import { envFileHasValue, setSecretInEnvFile } from "../util/secretsFile";
+import {
+  envFileHasValue,
+  removeSecretFromEnvFile,
+  setSecretInEnvFile,
+} from "../util/secretsFile";
 import { isValidSecretName } from "../util/unresolvedSecrets";
+import { withTimeout } from "../util/withTimeout";
 
 /** Where the setup flow can keep an API key. */
 export type SecretStorageKind = "secure" | "env";
 
 const PROBE_KEY = "continued.secretStorageProbe";
+
+/**
+ * How long to wait for the IDE's secret storage. A keychain can show an unlock
+ * prompt, so this is generous; an IDE that never replies must not block
+ * loading the config forever.
+ */
+export const SECURE_STORAGE_TIMEOUT_MS = 10_000;
 
 /**
  * True when the IDE can store a secret and read it back. The CLI and the test
@@ -18,8 +30,16 @@ export async function isSecureStorageAvailable(
 ): Promise<boolean> {
   try {
     const marker = "ok";
-    await ide.writeSecrets({ [PROBE_KEY]: marker });
-    const read = await ide.readSecrets([PROBE_KEY]);
+    await withTimeout(
+      ide.writeSecrets({ [PROBE_KEY]: marker }),
+      SECURE_STORAGE_TIMEOUT_MS,
+      "Secure storage",
+    );
+    const read = await withTimeout(
+      ide.readSecrets([PROBE_KEY]),
+      SECURE_STORAGE_TIMEOUT_MS,
+      "Secure storage",
+    );
     return read?.[PROBE_KEY] === marker;
   } catch {
     return false;
@@ -30,8 +50,12 @@ export interface StoreSecretResult {
   stored: boolean;
   /** Where the value went: "secure" storage or the ".env" file. */
   location?: SecretStorageKind;
-  /** Set when the value is stored but something else may still win a lookup. */
-  warning?: string;
+  /**
+   * True when the value went to secure storage and ~/.continue/.env still has a
+   * plaintext copy of the same name. Secure storage is read first, so the copy
+   * is unused; the UI offers to remove it (`removeEnvSecret`).
+   */
+  envShadowed?: boolean;
   /** Never contains the value. */
   error?: string;
 }
@@ -67,16 +91,13 @@ export async function storeSecret(args: {
           error: "This editor did not keep the key in secure storage",
         };
       }
-      // A value in ~/.continue/.env is looked up first and would win.
+      // Secure storage is read before ~/.continue/.env, so an old copy there
+      // is unused. It is still plaintext, so the caller offers to remove it.
       const shadowed = envFileHasValue(continueDir, name);
       return {
         stored: true,
         location: "secure",
-        ...(shadowed
-          ? {
-              warning: `${name} also has a value in ~/.continue/.env, which is used first. Remove that line to use the stored key.`,
-            }
-          : {}),
+        ...(shadowed ? { envShadowed: true } : {}),
       };
     }
 
@@ -87,6 +108,43 @@ export async function storeSecret(args: {
     return {
       stored: false,
       error: e instanceof Error ? e.message : "Could not store the key",
+    };
+  }
+}
+
+export interface RemoveEnvSecretResult {
+  removed: boolean;
+  /** Never contains the value. */
+  error?: string;
+}
+
+/**
+ * Delete the line for a secret from ~/.continue/.env. Only call this after the
+ * user agreed. It refuses unless the value is also in secure storage, so the
+ * key is never lost.
+ */
+export async function removeEnvSecret(args: {
+  ide: Pick<IDE, "readSecrets">;
+  name: string;
+  continueDir: string;
+}): Promise<RemoveEnvSecretResult> {
+  const { ide, name, continueDir } = args;
+  if (!isValidSecretName(name)) {
+    return { removed: false, error: `"${name}" is not a valid secret name` };
+  }
+  try {
+    const stored = (await ide.readSecrets([name]))?.[name];
+    if (!stored) {
+      return {
+        removed: false,
+        error: "The key is not in secure storage, so the .env line was kept",
+      };
+    }
+    return { removed: removeSecretFromEnvFile(continueDir, name) };
+  } catch (e) {
+    return {
+      removed: false,
+      error: e instanceof Error ? e.message : "Could not update the .env file",
     };
   }
 }

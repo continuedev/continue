@@ -223,7 +223,21 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   /** Store one secret (secure storage or ~/.continue/.env) and reload. */
   "config/setSecret": [
     { secretName: string; value: string; storage: "secure" | "env" },
-    { stored: boolean; error?: string; warning?: string },
+    {
+      stored: boolean;
+      error?: string;
+      warning?: string;
+      /** The name also has a plaintext copy in ~/.continue/.env. */
+      envShadowed?: boolean;
+    },
+  ];
+  /**
+   * Remove a secret's line from ~/.continue/.env. Only sent after the user
+   * agreed, and only honored when the value is in secure storage.
+   */
+  "config/removeEnvSecret": [
+    { secretName: string },
+    { removed: boolean; error?: string },
   ];
   "config/openSecretLocation": [
     { secretName: string; target: "env" | "configLine" },

@@ -101,6 +101,7 @@ class MessageTypes {
             "config/getProviderSetup",
             "config/saveProviderModels",
             "config/setSecret",
+            "config/removeEnvSecret",
             "mcp/reloadServer",
             "mcp/startAuthentication",
             "mcp/removeAuthentication",

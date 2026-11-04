@@ -96,3 +96,53 @@ export function envFileHasValue(dir: string, name: string): boolean {
     return false;
   }
 }
+
+/** The value `<dir>/.env` holds for the secret, if any. Callers must not log it. */
+export function readSecretFromEnvFile(
+  dir: string,
+  name: string,
+): string | undefined {
+  try {
+    const file = path.join(dir, ".env");
+    if (!fs.existsSync(file)) return undefined;
+    const value = dotenv.parse(fs.readFileSync(file, "utf8"))[name];
+    return value ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Remove the line that sets `NAME` from `<dir>/.env`, leaving every other line,
+ * comment and the line endings alone. Returns false when there was no such
+ * line. Throws, without touching the file, when removing the line would change
+ * any other variable (for example a quoted value that spans several lines).
+ */
+export function removeSecretFromEnvFile(dir: string, name: string): boolean {
+  if (!isValidSecretName(name)) {
+    throw new Error(`"${name}" is not a valid secret name`);
+  }
+  const file = path.join(dir, ".env");
+  if (!fs.existsSync(file)) return false;
+  const existing = fs.readFileSync(file, "utf8");
+  const eol = existing.includes("\r\n") ? "\r\n" : "\n";
+  const lines = existing.split(/\r?\n/);
+  const assignment = new RegExp(`^\\s*(export\\s+)?${name}\\s*=`);
+  const kept = lines.filter((l) => !assignment.test(l));
+  if (kept.length === lines.length) return false;
+
+  const next = kept.join(eol);
+  const before = dotenv.parse(existing);
+  const after = dotenv.parse(next);
+  delete before[name];
+  const same =
+    Object.keys(before).length === Object.keys(after).length &&
+    Object.keys(before).every((k) => before[k] === after[k]);
+  if (!same || name in after) {
+    throw new Error(
+      `Could not remove ${name} from .env without changing other lines; edit the file by hand`,
+    );
+  }
+  fs.writeFileSync(file, next, { mode: 0o600 });
+  return true;
+}
