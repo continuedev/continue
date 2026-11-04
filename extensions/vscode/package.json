@@ -754,6 +754,7 @@
     },
     "diff": "$diff",
     "picomatch": "^4.0.2",
+    "basic-ftp": "^6.2.5",
     "rollup": "^4.34.9",
     "vite": {
       "esbuild": "^0.25.0",
