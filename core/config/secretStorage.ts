@@ -1,6 +1,8 @@
 import type { IDE } from "..";
+import type { ProviderSetupConnection } from "./providerSetup";
 import {
   envFileHasValue,
+  readSecretFromEnvFile,
   removeSecretFromEnvFile,
   setSecretInEnvFile,
 } from "../util/secretsFile";
@@ -147,4 +149,100 @@ export async function removeEnvSecret(args: {
       error: e instanceof Error ? e.message : "Could not update the .env file",
     };
   }
+}
+
+export interface MoveKeyResult {
+  /** The key is now in secure storage. */
+  moved: boolean;
+  /** The ~/.continue/.env line is gone. False with `moved` true means it is still there. */
+  envRemoved?: boolean;
+  /** Never contains the value. */
+  error?: string;
+}
+
+/**
+ * Move a key from ~/.continue/.env to secure storage. The value is read and
+ * written here, in core; it is never returned. The .env line is removed only
+ * after the value reads back from secure storage. config.yaml is not touched:
+ * its `${{ secrets.NAME }}` reference stays valid.
+ */
+export async function moveEnvSecretToSecureStorage(args: {
+  ide: Pick<IDE, "readSecrets" | "writeSecrets">;
+  name: string;
+  continueDir: string;
+}): Promise<MoveKeyResult> {
+  const { ide, name, continueDir } = args;
+  if (!isValidSecretName(name)) {
+    return { moved: false, error: `"${name}" is not a valid secret name` };
+  }
+  const value = readSecretFromEnvFile(continueDir, name);
+  if (!value) {
+    return {
+      moved: false,
+      error: `${name} has no value in ~/.continue/.env`,
+    };
+  }
+  const stored = await storeSecret({
+    ide,
+    name,
+    value,
+    storage: "secure",
+    continueDir,
+  });
+  if (!stored.stored) return { moved: false, error: stored.error };
+  try {
+    return {
+      moved: true,
+      envRemoved: removeSecretFromEnvFile(continueDir, name),
+    };
+  } catch (e) {
+    return {
+      moved: true,
+      envRemoved: false,
+      error: e instanceof Error ? e.message : "Could not update the .env file",
+    };
+  }
+}
+
+/**
+ * Fill in `key.storedIn` for connections whose key is a secret reference, so
+ * the Providers card knows whether a key can be moved. Presence only.
+ */
+export async function annotateKeyStorage(
+  connections: ProviderSetupConnection[],
+  args: {
+    ide: Pick<IDE, "readSecrets">;
+    continueDir: string;
+    secureStorageAvailable: boolean;
+  },
+): Promise<ProviderSetupConnection[]> {
+  const names = [
+    ...new Set(
+      connections.flatMap((c) =>
+        c.key.state === "secret" && c.key.secretName ? [c.key.secretName] : [],
+      ),
+    ),
+  ];
+  let inSecure: Record<string, string> = {};
+  if (names.length > 0 && args.secureStorageAvailable) {
+    try {
+      inSecure = (await args.ide.readSecrets(names)) ?? {};
+    } catch {
+      inSecure = {};
+    }
+  }
+  return connections.map((c) => {
+    const name = c.key.secretName;
+    if (c.key.state !== "secret" || !name) return c;
+    return {
+      ...c,
+      key: {
+        ...c.key,
+        storedIn: {
+          secure: !!inSecure[name],
+          env: envFileHasValue(args.continueDir, name),
+        },
+      },
+    };
+  });
 }

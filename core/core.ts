@@ -82,7 +82,9 @@ import {
   validateSaveRequest,
 } from "./config/providerSetup";
 import {
+  annotateKeyStorage,
   isSecureStorageAvailable,
+  moveEnvSecretToSecureStorage,
   removeEnvSecret,
   storeSecret,
 } from "./config/secretStorage";
@@ -532,7 +534,11 @@ export class Core {
       const remembered = this.globalContext.get("preferredKeyStorage");
       const { connections, editable } = readProviderConnections();
       return {
-        connections,
+        connections: await annotateKeyStorage(connections, {
+          ide: this.ide,
+          continueDir: getContinueGlobalPath(),
+          secureStorageAvailable,
+        }),
         secureStorageAvailable,
         preferredKeyStorage:
           remembered === "env" || !secureStorageAvailable
@@ -616,6 +622,21 @@ export class Core {
         this.globalContext.update("preferredKeyStorage", storage);
         await this.configHandler.reloadConfig(
           "Secret stored (config/setSecret message)",
+        );
+      }
+      return result;
+    });
+
+    on("config/moveKeyToSecureStorage", async (msg) => {
+      const result = await moveEnvSecretToSecureStorage({
+        ide: this.ide,
+        name: msg.data.secretName,
+        continueDir: getContinueGlobalPath(),
+      });
+      if (result.moved) {
+        this.globalContext.update("preferredKeyStorage", "secure");
+        await this.configHandler.reloadConfig(
+          "Key moved to secure storage (config/moveKeyToSecureStorage message)",
         );
       }
       return result;

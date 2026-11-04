@@ -16,6 +16,23 @@ function describe(c: ProviderSetupConnection): string {
   return where ? `${where} - ${count}` : count;
 }
 
+type KeyAction = { kind: "move" | "removeCopy"; secretName: string };
+
+/** What can be done about where this connection's key is kept, if anything. */
+function keyActionFor(
+  c: ProviderSetupConnection,
+  secureStorageAvailable: boolean,
+): KeyAction | undefined {
+  const { secretName, storedIn } = c.key;
+  if (c.key.state !== "secret" || !secretName || !storedIn?.env) {
+    return undefined;
+  }
+  if (!storedIn.secure) {
+    return secureStorageAvailable ? { kind: "move", secretName } : undefined;
+  }
+  return { kind: "removeCopy", secretName };
+}
+
 /**
  * One row per provider connection in config.yaml, with a way back into the
  * setup flow to change its models or key.
@@ -26,6 +43,11 @@ export function ProvidersCard() {
   // The config object changes whenever a save reloads it.
   const config = useAppSelector((state) => state.config.config);
   const [info, setInfo] = useState<ProviderSetupInfo>();
+  const [reload, setReload] = useState(0);
+  // The key action being confirmed, and the last failure. Never a key value.
+  const [confirming, setConfirming] = useState<KeyAction>();
+  const [busy, setBusy] = useState(false);
+  const [keyError, setKeyError] = useState<string>();
 
   useEffect(() => {
     let cancelled = false;
@@ -37,7 +59,39 @@ export function ProvidersCard() {
     return () => {
       cancelled = true;
     };
-  }, [ideMessenger, config]);
+  }, [ideMessenger, config, reload]);
+
+  async function runKeyAction(action: KeyAction) {
+    setBusy(true);
+    setKeyError(undefined);
+    try {
+      let ok = false;
+      let error: string | undefined;
+      if (action.kind === "move") {
+        const res = await ideMessenger.request(
+          "config/moveKeyToSecureStorage",
+          { secretName: action.secretName },
+        );
+        const content = res.status === "success" ? res.content : undefined;
+        ok = !!content?.moved;
+        error = content?.error;
+      } else {
+        const res = await ideMessenger.request("config/removeEnvSecret", {
+          secretName: action.secretName,
+        });
+        const content = res.status === "success" ? res.content : undefined;
+        ok = !!content?.removed;
+        error = content?.error;
+      }
+      if (error || !ok) {
+        setKeyError(error ?? "Could not update where the key is kept");
+      }
+      setConfirming(undefined);
+      setReload((n) => n + 1);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <Card>
@@ -65,34 +119,90 @@ export function ProvidersCard() {
       )}
       {info?.connections.map((c) => {
         const id = `${c.provider}|${JSON.stringify(c.connection)}`;
+        const action = keyActionFor(c, info.secureStorageAvailable);
+        const isConfirming =
+          !!action &&
+          confirming?.kind === action.kind &&
+          confirming.secretName === action.secretName;
         return (
           <div
             key={id}
-            className="flex items-center justify-between gap-2 px-3 py-1.5 text-xs"
+            className="flex flex-col gap-1 px-3 py-1.5 text-xs"
             data-testid={`provider-row-${c.provider}`}
           >
-            <div className="min-w-0">
-              <span className="font-medium">{providerLabel(c.provider)}</span>{" "}
-              <span className="truncate text-description-muted">
-                {describe(c)}
-              </span>
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <span className="font-medium">{providerLabel(c.provider)}</span>{" "}
+                <span className="truncate text-description-muted">
+                  {describe(c)}
+                </span>
+              </div>
+              <div className="flex flex-shrink-0 gap-1">
+                {action && !isConfirming && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="my-0"
+                    onClick={() => setConfirming(action)}
+                  >
+                    {action.kind === "move"
+                      ? "Move key to secure storage"
+                      : "Remove .env copy"}
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="my-0"
+                  onClick={() =>
+                    openSetup({
+                      initialProvider: c.provider,
+                      initialConnection: c.connection,
+                    })
+                  }
+                >
+                  Edit
+                </Button>
+              </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="my-0"
-              onClick={() =>
-                openSetup({
-                  initialProvider: c.provider,
-                  initialConnection: c.connection,
-                })
-              }
-            >
-              Edit
-            </Button>
+            {action && isConfirming && (
+              <div
+                className="flex items-center justify-between gap-2"
+                data-testid="key-action-confirm"
+              >
+                <span className="text-description-muted">
+                  {action.kind === "move"
+                    ? `Move ${action.secretName} from ~/.continue/.env to secure storage and delete it from .env? config.yaml stays the same.`
+                    : `${action.secretName} is already in secure storage. Delete the plaintext line from ~/.continue/.env?`}
+                </span>
+                <div className="flex flex-shrink-0 gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="my-0"
+                    onClick={() => setConfirming(undefined)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="my-0"
+                    disabled={busy}
+                    onClick={() => runKeyAction(action)}
+                  >
+                    {action.kind === "move" ? "Move" : "Delete line"}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         );
       })}
+      {keyError && (
+        <div className="px-3 pb-2 text-xs text-error" role="alert">
+          {keyError}
+        </div>
+      )}
     </Card>
   );
 }

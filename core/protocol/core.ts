@@ -235,6 +235,15 @@ export type ToCoreFromIdeOrWebviewProtocol = {
    * Remove a secret's line from ~/.continue/.env. Only sent after the user
    * agreed, and only honored when the value is in secure storage.
    */
+  /**
+   * Move a key from ~/.continue/.env to secure storage, then remove the .env
+   * line. The value is handled in core and never returned. config.yaml keeps
+   * its `${{ secrets.NAME }}` reference.
+   */
+  "config/moveKeyToSecureStorage": [
+    { secretName: string },
+    { moved: boolean; envRemoved?: boolean; error?: string },
+  ];
   "config/removeEnvSecret": [
     { secretName: string },
     { removed: boolean; error?: string },

@@ -6,8 +6,10 @@ import * as dotenv from "dotenv";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  annotateKeyStorage,
   SECURE_STORAGE_TIMEOUT_MS,
   isSecureStorageAvailable,
+  moveEnvSecretToSecureStorage,
   removeEnvSecret,
   storeSecret,
 } from "./secretStorage";
@@ -209,5 +211,102 @@ describe("removeEnvSecret", () => {
       continueDir: dir,
     });
     expect(result.removed).toBe(false);
+  });
+});
+
+describe("moveEnvSecretToSecureStorage", () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), "move-key-"));
+  });
+  afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const envPath = () => path.join(dir, ".env");
+
+  it("writes secure storage, then removes only that .env line", async () => {
+    fs.writeFileSync(envPath(), "# keys\nA=1\nK='sk secret'\nB=2\n");
+    const { ide, store } = memoryIde();
+    const result = await moveEnvSecretToSecureStorage({
+      ide,
+      name: "K",
+      continueDir: dir,
+    });
+    expect(result).toEqual({ moved: true, envRemoved: true });
+    expect(store.K).toBe("sk secret");
+    expect(fs.readFileSync(envPath(), "utf8")).toBe("# keys\nA=1\nB=2\n");
+    // The value is not in the result.
+    expect(JSON.stringify(result)).not.toContain("sk secret");
+  });
+
+  it("keeps the .env line when secure storage drops the value", async () => {
+    fs.writeFileSync(envPath(), "K=value\n");
+    const result = await moveEnvSecretToSecureStorage({
+      ide: memoryIde({ keep: false }).ide,
+      name: "K",
+      continueDir: dir,
+    });
+    expect(result.moved).toBe(false);
+    expect(result.error).toBeDefined();
+    expect(fs.readFileSync(envPath(), "utf8")).toBe("K=value\n");
+  });
+
+  it("reports an error when .env has no value for the name", async () => {
+    fs.writeFileSync(envPath(), "OTHER=1\n");
+    const { ide, store } = memoryIde();
+    const result = await moveEnvSecretToSecureStorage({
+      ide,
+      name: "K",
+      continueDir: dir,
+    });
+    expect(result.moved).toBe(false);
+    expect(store.K).toBeUndefined();
+  });
+
+  it("keeps working copies on both sides if the .env line cannot be removed safely", async () => {
+    const text = 'K=abc\nM="x\nK=y\nz"\n';
+    fs.writeFileSync(envPath(), text);
+    const { ide, store } = memoryIde();
+    const result = await moveEnvSecretToSecureStorage({
+      ide,
+      name: "K",
+      continueDir: dir,
+    });
+    expect(result).toMatchObject({ moved: true, envRemoved: false });
+    expect(store.K).toBeDefined();
+    expect(fs.readFileSync(envPath(), "utf8")).toBe(text);
+  });
+});
+
+describe("annotateKeyStorage", () => {
+  it("reports where each referenced secret is found, never its value", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "annotate-"));
+    try {
+      fs.writeFileSync(path.join(dir, ".env"), "IN_ENV=1\nIN_BOTH=2\n");
+      const { ide, store } = memoryIde();
+      store.IN_BOTH = "2";
+      const conn = (secretName?: string, state: any = "secret") => ({
+        provider: "openai",
+        connection: {},
+        models: [],
+        key: { state, secretName },
+      });
+      const out = await annotateKeyStorage(
+        [
+          conn("IN_ENV"),
+          conn("IN_BOTH"),
+          conn("NOWHERE"),
+          conn(undefined, "inline"),
+        ],
+        { ide, continueDir: dir, secureStorageAvailable: true },
+      );
+      expect(out.map((c) => c.key.storedIn)).toEqual([
+        { secure: false, env: true },
+        { secure: true, env: true },
+        { secure: false, env: false },
+        undefined,
+      ]);
+      expect(JSON.stringify(out)).not.toMatch(/"2"|"1"/);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

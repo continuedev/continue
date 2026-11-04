@@ -46,7 +46,15 @@ export interface ProviderSetupConnection {
    * Whether a key is set up, never the key itself. "secret" means the entry
    * refers to `${{ secrets.NAME }}`; the name is given in `secretName`.
    */
-  key: { state: "none" | "inline" | "secret"; secretName?: string };
+  key: {
+    state: "none" | "inline" | "secret";
+    secretName?: string;
+    /**
+     * Where the secret's value is found on this machine, filled in by core
+     * (not by `describeProviderConnections`). Never the value itself.
+     */
+    storedIn?: { secure: boolean; env: boolean };
+  };
 }
 
 export interface ProviderSetupInfo {
