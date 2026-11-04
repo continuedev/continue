@@ -87,11 +87,11 @@ Problem: cached prompts expire after 5 minutes by default, so a session that pau
 
 ## Later
 
-Carried over from `fork-plan.md` section 4.7, item 4. Checkpoints are in progress; the rest are not started:
+Carried over from `fork-plan.md` section 4.7, item 4. Checkpoints are in progress and the MCP import has not started:
 
 - Checkpoints for file edits, so an Agent run can be rolled back. In progress, see `checkpoints.md`.
-- A global rules toggle per mode.
-- Context-window and cost display per model.
+- A global rules toggle per mode. In progress, see [`rules-per-mode.md`](./rules-per-mode.md).
+- Context-window and cost display per model. In progress, see [`usage-display.md`](./usage-display.md).
 - Import of Cline's MCP settings file, so servers are not configured twice.
 
 ## Open decisions

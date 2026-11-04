@@ -270,9 +270,39 @@ export interface IContextProvider {
   get deprecationMessage(): string | null;
 }
 
+/** Token and cost totals for one model within a session. */
+export interface ModelUsage {
+  provider: string;
+  model: string;
+  /** Requests that reported usage. */
+  requests: number;
+  /** Input tokens that were neither read from nor written to the cache. */
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  /** Estimated cost in USD of the requests that could be priced. */
+  cost: number;
+  /** How many of `requests` could be priced. Fewer than `requests` means `cost` is partial. */
+  pricedRequests: number;
+}
+
 export interface SessionUsage extends Usage {
-  /** Total cumulative cost in USD for all LLM API calls in this session */
+  /**
+   * Total estimated cost in USD of the requests that could be priced. Requests
+   * to models without a known price add nothing (see `ModelUsage.pricedRequests`).
+   */
   totalCost: number;
+  /** Totals per model, keyed `provider/model`. */
+  byModel?: Record<string, ModelUsage>;
+  /** The latest request, for the context-window display. */
+  lastRequest?: {
+    provider: string;
+    model: string;
+    /** All input tokens of that request as the API counted them. */
+    inputTokens: number;
+    outputTokens: number;
+  };
 }
 
 export interface Session {

@@ -16,6 +16,7 @@ import {
   errorToolCall,
   setActive,
   setAppliedRulesAtIndex,
+  addRequestUsageToSession,
   setContextPercentage,
   setInactive,
   setInlineErrorMessage,
@@ -279,6 +280,13 @@ export const streamNormalInput = createAsyncThunk<
             if (total > 0) {
               dispatch(setPromptCacheInputTokens(total));
             }
+            dispatch(
+              addRequestUsageToSession({
+                provider: selectedChatModel.provider,
+                model: selectedChatModel.model,
+                usage: message.usage,
+              }),
+            );
           }
         }
         next = await gen.next();
