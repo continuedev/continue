@@ -343,6 +343,41 @@ describe("autoReviewToolCall: rules come first", () => {
     expect(llm.chat).toHaveBeenCalledTimes(1);
   });
 
+  it("a category switch settles the call before the reviewer", async () => {
+    const { llm, deps } = setup(deny("production-impact"));
+    const r = await run(deps, "ls -la", {
+      approval: { mode: "auto", categories: { runSafeCommands: true } },
+    });
+    expect(r).toMatchObject({
+      decision: "allow",
+      by: "rules",
+      ruleSource: "category",
+    });
+    expect(llm.chat).not.toHaveBeenCalled();
+  });
+
+  it("a switch that does not cover the command leaves it to the reviewer", async () => {
+    const { llm, deps } = setup(deny("production-impact"));
+    const r = await run(deps, "make deploy", {
+      approval: { mode: "auto", categories: { runSafeCommands: true } },
+    });
+    expect(r).toMatchObject({ decision: "deny", by: "reviewer" });
+    expect(llm.chat).toHaveBeenCalledTimes(1);
+  });
+
+  it("a protected path still asks with run-all on, and the reviewer is not asked", async () => {
+    const { llm, deps } = setup(allow);
+    const r = await run(deps, "cat .env", {
+      approval: { mode: "auto", categories: { runAllCommands: true } },
+    });
+    expect(r).toMatchObject({
+      decision: "ask",
+      by: "rules",
+      ruleSource: "protected-path",
+    });
+    expect(llm.chat).not.toHaveBeenCalled();
+  });
+
   it("the reviewer can refuse with a named reason", async () => {
     const { deps } = setup(deny("remote-code-execution"));
     const r = await run(deps, "make deploy");

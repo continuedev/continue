@@ -23,6 +23,7 @@ import type {
   SaveProviderModelsResult,
 } from "../config/providerSetup";
 import type { DecisionSource as ToolDecisionSource } from "../tools/permissions/decide";
+import type { ApprovalSettings } from "../tools/permissions/approval";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 import {
@@ -422,6 +423,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       basePolicy: ToolPolicy;
       parsedArgs: Record<string, unknown>;
       processedArgs?: Record<string, unknown>;
+      /** Approval mode and switches; absent means Manual. */
+      approval?: ApprovalSettings;
     },
     {
       policy: ToolPolicy;

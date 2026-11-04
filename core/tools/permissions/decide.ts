@@ -1,4 +1,5 @@
 import type { ToolPolicy } from "@continuedev/terminal-security";
+import type { Loosening } from "./approval";
 import { ProtectedHit, protectedReason } from "./protected";
 import {
   canonicalRuleName,
@@ -22,6 +23,8 @@ export type DecisionSource =
   | "allow-rule"
   | "protected-path"
   | "safety-floor"
+  | "category"
+  | "yolo"
   | "tool-setting"
   | "default";
 
@@ -48,6 +51,8 @@ export interface DecideInput {
   rules: ParsedRule[];
   /** A protected path the call touches (see protected.ts); makes the call ask. */
   protectedHit?: ProtectedHit;
+  /** What the approval mode or a category switch would allow (see approval.ts). */
+  loosening?: Loosening;
 }
 
 export function findRuleMatch(input: DecideInput): RuleMatch | undefined {
@@ -121,7 +126,7 @@ function matchMcp(rules: ParsedRule[], name: string): RuleMatch | undefined {
  * Apply the user's rules on top of the tool's own policy, in this order:
  * deny rules; anything already `disabled` (a tool switched off or a command
  * the safety floor refuses); a protected path (always asks); ask rules; allow
- * rules; otherwise the evaluated policy. Nothing after the first two steps can
+ * rules; the approval mode or category switches; otherwise the evaluated policy. Nothing after the first two steps can
  * loosen them, and no allow rule can loosen a protected path.
  */
 export function decideToolCall(input: DecideInput): ToolDecision {
@@ -167,6 +172,14 @@ export function decideToolCall(input: DecideInput): ToolDecision {
       source: "allow-rule",
       rule: match.rule.raw,
       reason: `Allowed by your rule ${match.rule.raw}.`,
+    };
+  }
+  // An approval mode or switch only acts on a call nothing above has settled.
+  if (input.loosening && evaluated === "allowedWithPermission") {
+    return {
+      policy: "allowedWithoutPermission",
+      source: input.loosening.source,
+      reason: input.loosening.reason,
     };
   }
   return {

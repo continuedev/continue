@@ -31,6 +31,7 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateConfig } from "../../../redux/slices/configSlice";
 import { ConfigHeader } from "../components/ConfigHeader";
+import { AutoApproveCard } from "../components/AutoApproveCard";
 import { ToolPoliciesGroup } from "../components/ToolPoliciesGroup";
 
 interface MCPServerStatusProps {
@@ -492,6 +493,7 @@ export function ToolsSection() {
         </div>
       )}
       <div className="mb-4 space-y-6">
+        <AutoApproveCard />
         <ToolPoliciesGroup
           showIcon={false}
           groupName={BUILT_IN_GROUP_NAME}

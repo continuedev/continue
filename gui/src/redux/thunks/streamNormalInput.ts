@@ -44,7 +44,10 @@ import {
 } from "../selectors/selectToolCalls";
 import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
-import { selectAutoApproval } from "../selectors/selectAutoApproval";
+import {
+  selectApprovalSettings,
+  selectAutoApproval,
+} from "../selectors/selectAutoApproval";
 import {
   buildReviewHistory,
   evaluateToolPolicies,
@@ -380,6 +383,7 @@ export const streamNormalInput = createAsyncThunk<
             history: buildReviewHistory(state3.session.history),
           }
         : undefined,
+      selectApprovalSettings(state3),
     );
     const autoApprovedPolicies = policies.filter(
       ({ policy }) => policy === "allowedWithoutPermission",

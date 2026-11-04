@@ -1,1 +1,1 @@
-export { ApprovalSelect } from "./ApprovalSelect";
+export { ApprovalSelect, YoloBanner } from "./ApprovalSelect";

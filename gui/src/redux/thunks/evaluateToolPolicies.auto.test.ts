@@ -221,3 +221,65 @@ describe("buildReviewHistory", () => {
     expect(JSON.stringify(r)).not.toContain("SECRET");
   });
 });
+
+describe("approval modes in evaluateToolPolicies", () => {
+  async function runApproval(policyReply: any, basePolicy?: any) {
+    const ide = new MockIdeMessenger();
+    const seen: any[] = [];
+    ide.responseHandlers["tools/evaluatePolicy"] = (async (data: any) => {
+      seen.push(data);
+      return policyReply;
+    }) as any;
+    const [result] = await evaluateToolPolicies(
+      vi.fn() as any,
+      ide,
+      [],
+      [call("run_terminal_command", { command: "ls" })],
+      basePolicy ? { run_terminal_command: basePolicy } : {},
+      undefined,
+      { mode: "autoApprove", categories: { runSafeCommands: true } },
+    );
+    return { result, seen };
+  }
+
+  it("sends the approval settings to core", async () => {
+    const { seen } = await runApproval({ policy: ALLOW, source: "category" });
+    expect(seen[0].approval).toEqual({
+      mode: "autoApprove",
+      categories: { runSafeCommands: true },
+    });
+  });
+
+  it("accepts the loosening core made for a switch or YOLO", async () => {
+    for (const source of ["category", "yolo"]) {
+      const { result } = await runApproval({ policy: ALLOW, source });
+      expect(result.policy).toBe(ALLOW);
+    }
+  });
+
+  it("a tool the user switched off stays off whatever core says", async () => {
+    const { result } = await runApproval(
+      { policy: ALLOW, source: "yolo" },
+      "disabled",
+    );
+    expect(result.policy).toBe(OFF);
+  });
+
+  it("without approval settings nothing is sent and an unexplained loosening is ignored", async () => {
+    const ide = new MockIdeMessenger();
+    const seen: any[] = [];
+    ide.responseHandlers["tools/evaluatePolicy"] = (async (data: any) => {
+      seen.push(data);
+      return { policy: ALLOW };
+    }) as any;
+    const [result] = await evaluateToolPolicies(
+      vi.fn() as any,
+      ide,
+      [],
+      [call("run_terminal_command", { command: "ls" })],
+      {},
+    );
+    expect("approval" in seen[0]).toBe(false);
+    expect(result.policy).toBe(ASK);
+  });
+});

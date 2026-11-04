@@ -1,5 +1,6 @@
 import type { ToolPolicy } from "@continuedev/terminal-security";
 import type { ILLM } from "../../..";
+import type { ApprovalSettings } from "../approval";
 import { DecisionSource } from "../decide";
 import { EvaluateInput, evaluateToolPolicyWithRules } from "../evaluate";
 import type { ToolPermissions } from "../rules";
@@ -20,6 +21,8 @@ export interface AutoReviewRequest {
   parsedArgs: Record<string, unknown>;
   processedArgs?: Record<string, unknown>;
   history: ReviewHistory;
+  /** Approval mode and switches; absent means Manual. */
+  approval?: ApprovalSettings;
   /** No person to ask: an unusable reviewer refuses. */
   headless?: boolean;
 }
@@ -86,6 +89,7 @@ export async function autoReviewToolCall(
     parsedArgs: req.parsedArgs,
     processedArgs: req.processedArgs,
     permissions: deps.permissions,
+    approval: req.approval,
   });
   const base = { displayValue: evaluated.displayValue };
   const settled = (

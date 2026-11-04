@@ -1,3 +1,4 @@
+import type { ApprovalSettings } from "core/tools/permissions/approval";
 import type { RootState } from "../store";
 
 export const REVIEWER_NEEDED_MESSAGE =
@@ -31,5 +32,33 @@ export function selectAutoApproval(state: RootState): AutoApprovalStatus {
     ...(offered && !hasReviewer
       ? { unavailableReason: REVIEWER_NEEDED_MESSAGE }
       : {}),
+  };
+}
+
+/**
+ * The mode that is really in force. A saved "auto" that cannot be used (no
+ * reviewer, or the experiment turned off) falls back to Manual, not to the
+ * switches, so a lost reviewer never makes the app more permissive.
+ */
+export function selectEffectiveApprovalMode(
+  state: RootState,
+): ApprovalSettings["mode"] {
+  const mode = state.ui.approvalMode;
+  if (mode === "auto") {
+    return selectAutoApproval(state).active ? "auto" : "manual";
+  }
+  return mode;
+}
+
+/** What is sent to core with every policy check. Manual sends nothing. */
+export function selectApprovalSettings(
+  state: RootState,
+): ApprovalSettings | undefined {
+  const mode = selectEffectiveApprovalMode(state);
+  if (mode === "manual") return undefined;
+  return {
+    mode,
+    categories: state.ui.approvalCategories,
+    mcpServers: state.ui.approvalMcpServers,
   };
 }

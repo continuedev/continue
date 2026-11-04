@@ -1,6 +1,7 @@
 import type { ToolPolicy } from "@continuedev/terminal-security";
 import type { Tool } from "../..";
 import type { ResolvedPath } from "../../util/pathResolver";
+import { approvalLoosening, ApprovalSettings } from "./approval";
 import { DecisionSource, decideToolCall } from "./decide";
 import { parsePermissions, uriToPath } from "./names";
 import { findProtected } from "./protectedCall";
@@ -29,6 +30,8 @@ export interface EvaluateInput {
   parsedArgs: Record<string, unknown>;
   processedArgs?: Record<string, unknown>;
   permissions: ToolPermissions | undefined;
+  /** The user's approval mode and switches; absent means Manual. */
+  approval?: ApprovalSettings;
 }
 
 /**
@@ -66,7 +69,17 @@ export function evaluateToolPolicyWithRules(
   const protectedHit = findProtected({ toolName, parsedArgs, resolvedPath });
 
   const rules = parsePermissions(input.permissions);
-  if (rules.length === 0 && !protectedHit) {
+  const loosening =
+    evaluated === "allowedWithPermission"
+      ? approvalLoosening({
+          approval: input.approval,
+          tool,
+          toolName,
+          parsedArgs,
+          processedArgs,
+        })
+      : undefined;
+  if (rules.length === 0 && !protectedHit && !loosening) {
     return { policy: evaluated, displayValue };
   }
 
@@ -83,6 +96,7 @@ export function evaluateToolPolicyWithRules(
     evaluated,
     rules,
     protectedHit,
+    loosening,
   });
 
   return {

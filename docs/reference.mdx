@@ -307,6 +307,17 @@ If a narrow rule cannot be made, the button says why and does nothing: commands 
 
 **A second click for commands the safety check normally asks about.** Package installs, network fetches, scripts and similar commands are held for approval by the built-in safety check. Saving an always-allow rule for one switches that check off for that exact command. So for those, the first click shows the exact rule and the button changes to **Confirm always allow**; a second click saves it and runs the call, and **Not now** backs out. Commands the check already lets through, such as `git status`, save on the first click.
 
+**Approval modes.** The **Approval** menu next to the model picker sets how much runs without asking. It is saved per user, not in `config.yaml`, and the default is **Manual**.
+
+| Mode             | What it does                                                                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Manual**       | You approve each call that your tool settings and rules leave open. Nothing changes from before.                                     |
+| **Auto-approve** | The switches under **Settings > Tools > Auto-approve** also allow calls: read files, edit files, run safe commands, run all commands, browser, and MCP servers (one switch for all, plus one per server). |
+| **Auto**         | Auto-approve, and then a [reviewer model](/customize/model-roles/reviewer) decides what is left. Experimental.                       |
+| **YOLO**         | Everything that is left runs without asking. A warning stays above the input for as long as YOLO is on.                              |
+
+The modes sit on top of the rules, never above them. The order is: deny rules, then tools you switched off and commands the safety check refuses, then protected paths, then ask rules, then allow rules, and only then the mode. So **YOLO still refuses** what a deny rule or the safety check refuses, and **still asks** for a protected path or an ask rule. A switch never reaches past the tool's own check either: "Read files" does not cover a file outside the project, and "Run safe commands" covers only commands the safety check calls safe. "Run all commands" covers the rest, except what the safety check refuses. "Edit files" does not change the diff review of edits; protected files still wait for approval.
+
 ---
 
 ### `context`
