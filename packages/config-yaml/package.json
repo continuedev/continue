@@ -16,7 +16,7 @@
     "config-yaml": "./dist/cli.js"
   },
   "scripts": {
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "vitest run",
     "build": "tsc",
     "generate-schema": "tsc && node dist/scripts/generateJsonSchema.js"
   },
@@ -28,13 +28,10 @@
     "zod": "^4.6.6"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14",
-    "@types/node": "^20.0.0",
-    "cross-env": "^7.0.3",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.2.3",
+    "@types/node": "^24.3.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
   },
   "overrides": {
     "picomatch": "^4.0.4"
