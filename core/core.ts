@@ -80,11 +80,7 @@ import {
   validateSaveRequest,
 } from "./config/providerSetup";
 import { isSecureStorageAvailable, storeSecret } from "./config/secretStorage";
-import {
-  setupLocalConfig,
-  setupProviderConfig,
-  setupQuickstartConfig,
-} from "./config/onboarding";
+import { setupLocalConfig } from "./config/onboarding";
 import {
   createNewGlobalRuleFile,
   createNewWorkspaceBlockFile,
@@ -1575,22 +1571,13 @@ export class Core {
   private async handleCompleteOnboarding(
     msg: Message<CompleteOnboardingPayload>,
   ) {
-    const { mode, provider, apiKey } = msg.data;
+    const { mode } = msg.data;
 
     let editConfigYamlCallback: (config: ConfigYaml) => ConfigYaml;
 
     switch (mode) {
       case OnboardingModes.LOCAL:
         editConfigYamlCallback = setupLocalConfig;
-        break;
-
-      case OnboardingModes.API_KEY:
-        if (provider && apiKey) {
-          editConfigYamlCallback = (config: ConfigYaml) =>
-            setupProviderConfig(config, provider, apiKey);
-        } else {
-          editConfigYamlCallback = setupQuickstartConfig;
-        }
         break;
 
       default:

@@ -2037,8 +2037,6 @@ export interface Skill {
 
 export interface CompleteOnboardingPayload {
   mode: OnboardingModes;
-  provider?: string;
-  apiKey?: string;
 }
 
 export interface CompiledMessagesResult {
