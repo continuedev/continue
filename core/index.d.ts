@@ -570,6 +570,18 @@ interface McpUiState {
   content: McpUiResourceContents;
 }
 
+interface ToolCallDecision {
+  outcome: "allowed" | "blocked";
+  /** A rule, the safety check, a switch, YOLO, the Auto reviewer, or the user ("once"). */
+  source: string;
+  /** One line saying why. */
+  reason?: string;
+  /** The rule as written in config.yaml, when one decided. */
+  rule?: string;
+  /** The reviewer's category, for Auto. */
+  category?: string;
+}
+
 // Will exist only on "assistant" messages with tool calls
 interface ToolCallState {
   toolCallId: string;
@@ -579,6 +591,8 @@ interface ToolCallState {
   processedArgs?: Record<string, any>; // Added in preprocesing step
   /** Why this call is waiting for approval, when a rule or protected path says so. */
   policyNote?: string;
+  /** Why the call ran or was refused, for the decision chip. Set by the policy check. */
+  decision?: ToolCallDecision;
   output?: ContextItem[];
   tool?: Tool;
   mcpUiState?: McpUiState;

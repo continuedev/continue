@@ -1002,6 +1002,21 @@ export const sessionSlice = createSlice({
         toolCallState.policyNote = action.payload.note;
       }
     },
+    setToolCallDecision: (
+      state,
+      action: PayloadAction<{
+        toolCallId: string;
+        decision: NonNullable<ToolCallState["decision"]>;
+      }>,
+    ) => {
+      const toolCallState = findToolCallById(
+        state.history,
+        action.payload.toolCallId,
+      );
+      if (toolCallState) {
+        toolCallState.decision = action.payload.decision;
+      }
+    },
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
@@ -1138,6 +1153,7 @@ export const {
   abortStream,
   setToolCallCalling,
   setToolCallPolicyNote,
+  setToolCallDecision,
   cancelToolCall,
   errorToolCall,
   acceptToolCall,

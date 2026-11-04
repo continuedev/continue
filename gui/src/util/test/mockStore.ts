@@ -2,6 +2,9 @@ import { configureStore } from "@reduxjs/toolkit";
 import { copyOf } from "core/util";
 import { vi } from "vitest";
 import { MockIdeMessenger } from "../../context/MockIdeMessenger";
+import blockedCallsReducer, {
+  initialBlockedCalls,
+} from "../../redux/slices/blockedCallsSlice";
 import configReducer, {
   INITIAL_CONFIG_SLICE,
 } from "../../redux/slices/configSlice";
@@ -31,6 +34,7 @@ export const getEmptyRootState: () => RootState = () => {
     indexing: INITIAL_INDEXING_STATE,
     profiles: INITIAL_PROFILES_STATE,
     tabs: INITIAL_TABS_STATE,
+    blockedCalls: initialBlockedCalls,
   };
   const { streamAborter, ...serializableSession } = INITIAL_SESSION_STATE;
   const sessionCopy = copyOf(serializableSession) as Omit<
@@ -69,6 +73,7 @@ export const createMockStore = (
       indexing: indexingReducer,
       tabs: tabsReducer,
       profiles: profilesReducer,
+      blockedCalls: blockedCallsReducer,
     },
     preloadedState: {
       ...getEmptyRootState(),

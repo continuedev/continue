@@ -1,5 +1,6 @@
 import { Tool, ToolCallState } from "core";
 import Mustache from "mustache";
+import { DecisionChip } from "./DecisionChip";
 import { getStatusIntro } from "./utils";
 
 interface ToolCallStatusMessageProps {
@@ -52,11 +53,14 @@ export function ToolCallStatusMessage({
   }
 
   return (
-    <div
-      className="line-clamp-4 min-w-0 break-words text-description"
-      data-testid="tool-call-title"
-    >
-      {`Continued ${intro} ${message}`}
-    </div>
+    <>
+      <div
+        className="line-clamp-4 min-w-0 break-words text-description"
+        data-testid="tool-call-title"
+      >
+        {`Continued ${intro} ${message}`}
+      </div>
+      <DecisionChip decision={toolCallState.decision} />
+    </>
   );
 }

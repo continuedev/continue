@@ -7,7 +7,13 @@ import type { DecisionSource } from "core/tools/permissions/decide";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { isEditTool } from "../../util/toolCallState";
 import {
+  addBlockedCall,
+  consumeGrant,
+  grantKey,
+} from "../slices/blockedCallsSlice";
+import {
   errorToolCall,
+  setToolCallDecision,
   setToolCallPolicyNote,
   updateToolCallOutput,
 } from "../slices/sessionSlice";
@@ -18,13 +24,15 @@ import { AppThunkDispatch } from "../store";
 export interface AutoReviewContext {
   sessionId: string;
   history: ReviewHistory;
+  /** Exact calls the user allowed once from the Recently blocked list. */
+  onceGrants?: string[];
 }
 
 interface EvaluatedPolicy {
   policy: ToolPolicy;
   displayValue?: string;
   /** Why core decided, when the user has toolPermissions rules. "auto" means the reviewer model. */
-  source?: DecisionSource | "auto";
+  source?: DecisionSource | "auto" | "once";
   /** The reviewer's named reason (Auto mode). */
   category?: string;
   reason?: string;
@@ -161,6 +169,7 @@ async function reviewOpenCalls(
   auto: AutoReviewContext,
   toolPolicies: ToolPolicies,
   activeTools: Tool[],
+  dispatch: AppThunkDispatch,
   approval?: ApprovalSettings,
 ): Promise<EvaluatedPolicy[]> {
   return Promise.all(
@@ -178,6 +187,19 @@ async function reviewOpenCalls(
         activeTools.find((t) => t.function.name === toolName)
           ?.defaultToolPolicy ??
         DEFAULT_TOOL_SETTING;
+      // The user allowed this exact call once after Auto refused it. This is
+      // reached only for a call the rules left open, so no deny rule, protected
+      // path or ask rule can be skipped by it.
+      const key = grantKey(toolName, r.toolCallState.parsedArgs);
+      if (auto.onceGrants?.includes(key)) {
+        dispatch(consumeGrant(key));
+        return {
+          ...r,
+          policy: "allowedWithoutPermission" as const,
+          source: "once" as const,
+          reason: "You allowed this exact call once.",
+        };
+      }
       let reply: AutoReviewReply;
       try {
         const res = await ideMessenger.request("tools/autoReview", {
@@ -229,7 +251,7 @@ async function reviewOpenCalls(
 /** The text the model sees when a call is refused, naming who refused it. */
 export function refusalMessage(
   command: string,
-  source: DecisionSource | "auto" | undefined,
+  source: DecisionSource | "auto" | "once" | undefined,
   reason: string | undefined,
   category?: string,
 ): { description: string; content: string } {
@@ -290,6 +312,7 @@ export async function evaluateToolPolicies(
       auto,
       toolPolicies,
       activeTools,
+      dispatch,
       approval,
     );
   }
@@ -317,14 +340,65 @@ export async function evaluateToolPolicies(
     }
   }
 
+  // The decision chip: say why a call ran without asking.
+  for (const r of policyResults) {
+    const { source, reason, rule, toolCallState } = r;
+    if (
+      r.policy === "allowedWithoutPermission" &&
+      (source === "allow-rule" ||
+        source === "auto" ||
+        source === "once" ||
+        source === "category" ||
+        source === "yolo")
+    ) {
+      dispatch(
+        setToolCallDecision({
+          toolCallId: toolCallState.toolCallId,
+          decision: {
+            outcome: "allowed",
+            source,
+            ...(reason ? { reason } : {}),
+            ...(rule ? { rule } : {}),
+          },
+        }),
+      );
+    }
+  }
+
   for (const {
     displayValue,
     source,
     reason,
+    rule,
     category,
     toolCallState,
   } of disabledResults) {
     dispatch(errorToolCall({ toolCallId: toolCallState.toolCallId }));
+    const blockedSource = source ?? "safety-floor";
+    dispatch(
+      setToolCallDecision({
+        toolCallId: toolCallState.toolCallId,
+        decision: {
+          outcome: "blocked",
+          source: blockedSource,
+          ...(reason ? { reason } : {}),
+          ...(rule ? { rule } : {}),
+          ...(category ? { category } : {}),
+        },
+      }),
+    );
+    dispatch(
+      addBlockedCall({
+        id: toolCallState.toolCallId,
+        toolName: toolCallState.toolCall.function.name,
+        summary: displayValue || toolCallState.toolCall.function.name,
+        source: blockedSource,
+        ...(reason ? { reason } : {}),
+        ...(category ? { category } : {}),
+        parsedArgs: toolCallState.parsedArgs ?? {},
+        at: Date.now(),
+      }),
+    );
 
     // Use the displayValue from the policy evaluation, or fallback to function name
     const command = displayValue || toolCallState.toolCall.function.name;
