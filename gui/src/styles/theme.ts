@@ -96,7 +96,7 @@ export const THEME_COLORS = {
     vars: [
       "--vscode-input-border",
       "--vscode-commandCenter-inactiveBorder",
-      "vscode-border",
+      "--vscode-border",
     ],
     default: "#555555", // medium gray
   },

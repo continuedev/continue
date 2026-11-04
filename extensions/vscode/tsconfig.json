@@ -10,6 +10,13 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
+    // vscode-languageclient 11 exposes "./node" only through package.json
+    // "exports", which moduleResolution "node10" (implied by commonjs) ignores.
+    "paths": {
+      "vscode-languageclient/node": [
+        "./node_modules/vscode-languageclient/lib/node/main.d.ts"
+      ]
+    },
     "types": ["mocha"] // This solves conflict between jest and mocha: https://github.com/cypress-io/cypress/issues/7435#issuecomment-631695007
   },
   "include": ["src/**/*", "../../core/**/*.ts", "../../core/**/*.d.ts"],

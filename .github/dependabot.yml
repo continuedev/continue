@@ -87,6 +87,11 @@ updates:
       # @vitest/* and esbuild together by hand.
       - dependency-name: vitest
         update-types: ["version-update:semver-major"]
+      # svg-builder 3.0.4's ESM build uses a directory import
+      # (dist/esm/elements/element.js -> "../content"), which Node rejects, so
+      # the extension's JumpManager/InlineTipManager tests cannot load it.
+      - dependency-name: svg-builder
+        update-types: ["version-update:semver-major"]
       - dependency-name: "@vitest/*"
         update-types: ["version-update:semver-major"]
     groups:

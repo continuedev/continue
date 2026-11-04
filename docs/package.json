@@ -18,7 +18,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@c15t/react": "^3.2.1",
+    "@c15t/react": "^3.2.2",
     "axios": "^1.13.6",
     "sharp": "^0.35.5",
     "tar-fs": "^3.1.2"

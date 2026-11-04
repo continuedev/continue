@@ -12,8 +12,8 @@ import {
   persistStore,
 } from "redux-persist";
 import { createFilter } from "redux-persist-transform-filter";
-import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
-import storage from "redux-persist/lib/storage";
+import autoMergeLevel2 from "redux-persist/es/stateReconciler/autoMergeLevel2";
+import storage from "redux-persist/es/storage";
 import { IdeMessenger, IIdeMessenger } from "../context/IdeMessenger";
 import blockedCallsReducer from "./slices/blockedCallsSlice";
 import configReducer from "./slices/configSlice";
