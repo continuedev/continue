@@ -23,6 +23,9 @@ export function mergePackages(
     ...(current.modeModels || incoming.modeModels
       ? { modeModels: { ...current.modeModels, ...incoming.modeModels } }
       : {}),
+    ...(current.rulesByMode || incoming.rulesByMode
+      ? { rulesByMode: { ...current.rulesByMode, ...incoming.rulesByMode } }
+      : {}),
     ...mergeToolPermissionsField(current, incoming),
     requestOptions: mergeConfigYamlRequestOptions(
       current.requestOptions,
@@ -130,6 +133,9 @@ export function mergeUnrolledAssistants(
     env: { ...current.env, ...incoming.env },
     ...(current.modeModels || incoming.modeModels
       ? { modeModels: { ...current.modeModels, ...incoming.modeModels } }
+      : {}),
+    ...(current.rulesByMode || incoming.rulesByMode
+      ? { rulesByMode: { ...current.rulesByMode, ...incoming.rulesByMode } }
       : {}),
     ...mergeToolPermissionsField(current, incoming),
     requestOptions: mergeConfigYamlRequestOptions(

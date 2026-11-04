@@ -10,6 +10,7 @@ import {
 import { ConfigHandler } from "./config/ConfigHandler";
 import { addModel, deleteModel } from "./config/util";
 import { saveModeModels } from "./config/yaml/saveModeModels";
+import { saveRulesByMode } from "./config/yaml/saveRulesByMode";
 import { evaluateToolPolicyWithRules } from "./tools/permissions/evaluate";
 import { addToolRule } from "./tools/permissions/addRule";
 import { autoReviewToolCall } from "./tools/permissions/auto/handler";
@@ -395,6 +396,21 @@ export class Core {
       }
       await this.configHandler.reloadConfig(
         "Mode models changed (config/setModeModels message)",
+      );
+      return { saved: true };
+    });
+
+    on("config/setRulesByMode", async (msg) => {
+      const saved = saveRulesByMode(msg.data);
+      if (!saved) {
+        void this.ide.showToast(
+          "warning",
+          "Per-mode rule switches are saved in config.yaml, and this profile has none.",
+        );
+        return { saved: false };
+      }
+      await this.configHandler.reloadConfig(
+        "Rules by mode changed (config/setRulesByMode message)",
       );
       return { saved: true };
     });

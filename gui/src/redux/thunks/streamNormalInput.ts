@@ -1,6 +1,7 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { LLMFullCompletionOptions, ModelDescription } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
+import { rulesEnabledForMode } from "core/llm/rules/rulesByMode";
 import { ToCoreProtocol } from "core/protocol";
 import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import { selectActiveTools } from "../selectors/selectActiveTools";
@@ -196,7 +197,9 @@ export const streamNormalInput = createAsyncThunk<
     const { messages, appliedRules, appliedRuleIndex } = constructMessages(
       withoutMessageIds,
       systemMessage,
-      state.config.config.rules,
+      rulesEnabledForMode(state.config.config.rulesByMode, state.session.mode)
+        ? state.config.config.rules
+        : [],
       state.ui.ruleSettings,
       systemToolsFramework,
     );

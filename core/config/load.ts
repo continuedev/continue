@@ -659,6 +659,7 @@ async function finalToBrowserConfig(
       ]),
     ) as Record<ModelRole, ModelDescription | null>, // TODO better types here
     modeModels: final.modeModels,
+    rulesByMode: final.rulesByMode,
     // data not included here because client doesn't need
   };
 }

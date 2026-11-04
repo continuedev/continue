@@ -399,6 +399,7 @@ export async function unrollBlocks(
     | "env"
     | "requestOptions"
     | "modeModels"
+    | "rulesByMode"
     | "toolPermissions"
   >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 

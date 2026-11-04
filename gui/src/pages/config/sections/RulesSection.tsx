@@ -43,6 +43,7 @@ import {
 } from "../../../redux/slices/uiSlice";
 import { fontSize } from "../../../util";
 import { ConfigHeader } from "../components/ConfigHeader";
+import { RulesByModeToggles } from "./RulesByModeToggles";
 
 interface PromptCommandWithSlug extends SlashCommandDescWithSource {
   slug?: string;
@@ -494,6 +495,7 @@ function RulesSubSection() {
       />
 
       <Card>
+        <RulesByModeToggles />
         {sortedRules.length > 0 ? (
           <div className="flex flex-col gap-3">
             {sortedRules.map((rule, index) => (

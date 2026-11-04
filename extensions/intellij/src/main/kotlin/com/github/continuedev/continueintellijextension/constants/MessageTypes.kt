@@ -90,6 +90,7 @@ class MessageTypes {
             "config/getSerializedProfileInfo",
             "config/deleteModel",
             "config/setModeModels",
+            "config/setRulesByMode",
             "config/addToolRule",
             "tools/suggestAllowRule",
             "config/refreshProfiles",

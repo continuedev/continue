@@ -359,6 +359,7 @@ export async function configYamlToContinueConfig(options: {
   );
   continueConfig.modeModels = modeModelsResult.modeModels;
   localErrors.push(...modeModelsResult.errors);
+  continueConfig.rulesByMode = config.rulesByMode;
 
   // Tool rules. Kept even when some entries are unreadable: those are skipped
   // and reported, rather than failing the config.

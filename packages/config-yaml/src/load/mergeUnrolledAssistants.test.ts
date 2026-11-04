@@ -3,6 +3,20 @@ import { AssistantUnrolled } from "../schemas/index.js";
 import { mergeUnrolledAssistants } from "./merge.js";
 
 describe("mergeUnrolledAssistants", () => {
+  it("merges rulesByMode, the incoming mode winning", () => {
+    const base = { name: "a", version: "1.0.0", rulesByMode: { chat: false } };
+    const merged = mergeUnrolledAssistants(base, {
+      name: "b",
+      version: "1.0.0",
+      rulesByMode: { chat: true, plan: false },
+    });
+    expect(merged.rulesByMode).toEqual({ chat: true, plan: false });
+    expect(
+      mergeUnrolledAssistants(base, { name: "b", version: "1.0.0" })
+        .rulesByMode,
+    ).toEqual({ chat: false });
+  });
+
   const createBaseConfig = (): AssistantUnrolled => ({
     name: "Base Assistant",
     version: "1.0.0",

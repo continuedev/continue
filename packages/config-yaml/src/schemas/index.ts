@@ -130,6 +130,17 @@ export const modeModelsSchema = z.object({
 export type ModeModels = z.infer<typeof modeModelsSchema>;
 
 /**
+ * Whether rules are sent in each chat mode. A mode left out is enabled, so
+ * `rulesByMode: { chat: false }` turns rules off in Chat only.
+ */
+export const rulesByModeSchema = z.object({
+  chat: z.boolean().optional(),
+  agent: z.boolean().optional(),
+  plan: z.boolean().optional(),
+});
+export type RulesByMode = z.infer<typeof rulesByModeSchema>;
+
+/**
  * Rules for tool calls, written `toolName(pattern)` or a bare `toolName`.
  * Deny always wins over ask, and ask over allow. `auto` only configures the
  * experimental reviewer (Auto mode) and never loosens a rule. See plans/tool-auto-approval.md.
@@ -175,6 +186,7 @@ export const baseConfigYamlSchema = z.object({
     .and(commonMetadataSchema.partial())
     .optional(),
   modeModels: modeModelsSchema.optional(),
+  rulesByMode: rulesByModeSchema.optional(),
   toolPermissions: toolPermissionsSchema.optional(),
   env: envRecord.optional(),
   requestOptions: requestOptionsSchema.optional(),
