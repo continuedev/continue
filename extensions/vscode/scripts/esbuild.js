@@ -4,6 +4,9 @@ const { writeBuildTimestamp } = require("./utils");
 const {
   jsdomDefaultStylesheetPlugin,
 } = require("../../../scripts/util/esbuild-jsdom-stylesheet");
+const {
+  transformersJsPlugin,
+} = require("../../../scripts/util/esbuild-transformers-js");
 
 const esbuild = require("esbuild");
 
@@ -30,6 +33,7 @@ const esbuildConfig = {
   metafile: true,
   plugins: [
     jsdomDefaultStylesheetPlugin,
+    transformersJsPlugin,
     {
       name: "on-end-plugin",
       setup(build) {

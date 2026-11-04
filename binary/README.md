@@ -12,7 +12,7 @@ The build process is otherwise defined entirely in `build.js`.
 - @lancedb/\*\*
 - esbuild?
 - @esbuild?
-- onnxruntime-node?
+- onnxruntime-node (not packaged: transformers.js embeddings are VS Code only)
 
 ### List of dynamically imported modules
 

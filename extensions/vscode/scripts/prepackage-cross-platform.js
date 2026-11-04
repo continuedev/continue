@@ -14,6 +14,7 @@ const {
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
+const { onnxRuntimeFilesToValidate } = require("./onnxruntime");
 const { generateAndCopyConfigYamlSchema } = require("./generate-copy-config");
 const { npmInstall } = require("./npm-install");
 const { installRipgrepBinary } = require("./ripgrep");
@@ -137,15 +138,8 @@ async function package(target, os, arch, exe) {
     // Queries used for @outline and @highlights context providers
     "tag-qry/tree-sitter-c_sharp-tags.scm",
 
-    // onnx runtime bindngs
-    `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
-    `bin/napi-v3/${os}/${arch}/${
-      os === "darwin"
-        ? "libonnxruntime.1.14.0.dylib"
-        : os === "linux"
-          ? "libonnxruntime.so.1.14.0"
-          : "onnxruntime.dll"
-    }`,
+    // onnx runtime bindings and shared library (names depend on the onnxruntime-node version)
+    ...onnxRuntimeFilesToValidate(os, arch),
 
     // Code/styling for the sidebar
     "gui/assets/index.js",

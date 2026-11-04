@@ -55,14 +55,11 @@ updates:
       # Bump uuid itself (types are then bundled) and drop @types/uuid together.
       - dependency-name: "@types/uuid"
         update-types: ["version-update:semver-major"]
-      # onnxruntime-* are exact-pinned (1.14.0) to match @xenova/transformers. Dependabot files
-      # 1.14 -> 1.31 as a "minor", but it changes the native layout the extension/binary
-      # packaging expects (bin/napi-v3/<os>/<arch>/libonnxruntime.so.1.14.0 ...): the
-      # vscode-package-extension and jetbrains jobs fail with "The following files were missing".
-      # Move them with the @xenova/transformers -> @huggingface/transformers migration.
-      - dependency-name: onnxruntime-node
-      - dependency-name: onnxruntime-common
-      - dependency-name: onnxruntime-web
+      # @huggingface/transformers 4 pins onnxruntime-node >= 1.24, which no longer ships macOS x64
+      # binaries (core/node_modules/onnxruntime-node/bin/napi-v6/darwin/ has arm64 only), and we
+      # still publish a darwin-x64 VSIX. Stay on 3.x until that target is dropped.
+      - dependency-name: "@huggingface/transformers"
+        update-types: ["version-update:semver-major"]
       # The OpenTelemetry 0.x packages (sdk-node, exporters, instrumentation) version together and
       # their peer range on @opentelemetry/api moves with every 0.x minor: sdk-node 0.300 needs
       # api >=1.10 while @opentelemetry/resources 2.12 needs api <1.10, so `npm ci` in

@@ -12,6 +12,10 @@ const noMinify = args.includes("--no-minify");
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// transformers.js: stubs sharp and keeps the onnxruntime-node native binding a runtime require
+const { transformersJsPlugin } = createRequire(import.meta.url)(
+  "../../scripts/util/esbuild-transformers-js.js",
+);
 // jsdom >= 25 reads its default stylesheet from disk, which breaks in a bundle
 const { jsdomDefaultStylesheetPlugin } = createRequire(import.meta.url)(
   "../../scripts/util/esbuild-jsdom-stylesheet.js",
@@ -50,7 +54,11 @@ try {
     sourcemap: true,
     minify: !noMinify, // Use --no-minify flag to control minification
     metafile: true,
-    plugins: [optionalDevtoolsPlugin, jsdomDefaultStylesheetPlugin],
+    plugins: [
+      optionalDevtoolsPlugin,
+      jsdomDefaultStylesheetPlugin,
+      transformersJsPlugin,
+    ],
 
     // Handle .js extensions in imports
     resolveExtensions: [".ts", ".tsx", ".js", ".jsx", ".json"],

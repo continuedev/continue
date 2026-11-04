@@ -2,35 +2,41 @@ import path from "path";
 
 import { LLMOptions } from "../../index.js";
 import { BaseLLM } from "../../llm/index.js";
-// @ts-ignore
-// prettier-ignore
-import { type PipelineType } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
 
 class EmbeddingsPipeline {
-  static task: PipelineType = "feature-extraction";
+  static task = "feature-extraction" as const;
   static model = "all-MiniLM-L6-v2";
   static instance: any | null = null;
 
+  /**
+   * Directory that contains the `all-MiniLM-L6-v2` model folder. When unset it
+   * is `<extension>/models`, next to the bundled `out/` directory. Tests that
+   * run from the source tree point it at `extensions/vscode/models`.
+   */
+  static localModelPath: string | undefined = undefined;
+
   static async getInstance() {
     if (EmbeddingsPipeline.instance === null) {
-      // @ts-ignore
-      // prettier-ignore
-      const { env, pipeline } = await import("../../vendor/modules/@xenova/transformers/src/transformers.js");
+      const { env, pipeline } = await import("@huggingface/transformers");
 
       env.allowLocalModels = true;
       env.allowRemoteModels = false;
-      env.localModelPath = path.join(
-        typeof __dirname === "undefined"
-          ? // @ts-ignore
-            path.dirname(new URL(import.meta.url).pathname)
-          : __dirname,
-        "..",
-        "models",
-      );
+      env.localModelPath =
+        EmbeddingsPipeline.localModelPath ??
+        path.join(
+          typeof __dirname === "undefined"
+            ? // @ts-ignore
+              path.dirname(new URL(import.meta.url).pathname)
+            : __dirname,
+          "..",
+          "models",
+        );
 
       EmbeddingsPipeline.instance = await pipeline(
         EmbeddingsPipeline.task,
         EmbeddingsPipeline.model,
+        // The bundled model is the 8-bit quantized export (onnx/model_quantized.onnx)
+        { dtype: "q8" },
       );
     }
 
@@ -47,6 +53,12 @@ export class TransformersJsEmbeddingsProvider extends BaseLLM {
   static defaultOptions: Partial<LLMOptions> | undefined = {
     model: TransformersJsEmbeddingsProvider.model,
   };
+
+  /** Overrides the directory the embeddings model is loaded from (tests). */
+  static setLocalModelPath(modelsDir: string | undefined) {
+    EmbeddingsPipeline.localModelPath = modelsDir;
+    EmbeddingsPipeline.instance = null;
+  }
 
   constructor() {
     super({
