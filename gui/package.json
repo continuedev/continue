@@ -32,7 +32,6 @@
     "@tiptap/pm": "^3.32.2",
     "@tiptap/react": "^3.32.2",
     "@tiptap/suggestion": "^3.32.2",
-    "@types/diff": "^7.0.2",
     "@types/uuid": "^10.0.0",
     "anser": "^2.3.2",
     "clsx": "^2.1.1",
