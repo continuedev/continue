@@ -30,9 +30,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "watch:logs": "touch ~/.continue/logs/cn.log && tail -f ~/.continue/logs/cn.log",
-    "prepare": "npm run build",
-    "semantic-release": "semantic-release",
-    "semantic-release:dry-run": "semantic-release --dry-run"
+    "prepare": "npm run build"
   },
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
@@ -63,10 +61,6 @@
     "@opentelemetry/resources": "^3.0.0",
     "@opentelemetry/sdk-node": "^0.300.0",
     "@opentelemetry/semantic-conventions": "^1.44.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^11.0.3",
-    "@semantic-release/npm": "^13.2.0",
     "@testing-library/react": "^16.3.0",
     "@types/date-fns": "^2.6.3",
     "@types/express": "^5.0.3",
@@ -109,7 +103,6 @@
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "react": "^19.1.0",
-    "semantic-release": "^25.0.9",
     "shell-quote": "^1.8.3",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
@@ -123,7 +116,7 @@
     "node": ">=18"
   },
   "overrides": {
-    "minimatch@<9.0.7": "^9.0.7",
+    "minimatch": "^11.0.4",
     "qs": "^6.14.2",
     "picomatch": "^4.0.2",
     "openai": {
