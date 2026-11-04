@@ -4,6 +4,8 @@ Continued is an unofficial, community-maintained fork of the Continue VS Code ex
 
 Continued is not affiliated with Continue Dev, Inc.
 
+**Requirements:** VS Code 1.105 or newer (or a VS Code-based editor built on it). Older versions cannot load the extension and will refuse to install it, so they keep the previously installed version.
+
 ## Option 1: install a build
 
 There are no GitHub Releases for this fork yet, so builds come from GitHub Actions artifacts (see [Option 2](#option-2-download-a-build-from-github-actions)). Once releases are published, download the `.vsix` for your platform from the release page instead:
