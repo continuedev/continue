@@ -1,0 +1,44 @@
+---
+title: "IO Intelligence"
+description: "Configure IO Intelligence from io.net with Continue to run open-weight models such as Llama, DeepSeek and Qwen through an OpenAI-compatible API"
+---
+
+IO Intelligence is the hosted inference API from [io.net](https://io.net/). It serves open-weight models through an OpenAI-compatible endpoint, with streaming and tool calling.
+
+<Info>
+  Create an account at [io.net](https://io.net/) and follow the [API keys guide](https://io.net/docs/guides/intelligence/api-keys-and-secrets) to get an API key.
+</Info>
+
+## Chat model
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Llama 3.3 70B
+      provider: ionet
+      model: meta-llama/Llama-3.3-70B-Instruct
+      apiKey: <YOUR_IONET_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Llama 3.3 70B",
+        "provider": "ionet",
+        "model": "meta-llama/Llama-3.3-70B-Instruct",
+        "apiKey": "<YOUR_IONET_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+Any model ID returned by the IO Intelligence models endpoint works in the `model` field, for example `deepseek-ai/DeepSeek-R1-0528`.

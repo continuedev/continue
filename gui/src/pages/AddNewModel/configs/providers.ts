@@ -1270,6 +1270,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  ionet: {
+    title: "IO Intelligence",
+    provider: "ionet",
+    description:
+      "IO Intelligence is the hosted inference API from io.net, serving open-weight models such as Llama, DeepSeek and Qwen through an OpenAI-compatible endpoint.",
+    longDescription:
+      "To get started with IO Intelligence, create an account at [io.net](https://io.net/) and follow the [API keys guide](https://io.net/docs/guides/intelligence/api-keys-and-secrets).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your IO Intelligence API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://io.net/docs/guides/intelligence/api-keys-and-secrets",
+  },
   venice: {
     title: "Venice",
     provider: "venice",
