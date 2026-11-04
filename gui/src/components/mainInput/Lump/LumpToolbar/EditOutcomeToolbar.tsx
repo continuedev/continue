@@ -15,7 +15,7 @@ export function EditOutcomeToolbar() {
 
   return (
     <div className="flex items-center justify-between py-0.5 text-xs text-description-muted">
-      <div className="rounded bg-badge px-1.5">
+      <div className="rounded-sm bg-badge px-1.5">
         <span>{`${editApplyState.numDiffs} diff${editApplyState.numDiffs !== 1 ? "s" : ""}`}</span>
       </div>
       <AcceptRejectDiffButtons

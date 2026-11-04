@@ -41,7 +41,7 @@ export function ConfigsSection() {
               <div key={profile.id}>
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-baseline gap-3">
-                    <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center">
                       <AssistantIcon assistant={profile} />
                     </div>
                     <div className="flex flex-1 flex-col gap-2">
@@ -73,7 +73,7 @@ export function ConfigsSection() {
                                 error.fatal
                                   ? "bg-error/10 text-error"
                                   : "bg-yellow-500/10 text-yellow-500"
-                              } break-all rounded border border-solid border-transparent px-2 py-1 text-xs ${error.uri ? "cursor-pointer " + (error.fatal ? "hover:border-error" : "hover:border-yellow-500") : ""}`}
+                              } rounded-sm border border-solid border-transparent px-2 py-1 text-xs break-all ${error.uri ? "cursor-pointer " + (error.fatal ? "hover:border-error" : "hover:border-yellow-500") : ""}`}
                             >
                               {error.message.split("\n")[0]}
                             </div>
@@ -89,7 +89,7 @@ export function ConfigsSection() {
                       size="sm"
                       className="my-0 h-6 w-6 p-0 text-description-muted hover:enabled:text-foreground"
                     >
-                      <Cog6ToothIcon className="h-4 w-4 flex-shrink-0" />
+                      <Cog6ToothIcon className="h-4 w-4 shrink-0" />
                     </Button>
                   </ToolTip>
                 </div>

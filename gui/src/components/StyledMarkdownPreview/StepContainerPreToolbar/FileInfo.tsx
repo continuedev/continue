@@ -22,7 +22,7 @@ export const FileInfo = ({ filepath, range, onClick }: FileInfoProps) => {
       place="top-end"
     >
       <div
-        className={`flex select-none flex-row items-center gap-0.5 ${onClick && "cursor-pointer hover:underline"}`}
+        className={`flex flex-row items-center gap-0.5 select-none ${onClick && "cursor-pointer hover:underline"}`}
         onClick={onClick}
       >
         <div>

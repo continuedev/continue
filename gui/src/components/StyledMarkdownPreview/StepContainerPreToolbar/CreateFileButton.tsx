@@ -13,12 +13,12 @@ export function CreateFileButton({ onClick }: CreateFileButtonProps) {
       <HoverItem className="!p-0">
         <button
           data-testid="codeblock-toolbar-create"
-          className={`flex items-center border-none bg-transparent pl-0 text-xs text-lightgray text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
+          className={`flex items-center border-none bg-transparent pl-0 text-xs text-lightgray text-[${vscForeground}] cursor-pointer outline-hidden hover:brightness-125`}
           onClick={onClick}
         >
           <div className="flex items-center gap-1">
             <DocumentPlusIcon className="h-3.5 w-3.5 shrink-0" />
-            <span className="line-clamp-1 select-none break-all">
+            <span className="line-clamp-1 break-all select-none">
               Create file
             </span>
           </div>

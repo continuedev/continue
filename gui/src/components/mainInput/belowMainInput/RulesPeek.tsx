@@ -20,30 +20,30 @@ export function RulesPeekItem({ rule }: RulesPeekItemProps) {
 
   return (
     <div
-      className={`group mr-2 flex flex-col overflow-hidden rounded px-1.5 py-1 text-xs hover:bg-white/10`}
+      className={`group mr-2 flex flex-col overflow-hidden rounded-sm px-1.5 py-1 text-xs hover:bg-white/10`}
       data-testid="rules-peek-item"
       onClick={() => openRule(rule)}
     >
       <div className="flex w-full items-center">
         {isGlobal ? (
-          <GlobeAltIcon className="mr-2 h-4 w-4 flex-shrink-0 text-description-muted" />
+          <GlobeAltIcon className="mr-2 h-4 w-4 shrink-0 text-description-muted" />
         ) : (
-          <DocumentTextIcon className="mr-2 h-4 w-4 flex-shrink-0 text-description-muted" />
+          <DocumentTextIcon className="mr-2 h-4 w-4 shrink-0 text-description-muted" />
         )}
 
         <div className="flex min-w-0 flex-1 gap-2 text-xs">
-          <div className="max-w-[50%] flex-shrink-0 truncate font-medium">
+          <div className="max-w-[50%] shrink-0 truncate font-medium">
             {rule.name || "Agent rule"}
           </div>
 
-          <div className="min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-500">
+          <div className="min-w-0 flex-1 truncate overflow-hidden text-xs whitespace-nowrap text-gray-500">
             {isGlobal
               ? "Always applied"
               : `Pattern: ${typeof rule.globs === "string" ? rule.globs : Array.isArray(rule.globs) ? rule.globs.join(", ") : ""}`}
           </div>
         </div>
       </div>
-      <div className="mt-1 pl-6 pr-2 text-xs text-gray-500">
+      <div className="mt-1 pr-2 pl-6 text-xs text-gray-500">
         Source: {getRuleSourceDisplayName(rule)}
       </div>
     </div>

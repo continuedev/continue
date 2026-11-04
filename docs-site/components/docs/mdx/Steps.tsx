@@ -30,14 +30,14 @@ export function Step({
   return (
     <div className="relative pl-10">
       {/* Numbered circle */}
-      <div className="absolute left-0 top-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/[0.08] dark:bg-white/[0.1]">
+      <div className="absolute top-0.5 left-0 flex h-7 w-7 items-center justify-center rounded-full bg-black/[0.08] dark:bg-white/[0.1]">
         <span className="text-xs font-medium text-black/70 dark:text-white/70">
           {stepNumber}
         </span>
       </div>
       {/* Connecting line */}
       {!isLast && (
-        <div className="absolute bottom-0 left-[13px] top-8 w-[2px] bg-black/[0.08] dark:bg-white/[0.08]" />
+        <div className="absolute top-8 bottom-0 left-[13px] w-[2px] bg-black/[0.08] dark:bg-white/[0.08]" />
       )}
       {/* Content */}
       <div className={isLast ? "" : "pb-8"}>

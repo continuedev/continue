@@ -47,7 +47,7 @@ export function ToggleWithIcon({
 
   return (
     <div
-      className={`flex h-4 w-4 flex-shrink-0 flex-col items-center justify-center ${className}`}
+      className={`flex h-4 w-4 shrink-0 flex-col items-center justify-center ${className}`}
       onClick={isToggleable || isClickable ? handleClick : undefined}
       onMouseEnter={isToggleable ? () => setIsHovered(true) : undefined}
       onMouseLeave={isToggleable ? () => setIsHovered(false) : undefined}

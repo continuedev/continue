@@ -36,13 +36,13 @@ export function RecentlyBlocked() {
             <div
               key={item.id}
               data-testid={`blocked-${item.id}`}
-              className="flex flex-col gap-0.5 rounded border border-solid border-command-border px-1 py-0.5"
+              className="flex flex-col gap-0.5 rounded-sm border border-solid border-command-border px-1 py-0.5"
             >
               <div className="flex items-center gap-1">
                 <code className="min-w-0 flex-1 truncate" title={item.summary}>
                   {item.summary}
                 </code>
-                <span className="flex-shrink-0 text-error">
+                <span className="shrink-0 text-error">
                   {decisionLabel({
                     outcome: "blocked",
                     source: item.source,
@@ -51,14 +51,14 @@ export function RecentlyBlocked() {
                 </span>
                 {canAllowOnce(item) &&
                   (item.allowedOnce ? (
-                    <span className="flex-shrink-0 text-description-muted">
+                    <span className="shrink-0 text-description-muted">
                       Allowed once. Ask the agent to try again.
                     </span>
                   ) : (
                     <button
                       type="button"
                       data-testid={`allow-once-${item.id}`}
-                      className="flex-shrink-0 cursor-pointer rounded border-none bg-lightgray/20 px-1 text-2xs text-foreground"
+                      className="shrink-0 cursor-pointer rounded-sm border-none bg-lightgray/20 px-1 text-2xs text-foreground"
                       onClick={() => dispatch(allowBlockedOnce(item.id))}
                     >
                       Allow once

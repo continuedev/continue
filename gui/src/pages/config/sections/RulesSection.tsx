@@ -200,7 +200,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const tinyFont = fontSize(-3);
   return (
     <div
-      className={`flex flex-col rounded-sm border-border px-2 py-1.5 transition-colors ${isDisabled ? "opacity-50" : ""}`}
+      className={`flex flex-col rounded-xs border-border px-2 py-1.5 transition-colors ${isDisabled ? "opacity-50" : ""}`}
     >
       <div className="flex flex-col">
         <div className="flex flex-row justify-between gap-1">

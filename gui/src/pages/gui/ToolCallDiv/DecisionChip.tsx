@@ -50,7 +50,7 @@ export function DecisionChip({
       data-testid="decision-chip"
       data-outcome={decision.outcome}
       title={detail || undefined}
-      className={`flex-shrink-0 whitespace-nowrap rounded-full px-1.5 text-2xs ${
+      className={`shrink-0 rounded-full px-1.5 text-2xs whitespace-nowrap ${
         blocked ? "bg-error/20 text-error" : "bg-lightgray/20 text-description"
       }`}
     >

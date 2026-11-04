@@ -12,7 +12,7 @@ export interface DetailsProps {
 
 function renderCell(children: React.ReactNode) {
   return (
-    <div className="border-0 border-r-2 border-solid border-[color:var(--vscode-panel-border)] pl-2 pr-2 text-sm">
+    <div className="border-0 border-r-2 border-solid border-[color:var(--vscode-panel-border)] pr-2 pl-2 text-sm">
       {children}
     </div>
   );
@@ -129,7 +129,7 @@ export default function Details({ interaction }: DetailsProps) {
         onScroll={handleScroll}
       >
         {interaction.start ? <Start item={interaction.start}></Start> : ""}
-        <div className="whitespace-pre-wrap p-2">
+        <div className="p-2 whitespace-pre-wrap">
           {interaction.results.map((group, i) => {
             return <ResultGroup key={i} group={group}></ResultGroup>;
           })}

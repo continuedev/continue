@@ -22,7 +22,7 @@ export function ApplyActions(props: ApplyActionsProps) {
   switch (props.applyState ? props.applyState.status : null) {
     case "streaming":
       return (
-        <div className="flex select-none items-center rounded bg-badge pl-2 pr-1">
+        <div className="flex items-center rounded-sm bg-badge pr-1 pl-2 select-none">
           <span className="inline-flex items-center gap-2 text-center text-xs text-lightgray">
             Applying
             <Spinner />
@@ -31,7 +31,7 @@ export function ApplyActions(props: ApplyActionsProps) {
       );
     case "done":
       return (
-        <div className="flex select-none items-center rounded bg-badge sm:gap-1 md:px-1.5">
+        <div className="flex items-center rounded-sm bg-badge select-none sm:gap-1 md:px-1.5">
           <span className="flex items-center text-center text-xs text-lightgray max-md:hidden">
             {`${props.applyState?.numDiffs === 1 ? "1 diff" : `${props.applyState?.numDiffs} diffs`}`}
           </span>
@@ -42,7 +42,7 @@ export function ApplyActions(props: ApplyActionsProps) {
               onClick={onClickReject}
               tooltipContent={`Reject all (${getMetaKeyLabel()}⇧⌫)`}
             >
-              <XMarkIcon className="h-3.5 w-3.5 flex-shrink-0 text-error hover:brightness-125" />
+              <XMarkIcon className="h-3.5 w-3.5 shrink-0 text-error hover:brightness-125" />
             </ToolbarButtonWithTooltip>
 
             <ToolbarButtonWithTooltip
@@ -50,7 +50,7 @@ export function ApplyActions(props: ApplyActionsProps) {
               onClick={props.onClickAccept}
               tooltipContent={`Accept all (${getMetaKeyLabel()}⇧⏎)`}
             >
-              <CheckIcon className="h-3.5 w-3.5 flex-shrink-0 text-success hover:brightness-125" />
+              <CheckIcon className="h-3.5 w-3.5 shrink-0 text-success hover:brightness-125" />
             </ToolbarButtonWithTooltip>
           </div>
         </div>
@@ -69,7 +69,7 @@ export function ApplyActions(props: ApplyActionsProps) {
           >
             <button
               data-testid="codeblock-toolbar-apply"
-              className="flex cursor-pointer items-center border-none bg-transparent pl-0 text-xs text-lightgray outline-none hover:brightness-125"
+              className="flex cursor-pointer items-center border-none bg-transparent pl-0 text-xs text-lightgray outline-hidden hover:brightness-125"
               onClick={props.onClickApply}
             >
               <div className="flex items-center gap-1 text-lightgray">

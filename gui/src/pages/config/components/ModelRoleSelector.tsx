@@ -71,7 +71,7 @@ const ModelRoleSelector = ({
           {models.length === 0 ? (
             <ListboxButton
               onClick={() => ideMessenger.post("openUrl", setupURL)}
-              className="w-full justify-between rounded border border-command-border bg-input px-2 py-1.5 text-description underline hover:bg-list-active hover:text-list-active-foreground hover:underline"
+              className="w-full justify-between rounded-sm border border-command-border bg-input px-2 py-1.5 text-description underline hover:bg-list-active hover:text-list-active-foreground hover:underline"
             >
               <span className="line-clamp-1" style={{ fontSize: fontSize(-1) }}>
                 Setup {displayName} model
@@ -81,10 +81,10 @@ const ModelRoleSelector = ({
             <>
               <ListboxButton
                 disabled={models.length === 0}
-                className="w-full justify-between rounded border border-command-border bg-input px-2 py-1.5 hover:bg-list-active hover:text-list-active-foreground"
+                className="w-full justify-between rounded-sm border border-command-border bg-input px-2 py-1.5 hover:bg-list-active hover:text-list-active-foreground"
               >
                 {models.length === 0 || noConfiguredModels ? (
-                  <span className="line-clamp-1 italic text-lightgray">
+                  <span className="line-clamp-1 text-lightgray italic">
                     {`No ${models.length === 0 ? "" : "valid "}${displayName} models${
                       ["Chat", "Apply", "Edit"].includes(displayName)
                         ? ". Using Chat model"
@@ -143,7 +143,7 @@ const ModelRoleSelector = ({
                         >
                           <div className="flex w-full items-center justify-between gap-2">
                             <div className="flex min-w-0 flex-1 items-center gap-2">
-                              <CubeIcon className="h-3 w-3 flex-shrink-0" />
+                              <CubeIcon className="h-3 w-3 shrink-0" />
                               <span
                                 className="line-clamp-1 truncate"
                                 style={{ fontSize: fontSize(-1) }}
@@ -157,7 +157,7 @@ const ModelRoleSelector = ({
                               </span>
                             </div>
 
-                            <div className="flex-shrink-0">
+                            <div className="shrink-0">
                               {option.title === selectedModel?.title && (
                                 <CheckIcon className="h-3 w-3" />
                               )}

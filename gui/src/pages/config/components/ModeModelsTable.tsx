@@ -134,7 +134,7 @@ export function ModeModelsTable() {
                       ),
                     )
                   }
-                  className="rounded border border-command-border bg-input px-1 py-0.5 text-xs"
+                  className="rounded-sm border border-command-border bg-input px-1 py-0.5 text-xs"
                 >
                   {EFFORTS.map((o) => (
                     <option key={o.value} value={o.value}>

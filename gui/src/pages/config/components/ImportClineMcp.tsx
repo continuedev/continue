@@ -134,7 +134,7 @@ function ImportDialog({ sources }: { sources: McpImportPreviewSource[] }) {
           ))}
         </select>
       )}
-      <p className="mb-2 break-all text-xs text-description">{source.path}</p>
+      <p className="mb-2 text-xs break-all text-description">{source.path}</p>
 
       {source.error && <p className="text-sm text-error">{source.error}</p>}
       {importable.length === 0 && !source.error && (

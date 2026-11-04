@@ -17,7 +17,7 @@ export const ArgsToggleIcon = ({
         setIsShowing(!isShowing);
       }}
     >
-      <CodeBracketIcon className="h-3 w-3 flex-shrink-0 opacity-60" />
+      <CodeBracketIcon className="h-3 w-3 shrink-0 opacity-60" />
     </ToolbarButtonWithTooltip>
   );
 };
@@ -37,7 +37,7 @@ export const ArgsItems = ({ args, isShowing }: ArgsItemsProps) => {
   }
 
   return (
-    <div className="ml-5 mr-2 mt-1 flex flex-col text-xs">
+    <div className="mt-1 mr-2 ml-5 flex flex-col text-xs">
       {args.map(([key, value]) => (
         <div key={key} className="flex flex-row items-center gap-2 py-0.5">
           <span className="text-lightgray">{key}:</span>

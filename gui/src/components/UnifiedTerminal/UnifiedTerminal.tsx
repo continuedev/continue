@@ -311,7 +311,7 @@ function CollapsibleOutputContainer({
     <div className="relative">
       {/* Gradient overlay when collapsed */}
       {!isExpanded && (
-        <div className="pointer-events-none absolute left-0 right-0 top-0 z-[5] h-[100px] rounded-t-md bg-gradient-to-b from-editor to-transparent" />
+        <div className="pointer-events-none absolute top-0 right-0 left-0 z-[5] h-[100px] rounded-t-md bg-gradient-to-b from-editor to-transparent" />
       )}
 
       <div onClick={onToggle} className="cursor-pointer">
@@ -435,11 +435,11 @@ export function UnifiedTerminalCommand({
           <div className="flex max-w-[50%] flex-row items-center">
             <ChevronDownIcon
               onClick={() => setIsExpanded(!isExpanded)}
-              className={`h-3.5 w-3.5 flex-shrink-0 cursor-pointer text-description hover:brightness-125 ${
+              className={`h-3.5 w-3.5 shrink-0 cursor-pointer text-description hover:brightness-125 ${
                 isExpanded ? "rotate-0" : "-rotate-90"
               }`}
             />
-            <span className="ml-2 select-none text-description">Terminal</span>
+            <span className="ml-2 text-description select-none">Terminal</span>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -509,7 +509,7 @@ export function UnifiedTerminalCommand({
         {/* Status information */}
         {(statusMessage || isRunning) && (
           <div
-            className="flex items-center px-2 pb-2 pt-2 text-xs text-description"
+            className="flex items-center px-2 pt-2 pb-2 text-xs text-description"
             style={{
               borderTop:
                 "1px solid var(--vscode-commandCenter-inactiveBorder, #555555)",

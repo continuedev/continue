@@ -2,6 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { telemetryService } from "./telemetryService.js";
 
+// Module mocks are hoisted above the imports; they live at the top level so
+// their position matches when they run (vitest 5 rejects nested vi.mock).
+vi.mock("../util/logger.js", () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
 describe("TelemetryService - Session Metadata", () => {
   let originalEnv: NodeJS.ProcessEnv;
   let originalArgv: string[];
@@ -10,16 +21,6 @@ describe("TelemetryService - Session Metadata", () => {
     // Save original environment and argv
     originalEnv = { ...process.env };
     originalArgv = [...process.argv];
-
-    // Mock logger to prevent console output during tests
-    vi.mock("../util/logger.js", () => ({
-      logger: {
-        debug: vi.fn(),
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-      },
-    }));
 
     // Enable telemetry for tests
     process.env.CONTINUE_CLI_ENABLE_TELEMETRY = "1";

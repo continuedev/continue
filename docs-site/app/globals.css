@@ -1,3 +1,31 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* darkMode: "class" (Tailwind 3) */
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Tailwind 4's preflight changed three defaults that this site relied on.
+  These keep the Tailwind 3 look (see the v4 upgrade guide):
+  - borders default to currentcolor (v3: gray-200)
+  - placeholders use the text colour at 50% (v3: gray-400)
+  - buttons get cursor: default (v3: pointer)
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}

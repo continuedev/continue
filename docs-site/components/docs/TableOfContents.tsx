@@ -29,8 +29,8 @@ export function TableOfContents({ headings }: { headings: Heading[] }) {
   if (headings.length === 0) return null;
 
   return (
-    <aside className="hidden w-56 flex-shrink-0 overflow-y-auto px-4 pb-8 pt-8 xl:block">
-      <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-black/30 dark:text-white/30">
+    <aside className="hidden w-56 shrink-0 overflow-y-auto px-4 pt-8 pb-8 xl:block">
+      <h4 className="mb-3 text-xs font-medium tracking-wider text-black/30 uppercase dark:text-white/30">
         On this page
       </h4>
       <nav className="space-y-1">

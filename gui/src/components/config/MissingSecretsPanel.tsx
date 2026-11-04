@@ -51,7 +51,7 @@ export function MissingSecretsPanel({
       data-testid="missing-secrets-panel"
     >
       <div className="flex items-center gap-1.5 font-medium">
-        <KeyIcon className="h-3.5 w-3.5 flex-shrink-0 text-warning" />
+        <KeyIcon className="h-3.5 w-3.5 shrink-0 text-warning" />
         <span>
           {missing.length === 1
             ? "A key is not set on this machine"

@@ -50,14 +50,14 @@ export function SelectedAssistantButton({
               {selectedProfile.iconUrl && (
                 <AssistantIcon assistant={selectedProfile} size={iconSize} />
               )}
-              <span className={`hidden select-none text-xs xs:line-clamp-1`}>
+              <span className={`hidden text-xs select-none xs:line-clamp-1`}>
                 {selectedProfile.title}
               </span>
             </>
           )}
         </div>
         <ChevronDownIcon
-          className={`ml-0.5 h-3 w-3 flex-shrink-0 select-none text-description ${isSidebar && "hidden md:block"}`}
+          className={`ml-0.5 h-3 w-3 shrink-0 text-description select-none ${isSidebar && "hidden md:block"}`}
           aria-hidden="true"
         />
       </div>

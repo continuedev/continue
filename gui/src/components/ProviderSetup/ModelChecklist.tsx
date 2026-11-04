@@ -25,7 +25,7 @@ function Row({
 }) {
   return (
     <label
-      className="flex cursor-pointer items-start gap-2 rounded px-1 py-1 text-xs hover:bg-input"
+      className="flex cursor-pointer items-start gap-2 rounded-sm px-1 py-1 text-xs hover:bg-input"
       data-testid={`model-row-${row.model}`}
     >
       <input
@@ -100,7 +100,7 @@ export function ModelChecklist({
 
   return (
     <div className="flex flex-col gap-2" data-testid="model-checklist">
-      <div className="flex items-center rounded border border-solid border-border bg-background pl-2">
+      <div className="flex items-center rounded-sm border border-solid border-border bg-background pl-2">
         <MagnifyingGlassIcon className="h-4 w-4 text-description-muted" />
         <input
           type="text"
@@ -108,7 +108,7 @@ export function ModelChecklist({
           placeholder="Search models..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full border-none bg-transparent px-2 py-1.5 text-xs text-foreground outline-none"
+          className="w-full border-none bg-transparent px-2 py-1.5 text-xs text-foreground outline-hidden"
         />
       </div>
       <div className="flex max-h-72 flex-col gap-3 overflow-y-auto">

@@ -42,12 +42,12 @@ export default function Layout() {
 
       {/* Full-screen popover for TotalUsage */}
       {showTotalUsage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="relative h-full w-full max-w-6xl overflow-hidden bg-[color:var(--vscode-panel-background)] shadow-2xl">
             {/* Close button */}
             <button
               onClick={() => setShowTotalUsage(false)}
-              className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--vscode-button-background)] text-[color:var(--vscode-button-foreground)] transition-colors hover:bg-[color:var(--vscode-button-hoverBackground)]"
+              className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--vscode-button-background)] text-[color:var(--vscode-button-foreground)] transition-colors hover:bg-[color:var(--vscode-button-hoverBackground)]"
             >
               ×
             </button>

@@ -29,10 +29,10 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
     <div
       className={`flex flex-col items-start p-3 sm:flex-row sm:items-center ${props.isEven ? "" : "bg-vsc-editor-background/50"}`}
     >
-      <div className="w-full flex-grow pb-2 pr-4 sm:w-auto sm:pb-0">
-        <span className="block break-words text-sm">{props.description}:</span>
+      <div className="w-full grow pr-4 pb-2 sm:w-auto sm:pb-0">
+        <span className="block text-sm break-words">{props.description}:</span>
       </div>
-      <div className="flex-shrink-0 whitespace-nowrap">
+      <div className="shrink-0 whitespace-nowrap">
         <Shortcut>{props.shortcut}</Shortcut>
       </div>
     </div>

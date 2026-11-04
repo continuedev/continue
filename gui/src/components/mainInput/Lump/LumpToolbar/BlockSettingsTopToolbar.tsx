@@ -96,7 +96,7 @@ export function BlockSettingsTopToolbar() {
                 className="flex items-center rounded-full px-1.5 py-1 sm:px-1.5"
               >
                 <ExclamationTriangleIcon
-                  className="h-[13px] w-[13px] flex-shrink-0 text-warning"
+                  className="h-[13px] w-[13px] shrink-0 text-warning"
                   aria-hidden="true"
                 />
               </MissingSecretsPopover>
@@ -124,10 +124,10 @@ export function BlockSettingsTopToolbar() {
                 }
               }}
               data-testid="block-settings-toolbar-icon-error"
-              className="relative flex cursor-pointer select-none items-center rounded-full px-1.5 py-1 sm:px-1.5"
+              className="relative flex cursor-pointer items-center rounded-full px-1.5 py-1 select-none sm:px-1.5"
             >
               <ExclamationTriangleIcon
-                className="h-[13px] w-[13px] flex-shrink-0 text-warning"
+                className="h-[13px] w-[13px] shrink-0 text-warning"
                 aria-hidden="true"
               />
             </div>

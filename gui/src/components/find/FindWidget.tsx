@@ -215,7 +215,7 @@ export const useFindWidget = (
   // Find widget component
   const widget = (
     <div
-      className={`fixed top-0 z-50 transition-all ${open ? "" : "-translate-y-full"} right-0 flex flex-row items-center gap-1.5 rounded-bl-lg border-0 border-b border-l border-solid border-zinc-700 bg-vsc-background pl-[3px] pr-3 sm:gap-2`}
+      className={`fixed top-0 z-50 transition-all ${open ? "" : "-translate-y-full"} right-0 flex flex-row items-center gap-1.5 rounded-bl-lg border-0 border-b border-l border-solid border-zinc-700 bg-vsc-background pr-3 pl-[3px] sm:gap-2`}
     >
       <Input
         disabled={disabled}
@@ -227,7 +227,7 @@ export const useFindWidget = (
         }}
         placeholder="Search..."
       />
-      <p className="hidden min-w-12 whitespace-nowrap px-1 text-center text-xs xs:block">
+      <p className="hidden min-w-12 px-1 text-center text-xs whitespace-nowrap xs:block">
         {matches.length === 0
           ? "No results"
           : `${(currentMatch?.index ?? 0) + 1} of ${matches.length}`}
@@ -240,7 +240,7 @@ export const useFindWidget = (
             e.stopPropagation();
             previousMatch();
           }}
-          className="h-4 w-4 focus:ring"
+          className="h-4 w-4 focus:ring-3"
           disabled={matches.length < 2 || disabled}
         >
           <ArrowUpIcon className="h-4 w-4" />
@@ -252,7 +252,7 @@ export const useFindWidget = (
             e.stopPropagation();
             nextMatch();
           }}
-          className="h-4 w-4 focus:ring"
+          className="h-4 w-4 focus:ring-3"
           disabled={matches.length < 2 || disabled}
         >
           <ArrowDownIcon className="h-4 w-4" />
@@ -271,7 +271,7 @@ export const useFindWidget = (
           e.stopPropagation();
           setCaseSensitive((curr) => !curr);
         }}
-        className="h-5 w-6 rounded-full border text-xs focus:outline-none focus:ring"
+        className="h-5 w-6 rounded-full border text-xs focus:ring-3 focus:outline-hidden"
       >
         Aa
       </HeaderButtonWithToolTip>
@@ -279,7 +279,7 @@ export const useFindWidget = (
       <HeaderButton
         inverted={false}
         onClick={() => setOpen(false)}
-        className="focus:ring"
+        className="focus:ring-3"
       >
         <XMarkIcon className="h-4 w-4" />
       </HeaderButton>

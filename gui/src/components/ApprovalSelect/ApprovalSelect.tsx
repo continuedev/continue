@@ -59,12 +59,9 @@ export function ApprovalSelect() {
         >
           {yolo && <ExclamationTriangleIcon className="h-2.5 w-2.5" />}
           <span>{APPROVAL_LABELS[shown]}</span>
-          <ChevronDownIcon
-            className="h-2 w-2 flex-shrink-0"
-            aria-hidden="true"
-          />
+          <ChevronDownIcon className="h-2 w-2 shrink-0" aria-hidden="true" />
         </ListboxButton>
-        <ListboxOptions className="min-w-40 max-w-64">
+        <ListboxOptions className="max-w-64 min-w-40">
           {options.map((mode) => {
             const unavailable = mode === "auto" && !status.available;
             return (
@@ -79,14 +76,14 @@ export function ApprovalSelect() {
                   <span className={mode === "yolo" ? "text-error" : ""}>
                     {APPROVAL_LABELS[mode]}
                   </span>
-                  <span className="whitespace-normal text-2xs text-description-muted">
+                  <span className="text-2xs whitespace-normal text-description-muted">
                     {unavailable
                       ? `Not available. ${status.unavailableReason ?? ""}`
                       : APPROVAL_DESCRIPTIONS[mode]}
                   </span>
                 </div>
                 <CheckIcon
-                  className={`ml-auto h-3 w-3 flex-shrink-0 ${shown === mode ? "" : "opacity-0"}`}
+                  className={`ml-auto h-3 w-3 shrink-0 ${shown === mode ? "" : "opacity-0"}`}
                 />
               </ListboxOption>
             );
@@ -109,9 +106,9 @@ export function YoloBanner() {
     <div
       role="alert"
       data-testid="yolo-banner"
-      className="bg-error/15 flex items-center gap-2 px-2 py-0.5 text-2xs text-error"
+      className="flex items-center gap-2 bg-error/15 px-2 py-0.5 text-2xs text-error"
     >
-      <ExclamationTriangleIcon className="h-3 w-3 flex-shrink-0" />
+      <ExclamationTriangleIcon className="h-3 w-3 shrink-0" />
       <span className="flex-1">
         YOLO: tool calls run without asking. Deny rules, ask rules, protected
         paths and the safety check still apply.

@@ -671,7 +671,7 @@ export function ProviderSetupFlow({
             </button>
           </div>
           {refreshError && (
-            <span className="whitespace-pre-wrap text-xs text-warning">
+            <span className="text-xs whitespace-pre-wrap text-warning">
               Couldn't refresh the model list: {refreshError}
             </span>
           )}

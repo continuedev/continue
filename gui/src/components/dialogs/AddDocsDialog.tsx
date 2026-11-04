@@ -94,7 +94,7 @@ function AddDocsDialog() {
                       place="top"
                       content="The title that will be displayed to users in the `@docs` submenu"
                     >
-                      <InformationCircleIcon className="h-3.5 w-3.5 select-none text-lightgray" />
+                      <InformationCircleIcon className="h-3.5 w-3.5 text-lightgray select-none" />
                     </ToolTip>
                   </div>
                 </div>
@@ -118,7 +118,7 @@ function AddDocsDialog() {
                       place="top"
                       content="The starting location to begin crawling the documentation site"
                     >
-                      <InformationCircleIcon className="h-3.5 w-3.5 select-none text-lightgray" />
+                      <InformationCircleIcon className="h-3.5 w-3.5 text-lightgray select-none" />
                     </ToolTip>
                   </div>
                 </div>

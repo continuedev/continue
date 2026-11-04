@@ -24,7 +24,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 }) => {
   return (
     <div
-      className={`flex select-none items-center justify-between gap-3 ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+      className={`flex items-center justify-between gap-3 select-none ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}
     >
       <span className="truncate-right flex items-center gap-x-1">
         {text}{" "}

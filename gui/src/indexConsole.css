@@ -1,6 +1,28 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind 4. Preflight stays off (as in v3, corePlugins.preflight: false), so
+   only the theme and utilities layers are imported. The JS config keeps the
+   theme colours derived from src/styles/theme.ts. */
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";
+@config "../tailwind.config.cjs";
+
+/* Tailwind 3's fixed line-heights for text-xs..text-4xl. Tailwind 4 uses
+   unitless ratios, which change the line-height that nested text inherits. */
+@theme {
+  --text-xs--line-height: 1rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl--line-height: 2.5rem;
+}
+
+/* text-2xs (11px) sets only font-size, as in Tailwind 3; a theme font size
+   would also set a line-height in Tailwind 4. */
+@utility text-2xs {
+  font-size: 0.6875rem;
+}
 
 html,
 body,

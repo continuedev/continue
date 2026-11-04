@@ -428,7 +428,7 @@ export function Chat() {
             pointerEvents: isStreaming ? "none" : "auto",
           }}
         >
-          <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
+          <div className="flex flex-row items-center justify-between pr-2 pb-1 pl-0.5">
             <div className="hidden xs:inline">
               {history.length === 0 && lastSessionId && !isInEdit && (
                 <NewSessionButton

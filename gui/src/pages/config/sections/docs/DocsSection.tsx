@@ -56,14 +56,14 @@ function DocsIndexingStatuses() {
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex flex-col overflow-y-auto overflow-x-hidden pr-2">
+      <div className="flex flex-col overflow-x-hidden overflow-y-auto pr-2">
         {sortedConfigDocs.map((docConfig) => {
           return (
             <div
               key={docConfig.doc.startUrl}
               className="flex items-center gap-2"
             >
-              <div className="flex-grow">
+              <div className="grow">
                 <DocsIndexingStatus
                   docFromYaml={docConfig.docFromYaml}
                   docConfig={docConfig.doc}

@@ -735,7 +735,7 @@
     "monaco-vscode-textmate-theme-converter": "^0.1.7",
     "node-machine-id": "^1.1.12",
     "strip-ansi": "^7.1.0",
-    "svg-builder": "^2.0.0",
+    "svg-builder": "^3.0.4",
     "systeminformation": "^5.30.8",
     "undici": "^6.24.0",
     "uuid": "^11.1.1",

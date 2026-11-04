@@ -245,7 +245,7 @@ const TotalUsage: React.FC<TotalUsageProps> = ({ llmLog }) => {
       </div>
 
       {showCostBreakdown && totalUsage.costBreakdowns.length > 0 && (
-        <div className="mb-4 max-h-32 overflow-y-auto rounded border border-[color:var(--vscode-panel-border)] bg-[color:var(--vscode-editor-background)] p-3">
+        <div className="mb-4 max-h-32 overflow-y-auto rounded-sm border border-[color:var(--vscode-panel-border)] bg-[color:var(--vscode-editor-background)] p-3">
           <h3 className="mb-2 text-sm font-semibold text-[color:var(--vscode-foreground)]">
             Cost Breakdown
           </h3>
@@ -334,7 +334,7 @@ const TotalUsage: React.FC<TotalUsageProps> = ({ llmLog }) => {
       )}
 
       <div className="grid grid-cols-3 gap-3 text-sm">
-        <div className="rounded border border-[color:var(--vscode-panel-border)] bg-[color:var(--vscode-editor-background)] p-2 text-center">
+        <div className="rounded-sm border border-[color:var(--vscode-panel-border)] bg-[color:var(--vscode-editor-background)] p-2 text-center">
           <div className="text-[color:var(--vscode-charts-green)]">
             {totalUsage.totalSuccessfulInteractions}
           </div>
@@ -342,7 +342,7 @@ const TotalUsage: React.FC<TotalUsageProps> = ({ llmLog }) => {
             Success
           </div>
         </div>
-        <div className="rounded border border-[color:var(--vscode-panel-border)] bg-[color:var(--vscode-editor-background)] p-2 text-center">
+        <div className="rounded-sm border border-[color:var(--vscode-panel-border)] bg-[color:var(--vscode-editor-background)] p-2 text-center">
           <div className="text-[color:var(--vscode-charts-red)]">
             {totalUsage.totalErrorInteractions}
           </div>
@@ -350,7 +350,7 @@ const TotalUsage: React.FC<TotalUsageProps> = ({ llmLog }) => {
             Error
           </div>
         </div>
-        <div className="rounded border border-[color:var(--vscode-panel-border)] bg-[color:var(--vscode-editor-background)] p-2 text-center">
+        <div className="rounded-sm border border-[color:var(--vscode-panel-border)] bg-[color:var(--vscode-editor-background)] p-2 text-center">
           <div className="text-[color:var(--vscode-charts-yellow)]">
             {totalUsage.totalCancelledInteractions}
           </div>

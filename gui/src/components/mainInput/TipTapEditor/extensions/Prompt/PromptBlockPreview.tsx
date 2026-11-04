@@ -36,7 +36,7 @@ export const PromptBlockPreview = ({
         initiallyHidden={false}
         isSelected={selected}
         title={item.name}
-        icon={<ChatBubbleLeftIcon className="h-3 w-3 pl-1 pr-0.5" />}
+        icon={<ChatBubbleLeftIcon className="h-3 w-3 pr-0.5 pl-1" />}
         inputId={inputId}
         itemId={item.id.itemId}
         onDelete={handleDelete}
@@ -44,7 +44,7 @@ export const PromptBlockPreview = ({
       >
         {!item.content ? null : (
           <div
-            className="whitespace-pre-wrap px-3 py-1 text-xs"
+            className="px-3 py-1 text-xs whitespace-pre-wrap"
             contentEditable={false}
           >
             {item.content}

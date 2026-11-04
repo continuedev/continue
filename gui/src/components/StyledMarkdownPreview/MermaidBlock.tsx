@@ -139,7 +139,7 @@ export default function MermaidDiagram({ code }: { code: string }) {
         <div className="text-xs text-vsc-foreground">Generating diagram...</div>
       )}
       {!!error ? (
-        <div className="whitespace-pre text-sm text-error">{error}</div>
+        <div className="text-sm whitespace-pre text-error">{error}</div>
       ) : (
         <div className="mermaid relative">
           <div className="absolute right-0 z-10 m-2 flex items-center gap-x-1">

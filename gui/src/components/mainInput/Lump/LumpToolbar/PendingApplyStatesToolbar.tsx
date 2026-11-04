@@ -28,7 +28,7 @@ export function PendingApplyStatesToolbar({
       {Object.entries(applyStatesByFilepath).map(([filepath, states]) => (
         <div key={filepath} className="flex justify-between gap-3">
           {filepath && (
-            <span className="flex min-w-0 max-w-[75%] items-center gap-1 truncate rounded bg-badge pr-1 text-xs">
+            <span className="flex max-w-[75%] min-w-0 items-center gap-1 truncate rounded-sm bg-badge pr-1 text-xs">
               <FileIcon filename={filepath} height="18px" width="18px" />
               <span className="truncate">{getUriPathBasename(filepath)}</span>
             </span>

@@ -46,7 +46,7 @@ const ListboxOptions = React.forwardRef<HTMLUListElement, ListboxOptionsProps>(
         anchor={"bottom start"}
         {...props}
         className={cn(
-          "flex w-max min-w-[160px] max-w-[400px] flex-col overflow-auto bg-vsc-input-background px-0 shadow-md",
+          "flex w-max max-w-[400px] min-w-[160px] flex-col overflow-auto bg-vsc-input-background px-0 shadow-md",
           props.className,
         )}
         style={{
@@ -72,7 +72,7 @@ const ListboxOption = React.forwardRef<HTMLLIElement, ListboxOptionProps>(
         ref={ref}
         {...props}
         className={cn(
-          "flex select-none flex-row items-center justify-between px-2 py-1 text-foreground",
+          "flex flex-row items-center justify-between px-2 py-1 text-foreground select-none",
           props.disabled
             ? "opacity-50"
             : "background-transparent cursor-pointer opacity-100 hover:bg-list-active hover:text-list-active-foreground",

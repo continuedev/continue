@@ -65,7 +65,7 @@ export function ConfigRow({
         </div>
         <div className="flex items-center gap-4">
           {children}
-          {Icon && <Icon className="h-5 w-5 flex-shrink-0 text-gray-400" />}
+          {Icon && <Icon className="h-5 w-5 shrink-0 text-gray-400" />}
         </div>
       </Button>
     );
@@ -82,7 +82,7 @@ export function ConfigRow({
       </div>
       <div className="flex items-center gap-4">
         {children}
-        {Icon && <Icon className="h-5 w-5 flex-shrink-0 text-gray-400" />}
+        {Icon && <Icon className="h-5 w-5 shrink-0 text-gray-400" />}
       </div>
     </div>
   );

@@ -111,7 +111,7 @@ export function HistoryTableRow({
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <span className="line-clamp-1 break-all text-sm font-semibold">
+            <span className="line-clamp-1 text-sm font-semibold break-all">
               {sessionMetadata.title}
             </span>
 
@@ -130,7 +130,7 @@ export function HistoryTableRow({
         )}
 
         <div className="flex text-description-muted">
-          <span className="line-clamp-1 break-all text-xs">
+          <span className="line-clamp-1 text-xs break-all">
             {getUriPathBasename(sessionMetadata.workspaceDirectory || "")}
           </span>
           {/* Uncomment to show the date */}
@@ -148,7 +148,7 @@ export function HistoryTableRow({
       </td>
 
       {hovered && !editing && (
-        <td className="absolute right-2 top-12 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full bg-input px-2 py-1 shadow-md">
+        <td className="absolute top-12 right-2 ml-auto flex -translate-y-1/2 transform items-center gap-x-1 rounded-full bg-input px-2 py-1 shadow-md">
           {
             <>
               <HeaderButtonWithToolTip

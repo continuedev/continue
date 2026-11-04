@@ -109,7 +109,9 @@ vi.mock("svg-builder", () => {
     render: vi.fn().mockReturnValue("<svg>mock svg</svg>"),
   };
   return {
-    default: mockSvgBuilder,
+    // svg-builder 3: the default export is a factory; newInstance() returns a
+    // fresh builder.
+    default: { newInstance: vi.fn(() => mockSvgBuilder) },
   };
 });
 

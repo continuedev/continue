@@ -55,7 +55,7 @@ export function AssistantOption({
     >
       <div className="flex w-full items-center justify-between gap-10 py-0.5">
         <div className="flex w-full items-center gap-3">
-          <div className="flex h-3 w-3 flex-shrink-0 items-center justify-center">
+          <div className="flex h-3 w-3 shrink-0 items-center justify-center">
             <AssistantIcon assistant={profile} />
           </div>
           <span
@@ -68,7 +68,7 @@ export function AssistantOption({
           <Button
             variant="ghost"
             size="sm"
-            className="my-0 h-4 w-4 p-0 text-description-muted opacity-0 transition-opacity hover:enabled:text-foreground group-hover:opacity-100"
+            className="my-0 h-4 w-4 p-0 text-description-muted opacity-0 transition-opacity group-hover:opacity-100 hover:enabled:text-foreground"
             onClick={(e) => {
               e.stopPropagation();
               ideMessenger.post("config/openProfile", {

@@ -16,7 +16,7 @@ export function ConversationStarterCard({
       onClick={() => onClick(command)}
     >
       <div className="flex px-3 py-1.5">
-        <div className="mr-3 flex-shrink-0 self-start pt-0.5">
+        <div className="mr-3 shrink-0 self-start pt-0.5">
           <ChatBubbleLeftIcon className="h-5 w-5 text-lightgray" />
         </div>
         <div className="flex flex-1 flex-col justify-center">

@@ -54,7 +54,7 @@ function IndexingProgressErrorText({ update }: IndexingProgressErrorTextProps) {
     return (
       <div>
         <div
-          className="flex cursor-pointer items-center gap-2 italic text-yellow-600"
+          className="flex cursor-pointer items-center gap-2 text-yellow-600 italic"
           onClick={() => setShowWarnings(!showWarnings)}
         >
           <span className="leading-relaxed">
@@ -111,7 +111,7 @@ function IndexingProgressErrorText({ update }: IndexingProgressErrorTextProps) {
 
   // Show error for failed status
   return (
-    <div className="flex items-center gap-2 italic text-red-600">
+    <div className="flex items-center gap-2 text-red-600 italic">
       <XCircleIcon className="h-4 w-4" />
       <span className="leading-relaxed">{update.desc}</span>
     </div>

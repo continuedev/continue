@@ -36,7 +36,7 @@ export function Toggle({
         </div>
       </div>
       <div
-        className={`duration-400 overflow-hidden transition-all ease-in-out ${
+        className={`overflow-hidden transition-all duration-400 ease-in-out ${
           isOpen ? "mt-4 max-h-screen" : "max-h-0"
         }`}
       >

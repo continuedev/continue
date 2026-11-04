@@ -17,7 +17,7 @@ export function InsertButton({ onInsert }: InsertButtonProps) {
     >
       <ToolTip place="top" content="Insert Code">
         <div
-          className="flex cursor-pointer items-center border-none bg-transparent text-xs text-lightgray outline-none hover:brightness-125"
+          className="flex cursor-pointer items-center border-none bg-transparent text-xs text-lightgray outline-hidden hover:brightness-125"
           onClick={onInsert}
         >
           <div className="flex items-center gap-1 transition-colors duration-200 max-2xs:hidden">

@@ -61,7 +61,7 @@ function ThinkingBlockPeek({
         <div>
           <Button
             variant="outline"
-            className="flex-0 m-0 mb-2 flex min-w-0 cursor-pointer flex-row items-center gap-1.5 rounded-full border-[0.5px] border-solid border-border px-3 text-xs text-description transition-colors duration-200 ease-in-out hover:brightness-125"
+            className="m-0 mb-2 flex min-w-0 flex-0 cursor-pointer flex-row items-center gap-1.5 rounded-full border-[0.5px] border-solid border-border px-3 text-xs text-description transition-colors duration-200 ease-in-out hover:brightness-125"
             data-testid="thinking-block-peek"
             aria-expanded={open}
             aria-controls={`thinking-block-content-${index}`}
@@ -93,7 +93,7 @@ function ThinkingBlockPeek({
           }`}
         >
           {redactedThinking ? (
-            <div className="pl-5 text-xs italic text-description">
+            <div className="pl-5 text-xs text-description italic">
               Thinking content redacted due to safety reasons.
             </div>
           ) : (

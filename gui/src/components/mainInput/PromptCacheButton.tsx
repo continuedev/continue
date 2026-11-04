@@ -96,7 +96,7 @@ export function PromptCacheButton() {
             </HoverItem>
           </ListboxButton>
         </ToolTip>
-        <ListboxOptions className="min-w-48 max-w-72">
+        <ListboxOptions className="max-w-72 min-w-48">
           {choices.map((choice) => (
             <ListboxOption
               key={choice}

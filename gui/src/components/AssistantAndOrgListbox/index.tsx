@@ -156,7 +156,7 @@ export function AssistantAndOrgListbox({
                   <div className="flex w-full items-center">
                     <ArrowPathIcon
                       className={cn(
-                        "ml-1 mr-3 h-3.5 w-3.5 flex-shrink-0",
+                        "mr-3 ml-1 h-3.5 w-3.5 shrink-0",
                         configLoading && "animate-spin-slow",
                       )}
                     />

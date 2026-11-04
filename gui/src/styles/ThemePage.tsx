@@ -29,11 +29,11 @@ const ThemeTailwindClassExample = ({
 }) => {
   return (
     <>
-      <div className={`line-clamp-1 break-all px-2 text-right`}>
+      <div className={`line-clamp-1 px-2 text-right break-all`}>
         {colorName}
       </div>
       <div
-        className={`line-clamp-1 break-all p-1 text-[9px] ${isMissing ? "text-error" : ""}`}
+        className={`line-clamp-1 p-1 text-[9px] break-all ${isMissing ? "text-error" : ""}`}
         style={{
           backgroundColor: varWithFallback(
             colorName as keyof typeof THEME_COLORS,
@@ -43,7 +43,7 @@ const ThemeTailwindClassExample = ({
         {varNames.join(", ")}
       </div>
       <div
-        className={`line-clamp-1 break-all p-1 text-[9px]`}
+        className={`line-clamp-1 p-1 text-[9px] break-all`}
         style={{
           backgroundColor: defaultColor,
         }}
@@ -106,7 +106,7 @@ function ThemePage() {
         <span className="">←</span>
         Back to Chat
       </span>
-      <h2 className="mb-2 mt-0 p-0 text-center text-xl font-semibold">
+      <h2 className="mt-0 mb-2 p-0 text-center text-xl font-semibold">
         Theme Tester
       </h2>
       <div className="grid grid-cols-1 gap-4 rounded-md border border-solid border-border bg-background p-4 md:grid-cols-2">
@@ -116,10 +116,10 @@ function ThemePage() {
           <p className="text-description-muted">Muted text</p>
         </div>
 
-        <button className="cursor-pointer rounded border-none bg-primary px-4 py-2 text-primary-foreground hover:bg-primary-hover disabled:cursor-not-allowed disabled:brightness-75">
+        <button className="cursor-pointer rounded-sm border-none bg-primary px-4 py-2 text-primary-foreground hover:bg-primary-hover disabled:cursor-not-allowed disabled:brightness-75">
           Primary Button
         </button>
-        <button className="cursor-pointer rounded border-none bg-secondary px-4 py-2 text-secondary-foreground hover:bg-secondary-hover disabled:cursor-not-allowed disabled:brightness-75">
+        <button className="cursor-pointer rounded-sm border-none bg-secondary px-4 py-2 text-secondary-foreground hover:bg-secondary-hover disabled:cursor-not-allowed disabled:brightness-75">
           Secondary Button
         </button>
 
@@ -132,7 +132,7 @@ function ThemePage() {
         </div>
 
         <input
-          className="rounded-md border border-solid border-input-border bg-input p-2 text-input-foreground placeholder:text-input-placeholder focus:border-border-focus focus:outline-none"
+          className="rounded-md border border-solid border-input-border bg-input p-2 text-input-foreground placeholder:text-input-placeholder focus:border-border-focus focus:outline-hidden"
           placeholder="Input example"
         />
 
@@ -159,7 +159,7 @@ function ThemePage() {
         >
           List item (clickable)
         </div>
-        <div className="rounded-sm border border-solid border-border bg-editor p-2 text-editor-foreground">
+        <div className="rounded-xs border border-solid border-border bg-editor p-2 text-editor-foreground">
           <span>Editor</span>
         </div>
         <table>
@@ -188,7 +188,7 @@ function ThemePage() {
           <div className="h-3 w-3 bg-accent" />
         </div>
       </div>
-      <h2 className="mb-2 mt-6 text-xl font-semibold">Manage Theme</h2>
+      <h2 className="mt-6 mb-2 text-xl font-semibold">Manage Theme</h2>
       <h2 className="mb-2 text-lg font-semibold">Missing Theme Colors</h2>
       {missingVars.length > 0 ? (
         <div className="flex flex-col gap-1">
@@ -205,7 +205,7 @@ function ThemePage() {
       {jetbrains ? (
         <Button onClick={clearThemeLocalCache}>Clear Theme Cache</Button>
       ) : null}
-      <h2 className="mb-2 mt-6 text-xl font-semibold">All Theme Colors</h2>
+      <h2 className="mt-6 mb-2 text-xl font-semibold">All Theme Colors</h2>
       <div className="grid grid-cols-3">
         <div className="p-1">
           <span className="font-bold">Theme Color</span>

@@ -140,7 +140,7 @@ export function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
       <div className="w-full max-w-md">
         <div className="mt-3 flex flex-col gap-1 px-2">
           <div className="flex flex-col">
-            <p className="mb-1 text-sm font-semibold leading-tight text-foreground">
+            <p className="mb-1 text-sm leading-tight font-semibold text-foreground">
               Install Ollama
             </p>
             <OllamaStatus isOllamaConnected={isOllamaConnected} />

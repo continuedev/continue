@@ -34,7 +34,7 @@ export default function ListItem({
   return (
     <li
       className={
-        "w-full cursor-pointer pb-[3px] pl-[4px] pr-[4px] pt-[3px] " +
+        "w-full cursor-pointer pt-[3px] pr-[4px] pb-[3px] pl-[4px] " +
         (selected
           ? "bg-[color:var(--vscode-list-inactiveSelectionBackground)]" +
             " text-[color:var(--vscode-list-inctiveSelectionForeground)]" +

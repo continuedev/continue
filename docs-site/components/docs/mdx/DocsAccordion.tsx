@@ -43,7 +43,7 @@ export function DocsAccordionGroup({
         >
           <AccordionPrimitive.Trigger className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-black/70 transition-colors hover:text-black/90 dark:text-white/70 dark:hover:text-white/90 [&[data-state=open]>svg]:rotate-180">
             {item.title}
-            <ChevronDown className="h-4 w-4 flex-shrink-0 text-black/30 transition-transform duration-200 dark:text-white/30" />
+            <ChevronDown className="h-4 w-4 shrink-0 text-black/30 transition-transform duration-200 dark:text-white/30" />
           </AccordionPrimitive.Trigger>
           <AccordionPrimitive.Content className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm">
             <div className="px-4 pb-4 text-black/60 dark:text-white/60">
@@ -73,7 +73,7 @@ export function DocsAccordion({
       <AccordionPrimitive.Item value="item">
         <AccordionPrimitive.Trigger className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-black/70 transition-colors hover:text-black/90 dark:text-white/70 dark:hover:text-white/90 [&[data-state=open]>svg]:rotate-180">
           {title}
-          <ChevronDown className="h-4 w-4 flex-shrink-0 text-black/30 transition-transform duration-200 dark:text-white/30" />
+          <ChevronDown className="h-4 w-4 shrink-0 text-black/30 transition-transform duration-200 dark:text-white/30" />
         </AccordionPrimitive.Trigger>
         <AccordionPrimitive.Content className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm">
           <div className="px-4 pb-4 text-black/60 dark:text-white/60">

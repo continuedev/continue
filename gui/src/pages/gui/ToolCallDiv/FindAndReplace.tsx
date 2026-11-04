@@ -187,7 +187,7 @@ export function FindAndReplaceDisplay({
     if (status) {
       return (
         <div
-          className={`mr-1 h-4 w-4 flex-shrink-0 ${toolCallState.output ? "cursor-pointer" : ""}`}
+          className={`mr-1 h-4 w-4 shrink-0 ${toolCallState.output ? "cursor-pointer" : ""}`}
           onClick={(e) => {
             if (toolCallState.output) {
               e.stopPropagation();
@@ -218,7 +218,7 @@ export function FindAndReplaceDisplay({
             {statusIcon}
             <ChevronDownIcon
               data-testid="toggle-find-and-replace-diff"
-              className={`h-3.5 w-3.5 flex-shrink-0 cursor-pointer select-none text-lightgray transition-all hover:brightness-125 ${
+              className={`h-3.5 w-3.5 shrink-0 cursor-pointer text-lightgray transition-all select-none hover:brightness-125 ${
                 showContent ? "rotate-0" : "-rotate-90"
               }`}
             />

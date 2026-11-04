@@ -37,19 +37,14 @@
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
-    "@tailwindcss/typography": "^0.5.20",
+    "@tailwindcss/postcss": "^4.3.4",
     "@types/node": "^20",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "autoprefixer": "^10.6.2",
     "postcss": "^8.5.32",
-    "tailwindcss": "^3.3.5",
+    "tailwindcss": "^4.3.4",
     "tsx": "^4.23.15",
     "typescript": "^5"
   },
-  "overrides": {
-    "@tailwindcss/typography": {
-      "postcss-selector-parser": "^6.1.5"
-    }
-  }
+  "overrides": {}
 }

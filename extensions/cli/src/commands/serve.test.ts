@@ -4,6 +4,52 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createMinimalTestContext } from "../test-helpers/ui-test-context.js";
 
+// Module mocks are hoisted above the imports; they live at the top level so
+// their position matches when they run (vitest 5 rejects nested vi.mock).
+vi.mock("../auth/workos.js", () => ({
+  loadAuthConfig: vi.fn(() => null),
+  ensureOrganization: vi.fn(),
+  getOrganizationId: vi.fn(),
+  isAuthenticated: vi.fn(() => false),
+  isAuthenticatedConfig: vi.fn(() => false),
+}));
+
+vi.mock("../onboarding.js", () => ({
+  runNormalFlow: vi.fn(() =>
+    Promise.resolve({
+      config: { models: [] },
+      llmApi: { chat: vi.fn() },
+      model: { name: "test-model" },
+    }),
+  ),
+}));
+
+vi.mock("../session.js", () => ({
+  saveSession: vi.fn(),
+}));
+
+vi.mock("../systemMessage.js", () => ({
+  constructSystemMessage: vi.fn(() => Promise.resolve("System message")),
+}));
+
+vi.mock("../telemetry/telemetryService.js", () => ({
+  default: {
+    recordSessionStart: vi.fn(),
+    startActiveTime: vi.fn(),
+    stopActiveTime: vi.fn(),
+    updateOrganization: vi.fn(),
+  },
+}));
+
+vi.mock("chalk", () => ({
+  default: {
+    green: (str: string) => str,
+    dim: (str: string) => str,
+    yellow: (str: string) => str,
+    red: (str: string) => str,
+  },
+}));
+
 describe("serve command", () => {
   let context: any;
   let originalProcessExit: typeof process.exit;
@@ -18,51 +64,6 @@ describe("serve command", () => {
 
     // Mock console.log to prevent output during tests
     vi.spyOn(console, "log").mockImplementation(() => {});
-
-    // Mock all required modules at test level with correct relative paths
-    vi.mock("../auth/workos.js", () => ({
-      loadAuthConfig: vi.fn(() => null),
-      ensureOrganization: vi.fn(),
-      getOrganizationId: vi.fn(),
-      isAuthenticated: vi.fn(() => false),
-      isAuthenticatedConfig: vi.fn(() => false),
-    }));
-
-    vi.mock("../onboarding.js", () => ({
-      runNormalFlow: vi.fn(() =>
-        Promise.resolve({
-          config: { models: [] },
-          llmApi: { chat: vi.fn() },
-          model: { name: "test-model" },
-        }),
-      ),
-    }));
-
-    vi.mock("../session.js", () => ({
-      saveSession: vi.fn(),
-    }));
-
-    vi.mock("../systemMessage.js", () => ({
-      constructSystemMessage: vi.fn(() => Promise.resolve("System message")),
-    }));
-
-    vi.mock("../telemetry/telemetryService.js", () => ({
-      default: {
-        recordSessionStart: vi.fn(),
-        startActiveTime: vi.fn(),
-        stopActiveTime: vi.fn(),
-        updateOrganization: vi.fn(),
-      },
-    }));
-
-    vi.mock("chalk", () => ({
-      default: {
-        green: (str: string) => str,
-        dim: (str: string) => str,
-        yellow: (str: string) => str,
-        red: (str: string) => str,
-      },
-    }));
   });
 
   afterEach(async () => {

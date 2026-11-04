@@ -41,9 +41,9 @@ export function PendingToolCallToolbar() {
       {pendingToolCalls.map((toolCall, index) => (
         <div
           key={toolCall.toolCallId}
-          className="flex items-center gap-2 rounded border border-input bg-input"
+          className="flex items-center gap-2 rounded-sm border border-input bg-input"
         >
-          <span className="flex-1 truncate text-xs italic text-description">
+          <span className="flex-1 truncate text-xs text-description italic">
             {toolCall.tool?.displayTitle ?? toolCall.toolCall.function.name}
           </span>
           {toolCall.policyNote && (

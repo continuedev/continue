@@ -413,7 +413,7 @@ ${html}
             </p>
             <button
               onClick={() => setPermissionWarningDismissed(true)}
-              className="cursor-pointer rounded border-none bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:bg-primary-hover"
+              className="cursor-pointer rounded-sm border-none bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:bg-primary-hover"
             >
               Continue Anyway
             </button>

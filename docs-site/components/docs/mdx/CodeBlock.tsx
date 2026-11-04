@@ -60,7 +60,7 @@ export function CodeBlock({
       {/* Overlay: inset matches pre's border (1px) so gradient fills to the edge */}
       <div className="pointer-events-none absolute inset-[1px] flex items-start justify-end overflow-hidden rounded-[5px]">
         <div
-          className="pointer-events-auto flex items-start pl-8 pt-2"
+          className="pointer-events-auto flex items-start pt-2 pl-8"
           style={{
             background:
               "linear-gradient(to right, transparent, var(--docs-code-bg-solid) 40%)",

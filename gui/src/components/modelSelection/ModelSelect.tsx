@@ -98,11 +98,11 @@ function ModelOption({
     >
       <div className="flex w-full items-center justify-between gap-5">
         <div className="flex items-center gap-2 py-0.5">
-          <CubeIcon className="h-3 w-3 flex-shrink-0" />
+          <CubeIcon className="h-3 w-3 shrink-0" />
           <span className="line-clamp-1">
             {option.title}
             {option.isAutoDetected && (
-              <span className="ml-1.5 text-[10px] italic text-description-muted">
+              <span className="ml-1.5 text-[10px] text-description-muted italic">
                 (autodetected)
               </span>
             )}
@@ -113,7 +113,7 @@ function ModelOption({
             )}
             {option.missingSecret && (
               <span
-                className="ml-1.5 text-[10px] italic text-warning"
+                className="ml-1.5 text-[10px] text-warning italic"
                 data-testid="model-option-key-not-set"
               >
                 (Key not set)
@@ -124,7 +124,7 @@ function ModelOption({
         <Button
           variant="ghost"
           size="sm"
-          className="my-0 h-4 w-4 p-0 text-description-muted opacity-0 transition-opacity hover:enabled:text-foreground group-hover:opacity-100"
+          className="my-0 h-4 w-4 p-0 text-description-muted opacity-0 transition-opacity group-hover:opacity-100 hover:enabled:text-foreground"
           onClick={handleConfigureClick}
         >
           <Cog6ToothIcon className="h-3.5 w-3.5" />
@@ -287,7 +287,7 @@ function ModelSelect() {
             {modelSelectTitle(selectedModel) || "Select model"}
           </span>
           <ChevronDownIcon
-            className="hidden h-2 w-2 flex-shrink-0 hover:brightness-110 min-[200px]:flex"
+            className="hidden h-2 w-2 shrink-0 hover:brightness-110 min-[200px]:flex"
             aria-hidden="true"
           />
         </ListboxButton>
@@ -308,7 +308,7 @@ function ModelSelect() {
                 <Cog6ToothIcon className="h-3.5 w-3.5 text-description" />
                 {selectedKeyNotSet && (
                   <span
-                    className="absolute right-0 top-0 h-1.5 w-1.5 rounded-full bg-warning"
+                    className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-warning"
                     data-testid="model-select-key-not-set-dot"
                     title="Key not set on this machine"
                   />
@@ -319,7 +319,7 @@ function ModelSelect() {
 
           <div className="no-scrollbar max-h-[300px] overflow-y-auto">
             {isConfigLoading ? (
-              <div className="flex items-center gap-2 px-2 pb-2 pt-1 text-xs text-description">
+              <div className="flex items-center gap-2 px-2 pt-1 pb-2 text-xs text-description">
                 <ArrowPathIcon className="h-3 w-3 animate-spin-slow" />
                 <span>Loading config</span>
               </div>
@@ -330,7 +330,7 @@ function ModelSelect() {
             ) : offeredSorted.length > 0 ? (
               <>
                 <div
-                  className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-description-muted"
+                  className="px-2 pt-1 pb-0.5 text-[10px] tracking-wide text-description-muted uppercase"
                   data-testid="model-group-mode"
                 >
                   {modeLabel} models
@@ -347,7 +347,7 @@ function ModelSelect() {
                 {otherSorted.length > 0 && (
                   <>
                     <div
-                      className="px-2 pb-0.5 pt-2 text-[10px] uppercase tracking-wide text-description-muted"
+                      className="px-2 pt-2 pb-0.5 text-[10px] tracking-wide text-description-muted uppercase"
                       data-testid="model-group-all"
                     >
                       All models

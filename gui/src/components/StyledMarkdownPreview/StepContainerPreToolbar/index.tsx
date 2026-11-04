@@ -96,7 +96,7 @@ export function StepContainerPreToolbar({
       toolCallState?.status === "errored" ||
       toolCallState?.status === "done") ? (
       <div
-        className={`mr-1 h-4 w-4 flex-shrink-0 ${toolCallState.output ? "cursor-pointer" : ""}`}
+        className={`mr-1 h-4 w-4 shrink-0 ${toolCallState.output ? "cursor-pointer" : ""}`}
         onClick={() => {
           if (toolCallState.output) {
             ideMessenger.post("showVirtualFile", {
@@ -302,7 +302,7 @@ export function StepContainerPreToolbar({
           <ChevronDownIcon
             data-testid="toggle-codeblock"
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`h-3.5 w-3.5 flex-shrink-0 cursor-pointer text-lightgray hover:brightness-125 ${
+            className={`h-3.5 w-3.5 shrink-0 cursor-pointer text-lightgray hover:brightness-125 ${
               isExpanded ? "rotate-0" : "-rotate-90"
             }`}
           />
@@ -313,7 +313,7 @@ export function StepContainerPreToolbar({
               onClick={fileExists ? onClickFilename : undefined}
             />
           ) : (
-            <span className="ml-2 select-none capitalize text-lightgray">
+            <span className="ml-2 text-lightgray capitalize select-none">
               {language}
             </span>
           )}

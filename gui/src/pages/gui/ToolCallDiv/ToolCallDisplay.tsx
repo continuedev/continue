@@ -44,11 +44,11 @@ export function ToolCallDisplay({
             }`}
             onClick={isClickable ? handleClick : undefined}
           >
-            <div className="mt-[1px] h-4 w-4 flex-shrink-0 font-semibold">
+            <div className="mt-[1px] h-4 w-4 shrink-0 font-semibold">
               {icon}
             </div>
             {tool?.faviconUrl && (
-              <img src={tool.faviconUrl} className="h-4 w-4 rounded-sm" />
+              <img src={tool.faviconUrl} className="h-4 w-4 rounded-xs" />
             )}
             <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
           </div>

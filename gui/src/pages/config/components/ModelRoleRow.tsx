@@ -78,7 +78,7 @@ export function ModelRoleRow({
               onClick={() => onConfigure(selectedModel)}
               className="my-0 h-6 w-6 p-0 text-description hover:enabled:text-foreground"
             >
-              <Cog6ToothIcon className="h-4 w-4 flex-shrink-0" />
+              <Cog6ToothIcon className="h-4 w-4 shrink-0" />
             </Button>
           </ToolTip>
         )}
@@ -91,7 +91,7 @@ export function ModelRoleRow({
             <ToolTip content={missingSecretSummary(missing)}>
               <span>
                 <ExclamationTriangleIcon
-                  className="h-4 w-4 flex-shrink-0 text-warning"
+                  className="h-4 w-4 shrink-0 text-warning"
                   aria-hidden="true"
                 />
               </span>

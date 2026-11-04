@@ -80,7 +80,7 @@ export default function StepContainer(props: StepContainerProps) {
         className={`bg-background p-1 px-1.5 ${isBeforeLatestSummary ? "opacity-35" : ""}`}
       >
         {uiConfig?.displayRawMarkdown ? (
-          <pre className="max-w-full overflow-x-auto whitespace-pre-wrap break-words p-4 text-2xs">
+          <pre className="max-w-full overflow-x-auto p-4 text-2xs break-words whitespace-pre-wrap">
             {renderChatMessage(props.item.message)}
           </pre>
         ) : (

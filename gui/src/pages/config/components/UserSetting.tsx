@@ -116,7 +116,7 @@ export function UserSetting(props: UserSettingProps) {
               min={props.min ?? 0}
               max={props.max ?? 100}
               disabled={disabled}
-              className="flex-1 border-none bg-transparent px-2 py-1 text-right text-vsc-foreground outline-none focus:outline-none focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="flex-1 border-none bg-transparent px-2 py-1 text-right text-vsc-foreground outline-hidden focus:ring-0 focus:outline-hidden [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           </div>
         );
@@ -168,7 +168,7 @@ export function UserSetting(props: UserSettingProps) {
                     onChange={(e) => props.onChange(e.target.value)}
                     placeholder={props.placeholder}
                     disabled={disabled}
-                    className="flex-1 border-none bg-inherit px-1.5 py-1 text-vsc-foreground outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
+                    className="flex-1 border-none bg-inherit px-1.5 py-1 text-vsc-foreground ring-0 outline-hidden focus:border-none focus:ring-0 focus:outline-hidden disabled:cursor-not-allowed"
                   />
                 </div>
                 {props.isDirty && (
@@ -198,7 +198,7 @@ export function UserSetting(props: UserSettingProps) {
               value={props.value}
               onChange={(e) => props.onChange(e.target.value)}
               disabled={disabled}
-              className="flex-1 border-none bg-inherit px-1.5 py-1 text-vsc-foreground outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
+              className="flex-1 border-none bg-inherit px-1.5 py-1 text-vsc-foreground ring-0 outline-hidden focus:border-none focus:ring-0 focus:outline-hidden disabled:cursor-not-allowed"
             />
           </div>
         );

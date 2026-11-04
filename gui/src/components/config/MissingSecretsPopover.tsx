@@ -36,7 +36,7 @@ export function MissingSecretsPopover({
       </PopoverButton>
       <PopoverPanel
         anchor="bottom start"
-        className="z-[200000] rounded border border-solid border-border bg-vsc-input-background shadow-md"
+        className="z-[200000] rounded-sm border border-solid border-border bg-vsc-input-background shadow-md"
       >
         {({ close }: { close: () => void }) => (
           <MissingSecretsPanel missing={missing} onDone={close} />

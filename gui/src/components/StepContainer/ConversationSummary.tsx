@@ -27,8 +27,8 @@ export default function ConversationSummary(props: ConversationSummaryProps) {
   // Loading state - much simpler
   if (isLoading) {
     return (
-      <div className="mx-1.5 mb-4 mt-2">
-        <div className="rounded-md bg-vsc-input-background shadow-sm">
+      <div className="mx-1.5 mt-2 mb-4">
+        <div className="rounded-md bg-vsc-input-background shadow-xs">
           <div className="flex items-center justify-start px-3 py-2 text-xs text-description">
             <span>Generating conversation summary</span>
             <AnimatedEllipsis />
@@ -40,8 +40,8 @@ export default function ConversationSummary(props: ConversationSummaryProps) {
 
   // Normal state with content
   return (
-    <div className="mx-1.5 mb-4 mt-2">
-      <div className="rounded-md bg-vsc-input-background shadow-sm">
+    <div className="mx-1.5 mt-2 mb-4">
+      <div className="rounded-md bg-vsc-input-background shadow-xs">
         <div
           className="flex cursor-pointer items-center gap-2 px-3 py-2 text-xs text-description transition-colors duration-200 hover:brightness-105"
           onClick={() => setOpen(!open)}
@@ -65,7 +65,7 @@ export default function ConversationSummary(props: ConversationSummaryProps) {
         {open && (
           <>
             <div className="border-0 border-t border-solid border-border"></div>
-            <div className="max-h-[400px] overflow-y-auto px-3 pb-3 pt-2">
+            <div className="max-h-[400px] overflow-y-auto px-3 pt-2 pb-3">
               <StyledMarkdownPreview
                 isRenderingInStepContainer
                 source={props.item.conversationSummary}

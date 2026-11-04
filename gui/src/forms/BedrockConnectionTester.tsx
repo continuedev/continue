@@ -114,7 +114,7 @@ export function BedrockConnectionTester({
 
       {listResult && !listResult.ok && (
         <Alert type="error" size="sm">
-          <span className="whitespace-pre-wrap text-xs">
+          <span className="text-xs whitespace-pre-wrap">
             {listResult.error}
           </span>
         </Alert>
@@ -143,7 +143,7 @@ export function BedrockConnectionTester({
           </Alert>
         ) : (
           <Alert type="error" size="sm">
-            <span className="whitespace-pre-wrap text-xs">
+            <span className="text-xs whitespace-pre-wrap">
               {testResult.error}
             </span>
           </Alert>

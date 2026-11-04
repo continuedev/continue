@@ -13,19 +13,17 @@ export function AssistantIcon({
 }: AssistantIconProps) {
   if (isLocalProfile(assistant)) {
     return (
-      <ComputerDesktopIcon
-        className={`text-foreground ${size} flex-shrink-0`}
-      />
+      <ComputerDesktopIcon className={`text-foreground ${size} shrink-0`} />
     );
   } else if (assistant.iconUrl) {
     return (
       <img
         src={assistant.iconUrl}
-        className={`${size} flex-shrink-0 rounded-full`}
+        className={`${size} shrink-0 rounded-full`}
         alt=""
       />
     );
   } else {
-    return <SparklesIcon className={`${size} flex-shrink-0`} />;
+    return <SparklesIcon className={`${size} shrink-0`} />;
   }
 }

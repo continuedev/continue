@@ -66,14 +66,14 @@ export function ContextItemsPeekItem({
         : undefined;
       return (
         <SafeImg
-          className="mr-2 flex-shrink-0 rounded-md p-1"
+          className="mr-2 shrink-0 rounded-md p-1"
           src={contextItem.icon}
           height={dimensions}
           width={dimensions}
           fallback={
             NamedIcon ? (
               <div
-                className="mr-2 flex-shrink-0"
+                className="mr-2 shrink-0"
                 style={{
                   height: dimensions,
                   width: dimensions,
@@ -93,7 +93,7 @@ export function ContextItemsPeekItem({
 
     if (shouldShowFileIcon) {
       return (
-        <div className="mr-2 flex-shrink-0">
+        <div className="mr-2 shrink-0">
           <FileIcon
             filename={
               contextItem.description.split(" ").shift()?.split("#").shift() ||
@@ -113,7 +113,7 @@ export function ContextItemsPeekItem({
 
     return (
       <ProviderIcon
-        className="mr-2 flex-shrink-0"
+        className="mr-2 shrink-0"
         height={dimensions}
         width={dimensions}
       />
@@ -123,11 +123,11 @@ export function ContextItemsPeekItem({
   return (
     <div
       onClick={() => openContextItem(contextItem, ideMessenger)}
-      className="mr-2 flex cursor-pointer flex-row items-center gap-1.5 whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
+      className="mr-2 flex cursor-pointer flex-row items-center gap-1.5 rounded-sm px-1.5 py-1 text-xs whitespace-nowrap hover:bg-white/10"
       data-testid="context-items-peek-item"
     >
       {getContextItemIcon()}
-      <span className={`line-clamp-1 max-w-[130px] flex-shrink-0`}>
+      <span className={`line-clamp-1 max-w-[130px] shrink-0`}>
         {contextItem.name}
       </span>
       <div
@@ -151,7 +151,7 @@ export function ContextItemsPeekItem({
             : contextItem.description}
         </span>
         {isUrl && (
-          <ArrowTopRightOnSquareIcon className="h-3 w-3 flex-shrink-0 text-description-muted opacity-80 group-hover:opacity-100" />
+          <ArrowTopRightOnSquareIcon className="h-3 w-3 shrink-0 text-description-muted opacity-80 group-hover:opacity-100" />
         )}
       </div>
     </div>
@@ -196,7 +196,7 @@ export function ContextItemsPeek({
           <ContextItemsPeekItem key={idx} contextItem={contextItem} />
         ))
       ) : (
-        <div className="pl-2 text-xs italic text-description-muted">
+        <div className="pl-2 text-xs text-description-muted italic">
           No results
         </div>
       )}

@@ -89,11 +89,11 @@ export function UsageIndicator() {
       >
         {context ? (
           <span
-            className="relative h-[3px] w-6 overflow-hidden rounded-sm bg-command-border"
+            className="relative h-[3px] w-6 overflow-hidden rounded-xs bg-command-border"
             aria-hidden
           >
             <span
-              className={`absolute left-0 top-0 h-full ${context.fraction >= 0.9 ? "bg-error" : "bg-description"}`}
+              className={`absolute top-0 left-0 h-full ${context.fraction >= 0.9 ? "bg-error" : "bg-description"}`}
               style={{ width: `${percent}%` }}
             />
           </span>

@@ -5,5 +5,13 @@
   "semi": true,
   "singleQuote": false,
   "bracketSpacing": true,
-  "plugins": ["prettier-plugin-tailwindcss"]
+  "plugins": ["prettier-plugin-tailwindcss"],
+  "overrides": [
+    {
+      "files": ["gui/**/*"],
+      "options": {
+        "tailwindStylesheet": "./gui/src/index.css"
+      }
+    }
+  ]
 }

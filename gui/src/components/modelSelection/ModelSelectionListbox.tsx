@@ -105,8 +105,8 @@ function ModelSelectionListbox({
         setSearchQuery("");
       }}
     >
-      <div className="relative mb-2 mt-1">
-        <ListboxButton className="relative m-0 grid h-full w-full cursor-pointer grid-cols-[1fr_auto] items-center rounded-lg border border-solid border-border bg-background py-2 pl-3 pr-10 text-left text-foreground hover:bg-input focus:outline-none">
+      <div className="relative mt-1 mb-2">
+        <ListboxButton className="relative m-0 grid h-full w-full cursor-pointer grid-cols-[1fr_auto] items-center rounded-lg border border-solid border-border bg-background py-2 pr-10 pl-3 text-left text-foreground hover:bg-input focus:outline-hidden">
           <span className="flex items-center">
             {window.vscMediaUrl && selectedProvider.icon && (
               <img
@@ -130,17 +130,17 @@ function ModelSelectionListbox({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <ListboxOptions className="absolute left-0 top-full z-10 mt-1 flex h-fit w-3/5 flex-col overflow-y-auto rounded-default bg-input p-0 focus:outline-none [&]:!max-h-[30vh]">
+          <ListboxOptions className="absolute top-full left-0 z-10 mt-1 flex h-fit w-3/5 flex-col overflow-y-auto rounded-default bg-input p-0 focus:outline-hidden [&]:!max-h-[30vh]">
             {/* Search Box */}
             <div className="sticky top-0 border-b border-border p-2">
-              <div className="flex items-center rounded border border-border bg-background pl-2">
+              <div className="flex items-center rounded-sm border border-border bg-background pl-2">
                 <MagnifyingGlassIcon className="h-4 w-4 text-description-muted" />
                 <input
                   type="text"
                   placeholder={searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full border-0 bg-background px-2 py-1.5 text-foreground placeholder-description-muted outline-none"
+                  className="w-full border-0 bg-background px-2 py-1.5 text-foreground placeholder-description-muted outline-hidden"
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
@@ -156,14 +156,14 @@ function ModelSelectionListbox({
                 <>
                   {filteredTopOptions.length > 0 && (
                     <div className="py-1">
-                      <div className="px-3 py-1 text-xs font-medium uppercase tracking-wider text-description-muted">
+                      <div className="px-3 py-1 text-xs font-medium tracking-wider text-description-muted uppercase">
                         {topOptionsLabel}
                       </div>
                       {filteredTopOptions.map((option, index) => (
                         <ListboxOption
                           key={index}
                           className={({ selected }: { selected: boolean }) =>
-                            ` ${selected ? "bg-list-active" : "bg-input"} relative flex cursor-pointer select-none items-center justify-between gap-2 p-1.5 px-3 py-2 pr-4 hover:bg-list-active hover:text-list-active-foreground`
+                            ` ${selected ? "bg-list-active" : "bg-input"} relative flex cursor-pointer items-center justify-between gap-2 p-1.5 px-3 py-2 pr-4 select-none hover:bg-list-active hover:text-list-active-foreground`
                           }
                           value={option}
                         >
@@ -201,14 +201,14 @@ function ModelSelectionListbox({
                     )}
                   {filteredOtherOptions.length > 0 && (
                     <div className="py-1">
-                      <div className="px-3 py-1 text-xs font-medium uppercase tracking-wider text-description-muted">
+                      <div className="px-3 py-1 text-xs font-medium tracking-wider text-description-muted uppercase">
                         {otherOptionsLabel}
                       </div>
                       {filteredOtherOptions.map((option, index) => (
                         <ListboxOption
                           key={index}
                           className={({ selected }: { selected: boolean }) =>
-                            ` ${selected ? "bg-list-active" : "bg-input"} relative flex cursor-pointer select-none items-center justify-between gap-2 p-1.5 px-3 py-2 pr-4 hover:bg-list-active hover:text-list-active-foreground`
+                            ` ${selected ? "bg-list-active" : "bg-input"} relative flex cursor-pointer items-center justify-between gap-2 p-1.5 px-3 py-2 pr-4 select-none hover:bg-list-active hover:text-list-active-foreground`
                           }
                           value={option}
                         >

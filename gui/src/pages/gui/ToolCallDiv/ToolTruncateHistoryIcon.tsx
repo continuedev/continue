@@ -41,7 +41,7 @@ export function ToolTruncateHistoryIcon({
       }}
     >
       <BarsArrowUpIcon
-        className={`h-3 w-3 flex-shrink-0 opacity-60 ${isStreaming ? "cursor-not-allowed" : ""}`}
+        className={`h-3 w-3 shrink-0 opacity-60 ${isStreaming ? "cursor-not-allowed" : ""}`}
       />
     </ToolbarButtonWithTooltip>
   );

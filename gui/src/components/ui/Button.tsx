@@ -44,7 +44,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           buttonVariants[variant],
           isIcon
             ? iconButtonSizes[size]
-            : `my-1.5 rounded ${buttonSizes[size]}`,
+            : `my-1.5 rounded-sm ${buttonSizes[size]}`,
           className,
         )}
         style={{

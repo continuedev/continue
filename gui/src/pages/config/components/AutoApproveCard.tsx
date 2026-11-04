@@ -64,7 +64,7 @@ export function AutoApproveCard() {
   return (
     <div data-testid="auto-approve-card">
       <h3 className="my-0 mb-1 text-sm font-semibold">Auto-approve</h3>
-      <p className="mb-2 mt-0 text-xs text-description">
+      <p className="mt-0 mb-2 text-xs text-description">
         {inactive
           ? "These switches take effect in Auto-approve and Auto approval modes. Pick one from the Approval menu next to the model."
           : "Tool calls in these categories run without asking. Deny rules, ask rules and protected paths always win."}

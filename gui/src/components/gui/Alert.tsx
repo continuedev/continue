@@ -85,7 +85,7 @@ function Alert({
   return (
     <div
       className={cn(
-        `flex flex-row items-start border-[0.5px] ${border} border-solid shadow-sm ${alertSizes[size]}`,
+        `flex flex-row items-start border-[0.5px] ${border} border-solid shadow-xs ${alertSizes[size]}`,
         className,
       )}
       style={{
@@ -93,7 +93,7 @@ function Alert({
       }}
       {...props}
     >
-      <Icon className={`flex-shrink-0 ${iconColor} ${iconSizes[size]}`} />
+      <Icon className={`shrink-0 ${iconColor} ${iconSizes[size]}`} />
       <div className="flex flex-1 flex-col">
         <div className={`${spacingSizes[size]} ${text}`}>{children}</div>
       </div>

@@ -37,7 +37,7 @@ export function DeprecationBanner({
   return (
     <div className="px-4 py-4">
       <div
-        className="relative rounded-md border-[0.5px] border-solid border-info px-3 py-2.5 shadow-sm"
+        className="relative rounded-md border-[0.5px] border-solid border-info px-3 py-2.5 shadow-xs"
         style={{
           backgroundColor: `color-mix(in srgb, ${varWithFallback("info")} 20%, transparent)`,
         }}
@@ -45,7 +45,7 @@ export function DeprecationBanner({
         {dismissable && (
           <button
             onClick={handleDismiss}
-            className="absolute right-2 top-2 border-none bg-transparent p-0.5 text-gray-400 hover:brightness-125"
+            className="absolute top-2 right-2 border-none bg-transparent p-0.5 text-gray-400 hover:brightness-125"
           >
             <XMarkIcon className="h-3.5 w-3.5" />
           </button>
@@ -57,13 +57,13 @@ export function DeprecationBanner({
           <div className="flex gap-2">
             <button
               onClick={() => ideMessenger.post("openUrl", REPO_URL)}
-              className="flex-1 cursor-pointer rounded border-[0.5px] border-solid border-description bg-transparent px-2 py-1 text-[11px] font-medium text-foreground hover:brightness-125"
+              className="flex-1 cursor-pointer rounded-sm border-[0.5px] border-solid border-description bg-transparent px-2 py-1 text-[11px] font-medium text-foreground hover:brightness-125"
             >
               Learn more
             </button>
             <button
               onClick={() => ideMessenger.post("openUrl", EXPORT_URL)}
-              className="flex-1 cursor-pointer rounded border-none px-2 py-1 text-[11px] font-medium hover:brightness-125"
+              className="flex-1 cursor-pointer rounded-sm border-none px-2 py-1 text-[11px] font-medium hover:brightness-125"
               style={{
                 backgroundColor: vscButtonBackground,
                 color: vscButtonForeground,
