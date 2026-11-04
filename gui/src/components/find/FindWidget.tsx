@@ -56,8 +56,8 @@ type ScrollToMatchOption = "closest" | "first" | "none";
     Container must have relative positioning
 */
 export const useFindWidget = (
-  searchRef: RefObject<HTMLDivElement>,
-  headerRef: RefObject<HTMLDivElement>,
+  searchRef: RefObject<HTMLDivElement | null>,
+  headerRef: RefObject<HTMLDivElement | null>,
   disabled: boolean,
 ) => {
   // Search input, debounced

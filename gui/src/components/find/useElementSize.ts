@@ -13,7 +13,7 @@ interface UseElementSizeOptions {
 }
 
 export const useElementSize = (
-  ref: RefObject<HTMLElement>,
+  ref: RefObject<HTMLElement | null>,
   debounceMs = 250,
 ): ElementSize => {
   const [size, setSize] = useState<ElementSize>({

@@ -23,7 +23,7 @@ export function ToolTip({
   ...props
 }: Omit<ITooltip, "id" | "children" | "content"> & {
   content: ITooltip["children"];
-  children: ReactElement;
+  children: ReactElement<{ "data-tooltip-id"?: string }>;
 }) {
   const tooltipId = useId();
 

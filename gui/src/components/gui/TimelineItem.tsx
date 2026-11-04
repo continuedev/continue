@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import { ChatBubbleOvalLeftIcon } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import styled from "styled-components";

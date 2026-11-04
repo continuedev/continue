@@ -537,7 +537,9 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
               return (
                 <ItemDiv
                   as="button"
-                  ref={(el) => (itemRefs.current[index] = el)}
+                  ref={(el) => {
+                    itemRefs.current[index] = el;
+                  }}
                   className={`item cursor-pointer ${isSelected ? "is-selected" : ""}`}
                   key={index}
                   onClick={(e) => {

@@ -18,7 +18,7 @@ interface SearchOptions {
 }
 
 export const searchWithinContainer = (
-  containerRef: React.RefObject<HTMLDivElement>,
+  containerRef: React.RefObject<HTMLDivElement | null>,
   searchQuery: string,
   options: SearchOptions,
 ): {

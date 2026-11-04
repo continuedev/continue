@@ -1,5 +1,5 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import React, { isValidElement } from "react";
+import React, { type JSX, isValidElement } from "react";
 import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 import {

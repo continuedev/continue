@@ -102,7 +102,9 @@ export function HistoryTableRow({
             <Input
               type="text"
               className="w-full"
-              ref={(titleInput) => titleInput && titleInput.focus()}
+              ref={(titleInput) => {
+                titleInput?.focus();
+              }}
               value={sessionTitleEditValue}
               onChange={(e) => setSessionTitleEditValue(e.target.value)}
               onKeyUp={(e) => handleKeyUp(e)}

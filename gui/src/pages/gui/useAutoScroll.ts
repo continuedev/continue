@@ -10,7 +10,7 @@ function getNumUserMsgs(history: ChatHistoryItemWithMessageId[]) {
 }
 
 export const useAutoScroll = (
-  ref: React.RefObject<HTMLDivElement>,
+  ref: React.RefObject<HTMLDivElement | null>,
   history: ChatHistoryItemWithMessageId[],
 ) => {
   const [userHasScrolled, setUserHasScrolled] = useState(false);
