@@ -78,6 +78,7 @@
             "pages": [
               "customize/overview",
               "customize/models",
+              "customize/model-setup",
               "customize/mcp-tools",
               "customize/rules",
               "customize/prompts",

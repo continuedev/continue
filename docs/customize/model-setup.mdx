@@ -1,0 +1,51 @@
+---
+title: "Set Up Providers and Models"
+---
+
+Open the setup flow from **Settings > Models > Providers** (Add provider, or Edit on an existing row), from the first-run onboarding card, or from the command palette:
+
+- VS Code: `Continued: Manage Models and Providers`
+- JetBrains: `Tools > Manage Models and Providers`, or search for `Continue: Manage Models and Providers`
+
+The flow has three steps, and nothing is written until you confirm the last one.
+
+1. **Credentials.** Choose the provider, enter the API key and any endpoint fields (API base, or region and profile for Amazon Bedrock), and choose where the key is kept.
+2. **Models.** Tick the models to use. Models already in your `config.yaml` start ticked. The list can be refreshed from the provider with the entered credentials.
+3. **Review.** Lists the models to add and remove, and where the key goes. Removing models needs a separate confirmation, and removed models are also taken out of the `modeModels` lists.
+
+One provider connection (a provider plus its API base, region or profile) has one key, and every model you tick for it refers to that key. Editing the API base, region or profile of an existing connection changes that connection in place: its models keep their names and settings. If another connection already uses the new endpoint, the save is refused.
+
+Saving edits `config.yaml` and keeps your comments and key order. It needs a `config.yaml`, so it is unavailable if you only have a `config.json`.
+
+## Where API keys are stored
+
+Choose one per connection under "Keep the key in". `config.yaml` never contains the key unless you choose the last option.
+
+| Option | What is written | Notes |
+| :-- | :-- | :-- |
+| Secure storage | The key goes to the IDE's secret storage. `config.yaml` gets `apiKey: ${{ secrets.CONTINUED_<PROVIDER>_API_KEY }}`. | Default when the IDE can store and read back a test value: VS Code secret storage, JetBrains Password Safe. Not readable by the CLI or other tools. |
+| `~/.continue/.env` file | The key is added to `~/.continue/.env` (owner-only permissions). `config.yaml` gets the same reference. | Plaintext. Works with the CLI and anything else that reads `.env`. Default when secure storage is unavailable. |
+| Environment variable | Nothing is stored. `config.yaml` refers to the name you type. | For keys injected by something else. IDE extensions only see variables present when the IDE was launched. |
+| Inside `config.yaml` | The key is written into each model entry. | Not recommended: the file is often synced or committed. |
+
+Your last choice is remembered. Existing configs are not changed.
+
+### Lookup order
+
+`${{ secrets.NAME }}` is resolved from the first of these that has a value:
+
+1. The IDE's secure storage
+2. `~/.continue/.env`
+3. `<workspace>/.continue/.env`
+4. `<workspace>/.env`
+5. Process environment variables
+
+Because secure storage is read first, a key saved there wins over an older copy in `~/.continue/.env`. When you save a key to secure storage and `~/.continue/.env` has the same name, the flow asks whether to remove that line. It never deletes it without asking, and only does so once the key is in secure storage.
+
+### Move an existing key to secure storage
+
+On the Providers card, a connection whose key is only in `~/.continue/.env` shows **Move key to secure storage**. After you confirm, Continue copies the value into secure storage, checks that it reads back, and then removes that line from `~/.continue/.env`. `config.yaml` is unchanged, since it already refers to the secret by name. The key value stays in the extension host and is not sent to the chat panel. If the key is in both places, the card offers **Remove .env copy** instead.
+
+### A synced config on a new machine
+
+Secure storage is per machine. If `config.yaml` refers to a secret that has no value on this machine, the model shows as "Key not set", and the warning icon above the chat input offers **Enter key**, which opens the flow at the credentials step.

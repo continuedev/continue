@@ -284,15 +284,16 @@ models:
 
 When Continue encounters `${{ secrets.X }}`, it searches these sources **in order**:
 
-1. **Workspace `.env` file**: `<workspace-root>/.env`
-2. **Workspace Continue `.env` file**: `<workspace-root>/.continue/.env`
-3. **Global `.env` file**: `~/.continue/.env`
-4. **Process environment variables**: Standard system environment variables
+1. **IDE secure storage**: where the [provider setup flow](/customize/model-setup#where-api-keys-are-stored) keeps a key by default (VS Code and JetBrains only)
+2. **Global `.env` file**: `~/.continue/.env`
+3. **Workspace Continue `.env` file**: `<workspace-root>/.continue/.env`
+4. **Workspace `.env` file**: `<workspace-root>/.env`
+5. **Process environment variables**: Standard system environment variables
 
 <Warning>
 **IDE extensions (VS Code, JetBrains) cannot read your shell environment variables.** Setting `export OPENAI_API_KEY=...` in your terminal will not make the key available to Continue running inside your IDE. You must use a `.env` file instead.
 
-Process environment variables (source 4) only work with the [Continue CLI](/cli/configuration), where you can pass them directly: `export OPENAI_API_KEY=sk-... && cn`
+Process environment variables (source 5) only work with the [Continue CLI](/cli/configuration), where you can pass them directly: `export OPENAI_API_KEY=sk-... && cn`
 </Warning>
 
 #### Creating `.env` files
