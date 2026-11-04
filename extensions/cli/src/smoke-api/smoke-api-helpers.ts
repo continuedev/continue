@@ -191,14 +191,16 @@ export function waitForPattern(
     proc.stdout?.setEncoding("utf8").on("data", check);
     proc.stderr?.setEncoding("utf8").on("data", check);
 
-    proc.on("exit", () => {
+    // execa 10 subprocesses are promises, not ChildProcess emitters.
+    const onExit = () => {
       clearTimeout(timer);
       reject(
         new Error(
           `Process exited before pattern "${pattern}" was found.\nCollected output:\n${output}`,
         ),
       );
-    });
+    };
+    proc.then(onExit, onExit);
   });
 }
 
@@ -268,7 +270,6 @@ export async function shutdownServe(
   // Give it a moment to close gracefully
   await new Promise((r) => setTimeout(r, 500));
 
-  if (!proc.killed) {
-    proc.kill("SIGTERM");
-  }
+  // No-op if it already exited.
+  proc.kill("SIGTERM");
 }

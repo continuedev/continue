@@ -750,7 +750,8 @@
       "@types/node": "$@types/node"
     },
     "mocha": {
-      "serialize-javascript": "^7.0.5"
+      "serialize-javascript": "^7.0.5",
+      "glob": "^14.0.2"
     },
     "diff": "$diff",
     "picomatch": "^4.0.2",
@@ -768,6 +769,19 @@
     },
     "uuidv4": {
       "uuid": "^11.1.1"
+    },
+    "deepmerge": "4.1.2",
+    "vscode-extension-tester": {
+      "glob": "^14.0.2"
+    },
+    "test-exclude": {
+      "glob": "^14.0.2"
+    },
+    "rimraf": {
+      "glob": "^14.0.2"
+    },
+    "@openapitools/openapi-generator-cli": {
+      "glob": "^14.0.2"
     }
   }
 }

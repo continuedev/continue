@@ -1,6 +1,14 @@
 import { renderInMode, testBothModes } from "./TUIChat.dualModeHelper.js";
 import { waitForCondition } from "./TUIChat.testHelper.js";
 
+// ink 8 holds a lone ESC for ~20ms to tell it apart from the start of an
+// escape sequence, so a keypress must be followed by a short wait (and two
+// presses written back to back would be read as a single Meta+Esc).
+const pressEsc = async (stdin: { write: (data: string) => void }) => {
+  stdin.write("\u001b");
+  await new Promise((resolve) => setTimeout(resolve, 50));
+};
+
 /**
  * Integration tests for the message edit feature in TUIChat
  *
@@ -21,8 +29,8 @@ describe("TUIChat - Message Edit Feature", () => {
     expect(frame).not.toContain("No user messages to edit");
 
     // Press Esc twice quickly (within 500ms)
-    stdin.write("\u001b"); // First Esc
-    stdin.write("\u001b"); // Second Esc
+    await pressEsc(stdin);
+    await pressEsc(stdin);
 
     // Wait for UI to update
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -37,8 +45,8 @@ describe("TUIChat - Message Edit Feature", () => {
     const { lastFrame, stdin } = renderInMode(mode);
 
     // Open edit selector (double Esc)
-    stdin.write("\u001b");
-    stdin.write("\u001b");
+    await pressEsc(stdin);
+    await pressEsc(stdin);
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify selector is open
@@ -63,8 +71,8 @@ describe("TUIChat - Message Edit Feature", () => {
     const { lastFrame, stdin } = renderInMode(mode);
 
     // Open edit selector
-    stdin.write("\u001b");
-    stdin.write("\u001b");
+    await pressEsc(stdin);
+    await pressEsc(stdin);
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify edit selector is open
@@ -73,7 +81,7 @@ describe("TUIChat - Message Edit Feature", () => {
     expect(frame).toContain("No user messages to edit");
 
     // Press Esc to exit
-    stdin.write("\u001b");
+    await pressEsc(stdin);
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify edit selector is closed
@@ -89,8 +97,8 @@ describe("TUIChat - Message Edit Feature", () => {
     // Actual behavior depends on having chat history
 
     // Open edit selector
-    stdin.write("\u001b");
-    stdin.write("\u001b");
+    await pressEsc(stdin);
+    await pressEsc(stdin);
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Try to edit (Enter)
@@ -102,7 +110,7 @@ describe("TUIChat - Message Edit Feature", () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Exit without submitting (Esc)
-    stdin.write("\u001b");
+    await pressEsc(stdin);
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     const frame = lastFrame();
@@ -117,8 +125,8 @@ describe("TUIChat - Message Edit Feature", () => {
       const { lastFrame, stdin } = renderInMode(mode);
 
       // Perform various operations
-      stdin.write("\u001b");
-      stdin.write("\u001b"); // Open edit with separate Esc presses
+      await pressEsc(stdin);
+      await pressEsc(stdin);
 
       // Wait for selector to open (poll instead of fixed timeout)
       await waitForCondition(
@@ -133,7 +141,7 @@ describe("TUIChat - Message Edit Feature", () => {
       stdin.write("k"); // Navigate (no-op with 0 messages)
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      stdin.write("\u001b"); // Close
+      await pressEsc(stdin);
 
       // Wait for selector to close (poll instead of fixed timeout)
       await waitForCondition(
@@ -211,7 +219,7 @@ describe("TUIChat - Edit Feature Edge Cases", () => {
     const { lastFrame, stdin } = renderInMode(mode);
 
     // Single Esc (should not open edit selector)
-    stdin.write("\u001b");
+    await pressEsc(stdin);
     await new Promise((resolve) => setTimeout(resolve, 600)); // Wait longer than 500ms threshold
 
     // Verify selector did not open
@@ -219,7 +227,7 @@ describe("TUIChat - Edit Feature Edge Cases", () => {
     expect(frame).toBeDefined();
     expect(frame).not.toContain("No user messages to edit");
 
-    stdin.write("\u001b"); // Another single Esc after timeout
+    await pressEsc(stdin);
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify selector still did not open
@@ -273,7 +281,7 @@ describe("TUIChat - Edit Feature Compatibility", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Single Esc (might clear input or do other things)
-      stdin.write("\u001b");
+      await pressEsc(stdin);
       await new Promise((resolve) => setTimeout(resolve, 600));
 
       const frame = lastFrame();

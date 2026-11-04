@@ -25,7 +25,7 @@ export async function runLlmTest(testCase: LlmTestCase) {
     mockStream,
   } = testCase;
 
-  const mockFetch = jest.fn<any>();
+  const mockFetch = jest.fn<typeof fetch>();
 
   if (mockStream) {
     const encoder = new TextEncoder();

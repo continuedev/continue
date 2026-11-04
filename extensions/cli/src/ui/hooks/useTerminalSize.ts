@@ -5,7 +5,8 @@ const DEFAULT_ROWS = 24;
 const DEFAULT_COLS = 80;
 
 const useTerminalSize = (debounce = 100) => {
-  const { stdout } = useStdout();
+  // ink 8 types stdout as NodeJS.WritableStream; it is the TTY stream.
+  const stdout = useStdout().stdout as NodeJS.WriteStream;
   const [dimensions, setDimensions] = useState({
     columns: stdout.columns || DEFAULT_COLS,
     rows: stdout.rows || DEFAULT_ROWS,

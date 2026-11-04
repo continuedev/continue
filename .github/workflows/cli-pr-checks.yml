@@ -46,7 +46,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
           cache-dependency-path: extensions/cli/package-lock.json
 
@@ -78,7 +78,7 @@ jobs:
     strategy:
       matrix:
         os: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["ubuntu-latest","windows-latest","macos-latest"]') }}
-        node-version: ${{ fromJSON(github.event_name == 'pull_request' && '[22]' || '[18,20,22,24]') }}
+        node-version: ${{ fromJSON(github.event_name == 'pull_request' && '[22]' || '[22,24]') }}
       fail-fast: false
     runs-on: ${{ matrix.os }}
 
@@ -150,7 +150,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
           cache-dependency-path: extensions/cli/package-lock.json
 

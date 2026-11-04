@@ -29,10 +29,6 @@ updates:
     labels:
       - dependencies
     ignore:
-      # ink 6.8.0 breaks Esc/key handling in extensions/cli TUIChat tests
-      # (works through 6.7.0). Remove once the CLI is adapted.
-      - dependency-name: ink
-        versions: ["6.8.x"]
       # @types/vscode must not be newer than engines.vscode in the extension's
       # package.json (vsce refuses to package otherwise); bump them together by hand.
       - dependency-name: "@types/vscode"
@@ -47,9 +43,6 @@ updates:
       # compiles against APIs that do not exist at runtime. Bump it by hand together with
       # the Node runtime; minor/patch updates still flow.
       - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
-      # Needs Jest 30; core is on Jest 29 (see the Jest -> Vitest migration).
-      - dependency-name: jest-environment-jsdom
         update-types: ["version-update:semver-major"]
       # @types/uuid 11 is a stub for uuid >= 11; core uses uuid 9, which needs @types/uuid 9.
       # Bump uuid itself (types are then bundled) and drop @types/uuid together.

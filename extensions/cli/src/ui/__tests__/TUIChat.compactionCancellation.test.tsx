@@ -5,6 +5,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
 import { AppRoot } from "../AppRoot.js";
 
+// ink 8 holds a lone ESC for ~20ms to tell it apart from the start of an
+// escape sequence, so a keypress must be followed by a short wait (and two
+// presses written back to back would be read as a single Meta+Esc).
+const pressEsc = async (stdin: { write: (data: string) => void }) => {
+  stdin.write("\u001b");
+  await new Promise((resolve) => setTimeout(resolve, 50));
+};
+
 // Mock the useChat hook to control state
 const mockUseChat = vi.fn();
 const mockHandleInterrupt = vi.fn();
@@ -103,7 +111,7 @@ describe("TUIChat - Compaction Cancellation", () => {
     }
   });
 
-  it("prioritizes compaction cancellation over response cancellation", () => {
+  it("prioritizes compaction cancellation over response cancellation", async () => {
     // This tests the case where both might be true (theoretical edge case)
     const compactionStartTime = Date.now();
     const responseStartTime = Date.now();
@@ -130,7 +138,7 @@ describe("TUIChat - Compaction Cancellation", () => {
 
     try {
       // Simulate ESC key press when both states are active
-      stdin.write("\x1b"); // ESC key
+      await pressEsc(stdin);
 
       // Should still call handleInterrupt (which will prioritize compaction)
       expect(mockHandleInterrupt).toHaveBeenCalledTimes(1);
