@@ -729,7 +729,7 @@
     "diff": "^8.0.4",
     "express": "^4.18.2",
     "follow-redirects": "^1.15.4",
-    "jsdom": "^24.0.0",
+    "jsdom": "^30.1.3",
     "lru-cache": "^11.2.4",
     "minisearch": "^7.0.0",
     "mocha": "^11.7.5",
