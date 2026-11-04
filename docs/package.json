@@ -41,6 +41,11 @@
     "@orpc/zod": "^1.16.1",
     "sharp": "^0.35.5",
     "katex": "^0.18.2",
-    "@opentelemetry/sdk-node": "~0.220.0"
+    "@opentelemetry/sdk-node": "~0.220.0",
+    "image-size": "^2.0.4",
+    "fflate": "0.8.3",
+    "satori": {
+      "fflate": "0.7.5"
+    }
   }
 }
