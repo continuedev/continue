@@ -76,6 +76,7 @@ import { openSecretLocation } from "./config/openSecretLocation";
 import {
   defaultSecretName,
   readProviderConnections,
+  ProviderSetupError,
   saveProviderModels,
   validateSaveRequest,
 } from "./config/providerSetup";
@@ -557,7 +558,15 @@ export class Core {
               key: { storage: key.storage, secretName: key.secretName },
             }
           : req;
-      const saved = saveProviderModels(toSave);
+      let saved: boolean;
+      try {
+        saved = saveProviderModels(toSave);
+      } catch (e) {
+        if (e instanceof ProviderSetupError) {
+          return { saved: false, error: e.message };
+        }
+        throw e;
+      }
       if (!saved) {
         void this.ide.showToast(
           "warning",

@@ -221,8 +221,20 @@ export function findConnection(
   );
 }
 
+/** "http://localhost:1234/v1", "us-east-1 (work)" or "default endpoint". */
+export function describeConnection(c: ProviderConnectionKey): string {
+  const parts = [c.apiBase, c.region, c.profile ? `(${c.profile})` : undefined];
+  const text = parts.filter(Boolean).join(" ");
+  return text || "default endpoint";
+}
+
 export interface BuildRequestArgs {
   provider: ProviderInfo;
+  /**
+   * The connection being edited, as it is in config.yaml now. When the form
+   * describes a different endpoint, core changes that connection in place.
+   */
+  editing?: ProviderConnectionKey;
   values: FormValues;
   diff: SelectionDiff;
   /** Whether to send the key section at all. */
@@ -237,6 +249,7 @@ export interface BuildRequestArgs {
  */
 export function buildSaveRequest({
   provider,
+  editing,
   values,
   diff,
   key,
@@ -272,6 +285,9 @@ export function buildSaveRequest({
     add,
     remove: diff.remove.map((m) => m.name),
   };
+  if (editing && !sameConnection(editing, connection)) {
+    request.from = editing;
+  }
   if (key) {
     request.key = {
       storage: key.storage,

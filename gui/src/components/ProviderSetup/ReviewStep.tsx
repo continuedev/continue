@@ -10,6 +10,8 @@ interface ReviewStepProps {
   onConfirmRemoval: (confirmed: boolean) => void;
   error?: string;
   warning?: string;
+  /** Set when the endpoint, region or profile of the connection is edited. */
+  connectionChange?: { from: string; to: string; modelCount: number };
 }
 
 /** The last step: what will change in config.yaml. Nothing is saved before. */
@@ -21,9 +23,21 @@ export function ReviewStep({
   onConfirmRemoval,
   error,
   warning,
+  connectionChange,
 }: ReviewStepProps) {
   return (
     <div className="flex flex-col gap-3 text-xs" data-testid="review-step">
+      {connectionChange && (
+        <div data-testid="review-connection-change">
+          <div className="font-medium">Change endpoint</div>
+          <div>
+            {connectionChange.from} becomes {connectionChange.to}. The{" "}
+            {connectionChange.modelCount} existing model
+            {connectionChange.modelCount === 1 ? "" : "s"} on it keep their
+            names and settings.
+          </div>
+        </div>
+      )}
       <div>
         <div className="font-medium">Add to config.yaml</div>
         {diff.add.length === 0 ? (

@@ -1,0 +1,46 @@
+# Personal config. Keep these comments.
+name: Personal
+version: 1.0.0
+schema: v1
+
+models:
+  # Hosted OpenAI
+  - name: GPT
+    provider: openai
+    model: gpt-5
+    apiKey: ${{ secrets.OPENAI_API_KEY }}
+
+  # Local LM Studio (the endpoint is the thing being edited)
+  - name: Local Qwen # my favourite
+    provider: openai
+    model: qwen3
+    apiBase: http://localhost:1234/v1/
+    apiKey: ${{ secrets.LMSTUDIO_KEY }}
+    roles:
+      - chat
+    defaultCompletionOptions:
+      temperature: 0.2 # low on purpose
+  - name: Local Llama
+    provider: openai
+    model: llama4
+    apiBase: http://localhost:1234/v1
+    apiKey: ${{ secrets.LMSTUDIO_KEY }}
+
+  # Bedrock, work account
+  - name: Sonnet (Bedrock)
+    provider: bedrock
+    model: anthropic.claude-sonnet
+    env:
+      region: us-east-1
+      profile: work # SSO
+      accessKeyId: ${{ secrets.AWS_KEY }}
+
+modeModels:
+  chat:
+    model: Local Qwen
+    models:
+      - Local Qwen
+      - GPT
+
+rules:
+  - be brief # keep

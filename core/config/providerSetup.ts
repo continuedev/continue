@@ -60,8 +60,18 @@ export interface ProviderSetupInfo {
 
 export interface SaveProviderModelsRequest {
   provider: string;
-  /** Which connection to edit; matches entries by provider and these fields. */
+  /**
+   * The connection after this save; entries are matched by provider and these
+   * fields. Without `from`, this is also the connection being edited.
+   */
   connection?: ProviderConnectionKey;
+  /**
+   * Editing a connection's apiBase, region or profile: the connection as it is
+   * in config.yaml now. Its entries are changed in place to `connection`
+   * (they keep their names, comments and every other field) rather than a new
+   * connection being created beside them.
+   */
+  from?: ProviderConnectionKey;
   /** Models to add. `apiKey` on them is ignored; use `key`. */
   add?: JSONModelDescription[];
   /** Names (as in config.yaml) of models to remove from this connection. */
@@ -165,6 +175,9 @@ export function validateSaveRequest(
   if (!req.provider || typeof req.provider !== "string") {
     return "Choose a provider";
   }
+  if (req.from && !req.connection) {
+    return "Say which endpoint the connection should use";
+  }
   const key = req.key;
   if (key) {
     if (key.storage === "inline") {
@@ -185,6 +198,55 @@ export function validateSaveRequest(
     if (!model.model || !model.title) return "A model needs a name and an id";
   }
   return undefined;
+}
+
+/** Thrown when an edit cannot be applied; the message is safe to show. */
+export class ProviderSetupError extends Error {}
+
+/**
+ * Point the entries of the `from` connection at `to`. Only apiBase and
+ * env.region / env.profile change, and only when they differ, so a hand-written
+ * trailing slash or a comment on an untouched field survives.
+ */
+function moveConnection(
+  models: YamlModel[],
+  provider: string,
+  from: ProviderConnectionKey,
+  to: ProviderConnectionKey | undefined,
+): YamlModel[] {
+  const fromId = requestConnectionKey(provider, from);
+  const toId = requestConnectionKey(provider, to);
+  if (fromId === toId) return models;
+
+  if (
+    models.some(
+      (m) => m && typeof m === "object" && connectionKeyOf(m) === toId,
+    )
+  ) {
+    throw new ProviderSetupError(
+      "Another connection to that endpoint already exists. Edit that one instead, or remove its models first.",
+    );
+  }
+
+  return models.map((m) => {
+    if (!m || typeof m !== "object" || connectionKeyOf(m) !== fromId) return m;
+    const next: YamlModel = { ...m };
+
+    if (normalizeBase(m.apiBase) !== normalizeBase(to?.apiBase)) {
+      if (to?.apiBase) next.apiBase = to.apiBase;
+      else delete next.apiBase;
+    }
+
+    const env: Record<string, any> = { ...(m.env ?? {}) };
+    for (const field of ["region", "profile"] as const) {
+      if ((m.env?.[field] ?? "") === (to?.[field] ?? "")) continue;
+      if (to?.[field]) env[field] = to[field];
+      else delete env[field];
+    }
+    if (Object.keys(env).length > 0) next.env = env;
+    else delete next.env;
+    return next;
+  });
 }
 
 function dedupeName(taken: Set<string>, wanted: string): string {
@@ -245,7 +307,10 @@ export function applyProviderModels(
   req: SaveProviderModelsRequest,
 ): ConfigYaml {
   const connectionId = requestConnectionKey(req.provider, req.connection);
-  const models: YamlModel[] = [...((config.models ?? []) as YamlModel[])];
+  let models: YamlModel[] = [...((config.models ?? []) as YamlModel[])];
+  if (req.from) {
+    models = moveConnection(models, req.provider, req.from, req.connection);
+  }
   const inConnection = (m: YamlModel) =>
     m &&
     typeof m === "object" &&
