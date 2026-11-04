@@ -286,6 +286,31 @@ export interface Session {
   chatModelTitle?: string | null;
   /** Optional: cumulative usage and cost for all LLM API calls in this session */
   usage?: SessionUsage;
+  /** Optional: file snapshots taken before agent edits, used by "Restore to here" */
+  checkpoints?: TurnCheckpoint[];
+}
+
+/**
+ * Prior state of one file, captured before an agent tool call changed it.
+ * See core/util/checkpoints.ts.
+ */
+export interface FileCheckpoint {
+  /** File URI, as used by the IDE interface */
+  uri: string;
+  /** False when the agent created the file, so restoring means deleting it */
+  existed: boolean;
+  /** Prior contents. Absent when `existed` is false or the file was skipped */
+  content?: string;
+  /** Why the contents were not stored, so this file cannot be restored */
+  skipped?: "too_large" | "unreadable" | "evicted";
+}
+
+/** All files first touched during one turn (one user message and its replies). */
+export interface TurnCheckpoint {
+  /** `message.id` of the user message that started the turn */
+  turnId: string;
+  createdAt: number;
+  files: FileCheckpoint[];
 }
 
 export interface BaseSessionMetadata {

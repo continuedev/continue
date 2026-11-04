@@ -1,18 +1,24 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ContextItem, McpUiState } from "core";
+import { ContextItem, IDE, McpUiState, ToolCallState } from "core";
 import { CLIENT_TOOLS_IMPLS } from "core/tools/builtIn";
+import {
+  CHECKPOINT_TOOL_NAMES,
+  resolveCheckpointTargets,
+  snapshotFile,
+} from "core/util/checkpoints";
 import { ContinueError, ContinueErrorReason } from "core/util/errors";
 
 import { callClientTool } from "../../util/clientTools/callClientTool";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   acceptToolCall,
+  addCheckpointSnapshot,
   errorToolCall,
   setInactive,
   setToolCallCalling,
   updateToolCallOutput,
 } from "../slices/sessionSlice";
-import { ThunkApiType } from "../store";
+import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
 import { findToolCallById, logToolUsage } from "../util";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
@@ -45,6 +51,12 @@ export const callToolById = createAsyncThunk<
       toolCallId,
     }),
   );
+
+  // Snapshot the files this call may change, so the turn can be rolled back
+  await snapshotBeforeEdit(toolCallState, state.session.history, {
+    dispatch,
+    ide: extra.ideMessenger.ide,
+  });
 
   let output: ContextItem[] | undefined = undefined;
   let mcpUiState: McpUiState | undefined = undefined;
@@ -148,3 +160,38 @@ export const callToolById = createAsyncThunk<
     dispatch(setInactive());
   }
 });
+
+/**
+ * Record the prior contents of the file an edit tool is about to change,
+ * under the turn (latest user message) it belongs to. Failures are logged and
+ * never block the tool call.
+ */
+async function snapshotBeforeEdit(
+  toolCallState: ToolCallState,
+  history: RootState["session"]["history"],
+  { dispatch, ide }: { dispatch: AppThunkDispatch; ide: IDE },
+) {
+  const toolName = toolCallState.toolCall.function.name;
+  if (!CHECKPOINT_TOOL_NAMES.includes(toolName)) {
+    return;
+  }
+  try {
+    const turnId = history.findLast((item) => item.message.role === "user")
+      ?.message.id;
+    if (!turnId) {
+      return;
+    }
+    const uris = await resolveCheckpointTargets(
+      toolName,
+      toolCallState.parsedArgs,
+      ide,
+    );
+    for (const uri of uris) {
+      dispatch(
+        addCheckpointSnapshot({ turnId, file: await snapshotFile(ide, uri) }),
+      );
+    }
+  } catch (e) {
+    console.warn("Failed to snapshot file before edit", e);
+  }
+}

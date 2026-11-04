@@ -14,6 +14,7 @@ import {
   ChatMessage,
   ContextItem,
   ContextItemWithId,
+  FileCheckpoint,
   FileSymbolMap,
   McpUiState,
   MessageModes,
@@ -24,8 +25,10 @@ import {
   Tool,
   ToolCallDelta,
   ToolCallState,
+  TurnCheckpoint,
 } from "core";
 import { mergeReasoningDetails } from "core/llm/openaiTypeConverters";
+import { addFileSnapshot } from "core/util/checkpoints";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
   renderChatMessage,
@@ -228,6 +231,8 @@ type SessionState = {
   contextPercentage?: number;
   inlineErrorMessage?: InlineErrorMessageType;
   compactionLoading: Record<number, boolean>; // Track compaction loading by message index
+  /** Pre-edit file snapshots for "Restore to here"; see core/util/checkpoints.ts */
+  checkpoints: TurnCheckpoint[];
 };
 
 export const INITIAL_SESSION_STATE: SessionState = {
@@ -248,6 +253,7 @@ export const INITIAL_SESSION_STATE: SessionState = {
   lastSessionId: undefined,
   newestToolbarPreviewForInput: {},
   compactionLoading: {},
+  checkpoints: [],
   promptCache: { ...INITIAL_PROMPT_CACHE_STATE },
 };
 
@@ -448,6 +454,19 @@ export const sessionSlice = createSlice({
       state.inlineErrorMessage = undefined;
       state.isPruned = false;
       state.contextPercentage = undefined;
+    },
+    addCheckpointSnapshot: (
+      state,
+      { payload }: PayloadAction<{ turnId: string; file: FileCheckpoint }>,
+    ) => {
+      state.checkpoints = addFileSnapshot(
+        state.checkpoints,
+        payload.turnId,
+        payload.file,
+      );
+    },
+    setCheckpoints: (state, { payload }: PayloadAction<TurnCheckpoint[]>) => {
+      state.checkpoints = payload;
     },
     deleteCompaction: (state, action: PayloadAction<number>) => {
       // Removes the conversation summary from the specified message
@@ -706,6 +725,7 @@ export const sessionSlice = createSlice({
         state.history = payload.history as any;
         state.title = payload.title;
         state.id = payload.sessionId;
+        state.checkpoints = payload.checkpoints ?? [];
         if (payload.mode) {
           state.mode = payload.mode;
         }
@@ -713,6 +733,7 @@ export const sessionSlice = createSlice({
         state.history = [];
         state.title = NEW_SESSION_TITLE;
         state.id = uuidv4();
+        state.checkpoints = [];
       }
     },
     updateSessionTitle: (state, { payload }: PayloadAction<string>) => {
@@ -1096,6 +1117,8 @@ export const {
   setMainEditorContentTrigger,
   deleteMessage,
   deleteCompaction,
+  addCheckpointSnapshot,
+  setCheckpoints,
   setIsGatheringContext,
   resetNextCodeBlockToApplyIndex,
   updateApplyState,
