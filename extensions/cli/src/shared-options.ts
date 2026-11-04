@@ -13,6 +13,10 @@ export function addCommonOptions(command: Command): Command {
     )
     .option("--readonly", "Start in plan mode (read-only tools)")
     .option("--auto", "Start in auto mode (all tools allowed)")
+    .option(
+      "--auto-review",
+      "Experimental: a model with the 'reviewer' role decides tool calls your rules and --allow/--ask/--exclude leave open. Needs a reviewer model in config.yaml. With -p, calls it will not allow are refused.",
+    )
     .option("--verbose", "Enable verbose logging")
     .option("--beta-status-tool", "Enable beta status tool")
     .option(
@@ -102,6 +106,7 @@ export function mergeParentOptions(parentCommand: Command, options: any): any {
     "org",
     "readonly",
     "auto",
+    "autoReview",
     "tools",
     "verbose",
     "rule",

@@ -7,7 +7,14 @@ import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { ChatCompletionToolMessageParam } from "openai/resources/chat/completions.mjs";
 
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
+import type { ModelServiceState } from "src/services/types.js";
 
+import {
+  evaluateWithCoreRules,
+  getReviewer,
+  isAutoReviewEnabled,
+  type CoreVerdict,
+} from "../permissions/coreRules.js";
 import { checkToolPermission } from "../permissions/permissionChecker.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import { ToolCallRequest, ToolPermissions } from "../permissions/types.js";
@@ -109,14 +116,105 @@ export async function requestUserPermission(
   return permissionResult.approved;
 }
 
+/**
+ * The `toolPermissions` rules from config.yaml and the Auto reviewer (`--auto-review`),
+ * run by core's engine. Any failure here leaves the CLI's own result in place
+ * for rules, and for the reviewer it is an unusable reviewer (asks, or refuses
+ * when headless), never an allow.
+ */
+async function coreRulesVerdict(
+  toolCall: PreprocessedToolCall,
+  cliPermission: "allow" | "ask",
+  isHeadless?: boolean,
+): Promise<CoreVerdict | undefined> {
+  const autoReview = isAutoReviewEnabled();
+  try {
+    const modelState = await serviceContainer.get<ModelServiceState>(
+      SERVICE_NAMES.MODEL,
+    );
+    const assistant = modelState?.assistant;
+    const permissions = assistant?.toolPermissions;
+    if (!permissions && !autoReview) return undefined;
+    return await evaluateWithCoreRules({
+      cliToolName: toolCall.name,
+      args: toolCall.arguments,
+      cliPermission,
+      evaluateToolCallPolicy: toolCall.tool?.evaluateToolCallPolicy,
+      assistantPermissions: permissions,
+      autoReview,
+      reviewer:
+        autoReview && modelState?.authConfig
+          ? getReviewer(assistant, modelState.authConfig)
+          : null,
+      isHeadless: !!isHeadless,
+      history: autoReview ? services.chatHistory.getHistory() : undefined,
+    });
+  } catch (e) {
+    logger.warn("Could not apply toolPermissions rules", { error: e });
+    // Fail toward asking, and toward refusing when nobody can be asked.
+    return autoReview || assistantHasRules()
+      ? { decision: "ask", by: "system", reason: "Could not check your rules." }
+      : undefined;
+  }
+}
+
+function assistantHasRules(): boolean {
+  try {
+    const state = serviceContainer.getSync<ModelServiceState>(
+      SERVICE_NAMES.MODEL,
+    );
+    return !!state?.value?.assistant?.toolPermissions;
+  } catch {
+    return false;
+  }
+}
+
 // Helper function to check if tool permission is needed
 export async function checkToolPermissionApproval(
   permissions: ToolPermissions,
   toolCall: PreprocessedToolCall,
   callbacks?: StreamCallbacks,
   isHeadless?: boolean,
-): Promise<{ approved: boolean; denialReason?: "user" | "policy" }> {
+): Promise<{
+  approved: boolean;
+  denialReason?: "user" | "policy";
+  /** Why a rule, protected path or the reviewer refused it, to tell the model. */
+  denialMessage?: string;
+}> {
   const permissionCheck = checkToolPermission(toolCall, permissions);
+
+  // The CLI's own exclude always stands. Otherwise the rules in config.yaml
+  // (deny, protected paths, ask, allow) and the reviewer may tighten the
+  // result, and an allow rule may loosen an "ask".
+  if (permissionCheck.permission !== "exclude") {
+    const verdict = await coreRulesVerdict(
+      toolCall,
+      permissionCheck.permission,
+      isHeadless,
+    );
+    if (verdict) {
+      if (verdict.decision === "allow") return { approved: true };
+      if (verdict.decision === "deny") {
+        return {
+          approved: false,
+          denialReason: "policy",
+          denialMessage: verdict.reason,
+        };
+      }
+      // "ask": nobody to ask when headless, so it is a refusal.
+      if (isHeadless) {
+        return {
+          approved: false,
+          denialReason: "policy",
+          denialMessage: `${verdict.reason ?? "This call needs approval."} Running headless, so it was refused.`,
+        };
+      }
+      const userApproved = await requestUserPermission(toolCall, callbacks);
+      return userApproved
+        ? { approved: true }
+        : { approved: false, denialReason: "user" };
+    }
+  }
 
   if (permissionCheck.permission === "allow") {
     return { approved: true };
@@ -522,7 +620,9 @@ export async function executeStreamedToolCalls(
         const denialReason = permissionResult.denialReason || "user";
         const deniedMessage =
           denialReason === "policy"
-            ? `Command blocked by security policy`
+            ? permissionResult.denialMessage
+              ? `Command blocked by security policy: ${permissionResult.denialMessage} Do not retry it or reach the same result another way; find a safer route or tell the user what you need.`
+              : `Command blocked by security policy`
             : `Permission denied by user`;
 
         const deniedEntry: ToolResultWithStatus = {

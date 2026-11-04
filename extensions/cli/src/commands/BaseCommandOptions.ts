@@ -39,4 +39,6 @@ export interface ExtendedCommandOptions extends BaseCommandOptions {
   readonly?: boolean;
   /** Start in auto mode (all tools allowed) */
   auto?: boolean;
+  /** Experimental: a reviewer-role model decides calls the rules leave open. */
+  autoReview?: boolean;
 }

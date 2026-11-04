@@ -2,6 +2,7 @@ import type { ChatHistoryItem, ToolStatus } from "core/index.js";
 import { stripImages } from "core/util/messageContent.js";
 import { createHistoryItem } from "core/util/messageConversion.js";
 
+import { isAutoReviewEnabled } from "src/permissions/coreRules.js";
 import { checkToolPermission } from "src/permissions/permissionChecker.js";
 
 import {
@@ -184,9 +185,11 @@ export async function getRequestTools(isHeadless: boolean) {
       permissionsState.permissions,
     );
 
+    // Headless runs have no one to ask, so "ask" tools are normally not offered.
+    // With --auto-review the reviewer model answers instead of a person, so they are.
     if (
       result.permission === "allow" ||
-      (result.permission === "ask" && !isHeadless)
+      (result.permission === "ask" && (!isHeadless || isAutoReviewEnabled()))
     ) {
       allowedTools.push(tool);
     }

@@ -2,6 +2,7 @@
  * Shared flag processing utilities to eliminate duplication between TUI and headless modes
  */
 
+import { setAutoReviewEnabled } from "../permissions/coreRules.js";
 import { PermissionMode } from "../permissions/types.js";
 
 export interface PermissionOverrides {
@@ -67,7 +68,11 @@ export function processCommandFlags(options: {
   allow?: string[];
   ask?: string[];
   exclude?: string[];
+  autoReview?: boolean;
 }): ProcessedFlags {
+  // Experimental reviewer model for calls the rules leave open (--auto-review).
+  setAutoReviewEnabled(options.autoReview === true);
+
   // Convert legacy flags to mode
   const mode = convertLegacyModeFlags(options.readonly, options.auto);
 

@@ -90,3 +90,44 @@ cn --readonly   # Plan mode — read-only tools only, no file writes
 | **auto** (`--auto`) | Allows everything — `*: allow` |
 
 Plan and auto modes are absolute overrides. They ignore `--allow`, `--exclude`, and `permissions.yaml` entirely.
+
+## `toolPermissions` rules in `config.yaml`
+
+The same rules the IDE extensions use (see [`toolPermissions`](/reference#toolpermissions)) apply in the CLI when your assistant's `config.yaml` has a `toolPermissions` block:
+
+```yaml
+toolPermissions:
+  allow:
+    - runTerminalCommand(npm test*)
+  ask:
+    - runTerminalCommand(git push*)
+  deny:
+    - readFile(**/.env)
+    - runTerminalCommand(terraform apply*)
+```
+
+They sit on top of the policies above. The order is: the CLI's own `exclude` (and the built-in safety check), then `deny` rules, then protected paths (`.env`, `~/.ssh`, `.git/`, and so on), then `ask` rules, then `allow` rules. So a `deny` rule refuses a call even if `--allow` or `--auto` would have allowed it, and an `allow` rule can run a call that the CLI policies would ask about, but never one that is excluded, denied or protected.
+
+Rules cover the built-in tools `Bash`, `Read`, `Write`, `Edit`, `MultiEdit`, `List`, `Fetch` and `Search`. MCP tools are not covered in the CLI yet. When `config.yaml` has no `toolPermissions`, nothing changes.
+
+**Headless mode** (`-p`). There is nobody to approve, so anything that would ask is refused: an `ask` rule, a protected path, or a call the reviewer would pass to a person. The model gets the reason as the tool result and is told not to retry or work around it.
+
+## Auto reviewer (`--auto-review`, experimental)
+
+```bash
+cn --auto-review
+cn -p "Fix the failing test" --ask Bash --auto-review
+```
+
+With `--auto-review`, a model with the `reviewer` role in your `config.yaml` (see [Reviewer role](/customize/model-roles/reviewer)) decides each call that your rules and the CLI policies leave to "ask": it allows it, asks you, or refuses it with a reason. The reviewer sees your messages and the earlier tool calls, never tool output. It cannot loosen a deny rule, a protected path, an ask rule or an exclude.
+
+- Without a reviewer model, or if the reviewer fails or times out, a call is asked about in the TUI and **refused in headless mode**.
+- Only calls whose CLI permission is `ask` reach the reviewer. In headless mode `Bash` is allowed by default, so pass `--ask Bash` (as above) to have the reviewer judge commands. Headless runs offer `ask` tools to the model only when `--auto-review` is on.
+- After 3 refusals in a row or 20 in total, the reviewer stops allowing calls: the TUI asks you, and a headless run refuses. Tune these with `toolPermissions.auto.limits`.
+- The conversation is sent to the reviewer model's provider. Use a local model if that matters.
+
+| Flag | Effect |
+|------|--------|
+| `--allow <tool>`, `--ask <tool>`, `--exclude <tool>` | Override the CLI policies (unchanged) |
+| `--readonly`, `--auto` | Plan and auto modes (unchanged; `deny` rules in `config.yaml` still apply) |
+| `--auto-review` | Turn on the experimental reviewer for calls left open |
