@@ -32,7 +32,6 @@
   - [📐 Continue Architecture](#-continue-architecture)
     - [Continue VS Code Extension](#continue-vs-code-extension)
     - [Continue JetBrains Extension](#continue-jetbrains-extension)
-  - [Contributor License Agreement](#contributor-license-agreement-cla)
 
 # ❤️ Ways to Contribute
 
@@ -276,16 +275,3 @@ model:
   sure that for the model name you just added, this function returns the correct template type. This is assuming that
   the chat template for that model is already built in Continue. If not, you will have to add the template type and
   corresponding edit and chat templates.
-
-## Contributor License Agreement (CLA)
-
-We require all contributors to accept the CLA and have made it as easy as commenting on your PR:
-
-1. Open your pull request.
-2. Paste the following comment (or reply `recheck` if you’ve signed before):
-
-   ```text
-   I have read the CLA Document and I hereby sign the CLA
-   ```
-
-3. The CLA-Assistant bot records your signature in the repo and marks the status check as passed.
