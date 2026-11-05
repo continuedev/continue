@@ -204,7 +204,7 @@ export function getContextProviderDropdownOptions(
         action: () => {
           ideMessenger.post(
             "openUrl",
-            "https://github.com/b1tninja/continued/blob/main/docs/customize/deep-dives/custom-providers.mdx#built-in-context-providers",
+            "https://b1tninja.github.io/continued/customize/deep-dives/custom-providers#built-in-context-providers",
           );
         },
         description: "",

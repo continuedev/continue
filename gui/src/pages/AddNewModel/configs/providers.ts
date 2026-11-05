@@ -289,7 +289,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     title: "Moonshot",
     provider: "moonshot",
     description: "Use the Moonshot API for LLMs",
-    longDescription: `[Visit our documentation](https://github.com/b1tninja/continued/blob/main/docs/customize/model-providers/more/moonshot.mdx) for information on obtaining an API key.`,
+    longDescription: `[Visit our documentation](https://b1tninja.github.io/continued/customize/model-providers/more/moonshot) for information on obtaining an API key.`,
     icon: "moonshot.png",
     tags: [ModelProviderTags.RequiresApiKey],
     refPage: "moonshot",
@@ -428,7 +428,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     icon: "bedrock.svg",
     description:
       "Use Claude, Nova and other models through your AWS account. Authenticate with a Bedrock API key, an AWS profile (including SSO), or access keys.",
-    longDescription: `Enable the models you want in the [Bedrock console](https://console.aws.amazon.com/bedrock) (**Model access**) in the region you choose below. See the [documentation](https://github.com/b1tninja/continued/blob/main/docs/customize/model-providers/top-level/bedrock.mdx) for help picking an authentication method.`,
+    longDescription: `Enable the models you want in the [Bedrock console](https://console.aws.amazon.com/bedrock) (**Model access**) in the region you choose below. See the [documentation](https://b1tninja.github.io/continued/customize/model-providers/top-level/bedrock) for help picking an authentication method.`,
     tags: [ModelProviderTags.RequiresApiKey],
     refPage: "bedrock",
     packages: [
@@ -588,7 +588,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     provider: "azure",
     description:
       "Azure OpenAI Service offers industry-leading coding and language AI models that you can fine-tune to your specific needs for a variety of use cases.",
-    longDescription: `[Visit our documentation](https://github.com/b1tninja/continued/blob/main/docs/customize/model-providers/top-level/azure.mdx) for information on obtaining an API key.
+    longDescription: `[Visit our documentation](https://b1tninja.github.io/continued/customize/model-providers/top-level/azure) for information on obtaining an API key.
 
 Select the \`GPT-4o\` model below to complete your provider configuration, but note that this will not affect the specific model you need to select when creating your Azure deployment.`,
     icon: "azure.png",

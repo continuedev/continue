@@ -52,7 +52,7 @@ export class ContinueCompletionProvider
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
-            "https://github.com/b1tninja/continued/blob/main/docs/customize/deep-dives/autocomplete.mdx",
+            "https://b1tninja.github.io/continued/customize/deep-dives/autocomplete",
           ),
         );
       }

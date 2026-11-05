@@ -186,7 +186,7 @@ export function HelpSection() {
                 onClick={() =>
                   ideMessenger.post(
                     "openUrl",
-                    "https://github.com/b1tninja/continued/blob/main/docs/index.mdx",
+                    "https://b1tninja.github.io/continued/",
                   )
                 }
               />

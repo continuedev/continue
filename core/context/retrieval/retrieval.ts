@@ -18,7 +18,7 @@ export async function retrieveContextItemsFromEmbeddings(
   //   void extras.ide.showToast(
   //     "warning",
   //     "Set up an embeddings model to use this feature. Visit the docs to learn more: " +
-  //       "https://github.com/b1tninja/continued/blob/main/docs/customize/model-roles/embeddings.mdx",
+  //       "https://b1tninja.github.io/continued/customize/model-roles/embeddings",
   //   );
   //   return [];
   // }

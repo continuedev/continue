@@ -91,7 +91,7 @@ export function IndexingSettingsSection() {
             <div className="mt-1 text-xs">
               Learn how to{" "}
               <a
-                href="https://github.com/b1tninja/continued/blob/main/docs/guides/codebase-documentation-awareness.mdx"
+                href="https://b1tninja.github.io/continued/guides/codebase-documentation-awareness"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-inherit underline hover:brightness-125"

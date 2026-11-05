@@ -144,8 +144,7 @@ export function analyzeError(
 
   // Missing authentication header (no API key configured)
   if (errorText.includes("missing bearer or basic authentication")) {
-    helpUrl =
-      "https://github.com/b1tninja/continued/blob/main/docs/reference.mdx#models";
+    helpUrl = "https://b1tninja.github.io/continued/reference#models";
     customErrorMessage =
       'No API key was sent with the request. Add "apiKey" to your model config.';
   }

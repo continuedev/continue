@@ -18,21 +18,21 @@ import { ProvidersCard } from "../components/ProvidersCard";
 const MODEL_DOCS_URLS = {
   chat: {
     learnMore:
-      "https://github.com/b1tninja/continued/blob/main/docs/ide-extensions/chat/quick-start.mdx",
+      "https://b1tninja.github.io/continued/ide-extensions/chat/quick-start",
     setup:
-      "https://github.com/b1tninja/continued/blob/main/docs/ide-extensions/chat/model-setup.mdx",
+      "https://b1tninja.github.io/continued/ide-extensions/chat/model-setup",
   },
   autocomplete: {
     learnMore:
-      "https://github.com/b1tninja/continued/blob/main/docs/ide-extensions/autocomplete/quick-start.mdx",
+      "https://b1tninja.github.io/continued/ide-extensions/autocomplete/quick-start",
     setup:
-      "https://github.com/b1tninja/continued/blob/main/docs/ide-extensions/autocomplete/model-setup.mdx",
+      "https://b1tninja.github.io/continued/ide-extensions/autocomplete/model-setup",
   },
   edit: {
     learnMore:
-      "https://github.com/b1tninja/continued/blob/main/docs/ide-extensions/edit/quick-start.mdx",
+      "https://b1tninja.github.io/continued/ide-extensions/edit/quick-start",
     setup:
-      "https://github.com/b1tninja/continued/blob/main/docs/ide-extensions/edit/model-setup.mdx",
+      "https://b1tninja.github.io/continued/ide-extensions/edit/model-setup",
   },
 } as const;
 
@@ -188,7 +188,7 @@ export function ModelsSection() {
               selectedModel={config.selectedModelByRole.apply ?? undefined}
               onSelect={(model) => handleRoleUpdate("apply", model)}
               onConfigure={handleConfigureModel}
-              setupURL="https://github.com/b1tninja/continued/blob/main/docs/customize/model-roles/apply.mdx"
+              setupURL="https://b1tninja.github.io/continued/customize/model-roles/apply"
             />
 
             <Divider />
@@ -201,7 +201,7 @@ export function ModelsSection() {
               selectedModel={config.selectedModelByRole.embed ?? undefined}
               onSelect={(model) => handleRoleUpdate("embed", model)}
               onConfigure={handleConfigureModel}
-              setupURL="https://github.com/b1tninja/continued/blob/main/docs/customize/model-roles/embeddings.mdx"
+              setupURL="https://b1tninja.github.io/continued/customize/model-roles/embeddings"
             />
 
             <Divider />
@@ -214,7 +214,7 @@ export function ModelsSection() {
               selectedModel={config.selectedModelByRole.rerank ?? undefined}
               onSelect={(model) => handleRoleUpdate("rerank", model)}
               onConfigure={handleConfigureModel}
-              setupURL="https://github.com/b1tninja/continued/blob/main/docs/customize/model-roles/reranking.mdx"
+              setupURL="https://b1tninja.github.io/continued/customize/model-roles/reranking"
             />
 
             {config.experimental?.enableAutoApproval && (
@@ -231,7 +231,7 @@ export function ModelsSection() {
                   }
                   onSelect={(model) => handleRoleUpdate("reviewer", model)}
                   onConfigure={handleConfigureModel}
-                  setupURL="https://github.com/b1tninja/continued/blob/main/docs/customize/model-roles/reviewer.mdx"
+                  setupURL="https://b1tninja.github.io/continued/customize/model-roles/reviewer"
                 />
               </>
             )}

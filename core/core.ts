@@ -1793,7 +1793,7 @@ export class Core {
         //     .then((userSelection) => {
         //       if (userSelection === toastOption) {
         //         void this.ide.openUrl(
-        //           "https://github.com/b1tninja/continued/blob/main/docs/customize/model-roles/embeddings.mdx",
+        //           "https://b1tninja.github.io/continued/customize/model-roles/embeddings",
         //         );
         //       }
         //     });

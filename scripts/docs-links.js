@@ -12,6 +12,11 @@ const path = require("path");
 
 const ROOT = path.join(__dirname, "..");
 const DOCS = path.join(ROOT, "docs");
+// The hosted docs site (GitHub Pages, built from docs/ by docs-site/).
+const SITE = "https://b1tninja.github.io/continued";
+// Earlier links pointed at the page sources on GitHub; those are moved to the
+// site too. A page that is not .mdx (the install guide) is not on the site
+// and keeps its GitHub link.
 const GITHUB_DOCS = "https://github.com/b1tninja/continued/blob/main/docs";
 const WRITE = process.argv.includes("--write");
 
@@ -61,6 +66,12 @@ const LEGACY = new Map([
   ],
 ]);
 
+/** Site URL for a docs/ file (`customize/overview.mdx` -> /customize/overview). */
+function siteUrl(page, anchor) {
+  const p = page.replace(/\.mdx$/, "").replace(/(^|\/)index$/, "");
+  return `${SITE}/${p}${anchor ? `#${anchor}` : ""}`;
+}
+
 /** docs/ file for a site path, or undefined. */
 function pageFor(sitePath) {
   let p = decodeURIComponent(sitePath).replace(/\/$/, "") || "/";
@@ -90,6 +101,8 @@ function* walk(p) {
   }
 }
 
+const GITHUB_RE =
+  /https:\/\/github\.com\/b1tninja\/continued\/blob\/main\/docs\/([^\s"'`)#\]<>\\]+\.mdx)(?:#([^\s"'`)\]<>\\]+))?/g;
 const URL_RE = /https?:\/\/docs\.continue\.dev(\/[^\s"'`)\]<>\\]*)?/g;
 let changed = 0;
 const missing = new Map();
@@ -98,26 +111,34 @@ for (const target of SCAN) {
   if (!fs.existsSync(abs)) continue;
   for (const file of walk(abs)) {
     const before = fs.readFileSync(file, "utf8");
-    const after = before.replace(URL_RE, (url, rest = "/") => {
-      let [pathPart, anchor] = rest.split("#");
-      const key = decodeURIComponent(pathPart).replace(/\/$/, "").toLowerCase();
-      const legacy =
-        LEGACY.get(anchor ? `${key}#${anchor}` : key) ?? LEGACY.get(key);
-      if (legacy) {
+    const after = before
+      .replace(GITHUB_RE, (url, page, anchor) =>
+        fs.existsSync(path.join(DOCS, page))
+          ? (changed++, siteUrl(page, anchor))
+          : url,
+      )
+      .replace(URL_RE, (url, rest = "/") => {
+        let [pathPart, anchor] = rest.split("#");
+        const key = decodeURIComponent(pathPart)
+          .replace(/\/$/, "")
+          .toLowerCase();
+        const legacy =
+          LEGACY.get(anchor ? `${key}#${anchor}` : key) ?? LEGACY.get(key);
+        if (legacy) {
+          changed++;
+          const [page, newAnchor] = legacy;
+          anchor = newAnchor ?? anchor;
+          return siteUrl(page, anchor);
+        }
+        const page = pageFor(pathPart.replace(/\?.*$/, ""));
+        if (!page) {
+          const rel = path.relative(ROOT, file);
+          missing.set(url, [...(missing.get(url) ?? []), rel]);
+          return url;
+        }
         changed++;
-        const [page, newAnchor] = legacy;
-        anchor = newAnchor ?? anchor;
-        return `${GITHUB_DOCS}/${page}${anchor ? `#${anchor}` : ""}`;
-      }
-      const page = pageFor(pathPart.replace(/\?.*$/, ""));
-      if (!page) {
-        const rel = path.relative(ROOT, file);
-        missing.set(url, [...(missing.get(url) ?? []), rel]);
-        return url;
-      }
-      changed++;
-      return `${GITHUB_DOCS}/${page}${anchor ? `#${anchor}` : ""}`;
-    });
+        return siteUrl(page, anchor);
+      });
     if (after !== before && WRITE) fs.writeFileSync(file, after);
   }
 }
