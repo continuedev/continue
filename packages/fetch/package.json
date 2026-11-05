@@ -14,8 +14,8 @@
   "dependencies": {
     "@continuedev/config-types": "file:../config-types",
     "follow-redirects": "^1.15.6",
-    "http-proxy-agent": "^7.0.2",
-    "https-proxy-agent": "^7.0.5",
+    "http-proxy-agent": "^9.1.0",
+    "https-proxy-agent": "^9.1.0",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {

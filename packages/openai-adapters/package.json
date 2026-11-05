@@ -14,7 +14,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.44",
     "@ai-sdk/deepseek": "^3.0.76",
-    "@ai-sdk/google": "^3.0.30",
+    "@ai-sdk/google": "^4.0.109",
     "@ai-sdk/openai": "^3.0.29",
     "@ai-sdk/xai": "^3.0.57",
     "@anthropic-ai/sdk": "^0.67.0",
@@ -26,12 +26,12 @@
     "@google/genai": "^1.30.0",
     "@smithy/node-http-handler": "^4.14.1",
     "ai": "^6.0.86",
-    "dotenv": "^16.5.0",
+    "dotenv": "^18.0.9",
     "google-auth-library": "^10.4.1",
     "json-schema": "^0.4.0",
     "node-fetch": "^3.3.2",
-    "openai": "^5.23.2",
-    "uuid": "^11.1.0",
+    "openai": "^7.47.0",
+    "uuid": "^14.0.3",
     "zod": "^4.6.6"
   },
   "devDependencies": {

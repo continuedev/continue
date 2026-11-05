@@ -27,7 +27,8 @@ import { BaseLlmApi } from "./apis/base.js";
 import { LLMConfig, OpenAIConfigSchema } from "./types.js";
 import { appendPathToUrlIfNotPresent } from "./util/appendPathToUrl.js";
 
-dotenv.config();
+// dotenv 17+ logs "injected env" on every config() call unless quiet.
+dotenv.config({ quiet: true });
 
 function openAICompatible(
   apiBase: string,

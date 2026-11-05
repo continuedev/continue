@@ -94,7 +94,9 @@ function convertMessageContentPart(
     case "image_url":
       return convertImagePart(part);
     case "input_audio":
-      return convertAudioPart(part);
+      // openai 7 dropped ResponseInputAudio from ResponseInputContent; keep
+      // forwarding audio parts as before rather than silently dropping them.
+      return convertAudioPart(part) as unknown as ResponseInputContent;
     case "file":
       return convertFilePart(part);
     case "refusal":

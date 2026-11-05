@@ -32,6 +32,21 @@ import {
   toResponsesParams,
 } from "./openaiResponses.js";
 
+/**
+ * openai 7 throws when a client is built without credentials, and treats ""
+ * as none. Keyless providers (Ollama, LM Studio, local servers, Azure with
+ * auth headers from requestOptions) get a placeholder key, and the
+ * Authorization header it would produce is removed so no fake token is sent.
+ */
+export function openAIAuthOptions(apiKey: string | undefined): {
+  apiKey: string;
+  defaultHeaders?: { Authorization: null };
+} {
+  return apiKey
+    ? { apiKey }
+    : { apiKey: "no-api-key", defaultHeaders: { Authorization: null } };
+}
+
 export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
   apiBase: string = "https://api.openai.com/v1/";
@@ -46,8 +61,7 @@ export class OpenAIApi implements BaseLlmApi {
   /** Builds the client for the current `apiBase`; subclasses call it after changing the base. */
   protected createOpenAIClient(): OpenAI {
     return new OpenAI({
-      // Necessary because `new OpenAI()` will throw an error if there is no API Key
-      apiKey: this.config.apiKey ?? "",
+      ...openAIAuthOptions(this.config.apiKey),
       baseURL: this.apiBase,
       fetch: customFetch(this.config.requestOptions),
       timeout: this.config?.requestOptions?.timeout || undefined,

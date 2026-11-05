@@ -80,7 +80,7 @@
     "mac-ca": "^3.1.0",
     "node-fetch": "^3.3.2",
     "node-html-markdown": "^2.0.0",
-    "openai": "^5.13.1",
+    "openai": "^7.47.0",
     "p-limit": "^7.3.3",
     "partial-json": "^0.1.7",
     "pg": "^8.11.3",

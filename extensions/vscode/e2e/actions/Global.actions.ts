@@ -87,7 +87,14 @@ export class GlobalActions {
   static async setNextEditEnabled(enabled: boolean) {
     const workbench = new Workbench();
 
-    await workbench.openCommandPrompt();
+    // Callers often run this right after focusing the Continued webview; the
+    // palette shortcut is lost while focus is still in that iframe, and a
+    // single openCommandPrompt() then times out after 5s. Return to the
+    // workbench and retry, as the other command-palette actions do.
+    await TestUtils.waitForSuccess(async () => {
+      await workbench.getDriver().switchTo().defaultContent();
+      await workbench.openCommandPrompt();
+    });
     process.env.CONTINUE_E2E_NON_NEXT_EDIT_TEST = "true";
 
     // Initial wait and clear

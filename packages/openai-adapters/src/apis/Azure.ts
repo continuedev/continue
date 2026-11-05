@@ -7,7 +7,7 @@ import {
 import { z } from "zod";
 import { AzureConfigSchema } from "../types.js";
 import { customFetch } from "../util.js";
-import { OpenAIApi } from "./OpenAI.js";
+import { OpenAIApi, openAIAuthOptions } from "./OpenAI.js";
 
 export class AzureApi extends OpenAIApi {
   constructor(private azureConfig: z.infer<typeof AzureConfigSchema>) {
@@ -19,7 +19,7 @@ export class AzureApi extends OpenAIApi {
     const { baseURL, defaultQuery } = this._getAzureBaseURL(azureConfig);
 
     this.openai = new OpenAI({
-      apiKey: azureConfig.apiKey,
+      ...openAIAuthOptions(azureConfig.apiKey),
       baseURL,
       fetch: customFetch(azureConfig.requestOptions),
       defaultQuery,
