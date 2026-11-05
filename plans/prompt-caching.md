@@ -252,7 +252,7 @@ before each request:
   lastRequestStartedAt = now
 ```
 
-The 300 s lower bound is the point where a 5-minute entry has expired, so a gap above it is a gap 1 hour would have covered. The 3,300 s upper bound is my guess: a gap near an hour says little about whether the next one will be, and a lifetime is counted from the start of the previous request, so an hour leaves no margin. Both numbers should be tuned on real logs after C0. Once escalated, the session stays on 1 hour. A session that never has such a gap stays on 5 minutes, so a one-shot prompt pays the 5-minute write (125% of no-cache in the model) and not the 1-hour one (200%). Resuming a saved session starts un-escalated, and the first request after a long break pays the full write either way.
+The 300 s lower bound is the point where a 5-minute entry has expired, so a gap above it is a gap 1 hour would have covered. The 3,300 s upper bound is my guess: a gap near an hour says little about whether the next one will be, and a lifetime is counted from the start of the previous request, so an hour leaves no margin. Both numbers should be tuned on real logs after C0. A week of Bedrock gateway traffic puts them on the cost plateau: see [`cache-real-world-data.md`](./cache-real-world-data.md). Once escalated, the session stays on 1 hour. A session that never has such a gap stays on 5 minutes, so a one-shot prompt pays the 5-minute write (125% of no-cache in the model) and not the 1-hour one (200%). Resuming a saved session starts un-escalated, and the first request after a long break pays the full write either way.
 
 ### 6.4 Per provider
 
@@ -329,16 +329,16 @@ C0 and C1 are the ones that pay off for a user who changes nothing, so they go f
 
 ## 10. Risks
 
-| Risk                                                                    | Mitigation                                                                                                                                                                    |
-| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Caching on raises the bill for a short session (125% of no-cache)       | Auto stays on the cheaper 5-minute write until a long gap is seen; the toolbar shows the state; the release note names the switch.                                            |
-| A wrong `ttl` fails the request on Bedrock or a gateway                 | Allowlist, one retry without `ttl`, and `ttl` omitted whenever the lifetime is 5 minutes.                                                                                     |
-| A gateway at a custom `apiBase` strips the beta header or rejects `ttl` | Per-model override to `5m`; the error text names `cacheBehavior.ttl`.                                                                                                         |
-| The prices in the table go stale                                        | "Last checked" date, the every-model-has-a-price test, and the on-screen figure labelled "estimated".                                                                         |
-| The Bedrock suffix existed for a reason that removing it breaks         | Ask the author (commit 189d0c87c, `chezsmithy`); C0 data first; keep the change in its own reviewable PR.                                                                     |
-| Auto's thresholds are wrong for real sessions                           | They come from eight invented scenarios. C0 logs gaps; C4 waits for data.                                                                                                     |
-| Mode switches break the cache more often than expected                  | The notice (section 7) and the miss-cause report (6.5) make it visible; stabilising the prompt is deferred (6.6) until the data says it matters.                              |
-| A prompt stays on the provider's side longer with the 1-hour option     | Anthropic says cache entries are held in memory for their lifetime and not stored at rest. The 1-hour option holds a prompt 12 times longer than 5 minutes; the menu says so. |
+| Risk                                                                    | Mitigation                                                                                                                                                                                      |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Caching on raises the bill for a short session (125% of no-cache)       | Auto stays on the cheaper 5-minute write until a long gap is seen; the toolbar shows the state; the release note names the switch.                                                              |
+| A wrong `ttl` fails the request on Bedrock or a gateway                 | Allowlist, one retry without `ttl`, and `ttl` omitted whenever the lifetime is 5 minutes.                                                                                                       |
+| A gateway at a custom `apiBase` strips the beta header or rejects `ttl` | Per-model override to `5m`; the error text names `cacheBehavior.ttl`.                                                                                                                           |
+| The prices in the table go stale                                        | "Last checked" date, the every-model-has-a-price test, and the on-screen figure labelled "estimated".                                                                                           |
+| The Bedrock suffix existed for a reason that removing it breaks         | Ask the author (commit 189d0c87c, `chezsmithy`); C0 data first; keep the change in its own reviewable PR.                                                                                       |
+| Auto's thresholds are wrong for real sessions                           | They came from eight invented scenarios; a week of real agent traffic puts them on the cost plateau ([`cache-real-world-data.md`](./cache-real-world-data.md)), though not from Continue users. |
+| Mode switches break the cache more often than expected                  | The notice (section 7) and the miss-cause report (6.5) make it visible; stabilising the prompt is deferred (6.6) until the data says it matters.                                                |
+| A prompt stays on the provider's side longer with the 1-hour option     | Anthropic says cache entries are held in memory for their lifetime and not stored at rest. The 1-hour option holds a prompt 12 times longer than 5 minutes; the menu says so.                   |
 
 ## 11. Not verified
 
