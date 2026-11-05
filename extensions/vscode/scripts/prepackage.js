@@ -364,6 +364,25 @@ void (async () => {
 
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
 
+  // node_modules/@lancedb also holds the build machine's own platform package
+  // (npm installs it as an optional dependency), so a macOS package built on
+  // Linux carried vectordb-linux-x64-gnu too. Keep only the target's.
+  if (packageDirName) {
+    const outLancedb = path.join(
+      __dirname,
+      "..",
+      "out",
+      "node_modules",
+      "@lancedb",
+    );
+    for (const entry of fs.readdirSync(outLancedb)) {
+      if (entry.startsWith("vectordb-") && entry !== packageDirName) {
+        rimrafSync(path.join(outLancedb, entry));
+        console.log(`[info] Removed @lancedb/${entry} (not for ${target})`);
+      }
+    }
+  }
+
   if (packageDirName && expectedPackagePath) {
     const expectedOutPackagePath = path.join(
       __dirname,
