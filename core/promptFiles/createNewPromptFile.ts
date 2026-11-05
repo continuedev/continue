@@ -3,7 +3,7 @@ import { GlobalContext } from "../util/GlobalContext";
 import { joinPathsToUri } from "../util/uri";
 
 const FIRST_TIME_DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file
-# It is used to define and reuse prompts within Continue
+# It is used to define and reuse prompts within Continued
 # Each .prompt file can be accessed by typing "@prompts" in the Chat input
 
 # A prompt file consists of two parts:

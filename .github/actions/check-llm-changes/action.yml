@@ -27,6 +27,11 @@ runs:
         if [ "${{ github.event_name }}" = "push" ]; then
           # For push events, compare against the previous commit
           CHANGED_FILES=$(git diff --name-only HEAD~1...HEAD)
+        elif [ -z "${{ github.event.pull_request.base.ref }}" ]; then
+          # Scheduled and manual runs have no base branch to diff against
+          # (git rejected "origin/...HEAD" and failed the nightly run before
+          # any test ran). Nothing changed, so the API-key tests are skipped.
+          CHANGED_FILES=""
         else
           # For PR events, compare against the base branch
           git fetch origin ${{ github.event.pull_request.base.ref }}

@@ -1,5 +1,5 @@
 import { SecondaryButton } from "../..";
-import ContinueLogo from "../../svg/ContinueLogo";
+import ContinuedLogo from "../../svg/ContinuedLogo";
 
 export function OnboardingCardLanding({
   onSelectConfigure,
@@ -11,7 +11,7 @@ export function OnboardingCardLanding({
   return (
     <div className="max-full flex w-full flex-col items-center justify-center px-4 text-center xs:px-0">
       <div className="hidden xs:flex">
-        <ContinueLogo height={75} />
+        <ContinuedLogo height={75} />
       </div>
 
       <p className="mt-0 mb-5 w-full text-sm">

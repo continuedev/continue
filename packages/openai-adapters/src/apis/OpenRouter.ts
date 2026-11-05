@@ -12,8 +12,8 @@ export interface OpenRouterConfig extends OpenAIConfig {
 // TODO: Extract detailed error info from OpenRouter's error.metadata.raw to surface better messages
 
 export const OPENROUTER_HEADERS: Record<string, string> = {
-  "HTTP-Referer": "https://www.continue.dev/",
-  "X-OpenRouter-Title": "Continue",
+  "HTTP-Referer": "https://github.com/b1tninja/continued",
+  "X-OpenRouter-Title": "Continued",
   "X-OpenRouter-Categories": "ide-extension",
 };
 

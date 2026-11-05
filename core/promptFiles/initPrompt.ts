@@ -15,7 +15,7 @@ First, verify that you have access to the necessary tools:
 - ${BuiltInToolNames.LSTool}: To explore directory structure
 - ${BuiltInToolNames.CreateNewFile}: To generate the ${initFilename} file
 
-If any of these tools are unavailable, inform the user that they need to activate them and enable "Agent Mode" in Continue before proceeding.
+If any of these tools are unavailable, inform the user that they need to activate them and enable "Agent Mode" in Continued before proceeding.
 
 ## Step 2: Project Analysis
 Analyze the project structure and key files to understand:
@@ -73,7 +73,7 @@ Make sure your analysis is thorough but concise. Focus on information that would
 After creating the .continue/rules/${initFilename} file, provide a summary of what you've created and remind the user to:
 1. Review and edit the file as needed
 2. Commit it to their repository to share with their team
-3. Explain that Continue will automatically load this file into context when working with the project
+3. Explain that Continued will automatically load this file into context when working with the project
 
 Also inform the user that they can create additional ${RULES_MARKDOWN_FILENAME} files in subdirectories for more specific documentation related to those components.
 `.trim();

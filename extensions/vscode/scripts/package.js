@@ -26,8 +26,12 @@ if (target) {
   command += ` --target ${target}`;
 }
 
-exec(command, (error) => {
+exec(command, { maxBuffer: 64 * 1024 * 1024 }, (error, stdout, stderr) => {
   if (error) {
+    // exec keeps vsce's own output; without this a failure shows only
+    // "Command failed" and not why.
+    process.stdout.write(stdout);
+    process.stderr.write(stderr);
     throw error;
   }
   console.log(
