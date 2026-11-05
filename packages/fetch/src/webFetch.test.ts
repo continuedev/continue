@@ -79,6 +79,13 @@ describe.skipIf(!hasOpenssl())("createWebFetch", () => {
         res.writeHead(302, { location: "/echo" });
         return res.end();
       }
+      if (req.url === "/redirect-away") {
+        // Another origin: plain http on a different port.
+        res.writeHead(302, {
+          location: `http://127.0.0.1:${plainPort}/echo`,
+        });
+        return res.end();
+      }
       if (req.url === "/loop") {
         res.writeHead(302, { location: "/loop" });
         return res.end();
@@ -285,6 +292,23 @@ describe.skipIf(!hasOpenssl())("createWebFetch", () => {
     const data = await resp.json();
     expect(data.method).toBe("GET");
     expect(data.body).toBe("");
+  });
+
+  test("a same-origin redirect keeps the Authorization header", async () => {
+    const f = createWebFetch({ caBundlePath: caPath });
+    const resp = await f(url("/redirect"), {
+      headers: { Authorization: "Bearer secret" },
+    });
+    expect((await resp.json()).auth).toBe("Bearer secret");
+  });
+
+  test("a redirect to another origin drops credentials", async () => {
+    const f = createWebFetch({ caBundlePath: caPath });
+    const resp = await f(url("/redirect-away"), {
+      headers: { Authorization: "Bearer secret", Cookie: "session=1" },
+    });
+    expect(resp.status).toBe(200);
+    expect((await resp.json()).auth).toBeNull();
   });
 
   test("redirect: 'error' and redirect loops fail", async () => {

@@ -5,6 +5,14 @@ import { createAgentForUrl } from "./agent.js";
 import { RequestOptions } from "./types.js";
 
 const MAX_REDIRECTS = 10;
+/** Credentials a redirect to another origin must not carry (as browsers and node-fetch do). */
+const CREDENTIAL_HEADERS = [
+  "authorization",
+  "cookie",
+  "cookie2",
+  "proxy-authorization",
+  "www-authenticate",
+];
 const NULL_BODY_STATUSES = new Set([101, 204, 205, 304]);
 
 type WebFetch = (
@@ -145,7 +153,14 @@ export function createWebFetch(requestOptions?: RequestOptions): WebFetch {
           throw new TypeError("Too many redirects");
         }
         void response.body?.cancel().catch(() => {});
-        url = new URL(location, url);
+        const next = new URL(location, url);
+        // An MCP server's bearer token or cookie must not follow a redirect
+        // to some other host, or from https down to http.
+        if (next.origin !== url.origin) {
+          headers = new Headers(headers);
+          for (const name of CREDENTIAL_HEADERS) headers.delete(name);
+        }
+        url = next;
         // 303, and 301/302 for POST, switch to GET without a body (like browsers)
         if (
           response.status === 303 ||
