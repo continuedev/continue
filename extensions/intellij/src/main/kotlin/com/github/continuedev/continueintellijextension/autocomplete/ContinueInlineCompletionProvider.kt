@@ -91,6 +91,14 @@ class ContinueInlineCompletionProvider : InlineCompletionProvider {
 
             when (fimResult) {
                 is FimResult.FimEdit -> {
+                    // A blank FIM text means there is nothing to show. Returning a
+                    // suggestion with an empty gray-text element makes the platform
+                    // treat a suggestion as active, so keys like End get swallowed
+                    // by the inline completion handler instead of reaching the
+                    // editor (see #12302).
+                    if (fimResult.fimText.isBlank()) {
+                        return InlineCompletionSuggestion.Empty
+                    }
                     // Render as gray text inline completion
                     return object : InlineCompletionSuggestion {
                         override suspend fun getVariants(): List<InlineCompletionVariant> {
@@ -121,13 +129,17 @@ class ContinueInlineCompletionProvider : InlineCompletionProvider {
             }
         } else {
             // Use traditional autocomplete
+            // A blank completion is no completion: returning a suggestion with
+            // an empty gray-text element makes the platform treat a suggestion
+            // as active, so keys like End get swallowed by the inline
+            // completion handler instead of reaching the editor (see #12302).
             val variant = project.service<CompletionService>().getAutocomplete(
                 lastUuid!!,
                 editor.virtualFile.url,
                 editor.caretModel.primaryCaret.logicalPosition.line,
                 editor.caretModel.primaryCaret.logicalPosition.column
             )
-            if (variant == null)
+            if (variant.isNullOrBlank())
                 return InlineCompletionSuggestion.Empty
             return InlineCompletionSingleSuggestion.build(elements = flowOf(InlineCompletionGrayTextElement(variant)))
         }
