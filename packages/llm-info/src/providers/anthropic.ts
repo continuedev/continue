@@ -4,6 +4,45 @@ export const Anthropic: ModelProvider = {
   id: "anthropic",
   displayName: "Anthropic",
   models: [
+    // Claude 5 family: limits match the GUI model catalog
+    // (gui/src/pages/AddNewModel/configs/models.ts).
+    {
+      model: "claude-fable-5-1",
+      displayName: "Claude Fable 5.1",
+      contextLength: 1000000,
+      maxCompletionTokens: 128000,
+      description: "Anthropic's most capable model.",
+      regex: /claude-(?:5[.-]1-fable|fable-5[.-]1).*/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "claude-opus-5-5",
+      displayName: "Claude Opus 5.5",
+      contextLength: 1000000,
+      maxCompletionTokens: 128000,
+      description:
+        "Anthropic's Opus model for complex reasoning and agentic tasks.",
+      regex: /claude-(?:5[.-]5-opus|opus-5[.-]5).*/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "claude-sonnet-5-5",
+      displayName: "Claude Sonnet 5.5",
+      contextLength: 1000000,
+      maxCompletionTokens: 128000,
+      description: "Anthropic's best combination of speed and intelligence.",
+      regex: /claude-(?:5[.-]5-sonnet|sonnet-5[.-]5).*/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "claude-haiku-5-5",
+      displayName: "Claude Haiku 5.5",
+      contextLength: 1000000,
+      maxCompletionTokens: 128000,
+      description: "Anthropic's fastest model.",
+      regex: /claude-(?:5[.-]5-haiku|haiku-5[.-]5).*/i,
+      recommendedFor: ["chat"],
+    },
     {
       model: "claude-sonnet-4-6",
       displayName: "Claude Sonnet 4.6",

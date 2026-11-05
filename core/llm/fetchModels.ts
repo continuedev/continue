@@ -5,6 +5,7 @@ export interface FetchedModel {
   modelId?: string;
   description?: string;
   icon?: string;
+  /** The whole window, input plus output (Continue's `contextLength`). */
   contextLength?: number;
   maxTokens?: number;
   supportsTools?: boolean;
@@ -171,7 +172,10 @@ async function fetchAnthropicModels(apiKey?: string): Promise<FetchedModel[]> {
     name: m.display_name ?? m.id,
     modelId: m.id,
     icon: "anthropic.png",
-    contextLength: m.max_input_tokens ?? undefined,
+    contextLength: windowFromInputAndOutput(
+      m.max_input_tokens ?? undefined,
+      m.max_tokens ?? undefined,
+    ),
     maxTokens: m.max_tokens ?? undefined,
     supportsTools: true,
     createdAt: m.created_at ?? undefined,
@@ -217,7 +221,10 @@ async function fetchGeminiModels(
       name: m.displayName ?? m.name?.replace("models/", ""),
       modelId: m.name?.replace("models/", ""),
       icon: "gemini.png",
-      contextLength: m.inputTokenLimit,
+      contextLength: windowFromInputAndOutput(
+        m.inputTokenLimit,
+        m.outputTokenLimit,
+      ),
       maxTokens: m.outputTokenLimit,
       supportsTools: true,
     }));
@@ -244,6 +251,21 @@ async function fetchProviderModelsViaListModels(
       `Failed to fetch models for ${provider}: ${error?.message ?? error}`,
     );
   }
+}
+
+/**
+ * Continue's contextLength is the whole window: the prompt is pruned to
+ * contextLength - maxTokens. Providers that report an input limit and an
+ * output limit separately need the two added, or the input budget comes out
+ * as input - output (negative for Claude models whose output limit exceeds
+ * the reported input limit).
+ */
+export function windowFromInputAndOutput(
+  input: number | undefined,
+  output: number | undefined,
+): number | undefined {
+  if (!input) return undefined;
+  return input + (output ?? 0);
 }
 
 export async function fetchModels(

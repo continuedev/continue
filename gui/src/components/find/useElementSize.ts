@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useEffect, useState } from "react";
+import { RefObject, useCallback, useEffect, useRef, useState } from "react";
 
 interface ElementSize {
   clientWidth: number;
@@ -24,21 +24,24 @@ export const useElementSize = (
     isResizing: false,
   });
 
-  // Debounced update function
+  // The pending update, so a new measurement replaces it (a real debounce)
+  // and unmounting cancels it instead of setting state afterwards.
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+
   const debouncedSetSize = useCallback(
     (measurements: Omit<ElementSize, "isResizing">) => {
-      let timeoutId: NodeJS.Timeout;
-
       setSize((prev) => ({ ...prev, isResizing: true }));
 
-      timeoutId = setTimeout(() => {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        timeoutRef.current = undefined;
         setSize({
           ...measurements,
           isResizing: false,
         });
       }, debounceMs);
-
-      return () => clearTimeout(timeoutId);
     },
     [debounceMs],
   );
@@ -74,6 +77,8 @@ export const useElementSize = (
     // Cleanup
     return () => {
       resizeObserver.disconnect();
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = undefined;
     };
   }, [ref, debouncedSetSize]);
 
