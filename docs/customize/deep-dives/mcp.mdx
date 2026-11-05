@@ -1,5 +1,5 @@
 ---
-title: "How to Set Up Model Context Protocol (MCP) in Continue"
+title: "How to Set Up Model Context Protocol (MCP) in Continued"
 description: MCP use and customization
 keywords: [tool, use, function calling, claude, automatic]
 sidebarTitle: "Model Context Protocol (MCP)"
@@ -14,7 +14,7 @@ the wider digital world. This standard, created by Anthropic to bring together
 prompts, context, and tool use, is key for building truly useful AI experiences
 that can be set up with custom tools.
 
-## How MCP Works in Continue
+## How MCP Works in Continued
 
 Currently custom tools can be configured using the Model Context
 Protocol standard to unify prompts, context, and tool use.
@@ -23,7 +23,7 @@ MCP Servers can be added to your config using `mcpServers`.
 
 <Info>MCP can only be used in the **agent** mode.</Info>
 
-For ready-to-use configurations for popular MCP servers, see [Example MCP Servers](/customize/deep-dives/mcp-examples).
+For ready-to-use configurations for popular MCP servers, see [Example MCP Servers](./mcp-examples.mdx).
 
 ## Quick Start: How to Set Up Your First MCP Server
 
@@ -52,18 +52,11 @@ Open the browser and navigate Hacker News. Save the top 10 headlines in a hn.txt
 
 The result will be a generated file called `hn.txt` in the current working directory.
 
-![playwright mcp](/images/mcp-playwright.png)
-
-## How to Set Up Continue Documentation Search with MCP
-
-You can set up an MCP server to search the Continue documentation directly from your config. This is particularly useful for getting help with Continue configuration and features.
-
-For complete setup instructions, troubleshooting, and usage examples, see the [Continue MCP Reference](/reference/continue-mcp).
 
 ## Using JSON MCP Format from Claude, Cursor, Cline, etc
 
 <Info>
-If you're coming from another tool that uses JSON MCP format configuration files (like Claude Desktop, Cursor, or Cline), you can copy those JSON config files directly into your `.continue/mcpServers/` directory (note the plural "Servers") and Continue will automatically pick them up.
+If you're coming from another tool that uses JSON MCP format configuration files (like Claude Desktop, Cursor, or Cline), you can copy those JSON config files directly into your `.continue/mcpServers/` directory (note the plural "Servers") and Continued will automatically pick them up.
 
 For example, place your JSON MCP config file at `.continue/mcpServers/mcp.json` in your workspace.
 </Info>
@@ -72,7 +65,7 @@ For example, place your JSON MCP config file at `.continue/mcpServers/mcp.json` 
 
 To set up your own MCP server, read the [MCP
 quickstart](https://modelcontextprotocol.io/quickstart) and then add an MCP
-server block to your [config file](./configuration.md):
+server block to your [config file](./configuration.mdx):
 
 ```yaml title="config.yaml"
 # ...
@@ -161,12 +154,12 @@ mcpServers:
     url: https://mcp.datadoghq.eu/api/unstable/mcp-server/mcp
 ```
 
-1. If the server answers a request with HTTP 401, the server shows **Sign in required**. Continue never opens a browser by itself.
+1. If the server answers a request with HTTP 401, the server shows **Sign in required**. Continued never opens a browser by itself.
 2. Choose **Sign in** (the person icon next to the server, or the server's menu). Your browser opens the provider's sign-in page, and when you finish you are connected.
 3. The access token is refreshed automatically when it expires. If the provider revokes your session, the server goes back to **Sign in required**.
 4. **Sign out** (server menu) removes the stored credentials.
 
-**Sign in is always offered for remote servers**, including ones that reject a connection in a way Continue can't recognise as an OAuth challenge.
+**Sign in is always offered for remote servers**, including ones that reject a connection in a way Continued can't recognise as an OAuth challenge.
 
 The browser is sent back to a small local server while you sign in, on port `3000` by default. If that port is in use you'll see an error naming it; choose another with `oauth.callbackPort`. Some providers only accept a pre-registered redirect URL, so use the port that was registered:
 
@@ -210,7 +203,7 @@ mcpServers:
 - To set them once for everything, put `requestOptions` at the top level of `config.yaml`; per-server values take precedence.
 - If the certificate isn't trusted, the error says so and points at `useSystemCa` and `caBundlePath`.
 
-**stdio servers** run in their own process, so Continue can't change their networking. For Node-based servers (for example `npx ...`), Continue sets `NODE_OPTIONS=--use-system-ca` so they trust the OS certificate store too. This is on by default on Windows and macOS, can be turned off with `requestOptions: { useSystemCa: false }` at the top level, and is skipped when the `node` on your PATH is too old to know the flag (Node 22.15 or newer is needed). Anything you set in the server's own `env.NODE_OPTIONS` is kept.
+**stdio servers** run in their own process, so Continued can't change their networking. For Node-based servers (for example `npx ...`), Continued sets `NODE_OPTIONS=--use-system-ca` so they trust the OS certificate store too. This is on by default on Windows and macOS, can be turned off with `requestOptions: { useSystemCa: false }` at the top level, and is skipped when the `node` on your PATH is too old to know the flag (Node 22.15 or newer is needed). Anything you set in the server's own `env.NODE_OPTIONS` is kept.
 
 ### How to Work with Secrets in MCP Servers
 

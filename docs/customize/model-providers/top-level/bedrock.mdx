@@ -1,11 +1,11 @@
 ---
-title: "How to Configure Amazon Bedrock with Continue"
+title: "How to Configure Amazon Bedrock with Continued"
 slug: ../bedrock
 sidebarTitle: "Amazon Bedrock"
 ---
 
 <Tip>
-  **Discover Amazon Bedrock models [here](https://continue.dev/amazon)**
+  **Discover Amazon Bedrock models here**
 </Tip>
 
 <Info>
@@ -36,7 +36,7 @@ models:
 ```
 
 <Info>
-  **Check out a more advanced configuration [here](https://continue.dev/amazon/us-anthropic-claude-sonnet-4-20250514-v1?view=config)**
+  **Check out a more advanced configuration here**
 </Info>
 
 ## Add Bedrock from the UI
@@ -45,9 +45,9 @@ Open the model selector, choose **Add Chat model**, and pick **Amazon Bedrock**:
 
 1. Choose how to authenticate (API key, AWS profile / SSO, access keys, or default credentials) and fill in the fields that appear.
 2. Pick your **AWS region**.
-3. Click **Test connection**. Continue lists the models your account can use in that region, including inference profiles and your own application inference profiles, and the **Model** list above fills with them (newest first, legacy models last). The refresh icon next to **Model** reloads the list.
+3. Click **Test connection**. Continued lists the models your account can use in that region, including inference profiles and your own application inference profiles, and the **Model** list above fills with them (newest first, legacy models last). The refresh icon next to **Model** reloads the list.
 
-   If you signed in with a **Bedrock API key**, Continue also asks the Mantle endpoint (see [Bedrock Mantle](#bedrock-mantle-openai-compatible-endpoint)) and adds the models that only it serves, labelled **· Mantle**. A model both endpoints serve is listed once, on the standard endpoint. When you pick a Mantle-only model, Continue saves it with the `bedrock-mantle` provider using the same key and region, so you do not need to switch providers. Profile, SSO and access-key sign-ins cannot call Mantle, so those lists show standard-endpoint models only.
+   If you signed in with a **Bedrock API key**, Continued also asks the Mantle endpoint (see [Bedrock Mantle](#bedrock-mantle-openai-compatible-endpoint)) and adds the models that only it serves, labelled **· Mantle**. A model both endpoints serve is listed once, on the standard endpoint. When you pick a Mantle-only model, Continued saves it with the `bedrock-mantle` provider using the same key and region, so you do not need to switch providers. Profile, SSO and access-key sign-ins cannot call Mantle, so those lists show standard-endpoint models only.
 4. Click **Send test message** to confirm the model actually answers (this catches missing model access and IAM problems before you save).
 5. Click **Connect**.
 
@@ -62,7 +62,7 @@ Listing models needs `bedrock:ListFoundationModels` and `bedrock:ListInferencePr
 | [Access keys](#access-keys) | CI, scripts, or temporary STS credentials | `env.accessKeyId`, `env.secretAccessKey`, `env.sessionToken` |
 | [Environment / default chain](#environment-variables-and-the-default-credential-chain) | Existing AWS setup, EC2/ECS/Lambda roles | nothing |
 
-If you configure nothing, Continue uses the standard AWS credential chain, so an existing `aws configure` or `aws sso login` setup works without any Continue-specific settings.
+If you configure nothing, Continued uses the standard AWS credential chain, so an existing `aws configure` or `aws sso login` setup works without any Continued-specific settings.
 
 ## Regions and endpoints
 
@@ -79,7 +79,7 @@ Pick the region where you have model access. Bedrock runtime is available in:
 
 Availability changes over time, so use **Test connection** (or `aws bedrock list-foundation-models --region <region>`) as the source of truth. Not every model is in every region, and models must be enabled per account and region.
 
-By default Continue calls `https://bedrock-runtime.<region>.amazonaws.com`. Set `apiBase` to override that:
+By default Continued calls `https://bedrock-runtime.<region>.amazonaws.com`. Set `apiBase` to override that:
 
 ```yaml title="config.yaml"
 models:
@@ -190,7 +190,7 @@ models:
 
 Prompt caching is not supported in JSON configuration files, so use the YAML syntax above to enable it.
 
-The cache lifetime is chosen from the chat toolbar, and 1 hour is available only for some models. See [Prompt Caching](/customize/deep-dives/prompt-caching).
+The cache lifetime is chosen from the chat toolbar, and 1 hour is available only for some models. See [Prompt Caching](../../deep-dives/prompt-caching.mdx).
 
 ## Authentication
 
@@ -216,7 +216,7 @@ variable is ignored if you set `profile` or access keys explicitly.
 
 ### AWS profile and SSO
 
-Use this for work accounts. Continue never sees your keys; it reads the profile
+Use this for work accounts. Continued never sees your keys; it reads the profile
 from `~/.aws/config`.
 
 ```bash
@@ -237,7 +237,7 @@ models:
       - chat
 ```
 
-If you set `profile` and it can't be loaded, Continue reports an error (with an
+If you set `profile` and it can't be loaded, Continued reports an error (with an
 `aws sso login` hint when the SSO session has expired) rather than silently
 using a different profile.
 
@@ -280,7 +280,7 @@ using a different profile.
 
 ### Environment variables and the default credential chain
 
-With no `apiKey`, `profile` or keys configured, Continue first tries a profile
+With no `apiKey`, `profile` or keys configured, Continued first tries a profile
 named `bedrock` (for backwards compatibility) and then the standard AWS chain:
 `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN`, the
 `[default]` profile, SSO, and container or instance roles.
@@ -292,7 +292,7 @@ For inference profiles, grant them on the profile ARN as well as the underlying
 foundation models in each region. Bedrock API keys additionally need
 `bedrock:CallWithBearerToken`. Listing models in the UI needs
 `bedrock:ListFoundationModels` and `bedrock:ListInferenceProfiles`. Bedrock API keys
-only work with Bedrock and Bedrock Runtime actions, which covers everything Continue
+only work with Bedrock and Bedrock Runtime actions, which covers everything Continued
 does.
 
 ## Corporate proxies and TLS inspection
@@ -324,7 +324,7 @@ models:
 
 These apply to model requests, model listing and **Test connection**.
 
-When none of these are needed Continue leaves the AWS SDK's own networking alone. When one is, it switches the SDK to HTTP/1.1 through Continue's proxy-aware agent; streaming works the same.
+When none of these are needed Continued leaves the AWS SDK's own networking alone. When one is, it switches the SDK to HTTP/1.1 through Continued's proxy-aware agent; streaming works the same.
 
 If the certificate isn't trusted you'll see an error such as "unable to get local issuer certificate", followed by a hint pointing at `useSystemCa` and `caBundlePath`.
 
@@ -368,7 +368,7 @@ Some models are gated: your account can see the endpoint but not the model, or a
 
 If a model you expect is missing from the list, type its ID into **Custom model ID (optional)**; the model card lists the ID and path prefix.
 
-To use every model your key can access without listing them by hand, set `model: AUTODETECT`; Continue fills in the list from `GET /v1/models`.
+To use every model your key can access without listing them by hand, set `model: AUTODETECT`; Continued fills in the list from `GET /v1/models`.
 
 ### Mantle vs standard Bedrock
 
@@ -386,8 +386,8 @@ Per-token prices are the same on both endpoints. AWS recommends the standard end
 
 ### Per-model quirks (handled automatically)
 
-- **Path prefix.** Most models are served under `/v1`, some under `/openai/v1`. If a request is rejected with "isn't supported on this route", Continue retries on the other prefix and remembers it. To set it yourself, use `mantlePathPrefix` (the model card lists it under Programmatic Access).
-- **Token limit parameter.** Some models reject `max_tokens`. Continue switches to `max_completion_tokens` when it sees that error. To force it, set `maxTokensParam: max_completion_tokens` (or `max_tokens`).
+- **Path prefix.** Most models are served under `/v1`, some under `/openai/v1`. If a request is rejected with "isn't supported on this route", Continued retries on the other prefix and remembers it. To set it yourself, use `mantlePathPrefix` (the model card lists it under Programmatic Access).
+- **Token limit parameter.** Some models reject `max_tokens`. Continued switches to `max_completion_tokens` when it sees that error. To force it, set `maxTokensParam: max_completion_tokens` (or `max_tokens`).
 
 ```yaml title="config.yaml"
 models:
@@ -414,7 +414,7 @@ models:
     apiKey: ${{ secrets.BEDROCK_API_KEY }}
 ```
 
-That endpoint has no `GET /models`, so list models with **Test connection** on the standard Bedrock provider instead. When `apiBase` is set, Continue does not auto-detect the path prefix.
+That endpoint has no `GET /models`, so list models with **Test connection** on the standard Bedrock provider instead. When `apiBase` is set, Continued does not auto-detect the path prefix.
 
 ## How to Configure Custom Imported Models with Amazon Bedrock
 

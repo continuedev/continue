@@ -50,15 +50,15 @@ export class ConfigYamlDocumentLinkProvider
           startPos + slug.length,
         );
 
-        let linkUri: vscode.Uri;
-        if (slug.startsWith("./") || slug.startsWith("../")) {
-          const currentFilePath = document.uri.fsPath;
-          const parentPath = path.dirname(currentFilePath);
-          const resolvedPath = path.resolve(parentPath, slug);
-          linkUri = vscode.Uri.file(resolvedPath);
-        } else {
-          linkUri = vscode.Uri.parse(`https://continue.dev/${slug}`);
+        // Only local block files are linked. An "owner/name" slug pointed at
+        // upstream's hub, which this fork does not use (and cannot resolve).
+        if (!slug.startsWith("./") && !slug.startsWith("../")) {
+          continue;
         }
+        const currentFilePath = document.uri.fsPath;
+        const parentPath = path.dirname(currentFilePath);
+        const resolvedPath = path.resolve(parentPath, slug);
+        const linkUri = vscode.Uri.file(resolvedPath);
 
         const link = new vscode.DocumentLink(range, linkUri);
         links.push(link);

@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Continue",
+  "name": "Continued",
   "colors": {
     "primary": "#6b7280",
     "light": "#ffffff",
@@ -163,7 +163,6 @@
             "pages": [
               "reference",
               "reference/yaml-migration",
-              "reference/continue-mcp",
               "reference/json-reference",
               "reference/deprecated-context-providers",
               "reference/deprecated-codebase",
@@ -193,22 +192,6 @@
             "pages": ["faqs", "troubleshooting"]
           }
         ]
-      },
-      {
-        "tab": "CLI",
-        "groups": [
-          {
-            "group": "CLI",
-            "icon": "terminal",
-            "pages": [
-              "cli/quickstart",
-              "cli/tui-mode",
-              "cli/headless-mode",
-              "cli/configuration",
-              "cli/tool-permissions"
-            ]
-          }
-        ]
       }
     ],
     "global": {}
@@ -216,7 +199,7 @@
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg",
-    "href": "https://docs.continue.dev"
+    "href": "https://github.com/b1tninja/continued"
   },
   "background": {
     "color": {
@@ -226,15 +209,12 @@
   "navbar": {
     "primary": {
       "type": "github",
-      "href": "https://github.com/continuedev/continue"
+      "href": "https://github.com/b1tninja/continued"
     }
   },
   "footer": {
     "socials": {
-      "x": "https://twitter.com/continuedev",
-      "github": "https://github.com/continuedev/continue",
-      "linkedin": "https://linkedin.com/company/continuedev",
-      "youtube": "https://www.youtube.com/@continuedev"
+      "github": "https://github.com/b1tninja/continued"
     }
   },
   "contextual": {
@@ -245,27 +225,13 @@
     "suggestEdit": true,
     "raiseIssue": false
   },
-  "integrations": {
-    "ga4": {
-      "measurementId": "G-M3JWW8N2XQ"
-    }
-  },
   "custom": {
-    "css": ["custom.css"],
-    "js": ["reo-tracking.js"]
+    "css": ["custom.css"]
   },
   "redirects": [
     {
-      "source": "/cli/overview",
-      "destination": "/cli/quickstart"
-    },
-    {
-      "source": "/cli/install",
-      "destination": "/cli/quickstart"
-    },
-    {
       "source": "/changelog",
-      "destination": "https://changelog.continue.dev"
+      "destination": "https://github.com/b1tninja/continued/releases"
     },
     {
       "source": "/customization",
@@ -877,7 +843,7 @@
     },
     {
       "source": "/about",
-      "destination": "https://continue.dev/about-us"
+      "destination": "https://github.com/b1tninja/continued"
     },
     {
       "source": "/autocomplete/model-setup",
@@ -959,7 +925,6 @@
       "source": "/guides/build-your-own-context-provider",
       "destination": "/customize/deep-dives/custom-providers"
     },
-
     {
       "source": "/customize/settings",
       "destination": "/customize/overview"

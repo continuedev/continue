@@ -13,6 +13,7 @@ There are no GitHub Releases for this fork yet, so builds come from GitHub Actio
 - Windows: `continued-win32-x64-<version>.vsix`
 - Linux: `continued-linux-x64-<version>.vsix`
 - macOS (Apple Silicon): `continued-darwin-arm64-<version>.vsix`
+- macOS (Intel): `continued-darwin-x64-<version>.vsix`
 
 Then:
 

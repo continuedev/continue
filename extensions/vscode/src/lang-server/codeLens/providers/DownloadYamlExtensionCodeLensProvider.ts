@@ -24,7 +24,11 @@ export class DownloadYamlExtensionCodeLensProvider
       command: {
         title: "📖 View Continued Reference",
         command: "vscode.open",
-        arguments: [vscode.Uri.parse("https://docs.continue.dev/reference")],
+        arguments: [
+          vscode.Uri.parse(
+            "https://github.com/b1tninja/continued/blob/main/docs/reference.mdx",
+          ),
+        ],
       },
       isResolved: true,
     };

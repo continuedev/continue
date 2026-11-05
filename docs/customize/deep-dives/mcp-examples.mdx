@@ -5,7 +5,7 @@ keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify,
 
 Ready-to-use MCP server configurations for popular tools and services. Copy these into your `config.yaml` to get started.
 
-MCP servers are only available in **agent** mode. For configuration concepts and setup details, see the [MCP deep dive](/customize/deep-dives/mcp).
+MCP servers are only available in **agent** mode. For configuration concepts and setup details, see the [MCP deep dive](./mcp.mdx).
 
 ## Sentry
 
@@ -34,8 +34,6 @@ mcpServers:
     env:
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 ```
-
-See also: [Sentry MCP Error Monitoring guide](/guides/sentry-mcp-error-monitoring)
 
 ## Slack
 
@@ -70,8 +68,6 @@ mcpServers:
     apiKey: ${{ secrets.POSTHOG_API_KEY }}
 ```
 
-See also: [PostHog + GitHub Continuous AI guide](/guides/posthog-github-continuous-ai)
-
 ## Supabase
 
 ```yaml
@@ -81,8 +77,6 @@ mcpServers:
     url: https://mcp.supabase.com/mcp
     apiKey: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 ```
-
-See also: [Supabase MCP Database Workflow guide](/guides/supabase-mcp-database-workflow)
 
 ## Netlify
 
@@ -94,8 +88,6 @@ mcpServers:
     apiKey: ${{ secrets.NETLIFY_API_TOKEN }}
 ```
 
-See also: [Netlify MCP Continuous Deployment guide](/guides/netlify-mcp-continuous-deployment)
-
 ## Atlassian
 
 ```yaml
@@ -106,8 +98,6 @@ mcpServers:
     env:
       ATLASSIAN_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
 ```
-
-See also: [Atlassian MCP cookbook](/guides/atlassian-mcp-continue-cookbook)
 
 ## GitHub
 
@@ -121,8 +111,6 @@ mcpServers:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
-
-See also: [GitHub MCP cookbook](/guides/github-mcp-continue-cookbook)
 
 ## Sanity
 
@@ -140,8 +128,6 @@ mcpServers:
       MCP_USER_ROLE: ${{ secrets.MCP_USER_ROLE }}
 ```
 
-See also: [Sanity MCP cookbook](/guides/sanity-mcp-continue-cookbook)
-
 ## Snyk
 
 ```yaml
@@ -155,8 +141,6 @@ mcpServers:
       SNYK_API_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
 ```
 
-See also: [Snyk MCP cookbook](/guides/snyk-mcp-continue-cookbook)
-
 ## dlt
 
 ```yaml
@@ -168,8 +152,6 @@ mcpServers:
       - "dlthub/dlt-mcp"
 ```
 
-See also: [dlt MCP cookbook](/guides/dlt-mcp-continue-cookbook)
-
 ## Chrome DevTools
 
 ```yaml
@@ -180,11 +162,3 @@ mcpServers:
       - "-y"
       - "chrome-devtools-mcp@latest"
 ```
-
-See also: [Chrome DevTools MCP guide](/guides/chrome-devtools-mcp-performance)
-
-## Other guides
-
-These integrations have guides available but use direct API integration rather than MCP:
-
-- [Notion](/guides/notion-continue-guide)

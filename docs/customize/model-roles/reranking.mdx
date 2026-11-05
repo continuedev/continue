@@ -7,12 +7,12 @@ sidebar_position: 6
 
 A "reranking model" is trained to take two pieces of text (often a user question and a document) and return a relevancy score between 0 and 1, estimating how useful the document will be in answering the question. Rerankers are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.
 
-In Continue, rerankers are designated using the `rerank` role and used by [codebase awareness](/guides/codebase-documentation-awareness) in order to select the most relevant code snippets after vector search.
+In Continued, rerankers are designated using the `rerank` role and used by [codebase awareness](../../guides/codebase-documentation-awareness.mdx) in order to select the most relevant code snippets after vector search.
 
 ## Recommended reranking models
 
 <Info>
-  For a comparison of all reranking models including open and closed options, see our [comprehensive model recommendations](/customize/models#recommended-models).
+  For a comparison of all reranking models including open and closed options, see our [comprehensive model recommendations](../models.mdx#recommended-models).
 </Info>
 
 If you have the ability to use any model, we recommend `rerank-2` by Voyage AI, which is listed below along with the rest of the options for rerankers.

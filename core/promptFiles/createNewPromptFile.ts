@@ -24,7 +24,7 @@ const FIRST_TIME_DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file
   # @os
   # @repo-map
 
-# To learn more, see the full .prompt file reference: https://docs.continue.dev/features/prompt-files
+# To learn more, see the full .prompt file reference: https://github.com/b1tninja/continued/blob/main/docs/customize/deep-dives/prompts.mdx
 name: Example
 description: Example prompt file
 ---

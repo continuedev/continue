@@ -5,7 +5,7 @@ description: "Context Providers allow you to type '@' and see a dropdown of cont
 
 Context Providers allow you to type '@' and see a dropdown of content that can all be provided to the model as context.
 
-![Context Items](/images/customize/images/context-provider-example-0c96ff77286fa970b23dddfdc1fa986a.png)
+![Context Items](../../images/customize/images/context-provider-example-0c96ff77286fa970b23dddfdc1fa986a.png)
 
 ## Built-in Context Providers
 
@@ -166,7 +166,7 @@ Response
 
 ### Model Context Protocol
 
-The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then set up your configuration like this:
+The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continued supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then set up your configuration like this:
 
 ```yaml config.yaml
 mcpServers:
@@ -184,14 +184,14 @@ You'll then be able to type "@" and see "MCP" in the context providers dropdown.
 
 <Note>
   To provide context beyond the built-in context providers, we now recommend
-  using [MCP Servers](/customize/mcp-tools)
+  using [MCP Servers](../mcp-tools.mdx)
 </Note>
 
-View the [deprecated context providers](/reference/deprecated-context-providers) for documentation on:
+View the [deprecated context providers](../../reference/deprecated-context-providers.mdx) for documentation on:
 
-- [`@Codebase`](/reference/deprecated-codebase) - Use the [codebase awareness guide](/guides/codebase-documentation-awareness) instead
-- [`@Folder`](/reference/deprecated-codebase) - Use the [codebase awareness guide](/guides/codebase-documentation-awareness) instead
-- [`@Docs`](/reference/deprecated-docs) - Use the [documentation awareness guide](/guides/codebase-documentation-awareness) instead
+- [`@Codebase`](../../reference/deprecated-codebase.mdx) - Use the [codebase awareness guide](../../guides/codebase-documentation-awareness.mdx) instead
+- [`@Folder`](../../reference/deprecated-codebase.mdx) - Use the [codebase awareness guide](../../guides/codebase-documentation-awareness.mdx) instead
+- [`@Docs`](../../reference/deprecated-docs.mdx) - Use the [documentation awareness guide](../../guides/codebase-documentation-awareness.mdx) instead
 - `@Greptile` - Query Greptile index
 - `@Commits` - Reference git commits
 - `@Discord` - Reference Discord messages

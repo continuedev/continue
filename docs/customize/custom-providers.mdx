@@ -3,9 +3,9 @@ title: "Context Providers"
 description: "Context Providers allow you to type '@' and see a dropdown of content that can all be fed to the LLM as context. Every context provider is a plugin, which means if you want to reference some source of information that you don't see here, you can request (or build!) a new context provider."
 ---
 
-As an example, say you are working on solving a new GitHub Issue. You type '@Issue' and select the one you are working on. Continue can now see the issue title and contents. You also know that the issue is related to the files 'readme.md' and 'helloNested.py', so you type '@readme' and '@hello' to find and select them. Now these 3 "Context Items" are displayed inline with the rest of your input.
+As an example, say you are working on solving a new GitHub Issue. You type '@Issue' and select the one you are working on. Continued can now see the issue title and contents. You also know that the issue is related to the files 'readme.md' and 'helloNested.py', so you type '@readme' and '@hello' to find and select them. Now these 3 "Context Items" are displayed inline with the rest of your input.
 
-![Context Items](/images/customize/images/context-provider-example-0c96ff77286fa970b23dddfdc1fa986a.png)
+![Context Items](../images/customize/images/context-provider-example-0c96ff77286fa970b23dddfdc1fa986a.png)
 
 ## Built-in Context Providers
 
@@ -73,7 +73,7 @@ context:  - provider: docs
 
 Note that this will only enable the `@Docs` context provider.
 
-To use it, you need to add a documentation site to your config file. See the [docs](/guides/codebase-documentation-awareness) page for more information.
+To use it, you need to add a documentation site to your config file. See the [docs](../guides/codebase-documentation-awareness.mdx) page for more information.
 
 ### @Open Context Provider – Reference All Open Files or Pinned Files
 
@@ -114,7 +114,7 @@ context:
   - provider: codebase
 ```
 
-Read more about indexing and retrieval [here](/guides/codebase-documentation-awareness).
+Read more about indexing and retrieval [here](../guides/codebase-documentation-awareness.mdx).
 
 ### @Folder Context Provider – Reference Code from a Specific Folder
 
@@ -232,9 +232,9 @@ context:
   - provider: os
 ```
 
-### Using the Model Context Protocol (MCP) in Continue
+### Using the Model Context Protocol (MCP) in Continued
 
-The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then set up your configuration like this:
+The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continued supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then set up your configuration like this:
 
 config.yaml
 
@@ -250,6 +250,6 @@ mcpServers:
 
 You'll then be able to type "@" and see "MCP" in the context providers dropdown.
 
-### How to Request a New Context Provider in Continue
+### How to Request a New Context Provider in Continued
 
-Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new Context Provider.
+Not seeing what you want? Create an issue [here](https://github.com/b1tninja/continued/issues/new) to request a new Context Provider.

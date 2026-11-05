@@ -6,14 +6,14 @@ noindex: true
 ---
 
 <Warning>
-  **This feature is deprecated.** The `@Docs` context provider has been deprecated in favor of a more integrated approach to documentation awareness. Please refer to our [Guide on Making Agent Mode Aware of Codebases and Documentation](/guides/codebase-documentation-awareness) for the recommended approach.
+  **This feature is deprecated.** The `@Docs` context provider has been deprecated in favor of a more integrated approach to documentation awareness. Please refer to our [Guide on Making Agent Mode Aware of Codebases and Documentation](../guides/codebase-documentation-awareness.mdx) for the recommended approach.
 </Warning>
 
 ## Migration Guide
 
-If you're currently using the `@Docs` context provider, please migrate to the new approach outlined in our [codebase and documentation awareness guide](/guides/codebase-documentation-awareness). The new approach provides:
+If you're currently using the `@Docs` context provider, please migrate to the new approach outlined in our [codebase and documentation awareness guide](../guides/codebase-documentation-awareness.mdx). The new approach provides:
 
-- Better integration with Continue's Agent mode features
+- Better integration with Continued's Agent mode features
 - More intelligent context selection
 - Improved performance and accuracy
 
@@ -21,7 +21,7 @@ If you're currently using the `@Docs` context provider, please migrate to the ne
 
 **Below is the original documentation for the `@Docs` context provider, preserved for reference**
 
-The `@Docs` context provider allows you to efficiently reference documentation directly within Continue.
+The `@Docs` context provider allows you to efficiently reference documentation directly within Continued.
 
 ## How to Enable the @Docs Context Provider
 
@@ -85,7 +85,7 @@ Documentation sources may be suggested based on package files in your repo. This
 - Packages with partial information (with a pen icon) can be clicked to fill the form with the available information
 - Note that you can hover over the information icon to see where the package suggestion was found.
 
-![Add documentation form](/images/docs-form.png)
+![Add documentation form](../images/docs-form.png)
 
 ### How to Add Documentation in Configuration Files
 
@@ -119,7 +119,7 @@ For bulk documentation site adds or edits, we recommend editing your global conf
   </Tab>
 </Tabs>
 
-See [the config reference](/reference) for all documentation site configuration options.
+See [the config reference](../reference.mdx) for all documentation site configuration options.
 
 Indexing will re-sync upon saving the configuration file.
 
@@ -131,7 +131,7 @@ If you have set up an [embeddings provider](../customize/model-roles/embeddings.
 
 ### How to Configure Reranking for Better Results
 
-As with [@Codebase context provider configuration](./deprecated-codebase), you can adjust the reranking behavior of the `@Docs` context provider with the `nRetrieve`, `nFinal`, and `useReranking`.
+As with [@Codebase context provider configuration](./deprecated-codebase.mdx), you can adjust the reranking behavior of the `@Docs` context provider with the `nRetrieve`, `nFinal`, and `useReranking`.
 
 <Tabs>
   <Tab title="YAML">
@@ -201,7 +201,7 @@ The GitHub API rate limits public requests to 60 per hour. If you want to reliab
 
 ### How to Enable Local Crawling for Private Documentation
 
-By default, Continue crawls documentation sites using a specialized crawling service that provides the best experience for most users and documentation sites.
+By default, Continued crawls documentation sites using a specialized crawling service that provides the best experience for most users and documentation sites.
 
 If your documentation is private, you can skip the default crawler and use a local crawler instead by setting `useLocalCrawling` to `true`.
 
@@ -253,18 +253,18 @@ Further notes:
 
 You can view indexing statuses and manage your documentation sites from the `@docs indexes` section of the `More` page (three dots)
 
-- Continue does not automatically re-index your docs. Use `Click to re-index` to trigger a reindex for a specific source
+- Continued does not automatically re-index your docs. Use `Click to re-index` to trigger a reindex for a specific source
 - While a site is indexing, click `Cancel indexing` to cancel the process
 - Failed indexing attempts will show an error status bar and icon
 - Delete a documentation site from your configuration using the trash icon
 
-![More Page @docs indexes section](/images/docs-indexes.png)
+![More Page @docs indexes section](../images/docs-indexes.png)
 
 You can also view the overall status of currently indexing docs from a hideable progress bar at the bottom of the chat page
 
-![Documentation indexing peek](/images/docs-indexing-peek.png)
+![Documentation indexing peek](../images/docs-indexing-peek.png)
 
-You can also use the following IDE command to force a re-index of all docs: `Continue: Docs Force Re-Index`.
+You can also use the following IDE command to force a re-index of all docs: `Continued: Docs Force Re-Index`.
 
 ## Configuration Examples for Different Setups
 
@@ -306,54 +306,7 @@ The following configuration example works out of the box for VS Code. This uses 
   </Tab>
 </Tabs>
 
-### How to Set Up @Docs in JetBrains IDEs (Minimal Configuration)
-
-Here is the equivalent minimal example for Jetbrains, which requires setting up an [embeddings provider](../customize/model-roles/embeddings.mdx).
-
-<Tabs>
-  <Tab title="YAML">
-  ```yaml title="config.yaml"
-  name: My Config
-  version: 0.0.1
-  schema: v1
-
-  models:
-    - name: LMStudio embedder
-      provider: lmstudio
-      model: nomic-ai/nomic-embed-text-v1.5-GGUF
-      roles:
-        - embed
-  context:
-    - provider: docs
-  docs:
-    - title: Nest.js
-      startUrl: https://docs.nestjs.com/
-  ```
-  </Tab>
-  <Tab title="JSON">
-  ```json title="config.json"
-  {
-    "contextProviders": [
-      {
-        "name": "docs",
-      }
-    ],
-    "docs": [
-      {
-        "title": "Nest.js",
-        "startUrl": "https://docs.nestjs.com/",
-      },
-    ],
-    "embeddingsProvider": {
-      "provider": "lmstudio",
-      "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
-    }
-  }
-  ```
-  </Tab>
-</Tabs>
-
-### How to Set Up @Docs with Advanced Features (VS Code or JetBrains)
+### How to Set Up @Docs with Advanced Features
 
 The following configuration example includes:
 

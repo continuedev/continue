@@ -184,7 +184,10 @@ export function HelpSection() {
                 description="Learn how to configure and use Continued"
                 icon={LinkIcon}
                 onClick={() =>
-                  ideMessenger.post("openUrl", "https://docs.continue.dev/")
+                  ideMessenger.post(
+                    "openUrl",
+                    "https://github.com/b1tninja/continued/blob/main/docs/index.mdx",
+                  )
                 }
               />
             </div>

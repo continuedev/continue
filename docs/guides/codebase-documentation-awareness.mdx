@@ -44,7 +44,7 @@ This is a React application with:
   they trigger
 </Tip>
 
-Learn more about [rules configuration](/customize/deep-dives/rules).
+Learn more about [rules configuration](../customize/deep-dives/rules.mdx).
 
 ## Make Agent Mode Aware of Other Codebases
 
@@ -87,7 +87,7 @@ You can use the `gh` CLI to:
 
 #### DeepWiki MCP
 
-[DeepWiki MCP](https://continue.dev/deepwiki/deepwiki-mcp) lets agent mode explore any public GitHub repository.
+DeepWiki MCP lets agent mode explore any public GitHub repository.
 
 Once configured, agent mode can explore repositories like:
 
@@ -104,7 +104,7 @@ Create an MCP server that has access to your internal repositories.
 
 #### Custom Code RAG
 
-For faster retrieval and lower costs with very large internal codebases, consider implementing a [custom code RAG](/guides/custom-code-rag) system. This is an advanced approach that requires more setup but can provide performance benefits at scale.
+For faster retrieval and lower costs with very large internal codebases, consider implementing a [custom code RAG](./custom-code-rag.mdx) system. This is an advanced approach that requires more setup but can provide performance benefits at scale.
 
 ## Make Agent Mode Aware of Relevant Documentation
 
@@ -130,7 +130,7 @@ Always cite documentation when explaining concepts.
 
 #### Context7 MCP
 
-[Context7 MCP](https://continue.dev/upstash/context7-mcp) enables agent mode to search and retrieve information from public documentation:
+Context7 MCP enables agent mode to search and retrieve information from public documentation:
 
 Agent mode can then answer questions like:
 
@@ -181,10 +181,10 @@ The `@Docs` context provider has been deprecated. Instead:
 2. **Add documentation links in rules**: Create rules that reference documentation URLs
 3. **Use custom MCP servers**: For internal documentation, create an MCP server with access to your docs
 
-The new approach provides better integration with Continue's Agent mode features and more intelligent context selection.
+The new approach provides better integration with Continued's Agent mode features and more intelligent context selection.
 
 ## Next Steps
 
-- Learn more about [MCP servers](/reference/continue-mcp)
-- Explore [rules configuration](/customize/deep-dives/rules)
-  - Set up [other custom configurations](/guides/understanding-configs) with specific knowledge domains
+- Learn more about [MCP servers](../customize/deep-dives/mcp.mdx)
+- Explore [rules configuration](../customize/deep-dives/rules.mdx)
+  - Set up [other custom configurations](./understanding-configs.mdx) with specific knowledge domains

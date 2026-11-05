@@ -1,11 +1,11 @@
 ---
 title: "Configuring Models, Rules, and Tools"
-description: "Learn how to work with Continue's configuration system. Understand how to use models, rules, and tools, create local configurations, and organize your setup for maximum reusability."
+description: "Learn how to work with Continued's configuration system. Understand how to use models, rules, and tools, create local configurations, and organize your setup for maximum reusability."
 ---
 
 ## What Are Models, Rules, and Tools?
 
-Continue configs are built from three main types of configuration:
+Continued configs are built from three main types of configuration:
 
 <Columns cols={3}>
 <Card title="Models" icon="cube">
@@ -52,7 +52,7 @@ Perfect for project-specific setups like TypeScript rules for web apps or the Pl
 
 ## Shared Blocks
 
-Continue uses a slug in the format of `owner/item-name` to resolve blocks.
+Continued uses a slug in the format of `owner/item-name` to resolve blocks.
 
 For example, to use the Claude 4 Sonnet model, you'd reference it as `anthropic/claude-4-sonnet`.
 
@@ -64,9 +64,10 @@ version: 1.0.0
 schema: v1
 
 models:
-  - uses: anthropic/claude-4-sonnet
-    with:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # Use a secret from .env
+  - name: Claude Sonnet 4.6
+    provider: anthropic
+    model: claude-sonnet-4-6
+    apiKey: ${{ secrets.ANTHROPIC_API_KEY }} # Use a secret from .env
 ```
 
 ### Organization
@@ -105,7 +106,7 @@ When configuring a local model or MCP server, you can use the same mustache nota
 </Card>
 </Columns>
 
-See [Managing Local Secrets and Environment Variables](/faqs#managing-local-secrets-and-environment-variables) for full details on secret resolution and IDE vs CLI differences.
+See [Managing Local Secrets and Environment Variables](../faqs.mdx#managing-local-secrets-and-environment-variables) for full details on secret resolution and IDE vs CLI differences.
 
 <Info>
 **When to use `secrets.` vs `inputs.`**
@@ -130,7 +131,7 @@ version: 1.0.0
 schema: v1
 
 models:
-  - uses: myprofile/custom-model
+  - uses: file:///path/to/custom-model.yaml # a local block file
     with:
       ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
       TEMP: 0.9
@@ -166,7 +167,7 @@ version: 1.0.0
 schema: v1
 
 models:
-  - uses: myprofile/custom-model
+  - uses: file:///path/to/custom-model.yaml # a local block file
     with:
       SECRET_NAME: ${{ secrets.SECRET_NAME }}
 ```
@@ -175,6 +176,6 @@ models:
 
 Now that you understand how models, rules, and tools work, explore:
 
-- **[Config Reference](/reference)**: Detailed documentation of all available properties
-- **[Custom Context Providers](/customize/deep-dives/custom-providers)**: Create advanced context integrations
-- **[Model Roles](/customize/model-roles/intro)**: Understanding how different models work together
+- **[Config Reference](../reference.mdx)**: Detailed documentation of all available properties
+- **[Custom Context Providers](../customize/deep-dives/custom-providers.mdx)**: Create advanced context integrations
+- **[Model Roles](../customize/model-roles/intro.mdx)**: Understanding how different models work together

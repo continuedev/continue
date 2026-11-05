@@ -162,7 +162,7 @@ export class JiraClient {
     if (response.status === 500) {
       const text = await response.text();
       console.warn(
-        "Unable to get Jira tickets. You may need to set 'apiVersion': 2 in your config.json. See full documentation here: https://docs.continue.dev/customize/context-providers#jira-datacenter-support\n\n",
+        "Unable to get Jira tickets. You may need to set 'apiVersion': 2 in your config.json. See full documentation here: https://github.com/b1tninja/continued/blob/main/docs/reference/deprecated-context-providers.mdx#jira-datacenter-support\n\n",
         text,
       );
       return Promise.resolve([]);

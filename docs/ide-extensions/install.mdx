@@ -1,68 +1,26 @@
 ---
 title: "Install"
-description: "Get Continue installed in your favorite IDE in just a few steps."
+description: "Install Continued in VS Code from a .vsix build."
 ---
 
-<iframe
-  width="100%"
-  height="400"
-  src="https://www.youtube.com/embed/gjekTru4Cg4"
-  title="Install Continue VS Code Extension"
-  frameborder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowfullscreen
-></iframe>
-
-<Tabs>
-<Tab title="VS Code">
+Continued is installed from a `.vsix` file; it is not on the VS Code Marketplace or Open VSX.
+The full instructions, with checksums and troubleshooting, are in the
+[install guide](https://github.com/b1tninja/continued/blob/main/docs/continued-install.md).
 
 <Steps>
-<Step title="Install from Marketplace">
-Click `Install` on the [Continue extension page in the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
+<Step title="Download the build for your platform">
+`continued-win32-x64`, `continued-darwin-arm64` (Apple Silicon), `continued-darwin-x64` (Intel Mac) or `continued-linux-x64`.
 </Step>
 
-<Step title="Install in VS Code">
-  This will open the Continue extension page in VS Code, where you will need to
-  click `Install` again
+<Step title="Install it in VS Code">
+Run `code --install-extension continued-<platform>-<version>.vsix --force`, or use the Extensions view: `...` menu → **Install from VSIX…**. Then reload the window.
 </Step>
 
-<Step title="Move to Right Sidebar">
-The Continue logo will appear on the left sidebar. For a better experience, move Continue to the right sidebar
-
-![move-to-right-sidebar](/images/move-to-right-sidebar-b2d315296198e41046fc174d8178f30a.gif)
-
-</Step>
-
-</Steps>
-
-<Info>
-  If you have any problems, see the [troubleshooting guide](/troubleshooting).
-</Info>
-
-</Tab>
-
-<Tab title="JetBrains">
-
-<Steps>
-<Step title="Open Settings">
-Open your JetBrains IDE and open **Settings** using `Ctrl` + `Alt` + `S`
-</Step>
-
-<Step title="Find Continue Plugin">
-  Select **Plugins** on the sidebar and search for "Continue" in the marketplace
-</Step>
-
-<Step title="Install Plugin">
-Click `Install`, which will cause the Continue logo to show up on the right toolbar
-
-![jetbrains-getting-started.png](/images/getting-started/images/jetbrains-getting-started-d62b7edee1cdd58508c5075faf285955.png)
-
+<Step title="Move to the right sidebar (optional)">
+The Continued icon appears in the Activity Bar on the left. To keep Chat from covering the file explorer, right-click the icon and choose **Move To** → **Secondary Side Bar**.
 </Step>
 </Steps>
 
 <Info>
-  If you have any problems, see the [troubleshooting guide](/troubleshooting).
+  If you have any problems, see the [troubleshooting guide](../troubleshooting.mdx).
 </Info>
-
-</Tab>
-</Tabs>

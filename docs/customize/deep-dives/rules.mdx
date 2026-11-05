@@ -1,22 +1,22 @@
 ---
-title: "How to Create and Manage Rules in Continue"
+title: "How to Create and Manage Rules in Continued"
 description: "Rules are used to provide system message instructions to the model for Agent mode, Chat mode, and Edit mode requests"
 keywords: [rules, system, prompt, message]
 sidebarTitle: "Rules"
 ---
 
-Rules provide instructions to the model for [Agent mode](../../ide-extensions/agent/quick-start), [Chat](../../ide-extensions/chat/quick-start), and [Edit](../../ide-extensions/edit/quick-start) requests.
+Rules provide instructions to the model for [Agent mode](../../ide-extensions/agent/quick-start.mdx), [Chat](../../ide-extensions/chat/quick-start.mdx), and [Edit](../../ide-extensions/edit/quick-start.mdx) requests.
 
 <Info>
-  Rules are not included in [autocomplete](./autocomplete) or
-  [apply](../model-roles/apply).
+  Rules are not included in [autocomplete](./autocomplete.mdx) or
+  [apply](../model-roles/apply.mdx).
 </Info>
 
-## How Rules Work in Continue
+## How Rules Work in Continued
 
 You can view the current rules by clicking the pen icon above the main toolbar:
 
-![rules input toolbar section](/images/notch-rules.png)
+![rules input toolbar section](../../images/notch-rules.png)
 
 To form the system message, rules are joined with new lines, in the order they appear in the toolbar. This includes the base chat system message ([see below](#how-to-customize-chat-system-message)).
 
@@ -38,7 +38,7 @@ name: Pirate rule
 
 Now test your rules by asking a question about a file in chat.
 
-![pirate rule test](/images/pirate-rule-test.png)
+![pirate rule test](../../images/pirate-rule-test.png)
 
 ## How to Create Rules
 
@@ -46,7 +46,7 @@ Now test your rules by asking a question about a file in chat.
 
 Rules can be added locally using the "Add Rules" button.
 
-![add local rules button](/images/add-local-rules.png)
+![add local rules button](../../images/add-local-rules.png)
 
 <Info>
 **Automatically create local rules**: When in Agent mode, you can prompt the agent to create a rule for you using the `create_rule_block` tool if enabled.
@@ -80,10 +80,10 @@ Rules can be simple text, written in YAML configuration files, or as Markdown (`
 name: Documentation Standards
 globs: docs/**/*.{md,mdx}
 alwaysApply: false
-description: Standards for writing and maintaining Continue Docs
+description: Standards for writing and maintaining project docs
 ---
 
-# Continue Docs Standards
+# Project Docs Standards
 
 - Follow Mintlify documentation standards
 - Include YAML frontmatter with title, description, and keywords
@@ -159,8 +159,8 @@ globs: ["**/*.ts", "**/*.tsx"]
 
 ### How to Customize Chat System Message
 
-Continue includes a simple default system message for [Agent mode](../../ide-extensions/agent/quick-start) and [Chat](../../ide-extensions/chat/quick-start) requests, to help the model provide reliable codeblock formats in its output.
+Continued includes a simple default system message for [Agent mode](../../ide-extensions/agent/quick-start.mdx) and [Chat](../../ide-extensions/chat/quick-start.mdx) requests, to help the model provide reliable codeblock formats in its output.
 
-This can be viewed in the rules section of the toolbar (see above), or in the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4).
+This can be viewed in the rules section of the toolbar (see above), or in the source code [here](https://github.com/b1tninja/continued/blob/main/core/llm/constructMessages.ts#L4).
 
-Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](/reference#models).
+Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](../../reference.mdx#models).

@@ -34,11 +34,11 @@ function IndexingProgressErrorText({ update }: IndexingProgressErrorTextProps) {
           Add an Embeddings model to enable codebase indexing. See the docs for
           examples:
           <a
-            href="https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers"
+            href="https://github.com/b1tninja/continued/blob/main/docs/customize/model-roles/embeddings.mdx"
             target="_blank"
             className="cursor-pointer text-inherit underline hover:text-inherit"
           >
-            https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers
+            https://github.com/b1tninja/continued/blob/main/docs/customize/model-roles/embeddings.mdx
           </a>
         </span>
       </div>

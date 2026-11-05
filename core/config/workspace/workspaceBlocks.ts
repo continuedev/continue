@@ -56,7 +56,8 @@ function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
       configYaml.docs = [
         {
           name: "New docs",
-          startUrl: "https://docs.continue.dev",
+          startUrl:
+            "https://github.com/b1tninja/continued/blob/main/docs/index.mdx",
         },
       ];
       break;

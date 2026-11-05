@@ -7,25 +7,24 @@ sidebar_position: 5
 
 An "embeddings model" is trained to convert a piece of text into a vector, which can later be rapidly compared to other vectors to determine similarity between the pieces of text. Embeddings models are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.
 
-In Continue, embeddings are generated during indexing and then used by [codebase awareness](/guides/codebase-documentation-awareness) to perform similarity search over your codebase.
+In Continued, embeddings are generated during indexing and then used by [codebase awareness](../../guides/codebase-documentation-awareness.mdx) to perform similarity search over your codebase.
 
 You can add `embed` to a model's `roles` to specify that it can be used to embed.
 
 <Info>
   [Built-in model (VS Code only)] `transformers.js` is used as a built-in
-  embeddings model in VS Code. In JetBrains, there currently is no built-in
-  embedder.
+  embeddings model in VS Code.
 </Info>
 
 ## Recommended embedding models
 
 <Info>
-  See our [comprehensive model recommendations](/customize/models#recommended-models) for the best embedding models comparison.
+  See our [comprehensive model recommendations](../models.mdx#recommended-models) for the best embedding models comparison.
 </Info>
 
 If you have the ability to use any model, we recommend `voyage-code-3`, which is listed below along with the rest of the options for embeddings models.
 
-If you want to generate embeddings locally, we recommend using `nomic-embed-text` with [Ollama](../model-providers/top-level/ollama).
+If you want to generate embeddings locally, we recommend using `nomic-embed-text` with [Ollama](../model-providers/top-level/ollama.mdx).
 
 ### Voyage AI
 
@@ -62,11 +61,11 @@ After obtaining an API key from [here](https://www.voyageai.com/), you can confi
 
 ### Ollama
 
-See [here](../model-providers/top-level/ollama) for instructions on how to use Ollama for embeddings.
+See [here](../model-providers/top-level/ollama.mdx) for instructions on how to use Ollama for embeddings.
 
 ### Transformers.js (currently VS Code only)
 
-[Transformers.js](https://huggingface.co/docs/transformers.js/index) is a JavaScript port of the popular [Transformers](https://huggingface.co/transformers/) library. It allows embeddings to be calculated entirely locally. The model used is `all-MiniLM-L6-v2`, which is shipped alongside the Continue extension.
+[Transformers.js](https://huggingface.co/docs/transformers.js/index) is a JavaScript port of the popular [Transformers](https://huggingface.co/transformers/) library. It allows embeddings to be calculated entirely locally. The model used is `all-MiniLM-L6-v2`, which is shipped alongside the Continued extension.
 
 <Tabs>
     <Tab title="YAML">
@@ -127,36 +126,36 @@ See [here](../model-providers/top-level/ollama) for instructions on how to use O
 
 ### OpenAI
 
-See [here](../model-providers/top-level/openai) for instructions on how to use OpenAI for embeddings.
+See [here](../model-providers/top-level/openai.mdx) for instructions on how to use OpenAI for embeddings.
 
 ### Cohere
 
-See [here](../model-providers/more/cohere#embeddings-model) for instructions on how to use Cohere for embeddings.
+See [here](../model-providers/more/cohere.mdx#embeddings-model) for instructions on how to use Cohere for embeddings.
 
 ### Gemini
 
-See [here](../model-providers/top-level/gemini) for instructions on how to use Gemini for embeddings.
+See [here](../model-providers/top-level/gemini.mdx) for instructions on how to use Gemini for embeddings.
 
 ### Vertex
 
-See [here](../model-providers/top-level/vertexai) for instructions on how to use Vertex for embeddings.
+See [here](../model-providers/top-level/vertexai.mdx) for instructions on how to use Vertex for embeddings.
 
 ### Mistral
 
-See [here](../model-providers/more/mistral) for instructions on how to use Mistral for embeddings.
+See [here](../model-providers/more/mistral.mdx) for instructions on how to use Mistral for embeddings.
 
 ### NVIDIA
 
-See [here](../model-providers/more/nvidia) for instructions on how to use NVIDIA for embeddings.
+See [here](../model-providers/more/nvidia.mdx) for instructions on how to use NVIDIA for embeddings.
 
 ### Bedrock
 
-See [here](../model-providers/top-level/bedrock) for instructions on how to use Bedrock for embeddings.
+See [here](../model-providers/top-level/bedrock.mdx) for instructions on how to use Bedrock for embeddings.
 
 ### WatsonX
 
-See [here](../model-providers/more/watsonx#embeddings-model) for instructions on how to use WatsonX for embeddings.
+See [here](../model-providers/more/watsonx.mdx#embeddings-model) for instructions on how to use WatsonX for embeddings.
 
 ### LMStudio
 
-See [here](../model-providers/top-level/lmstudio) for instructions on how to use LMStudio for embeddings.
+See [here](../model-providers/top-level/lmstudio.mdx) for instructions on how to use LMStudio for embeddings.

@@ -5,7 +5,7 @@ description: "Using the highlighted code, the contents of the current file conta
 
 ## How Edit Functionality Works
 
-When you start an edit session, Continue:
+When you start an edit session, Continued:
 
 1. **Gathers Context**: Uses the highlighted code and the current file contents
 2. **Prompts the Model**: Sends the gathered context and your input instructions to the model
@@ -14,7 +14,7 @@ When you start an edit session, Continue:
 If you accept the diff, we remove the previously highlighted lines, and if you reject the diff, we remove the proposed changes.
 
 <Info>
-**Looking for AI that predicts your next edit?** Check out [Next Edit](/ide-extensions/autocomplete/next-edit), an experimental feature that proactively suggests code changes before you even start typing, going beyond traditional autocomplete to anticipate entire code modifications.
+**Looking for AI that predicts your next edit?** Check out [Next Edit](../autocomplete/next-edit.mdx), an experimental feature that proactively suggests code changes before you even start typing, going beyond traditional autocomplete to anticipate entire code modifications.
 </Info>
 
-If you would like to view the exact prompt that is sent to the model during an edit, you can [find it in the prompt logs](/troubleshooting#check-the-logs).
+If you would like to view the exact prompt that is sent to the model during an edit, you can [find it in the prompt logs](../../troubleshooting.mdx#check-the-logs).

@@ -52,7 +52,7 @@ export class ContinueCompletionProvider
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
-            "https://docs.continue.dev/features/tab-autocomplete",
+            "https://github.com/b1tninja/continued/blob/main/docs/customize/deep-dives/autocomplete.mdx",
           ),
         );
       }

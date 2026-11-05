@@ -45,7 +45,7 @@ export const FatalErrorIndicator = () => {
           onClick={() => {
             ideMessenger.post(
               "openUrl",
-              "https://docs.continue.dev/troubleshooting",
+              "https://github.com/b1tninja/continued/blob/main/docs/troubleshooting.mdx",
             );
           }}
           className="cursor-pointer underline"
