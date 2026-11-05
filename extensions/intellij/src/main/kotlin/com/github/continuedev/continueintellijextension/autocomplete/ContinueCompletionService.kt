@@ -23,8 +23,11 @@ class ContinueCompletionService(private val project: Project) : CompletionServic
                     requestInput,
                     null
                 ) {
-                    val content = it.castNestedOrNull<List<String>>("content")?.firstOrNull() ?: ""
-                    continuation.resumeWith(Result.success(content))
+                    // No content means no completion: return null (rather than
+                    // an empty string) so the provider does not surface a blank
+                    // suggestion that swallows keys like End (see #12302).
+                    val content = it.castNestedOrNull<List<String>>("content")?.firstOrNull()
+                    continuation.resumeWith(Result.success(content?.takeIf { it.isNotBlank() }))
                 }
             }
         }

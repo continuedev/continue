@@ -32,6 +32,25 @@ class ContinueInlineCompletionProviderTest : BasePlatformTestCase() {
     }
 
 
+    fun `test blank completion does not hijack End key`() = myFixture.testInlineCompletion {
+        registerSuggestion("")
+        init(PlainTextFileType.INSTANCE, "[some_heading<caret>]")
+        callInlineCompletion()
+        delay()
+        myFixture.performEditorAction("EditorLineEnd")
+        assertFileContent("[some_heading]<caret>")
+    }
+
+    fun `test whitespace-only completion does not hijack End key`() = myFixture.testInlineCompletion {
+        registerSuggestion("   ")
+        init(PlainTextFileType.INSTANCE, "[some_heading<caret>]")
+        callInlineCompletion()
+        delay()
+        myFixture.performEditorAction("EditorLineEnd")
+        assertFileContent("[some_heading]<caret>")
+    }
+
+
     fun `test show completion on Ctrl + Space, then insert with Tab`() = myFixture.testInlineCompletion {
         registerSuggestion("subtract(a: Int, b: Int) = a - b")
         init(
