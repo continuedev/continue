@@ -13,7 +13,7 @@ Download the `.vsix` for your platform from the [latest release](https://github.
 - Windows: `continued-win32-x64-<version>.vsix` (Arm: `continued-win32-arm64-<version>.vsix`)
 - macOS (Apple Silicon): `continued-darwin-arm64-<version>.vsix`
 - macOS (Intel): `continued-darwin-x64-<version>.vsix`
-- Linux: `continued-linux-x64-<version>.vsix` (also `linux-arm64`, `linux-armhf`, and `alpine-x64` for Alpine)
+- Linux: `continued-linux-x64-<version>.vsix` (Arm64: `continued-linux-arm64-<version>.vsix`)
 
 Each release also has a `SHA256SUMS.txt` with the checksum of every file. For a build of a newer, unreleased commit, see [Option 2](#option-2-download-a-build-from-github-actions).
 
