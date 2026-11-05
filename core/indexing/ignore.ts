@@ -1,6 +1,5 @@
 import ignore from "ignore";
 
-import path from "path";
 import { fileURLToPath } from "url";
 import { ContinueError, ContinueErrorReason } from "../util/errors";
 
@@ -235,19 +234,34 @@ export const defaultIgnoreFileAndDir = ignore()
   .add(defaultIgnoreFile)
   .add(defaultIgnoreDir);
 
+/**
+ * Convert a filepath or file URI into a gitignore-style relative path for the
+ * `ignore` library. Keep the full path (not just parent/basename) so nested
+ * security directories still match, and normalize Windows separators/drives.
+ */
+export function normalizePathForSecurityIgnore(filePathOrUri: string): string {
+  let filepath = filePathOrUri;
+  try {
+    filepath = fileURLToPath(filePathOrUri);
+  } catch {
+    // Not a file URL; use the original string.
+  }
+
+  filepath = filepath.replace(/\\/g, "/");
+  // POSIX fileURLToPath of file:///C:/... yields /C:/...
+  filepath = filepath.replace(/^\/+([a-zA-Z]:)/, "$1");
+  filepath = filepath.replace(/^[a-zA-Z]:/, "");
+  filepath = filepath.replace(/^\/+/, "");
+  filepath = filepath.replace(/^\.\/+/, "");
+
+  return filepath;
+}
+
 export function isSecurityConcern(filePathOrUri: string) {
   if (!filePathOrUri) {
     return false;
   }
-  let filepath = filePathOrUri;
-  try {
-    filepath = fileURLToPath(filePathOrUri);
-  } catch {}
-  if (path.isAbsolute(filepath)) {
-    const dir = path.dirname(filepath).split(/\/|\\/).at(-1) ?? "";
-    const basename = path.basename(filepath);
-    filepath = `${dir ? dir + "/" : ""}${basename}`;
-  }
+  const filepath = normalizePathForSecurityIgnore(filePathOrUri);
   if (!filepath) {
     return false;
   }
