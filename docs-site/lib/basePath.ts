@@ -14,5 +14,9 @@ export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 /** Prefix an absolute (`/`-rooted) path with the deploy base path. */
 export function withBasePath(path: string): string {
   if (!path.startsWith("/")) return path;
+  // Already prefixed (preprocessing adds it to raw <img src> in the source).
+  if (BASE_PATH && (path === BASE_PATH || path.startsWith(`${BASE_PATH}/`))) {
+    return path;
+  }
   return `${BASE_PATH}${path}`;
 }

@@ -37,6 +37,9 @@ jobs:
       - name: Build
         working-directory: docs-site
         run: npm run build
+        env:
+          # A project site lives under /<repo>/ (https://<owner>.github.io/<repo>/).
+          DOCS_BASE_PATH: /${{ github.event.repository.name }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
