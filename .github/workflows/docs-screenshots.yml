@@ -1,0 +1,58 @@
+name: Docs Screenshots
+
+# Builds the extension, opens it in VS Code under Xvfb with the e2e mock
+# models, and captures screenshots for the docs
+# (extensions/vscode/e2e/tests/Screenshots.screens.ts). The PNGs are uploaded
+# as the "docs-screenshots" artifact to review before they go into docs/images.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Build VS Code extension
+        uses: ./.github/actions/build-vscode-extension
+        with:
+          platform: linux
+          arch: x64
+          npm_config_arch: x64
+          pre-release: false
+          commit-sha: ${{ github.sha }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: vscode-extension-build-Linux
+          path: extensions/vscode/build
+
+  screenshots:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Capture screenshots
+        # The run fails if the script throws, but each shot that worked is
+        # still saved, so the artifact is uploaded either way.
+        continue-on-error: true
+        uses: ./.github/actions/run-vscode-e2e-test
+        with:
+          test_file: e2e/_output/tests/Screenshots.screens.js
+          command: e2e:ci:run-yaml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: docs-screenshots
+          path: extensions/vscode/e2e/_output/screenshots
+          if-no-files-found: warn
