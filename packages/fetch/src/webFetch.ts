@@ -80,8 +80,18 @@ export function createWebFetch(requestOptions?: RequestOptions): WebFetch {
       (typeof input === "object" && "method" in input ? input.method : "GET")
     ).toUpperCase();
     const signal = init?.signal ?? undefined;
-    const buffer = await toBuffer(init?.body);
     let headers = toHeaders(init, input);
+    let body: unknown = init?.body;
+    // FormData (multipart uploads) is serialised the way fetch would, with
+    // its boundary in the content type.
+    if (typeof FormData !== "undefined" && body instanceof FormData) {
+      const encoded = new Response(body);
+      if (!headers.has("content-type")) {
+        headers.set("content-type", encoded.headers.get("content-type") ?? "");
+      }
+      body = await encoded.arrayBuffer();
+    }
+    const buffer = await toBuffer(body);
     let url = toUrl(input);
     let redirectsLeft = MAX_REDIRECTS;
     let currentMethod = method;

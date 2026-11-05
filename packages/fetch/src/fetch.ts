@@ -6,6 +6,16 @@ import { HttpsProxyAgentWithTls } from "./agent.js";
 import { getAgentOptions } from "./getAgentOptions.js";
 import patchedFetch from "./node-fetch-patch.js";
 import { getProxy, shouldBypassProxy } from "./util.js";
+import { createWebFetch } from "./webFetch.js";
+
+/**
+ * Opt-in: send requests through createWebFetch (Node's http client with the
+ * same proxy/CA agents, returning a standard Response) instead of the
+ * patched node-fetch. Off by default until it has seen real traffic.
+ */
+function useWebFetch(): boolean {
+  return process.env.CONTINUE_USE_WEB_FETCH === "1";
+}
 
 const { http, https } = (followRedirects as any).default;
 
@@ -165,12 +175,18 @@ export async function fetchwithRequestOptions(
 
   // fetch the request with the provided options
   try {
-    const resp = await patchedFetch(url, {
-      ...init,
-      body: finalBody,
-      headers: headers,
-      agent: agent,
-    });
+    const resp = useWebFetch()
+      ? ((await createWebFetch(requestOptions)(url, {
+          ...(init as any),
+          body: finalBody as any,
+          headers,
+        })) as unknown as Response)
+      : await patchedFetch(url, {
+          ...init,
+          body: finalBody,
+          headers: headers,
+          agent: agent,
+        });
 
     // Verbose logging for debugging - log response details
     if (process.env.VERBOSE_FETCH) {
@@ -191,7 +207,11 @@ export async function fetchwithRequestOptions(
       logError(error);
     }
 
-    if (error instanceof Error && error.name === "AbortError") {
+    if (
+      (error instanceof Error && error.name === "AbortError") ||
+      // createWebFetch rejects with the signal's reason, which can be any value
+      (useWebFetch() && init?.signal?.aborted)
+    ) {
       // Return a Response object that streamResponse etc can handle
       return new Response(null, {
         status: 499, // Client Closed Request
