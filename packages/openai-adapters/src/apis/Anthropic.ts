@@ -49,6 +49,7 @@ import {
 import {
   applyAnthropicCacheTtl,
   AutoCacheTtl,
+  optsOutOfPromptCache,
   requestedCacheTtl,
 } from "./cacheTtl.js";
 import {
@@ -80,17 +81,22 @@ export class AnthropicApi implements BaseLlmApi {
   }
 
   private _convertBody(oaiBody: ChatCompletionCreateParams) {
+    // A side request (a session title) opts out of caching altogether
+    const noCache = optsOutOfPromptCache(oaiBody);
+
     // Step 1: Convert to clean Anthropic body (no caching)
     const cleanBody = this._convertToCleanAnthropicBody(oaiBody);
 
     // Step 2: Apply caching strategy
-    const cachingStrategy =
-      CACHING_STRATEGIES[this.config.cachingStrategy ?? "systemAndTools"];
+    const strategyName = noCache
+      ? "none"
+      : (this.config.cachingStrategy ?? "systemAndTools");
+    const cachingStrategy = CACHING_STRATEGIES[strategyName];
     const result = cachingStrategy(cleanBody);
 
     // Step 3: Cache last two user messages for conversation turn caching
     // Skip when caching is disabled
-    if ((this.config.cachingStrategy ?? "systemAndTools") !== "none") {
+    if (strategyName !== "none") {
       addCacheControlToLastTwoUserMessages(result.messages);
     }
 
@@ -101,7 +107,7 @@ export class AnthropicApi implements BaseLlmApi {
       requestedCacheTtl(
         this.config.cacheBehavior?.ttl,
         this.autoTtl,
-        (this.config.cachingStrategy ?? "systemAndTools") !== "none",
+        strategyName !== "none",
       ),
     );
   }

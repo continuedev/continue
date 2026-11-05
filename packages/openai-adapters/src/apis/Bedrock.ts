@@ -37,7 +37,11 @@ import {
   getBedrockErrorHint,
   resolveBedrockCacheParts,
 } from "./bedrockHelpers.js";
-import { AutoCacheTtl, requestedCacheTtl } from "./cacheTtl.js";
+import {
+  AutoCacheTtl,
+  optsOutOfPromptCache,
+  requestedCacheTtl,
+} from "./cacheTtl.js";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import {
   createAgentForUrl,
@@ -470,13 +474,14 @@ export class BedrockApi implements BaseLlmApi {
     // Only Claude models take cache points. The others (GPT, Nova, Grok, ...)
     // either cache by themselves or not at all, and reject a request that
     // carries a cachePoint field, so `promptCaching: true` must not reach them.
-    const parts = /claude/i.test(oaiBody.model)
-      ? resolveBedrockCacheParts(
-          this.config.promptCaching,
-          this.config.cacheBehavior,
-          !!systemMessageText,
-        )
-      : { tools: false, system: false, conversation: false };
+    const parts =
+      /claude/i.test(oaiBody.model) && !optsOutOfPromptCache(oaiBody)
+        ? resolveBedrockCacheParts(
+            this.config.promptCaching,
+            this.config.cacheBehavior,
+            !!systemMessageText,
+          )
+        : { tools: false, system: false, conversation: false };
 
     // The lifetime to ask for on every cache point of this request, only for a
     // model that accepts one (an unsupported `ttl` can fail the request).

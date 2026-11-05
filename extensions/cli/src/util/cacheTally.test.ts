@@ -103,6 +103,38 @@ describe("formatCacheTally", () => {
   });
 });
 
+describe("Gemini in the CLI tally", () => {
+  // The CLI reads the adapter's usage directly: Gemini's prompt count includes
+  // the cached part, and the CLI's own provider guess for a non-Claude, non-GPT
+  // model is "anthropic", which must not add the cache reads on top again.
+  const gemini = (prompt: number, read: number) => ({
+    promptTokens: prompt,
+    completionTokens: 10,
+    promptTokensDetails: { cachedTokens: read },
+  });
+
+  it("does not add cache reads to Gemini's prompt count", () => {
+    recordCacheTally(
+      "anthropic",
+      "gemini-2.5-pro",
+      gemini(9000, 7000),
+      "gemini",
+    );
+    expect(getCacheTally()).toMatchObject({
+      inputTokens: 9000,
+      readTokens: 7000,
+      belowMinimum: 0,
+    });
+  });
+
+  it("names a Gemini request under its implicit-caching minimum", () => {
+    recordCacheTally("anthropic", "gemini-2.5-pro", gemini(1500, 0), "gemini");
+    expect(formatCacheTally()).toBe(
+      "Prompt cache: 1 request, all under the model's 2,048-token minimum, so none could be cached",
+    );
+  });
+});
+
 describe("requests under the model's cache minimum", () => {
   // Bedrock lists 4,096 tokens for Haiku 4.5 and 1,024 for Sonnet 4.6.
   const haiku = "us.anthropic.claude-haiku-4-5-20251001-v1:0";

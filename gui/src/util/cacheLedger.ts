@@ -289,6 +289,14 @@ export interface CacheSummary {
   expectedRebuilds: number;
   /** Input tokens written to the cache, 5-minute and 1-hour. */
   written: { m5: number; h1: number };
+  /**
+   * Tokens written to the cache that an earlier request had already written:
+   * the conversation read again at the write price. Split by why: the previous
+   * entry had expired (a pause), or it was still alive and something changed
+   * (a model switch, an edit, a compaction). The input-side cost of these is
+   * what a longer lifetime or a steadier prompt would have saved.
+   */
+  rewritten: { afterPause: number; afterChange: number };
 }
 
 /** Causes that are the user's own doing; they are not faults in the cache. */
@@ -322,11 +330,25 @@ export function summarizeLedger(
   let expectedRebuilds = 0;
   let lastMiss: CacheSummary["lastMiss"];
   const written = { m5: 0, h1: 0 };
+  const rewritten = { afterPause: 0, afterChange: 0 };
+  let prev: CacheLedgerEntry | undefined;
   for (const e of cached) {
     input += entryInputTokens(e);
     read += e.read;
     written.m5 += e.write5m;
     written.h1 += e.write1h;
+    // Writing again what the previous request had put in the cache. The
+    // previous request must have used the cache at all: a prompt under the
+    // model's minimum is never cached, so writing it later is not a re-read.
+    if (prev && prev.read + prev.write5m + prev.write1h > 0) {
+      const again = Math.min(e.write5m + e.write1h, entryInputTokens(prev));
+      if (again > 0) {
+        const lifetime = PROMPT_CACHE_TTL_MS[prev.ttl ?? "5m"];
+        if (e.at - prev.at > lifetime) rewritten.afterPause += again;
+        else if (e.missCauses !== undefined) rewritten.afterChange += again;
+      }
+    }
+    prev = e;
     if (e.missCauses !== undefined) {
       if (isExpected(e.missCauses)) {
         expectedRebuilds++;
@@ -347,6 +369,7 @@ export function summarizeLedger(
     lastMiss,
     expectedRebuilds,
     written,
+    rewritten,
   };
 }
 
@@ -389,6 +412,18 @@ export function formatCacheSummary(
     parts.push(
       `${summary.expectedRebuilds} expected rebuild${summary.expectedRebuilds === 1 ? "" : "s"}`,
     );
+  }
+  const { afterPause, afterChange } = summary.rewritten;
+  if (afterPause > 0 || afterChange > 0) {
+    const bits: string[] = [];
+    if (afterPause > 0)
+      bits.push(`${tokensShort(afterPause)} tokens after pauses`);
+    if (afterChange > 0) {
+      bits.push(
+        `${tokensShort(afterChange)}${afterPause > 0 ? "" : " tokens"} after changes`,
+      );
+    }
+    parts.push(`re-read ${bits.join(", ")}`);
   }
   return parts.join(" \u00b7 ");
 }

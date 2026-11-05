@@ -141,7 +141,7 @@ describe("formatCacheSummary", () => {
       }),
     ])!;
     expect(formatCacheSummary(s, now)).toBe(
-      "2 requests \u00b7 0% of input from cache \u00b7 1 miss (last 6m 10s ago, 310.2k tokens rewritten, the tools changed)",
+      "2 requests \u00b7 0% of input from cache \u00b7 1 miss (last 6m 10s ago, 310.2k tokens rewritten, the tools changed) \u00b7 re-read 100.0k tokens after changes",
     );
   });
 

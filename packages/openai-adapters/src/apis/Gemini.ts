@@ -45,7 +45,12 @@ import {
 type UsageInfo = Pick<
   CompletionUsage,
   "total_tokens" | "completion_tokens" | "prompt_tokens"
->;
+> & {
+  /** Only when Gemini reported cache hits; names as the other adapters use. */
+  prompt_tokens_details?: CompletionUsage["prompt_tokens_details"] & {
+    cache_read_tokens?: number;
+  };
+};
 
 interface GeminiToolCall
   extends OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall {
@@ -329,10 +334,23 @@ export class GeminiApi implements BaseLlmApi {
 
     for await (const chunk of response) {
       if (chunk.usageMetadata) {
+        // `cachedContentTokenCount` is the part of the prompt served from a
+        // cache, implicit or explicit. Google's type documents `promptTokenCount`
+        // as including it when an explicit cache is used; that it does for
+        // implicit hits too has not been checked against a live response. It is
+        // left out when zero so a response without hits looks as it always did.
+        const cached = chunk.usageMetadata.cachedContentTokenCount;
         usage = {
           prompt_tokens: chunk.usageMetadata.promptTokenCount || 0,
           completion_tokens: chunk.usageMetadata.candidatesTokenCount || 0,
           total_tokens: chunk.usageMetadata.totalTokenCount || 0,
+          ...(typeof cached === "number" &&
+            cached > 0 && {
+              prompt_tokens_details: {
+                cached_tokens: cached,
+                cache_read_tokens: cached,
+              },
+            }),
         };
       }
 

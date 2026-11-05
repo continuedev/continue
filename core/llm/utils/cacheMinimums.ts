@@ -43,6 +43,20 @@ const RULES: MinimumRule[] = [
 ];
 
 /**
+ * Gemini's implicit caching minimums (the "Min token limit" table on
+ * ai.google.dev/gemini-api/docs/caching, checked 2026-11-04). Only the models
+ * that table lists; Flash-Lite and anything newer than the table are not
+ * claimed. The table is for the Gemini API, so only that provider uses it.
+ */
+const GEMINI_RULES: { match: RegExp; tokens: number }[] = [
+  { match: /^gemini-2\.5-(?:flash|pro)(?!-lite)/, tokens: 2048 },
+  {
+    match: /^gemini-(?:3\.1-pro|3\.6-flash|3\.8-flash|4(?:-|$))/,
+    tokens: 4096,
+  },
+];
+
+/**
  * The smallest prompt a cache checkpoint can take effect on for this model, or
  * undefined when the model is not in the vendors' tables (so nothing is claimed).
  */
@@ -50,6 +64,10 @@ export function minCacheableTokens(
   model: string,
   provider: string,
 ): number | undefined {
+  if (provider.toLowerCase() === "gemini") {
+    const id = model.toLowerCase().replace(/^models\//, "");
+    return GEMINI_RULES.find((r) => r.match.test(id))?.tokens;
+  }
   const id = normalizeClaudeModelId(model);
   if (!id) return undefined;
   const rule = RULES.find((r) => r.match.test(id));

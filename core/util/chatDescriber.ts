@@ -7,6 +7,14 @@ import type { IMessenger } from "../protocol/messenger";
 import { renderChatMessage } from "./messageContent";
 import { convertFromUnifiedHistory } from "./messageConversion";
 
+/**
+ * The request field the Anthropic and Bedrock adapters read to leave one
+ * request out of prompt caching. It is spelled out here, not imported, because
+ * core resolves the adapters package to a built copy that can be older than
+ * the source; `chatDescriber.noCache.vitest.ts` fails if the two differ.
+ */
+export const NO_PROMPT_CACHE_FIELD = "x_continue_no_prompt_cache";
+
 export class ChatDescriber {
   static maxTokens = 16; // Increased from 12 to meet GPT-5 minimum requirement
   static prompt: string | undefined =
@@ -85,6 +93,15 @@ export class ChatDescriber {
         messages: openaiMessages,
         max_tokens: ChatDescriber.maxTokens,
         stream: false as const,
+        // A title shares nothing with the conversation: caching it would write
+        // an entry nobody reads and, on a 1-hour or Auto setting, count as one
+        // of the conversation's requests. Only the Anthropic and Bedrock
+        // adapters know this field; to any other provider it would be an
+        // unknown parameter, so it is not sent there.
+        ...(modelConfig.provider === "anthropic" ||
+        modelConfig.provider === "bedrock"
+          ? { [NO_PROMPT_CACHE_FIELD]: true }
+          : {}),
       };
 
       // Call the LLM

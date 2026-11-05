@@ -1,4 +1,22 @@
 /**
+ * A per-request opt-out from prompt caching, for side requests that share
+ * nothing with the conversation (a session title, for example): they would
+ * write a cache entry nobody reads and, with `ttl: auto`, move the
+ * conversation's request count along. Only the Anthropic and Bedrock adapters
+ * read it, and neither forwards it: both build their own request body. Set it
+ * only for those two, because other adapters pass unknown fields on to the
+ * provider.
+ */
+export const NO_PROMPT_CACHE_FIELD = "x_continue_no_prompt_cache";
+
+export function optsOutOfPromptCache(body: unknown): boolean {
+  return (
+    (body as Record<string, unknown> | undefined)?.[NO_PROMPT_CACHE_FIELD] ===
+    true
+  );
+}
+
+/**
  * Prompt cache lifetimes for the adapters that send them (Anthropic, Bedrock).
  * Anthropic and Bedrock accept `5m` (the default) and `1h`.
  */
