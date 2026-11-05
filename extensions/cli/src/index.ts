@@ -7,6 +7,7 @@ import { Command } from "commander";
 
 import { chat } from "./commands/chat.js";
 import { checks } from "./commands/checks.js";
+import { hooksCommand } from "./commands/hooks.js";
 import { listSessionsCommand } from "./commands/ls.js";
 import { review } from "./commands/review.js";
 import { serve } from "./commands/serve.js";
@@ -196,6 +197,10 @@ addCommonOptions(program)
     "--beta-subagent-tool",
     "Enable beta Subagent tool for invoking subagents",
   )
+  .option(
+    "--trust-project-hooks",
+    "Run this project's hooks for this session without asking (see `cn hooks`)",
+  )
   .action(async (prompt, options) => {
     // Handle piped input - detect it early and decide on mode
     let stdinInput = null;
@@ -358,6 +363,18 @@ program
   .option("--verbose", "Enable verbose logging")
   .action(async (options) => {
     await review(options);
+  });
+
+// Hooks subcommand
+program
+  .command("hooks [action]")
+  .description(
+    "Show, trust or revoke this project's hooks (list, trust, revoke)",
+  )
+  .option("-y, --yes", "Trust without asking, for scripts")
+  .action(async (action: string | undefined, options) => {
+    const code = await hooksCommand(action, { yes: options.yes });
+    await gracefulExit(code);
   });
 
 // Handle unknown commands

@@ -6,6 +6,10 @@ import { ChatDescriber } from "core/util/chatDescriber.js";
 
 import { compactChatHistory, findCompactionIndex } from "../compaction.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
+import {
+  describePromptBlocked,
+  runUserPromptSubmitHooks,
+} from "../hooks/promptHook.js";
 import { safeStderr, safeStdout } from "../init.js";
 import { configureLogger } from "../logger.js";
 import * as logging from "../logging.js";
@@ -342,7 +346,7 @@ async function processMessage(
   options: ProcessMessageOptions,
 ): Promise<{ compactionIndex?: number | null } | void> {
   const {
-    userInput,
+    userInput: typedInput,
     chatHistory,
     model,
     llmApi,
@@ -352,6 +356,7 @@ async function processMessage(
     compactionIndex: initialCompactionIndex,
     firstAssistantResponse = false,
   } = options;
+  let userInput = typedInput;
   let compactionIndex = initialCompactionIndex;
   // Check for slash commands in headless mode
   if (userInput.trim() === "/compact") {
@@ -360,6 +365,17 @@ async function processMessage(
 
   // Track user prompt
   telemetryService.logUserPrompt(userInput.length, userInput);
+
+  // UserPromptSubmit hooks can stop the prompt or add context to it. Headless
+  // has no one to show a refusal to, so it fails the run with the reason.
+  const promptHook = await runUserPromptSubmitHooks(userInput);
+  if (promptHook.blockedReason) {
+    const message = describePromptBlocked(promptHook.blockedReason);
+    if (isHeadless) throw new Error(message);
+    console.info(chalk.red(message));
+    return;
+  }
+  userInput = promptHook.prompt;
 
   // Check if auto-compacting is needed BEFORE adding user message
   // The handleAutoCompaction function decides whether compaction is actually needed

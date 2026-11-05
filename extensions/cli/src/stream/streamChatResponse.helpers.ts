@@ -36,6 +36,11 @@ import { recordCacheTally } from "../util/cacheTally.js";
 import { logger } from "../util/logger.js";
 
 import { StreamCallbacks } from "./streamChatResponse.types.js";
+import {
+  runPostToolUseFailureHooks,
+  runPostToolUseHooks,
+  runPreToolUseHooks,
+} from "./toolHooks.js";
 
 export interface ToolResultWithStatus extends ChatCompletionToolMessageParam {
   status: ToolStatus;
@@ -176,6 +181,8 @@ export async function checkToolPermissionApproval(
   toolCall: PreprocessedToolCall,
   callbacks?: StreamCallbacks,
   isHeadless?: boolean,
+  /** What PreToolUse hooks asked for. They can tighten the policy, never loosen an exclude. */
+  hookDecision?: "allow" | "ask",
 ): Promise<{
   approved: boolean;
   denialReason?: "user" | "policy";
@@ -183,18 +190,26 @@ export async function checkToolPermissionApproval(
   denialMessage?: string;
 }> {
   const permissionCheck = checkToolPermission(toolCall, permissions);
+  let permission = permissionCheck.permission;
 
-  // The CLI's own exclude always stands. Otherwise the rules in config.yaml
-  // (deny, protected paths, ask, allow) and the reviewer may tighten the
-  // result, and an allow rule may loosen an "ask".
-  if (permissionCheck.permission !== "exclude") {
-    const verdict = await coreRulesVerdict(
-      toolCall,
-      permissionCheck.permission,
-      isHeadless,
-    );
+  // PreToolUse hooks adjust the CLI policy first; the CLI's own exclude
+  // always stands.
+  if (permission !== "exclude") {
+    if (hookDecision === "ask" && permission === "allow") permission = "ask";
+    else if (hookDecision === "allow" && permission === "ask") {
+      permission = "allow";
+    }
+  }
+
+  // Then the rules in config.yaml (deny, protected paths, ask, allow) and the
+  // reviewer may tighten the result, and an allow rule may loosen an "ask",
+  // but not one a hook asked for: the hook wants the user to confirm.
+  if (permission !== "exclude") {
+    const verdict = await coreRulesVerdict(toolCall, permission, isHeadless);
     if (verdict) {
-      if (verdict.decision === "allow") return { approved: true };
+      if (verdict.decision === "allow" && hookDecision !== "ask") {
+        return { approved: true };
+      }
       if (verdict.decision === "deny") {
         return {
           approved: false,
@@ -202,7 +217,8 @@ export async function checkToolPermissionApproval(
           denialMessage: verdict.reason,
         };
       }
-      // "ask": nobody to ask when headless, so it is a refusal.
+      // "ask" (or an allow rule over a hook's ask): nobody to ask when
+      // headless, so it is a refusal.
       if (isHeadless) {
         return {
           approved: false,
@@ -217,9 +233,9 @@ export async function checkToolPermissionApproval(
     }
   }
 
-  if (permissionCheck.permission === "allow") {
+  if (permission === "allow") {
     return { approved: true };
-  } else if (permissionCheck.permission === "ask") {
+  } else if (permission === "ask") {
     if (isHeadless) {
       // "ask" tools are excluded in headless so can only get here by policy evaluation
       return { approved: false, denialReason: "policy" };
@@ -228,7 +244,7 @@ export async function checkToolPermissionApproval(
     return userApproved
       ? { approved: true }
       : { approved: false, denialReason: "user" };
-  } else if (permissionCheck.permission === "exclude") {
+  } else if (permission === "exclude") {
     // Tool blocked by security policy
     return { approved: false, denialReason: "policy" };
   }
@@ -610,8 +626,11 @@ export async function executeStreamedToolCalls(
   let hasRejection = false;
 
   // Permission phase (sequential)
-  for (const { index, call } of indexedCalls) {
+  for (const { index, call: originalCall } of indexedCalls) {
     // Do not cancel subsequent tools after a rejection; handle each independently
+
+    // PreToolUse hooks may replace the arguments, so the call can change.
+    let call = originalCall;
 
     try {
       logger.debug("Checking tool permissions", {
@@ -621,6 +640,35 @@ export async function executeStreamedToolCalls(
 
       // Notify tool start before permission check to display in UI fallbacks
       callbacks?.onToolStart?.(call.name, call.arguments);
+
+      // PreToolUse hooks run before the permission check, so it sees the final
+      // arguments. A blocked call goes back to the model with the hook's
+      // reason and is not a rejection: in headless mode a rejection ends the
+      // run, but a hook's refusal is information the model can act on.
+      const hookOutcome = await runPreToolUseHooks(call);
+      if (hookOutcome.blockedReason) {
+        const blockedEntry: ToolResultWithStatus = {
+          role: "tool",
+          tool_call_id: call.id,
+          content: `Blocked by a hook: ${hookOutcome.blockedReason}`,
+          status: "canceled",
+        };
+        entriesByIndex.set(index, blockedEntry);
+        callbacks?.onToolResult?.(
+          String(blockedEntry.content),
+          call.name,
+          "canceled",
+        );
+        try {
+          services.chatHistory.addToolResult(
+            call.id,
+            String(blockedEntry.content),
+            "canceled",
+          );
+        } catch {}
+        continue;
+      }
+      call = hookOutcome.call;
 
       // Check tool permissions using helper
       const permissionState =
@@ -632,6 +680,7 @@ export async function executeStreamedToolCalls(
         call,
         callbacks,
         isHeadless,
+        hookOutcome.decision,
       );
 
       if (!permissionResult.approved) {
@@ -674,53 +723,60 @@ export async function executeStreamedToolCalls(
         services.chatHistory.updateToolStatus(call.id, "calling");
       } catch {}
 
-      // Start execution immediately for approved calls
+      // Start execution immediately for approved calls. `call` can be
+      // reassigned by the loop, so the closure takes the value it has now.
+      const approvedCall = call;
       execPromises.push(
         (async () => {
           try {
             logger.debug("Executing tool", {
-              name: call.name,
-              arguments: call.arguments,
+              name: approvedCall.name,
+              arguments: approvedCall.arguments,
             });
 
-            const toolResult = await executeToolCall(call, {
+            const rawResult = await executeToolCall(approvedCall, {
               parallelToolCallCount,
             });
+            const toolResult = await runPostToolUseHooks(
+              approvedCall,
+              rawResult,
+            );
             const entry: ToolResultWithStatus = {
               role: "tool",
-              tool_call_id: call.id,
+              tool_call_id: approvedCall.id,
               content: toolResult,
               status: "done",
             };
             entriesByIndex.set(index, entry);
-            callbacks?.onToolResult?.(toolResult, call.name, "done");
+            callbacks?.onToolResult?.(toolResult, approvedCall.name, "done");
             // Immediate service update for UI feedback
             try {
               services.chatHistory.addToolResult(
-                call.id,
+                approvedCall.id,
                 String(toolResult),
                 "done",
               );
             } catch {}
           } catch (error) {
-            const errorMessage = `Error executing tool ${call.name}: ${
+            const errorMessage = `Error executing tool ${approvedCall.name}: ${
               error instanceof Error ? error.message : String(error)
             }`;
             logger.error("Tool execution failed", {
-              name: call.name,
+              name: approvedCall.name,
               error: errorMessage,
             });
+            await runPostToolUseFailureHooks(approvedCall, errorMessage);
             entriesByIndex.set(index, {
               role: "tool",
-              tool_call_id: call.id,
+              tool_call_id: approvedCall.id,
               content: errorMessage,
               status: "errored",
             });
-            callbacks?.onToolError?.(errorMessage, call.name);
+            callbacks?.onToolError?.(errorMessage, approvedCall.name);
             // Immediate service update for UI feedback
             try {
               services.chatHistory.addToolResult(
-                call.id,
+                approvedCall.id,
                 errorMessage as string,
                 "errored",
               );

@@ -5,6 +5,10 @@ import { useApp } from "ink";
 import { useEffect, useRef, useState } from "react";
 
 import { findCompactionIndex } from "../../compaction.js";
+import {
+  describePromptBlocked,
+  runUserPromptSubmitHooks,
+} from "../../hooks/promptHook.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { services } from "../../services/index.js";
 import {
@@ -510,6 +514,17 @@ export function useChat({
       return; // Command was handled and no further processing needed
     }
     message = processedMessage;
+
+    // UserPromptSubmit hooks can stop the message or add context. Remote mode
+    // forwards the message to a server that runs its own hooks.
+    if (!(isRemoteMode && remoteUrl)) {
+      const promptHook = await runUserPromptSubmitHooks(message);
+      if (promptHook.blockedReason) {
+        onShowStatusMessage?.(describePromptBlocked(promptHook.blockedReason));
+        return;
+      }
+      message = promptHook.prompt;
+    }
 
     // Track telemetry
     trackUserMessage(message, model);

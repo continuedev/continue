@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getMatchingHookGroups, loadHooksConfig } from "./hookConfig.js";
 import { runHooks } from "./hookRunner.js";
+import { setTrustProjectHooksForRun } from "./hookTrust.js";
 import type {
   HookMatcherGroup,
   HooksConfig,
@@ -159,9 +160,15 @@ describe("hookConfig", () => {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     });
 
-    // Helper: call loadHooksConfig with isolated homeDir and project cwd
+    // Helper: call loadHooksConfig with isolated homeDir and project cwd.
+    // Project hooks run only when trusted, so these tests trust for the run.
     function loadIsolated(cwd?: string) {
-      return loadHooksConfig(cwd ?? projectDir, fakeHome);
+      setTrustProjectHooksForRun(true);
+      try {
+        return loadHooksConfig(cwd ?? projectDir, fakeHome);
+      } finally {
+        setTrustProjectHooksForRun(false);
+      }
     }
 
     it("returns empty config when no settings files exist", () => {
@@ -346,7 +353,7 @@ describeUnix("hookRunner", () => {
       expect(result.blockReason).toContain("blocked reason");
     });
 
-    it("does not block on non-zero exit codes other than 2", async () => {
+    it("blocks a PreToolUse on non-zero exit codes other than 2, with the cause", async () => {
       const config: HooksConfig = {
         PreToolUse: [
           {
@@ -371,8 +378,32 @@ describeUnix("hookRunner", () => {
       };
 
       const result = await runHooks(config, input);
-      expect(result.blocked).toBe(false);
+      expect(result.blocked).toBe(true);
+      expect(result.blockReason).toContain("exited with code 1");
       expect(result.results[0].exitCode).toBe(1);
+    });
+
+    it("lets a PreToolUse through on exit 1 when onError is allow", async () => {
+      const config: HooksConfig = {
+        PreToolUse: [
+          {
+            hooks: [{ type: "command", command: "exit 1", onError: "allow" }],
+          },
+        ],
+      };
+
+      const input: PreToolUseInput = {
+        session_id: "test-session",
+        transcript_path: "",
+        cwd: process.cwd(),
+        hook_event_name: "PreToolUse",
+        tool_name: "Bash",
+        tool_input: {},
+        tool_use_id: "test-id",
+      };
+
+      const result = await runHooks(config, input);
+      expect(result.blocked).toBe(false);
     });
 
     it("passes JSON input on stdin", async () => {
@@ -751,7 +782,7 @@ describeUnix("hookRunner", () => {
   });
 
   describe("runHooks - prompt/agent types", () => {
-    it("returns no-op for prompt hook type", async () => {
+    it("blocks a PreToolUse for a prompt hook, which is not supported yet", async () => {
       const config: HooksConfig = {
         PreToolUse: [
           {
@@ -776,9 +807,9 @@ describeUnix("hookRunner", () => {
       };
 
       const result = await runHooks(config, input);
-      expect(result.blocked).toBe(false);
+      expect(result.blocked).toBe(true);
+      expect(result.blockReason).toContain("not supported yet");
       expect(result.results).toHaveLength(1);
-      expect(result.results[0].exitCode).toBe(0);
     });
   });
 
@@ -887,7 +918,8 @@ describeUnix("hookRunner", () => {
 
       // Should not throw
       const result = await runHooks(config, input);
-      expect(result.blocked).toBe(false);
+      // Fails closed: a hook that cannot run must not wave the action through.
+      expect(result.blocked).toBe(true);
       // Exit code should be non-zero (127 for command not found)
       expect(result.results[0].exitCode).not.toBe(0);
     });

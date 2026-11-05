@@ -37,12 +37,20 @@ export type HookEventName = (typeof HOOK_EVENT_NAMES)[number];
 
 /** Common fields shared by all hook handler types */
 interface HookHandlerBase {
-  /** Seconds before canceling. Defaults: 600 for command, 30 for http/prompt, 60 for agent */
+  /** Seconds before canceling. Defaults: 30 for command and http on events that can block, 600 for other command hooks, 30 for http/prompt, 60 for agent */
   timeout?: number;
   /** Custom spinner message displayed while the hook runs */
   statusMessage?: string;
   /** If true, runs only once per session then is removed (skills only) */
   once?: boolean;
+  /**
+   * What happens to a PreToolUse, PermissionRequest or UserPromptSubmit when
+   * this hook fails (times out, cannot start, exits with a code other than 0
+   * or 2, returns an HTTP error, or has an unsupported handler type).
+   * "block" (the default) stops the action; "allow" lets it go ahead. Hooks
+   * on other events only log the failure.
+   */
+  onError?: "block" | "allow";
 }
 
 /** Command hook handler — runs a shell command */
@@ -361,6 +369,15 @@ export interface HookExecutionResult {
   blocked: boolean;
   /** The blocking error message (from stderr or output.reason) */
   blockReason?: string;
+  /**
+   * The hook did not complete normally: it timed out, could not start, exited
+   * with a code other than 0 or 2, got an HTTP error, or its handler type is
+   * not supported. Whether that blocks the action depends on the event and on
+   * the handler's `onError`; see `blocked`.
+   */
+  failed?: boolean;
+  /** Why the hook failed, for the log and for the model */
+  failureReason?: string;
 }
 
 /**
@@ -407,6 +424,17 @@ export const MATCHER_FIELD_MAP: Partial<Record<HookEventName, string>> = {
   PreCompact: "trigger",
   ConfigChange: "source",
 };
+
+/**
+ * Events that can stop or change an action. A failing hook on one of these
+ * blocks the action unless the handler sets `onError: "allow"`. Failures on
+ * other events cannot undo what already happened and are only logged.
+ */
+export const BLOCKING_EVENTS: HookEventName[] = [
+  "PreToolUse",
+  "PermissionRequest",
+  "UserPromptSubmit",
+];
 
 /**
  * Events that don't support matchers — they always fire on every occurrence.

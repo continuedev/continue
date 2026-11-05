@@ -27,6 +27,8 @@ export interface BaseCommandOptions {
   betaUploadArtifactTool?: boolean;
   /** Enable beta Subagent tool */
   betaSubagentTool?: boolean;
+  /** Run this project's hooks for this session without asking (--trust-project-hooks) */
+  trustProjectHooks?: boolean;
 }
 
 /**

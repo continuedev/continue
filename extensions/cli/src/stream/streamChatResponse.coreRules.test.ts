@@ -130,6 +130,37 @@ describe("checkToolPermissionApproval with toolPermissions rules", () => {
   });
 });
 
+describe("checkToolPermissionApproval with PreToolUse hooks and rules", () => {
+  it("an allow rule does not skip the confirmation a hook asked for", async () => {
+    state.model.assistant = {
+      toolPermissions: { allow: ["runTerminalCommand(npm run build)"] },
+    };
+    // Not headless, no permission callback: asking the user yields "no".
+    const r = await checkToolPermissionApproval(
+      allowAll,
+      bash("npm run build"),
+      {},
+      false,
+      "ask",
+    );
+    expect(r).toMatchObject({ approved: false, denialReason: "user" });
+  });
+
+  it("a deny rule still refuses a call a hook allowed", async () => {
+    state.model.assistant = {
+      toolPermissions: { deny: ["runTerminalCommand(terraform apply*)"] },
+    };
+    const r = await checkToolPermissionApproval(
+      askAll,
+      bash("terraform apply -auto-approve"),
+      {},
+      false,
+      "allow",
+    );
+    expect(r).toMatchObject({ approved: false, denialReason: "policy" });
+  });
+});
+
 describe("checkToolPermissionApproval with --auto-review", () => {
   it("headless without a reviewer model refuses a call the rules leave open", async () => {
     setAutoReviewEnabled(true);

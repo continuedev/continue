@@ -7,6 +7,10 @@ import { prependPrompt } from "src/util/promptProcessor.js";
 
 import { runEnvironmentInstallSafe } from "../environment/environmentHandler.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
+import {
+  describePromptBlocked,
+  runUserPromptSubmitHooks,
+} from "../hooks/promptHook.js";
 import { setAgentId } from "../index.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import {
@@ -458,13 +462,29 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       state.lastActivity = Date.now();
       processedMessage = true;
 
+      // UserPromptSubmit hooks can stop the message or add context. A
+      // stopped message is answered in the conversation, so whoever is
+      // watching the session sees why nothing happened.
+      const promptHook = await runUserPromptSubmitHooks(userMessage);
+      if (promptHook.blockedReason) {
+        try {
+          services.chatHistory.addAssistantMessage(
+            describePromptBlocked(promptHook.blockedReason),
+          );
+        } catch {
+          logger.warn(`A hook blocked a message: ${promptHook.blockedReason}`);
+        }
+        state.isProcessing = false;
+        continue;
+      }
+
       // Add user message via ChatHistoryService (single source of truth)
       try {
-        services.chatHistory.addUserMessage(userMessage);
+        services.chatHistory.addUserMessage(promptHook.prompt);
       } catch {
         // Fallback to local array if service unavailable
         state.session.history.push({
-          message: { role: "user", content: userMessage },
+          message: { role: "user", content: promptHook.prompt },
           contextItems: [],
         });
       }
