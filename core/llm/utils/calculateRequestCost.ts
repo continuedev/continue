@@ -324,78 +324,132 @@ function calculateAnthropicCost(
   };
 }
 
+interface OpenAIPrice {
+  input: number;
+  /** Price of cached input; absent where the model has no cached rate. */
+  cachedInput?: number;
+  output: number;
+  /**
+   * The listed prices are for prompts up to this many tokens; longer prompts
+   * are billed at long-context rates the table does not carry, so no price
+   * is given for them.
+   */
+  shortContextUpTo?: number;
+}
+
+/**
+ * OpenAI Standard-tier prices per million tokens, from
+ * developers.openai.com/api/docs/pricing (checked 2026-11-05). Older models
+ * no longer on that page keep their previous prices.
+ */
+const OPENAI_PRICES: Record<string, OpenAIPrice> = {
+  "gpt-6-astra": { input: 10, cachedInput: 1, output: 50 },
+  "gpt-6.1-sol": { input: 2, cachedInput: 0.1, output: 10 },
+  "gpt-6.1-terra": { input: 1, cachedInput: 0.05, output: 5 },
+  "gpt-6-luna": { input: 0.1, cachedInput: 0.01, output: 0.5 },
+  "gpt-6-sol": { input: 2, cachedInput: 0.2, output: 10 },
+  "gpt-5.6-sol": { input: 4, cachedInput: 0.4, output: 20 },
+  "gpt-5.6-terra": { input: 2, cachedInput: 0.2, output: 12 },
+  "gpt-5.6-luna": { input: 0.2, cachedInput: 0.02, output: 1.2 },
+  "gpt-5.5": {
+    input: 5,
+    cachedInput: 0.5,
+    output: 30,
+    shortContextUpTo: 272_000,
+  },
+  "gpt-5.5-pro": { input: 30, output: 180, shortContextUpTo: 272_000 },
+  "gpt-5.4": {
+    input: 2.5,
+    cachedInput: 0.25,
+    output: 15,
+    shortContextUpTo: 272_000,
+  },
+  "gpt-5.4-pro": { input: 30, output: 180, shortContextUpTo: 272_000 },
+  "gpt-5.4-mini": { input: 0.75, cachedInput: 0.075, output: 4.5 },
+  "gpt-5.4-nano": { input: 0.2, cachedInput: 0.02, output: 1.25 },
+  "gpt-5.2": { input: 1.75, cachedInput: 0.175, output: 14 },
+  "gpt-5.2-pro": { input: 21, output: 168 },
+  "gpt-5.1": { input: 1.25, cachedInput: 0.125, output: 10 },
+  "gpt-5": { input: 1.25, cachedInput: 0.125, output: 10 },
+  "gpt-5-mini": { input: 0.25, cachedInput: 0.025, output: 2 },
+  "gpt-5-nano": { input: 0.05, cachedInput: 0.005, output: 0.4 },
+  "gpt-5-pro": { input: 15, output: 120 },
+  "gpt-4.1": { input: 2, cachedInput: 0.5, output: 8 },
+  "gpt-4.1-mini": { input: 0.4, cachedInput: 0.1, output: 1.6 },
+  "gpt-4o": { input: 2.5, cachedInput: 1.25, output: 10 },
+  "gpt-4o-mini": { input: 0.15, cachedInput: 0.075, output: 0.6 },
+  "o3-pro": { input: 20, output: 80 },
+  o3: { input: 2, cachedInput: 0.5, output: 8 },
+  // Older models, no longer on the pricing page
+  "gpt-4-turbo": { input: 10, output: 30 },
+  "gpt-3.5-turbo-0125": { input: 0.5, output: 1.5 },
+  "gpt-3.5-turbo-1106": { input: 1, output: 2 },
+  "gpt-3.5-turbo": { input: 1.5, output: 2 },
+  "gpt-4": { input: 30, output: 60 },
+};
+
+/**
+ * The price entry for a model id: a key matches the id exactly or followed by
+ * a date suffix (gpt-4o-2024-08-06, gpt-4-0613). A variant the table does not
+ * list (gpt-4.1-nano, gpt-5-chat-latest) gets no price rather than its
+ * family's, and "gpt-5" never prices "gpt-5.5".
+ */
+export function openAIPriceFor(model: string): OpenAIPrice | undefined {
+  const id = model.toLowerCase().replace(/^openai\//, "");
+  const base = id.replace(/-(?:\d{4}-\d{2}-\d{2}|\d{4})$/, "");
+  for (const key of [id, base]) {
+    if (Object.hasOwn(OPENAI_PRICES, key)) return OPENAI_PRICES[key];
+  }
+  return undefined;
+}
+
 function calculateOpenAICost(
   model: string,
   usage: Usage,
 ): CostBreakdown | null {
-  // Normalize model name
-  const normalizedModel = model.toLowerCase();
-
-  // Define pricing per million tokens (MTok) by model family prefix
-  const pricing: Record<string, { input: number; output: number }> = {
-    // GPT-4o models (most specific first)
-    "gpt-4o-mini": { input: 0.15, output: 0.6 },
-    "gpt-4o": { input: 2.5, output: 10 },
-
-    // GPT-4 Turbo models
-    "gpt-4-turbo": { input: 10, output: 30 },
-
-    // GPT-3.5 Turbo models (most specific first)
-    "gpt-3.5-turbo-0125": { input: 0.5, output: 1.5 },
-    "gpt-3.5-turbo-1106": { input: 1, output: 2 },
-    "gpt-3.5-turbo": { input: 1.5, output: 2 },
-
-    // Base GPT-4 (fallback for other gpt-4 variants)
-    "gpt-4": { input: 30, output: 60 },
-  };
-
-  // Sort keys by length (longest first) to match most specific patterns first
-  const sortedKeys = Object.keys(pricing).sort((a, b) => b.length - a.length);
-
-  let modelPricing = null;
-  for (const prefix of sortedKeys) {
-    if (normalizedModel.startsWith(prefix)) {
-      modelPricing = pricing[prefix];
-      break;
-    }
+  const price = openAIPriceFor(model);
+  if (!price) return null; // Unknown model
+  if (price.shortContextUpTo && usage.promptTokens > price.shortContextUpTo) {
+    return null; // long-context rates are not in the table
   }
 
-  if (!modelPricing) {
-    return null; // Unknown model
-  }
+  // OpenAI's prompt_tokens includes the cached part.
+  const cached = Math.min(
+    usage.promptTokensDetails?.cachedTokens ?? 0,
+    usage.promptTokens,
+  );
+  const uncached = usage.promptTokens - cached;
+  const cachedRate = price.cachedInput ?? price.input;
 
-  // Calculate costs
-  const inputCost = (usage.promptTokens / 1_000_000) * modelPricing.input;
-  const outputCost = (usage.completionTokens / 1_000_000) * modelPricing.output;
+  const inputCost = (uncached / 1_000_000) * price.input;
+  const cachedCost = (cached / 1_000_000) * cachedRate;
+  const outputCost = (usage.completionTokens / 1_000_000) * price.output;
 
-  // Build breakdown components
   const breakdownParts: string[] = [];
-
-  if (usage.promptTokens > 0) {
+  if (uncached > 0) {
     breakdownParts.push(
-      `Input: ${usage.promptTokens.toLocaleString()} tokens × $${modelPricing.input}/MTok = $${inputCost.toFixed(6)}`,
+      `Input: ${uncached.toLocaleString()} tokens × $${price.input}/MTok = $${inputCost.toFixed(6)}`,
     );
   }
-
+  if (cached > 0) {
+    breakdownParts.push(
+      `Cached input: ${cached.toLocaleString()} tokens × $${cachedRate}/MTok = $${cachedCost.toFixed(6)}`,
+    );
+  }
   if (usage.completionTokens > 0) {
     breakdownParts.push(
-      `Output: ${usage.completionTokens.toLocaleString()} tokens × $${modelPricing.output}/MTok = $${outputCost.toFixed(6)}`,
+      `Output: ${usage.completionTokens.toLocaleString()} tokens × $${price.output}/MTok = $${outputCost.toFixed(6)}`,
     );
   }
 
-  const totalCost = inputCost + outputCost;
-
-  // Build final breakdown string
+  const totalCost = inputCost + cachedCost + outputCost;
   let breakdown = `Model: ${model}\n`;
   breakdown += breakdownParts.join("\n");
   if (breakdownParts.length > 1) {
     breakdown += `\nTotal: $${totalCost.toFixed(6)}`;
   }
 
-  return {
-    cost: totalCost,
-    breakdown,
-  };
+  return { cost: totalCost, breakdown };
 }
 
 export function calculateRequestCost(

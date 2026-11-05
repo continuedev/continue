@@ -518,15 +518,34 @@ function compileChatMessages({
     };
   });
 
-  while (historyWithTokens.length > 0 && currentTotal > inputTokensAvailable) {
-    const message = historyWithTokens.shift()!;
+  // In a tool loop the trailing sequence is assistant tool calls and their
+  // results, so the user's last message is in the prunable history. Never
+  // drop it: some providers reject a request with no user message (Ollama
+  // answers 500). Once everything before it is gone, prune the older tool
+  // rounds after it instead.
+  const protectedUser = toolSequence.some((m) => m.role === "user")
+    ? undefined
+    : // A reverse search, not findLast: gui/vscode/binary compile core with ES2022 libs.
+      [...historyWithTokens].reverse().find((m) => m.role === "user");
+
+  const removeAt = (index: number) => {
+    const [message] = historyWithTokens.splice(index, 1);
     currentTotal -= message.tokens;
     didPrune = true;
+    // Make sure no latent tool response is left without its call
+    while (historyWithTokens[index]?.role === "tool") {
+      const [toolMessage] = historyWithTokens.splice(index, 1);
+      currentTotal -= toolMessage.tokens;
+    }
+  };
 
-    // At this point make sure no latent tool response without corresponding call
-    while (historyWithTokens[0]?.role === "tool") {
-      const message = historyWithTokens.shift()!;
-      currentTotal -= message.tokens;
+  while (historyWithTokens.length > 0 && currentTotal > inputTokensAvailable) {
+    if (historyWithTokens[0] !== protectedUser) {
+      removeAt(0);
+    } else if (historyWithTokens.length > 1) {
+      removeAt(1);
+    } else {
+      break; // only the user's turn is left; the request keeps it
     }
   }
 

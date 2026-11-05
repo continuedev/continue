@@ -39,6 +39,7 @@ import {
   TextMessagePart,
   ThinkingChatMessage,
   ToolCallDelta,
+  Usage,
 } from "..";
 import { stripImages } from "../util/messageContent";
 
@@ -341,10 +342,65 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage[] {
     });
   }
 
+  const usage = usageFromCompletionUsage((response as any).usage);
+  const last = messages.at(-1);
+  if (usage && last?.role === "assistant") last.usage = usage;
+
   return messages;
 }
 
+/**
+ * The token counts of an OpenAI-format response, as core's Usage. Each
+ * adapter keeps its provider's meaning of prompt_tokens (OpenAI's includes
+ * the cached part, the Anthropic adapter's does not); cacheStats and the cost
+ * code read it per provider.
+ */
+export function usageFromCompletionUsage(raw: unknown): Usage | undefined {
+  const u = raw as
+    | {
+        prompt_tokens?: number;
+        completion_tokens?: number;
+        prompt_tokens_details?: {
+          cached_tokens?: number;
+          cache_read_tokens?: number;
+          cache_write_tokens?: number;
+        } | null;
+      }
+    | null
+    | undefined;
+  if (!u || typeof u.prompt_tokens !== "number") return undefined;
+  const d = u.prompt_tokens_details ?? undefined;
+  // The Anthropic adapter sends cached_tokens: 0 next to its cache_read_tokens.
+  const cached = d?.cached_tokens || d?.cache_read_tokens;
+  const written = d?.cache_write_tokens;
+  return {
+    promptTokens: u.prompt_tokens,
+    completionTokens: u.completion_tokens ?? 0,
+    ...(cached || written
+      ? {
+          promptTokensDetails: {
+            ...(cached ? { cachedTokens: cached } : {}),
+            ...(written ? { cacheWriteTokens: written } : {}),
+          },
+        }
+      : {}),
+  };
+}
+
 export function fromChatCompletionChunk(
+  chunk: ChatCompletionChunk,
+): ChatMessage | undefined {
+  const message = chatMessageFromChunk(chunk);
+  // The last chunk of a stream (stream_options.include_usage) carries the
+  // token counts, usually with no choices. Without this they were dropped.
+  const usage = usageFromCompletionUsage((chunk as any)?.usage);
+  if (!usage) return message;
+  if (message && message.role === "assistant") return { ...message, usage };
+  if (message) return message; // a thinking chunk; usage comes again at the end
+  return { role: "assistant", content: "", usage };
+}
+
+function chatMessageFromChunk(
   chunk: ChatCompletionChunk,
 ): ChatMessage | undefined {
   const delta = chunk.choices?.[0]?.delta as
