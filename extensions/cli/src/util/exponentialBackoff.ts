@@ -257,6 +257,9 @@ export async function* withExponentialBackoff<T>(
   let lastError: any;
 
   for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
+    // Once a chunk has gone to the caller, a retry would replay the reply on
+    // top of the part already shown (and corrupt streamed tool arguments).
+    let yielded = false;
     // Create a new AbortController for this retry attempt
     // This prevents accumulating listeners on the original signal
     const retryAbortController = new AbortController();
@@ -287,6 +290,7 @@ export async function* withExponentialBackoff<T>(
           throw new Error("Request aborted");
         }
 
+        yielded = true;
         yield chunk;
       }
 
@@ -307,6 +311,16 @@ export async function* withExponentialBackoff<T>(
 
       // Don't retry if the request was aborted
       if (abortSignal.aborted) {
+        throw err;
+      }
+
+      if (yielded) {
+        if (isRetryableError(err)) {
+          throw new Error(
+            `The connection closed in the middle of the response, so the reply is incomplete. (${formatError(err)})`,
+            { cause: err },
+          );
+        }
         throw err;
       }
 

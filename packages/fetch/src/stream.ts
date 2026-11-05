@@ -115,9 +115,8 @@ function parseSseLine(line: string): { done: boolean; data: any } {
   if (line.startsWith("data:")) {
     return { done: false, data: parseDataLine(line) };
   }
-  if (line.startsWith(": ping")) {
-    return { done: true, data: undefined };
-  }
+  // Anything else (": ping" and other SSE comments, "event:" lines, blank
+  // lines) carries no data. A ping is a keep-alive, not the end of the stream.
   return { done: false, data: undefined };
 }
 
@@ -141,9 +140,13 @@ export async function* streamSse(response: Response): AsyncGenerator<any> {
     }
   }
 
-  if (buffer.length > 0) {
-    const { done, data } = parseSseLine(buffer);
-    if (!done && data) {
+  // The stream may end without a trailing newline, or with several lines
+  // still buffered after an early break.
+  for (const line of buffer.split("\n")) {
+    if (!line) continue;
+    const { done, data } = parseSseLine(line);
+    if (done) break;
+    if (data) {
       yield data;
     }
   }

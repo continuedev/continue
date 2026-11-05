@@ -82,6 +82,20 @@ describe("Anthropic stream response facts", () => {
     expect(u.response).toEqual({ requestId: "msg_123" });
   });
 
+  test("a stream cut off before message_stop is an error, not a short reply", async () => {
+    events.list = [
+      start,
+      {
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text: "Hel" },
+      },
+    ];
+    await expect(lastUsage(response())).rejects.toThrow(
+      /ended before the response was complete/,
+    );
+  });
+
   test("never carries a latency: Anthropic does not send one", async () => {
     events.list = [start, delta("end_turn")];
     const u = await lastUsage(response());

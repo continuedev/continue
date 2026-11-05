@@ -313,6 +313,9 @@ class Anthropic extends BaseLLM {
     let lastToolUseName: string | undefined;
     let stopReason: string | undefined;
     let messageId: string | undefined;
+    let sawMessageStop = false;
+    // Set while a content block has started (or streamed) and not stopped.
+    let blockOpen = false;
     let usage: Usage = {
       promptTokens: 0,
       completionTokens: 0,
@@ -355,6 +358,7 @@ class Anthropic extends BaseLLM {
           break;
         case "content_block_start":
           const blockStartEvent = rawEvent as RawContentBlockStartEvent;
+          blockOpen = true;
           if (blockStartEvent.content_block.type === "tool_use") {
             lastToolUseId = blockStartEvent.content_block.id;
             lastToolUseName = blockStartEvent.content_block.name;
@@ -371,6 +375,7 @@ class Anthropic extends BaseLLM {
         case "content_block_delta":
           // https://docs.anthropic.com/en/api/messages-streaming#delta-types
           const blockDeltaEvent = rawEvent as RawContentBlockDeltaEvent;
+          blockOpen = true;
           switch (blockDeltaEvent.delta.type) {
             case "text_delta":
               yield { role: "assistant", content: blockDeltaEvent.delta.text };
@@ -410,12 +415,26 @@ class Anthropic extends BaseLLM {
           }
           break;
         case "content_block_stop":
+          blockOpen = false;
           lastToolUseId = undefined;
           lastToolUseName = undefined;
+          break;
+        case "message_stop":
+          sawMessageStop = true;
           break;
         default:
           break;
       }
+    }
+
+    // A proxy or load balancer that closes the stream cleanly mid-reply leaves
+    // a content block open with neither a stop_reason nor message_stop;
+    // without this the reply would end short with no error. (Only an open
+    // block counts, so a compatible server that skips message_stop is fine.)
+    if (blockOpen && !sawMessageStop && !stopReason) {
+      throw new Error(
+        "The Anthropic stream ended before the response was complete (no message_stop).",
+      );
     }
 
     yield {

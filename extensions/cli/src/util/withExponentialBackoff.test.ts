@@ -74,6 +74,58 @@ describe("withExponentialBackoff", () => {
     expect(generatorFactory).toHaveBeenCalledTimes(2);
   });
 
+  it("retries a stream that drops before its first chunk", async () => {
+    let callCount = 0;
+    const generatorFactory = vi.fn(async () => {
+      callCount++;
+      return (async function* () {
+        if (callCount === 1) {
+          throw new Error(
+            "Invalid response body while trying to fetch https://api.anthropic.com/v1/messages: aborted",
+          );
+        }
+        yield "whole reply";
+      })();
+    });
+
+    const results: string[] = [];
+    for await (const chunk of withExponentialBackoff(
+      generatorFactory,
+      abortController.signal,
+      { maxRetries: 2, initialDelay: 10 },
+    )) {
+      results.push(chunk);
+    }
+
+    expect(results).toEqual(["whole reply"]);
+    expect(generatorFactory).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not replay a reply that already started streaming", async () => {
+    const generatorFactory = vi.fn(async () =>
+      (async function* () {
+        yield "Hel";
+        throw new Error(
+          "Invalid response body while trying to fetch https://api.anthropic.com/v1/messages: aborted",
+        );
+      })(),
+    );
+
+    const results: string[] = [];
+    await expect(async () => {
+      for await (const chunk of withExponentialBackoff(
+        generatorFactory,
+        abortController.signal,
+        { maxRetries: 2, initialDelay: 10 },
+      )) {
+        results.push(chunk);
+      }
+    }).rejects.toThrow(/closed in the middle of the response/);
+
+    expect(results).toEqual(["Hel"]);
+    expect(generatorFactory).toHaveBeenCalledTimes(1);
+  });
+
   it("should not retry on non-retryable errors", async () => {
     const generatorFactory = vi.fn(async (retryAbortSignal: AbortSignal) => {
       const error = new Error("Bad request");

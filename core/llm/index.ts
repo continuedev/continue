@@ -42,6 +42,7 @@ import {
   unresolvedSecretNamesOfLlm,
 } from "../util/unresolvedSecrets.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
+import { retryStreamOnDroppedConnection } from "./utils/streamRetry.js";
 
 import {
   autodetectPromptTemplates,
@@ -1259,20 +1260,24 @@ export abstract class BaseLLM implements ILLM {
           const canUseResponses = this.canUseOpenAIResponses(completionOptions);
           const useStream = completionOptions.stream !== false;
 
-          let iterable: AsyncIterable<ChatMessage>;
-          if (canUseResponses) {
-            iterable = useStream
-              ? this.responsesStream(messages, signal, completionOptions)
-              : this.responsesNonStream(messages, signal, completionOptions);
-          } else {
-            iterable = useStream
+          const startIterable = (): AsyncIterable<ChatMessage> => {
+            if (canUseResponses) {
+              return useStream
+                ? this.responsesStream(messages, signal, completionOptions)
+                : this.responsesNonStream(messages, signal, completionOptions);
+            }
+            return useStream
               ? this.openAIAdapterStream(body, signal, (c) => {
                   if (!citations) {
                     citations = c;
                   }
                 })
               : this.openAIAdapterNonStream(body, signal);
-          }
+          };
+          const iterable = retryStreamOnDroppedConnection(
+            startIterable,
+            signal,
+          );
 
           for await (const chunk of iterable) {
             const result = this.processChatChunk(chunk, interaction);
@@ -1296,10 +1301,9 @@ export abstract class BaseLLM implements ILLM {
             }
           }
 
-          for await (const chunk of this._streamChat(
-            messages,
+          for await (const chunk of retryStreamOnDroppedConnection(
+            () => this._streamChat(messages, signal, completionOptions),
             signal,
-            completionOptions,
           )) {
             const result = this.processChatChunk(chunk, interaction);
             completion.push(...result.completion);

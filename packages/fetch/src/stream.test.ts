@@ -54,6 +54,39 @@ describe("streamSse", () => {
     expect(results).toEqual([{ foo: "bar" }, { baz: 42 }]);
   });
 
+  it("treats a `: ping` comment as a keep-alive, not the end", async () => {
+    const response = createMockResponse([
+      'data: {"a": 1}',
+      ": ping",
+      'data: {"b": 2}',
+      "data: [DONE]",
+    ]);
+
+    const results = [];
+    for await (const data of streamSse(response)) {
+      results.push(data);
+    }
+
+    expect(results).toEqual([{ a: 1 }, { b: 2 }]);
+  });
+
+  it("parses every line left in the buffer when the stream ends", async () => {
+    // One final chunk, no trailing newline: all three lines are still buffered.
+    const response = createMockResponse([
+      'data: {"a": 1}\n: ping\ndata: {"b": 2}',
+    ]);
+    (response as any).body = Readable.from([
+      Buffer.from('data: {"a": 1}\n: ping\ndata: {"b": 2}'),
+    ]);
+
+    const results = [];
+    for await (const data of streamSse(response)) {
+      results.push(data);
+    }
+
+    expect(results).toEqual([{ a: 1 }, { b: 2 }]);
+  });
+
   it("throws on malformed JSON", async () => {
     const sseLines = ['data: {"foo": "bar"', "data:[DONE]"];
     const response = createMockResponse(sseLines);
