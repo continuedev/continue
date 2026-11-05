@@ -61,12 +61,12 @@ describe("ModeModelsTable: saving", () => {
     expect(calls[0].agent.reasoningEffort).toBe("low");
   });
 
-  it("explains when there is no config.yaml to save to", async () => {
+  it("explains when the selected config cannot be saved to", async () => {
     const { user } = await setupTable(undefined, { saved: false });
     await user.click(box("Chat", "Alpha"));
     await user.click(saveButton());
     expect((await screen.findByRole("alert")).textContent).toContain(
-      "config.yaml",
+      "local YAML config",
     );
   });
 

@@ -184,6 +184,13 @@ export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
 const baseModelFields = {
   name: z.string(),
   model: z.string(),
+  /**
+   * Name of a provider instance (providers.yaml) this model uses. The
+   * instance supplies provider, apiKey, apiBase, env and requestOptions; the
+   * model's own values win. Kept after loading so clients can tell which
+   * connection a model belongs to.
+   */
+  connection: z.string().optional(),
   apiKey: z.string().optional(),
   apiBase: z.string().optional(),
   contextLength: z.number().optional(),
@@ -218,3 +225,38 @@ export const partialModelSchema = z
   .partial();
 
 export type ModelConfig = z.infer<typeof modelSchema>;
+
+/**
+ * A model as written in config.yaml or a models/ block before connections are
+ * resolved: with `connection` set, `provider` may come from the instance.
+ */
+export const connectedModelSchema = z.object({
+  ...baseModelFields,
+  connection: z.string(),
+  provider: z.string().optional(),
+  sourceFile: z.string().optional(),
+});
+
+/**
+ * A named provider instance: the connection settings shared by every model
+ * that names it with `connection:` (in any config). Written in
+ * ~/.continue/providers.yaml (or a workspace's .continue/providers.yaml).
+ */
+export const providerInstanceSchema = z.object({
+  /** Referenced by models as `connection: <name>`. */
+  name: z.string().min(1),
+  /** Provider type, as a model's `provider` (anthropic, openai, bedrock, ...). */
+  provider: z.string().min(1),
+  apiKey: z.string().optional(),
+  apiBase: z.string().optional(),
+  env: z
+    .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
+    .optional(),
+  requestOptions: requestOptionsSchema.optional(),
+});
+export type ProviderInstance = z.infer<typeof providerInstanceSchema>;
+
+export const providersFileSchema = z.object({
+  providers: z.array(providerInstanceSchema).default([]),
+});
+export type ProvidersFile = z.infer<typeof providersFileSchema>;

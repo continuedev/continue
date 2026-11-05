@@ -24,9 +24,11 @@ import {
   configYamlSchema,
   Rule,
 } from "../schemas/index.js";
+import type { ProviderInstance } from "../schemas/models.js";
 import { ConfigResult, ConfigValidationError } from "../validation.js";
 import { BlockDuplicationDetector } from "./blockDuplicationDetector.js";
 import { packageIdentifierToShorthandSlug } from "./clientRender.js";
+import { resolveModelConnections } from "./connections.js";
 import { BlockType, getBlockType } from "./getBlockType.js";
 
 export function parseConfigYaml(configYaml: string): ConfigYaml {
@@ -211,6 +213,11 @@ export interface BaseUnrollAssistantOptions {
   allowlistedBlocks?: PackageSlug[];
   blocklistedBlocks?: PackageSlug[];
   injectRequestOptions?: RequestOptions;
+  /**
+   * Provider instances (providers.yaml). Models that name one with
+   * `connection:` get its settings; see resolveModelConnections.
+   */
+  providers?: ProviderInstance[];
 }
 
 export interface DoNotRenderSecretsUnrollAssistantOptions extends BaseUnrollAssistantOptions {
@@ -283,7 +290,7 @@ export async function unrollAssistantFromContent(
   const {
     config: unrolledAssistant,
     configLoadInterrupted,
-    errors,
+    errors: blockErrors,
   } = await unrollBlocks(
     parsedYaml,
     registry,
@@ -292,6 +299,20 @@ export async function unrollAssistantFromContent(
     options.blocklistedBlocks,
     options.injectRequestOptions,
   );
+
+  const errors: ConfigValidationError[] = [...(blockErrors ?? [])];
+
+  // Fill in each model's settings from the provider instance it names, so
+  // the instance's secret references render below like the config's own.
+  if (unrolledAssistant) {
+    const connected = resolveModelConnections(
+      unrolledAssistant.models,
+      options.providers,
+    );
+    unrolledAssistant.models =
+      connected.models as typeof unrolledAssistant.models;
+    errors.push(...connected.errors);
+  }
 
   // Back to a string so we can fill in template variables
   const rawUnrolledYaml = YAML.stringify(unrolledAssistant);
@@ -772,7 +793,13 @@ export function parseMarkdownRuleOrAssistantUnrolled(
   content: string,
   id: PackageIdentifier,
 ): AssistantUnrolled {
-  return parseYamlOrMarkdownRule<AssistantUnrolled>(content, id, parseBlock);
+  // A block's model may name a connection instead of a provider; the provider
+  // is filled in by resolveModelConnections after the blocks are unrolled.
+  return parseYamlOrMarkdownRule<AssistantUnrolled>(
+    content,
+    id,
+    parseBlock as unknown as (content: string) => AssistantUnrolled,
+  );
 }
 
 function parseMarkdownRuleOrConfigYaml(

@@ -31,6 +31,11 @@ export function SelectedAssistantButton({
     >
       <div
         className={`flex flex-row items-center ${isSidebar ? "w-full justify-between" : "gap-1.5"}`}
+        title={
+          selectedProfile
+            ? `Config: ${selectedProfile.title} (click to switch)`
+            : "Choose a config"
+        }
       >
         <div className="flex min-w-0 flex-1 flex-row items-center gap-2">
           {selectedProfile === null ? (

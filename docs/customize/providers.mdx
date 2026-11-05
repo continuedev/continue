@@ -1,0 +1,66 @@
+---
+title: "Provider Accounts"
+---
+
+```yaml ~/.continue/providers.yaml
+providers:
+  - name: anthropic-work
+    provider: anthropic
+    apiKey: ${{ secrets.CONTINUED_ANTHROPIC_WORK_API_KEY }}
+  - name: xai
+    provider: xAI
+    apiKey: ${{ secrets.CONTINUED_XAI_API_KEY }}
+  - name: office-gpu
+    provider: ollama
+    apiBase: http://10.0.0.12:11434/
+```
+
+A provider account is a named connection to a provider: its type, API key, base URL and other connection settings. Define it once in `providers.yaml`, then use it from any number of configs. Two accounts can use the same provider, for example a work and a personal Anthropic key.
+
+## Use an account in a config
+
+A model names the account with `connection:` and leaves out `provider`, `apiKey` and `apiBase`:
+
+```yaml ~/.continue/configs/cloud.yaml
+name: Cloud
+version: 1.0.0
+schema: v1
+models:
+  - name: Claude Sonnet
+    connection: anthropic-work
+    model: claude-sonnet-4-6
+    roles: [chat, edit, apply]
+  - name: Grok
+    connection: xai
+    model: grok-4
+    roles: [chat]
+```
+
+The model gets the account's `provider`, `apiKey`, `apiBase`, `env` and `requestOptions`. Values set on the model win; `env` and `requestOptions.headers` are merged, with the model's keys taking precedence. A model whose `provider` differs from its account's is skipped with an error. So is a model that names an account that does not exist; the rest of the config still loads.
+
+## Fields
+
+| Field | Required | Description |
+| :-- | :-- | :-- |
+| `name` | Yes | What models refer to with `connection:`. Letters, digits, `.`, `-` and `_`. |
+| `provider` | Yes | The provider type, as in a model's `provider` field. |
+| `apiKey` | No | Use a `${{ secrets.NAME }}` reference rather than the key itself. |
+| `apiBase` | No | The endpoint, for proxies, gateways and self-hosted servers. |
+| `env` | No | Provider-specific settings, as on a model. |
+| `requestOptions` | No | Headers, timeouts, proxy and TLS settings, as on a model. |
+
+## Workspace accounts
+
+A workspace's `.continue/providers.yaml` adds accounts for that workspace. An account there replaces a global account with the same name. Workspace files can only be edited in the editor.
+
+## Manage accounts in the GUI
+
+**Settings > Models > Provider accounts** lists every account, where its key is kept (never the key itself), and how many models use it.
+
+- **Add** and **Edit** write `~/.continue/providers.yaml`. A key you enter goes to the editor's secure storage, or to `~/.continue/.env` if you choose it or secure storage is unavailable. The file only gets a `${{ secrets.CONTINUED_<NAME>_API_KEY }}` reference. Leaving the key blank when editing keeps the current one.
+- Renaming an account also renames the `connection:` of every model in your local configs that uses it.
+- **Delete** removes the account and keeps its key. Models that use it are skipped until an account with that name exists again.
+- **Add model** adds a model that uses the account to the selected config, with the roles you tick.
+- **Edit YAML** opens `providers.yaml`.
+
+See [Configs](/customize/configs) for picking models per config, and [Set Up Providers and Models](/customize/model-setup#where-api-keys-are-stored) for the key storage options.

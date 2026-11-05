@@ -12,6 +12,13 @@ import {
 } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
+import type {
+  MovePlaintextKeysResult,
+  PlaintextKey,
+  ProviderInstancesInfo,
+  SaveProviderInstanceRequest,
+  SaveProviderInstanceResult,
+} from "../config/providers/types";
 import type { ModeModelsInput } from "../config/yaml/saveModeModels";
 import type { RulesByModeInput } from "../config/yaml/saveRulesByMode";
 import type {
@@ -121,6 +128,9 @@ export type BedrockTestModelResult =
   | { ok: true; modelId: string; latencyMs: number; reply: string }
   | { ok: false; error: string };
 
+export type ProfileFileResult =
+  { ok: true; profileId?: string } | { ok: false; error: string };
+
 export type ToCoreFromIdeOrWebviewProtocol = {
   // Special
   ping: [string, string];
@@ -151,6 +161,22 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/deleteRule": [{ filepath: string }, void];
   "config/newPromptFile": [undefined, void];
   "config/newAssistantFile": [undefined, void];
+  /** Create a config (or a copy of `copyFrom`) and select it. */
+  "config/createProfile": [
+    {
+      name: string;
+      location: "global" | "workspace";
+      copyFrom?: string;
+    },
+    ProfileFileResult,
+  ];
+  /** Rename a config; its id changes unless it is the main config. */
+  "config/renameProfile": [
+    { profileId: string; name: string },
+    ProfileFileResult,
+  ];
+  /** Delete a config file; the main config cannot be deleted. */
+  "config/deleteProfile": [{ profileId: string }, ProfileFileResult];
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getSerializedProfileInfo": [
     undefined,
@@ -173,7 +199,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/setRulesByMode": [RulesByModeInput, { saved: boolean }];
   /**
    * Add one rule to `toolPermissions` in the global config.yaml (comments
-   * kept). "no-config" means there was no config.yaml to edit.
+   * kept). "no-config" means the selected config is not a local YAML file.
    */
   "config/addToolRule": [
     { decision: "allow" | "ask" | "deny"; rule: string },
@@ -269,6 +295,30 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/removeEnvSecret": [
     { secretName: string },
     { removed: boolean; error?: string },
+  ];
+  /** Provider instances (providers.yaml), with key state but no values. */
+  "providers/list": [undefined, ProviderInstancesInfo];
+  /** Add or edit an instance in ~/.continue/providers.yaml. */
+  "providers/save": [SaveProviderInstanceRequest, SaveProviderInstanceResult];
+  /** Remove an instance from ~/.continue/providers.yaml (its key is kept). */
+  "providers/delete": [{ name: string }, { deleted: boolean; error?: string }];
+  /** Add a model that uses a provider instance to the selected config. */
+  "config/addConnectedModel": [
+    { connection: string; model: string; name?: string; roles?: string[] },
+    { saved: boolean; error?: string },
+  ];
+  /** API keys written as plain text in local configs and providers files. */
+  "config/findPlaintextKeys": [
+    undefined,
+    { keys: PlaintextKey[]; secureStorageAvailable: boolean },
+  ];
+  /**
+   * Store the chosen plaintext keys as secrets and replace each with a
+   * `${{ secrets.NAME }}` reference. Values never leave core.
+   */
+  "config/movePlaintextKeys": [
+    { ids: string[]; storage: "secure" | "env" },
+    MovePlaintextKeysResult,
   ];
   "config/openSecretLocation": [
     { secretName: string; target: "env" | "configLine" },

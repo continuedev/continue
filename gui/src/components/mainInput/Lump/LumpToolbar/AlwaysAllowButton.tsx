@@ -49,7 +49,7 @@ export function AlwaysAllowButton({ toolCallId, toolName, parsedArgs }: Props) {
       if (result === "no-config") {
         return setState({
           kind: "message",
-          text: "Rules are saved in config.yaml, and this profile has none.",
+          text: "Rules can only be saved to a local YAML config, and the selected config is not one.",
         });
       }
       if (result === "invalid") {

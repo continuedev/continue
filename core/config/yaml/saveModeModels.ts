@@ -87,8 +87,8 @@ function dedupe(names: string[] | undefined): string[] {
 }
 
 /**
- * Write the update to the global config.yaml, keeping comments and key order.
- * Returns false when there is no config.yaml to edit (a config.json user), so
+ * Write the update to the selected config, keeping comments and key order.
+ * Returns false when the selected config is not a local YAML file, so
  * the caller can say so instead of silently doing nothing.
  */
 export function saveModeModels(update: ModeModelsUpdate): boolean {

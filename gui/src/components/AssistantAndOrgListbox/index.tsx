@@ -44,7 +44,8 @@ export function AssistantAndOrgListbox({
   }
 
   function onNewAssistant() {
-    void ideMessenger.request("config/newAssistantFile", undefined);
+    // New configs are made (and named) in Settings > Configs.
+    navigate(CONFIG_ROUTES.CONFIGS);
     close();
   }
 
@@ -108,7 +109,7 @@ export function AssistantAndOrgListbox({
           >
             <div className="flex items-center justify-between px-1.5 py-1">
               <span className="text-2xs font-medium text-description">
-                Configs
+                Switch config
               </span>
               <div className="flex items-center gap-0.5">
                 <Button

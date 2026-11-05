@@ -324,4 +324,30 @@ describe("GlobalContext", () => {
       consoleWarnMock.mockRestore();
     });
   });
+
+  it("moves a renamed profile's selection and model picks, and drops a deleted one's", () => {
+    globalContext.update("lastSelectedProfileForWorkspace", {
+      ws1: "file:///a.yaml",
+      ws2: "local",
+    });
+    globalContext.update("selectedModelsByProfileId", {
+      "file:///a.yaml": { chat: "Sonnet" } as any,
+    });
+
+    globalContext.moveProfileState("file:///a.yaml", "file:///b.yaml");
+    expect(globalContext.get("lastSelectedProfileForWorkspace")).toEqual({
+      ws1: "file:///b.yaml",
+      ws2: "local",
+    });
+    expect(globalContext.get("selectedModelsByProfileId")).toEqual({
+      "file:///b.yaml": { chat: "Sonnet" },
+    });
+
+    globalContext.moveProfileState("file:///b.yaml", null);
+    expect(globalContext.get("lastSelectedProfileForWorkspace")).toEqual({
+      ws1: null,
+      ws2: "local",
+    });
+    expect(globalContext.get("selectedModelsByProfileId")).toEqual({});
+  });
 });

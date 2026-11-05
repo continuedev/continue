@@ -13,6 +13,7 @@ import { getMetaKeyLabel, isJetBrains } from "../../../util";
 import { ConfigHeader } from "../components/ConfigHeader";
 import { ModelRoleRow } from "../components/ModelRoleRow";
 import { ModeModelsTable } from "../components/ModeModelsTable";
+import { ProviderInstancesCard } from "../components/ProviderInstancesCard";
 import { ProvidersCard } from "../components/ProvidersCard";
 
 const MODEL_DOCS_URLS = {
@@ -167,6 +168,8 @@ export function ModelsSection() {
           </>
         )}
       </Card>
+
+      <ProviderInstancesCard />
 
       <ProvidersCard />
 

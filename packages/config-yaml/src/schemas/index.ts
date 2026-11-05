@@ -3,6 +3,7 @@ import { commonModelSlugs } from "./commonSlugs.js";
 import { dataSchema } from "./data/index.js";
 import { mcpServerSchema, partialMcpServerSchema } from "./mcp/index.js";
 import {
+  connectedModelSchema,
   modelSchema,
   partialModelSchema,
   requestOptionsSchema,
@@ -201,6 +202,7 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
     .array(
       z.union([
         modelSchema,
+        connectedModelSchema,
         z.object({
           uses: modelsUsesSchema,
           with: z.record(z.string(), z.string()).optional(),
@@ -279,7 +281,9 @@ export const isAssistantUnrolledNonNullable = (
 
 export const blockSchema = baseConfigYamlSchema.and(
   z.union([
-    z.object({ models: z.array(modelSchema).length(1) }),
+    z.object({
+      models: z.array(z.union([modelSchema, connectedModelSchema])).length(1),
+    }),
     z.object({ context: z.array(contextSchema).length(1) }),
     z.object({ data: z.array(dataSchema).length(1) }),
     z.object({ mcpServers: z.array(mcpServerSchema).length(1) }),

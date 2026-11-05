@@ -30,6 +30,8 @@ export type GlobalContextType = {
   selectedModelsByProfileId: {
     [profileId: string]: GlobalContextModelSelections;
   };
+  /** The user chose "Don't ask again" on the offer to move plaintext keys. */
+  skipPlaintextKeyOffer?: boolean;
   /** Where the model setup flow last stored an API key. */
   preferredKeyStorage?: "secure" | "env";
   cliSelectedModel?: string; // CLI-specific model selection for unauthenticated users
@@ -183,5 +185,29 @@ export class GlobalContext {
       [profileId]: newSelections,
     });
     return newSelections;
+  }
+
+  /**
+   * Carry a profile's selection and per-role model picks over to its new id
+   * after a rename, or drop them (`newId` null) after it is deleted.
+   */
+  moveProfileState(oldId: string, newId: string | null): void {
+    const selected = this.get("lastSelectedProfileForWorkspace") ?? {};
+    const nextSelected = Object.fromEntries(
+      Object.entries(selected).map(([ws, id]) => [
+        ws,
+        id === oldId ? newId : id,
+      ]),
+    );
+    this.update("lastSelectedProfileForWorkspace", nextSelected);
+
+    const models = this.get("selectedModelsByProfileId") ?? {};
+    if (oldId in models) {
+      const { [oldId]: picks, ...rest } = models;
+      this.update(
+        "selectedModelsByProfileId",
+        newId ? { ...rest, [newId]: picks } : rest,
+      );
+    }
   }
 }

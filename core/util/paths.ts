@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { fileURLToPath } from "url";
 import * as URI from "uri-js";
 import * as YAML from "yaml";
 
@@ -263,21 +264,72 @@ function editConfigJson(
   }
 }
 
-function editConfigYaml(callback: (config: ConfigYaml) => ConfigYaml): void {
-  const configPath = getConfigYamlPath();
+/**
+ * The config file GUI edits go to: the selected config, when it is a local
+ * YAML file other than the main config.yaml. `undefined` means the main
+ * config (config.yaml, or config.json for older setups); `null` means the
+ * selected config cannot be edited here (e.g. a file on a remote host), so
+ * edits are refused rather than written to a config the user is not using.
+ */
+let selectedConfigFile: string | null | undefined = undefined;
+
+/**
+ * Called when the selected config changes. `uri` is the selected profile's
+ * file, or undefined for the main config.
+ */
+export function setSelectedConfigFile(uri: string | undefined): void {
+  if (!uri) {
+    selectedConfigFile = undefined;
+    return;
+  }
+  if (!uri.startsWith("file://")) {
+    selectedConfigFile = null;
+    return;
+  }
+  try {
+    selectedConfigFile = fileURLToPath(uri);
+  } catch {
+    selectedConfigFile = null;
+  }
+}
+
+/**
+ * The YAML file that GUI edits change, or undefined when there is none
+ * (a config.json setup, or a selected config that is not a local file).
+ */
+export function getEditableConfigYamlPath(): string | undefined {
+  if (selectedConfigFile === null) return undefined;
+  if (selectedConfigFile !== undefined) {
+    return fs.existsSync(selectedConfigFile) ? selectedConfigFile : undefined;
+  }
+  const p = getConfigYamlPath();
+  return fs.existsSync(p) ? p : undefined;
+}
+
+/** Where an edit goes: the selected config (default) or the main config. */
+export type ConfigEditTarget = "selected" | "main";
+
+function editConfigYaml(
+  callback: (config: ConfigYaml) => ConfigYaml,
+  configPath: string,
+): void {
   const source = fs.readFileSync(configPath, "utf8");
   // Edit the parsed document so comments and key order survive. The old
   // parse -> stringify round trip dropped every comment on each GUI save.
   const { text, error } = editYamlText<ConfigYaml>(source, callback);
   if (error) {
-    console.warn(`Not editing config.yaml: ${error}`);
+    console.warn(`Not editing ${path.basename(configPath)}: ${error}`);
     return;
   }
   if (text === undefined) return; // nothing changed, skip the write
 
   // Keep one copy from before the first GUI edit, for users who version the file.
+  // Only for files in ~/.continue: a .bak next to a workspace config would
+  // end up in the user's repository.
   const backupPath = `${configPath}.bak`;
-  if (!fs.existsSync(backupPath)) {
+  const rel = path.relative(getContinueGlobalPath(), configPath);
+  const inGlobalDir = !rel.startsWith("..") && !path.isAbsolute(rel);
+  if (inGlobalDir && !fs.existsSync(backupPath)) {
     try {
       fs.writeFileSync(backupPath, source);
       setConfigFilePermissions(backupPath);
@@ -329,9 +381,16 @@ export function editConfigFile(
     config: SerializedContinueConfig,
   ) => SerializedContinueConfig,
   configYamlCallback: (config: ConfigYaml) => ConfigYaml,
+  target: ConfigEditTarget = "selected",
 ): void {
-  if (fs.existsSync(getConfigYamlPath())) {
-    editConfigYaml(configYamlCallback);
+  if (target === "selected" && selectedConfigFile !== undefined) {
+    const file = getEditableConfigYamlPath();
+    if (file) editConfigYaml(configYamlCallback, file);
+    return;
+  }
+  const yamlPath = getConfigYamlPath();
+  if (fs.existsSync(yamlPath)) {
+    editConfigYaml(configYamlCallback, yamlPath);
   } else if (fs.existsSync(getConfigJsonPath())) {
     editConfigJson(configJsonCallback);
   }

@@ -39,6 +39,12 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   "history/list": [],
   "docs/getIndexedPages": [],
   "history/save": undefined,
+  "providers/list": {
+    instances: [],
+    globalFileUri: "file:///Users/user/.continue/providers.yaml",
+    secureStorageAvailable: true,
+  },
+  "config/findPlaintextKeys": { keys: [], secureStorageAvailable: true },
   "config/getSerializedProfileInfo": {
     profileId: "local",
     profiles: [],

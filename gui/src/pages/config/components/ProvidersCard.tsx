@@ -114,7 +114,8 @@ export function ProvidersCard() {
       </div>
       {info && info.editable === false && (
         <div className="px-3 pb-2 text-xs text-description-muted">
-          Models are saved in config.yaml, and this profile has none.
+          Models can only be saved to a local YAML config, and the selected
+          config is not one.
         </div>
       )}
       {info?.connections.map((c) => {

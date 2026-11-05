@@ -79,6 +79,8 @@
               "customize/overview",
               "customize/models",
               "customize/model-setup",
+              "customize/providers",
+              "customize/configs",
               "customize/mcp-tools",
               "customize/rules",
               "customize/prompts",

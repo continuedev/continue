@@ -5,7 +5,7 @@ import fs from "node:fs";
 
 import * as YAML from "yaml";
 
-import { editConfigFile, getConfigYamlPath } from "../util/paths";
+import { editConfigFile, getEditableConfigYamlPath } from "../util/paths";
 import { isValidSecretName } from "../util/unresolvedSecrets";
 
 import { defaultSecretName } from "./providerSecretName";
@@ -62,7 +62,7 @@ export interface ProviderSetupInfo {
   secureStorageAvailable: boolean;
   /** Last storage the user chose, or the default for this editor. */
   preferredKeyStorage: "secure" | "env";
-  /** False when there is no config.yaml to edit (config.json users). */
+  /** False when the selected config is not a local YAML file. */
   editable: boolean;
 }
 
@@ -384,8 +384,8 @@ export function applyProviderModels(
 }
 
 /**
- * Write the setup to the global config.yaml (comments and key order are kept).
- * Returns false when there is no config.yaml to edit.
+ * Write the setup to the selected config (comments and key order are kept).
+ * Returns false when it is not a YAML file this can edit.
  */
 export function saveProviderModels(req: SaveProviderModelsRequest): boolean {
   let edited = false;
@@ -399,14 +399,14 @@ export function saveProviderModels(req: SaveProviderModelsRequest): boolean {
   return edited;
 }
 
-/** The connections in the global config.yaml, or none when there is no file. */
+/** The connections in the selected config, or none when it cannot be edited. */
 export function readProviderConnections(): {
   connections: ProviderSetupConnection[];
   editable: boolean;
 } {
   try {
-    const file = getConfigYamlPath();
-    if (!fs.existsSync(file)) return { connections: [], editable: false };
+    const file = getEditableConfigYamlPath();
+    if (!file) return { connections: [], editable: false };
     const parsed = YAML.parse(fs.readFileSync(file, "utf8"));
     return {
       connections: describeProviderConnections(

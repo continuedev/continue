@@ -30,8 +30,8 @@ export function applyRulesByModeUpdate(
 }
 
 /**
- * Write the update to the global config.yaml, keeping comments and key order.
- * Returns false when there is no config.yaml to edit (a config.json user).
+ * Write the update to the selected config, keeping comments and key order.
+ * Returns false when the selected config is not a local YAML file.
  */
 export function saveRulesByMode(update: RulesByModeInput): boolean {
   let edited = false;

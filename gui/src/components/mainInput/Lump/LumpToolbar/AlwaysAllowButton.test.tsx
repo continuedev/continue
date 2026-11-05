@@ -133,7 +133,7 @@ describe("AlwaysAllowButton", () => {
   });
 
   it.each([
-    ["no config.yaml", { result: "no-config" }, /config\.yaml/],
+    ["no editable config", { result: "no-config" }, /local YAML config/],
     ["an invalid rule", { result: "invalid" }, /not valid/],
   ])("says so and does not run for %s", async (_l, save, text) => {
     const { user, status } = await setup({ suggest: good, save });

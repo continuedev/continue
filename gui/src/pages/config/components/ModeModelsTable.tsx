@@ -63,7 +63,7 @@ export function ModeModelsTable() {
         kind: "error",
         message:
           result.status === "success"
-            ? "These settings are saved in config.yaml, and this profile has none."
+            ? "These settings can only be saved to a local YAML config, and the selected config is not one."
             : "Could not save. Check that the config file is not read-only.",
       });
     } catch {

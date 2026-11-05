@@ -14,7 +14,7 @@ The flow has three steps, and nothing is written until you confirm the last one.
 
 One provider connection (a provider plus its API base, region or profile) has one key, and every model you tick for it refers to that key. Editing the API base, region or profile of an existing connection changes that connection in place: its models keep their names and settings. If another connection already uses the new endpoint, the save is refused.
 
-Saving edits `config.yaml` and keeps your comments and key order. It needs a `config.yaml`, so it is unavailable if you only have a `config.json`.
+Saving edits the selected config's YAML file and keeps your comments and key order. It is unavailable when the selected config is not a local YAML file (for example, if you only have a `config.json`). To share one key between several configs, use [provider accounts](/customize/providers) instead.
 
 ## Where API keys are stored
 
