@@ -2,6 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 
 import StreamErrorDialog from "../../pages/gui/StreamError";
 import { analyzeError } from "../../util/errorAnalysis";
+import { classifyRequestFailure } from "../../util/requestFailures";
 
 const OVERLOADED_RETRIES = 3;
 const OVERLOADED_DELAY_MS = 2000;
@@ -12,6 +13,7 @@ function isOverloadedErrorMessage(message?: string): boolean {
   return lower.includes("overloaded") || lower.includes("529");
 }
 import { selectSelectedChatModel } from "../slices/configSlice";
+import { recordRequestFailure } from "../slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../slices/uiSlice";
 import { ThunkApiType } from "../store";
 import { cancelStream } from "./cancelStream";
@@ -39,7 +41,23 @@ export const streamThunkWrapper = createAsyncThunk<
       // Get the selected model from the state for error analysis
       const state = getState();
       const selectedModel = selectSelectedChatModel(state);
-      const { message } = analyzeError(e, selectedModel);
+      const { message, statusCode } = analyzeError(e, selectedModel);
+
+      // Every failed attempt is noted for the session, including the ones
+      // retried below. A request the user stopped is not a failure.
+      const kind = classifyRequestFailure(message, statusCode);
+      if (kind && selectedModel) {
+        dispatch(
+          recordRequestFailure({
+            at: Date.now(),
+            mode: state.session.mode,
+            provider: selectedModel.provider,
+            model: selectedModel.model,
+            kind,
+            ...(statusCode !== undefined && { status: statusCode }),
+          }),
+        );
+      }
 
       const shouldRetry =
         isOverloadedErrorMessage(message) && attempt < OVERLOADED_RETRIES;

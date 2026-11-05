@@ -8,6 +8,7 @@ import ToggleSwitch from "../../../components/gui/Switch";
 import { ToolTip } from "../../../components/gui/Tooltip";
 import { Card } from "../../../components/ui";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { useWarmCacheNote } from "../../../hooks/useWarmCacheNote";
 import { toggleToolGroupSetting } from "../../../redux/slices/uiSlice";
 import { ToolPolicyItem } from "./ToolPolicyItem";
 
@@ -40,6 +41,7 @@ export function ToolPoliciesGroup({
     (state) => state.ui.toolGroupSettings,
   );
   const toolSettings = useAppSelector((state) => state.ui.toolSettings);
+  const warmCacheNote = useWarmCacheNote();
   const isGroupEnabled = useMemo(() => {
     return toolGroupSettings[groupName] !== "exclude";
   }, [toolGroupSettings, groupName]);
@@ -83,9 +85,12 @@ export function ToolPoliciesGroup({
           content={
             allToolsOff
               ? "Tools disabled in current mode"
-              : isGroupEnabled
-                ? `Disable all tools in ${groupName} group`
-                : `Enable all tools in ${groupName} group`
+              : (isGroupEnabled
+                  ? `Disable all tools in ${groupName} group`
+                  : `Enable all tools in ${groupName} group`) +
+                (warmCacheNote
+                  ? `. This changes the tool list. ${warmCacheNote}`
+                  : "")
           }
         >
           <div>

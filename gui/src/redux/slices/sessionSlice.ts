@@ -43,8 +43,12 @@ import { v4 as uuidv4 } from "uuid";
 import { type InlineErrorMessageType } from "../../components/mainInput/InlineErrorMessage";
 import { toolCallCtxItemToCtxItemWithId } from "../../pages/gui/ToolCallDiv/utils";
 import { addToolCallDeltaToState, isEditTool } from "../../util/toolCallState";
+import { appendLedger, type CacheLedgerEntry } from "../../util/cacheLedger";
+import { appendFailure, type RequestFailure } from "../../util/requestFailures";
 import {
   INITIAL_PROMPT_CACHE_STATE,
+  type PromptCacheKey,
+  type PromptCacheMiss,
   type PromptCacheSessionState,
 } from "../../util/promptCache";
 import { RootState } from "../store";
@@ -726,6 +730,27 @@ export const sessionSlice = createSlice({
       state.isPruned = false;
       state.contextPercentage = undefined;
       state.usage = payload?.usage;
+      // A different conversation shares nothing with the cached one: its size,
+      // timing, misses and what Auto learned all start over. Each conversation
+      // starts on the 5-minute lifetime and earns the 1-hour one from its own
+      // requests (carrying the flag over cost 0.8% in a replay of a week of
+      // real traffic, cancelling the saving from the request count). A saved
+      // session brings back its own record, so resuming it after a break can
+      // say the cache has expired and keeps counting from where it was.
+      const saved = payload?.promptCache;
+      state.promptCache = {
+        ...INITIAL_PROMPT_CACHE_STATE,
+        ...(saved?.lastRequestAt !== undefined && {
+          lastRequestAt: saved.lastRequestAt,
+          lastInputTokens: saved.lastInputTokens,
+          lastTtl: saved.lastTtl,
+          ...(saved.requests !== undefined && { requests: saved.requests }),
+          ...(saved.escalated && {
+            escalated: true,
+            escalatedBy: saved.escalatedBy,
+          }),
+        }),
+      };
 
       if (payload) {
         state.history = payload.history as any;
@@ -1038,6 +1063,46 @@ export const sessionSlice = createSlice({
         lastInputTokens: action.payload,
       };
     },
+    setPromptCacheKey: (state, action: PayloadAction<PromptCacheKey>) => {
+      state.promptCache = {
+        ...(state.promptCache ?? INITIAL_PROMPT_CACHE_STATE),
+        lastKey: action.payload,
+      };
+    },
+    recordCacheRequest: (state, action: PayloadAction<CacheLedgerEntry>) => {
+      const current = state.promptCache ?? INITIAL_PROMPT_CACHE_STATE;
+      state.promptCache = {
+        ...current,
+        ledger: appendLedger(current.ledger, action.payload),
+      };
+    },
+    recordRequestFailure: (state, action: PayloadAction<RequestFailure>) => {
+      const current = state.promptCache ?? INITIAL_PROMPT_CACHE_STATE;
+      state.promptCache = {
+        ...current,
+        failures: appendFailure(current.failures, action.payload),
+      };
+    },
+    recordCacheMiss: (state, action: PayloadAction<PromptCacheMiss>) => {
+      const current = state.promptCache ?? INITIAL_PROMPT_CACHE_STATE;
+      state.promptCache = {
+        ...current,
+        misses: (current.misses ?? 0) + 1,
+        lastMiss: action.payload,
+      };
+    },
+    acknowledgeCacheMisses: (state) => {
+      const current = state.promptCache ?? INITIAL_PROMPT_CACHE_STATE;
+      state.promptCache = { ...current, missesAcknowledged: current.misses };
+    },
+    dismissColdCacheNotice: (state, action: PayloadAction<number>) => {
+      const current = state.promptCache ?? INITIAL_PROMPT_CACHE_STATE;
+      state.promptCache = { ...current, dismissedColdFor: action.payload };
+    },
+    dismissCachingOffNotice: (state) => {
+      const current = state.promptCache ?? INITIAL_PROMPT_CACHE_STATE;
+      state.promptCache = { ...current, dismissedCachingOff: true };
+    },
     setNewestToolbarPreviewForInput: (
       state,
       {
@@ -1172,6 +1237,13 @@ export const {
   setPromptCacheState,
   setPromptCacheInputTokens,
   addRequestUsageToSession,
+  setPromptCacheKey,
+  recordCacheMiss,
+  recordCacheRequest,
+  recordRequestFailure,
+  acknowledgeCacheMisses,
+  dismissColdCacheNotice,
+  dismissCachingOffNotice,
   setInlineErrorMessage,
   setIsPruned,
   setContextPercentage,

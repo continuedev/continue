@@ -4,6 +4,7 @@ import { backgroundJobService } from "../services/BackgroundJobService.js";
 import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
+import { formatCacheTally } from "./cacheTally.js";
 import { hadUnhandledError } from "./errorState.js";
 import { getGitDiffSnapshot } from "./git.js";
 import { logger } from "./logger.js";
@@ -176,6 +177,14 @@ function displaySessionUsage(): void {
 
     const totalTokens = usage.promptTokens + usage.completionTokens;
     logger.info(`  Total Tokens:      ${totalTokens.toLocaleString()}`);
+
+    // Counted per request this run, so it can differ from the cumulative
+    // totals above when the session was resumed.
+    const cacheLine = formatCacheTally();
+    if (cacheLine) {
+      logger.info("");
+      logger.info(cacheLine);
+    }
     logger.info("=".repeat(60) + "\n");
   } catch (err) {
     logger.debug("Failed to display session usage (non-critical)", err as any);

@@ -520,12 +520,12 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
         key: "crossRegionInference",
         label: "Cross-region inference",
         description:
-          "Required by many newer models. Automatic adds the us./eu./apac. prefix for your region.",
+          "Required by many newer models. Automatic adds the us./eu./apac. prefix for your region and keeps requests in that geography. Global lets AWS route to any region and costs 10% less on Claude 4.5 and later.",
         defaultValue: "auto",
         omitWhen: "off",
         choices: [
-          { value: "auto", label: "Automatic (recommended)" },
-          { value: "global", label: "Global" },
+          { value: "auto", label: "Automatic (regional, recommended)" },
+          { value: "global", label: "Global (10% cheaper)" },
           { value: "off", label: "Off (use the model ID as-is)" },
         ],
       },

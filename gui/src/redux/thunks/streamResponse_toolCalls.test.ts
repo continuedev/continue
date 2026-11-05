@@ -50,7 +50,9 @@ const mockClaudeModel: ModelDescription = {
   model: "claude-3-5-sonnet-20241022",
   provider: "anthropic",
   underlyingProviderName: "anthropic",
-  completionOptions: { reasoningBudgetTokens: 2048 },
+  // Caching is on by default in Agent mode, which would add a cache-state
+  // action to every flow asserted here. It is off so these stay about tool calls.
+  completionOptions: { reasoningBudgetTokens: 2048, promptCaching: false },
 };
 
 // Mock editor state (what user types in the input)

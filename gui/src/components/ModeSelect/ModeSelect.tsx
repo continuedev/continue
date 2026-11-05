@@ -19,6 +19,7 @@ import { ToolTip } from "../gui/Tooltip";
 import { useMainEditor } from "../mainInput/TipTapEditor";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 import { ModeIcon } from "./ModeIcon";
+import { ModeSwitchCacheNotice } from "./ModeSwitchCacheNotice";
 
 /** Shows which model (and reasoning effort) a mode uses, when configured. */
 function ModeModelHint({ mode }: { mode: "chat" | "agent" | "plan" }) {
@@ -190,6 +191,7 @@ export function ModeSelect() {
           <div className="px-2 py-1 text-description-muted">
             {`${metaKeyLabel} . for next mode`}
           </div>
+          <ModeSwitchCacheNotice />
         </ListboxOptions>
       </div>
     </Listbox>

@@ -71,6 +71,7 @@ describe("resolvePromptCache in auto", () => {
     expect(r.nextState).toEqual({
       lastRequestAt: t0,
       escalated: false,
+      requests: 1,
       lastTtl: "5m",
       lastInputTokens: undefined,
     });
@@ -137,5 +138,112 @@ describe("resolvePromptCache in auto", () => {
     const r = resolvePromptCache(bedrockOld, "auto", first, t0 + 11 * MIN);
     expect(r.options.promptCacheTtl).toBe("1h");
     expect(r.nextState.lastTtl).toBe("5m");
+  });
+});
+
+describe("resolvePromptCache: Auto moves to 1 hour after 5 requests", () => {
+  const auto = (state: PromptCacheSessionState, at: number, mode?: string) =>
+    resolvePromptCache(sonnet, "auto", state, at, mode);
+
+  /** Send n requests 10 seconds apart in a mode; return each request's lifetime. */
+  function run(n: number, mode: string | undefined, setting: any = "auto") {
+    let s: PromptCacheSessionState = { escalated: false };
+    const ttls: (string | undefined)[] = [];
+    for (let i = 0; i < n; i++) {
+      const r = resolvePromptCache(sonnet, setting, s, t0 + i * 10_000, mode);
+      ttls.push(r.options.promptCacheTtl);
+      s = r.nextState;
+    }
+    return { ttls, state: s };
+  }
+
+  it("uses 5 minutes for requests 1 to 4 and 1 hour from request 5, in agent mode", () => {
+    const { ttls, state } = run(7, "agent");
+    expect(ttls).toEqual(["5m", "5m", "5m", "5m", "1h", "1h", "1h"]);
+    expect(state.escalatedBy).toBe("requests");
+    expect(state.requests).toBe(7);
+  });
+
+  it.each(["plan", "background"])("applies in %s mode too", (mode) => {
+    expect(run(5, mode).ttls[4]).toBe("1h");
+  });
+
+  it("never counts up to 1 hour in chat mode or with no mode", () => {
+    expect(new Set(run(12, "chat").ttls)).toEqual(new Set(["5m"]));
+    expect(new Set(run(12, undefined).ttls)).toEqual(new Set(["5m"]));
+  });
+
+  it("ignores the count when the lifetime is fixed", () => {
+    expect(new Set(run(9, "agent", "5m").ttls)).toEqual(new Set(["5m"]));
+    expect(new Set(run(9, "agent", "1h").ttls)).toEqual(new Set(["1h"]));
+  });
+
+  it("the gap rule still wins when it fires first, and says why", () => {
+    let s = auto({ escalated: false }, t0, "agent").nextState;
+    const r = auto(s, t0 + 10 * MIN, "agent");
+    expect(r.options.promptCacheTtl).toBe("1h");
+    expect(r.nextState.escalatedBy).toBe("gap");
+    // later requests keep the original reason
+    const later = auto(r.nextState, t0 + 10 * MIN + 1000, "agent");
+    expect(later.nextState.escalatedBy).toBe("gap");
+  });
+
+  it("does not count requests that send no cache settings of their own", () => {
+    const off = resolvePromptCache(
+      sonnet,
+      "off",
+      { escalated: false },
+      t0,
+      "agent",
+    );
+    expect(off.nextState.requests).toBeUndefined();
+    const unsupported = resolvePromptCache(
+      model("openai", "gpt-4o"),
+      "auto",
+      { escalated: false },
+      t0,
+      "agent",
+    );
+    expect(unsupported.nextState.requests).toBeUndefined();
+  });
+
+  it("does not claim 1 hour for a model that cannot take it", () => {
+    let s: PromptCacheSessionState = { escalated: false };
+    for (let i = 0; i < 6; i++) {
+      s = resolvePromptCache(
+        bedrockOld,
+        "auto",
+        s,
+        t0 + i * 1000,
+        "agent",
+      ).nextState;
+    }
+    expect(s.lastTtl).toBe("5m");
+  });
+
+  it("follows a config ttl of auto, and ignores a fixed config ttl", () => {
+    const cfg = (ttl: string) =>
+      ({
+        ...sonnet,
+        completionOptions: { promptCaching: true },
+        cacheBehavior: { ttl },
+      }) as any;
+    const count = (m: any) => {
+      let s: PromptCacheSessionState = { escalated: false };
+      let last: any;
+      for (let i = 0; i < 6; i++) {
+        last = resolvePromptCache(m, undefined, s, t0 + i * 1000, "agent");
+        s = last.nextState;
+      }
+      return s;
+    };
+    expect(count(cfg("auto")).lastTtl).toBe("1h");
+    expect(count(cfg("5m")).lastTtl).toBe("5m");
+    expect(count(cfg("5m")).escalated).toBe(false);
+  });
+
+  it("a resumed conversation keeps counting from its saved total", () => {
+    const r = auto({ escalated: false, requests: 4 }, t0, "agent");
+    expect(r.options.promptCacheTtl).toBe("1h");
   });
 });

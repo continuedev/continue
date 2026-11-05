@@ -29,6 +29,7 @@ import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { extractBase64FromDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
+import { withResponseInfo } from "../utils/cacheStats.js";
 import {
   cacheControlFor,
   markCacheBreakpoints,
@@ -310,6 +311,8 @@ class Anthropic extends BaseLLM {
 
     let lastToolUseId: string | undefined;
     let lastToolUseName: string | undefined;
+    let stopReason: string | undefined;
+    let messageId: string | undefined;
     let usage: Usage = {
       promptTokens: 0,
       completionTokens: 0,
@@ -326,6 +329,7 @@ class Anthropic extends BaseLLM {
         case "message_start":
           // Capture initial usage information
           const startEvent = rawEvent as RawMessageStartEvent;
+          messageId = startEvent.message.id;
           usage.promptTokens = startEvent.message.usage.input_tokens;
           usage.promptTokensDetails!.cachedTokens =
             startEvent.message.usage.cache_read_input_tokens ?? undefined;
@@ -342,6 +346,9 @@ class Anthropic extends BaseLLM {
         case "message_delta":
           // Update usage information during streaming
           const deltaEvent = rawEvent as RawMessageDeltaEvent;
+          if (deltaEvent.delta?.stop_reason) {
+            stopReason = deltaEvent.delta.stop_reason;
+          }
           if (deltaEvent.usage) {
             usage.completionTokens = deltaEvent.usage.output_tokens;
           }
@@ -414,7 +421,12 @@ class Anthropic extends BaseLLM {
     yield {
       role: "assistant",
       content: "",
-      usage,
+      usage: withResponseInfo(usage, {
+        stopReason,
+        // The header is what Anthropic support asks for; the message ID is
+        // the fallback when a proxy strips it.
+        requestId: response.headers?.get?.("request-id") ?? messageId,
+      }),
     };
   }
 

@@ -11,6 +11,7 @@ import {
 } from "core/llm/autodetect";
 import { memo, useContext, useRef } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useWarmCacheNote } from "../../hooks/useWarmCacheNote";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
@@ -26,6 +27,7 @@ import { Button } from "../ui";
 import { useFontSize } from "../ui/font";
 import ContextStatus from "./ContextStatus";
 import HoverItem from "./InputToolbar/HoverItem";
+import { CacheTipsButton } from "./CacheTipsButton";
 import { PromptCacheButton } from "./PromptCacheButton";
 import { UsageIndicator } from "./UsageIndicator";
 
@@ -73,6 +75,10 @@ function InputToolbar(props: InputToolbarProps) {
     );
 
   const supportsReasoning = modelSupportsReasoning(defaultModel);
+  // Changing the thinking settings rebuilds the message cache (measured live
+  // on Bedrock). Attaching an image to the new message does not, because it
+  // sits after everything already cached.
+  const warmCacheNote = useWarmCacheNote();
 
   const smallFont = useFontSize(-2);
   const tinyFont = useFontSize(-3);
@@ -156,9 +162,10 @@ function InputToolbar(props: InputToolbarProps) {
                 <ToolTip
                   place="top"
                   content={
-                    hasReasoningEnabled
+                    (hasReasoningEnabled
                       ? "Disable model reasoning"
-                      : "Enable model reasoning"
+                      : "Enable model reasoning") +
+                    (warmCacheNote ? ` ${warmCacheNote}` : "")
                   }
                 >
                   {hasReasoningEnabled ? (
@@ -170,6 +177,7 @@ function InputToolbar(props: InputToolbarProps) {
               </HoverItem>
             )}
             <PromptCacheButton />
+            <CacheTipsButton />
             <UsageIndicator />
           </div>
         </div>

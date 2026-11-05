@@ -1,3 +1,4 @@
+import { selectCacheSetting } from "../../redux/selectors/selectCacheSetting";
 import { findAnthropicPricing } from "core/llm/utils/calculateRequestCost";
 import {
   formatSwitchCost,
@@ -15,9 +16,7 @@ import { selectSelectedChatModel } from "../../redux/slices/configSlice";
  */
 export function ModelSwitchCacheNotice() {
   const model = useAppSelector(selectSelectedChatModel);
-  const setting = useAppSelector((s) =>
-    model ? s.ui.promptCacheSettings?.[model.title] : undefined,
-  );
+  const setting = useAppSelector(selectCacheSetting);
   const state = useAppSelector((s) => s.session.promptCache);
 
   if (!model || !state || !modelSupportsPromptCacheControl(model)) return null;

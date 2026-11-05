@@ -5,6 +5,7 @@ import {
   bedrockUsageToUsage,
   buildModelCatalog,
   getBedrockErrorHint,
+  globalProfileStatus,
   inferenceProfilePrefixForRegion,
 } from "./bedrockHelpers";
 
@@ -300,12 +301,25 @@ describe("bedrockUsageToUsage", () => {
 
 describe("bedrockSupportsOneHourCache", () => {
   it.each([
-    ["us.anthropic.claude-sonnet-4-5-20250929-v1:0", true],
-    ["anthropic.claude-sonnet-4-6", true],
-    ["anthropic.claude-haiku-4-5-20251001-v1:0", true],
+    // Every Claude row of the AWS Bedrock table lists "5 minutes, 1 hour"
+    ["anthropic.claude-haiku-5-5", true],
+    ["anthropic.claude-sonnet-5-5", true],
+    ["anthropic.claude-opus-5-5", true],
+    ["anthropic.claude-fable-5-1", true],
+    ["anthropic.claude-mythos-5-1", true],
+    ["anthropic.claude-fable-5", true],
+    ["anthropic.claude-mythos-5", true],
+    ["anthropic.claude-opus-5", true],
+    ["anthropic.claude-opus-4-8", true],
+    ["anthropic.claude-opus-4-7", true],
     ["anthropic.claude-opus-4-6-v1", true],
     ["global.anthropic.claude-opus-4-5-20251101-v1:0", true],
-    // Listed as 5 minutes only, or not listed: never send a ttl.
+    ["anthropic.claude-sonnet-5", true],
+    ["anthropic.claude-sonnet-4-6", true],
+    ["us.anthropic.claude-sonnet-4-6", true],
+    ["anthropic.claude-haiku-4-5-20251001-v1:0", true],
+    // Not in that table: never send a ttl (it can fail the request).
+    ["us.anthropic.claude-sonnet-4-5-20250929-v1:0", false],
     ["anthropic.claude-3-7-sonnet-20250219-v1:0", false],
     ["anthropic.claude-3-5-sonnet-20241022-v2:0", false],
     ["anthropic.claude-sonnet-4-20250514-v1:0", false],
@@ -318,7 +332,7 @@ describe("bedrockSupportsOneHourCache", () => {
 });
 
 describe("bedrockCacheTtl", () => {
-  const ok = "anthropic.claude-sonnet-4-5-20250929-v1:0";
+  const ok = "anthropic.claude-sonnet-4-6";
   const old = "anthropic.claude-3-7-sonnet-20250219-v1:0";
 
   it("returns 1h only when asked for and supported", () => {
@@ -329,5 +343,49 @@ describe("bedrockCacheTtl", () => {
   it("omits the ttl for the default lifetime", () => {
     expect(bedrockCacheTtl(ok, "5m")).toBeUndefined();
     expect(bedrockCacheTtl(ok, undefined)).toBeUndefined();
+  });
+});
+
+describe("globalProfileStatus", () => {
+  const catalog = [
+    { id: "global.anthropic.claude-sonnet-4-6", kind: "inference-profile" },
+    { id: "us.anthropic.claude-sonnet-4-6", kind: "inference-profile" },
+    { id: "us.anthropic.claude-haiku-4-5", kind: "inference-profile" },
+    { id: "global.anthropic.claude-mine", kind: "application-profile" },
+  ] as const;
+
+  it("is present when the account lists the global profile", () => {
+    expect(
+      globalProfileStatus([...catalog], "us.anthropic.claude-sonnet-4-6"),
+    ).toBe("present");
+    expect(
+      globalProfileStatus([...catalog], "EU.anthropic.claude-sonnet-4-6"),
+    ).toBe("present");
+  });
+
+  it("is absent when the list has the regional profile but no global one", () => {
+    expect(
+      globalProfileStatus([...catalog], "us.anthropic.claude-haiku-4-5"),
+    ).toBe("absent");
+    expect(globalProfileStatus([], "us.anthropic.claude-sonnet-4-6")).toBe(
+      "absent",
+    );
+  });
+
+  it("does not count a user's application profile as the global one", () => {
+    expect(globalProfileStatus([...catalog], "us.anthropic.claude-mine")).toBe(
+      "absent",
+    );
+  });
+
+  it("is unknown for IDs it cannot ask about", () => {
+    for (const id of [
+      "global.anthropic.claude-sonnet-4-6",
+      "anthropic.claude-3-haiku-20240307-v1:0",
+      "arn:aws:bedrock:us-east-1:123456789012:application-inference-profile/x",
+      "",
+    ]) {
+      expect(globalProfileStatus([...catalog], id)).toBe("unknown");
+    }
   });
 });

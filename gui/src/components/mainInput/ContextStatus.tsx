@@ -1,7 +1,19 @@
+import { selectCacheSetting } from "../../redux/selectors/selectCacheSetting";
 import { useMemo, useRef } from "react";
+import { useNow } from "../../hooks/useNow";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { saveCurrentSession } from "../../redux/thunks/session";
+import {
+  contextMeterTokens,
+  formatTokens,
+  formatUsd,
+  longContextNote,
+  perMessageCost,
+  QUALITY_NOTE,
+} from "../../util/cacheNotices";
 import { useCompactConversation } from "../../util/compactConversation";
+import { promptCacheStatus } from "../../util/promptCache";
 import { ToolTip } from "../gui/Tooltip";
 
 const ContextStatus = () => {
@@ -30,7 +42,16 @@ const ContextStatus = () => {
   }, [history.length, selectedChatModel]);
 
   const compactConversation = useCompactConversation();
-  if (!isPruned && percent < 60) {
+  const model = useAppSelector(selectSelectedChatModel);
+  const cacheSetting = useAppSelector(selectCacheSetting);
+  const cacheState = useAppSelector((state) => state.session.promptCache);
+  const now = useNow();
+
+  // The share of the window says little on a 1M model, so also show from a
+  // fixed size: that is where each message starts to cost real money.
+  const tokens = cacheState?.lastInputTokens ?? 0;
+  const isLarge = !!model && tokens >= contextMeterTokens(model);
+  if (!isPruned && percent < 60 && !isLarge) {
     return null;
   }
 
@@ -40,6 +61,21 @@ const ContextStatus = () => {
   }
 
   const barColorClass = isPruned ? "bg-error" : "bg-description";
+  const cost =
+    model && isLarge
+      ? perMessageCost(
+          model,
+          tokens,
+          promptCacheStatus(
+            model,
+            cacheSetting,
+            cacheState ?? { escalated: false },
+            now,
+          ).ttl,
+        )
+      : undefined;
+  const longNote =
+    model && isLarge ? longContextNote(model, tokens) : undefined;
 
   return (
     <div>
@@ -56,6 +92,23 @@ const ContextStatus = () => {
             <span className="inline-block">
               {`${percent}% of context filled.`}
             </span>
+            {isLarge && (
+              <span className="inline-block" data-testid="context-size-note">
+                {`${formatTokens(tokens)} tokens are sent with every message.`}
+                {cost &&
+                  ` One more message costs about ${formatUsd(cost.warmUsd)} with the prompt cache warm and ${formatUsd(cost.coldUsd)} after it expires.`}
+              </span>
+            )}
+            {isLarge && (
+              <span className="inline-block" data-testid="context-quality-note">
+                {QUALITY_NOTE}
+              </span>
+            )}
+            {longNote && (
+              <span className="inline-block" data-testid="long-context-note">
+                {longNote}
+              </span>
+            )}
             {isPruned && (
               <span className="inline-block">
                 {`Oldest messages are being removed.`}

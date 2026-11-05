@@ -5,7 +5,7 @@ keywords: [prompt caching, cache, ttl, cost, anthropic, bedrock, claude]
 
 Prompt caching lets a provider keep the start of your prompt (tool definitions, system prompt and conversation so far) and charge a fraction of the input price when the next request begins with the same text. Continued supports it for Claude models on Anthropic, Amazon Bedrock, Vertex AI and OpenRouter.
 
-Caching is off unless you turn it on. Either set it per model in `config.yaml`:
+Caching is on by default for Claude models on Anthropic and Bedrock in Agent, Plan and Background modes and in the `cn` command line, with the Auto lifetime below, unless `config.yaml` says something about caching. In Chat it is off until you turn it on. To turn it off, set `promptCaching: false` on the model, or choose Off in the prompt cache button. To turn it on in Chat as well, set it per model in `config.yaml`:
 
 ```yaml title="config.yaml"
 models:
@@ -23,13 +23,13 @@ or choose a setting from the prompt cache button in the chat toolbar, next to th
 
 A cached prefix expires after a period without use. Each request that reads it starts the period again at no charge.
 
-| Setting     | Lifetime sent            | Write price    | Notes                                                              |
-| ----------- | ------------------------ | -------------- | ------------------------------------------------------------------ |
-| 5 minutes   | none (provider default)  | 1.25x input    | Cheapest write. Expires if you pause longer than 5 minutes.        |
-| 1 hour      | `ttl: "1h"`              | 2x input       | Survives long commands and breaks.                                 |
-| Auto        | starts at 5 minutes      | 1.25x, then 2x | Switches to 1 hour for the rest of the session, see below.         |
-| Off         | caching disabled         | none           | Every request is sent and billed at the full input price.          |
-| Config default | none                  | 1.25x          | Follows `config.yaml`: on only if the model enables caching there. |
+| Setting        | Lifetime sent           | Write price    | Notes                                                              |
+| -------------- | ----------------------- | -------------- | ------------------------------------------------------------------ |
+| 5 minutes      | none (provider default) | 1.25x input    | Cheapest write. Expires if you pause longer than 5 minutes.        |
+| 1 hour         | `ttl: "1h"`             | 2x input       | Survives long commands and breaks.                                 |
+| Auto           | starts at 5 minutes     | 1.25x, then 2x | Switches to 1 hour for the rest of the session, see below.         |
+| Off            | caching disabled        | none           | Every request is sent and billed at the full input price.          |
+| Config default | none                    | 1.25x          | Follows `config.yaml`. If it says nothing about caching: Auto in Agent, Plan and Background, off in Chat. |
 
 On OpenRouter the lifetime travels as `cache_control: {"type": "ephemeral", "ttl": "1h"}` on the message content, which OpenRouter [passes to Claude models](https://openrouter.ai/docs/guides/best-practices/prompt-caching).
 
@@ -37,7 +37,7 @@ On Vertex AI the marker is the same `cache_control` object on the Anthropic requ
 
 Reading a cached prefix costs 0.1x the input price whatever the lifetime.
 
-Auto compares the start times of consecutive requests in the current session. If the gap was more than 5 minutes and at most 55 minutes (a pause a 1-hour entry would have covered), the session uses 1 hour from the next request on. A session that never pauses that long stays on 5 minutes. Auto keeps this per session and does not save it. The 55 minute limit is a guess, not a measured value.
+Auto starts on the 5-minute lifetime and moves the session to 1 hour, for the rest of that session, in either of two cases. First, it compares the start times of consecutive requests: if the gap was more than 5 minutes and at most 55 minutes (a pause a 1-hour entry would have covered), it switches from the next request on. Second, in Agent, Plan and Background modes it switches at the fifth request of the conversation, because a conversation that long tends to be worked on in bursts with pauses. Chat mode never switches on the request count. The cache button's tooltip says which of the two happened. The request count and the switch to 1 hour are saved with the session, so a resumed conversation keeps both; a new conversation starts again on 5 minutes. The 55 minute limit is a guess, not a measured value, and 5 is a point on a plateau: replaying a week of agent traffic, any threshold from 3 to 15 saved about the same.
 
 To set the lifetime in config, use `cacheBehavior.ttl`:
 
@@ -54,6 +54,9 @@ models:
 ```
 
 `ttl` accepts `5m`, `1h` or `auto` (the Auto row above). It only chooses the lifetime and does not turn caching on; `promptCaching: true` (or the toolbar) does that. A choice in the toolbar other than "Config default" overrides it for that session. If the model cannot take a 1-hour lifetime (see Bedrock below), `1h` is sent as the 5-minute default. In JSON configuration the same field is `cacheBehavior.ttl`.
+The `cn` command line reaches Claude through shared adapters and reads the same `cacheBehavior.ttl` and `promptCaching`, on both Anthropic and Bedrock. `1h` puts a 1-hour lifetime on every cache point (on Bedrock only for the models listed under Bedrock below; others get 5 minutes). `auto` is applied by the CLI itself, which has no toolbar: it counts the session's requests that carry cache points, and moves to 1 hour at the fifth, or after a pause of more than 5 and up to 55 minutes, the same two rules as above. It has no chat mode, so every CLI session counts as an Agent session. On Anthropic the CLI's cache points are on unless the adapter's `cachingStrategy` is `none`, and in an agent loop they now go on the last tool results, which is where the new content is. On Bedrock they are now on for Claude models when the config says nothing about caching, with the Auto lifetime, and off for any other model; `promptCaching: false` turns them off.
+
+
 
 ## What gets cached
 
@@ -71,13 +74,17 @@ cacheBehavior:
 
 Prices are multiples of the model's input price. These are the figures Continued uses; they are Anthropic list prices as of 2026-11-02, and Bedrock or a reseller can differ.
 
-| Model        | Input | 5-minute write | 1-hour write | Read    |
-| ------------ | ----- | -------------- | ------------ | ------- |
-| Sonnet 4.6   | $3    | $3.75          | $6           | $0.30   |
-| Opus 4.5-4.8 | $5    | $6.25          | $10          | $0.50   |
-| Haiku 4.5    | $1    | $1.25          | $2           | $0.10   |
+| Model        | Input | 5-minute write | 1-hour write | Read  |
+| ------------ | ----- | -------------- | ------------ | ----- |
+| Sonnet 4.6   | $3    | $3.75          | $6           | $0.30 |
+| Opus 4.5-4.8 | $5    | $6.25          | $10          | $0.50 |
+| Haiku 4.5    | $1    | $1.25          | $2           | $0.10 |
 
 Dollars per million tokens. Claude 4 Opus and 4.1 are $15 input; Claude 3 Haiku has its own cache prices. The table in `core/llm/utils/calculateRequestCost.ts` has every model.
+
+On Bedrock, Anthropic says regional and multi-region endpoints cost 10 percent more than global ones, for Claude Sonnet 4.5, Haiku 4.5, Opus 4.5 and every later model. Continued applies that to model IDs that start with `us.`, `eu.`, `apac.`, `jp.`, `au.` or `ca.`, and prices `global.` IDs and earlier models at list. Only `us.` was checked against real billing data. Set the full ID (for example `us.anthropic.claude-sonnet-4-6`) in your config for the estimate to include the premium. A bare ID with `crossRegionInference` set is prefixed only when the request is sent, so its estimate stays at list price.
+
+Compacting a conversation (the Compact button) sends the same system prompt, tools and cache settings as the conversation, so while the cache is warm the summary request reads it instead of paying full price for the history. When the cache has expired, or caching is off, or only part of the conversation is being compacted, it sends the saved history on its own as before, because writing a new cache entry just before replacing the conversation would cost more. The prompt asks the model to answer in text; if the reply has none, the plain request is sent.
 
 A cached session costs more than an uncached one on its first request and less on every request after that, as long as the entry has not expired. Switching the model, changing reasoning settings, or anything that changes the system prompt (such as a rule that starts to match) misses the cache, and the next request writes the prefix again. A one-prompt session never pays back the write.
 
@@ -91,15 +98,46 @@ The button is shown only for Claude models on the `anthropic`, `bedrock`, `verte
 
 The setting is stored per model and survives restarts.
 
+## Session summary
+
+The tooltip of the cache button says whether the cache is warm, then ends with a "This session:" line. It counts the requests that used caching, the share of their input read from the cache, the misses (a request that should have read a warm cache and mostly did not, with how long ago the last one was, how many tokens it rewrote and why, when known), and the expected rebuilds: requests that could not read the cache because you switched model, the conversation was compacted or shortened, or the oldest messages were dropped to fit.
+
+It comes from a list Continued keeps for the current conversation: the last 200 requests, with token counts, timings and the provider's request ID. It holds no message text, is not saved with the session, and starts empty in every new conversation. Requests that failed are not in it.
+
+With `--verbose`, the CLI prints a "Prompt cache:" line when a session ends: requests, share of input read from the cache, and tokens read and written. It counts the requests of that run only, so a resumed session reports just the new ones. If some requests were shorter than the model's minimum cacheable prompt (for example 4,096 tokens for Claude Haiku 4.5), the line says so: those requests could not be cached whatever the settings, and the provider reports nothing when that happens. The minimums are the vendors' published figures, and a model that is not in their tables is never reported this way.
+
+## Tips
+
+A small warning icon appears in the toolbar when there is advice about the model or cache settings in use, and not otherwise. Click it to read the tips. Each has a "Don't show again for this model" link. Dismissed tips come back through "Show dismissed tips" at the bottom of the cache menu, which appears only when the selected model has some hidden; it restores that model's tips and nothing else.
+
+| Tip | When it appears |
+| --- | --- |
+| Regional endpoints cost 10% more | A Bedrock model whose ID starts with `us.`, `eu.`, `apac.`, `jp.`, `au.` or `ca.` (see Cost). It suggests the matching `global.` ID. Continued asks Bedrock which inference profiles your account lists (a listing only, no model call), and if there is no global profile the tip keeps the price note and drops the suggestion. A global endpoint can route a request to any region, so keep the regional ID when your data must stay in one. |
+| 1 hour is not available for this model | You chose 1 hour, or Auto, for a Bedrock model that cannot take it (see Bedrock). |
+| Throttled N times with caching off | A Claude model on Anthropic or Bedrock was throttled at least twice in this conversation with caching off. Both providers say tokens read from a cache are not counted against the rate limit, so caching can reduce how often this happens. It will not stop throttling by itself: output tokens, cache writes and bursts of requests still count. |
+| A different setting would have cost N% less | After at least 6 requests, Continued replays the conversation (the size of each request and the pauses between them) under each setting. It appears when a different setting would have saved at least 10% of the input cost and at least a quarter of a dollar, and only if the replay of what actually happened agrees with the recorded cost to within 15%. It ignores output tokens, which caching does not change. It is an estimate from the token counts the provider reported, and it has not been checked against a real bill. |
+
+## Notices
+
+Four notices can appear above the input. None blocks sending, and each can be dismissed.
+
+- **Cache expired.** The cache has expired and the next message would re-read a large conversation at full price. It offers to compact, start a new session or switch to the 1-hour lifetime. It stays quiet when the conversation is below the model's minimum cacheable size.
+- **Caching is off.** Caching is off and the conversation is large enough that every message pays full price for all of it.
+- **Cache missed.** After 3 requests that should have read a warm cache but read less than half of the previous prompt. It names what changed when it can (the model, the tools, the system prompt, edited or removed messages) and otherwise says nothing the app controls changed.
+- **Large message.** A draft of about 30,000 tokens or more, since it is sent again with every later message.
+
+The cost notices appear only when at least a quarter of a dollar is at stake, or 100,000 tokens for a model with no price in the table.
+
+
 ## Bedrock
 
-On Bedrock, Vertex AI and OpenRouter, `1 hour` is offered only for models known to accept it: Claude Haiku 4.5, Sonnet 4.5, 4.6 and 5, and Opus 4.5 to 4.8 and 5. For any other Claude model the menu has no 1-hour entry, and a request that asks for it is sent with the 5-minute default, because an unsupported `ttl` can fail the request.
+On Bedrock, `1 hour` is offered only for models the AWS prompt caching guide lists with a 1-hour option: Claude Haiku 4.5 and 5.5, Sonnet 4.6, 5 and 5.5, Opus 4.5 to 4.8, 5 and 5.5, Fable and Mythos. Sonnet 4.5, Sonnet 4, Opus 4 and 4.1, and Claude 3 models are not in that table. Vertex AI and OpenRouter use the same list. For any other Claude model the menu has no 1-hour entry, and a request that asks for it is sent with the 5-minute default, because an unsupported `ttl` can fail the request.
 
 Continued also adds a per-process ID to the first user message so that two people sharing an AWS account do not read each other's cached conversation. The system prompt comes before it and can still be shared.
 
 ## Not supported
 
-- Caching on by default. Existing and new configs are unchanged until you enable it.
+- Caching on by default in Chat, for models other than Claude, and for Claude on Vertex AI and OpenRouter. A week of agent traffic on Anthropic's API and Bedrock supports the default where it is on; nothing measured covers a chat where each request is a human turn, or the other two providers, and a conversation of one request pays the write premium for nothing.
 - Non-Claude models, including OpenAI and Gemini. Providers that cache automatically do so without any setting here.
 - Keeping the cache alive while a command runs, or warming it when you open a saved session.
 - Control over the provider's minimum cacheable size. A prompt below the model's minimum is processed uncached without an error.

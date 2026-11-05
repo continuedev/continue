@@ -28,6 +28,10 @@ function filler(seed: number, chars: number): string {
   return out;
 }
 
+// A valid 1x1 PNG, for checking what an image in a message does to the cache.
+const TINY_PNG =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
 live("Bedrock prompt caching (live)", () => {
   it("measures cache reads across a growing conversation", async () => {
     const model =
@@ -36,6 +40,20 @@ live("Bedrock prompt caching (live)", () => {
     const turns = Number(process.env.LIVE_TURNS ?? 4);
     const waitAfter = Number(process.env.LIVE_WAIT_AFTER_TURN ?? 0);
     const waitS = Number(process.env.LIVE_WAIT_S ?? 0);
+    // LIVE_IMAGE_TURN=3 attaches an image to turn 3's message only.
+    const imageTurn = Number(process.env.LIVE_IMAGE_TURN ?? 0);
+    // LIVE_REASONING_TURN=3 turns thinking on from turn 3 on.
+    const reasoningTurn = Number(process.env.LIVE_REASONING_TURN ?? 0);
+    // LIVE_TOOLS_TURN=3 adds a second tool from turn 3 on (one from turn 1).
+    const toolsTurn = Number(process.env.LIVE_TOOLS_TURN ?? 0);
+    const tool = (name: string) => ({
+      type: "function",
+      function: {
+        name,
+        description: `Does ${name}. ${filler(99, 800)}`,
+        parameters: { type: "object", properties: {} },
+      },
+    });
     const bedrock = new Bedrock({
       model,
       region: process.env.AWS_REGION ?? "us-east-1",
@@ -55,9 +73,16 @@ live("Bedrock prompt caching (live)", () => {
         console.log(`LIVE waiting ${waitS}s before turn ${turn}`);
         await new Promise((r) => setTimeout(r, waitS * 1000));
       }
+      const text = `Turn ${turn}. Reply with only the word OK. ${filler(10 + turn, 7000)}`;
       messages.push({
         role: "user",
-        content: `Turn ${turn}. Reply with only the word OK. ${filler(10 + turn, 7000)}`,
+        content:
+          turn === imageTurn
+            ? [
+                { type: "imageUrl", imageUrl: { url: TINY_PNG } },
+                { type: "text", text },
+              ]
+            : text,
       });
       let reply = "";
       let usage: any;
@@ -66,9 +91,20 @@ live("Bedrock prompt caching (live)", () => {
         new AbortController().signal,
         {
           model,
-          maxTokens: 16,
+          maxTokens: reasoningTurn > 0 && turn >= reasoningTurn ? 2048 : 16,
           promptCaching: true,
           promptCacheTtl: ttl,
+          ...(reasoningTurn > 0 && turn >= reasoningTurn
+            ? { reasoning: true, reasoningBudgetTokens: 1024 }
+            : {}),
+          ...(toolsTurn > 0
+            ? {
+                tools:
+                  turn >= toolsTurn
+                    ? [tool("alpha_tool"), tool("beta_tool")]
+                    : [tool("alpha_tool")],
+              }
+            : {}),
         } as any,
       )) {
         if (chunk.role === "assistant") {

@@ -262,7 +262,7 @@ describe("Bedrock", () => {
   });
 
   describe("prompt cache points", () => {
-    const sonnet45 = "anthropic.claude-sonnet-4-5-20250929-v1:0";
+    const sonnet46 = "anthropic.claude-sonnet-4-6";
     const old = "anthropic.claude-3-7-sonnet-20250219-v1:0";
     const tools = [
       {
@@ -297,14 +297,14 @@ describe("Bedrock", () => {
     });
 
     it("adds no cache points unless caching is asked for", () => {
-      const p = points(build(sonnet45, {}));
+      const p = points(build(sonnet46, {}));
       expect(p.tools).toHaveLength(0);
       expect(p.system).toHaveLength(0);
       expect(p.messages).toHaveLength(0);
     });
 
     it("adds cache points to tools, system and the last two user messages", () => {
-      const p = points(build(sonnet45, { promptCaching: true }));
+      const p = points(build(sonnet46, { promptCaching: true }));
       expect(p.tools).toHaveLength(1);
       expect(p.system).toHaveLength(1);
       expect(p.messages).toHaveLength(2);
@@ -313,7 +313,7 @@ describe("Bedrock", () => {
 
     it("sends ttl 1h on every cache point for a model that supports it", () => {
       const p = points(
-        build(sonnet45, { promptCaching: true, promptCacheTtl: "1h" }),
+        build(sonnet46, { promptCaching: true, promptCacheTtl: "1h" }),
       );
       const all = [...p.tools, ...p.system, ...p.messages];
       expect(all).toHaveLength(4);
@@ -324,13 +324,13 @@ describe("Bedrock", () => {
 
     it("uses cacheBehavior.ttl when the request does not choose", () => {
       const cfg = { cacheBehavior: { ttl: "1h" } };
-      const p = points(build(sonnet45, { promptCaching: true }, cfg));
+      const p = points(build(sonnet46, { promptCaching: true }, cfg));
       for (const c of [...p.tools, ...p.system, ...p.messages]) {
         expect(c.cachePoint).toEqual({ type: "default", ttl: "1h" });
       }
       // The request's choice wins over config.
       const q = points(
-        build(sonnet45, { promptCaching: true, promptCacheTtl: "5m" }, cfg),
+        build(sonnet46, { promptCaching: true, promptCacheTtl: "5m" }, cfg),
       );
       expect(q.system[0].cachePoint).toEqual({ type: "default" });
       // Config "1h" still never reaches a 5-minute-only model.
@@ -347,10 +347,27 @@ describe("Bedrock", () => {
       }
     });
 
+    it.each([
+      "openai.gpt-6.1-sol",
+      "us.openai.gpt-5.6-sol",
+      "amazon.nova-pro-v1:0",
+      "us.xai.grok-4.7",
+    ])("never sends a cache point to %s, even with caching on", (model) => {
+      const input = build(
+        model,
+        { promptCaching: true, promptCacheTtl: "1h" },
+        {
+          cacheBehavior: { cacheConversation: true, cacheSystemMessage: true },
+        },
+      );
+      expect(JSON.stringify(input)).not.toContain("cachePoint");
+      expect(JSON.stringify(input)).not.toContain("SID:");
+    });
+
     it("an explicit false overrides cacheBehavior", () => {
       const p = points(
         build(
-          sonnet45,
+          sonnet46,
           { promptCaching: false },
           {
             cacheBehavior: {
@@ -366,7 +383,7 @@ describe("Bedrock", () => {
     });
 
     it("keeps earlier messages byte-identical from one request to the next", () => {
-      const model = sonnet45;
+      const model = sonnet46;
       const b: any = new TestBedrock({
         apiKey: "k",
         model,
@@ -402,7 +419,7 @@ describe("Bedrock", () => {
     it("puts the per-process ID on the first user message only", () => {
       const b: any = new TestBedrock({
         apiKey: "k",
-        model: sonnet45,
+        model: sonnet46,
         region: "us-east-1",
       });
       const input = b._generateConverseInput(
@@ -414,7 +431,7 @@ describe("Bedrock", () => {
           { role: "assistant", content: "b" },
           { role: "user", content: "three" },
         ],
-        { model: sonnet45, promptCaching: true },
+        { model: sonnet46, promptCaching: true },
       );
       const texts = input.messages.map((m: any) =>
         m.content.map((c: any) => c.text).filter(Boolean),
@@ -452,12 +469,12 @@ describe("Bedrock", () => {
       function convert(history: ChatMessage[]) {
         const b: any = new TestBedrock({
           apiKey: "k",
-          model: sonnet45,
+          model: sonnet46,
           region: "us-east-1",
         });
         b.capabilities = { tools: true };
         return b._generateConverseInput(history, {
-          model: sonnet45,
+          model: sonnet46,
           tools,
           promptCaching: true,
         }).messages as any[];
@@ -529,21 +546,21 @@ describe("Bedrock", () => {
     it("adds no ID when caching is off", () => {
       const b: any = new TestBedrock({
         apiKey: "k",
-        model: sonnet45,
+        model: sonnet46,
         region: "us-east-1",
       });
-      const input = b._generateConverseInput(msgs, { model: sonnet45 });
+      const input = b._generateConverseInput(msgs, { model: sonnet46 });
       expect(JSON.stringify(input.messages)).not.toContain("SID:");
     });
 
     it("turns the caching header on only when something is cached", () => {
-      const on: any = new TestBedrock({ apiKey: "k", model: sonnet45 });
-      on._generateConverseInput(msgs, { model: sonnet45, promptCaching: true });
+      const on: any = new TestBedrock({ apiKey: "k", model: sonnet46 });
+      on._generateConverseInput(msgs, { model: sonnet46, promptCaching: true });
       expect(on.requestOptions.headers).toMatchObject({
         "x-amzn-bedrock-enablepromptcaching": "true",
       });
-      const off: any = new TestBedrock({ apiKey: "k", model: sonnet45 });
-      off._generateConverseInput(msgs, { model: sonnet45 });
+      const off: any = new TestBedrock({ apiKey: "k", model: sonnet46 });
+      off._generateConverseInput(msgs, { model: sonnet46 });
       expect(off.requestOptions.headers ?? {}).not.toHaveProperty(
         "x-amzn-bedrock-enablepromptcaching",
       );

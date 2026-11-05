@@ -36,3 +36,28 @@ export function totalInputTokens(
     usage.promptTokens + (d?.cachedTokens ?? 0) + (d?.cacheWriteTokens ?? 0)
   );
 }
+
+/** What a provider said about a response, apart from its token counts. */
+export type ResponseInfo = NonNullable<Usage["response"]>;
+
+/**
+ * `usage` with the response facts attached, or `usage` untouched when the
+ * provider sent none. Empty and non-finite values are dropped, so a field is
+ * present only when it carries something.
+ */
+export function withResponseInfo(
+  usage: Usage,
+  info: {
+    stopReason?: string | null;
+    latencyMs?: number | null;
+    requestId?: string | null;
+  },
+): Usage {
+  const response: ResponseInfo = {};
+  if (info.stopReason) response.stopReason = info.stopReason;
+  if (typeof info.latencyMs === "number" && Number.isFinite(info.latencyMs)) {
+    response.latencyMs = info.latencyMs;
+  }
+  if (info.requestId) response.requestId = info.requestId;
+  return Object.keys(response).length > 0 ? { ...usage, response } : usage;
+}

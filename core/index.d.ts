@@ -305,6 +305,21 @@ export interface SessionUsage extends Usage {
   };
 }
 
+/** What the prompt cache held when a session was last used. */
+export interface SessionPromptCache {
+  /** When the last request started (ms since epoch). */
+  lastRequestAt?: number;
+  /** Input tokens of that request, as the API counted them. */
+  lastInputTokens?: number;
+  /** Lifetime that request wrote its cache entry with. */
+  lastTtl?: "5m" | "1h";
+  /** Requests the conversation has sent with caching on (Auto counts them). */
+  requests?: number;
+  /** Auto moved the conversation to the 1-hour lifetime. */
+  escalated?: boolean;
+  escalatedBy?: "gap" | "requests";
+}
+
 export interface Session {
   sessionId: string;
   title: string;
@@ -316,6 +331,11 @@ export interface Session {
   chatModelTitle?: string | null;
   /** Optional: cumulative usage and cost for all LLM API calls in this session */
   usage?: SessionUsage;
+  /**
+   * Optional: lets a resumed session tell that its prompt cache has expired
+   * and what re-reading the conversation will cost.
+   */
+  promptCache?: SessionPromptCache;
   /** Optional: file snapshots taken before agent edits, used by "Restore to here" */
   checkpoints?: TurnCheckpoint[];
 }
@@ -457,6 +477,18 @@ export interface ThinkingChatMessage {
 export interface Usage {
   completionTokens: number;
   promptTokens: number;
+  /**
+   * What the provider said about the response itself, apart from token counts.
+   * Each field is set only when the provider sends it.
+   */
+  response?: {
+    /** Why generation stopped: `tool_use`, `end_turn`, `max_tokens`, ... */
+    stopReason?: string;
+    /** The provider's own timing for the request (Bedrock `metrics.latencyMs`). */
+    latencyMs?: number;
+    /** An ID that identifies this call in the provider's logs and billing. */
+    requestId?: string;
+  };
   promptTokensDetails?: {
     cachedTokens?: number;
     /** This an Anthropic-specific property */

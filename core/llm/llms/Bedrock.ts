@@ -35,6 +35,7 @@ import { BaseLLM } from "../index.js";
 import { getAnthropicThinkingParams } from "./anthropicThinking.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { createBedrockRequestHandler } from "./bedrockHttp.js";
+import { withResponseInfo } from "../utils/cacheStats.js";
 import { getSecureID } from "../utils/getSecureID.js";
 import { resolveCacheParts, resolvePromptCacheTtl } from "./anthropicCache.js";
 import {
@@ -358,9 +359,17 @@ class Bedrock extends BaseLLM {
 
     try {
       let usage: Usage | undefined;
+      let stopReason: string | undefined;
+      let latencyMs: number | undefined;
       for await (const chunk of response.stream) {
         if (chunk.metadata?.usage) {
           usage = bedrockUsageToUsage(chunk.metadata.usage);
+        }
+        if (chunk.metadata?.metrics?.latencyMs !== undefined) {
+          latencyMs = chunk.metadata.metrics.latencyMs;
+        }
+        if (chunk.messageStop?.stopReason) {
+          stopReason = chunk.messageStop.stopReason;
         }
 
         const contentBlockDelta: ContentBlockDelta | undefined =
@@ -457,7 +466,15 @@ class Bedrock extends BaseLLM {
       if (usage) {
         // The metadata event arrives after the content; BaseLLM picks the
         // usage up from the last assistant chunk that carries it.
-        yield { role: "assistant", content: "", usage };
+        yield {
+          role: "assistant",
+          content: "",
+          usage: withResponseInfo(usage, {
+            stopReason,
+            latencyMs,
+            requestId: response.$metadata?.requestId,
+          }),
+        };
       }
     } catch (error: unknown) {
       // Clean up state and let the original error bubble up for retry handling
@@ -482,11 +499,18 @@ class Bedrock extends BaseLLM {
     // Prompt and system message caching settings. `options` already includes the
     // model's configured default, so an explicit `promptCaching: false` (for
     // example from the toolbar) wins over `cacheBehavior`.
-    const parts = resolveCacheParts(
-      options.promptCaching,
-      this.cacheBehavior,
-      !!systemMessage,
-    );
+    //
+    // Only Claude models take cache points. Other models on Bedrock either
+    // cache by themselves (GPT, Grok) or not at all (Nova), and reject a
+    // request that carries a cachePoint field (checked live), so a model
+    // config with `promptCaching: true` must not reach them.
+    const parts = /claude/i.test(options.model)
+      ? resolveCacheParts(
+          options.promptCaching,
+          this.cacheBehavior,
+          !!systemMessage,
+        )
+      : { tools: false, system: false, conversation: false };
     const cacheTtl = bedrockCacheTtl(
       options.model,
       resolvePromptCacheTtl(options.promptCacheTtl, this.cacheBehavior?.ttl),

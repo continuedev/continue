@@ -283,6 +283,9 @@ export async function processStreamingResponse(
   let inputTokens = 0;
   let outputTokens = 0;
   let fullUsage: any = null;
+  // Bedrock's request ID (its invocation log and the bill use it) or the
+  // provider's response ID; empty when the provider sends none.
+  let requestId: string | undefined;
 
   try {
     const streamWithBackoff = withExponentialBackoff(
@@ -295,6 +298,8 @@ export async function processStreamingResponse(
       chunkCount++;
 
       logger.debug("Received chunk", { chunkCount, chunk });
+
+      if (!requestId && chunk.id) requestId = chunk.id;
 
       // Track token usage if available
       if (chunk.usage) {
@@ -349,6 +354,7 @@ export async function processStreamingResponse(
     }
 
     logger.debug("Stream complete", {
+      requestId,
       chunkCount,
       responseLength: aiResponse.length,
       toolCallsCount: toolCallsMap.size,

@@ -47,6 +47,11 @@ import {
   openaiToolToAnthropicTool,
 } from "./AnthropicUtils.js";
 import {
+  applyAnthropicCacheTtl,
+  AutoCacheTtl,
+  requestedCacheTtl,
+} from "./cacheTtl.js";
+import {
   BaseLlmApi,
   CreateRerankResponse,
   FimCreateParamsStreaming,
@@ -56,9 +61,16 @@ import {
 export class AnthropicApi implements BaseLlmApi {
   apiBase: string = "https://api.anthropic.com/v1/";
 
+  /** Counts this instance's cached requests for `cacheBehavior.ttl: auto`. */
+  private autoTtl = new AutoCacheTtl();
+
   constructor(
     protected config: AnthropicConfig & {
       cachingStrategy?: CachingStrategyName;
+      // Only `ttl` is read: "1h" puts a 1-hour lifetime on the cache points,
+      // "auto" decides per request (see AutoCacheTtl), anything else keeps the
+      // 5-minute default.
+      cacheBehavior?: { ttl?: "auto" | "5m" | "1h" };
     },
   ) {
     this.apiBase = config.apiBase ?? this.apiBase;
@@ -82,7 +94,16 @@ export class AnthropicApi implements BaseLlmApi {
       addCacheControlToLastTwoUserMessages(result.messages);
     }
 
-    return result;
+    // Step 4: ask for a longer lifetime if the config says so. Unset, the
+    // request is exactly what it was before.
+    return applyAnthropicCacheTtl(
+      result,
+      requestedCacheTtl(
+        this.config.cacheBehavior?.ttl,
+        this.autoTtl,
+        (this.config.cachingStrategy ?? "systemAndTools") !== "none",
+      ),
+    );
   }
 
   private maxTokensForModel(model: string): number {

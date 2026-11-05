@@ -28,6 +28,7 @@ import {
 } from "../../../components/ui";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useWarmCacheNote } from "../../../hooks/useWarmCacheNote";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { updateConfig } from "../../../redux/slices/configSlice";
 import { ConfigHeader } from "../components/ConfigHeader";
@@ -74,6 +75,7 @@ function MCPServerPreview({
   const editBlock = useEditBlock();
 
   const dispatch = useAppDispatch();
+  const warmCacheNote = useWarmCacheNote();
   const updateMCPServerStatus = (status: MCPServerStatus["status"]) => {
     // optimistic config update
     dispatch(
@@ -315,7 +317,17 @@ function MCPServerPreview({
                   onClick={onDisconnect}
                   className="justify-start gap-x-1.5"
                 >
-                  <StopCircleIcon className="h-4 w-4 shrink-0" /> Disconnect
+                  <span
+                    className="flex items-center gap-x-1.5"
+                    title={
+                      warmCacheNote
+                        ? `Removes this server's tools from the prompt. ${warmCacheNote}`
+                        : undefined
+                    }
+                  >
+                    <StopCircleIcon className="h-4 w-4 shrink-0" />
+                    Disconnect
+                  </span>
                 </ListboxOption>
               )}
 
@@ -325,12 +337,21 @@ function MCPServerPreview({
                   onClick={onRefresh}
                   className="justify-start gap-x-1.5"
                 >
-                  {server.status === "disabled" ? (
-                    <PlayCircleIcon className="h-4 w-4 shrink-0" />
-                  ) : (
-                    <ArrowPathIcon className="h-4 w-4 shrink-0" />
-                  )}
-                  Reload
+                  <span
+                    className="flex items-center gap-x-1.5"
+                    title={
+                      warmCacheNote
+                        ? `A server that comes back with different tools changes the prompt. ${warmCacheNote}`
+                        : undefined
+                    }
+                  >
+                    {server.status === "disabled" ? (
+                      <PlayCircleIcon className="h-4 w-4 shrink-0" />
+                    ) : (
+                      <ArrowPathIcon className="h-4 w-4 shrink-0" />
+                    )}
+                    Reload
+                  </span>
                 </ListboxOption>
               )}
             </ListboxOptions>

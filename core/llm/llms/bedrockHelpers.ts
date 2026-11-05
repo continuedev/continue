@@ -291,14 +291,17 @@ export function bedrockUsageToUsage(usage: BedrockTokenUsageLike): {
 
 /**
  * Claude models on Bedrock that accept a 1-hour cache lifetime (`ttl: "1h"` on a
- * cache point). From the Bedrock prompt caching table (checked 2026-11-02).
- * Sending `ttl` to a model that only supports 5 minutes can fail the request
- * with a ValidationException, so anything not listed here gets the default.
- * Rows for older Sonnet 4 and Opus 4 / 4.1 models were not visible when the
- * table was read, so they are left out.
+ * cache point): every Claude row of the "Supported models" table in the AWS
+ * Bedrock prompt caching guide lists "5 minutes, 1 hour" (checked 2026-11-04):
+ * Haiku 4.5 and 5.5, Sonnet 4.6, 5 and 5.5, Opus 4.5 to 4.8, 5 and 5.5, Fable
+ * and Mythos. Sending `ttl` to a model that only supports 5 minutes "can result
+ * in a ValidationException", so a model that table does not list gets the
+ * default. That leaves out Sonnet 4.5 (not in the table), Sonnet 4, Opus 4 and
+ * 4.1, and Claude 3.x. Confirmed live with a 1-hour write and `cacheDetails`
+ * on Haiku 4.5, Haiku 5.5, Sonnet 5.5 and Opus 5.5; the others follow the table.
  */
 const ONE_HOUR_CACHE_MODELS =
-  /^claude-(haiku-4-5|haiku-5|sonnet-4-5|sonnet-4-6|sonnet-5|opus-4-5|opus-4-6|opus-4-7|opus-4-8|opus-5|fable|mythos)/;
+  /^claude-(haiku-4-5|haiku-5|sonnet-4-6|sonnet-5|opus-4-5|opus-4-6|opus-4-7|opus-4-8|opus-5|fable|mythos)/;
 
 export function bedrockSupportsOneHourCache(modelId: string): boolean {
   const id = normalizeClaudeModelId(modelId);
@@ -313,4 +316,55 @@ export function bedrockCacheTtl(
   return requested === "1h" && bedrockSupportsOneHourCache(modelId)
     ? "1h"
     : undefined;
+}
+
+/**
+ * Claude models that take a 1-hour lifetime through Anthropic's own request
+ * shape, which Vertex AI and OpenRouter use: Anthropic's prompt caching page
+ * says 1 hour works on every model that supports caching. This list is wider
+ * than Bedrock's (Sonnet 4.5 is here and not in AWS's table) and still leaves
+ * out Claude 3.x and the original Claude 4 releases, which main's earlier list
+ * also left out because they were not seen in a table.
+ */
+const ANTHROPIC_STYLE_ONE_HOUR_MODELS =
+  /^claude-(haiku-4-5|haiku-5|sonnet-4-5|sonnet-4-6|sonnet-5|opus-4-5|opus-4-6|opus-4-7|opus-4-8|opus-5|fable|mythos)/;
+
+export function anthropicStyleSupportsOneHourCache(modelId: string): boolean {
+  const id = normalizeClaudeModelId(modelId);
+  return !!id && ANTHROPIC_STYLE_ONE_HOUR_MODELS.test(id);
+}
+
+/** The `ttl` for Vertex AI and OpenRouter, or undefined for the default. */
+export function anthropicStyleCacheTtl(
+  modelId: string,
+  requested: "5m" | "1h" | undefined,
+): "1h" | undefined {
+  return requested === "1h" && anthropicStyleSupportsOneHourCache(modelId)
+    ? "1h"
+    : undefined;
+}
+
+/** What an account's own model list says about a model's `global.` profile. */
+export type GlobalProfileStatus = "present" | "absent" | "unknown";
+
+/**
+ * Whether the catalog lists the `global.` inference profile of a model given by
+ * a regional ID (`us.anthropic.claude-sonnet-4-6` ->
+ * `global.anthropic.claude-sonnet-4-6`). Only a regional ID has a global
+ * counterpart worth asking about: a `global.` ID is already it, and a bare ID,
+ * an ARN or an application profile has none to suggest, so those are "unknown"
+ * (nothing was checked) rather than "absent".
+ */
+export function globalProfileStatus(
+  catalog: Pick<BedrockModelOption, "id" | "kind">[],
+  modelId: string,
+): GlobalProfileStatus {
+  const m = modelId.match(/^(us|eu|apac|jp|au|ca)\.(.+)$/i);
+  if (!m) return "unknown";
+  const wanted = `global.${m[2]}`.toLowerCase();
+  return catalog.some(
+    (o) => o.kind === "inference-profile" && o.id.toLowerCase() === wanted,
+  )
+    ? "present"
+    : "absent";
 }

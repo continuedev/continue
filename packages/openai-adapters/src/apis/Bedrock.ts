@@ -31,8 +31,13 @@ import {
 
 import {
   applyCrossRegionInference,
+  bedrockCachePoint,
+  bedrockCacheTtl,
+  bedrockUsageToCompletionUsage,
   getBedrockErrorHint,
+  resolveBedrockCacheParts,
 } from "./bedrockHelpers.js";
+import { AutoCacheTtl, requestedCacheTtl } from "./cacheTtl.js";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import {
   createAgentForUrl,
@@ -43,7 +48,13 @@ import {
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { fromStatic } from "@aws-sdk/token-providers";
 import { BedrockConfig } from "../types.js";
-import { chatChunk, chatChunkFromDelta, embedding, rerank } from "../util.js";
+import {
+  chatChunk,
+  chatChunkFromDelta,
+  embedding,
+  rerank,
+  usageChatChunk,
+} from "../util.js";
 import { safeParseArgs } from "../util/parseArgs.js";
 import { parseDataUrl } from "../util/url.js";
 import {
@@ -72,6 +83,9 @@ interface ToolUseState {
 }
 
 export class BedrockApi implements BaseLlmApi {
+  /** Counts this instance's cached requests for `cacheBehavior.ttl: auto`. */
+  private autoTtl = new AutoCacheTtl();
+
   constructor(protected config: BedrockConfig) {
     if (config.env?.accessKeyId || config?.env?.secretAccessKey) {
       if (!config.env?.accessKeyId) {
@@ -258,6 +272,7 @@ export class BedrockApi implements BaseLlmApi {
   private _convertMessages(
     oaiMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
     availableTools: Set<string>,
+    cache?: { conversation: boolean; ttl?: "1h" },
   ): Message[] {
     let currentRole: "user" | "assistant" = "user";
     let currentBlocks: ContentBlock[] = [];
@@ -392,24 +407,38 @@ export class BedrockApi implements BaseLlmApi {
     }
 
     // If caching is enabled, add cache points
-    // if (this.config.cacheBehavior?.cacheConversation) {
-    //   this._addCachingToLastTwoUserMessages(converted);
-    // }
+    if (cache?.conversation) {
+      this._addCachingToLastTwoUserMessages(converted, cache.ttl);
+    }
 
     return converted;
   }
 
-  private _addCachingToLastTwoUserMessages(converted: Message[]) {
+  /**
+   * Put cache points on the last two user messages, and make the cached prefix
+   * unique to this process.
+   *
+   * Bedrock caches at the AWS account level, so identical prompts from
+   * different users or processes would share entries. A random ID in the
+   * prompt prevents that. It has to be in the same place on every request: if
+   * it were appended to the last two user messages, a message would lose its
+   * ID when it fell out of that window, its bytes would change, and the cached
+   * conversation would stop matching. So the ID goes on the first user message
+   * only, and every later cached prefix includes it.
+   */
+  private _addCachingToLastTwoUserMessages(converted: Message[], ttl?: "1h") {
+    const first = converted.find((m) => m.role === "user");
+    first?.content?.forEach((block) => {
+      if (block.text) {
+        block.text += getSecureID();
+      }
+    });
+
     let numCached = 0;
     for (let i = converted.length - 1; i >= 0; i--) {
       const message = converted[i];
       if (message.role === "user") {
-        message.content?.forEach((block) => {
-          if (block.text) {
-            block.text += getSecureID();
-          }
-        });
-        message.content?.push({ cachePoint: { type: "default" } });
+        message.content?.push(bedrockCachePoint(ttl));
         numCached++;
       }
       if (numCached === 2) {
@@ -438,6 +467,32 @@ export class BedrockApi implements BaseLlmApi {
     const availableTools = new Set<string>();
     let toolConfig: ToolConfiguration | undefined = undefined;
 
+    // Only Claude models take cache points. The others (GPT, Nova, Grok, ...)
+    // either cache by themselves or not at all, and reject a request that
+    // carries a cachePoint field, so `promptCaching: true` must not reach them.
+    const parts = /claude/i.test(oaiBody.model)
+      ? resolveBedrockCacheParts(
+          this.config.promptCaching,
+          this.config.cacheBehavior,
+          !!systemMessageText,
+        )
+      : { tools: false, system: false, conversation: false };
+
+    // The lifetime to ask for on every cache point of this request, only for a
+    // model that accepts one (an unsupported `ttl` can fail the request).
+    // `cacheBehavior.ttl: auto` is the chat window's policy; with no toolbar,
+    // this instance counts its own requests (one per model call, as the chat
+    // window does) and applies the same two rules.
+    const cachingOn = parts.tools || parts.system || parts.conversation;
+    const cacheTtl = bedrockCacheTtl(
+      oaiBody.model,
+      requestedCacheTtl(
+        this.config.cacheBehavior?.ttl,
+        this.autoTtl,
+        cachingOn,
+      ),
+    );
+
     if (oaiBody.tools && oaiBody.tools.length > 0) {
       toolConfig = {
         tools: oaiBody.tools.map((tool) => {
@@ -458,10 +513,10 @@ export class BedrockApi implements BaseLlmApi {
         }),
       } as ToolConfiguration;
 
-      // Add cache point if needed
-      // if (this.config.cacheBehavior?.cacheSystemMessage) {
-      //   toolConfig!.tools!.push({ cachePoint: { type: "default" } });
-      // }
+      // Add cache point after the tool list
+      if (parts.tools) {
+        toolConfig.tools!.push(bedrockCachePoint(cacheTtl));
+      }
 
       oaiBody.tools.forEach((tool) => {
         if (tool.type === "function" && "function" in tool) {
@@ -474,6 +529,7 @@ export class BedrockApi implements BaseLlmApi {
     const convertedMessages = this._convertMessages(
       oaiBody.messages,
       availableTools,
+      { conversation: parts.conversation, ttl: cacheTtl },
     );
 
     // Build final request body
@@ -499,8 +555,8 @@ export class BedrockApi implements BaseLlmApi {
 
     // Add system message if present
     if (systemMessageText) {
-      body.system = false // this.config.cacheBehavior?.cacheSystemMessage // TODO
-        ? [{ text: systemMessageText }, { cachePoint: { type: "default" } }]
+      body.system = parts.system
+        ? [{ text: systemMessageText }, bedrockCachePoint(cacheTtl)]
         : [{ text: systemMessageText }];
     }
 
@@ -529,6 +585,8 @@ export class BedrockApi implements BaseLlmApi {
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
     let completion = "";
+    let usage: ChatCompletion["usage"];
+    let requestId: string | undefined;
     const toolCalls: ChatCompletionMessageToolCall[] = [];
 
     for await (const chunk of this.chatCompletionStream(
@@ -538,14 +596,22 @@ export class BedrockApi implements BaseLlmApi {
       },
       signal,
     )) {
-      if (chunk.choices[0].delta.content) {
+      if (chunk.usage) {
+        usage = chunk.usage;
+      }
+      if (chunk.id) {
+        requestId = chunk.id;
+      }
+      if (chunk.choices[0]?.delta?.content) {
         completion += chunk.choices[0].delta.content;
       }
       // TODO tool calls not supported
     }
 
     return {
-      id: uuidv4(),
+      // Bedrock's own request ID when it sent one: it is the ID in the
+      // invocation log and the bill.
+      id: requestId ?? uuidv4(),
       object: "chat.completion",
       model: body.model,
       created: Date.now(),
@@ -562,7 +628,7 @@ export class BedrockApi implements BaseLlmApi {
           },
         },
       ],
-      usage: undefined,
+      usage,
     };
   }
 
@@ -584,6 +650,10 @@ export class BedrockApi implements BaseLlmApi {
         throw new Error("No stream received from Bedrock API");
       }
 
+      // The ID that identifies this call in Bedrock's invocation log and in
+      // billing. It is known before the first event, so every chunk carries it.
+      const id = response.$metadata?.requestId;
+
       for await (const chunk of response.stream) {
         if (chunk.contentBlockDelta?.delta) {
           const delta: any = chunk.contentBlockDelta.delta;
@@ -593,6 +663,7 @@ export class BedrockApi implements BaseLlmApi {
             yield chatChunk({
               content: delta.text,
               model: body.model,
+              id,
             });
             continue;
           }
@@ -609,6 +680,7 @@ export class BedrockApi implements BaseLlmApi {
           if (delta.toolUse) {
             yield chatChunkFromDelta({
               model: body.model,
+              id,
               delta: {
                 tool_calls: [
                   {
@@ -632,6 +704,7 @@ export class BedrockApi implements BaseLlmApi {
           if (start.toolUse) {
             yield chatChunkFromDelta({
               model: body.model,
+              id,
               delta: {
                 tool_calls: [
                   {
@@ -647,6 +720,16 @@ export class BedrockApi implements BaseLlmApi {
               },
             });
           }
+        }
+
+        // The metadata event arrives last and carries the token counts,
+        // including the cache read and write counts when caching is on.
+        if (chunk.metadata?.usage) {
+          yield usageChatChunk({
+            model: body.model,
+            id,
+            usage: bedrockUsageToCompletionUsage(chunk.metadata.usage),
+          });
         }
       }
     } catch (error) {

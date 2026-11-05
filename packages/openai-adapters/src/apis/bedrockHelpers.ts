@@ -2,6 +2,7 @@
  * Pure helpers for the Bedrock adapter. Keep in sync with
  * core/llm/llms/bedrockHelpers.ts (core cannot import this package's sources).
  */
+import type { CacheTtl } from "./cacheTtl.js";
 
 /** Geographic prefixes Bedrock uses for cross-region inference profile IDs. */
 export const INFERENCE_PROFILE_PREFIXES = [
@@ -103,4 +104,162 @@ export function getBedrockErrorHint(
     } and that your IAM identity allows bedrock:InvokeModel and bedrock:InvokeModelWithResponseStream.`;
   }
   return undefined;
+}
+
+/** The fields of Bedrock's `TokenUsage` that the adapter reads. */
+export interface BedrockTokenUsageLike {
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheReadInputTokens?: number;
+  cacheWriteInputTokens?: number;
+  /** Writes split by lifetime; empty when nothing was written. */
+  cacheDetails?: BedrockCacheDetailLike[];
+}
+
+/**
+ * Map the usage in a Converse stream's `metadata` event to the OpenAI usage
+ * shape, with the cache fields named as the Anthropic adapter names them.
+ * With caching on, Bedrock's `inputTokens` counts only tokens that were
+ * neither read from nor written to the cache, the same meaning as Anthropic's
+ * `input_tokens`, so `prompt_tokens` keeps that meaning on both adapters.
+ */
+export function bedrockUsageToCompletionUsage(usage: BedrockTokenUsageLike): {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  prompt_tokens_details: {
+    cached_tokens: number;
+    cache_read_tokens: number;
+    cache_write_tokens: number;
+    cache_write_tokens_5m?: number;
+    cache_write_tokens_1h?: number;
+  };
+} {
+  const read = usage.cacheReadInputTokens ?? 0;
+  const write = usage.cacheWriteInputTokens ?? 0;
+  const split = splitCacheWrites(usage.cacheDetails);
+  const prompt = usage.inputTokens ?? 0;
+  const completion = usage.outputTokens ?? 0;
+  return {
+    prompt_tokens: prompt,
+    completion_tokens: completion,
+    total_tokens: prompt + completion,
+    prompt_tokens_details: {
+      cached_tokens: read,
+      cache_read_tokens: read,
+      cache_write_tokens: write,
+      // Only when Bedrock split the writes by lifetime, as the Anthropic
+      // adapter does, so a 1-hour write is priced at the 1-hour rate.
+      ...(split && {
+        cache_write_tokens_5m: split.write5m,
+        cache_write_tokens_1h: split.write1h,
+      }),
+    },
+  };
+}
+
+/** Which parts of a request get a cache point. */
+export interface BedrockCacheParts {
+  tools: boolean;
+  system: boolean;
+  conversation: boolean;
+}
+
+/**
+ * Decide which parts of a request get cache points. Keep in sync with
+ * `resolveCacheParts` in core/llm/llms/anthropicCache.ts.
+ *
+ * An explicit `promptCaching: false` turns everything off, even when
+ * `cacheBehavior` says otherwise. `true` caches the tools, the system prompt
+ * and the conversation (up to four cache points: tools, system and the last
+ * two user messages). When it is unset, only `cacheBehavior` applies, and with
+ * nothing set no cache points are sent.
+ */
+export function resolveBedrockCacheParts(
+  requested: boolean | undefined,
+  behavior:
+    { cacheSystemMessage?: boolean; cacheConversation?: boolean } | undefined,
+  hasSystem: boolean,
+): BedrockCacheParts {
+  if (requested === false) {
+    return { tools: false, system: false, conversation: false };
+  }
+  if (requested === true) {
+    return { tools: true, system: hasSystem, conversation: true };
+  }
+  return {
+    tools: false,
+    system: !!(behavior?.cacheSystemMessage && hasSystem),
+    conversation: !!behavior?.cacheConversation,
+  };
+}
+
+/** `us.anthropic.claude-sonnet-4-6-v1:0` -> `claude-sonnet-4-6`; undefined if not Claude. */
+function claudeKey(modelId: string): string | undefined {
+  let id = modelId.toLowerCase();
+  const at = id.indexOf("claude");
+  if (at === -1) return undefined;
+  id = id.slice(at);
+  id = id.replace(/@.*$/, "").replace(/-v\d+(:\d+)?$/, "");
+  return id.replace(/(\d)\.(\d)/g, "$1-$2");
+}
+
+/**
+ * Claude models on Bedrock that accept a 1-hour cache lifetime (`ttl: "1h"` on a
+ * cache point): every Claude row of the "Supported models" table in the AWS
+ * Bedrock prompt caching guide lists "5 minutes, 1 hour" (checked 2026-11-04):
+ * Haiku 4.5 and 5.5, Sonnet 4.6, 5 and 5.5, Opus 4.5 to 4.8, 5 and 5.5, Fable
+ * and Mythos. Sending `ttl` to a model that only supports 5 minutes "can result
+ * in a ValidationException", so a model that table does not list gets the
+ * default. That leaves out Sonnet 4.5 (not in the table), Sonnet 4, Opus 4 and
+ * 4.1, and Claude 3.x. Confirmed live with a 1-hour write and `cacheDetails`
+ * on Haiku 4.5, Haiku 5.5, Sonnet 5.5 and Opus 5.5; the others follow the table.
+ *
+ * There are two copies, this one and core/llm/llms/bedrockHelpers.ts: core's
+ * is imported by the chat window, which cannot take this Node-only package.
+ * core/llm/llms/bedrockOneHourCache.vitest.ts fails if they disagree.
+ */
+const ONE_HOUR_CACHE_MODELS =
+  /^claude-(haiku-4-5|haiku-5|sonnet-4-6|sonnet-5|opus-4-5|opus-4-6|opus-4-7|opus-4-8|opus-5|fable|mythos)/;
+
+export function bedrockSupportsOneHourCache(modelId: string): boolean {
+  const id = claudeKey(modelId);
+  return !!id && ONE_HOUR_CACHE_MODELS.test(id);
+}
+
+/** The `ttl` to put on a Bedrock cache point, or undefined for the default. */
+export function bedrockCacheTtl(
+  modelId: string,
+  requested: CacheTtl | undefined,
+): "1h" | undefined {
+  return requested === "1h" && bedrockSupportsOneHourCache(modelId)
+    ? "1h"
+    : undefined;
+}
+
+/** A Bedrock cache point; `ttl` only when it is not the default. */
+export function bedrockCachePoint(ttl: "1h" | undefined): {
+  cachePoint: { type: "default"; ttl?: "1h" };
+} {
+  return { cachePoint: { type: "default", ...(ttl && { ttl }) } };
+}
+
+/** Per-lifetime cache writes Bedrock reports in `usage.cacheDetails`. */
+export interface BedrockCacheDetailLike {
+  ttl?: string;
+  inputTokens?: number;
+}
+
+/** Sum `cacheDetails` into 5-minute and 1-hour writes; undefined when absent. */
+export function splitCacheWrites(
+  details: BedrockCacheDetailLike[] | undefined,
+): { write5m: number; write1h: number } | undefined {
+  if (!details?.length) return undefined;
+  let write5m = 0;
+  let write1h = 0;
+  for (const d of details) {
+    if (d.ttl === "1h") write1h += d.inputTokens ?? 0;
+    else if (d.ttl === "5m") write5m += d.inputTokens ?? 0;
+  }
+  return { write5m, write1h };
 }

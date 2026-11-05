@@ -1,14 +1,10 @@
+import { selectCacheSetting } from "../selectors/selectCacheSetting";
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { LLMFullCompletionOptions, ModelDescription } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
-import { rulesEnabledForMode } from "core/llm/rules/rulesByMode";
 import { ToCoreProtocol } from "core/protocol";
+import { renderChatMessage } from "core/util/messageContent";
 import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
-import { selectActiveTools } from "../selectors/selectActiveTools";
-import {
-  getModeReasoningEffort,
-  reasoningOptionsForEffort,
-} from "../../util/modeModels";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
@@ -22,29 +18,36 @@ import {
   setInlineErrorMessage,
   setIsPruned,
   setPromptCacheInputTokens,
+  setPromptCacheKey,
   setPromptCacheState,
+  recordCacheMiss,
+  recordCacheRequest,
   setToolGenerated,
   streamUpdate,
 } from "../slices/sessionSlice";
 import {
   resolvePromptCache,
   INITIAL_PROMPT_CACHE_STATE,
+  modelSupportsOneHourCache,
+  modelSupportsPromptCacheControl,
+  promptCacheStatus,
 } from "../../util/promptCache";
+import { buildLedgerEntry } from "../../util/cacheLedger";
+import {
+  detectCacheMiss,
+  expectedRebuildCauses,
+  promptCacheKey,
+} from "../../util/cacheSafeguards";
 import { totalInputTokens } from "core/llm/utils/cacheStats";
 import { ThunkApiType } from "../store";
-import { constructMessages } from "../util/constructMessages";
+import { buildChatRequest } from "../util/buildChatRequest";
 
-import { modelSupportsNativeTools } from "core/llm/toolSupport";
-import { applyToolOverrides } from "core/tools/applyToolOverrides";
-import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
-import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
 
 import {
   selectCurrentToolCalls,
   selectPendingToolCalls,
 } from "../selectors/selectToolCalls";
-import { getBaseSystemMessage } from "../util/getBaseSystemMessage";
 import { callToolById } from "./callToolById";
 import {
   selectApprovalSettings,
@@ -56,38 +59,6 @@ import {
 } from "./evaluateToolPolicies";
 import { preprocessToolCalls } from "./preprocessToolCallArgs";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
-
-/**
- * Builds completion options with reasoning configuration based on session state and model capabilities.
- *
- * @param baseOptions - Base completion options to extend
- * @param hasReasoningEnabled - Whether reasoning is enabled in the session
- * @param model - The selected model with provider and completion options
- * @returns Completion options with reasoning configuration
- */
-function buildReasoningCompletionOptions(
-  baseOptions: LLMFullCompletionOptions,
-  hasReasoningEnabled: boolean | undefined,
-  model: ModelDescription,
-): LLMFullCompletionOptions {
-  if (hasReasoningEnabled === undefined) {
-    return baseOptions;
-  }
-
-  const reasoningOptions: LLMFullCompletionOptions = {
-    ...baseOptions,
-    reasoning: !!hasReasoningEnabled,
-  };
-
-  // Add reasoning budget tokens if reasoning is enabled and provider supports it
-  if (hasReasoningEnabled && model.underlyingProviderName !== "ollama") {
-    // Ollama doesn't support limiting reasoning tokens at this point
-    reasoningOptions.reasoningBudgetTokens =
-      model.completionOptions?.reasoningBudgetTokens ?? 2048;
-  }
-
-  return reasoningOptions;
-}
 
 export const streamNormalInput = createAsyncThunk<
   void,
@@ -114,95 +85,52 @@ export const streamNormalInput = createAsyncThunk<
       throw new Error("No chat model selected");
     }
 
-    // Get tools and apply model-level overrides (disabled, description, etc.)
-    let activeTools = selectActiveTools(state);
-    if (selectedChatModel.toolOverrides?.length) {
-      const { tools: overriddenTools, errors } = applyToolOverrides(
-        activeTools,
-        selectedChatModel.toolOverrides,
-      );
-      activeTools = overriddenTools;
-      for (const error of errors) {
-        if (!error.fatal) {
-          console.warn(`Tool override warning: ${error.message}`);
-        }
-      }
-    }
+    // Tools, reasoning, system message and messages: one function builds them,
+    // and the compaction request calls it too, so the two start with the same bytes.
+    const {
+      activeTools,
+      completionOptions: builtOptions,
+      messages,
+      appliedRules,
+      appliedRuleIndex,
+      systemToolsFramework,
+    } = buildChatRequest(state);
+    let completionOptions: LLMFullCompletionOptions = builtOptions;
 
-    // Use the centralized selector to determine if system message tools should be used
-    const useNativeTools = state.config.config.experimental
-      ?.onlyUseSystemMessageTools
-      ? false
-      : modelSupportsNativeTools(selectedChatModel);
-    const systemToolsFramework = !useNativeTools
-      ? new SystemMessageToolCodeblocksFramework()
-      : undefined;
-
-    // Construct completion options
-    let completionOptions: LLMFullCompletionOptions = {};
-    if (useNativeTools && activeTools.length > 0) {
-      completionOptions = {
-        tools: activeTools,
-      };
-    }
-
-    // An explicit reasoning toggle wins; otherwise use the mode's configured
-    // reasoning effort (`modeModels.<mode>.reasoningEffort`).
-    const modeReasoning =
-      state.session.hasReasoningEnabled === undefined
-        ? reasoningOptionsForEffort(
-            getModeReasoningEffort(state.config.config, state.session.mode),
-          )
-        : undefined;
-    completionOptions = modeReasoning
-      ? { ...completionOptions, ...modeReasoning }
-      : buildReasoningCompletionOptions(
-          completionOptions,
-          state.session.hasReasoningEnabled,
-          selectedChatModel,
-        );
-
-    // Prompt caching: the toolbar choice for this model, or config.yaml when
-    // there is none. Auto learns from the pauses between requests this session.
+    // Prompt caching: the toolbar choice for this model, or when there is none
+    // the default for this mode (see effectiveCacheSetting). Auto learns from
+    // the pauses between requests this session.
+    const cacheStateBefore =
+      state.session.promptCache ?? INITIAL_PROMPT_CACHE_STATE;
+    const cacheSetting = selectCacheSetting(state);
+    const cachingWasOn =
+      modelSupportsPromptCacheControl(selectedChatModel) &&
+      promptCacheStatus(selectedChatModel, cacheSetting, cacheStateBefore, 0)
+        .on;
     const cacheResolution = resolvePromptCache(
       selectedChatModel,
-      state.ui.promptCacheSettings?.[selectedChatModel.title],
-      state.session.promptCache ?? INITIAL_PROMPT_CACHE_STATE,
+      cacheSetting,
+      cacheStateBefore,
       Date.now(),
+      state.session.mode,
     );
     completionOptions = { ...completionOptions, ...cacheResolution.options };
     if (cacheResolution.nextState !== state.session.promptCache) {
       dispatch(setPromptCacheState(cacheResolution.nextState));
     }
 
-    // Construct messages (excluding system message)
-    const baseSystemMessage = getBaseSystemMessage(
-      state.session.mode,
+    // What the cached prefix is made of: the model, the tools and the system
+    // prompt. A change to any of them rebuilds the cache. The system prompt is
+    // the final one: base message, matched rules and any conversation summary,
+    // so a rule that starts to match is noticed.
+    const finalSystem = messages.find((m) => m.role === "system");
+    const cacheKey = promptCacheKey(
       selectedChatModel,
-      activeTools,
-    );
-
-    const systemMessage = systemToolsFramework
-      ? addSystemMessageToolsToSystemMessage(
-          systemToolsFramework,
-          baseSystemMessage,
-          activeTools,
-        )
-      : baseSystemMessage;
-
-    const withoutMessageIds = state.session.history.map((item) => {
-      const { id, ...messageWithoutId } = item.message;
-      return { ...item, message: messageWithoutId };
-    });
-
-    const { messages, appliedRules, appliedRuleIndex } = constructMessages(
-      withoutMessageIds,
-      systemMessage,
-      rulesEnabledForMode(state.config.config.rulesByMode, state.session.mode)
-        ? state.config.config.rules
-        : [],
-      state.ui.ruleSettings,
-      systemToolsFramework,
+      activeTools.map((t) => t.function.name),
+      finalSystem ? renderChatMessage(finalSystem) : undefined,
+      // Each message after the system one, so an edit or removal of an earlier
+      // message is told apart from a conversation that only grew.
+      messages.filter((m) => m.role !== "system"),
     );
 
     // TODO parallel tool calls will cause issues with this
@@ -269,7 +197,8 @@ export const streamNormalInput = createAsyncThunk<
         dispatch(streamUpdate(next.value));
 
         // The final chunk carries the API's token counts. Remember the input
-        // size so the cache button can say what throwing the cache away costs.
+        // size so the cache button can say what throwing the cache away costs,
+        // and check that a cache that should have been warm was read.
         for (const message of next.value) {
           if (message.role === "assistant" && message.usage) {
             const total = totalInputTokens(
@@ -278,7 +207,53 @@ export const streamNormalInput = createAsyncThunk<
               message.usage,
             );
             if (total > 0) {
+              let missCauses: string[] | undefined;
+              if (cachingWasOn) {
+                const request = {
+                  before: cacheStateBefore,
+                  key: cacheKey,
+                  requestAt: cacheResolution.nextState.lastRequestAt ?? start,
+                  readTokens:
+                    message.usage.promptTokensDetails?.cachedTokens ?? 0,
+                  totalInputTokens: total,
+                };
+                const miss = detectCacheMiss({ ...request, pruned: didPrune });
+                if (miss) {
+                  missCauses = miss.causes;
+                  dispatch(
+                    recordCacheMiss({
+                      readTokens: miss.readTokens,
+                      expectedTokens: miss.expectedTokens,
+                      causes: miss.causes,
+                    }),
+                  );
+                } else {
+                  // Not a fault, but the cache was not read either: a model
+                  // switch or a shortened conversation. Recorded so the
+                  // session summary can count it as an expected rebuild.
+                  missCauses = expectedRebuildCauses(request);
+                }
+              }
+              // One in-memory record per request, for the session's own
+              // statistics. Counts and timings only.
+              dispatch(
+                recordCacheRequest(
+                  buildLedgerEntry({
+                    at: start,
+                    mode: state.session.mode,
+                    provider: selectedChatModel.provider,
+                    model: selectedChatModel.model,
+                    cachingOn: !!cachingWasOn,
+                    ttl: cacheResolution.nextState.lastTtl,
+                    oneHour: modelSupportsOneHourCache(selectedChatModel),
+                    usage: message.usage,
+                    pruned: didPrune,
+                    missCauses,
+                  }),
+                ),
+              );
               dispatch(setPromptCacheInputTokens(total));
+              dispatch(setPromptCacheKey(cacheKey));
             }
             dispatch(
               addRequestUsageToSession({

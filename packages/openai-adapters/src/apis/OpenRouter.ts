@@ -3,6 +3,7 @@ import { ChatCompletionCreateParams } from "openai/resources/index";
 import { OpenAIConfig } from "../types.js";
 import { OpenAIApi } from "./OpenAI.js";
 import { applyAnthropicCachingToOpenRouterBody } from "./OpenRouterCaching.js";
+import { applyOpenAIBodyCacheTtl, cacheTtlInOpenAIBody } from "./cacheTtl.js";
 
 export interface OpenRouterConfig extends OpenAIConfig {
   cachingStrategy?: import("./AnthropicCachingStrategies.js").CachingStrategyName;
@@ -46,10 +47,18 @@ export class OpenRouterApi extends OpenAIApi {
       return modifiedBody;
     }
 
+    // Core marks the body, with the lifetime it chose, before it gets here.
+    // The strategy below marks the same places again with plain `ephemeral`,
+    // which would turn a 1-hour request back into 5 minutes, so read the
+    // lifetime first and put it back afterwards.
+    const requestedTtl = cacheTtlInOpenAIBody(modifiedBody);
+
     applyAnthropicCachingToOpenRouterBody(
       modifiedBody as unknown as ChatCompletionCreateParams,
       (this.config as OpenRouterConfig).cachingStrategy ?? "systemAndTools",
     );
+
+    applyOpenAIBodyCacheTtl(modifiedBody, requestedTtl);
 
     return modifiedBody;
   }

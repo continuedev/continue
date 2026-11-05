@@ -1,4 +1,5 @@
 import type { JSX } from "react";
+import { cacheTipKey } from "../../util/cacheTips";
 import { ToolPolicy } from "@continuedev/terminal-security";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { MessageModes, RuleWithSource, Tool } from "core";
@@ -38,6 +39,8 @@ type UIState = {
   reasoningSettings: ReasoningSettings;
   /** Prompt cache choice per model title; absent means follow config.yaml. */
   promptCacheSettings: PromptCacheSettings;
+  /** Cache tips the user dismissed, keyed by `cacheTipKey(modelTitle, tipId)`. */
+  dismissedCacheTips: Record<string, true>;
   /** Model the user picked by hand per mode; wins over `modeModels` until reload. */
   modeModelOverrides: Partial<Record<MessageModes, string>>;
   ttsActive: boolean;
@@ -82,6 +85,7 @@ export const DEFAULT_UI_SLICE: UIState = {
   ruleSettings: {},
   reasoningSettings: {},
   promptCacheSettings: {},
+  dismissedCacheTips: {},
   modeModelOverrides: {},
 };
 
@@ -220,6 +224,22 @@ export const uiSlice = createSlice({
           action.payload.setting;
       }
     },
+    dismissCacheTip: (state, action: PayloadAction<{ key: string }>) => {
+      state.dismissedCacheTips[action.payload.key] = true;
+    },
+    restoreCacheTips: (state) => {
+      state.dismissedCacheTips = {};
+    },
+    /** Bring back the dismissed tips of one model, leaving other models' alone. */
+    restoreCacheTipsForModel: (
+      state,
+      action: PayloadAction<{ modelTitle: string }>,
+    ) => {
+      const prefix = cacheTipKey(action.payload.modelTitle, "");
+      for (const key of Object.keys(state.dismissedCacheTips)) {
+        if (key.startsWith(prefix)) delete state.dismissedCacheTips[key];
+      }
+    },
     setModeModelOverride: (
       state,
       action: PayloadAction<{ mode: MessageModes; title: string }>,
@@ -247,6 +267,9 @@ export const {
   setTTSActive,
   setReasoningSetting,
   setPromptCacheSetting,
+  dismissCacheTip,
+  restoreCacheTips,
+  restoreCacheTipsForModel,
   setModeModelOverride,
 } = uiSlice.actions;
 

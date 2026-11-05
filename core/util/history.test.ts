@@ -64,6 +64,25 @@ describe("Full session lifecycle", () => {
     expect(session.title).toBe(modifiedSession.title);
   });
 
+  test("The prompt cache record is saved and loaded with the session", () => {
+    const promptCache = {
+      lastRequestAt: 1_700_000_000_000,
+      lastInputTokens: 366_000,
+      lastTtl: "5m" as const,
+    };
+    historyManager.save({ ...testSession, promptCache });
+    expect(historyManager.load(testSession.sessionId).promptCache).toEqual(
+      promptCache,
+    );
+  });
+
+  test("A session saved without a prompt cache record loads without one", () => {
+    historyManager.save(testSession);
+    expect(
+      historyManager.load(testSession.sessionId).promptCache,
+    ).toBeUndefined();
+  });
+
   test("Deleting session", () => {
     historyManager.delete(testSession.sessionId);
     const sessions = historyManager.list({});

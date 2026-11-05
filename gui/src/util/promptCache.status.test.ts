@@ -17,10 +17,7 @@ function model(provider: string, id: string): ModelDescription {
 }
 
 const sonnet = model("anthropic", "claude-sonnet-4-6");
-const bedrockSonnet = model(
-  "bedrock",
-  "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-);
+const bedrockSonnet = model("bedrock", "us.anthropic.claude-sonnet-4-6");
 const bedrockOld = model(
   "bedrock",
   "anthropic.claude-3-7-sonnet-20250219-v1:0",
@@ -115,6 +112,24 @@ describe("promptCacheStatus", () => {
     const s = promptCacheStatus(sonnet, "auto", cold, t0);
     expect(s.on).toBe(true);
     expect(s.warm).toBe(false);
+    expect(s.expiresAt).toBeUndefined();
+    expect(s.lifetimeMs).toBeUndefined();
+  });
+
+  it("reports when the entry expires and how long it lives", () => {
+    const s = promptCacheStatus(sonnet, "auto", warm5m, t0 + 2 * MIN);
+    expect(s.expiresAt).toBe(t0 + 5 * MIN);
+    expect(s.lifetimeMs).toBe(5 * MIN);
+    const hour = { escalated: true, lastRequestAt: t0, lastTtl: "1h" as const };
+    expect(promptCacheStatus(sonnet, "auto", hour, t0 + MIN).lifetimeMs).toBe(
+      60 * MIN,
+    );
+  });
+
+  it("has no expiry once the entry has lapsed", () => {
+    const s = promptCacheStatus(sonnet, "auto", warm5m, t0 + 6 * MIN);
+    expect(s.expiresAt).toBeUndefined();
+    expect(s.lifetimeMs).toBeUndefined();
   });
 
   it("is warm within the lifetime and reports the time left", () => {
@@ -160,6 +175,14 @@ describe("promptCacheTooltip", () => {
     expect(text).toContain("3 min");
   });
 
+  it("gives the clock time the entry expires at", () => {
+    const status = promptCacheStatus(sonnet, "auto", warm5m, t0 + 2 * MIN);
+    const clock = new Intl.DateTimeFormat(undefined, {
+      timeStyle: "short",
+    }).format(new Date(t0 + 5 * MIN));
+    expect(promptCacheTooltip(status, "auto")).toContain(`at ${clock}`);
+  });
+
   it("says nothing is cached once expired", () => {
     const status = promptCacheStatus(sonnet, "5m", warm5m, t0 + 6 * MIN);
     expect(promptCacheTooltip(status, "5m")).toContain("Nothing cached");
@@ -191,5 +214,97 @@ describe("formatTimeLeft", () => {
     [60 * MIN, "1 h"],
   ])("%i ms -> %s", (ms, expected) => {
     expect(formatTimeLeft(ms)).toBe(expected);
+  });
+});
+
+describe("promptCacheTooltip says why Auto switched", () => {
+  const status = {
+    on: true,
+    ttl: "1h" as const,
+    warm: false,
+  };
+
+  it("after the request count", () => {
+    expect(promptCacheTooltip(status, "auto", "requests")).toContain(
+      "Auto (1 hour, switched after 5 requests)",
+    );
+  });
+
+  it("after a pause", () => {
+    expect(promptCacheTooltip(status, "auto", "gap")).toContain(
+      "Auto (1 hour, switched after a pause)",
+    );
+  });
+
+  it("says nothing about why when Auto is still on 5 minutes or the lifetime is fixed", () => {
+    expect(
+      promptCacheTooltip({ ...status, ttl: "5m" }, "auto", "requests"),
+    ).toContain("Auto (5 minutes)");
+    expect(promptCacheTooltip(status, "1h", "requests")).not.toContain(
+      "switched",
+    );
+  });
+});
+
+describe("a prompt below the model's cache minimum", () => {
+  const haiku45 = model(
+    "bedrock",
+    "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  ); // caches from 4,096 tokens
+  const sonnet55 = model("bedrock", "us.anthropic.claude-sonnet-5-5"); // from 512
+  const on = { ...haiku45, completionOptions: { promptCaching: true } };
+  const after = (tokens: number) => ({
+    escalated: false,
+    lastRequestAt: t0,
+    lastTtl: "5m" as const,
+    lastInputTokens: tokens,
+  });
+
+  it("is not warm and says why, when the last request was under the minimum", () => {
+    const s = promptCacheStatus(haiku45, "5m", after(3_000), t0 + 1000);
+    expect(s.on).toBe(true);
+    expect(s.warm).toBe(false);
+    expect(s.belowMinimum).toEqual({ tokens: 3_000, minimum: 4_096 });
+    expect(s.expiresAt).toBeUndefined();
+    const text = promptCacheTooltip(s, "5m");
+    expect(text).toContain("Nothing is cached yet");
+    expect(text).toContain("3,000");
+    expect(text).toContain("4,096");
+  });
+
+  it("is warm once the request reaches the minimum", () => {
+    const s = promptCacheStatus(haiku45, "5m", after(4_096), t0 + 1000);
+    expect(s.belowMinimum).toBeUndefined();
+    expect(s.warm).toBe(true);
+  });
+
+  it("uses each model's own minimum", () => {
+    expect(
+      promptCacheStatus(sonnet55, "5m", after(3_000), t0 + 1000).warm,
+    ).toBe(true);
+    expect(
+      promptCacheStatus(sonnet55, "5m", after(400), t0 + 1000).belowMinimum,
+    ).toEqual({ tokens: 400, minimum: 512 });
+  });
+
+  it("says nothing before a size is known, with caching off, or for an unlisted model", () => {
+    const noSize = {
+      escalated: false,
+      lastRequestAt: t0,
+      lastTtl: "5m" as const,
+    };
+    expect(
+      promptCacheStatus(haiku45, "5m", noSize, t0).belowMinimum,
+    ).toBeUndefined();
+    expect(
+      promptCacheStatus(haiku45, "off", after(10), t0 + 1000).belowMinimum,
+    ).toBeUndefined();
+    expect(
+      promptCacheStatus(on, undefined, after(10), t0 + 1000).belowMinimum,
+    ).toEqual({ tokens: 10, minimum: 4_096 });
+    const future = model("bedrock", "us.anthropic.claude-sonnet-5-6");
+    expect(
+      promptCacheStatus(future, "5m", after(10), t0 + 1000).belowMinimum,
+    ).toBeUndefined();
   });
 });

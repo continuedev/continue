@@ -143,3 +143,332 @@ describe("BedrockApi networking (requestOptions)", () => {
     expect(handler.constructor.name).not.toBe("NodeHttpHandler");
   });
 });
+
+describe("BedrockApi usage", () => {
+  const events = [
+    { contentBlockDelta: { delta: { text: "Hello" } } },
+    { contentBlockDelta: { delta: { text: " there" } } },
+    {
+      metadata: {
+        usage: {
+          inputTokens: 12,
+          outputTokens: 34,
+          cacheReadInputTokens: 5000,
+          cacheWriteInputTokens: 700,
+        },
+      },
+    },
+  ];
+
+  const makeStreaming = (stream: any[]) => {
+    class StreamApi extends TestApi {
+      async getClient() {
+        return {
+          send: async () => ({
+            stream: (async function* () {
+              for (const e of stream) yield e;
+            })(),
+          }),
+        } as any;
+      }
+    }
+    return new StreamApi({ provider: "bedrock", env: {} } as any);
+  };
+
+  const body = {
+    model: "anthropic.claude-sonnet-4-6",
+    messages: [{ role: "user", content: "hi" }],
+    stream: true,
+  } as any;
+
+  it("streams a final usage chunk with the cache counts", async () => {
+    const api = makeStreaming(events);
+    const chunks: any[] = [];
+    for await (const c of api.chatCompletionStream(
+      body,
+      new AbortController().signal,
+    )) {
+      chunks.push(c);
+    }
+    const usageChunks = chunks.filter((c) => c.usage);
+    expect(usageChunks).toHaveLength(1);
+    expect(usageChunks[0].choices).toEqual([]);
+    expect(usageChunks[0].usage).toEqual({
+      prompt_tokens: 12,
+      completion_tokens: 34,
+      total_tokens: 46,
+      prompt_tokens_details: {
+        cached_tokens: 5000,
+        cache_read_tokens: 5000,
+        cache_write_tokens: 700,
+      },
+    });
+    // The usage chunk comes after the text
+    expect(chunks[chunks.length - 1]).toBe(usageChunks[0]);
+  });
+
+  it("returns the usage from a non-streaming call", async () => {
+    const api = makeStreaming(events);
+    const res = await api.chatCompletionNonStream(
+      { ...body, stream: false },
+      new AbortController().signal,
+    );
+    expect(res.choices[0].message.content).toBe("Hello there");
+    expect(res.usage).toMatchObject({
+      prompt_tokens: 12,
+      completion_tokens: 34,
+      prompt_tokens_details: { cache_read_tokens: 5000 },
+    });
+  });
+
+  it("emits no usage chunk when the stream has no metadata", async () => {
+    const api = makeStreaming(events.slice(0, 2));
+    const chunks: any[] = [];
+    for await (const c of api.chatCompletionStream(
+      body,
+      new AbortController().signal,
+    )) {
+      chunks.push(c);
+    }
+    expect(chunks.filter((c) => c.usage)).toHaveLength(0);
+    const res = await api.chatCompletionNonStream(
+      { ...body, stream: false },
+      new AbortController().signal,
+    );
+    expect(res.usage).toBeUndefined();
+  });
+
+  it("counts missing cache fields as zero", async () => {
+    const api = makeStreaming([
+      { metadata: { usage: { inputTokens: 3, outputTokens: 4 } } },
+    ]);
+    const res = await api.chatCompletionNonStream(
+      { ...body, stream: false },
+      new AbortController().signal,
+    );
+    expect(res.usage).toEqual({
+      prompt_tokens: 3,
+      completion_tokens: 4,
+      total_tokens: 7,
+      prompt_tokens_details: {
+        cached_tokens: 0,
+        cache_read_tokens: 0,
+        cache_write_tokens: 0,
+      },
+    });
+  });
+});
+
+describe("BedrockApi request ID", () => {
+  const stream = [
+    { contentBlockDelta: { delta: { text: "Hi" } } },
+    { metadata: { usage: { inputTokens: 1, outputTokens: 1 } } },
+  ];
+  const withMetadata = (metadata: any) => {
+    class IdApi extends TestApi {
+      async getClient() {
+        return {
+          send: async () => ({
+            $metadata: metadata,
+            stream: (async function* () {
+              for (const e of stream) yield e;
+            })(),
+          }),
+        } as any;
+      }
+    }
+    return new IdApi({ provider: "bedrock", env: {} } as any);
+  };
+  const body = {
+    model: "anthropic.claude-sonnet-4-6",
+    messages: [{ role: "user", content: "hi" }],
+    stream: true,
+  } as any;
+
+  it("puts Bedrock's request ID on every streamed chunk", async () => {
+    const api = withMetadata({ requestId: "req-abc-123" });
+    const ids: string[] = [];
+    for await (const c of api.chatCompletionStream(
+      body,
+      new AbortController().signal,
+    )) {
+      ids.push(c.id);
+    }
+    // a text chunk and the usage chunk
+    expect(ids).toEqual(["req-abc-123", "req-abc-123"]);
+  });
+
+  it("uses it as the ID of a non-streaming response", async () => {
+    const api = withMetadata({ requestId: "req-abc-123" });
+    const res = await api.chatCompletionNonStream(
+      { ...body, stream: false },
+      new AbortController().signal,
+    );
+    expect(res.id).toBe("req-abc-123");
+  });
+
+  it("falls back to a generated ID when Bedrock sends none", async () => {
+    const api = withMetadata(undefined);
+    const chunks: any[] = [];
+    for await (const c of api.chatCompletionStream(
+      body,
+      new AbortController().signal,
+    )) {
+      chunks.push(c);
+    }
+    expect(chunks.map((c) => c.id)).toEqual(["", ""]);
+    const res = await api.chatCompletionNonStream(
+      { ...body, stream: false },
+      new AbortController().signal,
+    );
+    expect(res.id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+});
+
+describe("BedrockApi cache points", () => {
+  const tool = {
+    type: "function",
+    function: { name: "read", description: "d", parameters: {} },
+  };
+  const messages = [
+    { role: "system", content: "be brief" },
+    { role: "user", content: "one" },
+    { role: "assistant", content: "ok" },
+    { role: "user", content: "two" },
+    { role: "assistant", content: "ok" },
+    { role: "user", content: "three" },
+  ];
+  const convert = (config: any = {}, extra: any = {}) =>
+    (
+      new TestApi({ provider: "bedrock", env: {}, ...config } as any) as any
+    )._convertBody({
+      model: "anthropic.claude-sonnet-4-6",
+      messages: JSON.parse(JSON.stringify(messages)),
+      tools: [tool],
+      ...extra,
+    });
+  const points = (blocks: any[] | undefined) =>
+    (blocks ?? []).filter((b) => b.cachePoint).length;
+  const userPoints = (body: any) =>
+    body.messages
+      .filter((m: any) => m.role === "user")
+      .map((m: any) => points(m.content));
+
+  it("sends no cache points when nothing is configured", () => {
+    const body = convert();
+    expect(points(body.system)).toBe(0);
+    expect(points(body.toolConfig.tools)).toBe(0);
+    expect(userPoints(body)).toEqual([0, 0, 0]);
+    expect(JSON.stringify(body)).not.toContain("SID:");
+  });
+
+  it("promptCaching: true caches tools, system and the last two user messages", () => {
+    const body = convert({ promptCaching: true });
+    expect(points(body.system)).toBe(1);
+    expect(body.system[1]).toEqual({ cachePoint: { type: "default" } });
+    expect(points(body.toolConfig.tools)).toBe(1);
+    expect(body.toolConfig.tools.at(-1)).toEqual({
+      cachePoint: { type: "default" },
+    });
+    // four cache points in all, the most Bedrock allows
+    expect(userPoints(body)).toEqual([0, 1, 1]);
+  });
+
+  it("puts the process ID on the first user message only", () => {
+    const body = convert({ promptCaching: true });
+    const texts = body.messages.map((m: any) =>
+      m.content.map((b: any) => b.text ?? "").join(""),
+    );
+    const withId = texts.filter((t: string) => t.includes("SID:"));
+    expect(withId).toHaveLength(1);
+    expect(texts[0]).toContain("SID:");
+  });
+
+  it("keeps the first message's bytes the same when the conversation grows", () => {
+    const short = convert({ promptCaching: true });
+    const long = convert(
+      { promptCaching: true },
+      {
+        messages: [
+          ...messages,
+          { role: "assistant", content: "ok" },
+          { role: "user", content: "four" },
+        ],
+      },
+    );
+    expect(JSON.stringify(long.messages[0])).toBe(
+      JSON.stringify(short.messages[0]),
+    );
+  });
+
+  it("promptCaching: false wins over cacheBehavior", () => {
+    const body = convert({
+      promptCaching: false,
+      cacheBehavior: { cacheSystemMessage: true, cacheConversation: true },
+    });
+    expect(points(body.system)).toBe(0);
+    expect(userPoints(body)).toEqual([0, 0, 0]);
+  });
+
+  it("cacheBehavior alone switches on system and conversation, not tools", () => {
+    const body = convert({
+      cacheBehavior: { cacheSystemMessage: true, cacheConversation: true },
+    });
+    expect(points(body.system)).toBe(1);
+    expect(points(body.toolConfig.tools)).toBe(0);
+    expect(userPoints(body)).toEqual([0, 1, 1]);
+  });
+
+  it("cacheSystemMessage with no system message adds nothing", () => {
+    const body = convert(
+      { cacheBehavior: { cacheSystemMessage: true } },
+      { messages: messages.slice(1) },
+    );
+    expect(body.system).toBeUndefined();
+  });
+
+  it("does not cache tools when there are none", () => {
+    const body = convert({ promptCaching: true }, { tools: undefined });
+    expect(body.toolConfig).toBeUndefined();
+  });
+});
+
+describe("BedrockApi cache points on non-Claude models", () => {
+  const body = (model: string) =>
+    (
+      new TestApi({
+        provider: "bedrock",
+        env: {},
+        promptCaching: true,
+      } as any) as any
+    )._convertBody({
+      model,
+      messages: [
+        { role: "system", content: "be brief" },
+        { role: "user", content: "hi" },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: { name: "read", description: "d", parameters: {} },
+        },
+      ],
+    });
+
+  it.each([
+    "us.openai.gpt-6.1-sol",
+    "us.amazon.nova-pro-v1:0",
+    "us.xai.grok-4.7",
+  ])("sends no cachePoint to %s even with promptCaching on", (model) => {
+    expect(JSON.stringify(body(model))).not.toContain("cachePoint");
+    expect(JSON.stringify(body(model))).not.toContain("SID:");
+  });
+
+  it.each([
+    "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "anthropic.claude-sonnet-4-6",
+    "global.anthropic.claude-sonnet-5-5",
+  ])("still sends cachePoint to %s", (model) => {
+    expect(JSON.stringify(body(model))).toContain("cachePoint");
+  });
+});

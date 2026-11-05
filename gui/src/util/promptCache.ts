@@ -1,18 +1,61 @@
 import type { ModelDescription } from "core";
-import { bedrockSupportsOneHourCache } from "core/llm/llms/bedrockHelpers";
+import {
+  anthropicStyleSupportsOneHourCache,
+  bedrockSupportsOneHourCache,
+} from "core/llm/llms/bedrockHelpers";
 import { normalizeClaudeModelId } from "core/llm/utils/calculateRequestCost";
+import { minCacheableTokens } from "core/llm/utils/cacheMinimums";
+import { formatClockTime } from "./promptCacheCountdown";
+import type { CacheLedgerEntry } from "./cacheLedger";
+import type { RequestFailure } from "./requestFailures";
 
 /** What the toolbar menu can set. `undefined` means "follow config.yaml". */
 export type PromptCacheSetting = "auto" | "5m" | "1h" | "off";
 
 export type PromptCacheTtl = "5m" | "1h";
 
+/** What the cached prefix was built from. A change to any part rebuilds it. */
+export interface PromptCacheKey {
+  model: string;
+  /** Checksum of the tool names sent, so a change to the tool list is visible. */
+  tools: string;
+  /** Checksum of the system message. */
+  system: string;
+  /**
+   * A checksum per message after the system message, in order. A conversation
+   * only grows, so the previous request's list should be the start of this
+   * one's; an earlier entry that differs means a message was edited or removed.
+   * Absent on keys made before this field existed, which are not compared.
+   */
+  messages?: string[];
+}
+
+/** A request that should have read the cache and mostly did not. */
+export interface PromptCacheMiss {
+  readTokens: number;
+  expectedTokens: number;
+  /** What changed since the last request, in words; empty when unknown. */
+  causes: string[];
+}
+
 /** Per-session facts the Auto lifetime learns from. Not persisted. */
 export interface PromptCacheSessionState {
   /** When the last request in this session started (ms since epoch). */
   lastRequestAt?: number;
-  /** Auto has seen a gap that a 1-hour lifetime would have covered. */
+  /**
+   * Auto has moved this conversation to the 1-hour lifetime: it saw a gap that
+   * a 1-hour entry would have covered, or the conversation reached
+   * `AUTO_ESCALATE_AT_REQUEST` requests in an agent-style mode.
+   */
   escalated: boolean;
+  /** Why `escalated` was set, for the tooltip. */
+  escalatedBy?: "gap" | "requests";
+  /**
+   * Requests this conversation has sent with caching on, one per model call
+   * (a tool loop counts each call). Starts at 0 in every new conversation and
+   * is saved with the session, so a resumed one keeps counting.
+   */
+  requests?: number;
   /** Lifetime the last request wrote its cache entry with. */
   lastTtl?: PromptCacheTtl;
   /**
@@ -21,6 +64,28 @@ export interface PromptCacheSessionState {
    * cache away would cost.
    */
   lastInputTokens?: number;
+  /** Model, mode and tools of the last request. */
+  lastKey?: PromptCacheKey;
+  /** Requests this session that missed a cache that should have been warm. */
+  misses?: number;
+  lastMiss?: PromptCacheMiss;
+  /** `misses` when the user dismissed the miss notice. */
+  missesAcknowledged?: number;
+  /** `lastRequestAt` the user dismissed the cold-cache notice for. */
+  dismissedColdFor?: number;
+  /** The user dismissed the "caching is off" suggestion for this session. */
+  dismissedCachingOff?: boolean;
+  /**
+   * One entry per request this conversation, newest last. In memory only: it is
+   * not saved with the session and starts empty in every new conversation.
+   */
+  ledger?: CacheLedgerEntry[];
+  /**
+   * Requests that failed (throttled, overloaded, other), newest last. In
+   * memory only, like the ledger, and kept apart from it because they carry
+   * no token counts.
+   */
+  failures?: RequestFailure[];
 }
 
 export const INITIAL_PROMPT_CACHE_STATE: PromptCacheSessionState = {
@@ -38,11 +103,28 @@ export const AUTO_ESCALATE_MIN_GAP_MS = 5 * 60 * 1000;
  * guess; see plans/prompt-caching.md section 6.3.
  */
 export const AUTO_ESCALATE_MAX_GAP_MS = 55 * 60 * 1000;
+/**
+ * Auto moves to the 1-hour lifetime at this request of a conversation, in
+ * agent-style modes. A week of real agent traffic (replayed in
+ * plans/cache-adaptive-lifetime.md) saves 2.9% to 4.4% for any threshold from
+ * 3 to 15, so 5 is a point on a plateau and not a tuned value.
+ */
+export const AUTO_ESCALATE_AT_REQUEST = 5;
+
+/**
+ * Modes that send tools, where each request is a model call in a loop and not
+ * a human turn. Chat keeps the gap rule only: no data says what five human
+ * turns predict.
+ */
+export function isAgentStyleMode(mode: string | undefined): boolean {
+  return mode === "agent" || mode === "plan" || mode === "background";
+}
 
 const TTL_MS: Record<PromptCacheTtl, number> = {
   "5m": 5 * 60 * 1000,
   "1h": 60 * 60 * 1000,
 };
+export const PROMPT_CACHE_TTL_MS = TTL_MS;
 
 /**
  * Whether the toolbar control does anything for this model: the providers whose
@@ -69,9 +151,16 @@ export function modelSupportsPromptCacheControl(
  */
 export function modelSupportsOneHourCache(model: ModelDescription): boolean {
   if (!modelSupportsPromptCacheControl(model)) return false;
-  return model.provider.toLowerCase() === "anthropic"
-    ? true
-    : bedrockSupportsOneHourCache(model.model);
+  switch (model.provider.toLowerCase()) {
+    case "anthropic":
+      return true;
+    case "bedrock":
+      // AWS's table, narrower than Anthropic's own.
+      return bedrockSupportsOneHourCache(model.model);
+    default:
+      // Vertex AI and OpenRouter take Anthropic's request shape.
+      return anthropicStyleSupportsOneHourCache(model.model);
+  }
 }
 
 /** Whether config.yaml turns caching on for this model without the toolbar. */
@@ -81,6 +170,61 @@ export function configEnablesPromptCaching(model: ModelDescription): boolean {
   return !!(
     model.cacheBehavior?.cacheConversation ||
     model.cacheBehavior?.cacheSystemMessage
+  );
+}
+
+/**
+ * True when config.yaml says nothing about whether to cache: no
+ * `promptCaching`, and neither `cacheConversation` nor `cacheSystemMessage`
+ * (an explicit `false` is saying something). Only then may a default apply.
+ */
+export function configSilentOnCaching(model: ModelDescription): boolean {
+  return (
+    model.completionOptions?.promptCaching === undefined &&
+    model.cacheBehavior?.cacheConversation === undefined &&
+    model.cacheBehavior?.cacheSystemMessage === undefined
+  );
+}
+
+/**
+ * The setting every cache calculation should use. It is the toolbar choice
+ * when there is one. With none, config.yaml decides if it says anything; when
+ * it says nothing, Agent, Plan and Background sessions on a Claude model that
+ * takes cache control run Auto (or the fixed lifetime `cacheBehavior.ttl`
+ * names), and Chat keeps caching off.
+ *
+ * Why only those modes: a week of real agent traffic (plans/cache-real-world-data.md)
+ * read 12 to 28 times per token written, which saved 85% of input cost, and
+ * Auto came within 0.7 points of the best lifetime for each conversation. In
+ * Chat a request is a human turn; the data does not cover it, and a
+ * conversation of one call pays the 25% write premium for nothing.
+ *
+ * To opt out: `promptCaching: false` in config, or Off in the toolbar.
+ */
+export function effectiveCacheSetting(
+  model: ModelDescription | null | undefined,
+  setting: PromptCacheSetting | undefined,
+  mode: string | undefined,
+): PromptCacheSetting | undefined {
+  if (setting !== undefined || !model) return setting;
+  if (!modelSupportsPromptCacheControl(model)) return setting;
+  // Vertex AI and OpenRouter honour the setting, but the traffic this default
+  // rests on was Anthropic's API and Bedrock; nothing measured covers them.
+  const provider = model.provider?.toLowerCase();
+  if (provider !== "anthropic" && provider !== "bedrock") return setting;
+  if (!configSilentOnCaching(model) || !isAgentStyleMode(mode)) return setting;
+  return configTtlPolicy(model) ?? "auto";
+}
+
+/** True when the effective setting comes from this default and not from a choice. */
+export function cachingIsDefaulted(
+  model: ModelDescription | null | undefined,
+  setting: PromptCacheSetting | undefined,
+  mode: string | undefined,
+): boolean {
+  return (
+    setting === undefined &&
+    effectiveCacheSetting(model, setting, mode) !== undefined
   );
 }
 
@@ -110,6 +254,7 @@ export function resolvePromptCache(
   setting: PromptCacheSetting | undefined,
   state: PromptCacheSessionState,
   now: number,
+  mode?: string,
 ): PromptCacheResolution {
   if (!modelSupportsPromptCacheControl(model)) {
     return { options: {}, nextState: state };
@@ -129,11 +274,28 @@ export function resolvePromptCache(
   }
 
   let escalated = state.escalated;
+  let escalatedBy = state.escalatedBy;
   if (state.lastRequestAt !== undefined) {
     const gap = now - state.lastRequestAt;
     if (gap > AUTO_ESCALATE_MIN_GAP_MS && gap <= AUTO_ESCALATE_MAX_GAP_MS) {
+      if (!escalated) escalatedBy = "gap";
       escalated = true;
     }
+  }
+
+  // One count per model call, including each call after a tool result.
+  const requests = (state.requests ?? 0) + 1;
+  const followsAuto =
+    setting === "auto" ||
+    (setting === undefined && configTtlPolicy(model) === "auto");
+  if (
+    followsAuto &&
+    !escalated &&
+    isAgentStyleMode(mode) &&
+    requests >= AUTO_ESCALATE_AT_REQUEST
+  ) {
+    escalated = true;
+    escalatedBy = "requests";
   }
 
   let options: PromptCacheResolution["options"];
@@ -173,8 +335,11 @@ export function resolvePromptCache(
   return {
     options,
     nextState: {
+      ...state,
       lastRequestAt: now,
       escalated,
+      ...(escalatedBy && { escalatedBy }),
+      requests,
       lastTtl: ttl,
       lastInputTokens: state.lastInputTokens,
     },
@@ -231,6 +396,16 @@ export interface PromptCacheStatus {
   warm: boolean;
   /** Milliseconds until that entry expires, when warm. */
   msLeft?: number;
+  /** When that entry expires (ms since epoch), when warm. */
+  expiresAt?: number;
+  /** Lifetime of that entry in ms, when warm. */
+  lifetimeMs?: number;
+  /**
+   * The last request was shorter than the model's cache minimum, so the
+   * provider cached nothing (and said nothing). Only set when the minimum is
+   * known and the API has reported the size.
+   */
+  belowMinimum?: { tokens: number; minimum: number };
 }
 
 export function promptCacheStatus(
@@ -247,35 +422,67 @@ export function promptCacheStatus(
   const ttl: PromptCacheTtl =
     policy === "1h" || (policy === "auto" && state.escalated) ? "1h" : "5m";
 
+  // A prompt under the model's minimum is not cached, so there is no entry to
+  // be warm or to expire.
+  const minimum = minCacheableTokens(model.model, model.provider);
+  const belowMinimum =
+    on &&
+    minimum !== undefined &&
+    state.lastInputTokens !== undefined &&
+    state.lastInputTokens < minimum
+      ? { tokens: state.lastInputTokens, minimum }
+      : undefined;
+
   let warm = false;
   let msLeft: number | undefined;
-  if (on && state.lastRequestAt !== undefined) {
-    const expiresAt = state.lastRequestAt + TTL_MS[state.lastTtl ?? "5m"];
-    if (expiresAt > now) {
+  let expiresAt: number | undefined;
+  let lifetimeMs: number | undefined;
+  if (on && !belowMinimum && state.lastRequestAt !== undefined) {
+    lifetimeMs = TTL_MS[state.lastTtl ?? "5m"];
+    const end = state.lastRequestAt + lifetimeMs;
+    if (end > now) {
       warm = true;
-      msLeft = expiresAt - now;
+      msLeft = end - now;
+      expiresAt = end;
+    } else {
+      lifetimeMs = undefined;
     }
   }
-  return { on, ttl, warm, msLeft };
+  return { on, ttl, warm, msLeft, expiresAt, lifetimeMs, belowMinimum };
 }
 
 /** One-line summary for the toolbar tooltip. */
 export function promptCacheTooltip(
   status: PromptCacheStatus,
   setting: PromptCacheSetting | undefined,
+  reason?: "gap" | "requests",
 ): string {
   if (!status.on) {
     return "Prompt cache: off. Every request re-reads the whole conversation at full price.";
   }
   const life = status.ttl === "1h" ? "1 hour" : "5 minutes";
+  const why =
+    setting === "auto" && status.ttl === "1h" && reason
+      ? reason === "requests"
+        ? `, switched after ${AUTO_ESCALATE_AT_REQUEST} requests`
+        : ", switched after a pause"
+      : "";
   const mode =
     setting === "auto"
-      ? `Auto (${life})`
+      ? `Auto (${life}${why})`
       : setting === undefined
         ? `from config (${life})`
         : life;
+  if (status.belowMinimum) {
+    const { tokens, minimum } = status.belowMinimum;
+    return `Prompt cache: ${mode}. Nothing is cached yet: the last request was about ${tokens.toLocaleString()} tokens and this model caches from ${minimum.toLocaleString()}. It starts once the conversation is longer.`;
+  }
   if (status.warm && status.msLeft !== undefined) {
-    return `Prompt cache: warm, ${mode}. Expires in about ${formatTimeLeft(status.msLeft)} unless you send something.`;
+    const at =
+      status.expiresAt !== undefined
+        ? `at ${formatClockTime(status.expiresAt)} (in about ${formatTimeLeft(status.msLeft)})`
+        : `in about ${formatTimeLeft(status.msLeft)}`;
+    return `Prompt cache: warm, ${mode}. Expires ${at} unless you send something.`;
   }
   return `Prompt cache: ${mode}. Nothing cached right now; the next request writes it.`;
 }
@@ -293,11 +500,13 @@ export const PROMPT_CACHE_SETTING_LABELS: Record<
 > = {
   config: {
     label: "Config default",
-    detail: "Follow config.yaml; off unless the model sets promptCaching",
+    detail:
+      "Follow config.yaml. If it says nothing: Auto in Agent, Plan and Background, off in Chat",
   },
   auto: {
     label: "Auto",
-    detail: "5 minutes, then 1 hour once you pause 5 to 55 minutes",
+    detail:
+      "5 minutes, then 1 hour after 5 requests in Agent, Plan or Background, or once you pause 5 to 55 minutes",
   },
   "5m": {
     label: "5 minutes",

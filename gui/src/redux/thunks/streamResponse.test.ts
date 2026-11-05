@@ -49,7 +49,11 @@ const mockClaudeModel: ModelDescription = {
   model: "claude-3-5-sonnet-20241022",
   provider: "anthropic",
   underlyingProviderName: "anthropic",
-  completionOptions: { reasoningBudgetTokens: 2048 },
+  // These tests are about the streaming flow and assert the exact actions it
+  // dispatches. Caching is on by default in Agent mode (the fixture's mode), so
+  // it is switched off here to keep them about one thing. The default itself is
+  // tested in streamResponse_promptCache.test.ts.
+  completionOptions: { reasoningBudgetTokens: 2048, promptCaching: false },
 };
 
 // Mock editor state (what user types in the input)

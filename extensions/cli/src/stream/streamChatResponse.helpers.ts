@@ -32,6 +32,7 @@ import {
   validateToolCallArgsPresent,
 } from "../tools/index.js";
 import { PreprocessedToolCall, ToolCall } from "../tools/types.js";
+import { recordCacheTally } from "../util/cacheTally.js";
 import { logger } from "../util/logger.js";
 
 import { StreamCallbacks } from "./streamChatResponse.types.js";
@@ -402,6 +403,15 @@ export function recordStreamTelemetry(options: {
             cachedTokens: fullUsage.prompt_tokens_details.cache_read_tokens,
             cacheWriteTokens:
               fullUsage.prompt_tokens_details.cache_write_tokens,
+            // The split by lifetime, when the adapter has one, prices a 1-hour
+            // write at the 1-hour rate.
+            ...(fullUsage.prompt_tokens_details.cache_write_tokens_1h !==
+              undefined && {
+              cacheWriteTokens5m:
+                fullUsage.prompt_tokens_details.cache_write_tokens_5m,
+              cacheWriteTokens1h:
+                fullUsage.prompt_tokens_details.cache_write_tokens_1h,
+            }),
           }
         : undefined,
     };
@@ -451,6 +461,15 @@ export function recordStreamTelemetry(options: {
 
   telemetryService.recordCost(cost, model.model);
   trackSessionUsage(cost, usage);
+  // The session totals add up the providers' own counts; the cache tally
+  // normalises them per request so a hit share can be taken from it. The real
+  // provider is passed too, for the vendors' per-provider cache minimums.
+  recordCacheTally(
+    detectProvider(model.model),
+    model.model,
+    usage,
+    typeof model.provider === "string" ? model.provider : undefined,
+  );
 
   telemetryService.recordResponseTime(
     totalDuration,

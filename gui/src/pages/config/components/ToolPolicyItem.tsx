@@ -18,6 +18,7 @@ import {
 } from "../../../components/ui";
 import { useFontSize } from "../../../components/ui/font";
 import { useAppSelector } from "../../../redux/hooks";
+import { useWarmCacheNote } from "../../../hooks/useWarmCacheNote";
 import { addTool, setToolPolicy } from "../../../redux/slices/uiSlice";
 
 interface ToolPolicyItemProps {
@@ -31,6 +32,7 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
   const policy = useAppSelector(
     (state) => state.ui.toolSettings[props.tool.function.name],
   );
+  const warmCacheNote = useWarmCacheNote();
   const [isExpanded, setIsExpanded] = useState(false);
   const mode = useAppSelector((state) => state.session.mode);
 
@@ -117,7 +119,14 @@ export function ToolPolicyItem(props: ToolPolicyItemProps) {
             </div>
           </div>
 
-          <div className="flex w-20 justify-end sm:w-24">
+          <div
+            className="flex w-20 justify-end sm:w-24"
+            title={
+              !disabled && warmCacheNote
+                ? `Turning a tool off or on changes the tool list. ${warmCacheNote}`
+                : undefined
+            }
+          >
             <Listbox
               value={disabled || policy === "disabled" ? "disabled" : policy}
               onChange={(newPolicy) => {

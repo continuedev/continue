@@ -710,6 +710,10 @@ describe("streamResponseThunk", () => {
         },
       },
       {
+        type: "session/recordRequestFailure",
+        payload: expect.objectContaining({ kind: "other" }),
+      },
+      {
         type: "chat/cancelStream/pending",
         meta: {
           arg: undefined,
@@ -814,6 +818,11 @@ describe("streamResponseThunk", () => {
         ...initialState.session,
         streamAborter: expect.any(AbortController),
         mainEditorContentTrigger: mockEditorState, // Editor content that triggered the request
+        // The failed request is noted for the session
+        promptCache: {
+          ...initialState.session.promptCache,
+          failures: [expect.objectContaining({ kind: "other" })],
+        },
       },
       ui: {
         ...initialState.ui,

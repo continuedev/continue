@@ -11,7 +11,7 @@ import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import Anthropic from "./Anthropic.js";
 import Gemini from "./Gemini.js";
 import { resolveCacheParts, resolvePromptCacheTtl } from "./anthropicCache.js";
-import { bedrockCacheTtl } from "./bedrockHelpers.js";
+import { anthropicStyleCacheTtl } from "./bedrockHelpers.js";
 import { applyCacheControlToOpenAIBody } from "./openaiCacheControl.js";
 
 class VertexAI extends BaseLLM {
@@ -239,7 +239,7 @@ class VertexAI extends BaseLLM {
     }
     // Vertex accepts ttl "1h" except on Claude 3.x models, which the
     // allowlist leaves out; the default 5 minutes is sent as no ttl.
-    const ttl = bedrockCacheTtl(
+    const ttl = anthropicStyleCacheTtl(
       body.model,
       resolvePromptCacheTtl(options?.promptCacheTtl, this.cacheBehavior?.ttl),
     );

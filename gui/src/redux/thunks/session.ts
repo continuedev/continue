@@ -164,7 +164,7 @@ export const loadLastSession = createAsyncThunk<void, void, ThunkApiType>(
     }
     dispatch(newSession(session));
     if (session.chatModelTitle) {
-      dispatch(selectChatModelForProfile(session.chatModelTitle));
+      void dispatch(selectChatModelForProfile(session.chatModelTitle));
     }
   },
 );
@@ -247,6 +247,7 @@ export const saveCurrentSession = createAsyncThunk<
       title = NEW_SESSION_TITLE;
     }
 
+    const cache = session.promptCache;
     const updatedSession: Session = {
       sessionId: session.id,
       title,
@@ -256,6 +257,18 @@ export const saveCurrentSession = createAsyncThunk<
       chatModelTitle: selectedChatModel?.title ?? null,
       ...(session.usage && { usage: session.usage }),
       checkpoints: session.checkpoints,
+      // Enough for a resumed session to know its cache has expired and what
+      // re-reading the conversation will cost.
+      ...(cache?.lastRequestAt !== undefined && {
+        promptCache: {
+          lastRequestAt: cache.lastRequestAt,
+          lastInputTokens: cache.lastInputTokens,
+          lastTtl: cache.lastTtl,
+          requests: cache.requests,
+          escalated: cache.escalated,
+          escalatedBy: cache.escalatedBy,
+        },
+      }),
     };
 
     const result = await dispatch(updateSession(updatedSession));

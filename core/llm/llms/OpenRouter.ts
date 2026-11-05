@@ -7,7 +7,7 @@ import { osModelsEditPrompt } from "../templates/edit.js";
 
 import OpenAI from "./OpenAI.js";
 import { resolvePromptCacheTtl } from "./anthropicCache.js";
-import { bedrockCacheTtl } from "./bedrockHelpers.js";
+import { anthropicStyleCacheTtl } from "./bedrockHelpers.js";
 import { applyCacheControlToOpenAIBody } from "./openaiCacheControl.js";
 
 class OpenRouter extends OpenAI {
@@ -113,7 +113,7 @@ class OpenRouter extends OpenAI {
     // Anthropic-style cache_control, including ttl, is passed through to Claude
     // models. The 1-hour lifetime is sent only for models known to take it
     // (Claude 3.x models are 5 minutes only); otherwise the field is omitted.
-    const ttl = bedrockCacheTtl(
+    const ttl = anthropicStyleCacheTtl(
       body.model,
       resolvePromptCacheTtl(options?.promptCacheTtl, this.cacheBehavior?.ttl),
     );

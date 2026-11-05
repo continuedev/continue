@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   applyCrossRegionInference,
+  bedrockUsageToCompletionUsage,
   getBedrockErrorHint,
   inferenceProfilePrefixForRegion,
+  resolveBedrockCacheParts,
 } from "./bedrockHelpers.js";
 
 describe("inferenceProfilePrefixForRegion", () => {
@@ -100,5 +102,65 @@ describe("getBedrockErrorHint", () => {
 
   it("returns undefined for unrelated errors", () => {
     expect(getBedrockErrorHint(new Error("boom"), {})).toBeUndefined();
+  });
+});
+
+describe("bedrockUsageToCompletionUsage", () => {
+  it("maps the cache fields to the names the Anthropic adapter uses", () => {
+    expect(
+      bedrockUsageToCompletionUsage({
+        inputTokens: 10,
+        outputTokens: 20,
+        cacheReadInputTokens: 300,
+        cacheWriteInputTokens: 40,
+      }),
+    ).toEqual({
+      prompt_tokens: 10,
+      completion_tokens: 20,
+      total_tokens: 30,
+      prompt_tokens_details: {
+        cached_tokens: 300,
+        cache_read_tokens: 300,
+        cache_write_tokens: 40,
+      },
+    });
+  });
+
+  it("does not add cache tokens to the prompt count", () => {
+    const u = bedrockUsageToCompletionUsage({
+      inputTokens: 1,
+      cacheReadInputTokens: 99_999,
+    });
+    expect(u.prompt_tokens).toBe(1);
+    expect(u.total_tokens).toBe(1);
+  });
+
+  it("treats an empty usage as zeros", () => {
+    expect(bedrockUsageToCompletionUsage({})).toMatchObject({
+      prompt_tokens: 0,
+      completion_tokens: 0,
+      total_tokens: 0,
+    });
+  });
+});
+
+describe("resolveBedrockCacheParts", () => {
+  const all = { tools: true, system: true, conversation: true };
+  const none = { tools: false, system: false, conversation: false };
+
+  it.each([
+    [undefined, undefined, true, none],
+    [true, undefined, true, all],
+    [true, undefined, false, { ...all, system: false }],
+    [false, { cacheConversation: true }, true, none],
+    [
+      undefined,
+      { cacheSystemMessage: true, cacheConversation: true },
+      true,
+      { tools: false, system: true, conversation: true },
+    ],
+    [undefined, { cacheSystemMessage: true }, false, none],
+  ] as const)("requested=%s behavior=%j hasSystem=%s", (r, b, s, expected) => {
+    expect(resolveBedrockCacheParts(r, b, s)).toEqual(expected);
   });
 });

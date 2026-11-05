@@ -110,6 +110,13 @@ export interface BedrockModelOptionInfo {
 export type BedrockListModelsResult =
   { ok: true; models: BedrockModelOptionInfo[] } | { ok: false; error: string };
 
+/**
+ * Whether the account lists the `global.` inference profile of a configured
+ * Bedrock model that uses a regional ID. "unknown" when nothing could be
+ * checked (not a Bedrock model, no regional prefix, or the listing failed).
+ */
+export type BedrockGlobalProfileStatus = "present" | "absent" | "unknown";
+
 export type BedrockTestModelResult =
   | { ok: true; modelId: string; latencyMs: number; reply: string }
   | { ok: false; error: string };
@@ -366,6 +373,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "llm/listModels": [{ title: string }, string[] | undefined];
   "bedrock/listModels": [BedrockConnectionParams, BedrockListModelsResult];
+  "bedrock/globalProfile": [{ title: string }, BedrockGlobalProfileStatus];
   "bedrock/testModel": [
     BedrockConnectionParams & { model: string },
     BedrockTestModelResult,
@@ -402,6 +410,14 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     {
       index: number;
       sessionId: string;
+      /**
+       * The conversation as the chat last sent it, so the summary request can
+       * read a warm prompt cache. Sent only when that is worth doing.
+       */
+      prefix?: {
+        messages: ChatMessage[];
+        options: LLMFullCompletionOptions;
+      };
     },
     string | undefined,
   ];
