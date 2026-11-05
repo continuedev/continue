@@ -352,13 +352,14 @@ export class VertexAIApi implements BaseLlmApi {
         yield* this.anthropicInstance.handleStreamResponse(
           response,
           body.model,
+          signal,
         );
         break;
       case "gemini":
         if (!this.genAI) {
           throw new Error("VertexAI: GoogleGenAI not initialized");
         }
-        yield* this.geminiInstance.streamWithGenAI(this.genAI, body);
+        yield* this.geminiInstance.streamWithGenAI(this.genAI, body, signal);
         break;
       case "mistral":
         const headers = await this.getAuthHeaders();

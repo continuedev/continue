@@ -329,10 +329,16 @@ export class GeminiApi implements BaseLlmApi {
   private async *processStreamResponse(
     response: AsyncIterable<any>,
     model: string,
+    signal?: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     let usage: UsageInfo | undefined = undefined;
+    // Gemini puts a finishReason on the last candidate. A stream with content
+    // but no finishReason was cut off by something in between.
+    let sawContent = false;
+    let finishReason: string | undefined;
 
     for await (const chunk of response) {
+      finishReason = chunk?.candidates?.[0]?.finishReason ?? finishReason;
       if (chunk.usageMetadata) {
         // `cachedContentTokenCount` is the part of the prompt served from a
         // cache, implicit or explicit. Google's type documents `promptTokenCount`
@@ -356,6 +362,7 @@ export class GeminiApi implements BaseLlmApi {
 
       const contentParts = chunk?.candidates?.[0]?.content?.parts;
       if (contentParts) {
+        if (contentParts.length > 0) sawContent = true;
         for (const part of contentParts) {
           if (part.text !== undefined) {
             const thoughtSignature = (part as any)?.thoughtSignature;
@@ -407,6 +414,12 @@ export class GeminiApi implements BaseLlmApi {
       }
     }
 
+    if (sawContent && !finishReason && !signal?.aborted) {
+      throw new Error(
+        "The Gemini stream ended before the response was complete (no finishReason).",
+      );
+    }
+
     if (usage) {
       yield usageChatChunk({
         model,
@@ -420,6 +433,7 @@ export class GeminiApi implements BaseLlmApi {
     genAI: GoogleGenAI,
     model: string,
     convertedBody: ReturnType<typeof this._convertBody>,
+    signal?: AbortSignal,
   ) {
     // Use native fetch temporarily for stream operation to get proper ReadableStream
     // The withNativeFetch wrapper restores native fetch, makes the call, then reverts
@@ -431,6 +445,9 @@ export class GeminiApi implements BaseLlmApi {
           systemInstruction: convertedBody.systemInstruction,
           tools: convertedBody.tools,
           ...convertedBody.generationConfig,
+          // Without this the stop button only stopped reading; the request
+          // kept generating (and billing) on Google's side.
+          ...(signal && { abortSignal: signal }),
         },
       }),
     );
@@ -438,7 +455,7 @@ export class GeminiApi implements BaseLlmApi {
 
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
-    _signal: AbortSignal,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const convertedBody = this._convertBody(
       body,
@@ -449,21 +466,24 @@ export class GeminiApi implements BaseLlmApi {
       this.genAI,
       body.model,
       convertedBody,
+      signal,
     );
-    yield* this.processStreamResponse(response, body.model);
+    yield* this.processStreamResponse(response, body.model, signal);
   }
 
   async *streamWithGenAI(
     genAI: GoogleGenAI,
     body: ChatCompletionCreateParamsStreaming,
+    signal?: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const convertedBody = this._convertBody(body, false, true);
     const response = await this.generateStream(
       genAI,
       body.model,
       convertedBody,
+      signal,
     );
-    yield* this.processStreamResponse(response, body.model);
+    yield* this.processStreamResponse(response, body.model, signal);
   }
 
   completionNonStream(

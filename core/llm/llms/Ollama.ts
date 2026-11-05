@@ -625,6 +625,29 @@ class Ollama extends BaseLLM implements ModelInstaller {
         yield msg;
       }
     } else {
+      // Ollama ends every chat stream with a `done: true` line. Without one
+      // the stream was cut off (server crash, proxy); n8n's format has no
+      // such line, so only Ollama-shaped chunks count.
+      let sawOllamaChunk = false;
+      let sawDone = false;
+      const parse = (chunk: string): ChatMessage[] => {
+        let j: OllamaChatResponse;
+        try {
+          j = JSON.parse(chunk) as OllamaChatResponse;
+        } catch (e) {
+          throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
+        }
+        if ("done" in j) {
+          sawOllamaChunk = true;
+          if (j.done) sawDone = true;
+        }
+        try {
+          return convertChatMessage(j);
+        } catch (e) {
+          throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
+        }
+      };
+
       let buffer = "";
       for await (const value of streamResponse(response)) {
         // Append the received chunk to the buffer
@@ -633,19 +656,21 @@ class Ollama extends BaseLLM implements ModelInstaller {
         const chunks = buffer.split("\n");
         buffer = chunks.pop() ?? "";
 
-        for (let i = 0; i < chunks.length; i++) {
-          const chunk = chunks[i];
+        for (const chunk of chunks) {
           if (chunk.trim() !== "") {
-            try {
-              const j = JSON.parse(chunk) as OllamaChatResponse;
-              for (const msg of convertChatMessage(j)) {
-                yield msg;
-              }
-            } catch (e) {
-              throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
-            }
+            yield* parse(chunk);
           }
         }
+      }
+      // The last line may arrive without a trailing newline.
+      if (buffer.trim() !== "") {
+        yield* parse(buffer);
+      }
+
+      if (sawOllamaChunk && !sawDone && !signal.aborted) {
+        throw new Error(
+          "The Ollama stream ended before the response was complete (no done: true).",
+        );
       }
     }
   }

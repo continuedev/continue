@@ -315,7 +315,11 @@ class VertexAI extends BaseLLM {
       signal,
     });
 
-    yield* this.anthropicInstance.handleResponse(response, options.stream);
+    yield* this.anthropicInstance.handleResponse(
+      response,
+      options.stream,
+      signal,
+    );
   }
 
   // Gemini

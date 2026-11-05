@@ -395,9 +395,16 @@ export class AnthropicApi implements BaseLlmApi {
   }
 
   // This is split off so e.g. VertexAI can use it
-  async *handleStreamResponse(response: any, model: string) {
+  async *handleStreamResponse(
+    response: any,
+    model: string,
+    signal?: AbortSignal,
+  ) {
     let lastToolUseId: string | undefined;
     let lastToolUseName: string | undefined;
+    // Set while a content block has started (or streamed) and not stopped.
+    let blockOpen = false;
+    let sawStop = false;
 
     const usage: CompletionUsage = {
       completion_tokens: 0,
@@ -410,6 +417,7 @@ export class AnthropicApi implements BaseLlmApi {
       switch (rawEvent.type) {
         case "content_block_start":
           const blockStartEvent = rawEvent as RawContentBlockStartEvent;
+          blockOpen = true;
           if (blockStartEvent.content_block.type === "tool_use") {
             lastToolUseId = blockStartEvent.content_block.id;
             lastToolUseName = blockStartEvent.content_block.name;
@@ -429,11 +437,13 @@ export class AnthropicApi implements BaseLlmApi {
           break;
         case "message_delta":
           const deltaEvent = rawEvent as RawMessageDeltaEvent;
+          if (deltaEvent.delta?.stop_reason) sawStop = true;
           usage.completion_tokens = deltaEvent.usage?.output_tokens ?? 0;
           break;
         case "content_block_delta":
           // https://docs.anthropic.com/en/api/messages-streaming#delta-types
           const blockDeltaEvent = rawEvent as RawContentBlockDeltaEvent;
+          blockOpen = true;
           switch (blockDeltaEvent.delta.type) {
             case "text_delta":
               yield chatChunk({
@@ -465,12 +475,27 @@ export class AnthropicApi implements BaseLlmApi {
           }
           break;
         case "content_block_stop":
+          blockOpen = false;
           lastToolUseId = undefined;
           lastToolUseName = undefined;
+          break;
+        case "message_stop":
+          sawStop = true;
           break;
         default:
           break;
       }
+    }
+
+    // A proxy that closes the stream cleanly mid-reply leaves a content block
+    // open with neither a stop_reason nor message_stop. Say so instead of
+    // returning a short reply as if it were complete.
+    // When the user stops the reply the body read ends quietly too
+    // (streamResponse swallows the AbortError); that is not a cut-off.
+    if (blockOpen && !sawStop && !signal?.aborted) {
+      throw new Error(
+        "The Anthropic stream ended before the response was complete (no message_stop).",
+      );
     }
 
     yield usageChatChunk({
@@ -495,7 +520,7 @@ export class AnthropicApi implements BaseLlmApi {
         signal,
       },
     );
-    yield* this.handleStreamResponse(response, body.model);
+    yield* this.handleStreamResponse(response, body.model, signal);
   }
 
   private getHeaders(): Record<string, string> {

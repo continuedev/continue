@@ -148,6 +148,8 @@ describe("Anthropic Adapter Tests", () => {
             text: " world",
           },
         },
+        // A real stream always ends this way.
+        { type: "message_stop" },
       ],
     });
   });
@@ -213,6 +215,7 @@ describe("Anthropic Adapter Tests", () => {
             text: "Hello",
           },
         },
+        { type: "message_stop" },
       ],
     });
   });

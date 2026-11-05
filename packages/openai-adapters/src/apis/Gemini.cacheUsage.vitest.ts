@@ -20,7 +20,10 @@ async function usageOf(chunks: any[]) {
   return out.find((c) => c.usage)?.usage;
 }
 
-const text = { candidates: [{ content: { parts: [{ text: "hi" }] } }] };
+// A real stream ends with a finishReason on the candidate.
+const text = {
+  candidates: [{ content: { parts: [{ text: "hi" }] }, finishReason: "STOP" }],
+};
 
 describe("Gemini usage with implicit caching", () => {
   it("reports the cached part of the prompt as cache reads", async () => {

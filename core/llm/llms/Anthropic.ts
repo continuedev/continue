@@ -277,6 +277,7 @@ class Anthropic extends BaseLLM {
   async *handleResponse(
     response: any,
     stream: boolean | undefined,
+    signal?: AbortSignal,
   ): AsyncGenerator<ChatMessage> {
     if (response.status === 499) {
       return; // Aborted by user
@@ -431,7 +432,9 @@ class Anthropic extends BaseLLM {
     // a content block open with neither a stop_reason nor message_stop;
     // without this the reply would end short with no error. (Only an open
     // block counts, so a compatible server that skips message_stop is fine.)
-    if (blockOpen && !sawMessageStop && !stopReason) {
+    // When the user stops the reply the body read ends quietly too
+    // (streamResponse swallows the AbortError); that is not a cut-off.
+    if (blockOpen && !sawMessageStop && !stopReason && !signal?.aborted) {
       throw new Error(
         "The Anthropic stream ended before the response was complete (no message_stop).",
       );
@@ -504,7 +507,7 @@ class Anthropic extends BaseLLM {
       signal,
     });
 
-    yield* this.handleResponse(response, options.stream);
+    yield* this.handleResponse(response, options.stream, signal);
   }
 }
 

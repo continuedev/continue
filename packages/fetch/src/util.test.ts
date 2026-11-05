@@ -1,14 +1,31 @@
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import {
   getProxyFromEnv,
   patternMatchesHostname,
   shouldBypassProxy,
 } from "./util.js";
 
-// Reset environment variables after each test
+// Each test starts with no proxy variables, whatever the machine running it
+// has set (CI behind a proxy, a corporate laptop), and the real environment
+// comes back afterwards.
+const PROXY_VARS = [
+  "HTTP_PROXY",
+  "http_proxy",
+  "HTTPS_PROXY",
+  "https_proxy",
+  "NO_PROXY",
+  "no_proxy",
+];
+const originalEnv = process.env;
+
+beforeEach(() => {
+  process.env = { ...originalEnv };
+  for (const name of PROXY_VARS) delete process.env[name];
+});
+
 afterEach(() => {
   vi.resetModules();
-  process.env = {};
+  process.env = originalEnv;
 });
 
 // Tests for getProxyFromEnv

@@ -96,6 +96,29 @@ describe("Anthropic stream response facts", () => {
     );
   });
 
+  test("stopping the reply mid-block is not reported as a cut-off", async () => {
+    events.list = [
+      start,
+      {
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text: "Hel" },
+      },
+    ];
+    const controller = new AbortController();
+    controller.abort();
+    const a = new Anthropic({ apiKey: "k", model: "claude-sonnet-4-6" } as any);
+    const out: any[] = [];
+    for await (const m of (a as any).handleResponse(
+      response(),
+      true,
+      controller.signal,
+    )) {
+      out.push(m);
+    }
+    expect(out.some((m) => m.content === "Hel")).toBe(true);
+  });
+
   test("never carries a latency: Anthropic does not send one", async () => {
     events.list = [start, delta("end_turn")];
     const u = await lastUsage(response());
