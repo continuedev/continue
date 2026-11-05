@@ -8,16 +8,18 @@ Continued is not affiliated with Continue Dev, Inc.
 
 ## Option 1: install a build
 
-There are no GitHub Releases for this fork yet, so builds come from GitHub Actions artifacts (see [Option 2](#option-2-download-a-build-from-github-actions)). Once releases are published, download the `.vsix` for your platform from the release page instead:
+Download the `.vsix` for your platform from the [latest release](https://github.com/b1tninja/continued/releases/latest):
 
-- Windows: `continued-win32-x64-<version>.vsix`
-- Linux: `continued-linux-x64-<version>.vsix`
+- Windows: `continued-win32-x64-<version>.vsix` (Arm: `continued-win32-arm64-<version>.vsix`)
 - macOS (Apple Silicon): `continued-darwin-arm64-<version>.vsix`
 - macOS (Intel): `continued-darwin-x64-<version>.vsix`
+- Linux: `continued-linux-x64-<version>.vsix` (also `linux-arm64`, `linux-armhf`, and `alpine-x64` for Alpine)
+
+Each release also has a `SHA256SUMS.txt` with the checksum of every file. For a build of a newer, unreleased commit, see [Option 2](#option-2-download-a-build-from-github-actions).
 
 Then:
 
-1. Verify the download (optional, recommended). Compare the checksum with the value you were given for that build:
+1. Verify the download (optional, recommended). Compare the checksum with the line for that file in the release's `SHA256SUMS.txt`:
 
    ```powershell
    # Windows PowerShell
@@ -27,6 +29,8 @@ Then:
    ```bash
    # macOS / Linux
    shasum -a 256 continued-*.vsix
+   # Linux, with SHA256SUMS.txt in the same folder:
+   sha256sum --check --ignore-missing SHA256SUMS.txt
    ```
 
 2. Install it:
@@ -41,7 +45,7 @@ Then:
 
 Continued uses the extension ID `b1tninja.continued`. It installs alongside the original Continue extension (`Continue.continue`) without conflicts, so you do not need to uninstall Continue first.
 
-> The artifact file names above follow the build's version format (`<package version>-<short commit SHA>`), so the exact file name includes the commit, for example `continued-win32-x64-1.3.40-62505d0.vsix`.
+> Release files are named with the version only, for example `continued-win32-x64-2.2.0.vsix`. GitHub Actions builds (Option 2) add the short commit SHA, for example `continued-win32-x64-2.2.0-62505d0.vsix`.
 
 ## Option 2: download a build from GitHub Actions
 

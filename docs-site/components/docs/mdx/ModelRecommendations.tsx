@@ -4,67 +4,37 @@ const modelRecs: Record<
 > = {
   agent_plan: {
     open: [
-      "[Qwen3 Coder (480B)](https://continue.dev/openrouter/qwen3-coder)",
-      "[Qwen3 Coder (30B)](https://continue.dev/ollama/qwen3-coder-30b)",
-      "[Devstral (27B)](https://continue.dev/ollama/devstral)",
-      "[Kimi K2 (1T)](https://continue.dev/openrouter/kimi-k2)",
+      "Qwen3 Coder (480B)",
+      "Qwen3 Coder (30B)",
+      "Devstral (27B)",
+      "Kimi K2 (1T)",
     ],
-    closed: [
-      "[Claude Opus 4.1](https://continue.dev/anthropic/claude-4-1-opus)",
-      "[Claude Sonnet 4.6](https://continue.dev/anthropic/claude-sonnet-4-6)",
-      "[GPT-5](https://continue.dev/openai/gpt-5)",
-      "[Gemini 2.5 Pro](https://continue.dev/google/gemini-2.5-pro)",
-    ],
+    closed: ["Claude Opus 4.1", "Claude Sonnet 4.6", "GPT-5", "Gemini 2.5 Pro"],
     notes: "Closed models are slightly better than open models",
   },
   chat_edit: {
-    open: [
-      "[Qwen3 Coder (480B)](https://continue.dev/openrouter/qwen3-coder)",
-      "[Qwen3 Coder (30B)](https://continue.dev/ollama/qwen3-coder-30b)",
-    ],
-    closed: [
-      "[Claude Opus 4.1](https://continue.dev/anthropic/claude-4-1-opus)",
-      "[Claude Sonnet 4.6](https://continue.dev/anthropic/claude-sonnet-4-6)",
-      "[GPT-5](https://continue.dev/openai/gpt-5)",
-      "[Gemini 2.5 Pro](https://continue.dev/google/gemini-2.5-pro)",
-    ],
+    open: ["Qwen3 Coder (480B)", "Qwen3 Coder (30B)"],
+    closed: ["Claude Opus 4.1", "Claude Sonnet 4.6", "GPT-5", "Gemini 2.5 Pro"],
     notes: "Closed and open models have similar performance",
   },
   autocomplete: {
-    open: [
-      "[QwenCoder2.5 (1.5B)](https://continue.dev/ollama/qwen2.5-coder-1.5b)",
-      "[QwenCoder2.5 (7B)](https://continue.dev/ollama/qwen2.5-coder-7b)",
-    ],
-    closed: [
-      "[Codestral](https://continue.dev/mistral/codestral)",
-      "[Mercury Coder](https://continue.dev/inception/mercury-coder)",
-    ],
+    open: ["QwenCoder2.5 (1.5B)", "QwenCoder2.5 (7B)"],
+    closed: ["Codestral", "Mercury Coder"],
     notes: "Closed models are slightly better than open models",
   },
   apply: {
-    open: ["[FastApply](https://continue.dev/mdpauley/fast-apply-15b-v10)"],
-    closed: [
-      "[Relace Instant Apply](https://continue.dev/relace/instant-apply)",
-      "[Morph Fast Apply](https://continue.dev/morphllm/morph-v2)",
-    ],
+    open: ["FastApply"],
+    closed: ["Relace Instant Apply", "Morph Fast Apply"],
     notes: "Closed models are better than open models",
   },
   embed: {
-    open: [
-      "[Nomic Embed Text](https://continue.dev/ollama/nomic-embed-text-latest)",
-    ],
-    closed: [
-      "[Voyage Code 3](https://continue.dev/voyageai/voyage-code-3)",
-      "[Morph Embeddings](https://continue.dev/morphllm/morph-embedding-v2)",
-    ],
+    open: ["Nomic Embed Text"],
+    closed: ["Voyage Code 3", "Morph Embeddings"],
     notes: "Closed models are slightly better than open models",
   },
   rerank: {
     open: ["zerank-1", "zerank-1-small"],
-    closed: [
-      "[Voyage Rerank 2.5](https://continue.dev/voyageai/rerank-2-5)",
-      "[Morph Rerank](https://continue.dev/morphllm/morph-rerank-v2)",
-    ],
+    closed: ["Voyage Rerank 2.5", "Morph Rerank"],
     notes: "Open models are beginning to emerge for this model role",
   },
 };

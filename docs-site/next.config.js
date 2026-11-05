@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 
-// Served at the root of the custom domain docs.continue.dev (via GitHub Pages),
-// so there is no base path. (public/CNAME sets the custom domain.)
-const basePath = "";
+// GitHub Pages serves a project site under /<repo>/; set DOCS_BASE_PATH when
+// building for it. No custom domain is configured (there is no public/CNAME).
+const basePath = process.env.DOCS_BASE_PATH ?? "";
 
 const nextConfig = {
   output: "export",
