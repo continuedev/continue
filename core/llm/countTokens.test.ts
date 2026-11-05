@@ -14,7 +14,7 @@ import {
   pruneStringFromTop,
 } from "./countTokens.js";
 
-describe.skip("countTokens", () => {
+describe("countTokens", () => {
   it("should count tokens for a simple string", () => {
     const content = "Hello world!";
     const tokenCount = countTokens(content, "gpt-4");
@@ -47,7 +47,7 @@ describe("countTokensAsync", () => {
   });
 });
 
-describe.skip("pruneLinesFromTop", () => {
+describe("pruneLinesFromTop", () => {
   it("should prune lines from the top to fit within max tokens", () => {
     const prompt = "Line 1\nLine 2\nLine 3\nLine 4";
     const pruned = pruneLinesFromTop(prompt, 5, "gpt-4");
@@ -88,7 +88,7 @@ describe.skip("pruneLinesFromTop", () => {
   });
 });
 
-describe.skip("pruneLinesFromBottom", () => {
+describe("pruneLinesFromBottom", () => {
   it("should prune lines from the bottom to fit within max tokens", () => {
     const prompt = "Line 1\nLine 2\nLine 3\nLine 4";
     const pruned = pruneLinesFromBottom(prompt, 5, "gpt-4");
@@ -129,6 +129,8 @@ describe.skip("pruneLinesFromBottom", () => {
   });
 });
 
+// Stale: the maxTokens it passes is above the sample's token count, so nothing
+// is pruned and the length assertion fails. Rewrite with a smaller budget.
 describe.skip("pruneRawPromptFromTop", () => {
   it("should prune string from the top based on maxTokens", () => {
     const result = pruneRawPromptFromTop("gpt-4", 5, "Hello world!", 2);
@@ -136,6 +138,8 @@ describe.skip("pruneRawPromptFromTop", () => {
   });
 });
 
+// Stale: the maxTokens it passes is above the sample's token count, so nothing
+// is pruned and the length assertion fails. Rewrite with a smaller budget.
 describe.skip("pruneStringFromTop", () => {
   it("should prune string from the top based on maxTokens", () => {
     const result = pruneStringFromTop("gpt-4", 5, "Hello world!");
@@ -143,6 +147,8 @@ describe.skip("pruneStringFromTop", () => {
   });
 });
 
+// Stale: the maxTokens it passes is above the sample's token count, so nothing
+// is pruned and the length assertion fails. Rewrite with a smaller budget.
 describe.skip("pruneStringFromBottom", () => {
   it("should prune string from the bottom based on maxTokens", () => {
     const result = pruneStringFromBottom("gpt-4", 5, "Hello world!");
@@ -150,6 +156,8 @@ describe.skip("pruneStringFromBottom", () => {
   });
 });
 
+// Stale: written for an older compileChatMessages signature (the message list
+// arrives as undefined). Rewrite against the current options object.
 describe.skip("compileChatMessages", () => {
   it("should compile and handle an empty or undefined message list", () => {
     const compiled = compileChatMessages("gpt-4", undefined, 100, 50, false);

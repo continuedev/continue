@@ -160,6 +160,8 @@ describe("Position comparison functions", () => {
   });
 });
 
+// Stale: these expect the end character to be included; getRangeInString
+// treats the end as exclusive, as VS Code ranges are.
 describe.skip("getRangeInString", () => {
   let content: string;
 

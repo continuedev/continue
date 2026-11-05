@@ -310,7 +310,7 @@ describe("MCPConnection", () => {
       expect(mockConnect).toHaveBeenCalled();
     });
 
-    it.skip("should include stderr output in error message when stdio command fails", async () => {
+    it("should include stderr output in error message when stdio command fails", async () => {
       // Clear any existing mocks to ensure we get real behavior
       vi.restoreAllMocks();
 
@@ -341,6 +341,7 @@ describe("MCPConnection", () => {
     });
   });
 
+  // Needs the real filesystem MCP server from npm and times out in CI.
   describe.skip("actually connect to Filesystem MCP", () => {
     it("should connect and include correct tools", async () => {
       const conn = new MCPConnection({

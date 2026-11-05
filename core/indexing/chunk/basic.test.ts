@@ -9,6 +9,7 @@ import { ChunkWithoutID } from "../../index";
 //   countTokensAsync: jest.fn(),
 // }));
 
+// All 3 tests fail against the current chunker; needs rewriting.
 describe.skip("basicChunker", () => {
   beforeEach(() => {
     jest.resetAllMocks();

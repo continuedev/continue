@@ -20,6 +20,7 @@ import {
   zephyrTemplateMessages,
 } from "./chat.js";
 
+// 8 of 23 expectations no longer match the templates' output.
 describe.skip("Chat Templates", () => {
   describe("llama2TemplateMessages", () => {
     it("should generate the correct prompt with system message and user messages", () => {
