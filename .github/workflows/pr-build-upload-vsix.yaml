@@ -1,7 +1,7 @@
 name: PR Build And Upload VSIX
 
-# Builds and uploads VSIX artifacts for the `oneper` script across Linux, Windows, and macOS ARM platforms
-# On request only: it builds three platforms (two of them on the slow Windows and macOS
+# Builds and uploads VSIX artifacts for the `oneper` script across Linux, Windows, and macOS (ARM and Intel)
+# On request only: it builds four targets (three of them on the slow Windows and macOS
 # runners). Add the `build-vsix` label to a PR (it then rebuilds on every push) or run this
 # workflow manually on any branch. The Linux package build in PR Checks runs on every PR.
 on:
@@ -41,6 +41,11 @@ jobs:
             runner: windows-latest
           - platform: darwin
             arch: arm64
+            runner: ${{ inputs.darwin_runner || 'macos-latest' }}
+          # Intel Macs: main.yaml and preview.yaml publish this target, so it
+          # is built here too.
+          - platform: darwin
+            arch: x64
             runner: ${{ inputs.darwin_runner || 'macos-latest' }}
 
     steps:
