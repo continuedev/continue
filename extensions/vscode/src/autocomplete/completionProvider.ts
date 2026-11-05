@@ -31,6 +31,24 @@ import {
   stopStatusBarLoading,
 } from "./statusBar";
 
+// Schemes belonging to non-code input surfaces (other extensions' chat / comment /
+// output boxes) where inline completions must not fire. See issue #12933.
+// Ref: VS Code scheme registry (Schemas) in src/vs/base/common/network.ts.
+const NON_CODE_INPUT_SCHEMES: Set<string> = new Set([
+  "vscode-scm", // SCM commit-message input (was the only prior guard)
+  "comment", // SCM / review comment input
+  "chatSessionInput", // Copilot Chat input (current builds) — the #12933 repro
+  "vscode-interactive-input", // chat / interactive input (older builds — version drift)
+  "vscode-chat-editor", // chat editor surface (older builds)
+  "chat-editing-text-model", // chat editing working-copy model
+  "output", // Output panel (never a code input)
+  "vscode-settings", // Settings editor input fields
+]);
+
+export function isNonCodeInputScheme(scheme: string): boolean {
+  return NON_CODE_INPUT_SCHEMES.has(scheme);
+}
+
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;
   position: vscode.Position;
@@ -171,7 +189,7 @@ export class ContinueCompletionProvider
       return null;
     }
 
-    if (document.uri.scheme === "vscode-scm") {
+    if (isNonCodeInputScheme(document.uri.scheme)) {
       return null;
     }
 
