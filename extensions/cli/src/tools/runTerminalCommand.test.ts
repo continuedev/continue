@@ -8,6 +8,23 @@ describe("runTerminalCommandTool", () => {
   const isMac = process.platform === "darwin";
   const isLinux = process.platform === "linux";
 
+  describe("commands that leave a background process", () => {
+    // The shell exits right away but `sleep` keeps the output pipe open; the
+    // tool used to wait for the pipe to close, i.e. for the timeout.
+    it.skipIf(process.platform === "win32")(
+      "returns when the shell exits, without waiting for the background child",
+      async () => {
+        const started = Date.now();
+        const result = await runTerminalCommandTool.run({
+          command: "sleep 30 & echo started",
+        });
+        expect(result).toContain("started");
+        expect(Date.now() - started).toBeLessThan(10_000);
+      },
+      20_000,
+    );
+  });
+
   describe("basic platform-specific terminal execution", () => {
     it("should execute a simple echo command", async () => {
       let command: string;

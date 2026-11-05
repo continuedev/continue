@@ -317,7 +317,32 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
       child.stdout.on("data", onStdout);
       child.stderr.on("data", onStderr);
 
-      child.on("close", (code) => {
+      // "close" waits for every holder of the output pipes, so a command that
+      // leaves a background process (`server &`, `nohup x &`) would only
+      // finish at the timeout. Finish shortly after the shell itself exits
+      // instead, once buffered output has arrived. The background process
+      // keeps running: its output is still drained (so it never blocks on a
+      // full pipe) but no longer collected, and the pipes no longer keep this
+      // process alive.
+      const EXIT_GRACE_MS = 100;
+      child.on("exit", (code) => {
+        setTimeout(() => {
+          if (isResolved) return;
+          for (const stream of [child.stdout, child.stderr]) {
+            stream.removeListener(
+              "data",
+              stream === child.stdout ? onStdout : onStderr,
+            );
+            stream.resume();
+            (stream as { unref?: () => void }).unref?.();
+          }
+          finish(code);
+        }, EXIT_GRACE_MS);
+      });
+
+      child.on("close", (code) => finish(code));
+
+      function finish(code: number | null) {
         if (isResolved) return;
         isResolved = true;
 
@@ -358,7 +383,7 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
           ? appendParallelLimitNote(truncationResult.output)
           : truncationResult.output;
         resolve(finalOutput);
-      });
+      }
 
       child.on("error", (error) => {
         if (isResolved) return;

@@ -8,6 +8,8 @@ import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { escapeEvents } from "../util/cli.js";
 import { logger } from "../util/logger.js";
 
+import { subagentPermissions } from "./permissions.js";
+
 /**
  * Options for executing a subagent
  */
@@ -75,16 +77,14 @@ export async function executeSubAgent(
       throw new Error("Model or LLM API not available");
     }
 
-    // allow all tools for now
-    // todo: eventually we want to show the same prompt in a dialog whether asking whether that tool call is allowed or not
-
+    // The parent's excludes still apply; tools it would ask about are allowed,
+    // since a subagent cannot show a prompt yet.
+    // todo: route "ask" to the parent's permission dialog instead.
     serviceContainer.set<ToolPermissionServiceState>(
       SERVICE_NAMES.TOOL_PERMISSIONS,
       {
         ...mainAgentPermissionsState,
-        permissions: {
-          policies: [{ tool: "*", permission: "allow" }],
-        },
+        permissions: subagentPermissions(mainAgentPermissionsState.permissions),
       },
     );
 
