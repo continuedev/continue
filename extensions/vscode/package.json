@@ -750,7 +750,8 @@
     },
     "mocha": {
       "serialize-javascript": "^7.0.5",
-      "glob": "^14.0.2"
+      "glob": "^14.0.2",
+      "minimatch": "^11.0.4"
     },
     "diff": "$diff",
     "picomatch": "^4.0.2",
@@ -773,13 +774,18 @@
       "glob": "^14.0.2"
     },
     "test-exclude": {
-      "glob": "^14.0.2"
+      "glob": "^14.0.2",
+      "minimatch": "^11.0.4"
     },
     "rimraf": {
       "glob": "^14.0.2"
     },
     "@openapitools/openapi-generator-cli": {
       "glob": "^14.0.2"
+    },
+    "minimatch@^10.0.0": "^11.0.4",
+    "vscode-languageclient": {
+      "minimatch": "10.2.6"
     }
   }
 }
