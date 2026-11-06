@@ -1,8 +1,7 @@
+import fs from "fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("fs");
-
-import fs from "fs";
 
 import {
   loadPermissionsYaml,
