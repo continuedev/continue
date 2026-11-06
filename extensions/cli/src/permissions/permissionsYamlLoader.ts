@@ -19,16 +19,30 @@ export interface PermissionsYamlConfig {
 }
 
 /**
- * Loads permissions from ~/.continue/permissions.yaml
- * Returns null if file doesn't exist or can't be parsed
+ * Result of attempting to load ~/.continue/permissions.yaml.
+ *
+ * Distinguishes "file absent" from "file present but unreadable" so callers can
+ * fail closed instead of treating a broken policy file like no policy at all.
  */
-export function loadPermissionsYaml(): PermissionsYamlConfig | null {
+export type PermissionsYamlLoadResult =
+  | { status: "absent" }
+  | { status: "valid"; config: PermissionsYamlConfig }
+  | {
+      status: "unreadable";
+      reason: "invalid_structure" | "parse_error";
+      error?: unknown;
+    };
+
+/**
+ * Loads permissions from ~/.continue/permissions.yaml as a tri-state result.
+ */
+export function loadPermissionsYamlResult(): PermissionsYamlLoadResult {
   try {
     if (!fs.existsSync(PERMISSIONS_YAML_PATH)) {
       logger.debug("Permissions YAML file does not exist", {
         path: PERMISSIONS_YAML_PATH,
       });
-      return null;
+      return { status: "absent" };
     }
 
     const content = fs.readFileSync(PERMISSIONS_YAML_PATH, "utf-8");
@@ -50,21 +64,33 @@ export function loadPermissionsYaml(): PermissionsYamlConfig | null {
           ask: parsed.ask?.length || 0,
           exclude: parsed.exclude?.length || 0,
         });
-        return parsed;
+        return { status: "valid", config: parsed };
       }
     }
 
     logger.warn("Invalid permissions YAML structure", {
       path: PERMISSIONS_YAML_PATH,
     });
-    return null;
+    return { status: "unreadable", reason: "invalid_structure" };
   } catch (error) {
     logger.error("Failed to load permissions YAML", {
       error,
       path: PERMISSIONS_YAML_PATH,
     });
-    return null;
+    return { status: "unreadable", reason: "parse_error", error };
   }
+}
+
+/**
+ * Loads permissions from ~/.continue/permissions.yaml.
+ * Returns the config when valid, otherwise null (absent or unreadable).
+ *
+ * Prefer {@link loadPermissionsYamlResult} when you need to fail closed on an
+ * unreadable file — null alone cannot tell "absent" from "broken".
+ */
+export function loadPermissionsYaml(): PermissionsYamlConfig | null {
+  const result = loadPermissionsYamlResult();
+  return result.status === "valid" ? result.config : null;
 }
 
 /**

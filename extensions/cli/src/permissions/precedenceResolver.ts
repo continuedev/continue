@@ -1,6 +1,8 @@
+import { logger } from "../util/logger.js";
+
 import { getDefaultToolPolicies } from "./defaultPolicies.js";
 import {
-  loadPermissionsYaml,
+  loadPermissionsYamlResult,
   yamlConfigToPolicies,
 } from "./permissionsYamlLoader.js";
 import { type ToolPermissionPolicy } from "./types.js";
@@ -29,6 +31,10 @@ export interface PermissionSources {
  * 4. Default policies (lowest)
  *
  * Earlier sources completely override later ones on a per-tool basis.
+ *
+ * If permissions.yaml exists but cannot be parsed, the personal layer fails
+ * closed with `{ tool: "*", permission: "ask" }` so headless permissive
+ * defaults cannot unlock tools the user intended to restrict.
  */
 export function resolvePermissionPrecedence(
   sources: PermissionSources,
@@ -43,10 +49,21 @@ export function resolvePermissionPrecedence(
 
   // Layer 2: Personal settings from ~/.continue/permissions.yaml
   if (sources.personalSettings !== false) {
-    const yamlConfig = loadPermissionsYaml();
-    if (yamlConfig) {
-      const yamlPolicies = yamlConfigToPolicies(yamlConfig);
+    const yamlResult = loadPermissionsYamlResult();
+    if (yamlResult.status === "valid") {
+      const yamlPolicies = yamlConfigToPolicies(yamlResult.config);
       policies.push(...yamlPolicies);
+    } else if (yamlResult.status === "unreadable") {
+      // Fail closed: a broken policy file must not fall through to permissive
+      // headless defaults (Bash/*: allow). First-match "*": ask shadows them.
+      logger.error(
+        "permissions.yaml exists but could not be parsed; applying fail-closed ask-all policy instead of permissive defaults",
+        {
+          reason: yamlResult.reason,
+          error: yamlResult.error,
+        },
+      );
+      policies.push({ tool: "*", permission: "ask" });
     }
   }
 
