@@ -4,7 +4,7 @@ description: "Comprehensive guide to resolving common issues with Continued, inc
 ---
 
 1. [Check the logs](#check-the-logs)
-2. [Try the latest build](#download-the-latest-build)
+2. [Try the latest release or an unreleased build](#try-an-unreleased-build)
 3. [Download an older version](#download-an-older-version)
 4. [Resolve keyboard shortcut issues](#keyboard-shortcuts-not-resolving)
 5. [MCP Server connection issues](#mcp-server-connection-issues)
@@ -41,7 +41,10 @@ To view prompt logs/analytics, you can enable the Continued Console.
 4. Open the Continued Console by using the command palette (`cmd/ctrl` + `shift` + `P`) and searching for "Continued: Focus on Continued Console View"
 
 
-## Download the latest build
+## Try an unreleased build
+
+First make sure you have the [latest release](https://github.com/b1tninja/continued/releases/latest):
+run `code --list-extensions --show-versions` and compare the `b1tninja.continued` version with it.
 
 Fixes land on `main` before a release. To try them, download the newest build of the
 [PR Build And Upload VSIX](https://github.com/b1tninja/continued/actions/workflows/pr-build-upload-vsix.yaml)
@@ -50,10 +53,10 @@ workflow on `main` (artifacts such as `win32-x64-vsix`) and install the `.vsix` 
 
 ## Download an Older Version
 
-If a previous version was working for you, install an older build: earlier runs of the same workflow
-keep their artifacts for 90 days, and published releases are on the
-[releases page](https://github.com/b1tninja/continued/releases). Installing a `.vsix` with
-`--force` replaces the current version; turn off auto-update for the extension so it is not replaced again.
+If a previous version was working for you, install that version's `.vsix` from the
+[releases page](https://github.com/b1tninja/continued/releases). Builds of unreleased commits are in
+earlier runs of the same workflow, which keep their artifacts for 90 days. Installing a `.vsix` with
+`--force` replaces the current version.
 
 ## Keyboard shortcuts not resolving
 

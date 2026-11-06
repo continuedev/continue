@@ -12,13 +12,24 @@
 
 ## Install
 
-Continued is not published to the VS Code Marketplace. Install the `.vsix` build:
+Continued is not published to the VS Code Marketplace or Open VSX. Install it from a GitHub release. It needs VS Code 1.105 or newer.
+
+1. Download the `.vsix` for your platform from the [latest release](https://github.com/b1tninja/continued/releases/latest) ([Continued 2.2.0](https://github.com/b1tninja/continued/releases/tag/v2.2.0-vscode)). There are builds for Windows (x64, Arm64), macOS (Apple Silicon, Intel), and Linux (x64, Arm64). Each release has a `SHA256SUMS.txt` to check the download against.
+2. Install it, then reload VS Code (**Developer: Reload Window**):
+
+   ```bash
+   code --install-extension continued-win32-x64-2.2.0.vsix --force
+   ```
+
+Or, with the GitHub CLI (change `win32-x64` to your platform):
 
 ```bash
-code --install-extension continued-win32-x64-<version>.vsix --force
+gh release download --repo b1tninja/continued --pattern "continued-win32-x64-*.vsix" --pattern SHA256SUMS.txt --dir continued-vsix
 ```
 
-The full instructions, including downloading builds from GitHub Actions, checking checksums and troubleshooting, are in [docs/continued-install.md](docs/continued-install.md).
+Continued (`b1tninja.continued`) installs alongside the original Continue extension and reads your existing `~/.continue` configuration. To update, install the next release's `.vsix` the same way.
+
+The [install guide](docs/continued-install.md) has every platform's file name, checksum commands, unreleased builds from GitHub Actions, and troubleshooting.
 
 ## What's different from upstream
 
@@ -29,7 +40,7 @@ The full instructions, including downloading builds from GitHub Actions, checkin
 
 ## Documentation
 
-The documentation site under `docs/` still describes upstream Continue in places and is being revised. Fork-specific install steps are in [docs/continued-install.md](docs/continued-install.md).
+The documentation is at [b1tninja.github.io/continued](https://b1tninja.github.io/continued/), built from `docs/`. It still describes upstream Continue in places and is being revised. What changed in each release is in the [release notes](https://github.com/b1tninja/continued/releases).
 
 ## Upstream
 

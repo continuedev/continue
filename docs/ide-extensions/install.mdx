@@ -1,25 +1,38 @@
 ---
 title: "Install"
-description: "Install Continued in VS Code from a .vsix build."
+description: "Install Continued in VS Code from a GitHub release."
 ---
 
-Continued is installed from a `.vsix` file; it is not on the VS Code Marketplace or Open VSX.
-The full instructions, with checksums and troubleshooting, are in the
+Continued is installed from a `.vsix` file attached to each [GitHub release](https://github.com/b1tninja/continued/releases); it is not on the VS Code Marketplace or Open VSX. It needs VS Code 1.105 or newer.
+The full instructions, with checksum commands, unreleased builds and troubleshooting, are in the
 [install guide](https://github.com/b1tninja/continued/blob/main/docs/continued-install.md).
 
 <Steps>
 <Step title="Download the build for your platform">
-`continued-win32-x64`, `continued-darwin-arm64` (Apple Silicon), `continued-darwin-x64` (Intel Mac) or `continued-linux-x64`.
+Open the [latest release](https://github.com/b1tninja/continued/releases/latest) and download the `.vsix` for your platform, plus `SHA256SUMS.txt` to check it against:
+
+| Platform              | File                                    |
+| --------------------- | --------------------------------------- |
+| Windows x64 / Arm64   | `continued-win32-x64-<version>.vsix`, `continued-win32-arm64-<version>.vsix` |
+| macOS (Apple Silicon) | `continued-darwin-arm64-<version>.vsix` |
+| macOS (Intel)         | `continued-darwin-x64-<version>.vsix`   |
+| Linux x64 / Arm64     | `continued-linux-x64-<version>.vsix`, `continued-linux-arm64-<version>.vsix` |
+
+With the GitHub CLI: `gh release download --repo b1tninja/continued --pattern "continued-win32-x64-*.vsix" --pattern SHA256SUMS.txt` (change `win32-x64` to your platform).
 </Step>
 
 <Step title="Install it in VS Code">
-Run `code --install-extension continued-<platform>-<version>.vsix --force`, or use the Extensions view: `...` menu → **Install from VSIX…**. Then reload the window.
+Run `code --install-extension continued-<platform>-<version>.vsix --force`, for example `continued-win32-x64-2.2.0.vsix`, or use the Extensions view: `...` menu → **Install from VSIX…**. Then reload the window.
+
+Continued installs alongside the original Continue extension and reads your existing `~/.continue` configuration.
 </Step>
 
 <Step title="Move to the right sidebar (optional)">
 The Continued icon appears in the Activity Bar on the left. To keep Chat from covering the file explorer, right-click the icon and choose **Move To** → **Secondary Side Bar**.
 </Step>
 </Steps>
+
+VS Code does not update a `.vsix` install automatically. To update, install the next release's `.vsix` the same way.
 
 <Info>
   If you have any problems, see the [troubleshooting guide](../troubleshooting.mdx).
