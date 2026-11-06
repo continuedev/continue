@@ -7,7 +7,7 @@ import { logger } from "../util/logger.js";
 import {
   PERMISSIONS_YAML_PATH,
   PermissionsYamlConfig,
-  loadPermissionsYaml,
+  loadPermissionsYamlResult,
 } from "./permissionsYamlLoader.js";
 
 /**
@@ -39,8 +39,22 @@ export function generatePolicyRule(toolName: string, toolArgs: any): string {
  */
 export async function addPolicyToYaml(policyRule: string): Promise<void> {
   try {
-    // Load existing config or create empty one
-    const config: PermissionsYamlConfig = loadPermissionsYaml() || {};
+    const loadResult = loadPermissionsYamlResult();
+    if (loadResult.status === "unreadable") {
+      // Do not rewrite from an empty config — that would permanently drop the
+      // user's remaining rules after a parse failure.
+      const message =
+        "permissions.yaml exists but could not be parsed; refusing to overwrite it with a partial allow-list";
+      logger.error(message, {
+        reason: loadResult.reason,
+        error: loadResult.error,
+        policyRule,
+      });
+      throw new Error(message);
+    }
+
+    const config: PermissionsYamlConfig =
+      loadResult.status === "valid" ? { ...loadResult.config } : {};
 
     // Ensure allow array exists
     if (!config.allow) {
