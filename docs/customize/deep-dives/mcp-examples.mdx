@@ -7,6 +7,8 @@ Ready-to-use MCP server configurations for popular tools and services. Copy thes
 
 MCP servers are only available in **agent** mode. For configuration concepts and setup details, see the [MCP deep dive](/customize/deep-dives/mcp).
 
+For shared servers, use [tool policies](/ide-extensions/agent/how-to-customize#how-to-configure-tool-policies) to exclude tools you do not want sent to the model. Client-side exclusion does not restrict the server itself; a documentation-only server endpoint can expose a smaller tool set.
+
 ## Sentry
 
 Sentry's MCP server provides tools for querying issues, viewing stack traces, and searching events.
@@ -182,6 +184,23 @@ mcpServers:
 ```
 
 See also: [Chrome DevTools MCP guide](/guides/chrome-devtools-mcp-performance)
+
+## BlockVectra documentation
+
+Search and read BlockVectra's RPC and indexed-data integration documentation without an account or API key:
+
+```yaml
+mcpServers:
+  - name: BlockVectra docs
+    type: streamable-http
+    url: https://docs.blockvectra.com/mcp/docs
+```
+
+This documentation endpoint exposes only `search_docs` and `read_doc` and rejects calls to other tools. The separate `/mcp` endpoint also includes RPC and account tools; use the documentation URL above when you only need source guidance.
+
+Try: "Find Robinhood mainnet's public RPC setup and cite the source. Keep mainnet and testnet distinct."
+
+See also: [BlockVectra MCP setup guide](https://docs.blockvectra.com/en/guides/mcp-server/?ref=continue-mcp-docs)
 
 ## Other guides
 
