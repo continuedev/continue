@@ -44,6 +44,7 @@ export function TabGroup({
           icon={tab.icon}
           isActive={activeTab === tab.id}
           onClick={() => onTabClick(tab.id)}
+          tabId={tab.id}
         />
       ))}
 

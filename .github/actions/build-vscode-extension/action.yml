@@ -15,7 +15,7 @@ inputs:
     required: false
     default: 'false'
   commit-sha:
-    description: 'Commit SHA for version modification (optional, uses first 7 chars)'
+    description: 'Commit SHA for version modification (optional, uses first 7 chars, as -g<sha>)'
     required: false
     default: ''
   github-token:
@@ -129,9 +129,12 @@ runs:
         # Get current version from package.json
         CURRENT_VERSION=$(node -p "require('./package.json').version")
 
-        # Create new version with short commit SHA (first 7 chars)
+        # Create new version with short commit SHA (first 7 chars). The "g"
+        # prefix (as in git describe) keeps the pre-release identifier
+        # alphanumeric: a SHA like 0168024 is all digits with a leading zero,
+        # which semver forbids, and vsce then rejects the version.
         COMMIT_SHORT="${{ inputs.commit-sha }}"
-        NEW_VERSION="${CURRENT_VERSION}-${COMMIT_SHORT:0:7}"
+        NEW_VERSION="${CURRENT_VERSION}-g${COMMIT_SHORT:0:7}"
 
         echo "📝 Updating package.json version from $CURRENT_VERSION to $NEW_VERSION"
 
