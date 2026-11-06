@@ -104,6 +104,26 @@ jobs:
           name: ${{ matrix.platform }}-${{ matrix.arch }}-vsix
           path: "extensions/vscode/*.vsix"
 
+      # The "agents" build adds the proposed APIs for VS Code's Agents window
+      # (scripts/agents-manifest.js). The Marketplace refuses proposed APIs,
+      # so it is a separate artifact, attached to the GitHub release only.
+      - name: Package the agents build
+        shell: bash
+        run: |
+          cd extensions/vscode
+          node scripts/agents-manifest.js
+          version=$(node -p "require('./package.json').version")
+          mkdir -p agents
+          npx vsce package --no-dependencies --target ${{ matrix.platform }}-${{ matrix.arch }} \
+            --out "agents/continued-${{ matrix.platform }}-${{ matrix.arch }}-${version}-agents.vsix"
+          git checkout -- package.json
+
+      - name: Upload agents .vsix artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.arch }}-vsix-agents
+          path: "extensions/vscode/agents/*.vsix"
+
   release:
     # Only a tag becomes a release. Run from a branch, the workflow builds
     # every package and stops here (a dry run), instead of tagging a release
@@ -127,6 +147,13 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           pattern: "*-vsix"
+          path: vsix-artifacts
+          merge-multiple: true
+
+      # The agents builds go on the GitHub release too (not to the Marketplace).
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: "*-vsix-agents"
           path: vsix-artifacts
           merge-multiple: true
 

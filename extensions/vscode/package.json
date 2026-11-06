@@ -56,6 +56,18 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "languageModelChatProviders": [
+      {
+        "vendor": "continued",
+        "displayName": "Continued"
+      }
+    ],
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "continued.mcpServers",
+        "label": "Continued"
+      }
+    ],
     "languages": [
       {
         "filenames": [
@@ -85,6 +97,16 @@
     "configuration": {
       "title": "Continued",
       "properties": {
+        "continue.shareModelsWithVSCode": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Offer the chat models of the selected Continued config to VS Code's own chat and agents (model picker vendor: Continued). Requests still go through Continued with your Continued keys."
+        },
+        "continue.shareMcpServersWithVSCode": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Offer the MCP servers of the selected Continued config to VS Code's own chat and agents, so they are configured once."
+        },
         "continue.telemetryEnabled": {
           "type": "boolean",
           "default": true,

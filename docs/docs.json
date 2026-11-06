@@ -81,6 +81,7 @@
               "customize/model-setup",
               "customize/providers",
               "customize/configs",
+              "customize/vscode-chat-and-agents",
               "customize/mcp-tools",
               "customize/rules",
               "customize/prompts",

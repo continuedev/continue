@@ -1,0 +1,36 @@
+---
+title: "VS Code Chat and Agents"
+---
+
+Continued shares the selected config's chat models and MCP servers with VS Code's own chat, agent mode and Agents window. Its keys stay with Continued.
+
+## Models in VS Code's model picker
+
+The chat models of the selected config appear in VS Code's model picker under **Continued**. Requests from VS Code's chat and agents run through Continued with the keys from your config and [provider accounts](/customize/providers); VS Code never receives the keys. Models that support tool calling can be used in agent mode.
+
+Switching configs changes the list. Turn it off with the `continue.shareModelsWithVSCode` setting.
+
+<Note>
+  VS Code only shows models from extensions to users on an individual GitHub Copilot plan, and Copilot Business or Enterprise administrators can turn them off with the "Bring Your Own Language Model Key" policy.
+</Note>
+
+## MCP servers in VS Code
+
+The MCP servers of the selected config appear in VS Code's MCP server list under **Continued**, so they are set up once for both. Stdio servers and HTTP (streamable HTTP and SSE) servers are shared; websocket servers are not, as VS Code has no equivalent. Servers disabled in Continued are left out.
+
+Environment values, API keys and request headers are not part of the list VS Code caches; they are passed only when VS Code starts the server. Turn sharing off with the `continue.shareMcpServersWithVSCode` setting.
+
+## Continued in the Agents window
+
+The **agents** build of the extension adds Continued as an agent in VS Code's Agents window. It runs on the chat model and always-applied rules of the selected config, and uses VS Code's tools, including MCP servers. VS Code asks for approval before tools that need it.
+
+The Agents window integration uses VS Code APIs that are still proposed, so:
+
+- Install the `continued-<platform>-<version>-agents.vsix` file from the [GitHub release](https://github.com/b1tninja/continued/releases) instead of the Marketplace version, which cannot include proposed APIs.
+- Use VS Code Insiders, or start VS Code Stable with:
+
+  ```bash
+  code --enable-proposed-api b1tninja.continued
+  ```
+
+Without either, the agents build works like the normal one. Sessions are listed in the Agents window under **Continued**; reopening a session shows its earlier turns when VS Code provides the APIs for it.

@@ -59,6 +59,7 @@ import {
   initDocumentContentCache,
 } from "../util/editLoggingUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { registerVsCodeAi } from "../ai/registerVsCodeAi";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
@@ -283,6 +284,9 @@ export class VsCodeExtension {
     resolveConfigHandler?.(this.configHandler);
 
     void this.configHandler.loadConfig();
+
+    // Offer Continued's models and MCP servers to VS Code's own chat/agents.
+    registerVsCodeAi(context, this.configHandler);
 
     this.verticalDiffManager = new VerticalDiffManager(
       this.sidebar.webviewProtocol,
