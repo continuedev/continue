@@ -10,9 +10,21 @@ val pluginGroup: String by project
 val pluginVersion: String by project
 val isEap get() = environment("RELEASE_CHANNEL").orNull == "eap"
 
+// The IntelliJ Platform Gradle plugin (2.20.0, the latest) still brings
+// jackson 2.21.4 and jsoup 1.22.2 onto the build classpath, both with known
+// advisories. Raise them to fixed releases; drop these once the plugin does.
+buildscript {
+    dependencies {
+        classpath(platform("com.fasterxml.jackson:jackson-bom:2.21.7"))
+        constraints {
+            classpath("org.jsoup:jsoup:1.23.2")
+        }
+    }
+}
+
 plugins {
     kotlin("jvm") version "2.4.21"
-    id("org.jetbrains.intellij.platform") version "2.19.0"
+    id("org.jetbrains.intellij.platform") version "2.20.0"
     id("org.jetbrains.changelog") version "2.5.0"
     id("org.jetbrains.qodana") version "0.1.13"
 }
@@ -48,12 +60,14 @@ dependencies {
     }
 
     testImplementation("junit:junit:4.13.2")
+    // Assertions such as assertDoesNotThrow; this used to arrive transitively
+    // through the video recorder.
+    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
     testImplementation("io.mockk:mockk:1.14.11") {
         // this transitive dependency (1.6.4) conflicts with built-in version (1.7.3)
         // otherwise e2e tests (runIdeForUiTests) will have linkage errors
         exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
     }
-    testImplementation("com.automation-remarks:video-recorder-junit5:2.0")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:6.1.3") // required to run both JUnit 5 and JUnit 3
     // Gradle 9 no longer supplies the JUnit Platform launcher itself
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.3")
@@ -62,6 +76,32 @@ dependencies {
     "testIntegrationRuntimeOnly"("org.junit.platform:junit-platform-launcher:6.1.3")
     testIntegrationImplementation("org.kodein.di:kodein-di-jvm:7.33.0")
     testIntegrationImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0")
+
+    // The IntelliJ Starter test framework (ide-starter-squashed 243.x, used by
+    // the integration tests only) brings Netty 4.2.0.Alpha4, Bouncy Castle
+    // 1.78.1, Jackson 2.17, Guava 33.3.0, protobuf 3.24.4, XStream 1.4.20 and
+    // lz4-java 1.8.0, all with known advisories. Raise them to fixed releases;
+    // newer Starter releases still carry some of them and need Java 21.
+    testIntegrationImplementation(platform("io.netty:netty-bom:4.2.18.Final"))
+    testIntegrationImplementation(platform("com.fasterxml.jackson:jackson-bom:2.21.7"))
+    constraints {
+        testIntegrationImplementation("org.bouncycastle:bcprov-jdk18on:1.86")
+        testIntegrationImplementation("org.bouncycastle:bcpkix-jdk18on:1.86")
+        testIntegrationImplementation("org.bouncycastle:bcutil-jdk18on:1.86")
+        testIntegrationImplementation("com.google.guava:guava:33.7.2-jre")
+        testIntegrationImplementation("com.google.protobuf:protobuf-java:3.25.5")
+        testIntegrationImplementation("com.thoughtworks.xstream:xstream:1.4.21")
+    }
+}
+
+// lz4-java moved from org.lz4 to at.yawk.lz4; the old coordinates have no
+// fixed release.
+configurations.matching { it.name.startsWith("testIntegration") }.configureEach {
+    resolutionStrategy.dependencySubstitution {
+        substitute(module("org.lz4:lz4-java"))
+            .using(module("at.yawk.lz4:lz4-java:1.13.0"))
+            .because("org.lz4:lz4-java 1.8.0 has advisories fixed only in at.yawk.lz4")
+    }
 }
 
 kotlin {

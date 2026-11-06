@@ -1,6 +1,5 @@
 package com.github.continuedev.continueintellijextension
 
-import com.automation.remarks.junit5.Video
 import com.intellij.driver.sdk.ui.components.*
 import com.intellij.driver.sdk.wait
 import com.intellij.ide.starter.driver.engine.runIdeWithDriver
@@ -16,7 +15,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class Autocomplete {
 
-    @Video
+    @RecordScreen
     @Test
     fun testAutocomplete() {
         val starter = Starter.newContext("testExample", TestCase(IdeProductProvider.IC, NoProject).withVersion("2024.3"))
