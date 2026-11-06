@@ -21,3 +21,11 @@
 #docs/*.md
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
+
+# Dependency floors raised past known advisories (pydantic >= 2.4.0 for
+# GHSA-mr82-8j83-vxmv, virtualenv >= 21.14.13 for GHSA-cx6f-vjhg-g3cc and
+# GHSA-4f8h-vr72-p32c). Keep them when the client is regenerated.
+requirements.txt
+test-requirements.txt
+setup.py
+pyproject.toml
