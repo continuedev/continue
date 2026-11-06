@@ -46,7 +46,7 @@ jobs:
         uses: ./.github/actions/run-vscode-e2e-test
         with:
           test_file: e2e/_output/tests/Screenshots.screens.js
-          command: e2e:ci:run-yaml
+          command: e2e:ci:run-screenshots
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload screenshots

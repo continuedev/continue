@@ -144,6 +144,13 @@ describe("Docs screenshots", () => {
         requireDisplayed: true,
       }).catch(() => GUIActions.switchToReactIframe()));
       await body();
+      // Park the pointer in a corner so no hover tooltip (e.g. "Select
+      // Model") covers the input; open menus stay open.
+      await driver
+        .actions()
+        .move({ x: 1, y: 1, origin: "viewport" as any })
+        .perform()
+        .catch(() => {});
       await TestUtils.waitForTimeout(800); // let animations settle
       await view.switchBack();
       await save(VSBrowser.instance.driver, name);
@@ -201,6 +208,7 @@ describe("Docs screenshots", () => {
 
   async function newSession() {
     await runCommand("Continued: New Session");
+    await TestUtils.waitForTimeout(1000); // the new session takes focus
   }
 
   async function openSettings() {
@@ -213,22 +221,59 @@ describe("Docs screenshots", () => {
     await driver.executeScript("arguments[0].click()", el);
   }
 
+  /**
+   * A real click, or a script click when something on top intercepts it.
+   * Some menus (the model picker) only open on a real click.
+   */
+  async function click(el: WebElement) {
+    try {
+      await el.click();
+    } catch (e) {
+      if (!/intercepted|not clickable/i.test((e as Error).message)) throw e;
+      await scriptClick(el);
+    }
+  }
+
+  /**
+   * Open a picker and choose an option. Right after New Session the input
+   * takes focus and can close a menu that just opened, so the open is
+   * retried until the option shows.
+   */
+  async function pick(
+    button: () => Promise<WebElement>,
+    option: () => Promise<WebElement>,
+  ) {
+    const el = await TestUtils.waitForSuccess(async () => {
+      await click(await button());
+      return TestUtils.waitForSuccess(option, 2000);
+    });
+    await click(el);
+  }
+
   async function selectMode(mode: string) {
-    await scriptClick(await GUISelectors.getModeDropdownButton(view));
-    await scriptClick(
-      await TestUtils.waitForSuccess(() =>
-        GUISelectors.getModeDropdownOption(view, mode),
-      ),
+    await pick(
+      () => GUISelectors.getModeDropdownButton(view),
+      () => GUISelectors.getModeDropdownOption(view, mode),
     );
   }
 
   async function selectModel(model: string) {
-    await scriptClick(await GUISelectors.getModelDropdownButton(view));
-    await scriptClick(
-      await TestUtils.waitForSuccess(() =>
-        GUISelectors.getModelDropdownOption(view, model),
-      ),
+    await pick(
+      () => GUISelectors.getModelDropdownButton(view),
+      () => GUISelectors.getModelDropdownOption(view, model),
     );
+  }
+
+  /** Wait for text anywhere in the chat, e.g. the end of a scripted reply. */
+  async function waitForText(text: string) {
+    await TestUtils.waitForSuccess(
+      () =>
+        view.findWebElement(
+          By.xpath(`//*[contains(normalize-space(.), "${text}")][not(*)]`),
+        ),
+      DEFAULT_TIMEOUT.MD,
+    );
+    await TestUtils.waitForTimeout(500);
   }
 
   async function send(text: string) {
@@ -248,7 +293,7 @@ describe("Docs screenshots", () => {
       const button = await GUISelectors.getModelDropdownButton(view);
       await button.click();
       await TestUtils.waitForSuccess(() =>
-        GUISelectors.getModelDropdownOption(view, "TEST LLM"),
+        GUISelectors.getModelDropdownOption(view, "GPT-5"),
       );
     });
 
@@ -265,41 +310,18 @@ describe("Docs screenshots", () => {
     await shot("chat-response", async () => {
       await newSession();
       await selectMode("Chat");
-      await selectModel("TEST LLM");
+      await selectModel("GPT-5");
       await send("Explain what this project does");
-      await TestUtils.waitForSuccess(
-        () => GUISelectors.getThreadMessageByText(view, "Explain what"),
-        DEFAULT_TIMEOUT.SM,
-      );
-      await TestUtils.waitForTimeout(1500); // the reply streams in
+      await waitForText("npm test"); // the end of the scripted reply
     });
 
-    await shot("agent-tool-approval", async () => {
-      await openSettings();
-      const tools = await TestUtils.waitForSuccess(() =>
-        GUISelectors.getToolsTab(view),
-      );
-      await tools.click();
-      const policy = await TestUtils.waitForSuccess(() =>
-        GUISelectors.getToolPolicyButton(view, "view_diff"),
-      );
-      // Cycle the policy until it reads "Ask" (Ask first).
-      for (let i = 0; i < 5 && !/ask/i.test(await policy.getText()); i++) {
-        await policy.click();
-        await TestUtils.waitForTimeout(300);
-      }
-      const back = await TestUtils.waitForSuccess(() =>
-        GUISelectors.getBackButton(view),
-      );
-      await back.click();
+    await shot("agent-response", async () => {
       await newSession();
-      await selectModel("TOOL MOCK LLM");
+      await selectModel("Claude Sonnet 4.5");
       await selectMode("Agent");
       await send("What changed on this branch?");
-      await TestUtils.waitForSuccess(
-        () => GUISelectors.getAcceptToolCallButton(view),
-        DEFAULT_TIMEOUT.SM,
-      );
+      // The scripted agent views the diff, then summarises it.
+      await waitForText("No other files are touched");
     });
 
     await shot("settings", async () => {

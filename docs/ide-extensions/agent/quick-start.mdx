@@ -45,7 +45,7 @@ You can switch to `Agent` in the mode selector below the chat input box. The mod
 - **Plan mode**: Read-only tools for safe exploration and planning
 - **Agent mode**: All tools available for making changes
 
-![How to select agent mode](../../images/mode-select-agent.png)
+![The mode selector, with Chat, Plan and Agent](../../images/mode-select-agent.png)
 
 <Info>
   If Agent mode or Plan mode is disabled with a `Not Supported` message, the selected
@@ -67,7 +67,9 @@ With Agent mode, you can provide natural language instruction and let the model 
 
 > Set the @typescript-eslint/naming-convention rule to "off" for all eslint configurations in this project
 
-Agent mode will then decide which tools to use to get the job done.
+Agent mode will then decide which tools to use to get the job done. Here it views the git diff before answering:
+
+![Agent mode viewing the git diff and summarizing the changes](../../images/agent-response.png)
 
 ## How to Give Agent Mode Permission
 

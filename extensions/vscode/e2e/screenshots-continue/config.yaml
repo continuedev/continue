@@ -1,0 +1,73 @@
+# Config for the Docs Screenshots workflow only (Screenshots.screens.ts):
+# realistic model names in the pickers, with scripted replies from the mock
+# provider, so the images can go into the docs. The e2e tests use
+# ../test-continue-yaml.
+name: Main Config
+version: 1.0.0
+schema: v1
+
+models:
+  - name: Claude Sonnet 4.5
+    provider: mock
+    model: claude-sonnet-4-5
+    capabilities:
+      - tool_use
+    requestOptions:
+      extraBodyProperties:
+        chatStream:
+          # Agent turn 1: look at the diff (the shot waits for its approval).
+          - - role: assistant
+              content: "I'll look at the uncommitted changes first."
+            - role: assistant
+              content: ""
+              toolCalls:
+                - id: view_diff_1
+                  type: function
+                  function:
+                    name: view_diff
+          # Agent turn 2, after the tool result.
+          - - role: assistant
+              content: |
+                This branch changes two things:
+
+                - **`src/api/client.ts`** retries a request up to three times when the server answers `429`, waiting longer each time.
+                - **`src/api/client.test.ts`** adds a test for the retry and one for giving up after the third attempt.
+
+                No other files are touched.
+    roles:
+      - chat
+      - edit
+      - apply
+
+  - name: GPT-5
+    provider: mock
+    model: gpt-5
+    capabilities:
+      - tool_use
+    requestOptions:
+      extraBodyProperties:
+        chatStream:
+          - - role: assistant
+              content: |
+                This is a small TypeScript service that exposes a REST API for managing tasks.
+
+                - **`src/server.ts`** starts an Express server and registers the routes.
+                - **`src/routes/tasks.ts`** handles creating, listing, updating and deleting tasks.
+                - **`src/db.ts`** stores tasks in SQLite through a thin query helper.
+
+                Tests live next to the code (`*.test.ts`) and run with `npm test`.
+    roles:
+      - chat
+      - edit
+      - apply
+
+  - name: Qwen2.5 Coder 7B (local)
+    provider: mock
+    model: qwen2.5-coder:7b
+    roles:
+      - autocomplete
+
+context:
+  - provider: diff
+  - provider: file
+  - provider: terminal
