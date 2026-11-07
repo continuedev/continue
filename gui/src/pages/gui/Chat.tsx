@@ -36,6 +36,7 @@ import { useApplyModeModel } from "../../hooks/useApplyModeModel";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
+  selectCurrentToolCalls,
   selectDoneApplyStates,
   selectPendingToolCalls,
 } from "../../redux/selectors/selectToolCalls";
@@ -46,6 +47,7 @@ import {
   newSession,
   QueuedMessage,
   removeQueuedMessage,
+  steerQueuedMessages,
   takeQueuedMessages,
   updateToolCallOutput,
 } from "../../redux/slices/sessionSlice";
@@ -186,8 +188,13 @@ export function Chat() {
       const currentMode = stateSnapshot.session.mode;
 
       // Typed while the agent works: queue it for when the turn ends, and
-      // leave the running turn alone
-      if (stateSnapshot.session.isStreaming) {
+      // leave the running turn alone. An approved tool that is running is
+      // work too, though nothing streams then: sending would start a second
+      // request alongside the turn that is waiting for the tool's result.
+      const isToolRunning = selectCurrentToolCalls(stateSnapshot).some(
+        (tc) => tc.status === "calling",
+      );
+      if (stateSnapshot.session.isStreaming || isToolRunning) {
         if (index === undefined && !isCurrentlyInEdit) {
           dispatch(enqueueMessage({ editorState, modifiers }));
           editorToClearOnSend?.commands.clearContent(false);
@@ -260,9 +267,6 @@ export function Chat() {
 
   const sendQueuedMessages = useCallback(
     async (ids?: string[]) => {
-      if (reduxStore.getState().session.isStreaming) {
-        await dispatch(cancelStream());
-      }
       const { queuedMessages } = reduxStore.getState().session;
       const chosen = ids
         ? queuedMessages.filter((m) => ids.includes(m.id))
@@ -278,6 +282,29 @@ export function Chat() {
       sendInput(merged.editorState, merged.modifiers);
     },
     [dispatch, reduxStore, sendInput],
+  );
+
+  // "Send now" while the agent works steers: the messages go in after the
+  // running tool calls finish, without stopping the turn (Stop does that).
+  // Otherwise, or when the reply is text with no tools, they go at turn end.
+  const sendNowOrSteer = useCallback(
+    (ids: string[]) => {
+      const state = reduxStore.getState();
+      const isAgentWorking =
+        state.session.isStreaming ||
+        selectCurrentToolCalls(state).some(
+          (tc) =>
+            tc.status === "generating" ||
+            tc.status === "generated" ||
+            tc.status === "calling",
+        );
+      if (isAgentWorking) {
+        dispatch(steerQueuedMessages(ids));
+      } else {
+        void sendQueuedMessages(ids);
+      }
+    },
+    [dispatch, reduxStore, sendQueuedMessages],
   );
 
   useEffect(() => {
@@ -490,7 +517,7 @@ export function Chat() {
         <CachingOffNotice />
         <LargeMessageNotice />
         <QueuedMessages
-          onSendNow={(ids) => void sendQueuedMessages(ids)}
+          onSendNow={sendNowOrSteer}
           onEdit={editQueuedMessage}
           onRemove={(id) => dispatch(removeQueuedMessage(id))}
         />

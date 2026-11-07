@@ -13,7 +13,11 @@ function isOverloadedErrorMessage(message?: string): boolean {
   return lower.includes("overloaded") || lower.includes("529");
 }
 import { selectSelectedChatModel } from "../slices/configSlice";
-import { recordRequestFailure, setQueuePaused } from "../slices/sessionSlice";
+import {
+  recordRequestFailure,
+  setQueuePaused,
+  setSteeredMessages,
+} from "../slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../slices/uiSlice";
 import { ThunkApiType } from "../store";
 import { cancelStream } from "./cancelStream";
@@ -66,11 +70,15 @@ export const streamThunkWrapper = createAsyncThunk<
         // cancelStream pauses the message queue as if the user stopped; a
         // retry is not a stop, so put the queue back as it was
         const wasQueuePaused = getState().session.isQueuePaused;
+        const steeredIds = (getState().session.queuedMessages ?? [])
+          .filter((m) => m.steer)
+          .map((m) => m.id);
         await dispatch(cancelStream());
         const delayMs = OVERLOADED_DELAY_MS * 2 ** attempt;
         await new Promise((resolve) => setTimeout(resolve, delayMs));
         await dispatch(cancelStream());
         dispatch(setQueuePaused(wasQueuePaused));
+        dispatch(setSteeredMessages(steeredIds));
       } else {
         await dispatch(cancelStream());
         dispatch(setDialogMessage(<StreamErrorDialog error={e} />));

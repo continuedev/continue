@@ -830,6 +830,46 @@ describe("Bedrock", () => {
       ]);
     });
 
+    it("puts a message sent while tools ran in the same user turn as their results (steering)", () => {
+      const messages: ChatMessage[] = [
+        { role: "user", content: "Use a tool" } as UserChatMessage,
+        {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: "tool-1",
+              type: "function",
+              function: { name: "test_tool", arguments: "{}" },
+            },
+          ],
+        },
+        { role: "tool", content: "Tool result", toolCallId: "tool-1" },
+        { role: "user", content: "Also check the tests" } as UserChatMessage,
+      ];
+
+      const converted = bedrock["_convertMessages"](
+        messages,
+        new Set(["test_tool"]),
+      );
+
+      // Roles still alternate, and the results come before the text
+      expect(converted.map((m: any) => m.role)).toEqual([
+        "user",
+        "assistant",
+        "user",
+      ]);
+      expect(converted[2].content).toEqual([
+        {
+          toolResult: {
+            toolUseId: "tool-1",
+            content: [{ text: "Tool result" }],
+          },
+        },
+        { text: "Also check the tests" },
+      ]);
+    });
+
     it("should handle tool calls with unavailable tools as text", () => {
       const messages: ChatMessage[] = [
         { role: "user", content: "Use a tool" } as UserChatMessage,

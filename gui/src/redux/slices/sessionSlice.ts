@@ -255,6 +255,11 @@ export interface QueuedMessage {
   id: string;
   editorState: JSONContent;
   modifiers: InputModifiers;
+  /**
+   * "Send now" while the agent works: delivered after the tool calls that are
+   * running finish, before the next model request, instead of at turn end.
+   */
+  steer?: boolean;
 }
 
 export const INITIAL_SESSION_STATE: SessionState = {
@@ -582,6 +587,18 @@ export const sessionSlice = createSlice({
     requestQueuedMessagesSend: (state) => {
       state.isQueueSendRequested = state.queuedMessages.length > 0;
     },
+    /** Deliver these at the next tool boundary (see QueuedMessage.steer) */
+    steerQueuedMessages: (state, { payload }: PayloadAction<string[]>) => {
+      for (const m of state.queuedMessages) {
+        if (payload.includes(m.id)) m.steer = true;
+      }
+    },
+    /** Exactly these are steered; [] after Stop, which cancels steering */
+    setSteeredMessages: (state, { payload }: PayloadAction<string[]>) => {
+      for (const m of state.queuedMessages) {
+        m.steer = payload.includes(m.id) || undefined;
+      }
+    },
     takeQueuedMessages: (state) => {
       state.queuedMessages = [];
       state.isQueuePaused = false;
@@ -773,7 +790,10 @@ export const sessionSlice = createSlice({
       // The queue belongs to its session and is saved with it. A loaded
       // session (including the one reopened after a reload or crash) brings
       // its queue back paused: nothing is sent until the person says so.
-      state.queuedMessages = payload?.queuedMessages ?? [];
+      // Steering belongs to the turn that was running, so it is not kept.
+      state.queuedMessages = (payload?.queuedMessages ?? []).map(
+        ({ id, editorState, modifiers }) => ({ id, editorState, modifiers }),
+      );
       state.isQueuePaused = state.queuedMessages.length > 0;
       state.isQueueSendRequested = false;
 
@@ -1270,6 +1290,8 @@ export const {
   clearQueuedMessages,
   setQueuePaused,
   requestQueuedMessagesSend,
+  steerQueuedMessages,
+  setSteeredMessages,
   takeQueuedMessages,
   updateFileSymbols,
   setContextItemsAtIndex,

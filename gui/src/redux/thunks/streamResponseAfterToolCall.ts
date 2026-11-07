@@ -1,13 +1,17 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage } from "core";
 import { renderContextItems } from "core/util/messageContent";
+import { mergeQueuedMessages } from "../../components/mainInput/util/queuedMessages";
 import { selectCurrentToolCalls } from "../selectors/selectToolCalls";
 import {
   ChatHistoryItemWithMessageId,
+  removeQueuedMessage,
+  requestQueuedMessagesSend,
   resetNextCodeBlockToApplyIndex,
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
+import { addUserInputToHistory } from "./addUserInputToHistory";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamThunkWrapper } from "./streamThunkWrapper";
 
@@ -40,7 +44,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
   ThunkApiType
 >(
   "chat/streamAfterToolCall",
-  async ({ toolCallId, depth = 0 }, { dispatch, getState }) => {
+  async ({ toolCallId, depth = 0 }, { dispatch, extra, getState }) => {
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
@@ -73,14 +77,44 @@ export const streamResponseAfterToolCall = createAsyncThunk<
             item.toolCallStates?.some((tc) => tc.toolCallId === toolCallId),
         );
 
+        if (!assistantMessage) return;
+
         if (
-          assistantMessage &&
           areAllToolsDoneStreaming(
             assistantMessage,
             state.config.config.ui?.continueAfterToolRejection,
           )
         ) {
+          // Steering: messages sent with "Send now" while the tools ran go in
+          // here, after the tool results and before the next request, so the
+          // model reads them in this turn. The providers merge the tool
+          // results and this text into one user turn.
+          const steered = (getState().session.queuedMessages ?? []).filter(
+            (m) => m.steer,
+          );
+          const merged = mergeQueuedMessages(steered);
+          if (merged) {
+            steered.forEach((m) => dispatch(removeQueuedMessage(m.id)));
+            await addUserInputToHistory({
+              ...merged,
+              index: getState().session.history.length,
+              dispatch,
+              getState,
+              ideMessenger: extra.ideMessenger,
+            });
+          }
           unwrapResult(await dispatch(streamNormalInput({ depth: depth + 1 })));
+        } else if (
+          !assistantMessage.toolCallStates?.some(
+            (tc) =>
+              tc.status === "generating" ||
+              tc.status === "generated" ||
+              tc.status === "calling",
+          )
+        ) {
+          // A rejected tool ends the turn without another request: the
+          // queue goes now, as at any other turn end
+          dispatch(requestQueuedMessagesSend());
         }
       }),
     );
