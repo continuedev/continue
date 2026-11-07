@@ -357,3 +357,43 @@ describe("llmsFromModelConfig requestOptions merging", () => {
     });
   });
 });
+
+describe("llmsFromModelConfig with routes", () => {
+  it("builds the model on each further route, with that route's account", async () => {
+    const [llm] = (await llmsFromModelConfig({
+      model: {
+        name: "Claude Sonnet",
+        provider: "anthropic",
+        model: "claude-sonnet-4-6",
+        connection: "anthropic-work",
+        apiKey: "sk-work",
+        contextLength: 200000,
+        routes: [
+          {
+            connection: "openrouter",
+            provider: "openai",
+            model: "anthropic/claude-sonnet-4.6",
+            apiBase: "https://openrouter.ai/api/v1/",
+            apiKey: "sk-or",
+          },
+        ],
+      } as ModelConfig,
+      uniqueId: "test",
+      llmLogger: { log: vi.fn() } as any,
+      config: { requestOptions: {} } as any,
+    })) as any[];
+    expect(llm.routeName).toBe("anthropic-work");
+    expect(llm.routes).toBeUndefined();
+    expect(llm.fallbackRoutes).toHaveLength(1);
+    const [{ name, llm: other }] = llm.fallbackRoutes;
+    expect(name).toBe("openrouter");
+    expect(other).toMatchObject({
+      apiBase: "https://openrouter.ai/api/v1/",
+      apiKey: "sk-or",
+      title: "Claude Sonnet",
+      contextLength: 200000,
+    });
+    expect(other.completionOptions.model).toBe("anthropic/claude-sonnet-4.6");
+    expect(other.constructor.providerName).toBe("openai");
+  });
+});

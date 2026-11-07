@@ -73,6 +73,14 @@ import {
   toFimBody,
 } from "./openaiTypeConverters.js";
 import { applyToolOverrides } from "../tools/applyToolOverrides.js";
+import {
+  firstRouteToTry,
+  isContextLengthError,
+  markRouteFailed,
+  markRouteOk,
+  routeKey,
+  shouldTryNextRoute,
+} from "./routes.js";
 
 export class LLMError extends Error {
   constructor(
@@ -152,6 +160,38 @@ export abstract class BaseLLM implements ILLM {
 
   uniqueId: string;
   model: string;
+
+  /** The account this model is served through, when it has routes. */
+  routeName?: string;
+  /**
+   * The model's further routes: the same model on other accounts, tried in
+   * order when a request fails in a way another account may not (see
+   * shouldTryNextRoute). Set by the config loader.
+   */
+  fallbackRoutes?: { name: string; llm: BaseLLM }[];
+  /**
+   * The route that answered last. Later requests start there, so a
+   * conversation stays on one account (and one prompt cache) once it has
+   * moved; a config reload starts again from the first.
+   */
+  private activeRoute = 0;
+  /** When this model last sent a chat request (see firstRouteToTry). */
+  private lastRouteRequestAt?: number;
+  /**
+   * Waits between retries of a request whose connection dropped before the
+   * reply started (see retryStreamOnDroppedConnection); undefined for the
+   * defaults. A route with another route after it does not retry: the next
+   * account is tried instead, without waiting out this one's timeouts again.
+   */
+  connectionRetryDelaysMs?: number[];
+
+  get routeNames(): string[] | undefined {
+    if (!this.fallbackRoutes?.length) return undefined;
+    return [
+      this.routeName ?? this.providerName,
+      ...this.fallbackRoutes.map((r) => r.name),
+    ];
+  }
 
   title?: string;
   baseChatSystemMessage?: string;
@@ -359,7 +399,24 @@ export abstract class BaseLLM implements ILLM {
       requestOptions: this.requestOptions,
       env: this._llmOptions.env,
       useResponsesApi: this._llmOptions.useResponsesApi,
+      ...(this.failsOverQuickly ? { maxRetries: 0 } : {}),
     });
+  }
+
+  /** See failOverQuickly. */
+  protected failsOverQuickly = false;
+
+  /**
+   * For a route with another route after it: a failed request is not retried
+   * on this account (not a dropped connection, not a rate limit, not the
+   * SDKs' own retries of 429 and 5xx); the next route is tried instead,
+   * without waiting out this account's timeouts and backoff first.
+   */
+  failOverQuickly() {
+    if (this.failsOverQuickly) return;
+    this.failsOverQuickly = true;
+    this.connectionRetryDelaysMs = [];
+    if (this.openaiAdapter) this.openaiAdapter = this.createOpenAiAdapter();
   }
 
   listModels(): Promise<string[]> {
@@ -562,10 +619,12 @@ export abstract class BaseLLM implements ILLM {
         throw e;
       }
     };
+    // A route with another after it fails over instead of backing off
     return withExponentialBackoff<Response>(
       () => customFetch(url, init) as any,
-      5,
+      this.failsOverQuickly ? 1 : 5,
       0.5,
+      init?.signal ?? undefined,
     );
   }
 
@@ -1155,8 +1214,92 @@ export abstract class BaseLLM implements ILLM {
     yield msg as ChatMessage;
   }
 
-  // Update the streamChat method:
+  /**
+   * A chat request, on the model's routes in turn when it has more than one:
+   * a failure before any of the reply arrived moves on to the next route if
+   * shouldTryNextRoute says another account may succeed. The message with
+   * the usage, and the prompt log, name the route that answered.
+   */
   async *streamChat(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: LLMFullCompletionOptions = {},
+    messageOptions?: MessageOption,
+  ): AsyncGenerator<ChatMessage, PromptLog> {
+    if (!this.fallbackRoutes?.length) {
+      return yield* this.streamChatOnRoute(
+        messages,
+        signal,
+        options,
+        messageOptions,
+      );
+    }
+    const routes: { name: string; llm: BaseLLM }[] = [
+      { name: this.routeName ?? this.providerName, llm: this },
+      ...this.fallbackRoutes,
+    ];
+    const keys = routes.map((r) =>
+      routeKey(r.llm as BaseLLM & { region?: string }),
+    );
+    const start = firstRouteToTry({
+      active: this.activeRoute,
+      keys,
+      lastRequestAt: this.lastRouteRequestAt,
+    });
+    this.lastRouteRequestAt = Date.now();
+    for (let i = start; ; i++) {
+      const { name, llm } = routes[i];
+      if (routes[i + 1]) llm.failOverQuickly();
+      const gen =
+        llm === this
+          ? this.streamChatOnRoute(messages, signal, options, messageOptions)
+          : llm.streamChat(messages, signal, options, messageOptions);
+      let started = false;
+      try {
+        let next = await gen.next();
+        while (!next.done) {
+          started = true;
+          const chunk = next.value;
+          // The usage is the answering account's: its provider and its own
+          // id for the model, so the cost is priced for that route
+          yield chunk.role === "assistant" && chunk.usage
+            ? {
+                ...chunk,
+                route: name,
+                routeProvider: llm.providerName,
+                routeModel: llm.model,
+              }
+            : chunk;
+          next = await gen.next();
+        }
+        this.activeRoute = i;
+        markRouteOk(keys[i]);
+        return { ...next.value, route: name };
+      } catch (e) {
+        const following = routes[i + 1];
+        // An account that could not serve (not one whose window was too
+        // small) is skipped for a while, across config reloads too
+        if (!started && !signal.aborted && !isContextLengthError(e)) {
+          markRouteFailed(keys[i]);
+        }
+        if (
+          started ||
+          signal.aborted ||
+          !following ||
+          !shouldTryNextRoute(e, llm, following.llm)
+        ) {
+          throw e;
+        }
+        console.warn(
+          `${this.title ?? this.model}: route "${name}" failed (${
+            (e as Error)?.message ?? e
+          }); trying "${following.name}"`,
+        );
+      }
+    }
+  }
+
+  private async *streamChatOnRoute(
     _messages: ChatMessage[],
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
@@ -1302,6 +1445,7 @@ export abstract class BaseLLM implements ILLM {
           const iterable = retryStreamOnDroppedConnection(
             startIterable,
             signal,
+            this.connectionRetryDelaysMs,
           );
 
           for await (const chunk of iterable) {
@@ -1329,6 +1473,7 @@ export abstract class BaseLLM implements ILLM {
           for await (const chunk of retryStreamOnDroppedConnection(
             () => this._streamChat(messages, signal, completionOptions),
             signal,
+            this.connectionRetryDelaysMs,
           )) {
             const result = this.processChatChunk(chunk, interaction);
             completion.push(...result.completion);

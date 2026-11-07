@@ -127,6 +127,16 @@ function mergeNode(
     return existing;
   }
   if (YAML.isSeq(existing) && Array.isArray(value)) {
+    // An empty `[]` placeholder (a new file's `models: []`) that gains
+    // entries with fields becomes a block list: flow style would put every
+    // model on one line. Lists of plain values (`roles: [chat]`) keep it.
+    if (
+      existing.flow &&
+      existing.items.length === 0 &&
+      value.some((v) => isPlainObject(v) || Array.isArray(v))
+    ) {
+      existing.flow = false;
+    }
     mergeSeq(doc, existing, value);
     return existing;
   }

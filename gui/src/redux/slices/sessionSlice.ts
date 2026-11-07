@@ -245,6 +245,11 @@ type SessionState = {
    * it says so (llama.cpp's prompt_progress). Not saved.
    */
   promptProgress?: PromptProgress;
+  /**
+   * For a model with routes: the account that answered the last request.
+   * Not saved.
+   */
+  answeredRoute?: { model: string; route: string };
   isPruned?: boolean;
   contextPercentage?: number;
   /** Tokens and estimated cost of this session's requests, saved with it. */
@@ -822,6 +827,7 @@ export const sessionSlice = createSlice({
       state.inlineErrorMessage = undefined;
       state.isPruned = false;
       state.contextPercentage = undefined;
+      state.answeredRoute = undefined;
       state.usage = payload?.usage;
       // A different conversation shares nothing with the cached one: its size,
       // timing, misses and what Auto learned all start over. Each conversation
@@ -1213,6 +1219,12 @@ export const sessionSlice = createSlice({
     ) => {
       state.promptProgress = action.payload;
     },
+    setAnsweredRoute: (
+      state,
+      action: PayloadAction<{ model: string; route: string } | undefined>,
+    ) => {
+      state.answeredRoute = action.payload;
+    },
     setPromptCacheInputTokens: (state, action: PayloadAction<number>) => {
       state.promptCache = {
         ...(state.promptCache ?? INITIAL_PROMPT_CACHE_STATE),
@@ -1424,6 +1436,7 @@ export const {
   setPromptCacheRequestAt,
   setPromptReadSpeed,
   setPromptProgress,
+  setAnsweredRoute,
   addRequestUsageToSession,
   setPromptCacheKey,
   recordCacheMiss,

@@ -5,7 +5,8 @@ import {
   Cog6ToothIcon,
   KeyIcon,
 } from "@heroicons/react/24/outline";
-import { useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { GhostButton } from "../../components";
 import { MissingSecretsPanel } from "../../components/config/MissingSecretsPanel";
@@ -19,10 +20,79 @@ import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import { analyzeError } from "../../util/errorAnalysis";
+import { CONFIG_ROUTES } from "../../util/navigation";
+import {
+  describeTransientFailure,
+  formatWait,
+  MAX_AUTO_RETRY_SECONDS,
+  transientFailure,
+} from "../../util/transientFailure";
 import { parseMissingSecretNames } from "core/util/unresolvedSecrets";
 
 interface StreamErrorProps {
   error: unknown;
+}
+
+/**
+ * Tries again by itself after a visible countdown, unless cancelled; then
+ * nothing happens until the person chooses. While the machine is offline
+ * (the webview's navigator.onLine; it knows about the network, not about the
+ * server) it waits for the network to return and tries again then.
+ */
+function RetryCountdown({
+  seconds,
+  onRetry,
+}: {
+  seconds: number;
+  onRetry: () => void;
+}) {
+  const [left, setLeft] = useState(seconds);
+  const [cancelled, setCancelled] = useState(false);
+  const [online, setOnline] = useState(
+    typeof navigator === "undefined" ? true : navigator.onLine !== false,
+  );
+  useEffect(() => {
+    const up = () => setOnline(true);
+    const down = () => setOnline(false);
+    window.addEventListener("online", up);
+    window.addEventListener("offline", down);
+    return () => {
+      window.removeEventListener("online", up);
+      window.removeEventListener("offline", down);
+    };
+  }, []);
+  // Back online: try again straight away
+  const [wasOffline, setWasOffline] = useState(!online);
+  useEffect(() => {
+    if (!online) setWasOffline(true);
+    else if (wasOffline && !cancelled) onRetry();
+  }, [online]);
+  useEffect(() => {
+    if (cancelled || !online) return;
+    if (left <= 0) {
+      onRetry();
+      return;
+    }
+    const timer = setTimeout(() => setLeft((l) => l - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [left, cancelled, online]);
+  if (cancelled) {
+    return (
+      <span className="text-description-muted" data-testid="retry-cancelled">
+        Not trying again automatically.
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-2" data-testid="retry-countdown">
+      <span>
+        {online
+          ? `Trying again in ${formatWait(left)}.`
+          : "This computer is offline. Trying again when the network is back."}
+      </span>
+      <GhostButton onClick={() => setCancelled(true)}>Cancel</GhostButton>
+    </span>
+  );
 }
 
 const StreamErrorDialog = ({ error }: StreamErrorProps) => {
@@ -77,43 +147,47 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     </GhostButton>
   );
 
+  const navigate = useNavigate();
+  const closeDialog = () => {
+    dispatch(setShowDialog(false));
+    dispatch(setDialogMessage(undefined));
+  };
+
+  const resubmit = () => {
+    let index = -1;
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (
+        history[i].message.role === "user" ||
+        history[i].message.role === "tool"
+      ) {
+        index = i;
+        break;
+      }
+    }
+
+    if (!mainEditor) {
+      console.error("Main editor not found, cannot resubmit message.");
+      return;
+    }
+
+    const editorState =
+      index === -1 ? mainEditor.getJSON() : history[index].editorState;
+
+    void dispatch(
+      streamResponseThunk({
+        editorState,
+        modifiers: {
+          noContext: true,
+          useCodebase: false,
+        },
+        index: index === -1 ? 0 : index,
+      }),
+    );
+    closeDialog();
+  };
+
   const resubmitButton = (
-    <GhostButton
-      className="flex items-center"
-      onClick={() => {
-        let index = -1;
-        for (let i = history.length - 1; i >= 0; i--) {
-          if (
-            history[i].message.role === "user" ||
-            history[i].message.role === "tool"
-          ) {
-            index = i;
-            break;
-          }
-        }
-
-        if (!mainEditor) {
-          console.error("Main editor not found, cannot resubmit message.");
-          return;
-        }
-
-        const editorState =
-          index === -1 ? mainEditor.getJSON() : history[index].editorState;
-
-        void dispatch(
-          streamResponseThunk({
-            editorState,
-            modifiers: {
-              noContext: true,
-              useCodebase: false,
-            },
-            index: index === -1 ? 0 : index,
-          }),
-        );
-        dispatch(setShowDialog(false));
-        dispatch(setDialogMessage(undefined));
-      }}
-    >
+    <GhostButton className="flex items-center" onClick={resubmit}>
       <ArrowPathIcon className="mr-1.5 h-3.5 w-3.5" />
       <span>Resubmit last message</span>
     </GhostButton>
@@ -242,6 +316,50 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
             <code>{selectedModel.underlyingProviderName}</code>
           </span>
         ) : null}
+      </div>
+    );
+  }
+
+  // A rate limit, an overloaded server or a lost connection: core already
+  // retried it (and tried a model's other routes), so the person decides:
+  // now, after a wait, or another model. The message is kept either way.
+  const transient = transientFailure(statusCode, message);
+  if (transient && !customErrorMessage) {
+    const autoRetry = transient.waitSeconds <= MAX_AUTO_RETRY_SECONDS;
+    errorContent = (
+      <div className="flex flex-col gap-2" data-testid="transient-failure">
+        <span>
+          {describeTransientFailure(
+            transient,
+            selectedModel?.title ?? "The model",
+          )}
+        </span>
+        <span className="text-description-muted">
+          {transient.waitFromServer
+            ? `The server asked to wait ${formatWait(transient.waitSeconds)}. `
+            : ""}
+          Your message is kept; nothing was lost.
+        </span>
+        {autoRetry && (
+          <RetryCountdown seconds={transient.waitSeconds} onRetry={resubmit} />
+        )}
+        <div className="flex flex-row flex-wrap justify-start gap-3 py-2">
+          <GhostButton className="flex items-center" onClick={resubmit}>
+            <ArrowPathIcon className="mr-1.5 h-3.5 w-3.5" />
+            <span>Try again now</span>
+          </GhostButton>
+          <GhostButton
+            className="flex items-center"
+            onClick={() => {
+              closeDialog();
+              navigate(CONFIG_ROUTES.MODELS);
+            }}
+          >
+            <Cog6ToothIcon className="mr-1.5 h-3.5 w-3.5" />
+            <span>Change model</span>
+          </GhostButton>
+          {transient.kind === "rate-limit" && checkKeysButton}
+        </div>
       </div>
     );
   }

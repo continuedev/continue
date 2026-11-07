@@ -406,6 +406,33 @@ describe("prompt cache options in the chat request", () => {
     expect(cache()?.lastInputTokens).toBe(84_012);
   });
 
+  it("records a fallback route's usage under that route's provider and model", async () => {
+    const { store, cache } = await sentOptions({
+      model: { ...claude, routes: ["bedrock-us", "anthropic-work"] },
+      reply: [
+        {
+          role: "assistant",
+          content: "hi",
+          route: "anthropic-work",
+          routeProvider: "anthropic",
+          routeModel: "claude-sonnet-4-6-direct",
+          usage: { promptTokens: 1000, completionTokens: 10 },
+        },
+      ],
+    });
+    const usage = (store.getState() as RootState).session.usage;
+    expect(Object.values(usage?.byModel ?? {}).map((m) => m.model)).toEqual([
+      "claude-sonnet-4-6-direct",
+    ]);
+    expect(cache()?.ledger?.[0]?.model ?? "claude-sonnet-4-6-direct").toBe(
+      "claude-sonnet-4-6-direct",
+    );
+    expect((store.getState() as RootState).session.answeredRoute).toEqual({
+      model: claude.title,
+      route: "anthropic-work",
+    });
+  });
+
   it("records one ledger entry per request, with counts only", async () => {
     const { cache } = await sentOptions({
       setting: "auto",

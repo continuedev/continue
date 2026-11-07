@@ -8,6 +8,12 @@ export const ClientCertificateOptionsSchema = z.object({
 
 export const RequestOptionsSchema = z.object({
   timeout: z.number().optional(),
+  /**
+   * Seconds to wait for a connection to the server (default 10), apart from
+   * `timeout` for the whole response. An unreachable server then fails in
+   * seconds, and a model's next route is tried.
+   */
+  connectTimeout: z.number().optional(),
   verifySsl: z.boolean().optional(),
   caBundlePath: z.union([z.string(), z.array(z.string())]).optional(),
   proxy: z.string().optional(),
@@ -21,6 +27,13 @@ export const RequestOptionsSchema = z.object({
 export const BaseConfig = z.object({
   provider: z.string(),
   requestOptions: RequestOptionsSchema.optional(),
+  /**
+   * Retries of a failed request (connection errors, 429, 5xx) by the
+   * provider's SDK, where it has them; its default when unset. Continue sets
+   * 0 for a model route with another after it, so the next account is tried
+   * instead.
+   */
+  maxRetries: z.number().int().min(0).optional(),
 });
 
 export const BasePlusConfig = BaseConfig.extend({

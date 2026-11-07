@@ -2,6 +2,7 @@ import type { ModeReasoningEffort } from "core";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Button, Card } from "../../../components/ui";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useModelCatalog } from "../../../hooks/useModelCatalog";
 import { useAppSelector } from "../../../redux/hooks";
 import {
   buildUpdate,
@@ -33,7 +34,18 @@ type Status =
 export function ModeModelsTable() {
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((state) => state.config.config);
-  const models = config.modelsByRole.chat;
+  // The config's chat models, then catalog models (models.yaml) it does
+  // not list yet: a mode can offer those too, and the config gets them
+  const catalog = useModelCatalog();
+  const models = useMemo(() => {
+    const titles = new Set(config.modelsByRole.chat.map((m) => m.title));
+    return [
+      ...config.modelsByRole.chat.map((m) => ({ title: m.title })),
+      ...catalog
+        .filter((c) => !titles.has(c.ref))
+        .map((c) => ({ title: c.ref })),
+    ];
+  }, [config.modelsByRole.chat, catalog]);
 
   // What config.yaml says now. The draft resets when it changes underneath us
   // (a save, a reload, or an edit made in the file).

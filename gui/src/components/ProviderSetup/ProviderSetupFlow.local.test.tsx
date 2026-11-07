@@ -81,6 +81,8 @@ describe("ProviderSetupFlow: local server", () => {
       apiBase: "http://127.0.0.1:8083/v1/",
     });
     expect(saves[0].key).toBeUndefined();
+    // A new connection becomes a provider account, named after the server
+    expect(saves[0].account).toEqual({ name: "Strata" });
     const added = saves[0].add.find(
       (m: any) => m.model === STRATA_MODEL.modelId,
     );
@@ -91,6 +93,50 @@ describe("ProviderSetupFlow: local server", () => {
       // From /props: agent mode and images work without editing the config
       capabilities: { tools: true, uploadImage: true },
     });
+  });
+
+  it("selects the server's own models, not the provider's presets", async () => {
+    const { messenger, saves } = messengerWith();
+    const onDone = vi.fn();
+    const { user } = await renderWithProviders(
+      <ProviderSetupFlow initialProvider="openai-compatible" onDone={onDone} />,
+      { mockIdeMessenger: messenger },
+    );
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    const box = (await screen.findByLabelText(
+      STRATA_MODEL.name,
+    )) as HTMLInputElement;
+    await waitFor(() => expect(box.checked).toBe(true));
+    expect(screen.getByTestId("model-checklist").textContent).toContain(
+      "1 model selected",
+    );
+    await user.click(screen.getByRole("button", { name: "Review" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect(saves[0].add.map((m: any) => m.model)).toEqual([
+      STRATA_MODEL.modelId,
+    ]);
+  });
+
+  it("names the account after a server that says what it is, without Detect", async () => {
+    const { messenger, saves } = messengerWith();
+    messenger.responseHandlers["models/fetch"] = async () => [
+      { ...STRATA_MODEL, server: "Strata" },
+    ];
+    const onDone = vi.fn();
+    const { user } = await renderWithProviders(
+      <ProviderSetupFlow initialProvider="openai-compatible" onDone={onDone} />,
+      { mockIdeMessenger: messenger },
+    );
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await checkModel(STRATA_MODEL.name);
+    await user.click(screen.getByRole("button", { name: "Review" }));
+    expect((await screen.findByTestId("review-account")).textContent).toContain(
+      'the account "Strata"',
+    );
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect(saves[0].account).toEqual({ name: "Strata" });
   });
 
   it("lists the models at the default address (port 8080) on Next", async () => {

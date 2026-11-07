@@ -41,6 +41,12 @@ export interface ProviderSetupModel {
 export interface ProviderSetupConnection {
   provider: string;
   connection: ProviderConnectionKey;
+  /**
+   * The provider account (providers.yaml) these models use, when they were
+   * set up as catalog models (`from:`) or name it with `connection:`.
+   * Absent for models with their own provider, apiBase and key.
+   */
+  account?: string;
   models: ProviderSetupModel[];
   /**
    * Whether a key is set up, never the key itself. "secret" means the entry
@@ -91,6 +97,12 @@ export interface SaveProviderModelsRequest {
     /** The key. Omit to keep what is stored and only (re)point the entries. */
     value?: string;
   };
+  /**
+   * Save as a provider account (providers.yaml) with catalog models
+   * (models.yaml) and `from:` entries, instead of models that carry their
+   * own connection. `name` is the account name to use for a new account.
+   */
+  account?: { name?: string };
 }
 
 export interface SaveProviderModelsResult {
@@ -399,8 +411,74 @@ export function saveProviderModels(req: SaveProviderModelsRequest): boolean {
   return edited;
 }
 
+/**
+ * Configured models that use a provider account, grouped by account: the
+ * config's `from:` entries (through the catalog) and `connection:` entries.
+ */
+export function describeAccountConnections(
+  config: ConfigYaml,
+  accounts: YamlModel[],
+  catalog: YamlModel[],
+): ProviderSetupConnection[] {
+  const byAccount = new Map(accounts.map((a) => [a?.name, a]));
+  const byModel = new Map(catalog.map((m) => [m?.name, m]));
+  const groups = new Map<string, ProviderSetupConnection>();
+  for (const entry of (config.models ?? []) as YamlModel[]) {
+    if (!entry || typeof entry !== "object") continue;
+    let accountName: string | undefined;
+    let modelId: string | undefined;
+    let shown: string | undefined;
+    if (typeof entry.from === "string") {
+      const base = byModel.get(entry.from.split("#")[0]);
+      accountName = entry.connection ?? base?.connection;
+      modelId = entry.model ?? base?.model;
+      shown = entry.name ?? entry.from;
+    } else if (typeof entry.connection === "string") {
+      accountName = entry.connection;
+      modelId = entry.model;
+      shown = entry.name;
+    }
+    const account = accountName ? byAccount.get(accountName) : undefined;
+    if (!account || !modelId || !shown) continue;
+    let group = groups.get(account.name);
+    if (!group) {
+      const ref =
+        typeof account.apiKey === "string"
+          ? SECRET_REFERENCE.exec(account.apiKey)
+          : null;
+      group = {
+        provider: account.provider,
+        connection: connectionOf(account),
+        account: account.name,
+        models: [],
+        key: ref
+          ? { state: "secret", secretName: ref[1] }
+          : typeof account.apiKey === "string" && account.apiKey.trim() !== ""
+            ? { state: "inline" }
+            : { state: "none" },
+      };
+      groups.set(account.name, group);
+    }
+    group.models.push({ name: shown, model: modelId });
+  }
+  return [...groups.values()];
+}
+
+function readYamlList(file: string, key: string): YamlModel[] {
+  try {
+    if (!fs.existsSync(file)) return [];
+    const parsed = YAML.parse(fs.readFileSync(file, "utf8"));
+    return Array.isArray(parsed?.[key]) ? parsed[key] : [];
+  } catch {
+    return [];
+  }
+}
+
 /** The connections in the selected config, or none when it cannot be edited. */
-export function readProviderConnections(): {
+export function readProviderConnections(paths?: {
+  providers: string;
+  models: string;
+}): {
   connections: ProviderSetupConnection[];
   editable: boolean;
 } {
@@ -408,10 +486,18 @@ export function readProviderConnections(): {
     const file = getEditableConfigYamlPath();
     if (!file) return { connections: [], editable: false };
     const parsed = YAML.parse(fs.readFileSync(file, "utf8"));
+    const config = parsed && typeof parsed === "object" ? parsed : {};
     return {
-      connections: describeProviderConnections(
-        parsed && typeof parsed === "object" ? parsed : {},
-      ),
+      connections: [
+        ...describeProviderConnections(config),
+        ...(paths
+          ? describeAccountConnections(
+              config,
+              readYamlList(paths.providers, "providers"),
+              readYamlList(paths.models, "models"),
+            )
+          : []),
+      ],
       editable: true,
     };
   } catch {

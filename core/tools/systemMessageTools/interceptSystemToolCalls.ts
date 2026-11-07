@@ -1,4 +1,9 @@
-import { ChatMessage, PromptLog, TextMessagePart } from "../..";
+import {
+  AssistantChatMessage,
+  ChatMessage,
+  PromptLog,
+  TextMessagePart,
+} from "../..";
 import { normalizeToMessageParts } from "../../util/messageContent";
 import { detectToolCallStart } from "./detectToolCallStart";
 import { createDelta, splitAtCodeblocksAndNewLines } from "./systemToolUtils";
@@ -7,6 +12,47 @@ import {
   SystemMessageToolsFramework,
   ToolCallParseState,
 } from "./types";
+
+/**
+ * What a streamed assistant message carries besides its text: the token
+ * counts (on the final chunk), the account that answered (a model with
+ * routes) and a local server's prompt progress. They belong to the message,
+ * not to its text, so they are passed on once, after the text, even when the
+ * message has no text: the final usage chunk and progress updates have none.
+ */
+function messageMeta(message: ChatMessage): ChatMessage | undefined {
+  const { usage, route, routeProvider, routeModel, promptProgress } =
+    message as ChatMessage & {
+      usage?: unknown;
+      route?: string;
+      routeProvider?: string;
+      routeModel?: string;
+      promptProgress?: unknown;
+    };
+  if (!usage && !promptProgress) return undefined;
+  return {
+    role: "assistant",
+    content: "",
+    ...(usage ? { usage } : {}),
+    ...(route ? { route } : {}),
+    ...(routeProvider ? { routeProvider } : {}),
+    ...(routeModel ? { routeModel } : {}),
+    ...(promptProgress ? { promptProgress } : {}),
+  } as ChatMessage;
+}
+
+/** The message without the fields messageMeta passes on separately. */
+function withoutMeta(message: AssistantChatMessage): AssistantChatMessage {
+  const {
+    usage: _usage,
+    route: _route,
+    routeProvider: _routeProvider,
+    routeModel: _routeModel,
+    promptProgress: _promptProgress,
+    ...rest
+  } = message;
+  return rest;
+}
 
 /*
     Function to intercept tool calls in markdown code blocks format from a chat message stream
@@ -63,6 +109,8 @@ export async function* interceptSystemToolCalls(
           continue;
         }
 
+        const meta = messageMeta(message);
+        const text = withoutMeta(message);
         const chunks = (parts as TextMessagePart[])
           .map((part) => splitAtCodeblocksAndNewLines(part.text))
           .flat();
@@ -90,7 +138,7 @@ export async function* interceptSystemToolCalls(
             if (delta) {
               yield [
                 {
-                  ...message,
+                  ...text,
                   content: "",
                   toolCalls: [delta],
                 },
@@ -106,13 +154,15 @@ export async function* interceptSystemToolCalls(
             // Yield normal assistant message
             yield [
               {
-                ...message,
+                ...text,
                 content: [{ type: "text", text: buffer }],
               },
             ];
           }
           buffer = "";
         }
+
+        if (meta) yield [meta];
       }
     }
   }

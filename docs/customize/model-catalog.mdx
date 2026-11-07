@@ -1,0 +1,121 @@
+---
+title: "Model Catalog"
+description: "Define each model once in models.yaml, with variants, and use it from any config."
+---
+
+A model catalog defines each model once: which [provider account](./providers) serves it, its context window, capabilities and settings, and named variants. Any config then uses it with `from:`, so models from several accounts mix freely, for example a local server for Agent mode and Claude on Bedrock for Plan mode.
+
+```yaml ~/.continue/models.yaml
+models:
+  - name: Qwen3.8 Flash
+    connection: strata # an account in providers.yaml
+    model: qwen3.8-flash-next-nvfp4-nvfp4
+    contextLength: 524288
+    capabilities: [tool_use, image_input]
+    defaultCompletionOptions: { maxTokens: 8192, temperature: 1.0 }
+    variants:
+      plan:
+        requestOptions:
+          extraBodyProperties: { reasoning_effort: xhigh }
+      act:
+        requestOptions:
+          extraBodyProperties: { reasoning_effort: low }
+  - name: Claude Sonnet
+    connection: bedrock-us
+    model: us.anthropic.claude-sonnet-4-6
+```
+
+## Use a catalog model in a config
+
+```yaml ~/.continue/config.yaml
+models:
+  - from: Qwen3.8 Flash#act
+    roles: [chat, edit, apply]
+modeModels:
+  plan:
+    model: Claude Sonnet
+  agent:
+    model: Qwen3.8 Flash#act
+```
+
+- `from: Name` uses the catalog model as it is, and `from: Name#variant` with that variant's changes.
+- The config entry can add `roles` and change any field for this config. Its name is the reference (`Qwen3.8 Flash#act`) unless it sets `name`.
+- A model or variant that `modeModels` picks but the config's `models` list does not have is added as a chat model, so a model assigned to a mode does not need to be listed twice.
+
+## How the settings combine
+
+A model is built from four layers, each over the one before: the account (`providers.yaml`), the catalog model, the variant, then the config entry. Objects merge key by key, so a variant can change one completion option and keep the others; plain values and lists replace.
+
+## Variants
+
+A variant changes a model's settings, never which model it is or where it is served from: `name`, `model`, `provider`, `connection`, `apiKey` and `apiBase` cannot be set in a variant. Use variants for reasoning effort, sampling, `contextManagement` and similar.
+
+**Set up models** adds a variant for each reasoning effort the server reports: llama.cpp when the model's chat template takes `reasoning_effort` (the levels from `/props`), and Strata (`none`, `low`, `medium`, `high`). Each one sets `reasoning_effort` in the request body, so `Qwen3.8 Flash#high` is the model at high effort.
+
+Switching between variants of one model, on the same server, does not warn about losing the prompt cache: the server sees the same model, and only the request settings change.
+
+## Routes
+
+One model can be served by several accounts, each with its own id for it. List them under `routes`, in the order to try them:
+
+```yaml ~/.continue/models.yaml
+models:
+  - name: Claude Sonnet
+    model: claude-sonnet-4-6
+    contextLength: 200000
+    routes:
+      - connection: bedrock-us
+        model: us.anthropic.claude-sonnet-4-6
+      - connection: anthropic-work
+```
+
+It is one model in the pickers. A model with no `connection` of its own is served by its first route; one with a `connection` tries that account first and the routes after it. At most three routes are used.
+
+A chat request moves on to the next route when the one before fails before any of the reply arrived, and only for:
+
+- a connection or authorization failure;
+- the model being unavailable, overloaded or throttled;
+- a prompt that does not fit, when the next route has a larger window.
+
+Any other error would fail on every route, so it is shown as it is. Once a route has answered, the conversation stays on it while its prompt cache is warm: each account has its own cache, and going back would rebuild it. After 5 minutes without a request the cache has most likely expired, so the next request starts on the first route again.
+
+An account that failed (unreachable, refusing the key, throttled or unavailable) is skipped for 5 minutes when another route follows it, including after the config reloads; after that the next request tries it again. The usage readout in the input toolbar says `via anthropic-work` when a fallback answered, its tokens and cost are counted for that account's model, and the prompt cache warnings count a change of route as a change of model.
+
+A route takes `connection`, and optionally `model`, `apiBase`, `env` and `requestOptions`; the rest of the model's settings apply on every route.
+
+## Retries
+
+A rate limit (HTTP 429), an overloaded or unavailable server (503, 529) and a dropped connection are tried again, by one policy:
+
+- When the server sends `Retry-After`, as seconds or as a date, Continue waits that long.
+- Otherwise the waits double from about a second, with some randomness so that several agents do not retry at the same moment. No single wait is longer than 30 seconds, and the waits together stay under 90 seconds.
+- A server that asks for a longer wait is reported straight away, with how long it asked for, instead of the request hanging.
+- A route with another route after it is not retried at all: the next account is tried at once, and its own retries apply only on the last route.
+
+A server that does not answer at all fails after 10 seconds (`requestOptions.connectTimeout`) instead of the operating system's TCP timeout.
+
+When the tries run out, the chat says what happened and that your message is kept. It tries again by itself after a short countdown, which you can cancel, or you can try again now or change the model. A wait of more than 10 minutes is left to you. While the computer is offline, the countdown waits for the network to come back and tries again then.
+
+## Workspace catalog
+
+A workspace's `.continue/models.yaml` adds models for that workspace, and a model there replaces a global model with the same name. The CLI (`cn`) reads the same files, `~/.continue/models.yaml` and `.continue/models.yaml` in the working directory, and `providers.yaml` in both places.
+
+## Set up in the GUI
+
+**Set up models** (onboarding, **Manage models**, and **Local server**) writes all three for a new provider:
+
+- the connection as an account in `~/.continue/providers.yaml`, with its key in secure storage or `~/.continue/.env` (the file has only the reference). A server found with **Detect** gives the account its name, such as `strata`;
+- each chosen model in `~/.continue/models.yaml`, with the context window, tools and image support the provider reported;
+- a `from:` entry in the selected config.
+
+Setting up the same endpoint again reuses its account and catalog models. A connection set up before this, with its provider, address and key on every model, keeps working and is edited as it is. **Settings > Models > Providers > Turn into an account** converts it: the connection becomes an account, the models move to the catalog, and each model keeps its place, name and roles in the config.
+
+## Assign models to roles and modes
+
+**Settings > Models > Assign models** lists every model in the catalog, each variant on its own row, and the models that are only in the config, with the account each one uses. Tick what each model is for: Chat, Edit, Apply, Autocomplete, Subagents or Compaction (the `summarize` role). Saving writes the selected config: a catalog model gets a `from:` entry with those roles, and the entry goes again when no role is left. Roles the table does not show, such as `embed`, are kept.
+
+**Models per mode** also offers catalog models that the config does not list yet; choosing one for a mode adds it.
+
+## Errors
+
+A `from:` name or variant that the catalog does not have skips that model with a message; the rest of the config still loads. Model names cannot contain `#`, which picks a variant.

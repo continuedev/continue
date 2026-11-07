@@ -30,6 +30,12 @@ export type ClientCertificateOptions = z.infer<
 
 export const requestOptionsSchema = z.object({
   timeout: z.number().optional(),
+  /**
+   * Seconds to wait for a connection to the server (default 10), apart from
+   * `timeout` for the whole response. An unreachable server then fails in
+   * seconds, and a model's next route is tried.
+   */
+  connectTimeout: z.number().optional(),
   verifySsl: z.boolean().optional(),
   useSystemCa: z.boolean().optional(),
   caBundlePath: z.union([z.string(), z.array(z.string())]).optional(),

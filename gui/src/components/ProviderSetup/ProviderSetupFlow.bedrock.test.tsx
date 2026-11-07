@@ -61,7 +61,12 @@ describe("ProviderSetupFlow - Amazon Bedrock", () => {
     ).toBeTruthy();
 
     await user.click(next);
-    await user.click(await screen.findByLabelText(/Nova Pro/));
+    // The live list's model is selected, not the presets it replaced
+    const nova = (await screen.findByLabelText(/Nova Pro/)) as HTMLInputElement;
+    await waitFor(() => expect(nova.checked).toBe(true));
+    expect(screen.getByTestId("model-checklist").textContent).toContain(
+      "1 model selected",
+    );
     await user.click(screen.getByRole("button", { name: "Review" }));
     await user.click(screen.getByRole("button", { name: "Save" }));
 

@@ -250,6 +250,12 @@ export interface BuildRequestArgs {
   key?: KeyChoice;
   /** Live Bedrock titles ("... (Bedrock)") are used as the name. */
   useLiveTitles?: boolean;
+  /**
+   * Save as a provider account with catalog models (and `from:` entries in
+   * the config) instead of models that carry their own connection. `name`
+   * is a suggestion for a new account.
+   */
+  account?: { name?: string };
 }
 
 /**
@@ -263,6 +269,7 @@ export function buildSaveRequest({
   diff,
   key,
   useLiveTitles,
+  account,
 }: BuildRequestArgs): SaveProviderModelsRequest {
   const add = diff.add
     .filter((row) => row.pkg)
@@ -297,6 +304,7 @@ export function buildSaveRequest({
   if (editing && !sameConnection(editing, connection)) {
     request.from = editing;
   }
+  if (account) request.account = account;
   if (key) {
     request.key = {
       storage: key.storage,

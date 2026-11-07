@@ -12,6 +12,12 @@ interface ReviewStepProps {
   warning?: string;
   /** Set when the endpoint, region or profile of the connection is edited. */
   connectionChange?: { from: string; to: string; modelCount: number };
+  /**
+   * Set when the models are saved through a provider account: the account
+   * (providers.yaml) and the model catalog (models.yaml) are written too.
+   * The name, when it is known before saving.
+   */
+  account?: { name?: string };
 }
 
 /** The last step: what will change in config.yaml. Nothing is saved before. */
@@ -24,6 +30,7 @@ export function ReviewStep({
   error,
   warning,
   connectionChange,
+  account,
 }: ReviewStepProps) {
   return (
     <div className="flex flex-col gap-3 text-xs" data-testid="review-step">
@@ -40,6 +47,15 @@ export function ReviewStep({
       )}
       <div>
         <div className="font-medium">Add to config.yaml</div>
+        {account && (
+          <div className="text-description-muted" data-testid="review-account">
+            {account.name
+              ? `Through the account "${account.name}"`
+              : "Through a new account"}{" "}
+            in providers.yaml; each model is defined once in models.yaml, so
+            other configs can use it too.
+          </div>
+        )}
         {diff.add.length === 0 ? (
           <div className="text-description-muted">No new models</div>
         ) : (

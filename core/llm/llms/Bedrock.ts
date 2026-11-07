@@ -178,6 +178,9 @@ class Bedrock extends BaseLLM {
       endpoint: this.apiBase,
       ...(requestHandler ? { requestHandler } : {}),
       ...(await this._clientAuth()),
+      // A route with a fallback fails over rather than retrying (see
+      // BaseLLM.failOverQuickly); otherwise the SDK's standard retries
+      ...(this.failsOverQuickly ? { maxAttempts: 1 } : {}),
     });
   }
 

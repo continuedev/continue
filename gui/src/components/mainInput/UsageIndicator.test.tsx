@@ -5,6 +5,7 @@ import { EMPTY_CONFIG, updateConfig } from "../../redux/slices/configSlice";
 import {
   addRequestUsageToSession,
   newSession,
+  setAnsweredRoute,
 } from "../../redux/slices/sessionSlice";
 import { setupStore } from "../../redux/store";
 import { renderWithProviders } from "../../util/test/render";
@@ -25,7 +26,7 @@ const local = {
   contextLength: 8192,
 };
 
-async function setup() {
+async function setup(chat: any = claude) {
   const ideMessenger = new MockIdeMessenger();
   const store = setupStore({ ideMessenger });
   await renderWithProviders(<UsageIndicator />, {
@@ -38,9 +39,9 @@ async function setup() {
         ...EMPTY_CONFIG,
         selectedModelByRole: {
           ...EMPTY_CONFIG.selectedModelByRole,
-          chat: claude,
+          chat,
         },
-        modelsByRole: { ...EMPTY_CONFIG.modelsByRole, chat: [claude, local] },
+        modelsByRole: { ...EMPTY_CONFIG.modelsByRole, chat: [chat, local] },
       } as any),
     );
   });
@@ -113,5 +114,37 @@ describe("UsageIndicator", () => {
       );
     });
     expect(store.getState().session.usage).toEqual(saved);
+  });
+});
+
+describe("UsageIndicator with routes", () => {
+  const routed = { ...claude, routes: ["bedrock-us", "anthropic-work"] };
+  const answer = async (store: any, route: string) => {
+    await act(async () => {
+      store.dispatch(
+        addRequestUsageToSession({
+          provider: "anthropic",
+          model: "claude-sonnet-4-6",
+          usage: { promptTokens: 20000, completionTokens: 0 },
+        }),
+      );
+      store.dispatch(setAnsweredRoute({ model: "Claude Sonnet", route }));
+    });
+  };
+
+  it("says nothing extra when the first route answered", async () => {
+    const store = await setup(routed);
+    await answer(store, "bedrock-us");
+    expect(screen.getByTestId("usage-indicator").textContent).not.toContain(
+      "via",
+    );
+  });
+
+  it("names the fallback route that answered", async () => {
+    const store = await setup(routed);
+    await answer(store, "anthropic-work");
+    expect(screen.getByTestId("usage-indicator").textContent).toContain(
+      "via anthropic-work",
+    );
   });
 });

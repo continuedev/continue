@@ -122,3 +122,26 @@ describe("editYamlText", () => {
     expect(YAML.parse(SAMPLE).name).toBe("Local Config");
   });
 });
+
+describe("editYamlText with an empty list placeholder", () => {
+  it("writes entries added to `models: []` as a block list", () => {
+    const { text } = editYamlText<{ models: unknown[] }>(
+      "# header\nmodels: []\n",
+      (c) => ({
+        ...c,
+        models: [{ name: "Qwen", model: "qwen", roles: ["chat"] }],
+      }),
+    );
+    expect(text).toBe(
+      "# header\nmodels:\n  - name: Qwen\n    model: qwen\n    roles:\n      - chat\n",
+    );
+  });
+
+  it("keeps a list of plain values inline", () => {
+    const { text } = editYamlText<{ roles: string[] }>("roles: []\n", (c) => ({
+      ...c,
+      roles: ["chat", "edit"],
+    }));
+    expect(text).toBe("roles: [chat, edit]\n");
+  });
+});

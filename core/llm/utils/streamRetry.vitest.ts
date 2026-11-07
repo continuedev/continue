@@ -191,3 +191,26 @@ describe("transient error events inside a 200 stream", () => {
     ).toBe(true);
   });
 });
+
+describe("errors the SDK already retried", () => {
+  it("are not retried again", async () => {
+    // Found in the Windows Sandbox check: the OpenAI SDK's timeout (its class
+    // sets no name) was retried three more times, each after its own retries
+    let calls = 0;
+    const start = () =>
+      (async function* () {
+        calls++;
+        throw new Error("Request timed out.");
+      })();
+    await expect(async () => {
+      for await (const _ of retryStreamOnDroppedConnection(
+        start,
+        undefined,
+        [1, 1],
+      )) {
+        // nothing
+      }
+    }).rejects.toThrow("Request timed out.");
+    expect(calls).toBe(1);
+  });
+});

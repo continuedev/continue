@@ -133,3 +133,40 @@ describe("ProvidersCard key storage actions", () => {
     );
   });
 });
+
+describe("ProvidersCard: provider accounts", () => {
+  it("turns a connection set up the old way into an account", async () => {
+    const { m, calls } = messengerWith(setupWith(undefined));
+    m.responseHandlers["config/convertConnectionToAccount"] = async (req) => {
+      calls.push({ type: "convert", data: req });
+      return { account: "anthropic", converted: 1 };
+    };
+    const { user } = await renderWithProviders(<ProvidersCard />, {
+      mockIdeMessenger: m,
+    });
+    await user.click(
+      await screen.findByRole("button", { name: "Turn into an account" }),
+    );
+    await waitFor(() =>
+      expect(calls).toContainEqual({
+        type: "convert",
+        data: { provider: "anthropic", connection: {} },
+      }),
+    );
+  });
+
+  it("names the account of a connection that already is one, without the action", async () => {
+    const setup = setupWith(undefined);
+    setup.connections[0] = {
+      ...setup.connections[0],
+      account: "anthropic-work",
+    };
+    const { m } = messengerWith(setup);
+    await renderWithProviders(<ProvidersCard />, { mockIdeMessenger: m });
+    const row = await screen.findByTestId("provider-row-anthropic");
+    expect(row.textContent).toContain("account anthropic-work");
+    expect(
+      screen.queryByRole("button", { name: "Turn into an account" }),
+    ).toBeNull();
+  });
+});

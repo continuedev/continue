@@ -71,6 +71,25 @@ function lossOf(
   };
 }
 
+/**
+ * Whether two model entries are the same model on the same server, such as
+ * two variants of one catalog model (`Name#plan`, `Name#act`) that differ
+ * only in settings. Switching between them keeps the prompt cache, unless
+ * a setting changes the prompt itself (a server that puts the reasoning
+ * effort at the start of the prompt, as Strata does unless
+ * `effort_position` is "end").
+ */
+export function sameServedModel(
+  a: ModelDescription,
+  b: ModelDescription,
+): boolean {
+  const base = (m: ModelDescription) =>
+    (m.apiBase ?? "").trim().replace(/\/+$/, "");
+  return (
+    a.provider === b.provider && a.model === b.model && base(a) === base(b)
+  );
+}
+
 /** Whether a loss is big enough to interrupt the user about. */
 export function isSignificantLoss(loss: CacheLoss | undefined): boolean {
   if (!loss) return false;
@@ -228,13 +247,36 @@ export function promptCacheKey(
   systemMessage: string | undefined,
   /** The messages after the system message, in the order they are sent. */
   messages?: ChatMessage[],
+  /**
+   * For a model with routes, the account serving the request: each account
+   * has its own cache, so a different route is a different model here.
+   */
+  route?: string,
 ): PromptCacheKey {
   return {
-    model: `${model.provider}/${model.model}`,
+    model: `${model.provider}/${model.model}${route ? ` via ${route}` : ""}`,
     tools: hashString(toolNames.join("\u0000")),
     system: hashString(systemMessage ?? ""),
     ...(messages && { messages: messages.map(messageChecksum) }),
   };
+}
+
+/**
+ * The route a request to this model will most likely take: the one the
+ * previous request was answered on (core stays on it), else the first.
+ */
+export function expectedRoute(
+  model: ModelDescription,
+  lastKey?: PromptCacheKey,
+): string | undefined {
+  const routes = model.routes;
+  if (!routes?.length) return undefined;
+  const base = `${model.provider}/${model.model} via `;
+  if (lastKey?.model.startsWith(base)) {
+    const last = lastKey.model.slice(base.length);
+    if (routes.includes(last)) return last;
+  }
+  return routes[0];
 }
 
 /** The cause named when the model differs from the previous request's. */

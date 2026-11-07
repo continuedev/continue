@@ -228,6 +228,15 @@ export function ProviderSetupFlow({
     editing ?? connection,
   );
   const configuredModels = configured?.models ?? [];
+  // A new connection is saved as a provider account with catalog models;
+  // one already set up the old way (models with their own connection) is
+  // edited as it is. A server found by Detect suggests the account's name.
+  const [detectedName, setDetectedName] = useState<string>();
+  const accountForSave = configured?.account
+    ? { name: configured.account }
+    : configured
+      ? undefined
+      : { name: isLocal ? detectedName : undefined };
   const hasStoredKey = (configured?.key.state ?? "none") !== "none";
 
   // Reuse the secret name the connection already refers to.
@@ -246,10 +255,25 @@ export function ProviderSetupFlow({
   // Start from what is configured (or the popular models) when the target
   // connection changes.
   const connectionId = `${provider.provider}|${JSON.stringify(editing ?? connection)}|${!!setup}`;
+  // Until a box is changed by hand, the selection follows the list: the
+  // provider's own model list replaces the presets when it arrives, and
+  // presets the server does not have must not stay selected (and be saved).
+  const selectionTouched = useRef(false);
   useEffect(() => {
+    selectionTouched.current = false;
     setChecked(initialChecked(groups, configuredModels));
     setConfirmedRemoval(false);
   }, [connectionId]);
+  const listKey = JSON.stringify(
+    [groups.configuredOnly, groups.top, groups.other].map((rows) =>
+      rows.map((r) => r.model),
+    ),
+  );
+  useEffect(() => {
+    if (!selectionTouched.current) {
+      setChecked(initialChecked(groups, configuredModels));
+    }
+  }, [listKey]);
 
   const keyChoice: KeyChoice = {
     storage,
@@ -317,7 +341,12 @@ export function ProviderSetupFlow({
         );
         return;
       }
-      if (providerRef.current === forProvider) setLiveModels(fetched);
+      if (providerRef.current === forProvider) {
+        setLiveModels(fetched);
+        // A server that names itself names the account, as Detect does
+        const server = fetched.find((p) => p.server)?.server;
+        if (isLocal && server) setDetectedName((d) => d ?? server);
+      }
     } catch (e) {
       setRefreshError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -338,6 +367,7 @@ export function ProviderSetupFlow({
   }
 
   function toggle(model: string) {
+    selectionTouched.current = true;
     setChecked((prev) => {
       const next = new Set(prev);
       if (next.has(model)) next.delete(model);
@@ -383,6 +413,7 @@ export function ProviderSetupFlow({
         diff,
         key: keyForRequest,
         useLiveTitles: isBedrock && modelLists.isLive,
+        account: accountForSave,
       });
       const res = await ideMessenger.request(
         "config/saveProviderModels",
@@ -598,6 +629,7 @@ export function ProviderSetupFlow({
               apiBase={connection.apiBase}
               onPick={(apiBase, server) => {
                 formMethods.setValue("apiBase", apiBase);
+                setDetectedName(server?.title);
                 setRefreshError(undefined);
                 setLiveModels(
                   server && server.models.length > 0
@@ -775,6 +807,7 @@ export function ProviderSetupFlow({
             }
             confirmedRemoval={confirmedRemoval}
             onConfirmRemoval={setConfirmedRemoval}
+            account={accountForSave}
             error={error}
             warning={warning}
           />

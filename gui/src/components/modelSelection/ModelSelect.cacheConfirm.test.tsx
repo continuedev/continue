@@ -24,6 +24,8 @@ const opus = {
   model: "claude-opus-4-8",
   underlyingProviderName: "anthropic",
 } as any;
+// A variant: the same model on the same server, with other settings
+const sonnetFast = { ...sonnet, title: "Sonnet#fast" } as any;
 const PROFILE = {
   title: "Main Config",
   id: "local",
@@ -33,7 +35,7 @@ const PROFILE = {
   fullSlug: { ownerSlug: "", packageSlug: "", versionSlug: "" },
 } as any;
 
-async function setup(cache: object | undefined) {
+async function setup(cache: object | undefined, extra: any[] = []) {
   const ideMessenger = new MockIdeMessenger();
   const store = setupStore({ ideMessenger });
   const view = await renderWithProviders(<ModelSelect />, {
@@ -46,7 +48,10 @@ async function setup(cache: object | undefined) {
     store.dispatch(
       updateConfig({
         ...EMPTY_CONFIG,
-        modelsByRole: { ...EMPTY_CONFIG.modelsByRole, chat: [sonnet, opus] },
+        modelsByRole: {
+          ...EMPTY_CONFIG.modelsByRole,
+          chat: [sonnet, opus, ...extra],
+        },
         selectedModelByRole: {
           ...EMPTY_CONFIG.selectedModelByRole,
           chat: sonnet,
@@ -110,6 +115,14 @@ describe("ModelSelect asks before throwing away a warm cache", () => {
       (store.getState().ui.dialogMessage as any).props.onSwitch();
     });
     expect(selected(store)).toBe("Opus");
+  });
+
+  it("does not ask when switching to a variant of the same model", async () => {
+    const { store, user } = await setup(warm(366_000), [sonnetFast]);
+    await user.click(screen.getByTestId("model-select-button"));
+    await user.click(await screen.findByText("Sonnet#fast"));
+    expect(store.getState().ui.dialogMessage).toBeUndefined();
+    expect(selected(store)).toBe("Sonnet#fast");
   });
 
   it("asks for the keyboard shortcut too", async () => {

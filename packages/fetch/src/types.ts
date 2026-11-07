@@ -7,4 +7,6 @@ import type { RequestOptions as BaseRequestOptions } from "@continuedev/config-t
 export type RequestOptions = BaseRequestOptions & {
   /** Also trust the OS certificate store (default: on for Windows and macOS). */
   useSystemCa?: boolean;
+  /** Seconds to wait for a connection (default 10); see connectTimeout.ts. */
+  connectTimeout?: number;
 };

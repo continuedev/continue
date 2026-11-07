@@ -24,6 +24,26 @@ const DROPPED_CODES = new Set([
   "UND_ERR_SOCKET",
 ]);
 
+const SDK_RETRIED_MESSAGES = new Set([
+  "Request timed out.",
+  "Connection error.",
+]);
+const SDK_RETRIED_NAMES = new Set([
+  "APIConnectionError",
+  "APIConnectionTimeoutError",
+]);
+
+/** An OpenAI SDK connection error, which the SDK has retried already. */
+function alreadyRetriedBySdk(e: { name?: string; message?: string }): boolean {
+  return (
+    SDK_RETRIED_NAMES.has(e.name ?? "") ||
+    SDK_RETRIED_NAMES.has(
+      (e as { constructor?: { name?: string } }).constructor?.name ?? "",
+    ) ||
+    SDK_RETRIED_MESSAGES.has(e.message ?? "")
+  );
+}
+
 export function isDroppedConnectionError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const e = error as {
@@ -33,6 +53,12 @@ export function isDroppedConnectionError(error: unknown): boolean {
     cause?: { code?: string };
   };
   if (e.name === "AbortError") return false;
+  // The OpenAI SDK retries a failed connection itself before throwing these
+  // (see retryPolicy.ts); retrying the whole request again here multiplied
+  // the tries, up to nine, each waiting out a timeout. Its classes do not set
+  // `name`, and the extension bundle renames classes, so their fixed
+  // messages identify them.
+  if (alreadyRetriedBySdk(e)) return false;
   if (
     DROPPED_CODES.has(e.code ?? "") ||
     DROPPED_CODES.has(e.cause?.code ?? "")

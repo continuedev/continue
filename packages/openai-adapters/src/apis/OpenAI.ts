@@ -65,6 +65,9 @@ export class OpenAIApi implements BaseLlmApi {
       baseURL: this.apiBase,
       fetch: customFetch(this.config.requestOptions),
       timeout: this.config?.requestOptions?.timeout || undefined,
+      ...(this.config.maxRetries !== undefined
+        ? { maxRetries: this.config.maxRetries }
+        : {}),
     });
   }
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {

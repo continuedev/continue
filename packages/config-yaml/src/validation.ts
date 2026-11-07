@@ -92,7 +92,8 @@ export function validateConfigYaml(
     }
 
     if (model.roles?.includes("autocomplete")) {
-      const modelName = model.model.toLocaleLowerCase();
+      // A `from:` entry gets its model id from the catalog when it is loaded
+      const modelName = (model.model ?? "").toLocaleLowerCase();
       const nonAutocompleteModels = [
         // "gpt",
         // "claude",

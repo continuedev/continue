@@ -24,7 +24,11 @@ import {
   partitionModelsByMode,
 } from "../../util/modeModels";
 import { modelHasMissingSecret } from "../../util/missingSecrets";
-import { isSignificantLoss, warmCacheLoss } from "../../util/cacheSafeguards";
+import {
+  isSignificantLoss,
+  sameServedModel,
+  warmCacheLoss,
+} from "../../util/cacheSafeguards";
 import { CONFIG_ROUTES } from "../../util/navigation";
 import {
   Button,
@@ -272,8 +276,14 @@ function ModelSelect() {
       (m) => m.title === title,
     );
     const current = config.selectedModelByRole.chat;
+    // Variants of one model (Name#plan, Name#act) are the same model on the
+    // same server: switching does not throw a cache away
     const loss =
-      !isInEdit && current && target && cacheState
+      !isInEdit &&
+      current &&
+      target &&
+      cacheState &&
+      !sameServedModel(current, target)
         ? warmCacheLoss(current, cacheSetting, cacheState, Date.now(), target)
         : undefined;
     if (!loss || !isSignificantLoss(loss)) {

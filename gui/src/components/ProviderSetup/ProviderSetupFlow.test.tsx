@@ -330,6 +330,8 @@ describe("ProviderSetupFlow", () => {
 
     await waitFor(() => expect(saves).toHaveLength(1));
     expect(saves[0].from).toEqual({ apiBase: "http://localhost:8000/api/v1" });
+    // A connection set up the old way is edited as it is, not as an account
+    expect(saves[0].account).toBeUndefined();
     expect(saves[0].connection).toEqual({
       apiBase: "http://gpu-box:8000/api/v1",
     });

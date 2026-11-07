@@ -3,6 +3,7 @@ import { commonModelSlugs } from "./commonSlugs.js";
 import { dataSchema } from "./data/index.js";
 import { mcpServerSchema, partialMcpServerSchema } from "./mcp/index.js";
 import {
+  catalogModelRefSchema,
   connectedModelSchema,
   modelSchema,
   partialModelSchema,
@@ -203,6 +204,7 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
       z.union([
         modelSchema,
         connectedModelSchema,
+        catalogModelRefSchema,
         z.object({
           uses: modelsUsesSchema,
           with: z.record(z.string(), z.string()).optional(),

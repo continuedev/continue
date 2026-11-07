@@ -24,10 +24,11 @@ import {
   configYamlSchema,
   Rule,
 } from "../schemas/index.js";
-import type { ProviderInstance } from "../schemas/models.js";
+import type { CatalogModel, ProviderInstance } from "../schemas/models.js";
 import { ConfigResult, ConfigValidationError } from "../validation.js";
 import { BlockDuplicationDetector } from "./blockDuplicationDetector.js";
 import { packageIdentifierToShorthandSlug } from "./clientRender.js";
+import { resolveCatalogModels } from "./catalog.js";
 import { resolveModelConnections } from "./connections.js";
 import { BlockType, getBlockType } from "./getBlockType.js";
 
@@ -218,6 +219,11 @@ export interface BaseUnrollAssistantOptions {
    * `connection:` get its settings; see resolveModelConnections.
    */
   providers?: ProviderInstance[];
+  /**
+   * The model catalog (models.yaml). Config models that say
+   * `from: Name[#variant]` become that model; see resolveCatalogModels.
+   */
+  catalog?: CatalogModel[];
 }
 
 export interface DoNotRenderSecretsUnrollAssistantOptions extends BaseUnrollAssistantOptions {
@@ -305,6 +311,16 @@ export async function unrollAssistantFromContent(
   // Fill in each model's settings from the provider instance it names, so
   // the instance's secret references render below like the config's own.
   if (unrolledAssistant) {
+    // Catalog models first (models.yaml): they can name a connection too
+    const fromCatalog = resolveCatalogModels(
+      unrolledAssistant.models,
+      options.catalog,
+      (unrolledAssistant as { modeModels?: unknown }).modeModels,
+    );
+    unrolledAssistant.models =
+      fromCatalog.models as typeof unrolledAssistant.models;
+    errors.push(...fromCatalog.errors);
+
     const connected = resolveModelConnections(
       unrolledAssistant.models,
       options.providers,

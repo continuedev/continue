@@ -13,7 +13,8 @@ function describe(c: ProviderSetupConnection): string {
   const where =
     c.connection.apiBase ?? c.connection.region ?? c.connection.profile;
   const count = `${c.models.length} model${c.models.length === 1 ? "" : "s"}`;
-  return where ? `${where} - ${count}` : count;
+  const parts = [c.account ? `account ${c.account}` : undefined, where, count];
+  return parts.filter(Boolean).join(" - ");
 }
 
 type KeyAction = { kind: "move" | "removeCopy"; secretName: string };
@@ -60,6 +61,30 @@ export function ProvidersCard() {
       cancelled = true;
     };
   }, [ideMessenger, config, reload]);
+
+  /**
+   * Turn a connection set up the old way into a provider account and
+   * catalog models, so other configs (and cn) can use the same setup.
+   */
+  async function convertToAccount(c: ProviderSetupConnection) {
+    setBusy(true);
+    setKeyError(undefined);
+    try {
+      const res = await ideMessenger.request(
+        "config/convertConnectionToAccount",
+        { provider: c.provider, connection: c.connection },
+      );
+      const content = res.status === "success" ? res.content : undefined;
+      if (!content || content.error || content.converted === 0) {
+        setKeyError(
+          content?.error ?? "Could not turn this connection into an account",
+        );
+      }
+      setReload((n) => n + 1);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function runKeyAction(action: KeyAction) {
     setBusy(true);
@@ -149,6 +174,19 @@ export function ProvidersCard() {
                     {action.kind === "move"
                       ? "Move key to secure storage"
                       : "Remove .env copy"}
+                  </Button>
+                )}
+                {!c.account && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="my-0"
+                    disabled={busy}
+                    title="Save this connection as a provider account and its models in the model catalog, so other configs and cn can use them"
+                    onClick={() => convertToAccount(c)}
+                    data-testid={`convert-to-account-${c.provider}`}
+                  >
+                    Turn into an account
                   </Button>
                 )}
                 <Button

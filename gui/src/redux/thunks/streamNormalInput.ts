@@ -20,6 +20,7 @@ import {
   setPromptCacheInputTokens,
   setPromptCacheKey,
   setPromptCacheRequestAt,
+  setAnsweredRoute,
   setPromptReadSpeed,
   setPromptProgress,
   setPromptCacheState,
@@ -43,6 +44,7 @@ import { splitPromptProgress } from "../../util/promptProgress";
 import {
   detectCacheMiss,
   expectedRebuildCauses,
+  expectedRoute,
   promptCacheKey,
 } from "../../util/cacheSafeguards";
 import { totalInputTokens } from "core/llm/utils/cacheStats";
@@ -134,15 +136,24 @@ export const streamNormalInput = createAsyncThunk<
     // prompt. A change to any of them rebuilds the cache. The system prompt is
     // the final one: base message, matched rules and any conversation summary,
     // so a rule that starts to match is noticed.
+    // A model with routes has a cache per account, so the key names the
+    // route; if another route answers, the key is rebuilt with that one.
     const finalSystem = messages.find((m) => m.role === "system");
-    const cacheKey = promptCacheKey(
+    const cacheKeyFor = (route: string | undefined) =>
+      promptCacheKey(
+        selectedChatModel,
+        activeTools.map((t) => t.function.name),
+        finalSystem ? renderChatMessage(finalSystem) : undefined,
+        // Each message after the system one, so an edit or removal of an earlier
+        // message is told apart from a conversation that only grew.
+        messages.filter((m) => m.role !== "system"),
+        route,
+      );
+    const routeExpected = expectedRoute(
       selectedChatModel,
-      activeTools.map((t) => t.function.name),
-      finalSystem ? renderChatMessage(finalSystem) : undefined,
-      // Each message after the system one, so an edit or removal of an earlier
-      // message is told apart from a conversation that only grew.
-      messages.filter((m) => m.role !== "system"),
+      cacheStateBefore.lastKey,
     );
+    const cacheKey = cacheKeyFor(routeExpected);
 
     // TODO parallel tool calls will cause issues with this
     // because there will be multiple tool messages, so which one should have applied rules?
@@ -223,9 +234,26 @@ export const streamNormalInput = createAsyncThunk<
         // and check that a cache that should have been warm was read.
         for (const message of next.value) {
           if (message.role === "assistant" && message.usage) {
+            const key =
+              message.route && message.route !== routeExpected
+                ? cacheKeyFor(message.route)
+                : cacheKey;
+            if (message.route) {
+              dispatch(
+                setAnsweredRoute({
+                  model: selectedChatModel.title,
+                  route: message.route,
+                }),
+              );
+            }
+            // A model with routes: the account that answered, priced as
+            // that account's provider and model id
+            const usageProvider =
+              message.routeProvider ?? selectedChatModel.provider;
+            const usageModel = message.routeModel ?? selectedChatModel.model;
             const total = totalInputTokens(
-              selectedChatModel.provider,
-              selectedChatModel.model,
+              usageProvider,
+              usageModel,
               message.usage,
             );
             if (total > 0) {
@@ -233,7 +261,7 @@ export const streamNormalInput = createAsyncThunk<
               if (cachingWasOn) {
                 const request = {
                   before: cacheStateBefore,
-                  key: cacheKey,
+                  key,
                   requestAt: localCache
                     ? start
                     : (cacheResolution.nextState.lastRequestAt ?? start),
@@ -266,8 +294,8 @@ export const streamNormalInput = createAsyncThunk<
                   buildLedgerEntry({
                     at: start,
                     mode: state.session.mode,
-                    provider: selectedChatModel.provider,
-                    model: selectedChatModel.model,
+                    provider: usageProvider,
+                    model: usageModel,
                     cachingOn: !!cachingWasOn,
                     ttl: cacheResolution.nextState.lastTtl,
                     oneHour: modelSupportsOneHourCache(selectedChatModel),
@@ -278,7 +306,7 @@ export const streamNormalInput = createAsyncThunk<
                 ),
               );
               dispatch(setPromptCacheInputTokens(total));
-              dispatch(setPromptCacheKey(cacheKey));
+              dispatch(setPromptCacheKey(key));
               if (localCache) {
                 dispatch(setPromptCacheRequestAt(start));
                 // Only a read of some size says much about the speed
@@ -291,8 +319,8 @@ export const streamNormalInput = createAsyncThunk<
             }
             dispatch(
               addRequestUsageToSession({
-                provider: selectedChatModel.provider,
-                model: selectedChatModel.model,
+                provider: usageProvider,
+                model: usageModel,
                 usage: message.usage,
               }),
             );

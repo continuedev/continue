@@ -12,6 +12,7 @@ import { updateSelectedModelByRole } from "../../../redux/thunks/updateSelectedM
 import { getMetaKeyLabel, isJetBrains } from "../../../util";
 import { ConfigHeader } from "../components/ConfigHeader";
 import { ModelRoleRow } from "../components/ModelRoleRow";
+import { AssignModelsCard } from "../components/AssignModelsCard";
 import { ModeModelsTable } from "../components/ModeModelsTable";
 import { ProviderInstancesCard } from "../components/ProviderInstancesCard";
 import { ProvidersCard } from "../components/ProvidersCard";
@@ -174,6 +175,8 @@ export function ModelsSection() {
       <ProvidersCard />
 
       {!jetbrains && <ModeModelsTable />}
+
+      <AssignModelsCard />
 
       <Card>
         <Toggle

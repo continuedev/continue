@@ -93,7 +93,9 @@ describe("ProvidersCard", () => {
     );
 
     await user.click(
-      screen.getByTestId("provider-row-openai").querySelector("button")!,
+      within(screen.getByTestId("provider-row-openai")).getByRole("button", {
+        name: "Edit",
+      }),
     );
     expect(store.getState().ui.showDialog).toBe(true);
     expect(store.getState().ui.dialogMessage?.props).toMatchObject({

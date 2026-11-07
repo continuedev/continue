@@ -74,7 +74,7 @@ async function modelConfigToBaseLLM({
     return undefined;
   }
 
-  const { capabilities, ...rest } = model;
+  const { capabilities, routes: _routes, ...rest } = model;
 
   const mergedRequestOptions = mergeConfigYamlRequestOptions(
     rest.requestOptions,
@@ -150,7 +150,41 @@ async function modelConfigToBaseLLM({
   }
 
   const llm = new cls(options);
+  if (model.connection) llm.routeName = model.connection;
   return llm;
+}
+
+/**
+ * The model on each of its further routes: the same settings, with the
+ * route's account (provider, key, address, env, request options) and its
+ * own id for the model.
+ */
+async function routeLLMs(
+  model: ModelConfig,
+  args: { uniqueId: string; llmLogger: ILLMLogger; config: ContinueConfig },
+): Promise<{ name: string; llm: BaseLLM }[]> {
+  const out: { name: string; llm: BaseLLM }[] = [];
+  for (const route of model.routes ?? []) {
+    if (!route.provider) continue; // its account was not found; reported when loading
+    const llm = await modelConfigToBaseLLM({
+      ...args,
+      model: {
+        ...model,
+        routes: undefined,
+        connection: route.connection,
+        provider: route.provider,
+        model: route.model ?? model.model,
+        apiKey: route.apiKey,
+        apiBase: route.apiBase,
+        env: route.env ?? model.env,
+        requestOptions: route.requestOptions
+          ? { ...(model.requestOptions ?? {}), ...route.requestOptions }
+          : model.requestOptions,
+      },
+    });
+    if (llm) out.push({ name: route.connection, llm });
+  }
+  return out;
 }
 
 async function autodetectModels({
@@ -225,6 +259,8 @@ export async function llmsFromModelConfig({
     });
     return models;
   } else {
+    const routes = await routeLLMs(model, { uniqueId, llmLogger, config });
+    if (routes.length > 0) baseLlm.fallbackRoutes = routes;
     return [baseLlm];
   }
 }

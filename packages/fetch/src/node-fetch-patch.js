@@ -20,6 +20,7 @@ import Stream, { PassThrough, pipeline as pump } from "node:stream";
 import zlib from "node:zlib";
 
 import dataUriToBuffer from "data-uri-to-buffer";
+import { armConnectTimeout } from "./connectTimeout.js";
 
 import {
   Blob,
@@ -119,6 +120,8 @@ export default async function fetch(url, options_) {
 
     // Send request
     const request_ = send(parsedURL.toString(), options);
+    // Continue: fail a connection that is not made in time (ms; see connectTimeout.ts)
+    armConnectTimeout(request_, options_?.connectTimeout);
 
     if (signal) {
       signal.addEventListener("abort", abortAndFinalize);

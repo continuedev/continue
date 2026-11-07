@@ -24,7 +24,13 @@ export class BlockDuplicationDetector {
   }
 
   private isCommonBlockDuplicated(block: any, blockType: BlockType): boolean {
-    return this.check(block.name, blockType);
+    // A catalog reference (`from: Name#variant`) has no name of its own
+    // before the catalog is applied; its reference is its name. A block with
+    // neither is never a duplicate of another (two would collide on
+    // `undefined` and the second be dropped).
+    const key = block.name ?? block.from;
+    if (key === undefined) return false;
+    return this.check(key, blockType);
   }
 
   private check(identifier: string, blockType: BlockType): boolean {

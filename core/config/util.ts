@@ -123,7 +123,9 @@ export function addModel(
     (config) => {
       const numMatches = config.models?.reduce(
         (prev, curr) =>
-          "name" in curr && curr.name.startsWith(model.title) ? prev + 1 : prev,
+          "name" in curr && curr.name?.startsWith(model.title)
+            ? prev + 1
+            : prev,
         0,
       );
       if (numMatches !== undefined && numMatches > 0) {

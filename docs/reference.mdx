@@ -123,6 +123,8 @@ The `models` section defines the language models used in your configuration. Mod
 
   - `timeout`: Timeout for each request to the language model.
 
+  - `connectTimeout`: Seconds to wait for a connection to the server, apart from `timeout` (default `10`). A server that does not answer at all, such as a host that is down or behind a VPN that is not connected, then fails in seconds instead of after the operating system's TCP timeout, and a model with [routes](/customize/model-catalog#routes) moves on to the next one. Through a proxy, it applies to the connection to the proxy.
+
   - `verifySsl`: Whether to verify SSL certificates for requests.
 
   - `useSystemCa`: Also trust the operating system's certificate store, for example the root certificate of a TLS-inspecting corporate proxy. Defaults to `true` on Windows and macOS and `false` on Linux. Needs a Node.js runtime that provides `tls.getCACertificates` (22.15+); on older runtimes it has no effect.

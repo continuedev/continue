@@ -94,7 +94,16 @@ export interface ServerCapabilities {
    * request fields, such as `return_progress`.
    */
   llamaCppStyle?: boolean;
+  /**
+   * The reasoning efforts the chat template takes, when it says
+   * (`chat_template_caps.supports_reasoning_effort` with
+   * `reasoning_effort_levels`, llama.cpp).
+   */
+  reasoningEfforts?: string[];
 }
+
+/** The levels Strata documents for `reasoning_effort` (docs/DETAILS.md). */
+export const STRATA_REASONING_EFFORTS = ["none", "low", "medium", "high"];
 
 /**
  * Read `/props` at the server's root, as llama.cpp's `llama-server` and
@@ -121,6 +130,14 @@ export async function serverCapabilities(
     if (caps && typeof caps === "object") {
       const tools = caps.supports_tools ?? caps.supports_tool_calls;
       if (typeof tools === "boolean") result.tools = tools;
+      const levels = caps.reasoning_effort_levels;
+      if (
+        caps.supports_reasoning_effort === true &&
+        Array.isArray(levels) &&
+        levels.every((l: unknown) => typeof l === "string")
+      ) {
+        result.reasoningEfforts = levels;
+      }
     }
     if (typeof props?.modalities?.vision === "boolean") {
       result.images = props.modalities.vision;
@@ -222,10 +239,14 @@ async function getModels(
 ): Promise<FetchedModel[]> {
   const listed = await getListedModels(apiBase, apiKey, fetchFn, timeoutMs);
   if (listed.length === 0) return listed;
-  const [caps, native] = await Promise.all([
+  const [caps, native, strata] = await Promise.all([
     serverCapabilities(apiBase, apiKey, fetchFn, timeoutMs),
     nativeModelInfo(apiBase, listed, fetchFn, timeoutMs),
+    isStrata(apiBase, fetchFn, timeoutMs ?? 3000),
   ]);
+  // A variant per reasoning effort the server takes (C4)
+  const efforts =
+    caps.reasoningEfforts ?? (strata ? STRATA_REASONING_EFFORTS : undefined);
   return listed.map((m) => {
     const info = native.get(m.name) ?? {};
     const tools = info.tools ?? caps.tools;
@@ -239,6 +260,8 @@ async function getModels(
       ...(m.supportsImages || caps.images || info.images
         ? { supportsImages: true }
         : {}),
+      ...(efforts && efforts.length > 0 ? { reasoningEfforts: efforts } : {}),
+      ...(strata ? { server: "Strata" } : {}),
     };
   });
 }

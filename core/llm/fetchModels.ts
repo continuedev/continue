@@ -12,6 +12,10 @@ export interface FetchedModel {
   supportsTools?: boolean;
   /** The model takes images, when the provider says so. */
   supportsImages?: boolean;
+  /** Reasoning efforts the model takes (`reasoning_effort`), when the server says. */
+  reasoningEfforts?: string[];
+  /** The server software that listed it, when it says (Strata). */
+  server?: string;
   /** ISO release date, when the provider reports one (used to rank by recency). */
   createdAt?: string;
   /** True when the provider reports the model as deprecated or retired. */

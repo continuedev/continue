@@ -209,7 +209,13 @@ export class BedrockApi implements BaseLlmApi {
   async getClient(): Promise<BedrockRuntimeClient> {
     const region = this.config.env?.region;
     const requestHandler = await this.getRequestHandler();
-    const networking = requestHandler ? { requestHandler } : {};
+    const networking = {
+      ...(requestHandler ? { requestHandler } : {}),
+      // maxRetries (see BaseConfig) as the SDK's attempts, the first included
+      ...(this.config.maxRetries !== undefined
+        ? { maxAttempts: this.config.maxRetries + 1 }
+        : {}),
+    };
 
     // If apiKey is provided, use bearer token authentication
     const apiKey = this.resolveApiKey();

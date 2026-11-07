@@ -80,6 +80,7 @@
               "customize/models",
               "customize/model-setup",
               "customize/providers",
+              "customize/model-catalog",
               "customize/configs",
               "customize/vscode-chat-and-agents",
               "customize/mcp-tools",

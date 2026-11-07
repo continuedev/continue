@@ -41,6 +41,8 @@ export interface ModelPackage {
   endpointProvider?: string;
   /** ISO release date reported by the provider (live lists only). */
   createdAt?: string;
+  /** The server software that listed it (a local server that says, Strata). */
+  server?: string;
   /** Provider reports this model as deprecated/legacy (live lists only). */
   deprecated?: boolean;
 }

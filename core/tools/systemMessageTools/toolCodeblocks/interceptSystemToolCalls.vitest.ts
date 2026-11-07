@@ -44,6 +44,66 @@ describe("interceptSystemToolCalls", () => {
     expect(result.done).toBe(true);
   });
 
+  it("passes on the usage chunk, which has no text, with its route", async () => {
+    // Found in the Windows Sandbox check: with tools in the system message,
+    // the final usage chunk was dropped, so no usage, cache figures or route
+    // reached the GUI
+    const usage = { promptTokens: 2341, completionTokens: 21 };
+    const out: ChatMessage[] = [];
+    for await (const group of interceptSystemToolCalls(
+      createAsyncGenerator([
+        [{ role: "assistant", content: "Hello there." }],
+        [{ role: "assistant", content: "", usage, route: "fake" } as any],
+      ]),
+      abortController,
+      framework,
+    )) {
+      out.push(...group);
+    }
+    expect(out.filter((m: any) => m.usage)).toEqual([
+      { role: "assistant", content: "", usage, route: "fake" },
+    ]);
+  });
+
+  it("passes usage on once when it comes with text", async () => {
+    const usage = { promptTokens: 10, completionTokens: 2 };
+    const out: ChatMessage[] = [];
+    for await (const group of interceptSystemToolCalls(
+      createAsyncGenerator([
+        [{ role: "assistant", content: "line one\nline two\n", usage } as any],
+      ]),
+      abortController,
+      framework,
+    )) {
+      out.push(...group);
+    }
+    expect(out.filter((m: any) => m.usage)).toHaveLength(1);
+    expect(
+      out
+        .map((m) =>
+          typeof m.content === "string"
+            ? m.content
+            : (m.content as any[]).map((p) => p.text).join(""),
+        )
+        .join(""),
+    ).toBe("line one\nline two\n");
+  });
+
+  it("passes on a local server's prompt progress", async () => {
+    const promptProgress = { processed: 100, total: 1000 };
+    const out: ChatMessage[] = [];
+    for await (const group of interceptSystemToolCalls(
+      createAsyncGenerator([
+        [{ role: "assistant", content: "", promptProgress } as any],
+      ]),
+      abortController,
+      framework,
+    )) {
+      out.push(...group);
+    }
+    expect(out).toEqual([{ role: "assistant", content: "", promptProgress }]);
+  });
+
   it("passes through assistant messages with existing tool calls", async () => {
     const messages: ChatMessage[][] = [
       [

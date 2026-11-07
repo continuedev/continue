@@ -31,6 +31,15 @@ import { globalProfileStatus } from "./llm/llms/bedrockHelpers";
 import BedrockMantle, { mantleRegionError } from "./llm/llms/BedrockMantle";
 import Lemonade from "./llm/llms/Lemonade";
 import { fetchModels } from "./llm/fetchModels";
+import {
+  convertConnectionToAccount,
+  saveProviderModelsToAccount,
+} from "./config/providers/accountSetup";
+import {
+  getGlobalModelsPath,
+  loadModelCatalog,
+} from "./config/providers/modelsFile";
+import { listCatalog, saveModelRoles } from "./config/yaml/saveModelRoles";
 import { detectLocalServers, serverConcurrency } from "./llm/localServers";
 import Ollama from "./llm/llms/Ollama";
 import { EditAggregator } from "./nextEdit/context/aggregateEdits";
@@ -110,6 +119,7 @@ import {
 } from "./config/providers/providerInstances";
 import {
   getGlobalProvidersPath,
+  loadProviderInstances,
   readWorkspaceProvidersFiles,
 } from "./config/providers/providersFile";
 import { setupLocalConfig } from "./config/onboarding";
@@ -353,6 +363,24 @@ export class Core {
 
     on("models/detectLocal", async () => detectLocalServers());
 
+    on("models/catalog", async () => {
+      const [catalog, accounts] = await Promise.all([
+        loadModelCatalog(this.ide),
+        loadProviderInstances(this.ide),
+      ]);
+      return listCatalog(catalog.models, accounts.providers);
+    });
+
+    on("config/setModelRoles", async ({ data: { updates } }) => {
+      const saved = saveModelRoles(updates);
+      if (saved) {
+        await this.configHandler.reloadConfig(
+          "Model roles changed (config/setModelRoles message)",
+        );
+      }
+      return { saved };
+    });
+
     // How many requests a chat model's own server takes at once (subagents)
     on("models/serverConcurrency", async ({ data: { title } }) => {
       const { config } = await this.configHandler.loadConfig();
@@ -435,6 +463,28 @@ export class Core {
         );
       }
       return result;
+    });
+
+    on("config/convertConnectionToAccount", async (msg) => {
+      const { provider, connection, accountName } = msg.data;
+      try {
+        const result = convertConnectionToAccount(
+          provider,
+          connection,
+          accountName,
+        );
+        if (result.converted > 0) {
+          await this.configHandler.reloadConfig(
+            "Connection turned into an account (config/convertConnectionToAccount message)",
+          );
+        }
+        return result;
+      } catch (e) {
+        return {
+          converted: 0,
+          error: e instanceof Error ? e.message : String(e),
+        };
+      }
     });
 
     on("config/addConnectedModel", async (msg) => {
@@ -742,7 +792,10 @@ export class Core {
     on("config/getProviderSetup", async () => {
       const secureStorageAvailable = await isSecureStorageAvailable(this.ide);
       const remembered = this.globalContext.get("preferredKeyStorage");
-      const { connections, editable } = readProviderConnections();
+      const { connections, editable } = readProviderConnections({
+        providers: getGlobalProvidersPath(),
+        models: getGlobalModelsPath(),
+      });
       return {
         connections: await annotateKeyStorage(connections, {
           ide: this.ide,
@@ -796,7 +849,14 @@ export class Core {
           : req;
       let saved: boolean;
       try {
-        saved = saveProviderModels(toSave);
+        // A setup that names an account becomes an account, catalog models
+        // and `from:` entries; one without keeps writing models inline
+        saved = toSave.account
+          ? saveProviderModelsToAccount({
+              ...toSave,
+              accountName: toSave.account.name,
+            }) !== undefined
+          : saveProviderModels(toSave);
       } catch (e) {
         if (e instanceof ProviderSetupError) {
           return { saved: false, error: e.message };
@@ -1893,6 +1953,13 @@ export class Core {
           }
           await this.configHandler.reloadConfig(
             "Current profile config file updated",
+          );
+          continue;
+        }
+        // Accounts and the model catalog are read by every config
+        if (/[\\/]\.continue[\\/](providers|models)\.yaml$/.test(uri)) {
+          await this.configHandler.reloadConfig(
+            "providers.yaml or models.yaml updated",
           );
           continue;
         }

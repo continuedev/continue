@@ -176,6 +176,8 @@ describe("detectLocalServers", () => {
             modelId: "qwen3.8-flash-next-nvfp4-nvfp4",
             contextLength: 524288,
             supportsImages: true,
+            reasoningEfforts: ["none", "low", "medium", "high"],
+            server: "Strata",
           },
         ],
       },
@@ -371,5 +373,56 @@ describe("serverConcurrency", () => {
         fetchFn as unknown as typeof fetch,
       ),
     ).toBeUndefined();
+  });
+});
+
+describe("reasoning efforts from the server", () => {
+  const routesOf =
+    (routes: Record<string, unknown>) =>
+    async (url: URL | string): Promise<Response> => {
+      const path = new URL(String(url)).pathname;
+      return path in routes ? json(routes[path]) : json({ error: "no" }, 404);
+    };
+
+  it("llama.cpp: the template's levels when it takes reasoning_effort", async () => {
+    const fetchFn = routesOf({
+      "/v1/models": { data: [{ id: "gpt-oss" }] },
+      "/props": {
+        chat_template_caps: {
+          supports_reasoning_effort: true,
+          reasoning_effort_levels: ["low", "medium", "high"],
+        },
+      },
+    });
+    const [m] = await listOpenAICompatibleModels(
+      "http://127.0.0.1:8080/v1/",
+      undefined,
+      fetchFn as unknown as typeof fetch,
+    );
+    expect(m.reasoningEfforts).toEqual(["low", "medium", "high"]);
+  });
+
+  it("Strata: its documented levels", async () => {
+    const fetchFn = routesOf({
+      "/v1/models": { data: [{ id: "qwen" }] },
+      "/v1/status": { service: "strata" },
+    });
+    const [m] = await listOpenAICompatibleModels(
+      "http://127.0.0.1:8083/v1/",
+      undefined,
+      fetchFn as unknown as typeof fetch,
+    );
+    expect(m.reasoningEfforts).toEqual(["none", "low", "medium", "high"]);
+    expect(m.server).toBe("Strata");
+  });
+
+  it("none for a server that does not say", async () => {
+    const fetchFn = routesOf({ "/v1/models": { data: [{ id: "m" }] } });
+    const [m] = await listOpenAICompatibleModels(
+      "http://127.0.0.1:8000/v1/",
+      undefined,
+      fetchFn as unknown as typeof fetch,
+    );
+    expect(m.reasoningEfforts).toBeUndefined();
   });
 });

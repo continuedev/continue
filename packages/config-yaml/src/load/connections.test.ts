@@ -191,3 +191,94 @@ models:
     );
   });
 });
+
+describe("routes", () => {
+  const bedrockUs = {
+    name: "bedrock-us",
+    provider: "bedrock",
+    env: { region: "us-east-1", profile: "work" },
+  };
+
+  it("serves a model with no account of its own by its first route, and connects the others", () => {
+    const { models, errors } = resolveModelConnections(
+      [
+        {
+          name: "Claude Sonnet",
+          model: "claude-sonnet-4-6",
+          routes: [
+            {
+              connection: "bedrock-us",
+              model: "us.anthropic.claude-sonnet-4-6",
+            },
+            { connection: "anthropic-work" },
+          ],
+        },
+      ],
+      [bedrockUs, anthropicWork],
+    );
+    expect(errors).toEqual([]);
+    expect(models?.[0]).toMatchObject({
+      name: "Claude Sonnet",
+      connection: "bedrock-us",
+      provider: "bedrock",
+      model: "us.anthropic.claude-sonnet-4-6",
+      env: { region: "us-east-1", profile: "work" },
+      routes: [
+        {
+          connection: "anthropic-work",
+          provider: "anthropic",
+          apiKey: "${{ secrets.WORK_KEY }}",
+          apiBase: "https://proxy.example.com/v1/",
+        },
+      ],
+    });
+  });
+
+  it("keeps a model's own account first", () => {
+    const { models } = resolveModelConnections(
+      [
+        {
+          name: "Sonnet",
+          model: "claude-sonnet-4-6",
+          connection: "anthropic-work",
+          routes: [
+            {
+              connection: "bedrock-us",
+              model: "us.anthropic.claude-sonnet-4-6",
+            },
+          ],
+        },
+      ],
+      [bedrockUs, anthropicWork],
+    );
+    expect(models?.[0]).toMatchObject({
+      provider: "anthropic",
+      routes: [{ connection: "bedrock-us", provider: "bedrock" }],
+    });
+  });
+
+  it("skips a route through an unknown account, and routes after the third", () => {
+    const { models, errors } = resolveModelConnections(
+      [
+        {
+          name: "Sonnet",
+          model: "claude-sonnet-4-6",
+          connection: "anthropic-work",
+          routes: [
+            { connection: "openrouter" },
+            { connection: "bedrock-us" },
+            { connection: "bedrock-us", model: "fourth" },
+          ],
+        },
+      ],
+      [bedrockUs, anthropicWork],
+    );
+    expect(errors.map((e) => e.message)).toEqual([
+      expect.stringContaining("more than 3 routes"),
+      expect.stringContaining('"openrouter"'),
+    ]);
+    expect(
+      (models?.[0] as { routes: { connection: string }[] }).routes,
+    ).toEqual([expect.objectContaining({ connection: "bedrock-us" })]);
+  });
+});
