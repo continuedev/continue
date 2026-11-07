@@ -2,7 +2,7 @@ import { selectCacheSetting } from "../redux/selectors/selectCacheSetting";
 import { useNow } from "./useNow";
 import { useAppSelector } from "../redux/hooks";
 import { selectSelectedChatModel } from "../redux/slices/configSlice";
-import { formatTokens, formatUsd } from "../util/cacheNotices";
+import { formatRereadCost } from "../util/cacheNotices";
 import { isSignificantLoss, warmCacheLoss } from "../util/cacheSafeguards";
 
 /**
@@ -19,9 +19,5 @@ export function useWarmCacheNote(): string {
   if (!model || !state) return "";
   const loss = warmCacheLoss(model, setting, state, now);
   if (!loss || !isSignificantLoss(loss)) return "";
-  const cost =
-    loss.extraUsd !== undefined
-      ? ` (about ${formatUsd(loss.extraUsd)} more)`
-      : "";
-  return `Prompt cache is warm: changing this re-reads ${formatTokens(loss.tokens)} tokens at full price${cost}.`;
+  return `Prompt cache is warm: changing this re-reads ${formatRereadCost(loss)}.`;
 }

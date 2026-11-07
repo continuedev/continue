@@ -8,6 +8,7 @@ import { ChatHistoryItem } from "core";
 import { hasCheckpointsFrom } from "core/util/checkpoints";
 import { renderChatMessage } from "core/util/messageContent";
 import { useAppSelector } from "../../redux/hooks";
+import { useCompactionCacheNote } from "../../hooks/useCompactionCacheNote";
 import { useCompactConversation } from "../../util/compactConversation";
 import {
   findTurnIdForIndex,
@@ -49,6 +50,7 @@ export default function ResponseActions({
   const showLabel = isLast && (isPruned || percent >= 60);
 
   const compactConversation = useCompactConversation();
+  const compactionNote = useCompactionCacheNote();
 
   // The turn this response belongs to, if an agent edit during or after it
   // has a checkpoint to roll back
@@ -69,11 +71,11 @@ export default function ResponseActions({
     <div className="mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs text-description-muted">
       <HeaderButtonWithToolTip
         testId={`compact-button-${index}`}
-        text={
+        text={`${
           showLabel
             ? "Summarize conversation to reduce context length"
             : "Compact conversation"
-        }
+        }${compactionNote ? `. ${compactionNote}` : ""}`}
         tabIndex={-1}
         onClick={() => compactConversation(index)}
       >

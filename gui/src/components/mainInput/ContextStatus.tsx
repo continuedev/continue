@@ -1,5 +1,6 @@
 import { selectCacheSetting } from "../../redux/selectors/selectCacheSetting";
 import { useMemo, useRef } from "react";
+import { useCompactionCacheNote } from "../../hooks/useCompactionCacheNote";
 import { useNow } from "../../hooks/useNow";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
@@ -42,6 +43,7 @@ const ContextStatus = () => {
   }, [history.length, selectedChatModel]);
 
   const compactConversation = useCompactConversation();
+  const compactionNote = useCompactionCacheNote();
   const model = useAppSelector(selectSelectedChatModel);
   const cacheSetting = useAppSelector(selectCacheSetting);
   const cacheState = useAppSelector((state) => state.session.promptCache);
@@ -112,6 +114,14 @@ const ContextStatus = () => {
             {isPruned && (
               <span className="inline-block">
                 {`Oldest messages are being removed.`}
+              </span>
+            )}
+            {history.length > 0 && compactionNote && (
+              <span
+                className="inline-block text-warning"
+                data-testid="compaction-cache-note"
+              >
+                {compactionNote}
               </span>
             )}
             {history.length > 0 && (

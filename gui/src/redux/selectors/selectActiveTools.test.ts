@@ -48,3 +48,40 @@ describe("selectActiveTools: present_plan", () => {
     expect(names("chat")).toEqual([]);
   });
 });
+
+describe("selectActiveTools: order", () => {
+  function namesWith(list: Tool[]): string[] {
+    const state = getEmptyRootState();
+    const root: RootState = {
+      ...state,
+      session: { ...state.session, mode: "agent" },
+      config: {
+        ...state.config,
+        config: { ...state.config.config, tools: list },
+      },
+    };
+    return selectActiveTools(root).map((t) => t.function.name);
+  }
+
+  it("keeps built-ins in their order and sorts the rest by name, however they were loaded", () => {
+    const builtIns = [
+      tool(BuiltInToolNames.ReadFile, true),
+      tool(BuiltInToolNames.EditExistingFile, false),
+    ];
+    const mcp = [
+      tool("mcp_zeta_search", true, "zeta"),
+      tool("mcp_alpha_read", true, "alpha"),
+      tool("mcp_alpha_list", true, "alpha"),
+    ];
+    const expected = [
+      BuiltInToolNames.ReadFile,
+      BuiltInToolNames.EditExistingFile,
+      "mcp_alpha_list",
+      "mcp_alpha_read",
+      "mcp_zeta_search",
+    ];
+    // A server that reconnected later has its tools at the end, or in front
+    expect(namesWith([...builtIns, ...mcp])).toEqual(expected);
+    expect(namesWith([mcp[0], ...builtIns, mcp[2], mcp[1]])).toEqual(expected);
+  });
+});

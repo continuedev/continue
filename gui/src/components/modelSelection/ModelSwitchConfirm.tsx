@@ -3,7 +3,7 @@ import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { useAppDispatch } from "../../redux/hooks";
 import { saveCurrentSession } from "../../redux/thunks/session";
 import type { CacheLoss } from "../../util/cacheSafeguards";
-import { formatTokens, formatUsd } from "../../util/cacheNotices";
+import { formatRereadCost } from "../../util/cacheNotices";
 import { Button } from "../ui/Button";
 
 /**
@@ -26,18 +26,12 @@ export function ModelSwitchConfirm(props: {
     dispatch(setShowDialog(false));
     dispatch(setDialogMessage(undefined));
   };
-  const cost =
-    props.loss.extraUsd !== undefined
-      ? ` (about ${formatUsd(props.loss.extraUsd)} more)`
-      : "";
-
   return (
     <div className="p-4 pt-0" data-testid="model-switch-confirm">
       <h1 className="mb-1 text-center text-xl">Switch model?</h1>
       <p className="text-center text-base">
         Each model has its own prompt cache. Switching from {props.from} to{" "}
-        {props.to} re-reads {formatTokens(props.loss.tokens)} tokens at full
-        price{cost}.
+        {props.to} re-reads {formatRereadCost(props.loss)}.
       </p>
       <p className="text-center text-sm text-description">
         A new session starts empty, so it costs nothing to re-read. Your current

@@ -132,3 +132,35 @@ describe("ContextStatus tooltip text", () => {
     expect(note.textContent).toContain("5x per token");
   });
 });
+
+describe("ContextStatus: compacting a cached conversation", () => {
+  const strata = {
+    title: "Strata",
+    provider: "openai",
+    model: "qwen3.8-flash-next-nvfp4-nvfp4",
+    apiBase: "http://127.0.0.1:8083/v1/",
+    underlyingProviderName: "openai",
+  } as any;
+
+  it("warns that compacting drops what a local server has cached", async () => {
+    const { container, user } = await setup(strata, 120_000, 0.7);
+    await user.hover(container.querySelector("[data-tooltip-id]")!);
+    const note = await screen.findByTestId("compaction-cache-note");
+    expect(note.textContent).toContain("120k tokens");
+    expect(note.textContent).toContain("the model server's cache");
+  });
+
+  it("warns for a warm cloud cache too", async () => {
+    const { container, user } = await setup(sonnet, 250_000, 0.25);
+    await user.hover(container.querySelector("[data-tooltip-id]")!);
+    const note = await screen.findByTestId("compaction-cache-note");
+    expect(note.textContent).toContain("the prompt cache");
+  });
+
+  it("says nothing for a conversation too small to matter", async () => {
+    const { container, user } = await setup(strata, 10_000, 0.7);
+    await user.hover(container.querySelector("[data-tooltip-id]")!);
+    await screen.findByText(/70% of context filled/);
+    expect(screen.queryByTestId("compaction-cache-note")).toBeNull();
+  });
+});

@@ -195,12 +195,24 @@ export function constructMessages(
     .map((item) => item.ctxItems)
     .flat();
 
+  // Rules that matched an earlier turn stay applied (see earlierTurns)
+  const earlierTurns = msgs
+    .slice(0, Math.max(lastUserMsgIndex, 0))
+    .filter(
+      (item) => item.message.role === "user" || item.message.role === "tool",
+    )
+    .map((item) => ({
+      userMessage: item.message as UserChatMessage | ToolResultChatMessage,
+      contextItems: item.ctxItems,
+    }));
+
   const { systemMessage, appliedRules } = getSystemMessageWithRules({
     baseSystemMessage,
     availableRules,
     userMessage: lastUserOrToolMsg,
     contextItems: rulesContextItems,
     rulePolicies,
+    earlierTurns,
   });
 
   // Append conversation summary to system message if it exists

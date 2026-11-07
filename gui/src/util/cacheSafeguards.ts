@@ -6,8 +6,10 @@ import {
 import {
   AUTO_ESCALATE_MAX_GAP_MS,
   AUTO_ESCALATE_MIN_GAP_MS,
+  LOCAL_CACHE_WARM_MS,
   modelSupportsOneHourCache,
   modelSupportsPromptCacheControl,
+  modelUsesLocalPrefixCache,
   promptCacheStatus,
   PROMPT_CACHE_TTL_MS,
   type PromptCacheKey,
@@ -26,6 +28,11 @@ import {
 export const NOTICE_MIN_EXTRA_USD = 0.25;
 /** The same bar in tokens, for models with no price in the table. */
 export const NOTICE_MIN_TOKENS_UNPRICED = 100_000;
+/**
+ * The bar for a model on the user's own server: nothing to pay, but a local
+ * model can take a minute or more to read this much again.
+ */
+export const NOTICE_MIN_TOKENS_LOCAL = 30_000;
 /** The context meter shows from this size, whatever share of the window it is. */
 export const CONTEXT_METER_TOKENS = 200_000;
 /** A model with a long-context price tier is flagged this far below its limit. */
@@ -36,6 +43,8 @@ export interface CacheLoss {
   tokens: number;
   /** Undefined when the model has no price in the table. */
   extraUsd?: number;
+  /** The cache is a local server's: the loss is time, not money. */
+  local?: boolean;
 }
 
 /** Extra dollars to write `tokens` to the cache instead of reading them. */
@@ -63,6 +72,7 @@ function lossOf(
 /** Whether a loss is big enough to interrupt the user about. */
 export function isSignificantLoss(loss: CacheLoss | undefined): boolean {
   if (!loss) return false;
+  if (loss.local) return loss.tokens >= NOTICE_MIN_TOKENS_LOCAL;
   return loss.extraUsd !== undefined
     ? loss.extraUsd >= NOTICE_MIN_EXTRA_USD
     : loss.tokens >= NOTICE_MIN_TOKENS_UNPRICED;
@@ -81,6 +91,17 @@ export function warmCacheLoss(
   /** The model the prompt would be sent to next, if not `model`. */
   target: ModelDescription = model,
 ): CacheLoss | undefined {
+  if (modelUsesLocalPrefixCache(model)) {
+    // No setting and no lifetime: warm while the last request was recent
+    if (
+      !state.lastInputTokens ||
+      state.lastRequestAt === undefined ||
+      now - state.lastRequestAt > LOCAL_CACHE_WARM_MS
+    ) {
+      return undefined;
+    }
+    return { tokens: state.lastInputTokens, local: true };
+  }
   if (!modelSupportsPromptCacheControl(model)) return undefined;
   const status = promptCacheStatus(model, setting, state, now);
   if (!status.on || !status.warm || !state.lastInputTokens) return undefined;

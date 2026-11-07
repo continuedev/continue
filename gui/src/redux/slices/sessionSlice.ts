@@ -1205,6 +1205,17 @@ export const sessionSlice = createSlice({
         lastInputTokens: action.payload,
       };
     },
+    /**
+     * When the last request to a local model server started. Models with
+     * cache control get it from resolvePromptCache; a local server's cache
+     * has no control, so this is what says it may still be warm.
+     */
+    setPromptCacheRequestAt: (state, action: PayloadAction<number>) => {
+      state.promptCache = {
+        ...(state.promptCache ?? INITIAL_PROMPT_CACHE_STATE),
+        lastRequestAt: action.payload,
+      };
+    },
     setPromptCacheKey: (state, action: PayloadAction<PromptCacheKey>) => {
       state.promptCache = {
         ...(state.promptCache ?? INITIAL_PROMPT_CACHE_STATE),
@@ -1389,6 +1400,7 @@ export const {
   setHasReasoningEnabled,
   setPromptCacheState,
   setPromptCacheInputTokens,
+  setPromptCacheRequestAt,
   addRequestUsageToSession,
   setPromptCacheKey,
   recordCacheMiss,

@@ -25,6 +25,26 @@ export function formatTokens(tokens: number): string {
   return tokens >= 1000 ? `${Math.round(tokens / 1000)}k` : `${tokens}`;
 }
 
+/**
+ * What re-reading a warm cache costs, ending a sentence that starts with a
+ * verb such as "re-reads": "366k tokens at full price (about $1.10 more)",
+ * or for a local server "366k tokens from scratch on the model server".
+ */
+export function formatRereadCost(loss: {
+  tokens: number;
+  extraUsd?: number;
+  local?: boolean;
+}): string {
+  if (loss.local) {
+    return `${formatTokens(loss.tokens)} tokens from scratch on the model server`;
+  }
+  const cost =
+    loss.extraUsd !== undefined
+      ? ` (about ${formatUsd(loss.extraUsd)} more)`
+      : "";
+  return `${formatTokens(loss.tokens)} tokens at full price${cost}`;
+}
+
 /** Context size at which the context meter appears for this model. */
 export function contextMeterTokens(
   model: ModelDescription | null | undefined,

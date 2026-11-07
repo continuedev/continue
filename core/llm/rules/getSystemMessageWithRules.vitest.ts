@@ -7,6 +7,7 @@ import {
 } from "../..";
 import {
   getApplicableRules,
+  getSystemMessageWithRules,
   shouldApplyRule,
 } from "./getSystemMessageWithRules";
 import { RulePolicies } from "./types";
@@ -475,5 +476,62 @@ describe("Content pattern matching", () => {
     expect(
       shouldApplyRule(nestedPatternRule, [utilFilePath], {}, utilContents),
     ).toBe(false);
+  });
+});
+
+describe("Rules from earlier turns stay applied", () => {
+  const rule = (name: string, globs?: string): RuleWithSource => ({
+    name,
+    rule: `RULE ${name}`,
+    source: "rules-block",
+    ...(globs ? { globs } : {}),
+  });
+  const rules = [
+    rule("python", "**/*.py"),
+    rule("tsx", "**/*.tsx"),
+    rule("always"),
+  ];
+  const file = (path: string) =>
+    ({
+      id: { providerTitle: "file", itemId: path },
+      name: path,
+      description: path,
+      content: "x",
+      uri: { type: "file", value: path },
+    }) as ContextItemWithId;
+  const user = (text: string): UserChatMessage => ({
+    role: "user",
+    content: text,
+  });
+
+  it("keeps a file rule after the agent moves on, in first-matched order", () => {
+    const { systemMessage, appliedRules } = getSystemMessageWithRules({
+      baseSystemMessage: "BASE",
+      availableRules: rules,
+      // Earlier: a .tsx file; now: a .py file
+      earlierTurns: [
+        { userMessage: user("look"), contextItems: [file("src/a.tsx")] },
+      ],
+      userMessage: user("now this"),
+      contextItems: [file("src/b.py")],
+    });
+    expect(appliedRules.map((r) => r.name)).toEqual([
+      "tsx",
+      "always",
+      "python",
+    ]);
+    // A newly matched rule goes at the end: what came before is unchanged
+    expect(systemMessage).toBe(
+      ["BASE", "RULE tsx", "RULE always", "RULE python"].join("\n\n"),
+    );
+  });
+
+  it("without earlier turns, only the latest turn's rules apply (as before)", () => {
+    const { appliedRules } = getSystemMessageWithRules({
+      availableRules: rules,
+      userMessage: user("now this"),
+      contextItems: [file("src/b.py")],
+    });
+    expect(appliedRules.map((r) => r.name)).toEqual(["python", "always"]);
   });
 });

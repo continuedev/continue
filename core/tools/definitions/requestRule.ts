@@ -15,8 +15,11 @@ function getAvailableRules(rules: ConfigDependentToolParams["rules"]) {
     return "No rules available.";
   }
 
+  // Sorted, so the tool description (part of every request's cached prefix)
+  // does not change with the order the rule files were read in
   return agentRequestedRules
     .map((rule) => `${rule.name}: ${rule.description}`)
+    .sort()
     .join("\n");
 }
 

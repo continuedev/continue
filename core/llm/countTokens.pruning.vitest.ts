@@ -143,3 +143,45 @@ describe("compileChatMessages with the task list block at the tail", () => {
     expect(compiledChatMessages.at(-1)).toEqual(list);
   });
 });
+
+describe("compileChatMessages prunes in steps", () => {
+  // Small numbered turns, so a long conversation crosses the budget gradually
+  const turn = (i: number): ChatMessage[] => [
+    { role: "user", content: `question ${i} ` + "word ".repeat(40) },
+    { role: "assistant", content: `answer ${i} ` + "word ".repeat(40) },
+  ];
+  const conversation = (turns: number): ChatMessage[] => [
+    { role: "system", content: "sys" },
+    ...Array.from({ length: turns }, (_, i) => turn(i)).flat(),
+    { role: "user", content: "latest" },
+  ];
+  const firstKept = (turns: number) =>
+    compileChatMessages({
+      modelName: "gpt-4",
+      msgs: conversation(turns),
+      knownContextLength: 4000,
+      maxTokens: 200,
+      supportsImages: false,
+    }).compiledChatMessages[1];
+
+  it("keeps the cut where it was while the conversation grows by less than a step", () => {
+    // Find the first length that prunes, then add one turn at a time
+    let turns = 1;
+    while (String(firstKept(turns).content).startsWith("question 0")) turns++;
+    const cut = firstKept(turns);
+    expect(firstKept(turns + 1)).toEqual(cut);
+    expect(firstKept(turns + 2)).toEqual(cut);
+  });
+
+  it("still fits the budget", () => {
+    const { compiledChatMessages, contextPercentage } = compileChatMessages({
+      modelName: "gpt-4",
+      msgs: conversation(80),
+      knownContextLength: 4000,
+      maxTokens: 200,
+      supportsImages: false,
+    });
+    expect(contextPercentage).toBeLessThanOrEqual(1);
+    expect(compiledChatMessages.at(-1)).toMatchObject({ content: "latest" });
+  });
+});

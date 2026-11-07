@@ -377,6 +377,9 @@ export function getTokenCountingBufferSafety(contextLength: number) {
 
 const MIN_RESPONSE_TOKENS = 1000;
 
+/** History is pruned in steps of this share of the input budget. */
+const PRUNE_STEP_FRACTION = 0.1;
+
 function pruneRawPromptFromTop(
   modelName: string,
   contextLength: number,
@@ -554,7 +557,22 @@ function compileChatMessages({
     }
   };
 
-  while (historyWithTokens.length > 0 && currentTotal > inputTokensAvailable) {
+  // Prune in steps. The history is pruned from scratch on every request, so
+  // dropping just enough would move the cut forward on every request, and
+  // a prompt cache could then reuse nothing after the system message and
+  // tools. Rounding what is dropped up to a step keeps the cut where it was
+  // until the conversation has grown by a whole step.
+  const overBy = currentTotal - inputTokensAvailable;
+  const pruneStep = Math.max(
+    1,
+    Math.floor(inputTokensAvailable * PRUNE_STEP_FRACTION),
+  );
+  const keepAtMost =
+    overBy > 0
+      ? currentTotal - Math.ceil(overBy / pruneStep) * pruneStep
+      : inputTokensAvailable;
+
+  while (historyWithTokens.length > 0 && currentTotal > keepAtMost) {
     if (historyWithTokens[0] !== protectedUser) {
       removeAt(0);
     } else if (historyWithTokens.length > 1) {

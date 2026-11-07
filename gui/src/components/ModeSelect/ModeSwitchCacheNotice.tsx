@@ -2,8 +2,8 @@ import { selectCacheSetting } from "../../redux/selectors/selectCacheSetting";
 import { useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { useNow } from "../../hooks/useNow";
-import { warmCacheLoss } from "../../util/cacheSafeguards";
-import { formatTokens, formatUsd } from "../../util/cacheNotices";
+import { isSignificantLoss, warmCacheLoss } from "../../util/cacheSafeguards";
+import { formatRereadCost } from "../../util/cacheNotices";
 
 /**
  * One line in the mode menu while the prompt cache is warm. Each mode has its
@@ -17,18 +17,14 @@ export function ModeSwitchCacheNotice() {
   const now = useNow();
   if (!model || !state) return null;
   const loss = warmCacheLoss(model, setting, state, now);
-  if (!loss) return null;
-  const cost =
-    loss.extraUsd !== undefined
-      ? ` (about ${formatUsd(loss.extraUsd)} more)`
-      : "";
+  if (!loss || (loss.local && !isSignificantLoss(loss))) return null;
   return (
     <div
       className="border-0 border-t border-solid border-t-border px-2 py-1 text-[10px] text-description-muted"
       data-testid="mode-switch-cache-notice"
     >
       Prompt cache is warm. Another mode has its own system prompt and tools, so
-      switching re-reads {formatTokens(loss.tokens)} tokens at full price{cost}.
+      switching re-reads {formatRereadCost(loss)}.
     </div>
   );
 }

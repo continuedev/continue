@@ -19,6 +19,7 @@ import {
   setIsPruned,
   setPromptCacheInputTokens,
   setPromptCacheKey,
+  setPromptCacheRequestAt,
   setPromptCacheState,
   recordCacheMiss,
   recordCacheRequest,
@@ -31,6 +32,7 @@ import {
   INITIAL_PROMPT_CACHE_STATE,
   modelSupportsOneHourCache,
   modelSupportsPromptCacheControl,
+  modelUsesLocalPrefixCache,
   promptCacheStatus,
 } from "../../util/promptCache";
 import { buildLedgerEntry } from "../../util/cacheLedger";
@@ -259,6 +261,9 @@ export const streamNormalInput = createAsyncThunk<
               );
               dispatch(setPromptCacheInputTokens(total));
               dispatch(setPromptCacheKey(cacheKey));
+              if (modelUsesLocalPrefixCache(selectedChatModel)) {
+                dispatch(setPromptCacheRequestAt(start));
+              }
             }
             dispatch(
               addRequestUsageToSession({
