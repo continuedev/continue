@@ -264,7 +264,9 @@ function TipTapEditorInner(props: TipTapEditorProps) {
     >
       <div className="px-2.5 pt-2 pb-1">
         <EditorContent
-          className={`scroll-container overflow-y-scroll ${props.isMainInput ? "max-h-[70vh]" : ""}`}
+          // In a short panel (VS Code's bottom panel) 70vh would push the
+          // toolbar and Enter button below the edge, so leave room for them
+          className={`scroll-container overflow-y-scroll ${props.isMainInput ? "max-h-[max(3em,min(70vh,calc(100vh_-_140px)))]" : ""}`}
           spellCheck={false}
           editor={editor}
           onClick={(event) => {

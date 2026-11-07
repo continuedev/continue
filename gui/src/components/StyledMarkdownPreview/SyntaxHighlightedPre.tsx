@@ -24,7 +24,8 @@ const StyledPre = styled.pre<{ theme: any }>`
   margin-bottom: 0;
   border-radius: 0 0 ${defaultBorderRadius} ${defaultBorderRadius} !important;
   max-height: 40vh;
-  overflow-y: scroll !important;
+  /* auto: a scrollbar only when the block reaches max-height */
+  overflow-y: auto !important;
 
   ${(props) => generateThemeStyles(props.theme)}
 `;

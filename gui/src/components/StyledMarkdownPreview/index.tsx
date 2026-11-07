@@ -67,8 +67,8 @@ const StyledMarkdown = styled.div<{
     background-color: ${vscEditorBackground};
     border-radius: ${defaultBorderRadius};
 
-    max-width: calc(100vw - 24px);
-    overflow-x: scroll;
+    max-width: 100%;
+    overflow-x: auto;
     overflow-y: hidden;
 
     padding: 8px;
@@ -83,6 +83,19 @@ const StyledMarkdown = styled.div<{
     background-color: ${vscEditorBackground};
     font-size: ${getFontSize() - 2}px;
     font-family: var(--vscode-editor-font-family);
+  }
+
+  /* A table wider than the chat scrolls on its own, and its cells keep
+     whole words (overriding the break-word rule below) */
+  table {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  table,
+  table * {
+    word-break: normal;
   }
 
   ul ul,

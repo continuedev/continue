@@ -7,7 +7,9 @@ export default function GUI() {
       <aside className="no-scrollbar hidden min-h-0 w-96 overflow-y-auto border-0 border-r border-solid border-vsc-input-border 4xl:flex">
         <History />
       </aside>
-      <main className="no-scrollbar flex min-h-0 flex-1 flex-col">
+      {/* min-w-0: without it this flex item grows to the widest unbreakable
+          content in the chat, pushing the input and its buttons off-screen */}
+      <main className="no-scrollbar flex min-h-0 min-w-0 flex-1 flex-col">
         <Chat />
       </main>
     </div>
