@@ -1,6 +1,7 @@
 import { URL } from "node:url";
 
-import * as cheerio from "cheerio";
+// This crawler fetches HTML itself; avoid Cheerio's unused HTTP client in the binary.
+import * as cheerio from "cheerio/slim";
 
 import { PageData } from "./DocsCrawler";
 

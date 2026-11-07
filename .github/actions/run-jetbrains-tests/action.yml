@@ -110,6 +110,12 @@ runs:
         cd binary
         npm run build
 
+    - name: Verify packaged core startup
+      shell: bash
+      env:
+        CONTINUE_GLOBAL_DIR: ${{ runner.temp }}/continue-core-startup
+      run: binary/bin/linux-x64/continue-binary --help
+
     - name: Run tests
       shell: bash
       run: |
