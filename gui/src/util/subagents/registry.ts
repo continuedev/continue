@@ -17,6 +17,25 @@ const approvals = new Map<string, (allowed: boolean) => void>();
 export const subagentSlots = new Semaphore(MAX_CONCURRENT_SUBAGENTS);
 export const subagentPrefixGate = new PrefixGate();
 
+/**
+ * Slots per model server, for servers that say how many requests they serve
+ * at once (Strata, llama.cpp). A one-slot server then runs one subagent at a
+ * time: more would only wait in its queue and push each other's
+ * conversations out of its cache. Keyed by server address and limit, so a
+ * server restarted with more slots gets a fresh semaphore.
+ */
+const serverSlots = new Map<string, Semaphore>();
+
+export function subagentServerSlots(apiBase: string, limit: number): Semaphore {
+  const key = `${apiBase.replace(/\/+$/, "")}|${limit}`;
+  let slots = serverSlots.get(key);
+  if (!slots) {
+    slots = new Semaphore(limit);
+    serverSlots.set(key, slots);
+  }
+  return slots;
+}
+
 export const STOPPED_BY_USER = "Stopped by the user";
 
 export function registerSubagentRun(

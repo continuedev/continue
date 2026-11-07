@@ -21,6 +21,7 @@ import type {
 } from "../config/providers/types";
 import type { ModeModelsInput } from "../config/yaml/saveModeModels";
 import type { SubagentLoadResult } from "../subagents/loadSubagents";
+import type { DetectedLocalServer } from "../llm/localServers";
 import type { RulesByModeInput } from "../config/yaml/saveRulesByMode";
 import type {
   AutoReviewReply,
@@ -580,8 +581,13 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       contextLength?: number;
       maxTokens?: number;
       supportsTools?: boolean;
+      supportsImages?: boolean;
       createdAt?: string;
       deprecated?: boolean;
     }[],
   ];
+  /** OpenAI-compatible servers answering on this machine's common ports. */
+  "models/detectLocal": [undefined, DetectedLocalServer[]];
+  /** Requests the server of this chat model serves at once, when it says. */
+  "models/serverConcurrency": [{ title: string }, number | undefined];
 };

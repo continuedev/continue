@@ -84,6 +84,9 @@ export function buildModelFromForm(
     if (input.uiOnly) continue;
     if (!isFieldVisible(input, values, all)) continue;
     const value = resolveValue(input, values);
+    // An empty optional field must not hide what the model itself says,
+    // such as the context window a live model list reported.
+    if (value === undefined) continue;
     const hasNewStyleRules =
       input.showWhen !== undefined || input.omitWhen !== undefined;
     if (hasNewStyleRules) {

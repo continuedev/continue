@@ -450,6 +450,39 @@ describe("runSubagentTool", () => {
     ]);
   });
 
+  it("runs one at a time on a local server that serves one request at once", async () => {
+    model.apiBase = "http://127.0.0.1:8083/v1/";
+    try {
+      const ids = ["s1", "s2"];
+      const { store, messenger } = makeStore(ids, {
+        promptCacheSettings: { Claude: "off" },
+      });
+      const asked: unknown[] = [];
+      messenger.responseHandlers["models/serverConcurrency"] = async (req) => {
+        asked.push(req);
+        return 1;
+      };
+      script(
+        messenger,
+        ids.map((id) => blockingTurn(id)),
+      );
+      const runs = ids.map((id) =>
+        runSubagentTool(args(), id, extras(store, messenger)),
+      );
+      await until(() => runOf(store, "s1")?.status === "running");
+      // The window has room for three, but the server has one slot
+      expect(runOf(store, "s2")!.status).toBe("queued");
+      expect(asked[0]).toEqual({ title: "Claude" });
+
+      stopSubagentRun("s1");
+      await until(() => runOf(store, "s2")?.status === "running");
+      store.dispatch(abortStream());
+      await Promise.all(runs);
+    } finally {
+      delete model.apiBase;
+    }
+  });
+
   it("with caching on, holds a sibling's first request until the first run's response starts", async () => {
     const { store, messenger } = makeStore(["s1", "s2"], {
       promptCacheSettings: { Claude: "5m" },

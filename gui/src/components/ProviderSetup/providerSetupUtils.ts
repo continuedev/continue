@@ -210,6 +210,15 @@ export function sameConnection(
   return norm(a) === norm(b);
 }
 
+/** True for OpenAI's own API, false for any other OpenAI-compatible server. */
+export function isOpenAICloud(apiBase: string): boolean {
+  try {
+    return new URL(apiBase).hostname === "api.openai.com";
+  } catch {
+    return false;
+  }
+}
+
 /** The configured connection of a provider that matches the form's values. */
 export function findConnection(
   connections: ProviderSetupConnection[],

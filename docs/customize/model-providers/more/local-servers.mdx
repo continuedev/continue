@@ -1,0 +1,53 @@
+---
+title: "Local servers (OpenAI-compatible)"
+description: "Use a model server on your machine, such as Strata, llama.cpp, vLLM, LM Studio or Ollama, through its OpenAI-compatible API."
+---
+
+Most local model servers have an OpenAI-compatible API. Continued talks to all of them through the `openai` provider with the server's address as `apiBase`, which gives you chat, tool calls and agent mode.
+
+## Set it up
+
+1. Start your server.
+2. Open **Set up models** (the model picker's **Manage models**, or the onboarding card) and choose **Local server (OpenAI-compatible)**.
+3. Select **Detect**. Continued looks for servers on the usual ports, including 8081-8089 for a second llama.cpp-style server, and fills in the address of the one it finds. You can also pick a usual address or type your own.
+4. Select **Next**. The model list is read from the server, with the context window it reports. Choose the models and save.
+
+The API key is optional: enter one only if your server was started with a key. It is stored as `CONTINUED_LOCAL_API_KEY`, apart from an OpenAI key.
+
+## Usual addresses
+
+| Server | Address |
+| --- | --- |
+| Strata, llama.cpp (`llama-server`), llamafile, LocalAI | `http://127.0.0.1:8080/v1/` |
+| vLLM | `http://127.0.0.1:8000/v1/` |
+| LM Studio | `http://127.0.0.1:1234/v1/` |
+| Ollama | `http://127.0.0.1:11434/v1/` |
+| Lemonade | `http://127.0.0.1:8000/api/v1/` |
+| SGLang | `http://127.0.0.1:30000/v1/` |
+| text-generation-webui | `http://127.0.0.1:5000/v1/` |
+| KoboldCpp | `http://127.0.0.1:5001/v1/` |
+| Jan | `http://127.0.0.1:1337/v1/` |
+
+## What is read from the server
+
+The model list fills in what the server reports, so a saved model needs no editing:
+
+- **Context window** (`contextLength`): `meta.n_ctx` (llama.cpp, Strata), `max_model_len` (vLLM), the loaded context from LM Studio's `/api/v0/models`, or `context_length`. For Ollama, only the context of a model that is loaded now (`/api/ps`): the trained maximum in `/api/show` is often larger than what Ollama runs with, and a larger window would have prompts cut short.
+- **Tool calls** (`capabilities: [tool_use]`, for agent mode): `chat_template_caps.supports_tools` in `/props` (llama.cpp, Strata), `capabilities` in Ollama's `/api/show`, or LM Studio's `tool_use`. A template that takes tools does not guarantee a model that uses them well.
+- **Images** (`image_input`): `modalities.vision` in `/props`, `architecture.input_modalities`, Ollama's `vision`, or LM Studio's `vlm` type.
+
+When a server reports none of these, set them yourself.
+
+## Configuration
+
+```yaml title="config.yaml"
+models:
+  - name: Strata
+    provider: openai
+    model: <MODEL_ID>
+    apiBase: http://127.0.0.1:8080/v1/
+    contextLength: 524288
+    capabilities: [tool_use]
+```
+
+`<MODEL_ID>` is an `id` from the server's `/v1/models`. Add `capabilities: [tool_use]` when the model supports tool calls, for agent mode.

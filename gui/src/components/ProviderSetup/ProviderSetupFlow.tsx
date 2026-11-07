@@ -25,6 +25,7 @@ import {
   computeModelLists,
 } from "../../forms/modelListUtils";
 import {
+  fetchedToPackages,
   fetchProviderModels,
   initializeDynamicModels,
 } from "../../pages/AddNewModel/configs/fetchProviderModels";
@@ -37,6 +38,7 @@ import {
   providers,
 } from "../../pages/AddNewModel/configs/providers";
 import ModelSelectionListbox from "../modelSelection/ModelSelectionListbox";
+import { LocalServerPicker } from "./LocalServerPicker";
 import { ModelChecklist } from "./ModelChecklist";
 import {
   buildChecklistRows,
@@ -47,6 +49,7 @@ import {
   diffSelection,
   findConnection,
   initialChecked,
+  isOpenAICloud,
   KeyChoice,
   keyProblem,
   keyStorageOptions,
@@ -70,6 +73,7 @@ export interface ProviderSetupFlowProps {
 }
 
 const POPULAR_PROVIDERS = [
+  "openai-compatible",
   "openai",
   "anthropic",
   "mistral",
@@ -82,11 +86,34 @@ const POPULAR_PROVIDERS = [
 const isBedrockProvider = (provider: string) =>
   provider === "bedrock" || provider === "bedrock-mantle";
 
+/**
+ * The secret name slug: a local server's key is not the OpenAI key, though
+ * both use the "openai" provider.
+ */
+const secretSlug = (p: ProviderInfo) => (p.localServer ? "local" : p.provider);
+
+/**
+ * The entry to start with. A configured "openai" connection to any other
+ * server than OpenAI's opens as a local server.
+ */
+function startingProvider(
+  initialProvider?: string,
+  initialConnection?: ProviderConnectionKey,
+): ProviderInfo {
+  if (
+    initialProvider === "openai" &&
+    initialConnection?.apiBase &&
+    !isOpenAICloud(initialConnection.apiBase)
+  ) {
+    return providers["openai-compatible"]!;
+  }
+  return (
+    (initialProvider && providers[initialProvider]) || providers["anthropic"]!
+  );
+}
+
 function providerLists() {
-  const all = Object.entries(providers)
-    .filter(([key]) => !["openai-aiohttp"].includes(key))
-    .map(([, p]) => p)
-    .filter((p): p is ProviderInfo => !!p);
+  const all = Object.values(providers).filter((p): p is ProviderInfo => !!p);
   const byTitle = (a: ProviderInfo, b: ProviderInfo) =>
     a.title.localeCompare(b.title);
   const popularTitles = POPULAR_PROVIDERS.map((id) => providers[id]?.title);
@@ -111,8 +138,8 @@ export function ProviderSetupFlow({
   const ideMessenger = useContext(IdeMessengerContext);
   const lists = useMemo(providerLists, []);
 
-  const [provider, setProvider] = useState<ProviderInfo>(
-    (initialProvider && providers[initialProvider]) || providers["anthropic"]!,
+  const [provider, setProvider] = useState<ProviderInfo>(() =>
+    startingProvider(initialProvider, initialConnection),
   );
   const [step, setStep] = useState<SetupStep>("credentials");
   const [setup, setSetup] = useState<ProviderSetupInfo>();
@@ -121,7 +148,7 @@ export function ProviderSetupFlow({
 
   const [storage, setStorage] = useState<KeyStorage>("env");
   const [secretName, setSecretName] = useState(
-    enterKey?.secretName ?? defaultSecretName(provider.provider),
+    enterKey?.secretName ?? defaultSecretName(secretSlug(provider)),
   );
   const [keyTouched, setKeyTouched] = useState(false);
 
@@ -173,13 +200,15 @@ export function ProviderSetupFlow({
     setLiveModels([]);
     setRefreshError(undefined);
     if (!enterKey) {
-      setSecretName(defaultSecretName(provider.provider));
+      setSecretName(defaultSecretName(secretSlug(provider)));
       setKeyTouched(false);
     }
   }, [provider]);
 
   const isBedrock = isBedrockProvider(provider.provider);
-  const hasKeyField = !!provider.apiKeyUrl;
+  const isLocal = !!provider.localServer;
+  // A local server's key is optional: only one started with a key needs it.
+  const hasKeyField = !!provider.apiKeyUrl || isLocal;
 
   // The connection the form describes, as core will match it.
   const connection = useMemo(
@@ -227,7 +256,9 @@ export function ProviderSetupFlow({
     secretName,
     value: formMethods.watch("apiKey") ?? "",
   };
-  const keyRequired = enterKey ? true : hasKeyField && !hasStoredKey;
+  const keyRequired = enterKey
+    ? true
+    : hasKeyField && !isLocal && !hasStoredKey;
   const keyIssue = hasKeyField
     ? keyProblem(keyChoice, { keyRequired })
     : undefined;
@@ -250,11 +281,12 @@ export function ProviderSetupFlow({
     diff.add.length > 0 || diff.remove.length > 0 || sendKey || connectionMoved;
   const needsConfirm = diff.remove.length > 0 && !confirmedRemoval;
 
-  const canRefresh = isBedrock
-    ? fieldsFilled
-    : !!keyChoice.value &&
-      provider.provider !== "ollama" &&
-      provider.provider !== "openrouter";
+  const canRefresh =
+    isBedrock || isLocal
+      ? fieldsFilled
+      : !!keyChoice.value &&
+        provider.provider !== "ollama" &&
+        provider.provider !== "openrouter";
 
   async function refreshModels() {
     const forProvider = provider.provider;
@@ -274,10 +306,15 @@ export function ProviderSetupFlow({
         ideMessenger,
         forProvider,
         formMethods.getValues("apiKey"),
-        formMethods.getValues("apiBase"),
+        // The form's value, or the field's default when it was not edited.
+        isLocal ? connection.apiBase : formMethods.getValues("apiBase"),
       );
       if (fetched.length === 0) {
-        setRefreshError("No models were returned. Check the API key.");
+        setRefreshError(
+          isLocal
+            ? "The server listed no models. Check that a model is loaded."
+            : "No models were returned. Check the API key.",
+        );
         return;
       }
       if (providerRef.current === forProvider) setLiveModels(fetched);
@@ -412,7 +449,9 @@ export function ProviderSetupFlow({
           placeholder={
             hasStoredKey && !enterKey
               ? "saved - leave blank to keep"
-              : `Enter your ${provider.title} API key`
+              : isLocal
+                ? "Optional: only if the server was started with a key"
+                : `Enter your ${provider.title} API key`
           }
           {...formMethods.register("apiKey")}
         />
@@ -554,6 +593,21 @@ export function ProviderSetupFlow({
             </div>
           )}
 
+          {!enterKey && isLocal && (
+            <LocalServerPicker
+              apiBase={connection.apiBase}
+              onPick={(apiBase, server) => {
+                formMethods.setValue("apiBase", apiBase);
+                setRefreshError(undefined);
+                setLiveModels(
+                  server && server.models.length > 0
+                    ? fetchedToPackages(server.models, provider.provider)
+                    : [],
+                );
+              }}
+            />
+          )}
+
           {keySection}
 
           {!enterKey &&
@@ -640,7 +694,11 @@ export function ProviderSetupFlow({
               <Button
                 className="flex-1"
                 disabled={!canContinue}
-                onClick={() => setStep("models")}
+                onClick={() => {
+                  setStep("models");
+                  // A local server's own list is the only one that applies.
+                  if (isLocal && liveModels.length === 0) void refreshModels();
+                }}
               >
                 Next
               </Button>

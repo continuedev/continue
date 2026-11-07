@@ -1,4 +1,5 @@
 import { LLMClasses, llmFromProviderAndOptions } from "./llms/index.js";
+import { listOpenAICompatibleModels } from "./localServers.js";
 
 export interface FetchedModel {
   name: string;
@@ -9,6 +10,8 @@ export interface FetchedModel {
   contextLength?: number;
   maxTokens?: number;
   supportsTools?: boolean;
+  /** The model takes images, when the provider says so. */
+  supportsImages?: boolean;
   /** ISO release date, when the provider reports one (used to rank by recency). */
   createdAt?: string;
   /** True when the provider reports the model as deprecated or retired. */
@@ -268,11 +271,47 @@ export function windowFromInputAndOutput(
   return input + (output ?? 0);
 }
 
+/**
+ * OpenAI-compatible servers whose `/models` list is read directly, so the
+ * context window each one reports comes along with the ids.
+ */
+const OPENAI_COMPATIBLE_LIST_PROVIDERS = new Set(["lmstudio", "vllm"]);
+
+function compatibleModelsBase(
+  provider: string,
+  apiBase?: string,
+): string | undefined {
+  if (provider === "openai") {
+    // OpenAI itself reports no context windows; any other server may.
+    if (!apiBase) return undefined;
+    try {
+      return new URL(apiBase).hostname === "api.openai.com"
+        ? undefined
+        : apiBase;
+    } catch {
+      return undefined; // not a URL: the generic path reports the error
+    }
+  }
+  if (!OPENAI_COMPATIBLE_LIST_PROVIDERS.has(provider)) return undefined;
+  const cls = LLMClasses.find((llm) => llm.providerName === provider);
+  return apiBase || cls?.defaultOptions?.apiBase;
+}
+
 export async function fetchModels(
   provider: string,
   apiKey?: string,
   apiBase?: string,
 ): Promise<FetchedModel[]> {
+  const compatibleBase = compatibleModelsBase(provider, apiBase);
+  if (compatibleBase) {
+    try {
+      return await listOpenAICompatibleModels(compatibleBase, apiKey);
+    } catch (error: any) {
+      throw new Error(
+        `Failed to fetch models for ${provider}: ${error?.message ?? error}`,
+      );
+    }
+  }
   switch (provider) {
     case "ollama":
       return fetchOllamaModels();

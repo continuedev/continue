@@ -64,6 +64,7 @@ import {
   registerSubagentRun,
   STOPPED_BY_USER,
   subagentPrefixGate,
+  subagentServerSlots,
   subagentSlots,
   waitForSubagentApproval,
 } from "./registry";
@@ -237,6 +238,7 @@ export async function runSubagentTool(
   update(run);
 
   let release: (() => void) | undefined;
+  let releaseServer: (() => void) | undefined;
   let childTools: Tool[] = [];
   let local: LocalSession = {
     ...INITIAL_SESSION_STATE,
@@ -355,6 +357,20 @@ export async function runSubagentTool(
 
     // Wait for a slot; a cancelled run gives up its place in the queue.
     release = await subagentSlots.acquire(signal);
+    // And one of the model server's own slots, when the server says how many
+    // it has: a one-slot local server runs one subagent at a time.
+    const serverLimit = model.apiBase
+      ? await ideMessenger
+          .request("models/serverConcurrency", { title: model.title })
+          .then((res) => (res.status === "success" ? res.content : undefined))
+          .catch(() => undefined)
+      : undefined;
+    if (model.apiBase && serverLimit) {
+      releaseServer = await subagentServerSlots(
+        model.apiBase,
+        serverLimit,
+      ).acquire(signal);
+    }
     update({ status: "running", startedAt: Date.now() });
 
     const maxTurns = definition.maxTurns ?? DEFAULT_SUBAGENT_MAX_TURNS;
@@ -460,6 +476,7 @@ export async function runSubagentTool(
     if (signal.aborted) finish("cancelled", reasonOf(signal));
     else finish("failed", message);
   } finally {
+    releaseServer?.();
     release?.();
     unregister();
     parentSignal.removeEventListener("abort", onParentAbort);
