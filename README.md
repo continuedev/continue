@@ -14,11 +14,11 @@
 
 Continued is not published to the VS Code Marketplace or Open VSX. Install it from a GitHub release. It needs VS Code 1.105 or newer.
 
-1. Download the `.vsix` for your platform from the [latest release](https://github.com/b1tninja/continued/releases/latest) ([Continued 2.2.0](https://github.com/b1tninja/continued/releases/tag/v2.2.0-vscode)). There are builds for Windows (x64, Arm64), macOS (Apple Silicon, Intel), and Linux (x64, Arm64). Each release has a `SHA256SUMS.txt` to check the download against.
+1. Download the `.vsix` for your platform from the [latest release](https://github.com/b1tninja/continued/releases/latest) ([Continued 2.4.0](https://github.com/b1tninja/continued/releases/tag/v2.4.0-vscode)). There are builds for Windows (x64, Arm64), macOS (Apple Silicon, Intel), and Linux (x64, Arm64). Each release has a `SHA256SUMS.txt` to check the download against.
 2. Install it, then reload VS Code (**Developer: Reload Window**):
 
    ```bash
-   code --install-extension continued-win32-x64-2.2.0.vsix --force
+   code --install-extension continued-win32-x64-2.4.0.vsix --force
    ```
 
 Or, with the GitHub CLI (change `win32-x64` to your platform):

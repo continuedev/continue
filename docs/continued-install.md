@@ -6,7 +6,7 @@ Continued is not affiliated with Continue Dev, Inc.
 
 **Requirements:** VS Code 1.105 or newer (or a VS Code-based editor built on it). Older versions cannot load the extension and will refuse to install it, so they keep the previously installed version.
 
-The current release is [Continued 2.2.0](https://github.com/b1tninja/continued/releases/tag/v2.2.0-vscode).
+The current release is [Continued 2.4.0](https://github.com/b1tninja/continued/releases/tag/v2.4.0-vscode).
 
 ## Option 1: install the latest release
 
@@ -23,7 +23,7 @@ Open the [latest release](https://github.com/b1tninja/continued/releases/latest)
 | Linux x64             | `continued-linux-x64-<version>.vsix`    |
 | Linux Arm64           | `continued-linux-arm64-<version>.vsix`  |
 
-For 2.2.0, the Windows x64 file is `continued-win32-x64-2.2.0.vsix`. The 2.2.0 release also has `linux-armhf` and `alpine-x64` files: don't use them, because their native modules are built for other platforms. There are no 32-bit ARM or Alpine (musl) builds.
+For 2.4.0, the Windows x64 file is `continued-win32-x64-2.4.0.vsix`. There are no 32-bit ARM or Alpine (musl) builds; the 2.2.0 release's `linux-armhf` and `alpine-x64` files did not work, because their native modules were built for other platforms.
 
 With the [GitHub CLI](https://cli.github.com/), you can download the latest release's file and checksums in one command. Change `win32-x64` to your platform:
 
@@ -52,7 +52,7 @@ grep continued-darwin-arm64 SHA256SUMS.txt | shasum -a 256 --check
 ### 3. Install it
 
 ```bash
-code --install-extension continued-win32-x64-2.2.0.vsix --force
+code --install-extension continued-win32-x64-2.4.0.vsix --force
 ```
 
 Or in VS Code: open the **Extensions** view, select **...** → **Install from VSIX...**, and choose the file.
@@ -65,7 +65,7 @@ Continued uses the extension ID `b1tninja.continued`. It installs alongside the 
 
 To check which version is installed, run `code --list-extensions --show-versions` and look for `b1tninja.continued@<version>`.
 
-> Release files are named with the version only, for example `continued-win32-x64-2.2.0.vsix`. GitHub Actions builds (Option 2) add the short commit SHA, for example `continued-win32-x64-2.2.0-62505d0.vsix`.
+> Release files are named with the version only, for example `continued-win32-x64-2.4.0.vsix`. GitHub Actions builds (Option 2) add the short commit SHA, for example `continued-win32-x64-2.4.0-g62505d0.vsix`.
 
 ## Option 2: download an unreleased build from GitHub Actions
 
