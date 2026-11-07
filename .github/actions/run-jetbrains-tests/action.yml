@@ -112,9 +112,10 @@ runs:
 
     - name: Verify packaged core startup
       shell: bash
+      working-directory: binary/bin/linux-x64
       env:
         CONTINUE_GLOBAL_DIR: ${{ runner.temp }}/continue-core-startup
-      run: binary/bin/linux-x64/continue-binary --help
+      run: ./continue-binary --help
 
     - name: Run tests
       shell: bash
