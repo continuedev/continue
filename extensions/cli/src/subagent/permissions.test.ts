@@ -13,14 +13,25 @@ const parent: ToolPermissions = {
       permission: "exclude",
       argumentMatches: { command: "rm*" },
     },
+    {
+      tool: "Bash",
+      permission: "allow",
+      argumentMatches: { command: "git status*" },
+    },
     { tool: "Edit", permission: "ask" },
     { tool: "Read", permission: "allow" },
   ],
 };
 
-const check = (name: string, args: Record<string, unknown> = {}) =>
-  checkToolPermission({ name, arguments: args }, subagentPermissions(parent))
-    .permission;
+const check = (
+  name: string,
+  args: Record<string, unknown> = {},
+  permissions: ToolPermissions = parent,
+) =>
+  checkToolPermission(
+    { name, arguments: args },
+    subagentPermissions(permissions),
+  ).permission;
 
 describe("subagentPermissions", () => {
   it("keeps the parent's excludes", () => {
@@ -28,14 +39,39 @@ describe("subagentPermissions", () => {
     expect(check("Bash", { command: "rm -rf /tmp/x" })).toBe("exclude");
   });
 
-  it("allows what the parent would ask about, since a subagent cannot prompt", () => {
-    expect(check("Edit")).toBe("allow");
-    expect(check("Bash", { command: "ls" })).toBe("allow");
+  it("allows what the parent allows without asking", () => {
+    expect(check("Read")).toBe("allow");
+    expect(check("Bash", { command: "git status --short" })).toBe("allow");
   });
 
-  it("allows everything when the parent excludes nothing (previous behaviour)", () => {
+  it("refuses what the parent would ask about, since a subagent cannot prompt", () => {
+    expect(check("Edit")).toBe("exclude");
+  });
+
+  it("refuses tools no policy matches, which the parent would ask about", () => {
+    expect(check("Bash", { command: "npm install" })).toBe("exclude");
+    expect(check("SomeMcpTool")).toBe("exclude");
     expect(
-      subagentPermissions({ policies: [{ tool: "*", permission: "ask" }] }),
-    ).toEqual({ policies: [{ tool: "*", permission: "allow" }] });
+      check("Anything", {}, { policies: [{ tool: "*", permission: "ask" }] }),
+    ).toBe("exclude");
+  });
+
+  it("keeps a parent that allows everything (auto mode) able to do everything", () => {
+    expect(
+      check(
+        "Bash",
+        { command: "npm test" },
+        {
+          policies: [{ tool: "*", permission: "allow" }],
+        },
+      ),
+    ).toBe("allow");
+  });
+
+  it("never lets a subagent start another subagent", () => {
+    expect(check("Subagent")).toBe("exclude");
+    expect(
+      check("Subagent", {}, { policies: [{ tool: "*", permission: "allow" }] }),
+    ).toBe("exclude");
   });
 });

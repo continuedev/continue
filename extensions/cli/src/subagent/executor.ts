@@ -53,11 +53,25 @@ async function buildAgentSystemMessage(
   return baseMessage;
 }
 
+let subagentRuns: Promise<unknown> = Promise.resolve();
+
 /**
- * Execute a subagent in a child session
+ * Execute a subagent in a child session.
+ *
+ * Runs one at a time: a run swaps the shared tool-permission, system-message
+ * and chat-history services and restores them afterwards, so two subagents
+ * started by parallel tool calls would otherwise overwrite each other's
+ * state and could leave the parent with a subagent's permissions.
  */
-// eslint-disable-next-line complexity
-export async function executeSubAgent(
+export function executeSubAgent(
+  options: SubAgentExecutionOptions,
+): Promise<SubAgentResult> {
+  const run = subagentRuns.then(() => runSubAgent(options));
+  subagentRuns = run.catch(() => undefined);
+  return run;
+}
+
+async function runSubAgent(
   options: SubAgentExecutionOptions,
 ): Promise<SubAgentResult> {
   const { agent: subAgent, prompt, abortController, onOutputUpdate } = options;
@@ -77,9 +91,8 @@ export async function executeSubAgent(
       throw new Error("Model or LLM API not available");
     }
 
-    // The parent's excludes still apply; tools it would ask about are allowed,
-    // since a subagent cannot show a prompt yet.
-    // todo: route "ask" to the parent's permission dialog instead.
+    // Only what the parent may do without asking; see subagentPermissions.
+    // todo: route "ask" to the parent's permission dialog instead of refusing.
     serviceContainer.set<ToolPermissionServiceState>(
       SERVICE_NAMES.TOOL_PERMISSIONS,
       {
