@@ -79,11 +79,15 @@ dependencies {
 
     // The IntelliJ Starter test framework (ide-starter-squashed 243.x, used by
     // the integration tests only) brings Netty 4.2.0.Alpha4, Bouncy Castle
-    // 1.78.1, Jackson 2.17, Guava 33.3.0, protobuf 3.24.4, XStream 1.4.20 and
-    // lz4-java 1.8.0, all with known advisories. Raise them to fixed releases;
+    // 1.78.1, Jackson 2.17, Guava 33.3.0, protobuf 3.24.4, XStream 1.4.20,
+    // lz4-java 1.8.0, OpenTelemetry 1.41.0, Ktor 2.3.12 and jsoup 1.18.1, all
+    // with known advisories. Raise them to fixed releases;
     // newer Starter releases still carry some of them and need Java 21.
     testIntegrationImplementation(platform("io.netty:netty-bom:4.2.18.Final"))
     testIntegrationImplementation(platform("com.fasterxml.jackson:jackson-bom:2.21.7"))
+    testIntegrationImplementation(platform("io.opentelemetry:opentelemetry-bom:1.68.0"))
+    testIntegrationImplementation(platform("io.opentelemetry:opentelemetry-bom-alpha:1.68.0-alpha"))
+    testIntegrationImplementation(platform("io.ktor:ktor-bom:2.3.13"))
     constraints {
         testIntegrationImplementation("org.bouncycastle:bcprov-jdk18on:1.86")
         testIntegrationImplementation("org.bouncycastle:bcpkix-jdk18on:1.86")
@@ -91,6 +95,22 @@ dependencies {
         testIntegrationImplementation("com.google.guava:guava:33.7.2-jre")
         testIntegrationImplementation("com.google.protobuf:protobuf-java:3.25.5")
         testIntegrationImplementation("com.thoughtworks.xstream:xstream:1.4.21")
+        testIntegrationImplementation("org.jsoup:jsoup:1.23.2")
+    }
+}
+
+// The unit-test framework (com.jetbrains.intellij.platform:test-framework
+// 241.x, in the intellijPlatformTest* configurations the IntelliJ Platform
+// plugin creates) brings jackson-core and jackson-databind 2.16.0, with known
+// advisories. Raise them as on the other classpaths.
+configurations.matching { it.name.startsWith("intellijPlatformTest") }.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "com.fasterxml.jackson.core" &&
+            requested.name in setOf("jackson-core", "jackson-databind")
+        ) {
+            useVersion("2.21.7")
+            because("jackson 2.16.0 from the IntelliJ test framework has advisories")
+        }
     }
 }
 
