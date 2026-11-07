@@ -628,23 +628,6 @@ describe("AutocompleteLruCache", () => {
     });
   });
 
-  // ═══════════════════════════════════════════════════════════════
-  // SINGLETON PATTERN (Static get() method)
-  // ═══════════════════════════════════════════════════════════════
-  describe("Singleton Pattern", () => {
-    beforeEach(() => {
-      // Reset singleton
-      (AutocompleteLruCache as any).instancePromise = undefined;
-    });
-
-    it("should return same instance on multiple calls", async () => {
-      const mockOpen = jest.fn().mockResolvedValue(mockDb);
-      jest.doMock("sqlite", () => ({ open: mockOpen }));
-
-      const instance1 = await AutocompleteLruCache.get();
-      const instance2 = await AutocompleteLruCache.get();
-
-      expect(instance1).toBe(instance2);
-    });
-  });
+  // The singleton get() is covered in AutocompleteLruCache.vitest.ts, where
+  // the database helper can be mocked.
 });

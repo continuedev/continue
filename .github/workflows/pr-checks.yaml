@@ -204,6 +204,14 @@ jobs:
           cd extensions/vscode
           npm run vitest
 
+      # Smart App Control blocks unsigned native modules (sqlite3, LanceDB); a
+      # top-level import of one stops the whole extension from activating
+      - name: Check activation does not need native modules
+        run: |
+          cd extensions/vscode
+          npm run esbuild
+          npm run check:native-modules-deferred
+
   get-packages-matrix:
     if: github.event.pull_request.draft != true
     runs-on: ubuntu-latest

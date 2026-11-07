@@ -1,6 +1,5 @@
 import { ConfigResult } from "@continuedev/config-yaml";
-import { open, type Database } from "sqlite";
-import sqlite3 from "sqlite3";
+import { type Database } from "sqlite";
 
 import {
   Chunk,
@@ -25,6 +24,7 @@ import {
   getDocsSqlitePath,
   getLanceDbPath,
 } from "../../util/paths";
+import { openSqliteDatabase } from "../../util/sqlite";
 
 import {
   ArticleWithChunks,
@@ -877,10 +877,7 @@ export default class DocsService {
   // SQLITE DB
   private async getOrCreateSqliteDb() {
     if (!this.sqliteDb) {
-      const db = await open({
-        filename: getDocsSqlitePath(),
-        driver: sqlite3.Database,
-      });
+      const db = await openSqliteDatabase(getDocsSqlitePath());
 
       await db.exec("PRAGMA busy_timeout = 3000;");
 

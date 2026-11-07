@@ -1,15 +1,14 @@
 import fs from "fs";
 
-import { open } from "sqlite";
-import sqlite3 from "sqlite3";
-
 import { DatabaseConnection } from "../indexing/refreshIndex.js";
 
 import { getDevDataSqlitePath } from "../util/paths.js";
+import { openSqliteDatabase } from "../util/sqlite.js";
 
 /* The Dev Data SQLITE table is only used for local tokens generated */
 export class DevDataSqliteDb {
   static db: DatabaseConnection | null = null;
+  private static warnedUnavailable = false;
 
   private static async createTables(db: DatabaseConnection) {
     await db.exec(
@@ -72,20 +71,25 @@ export class DevDataSqliteDb {
     return result ?? [];
   }
 
-  static async get() {
+  /** Returns null when SQLite is unavailable: token counts are best effort. */
+  static async get(): Promise<DatabaseConnection | null> {
     const devDataSqlitePath = getDevDataSqlitePath();
     if (DevDataSqliteDb.db && fs.existsSync(devDataSqlitePath)) {
       return DevDataSqliteDb.db;
     }
 
-    DevDataSqliteDb.db = await open({
-      filename: devDataSqlitePath,
-      driver: sqlite3.Database,
-    });
-
-    await DevDataSqliteDb.db.exec("PRAGMA busy_timeout = 3000;");
-
-    await DevDataSqliteDb.createTables(DevDataSqliteDb.db!);
+    try {
+      const db = await openSqliteDatabase(devDataSqlitePath);
+      await db.exec("PRAGMA busy_timeout = 3000;");
+      await DevDataSqliteDb.createTables(db);
+      DevDataSqliteDb.db = db;
+    } catch (error) {
+      if (!DevDataSqliteDb.warnedUnavailable) {
+        DevDataSqliteDb.warnedUnavailable = true;
+        console.warn("Token usage is not recorded: SQLite unavailable", error);
+      }
+      DevDataSqliteDb.db = null;
+    }
 
     return DevDataSqliteDb.db;
   }

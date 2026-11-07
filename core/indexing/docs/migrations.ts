@@ -1,5 +1,5 @@
 import { type Database } from "sqlite";
-import { type Table } from "vectordb";
+import type { Table } from "vectordb";
 
 import { editConfigFile, migrate } from "../../util/paths.js";
 

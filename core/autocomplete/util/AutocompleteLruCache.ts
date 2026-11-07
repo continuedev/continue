@@ -1,11 +1,10 @@
 import { Mutex } from "async-mutex";
-import { open } from "sqlite";
-import sqlite3 from "sqlite3";
 import {
   DatabaseConnection,
   truncateSqliteLikePattern,
 } from "../../indexing/refreshIndex.js";
 import { getTabAutocompleteCacheSqlitePath } from "../../util/paths.js";
+import { openSqliteDatabase } from "../../util/sqlite.js";
 
 interface CacheEntry {
   value: string;
@@ -30,27 +29,35 @@ export class AutocompleteLruCache {
   private dirty: Set<string> = new Set();
   private flushTimer?: NodeJS.Timeout;
 
-  constructor(private db: DatabaseConnection) {}
+  /** null: SQLite is unavailable and the cache lives in memory only. */
+  constructor(private db: DatabaseConnection | null) {}
 
   /**
    * Singleton accessor that initializes the cache with SQLite persistence.
    * Creates the database table if it doesn't exist and loads existing entries.
+   * If SQLite cannot be opened, the cache still works without persistence.
    */
   static async get(): Promise<AutocompleteLruCache> {
     if (!AutocompleteLruCache.instancePromise) {
       AutocompleteLruCache.instancePromise = (async () => {
-        const db = await open({
-          filename: getTabAutocompleteCacheSqlitePath(),
-          driver: sqlite3.Database,
-        });
-        await db.exec("PRAGMA busy_timeout = 3000;");
-        await db.run(`
-          CREATE TABLE IF NOT EXISTS cache (
-            key TEXT PRIMARY KEY,
-            value TEXT NOT NULL,
-            timestamp INTEGER NOT NULL
-          )
-        `);
+        let db: DatabaseConnection;
+        try {
+          db = await openSqliteDatabase(getTabAutocompleteCacheSqlitePath());
+          await db.exec("PRAGMA busy_timeout = 3000;");
+          await db.run(`
+            CREATE TABLE IF NOT EXISTS cache (
+              key TEXT PRIMARY KEY,
+              value TEXT NOT NULL,
+              timestamp INTEGER NOT NULL
+            )
+          `);
+        } catch (error) {
+          console.warn(
+            "Autocomplete cache is not saved between sessions: SQLite unavailable",
+            error,
+          );
+          return new AutocompleteLruCache(null);
+        }
 
         const instance = new AutocompleteLruCache(db);
         await instance.loadFromDb();
@@ -63,6 +70,7 @@ export class AutocompleteLruCache {
 
   /** Loads all cached entries from SQLite into memory on initialization. */
   private async loadFromDb() {
+    if (!this.db) return;
     const rows = await this.db.all("SELECT key, value, timestamp FROM cache");
     for (const row of rows) {
       this.cache.set(row.key, {
@@ -173,6 +181,11 @@ export class AutocompleteLruCache {
    * Skips if no changes pending. Rolls back transaction on error.
    */
   async flush() {
+    const db = this.db;
+    if (!db) {
+      this.dirty.clear();
+      return;
+    }
     if (this.dirty.size === 0) return;
 
     const release = await this.mutex.acquire();
@@ -180,14 +193,14 @@ export class AutocompleteLruCache {
     this.dirty.clear();
 
     try {
-      await this.db.run("BEGIN TRANSACTION");
+      await db.run("BEGIN TRANSACTION");
 
       for (const key of dirtyKeys) {
         const entry = this.cache.get(key);
 
         if (entry) {
           // Upsert
-          await this.db.run(
+          await db.run(
             `INSERT INTO cache (key, value, timestamp) VALUES (?, ?, ?)
              ON CONFLICT(key) DO UPDATE SET value = ?, timestamp = ?`,
             key,
@@ -198,13 +211,13 @@ export class AutocompleteLruCache {
           );
         } else {
           // Delete
-          await this.db.run("DELETE FROM cache WHERE key = ?", key);
+          await db.run("DELETE FROM cache WHERE key = ?", key);
         }
       }
 
-      await this.db.run("COMMIT");
+      await db.run("COMMIT");
     } catch (error) {
-      await this.db.run("ROLLBACK");
+      await db.run("ROLLBACK");
       console.error("Error flushing cache:", error);
     } finally {
       release();
@@ -220,7 +233,7 @@ export class AutocompleteLruCache {
       clearInterval(this.flushTimer);
     }
     await this.flush();
-    await this.db.close();
+    await this.db?.close();
     AutocompleteLruCache.instancePromise = undefined;
   }
 }

@@ -1,5 +1,3 @@
-import { getDatabaseAdapter } from "dbinfoz";
-
 import {
   ContextItem,
   ContextProviderDescription,
@@ -8,6 +6,14 @@ import {
   LoadSubmenuItemsArgs,
 } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
+
+// dbinfoz loads the native sqlite3 binary when imported, so import it only
+// when a database connection is used (see util/sqlite.ts)
+async function getDatabaseAdapter(connectionType: string, connection: any) {
+  const { getDatabaseAdapter } = await import("dbinfoz");
+  // @ts-ignore (incorrect typings on module's declaration file)
+  return getDatabaseAdapter(connectionType, connection);
+}
 
 class DatabaseContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -38,8 +44,7 @@ class DatabaseContextProvider extends BaseContextProvider {
 
     for (const connection of connections) {
       if (connection.name === connectionName) {
-        // @ts-ignore (incorrect typings on module's declaration file)
-        const adapter = getDatabaseAdapter(
+        const adapter = await getDatabaseAdapter(
           connection.connection_type,
           connection.connection,
         );
@@ -93,8 +98,7 @@ class DatabaseContextProvider extends BaseContextProvider {
     }
 
     for (const connection of connections) {
-      // @ts-ignore (incorrect typings on module's declaration file)
-      const adapter = getDatabaseAdapter(
+      const adapter = await getDatabaseAdapter(
         connection.connection_type,
         connection.connection,
       );

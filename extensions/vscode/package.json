@@ -679,6 +679,7 @@
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "esbuild-notify": "npm run esbuild-base -- --sourcemap --notify",
     "esbuild:visualize": "esbuild-visualizer --metadata ./build/meta.json --filename ./build/stats.html --open",
+    "check:native-modules-deferred": "node scripts/check-native-modules-deferred.js",
     "tsc": "tsc -p ./",
     "tsc:check": "tsc -p ./ --noEmit",
     "tsc-watch": "tsc -watch -p ./",
