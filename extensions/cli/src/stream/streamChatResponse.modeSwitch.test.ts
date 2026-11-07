@@ -45,17 +45,44 @@ describe("streamChatResponse - Mode Switch During Streaming", () => {
     serviceContainer.set(SERVICE_NAMES.TOOL_PERMISSIONS, updatedState);
 
     // Recompute tools - should now exclude write tools
-    tools = await getRequestTools(true);
+    tools = await getRequestTools(false);
     toolNames = tools.map((t) => t.function.name);
 
     // Should exclude write tools in plan mode
     expect(toolNames).not.toContain("Write");
     expect(toolNames).not.toContain("MultiEdit");
 
-    // Should still include read-only tools
+    // Should still include read-only tools, Bash (it asks first) and the plan tool
     expect(toolNames).toContain("Read");
     expect(toolNames).toContain("Bash");
     expect(toolNames).toContain("List");
+    expect(toolNames).toContain("PresentPlan");
+
+    // Headless plan mode has nobody to ask, so Bash is not offered at all
+    const headless = (await getRequestTools(true)).map((t) => t.function.name);
+    expect(headless).not.toContain("Bash");
+    expect(headless).toContain("Read");
+  });
+
+  test("offers PresentPlan in plan mode only", async () => {
+    const normal = (await getRequestTools(false)).map((t) => t.function.name);
+    expect(normal).not.toContain("PresentPlan");
+
+    toolPermissionService.switchMode("plan");
+    serviceContainer.set(
+      SERVICE_NAMES.TOOL_PERMISSIONS,
+      toolPermissionService.getState(),
+    );
+    const plan = (await getRequestTools(false)).map((t) => t.function.name);
+    expect(plan).toContain("PresentPlan");
+
+    toolPermissionService.switchMode("auto");
+    serviceContainer.set(
+      SERVICE_NAMES.TOOL_PERMISSIONS,
+      toolPermissionService.getState(),
+    );
+    const auto = (await getRequestTools(false)).map((t) => t.function.name);
+    expect(auto).not.toContain("PresentPlan");
   });
 
   test("getRequestTools reflects current mode immediately", async () => {

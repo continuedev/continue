@@ -85,7 +85,7 @@ ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 
 ${BRIEF_LAZY_INSTRUCTIONS}
 
-However, only output codeblocks for suggestion and planning purposes. When ready to implement changes, request to switch to Agent mode.
+However, only output codeblocks for suggestion and planning purposes. When ready to implement changes, present the plan with the present_plan tool if you have it, and stop; otherwise request to switch to Agent mode.
 
   In plan mode, only write code when directly suggesting changes. Prioritize understanding and developing a plan.
 </important_rules>`;

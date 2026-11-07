@@ -24,6 +24,13 @@ export const selectActiveTools = createSelector(
         ) {
           return false;
         }
+        // Presenting a plan is how Plan mode ends: Plan mode only.
+        if (
+          tool.function.name === BuiltInToolNames.PresentPlan &&
+          mode !== "plan"
+        ) {
+          return false;
+        }
         const toolPolicy =
           policies[tool.function.name] ??
           tool.defaultToolPolicy ??

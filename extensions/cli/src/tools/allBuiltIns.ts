@@ -6,6 +6,7 @@ import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
 import { multiEditTool } from "./multiEdit.js";
+import { presentPlanTool } from "./presentPlan.js";
 import { readFileTool } from "./readFile.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
@@ -26,6 +27,7 @@ export const ALL_BUILT_IN_TOOLS = [
   fetchTool,
   listFilesTool,
   multiEditTool,
+  presentPlanTool,
   readFileTool,
   reportFailureTool,
   runTerminalCommandTool,

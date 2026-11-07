@@ -1,6 +1,6 @@
 # Task planning
 
-Last updated: 2026-11-06. Status: P1 and P3 built (the task list as session state, `TaskList` in the CLI and `task_list` in the IDE, the list at the tail of each request, both summary prompts, the IDE list above the input) plus the CLI progress strip from P2. Open questions 1, 2, 4 and 5 are decided in [Decisions](#decisions); P0's live Bedrock measurement was replaced by a deterministic test.
+Last updated: 2026-11-07. Status: P1 and P3 built (the task list as session state, `TaskList` in the CLI and `task_list` in the IDE, the list at the tail of each request, both summary prompts, the IDE list above the input) plus the CLI progress strip from P2, and P4 (plan files with a Build step). Open questions 1 to 5 are decided in [Decisions](#decisions); P0's live Bedrock measurement was replaced by a deterministic test.
 
 Keep a plan and a task checklist outside the conversation, so a long piece of work does not lose its place when the conversation is compacted, pruned or moved to a new session.
 
@@ -201,6 +201,18 @@ An edit in the IDE list applies immediately and is saved. The plan records `upda
 
 Completed items the model leaves out of an update are kept, because the block folds old completed items into a count and the model cannot repeat what it does not see. Open items left out are removed. `reset: true` starts a new list. The person's edits replace the list exactly.
 
+### 3. Plan files: in the workspace, proposed by a tool, built from a card
+
+Built as P4 on 2026-11-07 (phase P of `agent-ux-parity.md`).
+
+- **Where**: `.continue/plans/<slug>.md` in the workspace (the first workspace folder in the IDE, the working directory in the CLI), so a team can review a plan. Claude Code keeps plans in `~/.claude/plans/` (setting `plansDirectory`); Cursor saves to the home directory (`~/.cursor/plans/*.plan.md`) and "Save to workspace" moves a plan into `.cursor/plans`. No setting yet.
+- **Format** (`core/util/planFile.ts`): a `# Title`, a short body, and a `## To-dos` checkbox list in the task list's markers, each line ending in `<!-- id: N -->` so ids survive a round trip through a file the person edits. A file a person wrote is read too: any "To-dos", "Tasks", "Steps" or "Checklist" heading, or every checkbox line when there is none. The to-dos are the task list, one to one.
+- **The tool**: `present_plan` in the IDE, `PresentPlan` in the CLI, following each side's naming (`task_list` / `TaskList`). It takes `title`, `plan` (markdown) and `todos` (strings). It writes the file, replaces the task list with the to-dos, records the file on the session (`Session.planFile`, a file URI) and ends the turn. It is offered in Plan mode only. Not named `ExitPlanMode`: here the tool does not leave Plan mode, the person's Build does, and the person can keep planning. Presenting again with the same title replaces the session's own file; a file of that name from elsewhere gets `-2`.
+- **Approval, IDE**: the tool call shows as a card (title, the plan rendered, the to-dos, a link that opens the file) with **Build** and **Keep planning** until something is sent after it. Build reads the file back, makes its checkboxes the task list (marked as edited by the user when they differ, so the model keeps the edits), switches to Agent mode and sends a message to implement the plan, read the file first and keep the list current. Keep planning stays in Plan mode and focuses the input. The tool's result is recorded in the history but not sent to the model (`endTurn` on a client tool), so the conversation stays well formed for the next message.
+- **Approval, CLI**: the tool asks with the existing question prompt (↑/↓ and Enter): Build, Keep planning, or type what to change. Build reads the file back the same way, switches the permission mode to normal and returns the build instructions as the tool result, so the same turn continues with the write tools. Headless runs have nobody to approve: the plan is saved, `Plan saved to <path>` goes to stderr, and the model is told to stop and end with the path.
+- **No "Build, auto-approve edits"**. Claude Code's approval offers auto mode or accept-edits. Here neither maps cleanly. In the IDE the approval mode is a global setting, not per session, and edit tools are always reviewed as diffs whatever it says, so a per-plan "auto-approve edits" would silently change a global setting without changing how edits are reviewed. In the CLI, `auto` allows every tool including Bash and MCP, which is more than edits. The person can switch modes after Build as usual.
+- **Plan mode no longer runs Bash or MCP tools unasked in the CLI**: `PLAN_MODE_POLICIES` had `Bash: allow` and `*: allow`. They are now `ask`; in headless plan mode "ask" tools are not offered, so a headless plan run is read-only. The IDE's Plan mode still offers MCP tools under their own policies (not changed here).
+
 ### 4. One implementation in core
 
 `core/util/taskPlan.ts` holds validation (at most one item in progress, at most 50 items, 200 characters per item, unique ids), id assignment, the request block, the progress line, the confirmation and the markdown mapping for `Checklist`; the types are in `core/index.d.ts` and `Session.taskPlan` is saved by `core/util/history.ts`, which the CLI also uses. The CLI imports it like its other core imports, through `core/dist`, so `npm run build` in `core` is needed before the CLI type-checks. `packages/openai-adapters` cannot import core, so it keeps its own copy of the tag, and a core test checks the two match.
@@ -210,6 +222,8 @@ Completed items the model leaves out of an update are kept, because the block fo
 - Claude Code task tools and model availability: https://code.claude.com/docs/en/tools-reference (Task tool availability), https://code.claude.com/docs/en/agent-sdk/todo-tracking
 - Claude Code task list display and compaction: https://code.claude.com/docs/en/interactive-mode (Task list)
 - Tool prompt wording (unofficial copies): https://tangled.org/nonbinary.computer/claude-code/blob/main/tools/TodoWriteTool/prompt.ts, https://spring-ai-community.github.io/spring-ai-agent-utils/latest/tools/TodoWriteTool/
+- Claude Code plan mode and its approval options: https://code.claude.com/docs/en/permission-modes, https://code.claude.com/docs/en/tools-reference (`ExitPlanMode`: "Presents a plan for approval and exits plan mode", permission required)
+- Cursor plan mode: https://cursor.com/docs/agent/planning, https://cursor.com/blog/plan-mode; plan storage and Build (forum, staff replies): https://forum.cursor.com/t/plan-files-stay-with-an-active-build-button-after-work-is-already-shipped/166085, https://forum.cursor.com/t/customize-build-plan-mode-message/144229
 - Cursor to-dos and summarization (forum reports): https://forum.cursor.com/t/agent-stuck-referencing-stale-completed-plans/160672, https://forum.cursor.com/t/agents-doing-weird-things-since-mon-tues-9-10th/154517, https://forum.cursor.com/t/cursor-1-2-agent-planning-better-context-and-faster-tab/112236
 
 ## Not decided here

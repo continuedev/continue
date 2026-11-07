@@ -25,6 +25,7 @@ import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
 import { multiEditTool } from "./multiEdit.js";
+import { presentPlanTool } from "./presentPlan.js";
 import { readFileTool } from "./readFile.js";
 import { reportFailureTool } from "./reportFailure.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
@@ -127,6 +128,11 @@ export async function getAllAvailableTools(
 
   if (isHeadless) {
     tools.push(exitTool);
+  }
+
+  // Presenting a plan is how plan mode ends, so only plan mode offers it.
+  if (services.toolPermissions.getCurrentMode() === "plan") {
+    tools.push(presentPlanTool);
   }
 
   if (isBetaSubagentToolEnabled()) {

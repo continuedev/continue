@@ -4,8 +4,12 @@ import React from "react";
 import { describe, expect, it, vi } from "vitest";
 
 const listeners = vi.hoisted(() => new Set<(p?: TaskPlan) => void>());
+const session = vi.hoisted(() => ({
+  planFile: undefined as string | undefined,
+}));
 vi.mock("../../session.js", () => ({
   getSessionTaskPlan: () => undefined,
+  getSessionPlanFile: () => session.planFile,
   onTaskPlanChange: (fn: (p?: TaskPlan) => void) => {
     listeners.add(fn);
     return () => listeners.delete(fn);
@@ -37,6 +41,14 @@ describe("TaskProgressStrip", () => {
     expect(render(<TaskProgressStrip plan={plan} />).lastFrame()).toContain(
       "Tasks 1/3 Running migrations",
     );
+  });
+
+  it("names the plan file when the list came from a plan", () => {
+    session.planFile = "file:///work/.continue/plans/add-retry.md";
+    expect(render(<TaskProgressStrip plan={plan} />).lastFrame()).toContain(
+      "plan add-retry.md",
+    );
+    session.planFile = undefined;
   });
 
   it("follows changes to the session's list", async () => {

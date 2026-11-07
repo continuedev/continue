@@ -121,16 +121,16 @@ describe("ToolPermissionService", () => {
       expect(policies).toContainEqual({ tool: "Write", permission: "exclude" });
       expect(policies).toContainEqual({ tool: "Edit", permission: "exclude" });
 
-      // Should allow read tools and bash
-      expect(policies).toContainEqual({ tool: "Bash", permission: "allow" });
+      // Should allow read tools; Bash can write, so it asks
+      expect(policies).toContainEqual({ tool: "Bash", permission: "ask" });
       expect(policies).toContainEqual({ tool: "Read", permission: "allow" });
       expect(policies).toContainEqual({ tool: "Search", permission: "allow" });
       expect(policies).toContainEqual({ tool: "List", permission: "allow" });
 
-      // Plan mode has wildcard allow at the end for MCP and other tools
+      // Plan mode has a wildcard ask at the end for MCP and other tools
       expect(policies[policies.length - 1]).toEqual({
         tool: "*",
-        permission: "allow",
+        permission: "ask",
       });
     });
 
@@ -401,10 +401,11 @@ describe("ToolPermissionService", () => {
       );
       expect(writeExcludeIndex).toBeGreaterThanOrEqual(0);
 
-      // Plan mode allows all other tools via wildcard
+      // Plan mode asks before all other tools via wildcard; headless runs
+      // are then not offered them (getRequestTools)
       expect(state.permissions.policies).toContainEqual({
         tool: "*",
-        permission: "allow",
+        permission: "ask",
       });
       expect(state.isHeadless).toBe(true);
     });

@@ -138,6 +138,16 @@ class SessionManager {
     notifyTaskPlanListeners(session.taskPlan);
   }
 
+  updatePlanFile(planFile: string | undefined): void {
+    const session = this.getCurrentSession();
+    if (planFile) {
+      session.planFile = planFile;
+    } else {
+      delete session.planFile;
+    }
+    saveSession();
+  }
+
   clear(): void {
     this.currentSession = null;
     notifyTaskPlanListeners(undefined);
@@ -619,6 +629,16 @@ export function getSessionTaskPlan(): TaskPlan | undefined {
 /** Replaces the current session's task list and saves the session. */
 export function updateSessionTaskPlan(plan: TaskPlan | undefined): void {
   SessionManager.getInstance().updateTaskPlan(plan);
+}
+
+/** URI of the plan file the current session works from (core/util/planFile.ts). */
+export function getSessionPlanFile(): string | undefined {
+  return SessionManager.getInstance().getCurrentSession().planFile;
+}
+
+/** Records the current session's plan file and saves the session. */
+export function updateSessionPlanFile(planFile: string | undefined): void {
+  SessionManager.getInstance().updatePlanFile(planFile);
 }
 
 /** Calls `listener` whenever the task list changes; returns an unsubscribe. */

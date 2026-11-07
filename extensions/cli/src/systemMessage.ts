@@ -217,7 +217,7 @@ export async function constructSystemMessage(
   // Add plan mode specific instructions if in plan mode
   if (mode === "plan") {
     systemMessage +=
-      '\n<context name="planMode">You are operating in _Plan Mode_, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files. Ask the user to switch to agent mode if they want to make changes. For example, it is not acceptable to use the Bash tool to write to files.</context>\n';
+      '\n<context name="planMode">You are operating in _Plan Mode_, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files. Bash commands ask the user for approval first, and it is not acceptable to use the Bash tool to write to files. When your plan is ready, present it with the PresentPlan tool and stop: the user then chooses to build it or to keep planning.</context>\n';
   } else {
     // Check if commit signature is disabled via environment variable
     if (!process.env.CONTINUE_CLI_DISABLE_COMMIT_SIGNATURE) {

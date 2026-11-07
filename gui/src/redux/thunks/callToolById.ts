@@ -67,6 +67,7 @@ export const callToolById = createAsyncThunk<
   let mcpUiState: McpUiState | undefined = undefined;
   let error: ContinueError | undefined = undefined;
   let streamResponse: boolean;
+  let endTurn = false;
 
   // IMPORTANT:
   // Errors that occur while calling tool call implementations
@@ -83,6 +84,7 @@ export const callToolById = createAsyncThunk<
       output: clientToolOutput,
       respondImmediately,
       error: clientToolError,
+      endTurn: clientEndTurn,
     } = await callClientTool(toolCallState, {
       dispatch,
       ideMessenger: extra.ideMessenger,
@@ -91,6 +93,7 @@ export const callToolById = createAsyncThunk<
     output = clientToolOutput;
     error = clientToolError;
     streamResponse = respondImmediately;
+    endTurn = !!clientEndTurn && !clientToolError;
   } else {
     // Tool is called on core side
     const result = await extra.ideMessenger.request("tools/call", {
@@ -169,9 +172,13 @@ export const callToolById = createAsyncThunk<
       streamResponseAfterToolCall({
         toolCallId,
         depth: depth + 1,
+        ...(endTurn && { endTurn }),
       }),
     );
     unwrapResult(wrapped);
+    if (endTurn) {
+      dispatch(setInactive());
+    }
   } else {
     dispatch(setInactive());
   }

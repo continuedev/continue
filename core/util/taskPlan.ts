@@ -411,6 +411,8 @@ export function taskPlanConfirmation(plan: TaskPlan): string {
  * Parses a markdown checkbox list (the CLI `Checklist` tool's input) into
  * items for `buildTaskPlan`. `- [ ]` pending, `- [x]` completed, and the
  * request block's own markers `[>]`, `[-]`, `[!]`. Other lines are ignored.
+ * A trailing `<!-- id: 3 -->` comment (as plan files write it) gives the
+ * item's id, so ids survive a round trip through a file the person edits.
  */
 export function parseMarkdownChecklist(markdown: string): TaskItemInput[] {
   const statusByMark: Record<string, TaskStatus> = {
@@ -424,11 +426,33 @@ export function parseMarkdownChecklist(markdown: string): TaskItemInput[] {
   const items: TaskItemInput[] = [];
   for (const line of markdown.split(/\r?\n/)) {
     const match = line.match(/^\s*(?:[-*+]|\d+\.)\s*\[([ xX>!-])\]\s*(.*)$/);
-    if (match && match[2].trim()) {
-      items.push({ text: match[2].trim(), status: statusByMark[match[1]] });
+    if (!match) {
+      continue;
+    }
+    let text = match[2].trim();
+    let id: string | undefined;
+    const idComment = text.match(TASK_ID_COMMENT);
+    if (idComment) {
+      id = idComment[1];
+      text = text.slice(0, idComment.index).trim();
+    }
+    if (text) {
+      items.push({
+        ...(id !== undefined && { id }),
+        text,
+        status: statusByMark[match[1]],
+      });
     }
   }
   return items;
+}
+
+/** `<!-- id: 3 -->` at the end of a checklist line. */
+const TASK_ID_COMMENT = /\s*<!--\s*id:\s*([A-Za-z0-9_.-]{1,40})\s*-->\s*$/;
+
+/** The id comment a plan file writes after an item. */
+export function taskIdComment(id: string): string {
+  return `<!-- id: ${id} -->`;
 }
 
 /** The plan as a markdown checkbox list, for displays that render one. */

@@ -40,14 +40,18 @@ export function getDefaultToolPolicies(
   return policies;
 }
 
-// Plan mode: Complete override - exclude all write operations, allow only reads and bash
+// Plan mode: complete override. Reads are allowed; nothing that can change the
+// workspace runs without asking. Write tools are excluded. Bash and MCP tools
+// can write too, so they ask (and headless runs, with nobody to ask, are not
+// offered them; see getRequestTools). PresentPlan writes only its own plan file
+// under .continue/plans and is offered in plan mode only.
 export const PLAN_MODE_POLICIES: ToolPermissionPolicy[] = [
   { tool: "Edit", permission: "exclude" },
   { tool: "MultiEdit", permission: "exclude" },
   { tool: "Write", permission: "exclude" },
 
-  // TODO address bash read only concerns, maybe make permissions more granular
-  { tool: "Bash", permission: "allow" },
+  { tool: "Bash", permission: "ask" },
+  { tool: "PresentPlan", permission: "allow" },
   { tool: "CheckBackgroundJob", permission: "allow" },
   { tool: "AskQuestion", permission: "allow" },
   { tool: "Checklist", permission: "allow" },
@@ -63,8 +67,8 @@ export const PLAN_MODE_POLICIES: ToolPermissionPolicy[] = [
   { tool: "Status", permission: "allow" },
   { tool: "UploadArtifact", permission: "allow" },
 
-  // Allow MCP tools
-  { tool: "*", permission: "allow" },
+  // MCP tools and anything else not listed
+  { tool: "*", permission: "ask" },
 ];
 
 // Auto mode: Complete override - allow everything without asking

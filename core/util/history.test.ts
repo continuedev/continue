@@ -109,6 +109,12 @@ describe("Full session lifecycle", () => {
     );
   });
 
+  test("The plan file is saved and loaded with the session", () => {
+    const planFile = "file:///work/repo/.continue/plans/add-retry.md";
+    historyManager.save({ ...testSession, planFile });
+    expect(historyManager.load(testSession.sessionId).planFile).toBe(planFile);
+  });
+
   test("An empty task list is not written", () => {
     historyManager.save({
       ...testSession,

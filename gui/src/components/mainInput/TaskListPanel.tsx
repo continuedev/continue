@@ -6,7 +6,8 @@ import {
   TASK_PLAN_LIMITS,
   TASK_STATUS_MARKERS,
 } from "core/util/taskPlan";
-import { useState, type KeyboardEvent } from "react";
+import { useContext, useState, type KeyboardEvent } from "react";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setTaskPlan } from "../../redux/slices/sessionSlice";
 import { saveCurrentSession } from "../../redux/thunks/session";
@@ -159,6 +160,8 @@ function TaskRow(props: {
 export function TaskListPanel() {
   const dispatch = useAppDispatch();
   const plan = useAppSelector((s) => s.session.taskPlan);
+  const planFile = useAppSelector((s) => s.session.planFile);
+  const ideMessenger = useContext(IdeMessengerContext);
   const [expanded, setExpanded] = useState(false);
   const [adding, setAdding] = useState("");
   const [error, setError] = useState<string | undefined>(undefined);
@@ -219,6 +222,17 @@ export function TaskListPanel() {
             {progress}
           </span>
         </button>
+        {planFile && (
+          <button
+            type="button"
+            data-testid="task-list-plan-file"
+            title={`Open the plan file (${planFile.split("/").pop()})`}
+            onClick={() => void ideMessenger.ide.openFile(planFile)}
+            className="shrink-0 cursor-pointer border-none bg-transparent p-0 text-xs text-link hover:underline"
+          >
+            Plan
+          </button>
+        )}
         {expanded && (
           <button
             type="button"

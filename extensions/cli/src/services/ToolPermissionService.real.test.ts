@@ -40,15 +40,22 @@ describe("ToolPermissionService - Real Tool Permission Test", () => {
       expect(result.permission).toBe("exclude");
     });
 
-    it("should allow Bash tool in plan mode", () => {
+    it("should ask before Bash in plan mode, since a command can write", () => {
       const permissions = service.getPermissions();
-      const toolCall = {
-        name: "Bash",
-        arguments: { command: "ls" },
-      };
-      const result = checkToolPermission(toolCall, permissions);
+      for (const command of ["ls", "echo hi > notes.txt", "rm -f build.log"]) {
+        const result = checkToolPermission(
+          { name: "Bash", arguments: { command } },
+          permissions,
+        );
+        expect(result.permission, command).toBe("ask");
+      }
+    });
 
-      console.log(`Bash permission check result:`, result);
+    it("should allow PresentPlan in plan mode", () => {
+      const result = checkToolPermission(
+        { name: "PresentPlan", arguments: {} },
+        service.getPermissions(),
+      );
       expect(result.permission).toBe("allow");
     });
 
@@ -76,7 +83,7 @@ describe("ToolPermissionService - Real Tool Permission Test", () => {
       expect(result.permission).toBe("allow");
     });
 
-    it("should allow unknown tools in plan mode (for MCP tools via wildcard)", () => {
+    it("should ask before unknown tools in plan mode (MCP tools via wildcard)", () => {
       const permissions = service.getPermissions();
       const toolCall = {
         name: "some_mcp_tool",
@@ -85,8 +92,8 @@ describe("ToolPermissionService - Real Tool Permission Test", () => {
       const result = checkToolPermission(toolCall, permissions);
 
       console.log(`some_mcp_tool permission check result:`, result);
-      // Plan mode allows MCP and other non-write tools via wildcard
-      expect(result.permission).toBe("allow");
+      // An MCP tool may write, so plan mode asks first
+      expect(result.permission).toBe("ask");
     });
   });
 

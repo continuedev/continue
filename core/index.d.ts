@@ -345,6 +345,12 @@ export interface Session {
    */
   taskPlan?: TaskPlan;
   /**
+   * Optional: URI of the plan file this session is working from
+   * (`.continue/plans/<slug>.md`), written by the plan tool in Plan mode. See
+   * core/util/planFile.ts.
+   */
+  planFile?: string;
+  /**
    * Optional: messages typed while the agent was working and not yet sent.
    * Saved as soon as they change, so a reload or crash does not lose them.
    */

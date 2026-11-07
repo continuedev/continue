@@ -18,6 +18,7 @@ export enum BuiltInToolNames {
   CodebaseTool = "codebase",
   ReadSkill = "read_skill",
   TaskList = "task_list",
+  PresentPlan = "present_plan",
 
   // excluded from allTools for now
   ViewRepoMap = "view_repo_map",
@@ -32,4 +33,6 @@ export const CLIENT_TOOLS_IMPLS = [
   BuiltInToolNames.MultiEdit,
   // The task list lives in the session, which the gui holds
   BuiltInToolNames.TaskList,
+  // Writes the plan file and seeds the task list, both through the gui
+  BuiltInToolNames.PresentPlan,
 ];
