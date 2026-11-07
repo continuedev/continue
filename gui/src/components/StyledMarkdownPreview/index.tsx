@@ -30,6 +30,7 @@ import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import { isSymbolNotRif, matchCodeToSymbolOrFile } from "./utils";
 import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
+import { rehypeTableCellAlign } from "./utils/rehypeTableCellAlign";
 import { remarkTables } from "./utils/remarkTables";
 
 const StyledMarkdown = styled.div<{
@@ -262,6 +263,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       rehypeKatex as any,
       {},
       rehypeHighlightPlugin(),
+      rehypeTableCellAlign,
       // Note: An empty obj is the default behavior, but leaving this here for scaffolding to
       // add unsupported languages in the future. We will need to install the `lowlight` package
       // to use the `common` language set in addition to unsupported languages.
