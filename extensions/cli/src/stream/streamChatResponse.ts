@@ -22,6 +22,7 @@ import { logger } from "../util/logger.js";
 import { validateContextLength } from "../util/tokenizer.js";
 
 import { getRequestTools, handleToolCalls } from "./handleToolCalls.js";
+import { injectSteeringMessage } from "./steering.js";
 import {
   handleNormalAutoCompaction,
   handlePostToolValidation,
@@ -563,6 +564,14 @@ export async function streamChatResponse(
     chatHistory = compactionResult.chatHistory;
     if (compactionResult.wasCompacted) {
       compactionOccurredThisTurn = true;
+    }
+
+    // Tool boundary: deliver a message the person steered with, so the next
+    // request already sees it. This runs after the post-tool checks so that
+    // pruning an oversized tool result cannot drop the message instead.
+    if (toolCalls.length > 0 && !abortController?.signal.aborted) {
+      chatHistory = (await injectSteeringMessage(callbacks, chatHistory))
+        .chatHistory;
     }
 
     // If compaction happened during this turn and we're about to stop,

@@ -1,5 +1,5 @@
 import type { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
-import { Box, Static, Text, useStdout } from "ink";
+import { Box, Static, useStdout } from "ink";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ChatHistoryItem } from "../../../../../core/index.js";
@@ -9,6 +9,8 @@ import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import { IntroMessage } from "../IntroMessage.js";
 import { splitChatHistory } from "../utils/historySplitting.js";
 
+import { QueuedMessages } from "./QueuedMessages.js";
+
 interface StaticChatContentProps {
   showIntroMessage: boolean;
   config?: AssistantUnrolled;
@@ -17,6 +19,9 @@ interface StaticChatContentProps {
   organizationName?: string;
   chatHistory: ChatHistoryItem[];
   queuedMessages?: QueuedMessage[];
+  queuePaused?: boolean;
+  queueSteerRequested?: boolean;
+  pendingMessage?: string | null;
   renderMessage: (
     item: ChatHistoryItem,
     index: number,
@@ -33,6 +38,9 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
   organizationName,
   chatHistory,
   queuedMessages = [],
+  queuePaused = false,
+  queueSteerRequested = false,
+  pendingMessage = null,
   renderMessage,
   refreshTrigger,
 }) => {
@@ -158,14 +166,13 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
         ))}
       </Box>
 
-      {/* Queued messages - show at bottom with queue indicators */}
-      {queuedMessages.length > 0 && (
-        <Box paddingLeft={2} paddingBottom={1}>
-          <Text color="dim" italic>
-            {queuedMessages.map((msg) => msg.message).join("\n")}
-          </Text>
-        </Box>
-      )}
+      {/* Queued messages - numbered, at the bottom, read from the queue */}
+      <QueuedMessages
+        items={queuedMessages}
+        paused={queuePaused}
+        steerRequested={queueSteerRequested}
+        pendingMessage={pendingMessage}
+      />
     </Box>
   );
 };

@@ -230,6 +230,17 @@ export class TextBuffer {
 
   // Add image to buffer and return placeholder
   addImage(imageBuffer: Buffer): string {
+    const placeholder = this.adoptImage(imageBuffer);
+    this.insertText(placeholder);
+    return placeholder;
+  }
+
+  /**
+   * Register an image without inserting its placeholder, for text that
+   * already refers to it (a queued message taken back into the input).
+   * Returns the placeholder the text should use.
+   */
+  adoptImage(imageBuffer: Buffer): string {
     // Validate image size
     if (imageBuffer.length > MAX_IMAGE_SIZE) {
       throw new Error(
@@ -259,7 +270,6 @@ export class TextBuffer {
     this._imageCounter++;
     const placeholder = `[Image #${this._imageCounter}]`;
     this._imageMap.set(placeholder, imageBuffer);
-    this.insertText(placeholder);
     return placeholder;
   }
 

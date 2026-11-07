@@ -290,3 +290,16 @@ export async function handleRemoteApply(remoteUrl: string): Promise<void> {
     } catch {}
   }
 }
+
+/**
+ * Esc in remote mode: pause the server's agent run with POST /pause, the
+ * endpoint built for it. (An empty POST /message used to be sent here, which
+ * the server rejects with 400 because a message is required.)
+ */
+export async function sendRemoteInterrupt(remoteUrl: string): Promise<void> {
+  try {
+    await fetch(`${remoteUrl}/pause`, { method: "POST" });
+  } catch (error) {
+    logger.error("Failed to send interrupt to remote server:", error);
+  }
+}

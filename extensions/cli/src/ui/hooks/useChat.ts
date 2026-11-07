@@ -17,7 +17,10 @@ import {
   updateSessionHistory,
 } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
-import { messageQueue, QueuedMessage } from "../../stream/messageQueue.js";
+import {
+  mergeQueuedMessages,
+  messageQueue,
+} from "../../stream/messageQueue.js";
 import { telemetryService } from "../../telemetry/telemetryService.js";
 import { formatError } from "../../util/formatError.js";
 import { logger } from "../../util/logger.js";
@@ -33,8 +36,10 @@ import {
   processSlashCommandResult,
   trackUserMessage,
 } from "./useChat.helpers.js";
+import { buildSteeringMessage, useQueueView } from "./useChat.queue.helpers.js";
 import {
   handleRemoteMessage,
+  sendRemoteInterrupt,
   setupRemotePolling,
 } from "./useChat.remote.helpers.js";
 import { handleBashModeProcessing } from "./useChat.shellMode.js";
@@ -187,21 +192,12 @@ export function useChat({
   // Track interrupted state for resume functionality
   const [wasInterrupted, setWasInterrupted] = useState(false);
 
-  // Track queued messages for immediate display
-  const [queuedMessages, setQueuedMessages] = useState<QueuedMessage[]>([]);
-
-  // Set up message queue listeners
-  useEffect(() => {
-    const onMessageQueued = (queuedMessage: QueuedMessage) => {
-      setQueuedMessages((prev) => [...prev, queuedMessage]);
-    };
-
-    messageQueue.on("messageQueued", onMessageQueued);
-
-    return () => {
-      messageQueue.off("messageQueued", onMessageQueued);
-    };
-  }, []);
+  // Queued messages are read from the queue itself, the single source of
+  // truth: the display is never cleared or edited on its own.
+  const queueView = useQueueView(messageQueue);
+  // The message being sent while auto-compaction runs ahead of it. It has
+  // left the queue but is not in the history yet, so it is shown separately.
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
 
   // Set up quiz service listeners
   useEffect(() => {
@@ -313,6 +309,7 @@ export function useChat({
       historyLength: newHistory.length,
     });
 
+    let failed = false;
     try {
       const streamCallbacks = createStreamCallbacks({
         setChatHistory: setChatHistory,
@@ -320,6 +317,10 @@ export function useChat({
         llmApi,
         model,
       });
+      // Steering: deliver queued messages at the next tool boundary when the
+      // person asked for it (Enter on an empty prompt while the agent works).
+      streamCallbacks.onToolBoundary = () =>
+        buildSteeringMessage(messageQueue, { onShowStatusMessage, model });
 
       // Execute streaming chat response
       await executeStreaming({
@@ -344,6 +345,7 @@ export function useChat({
         return currentHistory;
       });
     } catch (error: any) {
+      failed = true;
       const errorMessage = `Error: ${formatError(error)}`;
       setChatHistory((prev) => [
         ...prev,
@@ -364,23 +366,43 @@ export function useChat({
       setResponseStartTime(null);
       setInputMode(true);
 
-      // Check if there are queued messages and process them after a microtask delay
-      // This ensures the GUI state has been updated before processing the next message
-      const queuedMessageData = messageQueue.getNextMessage();
-      if (queuedMessageData) {
-        const { message: latestQueuedMessage, imageMap } = queuedMessageData;
-        logger.debug("processing queued message", { latestQueuedMessage });
-
-        // Clear queued messages from display since they're about to be processed
-        // Note: messageQueue.getNextMessage() already cleared the actual queue
-        setQueuedMessages([]);
-
-        await new Promise((resolve) => setTimeout(resolve, 100)); // add timeout for react to render the tui
-
-        // Process the queued message - it will handle adding to history and compaction display
-        await processQueuedMessage(latestQueuedMessage, imageMap);
+      // Stop and errors pause the queue: what was queued stays visible but
+      // is not sent until the person resumes or sends a new message.
+      if (failed || controller.signal.aborted) {
+        messageQueue.pause();
       }
+
+      await drainQueue();
     }
+  };
+
+  /**
+   * Send what is queued, now that the turn has ended: the queued plain
+   * messages go as one merged message, and commands run one at a time in
+   * the order they were queued. Does nothing while the queue is paused.
+   */
+  const drainQueue = async () => {
+    while (true) {
+      const merged = mergeQueuedMessages(messageQueue.takeNextBatch());
+      if (!merged) return;
+      logger.debug("processing queued messages", {
+        length: merged.message.length,
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 100)); // add timeout for react to render the tui
+
+      // Process the queued message - it will handle adding to history and compaction display
+      await processQueuedMessage(merged.message, merged.imageMap);
+    }
+  };
+
+  /** The history as it is now, not as it was when this closure rendered. */
+  const getLatestHistory = (): ChatHistoryItem[] => {
+    const svc = services.chatHistory;
+    if (typeof svc?.isReady === "function" && svc.isReady()) {
+      return svc.getHistory();
+    }
+    return chatHistory;
   };
 
   const handleResumeRequest = async (message: string) => {
@@ -405,6 +427,14 @@ export function useChat({
 
       // Clear the interrupted state and resume
       setWasInterrupted(false);
+      messageQueue.resume();
+
+      // Messages queued before the stop go with the resumed turn, so the
+      // model reads them before it carries on.
+      if (messageQueue.getQueueLength() > 0) {
+        await drainQueue();
+        return true;
+      }
 
       // Re-execute streaming with the truncated history
       await executeStreamingResponse(truncatedHistory, compactionIndex);
@@ -485,9 +515,11 @@ export function useChat({
     isQueuedMessage: boolean = false,
     baseHistory?: ChatHistoryItem[],
   ) => {
-    // Use baseHistory if provided (e.g., when editing a message),
-    // otherwise use current chatHistory
-    const currentHistory = baseHistory ?? chatHistory;
+    // Use baseHistory if provided (e.g., when editing a message). A queued
+    // message is sent from the end of an earlier turn, whose closure holds an
+    // old chatHistory, so it reads the history as it is now.
+    const currentHistory =
+      baseHistory ?? (isQueuedMessage ? getLatestHistory() : chatHistory);
     // Handle special commands
     const handled = await handleSpecialCommands({
       message,
@@ -556,13 +588,8 @@ export function useChat({
       setIsCompacting(true);
       setCompactionStartTime(Date.now());
 
-      // Add the queued message to queue display during compaction
-      const queuedMessageForDisplay: QueuedMessage = {
-        message,
-        imageMap,
-        timestamp: Date.now(),
-      };
-      setQueuedMessages((prev) => [...prev, queuedMessageForDisplay]);
+      // Show the message while compaction runs ahead of it
+      setPendingMessage(message);
 
       let currentChatHistory, currentCompactionIndex;
       try {
@@ -578,10 +605,8 @@ export function useChat({
         currentChatHistory = result.currentChatHistory;
         currentCompactionIndex = result.currentCompactionIndex;
       } catch (error) {
-        // If compaction fails, remove the queued message from display
-        setQueuedMessages((prev) =>
-          prev.filter((msg) => msg !== queuedMessageForDisplay),
-        );
+        // If compaction fails, stop showing the message
+        setPendingMessage(null);
         throw error; // Re-throw to maintain error handling
       } finally {
         setIsCompacting(false);
@@ -593,10 +618,8 @@ export function useChat({
       const newHistory = [...currentChatHistory, formattedQueuedMessage];
       setChatHistory(newHistory);
 
-      // Remove the queued message from display since it's now in chat history
-      setQueuedMessages((prev) =>
-        prev.filter((msg) => msg !== queuedMessageForDisplay),
-      );
+      // The message is in the chat history now
+      setPendingMessage(null);
 
       // Execute the streaming response with the updated history
       await executeStreamingResponse(newHistory, currentCompactionIndex);
@@ -623,13 +646,8 @@ export function useChat({
       setIsCompacting(true);
       setCompactionStartTime(Date.now());
 
-      // Add the triggering message to queue display during compaction
-      const compactionQueuedMessage: QueuedMessage = {
-        message,
-        imageMap,
-        timestamp: Date.now(),
-      };
-      setQueuedMessages((prev) => [...prev, compactionQueuedMessage]);
+      // Show the message while compaction runs ahead of it
+      setPendingMessage(message);
 
       let currentChatHistory, currentCompactionIndex;
       try {
@@ -645,10 +663,8 @@ export function useChat({
         currentChatHistory = result.currentChatHistory;
         currentCompactionIndex = result.currentCompactionIndex;
       } catch (error) {
-        // If compaction fails, remove the triggering message from queue display
-        setQueuedMessages((prev) =>
-          prev.filter((msg) => msg !== compactionQueuedMessage),
-        );
+        // If compaction fails, stop showing the message
+        setPendingMessage(null);
         throw error; // Re-throw to maintain error handling
       } finally {
         setIsCompacting(false);
@@ -660,10 +676,8 @@ export function useChat({
       const newHistory = [...currentChatHistory, newUserMessage];
       setChatHistory(newHistory);
 
-      // Remove the triggering message from queue display since it's now in chat history
-      setQueuedMessages((prev) =>
-        prev.filter((msg) => msg !== compactionQueuedMessage),
-      );
+      // The message is in the chat history now
+      setPendingMessage(null);
 
       // Execute the streaming response
       await executeStreamingResponse(newHistory, currentCompactionIndex);
@@ -693,6 +707,20 @@ export function useChat({
       setWasInterrupted(false);
     }
 
+    // A paused queue (after Stop or an error) goes out with the next thing
+    // the person sends, ahead of it and merged with it; Enter on an empty
+    // prompt sends the queue alone.
+    if (!isRemoteMode && messageQueue.getQueueLength() > 0) {
+      if (message !== "") {
+        await messageQueue.enqueueMessage(message, imageMap);
+      }
+      messageQueue.resume();
+      await drainQueue();
+      return;
+    }
+
+    if (message === "") return;
+
     // Use the common message processing logic
     await processMessage(message, imageMap, false);
   };
@@ -700,16 +728,8 @@ export function useChat({
   const handleInterrupt = () => {
     // In remote mode, send interrupt signal to server
     if (isRemoteMode && remoteUrl) {
-      // Send a message to interrupt the remote server
-      fetch(`${remoteUrl}/message`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: "" }), // Empty message triggers interrupt
-      }).catch((error) => {
-        logger.error("Failed to send interrupt to remote server:", error);
-      });
+      // Pause the remote agent run, as Esc does locally
+      void sendRemoteInterrupt(remoteUrl);
       return;
     }
 
@@ -722,13 +742,18 @@ export function useChat({
       setCompactionStartTime(null);
       setCompactionAbortController(null);
       setInputMode(true);
-      // Clear any queued messages (including the triggering message) when compaction is interrupted
-      setQueuedMessages([]);
+      // The message compaction ran for is dropped; the rest of the queue is
+      // kept, paused, as on any other stop.
+      setPendingMessage(null);
+      messageQueue.pause();
       return;
     }
 
     // If response is running, abort response
     if (abortController && isWaitingForResponse) {
+      // Keep the queue but do not send it: the person stopped the agent,
+      // possibly to change course. Enter on an empty prompt resumes.
+      messageQueue.pause();
       abortController.abort();
 
       // Remove the last message if it's from assistant (partial response)
@@ -760,8 +785,10 @@ export function useChat({
       additionalRules,
     );
     setChatHistory(newHistory);
-    // Clear any queued messages when resetting chat
-    setQueuedMessages([]);
+    // Queued messages belonged to the conversation that was cleared
+    messageQueue.clear();
+    messageQueue.resume();
+    setPendingMessage(null);
   };
 
   const handleEditMessage = async (
@@ -781,8 +808,11 @@ export function useChat({
       to: rewindedHistory.length,
     });
 
-    // Clear any queued messages
-    setQueuedMessages([]);
+    // Queued messages were written after the message being edited, for a
+    // conversation that is being rewound, so they are dropped
+    messageQueue.clear();
+    messageQueue.resume();
+    setPendingMessage(null);
 
     // Clear attached files
     setAttachedFiles([]);
@@ -846,6 +876,7 @@ export function useChat({
 
       // If this is a "stop stream" rejection, abort the current request
       if (stopStream && abortController && isWaitingForResponse) {
+        messageQueue.pause();
         abortController.abort();
         setChatHistory((prev) => [
           ...prev,
@@ -882,7 +913,10 @@ export function useChat({
     activePermissionRequest,
     activeQuizQuestion,
     wasInterrupted,
-    queuedMessages,
+    queuedMessages: queueView.items,
+    queuePaused: queueView.paused,
+    queueSteerRequested: queueView.steerRequested,
+    pendingMessage,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,

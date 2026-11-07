@@ -17,6 +17,7 @@ export class MockRemoteServer {
   private currentResponseIndex = 0;
   private isProcessing = false;
   private streamInterval: NodeJS.Timeout | null = null;
+  public pauseRequests = 0;
 
   constructor(config: MockRemoteServerConfig = {}) {
     this.app = express();
@@ -67,6 +68,23 @@ export class MockRemoteServer {
         position: 1,
         willInterrupt: false,
       });
+    });
+
+    // POST /pause - Pause the agent run (what Esc sends in remote mode)
+    this.app.post("/pause", (req, res) => {
+      this.pauseRequests++;
+      if (!this.isProcessing) {
+        return res.json({
+          success: false,
+          message: "No active processing to pause",
+        });
+      }
+      if (this.streamInterval) {
+        clearInterval(this.streamInterval);
+        this.streamInterval = null;
+      }
+      this.isProcessing = false;
+      res.json({ success: true, message: "Agent run paused" });
     });
 
     // POST /exit - Shutdown server

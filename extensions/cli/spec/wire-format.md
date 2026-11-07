@@ -37,7 +37,7 @@ Returns the current chat state including message history and processing status.
 
 ### `POST /message`
 
-Sends a user message to the server. Messages are queued and processed sequentially.
+Sends a user message to the server. Messages are queued; when the current turn ends, everything queued goes to the model as one message (joined by blank lines). Slash and `!` commands are not merged: each runs on its own, in order. A message sent after `POST /pause` resumes the queue and goes out together with whatever was queued before the pause.
 
 **Request Body:**
 
@@ -59,8 +59,21 @@ Sends a user message to the server. Messages are queued and processed sequential
 
 **Special Cases:**
 
-- Empty message (`""`) interrupts current processing
+- A missing or empty `message` is rejected with 400. To interrupt, use `POST /pause`.
 - Message `/exit` initiates server shutdown
+
+### `POST /pause`
+
+Stops the current agent run, as Esc does in the TUI. The queue is kept but paused: nothing queued is sent until the next `POST /message`.
+
+**Response:**
+
+```json
+{
+  "success": boolean,
+  "message": "Agent run paused" | "No active processing to pause"
+}
+```
 
 ### `GET /diff`
 
@@ -110,7 +123,7 @@ Messages in the chat history can have different types:
 3. **Server queues message**: Returns queue position
 4. **Server processes**: Updates state with streaming responses
 5. **Client displays**: Shows updates from state polling
-6. **Interruption**: Client sends empty message to interrupt
+6. **Interruption**: Client sends `POST /pause`
 7. **Exit**: Client sends `/exit` or `POST /exit` to shutdown
 
 ## Implementation Files
@@ -145,9 +158,9 @@ Messages in the chat history can have different types:
 
 ### Message Queueing
 
-- Messages are queued and processed one at a time
+- Messages queued during a turn are sent together, as one message, when it ends
 - Queue position returned on message submission
-- Supports interruption of current processing
+- `POST /pause` interrupts the current turn and pauses the queue until the next message
 
 ### Streaming Support
 

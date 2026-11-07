@@ -29,7 +29,7 @@ import {
   getCompleteStateSnapshot,
   loadOrCreateSessionById,
 } from "../session.js";
-import { messageQueue } from "../stream/messageQueue.js";
+import { mergeQueuedMessages, messageQueue } from "../stream/messageQueue.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { reportFailureTool } from "../tools/reportFailure.js";
@@ -237,8 +237,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       return res.status(400).json({ error: "Message field is required" });
     }
 
-    // Queue the message
+    // Queue the message. A message sent after /pause resumes the queue and
+    // goes out together with whatever was queued before the pause.
     await messageQueue.enqueueMessage(message);
+    messageQueue.resume();
 
     res.json({
       queued: true,
@@ -295,6 +297,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
         message: "No active processing to pause",
       });
     }
+
+    // Keep the queue but do not send it until the next message arrives, as
+    // Esc does in the TUI
+    messageQueue.pause();
 
     // Abort the current processing
     if (state.currentAbortController) {
@@ -452,7 +458,9 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   async function processMessages(state: ServerState, llmApi: any) {
     let processedMessage = false;
     while (state.serverRunning) {
-      const queuedMessage = messageQueue.getNextMessage();
+      // Everything queued while the last turn ran goes as one message;
+      // nothing goes while paused.
+      const queuedMessage = mergeQueuedMessages(messageQueue.takeNextBatch());
       if (!queuedMessage) {
         break;
       }

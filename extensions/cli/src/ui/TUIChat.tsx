@@ -222,6 +222,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
     activeQuizQuestion,
     wasInterrupted,
     queuedMessages,
+    queuePaused,
+    queueSteerRequested,
+    pendingMessage,
     handleUserMessage,
     handleInterrupt,
     handleFileAttached,
@@ -412,6 +415,9 @@ const TUIChat: React.FC<TUIChatProps> = ({
           organizationName={organizationName}
           chatHistory={chatHistory}
           queuedMessages={queuedMessages}
+          queuePaused={queuePaused}
+          queueSteerRequested={queueSteerRequested}
+          pendingMessage={pendingMessage}
           renderMessage={renderMessage}
           refreshTrigger={staticRefreshTrigger}
         />

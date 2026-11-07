@@ -16,9 +16,10 @@ import {
   serviceContainer,
   services,
 } from "../services/index.js";
-import { messageQueue } from "../stream/messageQueue.js";
+import { messageQueue, renamePlaceholders } from "../stream/messageQueue.js";
 import { escapeEvents } from "../util/cli.js";
 import { InputHistory } from "../util/inputHistory.js";
+import { logger } from "../util/logger.js";
 
 import { FileSearchUI } from "./FileSearchUI.js";
 import { useClipboardMonitor } from "./hooks/useClipboardMonitor.js";
@@ -524,8 +525,46 @@ const UserInput: React.FC<UserInputProps> = ({
     return false;
   };
 
+  // Up with messages queued takes them back into the input (as Claude Code
+  // does): out of the queue, one per line, ahead of any draft. Enter then
+  // queues the edited text again as one message, or sends it when idle.
+  const takeBackQueuedMessages = (): boolean => {
+    if (isRemoteMode || messageQueue.getQueueLength() === 0) return false;
+
+    const items = messageQueue.takeAll();
+    const parts = items.map((item) => {
+      if (!item.imageMap || item.imageMap.size === 0) return item.message;
+      const renames = new Map<string, string>();
+      for (const [placeholder, buffer] of item.imageMap) {
+        try {
+          renames.set(placeholder, textBuffer.adoptImage(buffer));
+        } catch (error) {
+          logger.warn("Could not restore a queued image", { error });
+        }
+      }
+      return renamePlaceholders(item.message, renames);
+    });
+
+    const taken = parts.join("\n");
+    const draft = textBuffer.text;
+    const newText = draft ? `${taken}\n${draft}` : taken;
+    textBuffer.setText(newText);
+    textBuffer.setCursor(taken.length);
+    setInputText(newText);
+    setCursorPosition(taken.length);
+    updateSlashCommandState(newText, taken.length);
+    updateFileSearchState(newText, taken.length);
+    updateBashModeState(newText);
+    inputHistory.resetNavigation();
+    return true;
+  };
+
   const handleHistoryNavigation = (key: any): boolean => {
     if (!showSlashCommands && !showFileSearch) {
+      if (key.upArrow && takeBackQueuedMessages()) {
+        return true;
+      }
+
       if (key.upArrow) {
         const historyEntry = inputHistory.navigateUp(inputText);
         if (historyEntry !== null) {
@@ -571,6 +610,21 @@ const UserInput: React.FC<UserInputProps> = ({
         updateSlashCommandState(newText, newCursorPos);
         updateFileSearchState(newText, newCursorPos);
         return true;
+      }
+
+      // Enter on an empty prompt with messages queued
+      if (!textBuffer.text.trim() && !isRemoteMode) {
+        if (isWaitingForResponse || isCompacting) {
+          // Steer: deliver the queue at the next tool boundary, inside the
+          // running turn. Without tool calls it goes when the reply ends.
+          messageQueue.requestSteer();
+          return true;
+        }
+        if (!wasInterrupted && messageQueue.getQueueLength() > 0) {
+          // The queue was paused by Stop or an error: send it now
+          onSubmit("");
+          return true;
+        }
       }
 
       // Normal Enter behavior - submit if there's content
