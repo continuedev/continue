@@ -376,6 +376,7 @@ export const streamNormalInput = createAsyncThunk<
           }
         : undefined,
       selectApprovalSettings(state3),
+      state3.session.mode,
     );
     const autoApprovedPolicies = policies.filter(
       ({ policy }) => policy === "allowedWithoutPermission",

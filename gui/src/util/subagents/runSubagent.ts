@@ -502,6 +502,7 @@ export async function runSubagentTool(
         current,
         getState().ui.toolSettings,
         selectApprovalSettings(getState()),
+        getState().session.mode,
       );
       if (policy.policy === "disabled") {
         fail(

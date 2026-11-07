@@ -1,5 +1,5 @@
 import { ToolPolicy } from "@continuedev/terminal-security";
-import { ChatHistoryItem, Tool, ToolCallState } from "core";
+import { ChatHistoryItem, MessageModes, Tool, ToolCallState } from "core";
 import type { ApprovalSettings } from "core/tools/permissions/approval";
 import type { AutoReviewReply } from "core/tools/permissions/auto/handler";
 import type { ReviewHistory } from "core/tools/permissions/auto/prompt";
@@ -33,7 +33,7 @@ interface EvaluatedPolicy {
   policy: ToolPolicy;
   displayValue?: string;
   /** Why core decided, when the user has toolPermissions rules. "auto" means the reviewer model. */
-  source?: DecisionSource | "auto" | "once";
+  source?: DecisionSource | "auto" | "once" | "plan-mode";
   /** The reviewer's named reason (Auto mode). */
   category?: string;
   reason?: string;
@@ -41,11 +41,55 @@ interface EvaluatedPolicy {
   toolCallState: ToolCallState;
 }
 
+export const PLAN_MODE_HOLD_REASON =
+  "Plan mode asks before a tool that may make changes. Only tools marked read-only run on their own.";
+
+/**
+ * Plan mode only reads. Built-in tools that write are not offered in it, but
+ * other tools (MCP servers) are, and they keep their own policies; one set to
+ * run on its own, or allowed by a rule or approval mode, would change things
+ * while planning. A call that would run without asking waits for the user
+ * instead, unless its tool is marked read-only. Refusals stand.
+ */
+export function holdInPlanMode(
+  result: EvaluatedPolicy,
+  activeTools: Tool[],
+): EvaluatedPolicy {
+  if (result.policy !== "allowedWithoutPermission") return result;
+  const name = result.toolCallState.toolCall.function.name;
+  const tool = activeTools.find((t) => t.function.name === name);
+  if (tool?.readonly) return result;
+  return {
+    ...result,
+    policy: "allowedWithPermission",
+    source: "plan-mode",
+    reason: PLAN_MODE_HOLD_REASON,
+  };
+}
+
 /**
  * Evaluates the tool policy for a tool call, including dynamic policy evaluation
  * Note that tool group policies are not considered here because activeTools already excludes disabled groups
  */
 export async function evaluateToolPolicy(
+  ideMessenger: IIdeMessenger,
+  activeTools: Tool[],
+  toolCallState: ToolCallState,
+  toolPolicies: ToolPolicies,
+  approval?: ApprovalSettings,
+  mode?: MessageModes,
+): Promise<EvaluatedPolicy> {
+  const result = await evaluateBasePolicy(
+    ideMessenger,
+    activeTools,
+    toolCallState,
+    toolPolicies,
+    approval,
+  );
+  return mode === "plan" ? holdInPlanMode(result, activeTools) : result;
+}
+
+async function evaluateBasePolicy(
   ideMessenger: IIdeMessenger,
   activeTools: Tool[],
   toolCallState: ToolCallState,
@@ -184,7 +228,9 @@ async function reviewOpenCalls(
         r.policy === "allowedWithPermission" &&
         !isEditTool(toolName) &&
         r.source !== "ask-rule" &&
-        r.source !== "protected-path";
+        r.source !== "protected-path" &&
+        // Plan mode's hold is for the user, not the reviewer
+        r.source !== "plan-mode";
       if (!open) return r;
 
       const basePolicy =
@@ -256,7 +302,7 @@ async function reviewOpenCalls(
 /** The text the model sees when a call is refused, naming who refused it. */
 export function refusalMessage(
   command: string,
-  source: DecisionSource | "auto" | "once" | undefined,
+  source: EvaluatedPolicy["source"],
   reason: string | undefined,
   category?: string,
 ): { description: string; content: string } {
@@ -297,6 +343,7 @@ export async function evaluateToolPolicies(
   toolPolicies: ToolPolicies,
   auto?: AutoReviewContext,
   approval?: ApprovalSettings,
+  mode?: MessageModes,
 ): Promise<EvaluatedPolicy[]> {
   // Check if ALL tool calls are auto-approved using dynamic evaluation
   let policyResults = await Promise.all(
@@ -307,6 +354,7 @@ export async function evaluateToolPolicies(
         toolCallState,
         toolPolicies,
         approval,
+        mode,
       ),
     ),
   );
@@ -334,7 +382,8 @@ export async function evaluateToolPolicies(
       reason &&
       (source === "protected-path" ||
         source === "ask-rule" ||
-        source === "auto")
+        source === "auto" ||
+        source === "plan-mode")
     ) {
       dispatch(
         setToolCallPolicyNote({
