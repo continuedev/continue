@@ -42,10 +42,13 @@ runs:
         java-version: 17
 
     - name: Setup FFmpeg
-      uses: AnimMouse/setup-ffmpeg@v1
-      with:
-        version: 7.1
-        token: ${{ inputs.github-token }}
+      shell: bash
+      run: |
+        # BtbN's rolling release removes older versioned FFmpeg assets.
+        # Use the Ubuntu package for the integration test video recorder.
+        sudo apt-get update
+        sudo apt-get install --yes --no-install-recommends ffmpeg
+        ffmpeg -version
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
