@@ -123,8 +123,6 @@ class BinaryIdeHandler {
   }
 }
 
-jest.setTimeout(30_000);
-
 const USE_TCP = false;
 
 function autodetectPlatformAndArch() {
