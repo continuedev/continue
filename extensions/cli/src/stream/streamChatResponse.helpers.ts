@@ -29,6 +29,7 @@ import {
   executeToolCall,
   getAllAvailableTools,
   Tool,
+  TOOL_ALIASES,
   validateToolCallArgsPresent,
 } from "../tools/index.js";
 import { PreprocessedToolCall, ToolCall } from "../tools/types.js";
@@ -547,7 +548,9 @@ export async function preprocessStreamedToolCalls(
     const startTime = Date.now();
     try {
       const availableTools: Tool[] = await getAllAvailableTools(isHeadless);
-      const tool = availableTools.find((t) => t.name === toolCall.name);
+      const tool =
+        availableTools.find((t) => t.name === toolCall.name) ??
+        TOOL_ALIASES.find((t) => t.name === toolCall.name);
       if (!tool) {
         throw new Error(`Tool ${toolCall.name} not found`);
       }

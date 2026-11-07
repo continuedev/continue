@@ -16,6 +16,7 @@ import {
 } from "./messages.js";
 
 import { renderChatMessage } from "../util/messageContent.js";
+import { isTaskPlanBlockText } from "../util/taskPlan.js";
 import { AsyncEncoder, LlamaAsyncEncoder } from "./asyncEncoder.js";
 import { DEFAULT_PRUNING_LENGTH } from "./constants.js";
 import { getAdjustedTokenCountFromModel } from "./getAdjustedTokenCount.js";
@@ -457,11 +458,25 @@ function compileChatMessages({
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
 
+  // The task list block (util/taskPlan.ts) rides at the very end. Set it
+  // aside so the real last turn is still the protected tail, and count it as
+  // non-negotiable: it is put back last.
+  const last = msgsCopy[msgsCopy.length - 1];
+  const taskListTail =
+    msgsCopy.length > 1 &&
+    last?.role === "user" &&
+    typeof last.content === "string" &&
+    isTaskPlanBlockText(last.content)
+      ? msgsCopy.pop()
+      : undefined;
+
   // Extract the tool sequence from the end of the message array
   const toolSequence = extractToolSequence(msgsCopy);
 
   // Count tokens for all messages in the tool sequence
-  let lastMessagesTokens = 0;
+  let lastMessagesTokens = taskListTail
+    ? countChatMessageTokens(modelName, taskListTail)
+    : 0;
   for (const msg of toolSequence) {
     lastMessagesTokens += countChatMessageTokens(modelName, msg);
   }
@@ -556,6 +571,9 @@ function compileChatMessages({
   }
   reassembled.push(...historyWithTokens.map(({ tokens, ...rest }) => rest));
   reassembled.push(...toolSequence);
+  if (taskListTail) {
+    reassembled.push(taskListTail);
+  }
 
   const inputTokens =
     currentTotal + systemMsgTokens + toolTokens + lastMessagesTokens;

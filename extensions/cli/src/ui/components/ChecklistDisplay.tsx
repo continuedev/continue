@@ -5,6 +5,19 @@ interface ChecklistDisplayProps {
   content: string;
 }
 
+// - [ ] pending, - [x] completed, and the task list's [>] in progress,
+// [-] cancelled, [!] blocked.
+const CHECKBOX = /^(\s*)-\s*\[([ xX>!-])\]\s*(.*)$/;
+
+const MARKS: Record<string, { symbol: string; color: string }> = {
+  " ": { symbol: "○", color: "yellow" },
+  x: { symbol: "✓", color: "green" },
+  X: { symbol: "✓", color: "green" },
+  ">": { symbol: "▶", color: "cyan" },
+  "-": { symbol: "–", color: "gray" },
+  "!": { symbol: "!", color: "red" },
+};
+
 /**
  * Renders checklist content with styled checkboxes
  */
@@ -13,15 +26,12 @@ export const ChecklistDisplay: React.FC<ChecklistDisplayProps> = ({
 }) => {
   const lines = content.split("\n");
 
-  // Find the index of the first incomplete checkbox item
-  let firstIncompleteIndex = -1;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const checkboxMatch = line.match(/^(\s*)-\s*\[([ x])\]\s*(.*)$/);
-    if (checkboxMatch && checkboxMatch[2] === " ") {
-      firstIncompleteIndex = i;
-      break;
-    }
+  // The item to highlight: the one in progress, or else the first open one
+  let currentIndex = lines.findIndex(
+    (line) => line.match(CHECKBOX)?.[2] === ">",
+  );
+  if (currentIndex === -1) {
+    currentIndex = lines.findIndex((line) => line.match(CHECKBOX)?.[2] === " ");
   }
 
   return (
@@ -30,27 +40,23 @@ export const ChecklistDisplay: React.FC<ChecklistDisplayProps> = ({
         if (line.startsWith("Task list")) {
           return null;
         }
-        // Match both completed [x] and incomplete [ ] checkboxes
-        const checkboxMatch = line.match(/^(\s*)-\s*\[([ x])\]\s*(.*)$/);
+        const checkboxMatch = line.match(CHECKBOX);
 
         if (checkboxMatch) {
           const [, indent, status, taskText] = checkboxMatch;
-          const isCompleted = status === "x";
-          const isFirstIncomplete = index === firstIncompleteIndex;
+          const mark = MARKS[status];
+          const isClosed = status === "x" || status === "X" || status === "-";
+          const isCurrent = index === currentIndex;
 
           return (
             <Box key={index}>
               <Text>{indent}</Text>
-              <Text color={isCompleted ? "green" : "yellow"}>
-                {isCompleted ? "✓" : "○"}
-              </Text>
+              <Text color={mark.color}>{mark.symbol}</Text>
               <Text> </Text>
               <Text
-                color={
-                  isCompleted ? "gray" : isFirstIncomplete ? "cyan" : "white"
-                }
-                strikethrough={isCompleted}
-                bold={isFirstIncomplete}
+                color={isClosed ? "gray" : isCurrent ? "cyan" : "white"}
+                strikethrough={isClosed}
+                bold={isCurrent}
               >
                 {taskText}
               </Text>

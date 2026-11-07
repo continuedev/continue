@@ -97,3 +97,49 @@ describe("compileChatMessages pruning in a tool loop", () => {
     expect(compiledChatMessages).toHaveLength(3);
   });
 });
+
+describe("compileChatMessages with the task list block at the tail", () => {
+  const list: ChatMessage = {
+    role: "user",
+    content: "<task_list>\n[>] 1. Read the files\n</task_list>",
+  };
+
+  it("keeps the block last and still protects the real last turn", () => {
+    const { compiledChatMessages, didPrune } = compile([
+      { role: "system", content: "sys" },
+      { role: "user", content: big("old") },
+      { role: "assistant", content: big("answer") },
+      { role: "user", content: "LATEST QUESTION " + big("q") },
+      call("t1"),
+      result("t1", big("file")),
+      call("t2"),
+      result("t2"),
+      list,
+    ]);
+    expect(didPrune).toBe(true);
+    expect(compiledChatMessages.at(-1)).toEqual(list);
+    expect(compiledChatMessages.at(-2)).toMatchObject({ toolCallId: "t2" });
+    const users = compiledChatMessages.filter(
+      (m) => m.role === "user" && m.content !== list.content,
+    );
+    expect(String(users.at(-1)?.content)).toContain("LATEST QUESTION");
+  });
+
+  it("is left alone when nothing needs pruning", () => {
+    const msgs: ChatMessage[] = [
+      { role: "user", content: "hi" },
+      call("t1"),
+      result("t1"),
+      list,
+    ];
+    const { compiledChatMessages, didPrune } = compile(msgs, 100_000);
+    expect(didPrune).toBe(false);
+    expect(compiledChatMessages.map((m) => m.role)).toEqual([
+      "user",
+      "assistant",
+      "tool",
+      "user",
+    ]);
+    expect(compiledChatMessages.at(-1)).toEqual(list);
+  });
+});

@@ -38,6 +38,7 @@ import {
   getDefaultCompletionOptions,
   StreamCallbacks,
 } from "./streamChatResponse.types.js";
+import { taskListBlockForRequest } from "./taskListBlock.js";
 
 dotenv.config();
 
@@ -194,7 +195,7 @@ interface ProcessStreamingResponseOptions {
 }
 
 // Process a single streaming response and return whether we need to continue
-// eslint-disable-next-line max-statements, complexity
+// eslint-disable-next-line max-statements
 export async function processStreamingResponse(
   options: ProcessStreamingResponseOptions,
 ): Promise<{
@@ -216,15 +217,23 @@ export async function processStreamingResponse(
 
   let chatHistory = options.chatHistory;
 
+  // The session's task list, sent last when the TaskList tool is offered.
+  const taskListBlock = taskListBlockForRequest(tools);
+
   // Safety buffer to account for tokenization estimation errors
   const SAFETY_BUFFER = 100;
 
   // Validate context length INCLUDING system message and tools
+  // The task list block is counted with the system message: it is sent with
+  // every request and is never pruned.
+  const fixedText = taskListBlock
+    ? `${systemMessage}\n${taskListBlock}`
+    : systemMessage;
   let validation = validateContextLength({
     chatHistory,
     model,
     safetyBuffer: SAFETY_BUFFER,
-    systemMessage,
+    systemMessage: fixedText,
     tools,
   });
 
@@ -241,7 +250,7 @@ export async function processStreamingResponse(
       chatHistory,
       model,
       safetyBuffer: SAFETY_BUFFER,
-      systemMessage,
+      systemMessage: fixedText,
       tools,
     });
   }
@@ -255,6 +264,11 @@ export async function processStreamingResponse(
     chatHistory,
     systemMessage,
   ) as ChatCompletionMessageParam[];
+  // Last, after the history: a change to the list then changes only the tail
+  // of the request, and Bedrock puts its cache point before it.
+  if (taskListBlock) {
+    openaiChatHistory.push({ role: "user", content: taskListBlock });
+  }
   const requestStartTime = Date.now();
 
   const streamFactory = async (retryAbortSignal: AbortSignal) => {

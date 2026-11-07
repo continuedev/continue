@@ -15,6 +15,7 @@ export function getDefaultToolPolicies(
     { tool: "CheckBackgroundJob", permission: "allow" },
     { tool: "AskQuestion", permission: "allow" },
     { tool: "Checklist", permission: "allow" },
+    { tool: "TaskList", permission: "allow" },
     { tool: "Diff", permission: "allow" },
     { tool: "Skills", permission: "allow" },
     { tool: "Exit", permission: "allow" }, // Exit tool is generally safe (headless mode only)
@@ -50,6 +51,7 @@ export const PLAN_MODE_POLICIES: ToolPermissionPolicy[] = [
   { tool: "CheckBackgroundJob", permission: "allow" },
   { tool: "AskQuestion", permission: "allow" },
   { tool: "Checklist", permission: "allow" },
+  { tool: "TaskList", permission: "allow" },
   { tool: "Diff", permission: "allow" },
   { tool: "Exit", permission: "allow" },
   { tool: "Fetch", permission: "allow" },

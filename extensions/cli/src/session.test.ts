@@ -9,12 +9,15 @@ import {
   clearSession,
   createSession,
   getCurrentSession,
+  getSessionTaskPlan,
   hasSession,
   loadOrCreateSessionById,
   loadSession,
+  onTaskPlanChange,
   saveSession,
   startNewSession,
   updateSessionHistory,
+  updateSessionTaskPlan,
   updateSessionTitle,
 } from "./session.js";
 
@@ -191,6 +194,44 @@ describe("SessionManager", () => {
       updateSessionTitle("My New Title");
 
       expect(session.title).toBe("My New Title");
+    });
+  });
+
+  describe("task list", () => {
+    const plan = {
+      items: [
+        { id: "1", text: "Read", status: "completed" as const },
+        { id: "2", text: "Fix", status: "in_progress" as const },
+      ],
+      updatedAt: "2026-11-06T12:00:00.000Z",
+    };
+
+    it("is stored on the session, saved with it and announced", () => {
+      const session = getCurrentSession();
+      session.history = [
+        { message: { role: "user", content: "hi" }, contextItems: [] },
+      ];
+      const seen: unknown[] = [];
+      const off = onTaskPlanChange((p) => seen.push(p));
+
+      updateSessionTaskPlan(plan);
+
+      expect(getSessionTaskPlan()).toEqual(plan);
+      expect(mockHistoryManager.save).toHaveBeenLastCalledWith(
+        expect.objectContaining({ taskPlan: plan }),
+      );
+      expect(seen).toEqual([plan]);
+
+      updateSessionTaskPlan({ items: [], updatedAt: plan.updatedAt });
+      expect(getSessionTaskPlan()).toBeUndefined();
+      expect(seen).toEqual([plan, undefined]);
+      off();
+    });
+
+    it("starts empty in a new session", () => {
+      updateSessionTaskPlan(plan);
+      startNewSession();
+      expect(getSessionTaskPlan()).toBeUndefined();
     });
   });
 

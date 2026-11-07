@@ -32,15 +32,25 @@ const ToolResultSummary: React.FC<ToolResultSummaryProps> = ({
   const chars = content.length;
   const displayName = toolName ? getToolDisplayName(toolName) : "Tool";
 
-  // Handle Checklist specially with styled display
-  if (toolName === "Checklist") {
-    return (
-      <Box flexDirection="column">
-        <Box marginBottom={1}>
-          <Text color="dim">⎿ </Text>
-          <Text color="blue">Task List Updated</Text>
+  // TaskList and its Checklist alias answer with a one-line confirmation; the
+  // list itself is shown in the tool call preview and above the prompt.
+  if (toolName === "TaskList" || toolName === "Checklist") {
+    if (content.startsWith("Task list status:")) {
+      // A result saved by an older version, which echoed the list
+      return (
+        <Box flexDirection="column">
+          <Box marginBottom={1}>
+            <Text color="dim">⎿ </Text>
+            <Text color="blue">Task List Updated</Text>
+          </Box>
+          <ChecklistDisplay content={content} />
         </Box>
-        <ChecklistDisplay content={`Task list status:\n${content}`} />
+      );
+    }
+    return (
+      <Box>
+        <Text color="dim">⎿ </Text>
+        <Text color="blue">{content.split(" It is sent with")[0]}</Text>
       </Box>
     );
   }

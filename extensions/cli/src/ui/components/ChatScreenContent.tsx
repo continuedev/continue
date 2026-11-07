@@ -1,4 +1,5 @@
 import type { AssistantConfig } from "@continuedev/sdk";
+import { Box } from "ink";
 import React from "react";
 
 import type {
@@ -8,6 +9,7 @@ import type {
 import { UserInput } from "../UserInput.js";
 
 import { QuizPrompt } from "./QuizPrompt.js";
+import { TaskProgressStrip } from "./TaskProgressStrip.js";
 import { ToolPermissionSelector } from "./ToolPermissionSelector.js";
 
 interface ChatScreenContentProps {
@@ -77,7 +79,7 @@ export const ChatScreenContent: React.FC<ChatScreenContentProps> = ({
     );
   }
 
-  return (
+  const input = (
     <UserInput
       onSubmit={handleUserMessage}
       isWaitingForResponse={isWaitingForResponse}
@@ -92,5 +94,16 @@ export const ChatScreenContent: React.FC<ChatScreenContentProps> = ({
       onImageInClipboardChange={onImageInClipboardChange}
       onShowEditSelector={onShowEditSelector}
     />
+  );
+
+  // A remote session's list is not in this process.
+  if (isRemoteMode) {
+    return input;
+  }
+  return (
+    <Box flexDirection="column">
+      <TaskProgressStrip />
+      {input}
+    </Box>
   );
 };

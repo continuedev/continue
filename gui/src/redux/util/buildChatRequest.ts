@@ -5,6 +5,8 @@ import { rulesEnabledForMode } from "core/llm/rules/rulesByMode";
 import { applyToolOverrides } from "core/tools/applyToolOverrides";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
+import { BuiltInToolNames } from "core/tools/builtIn";
+import { taskPlanTailMessage } from "core/util/taskPlan";
 import {
   getModeReasoningEffort,
   reasoningOptionsForEffort,
@@ -54,6 +56,13 @@ export interface ChatRequest {
   completionOptions: LLMFullCompletionOptions;
   /** The final system message first, then the conversation. */
   messages: ChatMessage[];
+  /**
+   * The session's task list as a message to send after `messages`, when the
+   * task list tool is offered. Kept apart so that the cache-miss key and the
+   * compaction request see only the conversation: the list changes at the
+   * tail of every request and must not count as an edit to it.
+   */
+  taskListMessage: ChatMessage | undefined;
   appliedRules: RuleMetadata[];
   appliedRuleIndex: number;
   /** Set when the model takes tools as text in the system message. */
@@ -161,11 +170,18 @@ export function buildChatRequest(
     systemToolsFramework,
   );
 
+  const taskListMessage = activeTools.some(
+    (t) => t.function.name === BuiltInToolNames.TaskList,
+  )
+    ? taskPlanTailMessage(state.session.taskPlan)
+    : undefined;
+
   return {
     model,
     activeTools,
     completionOptions,
     messages,
+    taskListMessage,
     appliedRules,
     appliedRuleIndex,
     systemToolsFramework,

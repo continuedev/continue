@@ -27,12 +27,14 @@ import {
   Tool,
   ToolCallDelta,
   ToolCallState,
+  TaskPlan,
   TurnCheckpoint,
   Usage,
 } from "core";
 import { mergeReasoningDetails } from "core/llm/openaiTypeConverters";
 import { addRequestUsage } from "core/llm/utils/sessionUsage";
 import { addFileSnapshot } from "core/util/checkpoints";
+import { isTaskPlan } from "core/util/taskPlan";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import {
   renderChatMessage,
@@ -243,6 +245,8 @@ type SessionState = {
   compactionLoading: Record<number, boolean>; // Track compaction loading by message index
   /** Pre-edit file snapshots for "Restore to here"; see core/util/checkpoints.ts */
   checkpoints: TurnCheckpoint[];
+  /** The agent's task list, saved with the session; see core/util/taskPlan.ts */
+  taskPlan?: TaskPlan;
   /** Messages typed while the agent was working, sent when the turn ends */
   queuedMessages: QueuedMessage[];
   /** Stop, an error or a new session pauses the queue until it is sent by hand */
@@ -497,6 +501,9 @@ export const sessionSlice = createSlice({
     },
     setCheckpoints: (state, { payload }: PayloadAction<TurnCheckpoint[]>) => {
       state.checkpoints = payload;
+    },
+    setTaskPlan: (state, { payload }: PayloadAction<TaskPlan | undefined>) => {
+      state.taskPlan = payload?.items.length ? payload : undefined;
     },
     deleteCompaction: (state, action: PayloadAction<number>) => {
       // Removes the conversation summary from the specified message
@@ -850,6 +857,9 @@ export const sessionSlice = createSlice({
         state.title = payload.title;
         state.id = payload.sessionId;
         state.checkpoints = payload.checkpoints ?? [];
+        state.taskPlan = isTaskPlan(payload.taskPlan)
+          ? payload.taskPlan
+          : undefined;
         if (payload.mode) {
           state.mode = payload.mode;
         }
@@ -858,6 +868,7 @@ export const sessionSlice = createSlice({
         state.title = NEW_SESSION_TITLE;
         state.id = uuidv4();
         state.checkpoints = [];
+        state.taskPlan = undefined;
       }
     },
     updateSessionTitle: (state, { payload }: PayloadAction<string>) => {
@@ -1313,6 +1324,7 @@ export const {
   deleteCompaction,
   addCheckpointSnapshot,
   setCheckpoints,
+  setTaskPlan,
   setIsGatheringContext,
   resetNextCodeBlockToApplyIndex,
   updateApplyState,

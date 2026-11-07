@@ -38,9 +38,9 @@ export interface CompactionOptions {
 }
 
 const COMPACTION_PROMPT =
-  "Please provide a concise summary of our conversation so far, capturing the key context, decisions made, and current state. Format this as a single comprehensive message that preserves all important information needed to continue our work. You do not need to recap the system message, as this will remain. Make sure it is clear what the current stream of work was at the very end prior to compaction so that you can continue exactly where you left off without missing any information.";
+  "Please provide a concise summary of our conversation so far, capturing the key context, decisions made, and current state. Format this as a single comprehensive message that preserves all important information needed to continue our work. You do not need to recap the system message, as this will remain. Make sure it is clear what the current stream of work was at the very end prior to compaction so that you can continue exactly where you left off without missing any information. The task list, if there is one, is kept separately and sent again after the summary, so do not restate its items; say only which item was being worked on at the end.";
 
-const COMPACTION_PROMPT_TOKENS = 150; // rough generous token count of ^
+const COMPACTION_PROMPT_TOKENS = 190; // rough generous token count of ^
 
 /**
  * Compacts a chat history into a summarized form

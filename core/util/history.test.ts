@@ -83,6 +83,40 @@ describe("Full session lifecycle", () => {
     ).toBeUndefined();
   });
 
+  test("The task list is saved and loaded with the session", () => {
+    const taskPlan = {
+      items: [
+        { id: "1", text: "Write the migration", status: "completed" as const },
+        {
+          id: "2",
+          text: "Run it",
+          status: "in_progress" as const,
+          activeForm: "Running it",
+        },
+        {
+          id: "3",
+          text: "Deploy",
+          status: "blocked" as const,
+          note: "waiting for keys",
+        },
+      ],
+      updatedAt: "2026-11-06T12:00:00.000Z",
+      updatedBy: "user" as const,
+    };
+    historyManager.save({ ...testSession, taskPlan });
+    expect(historyManager.load(testSession.sessionId).taskPlan).toEqual(
+      taskPlan,
+    );
+  });
+
+  test("An empty task list is not written", () => {
+    historyManager.save({
+      ...testSession,
+      taskPlan: { items: [], updatedAt: "2026-11-06T12:00:00.000Z" },
+    });
+    expect(historyManager.load(testSession.sessionId).taskPlan).toBeUndefined();
+  });
+
   test("Queued messages are saved and loaded with the session, and cleared when empty", () => {
     const queuedMessages = [
       {

@@ -1,6 +1,6 @@
 # Task planning
 
-Last updated: 2026-11-03. Status: plan, nothing built.
+Last updated: 2026-11-06. Status: P1 and P3 built (the task list as session state, `TaskList` in the CLI and `task_list` in the IDE, the list at the tail of each request, both summary prompts, the IDE list above the input) plus the CLI progress strip from P2. Open questions 1, 2, 4 and 5 are decided in [Decisions](#decisions); P0's live Bedrock measurement was replaced by a deterministic test.
 
 Keep a plan and a task checklist outside the conversation, so a long piece of work does not lose its place when the conversation is compacted, pruned or moved to a new session.
 
@@ -166,6 +166,51 @@ P1 fixes the stated problem and can ship alone for the CLI. P3 is the larger job
 3. Plan files: workspace or home directory by default?
 4. Should the IDE and CLI share one `TaskPlan` implementation in `core`, or should the CLI keep its own and map? Sharing is cleaner, but the CLI imports `core` through a package link that needed rebuilding by hand in this checkout.
 5. How does Cursor's list survive summarization? The docs fetched do not say. If it is stored in the plan file or re-sent every turn, that settles question 1.
+
+## Decisions
+
+Made on 2026-11-06 while building P1 and P3. Sources read that day are listed at the end of this section.
+
+### What the newer research changed
+
+- Claude Code now has `TaskCreate`, `TaskUpdate`, `TaskGet` and `TaskList` with stable ids, statuses and an `activeForm` label shown while an item runs; `TodoWrite` is the older whole-list tool. Its interactive-mode page says tasks "persist across context compactions". Since v2.1.268 the tools are given by default only to Opus 4.7, Sonnet 4.6, Haiku 4.5 and earlier models, because newer models keep track of multi-step work without a written list and the tool definitions and reminders cost context.
+- The guidance Claude Code gives the model: use a list for work with three or more distinct steps or when the user lists several things, skip it for a single quick change. The "exactly one in progress" and "mark complete immediately" rules come from community copies of the tool prompt, not from Anthropic's docs.
+- Cursor's docs still do not say how its to-dos survive summarization. Forum reports (found by search, not confirmed by the docs) say summarization can drop or garble them (question 5): that is the failure this design avoids by keeping the list outside the transcript.
+
+We kept one whole-list tool rather than Claude Code's create/update pair: it is one call per change, needs no merge rules, and matches `Checklist`, which models already use. `activeForm` was added to the item.
+
+### 1. Where the list goes: the tail, after the conversation's cache point
+
+The list is a separate user message after the history (`<task_list>` … `</task_list>`), sent only when the task list tool is offered.
+
+Bedrock (`core/llm/llms/Bedrock.ts` and `packages/openai-adapters/src/apis/Bedrock.ts`) places at most four cache points: after the tools, after the system prompt, and at the end of the last two user messages. Both merge consecutive user and tool messages into one Bedrock user message, so the list would land in the same message as the last tool result, before its cache point. The next request no longer has the list there, so the bytes before that point would differ, and the last step (an assistant message and its tool results) would be written to the cache again on every request. Both converters now recognise a trailing block that starts with `<task_list>` and put the cache point before it (and leave the per-process ID off it). Cost per request:
+
+| Where the list sits                       | What a change to the list costs                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------ |
+| System message, beside the summary        | The whole conversation after the system prompt is written again (1.25x input price)  |
+| Tail, before the conversation cache point | The last step is written again on every request, list changed or not                 |
+| Tail, after the cache point (built)       | Nothing beyond the list's own tokens (tens to a few hundred) at the full input price |
+
+Tests show this without a live call: `core/llm/llms/Bedrock.test.ts` ("with the task list block at the tail") and `packages/openai-adapters/src/apis/Bedrock.taskList.vitest.ts` build two consecutive requests with different lists and check that the second starts with exactly the blocks the first cached, and a control case where untagged text loses that. Anthropic's own API needs no change: there the list stays a separate message, so the breakpoint on the real last message stays where it was. Providers with automatic prefix caching (OpenAI and others) also gain from a tail position.
+
+In the IDE the list is kept out of the messages used for the cache-miss key and for the compaction request (`buildChatRequest` returns it as `taskListMessage`), and `compileChatMessages` sets it aside while pruning so the real last turn stays protected. A live Bedrock measurement with `Bedrock.cache.live.vitest.ts` is still worth doing once.
+
+### 2. Who owns the list: the person's edit wins at once
+
+An edit in the IDE list applies immediately and is saved. The plan records `updatedBy: "user"`, and the next request's block says the user edited the list and to keep their changes. Because the model gets the current list at the end of every request, its next whole-list update starts from the person's version. Roo's way (edits wait for the model's next update) makes an edit look ignored; locking edited items needs per-item merge rules that a whole-list tool does not have. One race remains: a tool call the model generated before the edit can still replace it.
+
+Completed items the model leaves out of an update are kept, because the block folds old completed items into a count and the model cannot repeat what it does not see. Open items left out are removed. `reset: true` starts a new list. The person's edits replace the list exactly.
+
+### 4. One implementation in core
+
+`core/util/taskPlan.ts` holds validation (at most one item in progress, at most 50 items, 200 characters per item, unique ids), id assignment, the request block, the progress line, the confirmation and the markdown mapping for `Checklist`; the types are in `core/index.d.ts` and `Session.taskPlan` is saved by `core/util/history.ts`, which the CLI also uses. The CLI imports it like its other core imports, through `core/dist`, so `npm run build` in `core` is needed before the CLI type-checks. `packages/openai-adapters` cannot import core, so it keeps its own copy of the tag, and a core test checks the two match.
+
+### Sources
+
+- Claude Code task tools and model availability: https://code.claude.com/docs/en/tools-reference (Task tool availability), https://code.claude.com/docs/en/agent-sdk/todo-tracking
+- Claude Code task list display and compaction: https://code.claude.com/docs/en/interactive-mode (Task list)
+- Tool prompt wording (unofficial copies): https://tangled.org/nonbinary.computer/claude-code/blob/main/tools/TodoWriteTool/prompt.ts, https://spring-ai-community.github.io/spring-ai-agent-utils/latest/tools/TodoWriteTool/
+- Cursor to-dos and summarization (forum reports): https://forum.cursor.com/t/agent-stuck-referencing-stale-completed-plans/160672, https://forum.cursor.com/t/agents-doing-weird-things-since-mon-tues-9-10th/154517, https://forum.cursor.com/t/cursor-1-2-agent-planning-better-context-and-faster-tab/112236
 
 ## Not decided here
 

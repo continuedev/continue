@@ -12,6 +12,7 @@ import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
 import { SKILLS_TOOL_META } from "./skills.js";
 import { statusTool } from "./status.js";
+import { taskListTool } from "./taskList.js";
 import { uploadArtifactTool } from "./uploadArtifact.js";
 import { viewDiffTool } from "./viewDiff.js";
 import { writeChecklistTool } from "./writeChecklist.js";
@@ -30,6 +31,7 @@ export const ALL_BUILT_IN_TOOLS = [
   runTerminalCommandTool,
   searchCodeTool,
   statusTool,
+  taskListTool,
   SUBAGENT_TOOL_META,
   SKILLS_TOOL_META,
   uploadArtifactTool,

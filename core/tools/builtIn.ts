@@ -17,6 +17,7 @@ export enum BuiltInToolNames {
   FetchUrlContent = "fetch_url_content",
   CodebaseTool = "codebase",
   ReadSkill = "read_skill",
+  TaskList = "task_list",
 
   // excluded from allTools for now
   ViewRepoMap = "view_repo_map",
@@ -29,4 +30,6 @@ export const CLIENT_TOOLS_IMPLS = [
   BuiltInToolNames.EditExistingFile,
   BuiltInToolNames.SingleFindAndReplace,
   BuiltInToolNames.MultiEdit,
+  // The task list lives in the session, which the gui holds
+  BuiltInToolNames.TaskList,
 ];

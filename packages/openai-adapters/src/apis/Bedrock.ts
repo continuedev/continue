@@ -68,6 +68,17 @@ import {
   RerankCreateParams,
 } from "./base.js";
 
+/**
+ * First line of the agent's task list block, which clients send as the last
+ * user text of a request. Must equal TASK_LIST_BLOCK_OPEN in
+ * core/util/taskPlan.ts (core/util/taskPlan.vitest.ts checks it).
+ */
+export const TASK_LIST_BLOCK_OPEN = "<task_list>";
+
+function isTaskListBlockText(text: string | undefined): boolean {
+  return !!text && text.startsWith(TASK_LIST_BLOCK_OPEN);
+}
+
 // Utility function to get or generate UUID for prompt caching
 function getSecureID(): string {
   // Adding a type declaration for the static property
@@ -429,11 +440,16 @@ export class BedrockApi implements BaseLlmApi {
    * ID when it fell out of that window, its bytes would change, and the cached
    * conversation would stop matching. So the ID goes on the first user message
    * only, and every later cached prefix includes it.
+   *
+   * The task list block (TASK_LIST_BLOCK_OPEN) is the last text of the last
+   * user message and changes between requests, so the cache point goes before
+   * it: the next request, which no longer has the block there, then starts
+   * with exactly the bytes this one cached.
    */
   private _addCachingToLastTwoUserMessages(converted: Message[], ttl?: "1h") {
     const first = converted.find((m) => m.role === "user");
     first?.content?.forEach((block) => {
-      if (block.text) {
+      if (block.text && !isTaskListBlockText(block.text)) {
         block.text += getSecureID();
       }
     });
@@ -442,7 +458,13 @@ export class BedrockApi implements BaseLlmApi {
     for (let i = converted.length - 1; i >= 0; i--) {
       const message = converted[i];
       if (message.role === "user") {
-        message.content?.push(bedrockCachePoint(ttl));
+        const content = message.content ?? [];
+        const last = content[content.length - 1];
+        if (content.length > 1 && isTaskListBlockText(last?.text)) {
+          content.splice(content.length - 1, 0, bedrockCachePoint(ttl));
+        } else {
+          content.push(bedrockCachePoint(ttl));
+        }
         numCached++;
       }
       if (numCached === 2) {

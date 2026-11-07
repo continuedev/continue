@@ -37,6 +37,7 @@ import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { createBedrockRequestHandler } from "./bedrockHttp.js";
 import { withResponseInfo } from "../utils/cacheStats.js";
 import { getSecureID } from "../utils/getSecureID.js";
+import { isTaskPlanBlockText } from "../../util/taskPlan.js";
 import { resolveCacheParts, resolvePromptCacheTtl } from "./anthropicCache.js";
 import {
   applyCrossRegionInference,
@@ -792,11 +793,16 @@ class Bedrock extends BaseLLM {
    * bytes changed, and the cached conversation stopped matching. Measured on
    * Bedrock, reads stopped growing from the third turn on. The ID now goes on
    * the first user message only; every later cached prefix includes it.
+   *
+   * The task list block (core/util/taskPlan.ts) is the last text of the last
+   * user message and changes between requests, so the cache point goes before
+   * it: the next request, which no longer has the block there, then starts
+   * with exactly the bytes this one cached.
    */
   private _addCachingToLastTwoUserMessages(converted: Message[], ttl?: "1h") {
     const first = converted.find((m) => m.role === "user");
     first?.content?.forEach((block) => {
-      if (block.text) {
+      if (block.text && !isTaskPlanBlockText(block.text)) {
         block.text += getSecureID();
       }
     });
@@ -805,9 +811,16 @@ class Bedrock extends BaseLLM {
     for (let i = converted.length - 1; i >= 0; i--) {
       const message = converted[i];
       if (message.role === "user") {
-        message.content?.push({
-          cachePoint: { type: "default", ...(ttl ? { ttl } : {}) },
-        });
+        const cachePoint = {
+          cachePoint: { type: "default" as const, ...(ttl ? { ttl } : {}) },
+        };
+        const content = message.content ?? [];
+        const last = content[content.length - 1];
+        if (content.length > 1 && isTaskPlanBlockText(last?.text)) {
+          content.splice(content.length - 1, 0, cachePoint);
+        } else {
+          content.push(cachePoint);
+        }
         numCached++;
       }
       if (numCached === 2) {

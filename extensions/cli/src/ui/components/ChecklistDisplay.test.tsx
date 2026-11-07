@@ -60,4 +60,20 @@ describe("ChecklistDisplay", () => {
     expect(output).toContain("✓");
     expect(output).toContain("○");
   });
+
+  it("shows the task list's in-progress, cancelled and blocked markers", () => {
+    const content = `- [x] Done
+- [>] Running migrations
+- [-] Dropped
+- [!] Waiting for keys
+- [ ] Later`;
+
+    const output = render(<ChecklistDisplay content={content} />).lastFrame();
+
+    expect(output).toContain("▶ Running migrations");
+    expect(output).toContain("– Dropped");
+    expect(output).toContain("! Waiting for keys");
+    expect(output).toContain("○ Later");
+    expect(output).not.toContain("[>]");
+  });
 });

@@ -31,6 +31,7 @@ import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { checkIfRipgrepIsInstalled, searchCodeTool } from "./searchCode.js";
 import { skillsTool } from "./skills.js";
 import { subagentTool } from "./subagent.js";
+import { taskListTool } from "./taskList.js";
 import {
   isBetaSubagentToolEnabled,
   isBetaUploadArtifactToolEnabled,
@@ -68,7 +69,7 @@ const BASE_BUILTIN_TOOLS: Tool[] = [
   listFilesTool,
   runTerminalCommandTool,
   fetchTool,
-  writeChecklistTool,
+  taskListTool,
   checkBackgroundJobTool,
   askQuestionTool,
 ];
@@ -141,6 +142,13 @@ export async function getAllAvailableTools(
 
   return tools;
 }
+
+/**
+ * Tools that are not offered to the model but still run when it calls them by
+ * name: `Checklist` maps its markdown list onto `TaskList`, for prompts, rules
+ * and resumed sessions that still name it.
+ */
+export const TOOL_ALIASES: Tool[] = [writeChecklistTool];
 
 export function getToolDisplayName(toolName: string): string {
   const tool = ALL_BUILT_IN_TOOLS.find((t) => t.name === toolName);

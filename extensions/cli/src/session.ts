@@ -7,6 +7,7 @@ import type {
   ChatHistoryItem,
   Session,
   SessionUsage,
+  TaskPlan,
   Usage,
 } from "core/index.js";
 import historyManager from "core/util/history.js";
@@ -111,6 +112,7 @@ class SessionManager {
   setSession(session: Session): void {
     this.currentSession = session;
     this.syncUsageFromSession();
+    notifyTaskPlanListeners(session.taskPlan);
   }
 
   updateHistory(history: ChatHistoryItem[]): void {
@@ -125,8 +127,20 @@ class SessionManager {
     saveSession();
   }
 
+  updateTaskPlan(plan: TaskPlan | undefined): void {
+    const session = this.getCurrentSession();
+    if (plan?.items.length) {
+      session.taskPlan = plan;
+    } else {
+      delete session.taskPlan;
+    }
+    saveSession();
+    notifyTaskPlanListeners(session.taskPlan);
+  }
+
   clear(): void {
     this.currentSession = null;
+    notifyTaskPlanListeners(undefined);
     this.sessionUsage = {
       totalCost: 0,
       promptTokens: 0,
@@ -579,6 +593,38 @@ export function startNewSession(history: ChatHistoryItem[] = []): Session {
 
   manager.setSession(newSession);
   return newSession;
+}
+
+type TaskPlanListener = (plan: TaskPlan | undefined) => void;
+const taskPlanListeners = new Set<TaskPlanListener>();
+
+function notifyTaskPlanListeners(plan: TaskPlan | undefined): void {
+  for (const listener of taskPlanListeners) {
+    try {
+      listener(plan);
+    } catch (error) {
+      logger.error("Task list listener failed:", error);
+    }
+  }
+}
+
+/**
+ * The current session's task list (see core/util/taskPlan.ts). It lives on
+ * the session, outside the history, so compaction cannot lose it.
+ */
+export function getSessionTaskPlan(): TaskPlan | undefined {
+  return SessionManager.getInstance().getCurrentSession().taskPlan;
+}
+
+/** Replaces the current session's task list and saves the session. */
+export function updateSessionTaskPlan(plan: TaskPlan | undefined): void {
+  SessionManager.getInstance().updateTaskPlan(plan);
+}
+
+/** Calls `listener` whenever the task list changes; returns an unsubscribe. */
+export function onTaskPlanChange(listener: TaskPlanListener): () => void {
+  taskPlanListeners.add(listener);
+  return () => taskPlanListeners.delete(listener);
 }
 
 /**

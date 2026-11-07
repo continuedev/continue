@@ -24,6 +24,7 @@ import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { CacheMissNotice } from "../../components/mainInput/CacheMissNotice";
 import { CachingOffNotice } from "../../components/mainInput/CachingOffNotice";
 import { ColdCacheNotice } from "../../components/mainInput/ColdCacheNotice";
+import { TaskListPanel } from "../../components/mainInput/TaskListPanel";
 import { LargeMessageNotice } from "../../components/mainInput/LargeMessageNotice";
 import { QueuedMessages } from "../../components/mainInput/QueuedMessages";
 import { useMainEditor } from "../../components/mainInput/TipTapEditor";
@@ -516,6 +517,7 @@ export function Chat() {
         <ColdCacheNotice />
         <CachingOffNotice />
         <LargeMessageNotice />
+        <TaskListPanel />
         <QueuedMessages
           onSendNow={sendNowOrSteer}
           onEdit={editQueuedMessage}

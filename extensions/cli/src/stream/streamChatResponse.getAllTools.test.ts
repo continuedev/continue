@@ -48,7 +48,8 @@ describe("getRequestTools - Tool Filtering", () => {
     expect(toolNames).toContain("Read");
     expect(toolNames).toContain("List");
     expect(toolNames).toContain("Fetch");
-    expect(toolNames).toContain("Checklist");
+    expect(toolNames).toContain("TaskList");
+    expect(toolNames).not.toContain("Checklist");
 
     // Write tools should be excluded
     expect(toolNames).not.toContain("Write");

@@ -543,6 +543,99 @@ describe("Bedrock", () => {
       });
     });
 
+    describe("with the task list block at the tail", () => {
+      const toolCall = (id: string) => ({
+        id,
+        type: "function" as const,
+        function: { name: "ls", arguments: "{}" },
+      });
+      const list = (text: string): ChatMessage => ({
+        role: "user",
+        content: `<task_list>\n[>] 1. ${text}\n</task_list>`,
+      });
+      const step1: ChatMessage[] = [
+        { role: "system", content: "You are an agent." },
+        { role: "user", content: "fix it" },
+        { role: "assistant", content: "", toolCalls: [toolCall("a")] },
+        { role: "tool", content: "out a", toolCallId: "a" },
+      ];
+      const step2: ChatMessage[] = [
+        ...step1,
+        { role: "assistant", content: "", toolCalls: [toolCall("b")] },
+        { role: "tool", content: "out b", toolCallId: "b" },
+      ];
+
+      function convert(history: ChatMessage[]) {
+        const b: any = new TestBedrock({
+          apiKey: "k",
+          model: sonnet46,
+          region: "us-east-1",
+        });
+        b.capabilities = { tools: true };
+        return b._generateConverseInput(history, {
+          model: sonnet46,
+          tools,
+          promptCaching: true,
+        });
+      }
+      // The conversation blocks a request cached: everything before its last
+      // cache point, as (role, block) pairs. Cache points are markers, not
+      // content, so they are left out.
+      const cachedBlocks = (input: any) => {
+        const flat: string[] = [];
+        let lastPoint = 0;
+        for (const m of input.messages) {
+          for (const c of m.content) {
+            if (c.cachePoint) {
+              lastPoint = flat.length;
+            } else {
+              flat.push(JSON.stringify([m.role, c]));
+            }
+          }
+        }
+        return { cached: flat.slice(0, lastPoint), all: flat };
+      };
+
+      it("puts the cache point before the block", () => {
+        const messages = convert([...step1, list("Run ls")]).messages;
+        const last = messages.at(-1).content;
+        expect(last.at(-1).text).toMatch(/^<task_list>/);
+        expect(last.at(-2).cachePoint).toBeDefined();
+        expect(last.at(-1).text).not.toContain("SID:");
+      });
+
+      it("keeps the cached prefix byte-identical when the list changes", () => {
+        const a = convert([...step1, list("Run ls")]);
+        const b = convert([...step2, list("Run ls again")]);
+        expect(JSON.stringify(b.toolConfig)).toBe(JSON.stringify(a.toolConfig));
+        expect(JSON.stringify(b.system)).toBe(JSON.stringify(a.system));
+        const { cached } = cachedBlocks(a);
+        const { all } = cachedBlocks(b);
+        expect(cached.length).toBeGreaterThan(0);
+        expect(all.slice(0, cached.length)).toEqual(cached);
+      });
+
+      it("keeps it on the first turn, when the block shares the first user message", () => {
+        const a = convert([step1[0], step1[1], list("Start")]);
+        const b = convert([...step1, list("Start, then ls")]);
+        const { cached } = cachedBlocks(a);
+        expect(cached).toHaveLength(1);
+        expect(cachedBlocks(b).all.slice(0, 1)).toEqual(cached);
+      });
+
+      it("would lose it if the block sat before the cache point (control)", () => {
+        // The same text without the tag is treated as ordinary content.
+        const plain = (text: string): ChatMessage => ({
+          role: "user",
+          content: `tasks:\n[>] 1. ${text}`,
+        });
+        const a = convert([...step1, plain("Run ls")]);
+        const b = convert([...step2, plain("Run ls again")]);
+        const { cached } = cachedBlocks(a);
+        expect(cachedBlocks(b).all.slice(0, cached.length)).not.toEqual(cached);
+      });
+    });
+
     it("adds no ID when caching is off", () => {
       const b: any = new TestBedrock({
         apiKey: "k",
