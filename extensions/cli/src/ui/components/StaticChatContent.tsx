@@ -7,7 +7,10 @@ import type { MCPService } from "../../services/MCPService.js";
 import type { QueuedMessage } from "../../stream/messageQueue.js";
 import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import { IntroMessage } from "../IntroMessage.js";
-import { splitChatHistory } from "../utils/historySplitting.js";
+import {
+  countStableItems,
+  splitChatHistory,
+} from "../utils/historySplitting.js";
 
 import { QueuedMessages } from "./QueuedMessages.js";
 
@@ -114,9 +117,9 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
     // Since messages are now split into reasonably-sized chunks,
     // we can keep more items static (only last 1-2 items dynamic)
     const PENDING_ITEMS_COUNT = 1;
-    const stableCount = Math.max(
-      0,
-      processedChatHistory.length - PENDING_ITEMS_COUNT,
+    const stableCount = countStableItems(
+      processedChatHistory,
+      PENDING_ITEMS_COUNT,
     );
     const stableHistory = processedChatHistory.slice(0, stableCount);
     const pendingHistory = processedChatHistory.slice(stableCount);

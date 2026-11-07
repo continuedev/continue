@@ -141,6 +141,32 @@ export function splitChatHistory(
 }
 
 /**
+ * How many leading items can be written to Ink's Static output, which is
+ * written once and never updated. The last `pendingCount` items stay
+ * dynamic, and so does an item of the current turn (after the last user
+ * message) whose tool calls are still running, with everything after it: a
+ * Subagent call can still be finishing after Stop has added a message below
+ * it, and its result would otherwise never be shown. Earlier turns count as
+ * finished, so a status left over from an interrupted session cannot keep the
+ * rest of the conversation dynamic.
+ */
+export function countStableItems(
+  history: ChatHistoryItem[],
+  pendingCount: number,
+): number {
+  let stable = Math.max(0, history.length - pendingCount);
+  for (let i = history.length - 1; i >= 0; i--) {
+    const item = history[i];
+    if (item.message.role === "user") break;
+    const running = item.toolCallStates?.some(
+      (s) => s.status === "generated" || s.status === "calling",
+    );
+    if (running) stable = Math.min(stable, i);
+  }
+  return stable;
+}
+
+/**
  * Estimates the height in terminal rows that content will take when rendered.
  */
 function estimateContentHeight(content: string, terminalWidth: number): number {

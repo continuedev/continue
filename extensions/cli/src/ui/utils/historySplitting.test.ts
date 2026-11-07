@@ -1,7 +1,7 @@
 import type { ChatHistoryItem } from "core";
 import { describe, expect, it } from "vitest";
 
-import { splitChatHistory } from "./historySplitting.js";
+import { countStableItems, splitChatHistory } from "./historySplitting.js";
 
 // Helper to create a mock chat history item
 function createMockChatHistoryItem(
@@ -54,5 +54,44 @@ describe("messageHistorySplitting", () => {
       // Last message should still be last
       expect(result[result.length - 1].message.content).toBe("Last");
     });
+  });
+});
+
+describe("countStableItems", () => {
+  const user = createMockChatHistoryItem("ask", "user");
+  const text = createMockChatHistoryItem("reply");
+  const system = {
+    message: { role: "system", content: "[Tool canceled]" },
+    contextItems: [],
+  } as ChatHistoryItem;
+  const toolCall = (status: "calling" | "done"): ChatHistoryItem => ({
+    message: { role: "assistant", content: "" },
+    contextItems: [],
+    toolCallStates: [
+      {
+        toolCallId: "c1",
+        toolCall: {
+          id: "c1",
+          type: "function",
+          function: { name: "Subagent", arguments: "{}" },
+        },
+        status,
+        parsedArgs: {},
+      },
+    ],
+  });
+
+  it("keeps only the last items dynamic when every tool call is finished", () => {
+    expect(countStableItems([user, toolCall("done"), system], 1)).toBe(2);
+  });
+
+  it("keeps a running tool call of this turn dynamic, with what follows", () => {
+    expect(countStableItems([user, toolCall("calling"), system], 1)).toBe(1);
+  });
+
+  it("freezes a running status from an earlier turn", () => {
+    expect(countStableItems([user, toolCall("calling"), user, text], 1)).toBe(
+      3,
+    );
   });
 });
