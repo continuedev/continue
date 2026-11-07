@@ -50,6 +50,15 @@ export interface RemoteServerState {
   session: Session;
   isProcessing: boolean;
   messageQueueLength: number;
+  /** What is queued, oldest first; `steer` marks what goes in this turn. */
+  messageQueue?: {
+    id: string;
+    message: string;
+    timestamp: number;
+    steer: boolean;
+  }[];
+  messageQueuePaused?: boolean;
+  steerRequested?: boolean;
   pendingPermission?: {
     toolName: string;
     toolArgs: any;

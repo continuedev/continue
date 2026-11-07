@@ -1,6 +1,16 @@
 import type { ChatHistoryItem, Session, ToolStatus } from "core/index.js";
+import { createHistoryItem } from "core/util/messageConversion.js";
 
+import {
+  describePromptBlocked,
+  runUserPromptSubmitHooks,
+} from "../hooks/promptHook.js";
 import { services } from "../services/index.js";
+import {
+  mergeQueuedMessages,
+  MessageQueue,
+  messageQueue,
+} from "../stream/messageQueue.js";
 import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { StreamCallbacks } from "../stream/streamChatResponse.types.js";
 import { logger } from "../util/logger.js";
@@ -28,6 +38,33 @@ export function removePartialAssistantMessage(
       sessionHistory.pop();
     }
   }
+}
+
+/**
+ * The tool-boundary callback for serve: when a client steered (POST /message
+ * with `steer: true`), take the queued plain messages, run them through the
+ * UserPromptSubmit hooks as the end of a turn would, and return them as one
+ * user message to append after the tool results. A blocked message is
+ * answered with a system message, so whoever watches the session sees why.
+ */
+export async function buildServeSteeringMessage(
+  queue: MessageQueue = messageQueue,
+): Promise<ChatHistoryItem | undefined> {
+  const merged = mergeQueuedMessages(queue.takeSteerMessages());
+  if (!merged) return undefined;
+
+  const promptHook = await runUserPromptSubmitHooks(merged.message);
+  if (promptHook.blockedReason) {
+    try {
+      services.chatHistory.addSystemMessage(
+        describePromptBlocked(promptHook.blockedReason),
+      );
+    } catch {
+      logger.warn(`A hook blocked a message: ${promptHook.blockedReason}`);
+    }
+    return undefined;
+  }
+  return createHistoryItem({ role: "user", content: promptHook.prompt }, []);
 }
 
 // Modified version of streamChatResponse that supports interruption
@@ -114,6 +151,9 @@ export async function streamChatResponseWithInterruption(
         );
       }
     },
+    // Steering: a message posted with `steer: true` while this run works is
+    // delivered here, between the tool results and the next model request.
+    onToolBoundary: () => buildServeSteeringMessage(),
   };
 
   try {

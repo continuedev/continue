@@ -7,10 +7,6 @@ import { prependPrompt } from "src/util/promptProcessor.js";
 
 import { runEnvironmentInstallSafe } from "../environment/environmentHandler.js";
 import { processCommandFlags } from "../flags/flagProcessor.js";
-import {
-  describePromptBlocked,
-  runUserPromptSubmitHooks,
-} from "../hooks/promptHook.js";
 import { setAgentId } from "../index.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import {
@@ -24,15 +20,10 @@ import {
   ConfigServiceState,
   ModelServiceState,
 } from "../services/types.js";
-import {
-  createSession,
-  getCompleteStateSnapshot,
-  loadOrCreateSessionById,
-} from "../session.js";
-import { mergeQueuedMessages, messageQueue } from "../stream/messageQueue.js";
+import { createSession, loadOrCreateSessionById } from "../session.js";
+import { messageQueue } from "../stream/messageQueue.js";
 import { constructSystemMessage } from "../systemMessage.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
-import { reportFailureTool } from "../tools/reportFailure.js";
 import { gracefulExit, updateAgentMetadata } from "../util/exit.js";
 import { formatError } from "../util/formatError.js";
 import { getGitDiffSnapshot } from "../util/git.js";
@@ -40,12 +31,13 @@ import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
+import { type ServerState } from "./serve.helpers.js";
 import {
-  checkAgentComplete,
-  removePartialAssistantMessage,
-  streamChatResponseWithInterruption,
-  type ServerState,
-} from "./serve.helpers.js";
+  getServeStateSnapshot,
+  processMessages,
+  registerMessageRoutes,
+  type ServeMessageContext,
+} from "./serve.messages.js";
 
 interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
@@ -74,7 +66,6 @@ export function shouldQueueInitialPrompt(
   return !hasConversation;
 }
 
-// eslint-disable-next-line max-statements
 export async function serve(prompt?: string, options: ServeOptions = {}) {
   // Set agent ID for error reporting if provided
   setAgentId(options.id);
@@ -191,13 +182,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     storageOption: options.id,
     accessToken: null,
     syncSessionHistory,
-    getCompleteStateSnapshot: () =>
-      getCompleteStateSnapshot(
-        state.session,
-        state.isProcessing,
-        messageQueue.getQueueLength(),
-        state.pendingPermission,
-      ),
+    getCompleteStateSnapshot: () => getServeStateSnapshot(state),
     isActive: () => state.serverRunning,
   });
 
@@ -215,43 +200,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const app = express();
   app.use(express.json());
 
-  // GET /state - Return the current state
-  app.get("/state", (_req: Request, res: Response) => {
-    state.lastActivity = Date.now();
-    syncSessionHistory();
-    const stateSnapshot = getCompleteStateSnapshot(
-      state.session,
-      state.isProcessing,
-      messageQueue.getQueueLength(),
-      state.pendingPermission,
-    );
-    res.json(stateSnapshot);
-  });
-
-  // POST /message - Queue a message and potentially interrupt
-  app.post("/message", async (req: Request, res: Response) => {
-    state.lastActivity = Date.now();
-
-    const { message } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: "Message field is required" });
-    }
-
-    // Queue the message. A message sent after /pause resumes the queue and
-    // goes out together with whatever was queued before the pause.
-    await messageQueue.enqueueMessage(message);
-    messageQueue.resume();
-
-    res.json({
-      queued: true,
-      position: messageQueue.getQueueLength(),
-    });
-
-    // Process messages if not already processing
-    if (!state.isProcessing) {
-      processMessages(state, llmApi);
-    }
-  });
+  const messageCtx: ServeMessageContext = {
+    state,
+    llmApi,
+    syncSessionHistory,
+    onIdle: () => storageSyncService.markAgentStatusUnread(),
+  };
+  registerMessageRoutes(app, messageCtx);
 
   // POST /permission - Approve or reject pending tool permission
   app.post("/permission", async (req: Request, res: Response) => {
@@ -283,36 +238,6 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     res.json({
       success: true,
       approved,
-    });
-  });
-
-  // POST /pause - Pause the current agent run (like pressing escape in TUI)
-  app.post("/pause", async (_req: Request, res: Response) => {
-    state.lastActivity = Date.now();
-
-    // Check if there's anything to pause
-    if (!state.isProcessing) {
-      return res.json({
-        success: false,
-        message: "No active processing to pause",
-      });
-    }
-
-    // Keep the queue but do not send it until the next message arrives, as
-    // Esc does in the TUI
-    messageQueue.pause();
-
-    // Abort the current processing
-    if (state.currentAbortController) {
-      state.currentAbortController.abort();
-    }
-
-    // Set isProcessing to false
-    state.isProcessing = false;
-
-    res.json({
-      success: true,
-      message: "Agent run paused",
     });
   });
 
@@ -401,7 +326,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     console.log(chalk.dim("  GET  /state      - Get current agent state"));
     console.log(
       chalk.dim(
-        "  POST /message    - Send a message (body: { message: string })",
+        "  POST /message    - Send a message (body: { message: string, steer?: boolean })",
       ),
     );
     console.log(
@@ -444,7 +369,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       if (shouldQueueInitialPrompt(existingHistory, initialPrompt)) {
         logger.info(chalk.dim("\nProcessing initial prompt..."));
         await messageQueue.enqueueMessage(initialPrompt);
-        processMessages(state, llmApi);
+        void processMessages(messageCtx);
       } else {
         logger.info(
           chalk.dim(
@@ -454,122 +379,6 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
       }
     }
   });
-
-  async function processMessages(state: ServerState, llmApi: any) {
-    let processedMessage = false;
-    while (state.serverRunning) {
-      // Everything queued while the last turn ran goes as one message;
-      // nothing goes while paused.
-      const queuedMessage = mergeQueuedMessages(messageQueue.takeNextBatch());
-      if (!queuedMessage) {
-        break;
-      }
-
-      const userMessage = queuedMessage.message;
-      state.isProcessing = true;
-      state.lastActivity = Date.now();
-      processedMessage = true;
-
-      // UserPromptSubmit hooks can stop the message or add context. A
-      // stopped message is answered in the conversation, so whoever is
-      // watching the session sees why nothing happened.
-      const promptHook = await runUserPromptSubmitHooks(userMessage);
-      if (promptHook.blockedReason) {
-        try {
-          services.chatHistory.addAssistantMessage(
-            describePromptBlocked(promptHook.blockedReason),
-          );
-        } catch {
-          logger.warn(`A hook blocked a message: ${promptHook.blockedReason}`);
-        }
-        state.isProcessing = false;
-        continue;
-      }
-
-      // Add user message via ChatHistoryService (single source of truth)
-      try {
-        services.chatHistory.addUserMessage(promptHook.prompt);
-      } catch {
-        // Fallback to local array if service unavailable
-        state.session.history.push({
-          message: { role: "user", content: promptHook.prompt },
-          contextItems: [],
-        });
-      }
-
-      try {
-        // Create new abort controller for this response
-        state.currentAbortController = new AbortController();
-
-        // Stream the response with interruption support
-        await streamChatResponseWithInterruption(
-          state,
-          llmApi,
-          state.currentAbortController,
-          () => false,
-        );
-
-        // No direct persistence here; ChatHistoryService handles persistence when appropriate
-
-        state.lastActivity = Date.now();
-
-        // Update metadata after successful agent turn
-        try {
-          const history = services.chatHistory?.getHistory();
-          await updateAgentMetadata({
-            history,
-            isComplete: checkAgentComplete(history),
-          });
-        } catch (metadataErr) {
-          logger.debug(
-            "Failed to update metadata after turn (non-critical)",
-            metadataErr as any,
-          );
-        }
-      } catch (e: any) {
-        if (e.name === "AbortError") {
-          logger.debug("Response interrupted");
-          removePartialAssistantMessage(state.session.history);
-        } else {
-          logger.error(`Error: ${formatError(e)}`);
-
-          // Add error message via ChatHistoryService
-          const errorMessage = `Error: ${formatError(e)}`;
-          try {
-            services.chatHistory.addAssistantMessage(errorMessage);
-          } catch {
-            state.session.history.push({
-              message: { role: "assistant", content: errorMessage },
-              contextItems: [],
-            });
-          }
-
-          // Report failure to control plane (retries exhausted or non-retryable error)
-          try {
-            await reportFailureTool.run({
-              errorMessage: formatError(e),
-            });
-          } catch (reportError) {
-            logger.error(
-              `Failed to report agent failure: ${formatError(reportError)}`,
-            );
-            // Don't block on reporting failure
-          }
-        }
-      } finally {
-        state.currentAbortController = null;
-        state.isProcessing = false;
-      }
-    }
-
-    if (
-      processedMessage &&
-      state.serverRunning &&
-      messageQueue.getQueueLength() === 0
-    ) {
-      await storageSyncService.markAgentStatusUnread();
-    }
-  }
 
   // Check for inactivity and shutdown
   inactivityChecker = setInterval(() => {

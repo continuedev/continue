@@ -18,6 +18,8 @@ export class MockRemoteServer {
   private isProcessing = false;
   private streamInterval: NodeJS.Timeout | null = null;
   public pauseRequests = 0;
+  /** Every POST /message body, in order, so tests can check `steer`. */
+  public messageRequests: { message: string; steer?: boolean }[] = [];
 
   constructor(config: MockRemoteServerConfig = {}) {
     this.app = express();
@@ -40,17 +42,27 @@ export class MockRemoteServer {
         },
         isProcessing: this.isProcessing,
         messageQueueLength: 0,
+        // The mock answers every message at once, so nothing stays queued
+        messageQueue: [],
+        messageQueuePaused: false,
+        steerRequested: false,
         pendingPermission: null,
       });
     });
 
     // POST /message - Handle new messages
     this.app.post("/message", (req, res) => {
-      const { message } = req.body;
+      const { message, steer } = req.body;
 
       if (!message && message !== "") {
         return res.status(400).json({ error: "Message field is required" });
       }
+      if (steer !== undefined && typeof steer !== "boolean") {
+        return res.status(400).json({ error: "steer must be a boolean" });
+      }
+      this.messageRequests.push({ message, steer });
+      // As in cn serve, steering only applies while a run is in progress
+      const steered = steer === true && this.isProcessing;
 
       // Add user message
       if (message) {
@@ -66,7 +78,7 @@ export class MockRemoteServer {
       res.json({
         queued: true,
         position: 1,
-        willInterrupt: false,
+        steered,
       });
     });
 

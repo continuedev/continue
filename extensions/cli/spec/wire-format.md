@@ -14,26 +14,44 @@ The protocol uses a polling-based REST API where:
 
 ### `GET /state`
 
-Returns the current chat state including message history and processing status.
+Returns the current chat state including message history, processing status and the message queue.
 
 **Response:**
 
 ```json
 {
-  "chatHistory": [
+  "session": {
+    "sessionId": "string",
+    "title": "string",
+    "workspaceDirectory": "string",
+    "history": ChatHistoryItem[]
+  },
+  "isProcessing": boolean,
+  "messageQueueLength": number,
+  "messageQueue": [
     {
-      "role": "user" | "assistant" | "system",
-      "content": "string",
-      "isStreaming": boolean,
-      "messageType": "tool-start" | "tool-result" | "tool-error" | "system",
-      "toolName": "string",
-      "toolResult": "string"
+      "id": "string",
+      "message": "string",
+      "timestamp": number,
+      "steer": boolean
     }
   ],
-  "isProcessing": boolean,
-  "messageQueueLength": number
+  "messageQueuePaused": boolean,
+  "steerRequested": boolean,
+  "pendingPermission": null | {
+    "toolName": "string",
+    "toolArgs": object,
+    "requestId": "string",
+    "timestamp": number,
+    "toolCallPreview": array
+  }
 }
 ```
+
+- `messageQueue` lists what is queued, oldest first. `steer` is true for a message that goes at the next tool boundary of the running turn rather than at its end.
+- `messageQueuePaused` is true after `POST /pause`: nothing queued is sent until the next `POST /message`.
+- `steerRequested` is true while a steer is waiting for a tool boundary.
+- `messageQueue`, `messageQueuePaused` and `steerRequested` were added after the other fields; older servers omit them.
 
 ### `POST /message`
 
@@ -43,9 +61,14 @@ Sends a user message to the server. Messages are queued; when the current turn e
 
 ```json
 {
-  "message": "string"
+  "message": "string",
+  "steer": boolean
 }
 ```
+
+`steer` is optional. With `steer: true` while a run is in progress, the message is delivered inside that run, as Enter on an empty prompt does in the TUI: at the next tool boundary (after a round of tool calls has finished and before the next model request) it is added as a user message after the tool results, so the model reads it in the same turn. If the run ends without another tool boundary, the message goes out at the end of the turn like any queued message. When nothing is running, `steer` makes no difference.
+
+Steering applies to the queue, not to one message: every plain message queued at that point goes at the boundary together, in order, joined by blank lines, so an earlier message cannot arrive after a later one. Slash and `!` commands are never steered; they wait for the end of the turn. A steered message passes through the `UserPromptSubmit` hooks like any other; if a hook blocks it, a system message saying so is added to the history.
 
 **Response:**
 
@@ -53,18 +76,21 @@ Sends a user message to the server. Messages are queued; when the current turn e
 {
   "queued": true,
   "position": number,
-  "willInterrupt": boolean
+  "steered": boolean
 }
 ```
+
+`steered` is true when the message will go at the next tool boundary: `steer` was true, a run was in progress, and the message is not a command.
 
 **Special Cases:**
 
 - A missing or empty `message` is rejected with 400. To interrupt, use `POST /pause`.
+- A `steer` that is not a boolean is rejected with 400.
 - Message `/exit` initiates server shutdown
 
 ### `POST /pause`
 
-Stops the current agent run, as Esc does in the TUI. The queue is kept but paused: nothing queued is sent until the next `POST /message`.
+Stops the current agent run, as Esc does in the TUI. The queue is kept but paused: nothing queued is sent until the next `POST /message`. A pending steer is cancelled; the steered messages stay queued.
 
 **Response:**
 
@@ -130,11 +156,13 @@ Messages in the chat history can have different types:
 
 ### Server Implementation
 
-- **Main server**: `src/commands/serve.ts:51-363`
+- **Main server**: `src/commands/serve.ts`
   - Express server setup
-  - Endpoint handlers
-  - State management
+  - `/permission`, `/diff` and `/exit` handlers
+- **Messages**: `src/commands/serve.messages.ts`
+  - `/state`, `/message` and `/pause` handlers
   - Message processing
+- **Steering at the tool boundary**: `buildServeSteeringMessage` in `src/commands/serve.helpers.ts`
 
 ### Client Implementation
 
@@ -161,6 +189,8 @@ Messages in the chat history can have different types:
 - Messages queued during a turn are sent together, as one message, when it ends
 - Queue position returned on message submission
 - `POST /pause` interrupts the current turn and pauses the queue until the next message
+- `POST /message` with `steer: true` delivers the queue at the next tool boundary of the running turn
+- `GET /state` lists the queue, marking what is steered
 
 ### Streaming Support
 
