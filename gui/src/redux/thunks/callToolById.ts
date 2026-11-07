@@ -47,6 +47,10 @@ export const callToolById = createAsyncThunk<
     throw new Error("No model selected");
   }
 
+  // Stop (or a new session) aborts this signal while the tool runs. The tool
+  // itself is not interrupted, but its result must not restart the agent loop.
+  const streamAbortSignal = state.session.streamAborter.signal;
+
   dispatch(
     setToolCallCalling({
       toolCallId,
@@ -152,6 +156,12 @@ export const callToolById = createAsyncThunk<
           toolCallId,
         }),
       );
+    }
+
+    // The result stays on the tool call and is sent with the next request;
+    // after Stop, do not start that request now
+    if (streamAbortSignal.aborted) {
+      return;
     }
 
     // Send to the LLM to continue the conversation

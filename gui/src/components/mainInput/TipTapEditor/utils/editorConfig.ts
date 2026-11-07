@@ -401,7 +401,12 @@ export function createEditorConfig(options: {
     if (!editor) {
       return;
     }
-    if (isStreamingRef.current || (codeToEdit.length === 0 && isInEdit)) {
+    // While the agent works, the main input queues its message (see
+    // Chat.sendInput); inputs of earlier messages cannot be resubmitted
+    if (
+      (isStreamingRef.current && !props.isMainInput) ||
+      (codeToEdit.length === 0 && isInEdit)
+    ) {
       return;
     }
 

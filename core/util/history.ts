@@ -133,6 +133,9 @@ export class HistoryManager {
     if (session.checkpoints?.length) {
       orderedSession.checkpoints = session.checkpoints;
     }
+    if (session.queuedMessages?.length) {
+      orderedSession.queuedMessages = session.queuedMessages;
+    }
 
     fs.writeFileSync(
       getSessionFilePath(session.sessionId),

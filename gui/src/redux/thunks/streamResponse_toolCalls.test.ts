@@ -287,6 +287,7 @@ describe("streamResponseThunk - tool calls", () => {
       "session/streamUpdate",
       "session/addPromptCompletionPair",
       "session/setInactive",
+      "session/requestQueuedMessagesSend",
       "chat/streamNormalInput/fulfilled",
       "session/saveCurrent/pending",
       "session/update/pending",
@@ -751,6 +752,7 @@ describe("streamResponseThunk - tool calls", () => {
       "session/streamUpdate",
       "session/addPromptCompletionPair",
       "session/setInactive",
+      "session/requestQueuedMessagesSend",
       "chat/streamNormalInput/fulfilled",
       "session/saveCurrent/pending",
       "session/update/pending",
@@ -1973,6 +1975,10 @@ describe("streamResponseThunk - tool calls", () => {
       },
       {
         type: "session/setInactive",
+        payload: undefined,
+      },
+      {
+        type: "session/requestQueuedMessagesSend",
         payload: undefined,
       },
       {

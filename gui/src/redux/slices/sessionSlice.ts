@@ -16,6 +16,7 @@ import {
   ContextItemWithId,
   FileCheckpoint,
   FileSymbolMap,
+  InputModifiers,
   McpUiState,
   MessageModes,
   PromptLog,
@@ -242,7 +243,19 @@ type SessionState = {
   compactionLoading: Record<number, boolean>; // Track compaction loading by message index
   /** Pre-edit file snapshots for "Restore to here"; see core/util/checkpoints.ts */
   checkpoints: TurnCheckpoint[];
+  /** Messages typed while the agent was working, sent when the turn ends */
+  queuedMessages: QueuedMessage[];
+  /** Stop, an error or a new session pauses the queue until it is sent by hand */
+  isQueuePaused: boolean;
+  /** Set when a turn ends; the chat view then sends the queue and clears it */
+  isQueueSendRequested: boolean;
 };
+
+export interface QueuedMessage {
+  id: string;
+  editorState: JSONContent;
+  modifiers: InputModifiers;
+}
 
 export const INITIAL_SESSION_STATE: SessionState = {
   isSessionMetadataLoading: false,
@@ -264,6 +277,9 @@ export const INITIAL_SESSION_STATE: SessionState = {
   compactionLoading: {},
   checkpoints: [],
   promptCache: { ...INITIAL_PROMPT_CACHE_STATE },
+  queuedMessages: [],
+  isQueuePaused: false,
+  isQueueSendRequested: false,
 };
 
 export const sessionSlice = createSlice({
@@ -542,6 +558,35 @@ export const sessionSlice = createSlice({
         state.history[payload.index].appliedRules = payload.appliedRules;
       }
     },
+    enqueueMessage: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{ editorState: JSONContent; modifiers: InputModifiers }>,
+    ) => {
+      state.queuedMessages.push({ id: uuidv4(), ...payload });
+    },
+    removeQueuedMessage: (state, { payload }: PayloadAction<string>) => {
+      state.queuedMessages = state.queuedMessages.filter(
+        (m) => m.id !== payload,
+      );
+    },
+    clearQueuedMessages: (state) => {
+      state.queuedMessages = [];
+      state.isQueuePaused = false;
+      state.isQueueSendRequested = false;
+    },
+    setQueuePaused: (state, { payload }: PayloadAction<boolean>) => {
+      state.isQueuePaused = payload;
+    },
+    requestQueuedMessagesSend: (state) => {
+      state.isQueueSendRequested = state.queuedMessages.length > 0;
+    },
+    takeQueuedMessages: (state) => {
+      state.queuedMessages = [];
+      state.isQueuePaused = false;
+      state.isQueueSendRequested = false;
+    },
     setInactive: (state) => {
       const curMessage = state.history.at(-1);
 
@@ -725,6 +770,12 @@ export const sessionSlice = createSlice({
 
       state.isStreaming = false;
       state.symbols = {};
+      // The queue belongs to its session and is saved with it. A loaded
+      // session (including the one reopened after a reload or crash) brings
+      // its queue back paused: nothing is sent until the person says so.
+      state.queuedMessages = payload?.queuedMessages ?? [];
+      state.isQueuePaused = state.queuedMessages.length > 0;
+      state.isQueueSendRequested = false;
 
       state.inlineErrorMessage = undefined;
       state.isPruned = false;
@@ -754,6 +805,28 @@ export const sessionSlice = createSlice({
 
       if (payload) {
         state.history = payload.history as any;
+        // A session saved mid-turn (the queue saves it at once) can hold a
+        // tool call that was running or still being generated. Nothing
+        // finishes it after a reload or crash, and a tool that looks running
+        // holds the input in the queue, so end it as interrupted.
+        for (const item of state.history) {
+          for (const toolCall of item.toolCallStates ?? []) {
+            if (toolCall.status === "generating") {
+              toolCall.status = "canceled";
+            } else if (toolCall.status === "calling") {
+              toolCall.status = "errored";
+              toolCall.output = [
+                {
+                  icon: "problems",
+                  name: "Interrupted",
+                  description: "The tool's run was interrupted",
+                  content:
+                    "The tool was running when the window closed or reloaded, so its result is unknown.",
+                },
+              ];
+            }
+          }
+        }
         state.title = payload.title;
         state.id = payload.sessionId;
         state.checkpoints = payload.checkpoints ?? [];
@@ -1192,6 +1265,12 @@ export const selectApplyStateByToolCallId = createSelector(
 );
 
 export const {
+  enqueueMessage,
+  removeQueuedMessage,
+  clearQueuedMessages,
+  setQueuePaused,
+  requestQueuedMessagesSend,
+  takeQueuedMessages,
   updateFileSymbols,
   setContextItemsAtIndex,
   addContextItemsAtIndex,

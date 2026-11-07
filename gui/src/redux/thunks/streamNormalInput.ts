@@ -22,6 +22,7 @@ import {
   setPromptCacheState,
   recordCacheMiss,
   recordCacheRequest,
+  requestQueuedMessagesSend,
   setToolGenerated,
   streamUpdate,
 } from "../slices/sessionSlice";
@@ -382,6 +383,9 @@ export const streamNormalInput = createAsyncThunk<
     // 4. Execute remaining tool calls
     if (originalToolCalls.length === 0) {
       dispatch(setInactive());
+      // A reply without tool calls ends the agent's turn: messages queued
+      // while it worked can go now (waiting for approval is not an end)
+      dispatch(requestQueuedMessagesSend());
     } else if (needsApprovalPolicies.length > 0) {
       const builtInReadonlyAutoApproved = autoApprovedPolicies.filter(
         ({ toolCallState }) =>

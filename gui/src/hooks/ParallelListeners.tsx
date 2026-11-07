@@ -23,7 +23,11 @@ import { setTTSActive } from "../redux/slices/uiSlice";
 import { modelSupportsReasoning } from "core/llm/autodetect";
 import { cancelStream } from "../redux/thunks/cancelStream";
 import { handleApplyStateUpdate } from "../redux/thunks/handleApplyStateUpdate";
-import { loadSession, refreshSessionMetadata } from "../redux/thunks/session";
+import {
+  loadSession,
+  refreshSessionMetadata,
+  saveCurrentSession,
+} from "../redux/thunks/session";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import {
   setDocumentStylesFromLocalStorage,
@@ -33,6 +37,9 @@ import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import { migrateLocalStorage } from "../util/migrateLocalStorage";
 import { useWebviewListener } from "./useWebviewListener";
+
+/** Coalesces quick queue edits into one save */
+const QUEUE_SAVE_DELAY_MS = 250;
 
 function ParallelListeners() {
   const dispatch = useAppDispatch();
@@ -51,6 +58,27 @@ function ParallelListeners() {
   const sessionId = useAppSelector((state) => state.session.id);
   const lastSessionId = useAppSelector((store) => store.session.lastSessionId);
   const [initialSessionId] = useState(sessionId || lastSessionId);
+
+  // Save queued messages with the session as soon as they change, not at the
+  // end of the turn, so a reload or crash mid-turn does not lose them
+  const queuedMessages = useAppSelector(
+    (state) => state.session.queuedMessages,
+  );
+  const lastQueuedMessages = useRef(queuedMessages);
+  // Read at save time: a dependency would let streaming cancel the save
+  const historyLength = useRef(history.length);
+  historyLength.current = history.length;
+  useEffect(() => {
+    if (lastQueuedMessages.current === queuedMessages) return;
+    lastQueuedMessages.current = queuedMessages;
+    const timer = setTimeout(() => {
+      if (historyLength.current === 0) return;
+      void dispatch(
+        saveCurrentSession({ openNewSession: false, generateTitle: false }),
+      );
+    }, QUEUE_SAVE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [queuedMessages, dispatch]);
 
   const handleConfigUpdate = useCallback(
     async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {

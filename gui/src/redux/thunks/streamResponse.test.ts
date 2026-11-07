@@ -277,6 +277,10 @@ describe("streamResponseThunk", () => {
         payload: undefined,
       },
       {
+        type: "session/requestQueuedMessagesSend",
+        payload: undefined,
+      },
+      {
         type: "chat/streamNormalInput/fulfilled",
         meta: expect.objectContaining({
           arg: { legacySlashCommandData: undefined },
@@ -627,6 +631,7 @@ describe("streamResponseThunk", () => {
       "session/streamUpdate",
       "session/addPromptCompletionPair",
       "session/setInactive",
+      "session/requestQueuedMessagesSend",
       "chat/streamNormalInput/fulfilled",
       "session/saveCurrent/pending",
       "session/update/pending",

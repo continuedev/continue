@@ -338,6 +338,18 @@ export interface Session {
   promptCache?: SessionPromptCache;
   /** Optional: file snapshots taken before agent edits, used by "Restore to here" */
   checkpoints?: TurnCheckpoint[];
+  /**
+   * Optional: messages typed while the agent was working and not yet sent.
+   * Saved as soon as they change, so a reload or crash does not lose them.
+   */
+  queuedMessages?: SessionQueuedMessage[];
+}
+
+/** A message queued in the chat input; `editorState` is the editor's JSON. */
+export interface SessionQueuedMessage {
+  id: string;
+  editorState: any;
+  modifiers: InputModifiers;
 }
 
 /**

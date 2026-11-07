@@ -83,6 +83,30 @@ describe("Full session lifecycle", () => {
     ).toBeUndefined();
   });
 
+  test("Queued messages are saved and loaded with the session, and cleared when empty", () => {
+    const queuedMessages = [
+      {
+        id: "q1",
+        editorState: {
+          type: "doc",
+          content: [
+            { type: "paragraph", content: [{ type: "text", text: "next" }] },
+          ],
+        },
+        modifiers: { useCodebase: false, noContext: false },
+      },
+    ];
+    historyManager.save({ ...testSession, queuedMessages });
+    expect(historyManager.load(testSession.sessionId).queuedMessages).toEqual(
+      queuedMessages,
+    );
+
+    historyManager.save({ ...testSession, queuedMessages: [] });
+    expect(
+      historyManager.load(testSession.sessionId).queuedMessages,
+    ).toBeUndefined();
+  });
+
   test("Deleting session", () => {
     historyManager.delete(testSession.sessionId);
     const sessions = historyManager.list({});

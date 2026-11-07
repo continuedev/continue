@@ -1,0 +1,98 @@
+# Agent UX parity: queue, steering, plans, task lists, subagents
+
+Last updated: 2026-11-06. Status: research done; phase Q1 built.
+
+The aim is a Cursor-like feel for the agent, running on Bedrock. This page compares how Claude Code and Cursor handle what happens while the agent works (queued messages, steering, stopping), planning, task lists and subagents, records what this fork does today, and orders the work. Task lists and plan files are designed in [`task-planning.md`](./task-planning.md) (Track F); this page does not repeat that design.
+
+Sources were read on 2026-11-06 and are listed at the end. Claude Code facts are from code.claude.com and its changelog (about v2.1.31x); Cursor facts are from cursor.com docs, changelogs and forum staff replies. Forum and third-party reports are marked as such.
+
+## What the others do
+
+### Queued messages and steering
+
+| Behavior                                | Claude Code                                                                                                         | Cursor                                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Enter while the agent works             | Queues the message                                                                                                  | Queues (default since a 2026 change; 1.4 made "steer" the default for a while)       |
+| When a queued message reaches the model | At the next tool boundary, inside the same turn; leftovers are sent in order when the turn ends                     | When the current task finishes; "Send now" delivers it at the next tool call instead |
+| Send now                                | `Ctrl+Enter`: sends the queue now and moves running shells and subagents to the background rather than killing them | "Send now" on each item, or `Cmd+Enter`                                              |
+| Editing queued messages                 | `Up` pulls every queued message back into the input; editing and Enter re-queues them as one message                | Delete and drag to reorder only; editing is a top feature request (forum)            |
+| Stop                                    | `Esc` stops, keeps work done, and sends the queue next                                                              | Stop button or `Cmd+Shift+Backspace`                                                 |
+| Context with a queued message           | The editor selection at the time of queueing travels with it                                                        | Not documented                                                                       |
+| Rewind                                  | Separate "restore code" and "restore conversation"; the rewound prompt goes back into the input                     | Checkpoints restore files only and keep messages                                     |
+
+Most Cursor forum complaints about the queue are state bugs: queued messages shown as sent but stalled, sent while idle, or cancelling earlier work. Whatever we build needs defined behavior on stop and on error, with tests.
+
+### Planning
+
+- Both: a plan mode that may read and research but not edit, ending in a plan the person edits and approves.
+- Claude Code enforces plan mode with tool restrictions, ends it with an `ExitPlanMode` tool whose approval chooses the permission level for the build, and keeps plans as files (`~/.claude/plans/`). Mode changes are appended as messages, so they keep the prompt cache.
+- Cursor writes a Markdown plan with to-dos, edited in an interactive editor, saved to the home directory or the workspace, and built with a click. Selected to-dos can be sent to new agents. Users report the plan's to-dos drifting from the build's to-dos (forum).
+
+### Task lists
+
+- Claude Code: `TaskCreate`/`TaskUpdate` with stable IDs, statuses and dependencies, stored outside the transcript (survives compaction), `Ctrl+T` shows up to five items, with the in-progress item labelled by its `activeForm`. Since v2.1.268 newer models get no task tools by default, to save context.
+- Cursor: one persistent to-do card the agent updates in place; to-dos come from the plan.
+- Track F already takes the main ideas: state outside the transcript, re-sent each request, one in-progress item, editable by the person.
+
+### Subagents
+
+- Both: a fresh context that returns one final report; built-in read-only explorers; custom agents as Markdown with frontmatter. Cursor reads `.cursor/agents`, `.claude/agents` and `.codex/agents`.
+- Claude Code: background by default, up to 20 concurrent, depth up to 3, permission prompts from subagents surface in the main session labelled with the agent's name, results are labelled as subagent output and scanned for instruction-like text, a live tree shows status, time and tokens. Forks inherit the conversation and so reuse its prompt cache.
+- Cursor: nesting one level; parallel agents in worktrees; `/best-of-n` compares models; background subagents log to a file.
+
+Published guidance (Anthropic's multi-agent and context-engineering posts, Cognition's "Don't build multi-agents", LangChain) agrees on the shape: one agent by default; subagents for context isolation, independent read-only breadth and fresh-context review; not for tightly coupled edits or parallel writes. Multi-agent research runs used about 15 times the tokens of chat in Anthropic's numbers.
+
+### Bedrock
+
+- Claude on Bedrock caches only what the request marks, at most four cache points, 5-minute or 1-hour TTL. Requests sent before an identical one has started its response write the cache again, so a fan-out of same-prefix subagents pays N writes unless the rest wait for the first. Cross-Region inference can add cache writes.
+- Quota is reserved as input plus `max_tokens` at the start of a request, and cache reads do not count. Oversized `max_tokens` on parallel subagents is the main cause of throttling.
+- Changing effort mid-session invalidates the Bedrock cache (Claude Code docs).
+- Cursor supports Bedrock keys for chat models only: Tab never uses them, requests still go through Cursor's servers, and zero data retention does not apply. A Bedrock-native client can do better on all three.
+
+## What this fork has
+
+From reading the code on `main` at 7baf55ea6.
+
+| Area                        | IDE (gui + core)                                                                                                                                                                                                                                                          | CLI (`cn`)                                                                                                                                                                                                                                                                                                                          |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Queue                       | None. Enter returns early while streaming (`gui/src/components/mainInput/TipTapEditor/utils/editorConfig.ts`, `onEnter`). While a tool waits for approval, sending a message rejects the pending calls and starts a new turn (`gui/src/pages/gui/Chat.tsx`, `sendInput`). | FIFO queue (`extensions/cli/src/stream/messageQueue.ts`), drained one message after the whole agent loop ends. The display is cleared after the first item while the rest still send, and interrupt, edit and reset clear only the display (`ui/hooks/useChat.ts`). No edit or remove.                                              |
+| Steering between tool calls | None                                                                                                                                                                                                                                                                      | None                                                                                                                                                                                                                                                                                                                                |
+| Stop                        | Stop button and `Cmd/Ctrl+Backspace`. A core tool that is already running is not cancelled, and when it returns the loop continues (`gui/src/redux/thunks/callToolById.ts` → `streamResponseAfterToolCall.ts`).                                                           | `Esc` aborts; Enter on an empty prompt resumes. Remote interrupt sends an empty message that `serve.ts` rejects with 400.                                                                                                                                                                                                           |
+| Edit and re-run             | Earlier inputs are editable; resubmitting truncates history. Files are not restored.                                                                                                                                                                                      | Double `Esc` opens the edit selector.                                                                                                                                                                                                                                                                                               |
+| Checkpoints                 | File snapshots per turn and a "restore files" button (`ResponseActions.tsx`). Separate from editing a message.                                                                                                                                                            | None                                                                                                                                                                                                                                                                                                                                |
+| Plan mode                   | Read-only built-in tools, but all MCP tools stay available (`gui/src/redux/selectors/selectActiveTools.ts`). No plan file, no build step.                                                                                                                                 | Plan policies auto-allow Bash and all MCP tools (`extensions/cli/src/permissions/defaultPolicies.ts`); the plan-mode prompt asks the model not to write with Bash.                                                                                                                                                                  |
+| Task list                   | None                                                                                                                                                                                                                                                                      | `Checklist` tool: whole markdown list, two states, kept only in the transcript, lost or paraphrased on compaction.                                                                                                                                                                                                                  |
+| Subagents                   | None                                                                                                                                                                                                                                                                      | Beta (`--beta-subagent-tool`): `extensions/cli/src/subagent/`. Turns every "ask" into "allow"; swaps global services during a run, so parallel subagents race; no depth limit (the child keeps the `Subagent` tool); its abort controller is not linked to the parent's; `SubagentStart`/`SubagentStop` hook types are never fired. |
+
+Two plan documents are out of date: `feature-comparison.md` says there are no checkpoints and that hooks are not called, and the roadmap's Track D says the hooks are on a branch. Both have shipped.
+
+## Design decisions
+
+1. **Three verbs while the agent works**, as in both tools: queue (Enter), send now (steer at the next tool boundary), and stop. Queue is the default.
+2. **Queue items are editable.** Each queued message is a chip above the input with Edit (pull it back into the input), Delete and Send now. Cursor users ask for exactly this; Claude Code's take-back-into-the-input is the editing method, kept per item instead of all at once.
+3. **Queued messages are sent when the turn ends, merged into one message**, so several quick follow-ups make one turn and not several. A turn that stops to wait for tool approval is not "ended": the queue waits, so it cannot silently approve or reject.
+4. **Stop keeps the queue and does not send it.** The person stopped the agent; sending more straight away (Claude Code's behavior) surprises people who stopped to change their mind. The chips stay, with Send now. An error pauses the queue the same way; an automatic retry does not.
+5. **Queued messages are saved with the session as soon as they change**, not at the end of the turn, so a crash or a window reload mid-turn does not lose them. They are part of the session file (`queuedMessages`), and a session that is loaded, including the one reopened after a reload, brings its queue back paused: nothing is sent until the person chooses Send now or Edit. Each session has its own queue.
+6. **Steering at a tool boundary comes second.** The gui history expects user and assistant turns to alternate, and a user message after tool results needs either a merged tool-result-plus-note message or a new item kind, checked against every provider's message conversion. It is phase Q3.
+7. **Subagents: read-only by default, no nesting by default, prompts go to the person.** A subagent's permissions are the parent's minus whatever its definition removes; "ask" is never turned into "allow".
+
+## Phases
+
+| Phase | Scope                                                                                                                                                                                                                                                                              | Depends on |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| Q1    | IDE queue: Enter while the agent works queues; chips with Edit, Delete and Send now; sent merged when the turn ends; paused on Stop or error; saved with the session at once and restored paused after a reload. Stop also stops the tool loop when a running tool returns. Built. | none       |
+| Q2    | CLI queue fixes: display mirrors the queue, interrupt and reset clear the real queue, edit and remove, merge on send; remote interrupt accepted.                                                                                                                                   | none       |
+| Q3    | Steering: Send now delivers at the next tool boundary in both clients, after checking message conversion for every provider.                                                                                                                                                       | Q1, Q2     |
+| S1    | CLI subagent safety: "ask" stays "ask" (or the call is refused while a subagent cannot prompt), no `Subagent` tool in the child, abort linked to the parent, one subagent at a time until services are per run, hooks fired.                                                       | E1         |
+| S2    | Subagents in the IDE: read-only explorer and reviewer types, Markdown definitions compatible with `.claude/agents`, a card with status, model, tokens and Stop, concurrency 3 to 5, staggered start so same-prefix agents read one cache write.                                    | S1, F1     |
+| P     | Plan mode: plan file, Build action, task list seeded from the plan (Track F, F4). In the CLI, plan mode asks before Bash and MCP instead of allowing them.                                                                                                                         | F1         |
+
+Track F's F1 (the task list as session state) is the base for P and for carrying a plan into subagents.
+
+## Sources
+
+Claude Code: https://code.claude.com/docs/en/interactive-mode, https://code.claude.com/docs/en/checkpointing, https://code.claude.com/docs/en/permission-modes, https://code.claude.com/docs/en/tools-reference, https://code.claude.com/docs/en/agent-sdk/todo-tracking, https://code.claude.com/docs/en/sub-agents, https://code.claude.com/docs/en/agent-teams, https://code.claude.com/docs/en/vs-code, https://code.claude.com/docs/en/prompt-caching, https://code.claude.com/docs/en/amazon-bedrock, https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md
+
+Cursor: https://cursor.com/docs/agent/overview, https://cursor.com/docs/agent/planning, https://cursor.com/docs/agent/subagents, https://cursor.com/docs/agent/review, https://cursor.com/blog/plan-mode, https://cursor.com/changelog/1-2, https://cursor.com/changelog/1-4, https://cursor.com/changelog/2-0, https://cursor.com/changelog/2-2, https://cursor.com/changelog/3-0, https://cursor.com/docs/customizing/aws-bedrock, https://cursor.com/help/models-and-usage/api-keys. Forum (user reports and staff replies): https://forum.cursor.com/t/allow-messages-in-queue-to-be-edited/146776, https://forum.cursor.com/t/plan-mode-todo-list-does-not-update/137115, https://forum.cursor.com/t/taking-longer-than-expected-when-queueing-messages/171810
+
+Subagents and Bedrock: https://www.anthropic.com/engineering/multi-agent-research-system, https://www.anthropic.com/engineering/building-effective-agents, https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents, https://cognition.com/blog/dont-build-multi-agents, https://www.langchain.com/blog/how-and-when-to-build-multi-agent-systems, https://roocodeinc.github.io/Roo-Code/features/boomerang-tasks, https://opencode.ai/docs/agents/, https://geminicli.com/docs/core/subagents/, https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html, https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-token-burndown.html, https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html

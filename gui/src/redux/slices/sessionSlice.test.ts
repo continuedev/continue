@@ -196,6 +196,9 @@ describe("sessionSlice streamUpdate", () => {
     isSessionMetadataLoading: false,
     compactionLoading: {},
     checkpoints: [],
+    queuedMessages: [],
+    isQueuePaused: false,
+    isQueueSendRequested: false,
   });
 
   describe("Basic Chat Message", () => {
