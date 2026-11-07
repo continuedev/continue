@@ -520,14 +520,16 @@ function hypothenuse(a, b) {
  * `us.amazon.nova-micro-v1:0` or `mistral.devstral-2-123b`.
  */
 const BEDROCK_MODEL_ID =
-  /^(?:(?:us|eu|apac|global|jp|au|ca|us-gov)\.)?(amazon|mistral|meta|cohere|ai21|deepseek|openai|writer|google|minimax|moonshot|moonshotai|nvidia|zai|anthropic)\./;
+  /^(?:(?:us|eu|apac|global|jp|au|ca|us-gov)\.)?(amazon|mistral|meta|cohere|ai21|deepseek|openai|writer|google|minimax|moonshot|moonshotai|nvidia|zai|anthropic|qwen)\./;
 
 /**
  * Bedrock serves these models through chat only: FIM tokens in the prompt
  * reach the model inside a chat turn, and it answers with prose ("Here's the
  * implementation..."). The hole-filler prompt is written for chat models.
- * Qwen coder models are left out because they complete correctly from their
- * own FIM prompt even through chat.
+ * Qwen coder models answer their own FIM prompt with code, but wrapped in a
+ * Markdown fence, and "```" is an autocomplete stop token, so the editor
+ * showed nothing (measured in Bedrock.tab.live.vitest.ts). They get the
+ * hole-filler prompt too.
  */
 export function isBedrockChatOnlyModel(model: string): boolean {
   return BEDROCK_MODEL_ID.test(model.toLowerCase());

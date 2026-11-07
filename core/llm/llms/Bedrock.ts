@@ -80,10 +80,12 @@ class Bedrock extends BaseLLM {
   };
 
   /**
-   * Bedrock's first token takes roughly 0.5-1 s, so autocomplete's 150 ms
-   * default would cut every suggestion to one line and cancel it at 375 ms.
+   * Autocomplete's modelTimeout counts from the request. On Bedrock the first
+   * token takes 0.5-1.1 s warm (Bedrock.tab.live.vitest.ts), and a multi-line
+   * body ends by about 1.5 s, so the 150 ms default cut every suggestion to
+   * one line and 1000 ms still cut multi-line bodies short.
    */
-  providerAutocompleteDefaults = { modelTimeout: 1000 };
+  providerAutocompleteDefaults = { modelTimeout: 2000 };
 
   private _promptCachingMetrics: PromptCachingMetrics = {
     cacheReadInputTokens: 0,

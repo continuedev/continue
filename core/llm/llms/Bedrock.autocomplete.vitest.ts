@@ -111,7 +111,7 @@ describe("Bedrock autocomplete", () => {
 
   it("gives autocomplete a timeout that fits Bedrock's first-token latency", () => {
     const llm = new Bedrock({ apiKey: "k", model: "m", region: "us-east-1" });
-    expect(llm.providerAutocompleteDefaults?.modelTimeout).toBe(1000);
+    expect(llm.providerAutocompleteDefaults?.modelTimeout).toBe(2000);
   });
 
   it("recognizes the refusal message", () => {

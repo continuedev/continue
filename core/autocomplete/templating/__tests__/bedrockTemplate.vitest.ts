@@ -30,9 +30,10 @@ describe("autocomplete template for Bedrock model IDs", () => {
     expect(isHoleFiller(model)).toBe(true);
   });
 
-  it("keeps the Qwen FIM prompt for Bedrock's Qwen coder models", () => {
-    expect(isBedrockChatOnlyModel("qwen.qwen3-coder-30b-a3b-v1:0")).toBe(false);
-    expect(isHoleFiller("qwen.qwen3-coder-30b-a3b-v1:0")).toBe(false);
+  it("uses the hole-filler prompt for Bedrock's Qwen coder models", () => {
+    // Their FIM answer comes wrapped in a ``` fence, which is a stop token.
+    expect(isBedrockChatOnlyModel("qwen.qwen3-coder-30b-a3b-v1:0")).toBe(true);
+    expect(isHoleFiller("qwen.qwen3-coder-30b-a3b-v1:0")).toBe(true);
   });
 
   it.each([
