@@ -45,6 +45,8 @@ export interface CacheLoss {
   extraUsd?: number;
   /** The cache is a local server's: the loss is time, not money. */
   local?: boolean;
+  /** For a local server whose read speed is known: how long a re-read takes. */
+  seconds?: number;
 }
 
 /** Extra dollars to write `tokens` to the cache instead of reading them. */
@@ -100,7 +102,12 @@ export function warmCacheLoss(
     ) {
       return undefined;
     }
-    return { tokens: state.lastInputTokens, local: true };
+    const speed = state.promptTokensPerSecond;
+    return {
+      tokens: state.lastInputTokens,
+      local: true,
+      ...(speed && speed > 0 ? { seconds: state.lastInputTokens / speed } : {}),
+    };
   }
   if (!modelSupportsPromptCacheControl(model)) return undefined;
   const status = promptCacheStatus(model, setting, state, now);
@@ -274,6 +281,8 @@ export function keyChanges(
 export const MISS_MIN_PREFIX_TOKENS = 50_000;
 /** The miss notice appears after this many unseen misses in a session. */
 export const MISS_NOTICE_AFTER = 3;
+/** The same for a local server, where one miss can cost minutes of reading. */
+export const MISS_NOTICE_AFTER_LOCAL = 1;
 /**
  * A draft this big (typed, pasted or as code blocks) gets a notice before it
  * is sent: about 120 KB of text at 4 characters per token. It is sent again
@@ -305,12 +314,18 @@ export function detectCacheMiss(args: {
   totalInputTokens: number;
   /** The oldest messages were dropped to fit the window, which moves the start. */
   pruned?: boolean;
+  /**
+   * How long the cache is taken to last, when it is not a cache-control
+   * lifetime: a local server's (LOCAL_CACHE_WARM_MS).
+   */
+  lifetimeMs?: number;
 }): CacheMissReport | undefined {
   const { before, key, requestAt, readTokens, totalInputTokens } = args;
   const expected = before.lastInputTokens;
   if (!expected || expected < MISS_MIN_PREFIX_TOKENS) return undefined;
   if (before.lastRequestAt === undefined) return undefined;
-  const lifetime = PROMPT_CACHE_TTL_MS[before.lastTtl ?? "5m"];
+  const lifetime =
+    args.lifetimeMs ?? PROMPT_CACHE_TTL_MS[before.lastTtl ?? "5m"];
   if (requestAt - before.lastRequestAt > lifetime) return undefined;
   // A shorter prompt means history was cut or compacted: a new prefix by design.
   if (totalInputTokens < expected - 1000) return undefined;
@@ -350,12 +365,15 @@ export function expectedRebuildCauses(args: {
   requestAt: number;
   readTokens: number;
   totalInputTokens: number;
+  /** As in detectCacheMiss: a local server's assumed cache lifetime. */
+  lifetimeMs?: number;
 }): string[] | undefined {
   const { before, key, requestAt, readTokens, totalInputTokens } = args;
   const expected = before.lastInputTokens;
   if (!expected || expected < MISS_MIN_PREFIX_TOKENS) return undefined;
   if (before.lastRequestAt === undefined) return undefined;
-  const lifetime = PROMPT_CACHE_TTL_MS[before.lastTtl ?? "5m"];
+  const lifetime =
+    args.lifetimeMs ?? PROMPT_CACHE_TTL_MS[before.lastTtl ?? "5m"];
   if (requestAt - before.lastRequestAt > lifetime) return undefined;
   if (readTokens >= expected * MISS_READ_SHARE) return undefined;
 

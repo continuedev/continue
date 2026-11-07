@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CacheMissNotice } from "./CacheMissNotice";
+import { EMPTY_CONFIG, updateConfig } from "../../redux/slices/configSlice";
 import {
   act,
   screen,
@@ -95,5 +96,53 @@ describe("CacheMissNotice", () => {
       store.dispatch(withMisses(6));
     });
     expect(screen.getByTestId("cache-miss-notice")).toBeInTheDocument();
+  });
+});
+
+describe("CacheMissNotice on a local server", () => {
+  const strata = {
+    title: "Strata",
+    provider: "openai",
+    model: "qwen3.8-flash-next-nvfp4-nvfp4",
+    apiBase: "http://127.0.0.1:8083/v1/",
+    underlyingProviderName: "openai",
+  };
+
+  async function setupLocal(misses: number, causes: string[] = []) {
+    const { store } = await setup();
+    await act(async () => {
+      store.dispatch(
+        updateConfig({
+          ...EMPTY_CONFIG,
+          selectedModelByRole: {
+            ...EMPTY_CONFIG.selectedModelByRole,
+            chat: strata,
+          },
+          modelsByRole: { ...EMPTY_CONFIG.modelsByRole, chat: [strata] },
+        } as any),
+      );
+      store.dispatch(
+        setPromptCacheState({
+          escalated: false,
+          misses,
+          lastMiss: { ...miss, causes },
+        }),
+      );
+    });
+  }
+
+  it("appears after one miss, since each one costs minutes", async () => {
+    await setupLocal(1);
+    const text = screen.getByTestId("cache-miss-notice").textContent!;
+    expect(text).toContain("missed once");
+    // Nothing changed on this side: the usual local reasons
+    expect(text).toContain("unloaded the model");
+    expect(text).toContain("another conversation");
+  });
+
+  it("still names what changed when it knows", async () => {
+    await setupLocal(1, ["the system prompt changed"]);
+    const text = screen.getByTestId("cache-miss-notice").textContent!;
+    expect(text).toContain("Likely cause: the system prompt changed.");
   });
 });

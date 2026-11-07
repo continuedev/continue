@@ -115,3 +115,36 @@ describe("promptProgressOf", () => {
     expect(promptProgressOf({ prompt_progress: { total: 0 } })).toBeUndefined();
   });
 });
+
+describe("prompt read speed", () => {
+  it("carries the server's timings.prompt_per_second on the usage", async () => {
+    const llm = new OpenAI({
+      model: "qwen",
+      apiBase: "http://127.0.0.1:8083/v1/",
+      apiKey: "k",
+    });
+    (llm as any).openaiAdapter = {
+      chatCompletionStream: async function* () {
+        yield textChunk;
+        yield {
+          id: "c",
+          object: "chat.completion.chunk",
+          choices: [],
+          usage: {
+            prompt_tokens: 120_000,
+            completion_tokens: 10,
+            total_tokens: 120_010,
+            prompt_tokens_details: { cached_tokens: 100_000 },
+          },
+          timings: { prompt_per_second: 950.5, cache_n: 100_000 },
+        };
+      },
+    };
+    const out = await collect(llm);
+    const usage = out.find((m) => m.role === "assistant" && m.usage) as any;
+    expect(usage.usage).toMatchObject({
+      promptTokens: 120_000,
+      promptTokensPerSecond: 950.5,
+    });
+  });
+});

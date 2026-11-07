@@ -1098,6 +1098,15 @@ export abstract class BaseLLM implements ILLM {
         continue;
       }
       const chatChunk = fromChatCompletionChunk(chunk as any);
+      // llama.cpp and Strata time the prompt reading: the GUI uses it to say
+      // how long a re-read would take
+      const readSpeed = Number((chunk as any).timings?.prompt_per_second);
+      if (chatChunk?.role === "assistant" && chatChunk.usage && readSpeed > 0) {
+        chatChunk.usage = {
+          ...chatChunk.usage,
+          promptTokensPerSecond: readSpeed,
+        };
+      }
       if (chatChunk) {
         yield chatChunk;
       }

@@ -43,6 +43,11 @@ export interface PromptCacheSessionState {
   /** When the last request in this session started (ms since epoch). */
   lastRequestAt?: number;
   /**
+   * How fast a local server last read the uncached part of a prompt, in
+   * tokens per second, as it reported it. For estimates of a re-read.
+   */
+  promptTokensPerSecond?: number;
+  /**
    * Auto has moved this conversation to the 1-hour lifetime: it saw a gap that
    * a 1-hour entry would have covered, or the conversation reached
    * `AUTO_ESCALATE_AT_REQUEST` requests in an agent-style mode.

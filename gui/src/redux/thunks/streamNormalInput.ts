@@ -20,6 +20,7 @@ import {
   setPromptCacheInputTokens,
   setPromptCacheKey,
   setPromptCacheRequestAt,
+  setPromptReadSpeed,
   setPromptProgress,
   setPromptCacheState,
   recordCacheMiss,
@@ -34,6 +35,7 @@ import {
   modelSupportsOneHourCache,
   modelSupportsPromptCacheControl,
   modelUsesLocalPrefixCache,
+  LOCAL_CACHE_WARM_MS,
   promptCacheStatus,
 } from "../../util/promptCache";
 import { buildLedgerEntry } from "../../util/cacheLedger";
@@ -109,10 +111,13 @@ export const streamNormalInput = createAsyncThunk<
     const cacheStateBefore =
       state.session.promptCache ?? INITIAL_PROMPT_CACHE_STATE;
     const cacheSetting = selectCacheSetting(state);
+    // A local server caches every prompt on its own, with no setting
+    const localCache = modelUsesLocalPrefixCache(selectedChatModel);
     const cachingWasOn =
-      modelSupportsPromptCacheControl(selectedChatModel) &&
-      promptCacheStatus(selectedChatModel, cacheSetting, cacheStateBefore, 0)
-        .on;
+      localCache ||
+      (modelSupportsPromptCacheControl(selectedChatModel) &&
+        promptCacheStatus(selectedChatModel, cacheSetting, cacheStateBefore, 0)
+          .on);
     const cacheResolution = resolvePromptCache(
       selectedChatModel,
       cacheSetting,
@@ -229,7 +234,10 @@ export const streamNormalInput = createAsyncThunk<
                 const request = {
                   before: cacheStateBefore,
                   key: cacheKey,
-                  requestAt: cacheResolution.nextState.lastRequestAt ?? start,
+                  requestAt: localCache
+                    ? start
+                    : (cacheResolution.nextState.lastRequestAt ?? start),
+                  ...(localCache && { lifetimeMs: LOCAL_CACHE_WARM_MS }),
                   readTokens:
                     message.usage.promptTokensDetails?.cachedTokens ?? 0,
                   totalInputTokens: total,
@@ -271,8 +279,14 @@ export const streamNormalInput = createAsyncThunk<
               );
               dispatch(setPromptCacheInputTokens(total));
               dispatch(setPromptCacheKey(cacheKey));
-              if (modelUsesLocalPrefixCache(selectedChatModel)) {
+              if (localCache) {
                 dispatch(setPromptCacheRequestAt(start));
+                // Only a read of some size says much about the speed
+                const speed = message.usage.promptTokensPerSecond;
+                const read =
+                  total -
+                  (message.usage.promptTokensDetails?.cachedTokens ?? 0);
+                if (speed && read >= 1000) dispatch(setPromptReadSpeed(speed));
               }
             }
             dispatch(

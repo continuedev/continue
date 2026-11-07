@@ -2,6 +2,7 @@ import type { ModelDescription } from "core";
 import { describe, expect, it } from "vitest";
 import { formatRereadCost } from "./cacheNotices";
 import {
+  detectCacheMiss,
   isSignificantLoss,
   NOTICE_MIN_TOKENS_LOCAL,
   warmCacheLoss,
@@ -113,5 +114,44 @@ describe("formatRereadCost", () => {
     expect(formatRereadCost({ tokens: 366_000 })).toBe(
       "366k tokens at full price",
     );
+  });
+});
+
+describe("local re-read time", () => {
+  it("estimates the time from the server's last read speed", () => {
+    const loss = warmCacheLoss(
+      strata,
+      undefined,
+      state({ lastInputTokens: 120_000, promptTokensPerSecond: 1000 }),
+      t0 + 60_000,
+    );
+    expect(loss).toEqual({ tokens: 120_000, local: true, seconds: 120 });
+    expect(formatRereadCost(loss!)).toBe(
+      "120k tokens from scratch on the model server (about 2 min at its last speed)",
+    );
+  });
+});
+
+describe("detectCacheMiss on a local server", () => {
+  const key = {
+    model: "openai:qwen",
+    tools: [],
+    system: "s",
+    messages: [],
+  } as any;
+
+  it("uses the local lifetime instead of a cache-control one", () => {
+    const before = state({ lastInputTokens: 120_000, lastKey: key });
+    const request = {
+      before,
+      key,
+      requestAt: t0 + 10 * 60_000, // 10 minutes later: past 5m, within 15m
+      readTokens: 0,
+      totalInputTokens: 125_000,
+    };
+    expect(detectCacheMiss(request)).toBeUndefined();
+    expect(
+      detectCacheMiss({ ...request, lifetimeMs: LOCAL_CACHE_WARM_MS }),
+    ).toMatchObject({ readTokens: 0, expectedTokens: 120_000 });
   });
 });

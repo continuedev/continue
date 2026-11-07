@@ -25,6 +25,13 @@ export function formatTokens(tokens: number): string {
   return tokens >= 1000 ? `${Math.round(tokens / 1000)}k` : `${tokens}`;
 }
 
+/** "40 s", "3 min", "1.5 h". */
+export function formatReadTime(seconds: number): string {
+  if (seconds < 90) return `${Math.max(1, Math.round(seconds))} s`;
+  if (seconds < 90 * 60) return `${Math.round(seconds / 60)} min`;
+  return `${(seconds / 3600).toFixed(1)} h`;
+}
+
 /**
  * What re-reading a warm cache costs, ending a sentence that starts with a
  * verb such as "re-reads": "366k tokens at full price (about $1.10 more)",
@@ -34,9 +41,14 @@ export function formatRereadCost(loss: {
   tokens: number;
   extraUsd?: number;
   local?: boolean;
+  seconds?: number;
 }): string {
   if (loss.local) {
-    return `${formatTokens(loss.tokens)} tokens from scratch on the model server`;
+    const time =
+      loss.seconds !== undefined
+        ? ` (about ${formatReadTime(loss.seconds)} at its last speed)`
+        : "";
+    return `${formatTokens(loss.tokens)} tokens from scratch on the model server${time}`;
   }
   const cost =
     loss.extraUsd !== undefined

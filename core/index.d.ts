@@ -535,6 +535,11 @@ export interface Usage {
   completionTokens: number;
   promptTokens: number;
   /**
+   * How fast the server read the part of the prompt it did not have cached,
+   * in tokens per second (llama.cpp's and Strata's `timings.prompt_per_second`).
+   */
+  promptTokensPerSecond?: number;
+  /**
    * What the provider said about the response itself, apart from token counts.
    * Each field is set only when the provider sends it.
    */
