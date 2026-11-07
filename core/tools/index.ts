@@ -25,6 +25,7 @@ export const getConfigDependentToolDefinitions = async (
 
   tools.push(await toolDefinitions.requestRuleTool(params));
   tools.push(await toolDefinitions.readSkillTool(params));
+  tools.push(await toolDefinitions.subagentTool(params));
 
   tools.push(toolDefinitions.searchWebTool);
 

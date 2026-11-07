@@ -17,6 +17,7 @@ export enum BuiltInToolNames {
   FetchUrlContent = "fetch_url_content",
   CodebaseTool = "codebase",
   ReadSkill = "read_skill",
+  Subagent = "subagent",
   TaskList = "task_list",
   PresentPlan = "present_plan",
 
@@ -31,6 +32,9 @@ export const CLIENT_TOOLS_IMPLS = [
   BuiltInToolNames.EditExistingFile,
   BuiltInToolNames.SingleFindAndReplace,
   BuiltInToolNames.MultiEdit,
+  // Runs in the gui, which drives the child conversation (see
+  // gui/src/util/subagents/runSubagent.ts).
+  BuiltInToolNames.Subagent,
   // The task list lives in the session, which the gui holds
   BuiltInToolNames.TaskList,
   // Writes the plan file and seeds the task list, both through the gui

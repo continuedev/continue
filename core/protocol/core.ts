@@ -20,6 +20,7 @@ import type {
   SaveProviderInstanceResult,
 } from "../config/providers/types";
 import type { ModeModelsInput } from "../config/yaml/saveModeModels";
+import type { SubagentLoadResult } from "../subagents/loadSubagents";
 import type { RulesByModeInput } from "../config/yaml/saveRulesByMode";
 import type {
   AutoReviewReply,
@@ -518,6 +519,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
+  /** Subagent definitions, read fresh from the agent folders on each call. */
+  "subagents/list": [undefined, SubagentLoadResult];
   "tools/call": [
     { toolCall: ToolCall },
     {

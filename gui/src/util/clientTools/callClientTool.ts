@@ -5,6 +5,7 @@ import { IIdeMessenger } from "../../context/IdeMessenger";
 import { AppThunkDispatch, RootState } from "../../redux/store";
 import { editToolImpl } from "./editImpl";
 import { multiEditImpl } from "./multiEditImpl";
+import { runSubagentTool } from "../subagents/runSubagent";
 import { presentPlanImpl } from "./presentPlanImpl";
 import { singleFindAndReplaceImpl } from "./singleFindAndReplaceImpl";
 import { taskListImpl } from "./taskListImpl";
@@ -55,6 +56,9 @@ export async function callClientTool(
         break;
       case BuiltInToolNames.MultiEdit:
         output = await multiEditImpl(parsedArgs, toolCall.id, extras);
+        break;
+      case BuiltInToolNames.Subagent:
+        output = await runSubagentTool(parsedArgs, toolCall.id, extras);
         break;
       case BuiltInToolNames.TaskList:
         output = await taskListImpl(parsedArgs, toolCall.id, extras);

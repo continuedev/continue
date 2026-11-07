@@ -11,6 +11,10 @@ import { TextResourceContents } from "@modelcontextprotocol/sdk/types.js";
 import Parser from "web-tree-sitter";
 import { CodebaseIndexer } from "./indexing/CodebaseIndexer";
 import { LLMConfigurationStatuses } from "./llm/constants";
+import type {
+  SubagentRunStatus,
+  SubagentToolCallSummary,
+} from "./subagents/result";
 
 declare global {
   interface Window {
@@ -674,6 +678,42 @@ interface ToolCallState {
   output?: ContextItem[];
   tool?: Tool;
   mcpUiState?: McpUiState;
+  /** Progress and outcome of a subagent this call started (the subagent tool). */
+  subagent?: SubagentRunState;
+}
+
+/**
+ * A subagent run, kept on the parent's tool call so it is saved with the
+ * session. Holds what the card shows: never the subagent's tool output.
+ */
+export interface SubagentRunState {
+  agent: string;
+  /** Title of the model it runs on. */
+  model?: string;
+  /** Short label the parent gave the task. */
+  description?: string;
+  prompt: string;
+  status: SubagentRunStatus;
+  toolCalls: SubagentToolCallSummary[];
+  /** The final answer, or what it has written so far. */
+  text: string;
+  error?: string;
+  /** Notes for the person (a model fallback, a tool it could not have). */
+  notices?: string[];
+  /** A call of the subagent's waiting for the person's approval. */
+  pendingApproval?: {
+    id: string;
+    toolName: string;
+    summary: string;
+    note?: string;
+  };
+  startedAt?: number;
+  endedAt?: number;
+  usage?: {
+    inputTokens: number;
+    outputTokens: number;
+    cachedTokens?: number;
+  };
 }
 
 interface Reasoning {

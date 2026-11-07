@@ -30,7 +30,14 @@ export async function* llmStreamChat(
     messageOptions,
   } = msg.data;
 
-  const model = config.selectedModelByRole.chat;
+  // The selected chat model, unless the request names another configured
+  // chat model by title (a subagent whose definition picks its own model).
+  const selected = config.selectedModelByRole.chat;
+  const model =
+    msg.data.title && selected?.title !== msg.data.title
+      ? (config.modelsByRole.chat.find((m) => m.title === msg.data.title) ??
+        selected)
+      : selected;
 
   if (!model) {
     throw new Error("No chat model selected");

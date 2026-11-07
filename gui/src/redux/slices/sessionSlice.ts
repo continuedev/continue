@@ -23,6 +23,7 @@ import {
   RuleMetadata,
   Session,
   SessionUsage,
+  SubagentRunState,
   ThinkingChatMessage,
   Tool,
   ToolCallDelta,
@@ -33,6 +34,7 @@ import {
 } from "core";
 import { mergeReasoningDetails } from "core/llm/openaiTypeConverters";
 import { addRequestUsage } from "core/llm/utils/sessionUsage";
+import { interruptSubagentRuns } from "../../util/subagents/interrupt";
 import { addFileSnapshot } from "core/util/checkpoints";
 import { isTaskPlan } from "core/util/taskPlan";
 import { NEW_SESSION_TITLE } from "core/util/constants";
@@ -837,6 +839,9 @@ export const sessionSlice = createSlice({
 
       if (payload) {
         state.history = payload.history as any;
+        // A subagent cannot outlive the window that ran it: one saved while
+        // running is shown as interrupted, not spinning forever.
+        interruptSubagentRuns(state.history);
         // A session saved mid-turn (the queue saves it at once) can hold a
         // tool call that was running or still being generated. Nothing
         // finishes it after a reload or crash, and a tool that looks running
@@ -1113,6 +1118,28 @@ export const sessionSlice = createSlice({
         toolCallState.status = "done";
       }
     },
+    /** Merge progress into the subagent run a tool call started. */
+    updateSubagentRun: (
+      state,
+      action: PayloadAction<{
+        toolCallId: string;
+        run: Partial<SubagentRunState>;
+      }>,
+    ) => {
+      const toolCallState = findToolCallById(
+        state.history,
+        action.payload.toolCallId,
+      );
+      if (!toolCallState) return;
+      const previous = toolCallState.subagent ?? {
+        agent: "",
+        prompt: "",
+        status: "queued" as const,
+        toolCalls: [],
+        text: "",
+      };
+      toolCallState.subagent = { ...previous, ...action.payload.run };
+    },
     setToolCallCalling: (
       state,
       action: PayloadAction<{
@@ -1339,6 +1366,7 @@ export const {
   updateApplyState,
   abortStream,
   setToolCallCalling,
+  updateSubagentRun,
   setToolCallPolicyNote,
   setToolCallDecision,
   cancelToolCall,

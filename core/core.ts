@@ -133,6 +133,7 @@ import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { OnboardingModes } from "./protocol/core";
 import type { IMessenger, Message } from "./protocol/messenger";
 import { ContinueError, ContinueErrorReason } from "./util/errors";
+import { loadSubagentDefinitions } from "./subagents/loadSubagents";
 import { shareSession } from "./util/historyUtils";
 import { Logger } from "./util/Logger.js";
 
@@ -317,10 +318,18 @@ export class Core {
       );
 
       this.registerMessageHandlers(ideSettingsPromise);
+      this.registerSubagentHandlers();
     } catch (error) {
       Logger.error(error);
       throw error; // Re-throw to prevent partially initialized core
     }
+  }
+
+  /** Subagent definitions, read fresh for each run (see core/subagents). */
+  private registerSubagentHandlers() {
+    this.messenger.on("subagents/list", async () =>
+      loadSubagentDefinitions(this.ide),
+    );
   }
 
   /** Config files, provider accounts and plaintext key handling. */

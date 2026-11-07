@@ -21,3 +21,4 @@ export { taskListTool } from "./taskList";
 export { viewDiffTool } from "./viewDiff";
 export { viewRepoMapTool } from "./viewRepoMap";
 export { viewSubdirectoryTool } from "./viewSubdirectory";
+export { subagentTool } from "./subagent";

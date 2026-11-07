@@ -9,6 +9,7 @@ import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
 import { McpAppRenderer } from "./MCPAppRenderer";
 import { PlanCard } from "./PlanCard";
 import { SimpleToolCallUI } from "./SimpleToolCallUI";
+import { SubagentCard } from "./SubagentCard";
 import { ToolCallDisplay } from "./ToolCallDisplay";
 import { getIconByName, getStatusIcon } from "./utils";
 
@@ -43,6 +44,9 @@ export function ToolCallDiv({
       (tool) => toolCallState.toolCall.function?.name === tool.function.name,
     );
     const functionName = toolCallState.toolCall.function?.name;
+    if (functionName === BuiltInToolNames.Subagent) {
+      return <SubagentCard toolCallState={toolCallState} />;
+    }
     const icon =
       functionName && tool?.toolCallIcon
         ? getIconByName(tool.toolCallIcon)

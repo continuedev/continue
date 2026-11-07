@@ -104,6 +104,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "addAutocompleteModel",
     "didChangeSelectedProfile",
     "tools/call",
+    "subagents/list",
     "tools/evaluatePolicy",
     "tools/autoReview",
     "tools/preprocessArgs",
