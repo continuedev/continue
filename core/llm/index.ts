@@ -43,6 +43,7 @@ import {
 } from "../util/unresolvedSecrets.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 import { retryStreamOnDroppedConnection } from "./utils/streamRetry.js";
+import { promptProgressOf, streamsPromptProgress } from "./localServers.js";
 
 import {
   autodetectPromptTemplates,
@@ -1091,6 +1092,11 @@ export abstract class BaseLLM implements ILLM {
       if (!this.lastRequestId && typeof (chunk as any).id === "string") {
         this.lastRequestId = (chunk as any).id;
       }
+      const promptProgress = promptProgressOf(chunk);
+      if (promptProgress) {
+        yield { role: "assistant", content: "", promptProgress };
+        continue;
+      }
       const chatChunk = fromChatCompletionChunk(chunk as any);
       if (chatChunk) {
         yield chatChunk;
@@ -1243,6 +1249,14 @@ export abstract class BaseLLM implements ILLM {
             includeReasoningContentField: this.supportsReasoningContentField,
           });
           body = this.modifyChatBody(body, completionOptions);
+          // llama.cpp and Strata report how far they are in a long prompt
+          if (
+            completionOptions.stream !== false &&
+            (await streamsPromptProgress(this.apiBase, this.apiKey))
+          ) {
+            // Not an OpenAI field, so not in the SDK's type
+            body = { ...body, return_progress: true } as unknown as typeof body;
+          }
 
           if (logEnabled) {
             interaction?.logItem({

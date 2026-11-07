@@ -568,11 +568,28 @@ export interface Usage {
   };
 }
 
+/**
+ * How far a server is in reading the prompt (llama.cpp's `prompt_progress`,
+ * also sent by Strata): `processed` of `total` tokens, of which `cache` came
+ * from its cache, after `timeMs` of reading.
+ */
+export interface PromptProgress {
+  total: number;
+  cache: number;
+  processed: number;
+  timeMs: number;
+}
+
 export interface AssistantChatMessage {
   role: "assistant";
   content: MessageContent;
   toolCalls?: ToolCallDelta[];
   usage?: Usage;
+  /**
+   * Set only on the progress updates a local server sends while it reads a
+   * long prompt; such a message has no content and is not part of the reply.
+   */
+  promptProgress?: PromptProgress;
   /** Arbitrary per-message metadata (IDs, provider-specific info, etc.) */
   metadata?: Record<string, unknown>;
 }

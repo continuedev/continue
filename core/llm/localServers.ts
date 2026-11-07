@@ -89,6 +89,11 @@ export interface ServerCapabilities {
    * model's or the server's whole window, is what one conversation gets.
    */
   contextLength?: number;
+  /**
+   * `/props` answered as llama.cpp's does, so the server takes llama.cpp's
+   * request fields, such as `return_progress`.
+   */
+  llamaCppStyle?: boolean;
 }
 
 /**
@@ -122,10 +127,78 @@ export async function serverCapabilities(
     }
     const slotContext = Number(props?.default_generation_settings?.n_ctx);
     if (slotContext > 0) result.contextLength = slotContext;
+    if (props?.default_generation_settings || props?.total_slots) {
+      result.llamaCppStyle = true;
+    }
     return result;
   } catch {
     return {};
   }
+}
+
+/** Addresses on this machine or the local network. */
+export function isLocalApiBase(apiBase: string): boolean {
+  let host: string;
+  try {
+    host = new URL(apiBase).hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  } catch {
+    return false;
+  }
+  return (
+    host === "localhost" ||
+    host.endsWith(".localhost") ||
+    host.endsWith(".local") ||
+    host === "host.docker.internal" ||
+    host === "::1" ||
+    /^127\./.test(host) ||
+    /^10\./.test(host) ||
+    /^192\.168\./.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+  );
+}
+
+const progressSupport = new Map<string, Promise<boolean>>();
+
+/**
+ * Whether the server at this address streams llama.cpp's `prompt_progress`
+ * when a request asks with `return_progress: true` (llama.cpp, Strata).
+ * Asked once per address with `/props`, and only for local addresses, so a
+ * cloud API is never sent a field it does not know.
+ */
+export function streamsPromptProgress(
+  apiBase: string | undefined,
+  apiKey?: string,
+  fetchFn: FetchFn = fetch,
+): Promise<boolean> {
+  if (!apiBase || !isLocalApiBase(apiBase)) return Promise.resolve(false);
+  let known = progressSupport.get(apiBase);
+  if (!known) {
+    known = serverCapabilities(apiBase, apiKey, fetchFn).then(
+      (caps) => !!caps.llamaCppStyle,
+    );
+    progressSupport.set(apiBase, known);
+  }
+  return known;
+}
+
+/** Forget what was learned about servers (tests). */
+export function resetPromptProgressSupport(): void {
+  progressSupport.clear();
+}
+
+/** llama.cpp's `prompt_progress`, as a streamed chunk carries it. */
+export function promptProgressOf(
+  chunk: any,
+): import("../index.js").PromptProgress | undefined {
+  const p = chunk?.prompt_progress;
+  const total = Number(p?.total);
+  if (!p || !(total > 0)) return undefined;
+  return {
+    total,
+    cache: Number(p.cache) || 0,
+    processed: Number(p.processed) || 0,
+    timeMs: Number(p.time_ms) || 0,
+  };
 }
 
 function withSlash(apiBase: string): string {

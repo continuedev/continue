@@ -59,6 +59,7 @@ import {
   promptCacheStatus,
   resolvePromptCache,
 } from "../promptCache";
+import { splitPromptProgress } from "../promptProgress";
 import { subagentResultItem } from "./interrupt";
 import {
   registerSubagentRun,
@@ -421,7 +422,9 @@ export async function runSubagentTool(
         while (!next.done) {
           gate?.opened();
           if (signal.aborted) break;
-          reduce(streamUpdate(next.value));
+          // A server's prompt-reading updates are not part of the reply
+          const { reply } = splitPromptProgress(next.value);
+          if (reply.length > 0) reduce(streamUpdate(reply));
           for (const message of next.value) {
             if (message.role === "assistant" && message.usage) {
               update({ usage: addUsage(run.usage, message.usage) });

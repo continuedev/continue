@@ -20,6 +20,7 @@ import {
   McpUiState,
   MessageModes,
   PromptLog,
+  PromptProgress,
   RuleMetadata,
   Session,
   SessionUsage,
@@ -239,6 +240,11 @@ type SessionState = {
   hasReasoningEnabled?: boolean;
   /** What Auto learned about this session's pauses; see util/promptCache.ts. */
   promptCache?: PromptCacheSessionState;
+  /**
+   * How far a local server is in reading the current request's prompt, while
+   * it says so (llama.cpp's prompt_progress). Not saved.
+   */
+  promptProgress?: PromptProgress;
   isPruned?: boolean;
   contextPercentage?: number;
   /** Tokens and estimated cost of this session's requests, saved with it. */
@@ -626,6 +632,8 @@ export const sessionSlice = createSlice({
       }
 
       state.isStreaming = false;
+      // Stopped or failed while the prompt was still being read
+      state.promptProgress = undefined;
     },
     abortStream: (state) => {
       state.streamAborter.abort();
@@ -1199,6 +1207,12 @@ export const sessionSlice = createSlice({
     ) => {
       state.promptCache = action.payload;
     },
+    setPromptProgress: (
+      state,
+      action: PayloadAction<PromptProgress | undefined>,
+    ) => {
+      state.promptProgress = action.payload;
+    },
     setPromptCacheInputTokens: (state, action: PayloadAction<number>) => {
       state.promptCache = {
         ...(state.promptCache ?? INITIAL_PROMPT_CACHE_STATE),
@@ -1401,6 +1415,7 @@ export const {
   setPromptCacheState,
   setPromptCacheInputTokens,
   setPromptCacheRequestAt,
+  setPromptProgress,
   addRequestUsageToSession,
   setPromptCacheKey,
   recordCacheMiss,

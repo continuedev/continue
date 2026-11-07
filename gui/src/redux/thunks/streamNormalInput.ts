@@ -20,6 +20,7 @@ import {
   setPromptCacheInputTokens,
   setPromptCacheKey,
   setPromptCacheRequestAt,
+  setPromptProgress,
   setPromptCacheState,
   recordCacheMiss,
   recordCacheRequest,
@@ -36,6 +37,7 @@ import {
   promptCacheStatus,
 } from "../../util/promptCache";
 import { buildLedgerEntry } from "../../util/cacheLedger";
+import { splitPromptProgress } from "../../util/promptProgress";
 import {
   detectCacheMiss,
   expectedRebuildCauses,
@@ -201,7 +203,15 @@ export const streamNormalInput = createAsyncThunk<
           break;
         }
 
-        dispatch(streamUpdate(next.value));
+        // A local server's prompt-reading updates go to the toolbar, not the
+        // conversation; the first part of the reply clears them
+        const { progress, reply } = splitPromptProgress(next.value);
+        if (progress) {
+          dispatch(setPromptProgress(progress));
+        } else if (getState().session.promptProgress) {
+          dispatch(setPromptProgress(undefined));
+        }
+        if (reply.length > 0) dispatch(streamUpdate(reply));
 
         // The final chunk carries the API's token counts. Remember the input
         // size so the cache button can say what throwing the cache away costs,
@@ -275,6 +285,9 @@ export const streamNormalInput = createAsyncThunk<
           }
         }
         next = await gen.next();
+      }
+      if (getState().session.promptProgress) {
+        dispatch(setPromptProgress(undefined));
       }
 
       // Attach prompt log and end thinking for reasoning models
