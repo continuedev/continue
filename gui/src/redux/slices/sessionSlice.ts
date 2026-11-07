@@ -1131,6 +1131,9 @@ export const sessionSlice = createSlice({
         action.payload.toolCallId,
       );
       if (!toolCallState) return;
+      // Loading the session ended the run (see interruptSubagentRuns): a run
+      // still winding down in this window must not overwrite that result.
+      if (toolCallState.subagent?.status === "interrupted") return;
       const previous = toolCallState.subagent ?? {
         agent: "",
         prompt: "",

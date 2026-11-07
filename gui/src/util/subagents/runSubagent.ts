@@ -22,6 +22,7 @@ import {
 } from "core/subagents/result";
 import { resolveSubagentTools } from "core/subagents/tools";
 import { applyToolOverrides } from "core/tools/applyToolOverrides";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { flagToolOutput } from "core/tools/permissions/injection";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { interceptSystemToolCalls } from "core/tools/systemMessageTools/interceptSystemToolCalls";
@@ -46,6 +47,7 @@ import {
   updateToolCallOutput,
 } from "../../redux/slices/sessionSlice";
 import { evaluateToolPolicy } from "../../redux/thunks/evaluateToolPolicies";
+import { findToolCallById } from "../../redux/util";
 import { constructMessages } from "../../redux/util/constructMessages";
 import type {
   ClientToolExtras,
@@ -76,6 +78,30 @@ function reasonOf(signal: AbortSignal): string {
     return reason.message;
   if (typeof reason === "string" && reason) return reason;
   return CANCELLED_BY_PARENT;
+}
+
+const ABORTED = Symbol("aborted");
+
+/** The promise's value, or ABORTED as soon as the signal aborts. */
+function unlessAborted<T>(
+  promise: Promise<T>,
+  signal: AbortSignal,
+): Promise<T | typeof ABORTED> {
+  if (signal.aborted) return Promise.resolve(ABORTED);
+  return new Promise((resolve, reject) => {
+    const onAbort = () => resolve(ABORTED);
+    signal.addEventListener("abort", onAbort, { once: true });
+    promise.then(
+      (value) => {
+        signal.removeEventListener("abort", onAbort);
+        resolve(value);
+      },
+      (error) => {
+        signal.removeEventListener("abort", onAbort);
+        reject(error);
+      },
+    );
+  });
 }
 
 /** What two runs must share for one to read the other's cache entry. */
@@ -363,6 +389,11 @@ export async function runSubagentTool(
             )
           : undefined;
       try {
+        // Stopped while waiting for the gate: send nothing
+        if (signal.aborted) {
+          finish("cancelled", reasonOf(signal));
+          break;
+        }
         let gen = ideMessenger.llmStreamChat(
           { completionOptions, title: model.title, messages },
           signal,
@@ -432,6 +463,13 @@ export async function runSubagentTool(
     release?.();
     unregister();
     parentSignal.removeEventListener("abort", onParentAbort);
+  }
+
+  // The session was reloaded in this window while the run wound down: it was
+  // marked interrupted with what it had, and that result stands.
+  const loaded = findToolCallById(getState().session.history, toolCallId);
+  if (loaded?.subagent?.status === "interrupted") {
+    return { output: loaded.output, respondImmediately: false };
   }
 
   const output = [subagentResultItem(run)];
@@ -531,9 +569,25 @@ export async function runSubagentTool(
         }
       }
 
-      const result = await ideMessenger.request("tools/call", {
-        toolCall: current.toolCall,
-      });
+      // Stop does not wait for the call: core cannot cancel a tool call, so
+      // its result is dropped, and a terminal command is killed as the
+      // parent's own Stop does.
+      const result = await unlessAborted(
+        ideMessenger.request("tools/call", { toolCall: current.toolCall }),
+        signal,
+      );
+      if (result === ABORTED) {
+        if (name === BuiltInToolNames.RunTerminalCommand) {
+          void ideMessenger
+            .request("process/killTerminalProcess", {
+              toolCallId: call.toolCallId,
+            })
+            .catch(() => {});
+        }
+        reduce(cancelToolCall({ toolCallId: call.toolCallId }));
+        setCallStatus("canceled");
+        return;
+      }
       if (result.status === "error") {
         fail(result.error);
         return;
