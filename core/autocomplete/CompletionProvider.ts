@@ -135,6 +135,7 @@ export class CompletionProvider {
     const { config } = await this.configHandler.loadConfig();
     const options = {
       ...DEFAULT_AUTOCOMPLETE_OPTS,
+      ...llm.providerAutocompleteDefaults,
       ...config?.tabAutocompleteOptions,
       ...llm.autocompleteOptions,
     };

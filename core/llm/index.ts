@@ -110,6 +110,8 @@ export abstract class BaseLLM implements ILLM {
 
   autocompleteOptions?: Partial<TabAutocompleteOptions>;
 
+  providerAutocompleteDefaults?: Partial<TabAutocompleteOptions>;
+
   supportsFim(): boolean {
     return false;
   }

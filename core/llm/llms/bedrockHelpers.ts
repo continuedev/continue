@@ -368,3 +368,13 @@ export function globalProfileStatus(
     ? "present"
     : "absent";
 }
+
+/**
+ * Whether Bedrock refused a request because the model doesn't accept
+ * `stopSequences`. Qwen, the newer Mistral models and gpt-oss on Bedrock all
+ * answer "This model doesn't support the stopSequences field".
+ */
+export function isStopSequencesUnsupportedError(e: unknown): boolean {
+  const message = e instanceof Error ? e.message : String(e ?? "");
+  return /doesn't support the stopSequences field/i.test(message);
+}

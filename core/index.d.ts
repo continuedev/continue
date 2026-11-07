@@ -109,6 +109,13 @@ export interface ILLM
 
   autocompleteOptions?: Partial<TabAutocompleteOptions>;
 
+  /**
+   * Autocomplete defaults that suit this provider, applied below the user's
+   * `tabAutocompleteOptions` and the model's own `autocompleteOptions`, so
+   * either can still override them.
+   */
+  providerAutocompleteDefaults?: Partial<TabAutocompleteOptions>;
+
   lastRequestId?: string;
 
   complete(
