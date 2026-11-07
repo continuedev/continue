@@ -48,6 +48,7 @@ import {
   buildModelCatalog,
   getBedrockErrorHint,
   isStopSequencesUnsupportedError,
+  normalizeToolUseIds,
 } from "./bedrockHelpers.js";
 
 /**
@@ -614,10 +615,13 @@ class Bedrock extends BaseLLM {
       });
     }
 
-    const convertedMessages = this._convertMessages(messages, availableTools, {
-      conversation: parts.conversation,
-      ttl: cacheTtl,
-    });
+    const convertedMessages = normalizeToolUseIds(
+      this._convertMessages(messages, availableTools, {
+        conversation: parts.conversation,
+        ttl: cacheTtl,
+      }),
+      options.model,
+    );
 
     return {
       modelId: applyCrossRegionInference(

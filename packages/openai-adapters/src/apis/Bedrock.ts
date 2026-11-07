@@ -35,6 +35,7 @@ import {
   bedrockCacheTtl,
   bedrockUsageToCompletionUsage,
   getBedrockErrorHint,
+  normalizeToolUseIds,
   resolveBedrockCacheParts,
 } from "./bedrockHelpers.js";
 import {
@@ -553,10 +554,12 @@ export class BedrockApi implements BaseLlmApi {
     }
 
     // Convert messages
-    const convertedMessages = this._convertMessages(
-      oaiBody.messages,
-      availableTools,
-      { conversation: parts.conversation, ttl: cacheTtl },
+    const convertedMessages = normalizeToolUseIds(
+      this._convertMessages(oaiBody.messages, availableTools, {
+        conversation: parts.conversation,
+        ttl: cacheTtl,
+      }),
+      oaiBody.model,
     );
 
     // Build final request body

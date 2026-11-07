@@ -378,3 +378,64 @@ export function isStopSequencesUnsupportedError(e: unknown): boolean {
   const message = e instanceof Error ? e.message : String(e ?? "");
   return /doesn't support the stopSequences field/i.test(message);
 }
+
+const MISTRAL_TOOL_ID = /^[A-Za-z0-9]{9}$/;
+
+/**
+ * Mistral models on Bedrock accept only tool call IDs of exactly nine letters
+ * or digits ("Tool call id was ... but must be a-z, A-Z, 0-9, with a length of
+ * 9"). Their own IDs already look like that, but a conversation can hold IDs
+ * from another model (Claude and Nova use `tooluse_...`) after a model switch.
+ */
+export function bedrockNeedsNineCharToolIds(modelId: string): boolean {
+  return /(^|\.)mistral\./i.test(modelId);
+}
+
+/** A stable nine-character letters-and-digits ID for `id`. */
+export function nineCharToolId(id: string): string {
+  if (MISTRAL_TOOL_ID.test(id)) return id;
+  const alphabet =
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  // Two FNV-1a passes give ~64 bits, enough for nine base-62 digits.
+  let h1 = 0x811c9dc5;
+  let h2 = 0x01000193;
+  for (let i = 0; i < id.length; i++) {
+    const c = id.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0;
+    h2 = Math.imul(h2 ^ c, 0x811c9dc5) >>> 0;
+  }
+  let n = BigInt(h1) * 0x100000000n + BigInt(h2);
+  let out = "";
+  for (let i = 0; i < 9; i++) {
+    out += alphabet[Number(n % 62n)];
+    n /= 62n;
+  }
+  return out;
+}
+
+/**
+ * Rewrites toolUse and toolResult IDs in converted Converse messages for
+ * models that need nine-character IDs. The same input ID always maps to the
+ * same output, so each toolResult still matches its toolUse.
+ */
+export function normalizeToolUseIds<
+  M extends {
+    content?: Array<{
+      toolUse?: { toolUseId?: string };
+      toolResult?: { toolUseId?: string };
+    }>;
+  },
+>(messages: M[], modelId: string): M[] {
+  if (!bedrockNeedsNineCharToolIds(modelId)) return messages;
+  for (const message of messages) {
+    for (const block of message.content ?? []) {
+      if (block.toolUse?.toolUseId) {
+        block.toolUse.toolUseId = nineCharToolId(block.toolUse.toolUseId);
+      }
+      if (block.toolResult?.toolUseId) {
+        block.toolResult.toolUseId = nineCharToolId(block.toolResult.toolUseId);
+      }
+    }
+  }
+  return messages;
+}
