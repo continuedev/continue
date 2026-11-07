@@ -62,6 +62,13 @@ async function buildWithEsbuild() {
     ],
     format: "cjs",
     platform: "node",
+    // The crawler fetches HTML itself. Keep Cheerio's unused HTTP client,
+    // which requires newer Node globals, out of the packaged Node 18 runtime.
+    alias: {
+      cheerio: require.resolve("cheerio/slim", {
+        paths: [path.join(__dirname, "..", "core")],
+      }),
+    },
     sourcemap: true,
     minify: !esbuildOnly,
     treeShaking: true,
