@@ -32,6 +32,10 @@ To debug the binary with IntelliJ, set `useTcp` to `true` in `CoreMessenger.kt`,
 
 ## Building
 
+Use the Node.js version in the repository `.nvmrc` (Node 22 or newer). The binary
+uses the maintained `@yao-pkg/pkg` packager and embeds Node 22 so runtime globals
+match the current Core dependencies.
+
 ```bash
 npm run build
 ```

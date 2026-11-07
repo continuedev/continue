@@ -1,6 +1,6 @@
 ---
 title: "Example MCP Servers"
-keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify, atlassian, github, sanity, snyk, dlt, chrome-devtools]
+keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify, atlassian, github, sanity, snyk, dlt, chrome-devtools, suno, seedance, happyhorse, gpt-image, nano-banana]
 ---
 
 Ready-to-use MCP server configurations for popular tools and services. Copy these into your `config.yaml` to get started.
@@ -182,6 +182,116 @@ mcpServers:
 ```
 
 See also: [Chrome DevTools MCP guide](/guides/chrome-devtools-mcp-performance)
+
+## Suno by Ace Data Cloud
+
+Suno music tools through your own Ace Data Cloud account. Provided by Ace Data Cloud, not an official Suno integration.
+
+```yaml
+mcpServers:
+  - name: Suno by Ace Data Cloud
+    type: streamable-http
+    url: https://suno.mcp.acedata.cloud/mcp
+    requestOptions:
+      headers:
+        Authorization: Bearer ${{ secrets.ACEDATACLOUD_API_TOKEN }}
+```
+
+Inspect the MCP tools first. `suno_generate_music` can submit a billable operation; save its task ID and query `suno_get_task` with that same ID until a terminal result. Do not rerun generation to check progress.
+
+Source and full API contract: [SunoMCP](https://github.com/AceDataCloud/SunoMCP).
+
+## Seedance by Ace Data Cloud
+
+Seedance video tools through your own Ace Data Cloud account. Provided by Ace Data Cloud, not an official Seedance integration.
+
+```yaml
+mcpServers:
+  - name: Seedance by Ace Data Cloud
+    type: streamable-http
+    url: https://seedance.mcp.acedata.cloud/mcp
+    requestOptions:
+      headers:
+        Authorization: Bearer ${{ secrets.ACEDATACLOUD_API_TOKEN }}
+```
+
+Inspect the MCP tools first. `seedance_generate_video` can submit a billable operation; save its task ID and query `seedance_get_task` with that same ID until a terminal result. Do not rerun generation to check progress.
+
+Source and full API contract: [SeedanceMCP](https://github.com/AceDataCloud/SeedanceMCP).
+
+## HappyHorse by Ace Data Cloud
+
+HappyHorse video tools through your own Ace Data Cloud account. Provided by Ace Data Cloud, not an official HappyHorse integration.
+
+```yaml
+mcpServers:
+  - name: HappyHorse by Ace Data Cloud
+    type: streamable-http
+    url: https://happyhorse.mcp.acedata.cloud/mcp
+    requestOptions:
+      headers:
+        Authorization: Bearer ${{ secrets.ACEDATACLOUD_API_TOKEN }}
+```
+
+Inspect the MCP tools first. `happyhorse_generate_video` can submit a billable operation; save its task ID and query `happyhorse_get_task` with that same ID until a terminal result. Do not rerun generation to check progress.
+
+Source and full API contract: [HappyHorseMCP](https://github.com/AceDataCloud/HappyHorseMCP).
+
+## GPT Image by Ace Data Cloud
+
+GPT Image image tools through your own Ace Data Cloud account. Provided by Ace Data Cloud, not an official GPT Image integration.
+
+```yaml
+mcpServers:
+  - name: GPT Image by Ace Data Cloud
+    type: streamable-http
+    url: https://openai.mcp.acedata.cloud/mcp
+    requestOptions:
+      headers:
+        Authorization: Bearer ${{ secrets.ACEDATACLOUD_API_TOKEN }}
+```
+
+Inspect the MCP tools first. `openai_generate_image` can submit a billable operation; save its task ID and query `openai_get_task` with that same ID until a terminal result. Do not rerun generation to check progress.
+
+Source and full API contract: [OpenAIMCP](https://github.com/AceDataCloud/OpenAIMCP).
+
+This connects the existing OpenAI MCP, which also exposes chat, audio and embedding tools. The name does not filter tools or permissions; use allowed-API restrictions on your token if needed.
+
+## Nano Banana by Ace Data Cloud
+
+Nano Banana image tools through your own Ace Data Cloud account. Provided by Ace Data Cloud, not an official Nano Banana integration.
+
+```yaml
+mcpServers:
+  - name: Nano Banana by Ace Data Cloud
+    type: streamable-http
+    url: https://nanobanana.mcp.acedata.cloud/mcp
+    requestOptions:
+      headers:
+        Authorization: Bearer ${{ secrets.ACEDATACLOUD_API_TOKEN }}
+```
+
+Inspect the MCP tools first. `nanobanana_generate_image` can submit a billable operation; save its task ID and query `nanobanana_get_task` with that same ID until a terminal result. Do not rerun generation to check progress.
+
+Source and full API contract: [NanoBananaMCP](https://github.com/AceDataCloud/NanoBananaMCP).
+
+## Set up the Ace media examples
+
+The five entries above are independent service configurations; add only the service you intend to use. They are examples for local MCP configuration, not Continue Hub search/install listings.
+
+1. [Register or sign in → Ace Data Cloud Applications](https://platform.acedata.cloud/console/applications?utm_source=continue&utm_medium=integration&utm_campaign=ecosystem-growth&utm_content=media_examples_api_key).
+2. Open **General application** or choose **Initialize General Application**. Copy the API Key, or use **Manage Keys → Create** for a separate token named for Continue and the service.
+3. Review service access, expiration, allowed generation **and task-query** APIs, usage limits and [current pricing/balance](https://platform.acedata.cloud/models?utm_source=continue&utm_medium=integration&utm_campaign=ecosystem-growth&utm_content=media_examples_pricing). No free generation allowance is implied.
+4. Save the raw token as `ACEDATACLOUD_API_TOKEN` in your private `~/.continue/.env`. Do not use a `platform-...` management token or commit the secret. Keep the YAML placeholder unchanged.
+5. Reload Continue and inspect the service's tool list in Agent mode with a tool-capable model. A loaded list confirms connection, not a completed generation or a correct bill.
+
+![Copy an API key or open Manage Keys](https://raw.githubusercontent.com/AceDataCloud/SunoDify/8d3d03570e73324220f111f7fe343da0792a8071/_assets/tutorial/get-api-key-en.png)
+
+![Create a dedicated token](https://raw.githubusercontent.com/AceDataCloud/SunoDify/8d3d03570e73324220f111f7fe343da0792a8071/_assets/tutorial/create-api-key-en.png)
+
+These redacted Ace account screenshots are reused from its published Suno for Dify guide; they show shared account Key controls, not a Continue run. Use the existing [Continue local configuration entry](/customize/deep-dives/configuration) and keep real credentials out of captures. Each service supports its own current models, task states, result fields and price; inspect its tool schema and linked source rather than assuming identical payloads.
+
+401 errors require checking the token and access; 403 can be permissions or moderation. Pending/preview responses are not final media. Only a terminal successful result with final media and a matching usage record establishes end-to-end acceptance.
 
 ## Other guides
 
