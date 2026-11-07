@@ -8,9 +8,13 @@ import {
   getAgentNames as getSubagentNames,
 } from "../subagent/get-agents.js";
 import { SUBAGENT_TOOL_META } from "../subagent/index.js";
+import {
+  formatSubagentResult,
+  linkedAbortController,
+} from "../subagent/result.js";
 import { logger } from "../util/logger.js";
 
-import { Tool } from "./types.js";
+import { Tool, ToolRunContext } from "./types.js";
 
 export const subagentTool = async (): Promise<Tool> => {
   const modelServiceState = await serviceContainer.get<ModelServiceState>(
@@ -60,7 +64,7 @@ export const subagentTool = async (): Promise<Tool> => {
       };
     },
 
-    run: async (args: any, context?: { toolCallId: string }) => {
+    run: async (args: any, context?: ToolRunContext) => {
       const { prompt, subagent_name } = args;
 
       logger.debug("subagent args", { args, context });
@@ -77,39 +81,42 @@ export const subagentTool = async (): Promise<Tool> => {
         throw new Error("No active session found");
       }
 
-      // Execute subagent with output streaming
-      const result = await executeSubAgent({
-        agent,
-        prompt,
-        parentSessionId,
-        abortController: new AbortController(),
-        onOutputUpdate: context?.toolCallId
-          ? (output: string) => {
-              try {
-                chatHistoryService.addToolResult(
-                  context.toolCallId,
-                  output,
-                  "calling",
-                );
-              } catch {
-                // Ignore errors during streaming updates
+      // Cancelling the parent turn (Esc, a serve interrupt, a headless
+      // signal) cancels the subagent.
+      const { controller, dispose } = linkedAbortController(
+        context?.abortSignal,
+      );
+
+      try {
+        // Execute subagent with output streaming
+        const result = await executeSubAgent({
+          agent,
+          agentName: subagent_name,
+          prompt,
+          parentSessionId,
+          abortController: controller,
+          onToolPermissionRequest: context?.onToolPermissionRequest,
+          onOutputUpdate: context?.toolCallId
+            ? (output: string) => {
+                try {
+                  chatHistoryService.addToolResult(
+                    context.toolCallId,
+                    output,
+                    "calling",
+                  );
+                } catch {
+                  // Ignore errors during streaming updates
+                }
               }
-            }
-          : undefined,
-      });
+            : undefined,
+        });
 
-      logger.debug("subagent result", { result });
+        logger.debug("subagent result", { result });
 
-      const output = [
-        result.response,
-        "<task_metadata>",
-        `status: ${result.success ? "completed" : "failed"}`,
-        "</task_metadata>",
-      ]
-        .filter(Boolean)
-        .join("\n");
-
-      return output;
+        return formatSubagentResult(subagent_name, result);
+      } finally {
+        dispose();
+      }
     },
   };
 };

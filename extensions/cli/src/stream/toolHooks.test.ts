@@ -414,3 +414,21 @@ describe("PostToolUseFailure", () => {
     expect(fs.readFileSync(marker, "utf-8")).toContain("disk full");
   });
 });
+
+describe("tool run context", () => {
+  it("hands each tool run the turn's signal and the session's permission prompt", async () => {
+    const turn = new AbortController();
+    const onToolPermissionRequest = vi.fn();
+    await executeStreamedToolCalls(
+      [makeCall()],
+      { onToolPermissionRequest },
+      false,
+      turn.signal,
+    );
+    expect(executeToolCall).toHaveBeenCalledWith(expect.anything(), {
+      parallelToolCallCount: 1,
+      abortSignal: turn.signal,
+      onToolPermissionRequest,
+    });
+  });
+});

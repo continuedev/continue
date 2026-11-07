@@ -39,7 +39,26 @@ export interface ToolRunContext {
    * Tools should divide their output limits by this number to avoid context overflow.
    */
   parallelToolCallCount: number;
+  /**
+   * The signal of the turn this call belongs to. It aborts when the person
+   * cancels the turn (Esc in the TUI, an interrupt in `serve`, a signal in
+   * headless mode); long-running tools should stop when it does.
+   */
+  abortSignal?: AbortSignal;
+  /**
+   * The permission prompt of the session that made this call, when it has
+   * one. Lets a tool that runs its own agent loop (a subagent) put that
+   * loop's "ask" calls in front of the person.
+   */
+  onToolPermissionRequest?: ToolPermissionPrompt;
 }
+
+export type ToolPermissionPrompt = (
+  toolName: string,
+  toolArgs: any,
+  requestId: string,
+  preview?: ToolCallPreview[],
+) => void;
 
 export interface Tool {
   name: string;

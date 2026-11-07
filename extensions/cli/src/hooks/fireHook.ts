@@ -21,6 +21,8 @@ import type {
   SessionStartInput,
   SessionStartSource,
   StopInput,
+  SubagentStartInput,
+  SubagentStopInput,
   UserPromptSubmitInput,
 } from "./types.js";
 
@@ -225,6 +227,54 @@ export async function firePreCompact(
     hook_event_name: "PreCompact",
     trigger,
     custom_instructions: customInstructions,
+  };
+
+  return services.hooks.fireEvent(input);
+}
+
+// ---------------------------------------------------------------------------
+// Subagent events
+//
+// Inputs follow Claude Code's SubagentStart and SubagentStop events
+// (https://code.claude.com/docs/en/hooks#subagentstart and #subagentstop).
+// SubagentStart cannot block a run; it can add context for the subagent.
+// SubagentStop can keep the subagent running: exit 2 or `decision: "block"`
+// with a reason, or `additionalContext`.
+// ---------------------------------------------------------------------------
+
+export async function fireSubagentStart(
+  agentId: string,
+  agentType: string,
+): Promise<HookEventResult> {
+  if (!isHookServiceReady()) return NOOP_RESULT;
+
+  const input: SubagentStartInput = {
+    ...getCommonFields(),
+    hook_event_name: "SubagentStart",
+    agent_id: agentId,
+    agent_type: agentType,
+  };
+
+  return services.hooks.fireEvent(input);
+}
+
+export async function fireSubagentStop(options: {
+  agentId: string;
+  agentType: string;
+  stopHookActive: boolean;
+  lastAssistantMessage?: string;
+}): Promise<HookEventResult> {
+  if (!isHookServiceReady()) return NOOP_RESULT;
+
+  const input: SubagentStopInput = {
+    ...getCommonFields(),
+    hook_event_name: "SubagentStop",
+    stop_hook_active: options.stopHookActive,
+    agent_id: options.agentId,
+    // Subagent runs are not written to a transcript file of their own.
+    agent_transcript_path: "",
+    agent_type: options.agentType,
+    last_assistant_message: options.lastAssistantMessage,
   };
 
   return services.hooks.fireEvent(input);

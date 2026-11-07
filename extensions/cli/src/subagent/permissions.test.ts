@@ -68,10 +68,61 @@ describe("subagentPermissions", () => {
     ).toBe("allow");
   });
 
+  describe("when the parent's prompt can be reached", () => {
+    const checkPrompting = (
+      name: string,
+      args: Record<string, unknown> = {},
+      permissions: ToolPermissions = parent,
+    ) =>
+      checkToolPermission(
+        { name, arguments: args },
+        subagentPermissions(permissions, { canPrompt: true }),
+      ).permission;
+
+    it("keeps 'ask' as 'ask' so the person decides", () => {
+      expect(checkPrompting("Edit")).toBe("ask");
+      expect(checkPrompting("Bash", { command: "npm install" })).toBe("ask");
+      expect(checkPrompting("SomeMcpTool")).toBe("ask");
+    });
+
+    it("still keeps the parent's excludes and allows", () => {
+      expect(checkPrompting("Write")).toBe("exclude");
+      expect(checkPrompting("Bash", { command: "rm -rf /tmp/x" })).toBe(
+        "exclude",
+      );
+      expect(checkPrompting("Read")).toBe("allow");
+    });
+
+    it("still never lets a subagent start another subagent", () => {
+      expect(
+        checkPrompting(
+          "Subagent",
+          {},
+          { policies: [{ tool: "*", permission: "allow" }] },
+        ),
+      ).toBe("exclude");
+    });
+  });
+
   it("never lets a subagent start another subagent", () => {
     expect(check("Subagent")).toBe("exclude");
     expect(
       check("Subagent", {}, { policies: [{ tool: "*", permission: "allow" }] }),
     ).toBe("exclude");
+  });
+
+  it("never lets a subagent write the parent's task list", () => {
+    const allowAll: ToolPermissions = {
+      policies: [{ tool: "*", permission: "allow" }],
+    };
+    for (const tool of ["TaskList", "Checklist"]) {
+      expect(check(tool, {}, allowAll)).toBe("exclude");
+      expect(
+        checkToolPermission(
+          { name: tool, arguments: {} },
+          subagentPermissions(allowAll, { canPrompt: true }),
+        ).permission,
+      ).toBe("exclude");
+    }
   });
 });

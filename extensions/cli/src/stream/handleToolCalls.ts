@@ -32,13 +32,22 @@ interface HandleToolCallsOptions {
   callbacks: StreamCallbacks | undefined;
   isHeadless: boolean;
   usage?: any;
+  /** The turn's signal, passed on to tool runs. */
+  abortSignal?: AbortSignal;
 }
 
 export async function handleToolCalls(
   options: HandleToolCallsOptions,
 ): Promise<boolean> {
-  const { toolCalls, chatHistory, content, callbacks, isHeadless, usage } =
-    options;
+  const {
+    toolCalls,
+    chatHistory,
+    content,
+    callbacks,
+    isHeadless,
+    usage,
+    abortSignal,
+  } = options;
   const chatHistorySvc = services.chatHistory;
   const useService =
     typeof chatHistorySvc?.isReady === "function" && chatHistorySvc.isReady();
@@ -154,6 +163,7 @@ export async function handleToolCalls(
     preprocessedCalls,
     callbacks,
     isHeadless,
+    abortSignal,
   );
 
   if (isHeadless && hasRejection) {

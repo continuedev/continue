@@ -316,6 +316,12 @@ export interface SubagentStartHookOutput {
   additionalContext?: string;
 }
 
+/** SubagentStop-specific output: feedback that keeps the subagent running */
+export interface SubagentStopHookOutput {
+  hookEventName: "SubagentStop";
+  additionalContext?: string;
+}
+
 /** PermissionRequest-specific output */
 export interface PermissionRequestHookOutput {
   hookEventName: "PermissionRequest";
@@ -339,6 +345,7 @@ export type HookSpecificOutput =
   | PostToolUseFailureHookOutput
   | NotificationHookOutput
   | SubagentStartHookOutput
+  | SubagentStopHookOutput
   | PermissionRequestHookOutput;
 
 /** The full JSON output schema returned by hooks */

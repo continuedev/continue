@@ -74,15 +74,32 @@ export function handlePermissionDenied(
   logger.debug(`Tool call rejected (${reason}) - stopping stream`);
 }
 
-// Helper function to request user permission
-export async function requestUserPermission(
+let permissionPrompts: Promise<unknown> = Promise.resolve();
+
+/**
+ * Ask the person about a tool call. Prompts are shown one at a time: a
+ * subagent's call can ask while the parent's permission loop is asking about
+ * its next call, and the UI holds a single request, so a second prompt
+ * would replace the first and leave it unanswered.
+ */
+export function requestUserPermission(
   toolCall: PreprocessedToolCall,
   callbacks?: StreamCallbacks,
 ): Promise<boolean> {
   if (!callbacks?.onToolPermissionRequest) {
-    return false;
+    return Promise.resolve(false);
   }
+  const prompt = permissionPrompts.then(() =>
+    promptForPermission(toolCall, callbacks),
+  );
+  permissionPrompts = prompt.catch(() => undefined);
+  return prompt;
+}
 
+async function promptForPermission(
+  toolCall: PreprocessedToolCall,
+  callbacks: StreamCallbacks,
+): Promise<boolean> {
   const toolCallRequest: ToolCallRequest = {
     name: toolCall.name,
     arguments: toolCall.preprocessResult?.args ?? toolCall.arguments,
@@ -603,6 +620,8 @@ export async function executeStreamedToolCalls(
   preprocessedCalls: PreprocessedToolCall[],
   callbacks?: StreamCallbacks,
   isHeadless?: boolean,
+  /** The turn's signal, handed to each tool run so it can stop on cancel. */
+  abortSignal?: AbortSignal,
 ): Promise<{
   hasRejection: boolean;
   chatHistoryEntries: ToolResultWithStatus[];
@@ -736,6 +755,8 @@ export async function executeStreamedToolCalls(
 
             const rawResult = await executeToolCall(approvedCall, {
               parallelToolCallCount,
+              abortSignal,
+              onToolPermissionRequest: callbacks?.onToolPermissionRequest,
             });
             const toolResult = await runPostToolUseHooks(
               approvedCall,
