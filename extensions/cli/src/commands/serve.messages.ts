@@ -29,8 +29,10 @@ import { logger } from "../util/logger.js";
 import {
   answerPendingQuestion,
   listPendingQuestions,
+  openPendingQuestions,
   pendingAnswerMessage,
   type PendingQuestion,
+  pendingQuestionState,
 } from "../util/pendingQuestions.js";
 import { formatReplyTally, getTruncatedReplies } from "../util/replyTally.js";
 
@@ -105,7 +107,9 @@ export interface RunTallySnapshot {
   /** Replies the output limit cut off (finish_reason "length"). */
   truncatedReplies: number;
   /** Questions asked with nobody to answer, answered ones included. */
-  pendingQuestions: PendingQuestion[];
+  pendingQuestions: (PendingQuestion & { state: "open" | "answered" })[];
+  /** How many of them still wait for an answer. */
+  openQuestions: number;
 }
 
 export function getServeStateSnapshot(
@@ -124,7 +128,11 @@ export function getServeStateSnapshot(
     truncatedReplies: getTruncatedReplies(),
     // Questions the model asked with nobody to answer (plan turns): answer
     // one with POST /message { answerQuestion: id, answer }
-    pendingQuestions: listPendingQuestions(),
+    pendingQuestions: listPendingQuestions().map((q) => ({
+      ...q,
+      state: pendingQuestionState(q),
+    })),
+    openQuestions: openPendingQuestions().length,
   };
 }
 

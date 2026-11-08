@@ -172,7 +172,7 @@ describe("PresentPlan", () => {
       decisions: [{ question: "Which format?" }],
     });
     expect(quizService.askQuestion).not.toHaveBeenCalled();
-    expect(result).toContain("1 decision wait for the person in the file");
+    expect(result).toContain("Its decision waits for the person in the file");
     expect(fs.readFileSync(file, "utf-8")).toContain("- Which format?");
   });
 

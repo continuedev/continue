@@ -48,7 +48,7 @@ describe("AskQuestion", () => {
       defaultAnswer: "ISO 8601",
       type: "scope",
     });
-    expect(result).toContain(`inbox (id ${held.id})`);
-    expect(result).toContain("Go on with your default");
+    expect(result).toContain(`held for the person (id ${held.id})`);
+    expect(result).toContain("the choice is the person's");
   });
 });

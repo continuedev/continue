@@ -106,6 +106,13 @@ export class OpenAIApi implements BaseLlmApi {
         body.parallel_tool_calls = false;
       }
     }
+
+    // requestOptions.extraBodyProperties: the config's extra fields for this
+    // server (a catalog variant's reasoning_effort, llama.cpp's
+    // chat_template_kwargs, ...). They were never applied on this path, so a
+    // variant that only set reasoning_effort did nothing in the CLI.
+    const extra = this.config.requestOptions?.extraBodyProperties;
+    if (extra) Object.assign(body, extra);
     return body;
   }
 

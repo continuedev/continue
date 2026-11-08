@@ -94,7 +94,7 @@ describe("buildPlan", () => {
     expect(text).toContain("Decisions:");
     expect(text).toContain("1. Which format? (to-dos 1): decided: Long");
     expect(text).toContain(
-      "2. Keep the old endpoint?: open; your pick yes stands unless the plan file says otherwise",
+      "2. Keep the old endpoint?: open; the person has not decided. Do not settle it.",
     );
   });
 

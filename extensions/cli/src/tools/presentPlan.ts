@@ -225,7 +225,7 @@ export const presentPlanTool: Tool = {
       // the file for the person; the model must not settle them.
       safeStderr(`Plan saved to ${relativePath}\n`);
       const open = decisions.length
-        ? ` Its ${decisions.length} decision${decisions.length === 1 ? "" : "s"} wait for the person in the file; do not settle them.`
+        ? ` Its ${decisions.length === 1 ? "decision waits" : `${decisions.length} decisions wait`} for the person in the file; do not settle ${decisions.length === 1 ? "it" : "them"}.`
         : "";
       return `Plan saved to ${relativePath} with ${plan.items.length} to-dos.${open} This is a headless run, so nobody can approve it now: do not implement anything. Stop, and end your reply with the line "Plan: ${relativePath}".`;
     }

@@ -142,6 +142,20 @@ describe("validatePlanArgs", () => {
     expect(md.ok && md.items.map((i) => i.text)).toEqual(["a", "b"]);
   });
 
+  it("accepts XML-shaped lists for to-dos and decisions", () => {
+    const r = validatePlanArgs({
+      title: "T",
+      todos: "<item>Write it</item>\n<item><![CDATA[Test it]]></item>",
+      decisions:
+        '<item>{"question":"Which format?","options":["ISO","readable"],"pick":"ISO"}</item><item>Keep the helper?</item>',
+    });
+    expect(r.ok && r.items.map((i) => i.text)).toEqual(["Write it", "Test it"]);
+    expect(r.ok && r.decisions).toEqual([
+      { question: "Which format?", options: ["ISO", "readable"], pick: "ISO" },
+      { question: "Keep the helper?" },
+    ]);
+  });
+
   it("refuses a missing title or no to-dos", () => {
     expect(validatePlanArgs({ todos: ["a"] }).ok).toBe(false);
     expect(validatePlanArgs({ title: "T", todos: [] }).ok).toBe(false);
@@ -256,7 +270,10 @@ describe("decisions in the plan file", () => {
     expect(answered[0].answer).toBeUndefined();
     const text = describeDecisions(answered);
     expect(text).toContain(
-      "1. Which format should formatDate return? (to-dos 1, 2): open; your pick ISO 8601 stands unless the plan file says otherwise",
+      "1. Which format should formatDate return? (to-dos 1, 2): open; the person has not decided. Do not start to-dos 1, 2 until it is decided.",
+    );
+    expect(describeDecisions([{ question: "Keep it?" }])).toContain(
+      "open; the person has not decided. Do not settle it.",
     );
     expect(text).toContain("2. Keep the old helper?: decided: No");
     expect(describeDecisions([])).toBe("");

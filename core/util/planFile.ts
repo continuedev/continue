@@ -342,6 +342,33 @@ function oneLine(text: string): string {
   return text.trim().replace(/\s*\n\s*/g, " ");
 }
 
+/**
+ * An array a model sent as text: JSON, or XML-shaped items (`<item>...</item>`,
+ * with or without CDATA, each item JSON or plain text), as Claude Haiku 4.5
+ * sent for `todos` and `decisions` in 2 of 3 live runs. Undefined when the
+ * text is neither, so the caller can try its own format.
+ */
+function listFromText(raw: string): unknown[] | undefined {
+  const text = raw.trim();
+  try {
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : [parsed];
+  } catch {
+    // not JSON
+  }
+  const items = [...text.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/gi)].map(
+    (m) => m[1].replace(/^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/, "$1").trim(),
+  );
+  if (items.length === 0) return undefined;
+  return items.map((item) => {
+    try {
+      return JSON.parse(item);
+    } catch {
+      return item;
+    }
+  });
+}
+
 export type PlanArgsResult =
   | {
       ok: true;
@@ -367,11 +394,7 @@ function planDecisions(
   if (value === undefined || value === null) return { decisions: [] };
   let list: unknown = value;
   if (typeof list === "string") {
-    try {
-      list = JSON.parse(list);
-    } catch {
-      list = [list];
-    }
+    list = listFromText(list) ?? [list];
   }
   if (!Array.isArray(list)) return { error: "decisions must be an array" };
   if (list.length > PLAN_LIMITS.maxDecisions) {
@@ -478,14 +501,11 @@ export function validatePlanArgs(args: {
   }
 
   let todos: unknown = args.todos;
-  // Some models send the array as a JSON string.
+  // Some models send the array as a string: JSON, XML items or a list.
   if (typeof todos === "string") {
-    const raw = todos;
-    try {
-      todos = JSON.parse(raw);
-    } catch {
-      todos = parseMarkdownChecklist(raw).map((item) => item.text);
-    }
+    todos =
+      listFromText(todos) ??
+      parseMarkdownChecklist(todos).map((item) => item.text);
   }
   if (!Array.isArray(todos) || todos.length === 0) {
     return { ok: false, error: "todos must be a non-empty array of strings" };
@@ -542,12 +562,16 @@ export function answeredDecisions(
  */
 export function describeDecisions(decisions: PlanDecision[]): string {
   if (decisions.length === 0) return "";
+  // An open decision is the person's: the pick is not a default to go on
+  // with, or the plan turn's assume-fallback comes back through this door.
   const lines = decisions.map((d, i) => {
     const todos = d.todos?.length ? ` (to-dos ${d.todos.join(", ")})` : "";
     if (d.answer)
       return `${i + 1}. ${d.question}${todos}: decided: ${d.answer}`;
-    const pick = d.pick ? `your pick ${d.pick} stands` : "no answer yet";
-    return `${i + 1}. ${d.question}${todos}: open; ${pick} unless the plan file says otherwise`;
+    const hold = d.todos?.length
+      ? ` Do not start to-dos ${d.todos.join(", ")} until it is decided.`
+      : " Do not settle it.";
+    return `${i + 1}. ${d.question}${todos}: open; the person has not decided.${hold}`;
   });
   return `Decisions:\n${lines.join("\n")}`;
 }
@@ -737,7 +761,7 @@ export function planProposedResult(
 ) {
   const open =
     decisions.length > 0
-      ? ` Its ${decisions.length} decision${decisions.length === 1 ? "" : "s"} wait for the user; do not settle them yourself.`
+      ? ` Its ${decisions.length === 1 ? "decision waits" : `${decisions.length} decisions wait`} for the user; do not settle ${decisions.length === 1 ? "it" : "them"} yourself.`
       : "";
   return `Plan saved to ${relativePath} and shown to the user, with its ${plan.items.length} to-dos as the task list.${open} Stop here and wait: the user will edit the plan, choose Build, or ask for changes.`;
 }

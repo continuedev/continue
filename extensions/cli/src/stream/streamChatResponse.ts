@@ -51,6 +51,7 @@ import {
   handlePreApiCompaction,
 } from "./streamChatResponse.compactionHelpers.js";
 import {
+  cacheReadTokens,
   processChunkContent,
   processToolCallDelta,
   recordStreamTelemetry,
@@ -398,7 +399,7 @@ export async function processStreamingResponse(
       toolCallsCount: toolCallsMap.size,
       inputTokens,
       outputTokens,
-      cacheReadTokens: fullUsage?.prompt_tokens_details?.cache_read_tokens,
+      cacheReadTokens: cacheReadTokens(fullUsage?.prompt_tokens_details),
       cacheWriteTokens: fullUsage?.prompt_tokens_details?.cache_write_tokens,
       cost,
       duration: totalDuration,
