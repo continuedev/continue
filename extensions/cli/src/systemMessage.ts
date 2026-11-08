@@ -40,7 +40,7 @@ function getGitStatus(): string {
   }
 }
 
-const baseSystemMessage = `You are an agent in the Continue CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.
+const baseSystemMessage = `You are an agent in the Continuous CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.
 
 Notes:
 1. IMPORTANT: You should be concise, direct, and to the point, since your responses will be displayed on a command line interface.

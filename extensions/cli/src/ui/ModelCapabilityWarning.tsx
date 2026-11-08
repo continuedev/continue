@@ -17,8 +17,8 @@ const ModelCapabilityWarning: React.FC<ModelCapabilityWarningProps> = ({
         </Text>
       </Box>
       <Text color="gray">
-        The model "{modelName}" is not recommended for use with cn due to
-        limited reasoning and tool calling capabilities
+        The model "{modelName}" is not recommended for use with Continuous due
+        to limited reasoning and tool calling capabilities
       </Text>
     </Box>
   );

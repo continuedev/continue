@@ -54,7 +54,7 @@ You should use this tool to notify the user whenever the state of your work chan
       const agentId = getAgentIdFromArgs();
       if (!agentId) {
         const errorMessage =
-          "Agent ID is required. Please use the --id flag with cn serve.";
+          "Agent ID is required. Please use the --id flag with continuous serve.";
         logger.error(errorMessage);
         throw new ContinueError(ContinueErrorReason.Unspecified, errorMessage);
       }

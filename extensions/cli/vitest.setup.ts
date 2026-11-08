@@ -53,7 +53,7 @@ vi.mock("./src/systemMessage.js", () => ({
   constructSystemMessage: vi
     .fn()
     .mockResolvedValue(
-      "You are an agent in the Continue CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.",
+      "You are an agent in the Continuous CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.",
     ),
   loadMarkdownRulesWithMetadata: vi.fn().mockReturnValue([]),
 }));

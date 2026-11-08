@@ -19,7 +19,7 @@ describe("TUIChat - Message Display Tests", () => {
       expect(frame).toContain("Remote Mode");
     } else {
       expect(frame).not.toContain("Remote Mode");
-      expect(frame).toContain("Continue CLI");
+      expect(frame).toContain("Continuous");
     }
   });
 
@@ -43,7 +43,7 @@ describe("TUIChat - Message Display Tests", () => {
     if (mode === "remote") {
       expect(frame).toContain("Remote Mode");
     } else {
-      expect(frame).toContain("Continue CLI");
+      expect(frame).toContain("Continuous");
     }
   });
 

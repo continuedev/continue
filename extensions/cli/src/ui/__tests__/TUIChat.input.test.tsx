@@ -67,7 +67,7 @@ describe("TUIChat - User Input Tests", () => {
       // so the input may not be reflected in the frame
       if (mode === "local") {
         expect(frame).toContain("!@#$%^&*()");
-        expect(frame).toContain("Continue CLI");
+        expect(frame).toContain("Continuous");
       }
     },
   );

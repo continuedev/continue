@@ -17,7 +17,7 @@ describe("ModelCapabilityWarning", () => {
       expect(frame).toContain("Model Capability Warning");
       expect(frame).toContain("gpt-3-davinci");
       expect(frame).toContain(
-        "is not recommended for use with cn due to limited reasoning and tool",
+        "is not recommended for use with Continuous due to limited reasoning",
       );
       expect(frame).toContain("calling capabilities");
     }

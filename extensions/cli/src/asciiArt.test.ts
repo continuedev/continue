@@ -9,6 +9,16 @@ const LOOP_TOP = "▄████▄";
 const WORD_TOP = "██████╗ ██████╗ ███╗   ██╗████████╗";
 
 describe("getDisplayableAsciiArt", () => {
+  it("uses the one-line banner when the terminal is short", () => {
+    const banner = plain(getDisplayableAsciiArt(120, 14)).trim();
+    expect(banner.split("\n")).toHaveLength(1);
+    expect(banner).toContain("continuous");
+  });
+
+  it("uses the tall banner when the rows are there", () => {
+    expect(plain(getDisplayableAsciiArt(120, 19))).toContain(WORD_TOP);
+  });
+
   it("shows the loop and the CONTINUOUS wordmark on a wide terminal", () => {
     const banner = plain(getDisplayableAsciiArt(120));
     expect(banner).toContain(LOOP_TOP);

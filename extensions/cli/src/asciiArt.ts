@@ -148,13 +148,22 @@ export function bannerWidth(banner: string): number {
 }
 
 /**
+ * Rows the intro needs besides the banner: its padding, the config and model
+ * lines, and the input and status bar under it.
+ */
+const ROWS_BESIDES_BANNER = 11;
+
+/**
  * The startup banner that fits the terminal. The intro box pads one column
- * each side, so a banner needs its width plus two.
+ * each side, so a banner needs its width plus two. Too few rows for a tall
+ * one and its top would scroll away, leaving a slice of the letters.
  */
 export function getDisplayableAsciiArt(
   columns: number = process.stdout.columns || 80,
+  rows: number = process.stdout.rows || 24,
 ): string {
   for (const make of [full, wordOnly, compact]) {
+    if (make().split("\n").length + ROWS_BESIDES_BANNER > rows) break;
     const banner = make();
     if (bannerWidth(banner) + 2 <= columns) return banner;
   }

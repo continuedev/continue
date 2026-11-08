@@ -56,11 +56,14 @@ interface ScreenContentProps {
   onShowEditSelector?: () => void;
 }
 
-function hideScreenContent(state?: UpdateServiceState) {
+/**
+ * Only while an update replaces the process. Checking runs in the background
+ * and must leave the input up: its key listener is what keeps Node running.
+ */
+export function hideScreenContent(state?: UpdateServiceState) {
   return (
-    (state?.status === "checking" && state?.autoUpdate) ||
-    (state?.isAutoUpdate &&
-      (state?.status === "updating" || state?.status === "updated"))
+    state?.isAutoUpdate &&
+    (state?.status === "updating" || state?.status === "updated")
   );
 }
 

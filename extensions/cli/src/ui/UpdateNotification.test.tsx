@@ -203,6 +203,6 @@ describe("UpdateNotification", () => {
 
     const { lastFrame } = render(<UpdateNotification />);
 
-    expect(lastFrame()).toContain("◉ Continue CLI");
+    expect(lastFrame()).toContain("◉ Continuous");
   });
 });
