@@ -35,6 +35,7 @@ import {
   bedrockCacheTtl,
   bedrockUsageToCompletionUsage,
   getBedrockErrorHint,
+  fillMissingToolResults,
   normalizeToolUseIds,
   resolveBedrockCacheParts,
 } from "./bedrockHelpers.js";
@@ -561,10 +562,13 @@ export class BedrockApi implements BaseLlmApi {
 
     // Convert messages
     const convertedMessages = normalizeToolUseIds(
-      this._convertMessages(oaiBody.messages, availableTools, {
-        conversation: parts.conversation,
-        ttl: cacheTtl,
-      }),
+      fillMissingToolResults(
+        this._convertMessages(oaiBody.messages, availableTools, {
+          conversation: parts.conversation,
+          ttl: cacheTtl,
+        }),
+        "The user cancelled this tool call.",
+      ),
       oaiBody.model,
     );
 

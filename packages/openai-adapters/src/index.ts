@@ -263,3 +263,4 @@ export type {
 export { isResponsesModel } from "./apis/openaiResponses.js";
 export { OPENROUTER_HEADERS } from "./apis/OpenRouter.js";
 export { extractBase64FromDataUrl, parseDataUrl } from "./util/url.js";
+export { fillMissingToolResults } from "./apis/bedrockHelpers.js";

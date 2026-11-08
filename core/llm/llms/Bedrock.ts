@@ -25,11 +25,13 @@ import {
 } from "@aws-sdk/client-bedrock";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { getTlsErrorHint } from "@continuedev/fetch";
+import { fillMissingToolResults } from "@continuedev/openai-adapters";
 import type { NodeHttpHandler } from "@smithy/node-http-handler";
 
 import type { CompletionOptions, RequestOptions } from "../../index.js";
 import { ChatMessage, Chunk, LLMOptions, MessageContent } from "../../index.js";
 import type { Usage } from "../../index.js";
+import { CANCELLED_TOOL_CALL_MESSAGE } from "../../tools/constants.js";
 import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { parseDataUrl } from "../../util/url.js";
@@ -664,10 +666,13 @@ class Bedrock extends BaseLLM {
     }
 
     const convertedMessages = normalizeToolUseIds(
-      this._convertMessages(messages, availableTools, {
-        conversation: parts.conversation,
-        ttl: cacheTtl,
-      }),
+      fillMissingToolResults(
+        this._convertMessages(messages, availableTools, {
+          conversation: parts.conversation,
+          ttl: cacheTtl,
+        }),
+        CANCELLED_TOOL_CALL_MESSAGE,
+      ),
       options.model,
     );
 

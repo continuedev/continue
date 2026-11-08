@@ -324,3 +324,49 @@ export function normalizeToolUseIds<
   }
   return messages;
 }
+
+/**
+ * Gives every toolUse a toolResult in the message right after it, with `text`
+ * as the result of any that has none. Claude refuses a conversation with an
+ * unanswered tool call ("tool_use ids were found without tool_result blocks
+ * immediately after"), and the rest of the history can't be sent without it.
+ */
+export function fillMissingToolResults<
+  M extends {
+    role?: string;
+    content?: Array<{
+      toolUse?: { toolUseId?: string };
+      toolResult?: unknown;
+      text?: unknown;
+    }>;
+  },
+>(messages: M[], text: string): M[] {
+  const filled: M[] = [];
+  messages.forEach((message, index) => {
+    filled.push(message);
+    if (message.role !== "assistant") return;
+    const next = messages[index + 1];
+    const answered = new Set(
+      next?.role === "user"
+        ? (next.content ?? []).map(
+            (block) =>
+              (block.toolResult as { toolUseId?: string } | undefined)
+                ?.toolUseId,
+          )
+        : [],
+    );
+    const results = (message.content ?? [])
+      .map((block) => block.toolUse?.toolUseId)
+      .filter((id) => id !== undefined && !answered.has(id))
+      .map((toolUseId) => ({
+        toolResult: { toolUseId, content: [{ text }] },
+      }));
+    if (results.length === 0) return;
+    if (next?.role === "user") {
+      next.content = [...results, ...(next.content ?? [])];
+    } else {
+      filled.push({ role: "user", content: results } as M);
+    }
+  });
+  return filled;
+}
