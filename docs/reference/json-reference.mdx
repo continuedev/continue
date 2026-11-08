@@ -288,7 +288,7 @@ Custom commands initiated by typing "/" in the sidebar. Commands include predefi
 
 **Properties:**
 
-- `name`: The command name. Options include "issue", "share", "cmd", "http", "commit", and "review".
+- `name`: The command name. Options include "share", "cmd", "http", "commit", "review", and "onboard".
 - `description`: Brief description of the command.
 - `step`: (Deprecated) Used for built-in commands; set the name for pre-configured options.
 - `params`: Additional parameters to configure command behavior (command-specific - see code for command)
@@ -359,24 +359,6 @@ config.json
       "name": "http",
       "description": "Does something custom",
       "params": { "url": "<my server endpoint>" }
-    }
-  ]
-}
-```
-
-### `/issue`
-
-Describe the issue you'd like to generate, and Continue will turn into a well-formatted title and body, then give you a link to the draft so you can submit. Make sure to set the URL of the repository you want to generate issues for.
-
-config.json
-
-```json
-{
-  "slashCommands": [
-    {
-      "name": "issue",
-      "description": "Generate a link to a drafted GitHub issue",
-      "params": { "repositoryUrl": "https://github.com/continuedev/continue" }
     }
   ]
 }
