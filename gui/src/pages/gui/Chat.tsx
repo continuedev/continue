@@ -47,6 +47,7 @@ import {
   enqueueMessage,
   newSession,
   QueuedMessage,
+  moveQueuedMessage,
   removeQueuedMessage,
   steerQueuedMessages,
   takeQueuedMessages,
@@ -543,6 +544,7 @@ export function Chat() {
           onSteerNow={(ids) => void steerNow(ids)}
           onEdit={editQueuedMessage}
           onRemove={(id) => dispatch(removeQueuedMessage(id))}
+          onMove={(id, to) => dispatch(moveQueuedMessage({ id, to }))}
         />
         <ContinueInputBox
           isMainInput

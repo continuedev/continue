@@ -601,6 +601,24 @@ export const sessionSlice = createSlice({
         (m) => m.id !== payload,
       );
     },
+    /**
+     * Move a queued message to another place in the queue, which is the
+     * order they are merged and sent in. `to` is clamped to the queue.
+     */
+    moveQueuedMessage: (
+      state,
+      { payload }: PayloadAction<{ id: string; to: number }>,
+    ) => {
+      const from = state.queuedMessages.findIndex((m) => m.id === payload.id);
+      if (from < 0) return;
+      const to = Math.max(
+        0,
+        Math.min(state.queuedMessages.length - 1, payload.to),
+      );
+      if (to === from) return;
+      const [message] = state.queuedMessages.splice(from, 1);
+      state.queuedMessages.splice(to, 0, message);
+    },
     clearQueuedMessages: (state) => {
       state.queuedMessages = [];
       state.isQueuePaused = false;
@@ -1380,6 +1398,7 @@ export const selectApplyStateByToolCallId = createSelector(
 export const {
   enqueueMessage,
   removeQueuedMessage,
+  moveQueuedMessage,
   clearQueuedMessages,
   setQueuePaused,
   requestQueuedMessagesSend,

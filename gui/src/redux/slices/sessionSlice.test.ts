@@ -3,7 +3,11 @@ import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuidv4 } from "uuid";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { addToolCallDeltaToState } from "../../util/toolCallState";
-import { ChatHistoryItemWithMessageId, sessionSlice } from "./sessionSlice";
+import {
+  ChatHistoryItemWithMessageId,
+  moveQueuedMessage,
+  sessionSlice,
+} from "./sessionSlice";
 
 // Mock dependencies
 vi.mock("uuid");
@@ -573,5 +577,55 @@ describe("sessionSlice streamUpdate", () => {
       expect(newState.history[1].message.role).toBe("assistant");
       expect(newState.history[1].toolCallStates).toHaveLength(1);
     });
+  });
+});
+
+describe("sessionSlice moveQueuedMessage", () => {
+  const queued = (...ids: string[]) =>
+    ({
+      ...sessionSlice.getInitialState(),
+      queuedMessages: ids.map((id) => ({
+        id,
+        editorState: { type: "doc" },
+        modifiers: { useCodebase: false, noContext: true },
+      })),
+    }) as any;
+  const ids = (state: any) => state.queuedMessages.map((m: any) => m.id);
+
+  it("moves a message to the given place", () => {
+    const state = sessionSlice.reducer(
+      queued("a", "b", "c"),
+      moveQueuedMessage({ id: "c", to: 0 }),
+    );
+    expect(ids(state)).toEqual(["c", "a", "b"]);
+  });
+
+  it("clamps the place to the queue", () => {
+    expect(
+      ids(
+        sessionSlice.reducer(
+          queued("a", "b", "c"),
+          moveQueuedMessage({ id: "a", to: 9 }),
+        ),
+      ),
+    ).toEqual(["b", "c", "a"]);
+    expect(
+      ids(
+        sessionSlice.reducer(
+          queued("a", "b", "c"),
+          moveQueuedMessage({ id: "b", to: -3 }),
+        ),
+      ),
+    ).toEqual(["b", "a", "c"]);
+  });
+
+  it("leaves the queue alone for an unknown message or no move", () => {
+    const before = queued("a", "b");
+    expect(
+      sessionSlice.reducer(before, moveQueuedMessage({ id: "x", to: 0 })),
+    ).toBe(before);
+    expect(
+      sessionSlice.reducer(before, moveQueuedMessage({ id: "a", to: 0 })),
+    ).toBe(before);
   });
 });

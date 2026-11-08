@@ -1,9 +1,12 @@
 import {
   BoltIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
   PaperAirplaneIcon,
   PencilIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { useRef, useState } from "react";
 import { useAppSelector } from "../../redux/hooks";
 import { selectCurrentToolCalls } from "../../redux/selectors/selectToolCalls";
 import { QueuedMessage } from "../../redux/slices/sessionSlice";
@@ -23,6 +26,8 @@ interface QueuedMessagesProps {
   /** Move the message back into the input for editing */
   onEdit: (message: QueuedMessage) => void;
   onRemove: (id: string) => void;
+  /** Move a message to position `to` (0-based): the order they are sent in */
+  onMove: (id: string, to: number) => void;
 }
 
 /**
@@ -42,8 +47,19 @@ export function QueuedMessages(props: QueuedMessagesProps) {
   const isWorking = isStreaming || isToolRunning;
   // Only the model's own writing is cut short, never a running tool
   const canSteerNow = !!props.onSteerNow && isStreaming && !isToolRunning;
+  // Drag to reorder: the message being dragged (a ref, so handlers of the
+  // same gesture see it before React re-renders), and the row it is over
+  const dragRef = useRef<string | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
 
   if (queued.length === 0) return null;
+  const canReorder = queued.length > 1;
+  const endDrag = () => {
+    dragRef.current = null;
+    setDragId(null);
+    setDropIndex(null);
+  };
 
   const steered = queued.filter((m) => m.steer).length;
   const sendNowTitle = isWorking
@@ -78,7 +94,31 @@ export function QueuedMessages(props: QueuedMessagesProps) {
         <div
           key={message.id}
           data-testid="queued-message"
-          className="group flex min-w-0 items-center gap-1.5 text-foreground"
+          draggable={canReorder}
+          onDragStart={(e) => {
+            dragRef.current = message.id;
+            setDragId(message.id);
+            e.dataTransfer?.setData("text/plain", message.id);
+            if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+          }}
+          onDragOver={(e) => {
+            if (!dragRef.current) return;
+            e.preventDefault();
+            setDropIndex(i);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            if (dragRef.current) props.onMove(dragRef.current, i);
+            endDrag();
+          }}
+          onDragEnd={endDrag}
+          className={`group flex min-w-0 items-center gap-1.5 text-foreground ${
+            canReorder ? "cursor-grab" : ""
+          } ${dragId === message.id ? "opacity-50" : ""} ${
+            dropIndex === i && dragId !== message.id
+              ? "rounded outline outline-1 outline-border"
+              : ""
+          }`}
         >
           <span className="shrink-0 text-description-muted">{i + 1}.</span>
           <span className="line-clamp-1 min-w-0 flex-1 wrap-anywhere">
@@ -93,6 +133,30 @@ export function QueuedMessages(props: QueuedMessagesProps) {
               next
             </span>
           )}
+          {canReorder &&
+            (i > 0 ? (
+              <QueueButton
+                testId="queued-message-move-up"
+                title="Move up: send earlier"
+                onClick={() => props.onMove(message.id, i - 1)}
+              >
+                <ChevronUpIcon className="h-3.5 w-3.5" />
+              </QueueButton>
+            ) : (
+              <ButtonSpace />
+            ))}
+          {canReorder &&
+            (i < queued.length - 1 ? (
+              <QueueButton
+                testId="queued-message-move-down"
+                title="Move down: send later"
+                onClick={() => props.onMove(message.id, i + 1)}
+              >
+                <ChevronDownIcon className="h-3.5 w-3.5" />
+              </QueueButton>
+            ) : (
+              <ButtonSpace />
+            ))}
           <QueueButton
             testId="queued-message-edit"
             title="Edit: move back into the input"
@@ -129,6 +193,11 @@ export function QueuedMessages(props: QueuedMessagesProps) {
       ))}
     </div>
   );
+}
+
+/** Holds a missing button's place, so the buttons line up across rows */
+function ButtonSpace() {
+  return <span aria-hidden className="w-[18px] shrink-0" />;
 }
 
 function QueueButton(props: {

@@ -264,4 +264,80 @@ describe("Queued messages", () => {
       expect(userMessages(store)).toEqual(["run it", "next step"]),
     );
   });
+
+  test("Reordering changes the order the queue is sent in", async () => {
+    const { ideMessenger, store } = await setup();
+
+    await sendInputWithMockedResponse(ideMessenger, "first", SLOW_REPLY);
+    await waitFor(() =>
+      expect(store.getState().session.isStreaming).toBe(true),
+    );
+    await typeAndPressEnter("alpha");
+    await typeAndPressEnter("beta");
+    await typeAndPressEnter("gamma");
+    const order = () =>
+      store
+        .getState()
+        .session.queuedMessages.map(
+          (m: any) => m.editorState.content?.[0]?.content?.[0]?.text,
+        );
+    expect(order()).toEqual(["alpha", "beta", "gamma"]);
+
+    const buttons = (testId: string) =>
+      document.querySelectorAll<HTMLElement>(`[data-testid=${testId}]`);
+    // No "up" on the first row, no "down" on the last
+    expect(buttons("queued-message-move-up")).toHaveLength(2);
+    expect(buttons("queued-message-move-down")).toHaveLength(2);
+
+    // gamma up one
+    await act(async () => {
+      buttons("queued-message-move-up")[1].click();
+    });
+    expect(order()).toEqual(["alpha", "gamma", "beta"]);
+
+    // alpha down one
+    await act(async () => {
+      buttons("queued-message-move-down")[0].click();
+    });
+    expect(order()).toEqual(["gamma", "alpha", "beta"]);
+
+    // Drag beta onto the first row
+    const rows = () =>
+      document.querySelectorAll<HTMLElement>("[data-testid=queued-message]");
+    await act(async () => {
+      fireEvent.dragStart(rows()[2]);
+      fireEvent.dragOver(rows()[0]);
+      fireEvent.drop(rows()[0]);
+    });
+    expect(order()).toEqual(["beta", "gamma", "alpha"]);
+
+    // Sent merged, in the new order
+    ideMessenger.chatStreamDelay = 0;
+    await waitFor(
+      () =>
+        expect(userMessages(store)).toEqual(["first", "beta\ngamma\nalpha"]),
+      { timeout: 5000 },
+    );
+  }, 15000);
+
+  test("A single queued message has no reorder controls", async () => {
+    const { ideMessenger, store } = await setup();
+    await sendInputWithMockedResponse(ideMessenger, "first", SLOW_REPLY);
+    await waitFor(() =>
+      expect(store.getState().session.isStreaming).toBe(true),
+    );
+    await typeAndPressEnter("only one");
+    await getElementByTestId("queued-messages");
+    expect(
+      document.querySelector("[data-testid=queued-message-move-up]"),
+    ).toBeNull();
+    expect(
+      document.querySelector("[data-testid=queued-message-move-down]"),
+    ).toBeNull();
+    expect(
+      document
+        .querySelector("[data-testid=queued-message]")!
+        .getAttribute("draggable"),
+    ).toBe("false");
+  });
 });
