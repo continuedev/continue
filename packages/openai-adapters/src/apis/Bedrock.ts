@@ -33,6 +33,7 @@ import {
   applyCrossRegionInference,
   bedrockCachePoint,
   bedrockCacheTtl,
+  bedrockModelAccessMessage,
   bedrockUsageToCompletionUsage,
   getBedrockErrorHint,
   fillMissingToolResults,
@@ -773,6 +774,13 @@ export class BedrockApi implements BaseLlmApi {
         }
       }
     } catch (error) {
+      const accessMessage = bedrockModelAccessMessage(
+        error,
+        requestBody.modelId ?? body.model,
+      );
+      if (accessMessage) {
+        throw new Error(accessMessage);
+      }
       // TLS / proxy trouble (untrusted corporate CA, proxy auth) is common
       // here; say how to fix it.
       const hint = getTlsErrorHint(error);

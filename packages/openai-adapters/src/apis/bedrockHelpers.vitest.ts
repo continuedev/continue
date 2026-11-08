@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyCrossRegionInference,
+  bedrockModelAccessMessage,
   bedrockUsageToCompletionUsage,
   getBedrockErrorHint,
   inferenceProfilePrefixForRegion,
@@ -102,6 +103,61 @@ describe("getBedrockErrorHint", () => {
 
   it("returns undefined for unrelated errors", () => {
     expect(getBedrockErrorHint(new Error("boom"), {})).toBeUndefined();
+  });
+});
+
+describe("bedrockModelAccessMessage", () => {
+  const AWS_TEXT =
+    "anthropic.claude-haiku-5-5 is not available for this account. You can explore other available models on Amazon Bedrock. For additional access options, contact AWS Sales at https://aws.amazon.com/contact-us/";
+  const denied = (message: string) =>
+    Object.assign(new Error(message), { name: "AccessDeniedException" });
+
+  it("says what is wrong and what to do, and keeps AWS's text last", () => {
+    const message = bedrockModelAccessMessage(
+      denied(AWS_TEXT),
+      "us.anthropic.claude-haiku-5-5",
+    )!;
+    expect(message).toContain("refused us.anthropic.claude-haiku-5-5");
+    expect(message).toContain(
+      "this AWS account has not been given access to that model",
+    );
+    expect(message).toContain("tokens-per-minute quota");
+    expect(message).toContain("use-case form");
+    expect(message).toContain("model agreement");
+    expect(message).toContain("https://console.aws.amazon.com/bedrock/");
+    expect(message.endsWith(`AWS said: ${AWS_TEXT}`)).toBe(true);
+  });
+
+  it("has no blank line, which would hide its start in the chat window", () => {
+    expect(bedrockModelAccessMessage(denied(AWS_TEXT), "m")).not.toContain(
+      "\n\n",
+    );
+  });
+
+  it("recognises the error name when it is part of the message", () => {
+    expect(
+      bedrockModelAccessMessage(
+        new Error(`AccessDeniedException: ${AWS_TEXT}`),
+        "m",
+      ),
+    ).toBeDefined();
+  });
+
+  it.each([
+    "User: arn:aws:iam::1:user/dev is not authorized to perform: bedrock:InvokeModel on resource: arn:aws:bedrock:us-east-1::foundation-model/m",
+    "You don't have access to the model with the specified model ID.",
+    "Invalid API key",
+  ])("leaves another AccessDenied message alone: %s", (message) => {
+    expect(bedrockModelAccessMessage(denied(message), "m")).toBeUndefined();
+  });
+
+  it("leaves the same wording alone on another kind of error", () => {
+    expect(
+      bedrockModelAccessMessage(
+        Object.assign(new Error(AWS_TEXT), { name: "ValidationException" }),
+        "m",
+      ),
+    ).toBeUndefined();
   });
 });
 

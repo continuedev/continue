@@ -472,3 +472,56 @@ describe("BedrockApi cache points on non-Claude models", () => {
     expect(JSON.stringify(body(model))).toContain("cachePoint");
   });
 });
+
+describe("BedrockApi when the call is refused", () => {
+  const AWS_TEXT =
+    "anthropic.claude-haiku-5-5 is not available for this account. You can explore other available models on Amazon Bedrock.";
+
+  const refusedWith = (name: string, message: string) => {
+    class RefusedApi extends BedrockApi {
+      async getClient() {
+        return {
+          send: async () => {
+            throw Object.assign(new Error(message), { name });
+          },
+        } as any;
+      }
+    }
+    return new RefusedApi({
+      provider: "bedrock",
+      env: { region: "us-east-1", crossRegionInference: "us" },
+    } as any);
+  };
+
+  const stream = async (api: BedrockApi) => {
+    const chunks = api.chatCompletionStream(
+      {
+        model: "anthropic.claude-haiku-5-5",
+        messages: [{ role: "user", content: "hi" }],
+        stream: true,
+      } as any,
+      new AbortController().signal,
+    );
+    for await (const _ of chunks) {
+      // the first step throws
+    }
+  };
+
+  it("explains a model the account has not been given, naming the ID it sent", async () => {
+    const error = await stream(
+      refusedWith("AccessDeniedException", AWS_TEXT),
+    ).catch((e: Error) => e);
+    const message = (error as Error).message;
+    expect(message).toContain("refused us.anthropic.claude-haiku-5-5");
+    expect(message).toContain("use-case form");
+    expect(message.endsWith(`AWS said: ${AWS_TEXT}`)).toBe(true);
+    expect(message).not.toContain("Error processing Bedrock stream");
+  });
+
+  it("keeps the existing message for another AccessDenied refusal", async () => {
+    const text = "User: dev is not authorized to perform: bedrock:InvokeModel";
+    await expect(
+      stream(refusedWith("AccessDeniedException", text)),
+    ).rejects.toThrow(new Error(`Error processing Bedrock stream: ${text}`));
+  });
+});

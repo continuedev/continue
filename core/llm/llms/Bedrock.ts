@@ -25,7 +25,10 @@ import {
 } from "@aws-sdk/client-bedrock";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { getTlsErrorHint } from "@continuedev/fetch";
-import { fillMissingToolResults } from "@continuedev/openai-adapters";
+import {
+  bedrockModelAccessMessage,
+  fillMissingToolResults,
+} from "@continuedev/openai-adapters";
 import type { NodeHttpHandler } from "@smithy/node-http-handler";
 
 import type { CompletionOptions, RequestOptions } from "../../index.js";
@@ -360,6 +363,19 @@ class Bedrock extends BaseLLM {
     try {
       yield* this._streamChatInner(messages, signal, options);
     } catch (e) {
+      const accessMessage = bedrockModelAccessMessage(
+        e,
+        applyCrossRegionInference(
+          options.model,
+          this.crossRegionInference,
+          this.region,
+        ),
+      );
+      if (accessMessage && e instanceof Error) {
+        // The same error object, so route failover still sees its name.
+        e.message = accessMessage;
+        throw e;
+      }
       throw this._withHint(e);
     }
   }
