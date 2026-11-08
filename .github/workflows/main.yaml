@@ -18,6 +18,10 @@ on:
         description: "Create this release and tag (v<version>-vscode, matching extensions/vscode/package.json) at the commit being built. Empty: build only, unless run from a tag."
         required: false
         default: ""
+      republish_run_id:
+        description: "Publish only: the ID of an earlier run of this workflow whose .vsix files go to the VS Code Marketplace again. Nothing is built or released; versions already there are skipped. Needs publish_build true."
+        required: false
+        default: ""
 
 jobs:
   check_release_name:
@@ -49,7 +53,7 @@ jobs:
 
   build:
     needs: [check_release_name, check-version]
-    if: needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
+    if: (needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch') && inputs.republish_run_id == ''
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -130,7 +134,7 @@ jobs:
   # published to npm.
   cli:
     needs: [check_release_name, check-version]
-    if: needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
+    if: (needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch') && inputs.republish_run_id == ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -185,7 +189,7 @@ jobs:
     # Only a tag becomes a release. Run from a branch, the workflow builds
     # every package and stops here (a dry run), instead of tagging a release
     # with the branch name.
-    if: startsWith(github.ref, 'refs/tags/') || inputs.release_tag != ''
+    if: (startsWith(github.ref, 'refs/tags/') || inputs.release_tag != '') && inputs.republish_run_id == ''
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -265,26 +269,48 @@ jobs:
   # credential, under a policy for this repository, this workflow file and
   # the `marketplace` environment. Only the normal builds are published: the
   # agents builds use proposed APIs, which the Marketplace refuses.
+  #
+  # With republish_run_id, this is the only job that runs: it takes that run's
+  # .vsix files and publishes the ones the Marketplace does not have yet. 2.4.4,
+  # the extension's first publish, kept only its first platform of six.
   publish-marketplace:
     runs-on: ubuntu-latest
     needs:
       - build
-    if: (github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true') && github.repository == 'b1tninja/continuous'
+    if: >-
+      !cancelled()
+      && (needs.build.result == 'success' || inputs.republish_run_id != '')
+      && (github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true')
+      && github.repository == 'b1tninja/continuous'
     environment: marketplace
     permissions:
+      actions: read
       contents: read
       id-token: write
     steps:
       - uses: actions/download-artifact@v8
+        if: inputs.republish_run_id == ''
         with:
           pattern: "*-vsix"
           path: vsix-artifacts
           merge-multiple: true
 
+      - uses: actions/download-artifact@v8
+        if: inputs.republish_run_id != ''
+        with:
+          pattern: "*-vsix"
+          path: vsix-artifacts
+          merge-multiple: true
+          run-id: ${{ inputs.republish_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish to VS Code Marketplace
         run: |
+          ls -l vsix-artifacts
           # Each package gets its own ID token and Marketplace credential.
-          for f in vsix-artifacts/*.vsix; do npx --yes @vscode/vsce@4.1.0 publish --oidc --packagePath "$f"; done
+          # --skip-duplicate: a platform already published at this version is
+          # skipped, so a re-run only adds the missing ones.
+          for f in vsix-artifacts/*.vsix; do npx --yes @vscode/vsce@4.1.0 publish --oidc --skip-duplicate --packagePath "$f"; done
 
   # Open VSX has no trusted publishing, so it keeps its token; skipped when the
   # secret is not set.
@@ -292,7 +318,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true'
+    if: (github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true') && inputs.republish_run_id == ''
     permissions:
       contents: read
     env:
