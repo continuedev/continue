@@ -498,7 +498,8 @@ export async function streamChatResponse(
       toolNames: tools.map((t) => t.function.name),
     });
 
-    // Get response from LLM
+    // Get response from LLM ("Steer now" interrupts only while it streams)
+    callbacks?.onModelStreaming?.(true);
     const { content, toolCalls, shouldContinue, usage } =
       await processStreamingResponse({
         isHeadless,
@@ -509,7 +510,7 @@ export async function streamChatResponse(
         callbacks,
         tools,
         systemMessage,
-      });
+      }).finally(() => callbacks?.onModelStreaming?.(false));
 
     if (abortController?.signal.aborted) {
       return finalResponse || content || fullResponse;

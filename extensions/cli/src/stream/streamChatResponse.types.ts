@@ -23,6 +23,12 @@ export interface StreamCallbacks {
    * is appended to the conversation, so the model reads it in the same turn.
    */
   onToolBoundary?: () => Promise<ChatHistoryItem | undefined>;
+  /**
+   * True while the model's reply streams, false once it has ended (before any
+   * of its tool calls run). "Steer now" interrupts only while it is true, so a
+   * running tool is never cut short.
+   */
+  onModelStreaming?: (streaming: boolean) => void;
 }
 
 export function getDefaultCompletionOptions(

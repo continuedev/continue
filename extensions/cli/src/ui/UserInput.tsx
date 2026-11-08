@@ -105,6 +105,8 @@ interface UserInputProps {
   isCompacting?: boolean;
   inputMode: boolean;
   onInterrupt?: () => void;
+  /** Steer now (a second Enter on an empty prompt); false when it did nothing */
+  onSteerNow?: () => boolean;
   assistant?: AssistantConfig;
   wasInterrupted?: boolean;
   onFileAttached?: (filePath: string, content: string) => void;
@@ -122,6 +124,7 @@ const UserInput: React.FC<UserInputProps> = ({
   isCompacting = false,
   inputMode,
   onInterrupt,
+  onSteerNow,
   assistant,
   wasInterrupted = false,
   onFileAttached,
@@ -615,6 +618,15 @@ const UserInput: React.FC<UserInputProps> = ({
       // Enter on an empty prompt with messages queued
       if (!textBuffer.text.trim() && !isRemoteMode) {
         if (isWaitingForResponse || isCompacting) {
+          // A second Enter steers now: the model's reply ends where it is
+          // and the queue goes at once (not while a tool runs).
+          if (
+            isWaitingForResponse &&
+            messageQueue.isSteerRequested() &&
+            onSteerNow?.()
+          ) {
+            return true;
+          }
           // Steer: deliver the queue at the next tool boundary, inside the
           // running turn. Without tool calls it goes when the reply ends.
           messageQueue.requestSteer();

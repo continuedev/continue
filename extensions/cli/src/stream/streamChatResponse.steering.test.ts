@@ -182,4 +182,45 @@ describe("streamChatResponse - steering at the tool boundary", () => {
 
     expect(onToolBoundary).not.toHaveBeenCalled();
   });
+
+  it("reports the model as streaming only while its reply streams, never while tools run", async () => {
+    // "Steer now" interrupts only while this is true
+    const events: string[] = [];
+    const { handleToolCalls } = await import("./handleToolCalls.js");
+    vi.mocked(handleToolCalls).mockImplementationOnce(async () => {
+      events.push("tools");
+      return false;
+    });
+    const { api } = llmReturning(toolCallChunks, [chunk({ content: "ok" })]);
+
+    await streamChatResponse(chatHistory, model, api, abortController, {
+      onModelStreaming: (streaming) =>
+        events.push(streaming ? "model" : "model done"),
+    });
+
+    expect(events).toEqual([
+      "model",
+      "model done",
+      "tools",
+      "model",
+      "model done",
+    ]);
+  });
+
+  it("reports the model stream ended when it fails", async () => {
+    const events: boolean[] = [];
+    const api = {
+      chatCompletionStream: vi.fn().mockImplementation(async function* () {
+        yield chunk({ content: "partial" });
+        throw new Error("connection reset");
+      }),
+    } as unknown as BaseLlmApi;
+
+    await expect(
+      streamChatResponse(chatHistory, model, api, abortController, {
+        onModelStreaming: (streaming) => events.push(streaming),
+      }),
+    ).rejects.toThrow();
+    expect(events).toEqual([true, false]);
+  });
 });

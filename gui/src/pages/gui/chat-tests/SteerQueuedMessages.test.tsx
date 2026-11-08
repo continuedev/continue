@@ -160,6 +160,88 @@ describe("Steering with queued messages", () => {
     expect(text(atEnd.at(-1))).toContain("afterwards, summarise");
   });
 
+  test("Steer now while the model writes ends its reply there and sends the message at once", async () => {
+    const rendered = await renderWithProviders(<Chat />);
+    const { ideMessenger, store } = rendered;
+    await act(async () => {
+      addAndSelectMockLlm(store, ideMessenger);
+    });
+    ideMessenger.responses["context/getSymbolsForFiles"] = {};
+    const requests: ChatMessage[][] = [];
+    ideMessenger.responseHandlers["llm/compileChat"] = async ({
+      messages,
+    }: any) => {
+      requests.push(messages);
+      return {
+        compiledChatMessages: messages,
+        didPrune: false,
+        contextPercentage: 0.5,
+      };
+    };
+    const streamChat = vi.spyOn(ideMessenger, "llmStreamChat");
+
+    // A long reply that is still being written
+    ideMessenger.chatStreamDelay = 50;
+    await sendInputWithMockedResponse(
+      ideMessenger,
+      "write an essay",
+      Array.from({ length: 40 }, (_, i) => ({
+        role: "assistant" as const,
+        content: `part${i} `,
+      })),
+    );
+    await waitFor(() =>
+      expect(text(store.getState().session.history.at(-1)?.message)).toContain(
+        "part1 ",
+      ),
+    );
+
+    await typeAndPressEnter("stop, just say hi");
+    await typeAndPressEnter("and then summarise");
+    expect(store.getState().session.queuedMessages).toHaveLength(2);
+
+    ideMessenger.chatStreamDelay = 0;
+    ideMessenger.chatResponse = [{ role: "assistant", content: "Hi." }];
+    await act(async () => {
+      document
+        .querySelectorAll<HTMLElement>(
+          "[data-testid=queued-message-steer-now]",
+        )[0]
+        .click();
+    });
+
+    // The steered request, then (when that short turn ends) the other message
+    await waitFor(() => expect(streamChat).toHaveBeenCalledTimes(3), {
+      timeout: 5000,
+    });
+    // The steered request: the reply so far, then the steer
+    const steered = requests[1].filter((m) => m.role !== "system");
+    expect(text(steered.at(-1))).toContain("stop, just say hi");
+    expect(steered.at(-2)?.role).toBe("assistant");
+    expect(text(steered.at(-2))).toContain("part0 ");
+    expect(text(steered.at(-2))).not.toContain("part39");
+
+    expect(text(steered.at(-1))).not.toContain("summarise");
+    // The other message was not steered: it went when the new turn ended
+    expect(text(requests[2].at(-2))).toBe("Hi.");
+    expect(text(requests[2].at(-1))).toContain("and then summarise");
+    expect(store.getState().session.isQueuePaused).toBe(false);
+  });
+
+  test("Steer now is not offered while a tool runs", async () => {
+    const { release } = await startTurnWithRunningTool();
+    await typeAndPressEnter("wait for it");
+    expect(
+      document.querySelector("[data-testid=queued-message-steer-now]"),
+    ).toBeNull();
+    expect(
+      document.querySelector("[data-testid=queued-message-send]"),
+    ).not.toBeNull();
+    await act(async () => {
+      release();
+    });
+  });
+
   test("Stop cancels steering and pauses the queue", async () => {
     const { store, streamChat, release } = await startTurnWithRunningTool();
 

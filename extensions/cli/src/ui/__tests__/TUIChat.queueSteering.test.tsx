@@ -152,6 +152,53 @@ describe("TUIChat - message queue and steering", () => {
     }
   });
 
+  it("a second Enter steers now: the reply ends where it is and the queue goes at once", async () => {
+    const first = heldTurn(textTurn("a very long essay"));
+    const llm = new ScriptedLlm([first.turn, textTurn("steered reply here")]);
+    await registerFlowServices({ llm });
+    const ui = renderFlow();
+    try {
+      await type(ui.stdin, "write an essay");
+      await type(ui.stdin, ENTER);
+      await first.started;
+
+      await type(ui.stdin, "no, just say hi");
+      await type(ui.stdin, ENTER);
+      // The first Enter on the empty prompt steers at the next tool boundary
+      await type(ui.stdin, ENTER);
+      await waitUntil(
+        () => (ui.lastFrame() ?? "").includes("Enter again to steer now"),
+        "the steer-now hint",
+        ui.lastFrame,
+      );
+      expect(llm.requests).toHaveLength(1);
+
+      // The second steers now
+      await type(ui.stdin, ENTER);
+      await waitUntil(
+        () => llm.requests.length === 2,
+        "the steered request",
+        ui.lastFrame,
+      );
+      expect(first.wasAborted()).toBe(true);
+      const sent = llm.requests[1].messages.filter((m) => m.role === "user");
+      expect(messageText(sent.at(-1)!)).toBe("no, just say hi");
+      expect(messageQueue.isPaused()).toBe(false);
+      expect(messageQueue.getQueueLength()).toBe(0);
+
+      await waitUntil(
+        () => ui.allOutput().includes("steered reply here"),
+        "the steered reply",
+        ui.lastFrame,
+      );
+      expect(ui.allOutput()).not.toContain("a very long essay");
+      await tick(300);
+      expect(llm.requests).toHaveLength(2);
+    } finally {
+      ui.unmount();
+    }
+  });
+
   it("Esc pauses the queue, and the next message sends it along", async () => {
     const first = heldTurn(textTurn("never shown"));
     const llm = new ScriptedLlm([first.turn, textTurn("after the stop")]);

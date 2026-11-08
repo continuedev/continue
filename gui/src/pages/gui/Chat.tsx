@@ -66,7 +66,7 @@ import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
-import { cancelStream } from "../../redux/thunks/cancelStream";
+import { cancelStream, interruptStream } from "../../redux/thunks/cancelStream";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
@@ -308,6 +308,26 @@ export function Chat() {
     [dispatch, reduxStore, sendQueuedMessages],
   );
 
+  // "Steer now" while the model writes: end its reply where it is (what it
+  // wrote stays, unfinished tool calls are cancelled) and send these at once,
+  // instead of after the next tool round. Other queued messages keep waiting
+  // for the end of the new turn. A running tool is never cut short.
+  const steerNow = useCallback(
+    async (ids: string[]) => {
+      const state = reduxStore.getState();
+      const isToolRunning = selectCurrentToolCalls(state).some(
+        (tc) => tc.status === "calling",
+      );
+      if (!state.session.isStreaming || isToolRunning) {
+        sendNowOrSteer(ids);
+        return;
+      }
+      await dispatch(interruptStream());
+      await sendQueuedMessages(ids);
+    },
+    [dispatch, reduxStore, sendNowOrSteer, sendQueuedMessages],
+  );
+
   useEffect(() => {
     if (isQueueSendRequested && !isStreaming) {
       void sendQueuedMessages();
@@ -520,6 +540,7 @@ export function Chat() {
         <TaskListPanel />
         <QueuedMessages
           onSendNow={sendNowOrSteer}
+          onSteerNow={(ids) => void steerNow(ids)}
           onEdit={editQueuedMessage}
           onRemove={(id) => dispatch(removeQueuedMessage(id))}
         />

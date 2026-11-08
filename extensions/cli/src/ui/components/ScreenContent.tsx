@@ -43,6 +43,8 @@ interface ScreenContentProps {
   isCompacting: boolean;
   inputMode: boolean;
   handleInterrupt: () => void;
+  /** Steer now; false when it did nothing (see useChat) */
+  handleSteerNow?: () => boolean;
   handleFileAttached: (filePath: string, content: string) => void;
   isInputDisabled: boolean;
   wasInterrupted?: boolean;
@@ -80,6 +82,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
   isCompacting,
   inputMode,
   handleInterrupt,
+  handleSteerNow,
   handleFileAttached,
   isInputDisabled,
   wasInterrupted = false,
@@ -186,6 +189,7 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
         isCompacting={isCompacting}
         inputMode={inputMode}
         handleInterrupt={handleInterrupt}
+        handleSteerNow={handleSteerNow}
         assistant={services.config?.config || undefined}
         wasInterrupted={wasInterrupted}
         handleFileAttached={handleFileAttached}

@@ -227,6 +227,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     pendingMessage,
     handleUserMessage,
     handleInterrupt,
+    handleSteerNow,
     handleFileAttached,
     resetChatHistory,
     handleEditMessage,
@@ -471,6 +472,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
           isCompacting={isCompacting}
           inputMode={inputMode}
           handleInterrupt={handleInterrupt}
+          handleSteerNow={handleSteerNow}
           handleFileAttached={handleFileAttached}
           isInputDisabled={isInputDisabled}
           wasInterrupted={wasInterrupted}

@@ -1,4 +1,5 @@
 import {
+  BoltIcon,
   PaperAirplaneIcon,
   PencilIcon,
   XMarkIcon,
@@ -14,6 +15,11 @@ interface QueuedMessagesProps {
    * running tool calls finish (steering), without stopping the turn.
    */
   onSendNow: (ids: string[]) => void;
+  /**
+   * Steer now: end the model's reply where it is and send these at once.
+   * Offered only while the model writes; a running tool always finishes.
+   */
+  onSteerNow?: (ids: string[]) => void;
   /** Move the message back into the input for editing */
   onEdit: (message: QueuedMessage) => void;
   onRemove: (id: string) => void;
@@ -34,12 +40,14 @@ export function QueuedMessages(props: QueuedMessagesProps) {
     selectCurrentToolCalls(s).some((tc) => tc.status === "calling"),
   );
   const isWorking = isStreaming || isToolRunning;
+  // Only the model's own writing is cut short, never a running tool
+  const canSteerNow = !!props.onSteerNow && isStreaming && !isToolRunning;
 
   if (queued.length === 0) return null;
 
   const steered = queued.filter((m) => m.steer).length;
   const sendNowTitle = isWorking
-    ? "Send after the running tool calls, in this turn (Stop interrupts now)"
+    ? "Send after the running tool calls, in this turn"
     : "Send this now";
 
   return (
@@ -92,6 +100,15 @@ export function QueuedMessages(props: QueuedMessagesProps) {
           >
             <PencilIcon className="h-3.5 w-3.5" />
           </QueueButton>
+          {canSteerNow && (
+            <QueueButton
+              testId="queued-message-steer-now"
+              title="Steer now: stop the reply here and send this"
+              onClick={() => props.onSteerNow?.([message.id])}
+            >
+              <BoltIcon className="h-3.5 w-3.5" />
+            </QueueButton>
+          )}
           {!message.steer && (
             <QueueButton
               testId="queued-message-send"

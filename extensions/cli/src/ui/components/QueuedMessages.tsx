@@ -12,7 +12,8 @@ interface QueuedMessagesProps {
 }
 
 function queueHint(paused: boolean, steerRequested: boolean): string {
-  if (steerRequested) return "sending after the current tool calls";
+  if (steerRequested)
+    return "sending after the current tool calls · Enter again to steer now";
   if (paused) return "paused · Enter to send · ↑ to edit";
   return "sent when the turn ends · Enter on empty prompt to send now · ↑ to edit";
 }

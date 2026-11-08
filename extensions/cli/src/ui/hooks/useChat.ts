@@ -18,6 +18,7 @@ import {
 } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
 import {
+  isQueuedCommand,
   mergeQueuedMessages,
   messageQueue,
 } from "../../stream/messageQueue.js";
@@ -165,6 +166,10 @@ export function useChat({
     useState<AbortController | null>(null);
   const [compactionAbortController, setCompactionAbortController] =
     useState<AbortController | null>(null);
+  // The model's reply is streaming (not a tool run or an approval wait)
+  const modelStreamingRef = useRef(false);
+  // The running response was ended by "Steer now": send the queue at once
+  const steerNowRef = useRef(false);
   const [isChatHistoryInitialized, setIsChatHistoryInitialized] = useState(
     // If we're resuming and found a saved session, we're already initialized
     // If we're forking and found a session to fork from, we're already initialized
@@ -321,6 +326,9 @@ export function useChat({
       // person asked for it (Enter on an empty prompt while the agent works).
       streamCallbacks.onToolBoundary = () =>
         buildSteeringMessage(messageQueue, { onShowStatusMessage, model });
+      streamCallbacks.onModelStreaming = (streaming: boolean) => {
+        modelStreamingRef.current = streaming;
+      };
 
       // Execute streaming chat response
       await executeStreaming({
@@ -367,8 +375,12 @@ export function useChat({
       setInputMode(true);
 
       // Stop and errors pause the queue: what was queued stays visible but
-      // is not sent until the person resumes or sends a new message.
-      if (failed || controller.signal.aborted) {
+      // is not sent until the person resumes or sends a new message. "Steer
+      // now" also aborts, but to send the queue right away.
+      const steeredNow = steerNowRef.current;
+      steerNowRef.current = false;
+      modelStreamingRef.current = false;
+      if (failed || (controller.signal.aborted && !steeredNow)) {
         messageQueue.pause();
       }
 
@@ -725,6 +737,37 @@ export function useChat({
     await processMessage(message, imageMap, false);
   };
 
+  /**
+   * Steer now: end the model's reply where it is and send the queued
+   * messages at once, instead of after the next tool round. Only while the
+   * model itself streams; a running tool or an approval wait is left alone.
+   * Returns false when it did nothing (the steer then waits as before).
+   */
+  const handleSteerNow = (): boolean => {
+    if (isRemoteMode || !abortController || !isWaitingForResponse) {
+      return false;
+    }
+    if (!modelStreamingRef.current) return false;
+    if (!messageQueue.list().some((m) => !isQueuedCommand(m.message))) {
+      return false;
+    }
+    steerNowRef.current = true;
+    abortController.abort();
+    // The partial reply goes, as on Stop: the steered request starts from
+    // the conversation before it, which the server already has cached
+    setChatHistory((current) => {
+      const lastMessage = current[current.length - 1];
+      if (
+        lastMessage?.message.role === "assistant" &&
+        !lastMessage.toolCallStates?.length
+      ) {
+        return current.slice(0, -1);
+      }
+      return current;
+    });
+    return true;
+  };
+
   const handleInterrupt = () => {
     // In remote mode, send interrupt signal to server
     if (isRemoteMode && remoteUrl) {
@@ -919,6 +962,7 @@ export function useChat({
     pendingMessage,
     handleUserMessage,
     handleInterrupt,
+    handleSteerNow,
     handleFileAttached,
     resetChatHistory,
     handleEditMessage,

@@ -23,3 +23,17 @@ export const cancelStream = createAsyncThunk<void, undefined, ThunkApiType>(
     dispatch(clearDanglingMessages());
   },
 );
+
+/**
+ * End the model's reply where it is, keeping what it already wrote, as Stop
+ * does, but leave the queue alone: "Steer now" sends the next message itself.
+ * The running stream thunk sees its aborter fired and returns.
+ */
+export const interruptStream = createAsyncThunk<void, undefined, ThunkApiType>(
+  "chat/interruptStream",
+  async (_, { dispatch }) => {
+    dispatch(setInactive());
+    dispatch(abortStream());
+    dispatch(clearDanglingMessages());
+  },
+);
