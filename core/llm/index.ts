@@ -43,7 +43,11 @@ import {
 } from "../util/unresolvedSecrets.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 import { retryStreamOnDroppedConnection } from "./utils/streamRetry.js";
-import { promptProgressOf, streamsPromptProgress } from "./localServers.js";
+import {
+  promptProgressOf,
+  streamsPromptProgress,
+  withThinkingOff,
+} from "./localServers.js";
 
 import {
   autodetectPromptTemplates,
@@ -1401,6 +1405,10 @@ export abstract class BaseLLM implements ILLM {
             includeReasoningContentField: this.supportsReasoningContentField,
           });
           body = this.modifyChatBody(body, completionOptions);
+          if (completionOptions.reasoning === false) {
+            // Edit and Apply ask for none; a local server's template needs telling
+            body = withThinkingOff(body, this.apiBase);
+          }
           // llama.cpp and Strata report how far they are in a long prompt
           if (
             completionOptions.stream !== false &&

@@ -18,6 +18,7 @@ import {
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
+import { isMissingEndpointError, withThinkingOff } from "../localServers.js";
 import {
   fromChatCompletionChunk,
   fromResponsesChunk,
@@ -38,6 +39,12 @@ const NON_CHAT_MODELS = [
   "babbage",
   "ada",
 ];
+
+/**
+ * `apiBase|model` pairs whose `/completions` answered 404: Strata, for one,
+ * serves only chat. Raw prompts for them go over chat from then on.
+ */
+const serversWithoutCompletions = new Set<string>();
 
 function isChatOnlyModel(model: string): boolean {
   // gpt and o-series models
@@ -430,6 +437,8 @@ class OpenAI extends BaseLLM {
       signal,
       options,
     )) {
+      // A thinking model's reasoning is not part of the completion.
+      if (chunk.role !== "assistant") continue;
       yield renderChatMessage(chunk);
     }
   }
@@ -517,27 +526,41 @@ class OpenAI extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    const serverKey = `${this.apiBase}|${options.model}`;
     if (
       !isChatOnlyModel(options.model) &&
       this.supportsCompletions() &&
+      !serversWithoutCompletions.has(serverKey) &&
       (NON_CHAT_MODELS.includes(options.model) ||
         this.useLegacyCompletionsEndpoint ||
         options.raw)
     ) {
-      for await (const content of this._legacystreamComplete(
-        renderChatMessage(messages[messages.length - 1]),
-        signal,
-        options,
-      )) {
-        yield {
-          role: "assistant",
-          content,
-        };
+      let yielded = false;
+      try {
+        for await (const content of this._legacystreamComplete(
+          renderChatMessage(messages[messages.length - 1]),
+          signal,
+          options,
+        )) {
+          yielded = true;
+          yield {
+            role: "assistant",
+            content,
+          };
+        }
+        return;
+      } catch (e) {
+        // Strata serves only chat: send this and later prompts there.
+        if (yielded || !isMissingEndpointError(e)) throw e;
+        serversWithoutCompletions.add(serverKey);
       }
-      return;
     }
 
-    const body = this._convertArgs(options, messages);
+    let body = this._convertArgs(options, messages);
+    if (options.raw) {
+      // A raw prompt (Tab) that has to go over chat: no thinking first.
+      body = withThinkingOff(body, this.apiBase);
+    }
 
     const response = await this.fetch(this._getEndpoint("chat/completions"), {
       method: "POST",

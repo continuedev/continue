@@ -46,3 +46,19 @@ describe("autocomplete template for Bedrock model IDs", () => {
     expect(isBedrockChatOnlyModel(model)).toBe(false);
   });
 });
+
+describe("autocomplete template for Qwen 3 chat models", () => {
+  it.each(["qwen3.8-flash-next-nvfp4-nvfp4", "Qwen3.6-35B-A3B", "qwen3:8b"])(
+    "uses the hole-filler prompt for %s",
+    (model) => {
+      expect(isHoleFiller(model)).toBe(true);
+    },
+  );
+
+  it.each(["qwen3-coder:30b", "qwen2.5-coder:1.5b-base"])(
+    "keeps the FIM prompt for the coder model %s",
+    (model) => {
+      expect(isHoleFiller(model)).toBe(false);
+    },
+  );
+});

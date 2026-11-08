@@ -553,6 +553,13 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     return qwenMultifileFimTemplate;
   }
 
+  // Qwen 3 and later chat models (Qwen3.8-Flash-Next on Strata, qwen3:8b)
+  // are not FIM-trained, and Strata serves them over chat only, so the FIM
+  // tokens below would reach them as plain text.
+  if (/qwen3/.test(lowerCaseModel)) {
+    return holeFillerTemplate;
+  }
+
   if (lowerCaseModel.includes("granite") && lowerCaseModel.includes("4")) {
     return granite4FimTemplate;
   }

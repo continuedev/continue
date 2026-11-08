@@ -203,6 +203,36 @@ export function resetPromptProgressSupport(): void {
   progressSupport.clear();
 }
 
+/**
+ * Turn the model's thinking off for one request to a local server:
+ * `chat_template_kwargs.enable_thinking`, which llama.cpp, vLLM, SGLang and
+ * Strata hand to the chat template (Qwen 3 and its successors read it).
+ * Tab and Apply want code at once, not a minute of reasoning first. Only
+ * local addresses get the field, as a cloud API may refuse one it does not
+ * know; kwargs the body already has are kept.
+ */
+export function withThinkingOff<T extends object>(
+  body: T,
+  apiBase: string | undefined,
+): T {
+  if (!apiBase || !isLocalApiBase(apiBase)) return body;
+  const kwargs = (body as { chat_template_kwargs?: object })
+    .chat_template_kwargs;
+  return {
+    ...body,
+    chat_template_kwargs: { enable_thinking: false, ...kwargs },
+  };
+}
+
+/**
+ * True when a request failed because the server has no such endpoint, as
+ * Strata answers `/v1/completions` (it serves only chat).
+ */
+export function isMissingEndpointError(e: unknown): boolean {
+  const message = e instanceof Error ? e.message : String(e ?? "");
+  return /^HTTP (404|405|501)\b/.test(message);
+}
+
 /** llama.cpp's `prompt_progress`, as a streamed chunk carries it. */
 export function promptProgressOf(
   chunk: any,
