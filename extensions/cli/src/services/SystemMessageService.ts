@@ -5,7 +5,7 @@ import { logger } from "../util/logger.js";
 
 import { BaseService } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
-import { SERVICE_NAMES } from "./types.js";
+import { type ModelServiceState, SERVICE_NAMES } from "./types.js";
 
 export interface SystemMessageServiceState {
   additionalRules?: string[];
@@ -70,13 +70,26 @@ export class SystemMessageService extends BaseService<SystemMessageServiceState>
     return this.currentState;
   }
 
-  private cacheKey(mode: PermissionMode): string {
+  /**
+   * The id of the model in use, for the turn text's prompt profile (short for
+   * Qwen). Read without waiting: before the model service is ready the full
+   * text is built, and the key changes once a model is known.
+   */
+  private currentModelId(): string | undefined {
+    const model = serviceContainer.getSync<ModelServiceState>(
+      SERVICE_NAMES.MODEL,
+    ).value?.model;
+    return model?.model;
+  }
+
+  private cacheKey(mode: PermissionMode, modelId: string | undefined): string {
     const { additionalRules, format, headless } = this.currentState;
     return JSON.stringify([
       mode,
       additionalRules ?? [],
       format ?? null,
       headless ?? false,
+      modelId ?? null,
     ]);
   }
 
@@ -85,7 +98,8 @@ export class SystemMessageService extends BaseService<SystemMessageServiceState>
    * on has changed, otherwise built now and cached.
    */
   public async getSystemMessage(currentMode: PermissionMode): Promise<string> {
-    const key = this.cacheKey(currentMode);
+    const modelId = this.currentModelId();
+    const key = this.cacheKey(currentMode, modelId);
     const fingerprint = instructionFilesFingerprint();
     const cached = this.cache.get(key);
     if (cached && cached.fingerprint === fingerprint) {
@@ -98,6 +112,7 @@ export class SystemMessageService extends BaseService<SystemMessageServiceState>
       additionalRules,
       format,
       headless,
+      modelId,
     );
     this.cache.set(key, { message: systemMessage, fingerprint });
 

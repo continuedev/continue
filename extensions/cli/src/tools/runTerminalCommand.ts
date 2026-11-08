@@ -145,7 +145,7 @@ export const runTerminalCommandTool: Tool = {
 
 Commands are automatically executed from the current working directory (${process.cwd()}), so there's no need to change directories with 'cd' commands.
 
-IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed, awk, etc).
+IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed, awk, etc). A command that writes a file (redirection, Set-Content, node -e or python -c calling a write) counts as a file edit: use Write or Edit for it, and if Write or Edit was refused, the command is refused too.
 `,
   parameters: {
     type: "object",

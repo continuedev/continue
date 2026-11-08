@@ -63,6 +63,35 @@ describe("constructSystemMessage", () => {
     expect(result).toContain('<context name="environment">');
   });
 
+  it("gives a Qwen model the short turn text and others the full one", async () => {
+    const qwenPlan = await constructSystemMessage(
+      "plan",
+      undefined,
+      undefined,
+      false,
+      "qwen.qwen3-coder-30b-a3b-v1:0",
+    );
+    expect(qwenPlan).toContain("do not make a task list");
+    expect(qwenPlan).toContain("End by calling PresentPlan, then stop");
+    const qwenAct = await constructSystemMessage(
+      "normal",
+      undefined,
+      undefined,
+      false,
+      "qwen3.8-flash-next-nvfp4-nvfp4",
+    );
+    expect(qwenAct).toContain("Keep going until the request is done");
+    const claude = await constructSystemMessage(
+      "plan",
+      undefined,
+      undefined,
+      false,
+      "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    );
+    expect(claude).toContain("Two kinds of unknowns");
+    expect(claude).not.toContain("do not make a task list");
+  });
+
   it("is the same text for two calls in the same process", async () => {
     expect(await constructSystemMessage("normal")).toBe(
       await constructSystemMessage("normal"),

@@ -149,6 +149,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     options.rule,
     undefined,
     true,
+    model.model,
   );
 
   const initialHistory: ChatHistoryItem[] = [];

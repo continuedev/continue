@@ -1,8 +1,8 @@
 import { ModelDescription, Tool } from "core";
 import {
-  DEFAULT_AGENT_SYSTEM_MESSAGE,
+  agentSystemMessageFor,
   DEFAULT_CHAT_SYSTEM_MESSAGE,
-  DEFAULT_PLAN_SYSTEM_MESSAGE,
+  planSystemMessageFor,
 } from "core/llm/defaultSystemMessages";
 
 export const NO_TOOL_WARNING =
@@ -15,10 +15,14 @@ export function getBaseSystemMessage(
 ): string {
   let baseMessage: string;
 
+  // The model's own text wins; otherwise the turn text its prompt profile
+  // selects (short for Qwen, full elsewhere; core/llm/prompts/turns.ts).
   if (messageMode === "agent") {
-    baseMessage = model.baseAgentSystemMessage ?? DEFAULT_AGENT_SYSTEM_MESSAGE;
+    baseMessage =
+      model.baseAgentSystemMessage ?? agentSystemMessageFor(model.model);
   } else if (messageMode === "plan") {
-    baseMessage = model.basePlanSystemMessage ?? DEFAULT_PLAN_SYSTEM_MESSAGE;
+    baseMessage =
+      model.basePlanSystemMessage ?? planSystemMessageFor(model.model);
   } else {
     baseMessage = model.baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE;
   }

@@ -4,9 +4,9 @@ import * as path from "path";
 
 import { parseMarkdownRule, RuleObject } from "@continuedev/config-yaml";
 import {
-  actTurn,
+  actTurnFor,
   CLI_TURN_TOOL_NAMES,
-  planTurn,
+  planTurnFor,
 } from "core/llm/prompts/turns.js";
 
 import { processRule } from "./hubLoader.js";
@@ -142,6 +142,8 @@ export async function constructSystemMessage(
   additionalRules?: string[],
   format?: "json",
   headless?: boolean,
+  /** The model id the message is for; picks the turn text's prompt profile. */
+  model?: string,
 ): Promise<string> {
   let agentContent = "";
 
@@ -192,11 +194,12 @@ export async function constructSystemMessage(
   let systemMessage = baseSystemMessage;
 
   // The turn's instructions: a plan turn in plan mode, an act turn otherwise.
-  // The same texts serve the IDE, so the two surfaces cannot drift apart.
+  // The same texts serve the IDE, so the two surfaces cannot drift apart; the
+  // model's prompt profile picks the short text for small models (Qwen).
   if (mode === "plan") {
-    systemMessage += `\n<context name="planMode">\n${planTurn(CLI_TURN_TOOL_NAMES)}\n</context>\n`;
+    systemMessage += `\n<context name="planMode">\n${planTurnFor(model, CLI_TURN_TOOL_NAMES)}\n</context>\n`;
   } else {
-    systemMessage += `\n<context name="agentMode">\n${actTurn(CLI_TURN_TOOL_NAMES)}\n</context>\n`;
+    systemMessage += `\n<context name="agentMode">\n${actTurnFor(model, CLI_TURN_TOOL_NAMES)}\n</context>\n`;
     // Check if commit signature is disabled via environment variable
     if (!process.env.CONTINUE_CLI_DISABLE_COMMIT_SIGNATURE) {
       systemMessage += `\n<context name="commitSignature">When creating commits using any CLI or tool, include the following in the commit message:

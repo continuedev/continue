@@ -1,4 +1,8 @@
-import { actTurn, IDE_TURN_TOOL_NAMES, planTurn } from "./prompts/turns.js";
+import {
+  actTurnFor,
+  IDE_TURN_TOOL_NAMES,
+  planTurnFor,
+} from "./prompts/turns.js";
 
 export const DEFAULT_SYSTEM_MESSAGES_URL =
   "https://github.com/b1tninja/continuous/blob/main/core/llm/defaultSystemMessages.ts";
@@ -64,27 +68,36 @@ ${EDIT_CODE_INSTRUCTIONS}
 /**
  * The act turn's instructions (core/llm/prompts/turns.ts), shared with the
  * CLI, plus the IDE's code-block rules. A Loop item run uses the same text.
+ * `model` picks the turn text by prompt profile (short for Qwen).
  */
-export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
+export function agentSystemMessageFor(model?: string): string {
+  return `\
 <important_rules>
-${actTurn(IDE_TURN_TOOL_NAMES)}
+${actTurnFor(model, IDE_TURN_TOOL_NAMES)}
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 ${BRIEF_LAZY_INSTRUCTIONS}
 Code blocks are for showing options. Make changes with the edit tools.
 </important_rules>`;
+}
+
+export const DEFAULT_AGENT_SYSTEM_MESSAGE = agentSystemMessageFor();
 
 /**
  * The plan turn's instructions, shared with the CLI, plus the IDE's code-block
  * rules. Plan mode offers only read-only tools (selectActiveTools), so the
  * text states the limit rather than asking the model to keep it. A Loop
- * re-plan uses the same text.
+ * re-plan uses the same text. `model` picks the text by prompt profile.
  */
-export const DEFAULT_PLAN_SYSTEM_MESSAGE = `\
+export function planSystemMessageFor(model?: string): string {
+  return `\
 <important_rules>
-${planTurn(IDE_TURN_TOOL_NAMES)}
+${planTurnFor(model, IDE_TURN_TOOL_NAMES)}
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 ${BRIEF_LAZY_INSTRUCTIONS}
 Code blocks here show what a change would look like. They are not edits.
 </important_rules>`;
+}
+
+export const DEFAULT_PLAN_SYSTEM_MESSAGE = planSystemMessageFor();

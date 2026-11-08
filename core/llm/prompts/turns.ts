@@ -68,9 +68,49 @@ You can call several read-only tools at once.`;
 }
 
 /**
+ * Which turn text a model gets. "short" is the same rules in a third of the
+ * words with the finish rule stated twice, for models whose instruction
+ * following falls off as rules pile up. Measured on 2026-11-08
+ * (research-qwen-harness.md): on Qwen3 the short turns won or tied in every
+ * scenario, and on Qwen3-Coder-30B the full plan turn took 22 requests with
+ * seven tool calls leaked as text where the short one took 10 and none.
+ * Other families keep the full text until they are measured; a model's own
+ * `baseAgentSystemMessage` or `basePlanSystemMessage` wins over both.
+ */
+export type PromptProfile = "full" | "short";
+
+const SHORT_PROMPT_MODELS = /qwen/i;
+
+export function promptProfile(model: string | undefined): PromptProfile {
+  return model && SHORT_PROMPT_MODELS.test(model) ? "short" : "full";
+}
+
+/** The act turn for a model: the short text where the profile says so. */
+export function actTurnFor(
+  model: string | undefined,
+  names: TurnToolNames = IDE_TURN_TOOL_NAMES,
+): string {
+  return promptProfile(model) === "short"
+    ? actTurnShort(names)
+    : actTurn(names);
+}
+
+/** The plan turn for a model: the short text where the profile says so. */
+export function planTurnFor(
+  model: string | undefined,
+  names: TurnToolNames = IDE_TURN_TOOL_NAMES,
+): string {
+  return promptProfile(model) === "short"
+    ? planTurnShort(names)
+    : planTurn(names);
+}
+
+/**
  * The act turn for small models: the same rules in a third of the words,
- * with the finish rule stated twice. Not wired yet; see policy-areas-prompts.md,
- * section 3.1, for how a model should select it.
+ * with the finish rule stated first and last. The refusal line also closes
+ * the command route (Qwen Code's denial rule); the tools line covers the three
+ * failures seen on Bedrock Qwen: a made-up tool name, a missing required
+ * parameter, and the same failing call repeated.
  */
 export function actTurnShort(
   names: TurnToolNames = IDE_TURN_TOOL_NAMES,
@@ -80,10 +120,11 @@ export function actTurnShort(
 - Make the changes, run the project's checks for what you changed, fix what fails.
 - A reply with no tool call ends your turn. Do not list steps and stop: take the next step.
 - Stop only when done, when blocked on something only the person has, or before a step that is hard to undo.
-- A refused tool call says what to do next. Do not retry it.
+- A refused tool call says what to do next. Do not retry it, and do not reach the same result through a command.
+- Call only the tools listed. Give every required parameter. If a call fails twice the same way, do something else or report.
 - Choose small things yourself and say what you chose. Ask only when a choice changes the result and the code cannot settle it; give options.
 - If a task list is shown, keep it current with ${names.taskList}. Do not make one otherwise.
-- When done, say what you changed, what you ran, and what you could not verify.`;
+- When done, say what you changed, what you ran, and what you could not verify. Keep going until the request is done or you have named the blocker.`;
 }
 
 /** A plan turn: Plan mode, or a Loop re-plan. */
@@ -107,15 +148,22 @@ Finishing
 - When the plan is ready, call ${names.presentPlan} and stop. That call is the request for approval: do not ask "is this plan all right" in text or through a question, and do not repeat the plan after the call. Your turn ends only by calling ${names.presentPlan} or by asking the person a question.`;
 }
 
-/** The plan turn for small models. Not wired yet (see actTurnShort). */
+/**
+ * The plan turn for small models (see promptProfile). No task list: the
+ * plan's to-dos become it, and Qwen3-Coder-30B made ten TaskList calls while
+ * planning under the full text. The reserved-choice rule comes before the
+ * assume fallback, the order that stopped the full turn deciding reserved
+ * choices.
+ */
 export function planTurnShort(
   names: TurnToolNames = IDE_TURN_TOOL_NAMES,
 ): string {
   return `You are in plan mode. Work out what to do; the person decides whether to do it.
-- Your tools only read. Do not try to change anything, and do not offer to switch modes.
-- Find facts about the code by reading. Ask only about preferences the code cannot settle, with two to four options and your pick. If unanswered, use your pick and note it as an assumption; a choice the person kept for themselves, or a costly one, goes in \`decisions\` with the options and your pick instead.
+- Your tools only read. Do not create or change anything, do not make a task list, and do not offer to switch modes.
+- Find facts about the code by reading. Ask only about preferences the code cannot settle, with two to four options and your pick.
+- A choice the person kept for themselves, or a costly one, goes in \`decisions\` with the options and your pick; write the to-dos so they do not presuppose the answer. Any other open preference: use your pick and note it as an assumption.
 - Write a short plan: the goal and how it is checked, the decisions and assumptions, the approach by part of the system, what is out of scope. Then the to-dos, in order, each with a check command where one exists.
-- End by calling ${names.presentPlan}. Do not ask whether the plan is all right; that call is the question.`;
+- End by calling ${names.presentPlan}, then stop. Do not ask whether the plan is all right; that call is the question. Your turn ends only by calling ${names.presentPlan} or by asking a question.`;
 }
 
 /**
