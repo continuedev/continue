@@ -5,6 +5,7 @@ import {
   evaluateWithCoreRules,
   setAutoReviewEnabled,
   toCoreCall,
+  reviewerModel,
 } from "./coreRules.js";
 
 const bashCheck = (base: any, args: Record<string, unknown>) =>
@@ -232,5 +233,39 @@ describe("--auto-review flag state", () => {
     setAutoReviewEnabled(true);
     expect(m.isAutoReviewEnabled()).toBe(true);
     setAutoReviewEnabled(false);
+  });
+});
+
+describe("reviewerModel", () => {
+  const judge = {
+    name: "Judge",
+    provider: "openai",
+    model: "gpt-4.1-mini",
+    roles: ["reviewer"],
+  };
+  const chat = {
+    name: "Chat",
+    provider: "openai",
+    model: "gpt-4.1",
+    roles: ["chat"],
+  };
+
+  it("prefers the model modeModels.reviewer names, whatever its roles", () => {
+    const assistant = {
+      models: [chat, judge],
+      modeModels: { reviewer: { model: "Chat" } },
+    } as any;
+    expect(reviewerModel(assistant)?.name).toBe("Chat");
+  });
+
+  it("falls back to the first reviewer-role model, also for an unknown name", () => {
+    expect(reviewerModel({ models: [chat, judge] } as any)?.name).toBe("Judge");
+    expect(
+      reviewerModel({
+        models: [chat, judge],
+        modeModels: { reviewer: { model: "Nope" } },
+      } as any)?.name,
+    ).toBe("Judge");
+    expect(reviewerModel({ models: [chat] } as any)).toBeUndefined();
   });
 });

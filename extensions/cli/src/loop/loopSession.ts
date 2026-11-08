@@ -31,10 +31,15 @@ import {
   type LoopControlResult,
 } from "core/util/loopMode.js";
 import { createHistoryItem } from "core/util/messageConversion.js";
+import { useForLoopTurn } from "core/util/modelUse.js";
 
 import { isAutoReviewEnabled } from "../permissions/coreRules.js";
 import type { PermissionMode } from "../permissions/types.js";
-import { serviceContainer, services } from "../services/index.js";
+import {
+  applyModelForUse,
+  serviceContainer,
+  services,
+} from "../services/index.js";
 import { SERVICE_NAMES } from "../services/types.js";
 import {
   getSessionLoop,
@@ -223,7 +228,11 @@ export function planFilePath(uri = getSessionPlanFile()): string | undefined {
 
 let modeBeforeReplan: PermissionMode | undefined;
 
-/** An item runs in the mode the person works in, never in Plan mode. */
+/**
+ * An item runs in the mode the person works in, never in Plan mode. Its model
+ * (`modeModels.loop`, else the agent model) is switched where the turn is
+ * sent: prepareLoopTurn.
+ */
 export function enterItemMode(): void {
   const permissions = services.toolPermissions;
   if (permissions.getCurrentMode() === "plan") {
@@ -240,6 +249,15 @@ export function enterReplanMode(): void {
     modeBeforeReplan = mode;
     permissions.switchMode("plan");
   }
+}
+
+/**
+ * Before a Loop turn is sent: switch to the model `modeModels` gives it
+ * (`loop` for an item, `replan` otherwise, falling back to the agent and plan
+ * entries). Awaited, so the turn goes to that model and not the one before.
+ */
+export async function prepareLoopTurn(kind: "item" | "replan"): Promise<void> {
+  await applyModelForUse(useForLoopTurn(kind));
 }
 
 // --- Starting, accepting a re-plan, stopping, resuming ---

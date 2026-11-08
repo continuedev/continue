@@ -13,6 +13,7 @@ import {
   reasoningOptionsForEffort,
 } from "../../util/modeModels";
 import { selectActiveTools } from "../selectors/selectActiveTools";
+import { selectModelUse } from "../selectors/selectModelUse";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import type { RootState } from "../store";
 import { constructMessages } from "./constructMessages";
@@ -128,12 +129,14 @@ export function buildChatRequest(
     };
   }
 
-  // An explicit reasoning toggle wins; otherwise use the mode's configured
-  // reasoning effort (`modeModels.<mode>.reasoningEffort`).
+  // An explicit reasoning toggle wins; otherwise use the configured reasoning
+  // effort for what this request is (`modeModels.<use>.reasoningEffort`: the
+  // mode, or a Loop item or re-plan).
+  const use = selectModelUse(state);
   const modeReasoning =
-    state.session.hasReasoningEnabled === undefined
+    state.session.hasReasoningEnabled === undefined && use
       ? reasoningOptionsForEffort(
-          getModeReasoningEffort(state.config.config, state.session.mode),
+          getModeReasoningEffort(state.config.config, use),
         )
       : undefined;
   completionOptions = modeReasoning

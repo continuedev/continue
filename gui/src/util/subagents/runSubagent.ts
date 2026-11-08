@@ -15,6 +15,7 @@ import {
   SubagentDefinition,
 } from "core/subagents/definitions";
 import { resolveSubagentModel } from "core/subagents/model";
+import { modeModelFor } from "core/util/modelUse";
 import {
   SubagentRunStatus,
   SubagentToolCallSummary,
@@ -295,10 +296,16 @@ export async function runSubagentTool(
     const state = getState();
     const parentModel = selectSelectedChatModel(state);
     if (!parentModel) throw new Error("No chat model selected");
+    // A definition that names no model gets `modeModels.subagent` when the
+    // config sets it, else the model of the turn that started it
+    const chatModels = state.config.config.modelsByRole?.chat ?? [];
+    const configured = modeModelFor(state.config.config.modeModels, "subagent");
+    const defaultModel =
+      chatModels.find((m) => m.title === configured?.title) ?? parentModel;
     const { model, fallbackReason } = resolveSubagentModel(
       definition.model,
-      state.config.config.modelsByRole?.chat ?? [],
-      parentModel,
+      chatModels,
+      defaultModel,
     );
 
     // The parent's tools for its mode (disabled tools and groups already

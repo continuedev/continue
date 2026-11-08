@@ -2482,10 +2482,15 @@ export type RulesByModeConfig = Partial<
   Record<"chat" | "agent" | "plan", boolean>
 >;
 
-/** Per-mode model selection from `modeModels:` in config.yaml. */
-export type ModeModelsConfig = Partial<
-  Record<"chat" | "agent" | "plan", ModeModelSetting>
->;
+/**
+ * What a model can be used for: the three chat modes, Loop item turns,
+ * Loop re-plans, the Auto reviewer and subagents (see core/util/modelUse.ts).
+ */
+export type ModelUse =
+  "chat" | "agent" | "plan" | "loop" | "replan" | "reviewer" | "subagent";
+
+/** Which model does what, from `modeModels:` in config.yaml. */
+export type ModeModelsConfig = Partial<Record<ModelUse, ModeModelSetting>>;
 
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;

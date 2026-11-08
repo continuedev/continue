@@ -388,6 +388,35 @@ export const services = {
 
 export type ServicesType = typeof services;
 
+/** The use a permission mode's turns are: Plan plans, the others act. */
+export function modelUseForMode(mode: string): "plan" | "agent" {
+  return mode === "plan" ? "plan" : "agent";
+}
+
+/**
+ * Switch the chat model to the one `modeModels` gives a use, and let the TUI
+ * see it (the container's state is what the hooks read). Errors are logged:
+ * a model that cannot be built must not stop the turn, which then goes to the
+ * model already selected.
+ */
+export async function applyModelForUse(
+  use: Parameters<ModelService["switchToModelForUse"]>[0],
+): Promise<void> {
+  try {
+    if (await modelService.switchToModelForUse(use)) {
+      serviceContainer.set(SERVICE_NAMES.MODEL, modelService.getState());
+    }
+  } catch (error) {
+    logger.error("Could not switch the model for this use", { use, error });
+  }
+}
+
+// Switching mode (Plan, normal, auto) switches the model as the IDE does
+// (`modeModels.plan` / `.agent`). Loop turns refine this in loopSession.ts.
+toolPermissionService.on("modeChanged", (mode: string) => {
+  void applyModelForUse(modelUseForMode(mode));
+});
+
 // Export the service container for advanced usage
 export { serviceContainer };
 

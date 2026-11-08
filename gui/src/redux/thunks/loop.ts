@@ -5,9 +5,11 @@ import {
   LoopState,
   LoopStrategy,
   MessageModes,
+  ModelUse,
 } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { finishItemNudge, presentPlanNudge } from "core/util/turnEnd";
+import { applyModeModel } from "./applyModeModel";
 import {
   acceptReplan,
   answerLoop,
@@ -100,7 +102,18 @@ async function displayPath(
   }
 }
 
-async function sendLoopTurn(dispatch: AppThunkDispatch, text: string) {
+/**
+ * Sends a Loop turn. The model is switched first to the one `modeModels` gives
+ * this kind of turn (`loop` for an item, `replan` otherwise, with the agent and
+ * plan entries as fallbacks): the mode's own effect runs after a render, which
+ * may be later than the request.
+ */
+async function sendLoopTurn(
+  dispatch: AppThunkDispatch,
+  text: string,
+  use?: ModelUse,
+) {
+  if (use) await dispatch(applyModeModel({ mode: use }));
   await dispatch(
     streamResponseThunk({
       editorState: doc(text),
@@ -563,7 +576,7 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
         );
         dispatch(setMode("agent"));
         commitLoop(dispatch, getState, loop);
-        await sendLoopTurn(dispatch, prompt);
+        await sendLoopTurn(dispatch, prompt, "loop");
         return;
       }
       case "check":
@@ -605,7 +618,7 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
         });
         dispatch(setMode("plan"));
         commitLoop(dispatch, getState, loop);
-        await sendLoopTurn(dispatch, prompt);
+        await sendLoopTurn(dispatch, prompt, "replan");
         return;
       }
     }

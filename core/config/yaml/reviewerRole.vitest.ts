@@ -81,3 +81,51 @@ describe("reviewer model role", () => {
     expect(config?.toolPermissions?.auto?.limits?.totalDenials).toBe(5);
   });
 });
+
+describe("modeModels.reviewer", () => {
+  async function loadWith(modeModels: object) {
+    return configYamlToContinueConfig({
+      unrolledAssistant: {
+        name: "t",
+        version: "1.0.0",
+        models: [chatModel, reviewModel],
+        modeModels,
+      } as any,
+      ide,
+      ideInfo,
+      uniqueId: "test",
+      llmLogger,
+    });
+  }
+
+  it("selects the named model as the reviewer, adding it to the role if needed", async () => {
+    const { config, errors } = await loadWith({
+      reviewer: { model: "Chat", reasoningEffort: "low" },
+    });
+    expect(errors ?? []).toEqual([]);
+    expect(config?.selectedModelByRole.reviewer?.title).toBe("Chat");
+    expect(config?.modelsByRole.reviewer.map((m) => m.title)).toEqual([
+      "Chat",
+      "Reviewer",
+    ]);
+    expect(config?.modeModels?.reviewer).toEqual({
+      title: "Chat",
+      reasoningEffort: "low",
+    });
+  });
+
+  it("wins over the saved pick when selections are restored", async () => {
+    const { config } = await loadWith({ reviewer: { model: "Chat" } });
+    const selected = rectifySelectedModelsFromGlobalContext(config!, "p");
+    expect(selected.selectedModelByRole.reviewer?.title).toBe("Chat");
+  });
+
+  it("an unknown name is reported and the role's own model stays selected", async () => {
+    const { config, errors } = await loadWith({ reviewer: { model: "Nope" } });
+    expect(errors?.map((e) => e.message)).toEqual([
+      expect.stringContaining('modeModels.reviewer: no model named "Nope"'),
+    ]);
+    const selected = rectifySelectedModelsFromGlobalContext(config!, "p");
+    expect(selected.selectedModelByRole.reviewer?.title).toBe("Reviewer");
+  });
+});

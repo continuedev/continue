@@ -367,3 +367,52 @@ describe("ModelService", () => {
     });
   });
 });
+
+describe("ModelService: the model for a use (modeModels)", () => {
+  const mockLlmApi = { complete: vi.fn(), stream: vi.fn() };
+  const models = [
+    { provider: "openai", model: "gpt-4", name: "GPT-4", roles: ["chat"] },
+    {
+      provider: "anthropic",
+      model: "claude-3",
+      name: "Claude 3",
+      roles: ["chat"],
+    },
+    {
+      provider: "openai",
+      model: "o3-mini",
+      name: "Judge",
+      roles: ["reviewer"],
+    },
+  ] as ModelConfig[];
+
+  async function start(modeModels: object) {
+    const service = new ModelService();
+    const assistant = { name: "a", version: "1", models, modeModels } as any;
+    vi.mocked(config.getLlmApi).mockReturnValue([mockLlmApi as any, models[0]]);
+    vi.mocked(config.createLlmApi).mockReturnValue(mockLlmApi as any);
+    vi.mocked(workos.getModelName).mockReturnValue(null as any);
+    await service.initialize(assistant, null);
+    return service;
+  }
+
+  test("switches to the use's model once, and reports no change after", async () => {
+    const service = await start({
+      plan: { model: "Claude 3" },
+      loop: { model: "GPT-4" },
+    });
+    expect(await service.switchToModelForUse("plan")).toBe(true);
+    expect(service.getState().model?.model).toBe("claude-3");
+    expect(await service.switchToModelForUse("plan")).toBe(false);
+    expect(await service.switchToModelForUse("replan")).toBe(false); // falls back to plan
+    expect(await service.switchToModelForUse("loop")).toBe(true);
+    expect(service.getState().model?.model).toBe("gpt-4");
+  });
+
+  test("leaves the model alone for a use with no entry or a non-chat model", async () => {
+    const service = await start({ subagent: { model: "Judge" } });
+    expect(await service.switchToModelForUse("agent")).toBe(false);
+    expect(await service.switchToModelForUse("subagent")).toBe(false);
+    expect(service.modelIndexForUse("chat")).toBe(-1);
+  });
+});

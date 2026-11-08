@@ -7,7 +7,11 @@ const model = (title: string) =>
   ({ title, model: title, provider: "bedrock" }) as any;
 const profile = { id: "local" } as any;
 
-function setup(overrides: Record<string, string> = {}, selected = "Sonnet") {
+function setup(
+  overrides: Record<string, string> = {},
+  selected = "Sonnet",
+  extraModeModels: Record<string, any> = {},
+) {
   const base = getEmptyRootState();
   const chat = [model("Opus"), model("Sonnet"), model("Haiku")];
   const store = createMockStore({
@@ -23,6 +27,7 @@ function setup(overrides: Record<string, string> = {}, selected = "Sonnet") {
         modeModels: {
           plan: { title: "Opus", reasoningEffort: "medium" },
           agent: { title: "Sonnet" },
+          ...extraModeModels,
         },
       },
     },
@@ -85,5 +90,33 @@ describe("applyModeModel", () => {
       applyModeModel({ mode: "plan", selectedProfile: profile }),
     );
     expect(posts).toEqual([]);
+  });
+});
+
+describe("applyModeModel for Loop turns", () => {
+  it("an item takes the loop model, a re-plan the plan model", async () => {
+    const { store } = setup({}, "Sonnet", { loop: { title: "Haiku" } });
+    await (store.dispatch as any)(
+      applyModeModel({ mode: "loop", selectedProfile: profile }),
+    );
+    expect(
+      (store.getState() as any).config.config.selectedModelByRole.chat.title,
+    ).toBe("Haiku");
+    await (store.dispatch as any)(
+      applyModeModel({ mode: "replan", selectedProfile: profile }),
+    );
+    expect(
+      (store.getState() as any).config.config.selectedModelByRole.chat.title,
+    ).toBe("Opus");
+  });
+
+  it("without a loop entry an item takes the agent model", async () => {
+    const { store } = setup({}, "Opus");
+    await (store.dispatch as any)(
+      applyModeModel({ mode: "loop", selectedProfile: profile }),
+    );
+    expect(
+      (store.getState() as any).config.config.selectedModelByRole.chat.title,
+    ).toBe("Sonnet");
   });
 });

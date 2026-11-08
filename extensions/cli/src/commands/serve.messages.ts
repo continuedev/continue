@@ -6,6 +6,7 @@ import {
 } from "../hooks/promptHook.js";
 import { runLoopCheck } from "../loop/loopChecks.js";
 import { loopWakeDelay, nextLoopTurn } from "../loop/loopDriver.js";
+import { prepareLoopTurn } from "../loop/loopSession.js";
 import { getSessionLoop, interruptRunningLoop } from "../loop/loopSession.js";
 import { services } from "../services/index.js";
 import { getCompleteStateSnapshot, type StateSnapshot } from "../session.js";
@@ -342,6 +343,7 @@ async function drainMessages(ctx: ServeMessageContext) {
         }
         continue;
       }
+      await prepareLoopTurn(step.kind);
       await runTurn(ctx, step.prompt);
       continue;
     }

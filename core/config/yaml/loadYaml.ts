@@ -403,12 +403,30 @@ export async function configYamlToContinueConfig(options: {
     }
   }
 
+  // Every loaded model once, whatever its roles: the reviewer may be any of them
+  const allLlms = Array.from(
+    new Set(Object.values(continueConfig.modelsByRole).flat()),
+  );
   const modeModelsResult = resolveModeModels(
     config.modeModels,
     continueConfig.modelsByRole.chat,
+    allLlms,
   );
   continueConfig.modeModels = modeModelsResult.modeModels;
   localErrors.push(...modeModelsResult.errors);
+  // `modeModels.reviewer` is the reviewer: it joins the role's list if it is
+  // not there and is selected (a Settings pick holds until reload, as a
+  // manual pick does for a mode; see rectifySelectedModelsFromGlobalContext).
+  const reviewerTitle = modeModelsResult.modeModels?.reviewer?.title;
+  if (reviewerTitle) {
+    const reviewer = allLlms.find((m) => m.title === reviewerTitle);
+    if (reviewer) {
+      if (!continueConfig.modelsByRole.reviewer.includes(reviewer)) {
+        continueConfig.modelsByRole.reviewer.unshift(reviewer);
+      }
+      continueConfig.selectedModelByRole.reviewer = reviewer;
+    }
+  }
   continueConfig.rulesByMode = config.rulesByMode;
 
   // Tool rules. Kept even when some entries are unreadable: those are skipped

@@ -172,11 +172,15 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     // Fallback: continue even if service init fails; stream will still work with arrays
   }
 
-  // Initialize server state
+  // Initialize server state. The model is read when a turn is sent, not
+  // once here: a mode change or a Loop turn may have switched it
+  // (`modeModels`), and the switch lives in the model service's state.
   const state: ServerState = {
     session,
     config,
-    model,
+    get model() {
+      return services.model.getState().model ?? model;
+    },
     isProcessing: false,
     lastActivity: Date.now(),
     currentAbortController: null,
@@ -223,7 +227,9 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   const messageCtx: ServeMessageContext = {
     state,
-    llmApi,
+    get llmApi() {
+      return services.model.getState().llmApi ?? llmApi;
+    },
     syncSessionHistory,
     onIdle: () => storageSyncService.markAgentStatusUnread(),
   };

@@ -136,3 +136,31 @@ describe("reasoning effort", () => {
     );
   });
 });
+
+describe("uses beyond the modes", () => {
+  const withLoop = {
+    modeModels: {
+      plan: { title: "Opus", reasoningEffort: "high" as const },
+      agent: { title: "Sonnet" },
+      loop: { title: "Haiku", reasoningEffort: "off" as const },
+    },
+  };
+
+  it("a Loop item has its own model and effort, a re-plan falls back to Plan's", () => {
+    expect(getModeModelTitle(withLoop, "loop")).toBe("Haiku");
+    expect(getModeReasoningEffort(withLoop, "loop")).toBe("off");
+    expect(getModeModelTitle(withLoop, "replan")).toBe("Opus");
+    expect(getModeReasoningEffort(withLoop, "replan")).toBe("high");
+  });
+
+  it("an item falls back to the Agent model when loop is not set", () => {
+    expect(getModeModelTitle(config, "loop")).toBe("Sonnet");
+    expect(getModeReasoningEffort(config, "loop")).toBe("low");
+  });
+
+  it("a manual pick for the mode does not reach the loop uses", () => {
+    expect(getModeModelTitle(config, "loop", { agent: "Haiku" })).toBe(
+      "Sonnet",
+    );
+  });
+});

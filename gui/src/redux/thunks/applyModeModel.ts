@@ -1,19 +1,21 @@
-import { MessageModes } from "core";
+import { MessageModes, ModelUse } from "core";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getModeModelTitle } from "../../util/modeModels";
+import { selectSelectedProfile } from "../slices/profilesSlice";
 import { ThunkApiType } from "../store";
 import { updateSelectedModelByRole } from "./updateSelectedModelByRole";
 
 /**
- * Switch the selected chat model to the one configured for `mode`
- * (`modeModels` in config.yaml, or the user's manual pick for that mode).
- * Does nothing when the mode has no model or it is already selected.
+ * Switch the selected chat model to the one configured for `mode` (a mode, or
+ * a use such as a Loop item or re-plan: `modeModels` in config.yaml, or the
+ * user's manual pick for that mode). Does nothing when the use has no model
+ * or it is already selected. The profile defaults to the selected one.
  */
 export const applyModeModel = createAsyncThunk<
   void,
   {
-    mode: MessageModes;
-    selectedProfile: Parameters<
+    mode: MessageModes | ModelUse;
+    selectedProfile?: Parameters<
       typeof updateSelectedModelByRole
     >[0]["selectedProfile"];
   },
@@ -36,7 +38,7 @@ export const applyModeModel = createAsyncThunk<
       updateSelectedModelByRole({
         role: "chat",
         modelTitle: title,
-        selectedProfile,
+        selectedProfile: selectedProfile ?? selectSelectedProfile(state),
       }),
     );
   },

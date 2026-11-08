@@ -49,6 +49,7 @@ import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { compactConversation } from "./util/conversationCompaction";
 import { GlobalContext } from "./util/GlobalContext";
+import { reasoningOptionsForEffort } from "./util/modelUse";
 import historyManager from "./util/history";
 import {
   editConfigFile,
@@ -1715,6 +1716,9 @@ export class Core {
           permissions: config.toolPermissions,
           enabled: config.experimental?.enableAutoApproval === true,
           reviewer: config.selectedModelByRole.reviewer,
+          reviewerReasoning: reasoningOptionsForEffort(
+            config.modeModels?.reviewer?.reasoningEffort,
+          ),
           environment: {
             workspaceDirs: dirs,
             gitRemotes: repo ? [repo] : undefined,

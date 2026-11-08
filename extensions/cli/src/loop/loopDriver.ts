@@ -49,6 +49,7 @@ import {
   planFileDisplayPath,
   planFilePath,
   sessionTokens,
+  prepareLoopTurn,
 } from "./loopSession.js";
 
 /**
@@ -359,8 +360,12 @@ export class LoopRunner {
       while (!this.disposed && this.host.isIdle()) {
         const step = nextLoopTurn(this.host.historyLength());
         if (!step) break;
-        if (step.kind === "check") await runLoopCheck(step);
-        else await this.host.send(step);
+        if (step.kind === "check") {
+          await runLoopCheck(step);
+        } else {
+          await prepareLoopTurn(step.kind);
+          await this.host.send(step);
+        }
       }
     } catch (error) {
       logger.error("Loop step failed", { error });

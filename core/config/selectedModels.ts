@@ -32,6 +32,12 @@ export function rectifySelectedModelsFromGlobalContext(
   ];
 
   for (const role of roles) {
+    // config.yaml names the reviewer (`modeModels.reviewer`): the config wins
+    // on load, and a pick made in Settings holds until the next reload.
+    if (role === "reviewer" && continueConfig.modeModels?.reviewer) {
+      continue;
+    }
+
     let newModel: ILLM | null = null;
     const currentSelection = currentForProfile[role] ?? null;
 

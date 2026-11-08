@@ -15,7 +15,18 @@ models:
     roles: [reviewer]
 ```
 
-A model is a reviewer only if its `roles` list includes `reviewer`. It is not part of the default roles, and no chat model is used in its place. If you have not chosen a reviewer, Auto is unavailable and the switch says "Choose a reviewer model in Settings > Models".
+A model is a reviewer only if its `roles` list includes `reviewer`, or if `modeModels.reviewer` names it. It is not part of the default roles, and no chat model is used in its place. If you have not chosen a reviewer, Auto is unavailable and the switch says "Choose a reviewer model in Settings > Models".
+
+To say in config.yaml which model reviews, and how much it may think first, use [`modeModels`](/reference#modemodels):
+
+```yaml title="config.yaml"
+modeModels:
+  reviewer:
+    model: Claude Sonnet # any model, whatever its roles
+    reasoningEffort: off
+```
+
+The named model joins the reviewer role and is selected when the config loads; a reviewer picked in Settings holds until the window reloads. `reasoningEffort` turns thinking on or off for the review and sets its budget (the CLI ignores it; use a catalog variant there). Without it the reviewer answers with its own defaults, at temperature 0 and in at most 300 tokens.
 
 ## Turn it on
 

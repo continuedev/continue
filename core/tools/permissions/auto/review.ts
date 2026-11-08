@@ -11,6 +11,36 @@ export interface ReviewOptions {
   /** No person to ask (CLI): an unusable reviewer refuses instead of asking. */
   headless?: boolean;
   nonce?: string;
+  /** `modeModels.reviewer.reasoningEffort`: thinking on or off, and its budget. */
+  reasoning?: ReviewerReasoning;
+}
+
+/** How much the reviewer may think before it answers. */
+export interface ReviewerReasoning {
+  reasoning: boolean;
+  reasoningBudgetTokens?: number;
+}
+
+/** The verdict is short; thinking, when on, needs its budget on top. */
+export const REVIEW_MAX_TOKENS = 300;
+
+/** Completion options for one review: temperature 0, plus the reasoning setting. */
+export function reviewCompletionOptions(reasoning?: ReviewerReasoning): {
+  temperature: number;
+  maxTokens: number;
+  reasoning?: boolean;
+  reasoningBudgetTokens?: number;
+} {
+  const base = { temperature: 0, maxTokens: REVIEW_MAX_TOKENS };
+  if (!reasoning) return base;
+  if (!reasoning.reasoning) return { ...base, reasoning: false };
+  const budget = reasoning.reasoningBudgetTokens ?? 0;
+  return {
+    ...base,
+    maxTokens: REVIEW_MAX_TOKENS + budget,
+    reasoning: true,
+    ...(budget > 0 ? { reasoningBudgetTokens: budget } : {}),
+  };
 }
 
 export function unavailable(why: string, headless?: boolean): ReviewResult {
@@ -60,10 +90,11 @@ export async function reviewToolCall(
 
   try {
     if (opts.signal?.aborted) controller.abort();
-    const reply = await llm.chat(messages, controller.signal, {
-      temperature: 0,
-      maxTokens: 300,
-    });
+    const reply = await llm.chat(
+      messages,
+      controller.signal,
+      reviewCompletionOptions(opts.reasoning),
+    );
     const text = messageText(reply?.content);
     if (!text.trim()) {
       return unavailable("The reviewer model returned nothing.", opts.headless);
