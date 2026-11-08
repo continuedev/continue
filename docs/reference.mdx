@@ -95,7 +95,7 @@ The `models` section defines the language models used in your configuration. Mod
   - `baseAgentSystemMessage`: Can be used to override the default system prompt for **Agent** mode.
   - `basePlanSystemMessage`: Can be used to override the default system prompt for **Plan** mode.
 
-- `contextManagement`: Context window settings for the CLI (`cn`). Each defaults to today's behavior. For a server whose prompt cache holds one conversation at a time, such as Strata, set `requestBodyHints.oneShot: { strata_checkpoint: false }` so the compaction summary does not replace the cached conversation, and a lower `subagent.contextLength` so sub-agents stay cheap.
+- `contextManagement`: Context window settings for the CLI (`continuous`). Each defaults to today's behavior. For a server whose prompt cache holds one conversation at a time, such as Strata, set `requestBodyHints.oneShot: { strata_checkpoint: false }` so the compaction summary does not replace the cached conversation, and a lower `subagent.contextLength` so sub-agents stay cheap.
 
   - `autoCompactRatio`: Compact once input reaches this fraction (0 to 1) of `contextLength - maxTokens`.
   - `autoCompactTokens`: Compact once input reaches this many tokens.

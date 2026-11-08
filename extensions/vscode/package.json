@@ -2,7 +2,7 @@
   "name": "continuous",
   "icon": "media/icon.png",
   "author": "b1tninja",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/b1tninja/continuous"
@@ -17,7 +17,7 @@
   "homepage": "https://github.com/b1tninja/continuous",
   "qna": "https://github.com/b1tninja/continuous/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continuous - open-source AI code agent",
+  "displayName": "Continuous",
   "pricing": "Free",
   "description": "Continuous: a community-maintained fork of the Continue open-source AI code agent",
   "publisher": "b1tninja",
