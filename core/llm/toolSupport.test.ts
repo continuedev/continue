@@ -137,6 +137,30 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
         true,
       );
     });
+
+    // Checked live on 2026-11-08 against Converse and ConverseStream.
+    it.each([
+      "us.amazon.nova-2-lite-v1:0",
+      "amazon.nova-pro-v1:0",
+      "amazon.nova-lite-v1:0",
+      "amazon.nova-micro-v1:0",
+      "amazon.nova-premier-v1:0",
+      "mistral.mistral-large-3-675b-instruct",
+      "qwen.qwen3-32b-v1:0",
+      "qwen.qwen3-coder-30b-a3b-v1:0",
+      "deepseek.v3.2",
+      "us.meta.llama4-maverick-17b-instruct-v1:0",
+    ])("enables tools for %s, which returns toolUse blocks", (model) => {
+      expect(supportsFn(model)).toBe(true);
+    });
+
+    it.each([
+      "us.deepseek.r1-v1:0",
+      "deepseek-r1-distill",
+      "us.meta.llama3-3-70b-instruct-v1:0",
+    ])("keeps tools off for %s", (model) => {
+      expect(supportsFn(model)).toBe(false);
+    });
   });
 
   describe("mistral", () => {

@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   applyCrossRegionInference,
+  bedrockFinishReason,
   bedrockModelAccessMessage,
+  bedrockReasoningFields,
+  bedrockSamplingParams,
   bedrockUsageToCompletionUsage,
+  budgetTokensToEffort,
+  crossRegionFallbackModelId,
+  effortToBudgetTokens,
   getBedrockErrorHint,
   inferenceProfilePrefixForRegion,
+  isInvalidModelIdentifierError,
   resolveBedrockCacheParts,
 } from "./bedrockHelpers.js";
 
@@ -218,5 +225,145 @@ describe("resolveBedrockCacheParts", () => {
     [undefined, { cacheSystemMessage: true }, false, none],
   ] as const)("requested=%s behavior=%j hasSystem=%s", (r, b, s, expected) => {
     expect(resolveBedrockCacheParts(r, b, s)).toEqual(expected);
+  });
+});
+
+describe("bedrockReasoningFields", () => {
+  it("maps effort and budget both ways as the GUI does", () => {
+    for (const effort of ["low", "medium", "high"] as const) {
+      expect(budgetTokensToEffort(effortToBudgetTokens(effort))).toBe(effort);
+    }
+  });
+
+  it("sends Claude thinking, adaptive on the models that take it", () => {
+    expect(
+      bedrockReasoningFields(
+        "anthropic.claude-haiku-4-5-20251001-v1:0",
+        true,
+        1024,
+      ),
+    ).toEqual({
+      additionalModelRequestFields: {
+        thinking: { type: "enabled", budget_tokens: 1024 },
+      },
+      omitMaxTokens: false,
+    });
+    expect(
+      bedrockReasoningFields("us.anthropic.claude-sonnet-4-6", true, 16384)
+        .additionalModelRequestFields,
+    ).toEqual({
+      thinking: { type: "adaptive" },
+      output_config: { effort: "high" },
+    });
+    expect(
+      bedrockReasoningFields("us.anthropic.claude-sonnet-4-6", false, 16384)
+        .additionalModelRequestFields,
+    ).toEqual({});
+  });
+
+  it("sends Nova 2 reasoningConfig and drops maxTokens at high", () => {
+    expect(
+      bedrockReasoningFields("us.amazon.nova-2-lite-v1:0", true, 16384),
+    ).toEqual({
+      additionalModelRequestFields: {
+        reasoningConfig: { type: "enabled", maxReasoningEffort: "high" },
+      },
+      omitMaxTokens: true,
+    });
+    expect(
+      bedrockReasoningFields("us.amazon.nova-2-lite-v1:0", true, 1024)
+        .omitMaxTokens,
+    ).toBe(false);
+  });
+
+  it("sends Qwen3 and DeepSeek V3.2 reasoning_effort, none only when explicitly off", () => {
+    expect(
+      bedrockReasoningFields("qwen.qwen3-32b-v1:0", true, 4096)
+        .additionalModelRequestFields,
+    ).toEqual({ reasoning_effort: "medium" });
+    expect(
+      bedrockReasoningFields("deepseek.v3.2", false, 4096)
+        .additionalModelRequestFields,
+    ).toEqual({ reasoning_effort: "none" });
+    expect(
+      bedrockReasoningFields("deepseek.v3.2", undefined, 4096)
+        .additionalModelRequestFields,
+    ).toEqual({});
+  });
+
+  it.each([
+    "us.deepseek.r1-v1:0",
+    "us.amazon.nova-pro-v1:0",
+    "amazon.nova-premier-v1:0",
+    "us.meta.llama3-3-70b-instruct-v1:0",
+    "mistral.mistral-large-3-675b-instruct",
+  ])("sends %s nothing", (id) => {
+    expect(bedrockReasoningFields(id, true, 16384)).toEqual({
+      additionalModelRequestFields: {},
+      omitMaxTokens: false,
+    });
+  });
+});
+
+describe("bedrockSamplingParams", () => {
+  const claude = "us.anthropic.claude-haiku-4-5-20251001-v1:0";
+  it("keeps Claude to temperature when both are set, neither with thinking", () => {
+    expect(bedrockSamplingParams(claude, 0.5, 0.9, false)).toEqual({
+      temperature: 0.5,
+    });
+    expect(bedrockSamplingParams(claude, undefined, 0.9, false)).toEqual({
+      temperature: undefined,
+      topP: 0.9,
+    });
+    expect(bedrockSamplingParams(claude, 0.5, undefined, true)).toEqual({});
+  });
+  it("leaves other families alone", () => {
+    expect(
+      bedrockSamplingParams("us.amazon.nova-2-lite-v1:0", 0.5, 0.9, true),
+    ).toEqual({
+      temperature: 0.5,
+      topP: 0.9,
+    });
+  });
+});
+
+describe("cross-region prefix fallback", () => {
+  it("recognises the refusal", () => {
+    expect(
+      isInvalidModelIdentifierError(
+        new Error(
+          "ValidationException: The provided model identifier is invalid.",
+        ),
+      ),
+    ).toBe(true);
+    expect(isInvalidModelIdentifierError(new Error("Throttling"))).toBe(false);
+  });
+  it("offers the bare ID only when auto added the prefix", () => {
+    expect(
+      crossRegionFallbackModelId("qwen.qwen3-32b-v1:0", "auto", "us-east-1"),
+    ).toBe("qwen.qwen3-32b-v1:0");
+    expect(
+      crossRegionFallbackModelId("qwen.qwen3-32b-v1:0", "us", "us-east-1"),
+    ).toBeUndefined();
+    expect(
+      crossRegionFallbackModelId("us.qwen.qwen3-32b-v1:0", "auto", "us-east-1"),
+    ).toBeUndefined();
+    expect(
+      crossRegionFallbackModelId("qwen.qwen3-32b-v1:0", "auto", "sa-east-1"),
+    ).toBeUndefined();
+  });
+});
+
+describe("bedrockFinishReason", () => {
+  it.each([
+    ["max_tokens", "length"],
+    ["tool_use", "tool_calls"],
+    ["end_turn", "stop"],
+    ["stop_sequence", "stop"],
+    ["content_filtered", "content_filter"],
+    ["guardrail_intervened", "content_filter"],
+    ["new_reason", "stop"],
+  ])("%s -> %s", (stop, finish) => {
+    expect(bedrockFinishReason(stop)).toBe(finish);
   });
 });

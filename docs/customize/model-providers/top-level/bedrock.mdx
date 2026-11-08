@@ -168,6 +168,16 @@ models:
 
 Whether a model supports a given tier or latency mode depends on the model and region; Bedrock returns a clear validation error if it doesn't. Extended thinking and prompt caching are controlled with `defaultCompletionOptions` (`reasoning`, `reasoningBudgetTokens`, `promptCaching`).
 
+### What is sent per model family
+
+Model families on Bedrock take different request fields, and the provider adjusts the request for each (measured live, November 2026):
+
+- **Reasoning.** Claude gets Anthropic's `thinking` (adaptive with an effort on Claude 4.6 and later, a token budget before that). Nova 2 gets `reasoningConfig` with an effort of low, medium or high from `reasoningBudgetTokens` (about 1K, 4K or 16K), and `maxTokens` is left out at high because the model refuses it there; Nova 2 returns its reasoning as the text `[REDACTED].` while billing the tokens, so it is shown as redacted thinking. Qwen3 and DeepSeek V3.2 get `reasoning_effort` (and `none` only when the config says `reasoning: false`). DeepSeek R1 always reasons and takes no field; Nova Pro, Lite, Micro and Premier, Llama and Mistral get nothing.
+- **Sampling.** Claude refuses `temperature` and `topP` together, so only `temperature` is sent when both are set, and neither is sent while thinking is on. Other families take both.
+- **Tools.** `toolChoice: auto` is always sent with tools (without it Llama writes the call as plain text). Tool use is on for Claude, every Nova, Mistral, Qwen3, GPT OSS, Llama 4 and DeepSeek V3; it stays off for DeepSeek R1 (which refuses tools) and Llama 3 (which refuses tools in streaming mode).
+- **Model IDs.** With `crossRegionInference: auto`, a model that is only offered on demand (Qwen, DeepSeek V3.2, the newer Mistral models) refuses the geographic prefix with "The provided model identifier is invalid"; the request is retried once with the bare ID and the choice is remembered for the process.
+- **Stop reasons.** A reply cut off at `maxTokens` arrives with `finish_reason: length`, and the CLI says so instead of treating it as complete.
+
 ## How to Enable Prompt Caching with Amazon Bedrock
 
 Bedrock allows Claude models to cache tool payloads, system messages, and chat

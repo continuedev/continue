@@ -12,7 +12,6 @@ import {
   ImageFormat,
   InvokeModelCommand,
   Message,
-  ReasoningContentBlockDelta,
   ToolConfiguration,
   ToolUseBlock,
   ToolUseBlockDelta,
@@ -39,23 +38,30 @@ import { safeParseToolCallArgs } from "../../tools/parseArgs.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { parseDataUrl } from "../../util/url.js";
 import { BaseLLM } from "../index.js";
-import { getAnthropicThinkingParams } from "./anthropicThinking.js";
+import { DEFAULT_REASONING_TOKENS } from "../constants.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 import { createBedrockRequestHandler } from "./bedrockHttp.js";
 import { withResponseInfo } from "../utils/cacheStats.js";
-import { getSecureID } from "../utils/getSecureID.js";
 import { isTaskPlanBlockText } from "../../util/taskPlan.js";
 import { resolvePromptCacheTtl } from "./anthropicCache.js";
 import {
   applyCrossRegionInference,
   BedrockModelOption,
   bedrockCachePartsForModel,
+  bedrockCachePointAfterTextOnly,
   bedrockCacheTtl,
+  bedrockReasoningFields,
+  bedrockSamplingParams,
   bedrockUsageToUsage,
   buildModelCatalog,
+  crossRegionFallbackModelId,
+  flushDsmlHold,
   getBedrockErrorHint,
+  holdBackDsmlMarker,
+  isInvalidModelIdentifierError,
   isStopSequencesUnsupportedError,
   isUseCaseFormMissingError,
+  leaksDsmlMarker,
   markAnthropicUseCaseNeeded,
   normalizeToolUseIds,
 } from "./bedrockHelpers.js";
@@ -69,6 +75,16 @@ const USE_CASE_LOOKUP_TIMEOUT_MS = 2000;
  * output at the stop tokens themselves.
  */
 const modelsWithoutStopSequences = new Set<string>();
+
+/**
+ * Prefixed model IDs (`us.qwen...`) that Bedrock refused as invalid in this
+ * process because the model is only offered on demand. Requests for them go
+ * out with the bare ID from then on.
+ */
+const modelsWithoutInferencePrefix = new Set<string>();
+
+/** Nova 2 returns this in place of its reasoning text; the tokens are billed. */
+const NOVA_REDACTED_REASONING = "[REDACTED].";
 
 interface ModelConfig {
   formatPayload: (text: string) => any;
@@ -398,13 +414,17 @@ class Bedrock extends BaseLLM {
 
   /**
    * Sends a ConverseStream request. A model that refuses `stopSequences` is
-   * retried once without them and remembered, so later requests skip the
-   * failing attempt.
+   * retried once without them, and a prefixed model ID that Bedrock does not
+   * know is retried once as `fallbackModelId` (the bare ID, when the prefix
+   * came from `crossRegionInference: auto`). Both are remembered, so later
+   * requests skip the failing attempt. Both can apply to one model (Qwen
+   * refuses the prefix and then the stops), so each is retried at most once.
    */
   private async _sendConverseStream(
     client: BedrockRuntimeClient,
     input: ConverseStreamCommandInput,
     signal: AbortSignal,
+    fallbackModelId?: string,
   ): Promise<ConverseStreamCommandOutput> {
     const send = async () =>
       (await client.send(new ConverseStreamCommand(input), {
@@ -417,21 +437,40 @@ class Bedrock extends BaseLLM {
       };
     };
 
-    const modelKey = input.modelId ?? "";
-    if (modelsWithoutStopSequences.has(modelKey)) withoutStops();
+    if (fallbackModelId && modelsWithoutInferencePrefix.has(input.modelId!)) {
+      input.modelId = fallbackModelId;
+    }
+    if (modelsWithoutStopSequences.has(input.modelId ?? "")) withoutStops();
 
-    try {
-      return await send();
-    } catch (e) {
-      if (
-        !input.inferenceConfig?.stopSequences?.length ||
-        !isStopSequencesUnsupportedError(e)
-      ) {
+    let retriedStops = false;
+    let retriedPrefix = false;
+    for (;;) {
+      try {
+        return await send();
+      } catch (e) {
+        if (
+          !retriedStops &&
+          input.inferenceConfig?.stopSequences?.length &&
+          isStopSequencesUnsupportedError(e)
+        ) {
+          retriedStops = true;
+          modelsWithoutStopSequences.add(input.modelId ?? "");
+          withoutStops();
+          continue;
+        }
+        if (
+          !retriedPrefix &&
+          fallbackModelId &&
+          input.modelId !== fallbackModelId &&
+          isInvalidModelIdentifierError(e)
+        ) {
+          retriedPrefix = true;
+          modelsWithoutInferencePrefix.add(input.modelId!);
+          input.modelId = fallbackModelId;
+          continue;
+        }
         throw e;
       }
-      modelsWithoutStopSequences.add(modelKey);
-      withoutStops();
-      return await send();
     }
   }
 
@@ -467,7 +506,16 @@ class Bedrock extends BaseLLM {
       ...options,
       stream: true,
     });
-    const response = await this._sendConverseStream(client, input, signal);
+    const response = await this._sendConverseStream(
+      client,
+      input,
+      signal,
+      crossRegionFallbackModelId(
+        options.model,
+        this.crossRegionInference,
+        this.region,
+      ),
+    );
 
     if (!response?.stream) {
       throw new Error("No stream received from Bedrock API");
@@ -483,6 +531,12 @@ class Bedrock extends BaseLLM {
       let usage: Usage | undefined;
       let stopReason: string | undefined;
       let latencyMs: number | undefined;
+      // DeepSeek V3.2 leaks a fragment of its tool-call markup at the end of
+      // the text before a toolUse block; held-back text waits here until the
+      // block ends (see holdBackDsmlMarker).
+      const filterDsml = leaksDsmlMarker(options.model);
+      let dsmlHold = "";
+      const isNova2 = /nova-2-/i.test(options.model);
       for await (const chunk of response.stream) {
         if (chunk.metadata?.usage) {
           usage = bedrockUsageToUsage(chunk.metadata.usage);
@@ -493,43 +547,64 @@ class Bedrock extends BaseLLM {
         if (chunk.messageStop?.stopReason) {
           stopReason = chunk.messageStop.stopReason;
         }
+        if (dsmlHold && (chunk.contentBlockStop || chunk.messageStop)) {
+          const text = flushDsmlHold(dsmlHold);
+          dsmlHold = "";
+          if (text) yield { role: "assistant", content: text };
+        }
 
         const contentBlockDelta: ContentBlockDelta | undefined =
           chunk.contentBlockDelta?.delta;
         if (contentBlockDelta) {
           // Handle text content
           if (contentBlockDelta.text) {
-            yield {
-              role: "assistant",
-              content: contentBlockDelta.text,
-            };
+            let text = contentBlockDelta.text;
+            if (filterDsml) {
+              const split = holdBackDsmlMarker(dsmlHold + text);
+              dsmlHold = split.hold;
+              text = split.emit;
+            }
+            if (text) {
+              yield {
+                role: "assistant",
+                content: text,
+              };
+            }
             continue;
           }
-          if (contentBlockDelta.reasoningContent?.text) {
-            yield {
-              role: "thinking",
-              content: contentBlockDelta.reasoningContent.text,
-            };
-            continue;
-          }
-          if (contentBlockDelta.reasoningContent?.signature) {
-            yield {
-              role: "thinking",
-              content: "",
-              signature: contentBlockDelta.reasoningContent.signature,
-            };
-            continue;
-          }
-        }
-
-        const reasoningDelta: ReasoningContentBlockDelta | undefined = chunk
-          .contentBlockDelta?.delta as ReasoningContentBlockDelta;
-        if (reasoningDelta) {
-          if (reasoningDelta.redactedContent) {
+          const reasoning = contentBlockDelta.reasoningContent;
+          if (reasoning?.redactedContent) {
+            // Encrypted bytes; kept as base64, the form Anthropic's own API
+            // uses, and decoded again in _convertMessages.
             yield {
               role: "thinking",
               content: "",
-              redactedThinking: reasoningDelta.text,
+              redactedThinking: Buffer.from(reasoning.redactedContent).toString(
+                "base64",
+              ),
+            };
+            continue;
+          }
+          if (reasoning?.text) {
+            if (isNova2 && reasoning.text === NOVA_REDACTED_REASONING) {
+              yield {
+                role: "thinking",
+                content: "",
+                redactedThinking: reasoning.text,
+              };
+              continue;
+            }
+            yield {
+              role: "thinking",
+              content: reasoning.text,
+            };
+            continue;
+          }
+          if (reasoning?.signature) {
+            yield {
+              role: "thinking",
+              content: "",
+              signature: reasoning.signature,
             };
             continue;
           }
@@ -673,6 +748,9 @@ class Bedrock extends BaseLLM {
             },
           },
         })),
+        // Without it Llama 3.3 writes the call as plain JSON text; every
+        // tool-capable family accepts it (checked live, 2026-11-08).
+        toolChoice: { auto: {} },
       } as ToolConfiguration;
       const shouldCacheToolsConfig = parts.tools;
       if (shouldCacheToolsConfig) {
@@ -685,13 +763,33 @@ class Bedrock extends BaseLLM {
 
     const convertedMessages = normalizeToolUseIds(
       fillMissingToolResults(
-        this._convertMessages(messages, availableTools, {
-          conversation: parts.conversation,
-          ttl: cacheTtl,
-        }),
+        this._convertMessages(
+          messages,
+          availableTools,
+          {
+            conversation: parts.conversation,
+            ttl: cacheTtl,
+            afterTextOnly: bedrockCachePointAfterTextOnly(options.model),
+          },
+          options.model,
+        ),
         CANCELLED_TOOL_CALL_MESSAGE,
       ),
       options.model,
+    );
+
+    // The reasoning switch differs per family (see bedrockReasoningFields);
+    // Claude's sampling fields depend on whether thinking is on.
+    const reasoningRequest = bedrockReasoningFields(
+      options.model,
+      options.reasoning,
+      options.reasoningBudgetTokens ?? DEFAULT_REASONING_TOKENS,
+    );
+    const sampling = bedrockSamplingParams(
+      options.model,
+      options.temperature,
+      options.topP,
+      !!options.reasoning,
     );
 
     return {
@@ -708,9 +806,11 @@ class Bedrock extends BaseLLM {
       toolConfig: toolConfig,
       messages: convertedMessages,
       inferenceConfig: {
-        maxTokens: options.maxTokens,
-        temperature: options.temperature,
-        topP: options.topP,
+        maxTokens: reasoningRequest.omitMaxTokens
+          ? undefined
+          : options.maxTokens,
+        temperature: sampling.temperature,
+        topP: sampling.topP,
         // TODO: The current approach selects the first 4 items from the list to comply with Bedrock's requirement
         // of having at most 4 stop sequences, as per the AWS documentation:
         // https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_InferenceConfiguration.html
@@ -725,7 +825,7 @@ class Bedrock extends BaseLLM {
       },
       ...this._extraConverseFields(),
       additionalModelRequestFields: {
-        ...getAnthropicThinkingParams(options),
+        ...reasoningRequest.additionalModelRequestFields,
         anthropic_beta: options.model.includes("claude")
           ? ["fine-grained-tool-streaming-2025-05-14"]
           : undefined,
@@ -740,8 +840,10 @@ class Bedrock extends BaseLLM {
   private _convertMessages(
     messages: ChatMessage[],
     availableTools: Set<string>,
-    cache?: { conversation: boolean; ttl?: "1h" },
+    cache?: { conversation: boolean; ttl?: "1h"; afterTextOnly?: boolean },
+    modelId: string = this.model,
   ): Message[] {
+    const replaysRedactedThinking = /claude/i.test(modelId);
     let currentRole: "user" | "assistant" = "user";
     let currentBlocks: ContentBlock[] = [];
 
@@ -865,10 +967,15 @@ class Bedrock extends BaseLLM {
           // THINKING:
           // Thinking messages are represented by "reasoningContent" blocks which can have redacted content or reasoning content
           if (message.redactedThinking) {
+            // Claude's encrypted bytes, base64 in the message (as the
+            // streaming side and Anthropic's own API keep them), go back as
+            // redactedContent. Nova 2's "[REDACTED]." placeholder carries
+            // nothing to replay.
+            if (!replaysRedactedThinking) continue;
             const block: ContentBlock.ReasoningContentMember = {
               reasoningContent: {
                 redactedContent: new Uint8Array(
-                  Buffer.from(message.redactedThinking),
+                  Buffer.from(message.redactedThinking, "base64"),
                 ),
               },
             };
@@ -903,57 +1010,66 @@ class Bedrock extends BaseLLM {
         this.completionOptions.promptCaching
       );
     if (cacheConversation) {
-      this._addCachingToLastTwoUserMessages(converted, cache?.ttl);
+      this._addCachingToLastTwoUserMessages(
+        converted,
+        cache?.ttl,
+        cache?.afterTextOnly ?? bedrockCachePointAfterTextOnly(modelId),
+      );
     }
 
     return converted;
   }
 
   /**
-   * Put cache points on the last two user messages, and make the cached prefix
-   * unique to this process.
+   * Put cache points on the last two user messages.
    *
-   * Bedrock caches at the AWS account level, so identical prompts from
-   * different users or processes would share entries (continuedev/continue
-   * #5035). A random ID in the prompt prevents that. It has to be in the same
-   * place on every request: this used to append it to the last two user
-   * messages, so a message lost its ID when it fell out of that window, its
-   * bytes changed, and the cached conversation stopped matching. Measured on
-   * Bedrock, reads stopped growing from the third turn on. The ID now goes on
-   * the first user message only; every later cached prefix includes it.
+   * No per-process marker goes into the prompt. One used to (a random
+   * `<!-- SID: ... -->` on the first user message, from continuedev/continue
+   * #5035, meant to keep users of one AWS account from sharing cache
+   * entries), but a cache hit needs the identical prefix and yields nothing
+   * but a cheaper request, so the marker bought no isolation and made every
+   * resumed or forked session rewrite its whole history at the cache-write
+   * price instead of reading it (measured 2026-11-08).
    *
    * The task list block (core/util/taskPlan.ts) is the last text of the last
    * user message and changes between requests, so the cache point goes before
    * it: the next request, which no longer has the block there, then starts
    * with exactly the bytes this one cached.
+   *
+   * With `afterTextOnly` (Nova) a cache point goes right after the last text
+   * block of a user message, and a user message with no text block (tool
+   * results only) gets none: Nova refuses a cachePoint next to a toolResult
+   * ("extraneous key [cachePoint]"). Claude takes it after a toolResult.
    */
-  private _addCachingToLastTwoUserMessages(converted: Message[], ttl?: "1h") {
-    const first = converted.find((m) => m.role === "user");
-    first?.content?.forEach((block) => {
-      if (block.text && !isTaskPlanBlockText(block.text)) {
-        block.text += getSecureID();
-      }
+  private _addCachingToLastTwoUserMessages(
+    converted: Message[],
+    ttl?: "1h",
+    afterTextOnly = false,
+  ) {
+    const cachePoint = () => ({
+      cachePoint: { type: "default" as const, ...(ttl ? { ttl } : {}) },
     });
-
     let numCached = 0;
-    for (let i = converted.length - 1; i >= 0; i--) {
+    for (let i = converted.length - 1; i >= 0 && numCached < 2; i--) {
       const message = converted[i];
-      if (message.role === "user") {
-        const cachePoint = {
-          cachePoint: { type: "default" as const, ...(ttl ? { ttl } : {}) },
-        };
-        const content = message.content ?? [];
+      if (message.role !== "user") continue;
+      const content = message.content ?? [];
+      if (afterTextOnly) {
+        const at = content.findLastIndex(
+          (block) =>
+            block.text !== undefined && !isTaskPlanBlockText(block.text),
+        );
+        if (at === -1) continue;
+        content.splice(at + 1, 0, cachePoint());
+      } else {
         const last = content[content.length - 1];
         if (content.length > 1 && isTaskPlanBlockText(last?.text)) {
-          content.splice(content.length - 1, 0, cachePoint);
+          content.splice(content.length - 1, 0, cachePoint());
         } else {
-          content.push(cachePoint);
+          content.push(cachePoint());
         }
-        numCached++;
       }
-      if (numCached === 2) {
-        break;
-      }
+      numCached++;
     }
   }
 

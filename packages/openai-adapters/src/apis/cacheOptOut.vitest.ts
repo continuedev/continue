@@ -86,12 +86,11 @@ describe("Bedrock: a request that opts out", () => {
   });
 
   it("leaves the rest of the request as it was", () => {
-    // Bedrock puts a per-process ID in the first user message, and a cache point
-    // is a block of its own: compare what is left once both are removed.
+    // A cache point is a block of its own: compare what is left once they are
+    // removed.
     const clean = (b: any) =>
       JSON.stringify(b, (k, v) => {
         if (Array.isArray(v)) return v.filter((x) => !x?.cachePoint);
-        if (typeof v === "string") return v.replace(/<!-- SID: [^>]*-->/, "");
         return v;
       });
     const plain = bedrock()._convertBody(title);

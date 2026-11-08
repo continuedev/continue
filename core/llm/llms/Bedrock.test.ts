@@ -1,3 +1,4 @@
+import { ConverseStreamCommand } from "@aws-sdk/client-bedrock-runtime";
 import {
   ChatMessage,
   Chunk,
@@ -259,6 +260,292 @@ describe("Bedrock", () => {
       );
       expect(input.modelId).toBe(`eu.${base.model}`);
     });
+
+    describe("sampling and reasoning per model family (probed live 2026-11-08)", () => {
+      const request = (model: string, options: any, tools?: any[]) => {
+        const b: any = new TestBedrock({ ...base, model });
+        b.capabilities = { tools: true };
+        return b._generateConverseInput([{ role: "user", content: "hi" }], {
+          model,
+          ...options,
+          ...(tools ? { tools } : {}),
+        });
+      };
+      const haiku45 = "us.anthropic.claude-haiku-4-5-20251001-v1:0";
+      const nova2 = "us.amazon.nova-2-lite-v1:0";
+
+      it("sends Claude temperature or topP, never both", () => {
+        const both = request(haiku45, { temperature: 0.5, topP: 0.9 });
+        expect(both.inferenceConfig.temperature).toBe(0.5);
+        expect(both.inferenceConfig.topP).toBeUndefined();
+        const topOnly = request(haiku45, { topP: 0.9 });
+        expect(topOnly.inferenceConfig.topP).toBe(0.9);
+        expect(topOnly.inferenceConfig.temperature).toBeUndefined();
+      });
+
+      it("sends Claude neither when thinking is on", () => {
+        const input = request(haiku45, {
+          temperature: 0.5,
+          topP: 0.9,
+          reasoning: true,
+          reasoningBudgetTokens: 1024,
+        });
+        expect(input.inferenceConfig.temperature).toBeUndefined();
+        expect(input.inferenceConfig.topP).toBeUndefined();
+        expect(input.additionalModelRequestFields.thinking).toEqual({
+          type: "enabled",
+          budget_tokens: 1024,
+        });
+        expect(JSON.stringify(input)).not.toContain("top_k");
+      });
+
+      it("sends Nova both sampling fields", () => {
+        const input = request(nova2, { temperature: 0.5, topP: 0.9 });
+        expect(input.inferenceConfig).toMatchObject({
+          temperature: 0.5,
+          topP: 0.9,
+        });
+      });
+
+      it("turns Nova 2 reasoning on with reasoningConfig, not thinking", () => {
+        const input = request(nova2, {
+          reasoning: true,
+          reasoningBudgetTokens: 4096,
+          maxTokens: 900,
+        });
+        expect(input.additionalModelRequestFields).toEqual({
+          reasoningConfig: { type: "enabled", maxReasoningEffort: "medium" },
+        });
+        expect(input.inferenceConfig.maxTokens).toBe(900);
+      });
+
+      it("omits maxTokens for Nova 2 at high effort, which refuses it", () => {
+        const input = request(nova2, {
+          reasoning: true,
+          reasoningBudgetTokens: 16384,
+          maxTokens: 900,
+        });
+        expect(
+          input.additionalModelRequestFields.reasoningConfig.maxReasoningEffort,
+        ).toBe("high");
+        expect(input.inferenceConfig.maxTokens).toBeUndefined();
+      });
+
+      it("sends Qwen3 and DeepSeek V3.2 reasoning_effort, and none only when told off", () => {
+        const on = request("qwen.qwen3-32b-v1:0", {
+          reasoning: true,
+          reasoningBudgetTokens: 16384,
+        });
+        expect(on.additionalModelRequestFields).toEqual({
+          reasoning_effort: "high",
+        });
+        const off = request("deepseek.v3.2", { reasoning: false });
+        expect(off.additionalModelRequestFields).toEqual({
+          reasoning_effort: "none",
+        });
+        const unset = request("qwen.qwen3-coder-30b-a3b-v1:0", {});
+        expect(unset.additionalModelRequestFields).toEqual({});
+      });
+
+      it.each([
+        "us.deepseek.r1-v1:0",
+        "us.amazon.nova-pro-v1:0",
+        "us.meta.llama3-3-70b-instruct-v1:0",
+        "mistral.mistral-large-3-675b-instruct",
+      ])("sends %s no reasoning field even with reasoning on", (model) => {
+        const input = request(model, {
+          reasoning: true,
+          reasoningBudgetTokens: 16384,
+          maxTokens: 900,
+        });
+        expect(input.additionalModelRequestFields).toEqual({});
+        expect(input.inferenceConfig.maxTokens).toBe(900);
+      });
+
+      it("asks for toolChoice auto whenever tools are sent", () => {
+        const tools = [
+          {
+            type: "function" as const,
+            function: { name: "ls", description: "List", parameters: {} },
+          },
+        ];
+        expect(request(nova2, {}, tools).toolConfig.toolChoice).toEqual({
+          auto: {},
+        });
+        expect(request(nova2, {}).toolConfig).toBeUndefined();
+      });
+    });
+  });
+
+  describe("stream handling", () => {
+    const signal = new AbortController().signal;
+    /** The Converse input of a (real or mocked) ConverseStreamCommand. */
+    const inputOf = (command: any) =>
+      command?.input ?? (ConverseStreamCommand as any).mock?.calls?.at(-1)?.[0];
+
+    function streaming(
+      model: string,
+      events: any[],
+      ctor: any = {},
+      sends: Array<(input: any) => void> = [],
+    ) {
+      const b: any = new TestBedrock({ apiKey: "k", model, ...ctor });
+      const sent: any[] = [];
+      b._getClient = async () => ({
+        middlewareStack: { add() {} },
+        send: async (command: any) => {
+          const input = inputOf(command);
+          sent.push(JSON.parse(JSON.stringify(input)));
+          sends[sent.length - 1]?.(input);
+          return {
+            $metadata: { requestId: "req-1" },
+            stream: (async function* () {
+              for (const e of events) yield e;
+            })(),
+          };
+        },
+      });
+      const collect = async (options: any = {}) => {
+        const out: any[] = [];
+        for await (const m of b._streamChatInner(
+          [{ role: "user", content: "hi" }],
+          signal,
+          { model, ...options },
+        )) {
+          out.push(m);
+        }
+        return out;
+      };
+      return { collect, sent };
+    }
+
+    it("reads redacted thinking from reasoningContent.redactedContent as base64", async () => {
+      const bytes = new Uint8Array([1, 2, 3, 250]);
+      const { collect } = streaming("us.anthropic.claude-haiku-4-5", [
+        {
+          contentBlockDelta: {
+            delta: { reasoningContent: { redactedContent: bytes } },
+          },
+        },
+        {
+          contentBlockDelta: {
+            delta: { reasoningContent: { text: "visible" } },
+          },
+        },
+        {
+          contentBlockDelta: {
+            delta: { reasoningContent: { signature: "sig" } },
+          },
+        },
+        { contentBlockDelta: { delta: { text: "4" } } },
+      ]);
+      expect(await collect()).toEqual([
+        {
+          role: "thinking",
+          content: "",
+          redactedThinking: Buffer.from(bytes).toString("base64"),
+        },
+        { role: "thinking", content: "visible" },
+        { role: "thinking", content: "", signature: "sig" },
+        { role: "assistant", content: "4" },
+      ]);
+    });
+
+    it("treats Nova 2's [REDACTED]. reasoning text as redacted thinking", async () => {
+      const { collect } = streaming("us.amazon.nova-2-lite-v1:0", [
+        {
+          contentBlockDelta: {
+            delta: { reasoningContent: { text: "[REDACTED]." } },
+          },
+        },
+        { contentBlockDelta: { delta: { text: "4" } } },
+      ]);
+      expect(await collect({ reasoning: true })).toEqual([
+        { role: "thinking", content: "", redactedThinking: "[REDACTED]." },
+        { role: "assistant", content: "4" },
+      ]);
+    });
+
+    it("records the stop reason, so max_tokens is visible as truncation", async () => {
+      const { collect } = streaming("us.anthropic.claude-haiku-4-5", [
+        { contentBlockDelta: { delta: { text: "partial" } } },
+        { messageStop: { stopReason: "max_tokens" } },
+        { metadata: { usage: { inputTokens: 5, outputTokens: 40 } } },
+      ]);
+      const out = await collect();
+      expect(out.at(-1).usage.response.stopReason).toBe("max_tokens");
+    });
+
+    it("drops DeepSeek V3.2's leaked tool-call marker, even split across deltas", async () => {
+      const { collect } = streaming("deepseek.v3.2", [
+        { contentBlockDelta: { delta: { text: "I will echo it." } } },
+        { contentBlockDelta: { delta: { text: "<\uFF5CDS" } } },
+        { contentBlockDelta: { delta: { text: "ML\uFF5Cfunction_calls" } } },
+        { contentBlockStop: {} },
+        {
+          contentBlockStart: {
+            start: { toolUse: { toolUseId: "t1", name: "echo" } },
+          },
+        },
+        { contentBlockDelta: { delta: { toolUse: { input: "{}" } } } },
+        { contentBlockStop: {} },
+      ]);
+      const out = await collect();
+      const text = out
+        .filter((m) => m.role === "assistant" && !m.toolCalls)
+        .map((m) => m.content)
+        .join("");
+      expect(text).toBe("I will echo it.");
+      expect(out.some((m) => m.toolCalls?.[0]?.function.name === "echo")).toBe(
+        true,
+      );
+    });
+
+    it("keeps a trailing < that was not the marker", async () => {
+      const { collect } = streaming("deepseek.v3.2", [
+        { contentBlockDelta: { delta: { text: "a <" } } },
+        { contentBlockDelta: { delta: { text: " b" } } },
+        { contentBlockStop: {} },
+      ]);
+      const out = await collect();
+      expect(out.map((m) => m.content).join("")).toBe("a < b");
+    });
+
+    it("retries once without the auto prefix when Bedrock calls the ID invalid, and remembers", async () => {
+      const refuse = () => {
+        throw new Error(
+          "ValidationException: The provided model identifier is invalid.",
+        );
+      };
+      const { collect, sent } = streaming(
+        "qwen.qwen3-32b-v1:0",
+        [{ contentBlockDelta: { delta: { text: "ok" } } }],
+        { region: "us-east-1", crossRegionInference: "auto" },
+        [refuse],
+      );
+      expect(await collect()).toEqual([{ role: "assistant", content: "ok" }]);
+      expect(sent.map((i) => i.modelId)).toEqual([
+        "us.qwen.qwen3-32b-v1:0",
+        "qwen.qwen3-32b-v1:0",
+      ]);
+      // The next request goes straight to the bare ID.
+      await collect();
+      expect(sent.at(-1).modelId).toBe("qwen.qwen3-32b-v1:0");
+    });
+
+    it("does not second-guess an explicit prefix", async () => {
+      const { collect } = streaming(
+        "qwen.qwen3-coder-30b-a3b-v1:0",
+        [],
+        { region: "us-east-1", crossRegionInference: "us" },
+        [
+          () => {
+            throw new Error("The provided model identifier is invalid.");
+          },
+        ],
+      );
+      await expect(collect()).rejects.toThrow(/model identifier is invalid/);
+    });
   });
 
   describe("prompt cache points", () => {
@@ -387,7 +674,7 @@ describe("Bedrock", () => {
         for (const c of p.messages) {
           expect(c.cachePoint).toEqual({ type: "default" });
         }
-        expect(JSON.stringify(input)).toContain("SID:");
+        expect(JSON.stringify(input)).not.toContain("SID:");
       },
     );
 
@@ -443,7 +730,7 @@ describe("Bedrock", () => {
       }
     });
 
-    it("puts the per-process ID on the first user message only", () => {
+    it("adds no per-process marker to the prompt, so another process reads the same prefix", () => {
       const b: any = new TestBedrock({
         apiKey: "k",
         model: sonnet46,
@@ -460,13 +747,79 @@ describe("Bedrock", () => {
         ],
         { model: sonnet46, promptCaching: true },
       );
-      const texts = input.messages.map((m: any) =>
+      const texts = input.messages.flatMap((m: any) =>
         m.content.map((c: any) => c.text).filter(Boolean),
       );
-      expect(texts[0][0]).toMatch(/^one<!-- SID: .+ -->$/);
-      for (const later of texts.slice(1)) {
-        for (const t of later) expect(t).not.toContain("SID:");
-      }
+      expect(texts).toEqual(["one", "a", "two", "b", "three"]);
+      expect(JSON.stringify(input)).not.toContain("SID:");
+    });
+
+    describe("on Nova, which refuses a cache point next to a toolResult", () => {
+      // Seen live on 2026-11-08: "#/messages/2/content/0: extraneous key
+      // [cachePoint]" on the second request of every multi-turn run, when the
+      // newest user message held only tool results. Claude takes it there.
+      const nova = "us.amazon.nova-2-lite-v1:0";
+      const toolCall = (id: string) => ({
+        id,
+        type: "function" as const,
+        function: { name: "ls", arguments: "{}" },
+      });
+      const history: ChatMessage[] = [
+        { role: "system", content: "You are an agent." },
+        { role: "user", content: "fix it" },
+        { role: "assistant", content: "", toolCalls: [toolCall("a")] },
+        { role: "tool", content: "out a", toolCallId: "a" },
+        { role: "assistant", content: "", toolCalls: [toolCall("b")] },
+        { role: "tool", content: "out b", toolCallId: "b" },
+      ];
+      const convert = (model: string, h: ChatMessage[]) => {
+        const b: any = new TestBedrock({ apiKey: "k", model });
+        b.capabilities = { tools: true };
+        return b._generateConverseInput(h, {
+          model,
+          tools,
+          promptCaching: true,
+        }).messages as any[];
+      };
+      const pointsAt = (messages: any[]) =>
+        messages.flatMap((m, i) =>
+          m.content.some((c: any) => c.cachePoint) ? [i] : [],
+        );
+
+      it("skips user messages made of tool results and uses the earlier text message", () => {
+        const messages = convert(nova, history);
+        expect(messages.map((m) => m.role)).toEqual([
+          "user",
+          "assistant",
+          "user",
+          "assistant",
+          "user",
+        ]);
+        expect(pointsAt(messages)).toEqual([0]);
+        for (const m of messages) {
+          for (const c of m.content) {
+            if (c.toolResult) {
+              expect(JSON.stringify(c.toolResult)).not.toContain("cachePoint");
+            }
+          }
+        }
+      });
+
+      it("puts the point right after a text block that follows a tool result", () => {
+        const messages = convert(nova, [
+          ...history,
+          { role: "user", content: "also check the tests" },
+        ]);
+        const last = messages.at(-1).content;
+        expect(last[0].toolResult).toBeDefined();
+        expect(last[1].text).toBe("also check the tests");
+        expect(last[2].cachePoint).toEqual({ type: "default" });
+        expect(pointsAt(messages)).toEqual([0, 4]);
+      });
+
+      it("still marks tool-result messages for Claude", () => {
+        expect(pointsAt(convert(sonnet46, history))).toEqual([2, 4]);
+      });
     });
 
     describe("on rewritten messages (agent loop)", () => {
@@ -661,16 +1014,6 @@ describe("Bedrock", () => {
         const { cached } = cachedBlocks(a);
         expect(cachedBlocks(b).all.slice(0, cached.length)).not.toEqual(cached);
       });
-    });
-
-    it("adds no ID when caching is off", () => {
-      const b: any = new TestBedrock({
-        apiKey: "k",
-        model: sonnet46,
-        region: "us-east-1",
-      });
-      const input = b._generateConverseInput(msgs, { model: sonnet46 });
-      expect(JSON.stringify(input.messages)).not.toContain("SID:");
     });
 
     it("turns the caching header on only when something is cached", () => {
@@ -1061,7 +1404,9 @@ describe("Bedrock", () => {
         {
           role: "thinking",
           content: "",
-          redactedThinking: "redacted-content-bytes",
+          redactedThinking: Buffer.from("redacted-content-bytes").toString(
+            "base64",
+          ),
         },
         { role: "assistant", content: "Here's my answer" },
       ];
@@ -1084,13 +1429,32 @@ describe("Bedrock", () => {
         },
       ]);
 
-      // Check that the Uint8Array contains the expected bytes
+      // The message holds base64 (as the stream handler and Anthropic's own
+      // API do); the request carries the bytes.
       const redactedContent =
         converted[1].content?.[0].reasoningContent?.redactedContent;
       expect(redactedContent).toBeInstanceOf(Uint8Array);
       expect(Buffer.from(redactedContent!).toString()).toBe(
         "redacted-content-bytes",
       );
+    });
+
+    it("does not replay Nova's redacted placeholder, which carries nothing", () => {
+      const messages: ChatMessage[] = [
+        { role: "user", content: "Think about this" } as UserChatMessage,
+        { role: "thinking", content: "", redactedThinking: "[REDACTED]." },
+        { role: "assistant", content: "Four" },
+      ];
+      const converted = bedrock["_convertMessages"](
+        messages,
+        new Set<string>(),
+        undefined,
+        "us.amazon.nova-2-lite-v1:0",
+      );
+      expect(converted).toEqual([
+        { role: "user", content: [{ text: "Think about this" }] },
+        { role: "assistant", content: [{ text: "Four" }] },
+      ]);
     });
 
     it("should convert multimodal content correctly", () => {
@@ -1177,9 +1541,9 @@ describe("Bedrock", () => {
         true,
       );
 
-      // Verify that text content includes a cache ID suffix
+      // No per-process marker on the text
       const userMessageText = converted[0].content?.[0].text;
-      expect(userMessageText).toMatch(/First message.+/);
+      expect(userMessageText).toBe("First message");
     });
 
     it("should add cache points when completionOptions.promptCaching is enabled", () => {
@@ -1220,9 +1584,8 @@ describe("Bedrock", () => {
         true,
       );
 
-      // Verify that text content includes a cache ID suffix
       const userMessageText = converted[0].content?.[0].text;
-      expect(userMessageText).toMatch(/First message.+/);
+      expect(userMessageText).toBe("First message");
     });
 
     it("should not add cache points when both caching options are disabled", () => {
