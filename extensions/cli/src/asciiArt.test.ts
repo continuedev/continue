@@ -1,72 +1,71 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { stripVTControlCharacters } from "node:util";
 
-import { CONTINUE_ASCII_ART, getDisplayableAsciiArt } from "./asciiArt.js";
+import { describe, expect, it } from "vitest";
 
-describe("asciiArt", () => {
-  let originalColumns: number | undefined;
+import { bannerWidth, getDisplayableAsciiArt } from "./asciiArt.js";
 
-  beforeEach(() => {
-    originalColumns = process.stdout.columns;
+const plain = (s: string) => stripVTControlCharacters(s);
+const LOOP_TOP = "▄████▄";
+const WORD_TOP = "██████╗ ██████╗ ███╗   ██╗████████╗";
+
+describe("getDisplayableAsciiArt", () => {
+  it("shows the loop and the CONTINUOUS wordmark on a wide terminal", () => {
+    const banner = plain(getDisplayableAsciiArt(120));
+    expect(banner).toContain(LOOP_TOP);
+    expect(banner).toContain(WORD_TOP);
+    // Six rows of art plus the version, all lined up
+    const rows = banner.split("\n").filter(Boolean);
+    expect(rows).toHaveLength(7);
+    const widths = new Set(rows.slice(0, 6).map((r) => [...r].length));
+    expect(widths.size).toBe(1);
+    expect(rows[6].trim()).toMatch(/^v/);
   });
 
-  afterEach(() => {
-    if (originalColumns === undefined) {
-      delete (process.stdout as any).columns;
-    } else {
-      process.stdout.columns = originalColumns;
+  it("drops the loop when only the wordmark fits", () => {
+    const banner = plain(getDisplayableAsciiArt(90));
+    expect(banner).toContain(WORD_TOP);
+    expect(banner).not.toContain(LOOP_TOP);
+  });
+
+  it("shows the loop with the name beside it on a narrow terminal", () => {
+    const banner = plain(getDisplayableAsciiArt(60));
+    expect(banner).toContain(LOOP_TOP);
+    expect(banner).toContain("continuous");
+    expect(banner).not.toContain(WORD_TOP);
+  });
+
+  it("falls back to one line on a very narrow terminal", () => {
+    const banner = plain(getDisplayableAsciiArt(20)).trim();
+    expect(banner.split("\n")).toHaveLength(1);
+    expect(banner).toMatch(/^continuous v/);
+  });
+
+  it("never shows art wider than the terminal allows", () => {
+    // Only the one-line fallback may wrap, on terminals narrower than it
+    for (const columns of [20, 34, 35, 60, 85, 86, 90, 109, 110, 200]) {
+      const banner = getDisplayableAsciiArt(columns);
+      const lines = plain(banner).split("\n").filter(Boolean);
+      if (lines.length > 1) {
+        expect(bannerWidth(banner) + 2).toBeLessThanOrEqual(columns);
+      }
     }
   });
 
-  describe("getDisplayableAsciiArt", () => {
-    it("should return full ASCII art when terminal is wide enough", () => {
-      // Set process.stdout.columns to simulate wide terminal
-      process.stdout.columns = 80;
+  it("uses the terminal width when none is given", () => {
+    const original = process.stdout.columns;
+    try {
+      process.stdout.columns = 90;
+      expect(plain(getDisplayableAsciiArt())).toContain(WORD_TOP);
+    } finally {
+      process.stdout.columns = original;
+    }
+  });
 
-      const result = getDisplayableAsciiArt();
-
-      expect(result).toBe(CONTINUE_ASCII_ART);
-    });
-
-    it("should return CN ASCII art version when terminal is too narrow", () => {
-      // Set process.stdout.columns to simulate narrow terminal
-      process.stdout.columns = 60;
-
-      const result = getDisplayableAsciiArt();
-
-      expect(result).toContain("██████╗");
-
-      expect(result).not.toBe(CONTINUE_ASCII_ART);
-      // Should be much shorter than the full ASCII art
-      expect(result.length).toBeLessThan(CONTINUE_ASCII_ART.length / 2);
-    });
-
-    it("should return CN ASCII art version when terminal is below threshold", () => {
-      // Test the edge case at exactly 74 columns (below our threshold of 75)
-      process.stdout.columns = 74;
-
-      const result = getDisplayableAsciiArt();
-
-      expect(result).toContain("██████╗");
-
-      expect(result).not.toBe(CONTINUE_ASCII_ART);
-    });
-
-    it("should return full ASCII art when terminal is exactly at threshold", () => {
-      // Test the edge case at exactly 75 columns (our threshold)
-      process.stdout.columns = 75;
-
-      const result = getDisplayableAsciiArt();
-
-      expect(result).toBe(CONTINUE_ASCII_ART);
-    });
-
-    it("should default to full ASCII art when columns is undefined", () => {
-      // Set process.stdout.columns to undefined (should default to 80)
-      delete (process.stdout as any).columns;
-
-      const result = getDisplayableAsciiArt();
-
-      expect(result).toBe(CONTINUE_ASCII_ART);
-    });
+  it("says continuous, not continue", () => {
+    for (const columns of [20, 60, 90, 120]) {
+      expect(plain(getDisplayableAsciiArt(columns))).not.toMatch(
+        /CONTINUE(?!US)|\bcontinue\b/,
+      );
+    }
   });
 });
