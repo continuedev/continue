@@ -32,6 +32,8 @@ interface AutoCompactionOptions {
   callbacks?: AutoCompactionCallbacks;
   systemMessage?: string;
   tools?: ChatCompletionTool[];
+  /** Save the compacted history to the current session (default true) */
+  persistSession?: boolean;
 }
 
 /**
@@ -139,6 +141,7 @@ export async function handleAutoCompaction(
     callbacks,
     systemMessage: providedSystemMessage,
     tools,
+    persistSession = true,
   } = options;
 
   if (
@@ -198,7 +201,9 @@ export async function handleAutoCompaction(
     });
 
     // Save the compacted session
-    updateSessionHistory(result.compactedHistory);
+    if (persistSession) {
+      updateSessionHistory(result.compactedHistory);
+    }
 
     // Handle success notification
     handleCompactionSuccess(result, isHeadless, callbacks);

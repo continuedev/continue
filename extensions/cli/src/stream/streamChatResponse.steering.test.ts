@@ -66,17 +66,26 @@ vi.mock("./handleToolCalls.js", () => ({
   getRequestTools: vi.fn(() => Promise.resolve([])),
 }));
 
-vi.mock("./streamChatResponse.compactionHelpers.js", () => ({
-  handlePreApiCompaction: vi.fn((chatHistory) =>
-    Promise.resolve({ chatHistory, wasCompacted: false }),
-  ),
-  handlePostToolValidation: vi.fn((_, chatHistory) =>
-    Promise.resolve({ chatHistory, wasCompacted: false }),
-  ),
-  handleNormalAutoCompaction: vi.fn((chatHistory) =>
-    Promise.resolve({ chatHistory, wasCompacted: false }),
-  ),
-}));
+vi.mock(
+  "./streamChatResponse.compactionHelpers.js",
+  async (importOriginal) => ({
+    // The real auto-continuation logic: it decides when a turn ends
+    handleAutoContinuation: (
+      await importOriginal<
+        typeof import("./streamChatResponse.compactionHelpers.js")
+      >()
+    ).handleAutoContinuation,
+    handlePreApiCompaction: vi.fn((chatHistory) =>
+      Promise.resolve({ chatHistory, wasCompacted: false }),
+    ),
+    handlePostToolValidation: vi.fn((_, chatHistory) =>
+      Promise.resolve({ chatHistory, wasCompacted: false }),
+    ),
+    handleNormalAutoCompaction: vi.fn((chatHistory) =>
+      Promise.resolve({ chatHistory, wasCompacted: false }),
+    ),
+  }),
+);
 
 function chunk(delta: any, finish: string | null = null): ChatCompletionChunk {
   return {

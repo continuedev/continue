@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { ChatHistoryItem } from "core";
 
+import { getSubagentModel } from "../contextManagement.js";
 import { fireSubagentStart, fireSubagentStop } from "../hooks/fireHook.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
 import { services } from "../services/index.js";
@@ -108,8 +109,11 @@ let subagentRuns: Promise<unknown> = Promise.resolve();
  * Runs one at a time: a run swaps the shared tool-permission, system-message
  * and chat-history services and restores them afterwards, so two subagents
  * started by parallel tool calls would otherwise overwrite each other's
- * state and could leave the parent with a subagent's permissions. A run
- * whose parent was cancelled while it waited does not start.
+ * state and could leave the parent with a subagent's permissions. Running
+ * one at a time also suits servers whose prompt cache holds one
+ * conversation at a time, such as Strata: parallel runs would interleave
+ * requests from different histories, and each switch reads the whole prompt
+ * again. A run whose parent was cancelled while it waited does not start.
  */
 export function executeSubAgent(
   options: SubAgentExecutionOptions,
@@ -260,10 +264,12 @@ async function runSubAgent(
       agent: subAgent.model?.name,
     });
 
-    const { model, llmApi } = subAgent;
-    if (!model || !llmApi) {
+    const { llmApi } = subAgent;
+    if (!subAgent.model || !llmApi) {
       throw new Error("Model or LLM API not available");
     }
+    // The model's sub-agent context budget, if one is configured
+    const model = getSubagentModel(subAgent.model);
 
     // SubagentStart cannot block (Claude Code: exit 2 "shows stderr to user
     // only"); its additionalContext goes to the subagent before its prompt.
@@ -352,6 +358,9 @@ async function runSubAgent(
           abortController,
           callbacks,
           false, // Not compacting
+          // Auto-compaction still runs within the sub-agent's budget, but
+          // the child history must not overwrite the parent session
+          { persistSession: false },
         );
         if (signal.aborted) break;
 

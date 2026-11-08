@@ -66,17 +66,26 @@ vi.mock("./handleToolCalls.js", () => ({
   getRequestTools: vi.fn(() => Promise.resolve([])),
 }));
 
-vi.mock("./streamChatResponse.compactionHelpers.js", () => ({
-  handlePreApiCompaction: vi.fn((chatHistory) =>
-    Promise.resolve({ chatHistory, wasCompacted: false }),
-  ),
-  handlePostToolValidation: vi.fn((_, chatHistory) =>
-    Promise.resolve({ chatHistory, wasCompacted: false }),
-  ),
-  handleNormalAutoCompaction: vi.fn((chatHistory) =>
-    Promise.resolve({ chatHistory, wasCompacted: false }),
-  ),
-}));
+vi.mock(
+  "./streamChatResponse.compactionHelpers.js",
+  async (importOriginal) => ({
+    // Keep the real auto-continuation logic under test
+    handleAutoContinuation: (
+      await importOriginal<
+        typeof import("./streamChatResponse.compactionHelpers.js")
+      >()
+    ).handleAutoContinuation,
+    handlePreApiCompaction: vi.fn((chatHistory) =>
+      Promise.resolve({ chatHistory, wasCompacted: false }),
+    ),
+    handlePostToolValidation: vi.fn((_, chatHistory) =>
+      Promise.resolve({ chatHistory, wasCompacted: false }),
+    ),
+    handleNormalAutoCompaction: vi.fn((chatHistory) =>
+      Promise.resolve({ chatHistory, wasCompacted: false }),
+    ),
+  }),
+);
 
 describe("streamChatResponse - auto-continuation after compaction", () => {
   const mockModel: ModelConfig = {
@@ -194,6 +203,30 @@ describe("streamChatResponse - auto-continuation after compaction", () => {
 
     // Verify the LLM was called multiple times (continuing the conversation)
     expect(callCount).toBeGreaterThan(1);
+  });
+
+  it("stops when every request compacts, instead of continuing forever", async () => {
+    const { handlePreApiCompaction } =
+      await import("./streamChatResponse.compactionHelpers.js");
+    const { logger } = await import("../util/logger.js");
+
+    // A budget below the fixed prompt: compaction never makes room
+    vi.mocked(handlePreApiCompaction).mockImplementation((history) =>
+      Promise.resolve({ chatHistory: history, wasCompacted: true }),
+    );
+
+    await streamChatResponse(
+      chatHistory,
+      mockModel,
+      mockLlmApi,
+      mockAbortController,
+    );
+
+    // The reply, one auto-continue, then stop
+    expect(responseCount).toBe(2);
+    expect(logger.warn).toHaveBeenCalledWith(
+      "Compacted again right after auto-continuing; not continuing again",
+    );
   });
 
   it("should not auto-continue if compaction occurs with tool calls pending", async () => {

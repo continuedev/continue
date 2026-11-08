@@ -19,6 +19,8 @@ export interface CompactionHelperOptions {
   callbacks?: StreamCallbacks;
   systemMessage: string;
   tools?: ChatCompletionTool[];
+  /** Save compacted history to the current session (default true) */
+  persistSession?: boolean;
 }
 
 /**
@@ -36,6 +38,7 @@ export async function handlePreApiCompaction(
     callbacks,
     systemMessage,
     tools,
+    persistSession,
   } = options;
 
   if (isCompacting) {
@@ -51,6 +54,7 @@ export async function handlePreApiCompaction(
       },
       systemMessage,
       tools,
+      persistSession,
     });
 
   if (wasCompacted) {
@@ -77,8 +81,15 @@ export async function handlePostToolValidation(
   chatHistory: ChatHistoryItem[],
   options: CompactionHelperOptions,
 ): Promise<{ chatHistory: ChatHistoryItem[]; wasCompacted: boolean }> {
-  const { model, llmApi, isHeadless, callbacks, systemMessage, tools } =
-    options;
+  const {
+    model,
+    llmApi,
+    isHeadless,
+    callbacks,
+    systemMessage,
+    tools,
+    persistSession,
+  } = options;
 
   if (toolCalls.length === 0) {
     return { chatHistory, wasCompacted: false };
@@ -119,6 +130,7 @@ export async function handlePostToolValidation(
         },
         systemMessage,
         tools,
+        persistSession,
       });
 
     if (wasCompacted) {
@@ -171,15 +183,23 @@ export async function handlePostToolValidation(
 }
 
 /**
- * Handle normal auto-compaction check at 80% threshold
+ * Handle normal auto-compaction check at the model's threshold
+ * (see getAutoCompactThreshold)
  */
 export async function handleNormalAutoCompaction(
   chatHistory: ChatHistoryItem[],
   shouldContinue: boolean,
   options: CompactionHelperOptions,
 ): Promise<{ chatHistory: ChatHistoryItem[]; wasCompacted: boolean }> {
-  const { model, llmApi, isHeadless, callbacks, systemMessage, tools } =
-    options;
+  const {
+    model,
+    llmApi,
+    isHeadless,
+    callbacks,
+    systemMessage,
+    tools,
+    persistSession,
+  } = options;
 
   if (!shouldContinue) {
     return { chatHistory, wasCompacted: false };
@@ -202,6 +222,7 @@ export async function handleNormalAutoCompaction(
       },
       systemMessage,
       tools,
+      persistSession,
     });
 
   if (wasCompacted) {
@@ -218,4 +239,52 @@ export async function handleNormalAutoCompaction(
   }
 
   return { chatHistory, wasCompacted: false };
+}
+
+/**
+ * Handle auto-continuation after compaction
+ */
+export function handleAutoContinuation(
+  compactionOccurred: boolean,
+  shouldContinue: boolean,
+  chatHistory: ChatHistoryItem[],
+  autoContinuedLastIteration: boolean,
+): { shouldAutoContinue: boolean; chatHistory: ChatHistoryItem[] } {
+  if (!compactionOccurred || shouldContinue) {
+    return { shouldAutoContinue: false, chatHistory };
+  }
+
+  // Compacting again straight after our own "continue" means compaction
+  // made no room; continuing again would loop, so stop instead
+  if (autoContinuedLastIteration) {
+    logger.warn(
+      "Compacted again right after auto-continuing; not continuing again",
+    );
+    return { shouldAutoContinue: false, chatHistory };
+  }
+
+  logger.debug(
+    "Auto-compaction occurred during this turn - automatically continuing session",
+  );
+
+  // Add a continuation message to the history
+  const chatHistorySvc = services.chatHistory;
+  if (
+    typeof chatHistorySvc?.isReady === "function" &&
+    chatHistorySvc.isReady()
+  ) {
+    chatHistorySvc.addUserMessage("continue");
+    chatHistory = chatHistorySvc.getHistory();
+  } else {
+    chatHistory.push({
+      message: {
+        role: "user",
+        content: "continue",
+      },
+      contextItems: [],
+    });
+  }
+
+  logger.debug("Added continuation message after compaction");
+  return { shouldAutoContinue: true, chatHistory };
 }

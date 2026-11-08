@@ -522,3 +522,39 @@ describe("executeSubAgent", () => {
     });
   });
 });
+
+describe("executeSubAgent: context budget", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (serviceContainer as any).values.set(PERMISSIONS, parentPermissions);
+    vi.mocked(fireSubagentStart).mockReset().mockResolvedValue(NOOP_HOOK);
+    vi.mocked(fireSubagentStop).mockReset().mockResolvedValue(NOOP_HOOK);
+  });
+
+  it("runs with the model's sub-agent budget and does not persist the child history", async () => {
+    mockStream(async (_history, callbacks) => {
+      callbacks.onContent?.("done");
+    });
+    const budgeted = {
+      model: {
+        name: "sub",
+        model: "test",
+        provider: "openai",
+        defaultCompletionOptions: { contextLength: 524_288, maxTokens: 16_384 },
+        contextManagement: { subagent: { contextLength: 65_536 } },
+      },
+      llmApi: {},
+    } as any;
+
+    const result = await run("task", { agent: budgeted });
+
+    expect(result.status).toBe("completed");
+    const [, usedModel, , , , isCompacting, options] =
+      vi.mocked(streamChatResponse).mock.calls[0];
+    expect(usedModel.defaultCompletionOptions?.contextLength).toBe(65_536);
+    // The parent's model is not changed
+    expect(budgeted.model.defaultCompletionOptions.contextLength).toBe(524_288);
+    expect(isCompacting).toBe(false);
+    expect(options).toEqual({ persistSession: false });
+  });
+});

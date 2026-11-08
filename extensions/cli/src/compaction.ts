@@ -258,6 +258,50 @@ export function getAutoCompactMessage(model: ModelConfig): string {
 }
 
 /**
+ * Input token count at which auto-compaction triggers.
+ *
+ * By default this keeps a buffer of up to AUTO_COMPACT_BUFFER_CAP tokens below
+ * the input space (contextLength - maxTokens). A model's
+ * `contextManagement.autoCompactRatio` replaces that with a plain fraction of
+ * the input space, and `contextManagement.autoCompactTokens` caps the result.
+ * @param model The model configuration
+ * @returns The threshold in input tokens
+ */
+export function getAutoCompactThreshold(model: ModelConfig): number {
+  const contextLimit = getModelContextLimit(model);
+  const maxTokens = getModelMaxTokens(model);
+  const inputSpace = contextLimit - maxTokens;
+  const { autoCompactRatio, autoCompactTokens } = model.contextManagement ?? {};
+
+  let threshold: number;
+  if (autoCompactRatio === undefined) {
+    const ratioCompactionBuffer = Math.ceil(
+      (1 - AUTO_COMPACT_BUFFER_RATIO) * inputSpace,
+    );
+    const safeCompactionBuffer = Math.max(maxTokens, ratioCompactionBuffer);
+    const compactionBuffer = Math.min(
+      safeCompactionBuffer,
+      AUTO_COMPACT_BUFFER_CAP,
+    );
+    threshold = inputSpace - compactionBuffer;
+  } else {
+    threshold = Math.floor(autoCompactRatio * inputSpace);
+  }
+  if (autoCompactTokens !== undefined) {
+    threshold = Math.min(threshold, autoCompactTokens);
+  }
+
+  // Ensure we have positive space available for input
+  if (inputSpace <= 0 || threshold <= 0) {
+    throw new Error(
+      `max_tokens is larger than context_length, which should not be possible. Please check your configuration.`,
+    );
+  }
+
+  return threshold;
+}
+
+/**
  * Check if the chat history exceeds the auto-compact threshold.
  * Accounts for system message and tool definitions in the calculation.
  * @param params Object containing chatHistory, model, optional systemMessage, and optional tools
@@ -274,29 +318,27 @@ export function shouldAutoCompact(params: AutoCompactParams): boolean {
   });
   const contextLimit = getModelContextLimit(model);
   const maxTokens = getModelMaxTokens(model);
-
-  // Additional buffer matching the auto-compaction threshold formula
-  const ratioCompactionBuffer = Math.ceil(
-    (1 - AUTO_COMPACT_BUFFER_RATIO) * (contextLimit - maxTokens),
-  );
-  const safeCompactionBuffer = Math.max(maxTokens, ratioCompactionBuffer);
-  const compactionBuffer = Math.min(
-    safeCompactionBuffer,
-    AUTO_COMPACT_BUFFER_CAP,
-  );
-
-  const compactionThreshold = contextLimit - maxTokens - compactionBuffer;
-
-  // Ensure we have positive space available for input
-  if (compactionThreshold <= 0) {
-    throw new Error(
-      `max_tokens is larger than context_length, which should not be possible. Please check your configuration.`,
-    );
-  }
+  const compactionThreshold = getAutoCompactThreshold(model);
 
   const toolTokens = tools ? countToolDefinitionTokens(tools) : 0;
   const systemTokens = systemMessage ? encode(systemMessage).length : 0;
-  const shouldCompact = inputTokens >= compactionThreshold;
+  let shouldCompact = inputTokens >= compactionThreshold;
+
+  // Compaction only shrinks the history. If the system message and tools
+  // alone reach the threshold, compacting cannot get under it and would run
+  // on every request, so wait until the input no longer fits at all.
+  const fixedTokens = systemTokens + toolTokens;
+  if (
+    shouldCompact &&
+    fixedTokens >= compactionThreshold &&
+    inputTokens < contextLimit - maxTokens
+  ) {
+    logger.warn(
+      "Auto-compaction threshold is below the system message and tools; skipping compaction until the context is full",
+      { fixedTokens, compactionThreshold },
+    );
+    shouldCompact = false;
+  }
 
   logger.debug("Context usage check", {
     inputTokens,
@@ -306,7 +348,7 @@ export function shouldAutoCompact(params: AutoCompactParams): boolean {
     contextLimit,
     maxTokens,
     reservedForOutput: maxTokens,
-    compactionBuffer,
+    compactionBuffer: contextLimit - maxTokens - compactionThreshold,
     compactionThreshold,
     shouldCompact,
   });

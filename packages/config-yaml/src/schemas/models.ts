@@ -135,6 +135,38 @@ export const chatOptionsSchema = z.object({
 });
 export type ChatOptions = z.infer<typeof chatOptionsSchema>;
 
+/** When to auto-compact, as a fraction of the input space and/or a token cap */
+const autoCompactFields = {
+  /** Compact once input reaches this fraction of (contextLength - maxTokens) */
+  autoCompactRatio: z.number().gt(0).lte(1).optional(),
+  /** Compact once input reaches this many tokens */
+  autoCompactTokens: z.number().int().positive().optional(),
+};
+
+export const contextManagementSchema = z.object({
+  ...autoCompactFields,
+  /** Budget applied when this model runs as a sub-agent */
+  subagent: z
+    .object({
+      /** Context limit for the sub-agent's own history (capped at the model's) */
+      contextLength: z.number().int().positive().optional(),
+      ...autoCompactFields,
+    })
+    .optional(),
+  /**
+   * Extra request body fields by request kind. `oneShot` is sent on requests
+   * that no later request continues (the compaction summary), `conversation`
+   * on every other chat request.
+   */
+  requestBodyHints: z
+    .object({
+      oneShot: z.record(z.string(), z.any()).optional(),
+      conversation: z.record(z.string(), z.any()).optional(),
+    })
+    .optional(),
+});
+export type ContextManagement = z.infer<typeof contextManagementSchema>;
+
 const templateSchema = z.enum([
   "llama2",
   "alpaca",
@@ -225,6 +257,7 @@ const baseModelFields = {
   requestOptions: requestOptionsSchema.optional(),
   embedOptions: embedOptionsSchema.optional(),
   chatOptions: chatOptionsSchema.optional(),
+  contextManagement: contextManagementSchema.optional(),
   promptTemplates: promptTemplatesSchema.optional(),
   useLegacyCompletionsEndpoint: z.boolean().optional(),
   useResponsesApi: z.boolean().optional(),
