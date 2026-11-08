@@ -66,11 +66,29 @@ export function applyCrossRegionInference(
  */
 export function getBedrockErrorHint(
   error: unknown,
-  ctx: { profile?: string; region?: string; usedProfile?: boolean },
+  ctx: {
+    profile?: string;
+    region?: string;
+    usedProfile?: boolean;
+    /** The request was signed with a Bedrock API key (bearer token). */
+    apiKey?: boolean;
+  },
 ): string | undefined {
   const err = error as { name?: string; message?: string } | undefined;
   const text = `${err?.name ?? ""} ${err?.message ?? ""}`;
   const profileArg = ctx.profile ? ` --profile ${ctx.profile}` : "";
+
+  // A 403 with this text is all Bedrock says when a short-term key is used
+  // outside the region it was generated for (seen live 2026-11-08).
+  if (ctx.apiKey && /make sure your API Key is valid/i.test(text)) {
+    return `Bedrock rejected the API key${
+      ctx.region ? ` in ${ctx.region}` : ""
+    }. A short-term key only works in the region it was generated for, so \`region\` must match it; a long-term key may have expired or been revoked.`;
+  }
+  // A ResourceNotFoundException, not an AccessDenied, so it is matched first.
+  if (/marked by provider as Legacy/i.test(text)) {
+    return "This model is legacy and Bedrock no longer serves it to accounts that have not used it in the last 30 days. Pick a current model: Test connection in the model picker lists them and marks the ones that need access.";
+  }
 
   if (
     /sso/i.test(text) &&
@@ -177,6 +195,12 @@ export interface BedrockModelOption {
    * use-case form. Bedrock still lists it as ACTIVE, but chat is refused.
    */
   needsAnthropicUseCase?: boolean;
+  /**
+   * What GetFoundationModelAvailability says about this account's access to
+   * the model. Absent when it was not asked (Amazon's own models) or the
+   * lookup failed.
+   */
+  access?: BedrockModelAccess;
 }
 
 function baseModelIdFromArn(arn: string | undefined): string | undefined {
@@ -743,4 +767,133 @@ export function bedrockFinishReason(
     default:
       return "stop";
   }
+}
+
+// ---------------------------------------------------------------------------
+// Model access and inference profile hints (added 2026-11-08)
+// ---------------------------------------------------------------------------
+
+/**
+ * The account's access to a model, from GetFoundationModelAvailability:
+ * "needs-access" when the agreement is NOT_AVAILABLE (or the identity is not
+ * authorised, not entitled, or the region does not serve it), "pending" while
+ * an agreement request is open, else "available".
+ */
+export type BedrockModelAccess = "available" | "needs-access" | "pending";
+
+/** Subset of GetFoundationModelAvailabilityResponse we rely on. */
+export interface FoundationModelAvailabilityLike {
+  agreementAvailability?: { status?: string; errorMessage?: string };
+  authorizationStatus?: string;
+  entitlementAvailability?: string;
+  regionAvailability?: string;
+}
+
+export function modelAccessFromAvailability(
+  availability: FoundationModelAvailabilityLike,
+): BedrockModelAccess {
+  const agreement = availability.agreementAvailability?.status;
+  if (agreement === "PENDING") return "pending";
+  if (
+    agreement === "NOT_AVAILABLE" ||
+    agreement === "ERROR" ||
+    availability.authorizationStatus === "NOT_AUTHORIZED" ||
+    availability.entitlementAvailability === "NOT_AVAILABLE" ||
+    availability.regionAvailability === "NOT_AVAILABLE"
+  ) {
+    return "needs-access";
+  }
+  return "available";
+}
+
+/**
+ * The base model IDs worth an availability lookup: every third-party model in
+ * the catalog. Amazon's own models need no agreement, and application
+ * profiles over unknown models have no base to ask about.
+ */
+export function modelsNeedingAccessCheck(
+  catalog: BedrockModelOption[],
+): string[] {
+  const ids = new Set<string>();
+  for (const option of catalog) {
+    const baseId = option.baseModelId;
+    if (!baseId || option.kind === "application-profile") continue;
+    if (option.provider === "Amazon" || baseId.startsWith("amazon.")) continue;
+    ids.add(baseId);
+  }
+  return [...ids];
+}
+
+/** Stamp each catalog entry with the access state of its base model. */
+export function applyModelAccess(
+  catalog: BedrockModelOption[],
+  access: ReadonlyMap<string, BedrockModelAccess>,
+): BedrockModelOption[] {
+  return catalog.map((option) => {
+    const state = option.baseModelId
+      ? access.get(option.baseModelId)
+      : undefined;
+    return state ? { ...option, access: state } : option;
+  });
+}
+
+/** The profile IDs to use in place of a bare model ID. */
+export interface InferenceProfileSuggestion {
+  /** The geographic profile (`us.`, `eu.`, ...), the one for `region` if listed. */
+  regional?: string;
+  /** The `global.` profile, when the catalog lists one. */
+  global?: string;
+}
+
+/**
+ * For a bare model ID that the catalog offers only through inference profiles,
+ * the profile IDs to use instead. Undefined when the ID already carries a
+ * prefix, is an ARN, is offered on demand, or is unknown to the catalog (an
+ * unknown ID is reported by Bedrock itself, and a stale catalog must not
+ * second-guess it).
+ */
+export function inferenceProfileSuggestion(
+  catalog: Pick<BedrockModelOption, "id" | "kind" | "baseModelId">[],
+  modelId: string,
+  region: string | undefined,
+): InferenceProfileSuggestion | undefined {
+  if (modelId.startsWith("arn:")) return undefined;
+  if (INFERENCE_PROFILE_PREFIXES.some((p) => modelId.startsWith(`${p}.`))) {
+    return undefined;
+  }
+  if (catalog.some((o) => o.kind === "on-demand" && o.id === modelId)) {
+    return undefined;
+  }
+  const profiles = catalog.filter(
+    (o) => o.kind === "inference-profile" && o.baseModelId === modelId,
+  );
+  if (profiles.length === 0) return undefined;
+
+  const wanted = inferenceProfilePrefixForRegion(region);
+  const geographic = profiles.filter((o) => !o.id.startsWith("global."));
+  const regional =
+    geographic.find((o) => wanted && o.id.startsWith(`${wanted}.`)) ??
+    geographic[0];
+  const global = profiles.find((o) => o.id.startsWith("global."));
+  return { regional: regional?.id, global: global?.id };
+}
+
+/** The config warning for a bare ID that needs an inference profile. */
+export function inferenceProfileWarning(
+  modelId: string,
+  region: string | undefined,
+  suggestion: InferenceProfileSuggestion,
+): string {
+  const ids = [suggestion.regional, suggestion.global].filter(
+    (id): id is string => !!id,
+  );
+  const useIds =
+    ids.length === 0
+      ? ""
+      : ` or use the profile ID ${ids.map((id) => `\`${id}\``).join(" or ")}`;
+  return (
+    `Bedrock model \`${modelId}\` is only offered through an inference profile` +
+    `${region ? ` in ${region}` : ""}, so requests with this ID will be refused. ` +
+    `Set \`crossRegionInference: auto\` under \`env\`${useIds}.`
+  );
 }

@@ -53,6 +53,8 @@ Open the model selector, choose **Add Chat model**, and pick **Amazon Bedrock**:
 
 Listing models needs `bedrock:ListFoundationModels` and `bedrock:ListInferenceProfiles`. If your credentials can't list models you can still type a model ID in **Custom model ID**.
 
+**Test connection** also asks Bedrock which third-party models your account may use (`bedrock:GetFoundationModelAvailability`, which API keys can call). A model whose access agreement is missing is listed last and marked **Needs access** (or **Legacy, not used in 30 days** for a legacy model Bedrock no longer serves to accounts that have not used it recently); one with an open request shows **Access pending**. The list is kept for an hour per account and region under `~/.continuous/bedrock-catalog/`, so the prompt-cache tips and the config check that warns when a bare model ID needs an inference profile read it without further calls; **Test connection** always fetches a fresh list.
+
 ## Which authentication method should I use?
 
 | Method | Best for | Fields |
@@ -345,6 +347,8 @@ If the certificate isn't trusted you'll see an error such as "unable to get loca
 | --- | --- |
 | "on-demand throughput isn't supported" | Set `crossRegionInference: auto` |
 | "You don't have access to the model" | Enable the model under **Model access** in the Bedrock console, in the same region |
+| "marked by provider as Legacy and you have not been actively using the model" | Bedrock no longer serves this legacy model to your account; pick a current model (**Test connection** marks the ones that need access) |
+| "Please make sure your API Key is valid" | A short-term API key works only in the region it was generated for: make `region` match it, or create a key for this region. A long-term key may have expired |
 | AWS SSO session expired | Run `aws sso login --profile <name>` |
 | "Could not load credentials" | Configure one of the methods above |
 | "unable to get local issuer certificate" / "self-signed certificate" | Your network inspects TLS. Set `requestOptions.useSystemCa: true` or `caBundlePath` ([details](#corporate-proxies-and-tls-inspection)) |

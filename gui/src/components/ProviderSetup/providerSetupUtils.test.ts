@@ -63,6 +63,20 @@ describe("buildChecklistRows / initialChecked", () => {
     );
     expect([...initialChecked(groups, [])]).toEqual(["a"]);
   });
+
+  it("does not pre-check models the account cannot use, and carries the note", () => {
+    const groups = buildChecklistRows(
+      {
+        top: [
+          pkg("locked", "Locked", { accessNote: "Needs access" }),
+          pkg("a"),
+        ],
+      },
+      [],
+    );
+    expect(groups.top[0].accessNote).toBe("Needs access");
+    expect([...initialChecked(groups, [])]).toEqual(["a"]);
+  });
 });
 
 describe("filterRows", () => {

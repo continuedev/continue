@@ -1,6 +1,7 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import Bedrock from "./Bedrock.js";
+import { clearBedrockCatalogCache } from "./bedrockCatalogCache.js";
 
 const foundationModels = [
   {
@@ -54,8 +55,22 @@ const formMissing = Object.assign(
 );
 
 type UseCaseLookup = (options?: { abortSignal?: AbortSignal }) => Promise<any>;
+type AvailabilityLookup = (
+  modelId: string,
+  options?: { abortSignal?: AbortSignal },
+) => Promise<any>;
 
-function bedrockWith(useCaseLookup: UseCaseLookup) {
+const available = async () => ({
+  agreementAvailability: { status: "AVAILABLE" },
+  authorizationStatus: "AUTHORIZED",
+  entitlementAvailability: "AVAILABLE",
+  regionAvailability: "AVAILABLE",
+});
+
+function bedrockWith(
+  useCaseLookup: UseCaseLookup,
+  availabilityLookup: AvailabilityLookup = available,
+) {
   const order: string[] = [];
   const send = vi.fn(async (command: any, options?: any) => {
     const name = command.constructor.name;
@@ -63,6 +78,8 @@ function bedrockWith(useCaseLookup: UseCaseLookup) {
     switch (name) {
       case "GetUseCaseForModelAccessCommand":
         return useCaseLookup(options);
+      case "GetFoundationModelAvailabilityCommand":
+        return availabilityLookup(command.input.modelId, options);
       case "ListFoundationModelsCommand":
         return { modelSummaries: foundationModels };
       case "ListInferenceProfilesCommand":
@@ -80,6 +97,11 @@ const flagged = (models: { id: string; needsAnthropicUseCase?: boolean }[]) =>
   models.filter((m) => m.needsAnthropicUseCase).map((m) => m.id);
 
 describe("Bedrock.listAvailableModels use-case lookup", () => {
+  beforeEach(() => {
+    // Every test builds the same account and region, so none may see the
+    // catalog another one cached.
+    clearBedrockCatalogCache({ disk: true });
+  });
   afterEach(() => {
     vi.useRealTimers();
   });
@@ -153,7 +175,7 @@ describe("Bedrock.listAvailableModels use-case lookup", () => {
     const { llm, order } = bedrockWith(() => new Promise(() => {}));
     const listing = llm.listAvailableModels();
     await vi.advanceTimersByTimeAsync(0);
-    expect(order).toEqual([
+    expect(order.slice(0, 3)).toEqual([
       "GetUseCaseForModelAccessCommand",
       "ListFoundationModelsCommand",
       "ListInferenceProfilesCommand",
@@ -185,5 +207,78 @@ describe("Bedrock.listAvailableModels use-case lookup", () => {
       throw formMissing;
     });
     await expect(llm.listAvailableModels()).rejects.toThrow("listing broke");
+  });
+});
+
+describe("Bedrock.listAvailableModels access lookup", () => {
+  beforeEach(() => {
+    clearBedrockCatalogCache({ disk: true });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const byId = (models: { id: string; access?: string }[]) =>
+    Object.fromEntries(models.map((m) => [m.id, m.access]));
+
+  it("asks about third-party models only and stamps the profile entries", async () => {
+    const asked: string[] = [];
+    const { llm } = bedrockWith(available, async (modelId) => {
+      asked.push(modelId);
+      return {
+        agreementAvailability: { status: "NOT_AVAILABLE" },
+        authorizationStatus: "AUTHORIZED",
+        entitlementAvailability: "AVAILABLE",
+        regionAvailability: "AVAILABLE",
+      };
+    });
+    const models = await llm.listAvailableModels();
+    expect(asked).toEqual(["anthropic.claude-sonnet-4-6"]);
+    expect(byId(models)).toEqual({
+      "us.anthropic.claude-sonnet-4-6": "needs-access",
+      "amazon.nova-pro-v1:0": undefined,
+      "my-team-claude": undefined,
+    });
+  });
+
+  it("reports a pending agreement", async () => {
+    const { llm } = bedrockWith(available, async () => ({
+      agreementAvailability: { status: "PENDING" },
+    }));
+    const models = await llm.listAvailableModels();
+    expect(byId(models)["us.anthropic.claude-sonnet-4-6"]).toBe("pending");
+  });
+
+  it("leaves the access state out when the lookup fails", async () => {
+    const { llm } = bedrockWith(available, async () => {
+      throw Object.assign(new Error("not authorized"), {
+        name: "AccessDeniedException",
+      });
+    });
+    const models = await llm.listAvailableModels();
+    expect(models).toHaveLength(3);
+    expect(models.every((m) => !("access" in m))).toBe(true);
+  });
+
+  it("gives up on lookups that hang at the deadline, and aborts them", async () => {
+    vi.useFakeTimers();
+    let signal: AbortSignal | undefined;
+    const { llm } = bedrockWith(
+      available,
+      (_id, options) =>
+        new Promise((_resolve, reject) => {
+          signal = options?.abortSignal;
+          // The SDK rejects an in-flight request when its signal aborts.
+          signal?.addEventListener("abort", () =>
+            reject(Object.assign(new Error("aborted"), { name: "AbortError" })),
+          );
+        }),
+    );
+    const listing = llm.listAvailableModels();
+    await vi.advanceTimersByTimeAsync(10000);
+    const models = await listing;
+    expect(signal?.aborted).toBe(true);
+    expect(models).toHaveLength(3);
+    expect(models.every((m) => !("access" in m))).toBe(true);
   });
 });

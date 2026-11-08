@@ -92,6 +92,9 @@ export function BedrockConnectionTester({
 
   const models = listResult?.ok ? listResult.models : [];
   const mantleOnly = models.filter((m) => m.endpoint === "mantle").length;
+  const needAccess = models.filter(
+    (m) => m.access === "needs-access" || m.access === "pending",
+  ).length;
 
   return (
     <div className="flex flex-col gap-2">
@@ -130,7 +133,11 @@ export function BedrockConnectionTester({
             {models.length === 1 ? "" : "s"} available
             {connection.region ? ` in ${connection.region}` : ""}
             {mantleOnly > 0 ? ` (${mantleOnly} only on Mantle)` : ""}. The Model
-            list above now shows them.
+            list above now shows them
+            {needAccess > 0
+              ? `; ${needAccess} need${needAccess === 1 ? "s" : ""} access in the Bedrock console and ${needAccess === 1 ? "is" : "are"} marked`
+              : ""}
+            .
           </span>
         </Alert>
       )}

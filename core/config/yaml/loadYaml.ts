@@ -25,6 +25,7 @@ import {
   InternalMcpOptions,
 } from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
+import Bedrock from "../../llm/llms/Bedrock";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { getAllPromptFiles } from "../../promptFiles/getPromptFiles";
 import { GlobalContext } from "../../util/GlobalContext";
@@ -407,6 +408,16 @@ export async function configYamlToContinueConfig(options: {
   const allLlms = Array.from(
     new Set(Object.values(continueConfig.modelsByRole).flat()),
   );
+
+  // A Bedrock model written as a bare ID that the account's catalog (as
+  // cached by the last listing, no call is made here) offers only through an
+  // inference profile fails at the first request; say so now instead.
+  for (const llm of allLlms) {
+    if (llm instanceof Bedrock) {
+      const warning = llm.inferenceProfileWarning();
+      if (warning) localErrors.push({ fatal: false, message: warning });
+    }
+  }
   const modeModelsResult = resolveModeModels(
     config.modeModels,
     continueConfig.modelsByRole.chat,

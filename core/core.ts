@@ -1168,10 +1168,12 @@ export class Core {
             models: await mantle.listAvailableModels(),
           };
         }
+        // "Test connection" is the user asking for a fresh answer, so the
+        // hour-long catalog cache is bypassed and refilled here.
         const bedrock = new Bedrock({ ...params, model: "" });
         return {
           ok: true as const,
-          models: await bedrock.listAvailableModels(),
+          models: await bedrock.listAvailableModels({ refresh: true }),
         };
       } catch (e) {
         return {
@@ -1181,7 +1183,8 @@ export class Core {
       }
     });
     // Does the account list the global profile of this configured Bedrock
-    // model? Lists models and profiles (control plane, no inference).
+    // model? Reads the catalog through its hour-long cache (control plane, no
+    // inference), so asking per model costs one listing an hour at most.
     on("bedrock/globalProfile", async (msg) => {
       try {
         const { config } = await this.configHandler.loadConfig();

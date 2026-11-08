@@ -47,6 +47,11 @@ export interface ModelPackage {
   deprecated?: boolean;
   /** Bedrock: the account must fill out Anthropic's use-case form first. */
   needsAnthropicUseCase?: boolean;
+  /**
+   * Bedrock: why the account cannot use this model yet ("Needs access",
+   * "Access pending", "Legacy, not used in 30 days"). Live lists only.
+   */
+  accessNote?: string;
 }
 
 export const models: { [key: string]: ModelPackage } = {

@@ -18,6 +18,7 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   BedrockClient,
+  GetFoundationModelAvailabilityCommand,
   GetUseCaseForModelAccessCommand,
   ListFoundationModelsCommand,
   ListInferenceProfilesCommand,
@@ -45,7 +46,14 @@ import { withResponseInfo } from "../utils/cacheStats.js";
 import { isTaskPlanBlockText } from "../../util/taskPlan.js";
 import { resolvePromptCacheTtl } from "./anthropicCache.js";
 import {
+  bedrockCatalogCacheKey,
+  readBedrockCatalogCache,
+  writeBedrockCatalogCache,
+} from "./bedrockCatalogCache.js";
+import {
   applyCrossRegionInference,
+  applyModelAccess,
+  BedrockModelAccess,
   BedrockModelOption,
   bedrockCachePartsForModel,
   bedrockCachePointAfterTextOnly,
@@ -58,16 +66,27 @@ import {
   flushDsmlHold,
   getBedrockErrorHint,
   holdBackDsmlMarker,
+  inferenceProfileSuggestion,
+  inferenceProfileWarning,
   isInvalidModelIdentifierError,
   isStopSequencesUnsupportedError,
   isUseCaseFormMissingError,
   leaksDsmlMarker,
   markAnthropicUseCaseNeeded,
+  modelAccessFromAvailability,
+  modelsNeedingAccessCheck,
   normalizeToolUseIds,
 } from "./bedrockHelpers.js";
 
 /** The use-case lookup is advisory, so listing never waits on it for long. */
 const USE_CASE_LOOKUP_TIMEOUT_MS = 2000;
+/**
+ * GetFoundationModelAvailability is one call per third-party model (about
+ * 0.3 to 0.8 s each). A few run at once, and the whole pass stops at the
+ * deadline; models not answered by then carry no access state.
+ */
+const ACCESS_LOOKUP_CONCURRENCY = 5;
+const ACCESS_LOOKUP_DEADLINE_MS = 10000;
 
 /**
  * Models that refused `stopSequences` in this process. They get requests
@@ -228,10 +247,21 @@ class Bedrock extends BaseLLM {
 
   /**
    * List the models this account can use in `region`: on-demand models by ID,
-   * and models that require it by inference profile ID. Anthropic models are
-   * flagged when the account has not filled out Anthropic's use-case form.
+   * and models that require it by inference profile ID. Third-party models
+   * carry the account's access state, and Anthropic models are flagged when
+   * the account has not filled out Anthropic's use-case form.
+   *
+   * The answer is cached for an hour per account and region (see
+   * bedrockCatalogCache.ts); `refresh` lists again regardless.
    */
-  async listAvailableModels(): Promise<BedrockModelOption[]> {
+  async listAvailableModels(options?: {
+    refresh?: boolean;
+  }): Promise<BedrockModelOption[]> {
+    const cacheKey = this._catalogCacheKey();
+    if (!options?.refresh) {
+      const cached = readBedrockCatalogCache(cacheKey);
+      if (cached) return cached;
+    }
     try {
       const client = await this._getControlClient();
       const useCaseMissing = this._isAnthropicUseCaseMissing(client);
@@ -250,13 +280,99 @@ class Bedrock extends BaseLLM {
         nextToken = page.nextToken;
       } while (nextToken);
 
-      const catalog = buildModelCatalog(models.modelSummaries ?? [], profiles);
-      return (await useCaseMissing)
-        ? markAnthropicUseCaseNeeded(catalog)
-        : catalog;
+      let catalog = buildModelCatalog(models.modelSummaries ?? [], profiles);
+      catalog = applyModelAccess(
+        catalog,
+        await this._modelAccess(client, modelsNeedingAccessCheck(catalog)),
+      );
+      if (await useCaseMissing) catalog = markAnthropicUseCaseNeeded(catalog);
+      writeBedrockCatalogCache(cacheKey, catalog);
+      return catalog;
     } catch (e) {
       throw this._withHint(e);
     }
+  }
+
+  /** The catalog cache key for this account and region (no network call). */
+  private _catalogCacheKey(): string {
+    return bedrockCatalogCacheKey(
+      {
+        apiKey: this._resolveApiKey(),
+        accessKeyId: this.accessKeyId,
+        profile: this._profileExplicit ? this.profile : undefined,
+      },
+      this.region,
+    );
+  }
+
+  /**
+   * The catalog listed for this account and region within the last hour, or
+   * undefined. Never calls Bedrock.
+   */
+  cachedCatalog(): BedrockModelOption[] | undefined {
+    return readBedrockCatalogCache(this._catalogCacheKey());
+  }
+
+  /**
+   * A non-fatal config warning when `model` is a bare ID that the cached
+   * catalog offers only through inference profiles and `crossRegionInference`
+   * is unset: such a request fails with a ValidationException, so say so at
+   * config load. Undefined when nothing is wrong or nothing is cached.
+   */
+  inferenceProfileWarning(): string | undefined {
+    if (!this.model || this.crossRegionInference) return undefined;
+    const catalog = this.cachedCatalog();
+    if (!catalog) return undefined;
+    const suggestion = inferenceProfileSuggestion(
+      catalog,
+      this.model,
+      this.region,
+    );
+    return suggestion
+      ? inferenceProfileWarning(this.model, this.region, suggestion)
+      : undefined;
+  }
+
+  /**
+   * The account's access state per base model ID, from
+   * GetFoundationModelAvailability. Advisory like the use-case lookup: a
+   * failed or late answer leaves that model without a state, and nothing here
+   * rejects.
+   */
+  private async _modelAccess(
+    client: BedrockClient,
+    modelIds: string[],
+  ): Promise<Map<string, BedrockModelAccess>> {
+    const access = new Map<string, BedrockModelAccess>();
+    if (modelIds.length === 0) return access;
+    const abort = new AbortController();
+    const deadline = setTimeout(() => abort.abort(), ACCESS_LOOKUP_DEADLINE_MS);
+    const queue = [...modelIds];
+    const worker = async () => {
+      while (queue.length > 0 && !abort.signal.aborted) {
+        const modelId = queue.shift()!;
+        try {
+          const availability: any = await client.send(
+            new GetFoundationModelAvailabilityCommand({ modelId }),
+            { abortSignal: abort.signal },
+          );
+          access.set(modelId, modelAccessFromAvailability(availability));
+        } catch {
+          // No state for this model.
+        }
+      }
+    };
+    try {
+      await Promise.all(
+        Array.from(
+          { length: Math.min(ACCESS_LOOKUP_CONCURRENCY, modelIds.length) },
+          worker,
+        ),
+      );
+    } finally {
+      clearTimeout(deadline);
+    }
+    return access;
   }
 
   /**
@@ -405,6 +521,7 @@ class Bedrock extends BaseLLM {
       getBedrockErrorHint(e, {
         profile: this._profileExplicit ? this.profile : undefined,
         region: this.region,
+        apiKey: !!this._resolveApiKey(),
       });
     if (hint && !e.message.includes(hint)) {
       e.message = `${e.message}\n\n${hint}`;
