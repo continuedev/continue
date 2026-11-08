@@ -2,6 +2,8 @@ import type { ChatHistoryItem } from "core/index.js";
 
 import { backgroundJobService } from "../services/BackgroundJobService.js";
 import { getSessionUsage } from "../session.js";
+
+import { formatSessionCost } from "./sessionCost.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
 import { formatCacheTally, splitInputTokens } from "./cacheTally.js";
@@ -83,6 +85,7 @@ function collectSessionUsage(metadata: Record<string, any>): void {
       const { cacheRead, cacheWrite } = splitInputTokens(usage);
       metadata.usage = {
         totalCost: parseFloat(usage.totalCost.toFixed(6)),
+        ...(usage.costEstimated && { costEstimated: true }),
         promptTokens: usage.promptTokens,
         completionTokens: usage.completionTokens,
         cachedTokens: cacheRead,
@@ -157,7 +160,7 @@ function displaySessionUsage(): void {
     logger.info("\n" + "=".repeat(60));
     logger.info("Session Usage Summary");
     logger.info("=".repeat(60));
-    logger.info(`Total Cost: $${usage.totalCost.toFixed(6)}`);
+    logger.info(`Total Cost: ${formatSessionCost(usage)}`);
     logger.info("");
     logger.info("Token Usage:");
     // Input is what the provider processed: uncached plus cache reads plus

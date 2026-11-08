@@ -310,6 +310,12 @@ export interface SessionUsage extends Usage {
    * to models without a known price add nothing (see `ModelUsage.pricedRequests`).
    */
   totalCost: number;
+  /**
+   * True when part of `totalCost` was priced at a fallback rate because the
+   * model has no entry in the price tables, so the figure is an estimate and
+   * is shown as one.
+   */
+  costEstimated?: boolean;
   /** Totals per model, keyed `provider/model`. */
   byModel?: Record<string, ModelUsage>;
   /** The latest request, for the context-window display. */

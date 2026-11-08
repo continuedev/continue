@@ -1,4 +1,7 @@
-import { ConverseStreamCommand } from "@aws-sdk/client-bedrock-runtime";
+import {
+  ConverseCommand,
+  ConverseStreamCommand,
+} from "@aws-sdk/client-bedrock-runtime";
 import {
   ChatMessage,
   Chunk,
@@ -14,6 +17,10 @@ jest.mock("@aws-sdk/client-bedrock-runtime", () => ({
     middlewareStack: { add: jest.fn() },
   })),
   ConverseStreamCommand: jest.fn(),
+  // Keeps its input so a test can tell a Converse call from a stream call
+  ConverseCommand: jest
+    .fn()
+    .mockImplementation((input: any) => ({ input, converse: true })),
   InvokeModelCommand: jest.fn(),
 }));
 
@@ -1634,5 +1641,175 @@ describe("Bedrock", () => {
       const userMessageText = converted[0].content?.[0].text;
       expect(userMessageText).toBe("First message");
     });
+  });
+});
+
+describe("Bedrock tools through Converse and Nova <thinking> tags", () => {
+  const signal = new AbortController().signal;
+  const tools = [
+    {
+      type: "function" as const,
+      function: { name: "Read", parameters: { type: "object" } },
+    },
+  ];
+  const converseReply = {
+    $metadata: { requestId: "req-c" },
+    output: {
+      message: {
+        role: "assistant",
+        content: [
+          { text: "Reading it." },
+          {
+            toolUse: {
+              toolUseId: "tooluse_1",
+              name: "Read",
+              input: { filepath: "a.ts" },
+            },
+          },
+        ],
+      },
+    },
+    stopReason: "tool_use",
+    usage: { inputTokens: 12, outputTokens: 34 },
+    metrics: { latencyMs: 250 },
+  };
+
+  /** Answers Converse with `reply`; ConverseStream with `events`, or throws `streamError`. */
+  function routed(
+    model: string,
+    reply: any,
+    events: any[] = [],
+    streamError?: Error,
+  ) {
+    const b: any = new TestBedrock({ apiKey: "k", model });
+    const sent: string[] = [];
+    b._getClient = async () => ({
+      middlewareStack: { add() {} },
+      send: async (command: any) => {
+        // The mock's implementation may have been reset by an earlier suite,
+        // so a Converse call is recognised by either form
+        if (command?.converse || command instanceof ConverseCommand) {
+          sent.push("Converse");
+          return reply;
+        }
+        sent.push("ConverseStream");
+        if (streamError) throw streamError;
+        return {
+          $metadata: { requestId: "req-s" },
+          stream: (async function* () {
+            for (const e of events) yield e;
+          })(),
+        };
+      },
+    });
+    const collect = async (options: any = {}) => {
+      const out: any[] = [];
+      for await (const m of b._streamChatInner(
+        [{ role: "user", content: "hi" }],
+        signal,
+        { model, ...options },
+      )) {
+        out.push(m);
+      }
+      return out;
+    };
+    return { collect, sent };
+  }
+
+  it("sends a Llama 4 request with tools through Converse and yields the whole reply", async () => {
+    const { collect, sent } = routed(
+      "us.meta.llama4-maverick-17b-instruct-v1:0",
+      converseReply,
+    );
+    const out = await collect({ tools });
+    expect(sent).toEqual(["Converse"]);
+    expect(out[0]).toEqual({ role: "assistant", content: "Reading it." });
+    expect(out[1]).toEqual({
+      role: "assistant",
+      content: "",
+      toolCalls: [
+        {
+          id: "tooluse_1",
+          type: "function",
+          function: { name: "Read", arguments: '{"filepath":"a.ts"}' },
+        },
+      ],
+    });
+    expect(out[2].usage).toMatchObject({
+      promptTokens: 12,
+      completionTokens: 34,
+      response: { stopReason: "tool_use", requestId: "req-c", latencyMs: 250 },
+    });
+  });
+
+  it("streams a Llama 4 request without tools", async () => {
+    const { collect, sent } = routed(
+      "us.meta.llama4-maverick-17b-instruct-v1:0",
+      converseReply,
+      [{ contentBlockDelta: { delta: { text: "hi" } } }],
+    );
+    expect(await collect()).toEqual([{ role: "assistant", content: "hi" }]);
+    expect(sent).toEqual(["ConverseStream"]);
+  });
+
+  it("retries once through Converse when ConverseStream refuses tools, and remembers the model", async () => {
+    const refusal = new Error(
+      "This model doesn't support tool use in streaming mode.",
+    );
+    const first = routed(
+      "mistral.some-future-model",
+      converseReply,
+      [],
+      refusal,
+    );
+    const out = await first.collect({ tools });
+    expect(first.sent).toEqual(["ConverseStream", "Converse"]);
+    expect(out[1].toolCalls).toHaveLength(1);
+    const second = routed("mistral.some-future-model", converseReply);
+    await second.collect({ tools });
+    expect(second.sent).toEqual(["Converse"]);
+  });
+
+  it("does not retry other stream errors", async () => {
+    const { collect, sent } = routed(
+      "mistral.other-model",
+      converseReply,
+      [],
+      new Error("ThrottlingException"),
+    );
+    await expect(collect({ tools })).rejects.toThrow(/ThrottlingException/);
+    expect(sent).toEqual(["ConverseStream"]);
+  });
+
+  it("lifts Nova Pro's <thinking> tags into thinking messages, across split deltas", async () => {
+    const text = (t: string) => ({ contentBlockDelta: { delta: { text: t } } });
+    const { collect } = routed("us.amazon.nova-pro-v1:0", undefined, [
+      text("<thin"),
+      text("king>Let me read the file.</thi"),
+      text("nking>\n\nThe file has 3 lines."),
+      { contentBlockStop: {} },
+      { messageStop: { stopReason: "end_turn" } },
+    ]);
+    const out = await collect();
+    const thinking = out
+      .filter((m) => m.role === "thinking")
+      .map((m) => m.content)
+      .join("");
+    const answer = out
+      .filter((m) => m.role === "assistant")
+      .map((m) => m.content)
+      .join("");
+    expect(thinking).toBe("Let me read the file.");
+    expect(answer).toBe("The file has 3 lines.");
+  });
+
+  it("leaves the tags in the text of other models", async () => {
+    const { collect } = routed("us.anthropic.claude-haiku-4-5", undefined, [
+      { contentBlockDelta: { delta: { text: "<thinking>kept</thinking>" } } },
+      { contentBlockStop: {} },
+    ]);
+    expect(await collect()).toEqual([
+      { role: "assistant", content: "<thinking>kept</thinking>" },
+    ]);
   });
 });

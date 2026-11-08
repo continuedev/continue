@@ -474,6 +474,10 @@ export function recordStreamTelemetry(options: {
   // Calculate cost using comprehensive pricing that includes caching
   let cost: number;
   let usage: Usage;
+  // True when the fallback rate priced this request (no table for the model):
+  // the session total is then marked an estimate. Against the AWS list the
+  // fallback reported $4.00 for a $2.35 run (research-bedrock-families.md).
+  let estimated = false;
   const provider = pricingProvider(model);
 
   if (fullUsage) {
@@ -510,9 +514,12 @@ export function recordStreamTelemetry(options: {
         : null);
 
     // Use fallback for unknown models
-    cost =
-      costBreakdown?.cost ??
-      calculateFallbackCost(usage, provider, model.model);
+    if (costBreakdown) {
+      cost = costBreakdown.cost;
+    } else {
+      cost = calculateFallbackCost(usage, provider, model.model);
+      estimated = true;
+    }
   } else {
     // Fallback when fullUsage not available
     usage = {
@@ -520,6 +527,7 @@ export function recordStreamTelemetry(options: {
       completionTokens: outputTokens,
     };
     cost = calculateFallbackCost(usage, provider, model.model);
+    estimated = true;
   }
 
   // Use tokens from fullUsage if available, otherwise use the passed params
@@ -546,7 +554,7 @@ export function recordStreamTelemetry(options: {
   // The session totals count the input the provider processed (uncached plus
   // cache reads plus writes), which needs the provider to know what its own
   // count leaves out; the cache tally does the same per request.
-  trackSessionUsage(cost, usage, provider, model.model);
+  trackSessionUsage(cost, usage, provider, model.model, estimated);
   recordCacheTally(provider, model.model, usage);
 
   telemetryService.recordResponseTime(

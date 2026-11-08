@@ -3,6 +3,8 @@ import {
   ContentBlock,
   ContentBlockStart,
   ConversationRole,
+  ConverseCommand,
+  ConverseCommandOutput,
   ConverseStreamCommand,
   ConverseStreamCommandInput,
   ImageFormat,
@@ -39,6 +41,7 @@ import {
   bedrockModelAccessMessage,
   bedrockReasoningFields,
   bedrockSamplingParams,
+  bedrockToolsNeedNonStreaming,
   bedrockUsageToCompletionUsage,
   crossRegionFallbackModelId,
   effortToBudgetTokens,
@@ -47,8 +50,12 @@ import {
   getBedrockErrorHint,
   holdBackDsmlMarker,
   isInvalidModelIdentifierError,
+  isStreamingToolUseUnsupportedError,
   leaksDsmlMarker,
   normalizeToolUseIds,
+  ThinkingSplit,
+  ThinkingTagSplitter,
+  writesThinkingTags,
 } from "./bedrockHelpers.js";
 import {
   AutoCacheTtl,
@@ -99,6 +106,14 @@ function isTaskListBlockText(text: string | undefined): boolean {
  */
 const modelsWithoutInferencePrefix = new Set<string>();
 
+/**
+ * Models that answered a ConverseStream request with tools with "This model
+ * doesn't support tool use in streaming mode." in this process. Their
+ * requests with tools go through Converse from then on, like the models in
+ * bedrockToolsNeedNonStreaming.
+ */
+const modelsWithoutStreamingTools = new Set<string>();
+
 /** Nova 2 returns this in place of its reasoning text; the tokens are billed. */
 const NOVA_REDACTED_REASONING = "[REDACTED].";
 
@@ -107,6 +122,48 @@ type ReasoningDelta = ChatCompletionChunk.Choice["delta"] & {
   reasoning_content?: string;
   reasoning_details?: Record<string, unknown>[];
 };
+
+/** The reasoning fields of a Converse reasoning block or stream delta. */
+interface ReasoningLike {
+  text?: string;
+  signature?: string;
+  redactedContent?: Uint8Array;
+}
+
+/**
+ * Reasoning as the OpenAI-style fields core's chunk reader takes: text as
+ * reasoning_content, the signature and redacted bytes in reasoning_details
+ * (the signature is read from its first entry). Nova 2's placeholder text
+ * is redacted thinking, not a thought.
+ */
+function reasoningDeltaFor(
+  reasoning: ReasoningLike,
+  isNova2: boolean,
+): ReasoningDelta | undefined {
+  if (reasoning.redactedContent) {
+    return {
+      reasoning_details: [
+        {
+          type: "reasoning.encrypted",
+          data: Buffer.from(reasoning.redactedContent).toString("base64"),
+        },
+      ],
+    };
+  }
+  if (reasoning.text !== undefined) {
+    return isNova2 && reasoning.text === NOVA_REDACTED_REASONING
+      ? {
+          reasoning_details: [
+            { type: "reasoning.encrypted", data: reasoning.text },
+          ],
+        }
+      : { reasoning_content: reasoning.text };
+  }
+  if (reasoning.signature) {
+    return { reasoning_details: [{ signature: reasoning.signature }] };
+  }
+  return undefined;
+}
 
 /**
  * Interface for tool use state tracking
@@ -723,6 +780,115 @@ export class BedrockApi implements BaseLlmApi {
     }
   }
 
+  /** Converse (no stream) with the same prefix retry as sendConverseStream. */
+  private async sendConverse(
+    client: BedrockRuntimeClient,
+    input: ConverseStreamCommandInput,
+    signal: AbortSignal,
+    fallbackModelId: string | undefined,
+  ): Promise<ConverseCommandOutput> {
+    if (fallbackModelId && modelsWithoutInferencePrefix.has(input.modelId!)) {
+      input.modelId = fallbackModelId;
+    }
+    try {
+      return await client.send(new ConverseCommand(input), {
+        abortSignal: signal,
+      });
+    } catch (e) {
+      if (
+        !fallbackModelId ||
+        input.modelId === fallbackModelId ||
+        !isInvalidModelIdentifierError(e)
+      ) {
+        throw e;
+      }
+      modelsWithoutInferencePrefix.add(input.modelId!);
+      input.modelId = fallbackModelId;
+      return await client.send(new ConverseCommand(input), {
+        abortSignal: signal,
+      });
+    }
+  }
+
+  /**
+   * A request with tools to a model that cannot stream them
+   * (bedrockToolsNeedNonStreaming): sent through Converse, and the whole
+   * reply yielded as the chunks the stream would have produced: text, each
+   * toolUse block at its own index, reasoning, then the finish_reason chunk
+   * from stopReason and the usage chunk.
+   */
+  private async *converseWholeMessage(
+    client: BedrockRuntimeClient,
+    input: ConverseStreamCommandInput,
+    signal: AbortSignal,
+    fallbackModelId: string | undefined,
+    model: string,
+  ): AsyncGenerator<ChatCompletionChunk> {
+    const response = await this.sendConverse(
+      client,
+      input,
+      signal,
+      fallbackModelId,
+    );
+    const id = response.$metadata?.requestId;
+    const isNova2 = /nova-2-/i.test(model);
+    let toolIndex = -1;
+    for (const block of response.output?.message?.content ?? []) {
+      if (block.text) {
+        yield chatChunk({ content: block.text, model, id });
+      } else if (block.reasoningContent) {
+        const reasoningDelta = reasoningDeltaFor(
+          {
+            ...block.reasoningContent.reasoningText,
+            redactedContent: block.reasoningContent.redactedContent,
+          },
+          isNova2,
+        );
+        if (reasoningDelta) {
+          yield chatChunkFromDelta({
+            model,
+            id,
+            delta: { role: "assistant", ...reasoningDelta },
+          });
+        }
+      } else if (block.toolUse) {
+        toolIndex++;
+        yield chatChunkFromDelta({
+          model,
+          id,
+          delta: {
+            tool_calls: [
+              {
+                index: toolIndex,
+                id: block.toolUse.toolUseId,
+                type: "function",
+                function: {
+                  name: block.toolUse.name,
+                  arguments: JSON.stringify(block.toolUse.input ?? {}),
+                },
+              },
+            ],
+          },
+        });
+      }
+    }
+    if (response.stopReason) {
+      yield chatChunkFromDelta({
+        model,
+        id,
+        delta: {},
+        finish_reason: bedrockFinishReason(response.stopReason),
+      });
+    }
+    if (response.usage) {
+      yield usageChatChunk({
+        model,
+        id,
+        usage: bedrockUsageToCompletionUsage(response.usage),
+      });
+    }
+  }
+
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
@@ -813,16 +979,52 @@ export class BedrockApi implements BaseLlmApi {
 
     try {
       const client = await this.getClient();
-      const response = await this.sendConverseStream(
-        client,
-        { ...requestBody },
-        signal,
-        crossRegionFallbackModelId(
-          body.model,
-          this.config.env?.crossRegionInference,
-          this.config.env?.region,
-        ),
+      const fallbackModelId = crossRegionFallbackModelId(
+        body.model,
+        this.config.env?.crossRegionInference,
+        this.config.env?.region,
       );
+
+      // Tools go through Converse for models that cannot stream them, and for
+      // a model that refused them in streaming mode earlier in this process.
+      const toolsWithoutStreaming =
+        !!requestBody.toolConfig &&
+        (bedrockToolsNeedNonStreaming(body.model) ||
+          modelsWithoutStreamingTools.has(body.model));
+      if (toolsWithoutStreaming) {
+        yield* this.converseWholeMessage(
+          client,
+          { ...requestBody },
+          signal,
+          fallbackModelId,
+          body.model,
+        );
+        return;
+      }
+
+      let response;
+      try {
+        response = await this.sendConverseStream(
+          client,
+          { ...requestBody },
+          signal,
+          fallbackModelId,
+        );
+      } catch (e) {
+        // Llama 4's refusal: retried once through Converse and remembered
+        if (!requestBody.toolConfig || !isStreamingToolUseUnsupportedError(e)) {
+          throw e;
+        }
+        modelsWithoutStreamingTools.add(body.model);
+        yield* this.converseWholeMessage(
+          client,
+          { ...requestBody },
+          signal,
+          fallbackModelId,
+          body.model,
+        );
+        return;
+      }
 
       if (!response?.stream) {
         throw new Error("No stream received from Bedrock API");
@@ -837,6 +1039,33 @@ export class BedrockApi implements BaseLlmApi {
       // block ends (see holdBackDsmlMarker).
       const filterDsml = leaksDsmlMarker(body.model);
       let dsmlHold = "";
+      // Nova Pro, Lite and Micro write their reasoning as <thinking> tags in
+      // the text; the splitter lifts it into reasoning_content, holding back
+      // a fragment that could still become a tag (see ThinkingTagSplitter).
+      const thinkingTags = writesThinkingTags(body.model)
+        ? new ThinkingTagSplitter()
+        : undefined;
+      const splitChunks = (split: ThinkingSplit): ChatCompletionChunk[] => {
+        const chunks: ChatCompletionChunk[] = [];
+        if (split.reasoning) {
+          chunks.push(
+            chatChunkFromDelta({
+              model: body.model,
+              id,
+              delta: {
+                role: "assistant",
+                reasoning_content: split.reasoning,
+              } as ReasoningDelta,
+            }),
+          );
+        }
+        if (split.content) {
+          chunks.push(
+            chatChunk({ content: split.content, model: body.model, id }),
+          );
+        }
+        return chunks;
+      };
       const isNova2 = /nova-2-/i.test(body.model);
       // Each toolUse block gets its own tool_calls index, so a reply with
       // several calls is not merged into one.
@@ -847,6 +1076,9 @@ export class BedrockApi implements BaseLlmApi {
           const text = flushDsmlHold(dsmlHold);
           dsmlHold = "";
           if (text) yield chatChunk({ content: text, model: body.model, id });
+        }
+        if (thinkingTags && (chunk.contentBlockStop || chunk.messageStop)) {
+          yield* splitChunks(thinkingTags.flush());
         }
 
         if (chunk.contentBlockDelta?.delta) {
@@ -860,6 +1092,10 @@ export class BedrockApi implements BaseLlmApi {
               dsmlHold = split.hold;
               text = split.emit;
             }
+            if (thinkingTags) {
+              yield* splitChunks(thinkingTags.push(text));
+              continue;
+            }
             if (text) {
               yield chatChunk({
                 content: text,
@@ -870,37 +1106,11 @@ export class BedrockApi implements BaseLlmApi {
             continue;
           }
 
-          // Reasoning, as the OpenAI-style fields core's chunk reader takes:
-          // text as reasoning_content, the signature and redacted bytes in
-          // reasoning_details (the signature is read from its first entry).
+          // Reasoning, as the OpenAI-style fields core's chunk reader takes
+          // (see reasoningDeltaFor).
           const reasoning = delta.reasoningContent;
           if (reasoning) {
-            let reasoningDelta: ReasoningDelta | undefined;
-            if (reasoning.redactedContent) {
-              reasoningDelta = {
-                reasoning_details: [
-                  {
-                    type: "reasoning.encrypted",
-                    data: Buffer.from(reasoning.redactedContent).toString(
-                      "base64",
-                    ),
-                  },
-                ],
-              };
-            } else if (reasoning.text !== undefined) {
-              reasoningDelta =
-                isNova2 && reasoning.text === NOVA_REDACTED_REASONING
-                  ? {
-                      reasoning_details: [
-                        { type: "reasoning.encrypted", data: reasoning.text },
-                      ],
-                    }
-                  : { reasoning_content: reasoning.text };
-            } else if (reasoning.signature) {
-              reasoningDelta = {
-                reasoning_details: [{ signature: reasoning.signature }],
-              };
-            }
+            const reasoningDelta = reasoningDeltaFor(reasoning, isNova2);
             if (reasoningDelta) {
               yield chatChunkFromDelta({
                 model: body.model,

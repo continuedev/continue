@@ -5,6 +5,7 @@ import {
   bedrockModelAccessMessage,
   bedrockReasoningFields,
   bedrockSamplingParams,
+  bedrockToolsNeedNonStreaming,
   bedrockUsageToCompletionUsage,
   budgetTokensToEffort,
   crossRegionFallbackModelId,
@@ -12,7 +13,11 @@ import {
   getBedrockErrorHint,
   inferenceProfilePrefixForRegion,
   isInvalidModelIdentifierError,
+  isStreamingToolUseUnsupportedError,
   resolveBedrockCacheParts,
+  ThinkingSplit,
+  ThinkingTagSplitter,
+  writesThinkingTags,
 } from "./bedrockHelpers.js";
 
 describe("inferenceProfilePrefixForRegion", () => {
@@ -365,5 +370,106 @@ describe("bedrockFinishReason", () => {
     ["new_reason", "stop"],
   ])("%s -> %s", (stop, finish) => {
     expect(bedrockFinishReason(stop)).toBe(finish);
+  });
+});
+
+describe("tools through Converse for models that cannot stream them", () => {
+  it.each([
+    "us.meta.llama4-maverick-17b-instruct-v1:0",
+    "meta.llama4-scout-17b-instruct-v1:0",
+    "qwen.qwen3-32b-v1:0",
+    "us.qwen.qwen3-32b-v1:0",
+  ])("%s needs the non-streaming route", (id) => {
+    expect(bedrockToolsNeedNonStreaming(id)).toBe(true);
+  });
+
+  it.each([
+    "us.anthropic.claude-haiku-4-5",
+    "amazon.nova-pro-v1:0",
+    "qwen.qwen3-coder-next",
+    "qwen.qwen3-coder-30b-a3b-v1:0",
+    "us.meta.llama3-3-70b-instruct-v1:0",
+  ])("%s streams tools as usual", (id) => {
+    expect(bedrockToolsNeedNonStreaming(id)).toBe(false);
+  });
+
+  it("recognises Bedrock's refusal of tools in streaming mode", () => {
+    expect(
+      isStreamingToolUseUnsupportedError(
+        new Error("This model doesn't support tool use in streaming mode."),
+      ),
+    ).toBe(true);
+    expect(isStreamingToolUseUnsupportedError(new Error("boom"))).toBe(false);
+  });
+});
+
+describe("Nova's <thinking> tags in the text", () => {
+  it("applies to Nova Pro, Lite, Micro and Premier, not Nova 2 or others", () => {
+    for (const id of [
+      "amazon.nova-pro-v1:0",
+      "us.amazon.nova-lite-v1:0",
+      "amazon.nova-micro-v1:0",
+      "us.amazon.nova-premier-v1:0",
+    ]) {
+      expect(writesThinkingTags(id)).toBe(true);
+    }
+    expect(writesThinkingTags("us.amazon.nova-2-lite-v1:0")).toBe(false);
+    expect(writesThinkingTags("us.anthropic.claude-haiku-4-5")).toBe(false);
+  });
+
+  const join = (parts: ThinkingSplit[]) =>
+    parts.reduce(
+      (acc, p) => ({
+        content: acc.content + p.content,
+        reasoning: acc.reasoning + p.reasoning,
+      }),
+      { content: "", reasoning: "" },
+    );
+
+  it("lifts the tagged text into reasoning and keeps the rest as content", () => {
+    const s = new ThinkingTagSplitter();
+    const out = join([
+      s.push("<thinking>Let me check the file.</thinking>\n\nThe answer is 4."),
+      s.flush(),
+    ]);
+    expect(out).toEqual({
+      reasoning: "Let me check the file.",
+      content: "The answer is 4.",
+    });
+  });
+
+  it("handles a tag split across deltas", () => {
+    const s = new ThinkingTagSplitter();
+    const out = join([
+      s.push("<thin"),
+      s.push("king>I rea"),
+      s.push("son</thi"),
+      s.push("nking>Done"),
+      s.flush(),
+    ]);
+    expect(out).toEqual({ reasoning: "I reason", content: "Done" });
+  });
+
+  it("holds back a possible tag start and releases it when it was only text", () => {
+    const s = new ThinkingTagSplitter();
+    const first = s.push("a <");
+    expect(first.content).toBe("a ");
+    const rest = join([s.push(" b and c"), s.flush()]);
+    expect(rest.content).toBe("< b and c");
+    expect(rest.reasoning).toBe("");
+  });
+
+  it("flushes a held fragment at the end of the block", () => {
+    const s = new ThinkingTagSplitter();
+    expect(s.push("text <").content).toBe("text ");
+    expect(s.flush()).toEqual({ content: "<", reasoning: "" });
+  });
+
+  it("leaves text without tags alone", () => {
+    const s = new ThinkingTagSplitter();
+    expect(join([s.push("Hello"), s.push(" world"), s.flush()])).toEqual({
+      content: "Hello world",
+      reasoning: "",
+    });
   });
 });

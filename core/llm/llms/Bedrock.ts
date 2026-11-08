@@ -5,6 +5,7 @@ import {
   ContentBlockStart,
   ContentBlockStartEvent,
   ConverseCommand,
+  ConverseCommandOutput,
   ConversationRole,
   ConverseStreamCommand,
   ConverseStreamCommandInput,
@@ -60,6 +61,7 @@ import {
   bedrockCacheTtl,
   bedrockReasoningFields,
   bedrockSamplingParams,
+  bedrockToolsNeedNonStreaming,
   bedrockUsageToUsage,
   buildModelCatalog,
   crossRegionFallbackModelId,
@@ -70,12 +72,16 @@ import {
   inferenceProfileWarning,
   isInvalidModelIdentifierError,
   isStopSequencesUnsupportedError,
+  isStreamingToolUseUnsupportedError,
   isUseCaseFormMissingError,
   leaksDsmlMarker,
   markAnthropicUseCaseNeeded,
   modelAccessFromAvailability,
   modelsNeedingAccessCheck,
   normalizeToolUseIds,
+  ThinkingSplit,
+  ThinkingTagSplitter,
+  writesThinkingTags,
 } from "./bedrockHelpers.js";
 
 /** The use-case lookup is advisory, so listing never waits on it for long. */
@@ -101,6 +107,14 @@ const modelsWithoutStopSequences = new Set<string>();
  * out with the bare ID from then on.
  */
 const modelsWithoutInferencePrefix = new Set<string>();
+
+/**
+ * Models that answered a ConverseStream request with tools with "This model
+ * doesn't support tool use in streaming mode." in this process. Their
+ * requests with tools go through Converse from then on, like the models in
+ * bedrockToolsNeedNonStreaming.
+ */
+const modelsWithoutStreamingTools = new Set<string>();
 
 /** Nova 2 returns this in place of its reasoning text; the tokens are billed. */
 const NOVA_REDACTED_REASONING = "[REDACTED].";
@@ -537,16 +551,44 @@ class Bedrock extends BaseLLM {
    * requests skip the failing attempt. Both can apply to one model (Qwen
    * refuses the prefix and then the stops), so each is retried at most once.
    */
-  private async _sendConverseStream(
+  private _sendConverseStream(
     client: BedrockRuntimeClient,
     input: ConverseStreamCommandInput,
     signal: AbortSignal,
     fallbackModelId?: string,
   ): Promise<ConverseStreamCommandOutput> {
-    const send = async () =>
-      (await client.send(new ConverseStreamCommand(input), {
-        abortSignal: signal,
-      })) as ConverseStreamCommandOutput;
+    return this._sendWithRetries(
+      input,
+      fallbackModelId,
+      async () =>
+        (await client.send(new ConverseStreamCommand(input), {
+          abortSignal: signal,
+        })) as ConverseStreamCommandOutput,
+    );
+  }
+
+  /** Converse (no stream), with the same retries as _sendConverseStream. */
+  private _sendConverse(
+    client: BedrockRuntimeClient,
+    input: ConverseStreamCommandInput,
+    signal: AbortSignal,
+    fallbackModelId?: string,
+  ): Promise<ConverseCommandOutput> {
+    return this._sendWithRetries(
+      input,
+      fallbackModelId,
+      async () =>
+        (await client.send(new ConverseCommand(input), {
+          abortSignal: signal,
+        })) as ConverseCommandOutput,
+    );
+  }
+
+  private async _sendWithRetries<T>(
+    input: ConverseStreamCommandInput,
+    fallbackModelId: string | undefined,
+    send: () => Promise<T>,
+  ): Promise<T> {
     const withoutStops = () => {
       input.inferenceConfig = {
         ...input.inferenceConfig,
@@ -623,26 +665,48 @@ class Bedrock extends BaseLLM {
       ...options,
       stream: true,
     });
-    const response = await this._sendConverseStream(
-      client,
-      input,
-      signal,
-      crossRegionFallbackModelId(
-        options.model,
-        this.crossRegionInference,
-        this.region,
-      ),
+    const fallbackModelId = crossRegionFallbackModelId(
+      options.model,
+      this.crossRegionInference,
+      this.region,
     );
-
-    if (!response?.stream) {
-      throw new Error("No stream received from Bedrock API");
-    }
 
     // Reset cache metrics for new request
     this._promptCachingMetrics = {
       cacheReadInputTokens: 0,
       cacheWriteInputTokens: 0,
     };
+
+    // Tools go through Converse for models that cannot stream them, and for
+    // a model that refused them in streaming mode earlier in this process.
+    if (
+      input.toolConfig &&
+      (bedrockToolsNeedNonStreaming(options.model) ||
+        modelsWithoutStreamingTools.has(options.model))
+    ) {
+      yield* this._converseWholeMessage(client, input, signal, fallbackModelId);
+      return;
+    }
+
+    let response: ConverseStreamCommandOutput;
+    try {
+      response = await this._sendConverseStream(
+        client,
+        input,
+        signal,
+        fallbackModelId,
+      );
+    } catch (e) {
+      // Llama 4's refusal: retried once through Converse and remembered
+      if (!input.toolConfig || !isStreamingToolUseUnsupportedError(e)) throw e;
+      modelsWithoutStreamingTools.add(options.model);
+      yield* this._converseWholeMessage(client, input, signal, fallbackModelId);
+      return;
+    }
+
+    if (!response?.stream) {
+      throw new Error("No stream received from Bedrock API");
+    }
 
     try {
       let usage: Usage | undefined;
@@ -653,6 +717,22 @@ class Bedrock extends BaseLLM {
       // block ends (see holdBackDsmlMarker).
       const filterDsml = leaksDsmlMarker(options.model);
       let dsmlHold = "";
+      // Nova Pro, Lite and Micro write their reasoning as <thinking> tags in
+      // the text; the splitter lifts it into thinking messages, holding back
+      // a fragment that could still become a tag (see ThinkingTagSplitter).
+      const thinkingTags = writesThinkingTags(options.model)
+        ? new ThinkingTagSplitter()
+        : undefined;
+      const splitMessages = (split: ThinkingSplit): ChatMessage[] => {
+        const out: ChatMessage[] = [];
+        if (split.reasoning) {
+          out.push({ role: "thinking", content: split.reasoning });
+        }
+        if (split.content) {
+          out.push({ role: "assistant", content: split.content });
+        }
+        return out;
+      };
       const isNova2 = /nova-2-/i.test(options.model);
       for await (const chunk of response.stream) {
         if (chunk.metadata?.usage) {
@@ -669,6 +749,9 @@ class Bedrock extends BaseLLM {
           dsmlHold = "";
           if (text) yield { role: "assistant", content: text };
         }
+        if (thinkingTags && (chunk.contentBlockStop || chunk.messageStop)) {
+          yield* splitMessages(thinkingTags.flush());
+        }
 
         const contentBlockDelta: ContentBlockDelta | undefined =
           chunk.contentBlockDelta?.delta;
@@ -680,6 +763,10 @@ class Bedrock extends BaseLLM {
               const split = holdBackDsmlMarker(dsmlHold + text);
               dsmlHold = split.hold;
               text = split.emit;
+            }
+            if (thinkingTags) {
+              yield* splitMessages(thinkingTags.push(text));
+              continue;
             }
             if (text) {
               yield {
@@ -793,6 +880,85 @@ class Bedrock extends BaseLLM {
     } catch (error: unknown) {
       // Clean up state and let the original error bubble up for retry handling
       throw error;
+    }
+  }
+
+  /**
+   * A request with tools to a model that cannot stream them
+   * (bedrockToolsNeedNonStreaming): sent through Converse, and the whole
+   * reply yielded as the messages the stream would have produced: text,
+   * reasoning, each toolUse block as a complete tool call, then the usage with
+   * the stop reason.
+   */
+  private async *_converseWholeMessage(
+    client: BedrockRuntimeClient,
+    input: ConverseStreamCommandInput,
+    signal: AbortSignal,
+    fallbackModelId: string | undefined,
+  ): AsyncGenerator<ChatMessage> {
+    const response = await this._sendConverse(
+      client,
+      input,
+      signal,
+      fallbackModelId,
+    );
+    const isNova2 = /nova-2-/i.test(input.modelId ?? "");
+    for (const block of response.output?.message?.content ?? []) {
+      if (block.text) {
+        yield { role: "assistant", content: block.text };
+      } else if (block.reasoningContent) {
+        const { reasoningText, redactedContent } = block.reasoningContent;
+        if (redactedContent) {
+          yield {
+            role: "thinking",
+            content: "",
+            redactedThinking: Buffer.from(redactedContent).toString("base64"),
+          };
+        } else if (reasoningText?.text) {
+          if (isNova2 && reasoningText.text === NOVA_REDACTED_REASONING) {
+            yield {
+              role: "thinking",
+              content: "",
+              redactedThinking: reasoningText.text,
+            };
+          } else {
+            yield { role: "thinking", content: reasoningText.text };
+          }
+          if (reasoningText.signature) {
+            yield {
+              role: "thinking",
+              content: "",
+              signature: reasoningText.signature,
+            };
+          }
+        }
+      } else if (block.toolUse?.toolUseId && block.toolUse.name) {
+        yield {
+          role: "assistant",
+          content: "",
+          toolCalls: [
+            {
+              id: block.toolUse.toolUseId,
+              type: "function",
+              function: {
+                name: block.toolUse.name,
+                arguments: JSON.stringify(block.toolUse.input ?? {}),
+              },
+            },
+          ],
+        };
+      }
+    }
+    if (response.usage) {
+      yield {
+        role: "assistant",
+        content: "",
+        usage: withResponseInfo(bedrockUsageToUsage(response.usage), {
+          stopReason: response.stopReason,
+          latencyMs: response.metrics?.latencyMs,
+          requestId: response.$metadata?.requestId,
+        }),
+      };
     }
   }
 

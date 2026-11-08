@@ -644,6 +644,115 @@ export function flushDsmlHold(hold: string): string {
 }
 
 /**
+ * Models whose tool calls must go through Converse rather than
+ * ConverseStream (checked live 2026-11-08):
+ *
+ * - Llama 4 Maverick and Scout refuse every ConverseStream request that
+ *   carries tools with "This model doesn't support tool use in streaming
+ *   mode."; the same request to Converse returns a proper toolUse block.
+ * - Qwen3 32B streams tool input with its opening fragment missing, so the
+ *   arguments never parse; Converse returned complete input every time.
+ *
+ * Requests without tools stream as usual. There are two copies, this one and
+ * core/llm/llms/bedrockHelpers.ts (see `bedrockSupportsOneHourCache` for why).
+ */
+const NON_STREAMING_TOOL_MODELS: RegExp[] = [
+  /(^|\.)meta\.llama4-/i,
+  /(^|\.)qwen\.qwen3-32b($|[-:])/i,
+];
+
+export function bedrockToolsNeedNonStreaming(modelId: string): boolean {
+  return NON_STREAMING_TOOL_MODELS.some((m) => m.test(modelId));
+}
+
+/** Bedrock's refusal of tools in ConverseStream, for a retry through Converse. */
+export function isStreamingToolUseUnsupportedError(e: unknown): boolean {
+  const message = e instanceof Error ? e.message : String(e ?? "");
+  return /doesn't support tool use in streaming mode/i.test(message);
+}
+
+/**
+ * Nova Pro, Lite, Micro and Premier write their reasoning into the text as
+ * literal `<thinking>...</thinking>` (Nova Pro, seen live 2026-11-08), so the
+ * GUI showed the reasoning as the answer. Nova 2 uses reasoningContent and
+ * does not match.
+ */
+export function writesThinkingTags(modelId: string): boolean {
+  return /nova-(pro|lite|micro|premier)/i.test(modelId);
+}
+
+const THINKING_OPEN = "<thinking>";
+const THINKING_CLOSE = "</thinking>";
+
+/** Text split into what is shown as the answer and what is shown as reasoning. */
+export interface ThinkingSplit {
+  content: string;
+  reasoning: string;
+}
+
+/** The longest proper prefix of `tag` that `text` ends with, as a length. */
+function trailingTagPrefix(text: string, tag: string): number {
+  const max = Math.min(text.length, tag.length - 1);
+  for (let n = max; n > 0; n--) {
+    if (tag.startsWith(text.slice(-n))) return n;
+  }
+  return 0;
+}
+
+/**
+ * Lifts `<thinking>...</thinking>` out of a text stream into reasoning, one
+ * block at a time: `push` takes each text delta and returns what can be shown
+ * now, holding back a trailing fragment that could still become a tag;
+ * `flush` releases what is held when the block ends. Text outside the tags
+ * stays content; the newlines right after a closing tag are dropped so the
+ * answer does not start with a blank line.
+ */
+export class ThinkingTagSplitter {
+  private hold = "";
+  private inside = false;
+  private skipNewlines = false;
+
+  push(text: string): ThinkingSplit {
+    let buffered = this.hold + text;
+    this.hold = "";
+    const out: ThinkingSplit = { content: "", reasoning: "" };
+    for (;;) {
+      if (this.skipNewlines) {
+        buffered = buffered.replace(/^[\r\n]+/, "");
+        if (buffered) this.skipNewlines = false;
+      }
+      const tag = this.inside ? THINKING_CLOSE : THINKING_OPEN;
+      const at = buffered.indexOf(tag);
+      if (at !== -1) {
+        this.emit(out, buffered.slice(0, at));
+        buffered = buffered.slice(at + tag.length);
+        this.inside = !this.inside;
+        if (!this.inside) this.skipNewlines = true;
+        continue;
+      }
+      const partial = trailingTagPrefix(buffered, tag);
+      this.hold = partial ? buffered.slice(-partial) : "";
+      this.emit(out, partial ? buffered.slice(0, -partial) : buffered);
+      return out;
+    }
+  }
+
+  /** What is still held when the block ends: a fragment that never became a tag. */
+  flush(): ThinkingSplit {
+    const out: ThinkingSplit = { content: "", reasoning: "" };
+    this.emit(out, this.hold);
+    this.hold = "";
+    return out;
+  }
+
+  private emit(out: ThinkingSplit, text: string): void {
+    if (!text) return;
+    if (this.inside) out.reasoning += text;
+    else out.content += text;
+  }
+}
+
+/**
  * Whether a conversation cache point may only follow a text block of a user
  * message. Nova refuses a cachePoint next to a toolResult ("extraneous key
  * [cachePoint]", seen live 2026-11-08 at the second request of every

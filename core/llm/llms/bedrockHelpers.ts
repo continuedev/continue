@@ -85,6 +85,13 @@ export function getBedrockErrorHint(
       ctx.region ? ` in ${ctx.region}` : ""
     }. A short-term key only works in the region it was generated for, so \`region\` must match it; a long-term key may have expired or been revoked.`;
   }
+  // A retired model: ResourceNotFoundException "This model version has
+  // reached the end of its life" (Nova Premier, seen live 2026-11-08) while
+  // ListInferenceProfiles and GetFoundationModelAvailability still say yes.
+  // Access or a profile would not help, so neither is suggested.
+  if (/reached the end of its life/i.test(text)) {
+    return "This model has been retired (end of life) and Bedrock no longer serves it, although its inference profile is still listed. Pick a current model: Test connection in the model picker lists the ones this account can use.";
+  }
   // A ResourceNotFoundException, not an AccessDenied, so it is matched first.
   if (/marked by provider as Legacy/i.test(text)) {
     return "This model is legacy and Bedrock no longer serves it to accounts that have not used it in the last 30 days. Pick a current model: Test connection in the model picker lists them and marks the ones that need access.";
@@ -250,6 +257,11 @@ export function buildModelCatalog(
 
     // System profiles must point at an eligible text model; application
     // profiles are the user's own, so keep them even if we can't classify them.
+    // This also drops a profile whose base model Bedrock no longer lists: on
+    // 2026-11-08 ListInferenceProfiles still returned
+    // us.amazon.nova-premier-v1:0 (ACTIVE) while amazon.nova-premier-v1:0 was
+    // absent from ListFoundationModels and requests to it failed with "reached
+    // the end of its life".
     if (!isApplication && !fm) continue;
 
     const geography = id.split(".")[0];
@@ -578,6 +590,116 @@ export function normalizeToolUseIds<
 export function isInvalidModelIdentifierError(e: unknown): boolean {
   const message = e instanceof Error ? e.message : String(e ?? "");
   return /provided model identifier is invalid/i.test(message);
+}
+
+/**
+ * Models whose tool calls must go through Converse rather than
+ * ConverseStream (checked live 2026-11-08):
+ *
+ * - Llama 4 Maverick and Scout refuse every ConverseStream request that
+ *   carries tools with "This model doesn't support tool use in streaming
+ *   mode."; the same request to Converse returns a proper toolUse block.
+ * - Qwen3 32B streams tool input with its opening fragment missing, so the
+ *   arguments never parse; Converse returned complete input every time.
+ *
+ * Requests without tools stream as usual. There are two copies, this one and
+ * packages/openai-adapters/src/apis/bedrockHelpers.ts (see
+ * `bedrockSupportsOneHourCache` for why).
+ */
+const NON_STREAMING_TOOL_MODELS: RegExp[] = [
+  /(^|\.)meta\.llama4-/i,
+  /(^|\.)qwen\.qwen3-32b($|[-:])/i,
+];
+
+export function bedrockToolsNeedNonStreaming(modelId: string): boolean {
+  return NON_STREAMING_TOOL_MODELS.some((m) => m.test(modelId));
+}
+
+/** Bedrock's refusal of tools in ConverseStream, for a retry through Converse. */
+export function isStreamingToolUseUnsupportedError(e: unknown): boolean {
+  const message = e instanceof Error ? e.message : String(e ?? "");
+  return /doesn't support tool use in streaming mode/i.test(message);
+}
+
+/**
+ * Nova Pro, Lite, Micro and Premier write their reasoning into the text as
+ * literal `<thinking>...</thinking>` (Nova Pro, seen live 2026-11-08), so the
+ * GUI showed the reasoning as the answer. Nova 2 uses reasoningContent and
+ * does not match.
+ */
+export function writesThinkingTags(modelId: string): boolean {
+  return /nova-(pro|lite|micro|premier)/i.test(modelId);
+}
+
+const THINKING_OPEN = "<thinking>";
+const THINKING_CLOSE = "</thinking>";
+
+/** Text split into what is shown as the answer and what is shown as reasoning. */
+export interface ThinkingSplit {
+  content: string;
+  reasoning: string;
+}
+
+/** The longest proper prefix of `tag` that `text` ends with, as a length. */
+function trailingTagPrefix(text: string, tag: string): number {
+  const max = Math.min(text.length, tag.length - 1);
+  for (let n = max; n > 0; n--) {
+    if (tag.startsWith(text.slice(-n))) return n;
+  }
+  return 0;
+}
+
+/**
+ * Lifts `<thinking>...</thinking>` out of a text stream into reasoning, one
+ * block at a time: `push` takes each text delta and returns what can be shown
+ * now, holding back a trailing fragment that could still become a tag;
+ * `flush` releases what is held when the block ends. Text outside the tags
+ * stays content; the newlines right after a closing tag are dropped so the
+ * answer does not start with a blank line. Two copies, as above.
+ */
+export class ThinkingTagSplitter {
+  private hold = "";
+  private inside = false;
+  private skipNewlines = false;
+
+  push(text: string): ThinkingSplit {
+    let buffered = this.hold + text;
+    this.hold = "";
+    const out: ThinkingSplit = { content: "", reasoning: "" };
+    for (;;) {
+      if (this.skipNewlines) {
+        buffered = buffered.replace(/^[\r\n]+/, "");
+        if (buffered) this.skipNewlines = false;
+      }
+      const tag = this.inside ? THINKING_CLOSE : THINKING_OPEN;
+      const at = buffered.indexOf(tag);
+      if (at !== -1) {
+        this.emit(out, buffered.slice(0, at));
+        buffered = buffered.slice(at + tag.length);
+        this.inside = !this.inside;
+        if (!this.inside) this.skipNewlines = true;
+        continue;
+      }
+      const partial = trailingTagPrefix(buffered, tag);
+      this.hold = partial ? buffered.slice(-partial) : "";
+      this.emit(out, partial ? buffered.slice(0, -partial) : buffered);
+      return out;
+    }
+  }
+
+  /** What is still held when the block ends: a fragment that never became a tag. */
+  flush(): ThinkingSplit {
+    const out: ThinkingSplit = { content: "", reasoning: "" };
+    this.emit(out, this.hold);
+    this.hold = "";
+    return out;
+  }
+
+  private emit(out: ThinkingSplit, text: string): void {
+    if (!text) return;
+    if (this.inside) out.reasoning += text;
+    else out.content += text;
+  }
 }
 
 /**

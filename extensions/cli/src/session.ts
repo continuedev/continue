@@ -201,16 +201,22 @@ class SessionManager {
    * (`totalInputTokens`), whatever the provider's own count leaves out. A
    * Bedrock request whose whole prompt was a cache write reports
    * `inputTokens` 0 and still counts its write here. Without a provider the
-   * provider's count is taken as the whole input.
+   * provider's count is taken as the whole input. `estimated` marks a cost
+   * priced at the fallback rate (no price table for the model): the session
+   * total is then an estimate and is shown as one.
    */
   trackUsage(
     cost: number,
     usage: Usage,
     provider?: string,
     model?: string,
+    estimated = false,
   ): void {
     // Accumulate cost
     this.sessionUsage.totalCost += cost;
+    if (estimated) {
+      this.sessionUsage.costEstimated = true;
+    }
 
     // Accumulate token counts
     const processedInput =
@@ -731,8 +737,15 @@ export function trackSessionUsage(
   usage: Usage,
   provider?: string,
   model?: string,
+  estimated = false,
 ): void {
-  SessionManager.getInstance().trackUsage(cost, usage, provider, model);
+  SessionManager.getInstance().trackUsage(
+    cost,
+    usage,
+    provider,
+    model,
+    estimated,
+  );
 }
 
 /**

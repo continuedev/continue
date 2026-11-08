@@ -12,6 +12,10 @@ import {
   modelsNeedingAccessCheck,
   globalProfileStatus,
   inferenceProfilePrefixForRegion,
+  bedrockToolsNeedNonStreaming,
+  isStreamingToolUseUnsupportedError,
+  ThinkingTagSplitter,
+  writesThinkingTags,
 } from "./bedrockHelpers";
 
 describe("inferenceProfilePrefixForRegion", () => {
@@ -123,6 +127,20 @@ describe("getBedrockErrorHint", () => {
   it("returns undefined for unrelated errors", () => {
     expect(getBedrockErrorHint(new Error("boom"), {})).toBeUndefined();
   });
+
+  it("says a model is retired when it has reached the end of its life", () => {
+    // Nova Premier, 2026-11-08: profile listed, availability AUTHORIZED,
+    // every request refused with this
+    const e = Object.assign(
+      new Error("This model version has reached the end of its life."),
+      { name: "ResourceNotFoundException" },
+    );
+    const hint = getBedrockErrorHint(e, { region: "us-east-1" })!;
+    expect(hint).toContain("retired");
+    expect(hint).toContain("Test connection");
+    expect(hint).not.toContain("crossRegionInference");
+    expect(hint).not.toContain("access");
+  });
 });
 
 describe("buildModelCatalog", () => {
@@ -206,10 +224,28 @@ describe("buildModelCatalog", () => {
       status: "INACTIVE",
       models: [],
     },
+    // Retired: the profile is still ACTIVE but the base model is no longer
+    // listed by ListFoundationModels (Nova Premier, 2026-11-08)
+    {
+      inferenceProfileId: "us.amazon.nova-premier-v1:0",
+      inferenceProfileName: "US Nova Premier",
+      type: "SYSTEM_DEFINED",
+      status: "ACTIVE",
+      models: [
+        {
+          modelArn:
+            "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-premier-v1:0",
+        },
+      ],
+    },
   ];
 
   const catalog = buildModelCatalog(fms, profiles);
   const ids = catalog.map((m) => m.id);
+
+  it("drops a system profile whose base model Bedrock no longer lists", () => {
+    expect(ids).not.toContain("us.amazon.nova-premier-v1:0");
+  });
 
   it("offers profile IDs for profile-only models and base IDs for on-demand ones", () => {
     expect(ids).toContain("us.anthropic.claude-sonnet-4-6");
@@ -648,5 +684,61 @@ describe("globalProfileStatus", () => {
     ]) {
       expect(globalProfileStatus([...catalog], id)).toBe("unknown");
     }
+  });
+});
+
+describe("tools through Converse for models that cannot stream them", () => {
+  it.each([
+    "us.meta.llama4-maverick-17b-instruct-v1:0",
+    "meta.llama4-scout-17b-instruct-v1:0",
+    "qwen.qwen3-32b-v1:0",
+  ])("%s needs the non-streaming route", (id) => {
+    expect(bedrockToolsNeedNonStreaming(id)).toBe(true);
+  });
+
+  it.each([
+    "us.anthropic.claude-haiku-4-5",
+    "amazon.nova-pro-v1:0",
+    "qwen.qwen3-coder-next",
+    "us.meta.llama3-3-70b-instruct-v1:0",
+  ])("%s streams tools as usual", (id) => {
+    expect(bedrockToolsNeedNonStreaming(id)).toBe(false);
+  });
+
+  it("recognises Bedrock's refusal of tools in streaming mode", () => {
+    expect(
+      isStreamingToolUseUnsupportedError(
+        new Error("This model doesn't support tool use in streaming mode."),
+      ),
+    ).toBe(true);
+    expect(isStreamingToolUseUnsupportedError(new Error("boom"))).toBe(false);
+  });
+});
+
+describe("Nova's <thinking> tags in the text", () => {
+  it("applies to Nova Pro, Lite, Micro and Premier, not Nova 2", () => {
+    expect(writesThinkingTags("amazon.nova-pro-v1:0")).toBe(true);
+    expect(writesThinkingTags("us.amazon.nova-lite-v1:0")).toBe(true);
+    expect(writesThinkingTags("us.amazon.nova-2-lite-v1:0")).toBe(false);
+    expect(writesThinkingTags("us.anthropic.claude-haiku-4-5")).toBe(false);
+  });
+
+  it("lifts the tagged text into reasoning, across split deltas", () => {
+    const s = new ThinkingTagSplitter();
+    const parts = [
+      s.push("<thin"),
+      s.push("king>I rea"),
+      s.push("son</thi"),
+      s.push("nking>\n\nDone"),
+      s.flush(),
+    ];
+    expect(parts.map((p) => p.reasoning).join("")).toBe("I reason");
+    expect(parts.map((p) => p.content).join("")).toBe("Done");
+  });
+
+  it("releases a held '<' that was only text", () => {
+    const s = new ThinkingTagSplitter();
+    const parts = [s.push("a < b"), s.flush()];
+    expect(parts.map((p) => p.content).join("")).toBe("a < b");
   });
 });

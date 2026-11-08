@@ -8,6 +8,7 @@ import {
   getSessionFilePath,
   getSessionUsage,
 } from "./session.js";
+import { formatSessionCost } from "./util/sessionCost.js";
 import { formatCacheTally, splitInputTokens } from "./util/cacheTally.js";
 import { logger } from "./util/logger.js";
 import { formatReplyTally } from "./util/replyTally.js";
@@ -80,9 +81,7 @@ function getUsageInfo(): string[] {
   try {
     const usage = getSessionUsage();
     if (usage.totalCost > 0 || usage.promptTokens > 0) {
-      lines.push(
-        `  Total Cost: ${chalk.green(`$${usage.totalCost.toFixed(6)}`)}`,
-      );
+      lines.push(`  Total Cost: ${chalk.green(formatSessionCost(usage))}`);
       // Input is what the provider processed: uncached plus cache reads plus
       // cache writes. The parts are always shown, so a session that never
       // cached does not look like one that could not.

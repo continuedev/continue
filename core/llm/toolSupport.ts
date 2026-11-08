@@ -91,7 +91,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     // Checked live on 2026-11-08 (Converse and ConverseStream): Claude, Nova
     // 2 Lite, Nova Pro, Mistral Large 3, Qwen3 and DeepSeek V3.2 return
     // toolUse blocks. DeepSeek R1 refuses tools outright. Llama 3.3 calls
-    // tools only outside streaming, so it stays off; Llama 4 streams them.
+    // tools only outside streaming, so it stays off. Llama 4 refuses tools
+    // in ConverseStream too ("This model doesn't support tool use in
+    // streaming mode.") but returns a proper toolUse block from Converse, so
+    // it stays on and the provider sends its tool requests without streaming
+    // (bedrockToolsNeedNonStreaming in llms/bedrockHelpers.ts).
     bedrock: (model) => {
       const id = model.toLowerCase();
       if (id.includes("claude-2") || id.includes("claude-instant")) {

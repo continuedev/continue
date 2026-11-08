@@ -987,3 +987,231 @@ describe("BedrockApi stream events", () => {
     ).rejects.toThrow(/model identifier is invalid/);
   });
 });
+
+describe("BedrockApi tools through Converse (Llama 4, Qwen3 32B; probed live 2026-11-08)", () => {
+  const signal = new AbortController().signal;
+  const tools = [
+    {
+      type: "function",
+      function: { name: "Read", parameters: { type: "object" } },
+    },
+  ];
+  const converseReply = {
+    $metadata: { requestId: "req-c" },
+    output: {
+      message: {
+        role: "assistant",
+        content: [
+          { text: "Reading it." },
+          {
+            toolUse: {
+              toolUseId: "tooluse_1",
+              name: "Read",
+              input: { filepath: "a.ts" },
+            },
+          },
+          {
+            toolUse: {
+              toolUseId: "tooluse_2",
+              name: "Read",
+              input: { filepath: "b.ts" },
+            },
+          },
+        ],
+      },
+    },
+    stopReason: "tool_use",
+    usage: { inputTokens: 12, outputTokens: 34 },
+  };
+
+  /** A client whose send answers Converse with `reply` and ConverseStream with `events`, or throws. */
+  function client(reply: any, events: any[] = [], streamError?: Error) {
+    const sent: { command: string; input: any }[] = [];
+    class RouteApi extends TestApi {
+      async getClient() {
+        return {
+          send: async (command: any) => {
+            sent.push({
+              command: command.constructor.name,
+              input: JSON.parse(JSON.stringify(command.input)),
+            });
+            if (command.constructor.name === "ConverseCommand") return reply;
+            if (streamError) throw streamError;
+            return {
+              $metadata: { requestId: "req-s" },
+              stream: (async function* () {
+                for (const e of events) yield e;
+              })(),
+            };
+          },
+        } as any;
+      }
+    }
+    const api = new RouteApi({ provider: "bedrock", env: {} } as any);
+    const collect = async (model: string, extra: any = {}) => {
+      const chunks: any[] = [];
+      for await (const c of api.chatCompletionStream(
+        {
+          model,
+          messages: [{ role: "user", content: "hi" }],
+          stream: true,
+          ...extra,
+        } as any,
+        signal,
+      )) {
+        chunks.push(c);
+      }
+      return chunks;
+    };
+    return { collect, sent };
+  }
+
+  it("sends a Llama 4 request with tools through Converse and yields the whole reply as chunks", async () => {
+    const { collect, sent } = client(converseReply);
+    const chunks = await collect("us.meta.llama4-maverick-17b-instruct-v1:0", {
+      tools,
+    });
+    expect(sent.map((s) => s.command)).toEqual(["ConverseCommand"]);
+    expect(sent[0].input.toolConfig.tools).toHaveLength(1);
+    const deltas = chunks.map((c) => c.choices[0]?.delta).filter(Boolean);
+    expect(deltas[0]).toMatchObject({ content: "Reading it." });
+    // each toolUse block at its own index, arguments as a JSON string
+    expect(deltas[1].tool_calls[0]).toMatchObject({
+      index: 0,
+      id: "tooluse_1",
+      function: { name: "Read", arguments: '{"filepath":"a.ts"}' },
+    });
+    expect(deltas[2].tool_calls[0]).toMatchObject({
+      index: 1,
+      id: "tooluse_2",
+      function: { arguments: '{"filepath":"b.ts"}' },
+    });
+    // then the finish_reason chunk from stopReason and the usage chunk
+    const finish = chunks.filter((c) => c.choices.length > 0).at(-1);
+    expect(finish.choices[0].delta).toEqual({});
+    expect(finish.choices[0].finish_reason).toBe("tool_calls");
+    expect(chunks.at(-1).usage).toMatchObject({
+      prompt_tokens: 12,
+      completion_tokens: 34,
+    });
+    expect(chunks[0].id).toBe("req-c");
+  });
+
+  it("streams a Llama 4 request without tools as usual", async () => {
+    const { collect, sent } = client(converseReply, [
+      { contentBlockDelta: { delta: { text: "hi" } } },
+    ]);
+    await collect("us.meta.llama4-scout-17b-instruct-v1:0");
+    expect(sent.map((s) => s.command)).toEqual(["ConverseStreamCommand"]);
+  });
+
+  it("routes Qwen3 32B tool requests the same way (its streamed tool input is truncated)", async () => {
+    const { collect, sent } = client(converseReply);
+    await collect("qwen.qwen3-32b-v1:0", { tools });
+    expect(sent.map((s) => s.command)).toEqual(["ConverseCommand"]);
+  });
+
+  it("retries once through Converse when ConverseStream refuses tools, and remembers the model", async () => {
+    const refusal = new Error(
+      "This model does not support tool use in streaming mode.".replace(
+        "does not",
+        "doesn't",
+      ),
+    );
+    const first = client(converseReply, [], refusal);
+    const chunks = await first.collect("mistral.some-future-model", { tools });
+    expect(first.sent.map((s) => s.command)).toEqual([
+      "ConverseStreamCommand",
+      "ConverseCommand",
+    ]);
+    expect(chunks.some((c) => c.choices[0]?.delta?.tool_calls?.length)).toBe(
+      true,
+    );
+    // the next request with tools goes straight to Converse
+    const second = client(converseReply);
+    await second.collect("mistral.some-future-model", { tools });
+    expect(second.sent.map((s) => s.command)).toEqual(["ConverseCommand"]);
+  });
+
+  it("does not retry other errors", async () => {
+    const other = client(converseReply, [], new Error("ThrottlingException"));
+    await expect(
+      other.collect("mistral.other-model", { tools }),
+    ).rejects.toThrow(/ThrottlingException/);
+    expect(other.sent.map((s) => s.command)).toEqual(["ConverseStreamCommand"]);
+  });
+});
+
+describe("BedrockApi Nova <thinking> tags (Nova Pro, seen live 2026-11-08)", () => {
+  const signal = new AbortController().signal;
+
+  function streaming(events: any[]) {
+    class StreamApi extends TestApi {
+      async getClient() {
+        return {
+          send: async () => ({
+            $metadata: { requestId: "req-1" },
+            stream: (async function* () {
+              for (const e of events) yield e;
+            })(),
+          }),
+        } as any;
+      }
+    }
+    const api = new StreamApi({ provider: "bedrock", env: {} } as any);
+    return async (model: string) => {
+      const chunks: any[] = [];
+      for await (const c of api.chatCompletionStream(
+        {
+          model,
+          messages: [{ role: "user", content: "hi" }],
+          stream: true,
+        } as any,
+        signal,
+      )) {
+        chunks.push(c);
+      }
+      return chunks.map((c) => c.choices[0]?.delta).filter(Boolean);
+    };
+  }
+  const text = (t: string) => ({ contentBlockDelta: { delta: { text: t } } });
+  const joined = (deltas: any[], key: string) =>
+    deltas.map((d) => d[key] ?? "").join("");
+
+  it("emits the text between the tags as reasoning_content and the rest as content", async () => {
+    const collect = streaming([
+      text("<thinking>Let me read"),
+      text(" the file.</thinking>\n\nThe file has 3 lines."),
+      { contentBlockStop: {} },
+      { messageStop: { stopReason: "end_turn" } },
+    ]);
+    const d = await collect("us.amazon.nova-pro-v1:0");
+    expect(joined(d, "reasoning_content")).toBe("Let me read the file.");
+    expect(joined(d, "content")).toBe("The file has 3 lines.");
+  });
+
+  it("handles a tag split across deltas", async () => {
+    const collect = streaming([
+      text("<thin"),
+      text("king>plan</think"),
+      text("ing>answer"),
+      { contentBlockStop: {} },
+    ]);
+    const d = await collect("amazon.nova-lite-v1:0");
+    expect(joined(d, "reasoning_content")).toBe("plan");
+    expect(joined(d, "content")).toBe("answer");
+  });
+
+  it("releases a held fragment at the end of the block and leaves other models alone", async () => {
+    const nova = await streaming([text("a <"), { contentBlockStop: {} }])(
+      "amazon.nova-micro-v1:0",
+    );
+    expect(joined(nova, "content")).toBe("a <");
+    const claude = await streaming([
+      text("<thinking>not lifted</thinking>"),
+      { contentBlockStop: {} },
+    ])("us.anthropic.claude-haiku-4-5");
+    expect(joined(claude, "content")).toBe("<thinking>not lifted</thinking>");
+    expect(joined(claude, "reasoning_content")).toBe("");
+  });
+});
