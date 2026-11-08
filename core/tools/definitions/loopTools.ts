@@ -25,9 +25,12 @@ export function holdQuestionToolDescription(finishItem: string): string {
 Make the question answerable on its own, without this conversation: say what it is about, the options, and your default.`;
 }
 
+// `type` is asked for in the description but not required by the schema: the
+// CLI rejects a call missing a required parameter, and a model that omits
+// the type must still be able to ask. A missing type is routed to the person.
 export const HOLD_QUESTION_PARAMETERS = {
   type: "object" as const,
-  required: ["question", "kind", "type"],
+  required: ["question", "kind"],
   properties: {
     question: {
       type: "string",

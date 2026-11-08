@@ -442,7 +442,7 @@ export function planProposedResult(relativePath: string, plan: TaskPlan) {
  * to implement, and that the person may have edited the file.
  */
 export function planBuildMessage(relativePath: string): string {
-  return `Build the plan in ${relativePath}. Read the file first: I may have edited it since you wrote it, and its to-dos are already your task list (updated from the file). Work through the to-dos in order and keep the list current: mark each to-do in_progress when you start it and completed as soon as it is done. Do not ask whether to start, do not recreate the list, and do not edit the plan file unless I ask.`;
+  return `Build the plan in ${relativePath}. Read the file first: I may have edited it since you wrote it, and its to-dos are already your task list (updated from the file). Work through the to-dos in order and keep the task list current: mark each to-do in_progress when you start it and completed as soon as it is done. Do not ask whether to start, do not recreate the list, and do not edit the plan file unless I ask.`;
 }
 
 /** What the model gets back when the person chooses to keep planning (CLI). */

@@ -31,7 +31,12 @@ import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
-import { type ServerState } from "./serve.helpers.js";
+import {
+  bearerTokenMiddleware,
+  DEFAULT_SERVE_HOST,
+  serveBindingProblem,
+  type ServerState,
+} from "./serve.helpers.js";
 import {
   getServeStateSnapshot,
   processMessages,
@@ -42,6 +47,10 @@ import {
 interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
   port?: string;
+  /** Interface to listen on; loopback unless told otherwise */
+  host?: string;
+  /** Bearer token every request must carry; required off loopback */
+  token?: string;
   /** Storage identifier for remote sync */
   id?: string;
 }
@@ -83,6 +92,14 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const timeoutSeconds = parseInt(options.timeout || "300", 10);
   const timeoutMs = timeoutSeconds * 1000;
   const port = parseInt(options.port || "8000", 10);
+  // Loopback unless told otherwise; any other interface needs a token
+  const bindingProblem = serveBindingProblem(
+    options.host ?? DEFAULT_SERVE_HOST,
+    options.token,
+  );
+  if (bindingProblem) {
+    throw new Error(bindingProblem);
+  }
 
   // Environment install script will be deferred until after server startup to avoid blocking
 
@@ -199,6 +216,10 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   const app = express();
   app.use(express.json());
+  // Anything that reaches the port can act as the person (messages,
+  // approvals, loop answers), so off loopback every request carries a token
+  const host = options.host ?? DEFAULT_SERVE_HOST;
+  if (options.token) app.use(bearerTokenMiddleware(options.token));
 
   const messageCtx: ServeMessageContext = {
     state,
@@ -320,8 +341,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     setTimeout(handleExitResponse, 100);
   });
 
-  const server = app.listen(port, async () => {
-    console.log(chalk.green(`Server started on http://localhost:${port}`));
+  const server = app.listen(port, host, async () => {
+    console.log(chalk.green(`Server started on http://${host}:${port}`));
+    if (options.token) {
+      console.log(
+        chalk.dim("  Every request needs: Authorization: Bearer <token>"),
+      );
+    }
     console.log(chalk.dim("Endpoints:"));
     console.log(chalk.dim("  GET  /state      - Get current agent state"));
     console.log(

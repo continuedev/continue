@@ -38,6 +38,37 @@ import { getCleanUriPath } from "../../util/uri";
 import { loadConfigContextProviders } from "../loadContextProviders";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { unrollLocalYamlBlocks } from "./loadLocalYamlBlocks";
+import * as YAML from "yaml";
+import {
+  stripUntrustedLoosening,
+  untrustedLooseningNotice,
+} from "../../tools/permissions/trust";
+
+/**
+ * A workspace block's YAML with the keys a repository may not set removed,
+ * and a notice for each file that had any. Unparseable YAML is returned as
+ * it was: the unroller reports it.
+ */
+function withoutUntrustedLoosening(
+  path: string,
+  content: string,
+  notices: ConfigValidationError[],
+): string {
+  let parsed: unknown;
+  try {
+    parsed = YAML.parse(content);
+  } catch {
+    return content;
+  }
+  const { config, removed } = stripUntrustedLoosening(parsed);
+  if (removed.length === 0) return content;
+  notices.push({
+    fatal: false,
+    uri: path,
+    message: untrustedLooseningNotice(getCleanUriPath(path), removed),
+  });
+  return YAML.stringify(config);
+}
 import { loadModelCatalog } from "../providers/modelsFile";
 import { loadProviderInstances } from "../providers/providersFile";
 import { LocalPlatformClient } from "./LocalPlatformClient";
@@ -59,6 +90,11 @@ async function loadConfigYaml(options: {
   // Add local .continuous blocks
   // Use "content" field to pass pre-read content directly, avoiding
   // fs.readFileSync which fails for vscode-remote:// URIs in WSL (#6242, #7810)
+  // A block that came with the workspace may tighten (deny, ask) but not
+  // loosen: its allow rules and reviewer guidance are dropped with a notice
+  // (core/tools/permissions/trust.ts; plans/policy-areas.md, "Settings").
+  const workspaceDirs = await ide.getWorkspaceDirs();
+  const trustNotices: ConfigValidationError[] = [];
   const localBlockPromises = BLOCK_TYPES.map(async (blockType) => {
     const localBlocks = await getAllDotContinueDefinitionFiles(
       ide,
@@ -68,7 +104,9 @@ async function loadConfigYaml(options: {
     return localBlocks.map((b) => ({
       uriType: "file" as const,
       fileUri: b.path,
-      content: b.content,
+      content: workspaceDirs.some((dir) => b.path.startsWith(dir))
+        ? withoutUntrustedLoosening(b.path, b.content, trustNotices)
+        : b.content,
     }));
   });
   const localPackageIdentifiers: PackageIdentifier[] = (
@@ -86,7 +124,7 @@ async function loadConfigYaml(options: {
     });
   };
 
-  const errors: ConfigValidationError[] = [];
+  const errors: ConfigValidationError[] = [...trustNotices];
 
   // Named provider instances (providers.yaml) that models reach with
   // `connection:`; shared by every config.
