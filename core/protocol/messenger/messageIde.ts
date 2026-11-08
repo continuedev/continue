@@ -16,6 +16,7 @@ import type {
   SignatureHelp,
   TerminalOptions,
   Thread,
+  WorkspaceSymbol,
 } from "../..";
 
 export class MessageIde implements IDE {
@@ -62,6 +63,10 @@ export class MessageIde implements IDE {
     textDocumentIdentifier: string,
   ): Promise<DocumentSymbol[]> {
     return this.request("getDocumentSymbols", { textDocumentIdentifier });
+  }
+
+  async getWorkspaceSymbols(query: string): Promise<WorkspaceSymbol[]> {
+    return this.request("getWorkspaceSymbols", { query });
   }
 
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
@@ -218,6 +223,10 @@ export class MessageIde implements IDE {
 
   getProblems(fileUri: string): Promise<Problem[]> {
     return this.request("getProblems", { filepath: fileUri });
+  }
+
+  waitForProblems(fileUri: string, timeoutMs: number): Promise<Problem[]> {
+    return this.request("waitForProblems", { filepath: fileUri, timeoutMs });
   }
 
   subprocess(command: string, cwd?: string): Promise<[string, string]> {

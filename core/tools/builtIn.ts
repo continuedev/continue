@@ -20,6 +20,7 @@ export enum BuiltInToolNames {
   Subagent = "subagent",
   TaskList = "task_list",
   PresentPlan = "present_plan",
+  CodeNavigation = "code_navigation",
 
   // excluded from allTools for now
   ViewRepoMap = "view_repo_map",

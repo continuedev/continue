@@ -33,6 +33,7 @@ const CLAUDE_TOOL_ALIASES: Record<string, string[]> = {
     BuiltInToolNames.ReadCurrentlyOpenFile,
   ],
   grep: [BuiltInToolNames.GrepSearch],
+  lsp: [BuiltInToolNames.CodeNavigation],
   glob: [BuiltInToolNames.FileGlobSearch],
   ls: [BuiltInToolNames.LSTool, BuiltInToolNames.ViewSubdirectory],
   bash: [BuiltInToolNames.RunTerminalCommand],

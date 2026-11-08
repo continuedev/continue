@@ -16,6 +16,7 @@ import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFi
 import { readFileImpl } from "./implementations/readFile";
 
 import { readFileRangeImpl } from "./implementations/readFileRange";
+import { codeNavigationImpl } from "./implementations/codeNavigation";
 import { readSkillImpl } from "./implementations/readSkill";
 import { requestRuleImpl } from "./implementations/requestRule";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
@@ -194,6 +195,8 @@ export async function callBuiltInTool(
       return await readFileImpl(args, extras);
     case BuiltInToolNames.ReadFileRange:
       return await readFileRangeImpl(args, extras);
+    case BuiltInToolNames.CodeNavigation:
+      return await codeNavigationImpl(args, extras);
     case BuiltInToolNames.CreateNewFile:
       return await createNewFileImpl(args, extras);
     case BuiltInToolNames.GrepSearch:

@@ -1021,6 +1021,18 @@ export interface Problem {
   filepath: string;
   range: Range;
   message: string;
+  /** Unset when the IDE does not report it. */
+  severity?: "error" | "warning" | "information" | "hint";
+  /** The tool that reported it, such as "ts" or "eslint". */
+  source?: string;
+}
+
+/** A symbol found by a workspace-wide search (LSP workspace/symbol). */
+export interface WorkspaceSymbol {
+  name: string;
+  kind: SymbolKind;
+  containerName?: string;
+  location: RangeInFile;
 }
 
 export interface Thread {
@@ -1175,6 +1187,14 @@ export interface IDE {
   getSignatureHelp(location: Location): Promise<SignatureHelp | null>; // TODO: add to jetbrains
   getReferences(location: Location): Promise<RangeInFile[]>;
   getDocumentSymbols(textDocumentIdentifier: string): Promise<DocumentSymbol[]>;
+  /** Symbols whose names match `query`, across the workspace. */
+  getWorkspaceSymbols(query: string): Promise<WorkspaceSymbol[]>;
+  /**
+   * A file's problems once its language servers have caught up with a
+   * change: waits for the file's diagnostics to change, at most `timeoutMs`,
+   * then returns them. IDEs without diagnostics return [].
+   */
+  waitForProblems(fileUri: string, timeoutMs: number): Promise<Problem[]>;
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void;

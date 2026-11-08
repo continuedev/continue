@@ -40,6 +40,7 @@ const RULE_NAME: Record<string, string> = {
   [BuiltInToolNames.ReadFile]: "readFile",
   [BuiltInToolNames.ReadFileRange]: "readFile",
   [BuiltInToolNames.ReadCurrentlyOpenFile]: "readFile",
+  [BuiltInToolNames.CodeNavigation]: "readFile",
   [BuiltInToolNames.CreateNewFile]: "writeFile",
   [BuiltInToolNames.EditExistingFile]: "writeFile",
   [BuiltInToolNames.SingleFindAndReplace]: "writeFile",
@@ -101,6 +102,7 @@ export function ruleTargetsFor(
       return str(args.command) ? [args.command as string] : [];
     case BuiltInToolNames.ReadFile:
     case BuiltInToolNames.ReadFileRange:
+    case BuiltInToolNames.CodeNavigation:
     case BuiltInToolNames.CreateNewFile:
     case BuiltInToolNames.EditExistingFile:
     case BuiltInToolNames.SingleFindAndReplace:

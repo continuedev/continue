@@ -56,9 +56,32 @@ const MAX_CACHE_SIZE = 500;
 const gotoCache = new Map<string, RangeInFile[]>();
 const signatureHelpCache = new Map<string, vscode.SignatureHelp>();
 
+/**
+ * Drop cached answers asked from a document once it changes: they are keyed
+ * by position in it, so after an edit (the agent's, or typing) they point at
+ * the wrong lines. Registered on first use.
+ */
+let watchingDocuments = false;
+function forgetResultsOnChange() {
+  if (watchingDocuments) return;
+  watchingDocuments = true;
+  vscode.workspace.onDidChangeTextDocument((e) => {
+    forgetLspResultsFor(e.document.uri.toString());
+  });
+}
+
+export function forgetLspResultsFor(uri: string) {
+  for (const cache of [gotoCache, signatureHelpCache, symbolCache]) {
+    for (const key of [...cache.keys()]) {
+      if (key.includes(uri)) cache.delete(key);
+    }
+  }
+}
+
 export async function executeGotoProvider(
   input: GotoInput,
 ): Promise<RangeInFile[]> {
+  forgetResultsOnChange();
   const cacheKey = gotoInputKey(input);
   const cached = gotoCache.get(cacheKey);
   if (cached) {
@@ -406,6 +429,7 @@ export const getDefinitionsFromLsp: GetLspDefinitionsFunction = async (
 export async function executeSignatureHelpProvider(
   input: SignatureHelpInput,
 ): Promise<SignatureHelp | null> {
+  forgetResultsOnChange();
   const cacheKey = signatureHelpKey(input);
   const cached = signatureHelpCache.get(cacheKey);
   if (cached) {
@@ -453,6 +477,7 @@ const symbolCache = new Map<string, DocumentSymbol[]>();
 export async function executeSymbolProvider(
   input: SymbolInput,
 ): Promise<DocumentSymbol[]> {
+  forgetResultsOnChange();
   const cacheKey = symbolInputKey(input);
   const cached = symbolCache.get(cacheKey);
   if (cached) {
@@ -460,51 +485,45 @@ export async function executeSymbolProvider(
   }
 
   try {
-    const symbols = (await vscode.commands.executeCommand(
+    const symbols = ((await vscode.commands.executeCommand(
       input.name,
       input.uri,
-      // )) as vscode.DocumentSymbol[] | vscode.SymbolInformation[];
-    )) as vscode.DocumentSymbol[];
+    )) ?? []) as Array<vscode.DocumentSymbol | vscode.SymbolInformation>;
 
     const results: DocumentSymbol[] = [];
 
-    // Handle both possible return types from the symbol provider
-    if (symbols.length > 0) {
-      // if ("location" in symbols[0]) {
-      //   // SymbolInformation type
-      //   results.push(
-      //     ...symbols.map((s: vscode.SymbolInformation) => ({
-      //       filepath: s.location.uri.toString(),
-      //       range: s.location.range,
-      //     })),
-      //   );
-      // } else {
-      // DocumentSymbol type - collect symbols recursively
-      function collectSymbols(
-        symbols: vscode.DocumentSymbol[],
-        uri: vscode.Uri,
-      ): DocumentSymbol[] {
-        const result: DocumentSymbol[] = [];
-        for (const symbol of symbols) {
+    // Providers answer with nested DocumentSymbols or, from older language
+    // servers, flat SymbolInformation (a location instead of ranges)
+    function collectSymbols(
+      symbols: Array<vscode.DocumentSymbol | vscode.SymbolInformation>,
+    ): DocumentSymbol[] {
+      const result: DocumentSymbol[] = [];
+      for (const symbol of symbols) {
+        if ("location" in symbol) {
           result.push({
             name: symbol.name,
-            range: symbol.range,
-            selectionRange: symbol.selectionRange,
-            kind: symbol.kind,
+            detail: symbol.containerName || undefined,
+            range: symbol.location.range,
+            selectionRange: symbol.location.range,
+            kind: symbol.kind as number,
           });
-
-          if (symbol.children && symbol.children.length > 0) {
-            result.push(...collectSymbols(symbol.children, uri));
-          }
+          continue;
         }
-        return result;
+        result.push({
+          name: symbol.name,
+          detail: symbol.detail || undefined,
+          range: symbol.range,
+          selectionRange: symbol.selectionRange,
+          kind: symbol.kind as number,
+        });
+        if (symbol.children && symbol.children.length > 0) {
+          result.push(...collectSymbols(symbol.children));
+        }
       }
-
-      results.push(
-        ...collectSymbols(symbols as vscode.DocumentSymbol[], input.uri),
-      );
-      // }
+      return result;
     }
+
+    results.push(...collectSymbols(symbols));
 
     // Add to cache
     if (symbolCache.size >= MAX_SYMBOL_CACHE_SIZE) {

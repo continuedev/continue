@@ -33,7 +33,15 @@ import type {
   SignatureHelp,
   TerminalOptions,
   Thread,
+  WorkspaceSymbol,
 } from "core";
+
+const SEVERITY: Record<vscode.DiagnosticSeverity, Problem["severity"]> = {
+  [vscode.DiagnosticSeverity.Error]: "error",
+  [vscode.DiagnosticSeverity.Warning]: "warning",
+  [vscode.DiagnosticSeverity.Information]: "information",
+  [vscode.DiagnosticSeverity.Hint]: "hint",
+};
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
@@ -650,8 +658,60 @@ class VsCodeIde implements IDE {
           end: { line: d.range.end.line, character: d.range.end.character },
         },
         message: d.message,
+        severity: SEVERITY[d.severity],
+        source: d.source || undefined,
       };
     });
+  }
+
+  async waitForProblems(
+    fileUri: string,
+    timeoutMs: number,
+  ): Promise<Problem[]> {
+    const uri = vscode.Uri.parse(fileUri);
+    const target = uri.toString();
+    // Language servers report a moment after a change; wait for this file's
+    // diagnostics to change, or give up and read what is there.
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(done, timeoutMs);
+      const listener = vscode.languages.onDidChangeDiagnostics((e) => {
+        if (e.uris.some((u) => u.toString() === target)) done();
+      });
+      function done() {
+        clearTimeout(timer);
+        listener.dispose();
+        resolve();
+      }
+    });
+    return this.getProblems(fileUri);
+  }
+
+  async getWorkspaceSymbols(query: string): Promise<WorkspaceSymbol[]> {
+    const symbols =
+      (await vscode.commands.executeCommand<vscode.SymbolInformation[]>(
+        "vscode.executeWorkspaceSymbolProvider",
+        query,
+      )) ?? [];
+    return symbols
+      .filter((s) => s.location?.uri && s.location.range)
+      .map((s) => ({
+        name: s.name,
+        kind: s.kind as number,
+        containerName: s.containerName || undefined,
+        location: {
+          filepath: s.location.uri.toString(),
+          range: {
+            start: {
+              line: s.location.range.start.line,
+              character: s.location.range.start.character,
+            },
+            end: {
+              line: s.location.range.end.line,
+              character: s.location.range.end.character,
+            },
+          },
+        },
+      }));
   }
 
   async subprocess(command: string, cwd?: string): Promise<[string, string]> {

@@ -1,7 +1,11 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { ApplyState, ApplyToFilePayload } from "core";
+import { ApplyState, ApplyToFilePayload, ContextItem } from "core";
 import { EDIT_MODE_STREAM_ID } from "core/edit/constants";
 import { logAgentModeEditOutcome } from "../../util/editOutcomeLogger";
+import {
+  problemsAfterEdit,
+  rememberProblemsBeforeEdit,
+} from "../../util/problemsAfterEdit";
 import {
   selectApplyStateByToolCallId,
   selectToolCallById,
@@ -93,11 +97,9 @@ export const handleApplyStateUpdate = createAsyncThunk<
                 );
 
                 // Add autoformatting diff to tool output if present
-                if (applyState.autoFormattingDiff) {
-                  dispatch(
-                    updateToolCallOutput({
-                      toolCallId: applyState.toolCallId,
-                      contextItems: [
+                const contextItems: ContextItem[] =
+                  applyState.autoFormattingDiff
+                    ? [
                         {
                           icon: "info",
                           name: "Auto-formatting Applied",
@@ -105,24 +107,33 @@ export const handleApplyStateUpdate = createAsyncThunk<
                           content: `Along with your edits, the editor applied the following auto-formatting:\n\n${applyState.autoFormattingDiff}\n\n(Note: Pay close attention to changes such as single quotes being converted to double quotes, semicolons being removed or added, long lines being broken into multiple lines, adjusting indentation style, adding/removing trailing commas, etc. This will help you ensure future SEARCH/REPLACE operations to this file are accurate.)`,
                           hidden: false,
                         },
-                      ],
-                    }),
-                  );
-                } else {
-                  dispatch(
-                    updateToolCallOutput({
-                      toolCallId: applyState.toolCallId,
-                      contextItems: [
+                      ]
+                    : [
                         {
                           name: "Edit Success",
                           content: `Successfully edited ${applyState.filepath}`,
                           description: "",
                           hidden: true,
                         },
-                      ],
-                    }),
+                      ];
+
+                // Errors and warnings the edit introduced, once the
+                // language servers have caught up
+                if (applyState.filepath) {
+                  const problems = await problemsAfterEdit(
+                    extra.ideMessenger,
+                    applyState.toolCallId,
+                    applyState.filepath,
                   );
+                  if (problems) contextItems.push(problems);
                 }
+
+                dispatch(
+                  updateToolCallOutput({
+                    toolCallId: applyState.toolCallId,
+                    contextItems,
+                  }),
+                );
               } else {
                 dispatch(
                   updateToolCallOutput({
@@ -165,6 +176,15 @@ export const applyForEditTool = createAsyncThunk<
       status: "not-started",
     }),
   );
+
+  // The file's problems before the edit, to report only what it adds
+  if (payload.filepath) {
+    rememberProblemsBeforeEdit(
+      extra.ideMessenger,
+      toolCallId,
+      payload.filepath,
+    );
+  }
 
   let didError = false;
   try {

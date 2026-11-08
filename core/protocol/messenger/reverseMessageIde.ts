@@ -161,6 +161,14 @@ export class ReverseMessageIde {
       return this.ide.getProblems(data.filepath);
     });
 
+    this.on("waitForProblems", (data) => {
+      return this.ide.waitForProblems(data.filepath, data.timeoutMs);
+    });
+
+    this.on("getWorkspaceSymbols", (data) => {
+      return this.ide.getWorkspaceSymbols(data.query);
+    });
+
     this.on("subprocess", (data) => {
       return this.ide.subprocess(data.command, data.cwd);
     });

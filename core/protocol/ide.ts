@@ -1,5 +1,6 @@
 import type {
   DocumentSymbol,
+  WorkspaceSymbol,
   FileStatsMap,
   FileType,
   IDE,
@@ -35,6 +36,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   fileExists: [{ filepath: string }, boolean];
   readFile: [{ filepath: string }, string];
   getProblems: [{ filepath: string }, Problem[]];
+  waitForProblems: [{ filepath: string; timeoutMs: number }, Problem[]];
   getOpenFiles: [undefined, string[]];
   getCurrentFile: [
     undefined,
@@ -85,6 +87,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getSignatureHelp: [{ location: Location }, SignatureHelp | null];
   getReferences: [{ location: Location }, RangeInFile[]];
   getDocumentSymbols: [{ textDocumentIdentifier: string }, DocumentSymbol[]];
+  getWorkspaceSymbols: [{ query: string }, WorkspaceSymbol[]];
 
   reportError: [any, void];
   closeSidebar: [undefined, void];

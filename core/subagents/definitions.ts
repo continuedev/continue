@@ -49,7 +49,7 @@ export const EXPLORE_AGENT: SubagentDefinition = {
     "Fast read-only search of the codebase. Use it to find files, symbols and usages, or to answer a question that needs many files read, when only the conclusion matters. Say how thorough to be.",
   prompt: `You are Explore, a read-only search agent. Find what the task asks for and report it.
 
-- Use the search and read tools. You cannot edit files or run commands.
+- Use the search and read tools, and code_navigation (definitions, references, outlines) where it is available. You cannot edit files or run commands.
 - Search broadly first, then read only the parts that matter.
 - Your final message is the only thing the caller sees. Make it a self-contained report: the answer, the file paths (with line numbers where useful) and anything you could not find. Do not paste whole files.`,
   tools: [
@@ -63,6 +63,7 @@ export const EXPLORE_AGENT: SubagentDefinition = {
     BuiltInToolNames.ViewRepoMap,
     BuiltInToolNames.CodebaseTool,
     BuiltInToolNames.ViewDiff,
+    BuiltInToolNames.CodeNavigation,
   ],
   source: "built-in",
 };

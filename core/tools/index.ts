@@ -45,6 +45,15 @@ export const getConfigDependentToolDefinitions = async (
     tools.push(toolDefinitions.singleFindAndReplaceTool);
   }
 
+  // Language-server navigation: only IDEs that answer these requests
+  const ideType = await params.ide
+    ?.getIdeInfo?.()
+    .then((info) => info.ideType)
+    .catch(() => undefined);
+  if (ideType === "vscode") {
+    tools.push(toolDefinitions.codeNavigationTool);
+  }
+
   // missing support for remote os calls: https://github.com/microsoft/vscode/issues/252269
   if (!isRemote) {
     tools.push(toolDefinitions.grepSearchTool);

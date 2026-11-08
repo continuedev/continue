@@ -16,6 +16,7 @@ import {
   SignatureHelp,
   TerminalOptions,
   Thread,
+  WorkspaceSymbol,
   ToastType,
 } from "../index.js";
 
@@ -59,6 +60,17 @@ class FileSystemIde implements IDE {
 
   getDocumentSymbols(fileUri: string): Promise<DocumentSymbol[]> {
     return Promise.resolve([]);
+  }
+
+  getWorkspaceSymbols(query: string): Promise<WorkspaceSymbol[]> {
+    return Promise.resolve([]);
+  }
+
+  async waitForProblems(
+    fileUri: string,
+    timeoutMs: number,
+  ): Promise<Problem[]> {
+    return [];
   }
 
   onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {

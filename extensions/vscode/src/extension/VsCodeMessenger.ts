@@ -387,6 +387,14 @@ export class VsCodeMessenger {
       return await ide.getDocumentSymbols(msg.data.textDocumentIdentifier);
     });
 
+    this.onWebviewOrCore("getWorkspaceSymbols", async (msg) => {
+      return await ide.getWorkspaceSymbols(msg.data.query);
+    });
+
+    this.onWebviewOrCore("waitForProblems", async (msg) => {
+      return await ide.waitForProblems(msg.data.filepath, msg.data.timeoutMs);
+    });
+
     this.onWebviewOrCore("getFileStats", async (msg) => {
       return await ide.getFileStats(msg.data.files);
     });

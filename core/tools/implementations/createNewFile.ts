@@ -4,6 +4,11 @@ import { ToolImpl } from ".";
 import { throwIfFileIsSecurityConcern } from "../../indexing/ignore";
 import { getCleanUriPath, getUriPathBasename } from "../../util/uri";
 import { getStringArg } from "../parseArgs";
+import {
+  newProblems,
+  newProblemsItem,
+  PROBLEMS_WAIT_MS,
+} from "../problemsReport";
 import { ContinueError, ContinueErrorReason } from "../../util/errors";
 
 export const createNewFileImpl: ToolImpl = async (args, extras) => {
@@ -29,6 +34,14 @@ export const createNewFileImpl: ToolImpl = async (args, extras) => {
     if (extras.codeBaseIndexer) {
       void extras.codeBaseIndexer?.refreshCodebaseIndexFiles([resolvedFileUri]);
     }
+    // A new file has no earlier problems, so whatever is reported is new
+    const problems = await extras.ide
+      .waitForProblems?.(resolvedFileUri, PROBLEMS_WAIT_MS)
+      .catch(() => []);
+    const problemsItem = newProblemsItem(
+      filepath,
+      newProblems([], problems ?? []),
+    );
     return [
       {
         name: getUriPathBasename(resolvedFileUri),
@@ -39,6 +52,7 @@ export const createNewFileImpl: ToolImpl = async (args, extras) => {
           value: resolvedFileUri,
         },
       },
+      ...(problemsItem ? [problemsItem] : []),
     ];
   } else {
     throw new ContinueError(
