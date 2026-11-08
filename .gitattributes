@@ -1,2 +1,7 @@
 # Git hooks are run by sh, so keep LF on every checkout
 .husky/* text eol=lf
+
+# Test fixtures compared byte for byte: keep LF on every checkout, so the
+# tests pass on Windows (where core.autocrlf would turn them into CRLF)
+core/diff/test-examples/** text eol=lf
+core/config/testdata/** text eol=lf

@@ -8,6 +8,7 @@ import { testIde } from "../../../../test/fixtures";
 import { getAst, getTreePathAtCursor } from "../../../util/ast";
 import { ImportDefinitionsService } from "../../ImportDefinitionsService";
 import { RootPathContextService } from "../RootPathContextService";
+import { fileURLToPath } from "node:url";
 
 function splitTextAtPosition(
   fileContent: string,
@@ -53,7 +54,9 @@ export async function testRootPathContext(
     "test",
     folderName,
   );
-  const workspaceDir = (await ide.getWorkspaceDirs())[0];
+  // The workspace is a file: URI; join paths, not the URI (that made a
+  // directory named "file:" on Linux, and failed on Windows)
+  const workspaceDir = fileURLToPath((await ide.getWorkspaceDirs())[0]);
   const testFolderPath = path.join(workspaceDir, folderName);
   fs.cpSync(folderPath, testFolderPath, {
     recursive: true,

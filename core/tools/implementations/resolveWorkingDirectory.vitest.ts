@@ -100,17 +100,24 @@ describe("resolveWorkingDirectory", () => {
   });
 
   describe("file:// URIs (local workspaces)", () => {
-    it("should parse basic file:// URI on Unix", () => {
-      const result = resolveWorkingDirectory(["file:///home/user/project"]);
-      expect(result).toBe("/home/user/project");
-    });
+    // POSIX file: URIs are not absolute paths on Windows (see the Windows case below)
+    it.skipIf(process.platform === "win32")(
+      "should parse basic file:// URI on Unix",
+      () => {
+        const result = resolveWorkingDirectory(["file:///home/user/project"]);
+        expect(result).toBe("/home/user/project");
+      },
+    );
 
-    it("should decode URL-encoded spaces in file:// URI", () => {
-      const result = resolveWorkingDirectory([
-        "file:///home/user/my%20project",
-      ]);
-      expect(result).toBe("/home/user/my project");
-    });
+    it.skipIf(process.platform === "win32")(
+      "should decode URL-encoded spaces in file:// URI",
+      () => {
+        const result = resolveWorkingDirectory([
+          "file:///home/user/my%20project",
+        ]);
+        expect(result).toBe("/home/user/my project");
+      },
+    );
 
     it("should handle Windows-style file:// URI", () => {
       // fileURLToPath handles Windows paths correctly
@@ -183,15 +190,18 @@ describe("resolveWorkingDirectory", () => {
   });
 
   describe("comparison with fileURLToPath behavior", () => {
-    it("should match fileURLToPath decoding for equivalent paths", () => {
-      const fileResult = fileURLToPath("file:///home/user/my%20project");
-      const wslResult = resolveWorkingDirectory([
-        "vscode-remote://wsl+Ubuntu/home/user/my%20project",
-      ]);
+    it.skipIf(process.platform === "win32")(
+      "should match fileURLToPath decoding for equivalent paths",
+      () => {
+        const fileResult = fileURLToPath("file:///home/user/my%20project");
+        const wslResult = resolveWorkingDirectory([
+          "vscode-remote://wsl+Ubuntu/home/user/my%20project",
+        ]);
 
-      // Both should decode %20 to space
-      expect(fileResult).toBe("/home/user/my project");
-      expect(wslResult).toBe("/home/user/my project");
-    });
+        // Both should decode %20 to space
+        expect(fileResult).toBe("/home/user/my project");
+        expect(wslResult).toBe("/home/user/my project");
+      },
+    );
   });
 });

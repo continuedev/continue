@@ -536,13 +536,17 @@ describe("runTerminalCommandImpl", () => {
         ).resolves.toBeDefined();
       });
 
-      it("should properly convert file:// URIs to paths", () => {
-        const fileUri = "file:///home/user/workspace";
-        const expectedPath = "/home/user/workspace";
+      // A POSIX file: URI is not an absolute path on Windows
+      it.skipIf(process.platform === "win32")(
+        "should properly convert file:// URIs to paths",
+        () => {
+          const fileUri = "file:///home/user/workspace";
+          const expectedPath = "/home/user/workspace";
 
-        // Test that fileURLToPath works correctly with file:// URIs
-        expect(fileURLToPath(fileUri)).toBe(expectedPath);
-      });
+          // Test that fileURLToPath works correctly with file:// URIs
+          expect(fileURLToPath(fileUri)).toBe(expectedPath);
+        },
+      );
 
       it("should throw error when trying to convert non-file URI", () => {
         const nonFileUri = "vscode-vfs://github/user/repo";

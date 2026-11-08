@@ -52,7 +52,7 @@ A variant changes a model's settings, never which model it is or where it is ser
 
 **Set up models** adds a variant for each reasoning effort the server reports: llama.cpp when the model's chat template takes `reasoning_effort` (the levels from `/props`), and Strata (`none`, `low`, `medium`, `high`). Each one sets `reasoning_effort` in the request body, so `Qwen3.8 Flash#high` is the model at high effort.
 
-Switching between variants of one model, on the same server, does not warn about losing the prompt cache: the server sees the same model, and only the request settings change.
+Switching between variants of one model on the same server does not warn about losing the prompt cache when they reason the same way, for example variants that only change sampling. A variant with another reasoning effort still warns: the effort can change the prompt itself. Strata, for instance, puts it at the start of the prompt unless its model config sets `"effort_position": "end"`, and does not report which.
 
 ## Routes
 

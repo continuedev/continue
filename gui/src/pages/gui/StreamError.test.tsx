@@ -58,6 +58,12 @@ describe("stream error for a failure that should pass", () => {
     expect(screen.getByText("Change model")).toBeTruthy();
     await user.click(screen.getByText("Cancel"));
     expect(screen.getByTestId("retry-cancelled")).toBeTruthy();
+    const opened = vi.fn();
+    window.addEventListener("continued:openModelSelect", opened);
+    await user.click(screen.getByText("Change model"));
+    await new Promise((r) => setTimeout(r, 10));
+    expect(opened).toHaveBeenCalled();
+    window.removeEventListener("continued:openModelSelect", opened);
   });
 
   it("does not wait on its own for an hour; it says how long the server asked for", async () => {

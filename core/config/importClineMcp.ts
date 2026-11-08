@@ -48,25 +48,34 @@ export function currentSettingsEnv(): SettingsEnv {
 
 const EDITORS = ["Code", "Code - Insiders", "VSCodium", "Cursor", "Windsurf"];
 
+/**
+ * Paths in the form of the OS they are for, whichever OS this runs on: the
+ * environment can describe another one (tests, or a remote host).
+ */
+function pathFor(env: SettingsEnv): typeof path.posix {
+  return env.platform === "win32" ? path.win32 : path.posix;
+}
+
 /** Where VS Code-family editors keep extension globalStorage on this OS. */
 function userDataDirs(env: SettingsEnv): { editor: string; dir: string }[] {
+  const p = pathFor(env);
   return EDITORS.map((editor) => {
     switch (env.platform) {
       case "darwin":
         return {
           editor,
-          dir: path.join(env.home, "Library", "Application Support", editor),
+          dir: p.join(env.home, "Library", "Application Support", editor),
         };
       case "win32":
         return {
           editor,
-          dir: path.join(
-            env.appData ?? path.join(env.home, "AppData", "Roaming"),
+          dir: p.join(
+            env.appData ?? p.join(env.home, "AppData", "Roaming"),
             editor,
           ),
         };
       default:
-        return { editor, dir: path.join(env.home, ".config", editor) };
+        return { editor, dir: p.join(env.home, ".config", editor) };
     }
   });
 }
@@ -78,13 +87,14 @@ function userDataDirs(env: SettingsEnv): { editor: string; dir: string }[] {
  * file `mcp_settings.json`.
  */
 export function candidateSettingsPaths(env: SettingsEnv): McpImportSource[] {
+  const p = pathFor(env);
   const out: McpImportSource[] = [];
   for (const { editor, dir } of userDataDirs(env)) {
-    const storage = path.join(dir, "User", "globalStorage");
+    const storage = p.join(dir, "User", "globalStorage");
     out.push({
       kind: "cline",
       label: `Cline (${editor})`,
-      path: path.join(
+      path: p.join(
         storage,
         "saoudrizwan.claude-dev",
         "settings",
@@ -95,12 +105,7 @@ export function candidateSettingsPaths(env: SettingsEnv): McpImportSource[] {
       out.push({
         kind: "roo",
         label: `Roo Code (${editor})`,
-        path: path.join(
-          storage,
-          "rooveterinaryinc.roo-cline",
-          "settings",
-          file,
-        ),
+        path: p.join(storage, "rooveterinaryinc.roo-cline", "settings", file),
       });
     }
   }
@@ -108,7 +113,7 @@ export function candidateSettingsPaths(env: SettingsEnv): McpImportSource[] {
   out.push({
     kind: "cline",
     label: "Cline (CLI)",
-    path: path.join(
+    path: p.join(
       env.home,
       ".cline",
       "data",

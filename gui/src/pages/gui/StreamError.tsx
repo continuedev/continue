@@ -6,7 +6,6 @@ import {
   KeyIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import { GhostButton } from "../../components";
 import { MissingSecretsPanel } from "../../components/config/MissingSecretsPanel";
@@ -19,8 +18,8 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
+import { OPEN_MODEL_SELECT_EVENT } from "../../components/modelSelection/ModelSelect";
 import { analyzeError } from "../../util/errorAnalysis";
-import { CONFIG_ROUTES } from "../../util/navigation";
 import {
   describeTransientFailure,
   formatWait,
@@ -147,7 +146,6 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     </GhostButton>
   );
 
-  const navigate = useNavigate();
   const closeDialog = () => {
     dispatch(setShowDialog(false));
     dispatch(setDialogMessage(undefined));
@@ -352,7 +350,11 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
             className="flex items-center"
             onClick={() => {
               closeDialog();
-              navigate(CONFIG_ROUTES.MODELS);
+              // The picker in the input toolbar, after the dialog has gone
+              setTimeout(
+                () => window.dispatchEvent(new Event(OPEN_MODEL_SELECT_EVENT)),
+                0,
+              );
             }}
           >
             <Cog6ToothIcon className="mr-1.5 h-3.5 w-3.5" />

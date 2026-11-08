@@ -26,6 +26,12 @@ const opus = {
 } as any;
 // A variant: the same model on the same server, with other settings
 const sonnetFast = { ...sonnet, title: "Sonnet#fast" } as any;
+// A variant with another reasoning effort: the prompt itself can change
+const sonnetHigh = {
+  ...sonnet,
+  title: "Sonnet#high",
+  requestOptions: { extraBodyProperties: { reasoning_effort: "high" } },
+} as any;
 const PROFILE = {
   title: "Main Config",
   id: "local",
@@ -123,6 +129,14 @@ describe("ModelSelect asks before throwing away a warm cache", () => {
     await user.click(await screen.findByText("Sonnet#fast"));
     expect(store.getState().ui.dialogMessage).toBeUndefined();
     expect(selected(store)).toBe("Sonnet#fast");
+  });
+
+  it("still asks when the variant changes the reasoning effort", async () => {
+    const { store, user } = await setup(warm(366_000), [sonnetHigh]);
+    await user.click(screen.getByTestId("model-select-button"));
+    await user.click(await screen.findByText("Sonnet#high"));
+    expect(store.getState().ui.dialogMessage).toBeDefined();
+    expect(selected(store)).toBe("Sonnet");
   });
 
   it("asks for the keyboard shortcut too", async () => {

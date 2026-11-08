@@ -8,6 +8,7 @@ import {
   NOTICE_MIN_TOKENS_LOCAL,
   promptCacheKey,
   sameServedModel,
+  switchKeepsCache,
   warmCacheLoss,
 } from "./cacheSafeguards";
 import {
@@ -198,5 +199,20 @@ describe("detectCacheMiss on a local server", () => {
     expect(
       detectCacheMiss({ ...request, lifetimeMs: LOCAL_CACHE_WARM_MS }),
     ).toMatchObject({ readTokens: 0, expectedTokens: 120_000 });
+  });
+});
+
+describe("switchKeepsCache", () => {
+  const effort = (e: string) => ({
+    ...strata,
+    requestOptions: { extraBodyProperties: { reasoning_effort: e } },
+  });
+  it("keeps the cache between variants that only change sampling", () => {
+    const a = { ...effort("low"), completionOptions: { temperature: 0.2 } };
+    const b = { ...effort("low"), completionOptions: { temperature: 1 } };
+    expect(switchKeepsCache(a as any, b as any)).toBe(true);
+  });
+  it("not between variants with another reasoning effort", () => {
+    expect(switchKeepsCache(effort("low"), effort("high"))).toBe(false);
   });
 });

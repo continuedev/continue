@@ -90,6 +90,40 @@ export function sameServedModel(
   );
 }
 
+/**
+ * What a model is asked to think with: the reasoning effort in the request
+ * body (a catalog variant's `reasoning_effort`), and the reasoning switch and
+ * budget in its completion options.
+ */
+function reasoningSettings(m: ModelDescription): string {
+  const effort = (
+    m.requestOptions?.extraBodyProperties as Record<string, unknown> | undefined
+  )?.reasoning_effort;
+  return JSON.stringify([
+    effort ?? null,
+    m.completionOptions?.reasoning ?? null,
+    m.completionOptions?.reasoningBudgetTokens ?? null,
+  ]);
+}
+
+/**
+ * Whether switching from one model to another keeps the prompt cache: the
+ * same served model, asked to reason the same way. A different reasoning
+ * effort can change the prompt itself (Strata puts it at the start unless
+ * `effort_position` is "end", and does not report which), so a switch
+ * between Plan and Act variants still warns; variants that differ only in
+ * sampling or limits do not.
+ */
+export function switchKeepsCache(
+  from: ModelDescription,
+  to: ModelDescription,
+): boolean {
+  return (
+    sameServedModel(from, to) &&
+    reasoningSettings(from) === reasoningSettings(to)
+  );
+}
+
 /** Whether a loss is big enough to interrupt the user about. */
 export function isSignificantLoss(loss: CacheLoss | undefined): boolean {
   if (!loss) return false;

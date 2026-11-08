@@ -157,7 +157,8 @@ test("CertsCache.getCa should return combined CA when caBundlePath is provided",
   certsCache._initialized = true;
   mockReadFileSync.mockReturnValue(customCertContent);
 
-  const ca = await certsCache.getCa(customCertPath);
+  // The OS store off: it is on by default on Windows and macOS
+  const ca = await certsCache.getCa(customCertPath, false);
   expect(ca).toEqual([...fixedCa, customCertContent]);
 });
 
