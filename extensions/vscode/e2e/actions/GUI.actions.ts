@@ -18,7 +18,7 @@ export class GUIActions {
       await new Workbench().executeCommand("View: Move View");
       await (
         await InputBox.create(DEFAULT_TIMEOUT.MD)
-      ).selectQuickPick("Continued");
+      ).selectQuickPick("Continuous");
       await (
         await InputBox.create(DEFAULT_TIMEOUT.MD)
       ).selectQuickPick("New Secondary Side Bar Entry");
@@ -34,7 +34,7 @@ export class GUIActions {
   };
 
   /**
-   * @param requireDisplayed throw (so a caller can retry) unless the Continued
+   * @param requireDisplayed throw (so a caller can retry) unless the Continuous
    *   webview is actually showing, instead of falling back to a hidden one.
    */
   public static switchToReactIframe = async (
@@ -53,7 +53,7 @@ export class GUIActions {
     for (let i = 0; i < iframes.length; i++) {
       const iframe = iframes[i];
       const src = await iframe.getAttribute("src");
-      if (src?.includes("extensionId=b1tninja.continued")) {
+      if (src?.includes("extensionId=b1tninja.continuous")) {
         firstMatch ??= iframe;
         // Newer VS Code versions keep hidden webviews around, so prefer the
         // one that is actually showing.
@@ -95,7 +95,7 @@ export class GUIActions {
 
   public static toggleGui = async () => {
     return TestUtils.waitForSuccess(() =>
-      new Workbench().executeCommand("continue.focusContinueInput"),
+      new Workbench().executeCommand("continuous.focusContinuousInput"),
     );
   };
 

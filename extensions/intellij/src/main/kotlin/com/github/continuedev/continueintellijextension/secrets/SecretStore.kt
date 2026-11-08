@@ -28,7 +28,7 @@ class PasswordSafeSecretStore : SecretStore {
         PasswordSafe.instance.setPassword(attributes(key), value.ifEmpty { null })
 
     private companion object {
-        const val SUBSYSTEM = "Continued"
+        const val SUBSYSTEM = "Continuous"
     }
 }
 

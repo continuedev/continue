@@ -12,6 +12,7 @@ import {
   SubagentDefinition,
   SubagentSource,
 } from "./definitions";
+import { WORKSPACE_DIRS } from "../util/workspaceDirs";
 
 export interface SubagentLoadResult {
   agents: SubagentDefinition[];
@@ -23,10 +24,10 @@ const AGENTS_DIR = "agents";
 
 /**
  * The directories agent files are read from, highest precedence first:
- * the workspace's `.continue/agents`, its `.claude/agents` (Claude Code's
+ * the workspace's `.continuous/agents`, its `.claude/agents` (Claude Code's
  * location, read for compatibility), then the same two in the user's home.
  *
- * `.continue/agents` also holds YAML agent configs (profiles); only its
+ * `.continuous/agents` also holds YAML agent configs (profiles); only its
  * Markdown files are subagents.
  */
 export async function subagentDirs(
@@ -35,10 +36,12 @@ export async function subagentDirs(
 ): Promise<{ dir: string; source: SubagentSource }[]> {
   const workspaceDirs = await ide.getWorkspaceDirs();
   return [
-    ...workspaceDirs.map((dir) => ({
-      dir: joinPathsToUri(dir, ".continue", AGENTS_DIR),
-      source: "workspace-continue" as const,
-    })),
+    ...workspaceDirs.flatMap((dir) =>
+      WORKSPACE_DIRS.map((name) => ({
+        dir: joinPathsToUri(dir, name, AGENTS_DIR),
+        source: "workspace-continue" as const,
+      })),
+    ),
     ...workspaceDirs.map((dir) => ({
       dir: joinPathsToUri(dir, ".claude", AGENTS_DIR),
       source: "workspace-claude" as const,

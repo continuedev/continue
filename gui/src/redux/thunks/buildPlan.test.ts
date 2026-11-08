@@ -4,7 +4,7 @@ import { createMockStore, getEmptyRootState } from "../../util/test/mockStore";
 import { RootState } from "../store";
 import { buildPlan } from "./buildPlan";
 
-const PLAN_URI = "file:///Users/user/workspace1/.continue/plans/add-retry.md";
+const PLAN_URI = "file:///Users/user/workspace1/.continuous/plans/add-retry.md";
 
 const seeded: TaskPlan = {
   items: [
@@ -59,7 +59,7 @@ describe("buildPlan", () => {
 
     expect(session(s).mode).toBe("agent");
     const text = sentText(s);
-    expect(text).toContain(".continue/plans/add-retry.md");
+    expect(text).toContain(".continuous/plans/add-retry.md");
     expect(text).toContain("Read the file first");
     expect(text).toContain("task list current");
     // Unchanged file: the list is the same and still the model's.

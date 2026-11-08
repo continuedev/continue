@@ -187,7 +187,7 @@ describe("buildSaveRequest", () => {
       diff: { add: rows, remove: [], keep: [] },
       key: {
         storage: "secure",
-        secretName: "CONTINUED_ANTHROPIC_API_KEY",
+        secretName: "CONTINUOUS_ANTHROPIC_API_KEY",
         value: "sk-ant-hunter2",
       },
     });
@@ -196,7 +196,7 @@ describe("buildSaveRequest", () => {
     expect(JSON.stringify(request.add)).not.toContain("hunter2");
     expect(request.key).toEqual({
       storage: "secure",
-      secretName: "CONTINUED_ANTHROPIC_API_KEY",
+      secretName: "CONTINUOUS_ANTHROPIC_API_KEY",
       value: "sk-ant-hunter2",
     });
   });

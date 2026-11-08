@@ -1,8 +1,8 @@
 <div align="center">
 
-![Continued logo](media/readme.png)
+![Continuous logo](media/readme.png)
 
-<h1 align="center">Continued</h1>
+<h1 align="center">Continuous</h1>
 
 **An open-source AI code agent for VS Code: agent, chat, edit and autocomplete with the models you choose.**
 
@@ -12,7 +12,7 @@
 
 </div>
 
-> **Unofficial, community-maintained fork.** Continued is not affiliated with, endorsed by, or supported by Continue Dev, Inc.
+> **Unofficial, community-maintained fork.** Continuous is not affiliated with, endorsed by, or supported by Continue Dev, Inc.
 
 ## Features
 
@@ -30,9 +30,9 @@
 
 ## Install and set up
 
-Continued is installed from a `.vsix` file. Downloads, checksums and troubleshooting are in the
-[install guide](https://github.com/b1tninja/continued/blob/main/docs/continued-install.md).
-Source and issues: [github.com/b1tninja/continued](https://github.com/b1tninja/continued).
+Continuous is installed from a `.vsix` file. Downloads, checksums and troubleshooting are in the
+[install guide](https://github.com/b1tninja/continuous/blob/main/docs/continuous-install.md).
+Source and issues: [github.com/b1tninja/continuous](https://github.com/b1tninja/continuous).
 
 ## License
 

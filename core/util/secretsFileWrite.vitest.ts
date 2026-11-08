@@ -23,8 +23,8 @@ describe("setSecretInEnvFile", () => {
   const read = () => fs.readFileSync(path.join(dir, ".env"), "utf8");
 
   it("creates the file with owner-only permissions", () => {
-    setSecretInEnvFile(dir, "CONTINUED_ANTHROPIC_API_KEY", "sk-ant-123");
-    expect(read()).toBe("CONTINUED_ANTHROPIC_API_KEY=sk-ant-123\n");
+    setSecretInEnvFile(dir, "CONTINUOUS_ANTHROPIC_API_KEY", "sk-ant-123");
+    expect(read()).toBe("CONTINUOUS_ANTHROPIC_API_KEY=sk-ant-123\n");
     if (process.platform !== "win32") {
       expect(fs.statSync(path.join(dir, ".env")).mode & 0o777).toBe(0o600);
     }
@@ -33,10 +33,10 @@ describe("setSecretInEnvFile", () => {
   it("replaces an existing line and keeps the others", () => {
     fs.writeFileSync(
       path.join(dir, ".env"),
-      "# keys\nA=1\nexport CONTINUED_X_API_KEY=\nB=2\n",
+      "# keys\nA=1\nexport CONTINUOUS_X_API_KEY=\nB=2\n",
     );
-    setSecretInEnvFile(dir, "CONTINUED_X_API_KEY", "new");
-    expect(read()).toBe("# keys\nA=1\nCONTINUED_X_API_KEY=new\nB=2\n");
+    setSecretInEnvFile(dir, "CONTINUOUS_X_API_KEY", "new");
+    expect(read()).toBe("# keys\nA=1\nCONTINUOUS_X_API_KEY=new\nB=2\n");
   });
 
   it("appends to a file without a trailing newline", () => {

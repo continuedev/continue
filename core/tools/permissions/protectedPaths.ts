@@ -116,6 +116,7 @@ export function isSecretPath(p: string): boolean {
 /** Directories whose contents change what runs later, or configure a tool. */
 const CONFIG_DIRS = new Set([
   ".git",
+  ".continuous",
   ".continue",
   ".vscode",
   ".idea",
@@ -154,6 +155,9 @@ const CONFIG_DIR_PAIRS: [string, string][] = [
  * add any of them: writeFile(AGENTS.md) in toolPermissions.ask.
  */
 const CONFIG_BASENAMES = new Set([
+  ".continuousrc.json",
+  ".continuousrc.yaml",
+  ".continuousrc.yml",
   ".continuerc.json",
   ".continuerc.yaml",
   ".continuerc.yml",

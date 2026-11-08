@@ -1,6 +1,6 @@
 ---
 title: "Model Setup for Agent Mode"
-description: "Learn how to set up models for Agent Mode in Continued, including recommended models and configuration options for optimal performance"
+description: "Learn how to set up models for Agent Mode in Continuous, including recommended models and configuration options for optimal performance"
 sidebarTitle: "Model Setup"
 ---
 import { ModelRecommendations } from '/snippets/ModelRecommendations.jsx'
@@ -9,11 +9,11 @@ The models you set up for Chat mode will be used with Agent mode if the model su
 
 ## How System Message Tools Work
 
-Continued implements an innovative approach called **system message tools** that ensures consistent tool functionality across all models, regardless of their native capabilities. This allows Agent mode to work seamlessly with a wider range of models and providers.
+Continuous implements an innovative approach called **system message tools** that ensures consistent tool functionality across all models, regardless of their native capabilities. This allows Agent mode to work seamlessly with a wider range of models and providers.
 
 ### How System Message Tools Function
 
-Instead of relying solely on native tool calling APIs (which vary between providers), Continued converts tools into XML format and includes them in the system message. The model generates tool calls as structured XML within its response, which Continued then parses and executes. This approach provides:
+Instead of relying solely on native tool calling APIs (which vary between providers), Continuous converts tools into XML format and includes them in the system message. The model generates tool calls as structured XML within its response, which Continuous then parses and executes. This approach provides:
 
 - **Universal compatibility** - Any model capable of following instructions can use tools, not just those with native tool support
 - **Consistent behavior** - Tool calls work identically across OpenAI, Anthropic, local models, and others
@@ -26,7 +26,7 @@ Instead of relying solely on native tool calling APIs (which vary between provid
 
 ### How to Configure Agent Mode
 
-Agent mode automatically determines whether to use native or system message tools based on the model's capabilities. No additional configuration is required - simply select your model and Continued handles the rest.
+Agent mode automatically determines whether to use native or system message tools based on the model's capabilities. No additional configuration is required - simply select your model and Continuous handles the rest.
 
 ## How to Check Model Compatibility
 

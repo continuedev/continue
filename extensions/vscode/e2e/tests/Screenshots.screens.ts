@@ -207,12 +207,12 @@ describe("Docs screenshots", () => {
   }
 
   async function newSession() {
-    await runCommand("Continued: New Session");
+    await runCommand("Continuous: New Session");
     await TestUtils.waitForTimeout(1000); // the new session takes focus
   }
 
   async function openSettings() {
-    await runCommand("Continued: Open Settings");
+    await runCommand("Continuous: Open Settings");
     await TestUtils.waitForTimeout(800);
   }
 

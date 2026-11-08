@@ -12,10 +12,11 @@ import { IDE } from "../..";
 import { getContinueGlobalPath } from "../../util/paths";
 import { localPathToUri } from "../../util/pathToUri";
 import { joinPathsToUri } from "../../util/uri";
+import { WORKSPACE_DIRS } from "../../util/workspaceDirs";
 
 export const PROVIDERS_FILE_NAME = "providers.yaml";
 
-/** ~/.continue/providers.yaml: the provider instances every config can use. */
+/** ~/.continuous/providers.yaml: the provider instances every config can use. */
 export function getGlobalProvidersPath(): string {
   return path.join(getContinueGlobalPath(), PROVIDERS_FILE_NAME);
 }
@@ -75,8 +76,8 @@ export function parseProvidersFile(
 }
 
 /**
- * Provider instances for loading a config: ~/.continue/providers.yaml, then
- * each workspace's .continue/providers.yaml. A workspace instance with the
+ * Provider instances for loading a config: ~/.continuous/providers.yaml, then
+ * each workspace's .continuous/providers.yaml. A workspace instance with the
  * same name replaces the global one, like the workspace's configs do.
  */
 export async function loadProviderInstances(
@@ -103,14 +104,19 @@ export async function loadProviderInstances(
   return { providers: Array.from(byName.values()), errors };
 }
 
-/** Each workspace's .continue/providers.yaml that exists, read. */
+/** Each workspace's .continuous/providers.yaml (and older .continue/providers.yaml) that exists, read. */
 export async function readWorkspaceProvidersFiles(
   ide: IDE,
 ): Promise<{ uri: string; label: string; content: string }[]> {
   const files: { uri: string; label: string; content: string }[] = [];
   try {
-    for (const dir of await ide.getWorkspaceDirs()) {
-      const uri = joinPathsToUri(dir, ".continue", PROVIDERS_FILE_NAME);
+    const uris = (await ide.getWorkspaceDirs()).flatMap((dir) =>
+      // The older .continue first, so .continuous wins on a shared name
+      [...WORKSPACE_DIRS]
+        .reverse()
+        .map((name) => joinPathsToUri(dir, name, PROVIDERS_FILE_NAME)),
+    );
+    for (const uri of uris) {
       if (await ide.fileExists(uri)) {
         files.push({
           uri,

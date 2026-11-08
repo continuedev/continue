@@ -16,7 +16,7 @@ export function findSecretLine(text: string, secretName: string): number {
 /**
  * Take the user to the place where a missing secret must be set.
  *
- * - "env": open ~/.continue/.env, adding an empty `NAME=` line first.
+ * - "env": open ~/.continuous/.env, adding an empty `NAME=` line first.
  * - "configLine": open the config file at the line that uses the secret. Only
  *   the main config file is searched; a secret used from another block file
  *   falls back to opening the config file.

@@ -2,14 +2,14 @@ import { IDE } from "..";
 import { joinPathsToUri } from "../util/uri";
 
 const DEFAULT_ASSISTANT_FILE = `# This is an example configuration file
-# To learn more, see the full config.yaml reference: https://b1tninja.github.io/continued/reference
+# To learn more, see the full config.yaml reference: https://b1tninja.github.io/continuous/reference
 
 name: Example Config
 version: 1.0.0
 schema: v1
 
 # Define which models can be used
-# https://b1tninja.github.io/continued/customize/models
+# https://b1tninja.github.io/continuous/customize/models
 models:
   - name: my gpt-5
     provider: openai
@@ -52,7 +52,7 @@ export async function createNewAssistantFile(
 
   const baseDirUri = joinPathsToUri(
     workspaceDirs[0],
-    assistantPath ?? ".continue/agents",
+    assistantPath ?? ".continuous/agents",
   );
 
   // Find the first available filename

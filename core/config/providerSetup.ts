@@ -110,7 +110,7 @@ export interface SaveProviderModelsResult {
   error?: string;
   warning?: string;
   /**
-   * The key went to secure storage, and ~/.continue/.env still has a plaintext
+   * The key went to secure storage, and ~/.continuous/.env still has a plaintext
    * copy under this name. The GUI offers to remove it (`config/removeEnvSecret`).
    */
   envShadowedSecret?: string;

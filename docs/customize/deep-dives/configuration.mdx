@@ -1,24 +1,24 @@
 ---
-title: "How to Configure Continued"
-description: Learn how to access and manage Continued configurations through local YAML files
+title: "How to Configure Continuous"
+description: Learn how to access and manage Continuous configurations through local YAML files
 keywords: [config, settings, customize]
 sidebarTitle: "Configuration"
 ---
 
-You can easily access your configuration from the Continued Chat sidebar. Open the sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) and click the Agent selector above the main chat input. Then, you can hover over an agent and click the `gear` icon.
+You can easily access your configuration from the Continuous Chat sidebar. Open the sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) and click the Agent selector above the main chat input. Then, you can hover over an agent and click the `gear` icon.
 
 
 ## How to Configure Local Configs with YAML
 
 Local user-level configuration is stored and can be edited in your home directory in `config.yaml`:
 
-- `~/.continue/config.yaml` (MacOS / Linux)
-- `%USERPROFILE%\.continue\config.yaml` (Windows)
+- `~/.continuous/config.yaml` (MacOS / Linux)
+- `%USERPROFILE%\.continuous\config.yaml` (Windows)
 
 To open this `config.yaml`, you need to open the configs dropdown in the top-right portion of the chat input. On that dropdown beside the "Local Config" option, select the cog icon. It will open the local `config.yaml`.
 
 
-When editing this file, you can see the available options suggested as you type, or check the reference below. When you save a config file from the IDE, Continued will automatically refresh to take into account your changes. A config file is automatically created the first time you use Continued, and always automatically generated with default values if it doesn't exist.
+When editing this file, you can see the available options suggested as you type, or check the reference below. When you save a config file from the IDE, Continuous will automatically refresh to take into account your changes. A config file is automatically created the first time you use Continuous, and always automatically generated with default values if it doesn't exist.
 
 See the full reference for `config.yaml` [here](../../reference.mdx).
 
@@ -27,7 +27,7 @@ See the full reference for `config.yaml` [here](../../reference.mdx).
 Some actions in the app write to this file (adding or removing models in the [setup flow](../model-setup.mdx), finishing onboarding, indexing documentation). Those edits change only what they need to: your comments, key order and `${{ secrets.* }}` references are kept. Two side effects are worth knowing:
 
 - Runs of blank lines are collapsed to one, and the space before a trailing comment is normalised.
-- The first time the app edits the file, it saves a copy of what was there as `config.yaml.bak` next to it, and does not overwrite that copy later. Delete it whenever you like. If you keep `~/.continue` in version control, add `config.yaml.bak` to `.gitignore`, because the copy contains whatever the file contained, including any API key written directly into it.
+- The first time the app edits the file, it saves a copy of what was there as `config.yaml.bak` next to it, and does not overwrite that copy later. Delete it whenever you like. If you keep `~/.continuous` in version control, add `config.yaml.bak` to `.gitignore`, because the copy contains whatever the file contained, including any API key written directly into it.
 
 If the file cannot be parsed, the app leaves it untouched and logs a warning instead of overwriting it.
 
@@ -38,18 +38,18 @@ If the file cannot be parsed, the app leaves it untouched and logs a warning ins
 </Info>
 
 - [`config.json`](../../reference.mdx) - The original configuration format which is stored in a file at the same location as `config.yaml`
-- `.continuerc.json` - Workspace-level configuration
+- `.continuousrc.json` - Workspace-level configuration
 - `config.ts` - Advanced configuration (probably unnecessary) - a TypeScript file in your home directory that can be used to programmatically modify (_merged_) the `config.json` schema:
-  - `~/.continue/config.ts` (MacOS / Linux)
-  - `%USERPROFILE%\.continue\config.ts` (Windows)
+  - `~/.continuous/config.ts` (MacOS / Linux)
+  - `%USERPROFILE%\.continuous\config.ts` (Windows)
 
-### How to Use `.continuerc.json` for Workspace Configuration
+### How to Use `.continuousrc.json` for Workspace Configuration
 
-The format of `.continuerc.json` is the same as `config.json`, plus one _additional_ property `mergeBehavior`, which can be set to either "merge" or "overwrite". If set to "merge" (the default), `.continuerc.json` will be applied on top of `config.json` (arrays and objects are merged). If set to "overwrite", then every top-level property of `.continuerc.json` will overwrite that property from `config.json`.
+The format of `.continuousrc.json` is the same as `config.json`, plus one _additional_ property `mergeBehavior`, which can be set to either "merge" or "overwrite". If set to "merge" (the default), `.continuousrc.json` will be applied on top of `config.json` (arrays and objects are merged). If set to "overwrite", then every top-level property of `.continuousrc.json` will overwrite that property from `config.json`.
 
 Example
 
-```json title=".continuerc.json"
+```json title=".continuousrc.json"
 {
   "tabAutocompleteOptions": {
     "disable": true
@@ -60,7 +60,7 @@ Example
 
 ### How to Use `config.ts` for Advanced Configuration
 
-`config.yaml` or `config.json` can handle the vast majority of necessary configuration, so we recommend using it whenever possible. However, if you need to programmatically extend Continued configuration, you can use a `config.ts` file, placed at `~/.continue/config.ts` (MacOS / Linux) or `%USERPROFILE%\.continue\config.ts` (Windows).
+`config.yaml` or `config.json` can handle the vast majority of necessary configuration, so we recommend using it whenever possible. However, if you need to programmatically extend Continuous configuration, you can use a `config.ts` file, placed at `~/.continuous/config.ts` (MacOS / Linux) or `%USERPROFILE%\.continuous\config.ts` (Windows).
 
 `config.ts` must export a `modifyConfig` function, like:
 

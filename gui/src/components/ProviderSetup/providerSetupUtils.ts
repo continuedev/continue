@@ -145,7 +145,7 @@ export interface KeyChoice {
 
 export const KEY_STORAGE_LABELS: Record<KeyStorage, string> = {
   secure: "Secure storage (this editor)",
-  env: "~/.continue/.env file",
+  env: "~/.continuous/.env file",
   envVar: "Environment variable (nothing is stored)",
   inline: "Inside config.yaml (not recommended)",
 };
@@ -330,8 +330,8 @@ export function describeKeyPlan(
         : `Models refer to ${key.secretName} in secure storage.`;
     case "env":
       return key.value
-        ? `The ${providerTitle} key is saved in ~/.continue/.env as ${key.secretName}. config.yaml only refers to it.`
-        : `Models refer to ${key.secretName} in ~/.continue/.env.`;
+        ? `The ${providerTitle} key is saved in ~/.continuous/.env as ${key.secretName}. config.yaml only refers to it.`
+        : `Models refer to ${key.secretName} in ~/.continuous/.env.`;
     case "envVar":
       return `Models refer to the environment variable ${key.secretName}. Nothing is stored; set it before starting the editor.`;
     case "inline":

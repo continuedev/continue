@@ -19,7 +19,7 @@ import { setSelectedProfile } from "../../../redux/slices/profilesSlice";
 import { ConfigHeader } from "../components/ConfigHeader";
 import { PlaintextKeysNotice } from "../components/PlaintextKeysNotice";
 
-/** The main config (~/.continue/config.yaml) cannot be deleted. */
+/** The main config (~/.continuous/config.yaml) cannot be deleted. */
 const MAIN_PROFILE_ID = "local";
 
 type Draft =
@@ -135,10 +135,10 @@ export function ConfigsSection() {
             }
           >
             <option value="global">
-              ~/.continue/configs (every workspace)
+              ~/.continuous/configs (every workspace)
             </option>
             <option value="workspace">
-              This workspace's .continue/configs
+              This workspace's .continuous/configs
             </option>
           </FormSelect>
           <label className="text-xs font-medium" htmlFor="config-copy-from">

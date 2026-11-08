@@ -6,20 +6,20 @@ import { runAgentTurn } from "./agentLoop";
 import { toContinuedTool } from "./languageModelChatProvider";
 
 /**
- * Continued agent sessions in VS Code's Agents window, through the proposed
+ * Continuous agent sessions in VS Code's Agents window, through the proposed
  * chatSessionsProvider API (and chatParticipantPrivate for transcripts).
  *
  * Proposed APIs only work in VS Code Insiders, or in Stable started with
- * `--enable-proposed-api b1tninja.continued`, and only in the "agents" build
+ * `--enable-proposed-api b1tninja.continuous`, and only in the "agents" build
  * of the extension, whose package.json declares them. Everywhere else the
  * functions are missing and this does nothing. The API is still changing, so
  * every call is feature-checked.
  */
 
 /** Must match contributes.chatSessions[].type in the agents build. */
-export const SESSION_TYPE = "continued";
-const SCHEME = "continued-session";
-const STORE_KEY = "continued.agentSessions";
+export const SESSION_TYPE = "continuous";
+const SCHEME = "continuous-session";
+const STORE_KEY = "continuous.agentSessions";
 const MAX_SESSIONS = 50;
 const MAX_TOOLS = 128;
 
@@ -91,7 +91,7 @@ export function registerAgentSessions(
       const llm = config?.selectedModelByRole?.chat;
       if (!llm) {
         stream.markdown(
-          "Choose a chat model in Continued first (Settings > Models).",
+          "Choose a chat model in Continuous first (Settings > Models).",
         );
         return {};
       }
@@ -169,7 +169,7 @@ export function registerAgentSessions(
     refresh();
     return true;
   } catch (e) {
-    console.warn("Continued: the Agents window integration is unavailable", e);
+    console.warn("Continuous: the Agents window integration is unavailable", e);
     return false;
   }
 }

@@ -94,7 +94,7 @@ describe("Keyboard Shortcuts", () => {
   }
 
   /**
-   * The Continued view is hidden when its iframe is no longer displayed in the
+   * The Continuous view is hidden when its iframe is no longer displayed in the
    * workbench. Check from the outer window: from inside the iframe, elements
    * still report themselves as displayed because VS Code keeps the hidden
    * webview's page alive.
@@ -108,10 +108,10 @@ describe("Keyboard Shortcuts", () => {
       for (const iframe of iframes) {
         const src = await iframe.getAttribute("src");
         if (
-          src?.includes("extensionId=b1tninja.continued") &&
+          src?.includes("extensionId=b1tninja.continuous") &&
           (await iframe.isDisplayed())
         ) {
-          throw new Error("Continued view is still visible");
+          throw new Error("Continuous view is still visible");
         }
       }
     }, timeout);
@@ -226,7 +226,7 @@ describe("Keyboard Shortcuts", () => {
 
     await view.switchBack();
 
-    // The editor may have been re-laid out while the Continued view was open
+    // The editor may have been re-laid out while the Continuous view was open
     editor = (await new EditorView().openEditor("Untitled-1")) as TextEditor;
     await TestUtils.waitForSuccess(() => editor.click());
     await KeyboardShortcutsActions.HACK__typeWithSelect(editor, "hello");

@@ -13,11 +13,11 @@ const path = require("path");
 const ROOT = path.join(__dirname, "..");
 const DOCS = path.join(ROOT, "docs");
 // The hosted docs site (GitHub Pages, built from docs/ by docs-site/).
-const SITE = "https://b1tninja.github.io/continued";
+const SITE = "https://b1tninja.github.io/continuous";
 // Earlier links pointed at the page sources on GitHub; those are moved to the
 // site too. A page that is not .mdx (the install guide) is not on the site
 // and keeps its GitHub link.
-const GITHUB_DOCS = "https://github.com/b1tninja/continued/blob/main/docs";
+const GITHUB_DOCS = "https://github.com/b1tninja/continuous/blob/main/docs";
 const WRITE = process.argv.includes("--write");
 
 // Shipped code only: the extension, the GUI, core and the packages it bundles.

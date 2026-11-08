@@ -18,7 +18,7 @@ export interface ProviderInstanceInfo {
   env?: Record<string, string | number | boolean>;
   /** Header names only; values can be credentials. */
   headerNames?: string[];
-  /** "global" is ~/.continue/providers.yaml; only it is edited from the GUI. */
+  /** "global" is ~/.continuous/providers.yaml; only it is edited from the GUI. */
   source: "global" | "workspace";
   sourceUri: string;
   /** Overridden by a workspace instance of the same name. */

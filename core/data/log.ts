@@ -54,8 +54,8 @@ export class DataLogger {
     }
     if ("userAgent" in zodSchema.shape) {
       newBody.userAgent = ideInfo
-        ? `${ideInfo.name}/${ideInfo.version} (Continued/${ideInfo.extensionVersion})`
-        : "Unknown/Unknown (Continued/Unknown)";
+        ? `${ideInfo.name}/${ideInfo.version} (Continuous/${ideInfo.extensionVersion})`
+        : "Unknown/Unknown (Continuous/Unknown)";
     }
     if ("selectedProfileId" in zodSchema.shape) {
       newBody.selectedProfileId =

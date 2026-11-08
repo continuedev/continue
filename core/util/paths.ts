@@ -26,15 +26,110 @@ export function setConfigFilePermissions(filePath: string): void {
   }
 }
 
+/** The global folder's name in the home directory, and its name before 2.4.2. */
+export const GLOBAL_DIR_NAME = ".continuous";
+export const LEGACY_GLOBAL_DIR_NAME = ".continue";
+
+/**
+ * What a first start copies from ~/.continue: everything but what is rebuilt
+ * on its own (the index, logs, dev data, downloaded tools and the compiled
+ * config.ts). Of the index folder only globalContext.json is kept: it holds
+ * the selected config, models and other choices, not index data.
+ */
+const NOT_COPIED_FROM_LEGACY_DIR = new Set([
+  "index",
+  "logs",
+  "dev_data",
+  ".utils",
+  "node_modules",
+  "out",
+]);
+const KEPT_FROM_LEGACY_INDEX = "globalContext.json";
+
+function copiedFromLegacyDir(legacyDir: string, source: string): boolean {
+  const relative = path.relative(legacyDir, source);
+  if (relative === "") return true;
+  const [top, ...rest] = relative.split(path.sep);
+  if (top === "index") {
+    return (
+      rest.length === 0 ||
+      (rest.length === 1 && rest[0] === KEPT_FROM_LEGACY_INDEX)
+    );
+  }
+  return !NOT_COPIED_FROM_LEGACY_DIR.has(top);
+}
+
+/**
+ * The copied globalContext.json names files by path or file URI (the selected
+ * config, for one). Point those in the old folder at the same file in the new
+ * one, so the choices still match.
+ */
+function repointGlobalContext(file: string, legacyDir: string, dir: string) {
+  if (!fs.existsSync(file)) return;
+  const forms = (p: string) => {
+    const slashed = p.replace(/\\/g, "/");
+    const uri = slashed.startsWith("/")
+      ? `file://${slashed}`
+      : `file:///${slashed}`;
+    const encoded = encodeURI(uri);
+    // VS Code writes a Windows drive as file:///c%3A/...
+    const vscodeUri = encoded.replace(
+      /^file:\/\/\/([A-Za-z]):/,
+      (_, drive: string) => `file:///${drive.toLowerCase()}%3A`,
+    );
+    return [JSON.stringify(p).slice(1, -1), slashed, uri, encoded, vscodeUri];
+  };
+  const from = forms(legacyDir);
+  const to = forms(dir);
+  let text = fs.readFileSync(file, "utf8");
+  from.forEach((f, i) => {
+    text = text.split(f).join(to[i]);
+  });
+  fs.writeFileSync(file, text);
+}
+
+/**
+ * Copy ~/.continue to ~/.continuous when only the old one exists. The copy
+ * goes to a temporary folder first and is renamed into place, so a failed
+ * copy leaves no half-made ~/.continuous. The old folder is not changed: the
+ * Continue extension and its CLI keep using it. Returns the folder to use.
+ */
+export function migrateLegacyGlobalDir(legacyDir: string, dir: string): string {
+  if (fs.existsSync(dir) || !fs.existsSync(legacyDir)) return dir;
+  const partial = `${dir}.partial-${process.pid}`;
+  try {
+    fs.cpSync(legacyDir, partial, {
+      recursive: true,
+      filter: (source) => copiedFromLegacyDir(legacyDir, source),
+    });
+    repointGlobalContext(
+      path.join(partial, "index", KEPT_FROM_LEGACY_INDEX),
+      legacyDir,
+      dir,
+    );
+    fs.renameSync(partial, dir);
+    return dir;
+  } catch (error) {
+    console.warn(`Could not copy ${legacyDir} to ${dir}`, error);
+    fs.rmSync(partial, { recursive: true, force: true });
+    // Another window may have made it in the meantime
+    return fs.existsSync(dir) ? dir : legacyDir;
+  }
+}
+
 const CONTINUE_GLOBAL_DIR = (() => {
-  const configPath = process.env.CONTINUE_GLOBAL_DIR;
+  const configPath =
+    process.env.CONTINUOUS_GLOBAL_DIR || process.env.CONTINUE_GLOBAL_DIR;
   if (configPath) {
     // Convert relative path to absolute paths based on current working directory
     return path.isAbsolute(configPath)
       ? configPath
       : path.resolve(process.cwd(), configPath);
   }
-  return path.join(os.homedir(), ".continue");
+  return migrateLegacyGlobalDir(
+    path.join(os.homedir(), LEGACY_GLOBAL_DIR_NAME),
+    path.join(os.homedir(), GLOBAL_DIR_NAME),
+  );
 })();
 
 // export const DEFAULT_CONFIG_TS_CONTENTS = `import { Config } from "./types"\n\nexport function modifyConfig(config: Config): Config {
@@ -58,18 +153,20 @@ export function getContinueUtilsPath(): string {
 }
 
 export function getGlobalContinueIgnorePath(): string {
-  const continueIgnorePath = path.join(
-    getContinueGlobalPath(),
-    ".continueignore",
-  );
-  if (!fs.existsSync(continueIgnorePath)) {
-    fs.writeFileSync(continueIgnorePath, "");
+  const ignorePath = path.join(getContinueGlobalPath(), ".continuousignore");
+  if (!fs.existsSync(ignorePath)) {
+    // A folder copied from ~/.continue has the file under its old name
+    const legacy = path.join(getContinueGlobalPath(), ".continueignore");
+    fs.writeFileSync(
+      ignorePath,
+      fs.existsSync(legacy) ? fs.readFileSync(legacy) : "",
+    );
   }
-  return continueIgnorePath;
+  return ignorePath;
 }
 
 export function getContinueGlobalPath(): string {
-  // This is ~/.continue on mac/linux
+  // ~/.continuous, or CONTINUOUS_GLOBAL_DIR
   const continuePath = CONTINUE_GLOBAL_DIR;
   if (!fs.existsSync(continuePath)) {
     fs.mkdirSync(continuePath);
@@ -158,9 +255,9 @@ export function getConfigTsPath(): string {
     fs.writeFileSync(
       packageJsonPath,
       JSON.stringify({
-        name: "continue-config",
+        name: "continuous-config",
         version: "1.0.0",
-        description: "My Continued Configuration",
+        description: "My Continuous Configuration",
         main: "config.js",
       }),
     );
@@ -211,7 +308,10 @@ export function getTsConfigPath(): string {
 
 export function getContinueRcPath(): string {
   // Disable indexing of the config folder to prevent infinite loops
-  const continuercPath = path.join(getContinueGlobalPath(), ".continuerc.json");
+  const continuercPath = path.join(
+    getContinueGlobalPath(),
+    ".continuousrc.json",
+  );
   if (!fs.existsSync(continuercPath)) {
     fs.writeFileSync(
       continuercPath,
@@ -324,7 +424,7 @@ function editConfigYaml(
   if (text === undefined) return; // nothing changed, skip the write
 
   // Keep one copy from before the first GUI edit, for users who version the file.
-  // Only for files in ~/.continue: a .bak next to a workspace config would
+  // Only for files in ~/.continuous: a .bak next to a workspace config would
   // end up in the user's repository.
   const backupPath = `${configPath}.bak`;
   const rel = path.relative(getContinueGlobalPath(), configPath);

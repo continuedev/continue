@@ -17,7 +17,7 @@ export class ContinueServerClient implements IContinueServerClient {
           ? undefined
           : new URL(serverUrl.endsWith("/") ? serverUrl : `${serverUrl}/`);
     } catch (e) {
-      console.warn("Invalid Continued server url", e);
+      console.warn("Invalid Continuous server url", e);
       this.url = undefined;
     }
   }

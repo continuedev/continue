@@ -4,7 +4,7 @@
 
 ## Checklist
 
-- [] I've read the [contributing guide](https://github.com/b1tninja/continued/blob/main/CONTRIBUTING.md)
+- [] I've read the [contributing guide](https://github.com/b1tninja/continuous/blob/main/CONTRIBUTING.md)
 - [] The relevant docs, if any, have been updated or created
 - [] The relevant tests, if any, have been updated or created
 

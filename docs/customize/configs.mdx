@@ -8,9 +8,9 @@ A config is a YAML file that picks models and assigns them to roles (chat, edit,
 
 | File | Shown as |
 | :-- | :-- |
-| `~/.continue/config.yaml` | The main config. It can be renamed but not deleted. |
-| `~/.continue/configs/*.yaml` | Available in every workspace. |
-| `<workspace>/.continue/configs/*.yaml` | Available in that workspace only. `.continue/agents` and `.continue/assistants` are read too. |
+| `~/.continuous/config.yaml` | The main config. It can be renamed but not deleted. |
+| `~/.continuous/configs/*.yaml` | Available in every workspace. |
+| `<workspace>/.continuous/configs/*.yaml` | Available in that workspace only. `.continuous/agents` and `.continuous/assistants` are read too. |
 
 ## Switch configs
 
@@ -30,7 +30,7 @@ In **Settings > Configs**:
   <img src="../images/settings-configs.png" alt="Settings > Configs, listing the main config with its rename, duplicate and edit buttons" />
 </Frame>
 
-- **+** creates a config. Choose a name, whether it goes in `~/.continue/configs` or the workspace, and whether to start empty or from a copy of another config. The new config is selected.
+- **+** creates a config. Choose a name, whether it goes in `~/.continuous/configs` or the workspace, and whether to start empty or from a copy of another config. The new config is selected.
 - The duplicate icon starts the same form with a copy of that config.
 - The pencil renames a config. Its file is renamed to match, and its selection and per-role model picks move with it. The main config keeps its file name.
 - The trash icon deletes the config's file after you confirm. Provider accounts and keys are kept.

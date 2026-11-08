@@ -12,7 +12,7 @@ import { withTimeout } from "../util/withTimeout";
 /** Where the setup flow can keep an API key. */
 export type SecretStorageKind = "secure" | "env";
 
-const PROBE_KEY = "continued.secretStorageProbe";
+const PROBE_KEY = "continuous.secretStorageProbe";
 
 /**
  * How long to wait for the IDE's secret storage. A keychain can show an unlock
@@ -24,7 +24,7 @@ export const SECURE_STORAGE_TIMEOUT_MS = 10_000;
 /**
  * True when the IDE can store a secret and read it back. The CLI and the test
  * host return nothing from `readSecrets`, so they report false and the setup
- * flow falls back to ~/.continue/.env. Nothing secret is written: the probe
+ * flow falls back to ~/.continuous/.env. Nothing secret is written: the probe
  * stores a fixed marker under a fixed name.
  */
 export async function isSecureStorageAvailable(
@@ -53,7 +53,7 @@ export interface StoreSecretResult {
   /** Where the value went: "secure" storage or the ".env" file. */
   location?: SecretStorageKind;
   /**
-   * True when the value went to secure storage and ~/.continue/.env still has a
+   * True when the value went to secure storage and ~/.continuous/.env still has a
    * plaintext copy of the same name. Secure storage is read first, so the copy
    * is unused; the UI offers to remove it (`removeEnvSecret`).
    */
@@ -71,7 +71,7 @@ export async function storeSecret(args: {
   name: string;
   value: string;
   storage: SecretStorageKind;
-  /** ~/.continue */
+  /** ~/.continuous */
   continueDir: string;
 }): Promise<StoreSecretResult> {
   const { ide, name, value, storage, continueDir } = args;
@@ -93,7 +93,7 @@ export async function storeSecret(args: {
           error: "This editor did not keep the key in secure storage",
         };
       }
-      // Secure storage is read before ~/.continue/.env, so an old copy there
+      // Secure storage is read before ~/.continuous/.env, so an old copy there
       // is unused. It is still plaintext, so the caller offers to remove it.
       const shadowed = envFileHasValue(continueDir, name);
       return {
@@ -121,7 +121,7 @@ export interface RemoveEnvSecretResult {
 }
 
 /**
- * Delete the line for a secret from ~/.continue/.env. Only call this after the
+ * Delete the line for a secret from ~/.continuous/.env. Only call this after the
  * user agreed. It refuses unless the value is also in secure storage, so the
  * key is never lost.
  */
@@ -154,14 +154,14 @@ export async function removeEnvSecret(args: {
 export interface MoveKeyResult {
   /** The key is now in secure storage. */
   moved: boolean;
-  /** The ~/.continue/.env line is gone. False with `moved` true means it is still there. */
+  /** The ~/.continuous/.env line is gone. False with `moved` true means it is still there. */
   envRemoved?: boolean;
   /** Never contains the value. */
   error?: string;
 }
 
 /**
- * Move a key from ~/.continue/.env to secure storage. The value is read and
+ * Move a key from ~/.continuous/.env to secure storage. The value is read and
  * written here, in core; it is never returned. The .env line is removed only
  * after the value reads back from secure storage. config.yaml is not touched:
  * its `${{ secrets.NAME }}` reference stays valid.
@@ -179,7 +179,7 @@ export async function moveEnvSecretToSecureStorage(args: {
   if (!value) {
     return {
       moved: false,
-      error: `${name} has no value in ~/.continue/.env`,
+      error: `${name} has no value in ~/.continuous/.env`,
     };
   }
   const stored = await storeSecret({

@@ -1,18 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 800" width="1600" height="800">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0F766E"/>
-      <stop offset="1" stop-color="#134E4A"/>
+      <stop offset="0" stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#1E1B4B"/>
     </linearGradient>
   </defs>
   <rect width="1600" height="800" fill="url(#bg)"/>
   <!-- Mark, scaled to 320px and centred vertically on the left -->
   <g transform="translate(120 240) scale(0.625)">
-    <rect x="32" y="32" width="448" height="448" rx="96" fill="#F0FDFA" fill-opacity="0.08"/>
-    <path d="M170 160 L104 256 L170 352" fill="none" stroke="#F0FDFA" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M342 160 L408 256 L342 352" fill="none" stroke="#F0FDFA" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="262" y="236" width="36" height="40" rx="6" fill="#5EEAD4"/>
+    <rect x="32" y="32" width="448" height="448" rx="96" fill="#EEF2FF" fill-opacity="0.08"/>
+    <path d="M256 256 C300 172 412 172 412 256 C412 340 300 340 256 256 C212 172 100 172 100 256 C100 340 212 340 256 256 Z" fill="none" stroke="#EEF2FF" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="350.5" cy="193" r="32" fill="#A5F3FC"/>
   </g>
-  <text x="520" y="380" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="150" font-weight="600" fill="#F0FDFA">Continued</text>
-  <text x="524" y="470" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="46" fill="#99F6E4">AI code agent for VS Code, community fork</text>
+  <text x="520" y="380" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="150" font-weight="600" fill="#EEF2FF">Continuous</text>
+  <text x="524" y="470" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="46" fill="#A5F3FC">AI code agent for VS Code, community fork</text>
 </svg>

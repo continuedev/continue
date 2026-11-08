@@ -3,7 +3,7 @@ title: "Prompt Caching"
 keywords: [prompt caching, cache, ttl, cost, anthropic, bedrock, claude]
 ---
 
-Prompt caching lets a provider keep the start of your prompt (tool definitions, system prompt and conversation so far) and charge a fraction of the input price when the next request begins with the same text. Continued supports it for Claude models on Anthropic, Amazon Bedrock, Vertex AI and OpenRouter.
+Prompt caching lets a provider keep the start of your prompt (tool definitions, system prompt and conversation so far) and charge a fraction of the input price when the next request begins with the same text. Continuous supports it for Claude models on Anthropic, Amazon Bedrock, Vertex AI and OpenRouter.
 
 Caching is on by default for Claude models on Anthropic and Bedrock in Agent, Plan and Background modes and in the `cn` command line, with the Auto lifetime below, unless `config.yaml` says something about caching. In Chat it is off until you turn it on. To turn it off, set `promptCaching: false` on the model, or choose Off in the prompt cache button. To turn it on in Chat as well, set it per model in `config.yaml`:
 
@@ -33,7 +33,7 @@ A cached prefix expires after a period without use. Each request that reads it s
 
 On OpenRouter the lifetime travels as `cache_control: {"type": "ephemeral", "ttl": "1h"}` on the message content, which OpenRouter [passes to Claude models](https://openrouter.ai/docs/guides/best-practices/prompt-caching).
 
-On Vertex AI the marker is the same `cache_control` object on the Anthropic request that Continued sends to `publishers/anthropic/models/...:streamRawPredict`. [Google lists](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/claude/prompt-caching) Claude 3.7 Sonnet, 3.5 Sonnet v2, 3.5 Sonnet and 3 Opus as unable to take the 1-hour lifetime; those get the 5-minute default.
+On Vertex AI the marker is the same `cache_control` object on the Anthropic request that Continuous sends to `publishers/anthropic/models/...:streamRawPredict`. [Google lists](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/claude/prompt-caching) Claude 3.7 Sonnet, 3.5 Sonnet v2, 3.5 Sonnet and 3 Opus as unable to take the 1-hour lifetime; those get the 5-minute default.
 
 Reading a cached prefix costs 0.1x the input price whatever the lifetime.
 
@@ -60,7 +60,7 @@ The `cn` command line reaches Claude through shared adapters and reads the same 
 
 ## What gets cached
 
-With caching on, Continued asks the provider to cache the last tool definition, the system prompt, and the last block of each of the last two user-role messages. In an Agent session those messages are mostly tool results, and they are cached too.
+With caching on, Continuous asks the provider to cache the last tool definition, the system prompt, and the last block of each of the last two user-role messages. In an Agent session those messages are mostly tool results, and they are cached too.
 
 `defaultCompletionOptions.promptCaching` is the switch. `promptCaching: false` turns caching off even if `cacheBehavior` is set. When `promptCaching` is not set, the older `cacheBehavior` fields apply:
 
@@ -72,7 +72,7 @@ cacheBehavior:
 
 ## Cost
 
-Prices are multiples of the model's input price. These are the figures Continued uses; they are Anthropic list prices as of 2026-11-02, and Bedrock or a reseller can differ.
+Prices are multiples of the model's input price. These are the figures Continuous uses; they are Anthropic list prices as of 2026-11-02, and Bedrock or a reseller can differ.
 
 | Model        | Input | 5-minute write | 1-hour write | Read  |
 | ------------ | ----- | -------------- | ------------ | ----- |
@@ -82,19 +82,19 @@ Prices are multiples of the model's input price. These are the figures Continued
 
 Dollars per million tokens. Claude 4 Opus and 4.1 are $15 input; Claude 3 Haiku has its own cache prices. The table in `core/llm/utils/calculateRequestCost.ts` has every model.
 
-On Bedrock, Anthropic says regional and multi-region endpoints cost 10 percent more than global ones, for Claude Sonnet 4.5, Haiku 4.5, Opus 4.5 and every later model. Continued applies that to model IDs that start with `us.`, `eu.`, `apac.`, `jp.`, `au.` or `ca.`, and prices `global.` IDs and earlier models at list. Only `us.` was checked against real billing data. Set the full ID (for example `us.anthropic.claude-sonnet-4-6`) in your config for the estimate to include the premium. A bare ID with `crossRegionInference` set is prefixed only when the request is sent, so its estimate stays at list price.
+On Bedrock, Anthropic says regional and multi-region endpoints cost 10 percent more than global ones, for Claude Sonnet 4.5, Haiku 4.5, Opus 4.5 and every later model. Continuous applies that to model IDs that start with `us.`, `eu.`, `apac.`, `jp.`, `au.` or `ca.`, and prices `global.` IDs and earlier models at list. Only `us.` was checked against real billing data. Set the full ID (for example `us.anthropic.claude-sonnet-4-6`) in your config for the estimate to include the premium. A bare ID with `crossRegionInference` set is prefixed only when the request is sent, so its estimate stays at list price.
 
 Compacting a conversation (the Compact button) sends the same system prompt, tools and cache settings as the conversation, so while the cache is warm the summary request reads it instead of paying full price for the history. When the cache has expired, or caching is off, or only part of the conversation is being compacted, it sends the saved history on its own as before, because writing a new cache entry just before replacing the conversation would cost more. The prompt asks the model to answer in text; if the reply has none, the plain request is sent.
 
 A cached session costs more than an uncached one on its first request and less on every request after that, as long as the entry has not expired. Switching the model, changing reasoning settings, or anything that changes the system prompt (such as a rule that starts to match) misses the cache, and the next request writes the prefix again. A one-prompt session never pays back the write.
 
-While the cache is warm and you open the model picker, Continued shows how many tokens switching model would re-read and an estimated extra cost. It does not warn about changes to reasoning or mode.
+While the cache is warm and you open the model picker, Continuous shows how many tokens switching model would re-read and an estimated extra cost. It does not warn about changes to reasoning or mode.
 
 The usage panel shows cost estimates for Claude models on Anthropic, Bedrock, Vertex AI and OpenRouter, split into 5-minute writes, 1-hour writes and reads when the provider reports the split. Its cache hit rate is cache-read tokens divided by the input tokens the API reports.
 
 ## Toolbar button
 
-The button is shown only for Claude models on the `anthropic`, `bedrock`, `vertexai` and `openrouter` providers. A filled icon means requests carry cache markers; a brighter one means an entry should still be alive. The tooltip says whether the cache is warm, which lifetime applies, and about how long is left. Warm is Continued's estimate from the time of your last request; the provider does not report it.
+The button is shown only for Claude models on the `anthropic`, `bedrock`, `vertexai` and `openrouter` providers. A filled icon means requests carry cache markers; a brighter one means an entry should still be alive. The tooltip says whether the cache is warm, which lifetime applies, and about how long is left. Warm is Continuous's estimate from the time of your last request; the provider does not report it.
 
 The setting is stored per model and survives restarts.
 
@@ -102,7 +102,7 @@ The setting is stored per model and survives restarts.
 
 The tooltip of the cache button says whether the cache is warm, then ends with a "This session:" line. It counts the requests that used caching, the share of their input read from the cache, the misses (a request that should have read a warm cache and mostly did not, with how long ago the last one was, how many tokens it rewrote and why, when known), and the expected rebuilds: requests that could not read the cache because you switched model, the conversation was compacted or shortened, or the oldest messages were dropped to fit.
 
-It comes from a list Continued keeps for the current conversation: the last 200 requests, with token counts, timings and the provider's request ID. It holds no message text, is not saved with the session, and starts empty in every new conversation. Requests that failed are not in it.
+It comes from a list Continuous keeps for the current conversation: the last 200 requests, with token counts, timings and the provider's request ID. It holds no message text, is not saved with the session, and starts empty in every new conversation. Requests that failed are not in it.
 
 With `--verbose`, the CLI prints a "Prompt cache:" line when a session ends: requests, share of input read from the cache, and tokens read and written. It counts the requests of that run only, so a resumed session reports just the new ones. If some requests were shorter than the model's minimum cacheable prompt (for example 4,096 tokens for Claude Haiku 4.5), the line says so: those requests could not be cached whatever the settings, and the provider reports nothing when that happens. The minimums are the vendors' published figures, and a model that is not in their tables is never reported this way.
 
@@ -112,10 +112,10 @@ A small warning icon appears in the toolbar when there is advice about the model
 
 | Tip | When it appears |
 | --- | --- |
-| Regional endpoints cost 10% more | A Bedrock model whose ID starts with `us.`, `eu.`, `apac.`, `jp.`, `au.` or `ca.` (see Cost). It suggests the matching `global.` ID. Continued asks Bedrock which inference profiles your account lists (a listing only, no model call), and if there is no global profile the tip keeps the price note and drops the suggestion. A global endpoint can route a request to any region, so keep the regional ID when your data must stay in one. |
+| Regional endpoints cost 10% more | A Bedrock model whose ID starts with `us.`, `eu.`, `apac.`, `jp.`, `au.` or `ca.` (see Cost). It suggests the matching `global.` ID. Continuous asks Bedrock which inference profiles your account lists (a listing only, no model call), and if there is no global profile the tip keeps the price note and drops the suggestion. A global endpoint can route a request to any region, so keep the regional ID when your data must stay in one. |
 | 1 hour is not available for this model | You chose 1 hour, or Auto, for a Bedrock model that cannot take it (see Bedrock). |
 | Throttled N times with caching off | A Claude model on Anthropic or Bedrock was throttled at least twice in this conversation with caching off. Both providers say tokens read from a cache are not counted against the rate limit, so caching can reduce how often this happens. It will not stop throttling by itself: output tokens, cache writes and bursts of requests still count. |
-| A different setting would have cost N% less | After at least 6 requests, Continued replays the conversation (the size of each request and the pauses between them) under each setting. It appears when a different setting would have saved at least 10% of the input cost and at least a quarter of a dollar, and only if the replay of what actually happened agrees with the recorded cost to within 15%. It ignores output tokens, which caching does not change. It is an estimate from the token counts the provider reported, and it has not been checked against a real bill. |
+| A different setting would have cost N% less | After at least 6 requests, Continuous replays the conversation (the size of each request and the pauses between them) under each setting. It appears when a different setting would have saved at least 10% of the input cost and at least a quarter of a dollar, and only if the replay of what actually happened agrees with the recorded cost to within 15%. It ignores output tokens, which caching does not change. It is an estimate from the token counts the provider reported, and it has not been checked against a real bill. |
 
 ## Notices
 
@@ -133,7 +133,7 @@ The cost notices appear only when at least a quarter of a dollar is at stake, or
 
 On Bedrock, `1 hour` is offered only for models the AWS prompt caching guide lists with a 1-hour option: Claude Haiku 4.5 and 5.5, Sonnet 4.6, 5 and 5.5, Opus 4.5 to 4.8, 5 and 5.5, Fable and Mythos. Sonnet 4.5, Sonnet 4, Opus 4 and 4.1, and Claude 3 models are not in that table. Vertex AI and OpenRouter use the same list. For any other Claude model the menu has no 1-hour entry, and a request that asks for it is sent with the 5-minute default, because an unsupported `ttl` can fail the request.
 
-Continued also adds a per-process ID to the first user message so that two people sharing an AWS account do not read each other's cached conversation. The system prompt comes before it and can still be shared.
+Continuous also adds a per-process ID to the first user message so that two people sharing an AWS account do not read each other's cached conversation. The system prompt comes before it and can still be shared.
 
 ## Not supported
 

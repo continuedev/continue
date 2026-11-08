@@ -23,14 +23,14 @@ describe("ClawRouter", () => {
     expect(clawRouter["supportsReasoningDetailsField"]).toBe(true);
   });
 
-  it("should include the Continued User-Agent header", () => {
+  it("should include the Continuous User-Agent header", () => {
     const clawRouter = new ClawRouter({
       model: "blockrun/auto",
     });
 
     const headers = clawRouter["_getHeaders"]();
 
-    expect(headers["User-Agent"]).toMatch(/^Continued\//);
+    expect(headers["User-Agent"]).toMatch(/^Continuous\//);
     expect(headers["X-Continue-Provider"]).toBe("clawrouter");
   });
 

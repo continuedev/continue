@@ -41,7 +41,7 @@ const DEFAULT_MOCK_CORE_RESPONSES: MockResponses = {
   "history/save": undefined,
   "providers/list": {
     instances: [],
-    globalFileUri: "file:///Users/user/.continue/providers.yaml",
+    globalFileUri: "file:///Users/user/.continuous/providers.yaml",
     secureStorageAvailable: true,
   },
   "config/findPlaintextKeys": { keys: [], secureStorageAvailable: true },

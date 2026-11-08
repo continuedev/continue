@@ -1,5 +1,5 @@
 ---
-title: "How to Set Up Model Context Protocol (MCP) in Continued"
+title: "How to Set Up Model Context Protocol (MCP) in Continuous"
 description: MCP use and customization
 keywords: [tool, use, function calling, claude, automatic]
 sidebarTitle: "Model Context Protocol (MCP)"
@@ -14,7 +14,7 @@ the wider digital world. This standard, created by Anthropic to bring together
 prompts, context, and tool use, is key for building truly useful AI experiences
 that can be set up with custom tools.
 
-## How MCP Works in Continued
+## How MCP Works in Continuous
 
 Currently custom tools can be configured using the Model Context
 Protocol standard to unify prompts, context, and tool use.
@@ -33,7 +33,7 @@ Below is a quick example of setting up a new MCP server for use in your config:
 2. Add a file called `playwright-mcp.yaml` to this folder
 3. Write the following contents and save
 
-```yaml title=".continue/mcpServers/playwright-mcp.yaml"
+```yaml title=".continuous/mcpServers/playwright-mcp.yaml"
 name: Playwright mcpServer
 version: 0.0.1
 schema: v1
@@ -56,9 +56,9 @@ The result will be a generated file called `hn.txt` in the current working direc
 ## Using JSON MCP Format from Claude, Cursor, Cline, etc
 
 <Info>
-If you're coming from another tool that uses JSON MCP format configuration files (like Claude Desktop, Cursor, or Cline), you can copy those JSON config files directly into your `.continue/mcpServers/` directory (note the plural "Servers") and Continued will automatically pick them up.
+If you're coming from another tool that uses JSON MCP format configuration files (like Claude Desktop, Cursor, or Cline), you can copy those JSON config files directly into your `.continuous/mcpServers/` directory (note the plural "Servers") and Continuous will automatically pick them up.
 
-For example, place your JSON MCP config file at `.continue/mcpServers/mcp.json` in your workspace.
+For example, place your JSON MCP config file at `.continuous/mcpServers/mcp.json` in your workspace.
 </Info>
 
 ## How to Configure MCP Servers
@@ -80,7 +80,7 @@ mcpServers:
 ```
 
 <Note>
-When creating a standalone block file in `.continue/mcpServers/`, remember to include the required metadata fields (`name`, `version`, `schema`) as shown in the Quick Start example above.
+When creating a standalone block file in `.continuous/mcpServers/`, remember to include the required metadata fields (`name`, `version`, `schema`) as shown in the Quick Start example above.
 </Note>
 
 ### How to Configure MCP Server Properties
@@ -154,12 +154,12 @@ mcpServers:
     url: https://mcp.datadoghq.eu/api/unstable/mcp-server/mcp
 ```
 
-1. If the server answers a request with HTTP 401, the server shows **Sign in required**. Continued never opens a browser by itself.
+1. If the server answers a request with HTTP 401, the server shows **Sign in required**. Continuous never opens a browser by itself.
 2. Choose **Sign in** (the person icon next to the server, or the server's menu). Your browser opens the provider's sign-in page, and when you finish you are connected.
 3. The access token is refreshed automatically when it expires. If the provider revokes your session, the server goes back to **Sign in required**.
 4. **Sign out** (server menu) removes the stored credentials.
 
-**Sign in is always offered for remote servers**, including ones that reject a connection in a way Continued can't recognise as an OAuth challenge.
+**Sign in is always offered for remote servers**, including ones that reject a connection in a way Continuous can't recognise as an OAuth challenge.
 
 The browser is sent back to a small local server while you sign in, on port `3000` by default. If that port is in use you'll see an error naming it; choose another with `oauth.callbackPort`. Some providers only accept a pre-registered redirect URL, so use the port that was registered:
 
@@ -177,7 +177,7 @@ If sign-in fails or is abandoned (denied in the browser, a wrong code, or no res
 <Note>
   OAuth credentials (access and refresh tokens, client registration) are kept in
   the editor's encrypted secret storage. Hosts that can't store secrets, such as
-  the CLI, fall back to `~/.continue/index/globalContext.json`; treat that file
+  the CLI, fall back to `~/.continuous/index/globalContext.json`; treat that file
   like any other credential store. Credentials saved there by earlier versions
   are moved into secret storage the first time they are used.
 </Note>
@@ -203,7 +203,7 @@ mcpServers:
 - To set them once for everything, put `requestOptions` at the top level of `config.yaml`; per-server values take precedence.
 - If the certificate isn't trusted, the error says so and points at `useSystemCa` and `caBundlePath`.
 
-**stdio servers** run in their own process, so Continued can't change their networking. For Node-based servers (for example `npx ...`), Continued sets `NODE_OPTIONS=--use-system-ca` so they trust the OS certificate store too. This is on by default on Windows and macOS, can be turned off with `requestOptions: { useSystemCa: false }` at the top level, and is skipped when the `node` on your PATH is too old to know the flag (Node 22.15 or newer is needed). Anything you set in the server's own `env.NODE_OPTIONS` is kept.
+**stdio servers** run in their own process, so Continuous can't change their networking. For Node-based servers (for example `npx ...`), Continuous sets `NODE_OPTIONS=--use-system-ca` so they trust the OS certificate store too. This is on by default on Windows and macOS, can be turned off with `requestOptions: { useSystemCa: false }` at the top level, and is skipped when the `node` on your PATH is too old to know the flag (Node 22.15 or newer is needed). Anything you set in the server's own `env.NODE_OPTIONS` is kept.
 
 ### How to Work with Secrets in MCP Servers
 

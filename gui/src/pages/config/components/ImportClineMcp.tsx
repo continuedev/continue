@@ -100,7 +100,7 @@ function ImportDialog({ sources }: { sources: McpImportPreviewSource[] }) {
         {result.secretsPending.length > 0 && (
           <p className="text-sm text-warning">
             Still needs a value: {result.secretsPending.join(", ")}. Add them in
-            ~/.continue/.env or through secure storage.
+            ~/.continuous/.env or through secure storage.
           </p>
         )}
         {result.warnings.map((w) => (
@@ -197,7 +197,7 @@ function ImportDialog({ sources }: { sources: McpImportPreviewSource[] }) {
                 checked={useSecure}
                 onChange={(e) => setUseSecure(e.target.checked)}
               />
-              Use the editor's secure storage (otherwise ~/.continue/.env)
+              Use the editor's secure storage (otherwise ~/.continuous/.env)
             </label>
           )}
         </div>

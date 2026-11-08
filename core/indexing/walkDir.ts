@@ -5,6 +5,7 @@ import type { FileType, IDE } from "..";
 import { joinPathsToUri } from "../util/uri";
 import { getGlobalContinueIgArray } from "./continueignore";
 import { defaultIgnoreFileAndDir, gitIgArrayFromFile } from "./ignore";
+import { IGNORE_FILES } from "../util/workspaceDirs";
 
 export interface WalkerOptions {
   include?: "dirs" | "files" | "both";
@@ -307,10 +308,11 @@ export async function getIgnoreContext(
     .map(([name, _]) => name);
 
   // Find ignore files and get ignore arrays from their contexts
-  // These are done separately so that .continueignore can override .gitignore
+  // These are done separately so that .continuousignore (or the older
+  // .continuousignore) can override .gitignore
   const gitIgnoreFile = dirFiles.find((name) => name === ".gitignore");
-  const continueIgnoreFile = dirFiles.find(
-    (name) => name === ".continueignore",
+  const continueIgnoreFiles = IGNORE_FILES.filter((name) =>
+    dirFiles.includes(name),
   );
 
   const getGitIgnorePatterns = async () => {
@@ -321,11 +323,12 @@ export async function getIgnoreContext(
     return [];
   };
   const getContinueIgnorePatterns = async () => {
-    if (continueIgnoreFile) {
-      const contents = await ide.readFile(`${currentDir}/.continueignore`);
-      return gitIgArrayFromFile(contents);
+    const patterns: string[] = [];
+    for (const name of continueIgnoreFiles) {
+      const contents = await ide.readFile(`${currentDir}/${name}`);
+      patterns.push(...gitIgArrayFromFile(contents));
     }
-    return [];
+    return patterns;
   };
 
   const ignoreArrays = await Promise.all([
@@ -340,8 +343,8 @@ export async function getIgnoreContext(
   // Note precedence here!
   const ignoreContext = ignore()
     .add(ignoreArrays[0]) // gitignore
-    .add(defaultAndGlobalIgnores) // default file/folder ignores followed by global .continueignore - this is combined for speed
-    .add(ignoreArrays[1]); // local .continueignore
+    .add(defaultAndGlobalIgnores) // default file/folder ignores followed by global .continuousignore - this is combined for speed
+    .add(ignoreArrays[1]); // local .continuousignore
 
   return ignoreContext;
 }

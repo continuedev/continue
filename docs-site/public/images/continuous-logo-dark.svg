@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1700 512" width="1700" height="512" role="img" aria-label="Continuous">
+  
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#312E81"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#bg)"/>
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#shine)"/>
+  <path d="M256 256 C300 172 412 172 412 256 C412 340 300 340 256 256 C212 172 100 172 100 256 C100 340 212 340 256 256 Z" fill="none" stroke="#EEF2FF" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="350.5" cy="193" r="32" fill="#A5F3FC"/>
+  <text x="560" y="330" fill="#CED0D6" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="210" font-weight="600">Continuous</text>
+</svg>

@@ -1,6 +1,6 @@
 # Plan: Maintained fork of Continue with working MCP OAuth and enterprise TLS
 
-Status: **in progress; see [`ROADMAP.md`](./ROADMAP.md) for what has shipped and what is next.** Written 2026-10-27 as the original design record; the sections below are left as written and were not re-audited against the code that has since merged. The fork `https://github.com/b1tninja/continued` now contains the work listed in the roadmap. Sections 8-11 define done, CI/CD, licensing and supporting work.
+Status: **in progress; see [`ROADMAP.md`](./ROADMAP.md) for what has shipped and what is next.** Written 2026-10-27 as the original design record; the sections below are left as written and were not re-audited against the code that has since merged. The fork `https://github.com/b1tninja/continuous` now contains the work listed in the roadmap. Sections 8-11 define done, CI/CD, licensing and supporting work.
 
 ## 1. Why
 
@@ -40,7 +40,7 @@ Out of scope: JetBrains plugin, CLI, hub/auth features (already removed upstream
 
 ### 4.1 Repo setup (about 0.5 day)
 
-- Done 2026-10-27: forked to `b1tninja/continued` (public, a GitHub fork of `continuedev/continue`, default branch `main`), cloned to `C:\github\b1tninja\continued`, `upstream` remote added. Next: branch from the `v2.0.0-vscode` tag (section 11, item 1) and change the VS Code publisher and extension ID so it cannot collide with, or be auto-updated by, the original marketplace listing. Ownership of the repo is an open question (section 10).
+- Done 2026-10-27: forked to `b1tninja/continuous` (public, a GitHub fork of `continuedev/continue`, default branch `main`), cloned to `C:\github\b1tninja\continued`, `upstream` remote added. Next: branch from the `v2.0.0-vscode` tag (section 11, item 1) and change the VS Code publisher and extension ID so it cannot collide with, or be auto-updated by, the original marketplace listing. Ownership of the repo is an open question (section 10).
 - Follow `BUILD_DEPENDENCIES.md` and `CONTRIBUTING.md` to build `extensions/vscode` and produce a `.vsix`. Confirm a clean build on Windows with the proxy root installed.
 - Disable or remove telemetry, auto-update, and marketplace publishing workflows in `.github/`.
 - Decide on distribution: internal `.vsix` file share vs. private marketplace. Document how users install and update.
@@ -262,7 +262,7 @@ Decided from file names only. Read each file before deleting it.
 
 ## 10. License and compliance
 
-What the fork contains (checked in `b1tninja/continued` at `main`, which GitHub reports as Apache License 2.0):
+What the fork contains (checked in `b1tninja/continuous` at `main`, which GitHub reports as Apache License 2.0):
 
 | Item                                      | Finding                                                                                                                                        |
 | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |

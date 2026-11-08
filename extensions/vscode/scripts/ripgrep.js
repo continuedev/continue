@@ -82,7 +82,7 @@ async function installRipgrepBinary(target, options = {}) {
 
   console.log(`[info] Installing ripgrep for ${target}: ${pkg}@${version}`);
 
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "continued-ripgrep-"));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "continuous-ripgrep-"));
   try {
     // `npm pack` downloads the tarball whatever the host os/cpu is
     const packed = JSON.parse(

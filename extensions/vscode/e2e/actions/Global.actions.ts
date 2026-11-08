@@ -87,7 +87,7 @@ export class GlobalActions {
   static async setNextEditEnabled(enabled: boolean) {
     const workbench = new Workbench();
 
-    // Callers often run this right after focusing the Continued webview; the
+    // Callers often run this right after focusing the Continuous webview; the
     // palette shortcut is lost while focus is still in that iframe, and a
     // single openCommandPrompt() then times out after 5s. Return to the
     // workbench and retry, as the other command-palette actions do.
@@ -113,7 +113,7 @@ export class GlobalActions {
       }
 
       const element = await statusBar.findElement(
-        By.xpath("//*[contains(text(), 'Continue')]"),
+        By.xpath("//*[contains(text(), 'Continuous')]"),
       );
 
       // Validate we can get text
@@ -149,7 +149,7 @@ export class GlobalActions {
     console.log("hasNE:", hasNE);
 
     if (hasNE !== enabled) {
-      await workbench.executeCommand("Continued: Toggle Next Edit");
+      await workbench.executeCommand("Continuous: Toggle Next Edit");
       // Clear any resulting notifications
       await TestUtils.waitForTimeout(500);
       await GlobalActions.clearAllNotifications();

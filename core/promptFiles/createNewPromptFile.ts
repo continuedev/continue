@@ -3,7 +3,7 @@ import { GlobalContext } from "../util/GlobalContext";
 import { joinPathsToUri } from "../util/uri";
 
 const FIRST_TIME_DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file
-# It is used to define and reuse prompts within Continued
+# It is used to define and reuse prompts within Continuous
 # Each .prompt file can be accessed by typing "@prompts" in the Chat input
 
 # A prompt file consists of two parts:
@@ -24,7 +24,7 @@ const FIRST_TIME_DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file
   # @os
   # @repo-map
 
-# To learn more, see the full .prompt file reference: https://b1tninja.github.io/continued/customize/deep-dives/prompts
+# To learn more, see the full .prompt file reference: https://b1tninja.github.io/continuous/customize/deep-dives/prompts
 name: Example
 description: Example prompt file
 ---
@@ -48,7 +48,7 @@ export async function createNewPromptFileV2(
 
   const baseDirUri = joinPathsToUri(
     workspaceDirs[0],
-    promptPath ?? ".continue/prompts",
+    promptPath ?? ".continuous/prompts",
   );
 
   // Find the first available filename

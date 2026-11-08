@@ -44,7 +44,7 @@ export class ContinueCompletionProvider
     if (await handleLLMError(e)) {
       return;
     }
-    let message = "Continued Autocomplete Error";
+    let message = "Continuous Autocomplete Error";
     if (e instanceof Error) {
       message += `: ${e.message}`;
     }
@@ -52,7 +52,7 @@ export class ContinueCompletionProvider
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
-            "https://b1tninja.github.io/continued/customize/deep-dives/autocomplete",
+            "https://b1tninja.github.io/continuous/customize/deep-dives/autocomplete",
           ),
         );
       }
@@ -602,7 +602,7 @@ export class ContinueCompletionProvider
         range,
         {
           title: "Log Autocomplete Outcome",
-          command: "continue.logAutocompleteOutcome",
+          command: "continuous.logAutocompleteOutcome",
           arguments: [completionId, this.completionProvider],
         },
       );
@@ -655,7 +655,7 @@ export class ContinueCompletionProvider
         }
 
         // Track this ghost text for acceptance detection.
-        // Ghost text acceptance can *technically* be acted upon in the command handler for "continue.logNextEditOutcomeAccept".
+        // Ghost text acceptance can *technically* be acted upon in the command handler for "continuous.logNextEditOutcomeAccept".
         // However, there is a substantial delay between accepting and logging, which introduces a lot of race conditions with different event handlers.
         // Plus, separating these concerns seems to make sense logically as well.
         GhostTextAcceptanceTracker.getInstance().setExpectedGhostTextAcceptance(
@@ -672,7 +672,7 @@ export class ContinueCompletionProvider
           ),
           {
             title: "Log Next Edit Outcome",
-            command: "continue.logNextEditOutcomeAccept",
+            command: "continuous.logNextEditOutcomeAccept",
             arguments: [completionId, this.nextEditLoggingService],
           },
         );

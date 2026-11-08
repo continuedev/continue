@@ -79,17 +79,17 @@ describe("storeSecret", () => {
     const { ide, store } = memoryIde();
     const result = await storeSecret({
       ide,
-      name: "CONTINUED_ANTHROPIC_API_KEY",
+      name: "CONTINUOUS_ANTHROPIC_API_KEY",
       value: "sk-ant-1",
       storage: "secure",
       continueDir: dir,
     });
     expect(result).toEqual({ stored: true, location: "secure" });
-    expect(store.CONTINUED_ANTHROPIC_API_KEY).toBe("sk-ant-1");
+    expect(store.CONTINUOUS_ANTHROPIC_API_KEY).toBe("sk-ant-1");
     expect(fs.existsSync(path.join(dir, ".env"))).toBe(false);
   });
 
-  it("flags a plaintext copy in ~/.continue/.env without touching it", async () => {
+  it("flags a plaintext copy in ~/.continuous/.env without touching it", async () => {
     fs.writeFileSync(path.join(dir, ".env"), "K=old\n");
     const result = await storeSecret({
       ide: memoryIde().ide,

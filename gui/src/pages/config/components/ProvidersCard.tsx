@@ -211,8 +211,8 @@ export function ProvidersCard() {
               >
                 <span className="text-description-muted">
                   {action.kind === "move"
-                    ? `Move ${action.secretName} from ~/.continue/.env to secure storage and delete it from .env? config.yaml stays the same.`
-                    : `${action.secretName} is already in secure storage. Delete the plaintext line from ~/.continue/.env?`}
+                    ? `Move ${action.secretName} from ~/.continuous/.env to secure storage and delete it from .env? config.yaml stays the same.`
+                    : `${action.secretName} is already in secure storage. Delete the plaintext line from ~/.continuous/.env?`}
                 </span>
                 <div className="flex shrink-0 gap-1">
                   <Button

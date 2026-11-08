@@ -1,3 +1,4 @@
+import { isInWorkspaceConfigDir } from "core/util/workspaceDirs";
 import * as vscode from "vscode";
 
 export class DownloadYamlExtensionCodeLensProvider
@@ -12,7 +13,7 @@ export class DownloadYamlExtensionCodeLensProvider
     document: vscode.TextDocument,
     _: vscode.CancellationToken,
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
-    if (!document.uri.fsPath.includes(".continue")) {
+    if (!isInWorkspaceConfigDir(document.uri.fsPath)) {
       return [];
     }
 
@@ -22,10 +23,10 @@ export class DownloadYamlExtensionCodeLensProvider
     const docCodeLens: vscode.CodeLens = {
       range: new vscode.Range(0, 0, 0, 0),
       command: {
-        title: "📖 View Continued Reference",
+        title: "📖 View Continuous Reference",
         command: "vscode.open",
         arguments: [
-          vscode.Uri.parse("https://b1tninja.github.io/continued/reference"),
+          vscode.Uri.parse("https://b1tninja.github.io/continuous/reference"),
         ],
       },
       isResolved: true,

@@ -5,6 +5,7 @@ out/
 data/
 src/client
 .continue
+.continuous
 
 exe
 bin

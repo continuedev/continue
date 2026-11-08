@@ -3,16 +3,16 @@ title: "Local servers (OpenAI-compatible)"
 description: "Use a model server on your machine, such as Strata, llama.cpp, vLLM, LM Studio or Ollama, through its OpenAI-compatible API."
 ---
 
-Most local model servers have an OpenAI-compatible API. Continued talks to all of them through the `openai` provider with the server's address as `apiBase`, which gives you chat, tool calls and agent mode.
+Most local model servers have an OpenAI-compatible API. Continuous talks to all of them through the `openai` provider with the server's address as `apiBase`, which gives you chat, tool calls and agent mode.
 
 ## Set it up
 
 1. Start your server.
 2. Open **Set up models** (the model picker's **Manage models**, or the onboarding card) and choose **Local server (OpenAI-compatible)**.
-3. Select **Detect**. Continued looks for servers on the usual ports, including 8081-8089 for a second llama.cpp-style server, and fills in the address of the one it finds. You can also pick a usual address or type your own.
+3. Select **Detect**. Continuous looks for servers on the usual ports, including 8081-8089 for a second llama.cpp-style server, and fills in the address of the one it finds. You can also pick a usual address or type your own.
 4. Select **Next**. The model list is read from the server, with the context window it reports. Choose the models and save.
 
-The API key is optional: enter one only if your server was started with a key. It is stored as `CONTINUED_LOCAL_API_KEY`, apart from an OpenAI key.
+The API key is optional: enter one only if your server was started with a key. It is stored as `CONTINUOUS_LOCAL_API_KEY`, apart from an OpenAI key.
 
 ## Usual addresses
 

@@ -210,7 +210,7 @@ class MCPConnection {
     if (unrendered.length > 0) {
       this.errors.push(
         `${this.options.name} MCP Server has unresolved secrets: ${unrendered.join(", ")}.
-Set each one in ~/.continue/.env, <workspace>/.continue/.env or <workspace>/.env (NAME=value), or as an environment variable.`,
+Set each one in ~/.continuous/.env, <workspace>/.continuous/.env or <workspace>/.env (NAME=value), or as an environment variable.`,
       );
     }
 

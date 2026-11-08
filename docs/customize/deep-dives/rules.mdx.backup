@@ -25,7 +25,7 @@ Below is a quick example of setting up a new rule file:
 2. Add a file called `pirates-rule.md` to this folder.
 3. Write the following contents to `pirates-rule.md` and save.
 
-```md title=".continue/rules/pirates-rule.md"
+```md title=".continuous/rules/pirates-rule.md"
 ---
 name: Pirate rule
 ---
@@ -46,7 +46,7 @@ Rules can be added locally using the "Add Rules" button.
 <Info>
 Automatically create local rule blocks: When in Agent mode, you can prompt the agent to create a rule for you using the `create_rule_block` tool if enabled.
 
-For example, you can say "Create a rule for this", and a rule will be created for you in `.continue/rules` based on your conversation.
+For example, you can say "Create a rule for this", and a rule will be created for you in `.continuous/rules` based on your conversation.
 </Info>
 
 Rules can also be added to a configuration on the Continue Hub.
@@ -125,7 +125,7 @@ Rules blocks can be simple text, written in YAML configuration files, or as Mark
 
 You can create project-specific rules by adding a `.continue/rules` folder to the root of your project and adding new rule files.
 
-```md title=".continue/rules/new-rule.md"
+```md title=".continuous/rules/new-rule.md"
 ---
 name: New rule
 ---
@@ -139,7 +139,7 @@ This is also done when selecting "Add Rule" in the Agent settings. This will cre
 
 If you want concise answers:
 
-```md title=".continue/rules/concise-rule.md"
+```md title=".continuous/rules/concise-rule.md"
 ---
 name: Always give concise answers
 ---
@@ -150,7 +150,7 @@ You can assume that I am knowledgable about most programming topics.
 
 If you want to ensure certain practices are followed, for example in React:
 
-```md title=".continue/rules/functional-rule.md"
+```md title=".continuous/rules/functional-rule.md"
 ---
 name: Always use functional components
 ---

@@ -56,7 +56,7 @@ async function loadConfigYaml(options: {
 }): Promise<ConfigResult<AssistantUnrolled>> {
   const { overrideConfigYaml, ideSettings, ide, packageIdentifier } = options;
 
-  // Add local .continue blocks
+  // Add local .continuous blocks
   // Use "content" field to pass pre-read content directly, avoiding
   // fs.readFileSync which fails for vscode-remote:// URIs in WSL (#6242, #7810)
   const localBlockPromises = BLOCK_TYPES.map(async (blockType) => {

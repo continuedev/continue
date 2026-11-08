@@ -64,12 +64,12 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
       return sendToChat
         ? {
             title,
-            command: "continue.customQuickActionSendToChat",
+            command: "continuous.customQuickActionSendToChat",
             arguments: [prompt, range],
           }
         : {
             title,
-            command: "continue.customQuickActionStreamInlineEdit",
+            command: "continuous.customQuickActionStreamInlineEdit",
             arguments: [prompt, range],
           };
     });
@@ -77,8 +77,8 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
 
   getDefaultCommand(range: vscode.Range): vscode.Command[] {
     const quickEdit: vscode.Command = {
-      command: "continue.defaultQuickAction",
-      title: "Continued",
+      command: "continuous.defaultQuickAction",
+      title: "Continuous",
       arguments: [{ range } as QuickEditShowParams],
     };
 

@@ -11,8 +11,8 @@ body:
         We appreciate your feedback. Before submitting, please check if a similar issue already exists.
 
         ### Quick Contribution Tips:
-        - Open a pull request that edits the page under `docs/` in [this repository](https://github.com/b1tninja/continued/tree/main/docs).
-        - For local development, see [CONTRIBUTING.md](https://github.com/b1tninja/continued/blob/main/CONTRIBUTING.md#-updating--improving-documentation).
+        - Open a pull request that edits the page under `docs/` in [this repository](https://github.com/b1tninja/continuous/tree/main/docs).
+        - For local development, see [CONTRIBUTING.md](https://github.com/b1tninja/continuous/blob/main/CONTRIBUTING.md#-updating--improving-documentation).
 
   - type: dropdown
     id: doc-issue-category
@@ -34,7 +34,7 @@ body:
     attributes:
       label: Affected Documentation Page URL
       description: Provide the URL of the specific page where you encountered the issue.
-      placeholder: "https://b1tninja.github.io/continued/path/to/page"
+      placeholder: "https://b1tninja.github.io/continuous/path/to/page"
     validations:
       required: false
 

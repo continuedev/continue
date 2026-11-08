@@ -750,7 +750,7 @@ export default class DocsService {
       void this.ide.showToast(
         "error",
         "Set up an embeddings model to use the @docs context provider. See: " +
-          "https://b1tninja.github.io/continued/customize/model-roles/embeddings",
+          "https://b1tninja.github.io/continuous/customize/model-roles/embeddings",
       );
       return [];
     }

@@ -71,7 +71,7 @@ A "refuse" answer for an "ask" reason is turned into an ask. An answer the revie
 
 ## Instructions hidden in tool output
 
-Files, web pages and command output can contain text written to hijack an agent ("ignore previous instructions and ..."). Continued checks every tool result for wording like that. When it finds some, it puts a short notice in front of the result that tells the model the text is data and not an instruction from you, and it tells the reviewer that the earlier call's output was flagged (the reviewer still never sees the output itself). This is a pattern check, not a guarantee: wording it does not know goes through unchanged, and harmless text can be flagged by accident. It never blocks a tool call by itself.
+Files, web pages and command output can contain text written to hijack an agent ("ignore previous instructions and ..."). Continuous checks every tool result for wording like that. When it finds some, it puts a short notice in front of the result that tells the model the text is data and not an instruction from you, and it tells the reviewer that the earlier call's output was flagged (the reviewer still never sees the output itself). This is a pattern check, not a guarantee: wording it does not know goes through unchanged, and harmless text can be flagged by accident. It never blocks a tool call by itself.
 
 ## Settings
 

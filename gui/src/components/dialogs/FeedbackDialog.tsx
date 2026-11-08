@@ -9,11 +9,11 @@ export default function FeedbackDialog() {
     <div className="mx-auto flex max-w-md flex-col p-6 pt-8">
       <div className="flex items-center gap-2 text-lg font-medium">
         <span>👋</span>
-        <span>Help us improve Continued</span>
+        <span>Help us improve Continuous</span>
       </div>
 
       <p className="text-sm leading-relaxed text-foreground">
-        We're always working to make Continued better and would love to hear
+        We're always working to make Continuous better and would love to hear
         from you. If you're interested in sharing your experience, please enter
         your details below.
       </p>

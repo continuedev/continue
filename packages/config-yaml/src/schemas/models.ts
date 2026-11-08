@@ -269,7 +269,7 @@ export const connectedModelSchema = z.object({
 /**
  * A named provider instance: the connection settings shared by every model
  * that names it with `connection:` (in any config). Written in
- * ~/.continue/providers.yaml (or a workspace's .continue/providers.yaml).
+ * ~/.continuous/providers.yaml (or a workspace's .continuous/providers.yaml).
  */
 export const providerInstanceSchema = z.object({
   /** Referenced by models as `connection: <name>`. */
@@ -308,8 +308,8 @@ export type CatalogVariant = z.infer<typeof catalogVariantSchema>;
 export type CatalogRoute = z.infer<typeof catalogRouteSchema>;
 
 /**
- * A model in the catalog (~/.continue/models.yaml, or a workspace's
- * .continue/models.yaml): defined once and used from any config with
+ * A model in the catalog (~/.continuous/models.yaml, or a workspace's
+ * .continuous/models.yaml): defined once and used from any config with
  * `from: <name>`. It names its account with `connection:` (or gives its own
  * provider), as a model in a config can.
  */

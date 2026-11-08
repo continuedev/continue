@@ -170,7 +170,7 @@ describe("streamChatResponse - auto-continuation after compaction", () => {
           yield contentChunk("First response");
         } else if (callCount === 2) {
           // Second call: after auto-continuation
-          yield contentChunk("Continued after compaction");
+          yield contentChunk("Continuous after compaction");
         }
       }) as any;
 

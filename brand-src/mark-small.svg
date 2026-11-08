@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Small-size variant (favicon, 16-48px): full-bleed, heavier strokes, one dot. -->
+  <!-- Small-size variant (favicon, 16-48px): full-bleed, heavier stroke, a larger dot. -->
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0D9488"/>
-      <stop offset="1" stop-color="#115E59"/>
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#312E81"/>
     </linearGradient>
   </defs>
   <rect x="0" y="0" width="512" height="512" rx="120" fill="url(#bg)"/>
-  <path d="M136 124 L268 256 L136 388" fill="none" stroke="#F0FDFA" stroke-width="84" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="394" cy="256" r="46" fill="#99F6E4"/>
+  <path d="M256 256 C304 160 440 160 440 256 C440 352 304 352 256 256 C208 160 72 160 72 256 C72 352 208 352 256 256 Z" fill="none" stroke="#EEF2FF" stroke-width="68" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="366" cy="184" r="48" fill="#A5F3FC"/>
 </svg>

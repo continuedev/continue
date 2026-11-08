@@ -5,13 +5,13 @@ import type { InternalMcpOptions, MCPServerStatus } from "core";
 import * as vscode from "vscode";
 
 /** Must match contributes.mcpServerDefinitionProviders[].id in package.json. */
-export const MCP_PROVIDER_ID = "continued.mcpServers";
+export const MCP_PROVIDER_ID = "continuous.mcpServers";
 
 type ProvidedDefinition =
   vscode.McpStdioServerDefinition | vscode.McpHttpServerDefinition;
 
 /**
- * Offers the MCP servers of the selected Continued config to VS Code's own
+ * Offers the MCP servers of the selected Continuous config to VS Code's own
  * chat and agents (including the Agents window), so they are configured once.
  *
  * Definitions are listed without credentials: VS Code caches the list. Env
@@ -60,7 +60,7 @@ export class ContinuedMcpServerDefinitionProvider implements vscode.McpServerDef
 }
 
 /**
- * Translate a Continued MCP server into a VS Code definition. Websocket servers
+ * Translate a Continuous MCP server into a VS Code definition. Websocket servers
  * have no VS Code equivalent and are left out. `withSecrets` false leaves out
  * env values, API keys and request headers.
  */

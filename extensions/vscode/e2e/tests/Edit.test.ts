@@ -31,7 +31,7 @@ describe("Edit Test", () => {
   beforeEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
 
-    // Don't toggle the Continued view here: "focus input" flips it open/closed
+    // Don't toggle the Continuous view here: "focus input" flips it open/closed
     // depending on what the previous test left behind. Cmd+I below opens it.
     await resetEditorAndSelectAll();
 
@@ -59,7 +59,10 @@ describe("Edit Test", () => {
     // Best effort: leave edit mode and drop any diff that is still pending
     // (both are no-ops when the test already accepted/rejected), so nothing
     // leaks into the next test.
-    for (const command of ["continue.exitEditMode", "continue.rejectDiff"]) {
+    for (const command of [
+      "continuous.exitEditMode",
+      "continuous.rejectDiff",
+    ]) {
       try {
         await new Workbench().executeCommand(command);
       } catch (e) {
@@ -109,7 +112,7 @@ describe("Edit Test", () => {
   /**
    * Cmd+I is dropped when keyboard focus is stuck in a hidden webview, and the
    * webview takes a moment to show and render its input. Press the shortcut and
-   * wait until the visible Continued webview has its input; press again if not.
+   * wait until the visible Continuous webview has its input; press again if not.
    */
   async function openEditInputWithRetry(attempts = 3) {
     const driver = VSBrowser.instance.driver;

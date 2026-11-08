@@ -5,8 +5,9 @@ import { getGlobalFolderWithName } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 import { joinPathsToUri } from "../util/uri";
 import { editYamlText } from "../util/yamlEdit";
+import { WORKSPACE_DIR } from "../util/workspaceDirs";
 
-/** Where new configs go, in ~/.continue or the workspace's .continue. */
+/** Where new configs go, in ~/.continuous or the workspace's .continuous. */
 export const CONFIGS_DIR_NAME = "configs";
 
 export type ConfigLocation = "global" | "workspace";
@@ -77,7 +78,7 @@ async function configsDirUri(
   if (workspaceDirs.length === 0) {
     throw new Error("Open a folder to save a config in the workspace.");
   }
-  return joinPathsToUri(workspaceDirs[0], ".continue", CONFIGS_DIR_NAME);
+  return joinPathsToUri(workspaceDirs[0], WORKSPACE_DIR, CONFIGS_DIR_NAME);
 }
 
 async function freeFileUri(

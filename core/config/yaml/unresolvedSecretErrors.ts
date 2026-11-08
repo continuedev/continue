@@ -20,7 +20,7 @@ export function unresolvedSecretErrors(
         : `models ${secret.modelNames.map((n) => `"${n}"`).join(", ")}`;
     return {
       fatal: false,
-      message: `The secret ${secret.secretName} is not set on this machine, so ${used} cannot authenticate. Add ${secret.secretName}=... to ~/.continue/.env or set it as an environment variable.`,
+      message: `The secret ${secret.secretName} is not set on this machine, so ${used} cannot authenticate. Add ${secret.secretName}=... to ~/.continuous/.env or set it as an environment variable.`,
       action: {
         kind: "setSecret" as const,
         secretName: secret.secretName,

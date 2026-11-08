@@ -2,14 +2,14 @@
 title: "Provider Accounts"
 ---
 
-```yaml ~/.continue/providers.yaml
+```yaml ~/.continuous/providers.yaml
 providers:
   - name: anthropic-work
     provider: anthropic
-    apiKey: ${{ secrets.CONTINUED_ANTHROPIC_WORK_API_KEY }}
+    apiKey: ${{ secrets.CONTINUOUS_ANTHROPIC_WORK_API_KEY }}
   - name: xai
     provider: xAI
-    apiKey: ${{ secrets.CONTINUED_XAI_API_KEY }}
+    apiKey: ${{ secrets.CONTINUOUS_XAI_API_KEY }}
   - name: office-gpu
     provider: ollama
     apiBase: http://10.0.0.12:11434/
@@ -21,7 +21,7 @@ A provider account is a named connection to a provider: its type, API key, base 
 
 A model names the account with `connection:` and leaves out `provider`, `apiKey` and `apiBase`:
 
-```yaml ~/.continue/configs/cloud.yaml
+```yaml ~/.continuous/configs/cloud.yaml
 name: Cloud
 version: 1.0.0
 schema: v1
@@ -51,13 +51,13 @@ The model gets the account's `provider`, `apiKey`, `apiBase`, `env` and `request
 
 ## Workspace accounts
 
-A workspace's `.continue/providers.yaml` adds accounts for that workspace. An account there replaces a global account with the same name. Workspace files can only be edited in the editor.
+A workspace's `.continuous/providers.yaml` adds accounts for that workspace. An account there replaces a global account with the same name. Workspace files can only be edited in the editor.
 
 ## Manage accounts in the GUI
 
 **Settings > Models > Provider accounts** lists every account, where its key is kept (never the key itself), and how many models use it.
 
-- **Add** and **Edit** write `~/.continue/providers.yaml`. A key you enter goes to the editor's secure storage, or to `~/.continue/.env` if you choose it or secure storage is unavailable. The file only gets a `${{ secrets.CONTINUED_<NAME>_API_KEY }}` reference. Leaving the key blank when editing keeps the current one.
+- **Add** and **Edit** write `~/.continuous/providers.yaml`. A key you enter goes to the editor's secure storage, or to `~/.continuous/.env` if you choose it or secure storage is unavailable. The file only gets a `${{ secrets.CONTINUOUS_<NAME>_API_KEY }}` reference. Leaving the key blank when editing keeps the current one.
 - Renaming an account also renames the `connection:` of every model in your local configs that uses it.
 - **Delete** removes the account and keeps its key. Models that use it are skipped until an account with that name exists again.
 - **Add model** adds a model that uses the account to the selected config, with the roles you tick.

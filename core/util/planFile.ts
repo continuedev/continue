@@ -11,7 +11,7 @@ import {
 
 /**
  * Plan files: what Plan mode ends with. A plan is a markdown file in the
- * workspace, `.continue/plans/<slug>.md`, with a title, a short body and a
+ * workspace, `.continuous/plans/<slug>.md`, with a title, a short body and a
  * to-do checklist whose items are the session's task list (one to-do, one
  * TaskItem). The person can edit the file; Build reads it back.
  * Design: plans/task-planning.md (P4) and plans/agent-ux-parity.md (phase P).
@@ -29,7 +29,7 @@ import {
  */
 
 /** Workspace-relative folder the plan files go in. */
-export const PLANS_DIR = ".continue/plans";
+export const PLANS_DIR = ".continuous/plans";
 
 export const PLAN_TODOS_HEADING = "To-dos";
 

@@ -115,7 +115,7 @@ export function cacheTips(
 
   // AWS Bedrock prompt caching guide: only the models in its table take a
   // 1-hour `ttl`; sending one to the others "can result in a
-  // ValidationException", so Continued sends the 5-minute default instead.
+  // ValidationException", so Continuous sends the 5-minute default instead.
   if (modelSupportsPromptCacheControl(model)) {
     const on =
       setting === undefined

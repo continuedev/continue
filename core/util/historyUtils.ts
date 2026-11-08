@@ -42,7 +42,7 @@ export function toMarkDown(history: ChatMessage[], time?: Date): string {
   if (!time) {
     time = new Date();
   }
-  let content = `### [Continued](https://github.com/b1tninja/continued) session transcript\n Exported: ${time.toLocaleString()}`;
+  let content = `### [Continuous](https://github.com/b1tninja/continuous) session transcript\n Exported: ${time.toLocaleString()}`;
 
   for (const msg of history) {
     let msgText = renderChatMessage(msg);

@@ -10,6 +10,7 @@ import { IDE } from "../..";
 import { getContinueGlobalPath } from "../../util/paths";
 import { localPathToUri } from "../../util/pathToUri";
 import { joinPathsToUri } from "../../util/uri";
+import { WORKSPACE_DIR } from "../../util/workspaceDirs";
 
 const BLOCK_TYPE_CONFIG: Record<
   BlockType,
@@ -56,7 +57,7 @@ function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
       configYaml.docs = [
         {
           name: "New docs",
-          startUrl: "https://b1tninja.github.io/continued/",
+          startUrl: "https://b1tninja.github.io/continuous/",
         },
       ];
       break;
@@ -166,7 +167,10 @@ export async function createNewWorkspaceBlockFile(
     );
   }
 
-  const baseDirUri = joinPathsToUri(workspaceDirs[0], `.continue/${blockType}`);
+  const baseDirUri = joinPathsToUri(
+    workspaceDirs[0],
+    `${WORKSPACE_DIR}/${blockType}`,
+  );
 
   const fileUri = await findAvailableFilename(
     baseDirUri,

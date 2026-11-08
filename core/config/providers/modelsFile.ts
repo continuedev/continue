@@ -12,10 +12,11 @@ import { IDE } from "../..";
 import { getContinueGlobalPath } from "../../util/paths";
 import { localPathToUri } from "../../util/pathToUri";
 import { joinPathsToUri } from "../../util/uri";
+import { WORKSPACE_DIRS } from "../../util/workspaceDirs";
 
 export const MODELS_FILE_NAME = "models.yaml";
 
-/** ~/.continue/models.yaml: the model catalog every config can use. */
+/** ~/.continuous/models.yaml: the model catalog every config can use. */
 export function getGlobalModelsPath(): string {
   return path.join(getContinueGlobalPath(), MODELS_FILE_NAME);
 }
@@ -83,8 +84,8 @@ export function parseModelsFile(
 }
 
 /**
- * The model catalog for loading a config: ~/.continue/models.yaml, then each
- * workspace's .continue/models.yaml. A workspace model with the same name
+ * The model catalog for loading a config: ~/.continuous/models.yaml, then each
+ * workspace's .continuous/models.yaml. A workspace model with the same name
  * replaces the global one, as workspace provider accounts do.
  */
 export async function loadModelCatalog(
@@ -106,8 +107,11 @@ export async function loadModelCatalog(
 
   try {
     for (const dir of await ide.getWorkspaceDirs()) {
-      const uri = joinPathsToUri(dir, ".continue", MODELS_FILE_NAME);
-      if (await ide.fileExists(uri)) add(await ide.readFile(uri), uri);
+      // The older .continue first, so .continuous wins on a shared name
+      for (const name of [...WORKSPACE_DIRS].reverse()) {
+        const uri = joinPathsToUri(dir, name, MODELS_FILE_NAME);
+        if (await ide.fileExists(uri)) add(await ide.readFile(uri), uri);
+      }
     }
   } catch (e) {
     console.warn("Could not read workspace models.yaml", e);

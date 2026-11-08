@@ -115,7 +115,7 @@ body`,
   it("names an agent after its file when the frontmatter has no name", () => {
     const def = parseSubagentFile(
       "---\ndescription: d\n---\nbody",
-      "file:///w/.continue/agents/doc-writer.md",
+      "file:///w/.continuous/agents/doc-writer.md",
       "workspace-continue",
     );
     expect(def.name).toBe("doc-writer");
@@ -168,15 +168,15 @@ describe("loadSubagentDefinitions", () => {
     walkDirCache.invalidate();
   });
 
-  it("reads .continue/agents, .claude/agents and the user's ~/.claude/agents", async () => {
+  it("reads .continuous/agents, .claude/agents and the user's ~/.claude/agents", async () => {
     addToTestDir([
-      ".continue/agents/",
+      ".continuous/agents/",
       [
-        ".continue/agents/reviewer.md",
+        ".continuous/agents/reviewer.md",
         "---\nname: reviewer\ndescription: from continue\n---\nA",
       ],
       // A YAML agent config in the same folder is a profile, not a subagent
-      [".continue/agents/config.yaml", "name: profile"],
+      [".continuous/agents/config.yaml", "name: profile"],
       ".claude/agents/",
       [
         ".claude/agents/reviewer.md",

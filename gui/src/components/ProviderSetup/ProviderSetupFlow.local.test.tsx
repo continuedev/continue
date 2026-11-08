@@ -190,7 +190,7 @@ describe("ProviderSetupFlow: local server", () => {
     await user.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(saves).toHaveLength(1));
     expect(saves[0].key).toMatchObject({
-      secretName: "CONTINUED_LOCAL_API_KEY",
+      secretName: "CONTINUOUS_LOCAL_API_KEY",
       value: "local-secret",
     });
   });

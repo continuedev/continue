@@ -3,6 +3,8 @@ import {
   DEFAULT_PROMPTS_FOLDER_V1,
   DEFAULT_PROMPTS_FOLDER_V2,
   DEFAULT_RULES_FOLDER,
+  LEGACY_PROMPTS_FOLDER,
+  LEGACY_RULES_FOLDER,
   RULES_DIR_NAME,
 } from ".";
 import { IDE } from "..";
@@ -46,7 +48,12 @@ export async function getAllPromptFiles(
   const workspaceDirs = await ide.getWorkspaceDirs();
   let promptFiles: { path: string; content: string }[] = [];
 
-  let dirsToCheck = [DEFAULT_PROMPTS_FOLDER_V2, DEFAULT_RULES_FOLDER];
+  let dirsToCheck = [
+    DEFAULT_PROMPTS_FOLDER_V2,
+    DEFAULT_RULES_FOLDER,
+    LEGACY_PROMPTS_FOLDER,
+    LEGACY_RULES_FOLDER,
+  ];
   if (checkV1DefaultFolder) {
     dirsToCheck.push(DEFAULT_PROMPTS_FOLDER_V1);
   }
@@ -62,7 +69,7 @@ export async function getAllPromptFiles(
     await Promise.all(fullDirs.map((dir) => getPromptFilesFromDir(ide, dir)))
   ).flat();
 
-  // Also read from ~/.continue/prompts and ~/.continue/rules
+  // Also read from ~/.continuous/prompts and ~/.continuous/rules
   promptFiles.push(...readAllGlobalPromptFiles());
 
   const promptFilesFromRulesDirectory = readAllGlobalPromptFiles(

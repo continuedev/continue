@@ -104,8 +104,8 @@ async function keyPresence(
 }
 
 /**
- * The provider instances in ~/.continue/providers.yaml and each workspace's
- * .continue/providers.yaml, with key state (never values) and the models that
+ * The provider instances in ~/.continuous/providers.yaml and each workspace's
+ * .continuous/providers.yaml, with key state (never values) and the models that
  * use them.
  */
 export async function listProviderInstances(
@@ -181,7 +181,7 @@ export async function listProviderInstances(
 
 type ProvidersDoc = { providers?: Record<string, unknown>[] };
 
-/** Edit ~/.continue/providers.yaml, creating it when missing. */
+/** Edit ~/.continuous/providers.yaml, creating it when missing. */
 function editGlobalProvidersFile(
   callback: (doc: ProvidersDoc) => ProvidersDoc,
 ): void {
@@ -231,8 +231,8 @@ function validateInstance(
 }
 
 /**
- * Add or edit an instance in ~/.continue/providers.yaml. A new key is stored
- * first (secure storage or ~/.continue/.env) and the file only gets its
+ * Add or edit an instance in ~/.continuous/providers.yaml. A new key is stored
+ * first (secure storage or ~/.continuous/.env) and the file only gets its
  * `${{ secrets.NAME }}` reference. Renaming an instance also renames the
  * `connection:` of the models in `configFiles` that use it.
  */
@@ -362,7 +362,7 @@ async function renameConnections(
   return count;
 }
 
-/** Remove an instance from ~/.continue/providers.yaml. Its key is kept. */
+/** Remove an instance from ~/.continuous/providers.yaml. Its key is kept. */
 export function deleteProviderInstance(name: string): {
   deleted: boolean;
   error?: string;
@@ -458,7 +458,7 @@ async function freeSecretName(
 }
 
 /**
- * Move the chosen plaintext keys to secure storage (or ~/.continue/.env) and
+ * Move the chosen plaintext keys to secure storage (or ~/.continuous/.env) and
  * replace each with a `${{ secrets.NAME }}` reference. A file is rewritten
  * only after every key it gives up has been stored. Values never leave core.
  */

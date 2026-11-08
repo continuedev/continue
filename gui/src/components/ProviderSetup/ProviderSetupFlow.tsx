@@ -163,7 +163,7 @@ export function ProviderSetupFlow({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
   const [warning, setWarning] = useState<string>();
-  // Set when the key went to secure storage and ~/.continue/.env still has a
+  // Set when the key went to secure storage and ~/.continuous/.env still has a
   // plaintext copy: the user is asked before anything is removed.
   const [envCopy, setEnvCopy] = useState<string>();
   const [removingEnvCopy, setRemovingEnvCopy] = useState(false);
@@ -449,7 +449,7 @@ export function ProviderSetupFlow({
       if (res.status !== "success" || !res.content.removed) {
         setError(
           (res.status === "success" ? res.content.error : undefined) ??
-            "Could not remove the line from ~/.continue/.env",
+            "Could not remove the line from ~/.continuous/.env",
         );
         return;
       }
@@ -557,9 +557,9 @@ export function ProviderSetupFlow({
       >
         <h2 className="m-0 text-center text-lg">Key saved</h2>
         <p className="m-0 text-sm">
-          The key is in secure storage, which Continue reads first.{" "}
+          The key is in secure storage, which Continuous reads first.{" "}
           <code>{envCopy}</code> is also set in plaintext in{" "}
-          <code>~/.continue/.env</code>. Remove that line?
+          <code>~/.continuous/.env</code>. Remove that line?
         </p>
         {error && (
           <div className="text-xs text-error" role="alert">

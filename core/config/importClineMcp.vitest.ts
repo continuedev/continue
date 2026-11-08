@@ -289,7 +289,7 @@ mcpServers:
     );
   });
 
-  it("stores to ~/.continue/.env when asked", async () => {
+  it("stores to ~/.continuous/.env when asked", async () => {
     await importMcpServers(req({ storage: "env", names: ["github"] }), deps());
     expect(fs.readFileSync(path.join(dir, ".env"), "utf8")).toContain(
       "GITHUB_PERSONAL_ACCESS_TOKEN=ghp_fixturetoken123",

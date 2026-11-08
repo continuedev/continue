@@ -53,8 +53,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: doc.frontmatter.title
-      ? `${doc.frontmatter.title} | Continued Docs`
-      : "Continued Docs",
+      ? `${doc.frontmatter.title} | Continuous Docs`
+      : "Continuous Docs",
     description: doc.frontmatter.description || "",
   };
 }

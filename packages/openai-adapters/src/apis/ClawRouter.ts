@@ -33,7 +33,7 @@ export class ClawRouterApi extends OpenAIApi {
   protected override getHeaders(): Record<string, string> {
     return {
       ...super.getHeaders(),
-      "User-Agent": "Continued/IDE",
+      "User-Agent": "Continuous/IDE",
       "X-Continue-Provider": "clawrouter",
     };
   }

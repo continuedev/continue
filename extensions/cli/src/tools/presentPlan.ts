@@ -47,7 +47,7 @@ function checkedArgs(args: PresentPlanArgs) {
 }
 
 /**
- * Writes the plan to `.continue/plans/<slug>.md` under the working directory
+ * Writes the plan to `.continuous/plans/<slug>.md` under the working directory
  * and makes its to-dos the session's task list. Presenting again with the same
  * title replaces this session's file; a file of that name that belongs to
  * something else gets a numbered name.
@@ -108,7 +108,7 @@ export const presentPlanTool: Tool = {
   name: PRESENT_PLAN_CLI_TOOL_NAME,
   displayName: "Present Plan",
   description: PRESENT_PLAN_TOOL_DESCRIPTION,
-  // It writes only its own plan file under .continue/plans, never the
+  // It writes only its own plan file under .continuous/plans, never the
   // person's code. It is offered in plan mode only (getAllAvailableTools).
   readonly: true,
   isBuiltIn: true,

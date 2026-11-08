@@ -488,7 +488,7 @@ export interface McpImportResult {
 
 export interface McpImportDeps {
   ide: Pick<IDE, "readSecrets" | "writeSecrets">;
-  /** ~/.continue */
+  /** ~/.continuous */
   continueDir: string;
   sources: McpImportSource[];
   readText?: (p: string) => string;
@@ -566,7 +566,7 @@ export async function importMcpServers(
       result.secretsStored.push(name);
       if (stored.envShadowed) {
         result.warnings.push(
-          `${name} is now in secure storage; ~/.continue/.env still has an unused copy you can remove.`,
+          `${name} is now in secure storage; ~/.continuous/.env still has an unused copy you can remove.`,
         );
       }
     } else {
@@ -575,7 +575,7 @@ export async function importMcpServers(
     }
   }
 
-  // Make pending names easy to fill in: an empty NAME= line in ~/.continue/.env
+  // Make pending names easy to fill in: an empty NAME= line in ~/.continuous/.env
   for (const name of result.secretsPending) {
     try {
       ensureSecretPlaceholder(deps.continueDir, name);

@@ -3,12 +3,20 @@ import * as vscode from "vscode";
 
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import { isUnsupportedPlatform } from "../util/util";
+import { migrateContinueSettings } from "../util/migrateSettings";
 
 import { GlobalContext } from "core/util/GlobalContext";
 import { VsCodeContinueApi } from "./api";
 import setupInlineTips from "./InlineTipManager";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
+  // Before anything reads a setting: continue.* became continuous.* in 2.4.2
+  try {
+    await migrateContinueSettings(context);
+  } catch (error) {
+    console.warn("Could not copy the continue.* settings", error);
+  }
+
   const platformCheck = isUnsupportedPlatform();
   const globalContext = new GlobalContext();
   const hasShownUnsupportedPlatformWarning = globalContext.get(
@@ -20,7 +28,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
     globalContext.update("hasShownUnsupportedPlatformWarning", true);
     void vscode.window.showInformationMessage(
-      `Continued detected that you are using ${platformTarget}. Due to native dependencies, Continued may not be able to start`,
+      `Continuous detected that you are using ${platformTarget}. Due to native dependencies, Continuous may not be able to start`,
     );
   }
 
@@ -33,13 +41,13 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   const vscodeExtension = new VsCodeExtension(context);
 
-  // Load Continued configuration
+  // Load Continuous configuration
   if (!context.globalState.get("hasBeenInstalled")) {
     void context.globalState.update("hasBeenInstalled", true);
   }
 
   // Register config.yaml schema by removing old entries and adding new one (uri.fsPath changes with each version)
-  const yamlMatcher = ".continue/**/*.yaml";
+  const yamlMatchers = [".continuous/**/*.yaml", ".continue/**/*.yaml"];
   const yamlConfig = vscode.workspace.getConfiguration("yaml");
   const yamlSchemas = yamlConfig.get<object>("schemas", {});
 
@@ -53,13 +61,13 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       "schemas",
       {
         ...yamlSchemas,
-        [newPath]: [yamlMatcher],
+        [newPath]: yamlMatchers,
       },
       vscode.ConfigurationTarget.Global,
     );
   } catch (error) {
     console.error(
-      "Failed to register Continued config.yaml schema, most likely, YAML extension is not installed",
+      "Failed to register Continuous config.yaml schema, most likely, YAML extension is not installed",
       error,
     );
   }

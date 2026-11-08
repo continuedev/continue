@@ -23,7 +23,7 @@ function keyLabel(i: ProviderInstanceInfo): string {
     case "secret": {
       const where = i.key.storedIn;
       if (where?.secure) return "key in secure storage";
-      if (where?.env) return "key in ~/.continue/.env";
+      if (where?.env) return "key in ~/.continuous/.env";
       return `key ${i.key.secretName} not set`;
     }
   }
@@ -282,7 +282,7 @@ export function ProviderInstancesCard() {
             {info?.secureStorageAvailable && (
               <option value="secure">Editor's secure storage</option>
             )}
-            <option value="env">~/.continue/.env</option>
+            <option value="env">~/.continuous/.env</option>
             <option value="none">No key (e.g. a local server)</option>
           </FormSelect>
           {form.storage !== "none" && (

@@ -23,7 +23,7 @@ describe("Autocomplete filtering tests", () => {
   beforeAll(async () => {
     tearDownTestDir();
     setUpTestDir();
-    addToTestDir([".continueignore"]);
+    addToTestDir([".continuousignore"]);
   });
 
   afterAll(async () => {

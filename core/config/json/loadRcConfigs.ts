@@ -1,6 +1,7 @@
 import * as JSONC from "comment-json";
 import { ContinueRcJson, FileType, IDE } from "../..";
 import { joinPathsToUri } from "../../util/uri";
+import { isRcFile } from "../../util/workspaceDirs";
 
 export async function getWorkspaceRcConfigs(
   ide: IDE,
@@ -15,7 +16,7 @@ export async function getWorkspaceRcConfigs(
             (entry) =>
               (entry[1] === (1 as FileType.File) ||
                 entry[1] === (64 as FileType.SymbolicLink)) &&
-              entry[0].endsWith(".continuerc.json"),
+              isRcFile(entry[0]),
           )
           .map((entry) => joinPathsToUri(dir, entry[0]));
         return await Promise.all(rcFiles.map(ide.readFile));

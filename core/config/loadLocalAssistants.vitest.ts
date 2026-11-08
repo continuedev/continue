@@ -13,13 +13,13 @@ describe("ASSISTANTS getAllDotContinueDefinitionFiles with fileExtType option", 
 
     // Add test files to the test directory
     addToTestDir([
-      ".continue/assistants/",
-      [".continue/assistants/assistant1.yaml", "yaml content 1"],
-      [".continue/assistants/assistant2.yml", "yaml content 2"],
-      [".continue/assistants/assistant3.md", "markdown content 1"],
-      [".continue/assistants/assistant4.txt", "txt content"],
-      [".continue/assistants/config.yaml", "txt content"],
-      [".continue/assistants/config.yml", "txt content"],
+      ".continuous/assistants/",
+      [".continuous/assistants/assistant1.yaml", "yaml content 1"],
+      [".continuous/assistants/assistant2.yml", "yaml content 2"],
+      [".continuous/assistants/assistant3.md", "markdown content 1"],
+      [".continuous/assistants/assistant4.txt", "txt content"],
+      [".continuous/assistants/config.yaml", "txt content"],
+      [".continuous/assistants/config.yml", "txt content"],
     ]);
   });
 
@@ -156,9 +156,9 @@ describe("ASSISTANTS getAllDotContinueDefinitionFiles with fileExtType option", 
     walkDirCache.invalidate();
     setUpTestDir();
     addToTestDir([
-      ".continue/assistants/",
-      [".continue/assistants/nonmatch1.txt", "txt content"],
-      [".continue/assistants/nonmatch2.json", "json content"],
+      ".continuous/assistants/",
+      [".continuous/assistants/nonmatch1.txt", "txt content"],
+      [".continuous/assistants/nonmatch2.json", "json content"],
     ]);
 
     const options: LoadAssistantFilesOptions = {
@@ -215,9 +215,9 @@ describe("ASSISTANTS getAllDotContinueDefinitionFiles with fileExtType option", 
   it("should filter by file extension case sensitively", async () => {
     // Add files with uppercase extensions
     addToTestDir([
-      [".continue/assistants/assistant5.YAML", "uppercase yaml"],
-      [".continue/assistants/assistant6.YML", "uppercase yml"],
-      [".continue/assistants/assistant7.MD", "uppercase md"],
+      [".continuous/assistants/assistant5.YAML", "uppercase yaml"],
+      [".continuous/assistants/assistant6.YML", "uppercase yml"],
+      [".continuous/assistants/assistant7.MD", "uppercase md"],
     ]);
 
     const yamlOptions: LoadAssistantFilesOptions = {
@@ -273,11 +273,11 @@ describe("AGENTS getAllDotContinueDefinitionFiles with fileExtType option", () =
 
     // Add test files to the test directory
     addToTestDir([
-      ".continue/agents/",
-      [".continue/agents/agent1.yaml", "yaml content 1"],
-      [".continue/agents/agent2.yml", "yaml content 2"],
-      [".continue/agents/agent3.md", "markdown content 1"],
-      [".continue/agents/agent4.txt", "txt content"],
+      ".continuous/agents/",
+      [".continuous/agents/agent1.yaml", "yaml content 1"],
+      [".continuous/agents/agent2.yml", "yaml content 2"],
+      [".continuous/agents/agent3.md", "markdown content 1"],
+      [".continuous/agents/agent4.txt", "txt content"],
     ]);
   });
 
@@ -390,9 +390,9 @@ describe("AGENTS getAllDotContinueDefinitionFiles with fileExtType option", () =
     walkDirCache.invalidate();
     setUpTestDir();
     addToTestDir([
-      ".continue/agents/",
-      [".continue/agents/nonmatch1.txt", "txt content"],
-      [".continue/agents/nonmatch2.json", "json content"],
+      ".continuous/agents/",
+      [".continuous/agents/nonmatch1.txt", "txt content"],
+      [".continuous/agents/nonmatch2.json", "json content"],
     ]);
 
     const options: LoadAssistantFilesOptions = {
@@ -449,9 +449,9 @@ describe("AGENTS getAllDotContinueDefinitionFiles with fileExtType option", () =
   it("should filter by file extension case sensitively", async () => {
     // Add files with uppercase extensions
     addToTestDir([
-      [".continue/agents/agent5.YAML", "uppercase yaml"],
-      [".continue/agents/agent6.YML", "uppercase yml"],
-      [".continue/agents/agent7.MD", "uppercase md"],
+      [".continuous/agents/agent5.YAML", "uppercase yaml"],
+      [".continuous/agents/agent6.YML", "uppercase yml"],
+      [".continuous/agents/agent7.MD", "uppercase md"],
     ]);
 
     const yamlOptions: LoadAssistantFilesOptions = {

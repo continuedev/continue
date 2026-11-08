@@ -115,7 +115,7 @@ jobs:
           version=$(node -p "require('./package.json').version")
           mkdir -p agents
           npx vsce package --no-dependencies --target ${{ matrix.platform }}-${{ matrix.arch }} \
-            --out "agents/continued-${{ matrix.platform }}-${{ matrix.arch }}-${version}-agents.vsix"
+            --out "agents/continuous-${{ matrix.platform }}-${{ matrix.arch }}-${version}-agents.vsix"
           git checkout -- package.json
 
       - name: Upload agents .vsix artifact
@@ -180,7 +180,7 @@ jobs:
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "path=$notes" >> "$GITHUB_OUTPUT"
-          echo "name=Continued $version" >> "$GITHUB_OUTPUT"
+          echo "name=Continuous $version" >> "$GITHUB_OUTPUT"
 
       - name: Release
         uses: softprops/action-gh-release@v3
@@ -204,7 +204,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build
-    if: (github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true') && github.repository == 'b1tninja/continued'
+    if: (github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true') && github.repository == 'b1tninja/continuous'
     environment: marketplace
     permissions:
       contents: read

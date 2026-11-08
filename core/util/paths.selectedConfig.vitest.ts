@@ -48,7 +48,7 @@ describe("GUI edits follow the selected config", () => {
     expect(text).toContain("be brief");
     expect(text).toContain("# keep me");
     expect(fs.readFileSync(getConfigYamlPath(), "utf8")).toBe(mainBefore);
-    // No .bak is left next to a config outside ~/.continue.
+    // No .bak is left next to a config outside ~/.continuous.
     expect(fs.existsSync(`${other}.bak`)).toBe(false);
   });
 
@@ -60,7 +60,9 @@ describe("GUI edits follow the selected config", () => {
   });
 
   it("refuses edits when the selected config is not a local file", () => {
-    setSelectedConfigFile("vscode-remote://wsl+Ubuntu/home/u/.continue/a.yaml");
+    setSelectedConfigFile(
+      "vscode-remote://wsl+Ubuntu/home/u/.continuous/a.yaml",
+    );
     expect(getEditableConfigYamlPath()).toBeUndefined();
     let ran = false;
     editConfigFile(

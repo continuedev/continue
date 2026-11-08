@@ -44,7 +44,7 @@ describe("TaskProgressStrip", () => {
   });
 
   it("names the plan file when the list came from a plan", () => {
-    session.planFile = "file:///work/.continue/plans/add-retry.md";
+    session.planFile = "file:///work/.continuous/plans/add-retry.md";
     expect(render(<TaskProgressStrip plan={plan} />).lastFrame()).toContain(
       "plan add-retry.md",
     );

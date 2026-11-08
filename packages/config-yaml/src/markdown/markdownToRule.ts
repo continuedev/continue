@@ -74,7 +74,7 @@ function getGlobPattern(globs: RuleFrontmatter["globs"], relativeDir?: string) {
   if (relativeDir === undefined) {
     return globs;
   }
-  if (relativeDir.includes(".continue")) {
+  if (/\.continu(e|ous)([\\/]|$)/.test(relativeDir)) {
     return globs;
   }
   if (!relativeDir.endsWith("/")) {

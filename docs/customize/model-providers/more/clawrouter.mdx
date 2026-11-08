@@ -1,5 +1,5 @@
 ---
-title: "How to Configure ClawRouter with Continued"
+title: "How to Configure ClawRouter with Continuous"
 sidebarTitle: "ClawRouter"
 ---
 
@@ -129,7 +129,7 @@ ClawRouter supports function calling and tool use through its underlying model p
 
 ## Switching Between Routing Profiles
 
-Add multiple ClawRouter profiles to your config and switch via Continued's model picker:
+Add multiple ClawRouter profiles to your config and switch via Continuous's model picker:
 
 <Tabs>
   <Tab title="YAML">
@@ -194,10 +194,10 @@ Add multiple ClawRouter profiles to your config and switch via Continued's model
   </Tab>
 </Tabs>
 
-Use the **model picker dropdown** in Continued's chat panel to switch between profiles. Each profile routes to different model tiers based on cost vs. quality trade-offs.
+Use the **model picker dropdown** in Continuous's chat panel to switch between profiles. Each profile routes to different model tiers based on cost vs. quality trade-offs.
 
 <Tip>
-  **Quick switch via CLI:** In the Continued chat, type `/model` followed by the profile name (e.g., `/model ClawRouter Eco`).
+  **Quick switch via CLI:** In the Continuous chat, type `/model` followed by the profile name (e.g., `/model ClawRouter Eco`).
 </Tip>
 
 ## Custom API Base
@@ -232,7 +232,7 @@ If you're running ClawRouter on a different port or host:
 
 ## Using Multiple Roles
 
-You can configure ClawRouter for different Continued roles:
+You can configure ClawRouter for different Continuous roles:
 
 <Tabs>
   <Tab title="YAML">
@@ -280,7 +280,7 @@ You can configure ClawRouter for different Continued roles:
 
 ## API Keys
 
-ClawRouter manages upstream provider API keys internally. You configure them in ClawRouter, not in Continued.
+ClawRouter manages upstream provider API keys internally. You configure them in ClawRouter, not in Continuous.
 
 For self-hosted setups with custom authentication:
 
@@ -366,7 +366,7 @@ ClawRouter handles common LLM errors automatically at the router level:
 
 ### Automatic Error Recovery
 
-| Error | Continued's Default | ClawRouter's Handling |
+| Error | Continuous's Default | ClawRouter's Handling |
 |-------|-------------------|----------------------|
 | **429 Rate Limit** | Retry same provider with backoff | Route to different provider entirely |
 | **402 Payment Required** | Fail immediately | x402 auto-payment from wallet |

@@ -67,7 +67,7 @@ let file: string;
 
 beforeEach(() => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), "cn-plan-"));
-  file = path.join(dir, ".continue", "plans", "add-retry.md");
+  file = path.join(dir, ".continuous", "plans", "add-retry.md");
   vi.spyOn(process, "cwd").mockReturnValue(dir);
   Object.assign(store, {
     plan: undefined,
@@ -116,7 +116,9 @@ describe("PresentPlan", () => {
     );
     expect(store.mode).toBe("normal");
     expect(result).toContain("approved the plan");
-    expect(result).toContain("Build the plan in .continue/plans/add-retry.md");
+    expect(result).toContain(
+      "Build the plan in .continuous/plans/add-retry.md",
+    );
     expect(store.plan?.updatedBy).toBe("user");
     expect(store.plan?.items.map((i) => i.text)).toEqual([
       "Add a helper",
@@ -159,9 +161,9 @@ describe("PresentPlan", () => {
     expect(store.mode).toBe("plan");
     expect(fs.existsSync(file)).toBe(true);
     expect(store.stderr.join("")).toContain(
-      "Plan saved to .continue/plans/add-retry.md",
+      "Plan saved to .continuous/plans/add-retry.md",
     );
-    expect(result).toContain("Plan: .continue/plans/add-retry.md");
+    expect(result).toContain("Plan: .continuous/plans/add-retry.md");
   });
 
   it("refuses bad arguments in preprocess, before anything is written", async () => {
@@ -174,6 +176,6 @@ describe("PresentPlan", () => {
       "text",
       "checklist",
     ]);
-    expect(fs.existsSync(path.join(dir, ".continue"))).toBe(false);
+    expect(fs.existsSync(path.join(dir, ".continuous"))).toBe(false);
   });
 });

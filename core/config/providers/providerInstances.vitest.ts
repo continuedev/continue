@@ -83,7 +83,7 @@ describe("provider instances", () => {
       { continueDir, configFiles: [] },
     );
     expect(result).toEqual({ saved: true });
-    expect(ide.secrets.CONTINUED_ANTHROPIC_WORK_API_KEY).toBe("sk-ant-secret");
+    expect(ide.secrets.CONTINUOUS_ANTHROPIC_WORK_API_KEY).toBe("sk-ant-secret");
     const text = fs.readFileSync(providersPath(), "utf8");
     expect(text).not.toContain("sk-ant-secret");
     expect(readProviders().providers).toEqual([
@@ -91,7 +91,7 @@ describe("provider instances", () => {
         name: "anthropic-work",
         provider: "anthropic",
         apiBase: "https://proxy.example.com/v1/",
-        apiKey: "${{ secrets.CONTINUED_ANTHROPIC_WORK_API_KEY }}",
+        apiKey: "${{ secrets.CONTINUOUS_ANTHROPIC_WORK_API_KEY }}",
       },
     ]);
   });
@@ -110,7 +110,7 @@ describe("provider instances", () => {
     const info = await listProviderInstances(ide, {
       workspaceFiles: [
         {
-          uri: "file:///ws/.continue/providers.yaml",
+          uri: "file:///ws/.continuous/providers.yaml",
           label: "providers.yaml (workspace)",
           content: "providers:\n  - { name: work, provider: openai }\n",
         },
@@ -129,7 +129,7 @@ describe("provider instances", () => {
     const global = info.instances.find((i) => i.source === "global")!;
     expect(global.key).toEqual({
       state: "secret",
-      secretName: "CONTINUED_WORK_API_KEY",
+      secretName: "CONTINUOUS_WORK_API_KEY",
       storedIn: { secure: true, env: false },
     });
     expect(global.usedBy).toEqual([{ config: "Cloud", model: "GPT" }]);
@@ -238,8 +238,8 @@ models:
       { uri: "file:///c.yaml", label: "Cloud", content: config },
     ]);
     expect(keys.map((k) => [k.label, k.secretName])).toEqual([
-      ["GPT", "CONTINUED_OPENAI_API_KEY"],
-      ["Other GPT", "CONTINUED_OPENAI_API_KEY"],
+      ["GPT", "CONTINUOUS_OPENAI_API_KEY"],
+      ["Other GPT", "CONTINUOUS_OPENAI_API_KEY"],
     ]);
     expect(JSON.stringify(keys)).not.toContain("sk-proj");
   });
@@ -257,21 +257,21 @@ models:
     expect(result.failed).toEqual([]);
     expect(result.moved).toHaveLength(2);
     expect(ide.secrets).toEqual({
-      CONTINUED_OPENAI_API_KEY: "sk-proj-real",
-      CONTINUED_OPENAI_API_KEY_2: "sk-proj-other",
+      CONTINUOUS_OPENAI_API_KEY: "sk-proj-real",
+      CONTINUOUS_OPENAI_API_KEY_2: "sk-proj-other",
     });
     const text = ide.files["file:///c.yaml"];
     expect(text).not.toContain("sk-proj");
     expect(text).toContain("# my models");
     const models = YAML.parse(text).models;
-    expect(models[0].apiKey).toBe("${{ secrets.CONTINUED_OPENAI_API_KEY }}");
-    expect(models[1].apiKey).toBe("${{ secrets.CONTINUED_OPENAI_API_KEY_2 }}");
+    expect(models[0].apiKey).toBe("${{ secrets.CONTINUOUS_OPENAI_API_KEY }}");
+    expect(models[1].apiKey).toBe("${{ secrets.CONTINUOUS_OPENAI_API_KEY_2 }}");
     expect(models[2].apiKey).toBe("YOUR_ANTHROPIC_API_KEY_HERE");
   });
 
   it("reuses a secret that already holds the same value", async () => {
     const ide = fakeIde({ "file:///c.yaml": config });
-    ide.secrets.CONTINUED_OPENAI_API_KEY = "sk-proj-other";
+    ide.secrets.CONTINUOUS_OPENAI_API_KEY = "sk-proj-other";
     const keys = findPlaintextKeys([
       { uri: "file:///c.yaml", label: "Cloud", content: config },
     ]);
@@ -280,11 +280,11 @@ models:
       continueDir,
     });
     expect(YAML.parse(ide.files["file:///c.yaml"]).models[1].apiKey).toBe(
-      "${{ secrets.CONTINUED_OPENAI_API_KEY }}",
+      "${{ secrets.CONTINUOUS_OPENAI_API_KEY }}",
     );
   });
 
-  it("can use ~/.continue/.env", async () => {
+  it("can use ~/.continuous/.env", async () => {
     const ide = fakeIde({ "file:///c.yaml": config });
     const [first] = findPlaintextKeys([
       { uri: "file:///c.yaml", label: "Cloud", content: config },
@@ -294,9 +294,9 @@ models:
       continueDir,
     });
     expect(result.moved).toEqual([first.id]);
-    expect(readSecretFromEnvFile(continueDir, "CONTINUED_OPENAI_API_KEY")).toBe(
-      "sk-proj-real",
-    );
+    expect(
+      readSecretFromEnvFile(continueDir, "CONTINUOUS_OPENAI_API_KEY"),
+    ).toBe("sk-proj-real");
   });
 
   it("does nothing to a key that changed after it was found", async () => {

@@ -48,7 +48,7 @@ function slugToLabel(slug: string, titleMap?: Record<string, string>) {
 
 const NAV_LINK_DEFS = [
   { label: "Docs", path: "/docs" },
-  { label: "GitHub", path: "https://github.com/b1tninja/continued" },
+  { label: "GitHub", path: "https://github.com/b1tninja/continuous" },
 ];
 
 const NAV_LINKS = NAV_LINK_DEFS.map((d) => ({
@@ -236,13 +236,13 @@ export function DocsShell({
             >
               <Link href={resolveHref("/")} className="flex items-center">
                 <img
-                  src={withBasePath("/images/continued-logo-light.svg")}
-                  alt="Continued"
+                  src={withBasePath("/images/continuous-logo-light.svg")}
+                  alt="Continuous"
                   className="h-8 w-auto dark:hidden"
                 />
                 <img
-                  src={withBasePath("/images/continued-logo-dark.svg")}
-                  alt="Continued"
+                  src={withBasePath("/images/continuous-logo-dark.svg")}
+                  alt="Continuous"
                   className="hidden h-8 w-auto dark:block"
                 />
               </Link>
@@ -251,13 +251,13 @@ export function DocsShell({
             <div className="flex items-center px-5 py-3 lg:hidden">
               <Link href={resolveHref("/")} className="flex items-center">
                 <img
-                  src={withBasePath("/images/continued-logo-light.svg")}
-                  alt="Continued"
+                  src={withBasePath("/images/continuous-logo-light.svg")}
+                  alt="Continuous"
                   className="h-8 w-auto dark:hidden"
                 />
                 <img
-                  src={withBasePath("/images/continued-logo-dark.svg")}
-                  alt="Continued"
+                  src={withBasePath("/images/continuous-logo-dark.svg")}
+                  alt="Continuous"
                   className="hidden h-8 w-auto dark:block"
                 />
               </Link>

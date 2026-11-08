@@ -1,17 +1,17 @@
 ---
 title: "config.yaml Reference"
-description: "Comprehensive guide to the config.yaml format used by Continued for building custom coding agents. Learn how to define models, context providers, rules, prompts, and more using YAML configuration."
+description: "Comprehensive guide to the config.yaml format used by Continuous for building custom coding agents. Learn how to define models, context providers, rules, prompts, and more using YAML configuration."
 ---
 
 ## Introduction
 
-Continued Agents are defined using the `config.yaml` specification.
+Continuous Agents are defined using the `config.yaml` specification.
 
 **Agents** are composed of models, rules, and tools (MCP servers).
 
 <Columns cols={2}>
 <Card title="Configuring Models, Rules, and Tools" icon="cube" href="./guides/configuring-models-rules-tools.mdx">
-Learn how to work with Continued's configuration system, including using hub models, rules, and tools, creating local configurations, and organizing your setup.
+Learn how to work with Continuous's configuration system, including using hub models, rules, and tools, creating local configurations, and organizing your setup.
 </Card>
 
   <Card title="Understanding Configs" icon="robot" href="./guides/understanding-configs.mdx">
@@ -78,12 +78,12 @@ The `models` section defines the language models used in your configuration. Mod
 
 - `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`, `reviewer` (experimental, see [Reviewer Role](./customize/model-roles/reviewer.mdx)). The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
 
-- `capabilities`: Array of strings denoting model capabilities, which will overwrite Continued's autodetection based on provider and model. See the [Model Capabilities guide](./customize/deep-dives/model-capabilities.mdx) for detailed information. Supported capabilities include:
+- `capabilities`: Array of strings denoting model capabilities, which will overwrite Continuous's autodetection based on provider and model. See the [Model Capabilities guide](./customize/deep-dives/model-capabilities.mdx) for detailed information. Supported capabilities include:
 
   - `tool_use`: Enables function/tool calling support (required for Agent mode)
   - `image_input`: Enables image upload and processing support
 
-  Continued automatically detects these capabilities for most models, but you can override this when using custom deployments or if autodetection isn't working correctly.
+  Continuous automatically detects these capabilities for most models, but you can override this when using custom deployments or if autodetection isn't working correctly.
 
 - `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 
@@ -284,12 +284,12 @@ The snake_case tool name also works as a rule name, for example `read_file(**/.e
 **Protected paths always ask.** Some paths are guarded even if you write no rules, and no allow rule or tool setting can switch that off (a deny rule still refuses them outright):
 
 - **Credentials** are protected for every tool and for commands: `.env`, `.env.*` and `*.env` (but not `.env.example`, `.sample`, `.template`), `~/.ssh`, `~/.aws`, `~/.gnupg`, `~/.kube`, `~/.azure`, `~/.docker`, `~/.config/gh`, `~/.config/gcloud`, `~/.terraform.d`, `~/.git-credentials`, `~/.pgpass`, `~/.my.cnf`, `.netrc`, `.npmrc`, `.pypirc`, private-key files such as `id_rsa`, files ending in `.pem`, `.key`, `.pfx`, `.p12`, `.tfvars` or `.tfstate`, `terraform.tfstate`, `/etc/shadow` and `/proc/self/environ`.
-- **Files that change what runs later** are protected for edits, new files and commands: anything under `.git/`, `.continue/`, `.vscode/`, `.idea/`, `.husky/`, `.devcontainer/`, `.cargo/`, `.claude/`, `.cursor/`, `.github/workflows/` or `.github/actions/`; `.continuerc.*`, `.mcp.json`, `.envrc`, `.gitlab-ci.yml`; and shell startup files such as `~/.bashrc`, `~/.zshrc`, `~/.gitconfig`, fish config and LaunchAgents. Just reading or listing these is fine. Instruction files such as `AGENTS.md` and `CLAUDE.md` are not on this list because they are edited all the time; add `writeFile(AGENTS.md)` to `ask` if you want them guarded.
+- **Files that change what runs later** are protected for edits, new files and commands: anything under `.git/`, `.continuous/`, `.vscode/`, `.idea/`, `.husky/`, `.devcontainer/`, `.cargo/`, `.claude/`, `.cursor/`, `.github/workflows/` or `.github/actions/`; `.continuousrc.*`, `.mcp.json`, `.envrc`, `.gitlab-ci.yml`; and shell startup files such as `~/.bashrc`, `~/.zshrc`, `~/.gitconfig`, fish config and LaunchAgents. Just reading or listing these is fine. Instruction files such as `AGENTS.md` and `CLAUDE.md` are not on this list because they are edited all the time; add `writeFile(AGENTS.md)` to `ask` if you want them guarded.
 - **Commands that print credentials** ask even when they name no file: `env` and `printenv` with no argument, `dir env:`, and a variable whose name is a credential word, such as `echo $AWS_SECRET_ACCESS_KEY`, `echo %GITHUB_TOKEN%` or `printenv NPM_TOKEN`. `echo $KEYBOARD_LAYOUT` is fine. Network paths such as `\\host\share` also ask, because looking one up contacts that computer and on Windows can send your login to it.
 
 The home directory is recognised however it is written (`~`, `$HOME`, `%USERPROFILE%`, or the full path). The approval prompt says which path caused the question. A command is checked by looking for these paths among its words, including after `sudo` and inside `bash -c '...'`, so `echo .env` also asks. It cannot see a path built from a variable, a wildcard, or a bare file name after `cd`.
 
-**These rules are a guard against mistakes, not a sandbox.** They do not see aliases, a command name built from something other than plain assignments (a glob such as `/usr/bin/gi? push`, or the output of another command), encodings such as `echo ... | base64 -d | sh`, or a script that runs a denied command inside itself (`npm run deploy` can do anything its script does). Anything that can edit your config can also add its own allow rule, which is why edits to `.continue/` always ask. Use deny rules for things you never want to happen by accident, and keep real secrets out of reach by other means too.
+**These rules are a guard against mistakes, not a sandbox.** They do not see aliases, a command name built from something other than plain assignments (a glob such as `/usr/bin/gi? push`, or the output of another command), encodings such as `echo ... | base64 -d | sh`, or a script that runs a denied command inside itself (`npm run deploy` can do anything its script does). Anything that can edit your config can also add its own allow rule, which is why edits to `.continuous/` always ask. Use deny rules for things you never want to happen by accident, and keep real secrets out of reach by other means too.
 
 **Edits.** File edits are normally shown as a diff for you to accept or reject. A `writeFile` deny rule refuses them before that. An `ask` or `allow` rule on edits changes nothing, because the diff review is already the check. The exception is a protected file (see above): an edit to `.github/workflows/ci.yml`, a git hook or `.env` waits for your approval before it is applied.
 
@@ -437,7 +437,7 @@ docs:
 
 ### `mcpServers`
 
-The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continued supports any MCP server with the MCP context provider.
+The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continuous supports any MCP server with the MCP context provider.
 
 **Properties:**
 

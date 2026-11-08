@@ -165,7 +165,7 @@
         },
         "noProxy": {
           "title": "No Proxy",
-          "description": "A list of hostnames for which Continue should not use the proxy specified in requestOptions.proxy",
+          "description": "A list of hostnames for which Continuous should not use the proxy specified in requestOptions.proxy",
           "type": "array",
           "items": {
             "type": "string"
@@ -476,8 +476,8 @@
         },
         "promptTemplates": {
           "title": "Prompt Templates",
-          "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt) for an example.",
-          "x-intellij-html-description": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See <a href='https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt'>here</a> for an example.",
+          "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Continuous) to a string giving the prompt template. See [here](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt) for an example.",
+          "x-intellij-html-description": "A mapping of prompt template name ('edit' is currently the only one used in Continuous) to a string giving the prompt template. See <a href='https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt'>here</a> for an example.",
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -1948,12 +1948,12 @@
                 "properties": {
                   "recap": {
                     "type": "boolean",
-                    "markdownDescription": "If recap is set to `true`, Continue will generate a summary of the changes after making the edit.",
-                    "x-intellij-html-description": "If recap is set to <code>true</code>, Continue will generate a summary of the changes after making the edit."
+                    "markdownDescription": "If recap is set to `true`, Continuous will generate a summary of the changes after making the edit.",
+                    "x-intellij-html-description": "If recap is set to <code>true</code>, Continuous will generate a summary of the changes after making the edit."
                   },
                   "tokenLimit": {
                     "type": "integer",
-                    "description": "By default, Continue doesn't let you edit extremely large ranges (beyond 1,200 tokens), because the LLM is unlikely to succeed. But if you would like to override this limit with the understanding of possible failure you may do so here."
+                    "description": "By default, Continuous doesn't let you edit extremely large ranges (beyond 1,200 tokens), because the LLM is unlikely to succeed. But if you would like to override this limit with the understanding of possible failure you may do so here."
                   }
                 }
               }
@@ -2898,15 +2898,15 @@
         },
         "disableIndexing": {
           "title": "Disable Indexing",
-          "markdownDescription": "If set to `true`, Continue will not index the codebase. This is mainly used for debugging purposes.",
-          "x-intellij-html-description": "If set to <code>true</code>, Continue will not index the codebase. This is mainly used for debugging purposes.",
+          "markdownDescription": "If set to `true`, Continuous will not index the codebase. This is mainly used for debugging purposes.",
+          "x-intellij-html-description": "If set to <code>true</code>, Continuous will not index the codebase. This is mainly used for debugging purposes.",
           "default": false,
           "type": "boolean"
         },
         "disableSessionTitles": {
           "title": "Disable Session Titles",
-          "markdownDescription": "If set to `true`, Continue will not make extra requests to the LLM to generate a summary title of each session.",
-          "x-intellij-html-description": "If set to <code>true</code>, Continue will not make extra requests to the LLM to generate a summary title of each session.",
+          "markdownDescription": "If set to `true`, Continuous will not make extra requests to the LLM to generate a summary title of each session.",
+          "x-intellij-html-description": "If set to <code>true</code>, Continuous will not make extra requests to the LLM to generate a summary title of each session.",
           "default": false,
           "type": "boolean"
         },
@@ -3331,8 +3331,8 @@
         },
         "tabAutocompleteModel": {
           "title": "Tab Autocomplete Model",
-          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using qwen2.5-coder:1.5b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
-          "x-intellij-html-description": "The model used for tab autocompletion. If undefined, Continue will default to using qwen2.5-coder:1.5b on a local Ollama instance.<br><br><i>IMPORTANT</i>:<br><br>If you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
+          "markdownDescription": "The model used for tab autocompletion. If undefined, Continuous will default to using qwen2.5-coder:1.5b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
+          "x-intellij-html-description": "The model used for tab autocompletion. If undefined, Continuous will default to using qwen2.5-coder:1.5b on a local Ollama instance.<br><br><i>IMPORTANT</i>:<br><br>If you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
           "default": {
             "title": "Tab Autocomplete Model",
             "provider": "ollama",
@@ -3387,7 +3387,7 @@
             },
             "multilineCompletions": {
               "enum": ["always", "never", "auto"],
-              "description": "If set to true, Continue will only complete a single line at a time."
+              "description": "If set to true, Continuous will only complete a single line at a time."
             },
             "useCache": {
               "type": "boolean",
@@ -3395,7 +3395,7 @@
             },
             "onlyMyCode": {
               "type": "boolean",
-              "description": "If set to true, Continue will not include any snippets from go to definition unless they are within your repository"
+              "description": "If set to true, Continuous will not include any snippets from go to definition unless they are within your repository"
             },
             "disableInFiles": {
               "description": "A list of files / glob patterns in which to disable tab autocomplete. For example, *.csv if you'd like to disable autocomplete in .csv files.",
@@ -3568,7 +3568,7 @@
             },
             "useChromiumForDocsCrawling": {
               "type": "boolean",
-              "description": "Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`.",
+              "description": "Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continuous/.utils`.",
               "default": false
             },
             "modelContextProtocolServers": {

@@ -2,13 +2,13 @@
 title: "VS Code Chat and Agents"
 ---
 
-Continued shares the selected config's chat models and MCP servers with VS Code's own chat, agent mode and Agents window. Its keys stay with Continued.
+Continuous shares the selected config's chat models and MCP servers with VS Code's own chat, agent mode and Agents window. Its keys stay with Continuous.
 
 ## Models in VS Code's model picker
 
-The chat models of the selected config appear in VS Code's model picker under **Continued**. Requests from VS Code's chat and agents run through Continued with the keys from your config and [provider accounts](/customize/providers); VS Code never receives the keys. Models that support tool calling can be used in agent mode.
+The chat models of the selected config appear in VS Code's model picker under **Continuous**. Requests from VS Code's chat and agents run through Continuous with the keys from your config and [provider accounts](/customize/providers); VS Code never receives the keys. Models that support tool calling can be used in agent mode.
 
-Switching configs changes the list. Turn it off with the `continue.shareModelsWithVSCode` setting.
+Switching configs changes the list. Turn it off with the `continuous.shareModelsWithVSCode` setting.
 
 <Note>
   VS Code only shows models from extensions to users on an individual GitHub Copilot plan, and Copilot Business or Enterprise administrators can turn them off with the "Bring Your Own Language Model Key" policy.
@@ -16,21 +16,21 @@ Switching configs changes the list. Turn it off with the `continue.shareModelsWi
 
 ## MCP servers in VS Code
 
-The MCP servers of the selected config appear in VS Code's MCP server list under **Continued**, so they are set up once for both. Stdio servers and HTTP (streamable HTTP and SSE) servers are shared; websocket servers are not, as VS Code has no equivalent. Servers disabled in Continued are left out.
+The MCP servers of the selected config appear in VS Code's MCP server list under **Continuous**, so they are set up once for both. Stdio servers and HTTP (streamable HTTP and SSE) servers are shared; websocket servers are not, as VS Code has no equivalent. Servers disabled in Continuous are left out.
 
-Environment values, API keys and request headers are not part of the list VS Code caches; they are passed only when VS Code starts the server. Turn sharing off with the `continue.shareMcpServersWithVSCode` setting.
+Environment values, API keys and request headers are not part of the list VS Code caches; they are passed only when VS Code starts the server. Turn sharing off with the `continuous.shareMcpServersWithVSCode` setting.
 
-## Experimental Continued agent sessions
+## Experimental Continuous agent sessions
 
-The **agents** build of the extension adds a **Continued** chat session type. It runs on the chat model and always-applied rules of the selected config, and uses VS Code's tools, including MCP servers. VS Code asks for approval before tools that need it.
+The **agents** build of the extension adds a **Continuous** chat session type. It runs on the chat model and always-applied rules of the selected config, and uses VS Code's tools, including MCP servers. VS Code asks for approval before tools that need it.
 
 It uses VS Code APIs that are still proposed, so:
 
-- Install the `continued-<platform>-<version>-agents.vsix` file from the [GitHub release](https://github.com/b1tninja/continued/releases) instead of the Marketplace version, which cannot include proposed APIs.
+- Install the `continuous-<platform>-<version>-agents.vsix` file from the [GitHub release](https://github.com/b1tninja/continuous/releases) instead of the Marketplace version, which cannot include proposed APIs.
 - Use VS Code Insiders, or start VS Code Stable with:
 
   ```bash
-  code --enable-proposed-api b1tninja.continued
+  code --enable-proposed-api b1tninja.continuous
   ```
 
 Without either, the agents build works like the normal one. Proposed APIs change without notice, so a VS Code update can break these sessions.
@@ -39,10 +39,10 @@ These sessions are expected to appear in editor chat and its sessions list, not 
 
 ## Agents window: current state
 
-In VS Code 1.145, an extension with code runs in the Agents window only if its `package.json` declares `capabilities.agentsWindow.supported`. Continued does not declare it yet, so its models and MCP servers are available in editor chat and agent mode, not in the Agents window. To try it anyway, enable Continued there in your user settings and reload the Agents window. Continued's sidebar and status bar do not exist in the Agents window, and this is untested:
+In VS Code 1.145, an extension with code runs in the Agents window only if its `package.json` declares `capabilities.agentsWindow.supported`. Continuous does not declare it yet, so its models and MCP servers are available in editor chat and agent mode, not in the Agents window. To try it anyway, enable Continuous there in your user settings and reload the Agents window. Continuous's sidebar and status bar do not exist in the Agents window, and this is untested:
 
 ```json
-"extensions.supportAgentsWindow": { "b1tninja.continued": true }
+"extensions.supportAgentsWindow": { "b1tninja.continuous": true }
 ```
 
 ## Roadmap
@@ -51,10 +51,10 @@ These are possible next steps. None is scheduled; most wait on VS Code APIs beco
 
 | Item | What it would do | Status |
 | :-- | :-- | :-- |
-| Agent sessions in the Agents window | Continued as an agent next to Copilot, Claude and Codex | **Blocked.** The agents there are built into VS Code, and the session API (`chatSessionsProvider`) is proposed with no plan to finalize it ([microsoft/vscode#340045](https://github.com/microsoft/vscode/issues/340045)). Stable VS Code allows it only for Copilot Chat, GitHub Pull Requests and OpenAI's Codex extension. |
+| Agent sessions in the Agents window | Continuous as an agent next to Copilot, Claude and Codex | **Blocked.** The agents there are built into VS Code, and the session API (`chatSessionsProvider`) is proposed with no plan to finalize it ([microsoft/vscode#340045](https://github.com/microsoft/vscode/issues/340045)). Stable VS Code allows it only for Copilot Chat, GitHub Pull Requests and OpenAI's Codex extension. |
 | Run in the Agents window | Make the shared models and MCP servers available there | Possible with the stable `capabilities.agentsWindow.supported` field, but the whole extension would load there, where its sidebar and status bar do not exist. Needs testing first. |
-| Your rules and prompts in VS Code chat | Continued rules as instructions, prompts as slash commands, skills and custom agents | The `chatInstructions`, `chatPromptFiles`, `chatSkills`, `chatAgents` and `chatPlugins` contribution points are stable but only ship files bundled in the extension. Providing each user's own rules and prompts needs the proposed `chatPromptFiles` provider API. |
-| Codebase search as a tool | Let any VS Code agent search Continued's codebase index and docs | Possible with the stable language model tools API (`vscode.lm.registerTool`). |
+| Your rules and prompts in VS Code chat | Continuous rules as instructions, prompts as slash commands, skills and custom agents | The `chatInstructions`, `chatPromptFiles`, `chatSkills`, `chatAgents` and `chatPlugins` contribution points are stable but only ship files bundled in the extension. Providing each user's own rules and prompts needs the proposed `chatPromptFiles` provider API. |
+| Codebase search as a tool | Let any VS Code agent search Continuous's codebase index and docs | Possible with the stable language model tools API (`vscode.lm.registerTool`). |
 | Provider accounts from VS Code's Language Models settings | Set up `providers.yaml` accounts where VS Code manages models | Possible with the stable configuration schema for model providers. |
-| System messages and model settings | Pass Continued's system message as a real system role; per-model settings in VS Code | **Blocked** on the proposed `languageModelSystem` and `chatProvider` APIs, the two AI APIs closest to being finalized ([microsoft/vscode#255286](https://github.com/microsoft/vscode/issues/255286), [#291012](https://github.com/microsoft/vscode/issues/291012)). |
-| The `cn` CLI as an Agent Host | Serve Continued agents over the open Agent Host Protocol, which VS Code's Agents window speaks | Exploratory. The protocol is open, but VS Code does not document connecting to an Agent Host other than its own. |
+| System messages and model settings | Pass Continuous's system message as a real system role; per-model settings in VS Code | **Blocked** on the proposed `languageModelSystem` and `chatProvider` APIs, the two AI APIs closest to being finalized ([microsoft/vscode#255286](https://github.com/microsoft/vscode/issues/255286), [#291012](https://github.com/microsoft/vscode/issues/291012)). |
+| The `cn` CLI as an Agent Host | Serve Continuous agents over the open Agent Host Protocol, which VS Code's Agents window speaks | Exploratory. The protocol is open, but VS Code does not document connecting to an Agent Host other than its own. |

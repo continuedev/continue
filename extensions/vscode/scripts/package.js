@@ -35,6 +35,6 @@ exec(command, { maxBuffer: 64 * 1024 * 1024 }, (error, stdout, stderr) => {
     throw error;
   }
   console.log(
-    `vsce package completed - extension created at extensions/vscode/build/continued-${version}.vsix`,
+    `vsce package completed - extension created at extensions/vscode/build/continuous-${version}.vsix`,
   );
 });

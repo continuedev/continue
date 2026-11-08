@@ -17,7 +17,7 @@ function setupWith(
         models: [{ name: "Opus", model: "claude-opus" }],
         key: {
           state: "secret",
-          secretName: "CONTINUED_ANTHROPIC_API_KEY",
+          secretName: "CONTINUOUS_ANTHROPIC_API_KEY",
           storedIn,
         },
       },
@@ -44,7 +44,7 @@ function messengerWith(setup: ProviderSetupInfo) {
 }
 
 describe("ProvidersCard key storage actions", () => {
-  it("moves a key that is only in ~/.continue/.env after confirmation", async () => {
+  it("moves a key that is only in ~/.continuous/.env after confirmation", async () => {
     const { m, calls } = messengerWith(setupWith({ secure: false, env: true }));
     const { user } = await renderWithProviders(<ProvidersCard />, {
       mockIdeMessenger: m,
@@ -63,7 +63,7 @@ describe("ProvidersCard key storage actions", () => {
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toEqual({
       type: "move",
-      data: { secretName: "CONTINUED_ANTHROPIC_API_KEY" },
+      data: { secretName: "CONTINUOUS_ANTHROPIC_API_KEY" },
     });
   });
 

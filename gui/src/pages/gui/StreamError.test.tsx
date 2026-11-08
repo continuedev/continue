@@ -59,17 +59,17 @@ describe("stream error for a failure that should pass", () => {
     await user.click(screen.getByText("Cancel"));
     expect(screen.getByTestId("retry-cancelled")).toBeTruthy();
     const opened = vi.fn();
-    window.addEventListener("continued:openModelSelect", opened);
+    window.addEventListener("continuous:openModelSelect", opened);
     await user.click(screen.getByText("Change model"));
     await new Promise((r) => setTimeout(r, 10));
     expect(opened).toHaveBeenCalled();
-    window.removeEventListener("continued:openModelSelect", opened);
+    window.removeEventListener("continuous:openModelSelect", opened);
   });
 
   it("does not wait on its own for an hour; it says how long the server asked for", async () => {
     await render(
       new Error(
-        "The server asked to wait 3600 s before trying again (rate limit or overload), longer than Continue waits on its own.",
+        "The server asked to wait 3600 s before trying again (rate limit or overload), longer than Continuous waits on its own.",
       ),
     );
     expect(screen.getByTestId("transient-failure").textContent).toContain(

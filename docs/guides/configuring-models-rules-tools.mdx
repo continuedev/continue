@@ -1,11 +1,11 @@
 ---
 title: "Configuring Models, Rules, and Tools"
-description: "Learn how to work with Continued's configuration system. Understand how to use models, rules, and tools, create local configurations, and organize your setup for maximum reusability."
+description: "Learn how to work with Continuous's configuration system. Understand how to use models, rules, and tools, create local configurations, and organize your setup for maximum reusability."
 ---
 
 ## What Are Models, Rules, and Tools?
 
-Continued configs are built from three main types of configuration:
+Continuous configs are built from three main types of configuration:
 
 <Columns cols={3}>
 <Card title="Models" icon="cube">
@@ -52,7 +52,7 @@ Perfect for project-specific setups like TypeScript rules for web apps or the Pl
 
 ## Shared Blocks
 
-Continued uses a slug in the format of `owner/item-name` to resolve blocks.
+Continuous uses a slug in the format of `owner/item-name` to resolve blocks.
 
 For example, to use the Claude 4 Sonnet model, you'd reference it as `anthropic/claude-4-sonnet`.
 
@@ -76,15 +76,15 @@ Organize your local configurations using these directories:
 
 <Columns cols={3}>
 <Card title="Models" icon="cube">
-  `.continue/models`
+  `.continuous/models`
 </Card>
 
 <Card title="Rules" icon="pencil">
-  `.continue/rules`
+  `.continuous/rules`
 </Card>
 
 <Card title="Tools" icon="server">
-  `.continue/mcpServers`
+  `.continuous/mcpServers`
 </Card>
 </Columns>
 
@@ -98,11 +98,11 @@ When configuring a local model or MCP server, you can use the same mustache nota
 
 <Columns cols={2}>
 <Card title="Workspace" icon="folder-open">
-`.env` file at your project root, or in `<workspace-root>/.continue/.env`
+`.env` file at your project root, or in `<workspace-root>/.continuous/.env`
 </Card>
 
 <Card title="Global" icon="globe">
-`.env` file in `~/.continue/.env`
+`.env` file in `~/.continuous/.env`
 </Card>
 </Columns>
 

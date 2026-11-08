@@ -84,7 +84,7 @@ describe("loadModelCatalog", () => {
     const ide = {
       getWorkspaceDirs: async () => ["file:///ws"],
       fileExists: async (uri: string) =>
-        uri === "file:///ws/.continue/models.yaml",
+        uri === "file:///ws/.continuous/models.yaml",
       readFile: async () => "models:\n  - { name: a, model: workspace-a }\n",
     };
     const { models, errors } = await loadModelCatalog(ide as any);

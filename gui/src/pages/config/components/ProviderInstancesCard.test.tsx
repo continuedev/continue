@@ -13,16 +13,16 @@ const INFO: ProviderInstancesInfo = {
       provider: "anthropic",
       apiBase: "https://proxy.example.com/v1/",
       source: "global",
-      sourceUri: "file:///home/u/.continue/providers.yaml",
+      sourceUri: "file:///home/u/.continuous/providers.yaml",
       key: {
         state: "secret",
-        secretName: "CONTINUED_ANTHROPIC_WORK_API_KEY",
+        secretName: "CONTINUOUS_ANTHROPIC_WORK_API_KEY",
         storedIn: { secure: true, env: false },
       },
       usedBy: [{ config: "Cloud", model: "Sonnet" }],
     },
   ],
-  globalFileUri: "file:///home/u/.continue/providers.yaml",
+  globalFileUri: "file:///home/u/.continuous/providers.yaml",
   secureStorageAvailable: true,
 };
 
@@ -151,7 +151,7 @@ describe("PlaintextKeysNotice", () => {
         fileLabel: "Cloud",
         kind: "model" as const,
         label: "GPT",
-        secretName: "CONTINUED_OPENAI_API_KEY",
+        secretName: "CONTINUOUS_OPENAI_API_KEY",
       },
     ];
     m.responseHandlers["config/findPlaintextKeys"] = async () => ({

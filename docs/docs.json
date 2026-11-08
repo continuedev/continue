@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Continued",
+  "name": "Continuous",
   "colors": {
     "primary": "#6b7280",
     "light": "#ffffff",
@@ -204,7 +204,7 @@
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg",
-    "href": "https://github.com/b1tninja/continued"
+    "href": "https://github.com/b1tninja/continuous"
   },
   "background": {
     "color": {
@@ -214,12 +214,12 @@
   "navbar": {
     "primary": {
       "type": "github",
-      "href": "https://github.com/b1tninja/continued"
+      "href": "https://github.com/b1tninja/continuous"
     }
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/b1tninja/continued"
+      "github": "https://github.com/b1tninja/continuous"
     }
   },
   "contextual": {
@@ -236,7 +236,7 @@
   "redirects": [
     {
       "source": "/changelog",
-      "destination": "https://github.com/b1tninja/continued/releases"
+      "destination": "https://github.com/b1tninja/continuous/releases"
     },
     {
       "source": "/customization",
@@ -848,7 +848,7 @@
     },
     {
       "source": "/about",
-      "destination": "https://github.com/b1tninja/continued"
+      "destination": "https://github.com/b1tninja/continuous"
     },
     {
       "source": "/autocomplete/model-setup",

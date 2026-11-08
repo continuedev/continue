@@ -50,7 +50,7 @@ describe("applyAccountSetup", () => {
       provider: "openai",
       connection: { apiBase: "http://127.0.0.1:8083/v1/" },
       add: [strataModel],
-      key: { storage: "secure", secretName: "CONTINUED_LOCAL_API_KEY" },
+      key: { storage: "secure", secretName: "CONTINUOUS_LOCAL_API_KEY" },
       accountName: "Strata",
     });
     expect(out.account).toBe("strata");
@@ -59,7 +59,7 @@ describe("applyAccountSetup", () => {
         name: "strata",
         provider: "openai",
         apiBase: "http://127.0.0.1:8083/v1/",
-        apiKey: "${{ secrets.CONTINUED_LOCAL_API_KEY }}",
+        apiKey: "${{ secrets.CONTINUOUS_LOCAL_API_KEY }}",
       },
     ]);
     expect(out.models.models).toHaveLength(1);
@@ -138,7 +138,7 @@ describe("applyConvertToAccount", () => {
               provider: "openai",
               model: "qwen",
               apiBase: "http://127.0.0.1:8083/v1/",
-              apiKey: "${{ secrets.CONTINUED_LOCAL_API_KEY }}",
+              apiKey: "${{ secrets.CONTINUOUS_LOCAL_API_KEY }}",
               roles: ["chat"],
               requestOptions: {
                 extraBodyProperties: { reasoning_effort: "xhigh" },
@@ -162,7 +162,7 @@ describe("applyConvertToAccount", () => {
         name: "strata",
         provider: "openai",
         apiBase: "http://127.0.0.1:8083/v1",
-        apiKey: "${{ secrets.CONTINUED_LOCAL_API_KEY }}",
+        apiKey: "${{ secrets.CONTINUOUS_LOCAL_API_KEY }}",
       },
     ]);
     expect(out.models.models).toEqual([
@@ -195,7 +195,7 @@ describe("describeAccountConnections", () => {
           name: "strata",
           provider: "openai",
           apiBase: "http://127.0.0.1:8083/v1/",
-          apiKey: "${{ secrets.CONTINUED_LOCAL_API_KEY }}",
+          apiKey: "${{ secrets.CONTINUOUS_LOCAL_API_KEY }}",
         },
       ],
       [{ name: "Qwen", connection: "strata", model: "qwen" }],
@@ -209,7 +209,7 @@ describe("describeAccountConnections", () => {
           { name: "Qwen#act", model: "qwen" },
           { name: "Direct", model: "other" },
         ],
-        key: { state: "secret", secretName: "CONTINUED_LOCAL_API_KEY" },
+        key: { state: "secret", secretName: "CONTINUOUS_LOCAL_API_KEY" },
       },
     ]);
   });

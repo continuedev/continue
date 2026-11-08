@@ -89,7 +89,7 @@ describe("config paths", () => {
     ".git/hooks/pre-commit",
     "sub/.git/HEAD",
     ".GIT/config",
-    ".continue/config.yaml",
+    ".continuous/config.yaml",
     ".vscode/tasks.json",
     ".github/workflows/ci.yml",
     "repo/.GitHub/Workflows/x.yml",

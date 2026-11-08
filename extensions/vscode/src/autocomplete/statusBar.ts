@@ -48,29 +48,29 @@ const statusBarItemText = (
   error?: boolean,
 ) => {
   if (error) {
-    return "$(alert) Continued (config error)";
+    return "$(alert) Continuous (config error)";
   }
 
   let text: string;
   switch (status) {
     case undefined:
       if (loading) {
-        text = "$(loading~spin) Continued";
+        text = "$(loading~spin) Continuous";
       } else {
-        text = "Continued";
+        text = "Continuous";
       }
       break;
     case StatusBarStatus.Disabled:
-      text = "$(circle-slash) Continued";
+      text = "$(circle-slash) Continuous";
       break;
     case StatusBarStatus.Enabled:
-      text = "$(check) Continued";
+      text = "$(check) Continuous";
       break;
     case StatusBarStatus.Paused:
-      text = "$(debug-pause) Continued";
+      text = "$(debug-pause) Continuous";
       break;
     default:
-      text = "Continued";
+      text = "Continuous";
   }
 
   // Append Next Edit indicator if enabled.
@@ -147,7 +147,7 @@ export function setupStatusBar(
 
   statusBarItem.text = statusBarItemText(status, loading, statusBarError);
   statusBarItem.tooltip = statusBarItemTooltip(status ?? statusBarStatus);
-  statusBarItem.command = "continue.openTabAutocompleteConfigMenu";
+  statusBarItem.command = "continuous.openTabAutocompleteConfigMenu";
 
   statusBarItem.show();
   if (status !== undefined) {

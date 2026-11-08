@@ -44,7 +44,7 @@ class ClawRouter extends OpenAI {
   protected _getHeaders() {
     return {
       ...super._getHeaders(),
-      "User-Agent": `Continued/${CONTINUE_VERSION}`,
+      "User-Agent": `Continuous/${CONTINUE_VERSION}`,
       "X-Continue-Provider": "clawrouter",
     };
   }

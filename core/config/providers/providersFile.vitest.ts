@@ -12,7 +12,7 @@ describe("parseProvidersFile", () => {
       `providers:
   - name: anthropic-work
     provider: anthropic
-    apiKey: \${{ secrets.CONTINUED_ANTHROPIC_WORK_API_KEY }}
+    apiKey: \${{ secrets.CONTINUOUS_ANTHROPIC_WORK_API_KEY }}
   - name: local
     provider: ollama
     apiBase: http://localhost:11434/
@@ -83,7 +83,7 @@ describe("loadProviderInstances", () => {
     const ide = {
       getWorkspaceDirs: async () => ["file:///ws"],
       fileExists: async (uri: string) =>
-        uri === "file:///ws/.continue/providers.yaml",
+        uri === "file:///ws/.continuous/providers.yaml",
       readFile: async () =>
         "providers:\n  - { name: a, provider: anthropic }\n",
     };

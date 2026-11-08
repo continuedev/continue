@@ -10,10 +10,11 @@ import { getContinueDotEnv } from "../../util/paths";
 import { joinPathsToUri } from "../../util/uri";
 import { SECURE_STORAGE_TIMEOUT_MS } from "../secretStorage";
 import { TimeoutError, withTimeout } from "../../util/withTimeout";
+import { WORKSPACE_DIRS } from "../../util/workspaceDirs";
 
 /**
  * Resolves `${{ secrets.NAME }}` for local configs. Lookup order: the IDE's
- * secure storage, then ~/.continue/.env, <workspace>/.continue/.env and
+ * secure storage, then ~/.continuous/.env, <workspace>/.continuous/.env and
  * <workspace>/.env, then the process environment.
  */
 export class LocalPlatformClient implements PlatformClient {
@@ -27,7 +28,7 @@ export class LocalPlatformClient implements PlatformClient {
   constructor(private readonly ide: IDE) {}
 
   /**
-   * searches for the first valid secret file in order of ~/.continue/.env, <workspace>/.continue/.env, <workspace>/.env
+   * searches for the first valid secret file in order of ~/.continuous/.env, <workspace>/.continuous/.env, <workspace>/.env
    */
   private async findSecretInEnvFiles(
     fqsn: FQSN,
@@ -57,7 +58,7 @@ export class LocalPlatformClient implements PlatformClient {
       return dotEnv[fqsn.secretName];
     } catch (error) {
       console.warn(
-        `Error reading ~/.continue/.env file: ${error instanceof Error ? error.message : String(error)}`,
+        `Error reading ~/.continuous/.env file: ${error instanceof Error ? error.message : String(error)}`,
       );
       return undefined;
     }
@@ -69,12 +70,12 @@ export class LocalPlatformClient implements PlatformClient {
   ): Promise<string | undefined> {
     try {
       const workspaceDirs = await this.ide.getWorkspaceDirs();
-      for (const folder of workspaceDirs) {
-        const envFilePath = joinPathsToUri(
-          folder,
-          insideContinue ? ".continue" : "",
-          ".env",
-        );
+      const envFilePaths = workspaceDirs.flatMap((folder) =>
+        insideContinue
+          ? WORKSPACE_DIRS.map((name) => joinPathsToUri(folder, name, ".env"))
+          : [joinPathsToUri(folder, "", ".env")],
+      );
+      for (const envFilePath of envFilePaths) {
         try {
           const fileExists = await this.ide.fileExists(envFilePath);
           if (fileExists) {

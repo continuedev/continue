@@ -1,4 +1,4 @@
-// Rename the product "Continue" to "Continued" in docs/ prose.
+// Rename the product "Continue" to "Continuous" in docs/ prose.
 // Leaves code (fenced blocks and inline `code`), URLs, and identifiers
 // (Continue.continue, .continue/, continue.*, @continuedev) alone, and
 // skips "Continue" used as a verb ("Continue to the next step").
@@ -17,7 +17,7 @@ const VERBOSE = process.argv.includes("--verbose");
 const PRODUCT =
   /(?<![\w./@:#-])Continue(?![\w-])(?!\.(?:[a-z]|continue))(?! Dev\b)/g;
 // The fork's own pages, which refer to upstream on purpose.
-const SKIP_FILES = new Set(["continued-install.md", "README.md"]);
+const SKIP_FILES = new Set(["continuous-install.md", "README.md"]);
 // Verb uses: "Continue to/with/on/reading/..." at a sentence or item start.
 const VERB_AFTER =
   /^\s+(to|with|on|reading|working|the|through|until|as|if|when|by|clicking|from|button)\b/i;
@@ -70,7 +70,7 @@ for (const file of files(DOCS)) {
           return m;
         }
         count++;
-        return "Continued";
+        return "Continuous";
       }),
     );
   });

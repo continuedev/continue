@@ -44,7 +44,7 @@ export function getDefaultToolPolicies(
 // workspace runs without asking. Write tools are excluded. Bash and MCP tools
 // can write too, so they ask (and headless runs, with nobody to ask, are not
 // offered them; see getRequestTools). PresentPlan writes only its own plan file
-// under .continue/plans and is offered in plan mode only.
+// under .continuous/plans and is offered in plan mode only.
 export const PLAN_MODE_POLICIES: ToolPermissionPolicy[] = [
   { tool: "Edit", permission: "exclude" },
   { tool: "MultiEdit", permission: "exclude" },

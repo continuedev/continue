@@ -9,7 +9,7 @@ import { setupStore } from "../../../redux/store";
 import { renderWithProviders } from "../../../util/test/render";
 import { PlanCard } from "./PlanCard";
 
-const PLAN_URI = "file:///Users/user/workspace1/.continue/plans/add-retry.md";
+const PLAN_URI = "file:///Users/user/workspace1/.continuous/plans/add-retry.md";
 const FILE =
   "# Add retry\n\nWrap it.\n\n## To-dos\n\n- [ ] Add a helper <!-- id: 1 -->\n- [ ] Use it <!-- id: 2 -->\n";
 
@@ -29,7 +29,7 @@ const toolCallState: ToolCallState = {
   output: [
     {
       name: "Add retry",
-      description: ".continue/plans/add-retry.md",
+      description: ".continuous/plans/add-retry.md",
       content: "Plan saved",
       uri: { type: "file", value: PLAN_URI },
     },
@@ -134,7 +134,7 @@ describe("PlanCard", () => {
     const sent = state.history[2];
     expect(sent.message.role).toBe("user");
     expect(JSON.stringify(sent.editorState)).toContain(
-      "Build the plan in .continue/plans/add-retry.md",
+      "Build the plan in .continuous/plans/add-retry.md",
     );
   });
 

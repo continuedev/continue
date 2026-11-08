@@ -37,7 +37,7 @@ describe("presentPlanImpl", () => {
     const x = extras();
     const out = await presentPlanImpl(args, "call-1", x.extras);
 
-    const uri = `${WS}/.continue/plans/add-retry.md`;
+    const uri = `${WS}/.continuous/plans/add-retry.md`;
     expect(x.ide.writeFile).toHaveBeenCalledWith(
       uri,
       expect.stringContaining("# Add retry\n\nWrap upload() in a retry."),
@@ -67,14 +67,14 @@ describe("presentPlanImpl", () => {
     expect(out.endTurn).toBe(true);
     expect(out.output?.[0]).toMatchObject({
       name: "Add retry",
-      description: ".continue/plans/add-retry.md",
+      description: ".continuous/plans/add-retry.md",
       uri: { type: "file", value: uri },
     });
     expect(out.output?.[0].content).toMatch(/Stop here and wait/);
   });
 
   it("replaces this session's own file but not someone else's", async () => {
-    const own = `${WS}/.continue/plans/add-retry.md`;
+    const own = `${WS}/.continuous/plans/add-retry.md`;
     const mine = extras({ planFile: own }, [own]);
     await presentPlanImpl(args, "c", mine.extras);
     expect(mine.ide.writeFile.mock.calls[0][0]).toBe(own);
@@ -82,7 +82,7 @@ describe("presentPlanImpl", () => {
     const other = extras({}, [own]);
     await presentPlanImpl(args, "c", other.extras);
     expect(other.ide.writeFile.mock.calls[0][0]).toBe(
-      `${WS}/.continue/plans/add-retry-2.md`,
+      `${WS}/.continuous/plans/add-retry-2.md`,
     );
   });
 

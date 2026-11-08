@@ -13,18 +13,24 @@ import { localPathToUri } from "../util/pathToUri";
 import { getUriPathBasename, joinPathsToUri } from "../util/uri";
 import { SYSTEM_PROMPT_DOT_FILE } from "./getWorkspaceContinueRuleDotFiles";
 import { SUPPORTED_AGENT_FILES } from "./markdown";
+import {
+  isInWorkspaceConfigDir,
+  isInWorkspaceConfigSubdir,
+  isRcFile,
+  WORKSPACE_DIRS,
+} from "../util/workspaceDirs";
 export function isContinueConfigRelatedUri(uri: string): boolean {
   return (
-    uri.endsWith(".continuerc.json") ||
+    isRcFile(uri) ||
     uri.endsWith(".prompt") ||
     !!SUPPORTED_AGENT_FILES.find((file) => uri.endsWith(`/${file}`)) ||
     uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
-    (uri.includes(".continue") &&
+    (isInWorkspaceConfigDir(uri) &&
       (uri.endsWith(".yaml") ||
         uri.endsWith(".yml") ||
         uri.endsWith(".json"))) ||
     [...BLOCK_TYPES, "agents", "assistants", "configs"].some((blockType) =>
-      uri.includes(`.continue/${blockType}`),
+      isInWorkspaceConfigSubdir(uri, blockType),
     )
   );
 }
@@ -37,9 +43,9 @@ export function isContinueAgentConfigFile(uri: string): boolean {
 
   const normalizedUri = URI.normalize(uri);
   return (
-    normalizedUri.includes(`/.continue/agents/`) ||
-    normalizedUri.includes(`/.continue/assistants/`) ||
-    normalizedUri.includes(`/.continue/configs/`)
+    isInWorkspaceConfigSubdir(normalizedUri, "agents") ||
+    isInWorkspaceConfigSubdir(normalizedUri, "assistants") ||
+    isInWorkspaceConfigSubdir(normalizedUri, "configs")
   );
 }
 
@@ -109,14 +115,14 @@ export function getDotContinueSubDirs(
 ): string[] {
   let fullDirs: string[] = [];
 
-  // Workspace .continue/<subDirName>
+  // Workspace .continuous/<subDirName>, then the older .continue/<subDirName>
   if (options.includeWorkspace) {
-    fullDirs = workspaceDirs.map((dir) =>
-      joinPathsToUri(dir, ".continue", subDirName),
+    fullDirs = workspaceDirs.flatMap((dir) =>
+      WORKSPACE_DIRS.map((name) => joinPathsToUri(dir, name, subDirName)),
     );
   }
 
-  // ~/.continue/<subDirName>
+  // ~/.continuous/<subDirName>
   if (options.includeGlobal) {
     fullDirs.push(localPathToUri(getGlobalFolderWithName(subDirName)));
   }
@@ -125,8 +131,8 @@ export function getDotContinueSubDirs(
 }
 
 /**
- * This method searches in both ~/.continue and workspace .continue
- * for all YAML/Markdown files in the specified subdirectory, for example .continue/assistants or .continue/prompts
+ * This method searches in both ~/.continuous and workspace .continuous
+ * for all YAML/Markdown files in the specified subdirectory, for example .continuous/assistants or .continuous/prompts
  */
 export async function getAllDotContinueDefinitionFiles(
   ide: IDE,

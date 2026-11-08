@@ -39,6 +39,7 @@ import {
   getGlobalModelsPath,
   loadModelCatalog,
 } from "./config/providers/modelsFile";
+import { isIgnoreFile } from "./util/workspaceDirs";
 import { listCatalog, saveModelRoles } from "./config/yaml/saveModelRoles";
 import { detectLocalServers, serverConcurrency } from "./llm/localServers";
 import Ollama from "./llm/llms/Ollama";
@@ -193,7 +194,7 @@ export class Core {
     private readonly ide: IDE,
   ) {
     try {
-      // Ensure .continue directory is created
+      // Ensure .continuous directory is created
       migrateV1DevDataFiles();
 
       const ideInfoPromise = messenger.request("getIdeInfo", undefined);
@@ -1474,7 +1475,7 @@ export class Core {
         await this.configHandler.refreshAll("Local config file created");
       } else if (nonColocatedRuleUris.some(isContinueConfigRelatedUri)) {
         await this.configHandler.reloadConfig(
-          ".continue config-related file created",
+          ".continuous config-related file created",
         );
       }
     });
@@ -1506,7 +1507,7 @@ export class Core {
         await this.configHandler.refreshAll("Local config file deleted");
       } else if (nonColocatedRuleUris.some(isContinueConfigRelatedUri)) {
         await this.configHandler.reloadConfig(
-          ".continue config-related file deleted",
+          ".continuous config-related file deleted",
         );
       }
     });
@@ -1839,7 +1840,7 @@ export class Core {
   /**
    * After a config loads, offer once per session to move API keys written as
    * plain text into secure storage. Only offered when the editor has secure
-   * storage; ~/.continue/.env would still be plain text.
+   * storage; ~/.continuous/.env would still be plain text.
    */
   private async offerToMovePlaintextKeys(): Promise<void> {
     if (this.offeringPlaintextKeys) return;
@@ -1976,10 +1977,7 @@ export class Core {
           await this.configHandler.reloadConfig(
             "Local config-related file updated",
           );
-        } else if (
-          uri.endsWith(".continueignore") ||
-          uri.endsWith(".gitignore")
-        ) {
+        } else if (isIgnoreFile(uri) || uri.endsWith(".gitignore")) {
           // Reindex the workspaces
           this.invoke("index/forceReIndex", {
             shouldClearIndexes: true,
@@ -2126,7 +2124,7 @@ export class Core {
         //     .then((userSelection) => {
         //       if (userSelection === toastOption) {
         //         void this.ide.openUrl(
-        //           "https://b1tninja.github.io/continued/customize/model-roles/embeddings",
+        //           "https://b1tninja.github.io/continuous/customize/model-roles/embeddings",
         //         );
         //       }
         //     });

@@ -20,9 +20,10 @@ import { deduplicateArray } from "../../../util";
 import { getGlobalFolderWithName } from "../../../util/paths";
 import { localPathToUri } from "../../../util/pathToUri";
 import { getUriPathBasename, joinPathsToUri } from "../../../util/uri";
+import { WORKSPACE_DIRS } from "../../../util/workspaceDirs";
 
 /**
- * Loads MCP configs from JSON files in ~/.continue/mcpServers and workspace .continue/mcpServers
+ * Loads MCP configs from JSON files in ~/.continuous/mcpServers and workspace .continuous/mcpServers
  */
 export async function loadJsonMcpConfigs(
   ide: IDE,
@@ -36,8 +37,8 @@ export async function loadJsonMcpConfigs(
 
   // Get dirs
   const workspaceDirs = await ide.getWorkspaceDirs();
-  const mcpDirs = workspaceDirs.map((dir) =>
-    joinPathsToUri(dir, ".continue", "mcpServers"),
+  const mcpDirs = workspaceDirs.flatMap((dir) =>
+    WORKSPACE_DIRS.map((name) => joinPathsToUri(dir, name, "mcpServers")),
   );
   if (includeGlobal) {
     mcpDirs.push(localPathToUri(getGlobalFolderWithName("mcpServers")));

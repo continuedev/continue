@@ -146,7 +146,7 @@ function ModelOption({
 }
 
 /** Dispatch on window to open the chat model picker. */
-export const OPEN_MODEL_SELECT_EVENT = "continued:openModelSelect";
+export const OPEN_MODEL_SELECT_EVENT = "continuous:openModelSelect";
 
 function ModelSelect() {
   const dispatch = useAppDispatch();

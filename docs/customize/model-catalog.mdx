@@ -5,7 +5,7 @@ description: "Define each model once in models.yaml, with variants, and use it f
 
 A model catalog defines each model once: which [provider account](./providers) serves it, its context window, capabilities and settings, and named variants. Any config then uses it with `from:`, so models from several accounts mix freely, for example a local server for Agent mode and Claude on Bedrock for Plan mode.
 
-```yaml ~/.continue/models.yaml
+```yaml ~/.continuous/models.yaml
 models:
   - name: Qwen3.8 Flash
     connection: strata # an account in providers.yaml
@@ -27,7 +27,7 @@ models:
 
 ## Use a catalog model in a config
 
-```yaml ~/.continue/config.yaml
+```yaml ~/.continuous/config.yaml
 models:
   - from: Qwen3.8 Flash#act
     roles: [chat, edit, apply]
@@ -58,7 +58,7 @@ Switching between variants of one model on the same server does not warn about l
 
 One model can be served by several accounts, each with its own id for it. List them under `routes`, in the order to try them:
 
-```yaml ~/.continue/models.yaml
+```yaml ~/.continuous/models.yaml
 models:
   - name: Claude Sonnet
     model: claude-sonnet-4-6
@@ -87,7 +87,7 @@ A route takes `connection`, and optionally `model`, `apiBase`, `env` and `reques
 
 A rate limit (HTTP 429), an overloaded or unavailable server (503, 529) and a dropped connection are tried again, by one policy:
 
-- When the server sends `Retry-After`, as seconds or as a date, Continue waits that long.
+- When the server sends `Retry-After`, as seconds or as a date, Continuous waits that long.
 - Otherwise the waits double from about a second, with some randomness so that several agents do not retry at the same moment. No single wait is longer than 30 seconds, and the waits together stay under 90 seconds.
 - A server that asks for a longer wait is reported straight away, with how long it asked for, instead of the request hanging.
 - A route with another route after it is not retried at all: the next account is tried at once, and its own retries apply only on the last route.
@@ -98,14 +98,14 @@ When the tries run out, the chat says what happened and that your message is kep
 
 ## Workspace catalog
 
-A workspace's `.continue/models.yaml` adds models for that workspace, and a model there replaces a global model with the same name. The CLI (`cn`) reads the same files, `~/.continue/models.yaml` and `.continue/models.yaml` in the working directory, and `providers.yaml` in both places.
+A workspace's `.continuous/models.yaml` adds models for that workspace, and a model there replaces a global model with the same name. The CLI (`cn`) reads the same files, `~/.continuous/models.yaml` and `.continuous/models.yaml` in the working directory, and `providers.yaml` in both places.
 
 ## Set up in the GUI
 
 **Set up models** (onboarding, **Manage models**, and **Local server**) writes all three for a new provider:
 
-- the connection as an account in `~/.continue/providers.yaml`, with its key in secure storage or `~/.continue/.env` (the file has only the reference). A server found with **Detect** gives the account its name, such as `strata`;
-- each chosen model in `~/.continue/models.yaml`, with the context window, tools and image support the provider reported;
+- the connection as an account in `~/.continuous/providers.yaml`, with its key in secure storage or `~/.continuous/.env` (the file has only the reference). A server found with **Detect** gives the account its name, such as `strata`;
+- each chosen model in `~/.continuous/models.yaml`, with the context window, tools and image support the provider reported;
 - a `from:` entry in the selected config.
 
 Setting up the same endpoint again reuses its account and catalog models. A connection set up before this, with its provider, address and key on every model, keeps working and is edited as it is. **Settings > Models > Providers > Turn into an account** converts it: the connection becomes an account, the models move to the catalog, and each model keeps its place, name and roles in the config.

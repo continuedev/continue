@@ -13,9 +13,9 @@ This document catalogs all build dependencies, secrets, and environment variable
 The VS Code Marketplace needs no secret: `main.yaml` and `preview.yaml` publish by trusted publishing (OIDC). Their `publish-marketplace` jobs run in the `marketplace` GitHub environment with `id-token: write`, and `vsce publish --oidc` exchanges the job's GitHub ID token for a short-lived Marketplace credential. Setting it up:
 
 - A GitHub environment named `marketplace` (Settings > Environments), with deployments limited to `main` and the `v*` tags.
-- In the Marketplace's publisher settings for `b1tninja`, one Trusted Publishing policy per workflow: provider GitHub Actions, owner `b1tninja`, repository `continued`, workflow `main.yaml` (and a second for `preview.yaml`), environment `marketplace`.
+- In the Marketplace's publisher settings for `b1tninja`, one Trusted Publishing policy per workflow: provider GitHub Actions, owner `b1tninja`, repository `continuous`, workflow `main.yaml` (and a second for `preview.yaml`), environment `marketplace`.
 
-The jobs run only in `b1tninja/continued`, so a fork does not try to publish.
+The jobs run only in `b1tninja/continuous`, so a fork does not try to publish.
 
 ---
 

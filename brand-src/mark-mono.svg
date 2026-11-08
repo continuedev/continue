@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none">
   <!-- Monochrome activity-bar icon. VS Code recolours it from currentColor, so no fixed colours here. -->
-  <path d="M6 5.5 L12.5 12 L6 18.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="16.4" cy="12" r="1.7" fill="currentColor"/>
-  <circle cx="20.6" cy="12" r="1.1" fill="currentColor" fill-opacity="0.6"/>
+  <path d="M12 12 C14.1 8 19.6 8 19.6 12 C19.6 16 14.1 16 12 12 C9.9 8 4.4 8 4.4 12 C4.4 16 9.9 16 12 12 Z" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="16.6" cy="9.05" r="1.9" fill="currentColor"/>
 </svg>

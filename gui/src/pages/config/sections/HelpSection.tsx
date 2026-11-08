@@ -52,7 +52,7 @@ const vscodeShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd L",
     description:
-      "New Chat / New Chat With Selected Code / Close Continued Sidebar If Chat Already In Focus",
+      "New Chat / New Chat With Selected Code / Close Continuous Sidebar If Chat Already In Focus",
   },
   {
     shortcut: "cmd backspace",
@@ -65,7 +65,7 @@ const vscodeShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd shift L",
     description:
-      "Focus Current Chat / Add Selected Code To Current Chat / Close Continued Sidebar If Chat Already In Focus",
+      "Focus Current Chat / Add Selected Code To Current Chat / Close Continuous Sidebar If Chat Already In Focus",
   },
   {
     shortcut: "cmd shift R",
@@ -113,7 +113,7 @@ const jetbrainsShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd J",
     description:
-      "New Chat / New Chat With Selected Code / Close Continued Sidebar If Chat Already In Focus",
+      "New Chat / New Chat With Selected Code / Close Continuous Sidebar If Chat Already In Focus",
   },
   {
     shortcut: "cmd backspace",
@@ -126,7 +126,7 @@ const jetbrainsShortcuts: Omit<KeyboardShortcutProps, "isEven">[] = [
   {
     shortcut: "cmd shift J",
     description:
-      "Focus Current Chat / Add Selected Code To Current Chat / Close Continued Sidebar If Chat Already In Focus",
+      "Focus Current Chat / Add Selected Code To Current Chat / Close Continuous Sidebar If Chat Already In Focus",
   },
   {
     shortcut: "cmd shift backspace",
@@ -181,12 +181,12 @@ export function HelpSection() {
             <div className="flex flex-col">
               <ConfigRow
                 title="Documentation"
-                description="Learn how to configure and use Continued"
+                description="Learn how to configure and use Continuous"
                 icon={LinkIcon}
                 onClick={() =>
                   ideMessenger.post(
                     "openUrl",
-                    "https://b1tninja.github.io/continued/",
+                    "https://b1tninja.github.io/continuous/",
                   )
                 }
               />

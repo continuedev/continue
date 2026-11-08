@@ -140,7 +140,7 @@ export class RetryWaitTooLongError extends Error {
     cause: unknown,
   ) {
     super(
-      `The server asked to wait ${Math.ceil(waitMs / 1000)} s before trying again (rate limit or overload), longer than Continue waits on its own. Try again later, or pick another model. (${(cause as Error)?.message ?? cause})`,
+      `The server asked to wait ${Math.ceil(waitMs / 1000)} s before trying again (rate limit or overload), longer than Continuous waits on its own. Try again later, or pick another model. (${(cause as Error)?.message ?? cause})`,
       { cause },
     );
     this.name = "RetryWaitTooLongError";

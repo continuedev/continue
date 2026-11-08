@@ -173,6 +173,6 @@ export class GUISelectors {
   }
 
   public static getContinueExtensionBadge(view: WebView) {
-    return SelectorUtils.getElementByAriaLabel(view, "Continued");
+    return SelectorUtils.getElementByAriaLabel(view, "Continuous");
   }
 }

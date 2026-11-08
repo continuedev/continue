@@ -3,7 +3,7 @@
  * value when the config was loaded.
  *
  * Local config loading (LocalPlatformClient) looks a secret up in
- * ~/.continue/.env, the workspace .env files and the process environment. A
+ * ~/.continuous/.env, the workspace .env files and the process environment. A
  * name that is found nowhere is left in the text as is, and that literal text
  * then ends up being used as the API key. These helpers find such leftovers so
  * the config can report them instead.
@@ -145,7 +145,7 @@ export class MissingSecretError extends Error {
     super(
       `The API key for "${modelTitle}" ${MISSING_SECRET_MARKER}${
         secretNames.length === 1 ? "" : "s"
-      }: ${secretNames.join(", ")}). Set it in ~/.continue/.env or as an environment variable.`,
+      }: ${secretNames.join(", ")}). Set it in ~/.continuous/.env or as an environment variable.`,
     );
     this.name = "MissingSecretError";
   }

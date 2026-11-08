@@ -70,7 +70,7 @@ describe("callToolById with present_plan", () => {
     const session = (store.getState() as RootState).session;
     expect(writeFile).toHaveBeenCalledWith(
       expect.objectContaining({
-        path: "file:///Users/user/workspace1/.continue/plans/add-retry.md",
+        path: "file:///Users/user/workspace1/.continuous/plans/add-retry.md",
       }),
     );
     expect(session.taskPlan?.items.map((i: any) => i.text)).toEqual([
@@ -78,7 +78,7 @@ describe("callToolById with present_plan", () => {
       "Use it",
     ]);
     expect(session.planFile).toBe(
-      "file:///Users/user/workspace1/.continue/plans/add-retry.md",
+      "file:///Users/user/workspace1/.continuous/plans/add-retry.md",
     );
     expect(session.history[1].toolCallStates?.[0].status).toBe("done");
     // The tool result is in the history, so the next request is well formed.

@@ -6,9 +6,9 @@ import "./globals.css";
 import "./docs.css";
 
 export const metadata: Metadata = {
-  title: "Continued Docs",
+  title: "Continuous Docs",
   description:
-    "Documentation for Continued — an open-source AI code agent for VS Code.",
+    "Documentation for Continuous — an open-source AI code agent for VS Code.",
 };
 
 export default function RootLayout({

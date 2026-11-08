@@ -121,8 +121,8 @@ export function MissingSecretsPanel({
       ))}
 
       <div className="text-description-muted">
-        Add <code>NAME=value</code> to <code>~/.continue/.env</code>, or set it
-        as an environment variable, then the config reloads on save.
+        Add <code>NAME=value</code> to <code>~/.continuous/.env</code>, or set
+        it as an environment variable, then the config reloads on save.
       </div>
     </div>
   );

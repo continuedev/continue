@@ -8,7 +8,7 @@ import { ExtensionContext } from "vscode";
  */
 export function cleanSlate(context: ExtensionContext) {
   // Commented just to be safe
-  // // Remove ~/.continue
+  // // Remove ~/.continuous
   // const continuePath = getContinueGlobalPath();
   // if (fs.existsSync(continuePath)) {
   //   fs.rmSync(continuePath, { recursive: true, force: true });

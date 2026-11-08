@@ -309,16 +309,16 @@ describe("JumpManager", () => {
       // Should set context
       expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
         "setContext",
-        "continue.jumpDecorationVisible",
+        "continuous.jumpDecorationVisible",
         true,
       );
       // Should register key listeners
       expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
-        "continue.acceptJump",
+        "continuous.acceptJump",
         expect.any(Function),
       );
       expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
-        "continue.rejectJump",
+        "continuous.rejectJump",
         expect.any(Function),
       );
     });
@@ -363,7 +363,7 @@ describe("JumpManager", () => {
       // Find the acceptJump command handler.
       const commandArgs = vi
         .mocked(vscode.commands.registerCommand)
-        .mock.calls.find((call: any) => call[0] === "continue.acceptJump");
+        .mock.calls.find((call: any) => call[0] === "continuous.acceptJump");
       expect(commandArgs).toBeDefined();
       const acceptJumpHandler = commandArgs![1];
 
@@ -397,7 +397,7 @@ describe("JumpManager", () => {
       // Find the command handler
       const commandArgs = vi
         .mocked(vscode.commands.registerCommand)
-        .mock.calls.find((call: any) => call[0] === "continue.acceptJump");
+        .mock.calls.find((call: any) => call[0] === "continuous.acceptJump");
       expect(commandArgs).toBeDefined();
       const acceptJumpHandler = commandArgs![1];
 
@@ -414,7 +414,7 @@ describe("JumpManager", () => {
       // Expect decoration to be cleared
       expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
         "setContext",
-        "continue.jumpDecorationVisible",
+        "continuous.jumpDecorationVisible",
         false,
       );
       // Expect inline suggest to be triggered
@@ -445,7 +445,7 @@ describe("JumpManager", () => {
       // Find the command handler
       const commandArgs = vi
         .mocked(vscode.commands.registerCommand)
-        .mock.calls.find((call: any) => call[0] === "continue.rejectJump");
+        .mock.calls.find((call: any) => call[0] === "continuous.rejectJump");
       expect(commandArgs).toBeDefined();
       const rejectJumpHandler = commandArgs![1];
       expect(rejectJumpHandler).toBeDefined();
@@ -462,7 +462,7 @@ describe("JumpManager", () => {
       // Expect decoration to be cleared
       expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
         "setContext",
-        "continue.jumpDecorationVisible",
+        "continuous.jumpDecorationVisible",
         false,
       );
     });
@@ -501,7 +501,7 @@ describe("JumpManager", () => {
 
       // Should trigger reject jump
       expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
-        "continue.rejectJump",
+        "continuous.rejectJump",
       );
     });
   });
@@ -545,7 +545,7 @@ describe("JumpManager", () => {
       // We need to manually implement what the callback would do
       if ((jumpManager as any)._completionAfterJump) {
         vscode.commands.executeCommand(
-          "continue.showNextEditAfterJump",
+          "continuous.showNextEditAfterJump",
           (jumpManager as any)._completionAfterJump,
         );
         (jumpManager as any)._completionAfterJump = null;
@@ -553,7 +553,7 @@ describe("JumpManager", () => {
 
       // Verify that the command was called with the completion data
       expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
-        "continue.showNextEditAfterJump",
+        "continuous.showNextEditAfterJump",
         completionData,
       );
 
@@ -590,7 +590,7 @@ describe("JumpManager", () => {
       // Expect context to be reset
       expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
         "setContext",
-        "continue.jumpDecorationVisible",
+        "continuous.jumpDecorationVisible",
         false,
       );
     });

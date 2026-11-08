@@ -270,23 +270,23 @@ export type ToCoreFromIdeOrWebviewProtocol = {
    * config.yaml. Credentials become ${{ secrets.NAME }} references.
    */
   "config/importMcpServers": [McpImportRequest, McpImportResult];
-  /** Store one secret (secure storage or ~/.continue/.env) and reload. */
+  /** Store one secret (secure storage or ~/.continuous/.env) and reload. */
   "config/setSecret": [
     { secretName: string; value: string; storage: "secure" | "env" },
     {
       stored: boolean;
       error?: string;
       warning?: string;
-      /** The name also has a plaintext copy in ~/.continue/.env. */
+      /** The name also has a plaintext copy in ~/.continuous/.env. */
       envShadowed?: boolean;
     },
   ];
   /**
-   * Remove a secret's line from ~/.continue/.env. Only sent after the user
+   * Remove a secret's line from ~/.continuous/.env. Only sent after the user
    * agreed, and only honored when the value is in secure storage.
    */
   /**
-   * Move a key from ~/.continue/.env to secure storage, then remove the .env
+   * Move a key from ~/.continuous/.env to secure storage, then remove the .env
    * line. The value is handled in core and never returned. config.yaml keeps
    * its `${{ secrets.NAME }}` reference.
    */
@@ -300,9 +300,9 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   /** Provider instances (providers.yaml), with key state but no values. */
   "providers/list": [undefined, ProviderInstancesInfo];
-  /** Add or edit an instance in ~/.continue/providers.yaml. */
+  /** Add or edit an instance in ~/.continuous/providers.yaml. */
   "providers/save": [SaveProviderInstanceRequest, SaveProviderInstanceResult];
-  /** Remove an instance from ~/.continue/providers.yaml (its key is kept). */
+  /** Remove an instance from ~/.continuous/providers.yaml (its key is kept). */
   "providers/delete": [{ name: string }, { deleted: boolean; error?: string }];
   /**
    * Turn the selected config's models of one connection set up the old way

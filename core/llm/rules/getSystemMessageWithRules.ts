@@ -11,6 +11,7 @@ import { getCleanUriPath } from "../../util/uri";
 import { extractContentFromCodeBlock } from "../utils/extractContentFromCodeBlocks";
 import { extractPathsFromCodeBlocks } from "../utils/extractPathsFromCodeBlocks";
 import { RulePolicies } from "./types";
+import { isInWorkspaceConfigDir } from "../../util/workspaceDirs";
 
 /**
  * Checks if a path matches any of the provided globs
@@ -130,10 +131,11 @@ const isFileInDirectory = (
 };
 
 /**
- * Checks if a rule is a root-level rule (.continue directory or no file path)
+ * Checks if a rule is a root-level rule (.continuous or .continue directory, or no file path)
  */
 const isRootLevelRule = (rule: RuleWithSource): boolean => {
-  return !rule.sourceFile || rule.sourceFile.includes(".continue/"); // sourceFile path is absolute - hence we need to check for it in between
+  // sourceFile path is absolute - hence we need to check for it in between
+  return !rule.sourceFile || isInWorkspaceConfigDir(rule.sourceFile);
 };
 
 /**
@@ -227,7 +229,7 @@ export const shouldApplyRule = (
     return false;
   }
 
-  // Check if this is a root-level rule (in .continue directory or no file path)
+  // Check if this is a root-level rule (in .continuous directory or no file path)
   const isRootRule = isRootLevelRule(rule);
 
   // For non-root rules, we need to check if any files are in the rule's directory

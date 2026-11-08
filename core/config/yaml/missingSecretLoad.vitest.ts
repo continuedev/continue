@@ -48,7 +48,7 @@ async function load(text: string) {
 }
 
 describe("config load with a secret that is not set on this machine", () => {
-  const name = "CONTINUED_A0_TEST_KEY";
+  const name = "CONTINUOUS_A0_TEST_KEY";
 
   afterEach(() => {
     delete process.env[name];
@@ -85,7 +85,7 @@ describe("config load with a secret that is not set on this machine", () => {
     expect(config.modelsByRole.chat[0].getConfigurationStatus()).toBe("valid");
   });
 
-  it("is silent when the secret comes from ~/.continue/.env", async () => {
+  it("is silent when the secret comes from ~/.continuous/.env", async () => {
     vi.spyOn(paths, "getContinueDotEnv").mockReturnValue({
       [name]: "sk-from-dotenv",
     });

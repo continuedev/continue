@@ -485,7 +485,7 @@ class VsCodeIde implements IDE {
 
       // IMPORTANT: findFiles automatically accounts for .gitignore
       const ignoreFiles = await vscode.workspace.findFiles(
-        "**/.continueignore",
+        "**/{.continuousignore,.continueignore}",
         null,
       );
 
@@ -562,6 +562,8 @@ class VsCodeIde implements IDE {
           "--iglob",
           pattern,
           "--ignore-file",
+          ".continuousignore",
+          "--ignore-file",
           ".continueignore",
           "--ignore-file",
           ".gitignore",
@@ -593,6 +595,8 @@ class VsCodeIde implements IDE {
     for (const dir of await this.getWorkspaceDirs()) {
       const dirResults = await this.runRipgrepQuery(dir, [
         "-i", // Case-insensitive search
+        "--ignore-file",
+        ".continuousignore",
         "--ignore-file",
         ".continueignore",
         "--ignore-file",

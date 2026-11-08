@@ -1,11 +1,11 @@
 ---
-title: "How to Collect and Manage Development Data in Continued"
+title: "How to Collect and Manage Development Data in Continuous"
 description: Collecting data on how you build software
 keywords: [development data, dev data, LLM-aided development]
 sidebarTitle: "Development Data"
 ---
 
-When you use Continued, you automatically collect data on how you build software. By default, this development data is saved to `.continue/dev_data` on your local machine.
+When you use Continuous, you automatically collect data on how you build software. By default, this development data is saved to `.continuous/dev_data` on your local machine.
 
 
 ## How to Configure Custom Data Destinations
@@ -14,4 +14,4 @@ You can also configure custom destinations for your data, including remote HTTP 
 
 Data destinations should be configured directly in the `data` section of your `config.yaml` file. See more details about adding `data` configuration in the [YAML specification](../../reference.mdx#data).
 
-When sending development data to your own HTTP endpoint, it will receive an event JSON blob at the given `schema` version. You can view event names, schema versions, and fields [here in the source code](https://github.com/b1tninja/continued/tree/main/packages/config-yaml/src/schemas/data).
+When sending development data to your own HTTP endpoint, it will receive an event JSON blob at the given `schema` version. You can view event names, schema versions, and fields [here in the source code](https://github.com/b1tninja/continuous/tree/main/packages/config-yaml/src/schemas/data).

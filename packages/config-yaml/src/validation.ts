@@ -7,7 +7,7 @@ import { ConfigYaml, configYamlSchema } from "./schemas/index.js";
 export type ConfigErrorAction = {
   /**
    * A `${{ secrets.NAME }}` reference in a model's credentials has no value on
-   * this machine (not in ~/.continue/.env, the workspace .env files or the
+   * this machine (not in ~/.continuous/.env, the workspace .env files or the
    * environment).
    */
   kind: "setSecret";
@@ -109,7 +109,7 @@ export function validateConfigYaml(
       ) {
         errors.push({
           fatal: false,
-          message: `${model.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://b1tninja.github.io/continued/customize/deep-dives/autocomplete#i-want-better-completions-should-i-use-gpt-5`,
+          message: `${model.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://b1tninja.github.io/continuous/customize/deep-dives/autocomplete#i-want-better-completions-should-i-use-gpt-5`,
         });
       }
     }

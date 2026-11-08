@@ -4,7 +4,7 @@
 echo "Current directory: $(pwd)"
 
 # Find the latest VSIX file in the build directory
-latest_vsix=$(ls -t ./build/continued-*.vsix | head -n1)
+latest_vsix=$(ls -t ./build/continuous-*.vsix | head -n1)
 
 if [ -z "$latest_vsix" ]; then
     echo "No VSIX file found in build directory"

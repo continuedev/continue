@@ -81,7 +81,7 @@ export function PlaintextKeysNotice() {
               Moving stores each key{" "}
               {secureAvailable
                 ? "in the editor's secure storage"
-                : "in ~/.continue/.env"}{" "}
+                : "in ~/.continuous/.env"}{" "}
               and replaces it with a <code>{"${{ secrets.NAME }}"}</code>{" "}
               reference, so the file is safe to share or commit.
             </div>
@@ -93,7 +93,7 @@ export function PlaintextKeysNotice() {
               >
                 {secureAvailable
                   ? "Move to secure storage"
-                  : "Move to ~/.continue/.env"}
+                  : "Move to ~/.continuous/.env"}
               </Button>
             </div>
           </>

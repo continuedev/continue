@@ -57,7 +57,7 @@ describe("ProviderSetupFlow", () => {
 
     await user.click(screen.getByRole("button", { name: "Review" }));
     expect(screen.getByTestId("review-key-plan").textContent).toMatch(
-      /CONTINUED_ANTHROPIC_API_KEY/,
+      /CONTINUOUS_ANTHROPIC_API_KEY/,
     );
     expect(screen.getByTestId("review-key-plan").textContent).not.toContain(
       "hunter2",
@@ -71,7 +71,7 @@ describe("ProviderSetupFlow", () => {
     expect(saves[0].remove).toEqual([]);
     expect(saves[0].key).toEqual({
       storage: "secure",
-      secretName: "CONTINUED_ANTHROPIC_API_KEY",
+      secretName: "CONTINUOUS_ANTHROPIC_API_KEY",
       value: "sk-ant-hunter2",
     });
     // The key is only in `key`, never in a model.
@@ -201,7 +201,7 @@ describe("ProviderSetupFlow", () => {
     const { user } = await renderWithProviders(
       <ProviderSetupFlow
         initialProvider="anthropic"
-        enterKey={{ secretName: "CONTINUED_ANTHROPIC_API_KEY" }}
+        enterKey={{ secretName: "CONTINUOUS_ANTHROPIC_API_KEY" }}
         onDone={onDone}
       />,
       { mockIdeMessenger: messenger },
@@ -216,7 +216,7 @@ describe("ProviderSetupFlow", () => {
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(secrets).toEqual([
       {
-        secretName: "CONTINUED_ANTHROPIC_API_KEY",
+        secretName: "CONTINUOUS_ANTHROPIC_API_KEY",
         value: "sk-ant-new",
         storage: "secure",
       },
@@ -224,7 +224,7 @@ describe("ProviderSetupFlow", () => {
     expect(saves).toEqual([]);
   });
 
-  it("asks before removing a plaintext copy from ~/.continue/.env", async () => {
+  it("asks before removing a plaintext copy from ~/.continuous/.env", async () => {
     const { messenger, secrets } = messengerWith();
     messenger.responseHandlers["config/setSecret"] = async (req) => {
       secrets.push(req);
@@ -239,7 +239,7 @@ describe("ProviderSetupFlow", () => {
     const { user } = await renderWithProviders(
       <ProviderSetupFlow
         initialProvider="anthropic"
-        enterKey={{ secretName: "CONTINUED_ANTHROPIC_API_KEY" }}
+        enterKey={{ secretName: "CONTINUOUS_ANTHROPIC_API_KEY" }}
         onDone={onDone}
       />,
       { mockIdeMessenger: messenger },
@@ -254,14 +254,14 @@ describe("ProviderSetupFlow", () => {
 
     await user.click(screen.getByRole("button", { name: "Remove from .env" }));
     await waitFor(() => expect(onDone).toHaveBeenCalled());
-    expect(removals).toEqual([{ secretName: "CONTINUED_ANTHROPIC_API_KEY" }]);
+    expect(removals).toEqual([{ secretName: "CONTINUOUS_ANTHROPIC_API_KEY" }]);
   });
 
   it("keeps the .env line when the user says so", async () => {
     const { messenger } = messengerWith();
     messenger.responseHandlers["config/saveProviderModels"] = async () => ({
       saved: true,
-      envShadowedSecret: "CONTINUED_ANTHROPIC_API_KEY",
+      envShadowedSecret: "CONTINUOUS_ANTHROPIC_API_KEY",
     });
     const removals: any[] = [];
     messenger.responseHandlers["config/removeEnvSecret"] = async (req) => {

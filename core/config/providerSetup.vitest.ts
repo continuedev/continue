@@ -26,12 +26,12 @@ const base = (models: any[], extra: Record<string, any> = {}): ConfigYaml =>
   ({ name: "c", version: "1", schema: "v1", models, ...extra }) as any;
 
 describe("defaultSecretName", () => {
-  it("builds CONTINUED_<PROVIDER>_API_KEY", () => {
-    expect(defaultSecretName("anthropic")).toBe("CONTINUED_ANTHROPIC_API_KEY");
+  it("builds CONTINUOUS_<PROVIDER>_API_KEY", () => {
+    expect(defaultSecretName("anthropic")).toBe("CONTINUOUS_ANTHROPIC_API_KEY");
     expect(defaultSecretName("bedrock-mantle")).toBe(
-      "CONTINUED_BEDROCK_MANTLE_API_KEY",
+      "CONTINUOUS_BEDROCK_MANTLE_API_KEY",
     );
-    expect(defaultSecretName("")).toBe("CONTINUED_PROVIDER_API_KEY");
+    expect(defaultSecretName("")).toBe("CONTINUOUS_PROVIDER_API_KEY");
   });
 });
 
@@ -107,13 +107,13 @@ describe("applyProviderModels", () => {
       add: [desc("anthropic", "opus"), desc("anthropic", "sonnet")],
       key: {
         storage: "secure",
-        secretName: "CONTINUED_ANTHROPIC_API_KEY",
+        secretName: "CONTINUOUS_ANTHROPIC_API_KEY",
         value: "sk-ant-secret",
       },
     });
     expect(next.models).toHaveLength(2);
     for (const m of next.models as any[]) {
-      expect(m.apiKey).toBe("${{ secrets.CONTINUED_ANTHROPIC_API_KEY }}");
+      expect(m.apiKey).toBe("${{ secrets.CONTINUOUS_ANTHROPIC_API_KEY }}");
     }
     expect(JSON.stringify(next)).not.toContain("sk-ant-secret");
   });
@@ -334,7 +334,7 @@ rules:
       add: [desc("anthropic", "claude-sonnet", { title: "Sonnet" })],
       key: {
         storage: "env",
-        secretName: "CONTINUED_ANTHROPIC_API_KEY",
+        secretName: "CONTINUOUS_ANTHROPIC_API_KEY",
         value: "sk-ant-should-not-appear",
       },
     });
@@ -347,8 +347,8 @@ rules:
     const models = YAML.parse(text).models;
     expect(models.map((m: any) => m.name)).toEqual(["Opus", "Sonnet"]);
     expect(models.map((m: any) => m.apiKey)).toEqual([
-      "${{ secrets.CONTINUED_ANTHROPIC_API_KEY }}",
-      "${{ secrets.CONTINUED_ANTHROPIC_API_KEY }}",
+      "${{ secrets.CONTINUOUS_ANTHROPIC_API_KEY }}",
+      "${{ secrets.CONTINUOUS_ANTHROPIC_API_KEY }}",
     ]);
   });
 });

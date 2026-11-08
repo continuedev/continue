@@ -38,7 +38,7 @@ describe("TUIChat - plan mode", () => {
 
   beforeEach(async () => {
     await resetFlowState();
-    // PresentPlan writes .continue/plans under the working directory
+    // PresentPlan writes .continuous/plans under the working directory
     cwd = fs.mkdtempSync(path.join(os.tmpdir(), "cn-plan-"));
     vi.spyOn(process, "cwd").mockReturnValue(cwd);
   });
@@ -60,7 +60,7 @@ describe("TUIChat - plan mode", () => {
       ui.lastFrame,
     );
     const frame = ui.lastFrame() ?? "";
-    expect(frame).toContain(".continue/plans/add-retry.md");
+    expect(frame).toContain(".continuous/plans/add-retry.md");
     expect(frame).toContain("Build");
     expect(frame).toContain("Keep planning");
     for (const key of answerKeys) await type(ui.stdin, key);
@@ -84,7 +84,7 @@ describe("TUIChat - plan mode", () => {
       expect(offered).not.toContain("Write");
       expect(offered).not.toContain("Edit");
 
-      const file = path.join(cwd, ".continue", "plans", "add-retry.md");
+      const file = path.join(cwd, ".continuous", "plans", "add-retry.md");
       expect(fs.readFileSync(file, "utf-8")).toContain(
         "Retry failed fetches with backoff.",
       );
