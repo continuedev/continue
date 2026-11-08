@@ -436,6 +436,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     longDescription: `Enable the models you want in the [Bedrock console](https://console.aws.amazon.com/bedrock) (**Model access**) in the region you choose below. See the [documentation](https://b1tninja.github.io/continuous/customize/model-providers/top-level/bedrock) for help picking an authentication method.`,
     tags: [ModelProviderTags.RequiresApiKey],
     refPage: "bedrock",
+    apiKeyUrl: "https://console.aws.amazon.com/bedrock/home#/api-keys",
     packages: [
       models.bedrockClaudeFable51,
       models.bedrockClaudeOpus55,

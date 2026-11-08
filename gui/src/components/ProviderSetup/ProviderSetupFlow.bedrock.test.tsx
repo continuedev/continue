@@ -86,6 +86,61 @@ describe("ProviderSetupFlow - Amazon Bedrock", () => {
     });
     // No key is sent for profile auth.
     expect(saves[0].add[0]).not.toHaveProperty("apiKey");
+    expect(saves[0].key).toBeUndefined();
+  });
+
+  it("saves the API key it tested with", async () => {
+    const messenger = new MockIdeMessenger();
+    const saves: any[] = [];
+    messenger.responseHandlers["config/getProviderSetup"] = async () => ({
+      connections: [],
+      secureStorageAvailable: true,
+      preferredKeyStorage: "secure",
+      editable: true,
+    });
+    messenger.responseHandlers["config/saveProviderModels"] = async (req) => {
+      saves.push(req);
+      return { saved: true };
+    };
+    messenger.responseHandlers["bedrock/listModels"] = async () => ({
+      ok: true,
+      models: [
+        {
+          id: "amazon.nova-pro-v1:0",
+          name: "Nova Pro",
+          provider: "Amazon",
+          kind: "on-demand",
+        },
+      ],
+    });
+
+    const { user } = await renderWithProviders(
+      <ProviderSetupFlow initialProvider="bedrock" onDone={vi.fn()} />,
+      { mockIdeMessenger: messenger },
+    );
+
+    await user.type(screen.getByLabelText("Bedrock API key"), "test-key");
+    await user.selectOptions(screen.getByLabelText("AWS region"), "us-east-1");
+    await user.click(screen.getByRole("button", { name: "Test connection" }));
+    await screen.findByText(/1 model available in us-east-1/);
+
+    const next = screen.getByRole("button", { name: "Next" });
+    await waitFor(() =>
+      expect((next as HTMLButtonElement).disabled).toBe(false),
+    );
+    await user.click(next);
+    const nova = (await screen.findByLabelText(/Nova Pro/)) as HTMLInputElement;
+    await waitFor(() => expect(nova.checked).toBe(true));
+    await user.click(screen.getByRole("button", { name: "Review" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(saves).toHaveLength(1));
+    expect(saves[0].key).toEqual({
+      storage: "secure",
+      secretName: expect.stringMatching(/BEDROCK/),
+      value: "test-key",
+    });
+    expect(saves[0].add[0]).not.toHaveProperty("apiKey");
   });
 
   it("marks models that need the Anthropic use-case form, without checking them, and lets them be selected", async () => {

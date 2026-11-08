@@ -15,6 +15,7 @@ import {
   buildModelFromForm,
   getBedrockConnectionParams,
   getRenderableFields,
+  isFieldVisible,
 } from "../../forms/addModelFormUtils";
 import { listBedrockModelsFor } from "../../forms/bedrockModels";
 import { BedrockConnectionTester } from "../../forms/BedrockConnectionTester";
@@ -207,8 +208,15 @@ export function ProviderSetupFlow({
 
   const isBedrock = isBedrockProvider(provider.provider);
   const isLocal = !!provider.localServer;
+  const allFields = provider.collectInputFor ?? [];
+  const apiKeyField = allFields.find((f) => f.key === "apiKey");
+  // Set when the key is only one of several ways to sign in, as on Bedrock.
+  const keyIsOptionalAuth = !!apiKeyField?.showWhen;
   // A local server's key is optional: only one started with a key needs it.
-  const hasKeyField = !!provider.apiKeyUrl || isLocal;
+  const hasKeyField =
+    isLocal ||
+    (!!provider.apiKeyUrl &&
+      (!keyIsOptionalAuth || isFieldVisible(apiKeyField, values, allFields)));
 
   // The connection the form describes, as core will match it.
   const connection = useMemo(
@@ -470,7 +478,7 @@ export function ProviderSetupFlow({
     <div className="flex flex-col gap-2">
       <div>
         <label className="mb-1 block text-sm font-medium" htmlFor="apiKey">
-          API key
+          {keyIsOptionalAuth ? apiKeyField.label : "API key"}
         </label>
         <Input
           id="apiKey"
@@ -640,49 +648,58 @@ export function ProviderSetupFlow({
             />
           )}
 
-          {keySection}
+          {!keyIsOptionalAuth && keySection}
 
           {!enterKey &&
-            getRenderableFields(provider, values).map((field) => (
-              <div key={`${provider.provider}-${field.key}`}>
-                <label
-                  className="mb-1 block text-sm font-medium"
-                  htmlFor={field.key}
-                >
-                  {field.label}
-                </label>
-                {field.inputType === "select" ? (
-                  <FormSelect
-                    id={field.key}
-                    defaultValue={field.defaultValue}
-                    {...formMethods.register(field.key)}
+            getRenderableFields(provider, values)
+              .filter((field) => field.key !== "apiKey")
+              .map((field) => (
+                <div key={`${provider.provider}-${field.key}`}>
+                  <label
+                    className="mb-1 block text-sm font-medium"
+                    htmlFor={field.key}
                   >
-                    {(
-                      field.choices ??
-                      (field.options ?? []).map((o) => ({ value: o, label: o }))
-                    ).map((choice) => (
-                      <option key={choice.value} value={choice.value}>
-                        {choice.label}
-                      </option>
-                    ))}
-                  </FormSelect>
-                ) : (
-                  <Input
-                    id={field.key}
-                    className="w-full"
-                    type={field.inputType === "password" ? "password" : "text"}
-                    defaultValue={field.defaultValue}
-                    placeholder={`${field.placeholder ?? ""}`}
-                    {...formMethods.register(field.key)}
-                  />
-                )}
-                {field.description && (
-                  <span className="mt-1 block text-xs text-description-muted">
-                    {field.description}
-                  </span>
-                )}
-              </div>
-            ))}
+                    {field.label}
+                  </label>
+                  {field.inputType === "select" ? (
+                    <FormSelect
+                      id={field.key}
+                      defaultValue={field.defaultValue}
+                      {...formMethods.register(field.key)}
+                    >
+                      {(
+                        field.choices ??
+                        (field.options ?? []).map((o) => ({
+                          value: o,
+                          label: o,
+                        }))
+                      ).map((choice) => (
+                        <option key={choice.value} value={choice.value}>
+                          {choice.label}
+                        </option>
+                      ))}
+                    </FormSelect>
+                  ) : (
+                    <Input
+                      id={field.key}
+                      className="w-full"
+                      type={
+                        field.inputType === "password" ? "password" : "text"
+                      }
+                      defaultValue={field.defaultValue}
+                      placeholder={`${field.placeholder ?? ""}`}
+                      {...formMethods.register(field.key)}
+                    />
+                  )}
+                  {field.description && (
+                    <span className="mt-1 block text-xs text-description-muted">
+                      {field.description}
+                    </span>
+                  )}
+                </div>
+              ))}
+
+          {keyIsOptionalAuth && keySection}
 
           {!enterKey && isBedrock && (
             <BedrockConnectionTester
