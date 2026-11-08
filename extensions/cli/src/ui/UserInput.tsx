@@ -219,12 +219,12 @@ const UserInput: React.FC<UserInputProps> = ({
     void loadCommands();
   }, [assistant?.prompts, assistant?.rules]);
 
-  // Cycle through permission modes
-  const cycleModes = async () => {
+  // Cycle through permission modes: forward (Shift+Tab, Right) or back (Left)
+  const cycleModes = async (step: 1 | -1 = 1) => {
     const modes: PermissionMode[] = ["normal", "plan", "auto"];
     const currentMode = services.toolPermissions.getCurrentMode();
     const currentIndex = modes.indexOf(currentMode);
-    const nextIndex = (currentIndex + 1) % modes.length;
+    const nextIndex = (currentIndex + step + modes.length) % modes.length;
     const nextMode = modes[nextIndex];
 
     services.toolPermissions.switchMode(nextMode);
