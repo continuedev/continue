@@ -3,6 +3,11 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { parseMarkdownRule, RuleObject } from "@continuedev/config-yaml";
+import {
+  actTurn,
+  CLI_TURN_TOOL_NAMES,
+  planTurn,
+} from "core/llm/prompts/turns.js";
 
 import { env } from "./env.js";
 import { processRule } from "./hubLoader.js";
@@ -40,11 +45,10 @@ function getGitStatus(): string {
   }
 }
 
-const baseSystemMessage = `You are an agent in the Continuous CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.
-
-Notes:
-1. IMPORTANT: You should be concise, direct, and to the point, since your responses will be displayed on a command line interface.
-2. When relevant, share file names and code snippets relevant to the query
+// The CLI's preamble. The turn's own instructions (act or plan) are shared
+// with the IDE and appended by constructSystemMessage; see
+// core/llm/prompts/turns.ts and plans/policy-areas.md.
+const baseSystemMessage = `You are an agent in the Continuous CLI. Your replies are shown in a terminal: be concise and direct, and show file names and code only where they help.
 Here is useful information about the environment you are running in:
 <env>
 Working directory: ${process.cwd()}
@@ -215,11 +219,12 @@ export async function constructSystemMessage(
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;
 
-  // Add plan mode specific instructions if in plan mode
+  // The turn's instructions: a plan turn in plan mode, an act turn otherwise.
+  // The same texts serve the IDE, so the two surfaces cannot drift apart.
   if (mode === "plan") {
-    systemMessage +=
-      '\n<context name="planMode">You are operating in _Plan Mode_, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files. Bash commands ask the user for approval first, and it is not acceptable to use the Bash tool to write to files. When your plan is ready, present it with the PresentPlan tool and stop: the user then chooses to build it or to keep planning.</context>\n';
+    systemMessage += `\n<context name="planMode">\n${planTurn(CLI_TURN_TOOL_NAMES)}\n</context>\n`;
   } else {
+    systemMessage += `\n<context name="agentMode">\n${actTurn(CLI_TURN_TOOL_NAMES)}\n</context>\n`;
     // Check if commit signature is disabled via environment variable
     if (!process.env.CONTINUE_CLI_DISABLE_COMMIT_SIGNATURE) {
       systemMessage += `\n<context name="commitSignature">When creating commits using any CLI or tool, include the following in the commit message:

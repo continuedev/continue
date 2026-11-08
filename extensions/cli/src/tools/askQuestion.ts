@@ -2,14 +2,25 @@ import { quizService } from "../services/QuizService.js";
 
 import { Tool } from "./types.js";
 
+/**
+ * What a question is about, as the agent labels it. Recorded for the person
+ * and for the Questions level (plans/policy-areas.md); the label never on its
+ * own decides who answers.
+ */
+export const QUESTION_TYPES = [
+  "access",
+  "irreversible",
+  "security",
+  "cost",
+  "scope",
+  "design",
+  "detail",
+] as const;
+
 export const askQuestionTool: Tool = {
   name: "AskQuestion",
   displayName: "Ask Question",
-  description: `Ask the user a clarifying question to gather requirements, preferences, or implementation details before proceeding.
-Guidelines:
-- You should use this tool **whenever you want to clarify your assumption or need answers to build your plan**.
-- DO NOT supply "other" or "none of the above" or similar as an option. User can always provide a free-form answer when needed.
-`,
+  description: `Ask the person one question and wait for the answer. Use it for a preference or trade-off that would change the result and that reading the code cannot settle; facts about the code are found, not asked. Give two to four options with your recommended one first and in defaultAnswer; the person can always answer in their own words, so do not add "other". Set type to what a wrong answer would cost: access (something only the person can supply), irreversible, security, cost, scope, design or detail. If the answer does not come, proceed with your default and say so.`,
   parameters: {
     type: "object",
     required: ["question", "options"],
@@ -21,7 +32,7 @@ Guidelines:
       options: {
         type: "array",
         description:
-          "The list of choices. Leave as empty array if user should provide a free-form answer.",
+          "Two to four choices, your recommended one first. Leave empty only if the person must answer in their own words.",
         items: {
           type: "string",
         },
@@ -29,7 +40,12 @@ Guidelines:
       defaultAnswer: {
         type: "string",
         description:
-          "Default answer if user presses Enter without providing input",
+          "Your recommended answer, used if the person presses Enter without choosing",
+      },
+      type: {
+        type: "string",
+        enum: [...QUESTION_TYPES],
+        description: "What a wrong answer would cost",
       },
     },
   },
@@ -39,6 +55,7 @@ Guidelines:
     question: string;
     options?: string[];
     defaultAnswer?: string;
+    type?: string;
   }): Promise<string> => {
     const { question, options, defaultAnswer } = args;
 

@@ -40,6 +40,7 @@ export const holdQuestionImpl: ClientToolImpl = async (
       question: args?.question,
       kind: args?.kind,
       assumption: args?.assumption,
+      type: args?.type,
     },
     new Date(),
   );

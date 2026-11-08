@@ -12,6 +12,7 @@ import type {
   LoopStopReason,
   LoopStrategy,
   MessageContent,
+  QuestionType,
   TaskItem,
   TaskPlan,
 } from "../index.js";
@@ -41,6 +42,21 @@ import { TASK_LIST_BLOCK_CLOSE, TASK_LIST_BLOCK_OPEN } from "./taskPlan.js";
 export const HOLD_QUESTION_TOOL_NAME = "hold_question";
 export const FINISH_ITEM_TOOL_NAME = "finish_item";
 export const REMIND_ME_TOOL_NAME = "remind_me";
+
+/**
+ * What a wrong answer to a question would cost, as the agent labels it
+ * (plans/policy-areas.md, "Questions are about who decides"). The consequence
+ * types come first; a question on two axes takes the costlier one.
+ */
+export const QUESTION_TYPES: readonly QuestionType[] = [
+  "access",
+  "irreversible",
+  "security",
+  "cost",
+  "scope",
+  "design",
+  "detail",
+];
 
 /**
  * The names the prompts and tool results give the model for the loop's
@@ -1628,6 +1644,8 @@ export function holdQuestion(
     question: unknown;
     kind: unknown;
     assumption?: unknown;
+    /** What a wrong answer would cost, as the agent labelled it (QUESTION_TYPES) */
+    type?: unknown;
     approval?: LoopQuestion["approval"];
     /** For the error texts; default the IDE's names */
     toolNames?: LoopToolNames;
@@ -1635,6 +1653,13 @@ export function holdQuestion(
   now: Date,
 ): HoldResult {
   const names = input.toolNames ?? LOOP_TOOL_NAMES;
+  // Recorded, never trusted on its own: a wrong label is the expected case
+  // under pressure (plans/policy-areas.md, "Questions are about who decides")
+  const type =
+    typeof input.type === "string" &&
+    (QUESTION_TYPES as readonly string[]).includes(input.type)
+      ? (input.type as QuestionType)
+      : undefined;
   const question =
     typeof input.question === "string" ? input.question.trim() : "";
   if (!question) return { ok: false, error: "question is empty" };
@@ -1687,6 +1712,7 @@ export function holdQuestion(
     ...(itemId ? { itemId } : {}),
     question,
     kind,
+    ...(type ? { type } : {}),
     ...(assumption ? { assumption } : {}),
     ...(input.approval ? { approval: input.approval } : {}),
     askedAt: iso(now),
@@ -2277,13 +2303,14 @@ export function loopItemPrompt(input: {
     "",
     "Before you report it done, run the checks the project has for what you changed (tests, type check, lint) and fix what fails; name them in your summary, or say there was nothing to run.",
     "",
-    `When the item is done, call ${names.finishItem} with outcome "done" and a one-line summary. If you cannot finish it, call ${names.finishItem} with outcome "stuck" and say why. Put anything a later item should know (a command that works, a trap you hit) in \`notes\`: one or two lines, not progress.`,
+    `When the item is done, call ${names.finishItem} with outcome "done" and a one-line summary. If you cannot finish it, call ${names.finishItem} with outcome "stuck" and say why. Put anything a later item should know (a command that works, a trap you hit) in \`notes\`: one or two lines, not progress. End this turn only by calling ${names.finishItem}: a reply with no tool call does not end the item, and the item is not ended until ${names.finishItem} is called.`,
     "",
     `If you learn something a later item or a retry will need, save it with ${names.remindMe} now.`,
     "",
+    // The one level-dependent line, last so it never moves the plan block
     input.decideAlone
       ? "Nobody will answer questions on this run. Make every decision yourself, even important ones, and say what you chose in your summary."
-      : `Ask, rather than decide silently: whenever the person might want a say (a choice between approaches, scope, naming, an irreversible step, or anything the plan does not settle), call ${names.holdQuestion}. Use kind "assumption" by default: state the choice you are making in \`assumption\` and keep working; the person can overrule it later. Use kind "blocking" only when there is no reasonable default, then stop and call ${names.finishItem} with outcome "waiting". Write each question so it can be answered without this conversation: name the item, the options and your default.`,
+      : `When the plan does not settle a choice and the person might want a say, call ${names.holdQuestion} rather than deciding silently. Give it the type of the question (what a wrong answer would cost: access, irreversible, security, cost, scope, design or detail), your default in \`assumption\` with kind "assumption", and keep working; the person can overrule it later. Use kind "blocking" only when there is no reasonable default: then do what you can and call ${names.finishItem} with outcome "waiting". Write each question so it can be answered without this conversation: the item, the options, your default.`,
   );
   return lines.join("\n");
 }

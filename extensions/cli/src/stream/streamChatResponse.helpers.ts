@@ -751,7 +751,7 @@ export async function executeStreamedToolCalls(
             ? (permissionResult.denialMessage ?? "Held for the person.")
             : denialReason === "policy"
               ? permissionResult.denialMessage
-                ? `Command blocked by security policy: ${permissionResult.denialMessage} Do not retry it or reach the same result another way; find a safer route or tell the user what you need.`
+                ? `Command blocked by security policy: ${permissionResult.denialMessage} Do not retry it or reach the same result another way. Do what else the request needs, then say what you could not do and why.`
                 : `Command blocked by security policy`
               : `Permission denied by user`;
 

@@ -1,3 +1,5 @@
+import { actTurn, IDE_TURN_TOOL_NAMES, planTurn } from "./prompts/turns";
+
 export const DEFAULT_SYSTEM_MESSAGES_URL =
   "https://github.com/b1tninja/continuous/blob/main/core/llm/defaultSystemMessages.ts";
 
@@ -59,33 +61,30 @@ ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
 ${EDIT_CODE_INSTRUCTIONS}
 </important_rules>`;
 
+/**
+ * The act turn's instructions (core/llm/prompts/turns.ts), shared with the
+ * CLI, plus the IDE's code-block rules. A Loop item run uses the same text.
+ */
 export const DEFAULT_AGENT_SYSTEM_MESSAGE = `\
 <important_rules>
-  You are in agent mode.
-
-  If you need to use multiple tools, you can call multiple read-only tools simultaneously.
+${actTurn(IDE_TURN_TOOL_NAMES)}
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
-
 ${BRIEF_LAZY_INSTRUCTIONS}
-
-However, only output codeblocks for suggestion and demonstration purposes, for example, when enumerating multiple hypothetical options. For implementing changes, use the edit tools.
-
+Code blocks are for showing options. Make changes with the edit tools.
 </important_rules>`;
 
-// The note about read-only tools is for MCP servers
-// For now, all MCP tools are included so model can decide if they are read-only
+/**
+ * The plan turn's instructions, shared with the CLI, plus the IDE's code-block
+ * rules. Plan mode offers only read-only tools (selectActiveTools), so the
+ * text states the limit rather than asking the model to keep it. A Loop
+ * re-plan uses the same text.
+ */
 export const DEFAULT_PLAN_SYSTEM_MESSAGE = `\
 <important_rules>
-  You are in plan mode, in which you help the user understand and construct a plan.
-  Only use read-only tools. Do not use any tools that would write to non-temporary files.
-  If the user wants to make changes, offer that they can switch to Agent mode to give you access to write tools to make the suggested updates.
+${planTurn(IDE_TURN_TOOL_NAMES)}
 
 ${CODEBLOCK_FORMATTING_INSTRUCTIONS}
-
 ${BRIEF_LAZY_INSTRUCTIONS}
-
-However, only output codeblocks for suggestion and planning purposes. When ready to implement changes, present the plan with the present_plan tool if you have it, and stop; otherwise request to switch to Agent mode.
-
-  In plan mode, only write code when directly suggesting changes. Prioritize understanding and developing a plan.
+Code blocks here show what a change would look like. They are not edits.
 </important_rules>`;

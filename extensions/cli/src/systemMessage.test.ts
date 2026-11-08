@@ -19,7 +19,9 @@ vi.mock("./hubLoader.js", () => ({
     .mockImplementation((spec: string) => Promise.resolve(spec)),
 }));
 
-const PLAN_MODE_STRING = "You are operating in _Plan Mode_";
+// The first lines of the shared turn texts (core/llm/prompts/turns.ts)
+const PLAN_MODE_STRING = "You are in plan mode.";
+const AGENT_MODE_STRING = "You are in agent mode.";
 
 describe("constructSystemMessage", () => {
   it("should return base system message with rules when additionalRules is provided", async () => {
@@ -180,14 +182,12 @@ Rule 3: Third rule`;
 
     expect(result).toContain("You are an agent in the Continuous CLI");
     expect(result).toContain(PLAN_MODE_STRING);
-    expect(result).toContain(
-      "which means that your goal is to help the user investigate their ideas",
-    );
-    expect(result).toContain("develop a plan before taking action");
-    expect(result).toContain("read-only tools");
-    expect(result).toContain(
-      "should not attempt to circumvent them to write / delete / create files",
-    );
+    expect(result).toContain("the person decides whether to do it");
+    expect(result).toContain("Your tools only read");
+    // The CLI's own tool name, not the IDE's
+    expect(result).toContain("call PresentPlan and stop");
+    expect(result).not.toContain("present_plan");
+    expect(result).not.toContain(AGENT_MODE_STRING);
   });
 
   it("should not add plan mode instructions when mode is not plan", async () => {
@@ -200,9 +200,7 @@ Rule 3: Third rule`;
 
     expect(result).toContain("You are an agent in the Continuous CLI");
     expect(result).not.toContain(PLAN_MODE_STRING);
-    expect(result).not.toContain(
-      "which means that your goal is to help the user investigate their ideas",
-    );
+    expect(result).toContain(AGENT_MODE_STRING);
   });
 
   it("should not add plan mode instructions when mode is normal", async () => {
@@ -210,9 +208,10 @@ Rule 3: Third rule`;
 
     expect(result).toContain("You are an agent in the Continuous CLI");
     expect(result).not.toContain(PLAN_MODE_STRING);
-    expect(result).not.toContain(
-      "which means that your goal is to help the user investigate their ideas",
-    );
+    expect(result).toContain(AGENT_MODE_STRING);
+    // The act turn's rules against listing steps and stopping
+    expect(result).toContain("A reply with no tool call ends your turn");
+    expect(result).toContain("TaskList tool");
   });
 
   it("should include basic plan mode description", async () => {
@@ -224,8 +223,8 @@ Rule 3: Third rule`;
     );
 
     expect(result).toContain(PLAN_MODE_STRING);
-    expect(result).toContain("read-only tools");
-    expect(result).toContain("write / delete / create files");
+    expect(result).toContain("Your tools only read");
+    expect(result).toContain("Two kinds of unknowns");
   });
 
   it("should combine plan mode with headless mode instructions", async () => {
@@ -238,9 +237,7 @@ Rule 3: Third rule`;
 
     expect(result).toContain("IMPORTANT: You are running in headless mode");
     expect(result).toContain(PLAN_MODE_STRING);
-    expect(result).toContain(
-      "which means that your goal is to help the user investigate their ideas",
-    );
+    expect(result).toContain("the person decides whether to do it");
   });
 
   it("should combine plan mode with JSON format instructions", async () => {
@@ -255,8 +252,6 @@ Rule 3: Third rule`;
       "IMPORTANT: You are operating in JSON output mode",
     );
     expect(result).toContain(PLAN_MODE_STRING);
-    expect(result).toContain(
-      "which means that your goal is to help the user investigate their ideas",
-    );
+    expect(result).toContain("the person decides whether to do it");
   });
 });

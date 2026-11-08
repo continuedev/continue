@@ -659,8 +659,13 @@ describe("the item prompt", () => {
 
   test("encourages holding questions, assumption first, self-contained", () => {
     expect(prompt).toContain("hold_question");
-    expect(prompt).toMatch(/Ask, rather than decide silently/);
-    expect(prompt).toMatch(/kind "assumption" by default/);
+    expect(prompt).toMatch(/rather than deciding silently/);
+    expect(prompt).toMatch(
+      /your default in `assumption` with kind "assumption"/,
+    );
+    expect(prompt).toMatch(/type of the question/);
+    // The finish rule is stated in both directions for small models
+    expect(prompt).toMatch(/End this turn only by calling finish_item/);
     expect(prompt).toMatch(
       /"blocking" only when there is no reasonable default/,
     );

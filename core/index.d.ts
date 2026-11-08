@@ -454,6 +454,21 @@ export interface LoopItemState {
  */
 export type LoopQuestionKind = "blocking" | "assumption" | "approval";
 
+/**
+ * What a wrong answer to a question would cost, as the agent labels it
+ * (plans/policy-areas.md, "Questions are about who decides"). Recorded with
+ * the question; the Questions level will route on it, with checks. The list
+ * is QUESTION_TYPES in core/util/loopMode.ts.
+ */
+export type QuestionType =
+  | "access"
+  | "irreversible"
+  | "security"
+  | "cost"
+  | "scope"
+  | "design"
+  | "detail";
+
 export interface LoopQuestion {
   /** IDGAF: the agent decided this itself; it never reached the inbox */
   decidedAlone?: boolean;
@@ -462,6 +477,8 @@ export interface LoopQuestion {
   itemId?: string;
   question: string;
   kind: LoopQuestionKind;
+  /** The agent's label for what a wrong answer would cost */
+  type?: QuestionType;
   /** The default the item continued with (kind assumption) */
   assumption?: string;
   /** The held tool call (kind approval) */

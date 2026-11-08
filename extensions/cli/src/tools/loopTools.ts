@@ -86,6 +86,7 @@ export const holdQuestionTool: Tool = {
         question: args?.question,
         kind: args?.kind,
         assumption: args?.assumption,
+        type: args?.type,
         toolNames: CLI_LOOP_TOOL_NAMES,
       },
       new Date(),
