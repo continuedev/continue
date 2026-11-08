@@ -769,7 +769,6 @@
     "uuid": "^11.1.1",
     "vectordb": "0.4.20",
     "vitest": "^5.0.5",
-    "vscode-languageclient": "^11.0.0",
     "yaml": "^2.9.1"
   },
   "overrides": {
@@ -811,9 +810,6 @@
     "@openapitools/openapi-generator-cli": {
       "glob": "^14.0.2"
     },
-    "minimatch@^10.0.0": "^11.0.4",
-    "vscode-languageclient": {
-      "minimatch": "10.2.6"
-    }
+    "minimatch@^10.0.0": "^11.0.4"
   }
 }
