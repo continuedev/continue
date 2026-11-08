@@ -76,6 +76,16 @@ describe("messageQueue", () => {
     expect(queue.list()).toEqual([]);
   });
 
+  it("puts a message back at the front", async () => {
+    const queue = await queueWith("later");
+    const changed = vi.fn();
+    queue.on("changed", changed);
+    const item = queue.putBack("taken back");
+    expect(queue.list().map((m) => m.message)).toEqual(["taken back", "later"]);
+    expect(queue.list()[1].id).not.toBe(item.id);
+    expect(changed).toHaveBeenCalledTimes(1);
+  });
+
   it("emits changed with the new list on every mutation", async () => {
     const queue = new MessageQueue();
     const seen: string[][] = [];

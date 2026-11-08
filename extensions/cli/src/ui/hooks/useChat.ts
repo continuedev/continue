@@ -828,9 +828,10 @@ export function useChat({
       additionalRules,
     );
     setChatHistory(newHistory);
-    // Queued messages belonged to the conversation that was cleared
-    messageQueue.clear();
-    messageQueue.resume();
+    // Queued messages were written for the conversation that was reset, but
+    // are never thrown away unasked: they stay, paused, until the person
+    // sends, edits or removes them
+    messageQueue.pause();
     setPendingMessage(null);
   };
 
@@ -852,9 +853,9 @@ export function useChat({
     });
 
     // Queued messages were written after the message being edited, for a
-    // conversation that is being rewound, so they are dropped
-    messageQueue.clear();
-    messageQueue.resume();
+    // conversation that is being rewound. An Esc too many reaches this
+    // picker, so they are kept, paused, not dropped: the person decides
+    messageQueue.pause();
     setPendingMessage(null);
 
     // Clear attached files

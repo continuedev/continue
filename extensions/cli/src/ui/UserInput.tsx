@@ -158,8 +158,21 @@ const UserInput: React.FC<UserInputProps> = ({
   const [cursorPosition, setCursorPosition] = useState(0);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
 
+  // The prompt holds messages Up took back from the queue (until sent)
+  const takenBackRef = useRef(false);
+
   // Clear input function for Ctrl+C
   const clearInput = useCallback(() => {
+    // Messages taken back from the queue are not thrown away by a Ctrl+C:
+    // the prompt, edits included, goes back to the front of the queue
+    const text = textBuffer.text.trim();
+    if (takenBackRef.current && text && !isRemoteMode) {
+      const images = textBuffer.getAllImages();
+      textBuffer.expandAllPasteBlocks();
+      const restored = textBuffer.text.trim();
+      messageQueue.putBack(restored, images.size > 0 ? images : undefined);
+    }
+    takenBackRef.current = false;
     textBuffer.clear();
     setInputText("");
     setCursorPosition(0);
@@ -167,7 +180,7 @@ const UserInput: React.FC<UserInputProps> = ({
     setShowFileSearch(false);
     setShowBashMode(false);
     inputHistory.resetNavigation();
-  }, [textBuffer]);
+  }, [textBuffer, isRemoteMode]);
 
   const [slashCommandFilter, setSlashCommandFilter] = useState("");
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
@@ -565,6 +578,7 @@ const UserInput: React.FC<UserInputProps> = ({
     updateFileSearchState(newText, taken.length);
     updateBashModeState(newText);
     inputHistory.resetNavigation();
+    takenBackRef.current = true;
     return true;
   };
 
@@ -720,6 +734,7 @@ const UserInput: React.FC<UserInputProps> = ({
         const submittedText = textBuffer.text.trim();
 
         inputHistory.addEntry(submittedText);
+        takenBackRef.current = false;
 
         // We don't queue, we just send in remote mode because the server handles queueing
         if (!isRemoteMode && (isWaitingForResponse || isCompacting)) {

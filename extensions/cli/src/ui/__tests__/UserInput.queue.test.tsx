@@ -6,6 +6,9 @@ import { messageQueue } from "../../stream/messageQueue.js";
 import { UserInput } from "../UserInput.js";
 
 const UP = "\x1b[A";
+const ENTER = "\r";
+const CTRL_C = "\u0003";
+const NL = "\n";
 
 function renderInput(props: Partial<React.ComponentProps<typeof UserInput>>) {
   const onSubmit = vi.fn();
@@ -131,5 +134,61 @@ describe("UserInput and the message queue", () => {
     } finally {
       unmount();
     }
+  });
+
+  describe("Ctrl+C after Up took the queue back", () => {
+    beforeEach(() => {
+      // Ctrl+C also signals the process for the two-stage exit
+      vi.spyOn(process, "kill").mockImplementation(() => true);
+    });
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("puts the prompt, edits included, back at the front of the queue", async () => {
+      await messageQueue.enqueueMessage("first thought");
+      await messageQueue.enqueueMessage("second thought");
+      const { stdin, unmount } = renderInput({ isWaitingForResponse: true });
+      try {
+        stdin.write(UP);
+        expect(messageQueue.getQueueLength()).toBe(0);
+        stdin.write(" and more");
+        await messageQueue.enqueueMessage("typed later");
+
+        stdin.write(CTRL_C);
+        expect(messageQueue.list().map((m) => m.message)).toEqual([
+          "first thought" + NL + "second thought and more",
+          "typed later",
+        ]);
+      } finally {
+        unmount();
+      }
+    });
+
+    it("still just clears an ordinary draft", () => {
+      const { stdin, unmount } = renderInput({ isWaitingForResponse: true });
+      try {
+        stdin.write("a draft");
+        stdin.write(CTRL_C);
+        expect(messageQueue.getQueueLength()).toBe(0);
+      } finally {
+        unmount();
+      }
+    });
+
+    it("does not put back what was already sent", () => {
+      const { stdin, unmount } = renderInput({ isWaitingForResponse: true });
+      try {
+        void messageQueue.enqueueMessage("queued");
+        stdin.write(UP);
+        stdin.write(ENTER);
+        expect(messageQueue.list().map((m) => m.message)).toEqual(["queued"]);
+        stdin.write("new draft");
+        stdin.write(CTRL_C);
+        expect(messageQueue.list().map((m) => m.message)).toEqual(["queued"]);
+      } finally {
+        unmount();
+      }
+    });
   });
 });

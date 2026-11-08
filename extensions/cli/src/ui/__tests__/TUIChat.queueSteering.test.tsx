@@ -304,6 +304,73 @@ describe("TUIChat - message queue and steering", () => {
     }
   });
 
+  it("rewinding with the edit picker keeps the queue, paused, instead of dropping it", async () => {
+    const second = heldTurn(textTurn("never finished"));
+    const llm = new ScriptedLlm([
+      textTurn("reply one"),
+      second.turn,
+      textTurn("reply to the edit"),
+    ]);
+    await registerFlowServices({ llm });
+    const ui = renderFlow();
+    try {
+      await type(ui.stdin, "start");
+      await type(ui.stdin, ENTER);
+      await waitUntil(
+        () => ui.allOutput().includes("reply one"),
+        "the first reply",
+        ui.lastFrame,
+      );
+      await type(ui.stdin, "second");
+      await type(ui.stdin, ENTER);
+      await second.started;
+      await type(ui.stdin, "carefully thought out");
+      await type(ui.stdin, ENTER);
+      expect(messageQueue.getQueueLength()).toBe(1);
+
+      // Esc stops the agent; two more open the edit picker
+      await type(ui.stdin, ESC);
+      await waitUntil(
+        () => messageQueue.isPaused(),
+        "the queue to pause",
+        ui.lastFrame,
+      );
+      await type(ui.stdin, ESC);
+      await type(ui.stdin, ESC);
+      await waitUntil(
+        () => (ui.lastFrame() ?? "").includes("Edit Message"),
+        "the edit picker",
+        ui.lastFrame,
+      );
+      // Edit the selected message and send it
+      await type(ui.stdin, ENTER);
+      await type(ui.stdin, " again");
+      await type(ui.stdin, ENTER);
+      await waitUntil(
+        () => llm.requests.length === 3,
+        "the edited message to be sent",
+        ui.lastFrame,
+      );
+      await waitUntil(
+        () => ui.allOutput().includes("reply to the edit"),
+        "the reply to the edit",
+        ui.lastFrame,
+      );
+
+      // The queued message is still there, paused, not sent with the edit
+      expect(messageQueue.list().map((m) => m.message)).toEqual([
+        "carefully thought out",
+      ]);
+      expect(messageQueue.isPaused()).toBe(true);
+      const sent = llm.requests[2].messages.filter((m) => m.role === "user");
+      expect(messageText(sent.at(-1)!)).not.toContain("carefully");
+      await tick(300);
+      expect(llm.requests).toHaveLength(3);
+    } finally {
+      ui.unmount();
+    }
+  });
+
   it("Esc pauses the queue, and the next message sends it along", async () => {
     const first = heldTurn(textTurn("never shown"));
     const llm = new ScriptedLlm([first.turn, textTurn("after the stop")]);

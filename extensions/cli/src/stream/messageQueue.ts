@@ -138,6 +138,22 @@ export class MessageQueue extends EventEmitter {
     return true;
   }
 
+  /**
+   * Put a message back at the front of the queue: what Up took back into
+   * the prompt, when Ctrl+C would otherwise throw it away.
+   */
+  putBack(message: string, imageMap?: Map<string, Buffer>): QueuedMessage {
+    const item: QueuedMessage = {
+      id: `q${this.nextId++}`,
+      message,
+      imageMap,
+      timestamp: Date.now(),
+    };
+    this.queue.unshift(item);
+    this.changed();
+    return item;
+  }
+
   /** A snapshot of the queue, oldest first. */
   list(): QueuedMessage[] {
     return [...this.queue];
