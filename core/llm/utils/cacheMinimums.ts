@@ -57,6 +57,15 @@ const GEMINI_RULES: { match: RegExp; tokens: number }[] = [
 ];
 
 /**
+ * Amazon Nova on Bedrock: the AWS table (checked 2026-11-08) lists Nova 2 Lite,
+ * Pro, Lite and Micro at "1K" tokens per checkpoint, with a 20K-token cap on
+ * what is cached. Keep the model list in step with `bedrockCachePointFields`
+ * in core/llm/llms/bedrockHelpers.ts.
+ */
+const NOVA_BEDROCK_MINIMUM = 1024;
+const NOVA_CACHE_MODELS = /(^|\.)amazon\.nova-(2-lite|pro|lite|micro)-v\d/i;
+
+/**
  * The smallest prompt a cache checkpoint can take effect on for this model, or
  * undefined when the model is not in the vendors' tables (so nothing is claimed).
  */
@@ -67,6 +76,9 @@ export function minCacheableTokens(
   if (provider.toLowerCase() === "gemini") {
     const id = model.toLowerCase().replace(/^models\//, "");
     return GEMINI_RULES.find((r) => r.match.test(id))?.tokens;
+  }
+  if (provider.toLowerCase() === "bedrock" && NOVA_CACHE_MODELS.test(model)) {
+    return NOVA_BEDROCK_MINIMUM;
   }
   const id = normalizeClaudeModelId(model);
   if (!id) return undefined;

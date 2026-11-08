@@ -3,9 +3,9 @@ title: "Prompt Caching"
 keywords: [prompt caching, cache, ttl, cost, anthropic, bedrock, claude]
 ---
 
-Prompt caching lets a provider keep the start of your prompt (tool definitions, system prompt and conversation so far) and charge a fraction of the input price when the next request begins with the same text. Continuous supports it for Claude models on Anthropic, Amazon Bedrock, Vertex AI and OpenRouter.
+Prompt caching lets a provider keep the start of your prompt (tool definitions, system prompt and conversation so far) and charge a fraction of the input price when the next request begins with the same text. Continuous supports it for Claude models on Anthropic, Amazon Bedrock, Vertex AI and OpenRouter, and for Amazon Nova 2 Lite, Nova Pro, Nova Lite and Nova Micro on Bedrock (see Bedrock below).
 
-Caching is on by default for Claude models on Anthropic and Bedrock in Agent, Plan and Background modes and in the `cn` command line, with the Auto lifetime below, unless `config.yaml` says something about caching. In Chat it is off until you turn it on. To turn it off, set `promptCaching: false` on the model, or choose Off in the prompt cache button. To turn it on in Chat as well, set it per model in `config.yaml`:
+Caching is on by default for Claude models on Anthropic and Bedrock in Agent, Plan and Background modes and in the `cn` command line, with the Auto lifetime below, unless `config.yaml` says something about caching. The `cn` command line also turns it on by default for the Nova models named above. In Chat it is off until you turn it on. To turn it off, set `promptCaching: false` on the model, or choose Off in the prompt cache button. To turn it on in Chat as well, set it per model in `config.yaml`:
 
 ```yaml title="config.yaml"
 models:
@@ -54,7 +54,7 @@ models:
 ```
 
 `ttl` accepts `5m`, `1h` or `auto` (the Auto row above). It only chooses the lifetime and does not turn caching on; `promptCaching: true` (or the toolbar) does that. A choice in the toolbar other than "Config default" overrides it for that session. If the model cannot take a 1-hour lifetime (see Bedrock below), `1h` is sent as the 5-minute default. In JSON configuration the same field is `cacheBehavior.ttl`.
-The `cn` command line reaches Claude through shared adapters and reads the same `cacheBehavior.ttl` and `promptCaching`, on both Anthropic and Bedrock. `1h` puts a 1-hour lifetime on every cache point (on Bedrock only for the models listed under Bedrock below; others get 5 minutes). `auto` is applied by the CLI itself, which has no toolbar: it counts the session's requests that carry cache points, and moves to 1 hour at the fifth, or after a pause of more than 5 and up to 55 minutes, the same two rules as above. It has no chat mode, so every CLI session counts as an Agent session. On Anthropic the CLI's cache points are on unless the adapter's `cachingStrategy` is `none`, and in an agent loop they now go on the last tool results, which is where the new content is. On Bedrock they are now on for Claude models when the config says nothing about caching, with the Auto lifetime, and off for any other model; `promptCaching: false` turns them off.
+The `cn` command line reaches Claude through shared adapters and reads the same `cacheBehavior.ttl` and `promptCaching`, on both Anthropic and Bedrock. `1h` puts a 1-hour lifetime on every cache point (on Bedrock only for the models listed under Bedrock below; others get 5 minutes). `auto` is applied by the CLI itself, which has no toolbar: it counts the session's requests that carry cache points, and moves to 1 hour at the fifth, or after a pause of more than 5 and up to 55 minutes, the same two rules as above. It has no chat mode, so every CLI session counts as an Agent session. On Anthropic the CLI's cache points are on unless the adapter's `cachingStrategy` is `none`, and in an agent loop they now go on the last tool results, which is where the new content is. On Bedrock they are now on when the config says nothing about caching for Claude models, with the Auto lifetime, and for the Nova models listed below, with Nova's 5-minute default; off for any other model. `promptCaching: false` turns them off.
 
 
 
@@ -135,9 +135,13 @@ On Bedrock, `1 hour` is offered only for models the AWS prompt caching guide lis
 
 Continuous also adds a per-process ID to the first user message so that two people sharing an AWS account do not read each other's cached conversation. The system prompt comes before it and can still be shared.
 
+### Amazon Nova
+
+The AWS prompt caching guide lists four Nova models with explicit cache checkpoints: Nova 2 Lite (`amazon.nova-2-lite-v1:0`), Nova Pro, Nova Lite and Nova Micro. For them Continuous puts cache points on the system prompt and the last two user messages, never on the tool list (Nova refuses a request with a cache point there) and never with a `ttl` (Nova takes only the 5-minute lifetime). The minimum is 1K tokens before a checkpoint, and AWS caps what Nova caches at 20K tokens, so a long agent conversation caches only its first 20K tokens. A cache read on Nova costs a quarter of the input price. Nova also reuses prefixes on its own (implicit caching), but AWS says that reuse is neither reported in the usage fields nor billed as cache reads, so a Nova session that shows zero cached tokens has sent no cache points. Nova Premier and the other Nova 2 models are not in the table and get no cache points. The chat window's prompt cache button is for Claude models only, so on Nova the setting is `promptCaching` in `config.yaml`.
+
 ## Not supported
 
-- Caching on by default in Chat, for models other than Claude, and for Claude on Vertex AI and OpenRouter. A week of agent traffic on Anthropic's API and Bedrock supports the default where it is on; nothing measured covers a chat where each request is a human turn, or the other two providers, and a conversation of one request pays the write premium for nothing.
-- Non-Claude models, including OpenAI and Gemini. Providers that cache automatically do so without any setting here.
+- Caching on by default in Chat, for models other than Claude and the four Nova models, and for Claude on Vertex AI and OpenRouter. A week of agent traffic on Anthropic's API and Bedrock supports the default where it is on; nothing measured covers a chat where each request is a human turn, or the other two providers, and a conversation of one request pays the write premium for nothing.
+- Other models, including OpenAI and Gemini. Providers that cache automatically do so without any setting here.
 - Keeping the cache alive while a command runs, or warming it when you open a saved session.
 - Control over the provider's minimum cacheable size. A prompt below the model's minimum is processed uncached without an error.

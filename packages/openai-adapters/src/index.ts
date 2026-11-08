@@ -244,7 +244,10 @@ export {
   getAnthropicMediaTypeFromDataUrl,
 } from "./apis/AnthropicUtils.js";
 
-export { bedrockModelAccessMessage } from "./apis/bedrockHelpers.js";
+export {
+  bedrockCachePointFields,
+  bedrockModelAccessMessage,
+} from "./apis/bedrockHelpers.js";
 export {
   alternateMantlePrefix,
   getMantleErrorHint,

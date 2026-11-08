@@ -31,6 +31,7 @@ import {
 
 import {
   applyCrossRegionInference,
+  bedrockCachePartsForModel,
   bedrockCachePoint,
   bedrockCacheTtl,
   bedrockModelAccessMessage,
@@ -38,7 +39,6 @@ import {
   getBedrockErrorHint,
   fillMissingToolResults,
   normalizeToolUseIds,
-  resolveBedrockCacheParts,
 } from "./bedrockHelpers.js";
 import {
   AutoCacheTtl,
@@ -502,17 +502,19 @@ export class BedrockApi implements BaseLlmApi {
     const availableTools = new Set<string>();
     let toolConfig: ToolConfiguration | undefined = undefined;
 
-    // Only Claude models take cache points. The others (GPT, Nova, Grok, ...)
-    // either cache by themselves or not at all, and reject a request that
-    // carries a cachePoint field, so `promptCaching: true` must not reach them.
-    const parts =
-      /claude/i.test(oaiBody.model) && !optsOutOfPromptCache(oaiBody)
-        ? resolveBedrockCacheParts(
-            this.config.promptCaching,
-            this.config.cacheBehavior,
-            !!systemMessageText,
-          )
-        : { tools: false, system: false, conversation: false };
+    // Cache points go only where the model accepts them: Claude takes them on
+    // the tools, the system prompt and the messages; Nova on the system prompt
+    // and the messages only; GPT and Grok cache by themselves and reject a
+    // request that carries a cachePoint field anywhere, so `promptCaching:
+    // true` must not reach them. See `bedrockCachePointFields`.
+    const parts = optsOutOfPromptCache(oaiBody)
+      ? { tools: false, system: false, conversation: false }
+      : bedrockCachePartsForModel(
+          oaiBody.model,
+          this.config.promptCaching,
+          this.config.cacheBehavior,
+          !!systemMessageText,
+        );
 
     // The lifetime to ask for on every cache point of this request, only for a
     // model that accepts one (an unsupported `ttl` can fail the request).

@@ -1,6 +1,7 @@
 import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 import {
   BaseLlmApi,
+  bedrockCachePointFields,
   constructLlmApi,
   LLMConfig,
 } from "@continuedev/openai-adapters";
@@ -41,12 +42,15 @@ function _mergeUserAgentIntoRequestOptions(
 /**
  * The caching settings for a Bedrock model. The CLI only runs agent loops, so
  * the chat window's default for Agent mode applies: when the model config says
- * nothing about caching, a Claude model caches with Auto. A week of real agent
- * traffic read 12 to 28 times per token written, and Auto came within 0.7
- * points of the best lifetime for each conversation
- * (plans/cache-real-world-data.md). Anything the config says wins, including
- * `promptCaching: false`. Non-Claude models are left alone: they reject a
- * cache point.
+ * nothing about caching, a model that takes cache points caches. A week of
+ * real agent traffic read 12 to 28 times per token written, and Auto came
+ * within 0.7 points of the best lifetime for each conversation
+ * (plans/cache-real-world-data.md), so a Claude model gets Auto. A Nova model
+ * that the AWS table lists (`bedrockCachePointFields`) caches too, with no
+ * lifetime: Nova takes only the 5-minute default, its cache reads cost a
+ * quarter of its input price and its writes are not charged. Anything the
+ * config says wins, including `promptCaching: false`. Other models are left
+ * alone: they reject a cache point.
  */
 export function bedrockCachingSettings(model: ModelConfig): {
   promptCaching?: boolean;
@@ -63,6 +67,9 @@ export function bedrockCachingSettings(model: ModelConfig): {
       promptCaching: true,
       cacheBehavior: { ...behavior, ttl: behavior?.ttl ?? "auto" },
     };
+  }
+  if (silent && bedrockCachePointFields(model.model)) {
+    return { promptCaching: true, cacheBehavior: behavior };
   }
   return { promptCaching, cacheBehavior: behavior };
 }

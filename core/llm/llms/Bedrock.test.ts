@@ -350,7 +350,8 @@ describe("Bedrock", () => {
     it.each([
       "openai.gpt-6.1-sol",
       "us.openai.gpt-5.6-sol",
-      "amazon.nova-pro-v1:0",
+      "amazon.nova-premier-v1:0",
+      "us.amazon.nova-2-pro-v1:0",
       "us.xai.grok-4.7",
     ])("never sends a cache point to %s, even with caching on", (model) => {
       const input = build(
@@ -363,6 +364,32 @@ describe("Bedrock", () => {
       expect(JSON.stringify(input)).not.toContain("cachePoint");
       expect(JSON.stringify(input)).not.toContain("SID:");
     });
+
+    // The AWS table lists these Nova models with checkpoints in `system` and
+    // `messages` only, 5 minutes only; a cache point in the tool list is
+    // refused (seen live), and so is a ttl.
+    it.each([
+      "us.amazon.nova-2-lite-v1:0",
+      "amazon.nova-pro-v1:0",
+      "amazon.nova-lite-v1:0",
+      "amazon.nova-micro-v1:0",
+    ])(
+      "caches the system prompt and messages, never the tools or a ttl, on %s",
+      (model) => {
+        const input = build(model, {
+          promptCaching: true,
+          promptCacheTtl: "1h",
+        });
+        const p = points(input);
+        expect(p.tools).toHaveLength(0);
+        expect(p.system).toEqual([{ cachePoint: { type: "default" } }]);
+        expect(p.messages).toHaveLength(2);
+        for (const c of p.messages) {
+          expect(c.cachePoint).toEqual({ type: "default" });
+        }
+        expect(JSON.stringify(input)).toContain("SID:");
+      },
+    );
 
     it("an explicit false overrides cacheBehavior", () => {
       const p = points(

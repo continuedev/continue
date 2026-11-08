@@ -171,8 +171,9 @@ Whether a model supports a given tier or latency mode depends on the model and r
 ## How to Enable Prompt Caching with Amazon Bedrock
 
 Bedrock allows Claude models to cache tool payloads, system messages, and chat
-messages between requests. Enable this behavior by adding
-`promptCaching: true` under `defaultCompletionOptions` in your model
+messages between requests, and Amazon Nova 2 Lite, Nova Pro, Nova Lite and
+Nova Micro to cache system messages and chat messages. Enable this behavior by
+adding `promptCaching: true` under `defaultCompletionOptions` in your model
 configuration.
 
 ```yaml title="config.yaml"
@@ -190,7 +191,7 @@ models:
 
 Prompt caching is not supported in JSON configuration files, so use the YAML syntax above to enable it.
 
-The cache lifetime is chosen from the chat toolbar, and 1 hour is available only for some models. See [Prompt Caching](../../deep-dives/prompt-caching.mdx).
+The cache lifetime is chosen from the chat toolbar, and 1 hour is available only for some Claude models; Nova takes 5 minutes only. See [Prompt Caching](../../deep-dives/prompt-caching.mdx).
 
 ## Authentication
 

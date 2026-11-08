@@ -45,10 +45,11 @@ import { createBedrockRequestHandler } from "./bedrockHttp.js";
 import { withResponseInfo } from "../utils/cacheStats.js";
 import { getSecureID } from "../utils/getSecureID.js";
 import { isTaskPlanBlockText } from "../../util/taskPlan.js";
-import { resolveCacheParts, resolvePromptCacheTtl } from "./anthropicCache.js";
+import { resolvePromptCacheTtl } from "./anthropicCache.js";
 import {
   applyCrossRegionInference,
   BedrockModelOption,
+  bedrockCachePartsForModel,
   bedrockCacheTtl,
   bedrockUsageToUsage,
   buildModelCatalog,
@@ -621,17 +622,18 @@ class Bedrock extends BaseLLM {
     // model's configured default, so an explicit `promptCaching: false` (for
     // example from the toolbar) wins over `cacheBehavior`.
     //
-    // Only Claude models take cache points. Other models on Bedrock either
-    // cache by themselves (GPT, Grok) or not at all (Nova), and reject a
-    // request that carries a cachePoint field (checked live), so a model
-    // config with `promptCaching: true` must not reach them.
-    const parts = /claude/i.test(options.model)
-      ? resolveCacheParts(
-          options.promptCaching,
-          this.cacheBehavior,
-          !!systemMessage,
-        )
-      : { tools: false, system: false, conversation: false };
+    // Cache points go only where the model accepts them: Claude takes them on
+    // the tools, the system prompt and the messages; Nova on the system prompt
+    // and the messages only; GPT and Grok cache by themselves and reject a
+    // request that carries a cachePoint field anywhere (checked live), so a
+    // model config with `promptCaching: true` must not reach them. See
+    // `bedrockCachePointFields`.
+    const parts = bedrockCachePartsForModel(
+      options.model,
+      options.promptCaching,
+      this.cacheBehavior,
+      !!systemMessage,
+    );
     const cacheTtl = bedrockCacheTtl(
       options.model,
       resolvePromptCacheTtl(options.promptCacheTtl, this.cacheBehavior?.ttl),

@@ -27,6 +27,26 @@ describe("minCacheableTokens", () => {
     expect(minCacheableTokens(`global.${id}`, "bedrock")).toBe(expected);
   });
 
+  // The Nova rows of the same table: "1K", system and messages only.
+  it.each([
+    "amazon.nova-2-lite-v1:0",
+    "us.amazon.nova-2-lite-v1:0",
+    "amazon.nova-pro-v1:0",
+    "amazon.nova-lite-v1:0",
+    "amazon.nova-micro-v1:0",
+  ])("Bedrock %s -> 1024", (id) => {
+    expect(minCacheableTokens(id, "bedrock")).toBe(1024);
+  });
+
+  it("claims nothing for a Nova model the table does not list", () => {
+    expect(minCacheableTokens("amazon.nova-premier-v1:0", "bedrock")).toBe(
+      undefined,
+    );
+    expect(minCacheableTokens("us.amazon.nova-2-pro-v1:0", "bedrock")).toBe(
+      undefined,
+    );
+  });
+
   it("uses Anthropic's own number for Opus 4.7 on the anthropic provider", () => {
     expect(minCacheableTokens("claude-opus-4-7", "anthropic")).toBe(2048);
     expect(minCacheableTokens("claude-opus-4-7", "bedrock")).toBe(4096);
@@ -49,7 +69,7 @@ describe("minCacheableTokens", () => {
     ).toBeUndefined();
     expect(minCacheableTokens("gpt-4o", "openai")).toBeUndefined();
     expect(
-      minCacheableTokens("amazon.nova-pro-v1:0", "bedrock"),
+      minCacheableTokens("amazon.nova-premier-v1:0", "bedrock"),
     ).toBeUndefined();
   });
 

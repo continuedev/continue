@@ -457,11 +457,48 @@ describe("BedrockApi cache points on non-Claude models", () => {
 
   it.each([
     "us.openai.gpt-6.1-sol",
-    "us.amazon.nova-pro-v1:0",
     "us.xai.grok-4.7",
+    "us.amazon.nova-premier-v1:0",
+    "us.amazon.nova-2-pro-v1:0",
   ])("sends no cachePoint to %s even with promptCaching on", (model) => {
     expect(JSON.stringify(body(model))).not.toContain("cachePoint");
     expect(JSON.stringify(body(model))).not.toContain("SID:");
+  });
+
+  // The AWS table lists these Nova models with checkpoints in `system` and
+  // `messages` only; a cache point in the tool list is refused (seen live).
+  it.each([
+    "us.amazon.nova-2-lite-v1:0",
+    "amazon.nova-2-lite-v1:0",
+    "us.amazon.nova-pro-v1:0",
+    "amazon.nova-lite-v1:0",
+    "amazon.nova-micro-v1:0",
+  ])("caches the system prompt and messages, not the tools, on %s", (model) => {
+    const b = body(model);
+    expect(b.system.at(-1)).toEqual({ cachePoint: { type: "default" } });
+    expect(JSON.stringify(b.toolConfig)).not.toContain("cachePoint");
+    const user = b.messages.find((m: any) => m.role === "user");
+    expect(user.content.at(-1)).toEqual({ cachePoint: { type: "default" } });
+    expect(JSON.stringify(b.messages)).toContain("SID:");
+  });
+
+  it("never sends a ttl to Nova, which takes only the 5-minute default", () => {
+    const b = (
+      new TestApi({
+        provider: "bedrock",
+        env: {},
+        promptCaching: true,
+        cacheBehavior: { ttl: "1h" },
+      } as any) as any
+    )._convertBody({
+      model: "us.amazon.nova-2-lite-v1:0",
+      messages: [
+        { role: "system", content: "be brief" },
+        { role: "user", content: "hi" },
+      ],
+    });
+    expect(JSON.stringify(b)).toContain("cachePoint");
+    expect(JSON.stringify(b)).not.toContain("ttl");
   });
 
   it.each([

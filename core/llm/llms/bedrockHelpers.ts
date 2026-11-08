@@ -1,4 +1,5 @@
 import { normalizeClaudeModelId } from "../utils/calculateRequestCost.js";
+import { resolveCacheParts } from "./anthropicCache.js";
 
 /**
  * Pure helpers for the Bedrock provider (kept separate from Bedrock.ts so they
@@ -317,6 +318,74 @@ export function bedrockUsageToUsage(usage: BedrockTokenUsageLike): {
     promptTokens: usage.inputTokens ?? 0,
     completionTokens: usage.outputTokens ?? 0,
     promptTokensDetails: details,
+  };
+}
+
+/** Which parts of a Converse request get, or may get, a cache point. */
+export interface BedrockCacheParts {
+  tools: boolean;
+  system: boolean;
+  conversation: boolean;
+}
+
+/**
+ * Amazon Nova models that take explicit cache checkpoints: the Nova rows of the
+ * "Supported models" table in the AWS Bedrock prompt caching guide (checked
+ * 2026-11-08) are Nova 2 Lite, Nova Pro, Nova Lite and Nova Micro, each with a
+ * 1K-token minimum, 4 checkpoints, a 5-minute lifetime only, and checkpoints
+ * in `system` and `messages` but not `tools`. Nova Premier and the other Nova
+ * 2 models are not in the table and get nothing. `us.amazon.nova-2-lite-v1:0`
+ * and `amazon.nova-pro-v1:0` match; `nova-premier` and `nova-2-pro` do not.
+ */
+const NOVA_CACHE_MODELS = /(^|\.)amazon\.nova-(2-lite|pro|lite|micro)-v\d/i;
+
+/**
+ * Which fields of a Converse request accept a `cachePoint` on this model, or
+ * undefined for a model that accepts none. Claude takes one in `tools`,
+ * `system` and `messages`. Nova takes `system` and `messages` only: checked
+ * live on 2026-11-04, a Nova model refused a request whose tool list carried a
+ * cache point, which is what `promptCaching: true` used to send it, and the
+ * AWS table lists `system` and `messages` for Nova. GPT and Grok on Bedrock
+ * cache by themselves and refuse any cache point. A `ttl` is a separate
+ * question (`bedrockCacheTtl`): Nova takes only the 5-minute default.
+ *
+ * There are two copies, this one and the one in
+ * packages/openai-adapters/src/apis/bedrockHelpers.ts; see
+ * `bedrockSupportsOneHourCache` for why, and bedrockCacheFields.vitest.ts
+ * fails if they disagree.
+ */
+export function bedrockCachePointFields(
+  modelId: string,
+): BedrockCacheParts | undefined {
+  if (/claude/i.test(modelId)) {
+    return { tools: true, system: true, conversation: true };
+  }
+  if (NOVA_CACHE_MODELS.test(modelId)) {
+    return { tools: false, system: true, conversation: true };
+  }
+  return undefined;
+}
+
+/**
+ * `resolveCacheParts`, limited to the fields this model accepts a cache point
+ * in, and nothing at all for a model that accepts none, so `promptCaching:
+ * true` on a GPT, Grok or unlisted Nova model sends no `cachePoint` field (the
+ * request would be refused).
+ */
+export function bedrockCachePartsForModel(
+  modelId: string,
+  requested: boolean | undefined,
+  behavior:
+    { cacheSystemMessage?: boolean; cacheConversation?: boolean } | undefined,
+  hasSystem: boolean,
+): BedrockCacheParts {
+  const fields = bedrockCachePointFields(modelId);
+  if (!fields) return { tools: false, system: false, conversation: false };
+  const parts = resolveCacheParts(requested, behavior, hasSystem);
+  return {
+    tools: parts.tools && fields.tools,
+    system: parts.system && fields.system,
+    conversation: parts.conversation && fields.conversation,
   };
 }
 
