@@ -119,21 +119,66 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: true
 
-  publish:
+  # VS Code Marketplace, by trusted publishing (OIDC): no token is stored. The
+  # Marketplace exchanges this job's GitHub ID token for a short-lived
+  # credential, under a policy for this repository, this workflow file and
+  # the `marketplace` environment. Only the normal builds are published: the
+  # agents builds use proposed APIs, which the Marketplace refuses.
+  publish-marketplace:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    if: (github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true') && github.repository == 'b1tninja/continued'
+    environment: marketplace
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: "*-vsix"
+          path: vsix-artifacts
+          merge-multiple: true
+
+      - name: Publish to VS Code Marketplace (pre-release)
+        run: |
+          # Each package gets its own ID token and Marketplace credential.
+          for f in vsix-artifacts/*.vsix; do npx --yes @vscode/vsce@4.1.0 publish --oidc --pre-release --packagePath "$f"; done
+
+  # Open VSX has no trusted publishing, so it keeps its token; skipped when the
+  # secret is not set.
+  publish-openvsx:
     runs-on: ubuntu-latest
     needs:
       - build
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true'
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
     env:
-      # Marketplace publishing is optional: each step below is skipped unless
-      # the matching repository secret exists.
-      VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
       OVSX_PAT: ${{ secrets.VSX_REGISTRY_TOKEN }}
     steps:
-      # 0. Setup git
+      - uses: actions/download-artifact@v8
+        if: env.OVSX_PAT != ''
+        with:
+          pattern: "*-vsix"
+          path: vsix-artifacts
+          merge-multiple: true
+
+      - name: Publish to Open VSX Registry (pre-release)
+        if: env.OVSX_PAT != ''
+        continue-on-error: true
+        run: |
+          for f in vsix-artifacts/*.vsix; do npx --yes ovsx@1.3.0 publish --pre-release --packagePath "$f"; done
+
+  # After a successful pre-release, a PR that bumps the version for the next.
+  bump-version:
+    runs-on: ubuntu-latest
+    needs:
+      - publish-marketplace
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
       - name: Checkout
         uses: actions/checkout@v7
 
@@ -144,28 +189,6 @@ jobs:
 
       - name: Pull latest changes from release
         run: git fetch origin ${{ github.ref }} && git checkout ${{ github.ref }}
-
-      # 1. Download the artifacts
-      - uses: actions/download-artifact@v8
-        with:
-          pattern: "*-vsix"
-          path: vsix-artifacts
-          merge-multiple: true
-
-      # 2. Publish the extension to VS Code Marketplace
-      - name: Publish to VS Code Marketplace
-        if: env.VSCE_PAT != ''
-        run: |
-          cd extensions/vscode
-          for f in ../../vsix-artifacts/*.vsix; do npx @vscode/vsce publish --pre-release --packagePath "$f"; done
-
-      # 3. Publish the extension to Open VSX Registry
-      - name: Publish (Open VSX Registry)
-        if: env.OVSX_PAT != ''
-        continue-on-error: true
-        run: |
-          cd extensions/vscode
-          for f in ../../vsix-artifacts/*.vsix; do npx ovsx publish --pre-release --packagePath "$f"; done
 
       # 4. Create PR with version bump
       - name: Setup Node.js

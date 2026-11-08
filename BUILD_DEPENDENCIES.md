@@ -6,10 +6,16 @@ This document catalogs all build dependencies, secrets, and environment variable
 
 ## VS Code Extension
 
-| Secret               | Purpose                                                                             | Referenced In               |
-| -------------------- | ----------------------------------------------------------------------------------- | --------------------------- |
-| `VSCE_TOKEN`         | Personal access token for publishing to the VS Code Marketplace (set as `VSCE_PAT`) | `main.yaml`, `preview.yaml` |
-| `VSX_REGISTRY_TOKEN` | Token for publishing to the Open VSX Registry                                       | `main.yaml`, `preview.yaml` |
+| Secret               | Purpose                                                                       | Referenced In               |
+| -------------------- | ----------------------------------------------------------------------------- | --------------------------- |
+| `VSX_REGISTRY_TOKEN` | Token for publishing to the Open VSX Registry; that job is skipped without it | `main.yaml`, `preview.yaml` |
+
+The VS Code Marketplace needs no secret: `main.yaml` and `preview.yaml` publish by trusted publishing (OIDC). Their `publish-marketplace` jobs run in the `marketplace` GitHub environment with `id-token: write`, and `vsce publish --oidc` exchanges the job's GitHub ID token for a short-lived Marketplace credential. Setting it up:
+
+- A GitHub environment named `marketplace` (Settings > Environments), with deployments limited to `main` and the `v*` tags.
+- In the Marketplace's publisher settings for `b1tninja`, one Trusted Publishing policy per workflow: provider GitHub Actions, owner `b1tninja`, repository `continued`, workflow `main.yaml` (and a second for `preview.yaml`), environment `marketplace`.
+
+The jobs run only in `b1tninja/continued`, so a fork does not try to publish.
 
 ---
 
