@@ -669,10 +669,35 @@
           ".continuerc.json"
         ],
         "url": "./continue_rc_schema.json"
+      }
+    ],
+    "yamlValidation": [
+      {
+        "fileMatch": [
+          "**/.continuous/config.yaml",
+          "**/.continuous/configs/*.yaml",
+          "**/.continuous/agents/*.yaml",
+          "**/.continuous/assistants/*.yaml",
+          "**/.continue/config.yaml",
+          "**/.continue/configs/*.yaml",
+          "**/.continue/agents/*.yaml",
+          "**/.continue/assistants/*.yaml"
+        ],
+        "url": "./config-yaml-schema.json"
       },
       {
-        "fileMatch": "**/config.yaml",
-        "url": "./config-yaml-schema.json"
+        "fileMatch": [
+          "**/.continuous/models.yaml",
+          "**/.continue/models.yaml"
+        ],
+        "url": "./models-yaml-schema.json"
+      },
+      {
+        "fileMatch": [
+          "**/.continuous/providers.yaml",
+          "**/.continue/providers.yaml"
+        ],
+        "url": "./providers-yaml-schema.json"
       }
     ]
   },

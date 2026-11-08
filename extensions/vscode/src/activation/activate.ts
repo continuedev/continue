@@ -2,6 +2,7 @@ import { getContinueRcPath, getTsConfigPath } from "core/util/paths";
 import * as vscode from "vscode";
 
 import { VsCodeExtension } from "../extension/VsCodeExtension";
+import { removeStaleYamlSchemaEntries } from "../lang-server/yamlSchemas";
 import { isUnsupportedPlatform } from "../util/util";
 import { migrateContinueSettings } from "../util/migrateSettings";
 
@@ -46,30 +47,14 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     void context.globalState.update("hasBeenInstalled", true);
   }
 
-  // Register config.yaml schema by removing old entries and adding new one (uri.fsPath changes with each version)
-  const yamlMatchers = [".continuous/**/*.yaml", ".continue/**/*.yaml"];
-  const yamlConfig = vscode.workspace.getConfiguration("yaml");
-  const yamlSchemas = yamlConfig.get<object>("schemas", {});
-
-  const newPath = vscode.Uri.joinPath(
-    context.extension.extensionUri,
-    "config-yaml-schema.json",
-  ).toString();
-
+  // The YAML schemas are declared in package.json (yamlValidation), one per
+  // file. Earlier versions wrote the config schema into the user's
+  // yaml.schemas setting instead, once per installed version, and never
+  // removed it; take those entries out.
   try {
-    await yamlConfig.update(
-      "schemas",
-      {
-        ...yamlSchemas,
-        [newPath]: yamlMatchers,
-      },
-      vscode.ConfigurationTarget.Global,
-    );
+    await removeStaleYamlSchemaEntries();
   } catch (error) {
-    console.error(
-      "Failed to register Continuous config.yaml schema, most likely, YAML extension is not installed",
-      error,
-    );
+    console.warn("Could not clean up yaml.schemas", error);
   }
 
   const api = new VsCodeContinueApi(vscodeExtension);

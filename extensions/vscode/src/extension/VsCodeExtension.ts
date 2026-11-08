@@ -60,6 +60,7 @@ import {
 } from "../util/editLoggingUtils";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { registerVsCodeAi } from "../ai/registerVsCodeAi";
+import { registerConfigLanguageSupport } from "../lang-server/configLanguageSupport";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
@@ -609,6 +610,9 @@ export class VsCodeExtension {
       new ConfigYamlDocumentLinkProvider(),
     );
     context.subscriptions.push(linkProvider);
+
+    // Problems and name completion in config.yaml, models.yaml, providers.yaml
+    registerConfigLanguageSupport(context, this.ide);
 
     this.ide.onDidChangeActiveTextEditor((filepath) => {
       void this.core.invoke("files/opened", { uris: [filepath] });

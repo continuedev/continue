@@ -30,4 +30,6 @@ e2e/test-continue-yaml/*
 e2e/screenshots-continue/*
 !e2e/screenshots-continue/config.yaml
 config-yaml-schema.json
+models-yaml-schema.json
+providers-yaml-schema.json
 src/.buildTimestamp.ts

@@ -15,11 +15,17 @@ async function generateConfigYamlSchema() {
   execCmdSync("npm install");
   execCmdSync("npm run build");
   execCmdSync("npm run generate-schema");
-  fs.copyFileSync(
-    path.join("schema", "config-yaml-schema.json"),
-    path.join(continueDir, "extensions", "vscode", "config-yaml-schema.json"),
-  );
-  console.log("[info] Generated config.yaml schema");
+  for (const file of [
+    "config-yaml-schema.json",
+    "models-yaml-schema.json",
+    "providers-yaml-schema.json",
+  ]) {
+    fs.copyFileSync(
+      path.join("schema", file),
+      path.join(continueDir, "extensions", "vscode", file),
+    );
+  }
+  console.log("[info] Generated the config, models and providers YAML schemas");
 }
 
 async function copyConfigSchema() {
