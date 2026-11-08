@@ -5,6 +5,7 @@ import {
   describePromptBlocked,
   runUserPromptSubmitHooks,
 } from "../hooks/promptHook.js";
+import { withLoopSteering } from "../loop/loopSession.js";
 import { services } from "../services/index.js";
 import {
   mergeQueuedMessages,
@@ -153,7 +154,8 @@ export async function streamChatResponseWithInterruption(
     },
     // Steering: a message posted with `steer: true` while this run works is
     // delivered here, between the tool results and the next model request.
-    onToolBoundary: () => buildServeSteeringMessage(),
+    // Loop mode's answers for the running item go in at the same boundary.
+    onToolBoundary: withLoopSteering(() => buildServeSteeringMessage()),
   };
 
   try {

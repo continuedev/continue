@@ -3,6 +3,7 @@ import React, { useState } from "react";
 
 import { ToolCallTitle } from "src/tools/ToolCallTitle.js";
 
+import { generatePolicyRule } from "../../permissions/policyWriter.js";
 import { ToolCallPreview } from "../../tools/types.js";
 import { defaultBoxStyles } from "../styles.js";
 
@@ -34,12 +35,12 @@ interface ToolPermissionSelectorProps {
   ) => void;
 }
 
-const getPermissionOptions = (): PermissionOption[] => {
+const getPermissionOptions = (rule: string): PermissionOption[] => {
   return [
     { id: "approve", name: "Continue", color: "green", approved: true },
     {
       id: "approve_policy",
-      name: "Continue + don't ask again",
+      name: `Continue + always allow ${rule.length > 60 ? `${rule.slice(0, 59)}…` : rule}`,
       color: "cyan",
       approved: true,
       createPolicy: true,
@@ -62,7 +63,10 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
   hasDynamicEvaluation = false,
   onResponse,
 }) => {
-  const permissionOptions = getPermissionOptions();
+  // Named in full, because it is saved for every later session
+  const permissionOptions = getPermissionOptions(
+    generatePolicyRule(toolName, toolArgs),
+  );
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [initialHasShownDangerousCommand] = useState(
     hasShownDangerousCommandWarning,
@@ -89,8 +93,8 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
       return;
     }
 
-    // Shift+Tab to continue with policy creation
-    if (key.tab && key.shift) {
+    // "a" to continue and always allow; Shift+Tab cycles modes elsewhere
+    if (input === "a" && !key.ctrl && !key.meta) {
       onResponse(requestId, true, true, false);
       return;
     }
@@ -146,7 +150,7 @@ export const ToolPermissionSelector: React.FC<ToolPermissionSelectorProps> = ({
           const isSelected = index === selectedIndex;
           let shortcut = "";
           if (option.id === "approve") shortcut = "(tab)";
-          else if (option.id === "approve_policy") shortcut = "(shift+tab)";
+          else if (option.id === "approve_policy") shortcut = "(a)";
           else if (option.id === "deny_stop") shortcut = "(esc)";
 
           return (

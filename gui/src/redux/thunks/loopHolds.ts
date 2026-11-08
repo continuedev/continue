@@ -6,6 +6,7 @@ import {
   describeHeldCall,
   FINISH_ITEM_TOOL_NAME,
   HOLD_QUESTION_TOOL_NAME,
+  REMIND_ME_TOOL_NAME,
   itemTurnLimitReport,
   itemTurnLimitResult,
   itemTurnState,
@@ -127,6 +128,8 @@ export function applyLoopHolds(
       current.kind === "item" &&
       name !== HOLD_QUESTION_TOOL_NAME &&
       name !== FINISH_ITEM_TOOL_NAME &&
+      // Saving what it found is what a run out of turns should do
+      name !== REMIND_ME_TOOL_NAME &&
       // Only reading stops: research already done must still get written
       toolCallState.tool?.readonly &&
       startLoop &&
@@ -161,7 +164,14 @@ export function applyLoopHolds(
         return { ...p, policy: "disabled" };
       }
     }
-    if (p.policy !== "allowedWithPermission" || !loop) return p;
+    // Edits are reviewed as a diff outside a loop. A loop cannot wait on one,
+    // so at the level that keeps the person in charge they ask first.
+    const heldEdit =
+      p.policy === "allowedWithoutPermission" &&
+      isEditTool(name) &&
+      current.kind === "item" &&
+      loop?.autonomy === "supervised";
+    if ((p.policy !== "allowedWithPermission" && !heldEdit) || !loop) return p;
 
     if (current.kind === "replan") {
       refuse(

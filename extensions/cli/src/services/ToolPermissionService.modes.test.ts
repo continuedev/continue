@@ -10,6 +10,18 @@ describe("ToolPermissionService - Mode Functionality", () => {
   });
 
   describe("mode initialization", () => {
+    it("started in plan mode, switching to normal gives normal mode's policies", () => {
+      // --readonly (plan) then Build: normal mode must not end up with none,
+      // which made every tool ask
+      service.initializeSync({ mode: "plan", isHeadless: false });
+      const policies = service.switchMode("normal").permissions.policies;
+      const first = (tool: string) =>
+        policies.find((p) => p.tool === tool || p.tool === "*")?.permission;
+      expect(first("Read")).toBe("allow");
+      expect(first("List")).toBe("allow");
+      expect(first("Write")).toBe("ask");
+    });
+
     it("should initialize with normal mode by default", () => {
       const state = service.initializeSync();
       expect(state.currentMode).toBe("normal");

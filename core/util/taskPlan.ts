@@ -27,6 +27,8 @@ export const TASK_PLAN_LIMITS = {
   maxNoteLength: 200,
   maxActiveFormLength: 120,
   maxIdLength: 40,
+  /** A to-do's check command (TaskItem.check) */
+  maxCheckLength: 500,
   /** Completed items shown in the request block; older ones are a count */
   shownCompleted: 3,
 } as const;
@@ -50,13 +52,13 @@ export const TASK_LIST_BLOCK_OPEN = "<task_list>";
 export const TASK_LIST_BLOCK_CLOSE = "</task_list>";
 
 /** The task list tool's description, shared by the IDE (task_list) and the CLI (TaskList). */
-export const TASK_LIST_TOOL_DESCRIPTION = `Write your task list for the current work: the complete list each time, in order. Use it for work with three or more distinct steps, or when the user gives you several things to do; skip it for a single quick change.
+export const TASK_LIST_TOOL_DESCRIPTION = `Your task list: while planning, the steps of the work; while building, the list the plan gave you, to keep current. Send the complete list each time, in order.
 
 Rules:
 - Exactly one item is in_progress while you work. Mark an item in_progress before you start it and completed as soon as it is done, not in batches.
 - Use blocked (with a note saying why) or cancelled instead of deleting an item that did not get done.
 - Keep each item short and specific. Optionally give activeForm, a present-tense label shown while the item runs ("Running migrations").
-- Repeat the id of items you keep. New items need no id. Completed items you leave out are kept; open items you leave out are removed. Set reset to true to start a new list for unrelated work.
+- Repeat the id of items you keep. New items need no id. Completed items you leave out are kept. While planning, open items you leave out are removed and reset starts a new list; while building, open items you leave out are kept, so use cancelled to drop one.
 
 The list is stored outside the conversation and sent back to you at the end of every request, so it survives compaction. The user can see and edit it; when they do, their version is what you get back.`;
 
@@ -67,6 +69,13 @@ export interface TaskItemInput {
   status?: unknown;
   note?: unknown;
   activeForm?: unknown;
+  /**
+   * The items this one comes after, as 1-based positions in the same list
+   * (numbers, or numeric strings); stored as ids (TaskItem.after)
+   */
+  after?: unknown;
+  /** A command that confirms the item is done (TaskItem.check) */
+  check?: unknown;
 }
 
 export type TaskPlanResult =
@@ -120,6 +129,13 @@ export function buildTaskPlan(
     reset?: boolean;
     updatedBy?: "model" | "user";
     now?: Date;
+    /**
+     * Building from a plan: the list may be sent in part, so items left out
+     * stay where they are and an item named by id may leave out its text. A
+     * model that sent only the two items it was changing removed the other
+     * six to-dos of a plan.
+     */
+    keepOpen?: boolean;
   } = {},
 ): TaskPlanResult {
   if (!Array.isArray(input)) {
@@ -143,6 +159,8 @@ export function buildTaskPlan(
   const items: TaskItem[] = [];
   const seenIds = new Set<string>();
   let inProgress = 0;
+  /** Each item's `after` positions, resolved to ids once every id is known */
+  const afterPositions: number[][] = [];
 
   for (let i = 0; i < input.length; i++) {
     const position = i + 1;
@@ -150,10 +168,11 @@ export function buildTaskPlan(
     if (!raw || typeof raw !== "object") {
       return { ok: false, error: `Item ${position} must be an object` };
     }
-    if (typeof raw.text !== "string" || !raw.text.trim()) {
+    const rawText = itemText(raw, options.keepOpen ? previousItems : []);
+    if (rawText === undefined) {
       return { ok: false, error: `Item ${position} has no text` };
     }
-    const text = raw.text.trim().replace(/\s*\n\s*/g, " ");
+    const text = rawText.replace(/\s*\n\s*/g, " ");
     if (text.length > TASK_PLAN_LIMITS.maxTextLength) {
       return {
         ok: false,
@@ -209,6 +228,12 @@ export function buildTaskPlan(
       return { ok: false, error: activeForm.error };
     }
 
+    const extras = itemExtras(raw, position, input.length);
+    if ("error" in extras) {
+      return { ok: false, error: extras.error };
+    }
+    afterPositions.push(extras.after);
+
     if (id !== undefined) {
       seenIds.add(id);
     }
@@ -218,7 +243,13 @@ export function buildTaskPlan(
       status,
       ...(note.value && { note: note.value }),
       ...(activeForm.value && { activeForm: activeForm.value }),
+      ...extras.fields,
     });
+  }
+
+  const circle = afterCircleError(afterPositions);
+  if (circle) {
+    return { ok: false, error: circle };
   }
 
   if (inProgress > 1) {
@@ -241,13 +272,13 @@ export function buildTaskPlan(
     seenIds.add(item.id);
   }
 
-  // Ids for new items: the next free number.
-  let next = 1;
-  for (const id of seenIds) {
-    if (/^\d+$/.test(id)) {
-      next = Math.max(next, Number(id) + 1);
-    }
-  }
+  // Ids for new items: the next free number, above the previous list's too.
+  // A Loop keeps each item's state under its id, so a new to-do that took the
+  // id of a dropped one would inherit its attempts and its failed check.
+  let next = nextFreeNumber([
+    ...seenIds,
+    ...previousItems.map((item) => item.id),
+  ]);
   for (const item of items) {
     if (item.id === "") {
       while (seenIds.has(String(next))) {
@@ -258,14 +289,184 @@ export function buildTaskPlan(
     }
   }
 
+  applyAfter(items, afterPositions);
+
+  const finalItems = withOmittedItems(
+    previousItems,
+    keptToUse,
+    items,
+    options.keepOpen,
+  );
+  if (finalItems.length > TASK_PLAN_LIMITS.maxItems) {
+    return {
+      ok: false,
+      error: `Too many items (${finalItems.length}); the limit is ${TASK_PLAN_LIMITS.maxItems}.`,
+    };
+  }
+
   return {
     ok: true,
     plan: {
-      items: [...keptToUse, ...items],
+      items: finalItems,
       updatedAt: (options.now ?? new Date()).toISOString(),
       updatedBy: options.updatedBy ?? "model",
     },
   };
+}
+
+/** An item's text, or that of the previous item its id names; undefined if none. */
+function itemText(
+  raw: TaskItemInput,
+  previous: TaskItem[],
+): string | undefined {
+  if (typeof raw.text === "string" && raw.text.trim()) return raw.text.trim();
+  return previous.find((item) => item.id === String(raw.id))?.text;
+}
+
+/** One above the highest numeric id. */
+function nextFreeNumber(ids: string[]): number {
+  let next = 1;
+  for (const id of ids) {
+    if (/^\d+$/.test(id)) {
+      next = Math.max(next, Number(id) + 1);
+    }
+  }
+  return next;
+}
+
+/**
+ * The finished list. A whole list stands as sent, in its order. With keepOpen,
+ * a list that left out an open item was a partial update.
+ */
+function withOmittedItems(
+  previous: TaskItem[],
+  kept: TaskItem[],
+  items: TaskItem[],
+  keepOpen: boolean | undefined,
+): TaskItem[] {
+  const sent = new Set(items.map((item) => item.id));
+  const partial = previous.some(
+    (item) =>
+      item.status !== "completed" &&
+      item.status !== "cancelled" &&
+      !sent.has(item.id),
+  );
+  return keepOpen && partial
+    ? mergeIntoPrevious(previous, items)
+    : [...kept, ...items];
+}
+
+/**
+ * A partial update laid over the previous list: each item keeps its place and
+ * what the update did not say, the rest stay, and new items go last. An item
+ * left out stops being in progress when the update names another that is.
+ */
+function mergeIntoPrevious(
+  previous: TaskItem[],
+  items: TaskItem[],
+): TaskItem[] {
+  const updates = new Map(items.map((item) => [item.id, item]));
+  const known = new Set(previous.map((item) => item.id));
+  const moved = items.some((item) => item.status === "in_progress");
+  const merged = previous.map((item): TaskItem => {
+    const update = updates.get(item.id);
+    if (update) return { ...item, ...update };
+    return moved && item.status === "in_progress"
+      ? { ...item, status: "pending" }
+      : item;
+  });
+  return [...merged, ...items.filter((item) => !known.has(item.id))];
+}
+
+/** An item's check command and `after` positions, or why they are invalid. */
+function itemExtras(
+  raw: TaskItemInput,
+  position: number,
+  count: number,
+): { fields: { check?: string }; after: number[] } | { error: string } {
+  const check = optionalText(
+    raw.check,
+    "check",
+    TASK_PLAN_LIMITS.maxCheckLength,
+    position,
+  );
+  if (check.error) return { error: check.error };
+  const after = afterList(raw.after, position, count);
+  if (typeof after === "string") return { error: after };
+  return {
+    fields: check.value ? { check: check.value.replace(/\s*\n\s*/g, " ") } : {},
+    after,
+  };
+}
+
+/**
+ * An item's `after` positions: 1-based, in the list, not the item itself.
+ * Returns the error text when they are not.
+ */
+function afterList(
+  value: unknown,
+  position: number,
+  count: number,
+): number[] | string {
+  if (value === undefined || value === null || value === "") return [];
+  const raw =
+    typeof value === "string"
+      ? value.split(/[\s,]+/).filter(Boolean)
+      : Array.isArray(value)
+        ? value
+        : [value];
+  const positions: number[] = [];
+  for (const entry of raw) {
+    const n = typeof entry === "number" ? entry : Number(String(entry).trim());
+    if (!Number.isInteger(n) || n < 1 || n > count) {
+      return `Item ${position}: after: must list item numbers from 1 to ${count}`;
+    }
+    if (n === position) {
+      return `Item ${position} cannot come after itself`;
+    }
+    if (!positions.includes(n)) positions.push(n);
+  }
+  return positions;
+}
+
+/** The error for a circle of `after` references, if there is one. */
+function afterCircleError(after: number[][]): string | undefined {
+  const cycle = afterCycle(after);
+  return cycle
+    ? `Items ${cycle.join(", ")} come after each other in a circle; remove one of the after: lines.`
+    : undefined;
+}
+
+/** `after` positions become the ids the items now have. */
+function applyAfter(items: TaskItem[], afterPositions: number[][]): void {
+  items.forEach((item, i) => {
+    const after = afterPositions[i].map((p) => items[p - 1].id);
+    if (after.length) item.after = after;
+  });
+}
+
+/** The positions in a circle of `after` references, if there is one. */
+function afterCycle(after: number[][]): number[] | undefined {
+  const state = new Map<number, "visiting" | "done">();
+  const path: number[] = [];
+  const visit = (p: number): number[] | undefined => {
+    if (state.get(p) === "done") return undefined;
+    if (state.get(p) === "visiting") return path.slice(path.indexOf(p));
+    state.set(p, "visiting");
+    path.push(p);
+    for (const q of after[p - 1] ?? []) {
+      const found = visit(q);
+      if (found) return found;
+    }
+    path.pop();
+    state.set(p, "done");
+    return undefined;
+  };
+  for (let p = 1; p <= after.length; p++) {
+    const found = visit(p);
+    if (found) return found;
+  }
+  return undefined;
 }
 
 /** Checks a stored plan (for example one read from a session file). */
@@ -425,6 +626,14 @@ export function parseMarkdownChecklist(markdown: string): TaskItemInput[] {
   };
   const items: TaskItemInput[] = [];
   for (const line of markdown.split(/\r?\n/)) {
+    // `  after: 1, 2` and `  check: <command>` under a to-do belong to it
+    const attribute = line.match(ITEM_ATTRIBUTE);
+    if (attribute && items.length > 0) {
+      const last = items[items.length - 1];
+      const key = attribute[1].toLowerCase() as "after" | "check";
+      last[key] = attribute[2].trim();
+      continue;
+    }
     const match = line.match(/^\s*(?:[-*+]|\d+\.)\s*\[([ xX>!-])\]\s*(.*)$/);
     if (!match) {
       continue;
@@ -445,6 +654,23 @@ export function parseMarkdownChecklist(markdown: string): TaskItemInput[] {
     }
   }
   return items;
+}
+
+/** An indented `after: 1, 2` or `check: <command>` line under a to-do. */
+const ITEM_ATTRIBUTE = /^(?:\t|\s{2,})(after|check)\s*:\s*(.*)$/i;
+
+/** The lines a plan file writes under a to-do for its `after` and `check`. */
+export function taskItemAttributeLines(
+  item: TaskItem,
+  items: TaskItem[],
+): string[] {
+  const lines: string[] = [];
+  const positions = (item.after ?? [])
+    .map((id) => items.findIndex((i) => i.id === id) + 1)
+    .filter((p) => p > 0);
+  if (positions.length) lines.push(`  after: ${positions.join(", ")}`);
+  if (item.check) lines.push(`  check: ${item.check}`);
+  return lines;
 }
 
 /** `<!-- id: 3 -->` at the end of a checklist line. */

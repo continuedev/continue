@@ -57,6 +57,7 @@ export default function AcceptRejectAllButtons({
     <div
       className="flex flex-row items-center justify-evenly gap-3 px-3"
       data-testid="accept-reject-all-buttons"
+      title="Sending a message rejects these changes"
     >
       <ToolTip content={`Reject All (${rejectShortcut})`}>
         <button

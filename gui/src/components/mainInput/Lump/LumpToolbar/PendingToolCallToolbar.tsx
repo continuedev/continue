@@ -38,6 +38,25 @@ export function PendingToolCallToolbar() {
 
   return (
     <div className="flex w-full flex-col pb-0.5">
+      <div className="flex items-center justify-between gap-2 px-1 pb-0.5">
+        <span className="text-2xs text-description-muted">
+          Sending a message rejects{" "}
+          {pendingToolCalls.length > 1 ? "these" : "this"}.
+        </span>
+        {pendingToolCalls.length > 1 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="my-0 font-medium"
+            onClick={() =>
+              pendingToolCalls.forEach((t) => handleAccept(t.toolCallId))
+            }
+            data-testid="accept-all-tool-calls"
+          >
+            Accept all ({pendingToolCalls.length})
+          </Button>
+        )}
+      </div>
       {pendingToolCalls.map((toolCall, index) => (
         <div
           key={toolCall.toolCallId}

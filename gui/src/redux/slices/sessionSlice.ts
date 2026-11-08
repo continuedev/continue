@@ -266,6 +266,17 @@ type SessionState = {
   planFile?: string;
   /** Loop mode's state, saved with the session; see core/util/loopMode.ts */
   loop?: LoopState;
+  /**
+   * The person chose Loop in the mode picker. Not a mode: the turns stay
+   * Plan (the first message plans) and Agent (the items). With it set, a
+   * presented plan starts the loop by itself. Saved with the session.
+   */
+  loopRequested?: boolean;
+  /**
+   * The mode picked while a loop item ran: the loop stops after the item and
+   * the mode is taken then, so the item finishes in its own mode.
+   */
+  modeAfterLoop?: MessageModes;
   /** Messages typed while the agent was working, sent when the turn ends */
   queuedMessages: QueuedMessage[];
   /** Stop, an error or a new session pauses the queue until it is sent by hand */
@@ -560,7 +571,26 @@ export const sessionSlice = createSlice({
       }
     },
     setLoop: (state, { payload }: PayloadAction<LoopState | undefined>) => {
+      const wasActive = !!state.loop && state.loop.status !== "stopped";
       state.loop = payload;
+      if (!wasActive || (payload && payload.status !== "stopped")) return;
+      // The loop ended: take the mode picked while it ran, or, still in
+      // Loop, plan again so the next message proposes the next plan
+      if (state.modeAfterLoop) {
+        state.mode = state.modeAfterLoop;
+        state.modeAfterLoop = undefined;
+      } else if (state.loopRequested) {
+        state.mode = "plan";
+      }
+    },
+    setLoopRequested: (state, { payload }: PayloadAction<boolean>) => {
+      state.loopRequested = payload || undefined;
+    },
+    setModeAfterLoop: (
+      state,
+      { payload }: PayloadAction<MessageModes | undefined>,
+    ) => {
+      state.modeAfterLoop = payload;
     },
     deleteCompaction: (state, action: PayloadAction<number>) => {
       // Removes the conversation summary from the specified message
@@ -958,6 +988,8 @@ export const sessionSlice = createSlice({
         state.planFile =
           typeof payload.planFile === "string" ? payload.planFile : undefined;
         state.loop = restoreLoop(payload.loop);
+        state.loopRequested = payload.loopRequested === true || undefined;
+        state.modeAfterLoop = undefined;
         if (payload.mode) {
           state.mode = payload.mode;
         }
@@ -969,6 +1001,8 @@ export const sessionSlice = createSlice({
         state.taskPlan = undefined;
         state.planFile = undefined;
         state.loop = undefined;
+        state.loopRequested = undefined;
+        state.modeAfterLoop = undefined;
       }
     },
     updateSessionTitle: (state, { payload }: PayloadAction<string>) => {
@@ -1484,6 +1518,8 @@ export const {
   setPlanFile,
   clearToolCallArguments,
   setLoop,
+  setLoopRequested,
+  setModeAfterLoop,
   setIsGatheringContext,
   resetNextCodeBlockToApplyIndex,
   updateApplyState,

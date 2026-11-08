@@ -16,6 +16,10 @@ export function getDefaultToolPolicies(
     { tool: "AskQuestion", permission: "allow" },
     { tool: "Checklist", permission: "allow" },
     { tool: "TaskList", permission: "allow" },
+    // Loop mode's tools, offered only while the loop runs an item
+    { tool: "HoldQuestion", permission: "allow" },
+    { tool: "FinishItem", permission: "allow" },
+    { tool: "RemindMe", permission: "allow" },
     { tool: "Diff", permission: "allow" },
     { tool: "Skills", permission: "allow" },
     { tool: "Exit", permission: "allow" }, // Exit tool is generally safe (headless mode only)

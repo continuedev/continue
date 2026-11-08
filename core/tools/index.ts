@@ -16,6 +16,7 @@ export const getBaseToolDefinitions = () => [
   toolDefinitions.taskListTool,
   toolDefinitions.presentPlanTool,
   toolDefinitions.holdQuestionTool,
+  toolDefinitions.remindMeTool,
   toolDefinitions.finishItemTool,
 ];
 

@@ -1,13 +1,14 @@
 import {
+  ArrowPathIcon,
   ChatBubbleLeftIcon,
   RocketLaunchIcon,
   SparklesIcon,
   SwatchIcon,
 } from "@heroicons/react/24/outline";
-import { MessageModes } from "core";
+import type { ModeEntry } from "../../redux/selectors/selectModeEntry";
 
 interface ModeIconProps {
-  mode: MessageModes;
+  mode: ModeEntry;
   className?: string;
 }
 
@@ -24,5 +25,7 @@ export function ModeIcon({
       return <ChatBubbleLeftIcon className={className} />;
     case "background":
       return <RocketLaunchIcon className={className} />;
+    case "loop":
+      return <ArrowPathIcon className={className} />;
   }
 }

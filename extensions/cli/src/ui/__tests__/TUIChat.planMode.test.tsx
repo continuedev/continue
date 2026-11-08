@@ -100,6 +100,8 @@ describe("TUIChat - plan mode", () => {
       const nextTools = llm.requests[1].tools.map((t) => t.function.name);
       expect(nextTools).not.toContain("PresentPlan");
       expect(nextTools).toContain("Write");
+      // The plan's checklist goes on being used
+      expect(nextTools).toContain("TaskList");
 
       await waitUntil(
         () => ui.allOutput().includes("building now"),
@@ -120,7 +122,8 @@ describe("TUIChat - plan mode", () => {
       toolTurn("PresentPlan", planArgs),
       textTurn("what should change?"),
     ]);
-    const ui = await presentPlan([DOWN, ENTER], llm);
+    // Build, Build in a loop, Keep planning
+    const ui = await presentPlan([DOWN, DOWN, ENTER], llm);
     try {
       const result = llm.requests[1].messages.find((m) => m.role === "tool");
       expect(messageText(result!)).toContain("The user wants to keep planning");

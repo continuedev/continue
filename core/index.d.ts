@@ -378,11 +378,35 @@ export interface Session {
    * answers. See core/util/loopMode.ts.
    */
   loop?: LoopState;
+  /**
+   * Optional: the person chose Loop in the mode picker. Not a mode: the turns
+   * stay Plan and Agent; a plan presented while it is set starts the loop.
+   */
+  loopRequested?: boolean;
 }
 
 /** Where one plan item is in Loop mode. The task list shows it too. */
+/**
+ * checking: the item reported done and has a check (TaskItem.check) that
+ * has not passed yet; the loop runs it next (decideNext's "check" action).
+ */
 export type LoopItemStatus =
-  "pending" | "running" | "done" | "waiting" | "redo" | "failed";
+  "pending" | "running" | "checking" | "done" | "waiting" | "redo" | "failed";
+
+/** The last time an item's check (TaskItem.check) ran, or why it did not. */
+export interface LoopCheckResult {
+  /**
+   * passed: exit 0. failed: another exit code (the item runs again).
+   * refused: a rule refused the command or the person did not allow it, so
+   * the item counts as done without its check.
+   */
+  status: "passed" | "failed" | "refused";
+  command: string;
+  exitCode?: number | null;
+  /** The tail of what it printed, at most LOOP_LIMITS.maxCheckOutput */
+  output?: string;
+  at: string;
+}
 
 export interface LoopItemState {
   /** The task list item's id */
@@ -390,6 +414,10 @@ export interface LoopItemState {
   status: LoopItemStatus;
   /** Runs started for this item, reset when an answer requeues it */
   attempts: number;
+  /** Times a run set this item aside (finish_item outcome "later") */
+  deferrals?: number;
+  /** Set aside and not run since: it goes behind the other runnable items */
+  setAside?: boolean;
   /** What the run said it did (finish_item), or why it stopped */
   summary?: string;
   /**
@@ -397,6 +425,26 @@ export interface LoopItemState {
    * with its best default. The questions stay open in the inbox.
    */
   unanswered?: string[];
+  /**
+   * The person skipped the item (skipItem). Its status is done, so the loop
+   * goes past it, but the task list shows it cancelled and it does not count
+   * toward doneThisRound. Its open questions stay open. Cleared by
+   * runItemAgain.
+   */
+  skipped?: boolean;
+  /**
+   * The person asked for the item to run again (runItemAgain): its next
+   * run's prompt says so, and to check what is already done first. Cleared
+   * when that run ends.
+   */
+  again?: boolean;
+  /** The last run of the item's check (TaskItem.check) */
+  check?: LoopCheckResult;
+  /**
+   * Fix forward: re-plans scoped to this item after it failed (at most
+   * LOOP_MAX_REPAIRS_PER_ITEM). To-dos a repair splits it into inherit it.
+   */
+  repairs?: number;
 }
 
 /**
@@ -407,6 +455,8 @@ export interface LoopItemState {
 export type LoopQuestionKind = "blocking" | "assumption" | "approval";
 
 export interface LoopQuestion {
+  /** IDGAF: the agent decided this itself; it never reached the inbox */
+  decidedAlone?: boolean;
   id: string;
   /** The item it is about; none for a question about the whole plan */
   itemId?: string;
@@ -467,8 +517,16 @@ export type LoopStopReason =
   | "stopped"
   | "replan_failed";
 
+/**
+ * The loop's limits. The person can change most of them while the loop runs,
+ * within LOOP_BUDGET_BOUNDS (setLoopBudget in core/util/loopMode.ts);
+ * changing the autonomy level resets them to the level's.
+ */
 export interface LoopBudget {
-  /** Re-plans before the loop stops */
+  /**
+   * Rounds before the loop stops: the first pass over the plan is round 1,
+   * so 1 means never re-plan and N + 1 allows N re-plans
+   */
   maxRounds: number;
   /** Prompt plus completion tokens the loop may use (0: no limit) */
   maxTokens: number;
@@ -490,7 +548,41 @@ export interface LoopBudget {
  * and Auto: auto; YOLO: unattended) and can be changed while it runs. See
  * LOOP_AUTONOMY in core/util/loopMode.ts.
  */
-export type LoopAutonomy = "supervised" | "auto" | "unattended";
+export type LoopAutonomy = "supervised" | "auto" | "unattended" | "idgaf";
+
+/**
+ * How the loop moves through the plan, next to the autonomy level (how much
+ * it does without the person). See LOOP_STRATEGIES in core/util/loopMode.ts.
+ * - finish: plan order; re-plan only when nothing can run;
+ * - check-in: also re-plan every few finished items, and at once when an
+ *   assumption is overruled or an item fails;
+ * - fix-forward: a failed item gets a re-plan of just that item.
+ */
+export type LoopStrategy = "finish" | "check-in" | "fix-forward";
+
+export type LoopReminderWhen = "item" | "next_items" | "retry" | "replan";
+
+/** A file a reminder refers to, and its content when the reminder was saved. */
+export interface LoopReminderFile {
+  path: string;
+  /** core/util/loopReminders.ts reminderFileStamp */
+  stamp: string;
+}
+
+/** What a run saved for one later run (remind_me). */
+export interface LoopReminder {
+  id: string;
+  note: string;
+  when: LoopReminderWhen;
+  /** The item saving it */
+  fromItemId: string;
+  /** The item it is for, with when "item" */
+  itemId?: string;
+  files?: LoopReminderFile[];
+  savedAt: string;
+  /** Set when a run's opening prompt carried it; it is delivered once */
+  deliveredAt?: string;
+}
 
 export interface LoopState {
   status: LoopStatus;
@@ -502,24 +594,56 @@ export interface LoopState {
   budget: LoopBudget;
   /** Missing on loops saved before autonomy levels: treated as "auto" */
   autonomy?: LoopAutonomy;
+  /** Missing on loops saved before strategies: treated as "finish" */
+  strategy?: LoopStrategy;
+  /**
+   * The person picked the strategy; otherwise changing the level changes it
+   * to the new level's default.
+   */
+  strategyPicked?: boolean;
   items: LoopItemState[];
-  /** What is running: one item, or the re-plan turn */
+  /**
+   * What is running: one item, the re-plan turn, or an item's check (a
+   * command the harness runs, not a model turn)
+   */
   current?: {
-    kind: "item" | "replan";
+    kind: "item" | "replan" | "check";
+    /** The item that runs; for a repair re-plan, the failed item it is about */
     itemId?: string;
     /** History length when it started; its messages come after */
     historyIndex: number;
     startedAt: string;
     /** What finish_item reported during this run */
     report?: {
-      outcome: "done" | "stuck" | "waiting";
+      outcome: "done" | "stuck" | "waiting" | "later";
       summary?: string;
       /** What a later item should know (finish_item notes) */
       notes?: string;
     };
     /** A re-plan: the to-dos it started from, to tell whether it adds scope */
     planTexts?: string[];
+    /** A check-in re-plan (check-in strategy): why it was due */
+    checkIn?: string;
+    /** A repair re-plan (fix forward): the failed item's text */
+    itemText?: string;
   };
+  /**
+   * The re-plan whose plan waits to be accepted: what it was for, so
+   * acceptReplan can tell a check-in or a repair from a round's re-plan.
+   * For a repair (fix forward), itemId is the failed item.
+   */
+  replanned?: {
+    planTexts: string[];
+    checkIn?: string;
+    itemId?: string;
+    itemText?: string;
+  };
+  /** Check in: items done since the start or the last accepted re-plan */
+  doneSinceReplan?: number;
+  /** Check in: an event (a redo, a failed item) asks for a check-in now */
+  checkInDue?: string;
+  /** Fix forward: the failed item waiting for its scoped re-plan */
+  repairItemId?: string;
   questions: LoopQuestion[];
   answers: LoopAnswer[];
   /** Items finished in this round, for the no-progress check */
@@ -545,6 +669,8 @@ export interface LoopState {
    * newest last, capped; sent with every item prompt.
    */
   notes?: string[];
+  /** What runs saved for later runs with remind_me; they end with the loop */
+  reminders?: LoopReminder[];
   /** The person asked to stop once the running item or re-plan ends */
   stopRequested?: boolean;
   stopReason?: LoopStopReason;
@@ -571,6 +697,18 @@ export interface TaskItem {
   note?: string;
   /** Present-tense label shown while the item is in progress ("Running migrations") */
   activeForm?: string;
+  /**
+   * Ids of the items this one comes after: Loop mode does not run it before
+   * they are done. The plan file writes them as `after: 1, 2` (positions)
+   * under the to-do.
+   */
+  after?: string[];
+  /**
+   * A shell command that confirms the item is done (exit 0). Loop mode runs
+   * it after the item reports done, under the same rules as any terminal
+   * command. The plan file writes it as `check: <command>` under the to-do.
+   */
+  check?: string;
 }
 
 export interface TaskPlan {
@@ -1853,6 +1991,8 @@ export interface MCPTool {
     properties?: Record<string, any>;
   };
   _meta?: Record<string, unknown> | undefined;
+  /** MCP tool annotations; `readOnlyHint` says the tool changes nothing */
+  annotations?: { readOnlyHint?: boolean };
 }
 
 type BaseInternalMCPOptions = {

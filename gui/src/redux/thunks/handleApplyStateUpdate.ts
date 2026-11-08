@@ -6,6 +6,7 @@ import {
   problemsAfterEdit,
   rememberProblemsBeforeEdit,
 } from "../../util/problemsAfterEdit";
+import { selectEffectiveApprovalMode } from "../selectors/selectAutoApproval";
 import {
   selectApplyStateByToolCallId,
   selectToolCallById,
@@ -56,8 +57,12 @@ export const handleApplyStateUpdate = createAsyncThunk<
         if (
           applyState.status === "done" &&
           toolCallState?.toolCall.function.name &&
-          getState().ui.toolSettings[toolCallState.toolCall.function.name] ===
-            "allowedWithoutPermission"
+          // Nobody is expected to be watching a loop's edits: Supervised
+          // asks before the edit (applyLoopHolds), and each item can be reverted
+          (selectEffectiveApprovalMode(getState()) === "yolo" ||
+            getState().session.loop?.current?.kind === "item" ||
+            getState().ui.toolSettings[toolCallState.toolCall.function.name] ===
+              "allowedWithoutPermission")
         ) {
           extra.ideMessenger.post("acceptDiff", {
             streamId: applyState.streamId,

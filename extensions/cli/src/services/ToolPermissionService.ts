@@ -218,6 +218,21 @@ export class ToolPermissionService
     ) {
       // For plan and auto modes, use ONLY mode policies (absolute override)
       allPolicies = [...modePolicies];
+      // Keep normal mode's policies for when the person (or Build) leaves
+      // this mode: without them, switching to normal had none at all, so
+      // every tool, even Read, asked.
+      if (!this.currentState.originalPolicies) {
+        this.setState({
+          originalPolicies: {
+            policies: resolvePermissionPrecedence({
+              commandLineFlags: runtimeOverrides,
+              personalSettings: true,
+              useDefaults: true,
+              isHeadless: this.currentState.isHeadless,
+            }),
+          },
+        });
+      }
     } else {
       // Normal mode: combine headless + mode policies with user configuration
       const compiledPolicies = resolvePermissionPrecedence({

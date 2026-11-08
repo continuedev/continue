@@ -42,6 +42,10 @@ describe("selectActiveTools: present_plan", () => {
     ]);
   });
 
+  it("keeps every file-editing tool out of Plan mode", () => {
+    expect(names("plan")).not.toContain(BuiltInToolNames.EditExistingFile);
+  });
+
   it("is not offered in Agent or Chat mode", () => {
     expect(names("agent")).not.toContain(BuiltInToolNames.PresentPlan);
     expect(names("agent")).toContain(BuiltInToolNames.EditExistingFile);

@@ -1,11 +1,17 @@
 import { ContinueError, ContinueErrorReason } from "core/util/errors";
 import {
-  FinishOutcome,
-  finishItemResult,
+  finishItemReport,
+  finishItemResultFor,
   holdQuestion,
   holdQuestionResult,
-  LOOP_LIMITS,
 } from "core/util/loopMode";
+import {
+  reminderFilePaths,
+  reminderSavedResult,
+  saveLaterReminder,
+  saveReminder,
+} from "core/util/loopReminders";
+import { stampLoopFiles } from "../../redux/util/loopReminderFiles";
 import { commitLoop } from "../../redux/util/loopCommit";
 import { ClientToolImpl } from "./callClientTool";
 
@@ -54,7 +60,45 @@ export const holdQuestionImpl: ClientToolImpl = async (
   };
 };
 
-const OUTCOMES: FinishOutcome[] = ["done", "waiting", "stuck"];
+/** remind_me: saves a note for a later run; the turn goes on. */
+export const remindMeImpl: ClientToolImpl = async (
+  args,
+  _toolCallId,
+  extras,
+) => {
+  const { itemId } = runningItem(extras);
+  const paths = reminderFilePaths(args?.files);
+  const stamps = await stampLoopFiles(extras.ideMessenger.ide, paths);
+  // The read above took time: save on the loop as it is now
+  const { loop } = runningItem(extras);
+  const result = saveReminder(
+    loop,
+    extras.getState().session.taskPlan,
+    {
+      fromItemId: itemId,
+      note: args?.note,
+      when: args?.when,
+      item: args?.item,
+      files: paths.map((path) => ({ path, stamp: stamps[path] })),
+    },
+    new Date(),
+  );
+  if (!result.ok) {
+    throw new ContinueError(ContinueErrorReason.Unspecified, result.error);
+  }
+  commitLoop(extras.dispatch, extras.getState, result.loop);
+  return {
+    respondImmediately: true,
+    output: [
+      {
+        name: "Reminder saved",
+        description: result.reminder.id,
+        content: reminderSavedResult(result.reminder, result.duplicate),
+        hidden: false,
+      },
+    ],
+  };
+};
 
 /** finish_item: records the run's report and ends the turn. */
 export const finishItemImpl: ClientToolImpl = async (
@@ -62,32 +106,31 @@ export const finishItemImpl: ClientToolImpl = async (
   _toolCallId,
   extras,
 ) => {
-  const { loop } = runningItem(extras);
-  const outcome = args?.outcome as FinishOutcome;
-  if (!OUTCOMES.includes(outcome)) {
-    throw new ContinueError(
-      ContinueErrorReason.Unspecified,
-      `outcome must be one of ${OUTCOMES.join(", ")}`,
-    );
+  const { itemId } = runningItem(extras);
+  const parsed = finishItemReport(args);
+  if (!parsed.ok) {
+    throw new ContinueError(ContinueErrorReason.Unspecified, parsed.error);
   }
-  const summary =
-    typeof args?.summary === "string"
-      ? args.summary.trim().slice(0, LOOP_LIMITS.maxSummaryLength)
-      : undefined;
-  const notes =
-    typeof args?.notes === "string"
-      ? args.notes.trim().slice(0, LOOP_LIMITS.maxNoteLength)
-      : undefined;
+  const { report, later } = parsed;
+  const stamps = await stampLoopFiles(
+    extras.ideMessenger.ide,
+    later?.files ?? [],
+  );
+  // The read above took time: report on the loop as it is now
+  const { loop } = runningItem(extras);
+  const result = finishItemResultFor(loop, itemId, report.outcome);
+  const saved = later
+    ? saveLaterReminder(
+        loop,
+        itemId,
+        later.note,
+        later.files.map((path) => ({ path, stamp: stamps[path] })),
+        new Date(),
+      )
+    : loop;
   commitLoop(extras.dispatch, extras.getState, {
-    ...loop,
-    current: loop.current && {
-      ...loop.current,
-      report: {
-        outcome,
-        ...(summary ? { summary } : {}),
-        ...(notes ? { notes } : {}),
-      },
-    },
+    ...saved,
+    current: saved.current && { ...saved.current, report },
   });
   return {
     respondImmediately: true,
@@ -96,8 +139,8 @@ export const finishItemImpl: ClientToolImpl = async (
     output: [
       {
         name: "Item reported",
-        description: outcome,
-        content: finishItemResult(outcome),
+        description: report.outcome,
+        content: result,
         hidden: false,
       },
     ],

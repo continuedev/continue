@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { MockIdeMessenger } from "../../context/MockIdeMessenger";
 import {
   evaluateToolPolicies,
+  evaluateToolPolicy,
   PLAN_MODE_HOLD_REASON,
 } from "./evaluateToolPolicies";
 
@@ -91,6 +92,22 @@ describe("Plan mode holds tools that may make changes", () => {
       );
       expect(result.policy).toBe(ASK);
     }
+  });
+
+  it("YOLO does not lift it: Plan mode changes nothing", async () => {
+    const ide = new MockIdeMessenger();
+    ide.responseHandlers["tools/evaluatePolicy"] = async () =>
+      ({ policy: ALLOW, source: "yolo" }) as any;
+    const result = await evaluateToolPolicy(
+      ide,
+      [mcpTool],
+      call("github_create_issue"),
+      { github_create_issue: ALLOW },
+      { mode: "yolo" },
+      "plan",
+    );
+    expect(result.policy).toBe(ASK);
+    expect(result.source).toBe("plan-mode");
   });
 
   it("leaves the hold to the user, not the Auto reviewer", async () => {

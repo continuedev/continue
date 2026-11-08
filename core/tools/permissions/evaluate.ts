@@ -69,8 +69,12 @@ export function evaluateToolPolicyWithRules(
   const protectedHit = findProtected({ toolName, parsedArgs, resolvedPath });
 
   const rules = parsePermissions(input.permissions);
+  // YOLO also overrides a refusal, a rule and a protected path
+  const yoloOverrides =
+    input.approval?.mode === "yolo" &&
+    (evaluated === "disabled" || !!protectedHit || rules.length > 0);
   const loosening =
-    evaluated === "allowedWithPermission"
+    evaluated === "allowedWithPermission" || yoloOverrides
       ? approvalLoosening({
           approval: input.approval,
           tool,

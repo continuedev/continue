@@ -86,6 +86,8 @@ export async function evaluateToolPolicy(
     toolPolicies,
     approval,
   );
+  // Plan mode changes nothing until the plan is accepted, in every approval
+  // mode: YOLO is about what runs while building
   return mode === "plan" ? holdInPlanMode(result, activeTools) : result;
 }
 
@@ -111,6 +113,7 @@ async function evaluateBasePolicy(
         basePolicy: "allowedWithoutPermission",
         parsedArgs: toolCallState.parsedArgs,
         processedArgs: toolCallState.processedArgs,
+        ...(approval ? { approval } : {}),
       });
       if (result.status === "success") {
         const { policy, source } = result.content;
@@ -165,6 +168,7 @@ async function evaluateBasePolicy(
     // call no rule, protected path or safety check has settled.
     details.source !== "allow-rule" &&
     details.source !== "category" &&
+    details.source !== "review" &&
     details.source !== "yolo"
   ) {
     return { ...details, policy: "allowedWithPermission", toolCallState }; // Cannot make more lenient
@@ -403,6 +407,7 @@ export async function evaluateToolPolicies(
         source === "auto" ||
         source === "once" ||
         source === "category" ||
+        source === "review" ||
         source === "yolo")
     ) {
       dispatch(

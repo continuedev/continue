@@ -331,6 +331,11 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     );
     console.log(
       chalk.dim(
+        "                     or answer the loop (body: { loopAnswer: { questionId?, itemId?, text, ... } }, loopAction?, loopAutonomy?)",
+      ),
+    );
+    console.log(
+      chalk.dim(
         "  POST /permission - Approve/reject tool (body: { requestId, approved })",
       ),
     );

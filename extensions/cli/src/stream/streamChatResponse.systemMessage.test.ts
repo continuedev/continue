@@ -4,8 +4,25 @@ import type { ChatHistoryItem } from "core/index.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { services } from "../services/index.js";
+import {
+  initChatHistory,
+  processSlashCommandResult,
+} from "../ui/hooks/useChat.helpers.js";
 
-import { processStreamingResponse } from "./streamChatResponse.js";
+import {
+  processStreamingResponse,
+  streamChatResponse,
+} from "./streamChatResponse.js";
+
+// No tools and no tool calls, so streamChatResponse makes one request
+vi.mock("./handleToolCalls.js", async () => {
+  const actual = await vi.importActual<object>("./handleToolCalls.js");
+  return {
+    ...actual,
+    getRequestTools: vi.fn(async () => []),
+    handleToolCalls: vi.fn(async () => false),
+  };
+});
 
 // Mock services
 vi.mock("../services/index.js", () => ({
@@ -196,5 +213,123 @@ describe("streamChatResponse system message validation", () => {
         systemMessage,
       }),
     ).rejects.toThrow(); // Will fail because we can't prune enough
+  });
+});
+
+describe("the system message in the request", () => {
+  const model = {
+    model: "test-model",
+    defaultCompletionOptions: { contextLength: 100_000, maxTokens: 100 },
+  } as ModelConfig;
+
+  function fakeLlmApi(): BaseLlmApi {
+    return {
+      chatCompletionStream: vi.fn().mockImplementation(async () => ({
+        [Symbol.asyncIterator]: async function* () {
+          yield { choices: [{ delta: { content: "ok" } }] };
+        },
+      })),
+    } as unknown as BaseLlmApi;
+  }
+
+  function sentMessages(llmApi: BaseLlmApi, call = 0) {
+    return vi.mocked(llmApi.chatCompletionStream).mock.calls[call][0]
+      .messages as Array<{ role: string; content: unknown }>;
+  }
+
+  const system = (content: string): ChatHistoryItem => ({
+    message: { role: "system", content },
+    contextItems: [],
+  });
+  const user = (content: string): ChatHistoryItem => ({
+    message: { role: "user", content },
+    contextItems: [],
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("sends one system message, the current one, for a history that has a system item", async () => {
+    const llmApi = fakeLlmApi();
+    await processStreamingResponse({
+      chatHistory: [system("startup system message"), user("hello")],
+      model,
+      llmApi,
+      abortController: new AbortController(),
+      systemMessage: "current system message",
+    });
+
+    const messages = sentMessages(llmApi);
+    expect(messages.map((m) => m.role)).toEqual(["system", "user"]);
+    expect(messages[0].content).toBe("current system message");
+    expect(messages[1].content).toBe("hello");
+  });
+
+  it("cn serve: the startup system item is replaced by the current one", async () => {
+    // serve.ts seeds the session with the system message built at startup
+    const history = [system("built at startup"), user("first prompt")];
+    vi.mocked(services.systemMessage.getSystemMessage).mockResolvedValue(
+      "built for this request",
+    );
+    const llmApi = fakeLlmApi();
+
+    await streamChatResponse(
+      history,
+      model,
+      llmApi,
+      new AbortController(),
+      undefined,
+      false,
+      { persistSession: false },
+    );
+
+    expect(llmApi.chatCompletionStream).toHaveBeenCalledTimes(1);
+    const messages = sentMessages(llmApi);
+    expect(messages.filter((m) => m.role === "system")).toEqual([
+      { role: "system", content: "built for this request" },
+    ]);
+    expect(messages.map((m) => m.role)).toEqual(["system", "user"]);
+  });
+
+  it("TUI: slash command output in the history is not sent as a system message", async () => {
+    // The TUI starts with no system item and injects one per request
+    let history = await initChatHistory(false);
+    expect(history).toEqual([]);
+    history = [...history, user("first prompt")];
+
+    // A slash command's output is a system item shown on screen
+    processSlashCommandResult({
+      result: { output: "Session info: ..." },
+      chatHistory: history,
+      setChatHistory: (update) => {
+        history = typeof update === "function" ? update(history) : update;
+      },
+      onShowConfigSelector: () => {},
+    });
+    history = [...history, user("second prompt")];
+    expect(history.map((h) => h.message.role)).toEqual([
+      "user",
+      "system",
+      "user",
+    ]);
+
+    vi.mocked(services.systemMessage.getSystemMessage).mockResolvedValue(
+      "TUI system message",
+    );
+    const llmApi = fakeLlmApi();
+    await streamChatResponse(
+      history,
+      model,
+      llmApi,
+      new AbortController(),
+      undefined,
+      false,
+      { persistSession: false },
+    );
+
+    const messages = sentMessages(llmApi);
+    expect(messages.map((m) => m.role)).toEqual(["system", "user", "user"]);
+    expect(messages[0].content).toBe("TUI system message");
   });
 });

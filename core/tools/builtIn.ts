@@ -22,6 +22,7 @@ export enum BuiltInToolNames {
   PresentPlan = "present_plan",
   HoldQuestion = "hold_question",
   FinishItem = "finish_item",
+  RemindMe = "remind_me",
   CodeNavigation = "code_navigation",
 
   // excluded from allTools for now
@@ -45,4 +46,5 @@ export const CLIENT_TOOLS_IMPLS = [
   // Loop mode: the loop's state lives in the session, which the gui holds
   BuiltInToolNames.HoldQuestion,
   BuiltInToolNames.FinishItem,
+  BuiltInToolNames.RemindMe,
 ];

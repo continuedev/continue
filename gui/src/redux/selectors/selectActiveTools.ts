@@ -33,24 +33,35 @@ export const selectActiveTools = createSelector(
     (store: RootState) => store.ui.toolGroupSettings,
     // Loop mode: an item is running (its two tools, and the loop owns the list)
     (store: RootState) => store.session.loop?.current?.kind === "item",
+    (store: RootState) => !!store.session.taskPlan?.items.length,
   ],
-  (mode, tools, policies, groupPolicies, loopItemRunning): Tool[] => {
+  (
+    mode,
+    tools,
+    policies,
+    groupPolicies,
+    loopItemRunning,
+    hasTaskList,
+  ): Tool[] => {
     if (mode === "chat") {
       return [];
     } else {
       const enabledTools = tools.filter((tool) => {
-        // The task list is for agent work: Agent and Plan modes only. While
-        // the loop runs an item, the loop keeps the list.
+        // Only Plan mode makes a list. Agent mode acts: it gets the tool only
+        // to keep a list a plan left. While the loop runs an item, the loop
+        // keeps the list.
         if (
           tool.function.name === BuiltInToolNames.TaskList &&
-          ((mode !== "agent" && mode !== "plan") || loopItemRunning)
+          mode !== "plan" &&
+          !(mode === "agent" && hasTaskList && !loopItemRunning)
         ) {
           return false;
         }
         // Loop mode's tools exist only for the item it is running.
         if (
           (tool.function.name === BuiltInToolNames.HoldQuestion ||
-            tool.function.name === BuiltInToolNames.FinishItem) &&
+            tool.function.name === BuiltInToolNames.FinishItem ||
+            tool.function.name === BuiltInToolNames.RemindMe) &&
           !(loopItemRunning && mode === "agent")
         ) {
           return false;

@@ -4,6 +4,7 @@ import { ChatCompletionTool } from "openai/resources.mjs";
 
 import { isModelCapable } from "src/utils/modelCapability.js";
 
+import { loopItemRunning, loopRunGoing } from "../loop/loopSession.js";
 import {
   SERVICE_NAMES,
   serviceContainer,
@@ -14,6 +15,7 @@ import type {
   MCPTool,
   ModelServiceState,
 } from "../services/types.js";
+import { getSessionTaskPlan } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { logger } from "../util/logger.js";
 
@@ -24,6 +26,7 @@ import { editTool } from "./edit.js";
 import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
+import { finishItemTool, holdQuestionTool, remindMeTool } from "./loopTools.js";
 import { multiEditTool } from "./multiEdit.js";
 import { presentPlanTool } from "./presentPlan.js";
 import { readFileTool } from "./readFile.js";
@@ -81,7 +84,34 @@ const BUILTIN_SEARCH_TOOLS: Tool[] = [searchCodeTool];
 export async function getAllAvailableTools(
   isHeadless: boolean,
 ): Promise<Tool[]> {
-  const tools = [...BASE_BUILTIN_TOOLS];
+  // Loop mode: while it runs an item, the item reports with FinishItem and
+  // asks with HoldQuestion, and the loop owns the task list.
+  const loopItem =
+    loopItemRunning() && services.toolPermissions.getCurrentMode() !== "plan";
+  const tools = loopItem
+    ? [
+        ...BASE_BUILTIN_TOOLS.filter((t) => t !== taskListTool),
+        holdQuestionTool,
+        remindMeTool,
+        finishItemTool,
+      ]
+    : [...BASE_BUILTIN_TOOLS];
+  // Only plan mode makes a list. Otherwise the model acts: it gets the tool
+  // only to keep a list a plan left.
+  if (
+    services.toolPermissions.getCurrentMode() !== "plan" &&
+    !loopItem &&
+    !getSessionTaskPlan()?.items.length
+  ) {
+    tools.splice(tools.indexOf(taskListTool), 1);
+  }
+
+  // A question that waits for an answer would stall for good with nobody
+  // there to answer it: headless runs and `cn serve`, where there is no
+  // question box, and a loop, whose questions go through HoldQuestion
+  if (isHeadless || services.toolPermissions.isHeadless() || loopRunGoing()) {
+    tools.splice(tools.indexOf(askQuestionTool), 1);
+  }
 
   const isRipgrepInstalled = await checkIfRipgrepIsInstalled();
   if (isRipgrepInstalled) {
@@ -216,7 +246,8 @@ export function convertMcpToolToContinueTool(mcpTool: MCPTool): Tool {
       >,
       required: mcpTool.inputSchema.required,
     },
-    readonly: undefined, // MCP tools don't have readonly property
+    // A server's own word that the tool changes nothing
+    readonly: mcpTool.annotations?.readOnlyHint === true ? true : undefined,
     isBuiltIn: false,
     run: async (args: any) => {
       const result = await services.mcp?.runTool(mcpTool.name, args);

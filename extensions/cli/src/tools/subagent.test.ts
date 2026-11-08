@@ -122,6 +122,28 @@ describe("subagentTool", () => {
     );
   });
 
+  it("runs in a headless session, which has no session id", async () => {
+    vi.mocked(services.chatHistory.getSessionId).mockReturnValueOnce("");
+    vi.mocked(getAgentNames).mockReturnValue(["code-agent"]);
+    vi.mocked(getSubagent).mockReturnValue({
+      model: { name: "test-model" },
+    } as any);
+    vi.mocked(executeSubAgent).mockResolvedValue({
+      success: true,
+      status: "completed",
+      response: "subagent-output",
+      toolCalls: [],
+    });
+
+    const tool = await subagentTool();
+    await expect(
+      tool.run(
+        { prompt: "Subagent prompt", subagent_name: "code-agent" },
+        { toolCallId: "tool-call-id", parallelToolCallCount: 1 },
+      ),
+    ).resolves.toContain("subagent-output");
+  });
+
   it("links the subagent's abort to the parent turn and passes the parent's prompt", async () => {
     vi.mocked(getSubagent).mockReturnValue({
       model: { name: "test-model" },

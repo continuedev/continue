@@ -115,6 +115,15 @@ export function PlanCard({ toolCallState, historyIndex }: PlanCardProps) {
           ))}
         </ul>
       )}
+      {loopActive && !awaitingLoop && isLatestPlanCard && (
+        <div
+          data-testid="plan-card-loop-started"
+          className="mt-2 text-2xs text-description-muted"
+        >
+          The loop is building this plan, one to-do at a time. Questions go to
+          its inbox.
+        </div>
+      )}
       {showActions && awaitingLoop && (
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <Button

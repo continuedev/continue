@@ -76,10 +76,8 @@ export const subagentTool = async (): Promise<Tool> => {
       }
 
       const chatHistoryService = services.chatHistory;
+      // A headless run has no session of its own, and needs none
       const parentSessionId = chatHistoryService.getSessionId();
-      if (!parentSessionId) {
-        throw new Error("No active session found");
-      }
 
       // Cancelling the parent turn (Esc, a serve interrupt, a headless
       // signal) cancels the subagent.

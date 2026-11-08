@@ -99,6 +99,11 @@ export const SYSTEM_SLASH_COMMANDS: SystemCommand[] = [
     category: "system",
   },
   {
+    name: "loop",
+    description: "Open the loop's inbox: questions, answers, Stop loop",
+    category: "system",
+  },
+  {
     name: "sessions",
     description: "Show all chat sessions",
     category: "system",

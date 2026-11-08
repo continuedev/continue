@@ -8,19 +8,23 @@ import { canonicalRuleName } from "./names";
  * - manual: today's behaviour; only the user's rules loosen anything.
  * - autoApprove: the category switches below also loosen calls.
  * - auto: autoApprove, and a reviewer model decides what is left.
- * - yolo: every call that is not refused, protected, or asked about by a rule
+ * - review: every call that is not refused, protected, or asked about by a rule
  *   is allowed.
+ * - yolo: every call is allowed, whatever a rule, a protected path or the
+ *   safety floor says. Only a tool switched off stays off.
  *
- * None of these can loosen a deny rule, a tool that is switched off, a command
+ * Apart from yolo, none of these can loosen a deny rule, a tool that is switched off, a command
  * the safety floor refuses, a protected path, or an ask rule. They only act on
  * a call that would otherwise be left to the user's tool setting.
  */
-export type ApprovalModeName = "manual" | "autoApprove" | "auto" | "yolo";
+export type ApprovalModeName =
+  "manual" | "autoApprove" | "auto" | "review" | "yolo";
 
 export const APPROVAL_MODES: readonly ApprovalModeName[] = [
   "manual",
   "autoApprove",
   "auto",
+  "review",
   "yolo",
 ];
 
@@ -60,8 +64,10 @@ export const CATEGORY_LABELS: Record<ApprovalCategoryName, string> = {
 
 /** What a mode or switch decided, for the decision chip. */
 export interface Loosening {
-  source: "category" | "yolo";
+  source: "category" | "review" | "yolo";
   reason: string;
+  /** Allows the call whatever else applies (YOLO). */
+  absolute?: boolean;
 }
 
 type ToolLike = Pick<
@@ -136,9 +142,14 @@ export function approvalLoosening(
   if (approval.mode === "manual") return undefined;
 
   if (approval.mode === "yolo") {
+    return { source: "yolo", reason: "Allowed by YOLO mode.", absolute: true };
+  }
+
+  if (approval.mode === "review") {
     return {
-      source: "yolo",
-      reason: "Allowed by YOLO mode (no deny rule or protected path applies).",
+      source: "review",
+      reason:
+        "Allowed by Review mode (no deny rule or protected path applies).",
     };
   }
 

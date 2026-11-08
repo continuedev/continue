@@ -1,5 +1,11 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { LoopAutonomy, LoopState } from "core";
+import {
+  LoopAutonomy,
+  LoopBudget,
+  LoopState,
+  LoopStrategy,
+  MessageModes,
+} from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import {
   acceptReplan,
@@ -7,9 +13,11 @@ import {
   answersToDeliver,
   createLoop,
   decideNext,
+  endReplan,
   finishItemRun,
+  holdCheck,
   loopItemPrompt,
-  loopReplanPrompt,
+  loopReplanTurnPrompt,
   markDelivered,
   enterWait,
   loopAutonomyFor,
@@ -19,14 +27,24 @@ import {
   releaseEmptyWait,
   replanDecision,
   setLoopAutonomy,
+  setLoopStrategy,
   requestStop,
   resumeLoop,
+  runItemAgain,
+  setLoopBudget,
   settleSteeredAnswers,
+  skipItem,
+  type LoopControlResult,
   startItemRun,
   standingInstructions,
   startReplan,
   stopLoop,
 } from "core/util/loopMode";
+import {
+  reminderPathsDue,
+  replanReminderTarget,
+  takeReminders,
+} from "core/util/loopReminders";
 import { parsePlanFile, taskPlanFromPlanFile } from "core/util/planFile";
 import { findUriInDirs } from "core/util/uri";
 import { selectEffectiveApprovalMode } from "../selectors/selectAutoApproval";
@@ -34,12 +52,16 @@ import {
   enqueueMessage,
   removeQueuedMessage,
   setLoop,
+  setLoopRequested,
   setMode,
+  setModeAfterLoop,
   setTaskPlan,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
 import { commitLoop } from "../util/loopCommit";
+import { stampLoopFiles } from "../util/loopReminderFiles";
 
+import { runLoopCheck } from "./loopChecks";
 import { streamResponseThunk } from "./streamResponse";
 
 /**
@@ -153,6 +175,60 @@ export const acceptLoopPlan = createAsyncThunk<void, undefined, ThunkApiType>(
   },
 );
 
+/** Whether the session's loop is going (any status but stopped). */
+function loopActive(state: RootState): boolean {
+  const { loop } = state.session;
+  return !!loop && loop.status !== "stopped";
+}
+
+/**
+ * Loop in the mode picker. It is not a mode: the first message is a Plan
+ * turn, and the plan it presents starts the loop (presentPlanImpl). A loop
+ * already going keeps the mode it runs in.
+ */
+export const chooseLoopMode = createAsyncThunk<void, undefined, ThunkApiType>(
+  "loop/chooseMode",
+  async (_, { dispatch, getState }) => {
+    dispatch(setModeAfterLoop(undefined));
+    dispatch(setLoopRequested(true));
+    if (!loopActive(getState())) dispatch(setMode("plan"));
+  },
+);
+
+/**
+ * Chat, Plan or Agent picked while in Loop: a running loop stops after the
+ * running item, and the mode is taken when it stops (setLoop), so the item
+ * finishes in its own mode. Otherwise the mode is taken at once.
+ */
+export const leaveLoopMode = createAsyncThunk<void, MessageModes, ThunkApiType>(
+  "loop/leaveMode",
+  async (mode, { dispatch, getState }) => {
+    dispatch(setLoopRequested(false));
+    if (loopActive(getState())) {
+      dispatch(setModeAfterLoop(mode));
+      await dispatch(stopLoopThunk());
+      return;
+    }
+    dispatch(setModeAfterLoop(undefined));
+    dispatch(setMode(mode));
+  },
+);
+
+/**
+ * A plan presented while the person is in Loop starts the loop by itself,
+ * unless a loop is already going (its own re-plan is accepted as before).
+ */
+export const startLoopIfRequested = createAsyncThunk<
+  boolean,
+  { planFile: string },
+  ThunkApiType
+>("loop/startIfRequested", async ({ planFile }, { dispatch, getState }) => {
+  const state = getState();
+  if (!state.session.loopRequested || loopActive(state)) return false;
+  await dispatch(startLoopFromPlan({ planFile }));
+  return loopActive(getState());
+});
+
 export const stopLoopThunk = createAsyncThunk<void, undefined, ThunkApiType>(
   "loop/stop",
   async (_, { dispatch, getState }) => {
@@ -188,6 +264,60 @@ export const setLoopAutonomyThunk = createAsyncThunk<
   const { loop } = getState().session;
   if (!loop) return;
   commitLoop(dispatch, getState, setLoopAutonomy(loop, autonomy));
+});
+
+type LoopControlOutcome = { ok: boolean; error?: string };
+
+/** Applies one of core's controls to the session's loop. */
+function control(
+  dispatch: AppThunkDispatch,
+  getState: () => RootState,
+  apply: (loop: LoopState) => LoopControlResult,
+): LoopControlOutcome {
+  const { loop } = getState().session;
+  if (!loop) return { ok: false, error: "No loop is running" };
+  const result = apply(loop);
+  if (!result.ok) return result;
+  commitLoop(dispatch, getState, result.loop);
+  return { ok: true };
+}
+
+/** Skip an item that is not running: it counts as finished, shown cancelled. */
+export const skipLoopItemThunk = createAsyncThunk<
+  LoopControlOutcome,
+  string,
+  ThunkApiType
+>("loop/skipItem", async (itemId, { dispatch, getState }) =>
+  control(dispatch, getState, (loop) => skipItem(loop, itemId)),
+);
+
+/** Run a done, failed or skipped item again. */
+export const runLoopItemAgainThunk = createAsyncThunk<
+  LoopControlOutcome,
+  string,
+  ThunkApiType
+>("loop/runItemAgain", async (itemId, { dispatch, getState }) =>
+  control(dispatch, getState, (loop) => runItemAgain(loop, itemId)),
+);
+
+/** The inbox's limits editor and re-plan picker: core checks the bounds. */
+export const setLoopBudgetThunk = createAsyncThunk<
+  LoopControlOutcome,
+  Partial<LoopBudget>,
+  ThunkApiType
+>("loop/setBudget", async (budget, { dispatch, getState }) =>
+  control(dispatch, getState, (loop) => setLoopBudget(loop, budget)),
+);
+
+/** The inbox's strategy picker: how the running loop moves through the plan. */
+export const setLoopStrategyThunk = createAsyncThunk<
+  void,
+  LoopStrategy,
+  ThunkApiType
+>("loop/setStrategy", async (strategy, { dispatch, getState }) => {
+  const { loop } = getState().session;
+  if (!loop) return;
+  commitLoop(dispatch, getState, setLoopStrategy(loop, strategy));
 });
 
 export const endLoopThunk = createAsyncThunk<void, undefined, ThunkApiType>(
@@ -279,17 +409,24 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
       const delivered = loop.answers
         .filter((a) => a.route === "steer" && !queuedIds.has(a.id))
         .map((a) => a.id);
-      const finishedItem = loop.current.itemId;
-      loop = finishItemRun(loop, loop.current.report);
+      // An item with a check is not done until its check passes
+      const itemId = loop.current.itemId;
+      const check = state.session.taskPlan?.items.find(
+        (t) => t.id === itemId,
+      )?.check;
+      loop = finishItemRun(loop, loop.current.report, { check });
       loop = settleSteeredAnswers(loop, delivered);
-      if (finishedItem) loop = releaseEmptyWait(loop, finishedItem);
+      if (itemId) loop = releaseEmptyWait(loop, itemId);
+    } else if (loop.current?.kind === "check") {
+      // A check that did not finish (the gui reloaded while it ran): the
+      // item stays checking, and its check runs again
+      loop = holdCheck(loop);
     } else if (loop.current?.kind === "replan") {
       const presented = callsSince(
         state,
         loop.current.historyIndex,
         BuiltInToolNames.PresentPlan,
       ).some((tc) => tc.status === "done");
-      const planTexts = loop.current.planTexts ?? [];
       if (!presented) {
         commitLoop(
           dispatch,
@@ -302,20 +439,11 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
         );
         return;
       }
-      const plan = getState().session.taskPlan;
-      // The loop's autonomy level says which re-plans start the next round
-      // by themselves; anything else waits for the person on the plan card.
-      const decision = plan
-        ? replanDecision(loop, planTexts, plan)
-        : { accept: false, reason: "The re-plan left no to-dos." };
-      loop = {
-        ...loop,
-        current: undefined,
-        status: "awaiting_plan",
-        replanReason: decision.reason,
-      };
-      commitLoop(dispatch, getState, loop);
-      if (decision.accept) {
+      // The loop's autonomy level (and, for a repair, its scope) says which
+      // re-plans start by themselves; anything else waits on the plan card.
+      const ended = endReplan(loop, getState().session.taskPlan);
+      commitLoop(dispatch, getState, ended.loop);
+      if (ended.accept) {
         await dispatch(acceptLoopPlan());
       }
       return;
@@ -362,6 +490,14 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
         return;
       case "run": {
         const item = plan.items.find((i) => i.id === action.itemId)!;
+        const reminderTarget = { kind: "item", itemId: action.itemId } as const;
+        const taken = takeReminders(
+          loop,
+          reminderTarget,
+          await stampLoopFiles(ide, reminderPathsDue(loop, reminderTarget)),
+          now,
+        );
+        loop = taken.loop;
         const itemState = loop.items.find((i) => i.id === action.itemId);
         const answers = answersToDeliver(loop, action.itemId);
         const prompt = loopItemPrompt({
@@ -370,10 +506,18 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
           answers,
           questions: loop.questions,
           redo: itemState?.status === "redo",
+          again: itemState?.again,
           attempt: (itemState?.attempts ?? 0) + 1,
           notes: loop.notes,
           standing: standingInstructions(loop),
           freshContext: loop.freshContext !== false,
+          // A failed check's output, for the item to fix
+          lastCheck: itemState?.check,
+          // The request carries the plan block (loopPlanBlock)
+          planBlock: true,
+          reminders: taken.reminders,
+          returning: itemState?.setAside,
+          decideAlone: loop.autonomy === "idgaf",
           unanswered: loop.questions.filter((q) =>
             itemState?.unanswered?.includes(q.id),
           ),
@@ -393,6 +537,11 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
         await sendLoopTurn(dispatch, prompt);
         return;
       }
+      case "check":
+        // The harness runs the item's check; no model turn
+        commitLoop(dispatch, getState, loop);
+        await runLoopCheck(dispatch, getState, extra.ideMessenger, action, now);
+        return;
       case "replan": {
         let planTitle: string | undefined;
         if (state.session.planFile) {
@@ -404,15 +553,27 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
             // the prompt goes without a title
           }
         }
-        const prompt = loopReplanPrompt({ loop, plan, planFile, planTitle });
-        const next = startReplan(loop, state.session.history.length, now);
-        loop = {
-          ...next,
-          current: next.current && {
-            ...next.current,
-            planTexts: plan.items.map((i) => i.text),
-          },
-        };
+        // A round's re-plan, a check-in, or a repair of one failed item
+        const replanTarget = replanReminderTarget(action);
+        const taken = takeReminders(
+          loop,
+          replanTarget,
+          await stampLoopFiles(ide, reminderPathsDue(loop, replanTarget)),
+          now,
+        );
+        loop = taken.loop;
+        const prompt = loopReplanTurnPrompt(action, {
+          loop,
+          plan,
+          planFile,
+          planTitle,
+          reminders: taken.reminders,
+        });
+        loop = startReplan(loop, state.session.history.length, now, {
+          plan,
+          checkIn: action.checkIn,
+          itemId: action.itemId,
+        });
         dispatch(setMode("plan"));
         commitLoop(dispatch, getState, loop);
         await sendLoopTurn(dispatch, prompt);

@@ -20,6 +20,7 @@ export type NavigationScreen =
   | "update" // Update selector
   | "edit" // Edit message selector
   | "jobs" // Background Jobs selector
+  | "loop" // Loop mode's inbox
   | "export"; // Export session selector
 
 interface NavigationState {

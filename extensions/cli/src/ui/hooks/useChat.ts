@@ -9,11 +9,18 @@ import {
   describePromptBlocked,
   runUserPromptSubmitHooks,
 } from "../../hooks/promptHook.js";
+import { LoopRunner } from "../../loop/loopDriver.js";
+import {
+  getSessionLoop,
+  interruptRunningLoop,
+  withLoopSteering,
+} from "../../loop/loopSession.js";
 import { toolPermissionManager } from "../../permissions/permissionManager.js";
 import { services } from "../../services/index.js";
 import {
   createSession,
   loadSession,
+  onLoopChange,
   updateSessionHistory,
 } from "../../session.js";
 import { handleSlashCommands } from "../../slashCommands.js";
@@ -71,6 +78,7 @@ export function useChat({
   onShowSessionSelector,
   onShowJobsSelector,
   onShowExportSelector,
+  onShowLoopInbox,
   onClear,
   onRefreshStatic,
   isRemoteMode = false,
@@ -295,10 +303,42 @@ export function useChat({
     }
   }, [initialPrompt, additionalPrompts, isChatHistoryInitialized]);
 
+  // Loop mode: the runner sends the loop's turns when nothing else is going
+  // on (src/loop/loopDriver.ts). `busy` counts the turns and messages in
+  // flight, which a turn's stale closures cannot read from state.
+  const busyRef = useRef(0);
+  const sendLoopTurnRef = useRef<(prompt: string) => Promise<void>>(
+    async () => {},
+  );
+  const loopRunnerRef = useRef<LoopRunner | null>(null);
+  if (!loopRunnerRef.current && !isRemoteMode) {
+    loopRunnerRef.current = new LoopRunner({
+      isIdle: () =>
+        busyRef.current === 0 &&
+        !(messageQueue.getQueueLength() > 0 && !messageQueue.isPaused()),
+      historyLength: () => getLatestHistory().length,
+      send: (turn) => sendLoopTurnRef.current(turn.prompt),
+    });
+  }
+  useEffect(() => {
+    const runner = loopRunnerRef.current;
+    if (!runner) return;
+    // An answer, Resume or a new loop can give the loop something to do;
+    // the kick waits for the change to settle and does nothing while busy.
+    const unsubscribe = onLoopChange(() => {
+      setTimeout(() => runner.kick(), 0);
+    });
+    return () => {
+      unsubscribe();
+      runner.dispose();
+    };
+  }, []);
+
   const executeStreamingResponse = async (
     newHistory: ChatHistoryItem[],
     currentCompactionIndex: number | null,
   ) => {
+    busyRef.current++;
     // Clean up previous abort controller if it exists
     if (abortController && !abortController.signal.aborted) {
       abortController.abort();
@@ -323,9 +363,11 @@ export function useChat({
         model,
       });
       // Steering: deliver queued messages at the next tool boundary when the
-      // person asked for it (Enter on an empty prompt while the agent works).
-      streamCallbacks.onToolBoundary = () =>
-        buildSteeringMessage(messageQueue, { onShowStatusMessage, model });
+      // person asked for it (Enter on an empty prompt while the agent works),
+      // and Loop mode's answers for the running item at the same boundary.
+      streamCallbacks.onToolBoundary = withLoopSteering(() =>
+        buildSteeringMessage(messageQueue, { onShowStatusMessage, model }),
+      );
       streamCallbacks.onModelStreaming = (streaming: boolean) => {
         modelStreamingRef.current = streaming;
       };
@@ -383,9 +425,28 @@ export function useChat({
       if (failed || (controller.signal.aborted && !steeredNow)) {
         messageQueue.pause();
       }
+      // A turn that failed during a loop step stops the loop, as Stop does
+      if (failed && getSessionLoop()?.current) {
+        interruptRunningLoop(
+          "A turn failed while the loop was running. Resume to go on.",
+        );
+      }
 
-      await drainQueue();
+      try {
+        await drainQueue();
+      } finally {
+        busyRef.current--;
+      }
+      loopRunnerRef.current?.kick();
     }
+  };
+
+  /** Loop mode: send the loop's prompt as the next user message. */
+  sendLoopTurnRef.current = async (prompt: string) => {
+    const message = await formatMessageWithFiles(prompt, [], undefined);
+    const newHistory = [...getLatestHistory(), message];
+    setChatHistory(newHistory);
+    await executeStreamingResponse(newHistory, compactionIndex);
   };
 
   /**
@@ -497,6 +558,7 @@ export function useChat({
       onShowJobsSelector,
       onShowUpdateSelector,
       onShowExportSelector,
+      onShowLoopInbox,
       onClear,
     });
 
@@ -522,6 +584,22 @@ export function useChat({
   };
 
   const processMessage = async (
+    message: string,
+    imageMap?: Map<string, Buffer>,
+    isQueuedMessage: boolean = false,
+    baseHistory?: ChatHistoryItem[],
+  ) => {
+    busyRef.current++;
+    try {
+      await processMessageNow(message, imageMap, isQueuedMessage, baseHistory);
+    } finally {
+      busyRef.current--;
+    }
+    // The loop waited for this message's turn
+    loopRunnerRef.current?.kick();
+  };
+
+  const processMessageNow = async (
     message: string,
     imageMap?: Map<string, Buffer>,
     isQueuedMessage: boolean = false,
@@ -794,6 +872,8 @@ export function useChat({
 
     // If response is running, abort response
     if (abortController && isWaitingForResponse) {
+      // Stop during a loop step stops the loop; its item goes back to pending
+      interruptRunningLoop();
       // Keep the queue but do not send it: the person stopped the agent,
       // possibly to change course. Enter on an empty prompt resumes.
       messageQueue.pause();

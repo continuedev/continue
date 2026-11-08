@@ -27,6 +27,18 @@ test("should be able to toggle modes", async () => {
     );
   });
 
+  // The cycle is Chat, Plan, Agent, Loop: after Agent comes Loop
+  await getElementByText("Loop");
+
+  act(() => {
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: ".",
+        metaKey: true, // cmd key on Mac
+      }),
+    );
+  });
+
   // Check that it switched to Chat mode
   await getElementByText("Chat");
 

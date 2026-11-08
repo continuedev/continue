@@ -18,6 +18,7 @@ import type { ConfigOption, ModelOption } from "../types/selectorTypes.js";
 import { UpdateSelector } from "../UpdateSelector.js";
 
 import { ChatScreenContent } from "./ChatScreenContent.js";
+import { LoopInbox } from "./LoopInbox.js";
 import { SessionSelectorWithLoading } from "./SessionSelectorWithLoading.js";
 
 interface ScreenContentProps {
@@ -145,6 +146,13 @@ export const ScreenContent: React.FC<ScreenContentProps> = ({
         onSelect={handleExportSession}
         onExit={closeCurrentScreen}
       />
+    );
+  }
+
+  // Loop mode's inbox
+  if (isScreenActive("loop")) {
+    return (
+      <LoopInbox onClose={closeCurrentScreen} onStopNow={handleInterrupt} />
     );
   }
 

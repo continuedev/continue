@@ -2,6 +2,7 @@ import { render } from "ink-testing-library";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { resetLoopMemory } from "../../loop/loopSession.js";
 import { services } from "../../services/index.js";
 import { createUITestContext } from "../../test-helpers/ui-test-context.js";
 import { AppRoot } from "../AppRoot.js";
@@ -16,6 +17,8 @@ describe("TUIChat - Plan Mode Bug Reproduction", () => {
       serviceValue: { some: "data" },
     });
 
+    // The loop entry lives in memory: start each test outside it
+    resetLoopMemory();
     // Ensure mode service is properly initialized in normal mode
     await toolPermissionService.doInitialize({
       mode: "normal",
@@ -84,6 +87,14 @@ describe("TUIChat - Plan Mode Bug Reproduction", () => {
       frame = lastFrame();
       expect(frame!).toContain("plan]");
 
+      // Switch to the loop entry (plan mode underneath)
+      stdin.write("\x1b[Z");
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      frame = lastFrame();
+      expect(frame!).toContain("loop]");
+      expect(frame!).not.toContain("plan]");
+
       // Switch to auto mode
       stdin.write("\x1b[Z");
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -123,6 +134,9 @@ describe("TUIChat - Plan Mode Bug Reproduction", () => {
       frame = lastFrame();
 
       // Try to switch to another mode - this is where the bug might occur
+      stdin.write("\x1b[Z"); // Should go to the loop entry
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      expect(lastFrame()!).toContain("loop]");
       stdin.write("\x1b[Z]"); // Should go to auto mode
       await new Promise((resolve) => setTimeout(resolve, 200));
 

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
@@ -10,6 +11,7 @@ import type {
 
 import { pruneLastMessage } from "../compaction.js";
 import { getRequestBodyHints } from "../contextManagement.js";
+import { consumeLoopTurnEnd, loopRequestHistory } from "../loop/loopSession.js";
 import { services } from "../services/index.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { applyChatCompletionToolOverrides } from "../tools/applyToolOverrides.js";
@@ -158,7 +160,7 @@ interface ProcessStreamingResponseOptions {
   isHeadless?: boolean;
   tools?: ChatCompletionTool[];
   systemMessage: string;
-  isCompacting?: boolean;
+  isCompacting?: boolean; // also: compaction gets no Loop mode plan block
 }
 
 // Process a single streaming response and return whether we need to continue
@@ -183,10 +185,16 @@ export async function processStreamingResponse(
     isCompacting = false,
   } = options;
 
-  let chatHistory = options.chatHistory;
+  // The request carries one system message, the current `systemMessage`.
+  // A system item in the history is left out: `cn serve` stores the startup
+  // system message there, fixed before any mode switch, and the TUI stores
+  // slash command output and compaction notices there for display only.
+  let chatHistory = options.chatHistory.filter(
+    (item) => item.message.role !== "system",
+  );
 
   // The session's task list, sent last when the TaskList tool is offered.
-  const taskListBlock = taskListBlockForRequest(tools);
+  const taskListBlock = taskListBlockForRequest(tools, isCompacting);
 
   // Safety buffer to account for tokenization estimation errors
   const SAFETY_BUFFER = 100;
@@ -483,12 +491,13 @@ export async function streamChatResponse(
       toolNames: tools.map((t) => t.function.name),
     });
 
-    // Get response from LLM ("Steer now" interrupts only while it streams)
+    // Get response from LLM ("Steer now" interrupts only while it streams;
+    // Loop mode sends each run without the turns before it)
     callbacks?.onModelStreaming?.(true);
     const { content, toolCalls, shouldContinue, usage } =
       await processStreamingResponse({
         isHeadless,
-        chatHistory,
+        chatHistory: loopRequestHistory(chatHistory, isCompacting),
         model,
         llmApi,
         abortController,
@@ -528,6 +537,12 @@ export async function streamChatResponse(
 
     if (shouldReturn) {
       return finalResponse || content || fullResponse;
+    }
+
+    // Loop mode: FinishItem (or a plan the loop asked for) ends the turn
+    // with no further request; undelivered steered answers go with the next run.
+    if (consumeLoopTurnEnd(isCompacting)) {
+      break;
     }
 
     // After tool execution, validate that we haven't exceeded context limit

@@ -8,6 +8,7 @@ import {
   taskPlanToMarkdown,
 } from "core/util/taskPlan.js";
 
+import { services } from "../services/index.js";
 import { getSessionTaskPlan, updateSessionTaskPlan } from "../session.js";
 
 import type { Tool } from "./types.js";
@@ -32,9 +33,13 @@ export function planFromToolArgs(args: {
   items?: unknown;
   reset?: unknown;
 }): TaskPlan {
+  // Only plan mode makes a list. Otherwise the model can update the one it was
+  // given, never replace it, and leaving an item out does not remove it.
+  const planning = services.toolPermissions.getCurrentMode() === "plan";
   const result = buildTaskPlan(parseItems(args.items), {
     previous: getSessionTaskPlan(),
-    reset: args.reset === true || args.reset === "true",
+    reset: planning && (args.reset === true || args.reset === "true"),
+    keepOpen: !planning,
     updatedBy: "model",
   });
   if (!result.ok) {

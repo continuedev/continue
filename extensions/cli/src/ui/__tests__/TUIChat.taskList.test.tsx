@@ -39,7 +39,7 @@ describe("TUIChat - task list", () => {
       }),
       textTurn("list written"),
     ]);
-    await registerFlowServices({ llm });
+    await registerFlowServices({ llm, mode: "plan" });
     const ui = renderFlow();
     try {
       await type(ui.stdin, "plan the fix");
@@ -94,7 +94,7 @@ describe("TUIChat - task list", () => {
       }),
       textTurn("checklist written"),
     ]);
-    await registerFlowServices({ llm });
+    await registerFlowServices({ llm, mode: "plan" });
     const ui = renderFlow();
     try {
       await type(ui.stdin, "track this");

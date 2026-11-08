@@ -4,7 +4,6 @@ import { LLMFullCompletionOptions, ModelDescription } from "core";
 import { getRuleId } from "core/llm/rules/getSystemMessageWithRules";
 import { ToCoreProtocol } from "core/protocol";
 import { renderChatMessage } from "core/util/messageContent";
-import { BUILT_IN_GROUP_NAME } from "core/tools/builtIn";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
@@ -495,19 +494,14 @@ export const streamNormalInput = createAsyncThunk<
       // while it worked can go now (waiting for approval is not an end)
       dispatch(requestQueuedMessagesSend());
     } else if (needsApprovalPolicies.length > 0) {
-      const builtInReadonlyAutoApproved = autoApprovedPolicies.filter(
-        ({ toolCallState }) =>
-          toolCallState.tool?.group === BUILT_IN_GROUP_NAME &&
-          toolCallState.tool?.readonly,
-      );
-
-      if (builtInReadonlyAutoApproved.length > 0) {
+      // What needs no approval runs now; only the rest waits for the person
+      if (autoApprovedPolicies.length > 0) {
         const state4 = getState();
         if (streamAborter.signal.aborted || !state4.session.isStreaming) {
           return;
         }
         await Promise.all(
-          builtInReadonlyAutoApproved.map(async ({ toolCallState }) => {
+          autoApprovedPolicies.map(async ({ toolCallState }) => {
             unwrapResult(
               await dispatch(
                 callToolById({

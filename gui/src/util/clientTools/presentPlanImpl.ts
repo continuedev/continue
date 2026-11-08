@@ -9,13 +9,15 @@ import {
 } from "core/util/planFile";
 import { joinPathsToUri } from "core/util/uri";
 import { setPlanFile, setTaskPlan } from "../../redux/slices/sessionSlice";
+import { startLoopIfRequested } from "../../redux/thunks/loop";
 import { ClientToolImpl } from "./callClientTool";
 
 /**
  * The present_plan tool (Plan mode only): writes the plan to
  * `.continue/plans/<slug>.md` in the first workspace folder, makes its to-dos
  * the task list, records the file on the session and ends the turn. The plan
- * card (PlanCard) then offers Build and Keep planning.
+ * card (PlanCard) then offers Build and Keep planning. In Loop (the mode
+ * picker's entry, session.loopRequested) the plan starts the loop instead.
  *
  * Presenting again with the same title replaces this session's file; a file
  * of that name that belongs to something else gets a numbered name instead.
@@ -62,6 +64,12 @@ export const presentPlanImpl: ClientToolImpl = async (
 
   extras.dispatch(setTaskPlan(result.plan));
   extras.dispatch(setPlanFile(fileUri));
+  // Loop: the person chose to build in a loop before the plan existed
+  const loopStarted =
+    !!session.loopRequested &&
+    (await extras
+      .dispatch(startLoopIfRequested({ planFile: fileUri }))
+      .unwrap());
 
   return {
     respondImmediately: true,
@@ -70,7 +78,9 @@ export const presentPlanImpl: ClientToolImpl = async (
       {
         name: parsed.title,
         description: relativePath,
-        content: planProposedResult(relativePath, result.plan),
+        content: loopStarted
+          ? `Plan saved to ${relativePath}. The loop started building it, one to-do per turn: stop here.`
+          : planProposedResult(relativePath, result.plan),
         uri: { type: "file", value: fileUri },
         hidden: false,
       },

@@ -9,6 +9,7 @@ import { ChatCompletionToolMessageParam } from "openai/resources/chat/completion
 import { ToolPermissionServiceState } from "src/services/ToolPermissionService.js";
 import type { ModelServiceState } from "src/services/types.js";
 
+import { holdLoopCall, loopRepeatGuard } from "../loop/loopHolds.js";
 import {
   evaluateWithCoreRules,
   getReviewer,
@@ -17,6 +18,7 @@ import {
 } from "../permissions/coreRules.js";
 import { checkToolPermission } from "../permissions/permissionChecker.js";
 import { toolPermissionManager } from "../permissions/permissionManager.js";
+import { withReadOnlyMcp } from "../permissions/readOnlyMcp.js";
 import { ToolCallRequest, ToolPermissions } from "../permissions/types.js";
 import {
   SERVICE_NAMES,
@@ -203,11 +205,15 @@ export async function checkToolPermissionApproval(
   hookDecision?: "allow" | "ask",
 ): Promise<{
   approved: boolean;
-  denialReason?: "user" | "policy";
+  /** "loop": Loop mode held the call as a question instead of asking */
+  denialReason?: "user" | "policy" | "loop";
   /** Why a rule, protected path or the reviewer refused it, to tell the model. */
   denialMessage?: string;
 }> {
-  const permissionCheck = checkToolPermission(toolCall, permissions);
+  const permissionCheck = withReadOnlyMcp(
+    checkToolPermission(toolCall, permissions),
+    toolCall.tool,
+  );
   let permission = permissionCheck.permission;
 
   // PreToolUse hooks adjust the CLI policy first; the CLI's own exclude
@@ -235,8 +241,10 @@ export async function checkToolPermissionApproval(
           denialMessage: verdict.reason,
         };
       }
-      // "ask" (or an allow rule over a hook's ask): nobody to ask when
-      // headless, so it is a refusal.
+      // "ask" (or an allow rule over a hook's ask): Loop mode holds it as a
+      // question; otherwise nobody to ask when headless, so it is a refusal.
+      const held = holdLoopCall(toolCall, verdict.reason);
+      if (held) return held;
       if (isHeadless) {
         return {
           approved: false,
@@ -254,6 +262,8 @@ export async function checkToolPermissionApproval(
   if (permission === "allow") {
     return { approved: true };
   } else if (permission === "ask") {
+    const held = holdLoopCall(toolCall);
+    if (held) return held;
     if (isHeadless) {
       // "ask" tools are excluded in headless so can only get here by policy evaluation
       return { approved: false, denialReason: "policy" };
@@ -402,6 +412,17 @@ function calculateFallbackCost(
   return (inputTokens * 1 + outputTokens * 2) / 1_000_000;
 }
 
+/**
+ * Cached input tokens from a response's usage. The adapters for Anthropic,
+ * Bedrock and Gemini set `cache_read_tokens`; OpenAI-style servers (OpenAI,
+ * Strata, llama.cpp) report only `cached_tokens`, which was read as none.
+ */
+export function cacheReadTokens(
+  details: { cache_read_tokens?: number; cached_tokens?: number } | undefined,
+): number | undefined {
+  return details?.cache_read_tokens ?? details?.cached_tokens;
+}
+
 // Helper function to record telemetry
 export function recordStreamTelemetry(options: {
   requestStartTime: number;
@@ -434,7 +455,7 @@ export function recordStreamTelemetry(options: {
       completionTokens: fullUsage.completion_tokens,
       promptTokensDetails: fullUsage.prompt_tokens_details
         ? {
-            cachedTokens: fullUsage.prompt_tokens_details.cache_read_tokens,
+            cachedTokens: cacheReadTokens(fullUsage.prompt_tokens_details),
             cacheWriteTokens:
               fullUsage.prompt_tokens_details.cache_write_tokens,
             // The split by lifetime, when the adapter has one, prices a 1-hour
@@ -478,12 +499,9 @@ export function recordStreamTelemetry(options: {
   telemetryService.recordTokenUsage(actualOutputTokens, "output", model.model);
 
   // Record cache tokens if available
-  if (fullUsage?.prompt_tokens_details?.cache_read_tokens) {
-    telemetryService.recordTokenUsage(
-      fullUsage.prompt_tokens_details.cache_read_tokens,
-      "cacheRead",
-      model.model,
-    );
+  const cacheRead = cacheReadTokens(fullUsage?.prompt_tokens_details);
+  if (cacheRead) {
+    telemetryService.recordTokenUsage(cacheRead, "cacheRead", model.model);
   }
   if (fullUsage?.prompt_tokens_details?.cache_write_tokens) {
     telemetryService.recordTokenUsage(
@@ -619,6 +637,7 @@ export async function preprocessStreamedToolCalls(
  * @param callbacks - Optional callbacks for notifying of events
  * @returns - Chat history entries with tool results and status information
  */
+// eslint-disable-next-line max-statements
 export async function executeStreamedToolCalls(
   preprocessedCalls: PreprocessedToolCall[],
   callbacks?: StreamCallbacks,
@@ -647,6 +666,9 @@ export async function executeStreamedToolCalls(
 
   let hasRejection = false;
 
+  // Loop mode refuses a call repeated too often in one item's run
+  const loopRepeat = loopRepeatGuard(preprocessedCalls.map((c) => c.id));
+
   // Permission phase (sequential)
   for (const { index, call: originalCall } of indexedCalls) {
     // Do not cancel subsequent tools after a rejection; handle each independently
@@ -655,6 +677,22 @@ export async function executeStreamedToolCalls(
     let call = originalCall;
 
     try {
+      const repeated = loopRepeat.check(call);
+      if (repeated) {
+        callbacks?.onToolStart?.(call.name, call.arguments);
+        entriesByIndex.set(index, {
+          role: "tool",
+          tool_call_id: call.id,
+          content: repeated,
+          status: "canceled",
+        });
+        callbacks?.onToolResult?.(repeated, call.name, "canceled");
+        try {
+          services.chatHistory.addToolResult(call.id, repeated, "canceled");
+        } catch {}
+        continue;
+      }
+
       logger.debug("Checking tool permissions", {
         name: call.name,
         arguments: call.arguments,
@@ -709,11 +747,13 @@ export async function executeStreamedToolCalls(
         // Permission denied: create entry with canceled status
         const denialReason = permissionResult.denialReason || "user";
         const deniedMessage =
-          denialReason === "policy"
-            ? permissionResult.denialMessage
-              ? `Command blocked by security policy: ${permissionResult.denialMessage} Do not retry it or reach the same result another way; find a safer route or tell the user what you need.`
-              : `Command blocked by security policy`
-            : `Permission denied by user`;
+          denialReason === "loop"
+            ? (permissionResult.denialMessage ?? "Held for the person.")
+            : denialReason === "policy"
+              ? permissionResult.denialMessage
+                ? `Command blocked by security policy: ${permissionResult.denialMessage} Do not retry it or reach the same result another way; find a safer route or tell the user what you need.`
+                : `Command blocked by security policy`
+              : `Permission denied by user`;
 
         const deniedEntry: ToolResultWithStatus = {
           role: "tool",
@@ -735,7 +775,8 @@ export async function executeStreamedToolCalls(
             "canceled",
           );
         } catch {}
-        hasRejection = true;
+        // A call Loop mode held is not a refusal: the item goes on without it
+        if (denialReason !== "loop") hasRejection = true;
         // Remaining items will be auto-cancelled in subsequent iterations
         continue;
       }

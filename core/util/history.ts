@@ -145,6 +145,9 @@ export class HistoryManager {
     if (session.loop) {
       orderedSession.loop = session.loop;
     }
+    if (session.loopRequested) {
+      orderedSession.loopRequested = true;
+    }
 
     fs.writeFileSync(
       getSessionFilePath(session.sessionId),

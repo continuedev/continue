@@ -15,6 +15,7 @@ export const APPROVAL_LABELS: Record<ApprovalMode, string> = {
   manual: "Manual",
   autoApprove: "Auto-approve",
   auto: "Auto",
+  review: "Review",
   yolo: "YOLO",
 };
 
@@ -24,7 +25,9 @@ export const APPROVAL_DESCRIPTIONS: Record<ApprovalMode, string> = {
   autoApprove:
     "Tool calls in the categories you switched on (Settings > Tools) run without asking. Rules and protected paths still apply.",
   auto: "Like Auto-approve, and a reviewer model decides what is left: it allows, asks you, or refuses. Experimental.",
-  yolo: "Everything runs without asking, except what a deny rule, an ask rule, a protected path or the safety check stops. Dangerous.",
+  review:
+    "Tools run without asking, and you review file edits as diffs. Deny rules, ask rules, protected paths and the safety check still apply.",
+  yolo: "Absolutely everything runs without asking. Deny rules, ask rules, protected paths and the safety check are all ignored. Very dangerous.",
 };
 
 /**
@@ -39,9 +42,9 @@ export function ApprovalSelect() {
 
   const options: ApprovalMode[] = ["manual", "autoApprove"];
   if (status.offered) options.push("auto");
-  options.push("yolo");
+  options.push("review", "yolo");
 
-  const yolo = effective === "yolo";
+  const yolo = effective === "yolo" || effective === "review";
   // A saved Auto that cannot run shows as Manual, which is what is in force.
   const shown = saved === "auto" && effective === "manual" ? "manual" : saved;
 
@@ -73,7 +76,11 @@ export function ApprovalSelect() {
                 className="items-start gap-1"
               >
                 <div className="flex flex-col">
-                  <span className={mode === "yolo" ? "text-error" : ""}>
+                  <span
+                    className={
+                      mode === "yolo" || mode === "review" ? "text-error" : ""
+                    }
+                  >
                     {APPROVAL_LABELS[mode]}
                   </span>
                   <span className="text-2xs whitespace-normal text-description-muted">
@@ -100,8 +107,8 @@ export function ApprovalSelect() {
  */
 export function YoloBanner() {
   const dispatch = useAppDispatch();
-  const yolo = useAppSelector(selectEffectiveApprovalMode) === "yolo";
-  if (!yolo) return null;
+  const mode = useAppSelector(selectEffectiveApprovalMode);
+  if (mode !== "yolo" && mode !== "review") return null;
   return (
     <div
       role="alert"
@@ -110,8 +117,9 @@ export function YoloBanner() {
     >
       <ExclamationTriangleIcon className="h-3 w-3 shrink-0" />
       <span className="flex-1">
-        YOLO: tool calls run without asking. Deny rules, ask rules, protected
-        paths and the safety check still apply.
+        {mode === "yolo"
+          ? "YOLO: every tool call runs without asking. Deny rules, ask rules, protected paths and the safety check are ignored."
+          : "Review mode: tools run without asking and you review file edits as diffs. Deny rules, ask rules, protected paths and the safety check still apply."}
       </span>
       <button
         type="button"

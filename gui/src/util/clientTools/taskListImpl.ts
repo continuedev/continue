@@ -23,9 +23,13 @@ export const taskListImpl: ClientToolImpl = async (
     }
   }
 
+  // Only Plan mode makes a list. Agent mode can update the one it was given,
+  // never replace it, and leaving an item out does not remove it.
+  const planning = extras.getState().session.mode === "plan";
   const result = buildTaskPlan(items, {
     previous: extras.getState().session.taskPlan,
-    reset: args?.reset === true || args?.reset === "true",
+    reset: planning && (args?.reset === true || args?.reset === "true"),
+    keepOpen: !planning,
     updatedBy: "model",
   });
   if (!result.ok) {

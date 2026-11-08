@@ -1,4 +1,3 @@
-import type { PermissionMode } from "../../permissions/types.js";
 import { messageQueue } from "../../stream/messageQueue.js";
 import { backgroundSignalManager } from "../../util/backgroundSignalManager.js";
 import {
@@ -15,7 +14,7 @@ interface ControlKeysOptions {
   exit: () => void;
   showSlashCommands: boolean;
   showFileSearch: boolean;
-  cycleModes: (step?: 1 | -1) => Promise<PermissionMode>;
+  cycleModes: (step?: 1 | -1) => Promise<unknown>;
   clearInput?: () => void;
   textBuffer?: TextBuffer;
   onTextBufferUpdate?: () => void;

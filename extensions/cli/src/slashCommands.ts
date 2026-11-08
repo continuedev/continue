@@ -39,7 +39,7 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
     `  ${chalk.cyan("Ctrl+C")}     Clear input`,
     `  ${chalk.cyan("Ctrl+D")}     Exit application`,
     `  ${chalk.cyan("Ctrl+L")}     Clear screen`,
-    `  ${chalk.cyan("Shift+Tab")}  Cycle permission modes (normal/plan/auto)`,
+    `  ${chalk.cyan("Shift+Tab")}  Cycle modes (normal/plan/loop/auto)`,
     `  ${chalk.cyan("Esc")}        Cancel streaming or close suggestions`,
     "",
     chalk.white("Special Characters:"),
@@ -286,6 +286,8 @@ const commandHandlers: Record<string, CommandHandler> = {
     return { openUpdateSelector: true };
   },
   jobs: handleJobs,
+  // Loop mode's inbox: questions, answers, the level, Stop loop
+  loop: () => ({ openLoopInbox: true }),
   skills: () => handleSkills(),
   "import-skill": (args) => handleImportSkill(args),
   sessions: handleSessions,

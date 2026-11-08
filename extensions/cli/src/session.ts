@@ -1,15 +1,18 @@
+/* eslint-disable max-lines */
 import fs from "fs";
 import path from "path";
 
 import type {
   BaseSessionMetadata,
   ChatHistoryItem,
+  LoopState,
   Session,
   SessionUsage,
   TaskPlan,
   Usage,
 } from "core/index.js";
 import historyManager from "core/util/history.js";
+import { restoreLoop } from "core/util/loopMode.js";
 import { v4 as uuidv4 } from "uuid";
 
 import { DEFAULT_SESSION_TITLE } from "./constants/session.js";
@@ -108,9 +111,20 @@ class SessionManager {
   }
 
   setSession(session: Session): void {
+    // A loop saved mid-run comes back stopped, so a resumed session never
+    // starts work by itself (core/util/loopMode.ts restoreLoop).
+    if (session.loop !== undefined) {
+      const loop = restoreLoop(session.loop);
+      if (loop) {
+        session.loop = loop;
+      } else {
+        delete session.loop;
+      }
+    }
     this.currentSession = session;
     this.syncUsageFromSession();
     notifyTaskPlanListeners(session.taskPlan);
+    notifyLoopListeners(session.loop);
   }
 
   updateHistory(history: ChatHistoryItem[]): void {
@@ -136,6 +150,17 @@ class SessionManager {
     notifyTaskPlanListeners(session.taskPlan);
   }
 
+  updateLoop(loop: LoopState | undefined): void {
+    const session = this.getCurrentSession();
+    if (loop) {
+      session.loop = loop;
+    } else {
+      delete session.loop;
+    }
+    saveSession();
+    notifyLoopListeners(session.loop);
+  }
+
   updatePlanFile(planFile: string | undefined): void {
     const session = this.getCurrentSession();
     if (planFile) {
@@ -149,6 +174,7 @@ class SessionManager {
   clear(): void {
     this.currentSession = null;
     notifyTaskPlanListeners(undefined);
+    notifyLoopListeners(undefined);
     this.sessionUsage = {
       totalCost: 0,
       promptTokens: 0,
@@ -643,6 +669,39 @@ export function updateSessionPlanFile(planFile: string | undefined): void {
 export function onTaskPlanChange(listener: TaskPlanListener): () => void {
   taskPlanListeners.add(listener);
   return () => taskPlanListeners.delete(listener);
+}
+
+type LoopListener = (loop: LoopState | undefined) => void;
+const loopListeners = new Set<LoopListener>();
+
+function notifyLoopListeners(loop: LoopState | undefined): void {
+  for (const listener of loopListeners) {
+    try {
+      listener(loop);
+    } catch (error) {
+      logger.error("Loop listener failed:", error);
+    }
+  }
+}
+
+/** The current session's Loop mode state (core/util/loopMode.ts). */
+export function getSessionLoop(): LoopState | undefined {
+  return SessionManager.getInstance().getCurrentSession().loop;
+}
+
+/**
+ * Replaces the current session's loop and saves the session. Callers go
+ * through src/loop/loopSession.ts commitLoop, which also keeps the task list
+ * in step with the loop.
+ */
+export function updateSessionLoop(loop: LoopState | undefined): void {
+  SessionManager.getInstance().updateLoop(loop);
+}
+
+/** Calls `listener` whenever the loop changes; returns an unsubscribe. */
+export function onLoopChange(listener: LoopListener): () => void {
+  loopListeners.add(listener);
+  return () => loopListeners.delete(listener);
 }
 
 /**

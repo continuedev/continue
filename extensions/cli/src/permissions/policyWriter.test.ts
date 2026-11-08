@@ -14,28 +14,28 @@ describe("policyWriter", () => {
 
     it("should generate command-specific patterns for Bash tool", () => {
       expect(generatePolicyRule("Bash", { command: "ls -la" })).toBe(
-        "Bash(ls*)",
+        "Bash(ls -la)",
       );
       expect(generatePolicyRule("Bash", { command: "git status" })).toBe(
-        "Bash(git*)",
+        "Bash(git status)",
       );
       expect(generatePolicyRule("Bash", { command: "npm install" })).toBe(
-        "Bash(npm*)",
+        "Bash(npm install)",
       );
     });
 
     it("should handle complex bash commands", () => {
       expect(
         generatePolicyRule("Bash", { command: "ls -la && echo test" }),
-      ).toBe("Bash(ls*)");
+      ).toBe("Bash(ls -la && echo test)");
       expect(
         generatePolicyRule("Bash", {
           command: "find . -name '*.ts' | head -10",
         }),
-      ).toBe("Bash(find*)");
+      ).toBe("Bash(find . -name '*.ts' | head -10)");
       expect(
         generatePolicyRule("Bash", { command: "  grep -r test .  " }),
-      ).toBe("Bash(grep*)");
+      ).toBe("Bash(grep -r test .)");
     });
 
     it("should fallback to display name for bash tools without command", () => {

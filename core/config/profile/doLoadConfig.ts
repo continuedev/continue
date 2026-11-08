@@ -61,6 +61,20 @@ async function loadRules(ide: IDE) {
   return { rules, errors };
 }
 
+/**
+ * Whether to believe an MCP tool's `readOnlyHint`. The MCP spec says to treat
+ * annotations as untrusted unless the server is, and a server configured
+ * inside the open repository came with the repository.
+ */
+export function mcpToolIsReadOnly(
+  tool: { annotations?: { readOnlyHint?: boolean } },
+  sourceFile: string | undefined,
+  workspaceDirs: string[],
+): boolean {
+  if (tool.annotations?.readOnlyHint !== true) return false;
+  return !workspaceDirs.some((dir) => sourceFile?.startsWith(dir));
+}
+
 export default async function doLoadConfig(options: {
   ide: IDE;
   llmLogger: ILLMLogger;
@@ -210,6 +224,7 @@ export default async function doLoadConfig(options: {
       });
     });
     if (server.status === "connected") {
+      const workspaceDirs = await ide.getWorkspaceDirs();
       const serverTools: Tool[] = server.tools.map((tool) => ({
         displayTitle: server.name + " " + tool.name,
         function: {
@@ -218,7 +233,12 @@ export default async function doLoadConfig(options: {
           parameters: tool.inputSchema,
         },
         faviconUrl: server.faviconUrl,
-        readonly: false,
+        // A server's word that the tool only fetches context: it runs without
+        // asking, in Plan mode too. Not from a server a repository brought.
+        readonly: mcpToolIsReadOnly(tool, server.sourceFile, workspaceDirs),
+        ...(mcpToolIsReadOnly(tool, server.sourceFile, workspaceDirs) && {
+          defaultToolPolicy: "allowedWithoutPermission" as const,
+        }),
         type: "function" as const,
         uri: encodeMCPToolUri(server.id, tool.name),
         group: server.name,

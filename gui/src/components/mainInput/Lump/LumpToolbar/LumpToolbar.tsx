@@ -8,6 +8,7 @@ import {
   selectToolCallsByStatus,
 } from "../../../../redux/selectors/selectToolCalls";
 import { cancelToolCall } from "../../../../redux/slices/sessionSlice";
+import { cancelToolCallThunk } from "../../../../redux/thunks/cancelToolCall";
 import { callToolById } from "../../../../redux/thunks/callToolById";
 import { cancelStream } from "../../../../redux/thunks/cancelStream";
 import { logToolUsage } from "../../../../redux/util";
@@ -147,7 +148,7 @@ export function LumpToolbar() {
             editor.mainEditor?.commands.focus();
           }
           void dispatch(
-            cancelToolCall({
+            cancelToolCallThunk({
               toolCallId: firstPendingToolCall.toolCallId,
             }),
           );

@@ -21,7 +21,7 @@ const CATEGORIES: {
   {
     key: "editFiles",
     label: "Edit files",
-    hint: "Edit tools. Edits you review as a diff are still shown as a diff. Protected files (.git, .env, workflows) always ask.",
+    hint: "Creating files. Edits to existing files are still shown as a diff for you to accept. Protected files (.git, .env, workflows) always ask.",
   },
   {
     key: "runSafeCommands",
@@ -59,7 +59,7 @@ export function AutoApproveCard() {
     (s) => s.config.config.mcpServerStatuses ?? [],
   );
 
-  const inactive = mode === "manual" || mode === "yolo";
+  const inactive = mode === "manual" || mode === "review" || mode === "yolo";
 
   return (
     <div data-testid="auto-approve-card">

@@ -52,6 +52,8 @@ vi.mock("../services/index.js", () => {
 vi.mock("../session.js", () => ({
   updateSessionHistory: vi.fn(),
   trackSessionUsage: vi.fn(),
+  // No loop in these sessions
+  getSessionLoop: vi.fn(() => undefined),
   getCompleteStateSnapshot: (
     session: any,
     isProcessing: boolean,

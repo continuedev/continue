@@ -4,6 +4,9 @@ import {
   describePromptBlocked,
   runUserPromptSubmitHooks,
 } from "../hooks/promptHook.js";
+import { runLoopCheck } from "../loop/loopChecks.js";
+import { loopWakeDelay, nextLoopTurn } from "../loop/loopDriver.js";
+import { getSessionLoop, interruptRunningLoop } from "../loop/loopSession.js";
 import { services } from "../services/index.js";
 import { getCompleteStateSnapshot, type StateSnapshot } from "../session.js";
 import {
@@ -23,6 +26,11 @@ import {
   streamChatResponseWithInterruption,
   type ServerState,
 } from "./serve.helpers.js";
+import {
+  getLoopSnapshot,
+  handleLoopMessage,
+  LoopSnapshot,
+} from "./serve.loop.js";
 
 /** One queued message as `GET /state` reports it. */
 export interface QueuedMessageSnapshot {
@@ -65,11 +73,16 @@ export interface ServeMessageContext {
   syncSessionHistory: () => void;
   /** Called when a run of turns has ended with nothing left in the queue. */
   onIdle: () => Promise<void>;
+  /** processMessages is sending turns; another call only asks it to look again */
+  draining?: boolean;
+  lookAgain?: boolean;
+  /** Wakes an unattended loop when its wait for answers runs out */
+  loopWakeTimer?: ReturnType<typeof setTimeout>;
 }
 
 export function getServeStateSnapshot(
   state: ServerState,
-): StateSnapshot & QueueSnapshot {
+): StateSnapshot & QueueSnapshot & LoopSnapshot {
   return {
     ...getCompleteStateSnapshot(
       state.session,
@@ -78,6 +91,7 @@ export function getServeStateSnapshot(
       state.pendingPermission,
     ),
     ...getQueueSnapshot(),
+    ...getLoopSnapshot(),
   };
 }
 
@@ -98,6 +112,16 @@ export function registerMessageRoutes(
   // POST /message - Queue a message; `steer: true` delivers it in this turn
   app.post("/message", async (req: Request, res: Response) => {
     state.lastActivity = Date.now();
+
+    // Loop mode: an answer for the inbox, or one of its buttons
+    const loopResponse = handleLoopMessage(req.body ?? {});
+    if (loopResponse) {
+      res.status(loopResponse.status).json(loopResponse.json);
+      if (loopResponse.status === 200 && !state.isProcessing) {
+        void processMessages(ctx);
+      }
+      return;
+    }
 
     const { message, steer } = req.body ?? {};
     if (!message) {
@@ -148,6 +172,8 @@ export function registerMessageRoutes(
     // Keep the queue but do not send it until the next message arrives, as
     // Esc does in the TUI
     messageQueue.pause();
+    // A loop step that is stopped stops the loop; its item goes back to pending
+    interruptRunningLoop();
 
     // Abort the current processing
     if (state.currentAbortController) {
@@ -166,6 +192,10 @@ export function registerMessageRoutes(
 
 async function reportTurnError(state: ServerState, e: unknown) {
   logger.error(`Error: ${formatError(e)}`);
+  // A turn that failed during a loop step stops the loop, as /pause does
+  interruptRunningLoop(
+    "A turn failed while the loop was running. Resume to go on.",
+  );
 
   // Add error message via ChatHistoryService
   const errorMessage = `Error: ${formatError(e)}`;
@@ -245,8 +275,51 @@ async function runTurn(ctx: ServeMessageContext, prompt: string) {
   }
 }
 
-/** Send what is queued, one turn at a time, until the queue is empty. */
+function historyLength(state: ServerState): number {
+  try {
+    return services.chatHistory.getHistory().length;
+  } catch {
+    return state.session.history.length;
+  }
+}
+
+/** Unattended: look again when the loop's wait for answers runs out. */
+function scheduleLoopWake(ctx: ServeMessageContext): void {
+  if (ctx.loopWakeTimer) clearTimeout(ctx.loopWakeTimer);
+  ctx.loopWakeTimer = undefined;
+  const delay = loopWakeDelay(getSessionLoop());
+  if (delay === undefined || !ctx.state.serverRunning) return;
+  ctx.loopWakeTimer = setTimeout(() => {
+    if (!ctx.state.isProcessing) void processMessages(ctx);
+  }, delay);
+  ctx.loopWakeTimer.unref?.();
+}
+
+/**
+ * Send what is queued, one turn at a time, until the queue is empty; then
+ * the turns Loop mode asks for (src/loop/loopDriver.ts), the person's queued
+ * messages going first after each.
+ */
 export async function processMessages(ctx: ServeMessageContext) {
+  if (ctx.draining) {
+    ctx.lookAgain = true;
+    return;
+  }
+  ctx.draining = true;
+  try {
+    await drainMessages(ctx);
+  } finally {
+    ctx.draining = false;
+    if (ctx.lookAgain) {
+      ctx.lookAgain = false;
+      if (ctx.state.serverRunning) void processMessages(ctx);
+    } else {
+      scheduleLoopWake(ctx);
+    }
+  }
+}
+
+async function drainMessages(ctx: ServeMessageContext) {
   const { state } = ctx;
   let processedMessage = false;
   while (state.serverRunning) {
@@ -254,7 +327,23 @@ export async function processMessages(ctx: ServeMessageContext) {
     // nothing goes while paused.
     const queuedMessage = mergeQueuedMessages(messageQueue.takeNextBatch());
     if (!queuedMessage) {
-      break;
+      // Nothing of the person's is waiting: the loop's next step, if any
+      const step = nextLoopTurn(historyLength(state));
+      if (!step) break;
+      state.isProcessing = true;
+      state.lastActivity = Date.now();
+      processedMessage = true;
+      if (step.kind === "check") {
+        // An item's check: the harness runs the command, no model turn
+        try {
+          await runLoopCheck(step);
+        } finally {
+          state.isProcessing = false;
+        }
+        continue;
+      }
+      await runTurn(ctx, step.prompt);
+      continue;
     }
 
     const userMessage = queuedMessage.message;

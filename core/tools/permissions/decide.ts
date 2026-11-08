@@ -24,6 +24,7 @@ export type DecisionSource =
   | "protected-path"
   | "safety-floor"
   | "category"
+  | "review"
   | "yolo"
   | "tool-setting"
   | "default";
@@ -131,6 +132,13 @@ function matchMcp(rules: ParsedRule[], name: string): RuleMatch | undefined {
  */
 export function decideToolCall(input: DecideInput): ToolDecision {
   const { base, evaluated } = input;
+  if (input.loosening?.absolute && base !== "disabled") {
+    return {
+      policy: "allowedWithoutPermission",
+      source: input.loosening.source,
+      reason: input.loosening.reason,
+    };
+  }
   const match = findRuleMatch(input);
 
   if (match?.decision === "deny") {

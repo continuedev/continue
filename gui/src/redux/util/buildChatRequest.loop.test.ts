@@ -91,3 +91,58 @@ describe("a loop item's request", () => {
     expect(texts(idle)).toHaveLength(3);
   });
 });
+
+describe("a loop item's plan block", () => {
+  const withPlan = (state: RootState): RootState => ({
+    ...state,
+    session: { ...state.session, taskPlan: plan },
+  });
+
+  it("goes after the item prompt, with every slot and the running item marked", () => {
+    const request = buildChatRequest(withPlan(stateWith()));
+    // Not last: a block after the newest message moves with every request
+    // and breaks a prompt cache there
+    expect(request.taskListMessage).toBeUndefined();
+    const [prompt] = texts(withPlan(stateWith()));
+    expect(prompt.startsWith("item two prompt\n\n<task_list>")).toBe(true);
+    expect(prompt).toContain("[x] 1. Write the lexer");
+    expect(prompt).toContain("[>] 2. Add tests  <- this item");
+    expect(prompt).toContain("report it with finish_item");
+  });
+
+  it("stays as the run started while the run goes on", () => {
+    const state = withPlan(stateWith());
+    const [before] = texts(state);
+    const loop = state.session.loop!;
+    const changed = {
+      ...state,
+      session: {
+        ...state.session,
+        loop: {
+          ...loop,
+          items: loop.items.map((i) =>
+            i.id === "1" ? { ...i, summary: "changed meanwhile" } : i,
+          ),
+        },
+      },
+    };
+    expect(texts(changed)[0]).toBe(before);
+    // The kept history is not changed
+    expect(renderChatMessage(state.session.history.at(-1)!.message)).toBe(
+      "item two prompt",
+    );
+  });
+
+  it("is not sent outside an item's run", () => {
+    const state = withPlan(stateWith());
+    const idle = {
+      ...state,
+      session: {
+        ...state.session,
+        loop: { ...state.session.loop!, current: undefined },
+      },
+    };
+    // The task list tool is not among this state's tools either
+    expect(buildChatRequest(idle).taskListMessage).toBeUndefined();
+  });
+});

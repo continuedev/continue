@@ -41,10 +41,10 @@ describe("TUIChat - Tool Permission Tests", () => {
     expect(frame).toContain("Edit");
     expect(frame).toContain("Would you like to continue?");
     expect(frame).toContain("Continue");
-    expect(frame).toContain("Continue + don't ask again");
+    expect(frame).toContain("Continue + always allow");
     expect(frame).toContain("No, and tell Continue what to do differently");
     expect(frame).toContain("(tab)");
-    expect(frame).toContain("(shift+tab)");
+    expect(frame).toContain("(a)");
     expect(frame).toContain("(esc)");
     // Verify old Cancel option is not shown
     expect(frame).not.toContain("Cancel");
@@ -170,7 +170,7 @@ describe("TUIChat - Tool Permission Tests", () => {
     );
   });
 
-  it("handles shift+tab key for policy creation", async () => {
+  it("handles the a key for policy creation", async () => {
     const handleResponse = vi.fn();
 
     const { stdin } = render(
@@ -186,9 +186,8 @@ describe("TUIChat - Tool Permission Tests", () => {
 
     await vi.advanceTimersByTimeAsync(50);
 
-    // Test shift+tab key for approval with policy creation
-    // In terminal, shift+tab is typically represented as "\x1b[Z"
-    stdin.write("\x1b[Z");
+    // Test the a key for approval with policy creation
+    stdin.write("a");
 
     await vi.advanceTimersByTimeAsync(50);
 
@@ -224,7 +223,7 @@ describe("TUIChat - Tool Permission Tests", () => {
 
     // Verify all 3 options are present
     expect(frame).toContain("Continue");
-    expect(frame).toContain("Continue + don't ask again");
+    expect(frame).toContain("Continue + always allow");
     expect(frame).toContain("No, and tell Continue what to do differently");
     // Verify old Cancel option is not shown
     expect(frame).not.toContain("Cancel");

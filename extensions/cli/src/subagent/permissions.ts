@@ -28,8 +28,17 @@ export interface SubagentPermissionOptions {
  *
  * Policies are first-match, so the order of the parent's policies is kept.
  */
-/** Tools that write the session's task list (TaskList, and its alias) */
-export const TASK_LIST_TOOLS = ["TaskList", "Checklist"];
+/**
+ * Tools that write the session's task list (TaskList, and its alias), and
+ * Loop mode's tools, which hold questions for and report the parent's item
+ */
+export const TASK_LIST_TOOLS = [
+  "TaskList",
+  "Checklist",
+  "HoldQuestion",
+  "FinishItem",
+  "RemindMe",
+];
 
 export function subagentPermissions(
   parent: ToolPermissions,

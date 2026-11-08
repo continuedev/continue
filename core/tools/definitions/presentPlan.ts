@@ -2,6 +2,7 @@ import { Tool } from "../..";
 import {
   PLAN_LIMITS,
   PLANS_DIR,
+  PRESENT_PLAN_TODO_DETAILS_PARAMETER,
   PRESENT_PLAN_TOOL_DESCRIPTION,
 } from "../../util/planFile";
 import { TASK_PLAN_LIMITS } from "../../util/taskPlan";
@@ -44,6 +45,7 @@ export const presentPlanTool: Tool = {
           description: `The implementation steps in order, at most ${TASK_PLAN_LIMITS.maxItems}, each at most ${TASK_PLAN_LIMITS.maxTextLength} characters.`,
           items: { type: "string" },
         },
+        todo_details: PRESENT_PLAN_TODO_DETAILS_PARAMETER,
       },
     },
   },

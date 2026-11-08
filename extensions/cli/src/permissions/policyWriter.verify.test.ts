@@ -12,7 +12,9 @@ describe("policyWriter verification", () => {
     expect(generatePolicyRule("Read", { filepath: "test.txt" })).toBe("Read");
 
     // Test Bash tool with commands
-    expect(generatePolicyRule("Bash", { command: "ls -la" })).toBe("Bash(ls*)");
+    expect(generatePolicyRule("Bash", { command: "ls -la" })).toBe(
+      "Bash(ls -la)",
+    );
   });
 
   it("should use exact tool names without case normalization", () => {

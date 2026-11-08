@@ -11,6 +11,8 @@ export function decisionLabel(d: ToolCallDecision): string {
         return "Allowed by Auto";
       case "category":
         return "Allowed by switch";
+      case "review":
+        return "Allowed by Review";
       case "yolo":
         return "Allowed by YOLO";
       case "once":

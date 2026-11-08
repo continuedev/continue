@@ -6,6 +6,7 @@ import { applyToolOverrides } from "core/tools/applyToolOverrides";
 import { addSystemMessageToolsToSystemMessage } from "core/tools/systemMessageTools/buildToolsSystemMessage";
 import { SystemMessageToolCodeblocksFramework } from "core/tools/systemMessageTools/toolCodeblocks";
 import { BuiltInToolNames } from "core/tools/builtIn";
+import { loopRunPlanBlock, withLoopPlanBlock } from "core/util/loopMode";
 import { taskPlanTailMessage } from "core/util/taskPlan";
 import {
   getModeReasoningEffort,
@@ -16,6 +17,9 @@ import { selectSelectedChatModel } from "../slices/configSlice";
 import type { RootState } from "../store";
 import { constructMessages } from "./constructMessages";
 import { getBaseSystemMessage } from "./getBaseSystemMessage";
+
+/** The plan block of the running item's run, kept between its requests. */
+const runPlanMemo: { key?: string; block?: string } = {};
 
 /**
  * Builds completion options with reasoning configuration based on session state and model capabilities.
@@ -163,10 +167,32 @@ export function buildChatRequest(
       ? Math.min(loop.current.historyIndex, history.length)
       : 0;
 
-  const withoutMessageIds = history.slice(contextStart).map((item) => {
+  // Loop mode: an item's run gets the plan block (its slots, the notes and
+  // the person's standing instructions) after its prompt, fixed for the run,
+  // while the task list tool is hidden from it. Every request of the run then
+  // only extends the one before it, so a prompt cache keeps matching
+  // (core's loopRunPlanBlock).
+  const loopBlock =
+    history === state.session.history &&
+    loop?.current?.kind === "item" &&
+    state.session.taskPlan
+      ? loopRunPlanBlock(runPlanMemo, { loop, plan: state.session.taskPlan })
+      : "";
+  const promptIndex = loopBlock ? loop?.current?.historyIndex : undefined;
+
+  const withoutMessageIds = history.slice(contextStart).map((item, i) => {
     const { id, ...messageWithoutId } = item.message as typeof item.message & {
       id?: string;
     };
+    if (i + contextStart === promptIndex) {
+      return {
+        ...item,
+        message: {
+          ...messageWithoutId,
+          content: withLoopPlanBlock(messageWithoutId.content, loopBlock),
+        } as typeof messageWithoutId,
+      };
+    }
     return { ...item, message: messageWithoutId };
   });
 
@@ -189,11 +215,11 @@ export function buildChatRequest(
   const appliedRuleIndex =
     runRuleIndex >= 0 ? runRuleIndex + contextStart : runRuleIndex;
 
-  const taskListMessage = activeTools.some(
-    (t) => t.function.name === BuiltInToolNames.TaskList,
-  )
-    ? taskPlanTailMessage(state.session.taskPlan)
-    : undefined;
+  const taskListMessage: ChatMessage | undefined = loopBlock
+    ? undefined
+    : activeTools.some((t) => t.function.name === BuiltInToolNames.TaskList)
+      ? taskPlanTailMessage(state.session.taskPlan)
+      : undefined;
 
   return {
     model,

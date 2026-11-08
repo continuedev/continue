@@ -1,20 +1,26 @@
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
-import type { LoopAutonomy, LoopQuestion } from "core";
+import type { LoopAutonomy, LoopQuestion, LoopStrategy } from "core";
 import {
   formatLoopStatus,
   LOOP_AUTONOMY,
   LOOP_AUTONOMY_LEVELS,
   LOOP_LIMITS,
+  LOOP_STRATEGIES,
+  LOOP_STRATEGY_ORDER,
+  loopStrategy,
   standingInstructions,
 } from "core/util/loopMode";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { cancelStream } from "../../redux/thunks/cancelStream";
+import { LoopControls } from "./LoopControls";
 import {
   answerLoopQuestion,
   endLoopThunk,
   LoopAnswerInput,
   resumeLoopThunk,
   setLoopAutonomyThunk,
+  setLoopStrategyThunk,
   stopLoopThunk,
 } from "../../redux/thunks/loop";
 
@@ -179,6 +185,21 @@ export function LoopInbox() {
             </option>
           ))}
         </select>
+        <select
+          data-testid="loop-strategy"
+          value={loopStrategy(loop)}
+          title={LOOP_STRATEGIES[loopStrategy(loop)].description}
+          onChange={(e) =>
+            void dispatch(setLoopStrategyThunk(e.target.value as LoopStrategy))
+          }
+          className="shrink-0 cursor-pointer rounded border border-solid border-border bg-input px-1 text-xs text-foreground"
+        >
+          {LOOP_STRATEGY_ORDER.map((strategy) => (
+            <option key={strategy} value={strategy}>
+              {LOOP_STRATEGIES[strategy].label}
+            </option>
+          ))}
+        </select>
         {stopped ? (
           <>
             {loop.stopReason !== "done" && (
@@ -201,17 +222,44 @@ export function LoopInbox() {
             </button>
           </>
         ) : (
-          <button
-            type="button"
-            data-testid="loop-stop"
-            title="Stop after the running item (Stop in the input stops it now)"
-            className="shrink-0 cursor-pointer border-none bg-transparent p-0 text-xs text-link hover:underline"
-            onClick={() => void dispatch(stopLoopThunk())}
-          >
-            Stop loop
-          </button>
+          <>
+            {!loop.stopRequested && (
+              <button
+                type="button"
+                data-testid="loop-stop"
+                title="Stop once the running item or re-plan ends"
+                className="shrink-0 cursor-pointer border-none bg-transparent p-0 text-xs text-link hover:underline"
+                onClick={() => void dispatch(stopLoopThunk())}
+              >
+                Stop after this item
+              </button>
+            )}
+            {loop.current && (
+              <button
+                type="button"
+                data-testid="loop-stop-now"
+                title="Stop the running item now; it goes back to pending"
+                className="shrink-0 cursor-pointer border-none bg-transparent p-0 text-xs text-link hover:underline"
+                onClick={() => void dispatch(cancelStream())}
+              >
+                Stop now
+              </button>
+            )}
+          </>
         )}
       </div>
+      {loop.current?.kind === "check" && (
+        <div
+          data-testid="loop-check-running"
+          className="mt-0.5 truncate text-description"
+        >
+          Running the check for {loop.current.itemId}:{" "}
+          <code>
+            {taskPlan?.items.find((i) => i.id === loop.current?.itemId)?.check}
+          </code>
+        </div>
+      )}
+      <LoopControls loop={loop} taskPlan={taskPlan} />
       {loop.status === "awaiting_plan" && loop.replanReason && (
         <div
           data-testid="loop-replan-reason"

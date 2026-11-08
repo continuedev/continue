@@ -249,6 +249,7 @@ const TUIChat: React.FC<TUIChatProps> = ({
     onShowUpdateSelector: () => navigateTo("update"),
     onShowSessionSelector: () => navigateTo("session"),
     onShowJobsSelector: () => navigateTo("jobs"),
+    onShowLoopInbox: () => navigateTo("loop"),
     onShowExportSelector: () => navigateTo("export"),
     onReload: handleReload,
     onClear: handleClear,

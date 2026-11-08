@@ -115,7 +115,7 @@ describe("subagentPermissions", () => {
     const allowAll: ToolPermissions = {
       policies: [{ tool: "*", permission: "allow" }],
     };
-    for (const tool of ["TaskList", "Checklist"]) {
+    for (const tool of ["TaskList", "Checklist", "RemindMe"]) {
       expect(check(tool, {}, allowAll)).toBe("exclude");
       expect(
         checkToolPermission(

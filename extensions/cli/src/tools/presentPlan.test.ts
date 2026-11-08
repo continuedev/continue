@@ -25,6 +25,8 @@ vi.mock("../session.js", () => ({
   updateSessionPlanFile: (file: string | undefined) => {
     store.planFile = file;
   },
+  // No loop in these sessions
+  getSessionLoop: () => undefined,
 }));
 vi.mock("../services/index.js", () => ({
   services: {
@@ -112,7 +114,9 @@ describe("PresentPlan", () => {
     const result = await presentPlanTool.run(args);
 
     expect(quizService.askQuestion).toHaveBeenCalledWith(
-      expect.objectContaining({ options: ["Build", "Keep planning"] }),
+      expect.objectContaining({
+        options: ["Build", "Build in a loop", "Keep planning"],
+      }),
     );
     expect(store.mode).toBe("normal");
     expect(result).toContain("approved the plan");

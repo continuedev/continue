@@ -4,7 +4,9 @@ import { createHistoryItem } from "core/util/messageConversion.js";
 
 import { isAutoReviewEnabled } from "src/permissions/coreRules.js";
 import { checkToolPermission } from "src/permissions/permissionChecker.js";
+import { withReadOnlyMcp } from "src/permissions/readOnlyMcp.js";
 
+import { loopItemRunning } from "../loop/loopSession.js";
 import {
   SERVICE_NAMES,
   serviceContainer,
@@ -34,6 +36,29 @@ interface HandleToolCallsOptions {
   usage?: any;
   /** The turn's signal, passed on to tool runs. */
   abortSignal?: AbortSignal;
+}
+
+/** Records a tool's result on the local history's assistant message. */
+function setLocalToolResult(
+  chatHistory: ChatHistoryItem[],
+  toolCallId: string,
+  content: string,
+  status: ToolStatus,
+): void {
+  const owner = chatHistory.findLast(
+    (item) =>
+      item.message.role === "assistant" &&
+      item.toolCallStates?.some((ts) => ts.toolCallId === toolCallId),
+  );
+  const toolState = owner?.toolCallStates?.find(
+    (ts) => ts.toolCallId === toolCallId,
+  );
+  if (toolState) {
+    toolState.status = status;
+    toolState.output = [
+      { content, name: `Tool Result`, description: "Tool execution result" },
+    ];
+  }
 }
 
 export async function handleToolCalls(
@@ -132,39 +157,37 @@ export async function handleToolCalls(
       );
     } else {
       // Fallback only when service is unavailable: update local tool state
-      const lastAssistantIndex = chatHistory.findLastIndex(
-        (item) => item.message.role === "assistant" && item.toolCallStates,
+      setLocalToolResult(
+        chatHistory,
+        errorEntry.tool_call_id,
+        errorContent,
+        "errored",
       );
-      if (
-        lastAssistantIndex >= 0 &&
-        chatHistory[lastAssistantIndex].toolCallStates
-      ) {
-        const toolState = chatHistory[lastAssistantIndex].toolCallStates.find(
-          (ts) => ts.toolCallId === errorEntry.tool_call_id,
-        );
-        if (toolState) {
-          toolState.status = "errored";
-          toolState.output = [
-            {
-              content: errorContent,
-              name: `Tool Result`,
-              description: "Tool execution result",
-            },
-          ];
-        }
-      }
     }
   });
 
   // Execute the valid preprocessed tool calls
   // Note: executeStreamedToolCalls adds tool results to toolCallStates via
   // services.chatHistory.addToolResult() internally
-  const { hasRejection } = await executeStreamedToolCalls(
+  const { hasRejection, chatHistoryEntries } = await executeStreamedToolCalls(
     preprocessedCalls,
     callbacks,
     isHeadless,
     abortSignal,
   );
+
+  // A subagent keeps its own history and turns the service off, so the results
+  // written to the service never reached it: it saw every call as unanswered.
+  if (!useService) {
+    for (const entry of chatHistoryEntries) {
+      setLocalToolResult(
+        chatHistory,
+        entry.tool_call_id,
+        stripImages(entry.content) || "",
+        entry.status,
+      );
+    }
+  }
 
   if (isHeadless && hasRejection) {
     logger.debug(
@@ -190,16 +213,22 @@ export async function getRequestTools(isHeadless: boolean) {
 
   const allowedTools: Tool[] = [];
   for (const tool of availableTools) {
-    const result = checkToolPermission(
-      { name: tool.name, arguments: {} },
-      permissionsState.permissions,
+    const result = withReadOnlyMcp(
+      checkToolPermission(
+        { name: tool.name, arguments: {} },
+        permissionsState.permissions,
+      ),
+      tool,
     );
 
     // Headless runs have no one to ask, so "ask" tools are normally not offered.
     // With --auto-review the reviewer model answers instead of a person, so they are.
+    // Under Loop mode an item's "ask" call is held as a question for the
+    // person (src/loop/loopHolds.ts), so they are offered too.
     if (
       result.permission === "allow" ||
-      (result.permission === "ask" && (!isHeadless || isAutoReviewEnabled()))
+      (result.permission === "ask" &&
+        (!isHeadless || isAutoReviewEnabled() || loopItemRunning()))
     ) {
       allowedTools.push(tool);
     }

@@ -5,6 +5,7 @@ import {
   TASK_PLAN_LIMITS,
   TASK_STATUS_MARKERS,
   taskIdComment,
+  taskItemAttributeLines,
   type TaskItemInput,
   type TaskPlanResult,
 } from "./taskPlan.js";
@@ -103,6 +104,7 @@ export function serializePlanFile(plan: {
   for (const item of plan.items) {
     lines.push(
       `- ${TASK_STATUS_MARKERS[item.status]} ${item.text} ${taskIdComment(item.id)}`,
+      ...taskItemAttributeLines(item, plan.items),
     );
   }
   return lines.join("\n") + "\n";
@@ -167,6 +169,38 @@ export function parsePlanFile(markdown: string): PlanDocument {
   };
 }
 
+/** Applies the plan tool's `todo_details` to the to-dos; returns an error text. */
+function todoDetails(
+  value: unknown,
+  items: TaskItemInput[],
+): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  let details: unknown = value;
+  if (typeof details === "string") {
+    try {
+      details = JSON.parse(details);
+    } catch {
+      return "todo_details must be an array";
+    }
+  }
+  if (!Array.isArray(details)) return "todo_details must be an array";
+  for (const detail of details) {
+    const d = (detail ?? {}) as {
+      todo?: unknown;
+      after?: unknown;
+      check?: unknown;
+    };
+    const n = Number(d.todo);
+    if (!Number.isInteger(n) || n < 1 || n > items.length) {
+      return `todo_details: todo must be a to-do number from 1 to ${items.length}`;
+    }
+    const item = items[n - 1];
+    if (d.after !== undefined) item.after = d.after;
+    if (d.check !== undefined) item.check = d.check;
+  }
+  return undefined;
+}
+
 function oneLine(text: string): string {
   return text.trim().replace(/\s*\n\s*/g, " ");
 }
@@ -180,12 +214,15 @@ export type PlanArgsResult =
 
 /**
  * Checks what the model sent to the plan tool: a title, the plan text and at
- * least one to-do. To-dos are strings (or `{ text }`), all pending.
+ * least one to-do. To-dos are strings (or `{ text, after?, check? }`), all
+ * pending. `todo_details` adds `after` (1-based to-do numbers) and `check` (a
+ * command that confirms the to-do is done) to to-dos sent as strings.
  */
 export function validatePlanArgs(args: {
   title?: unknown;
   plan?: unknown;
   todos?: unknown;
+  todo_details?: unknown;
 }): PlanArgsResult {
   if (typeof args?.title !== "string" || !oneLine(args.title)) {
     return { ok: false, error: "title is required" };
@@ -229,8 +266,19 @@ export function validatePlanArgs(args: {
     if (typeof text !== "string" || !text.trim()) {
       return { ok: false, error: "every to-do needs text" };
     }
-    items.push({ text, status: "pending" });
+    const extra =
+      todo && typeof todo === "object"
+        ? (todo as { after?: unknown; check?: unknown })
+        : {};
+    items.push({
+      text,
+      status: "pending",
+      ...(extra.after !== undefined && { after: extra.after }),
+      ...(extra.check !== undefined && { check: extra.check }),
+    });
   }
+  const details = todoDetails(args.todo_details, items);
+  if (details) return { ok: false, error: details };
   if (items.length > TASK_PLAN_LIMITS.maxItems) {
     return {
       ok: false,
@@ -357,8 +405,32 @@ It saves the plan as a markdown file in the workspace (${PLANS_DIR}/<title>.md),
 - title: a short name for the work.
 - plan: the plan in markdown, for a person to read: the goal, the approach, the files involved, risks or open questions. Keep it short; do not repeat the to-dos.
 - todos: the implementation steps in order, one short line each. They become the task list you update while you build.
+- todo_details (optional): for a to-do that must wait for others, its \`after\` (the numbers of the to-dos it comes after); for one that a command can verify, its \`check\` (a command that exits 0 when the to-do is done, such as a focused test run). Size each to-do as one reviewable change that one check can verify.
 
 Calling it again with the same title replaces that plan file, so revise a plan by presenting it again.`;
+
+/** The plan tool's `todo_details` parameter, shared by the IDE and the CLI. */
+export const PRESENT_PLAN_TODO_DETAILS_PARAMETER = {
+  type: "array",
+  description:
+    "Optional. Per to-do: after (numbers of the to-dos it comes after) and check (a command that exits 0 when it is done).",
+  items: {
+    type: "object",
+    required: ["todo"],
+    properties: {
+      todo: { type: "number", description: "The to-do's number, from 1" },
+      after: {
+        type: "array",
+        description: "Numbers of the to-dos this one comes after",
+        items: { type: "number" },
+      },
+      check: {
+        type: "string",
+        description: "A command that exits 0 when this to-do is done",
+      },
+    },
+  },
+};
 
 /** What the model gets back once the plan is saved and shown (IDE). */
 export function planProposedResult(relativePath: string, plan: TaskPlan) {

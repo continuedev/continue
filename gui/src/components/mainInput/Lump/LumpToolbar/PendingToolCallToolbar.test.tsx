@@ -84,4 +84,18 @@ describe("PendingToolCallToolbar: why it is asking", () => {
       long,
     );
   });
+
+  it("offers Accept all only when several calls wait", async () => {
+    await setup([call("a")]);
+    expect(screen.queryByTestId("accept-all-tool-calls")).toBeNull();
+    await setup([call("a"), call("b")]);
+    expect(screen.getByTestId("accept-all-tool-calls").textContent).toContain(
+      "Accept all (2)",
+    );
+  });
+
+  it("says that sending a message rejects what is waiting", async () => {
+    await setup([call("a")]);
+    expect(screen.getByText(/Sending a message rejects this/)).toBeTruthy();
+  });
 });
