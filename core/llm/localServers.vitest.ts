@@ -6,6 +6,9 @@ import {
   detectLocalServers,
   isMissingEndpointError,
   listOpenAICompatibleModels,
+  markOwnRequest,
+  resetServerBusy,
+  serverBusyElsewhere,
   serverConcurrency,
   withThinkingOff,
 } from "./localServers";
@@ -472,5 +475,71 @@ describe("isMissingEndpointError", () => {
     );
     expect(isMissingEndpointError(new Error("ECONNREFUSED"))).toBe(false);
     expect(isMissingEndpointError(undefined)).toBe(false);
+  });
+});
+
+describe("serverBusyElsewhere", () => {
+  const LOCAL = "http://127.0.0.1:8083/v1/";
+  const slotsServer = (...processing: boolean[]) =>
+    vi.fn(async (url: RequestInfo | URL) =>
+      new URL(String(url)).pathname === "/slots"
+        ? json(processing.map((p, id) => ({ id, is_processing: p })))
+        : json({}, 404),
+    );
+
+  afterEach(() => {
+    resetServerBusy();
+    vi.useRealTimers();
+  });
+
+  it("is true when every slot is busy, false when one is free", async () => {
+    expect(await serverBusyElsewhere(LOCAL, undefined, slotsServer(true))).toBe(
+      true,
+    );
+    resetServerBusy();
+    expect(
+      await serverBusyElsewhere(LOCAL, undefined, slotsServer(true, false)),
+    ).toBe(false);
+  });
+
+  it("does not count this client's own Tab request, even just after it ends", async () => {
+    vi.useFakeTimers();
+    const fetchFn = slotsServer(true);
+    const release = markOwnRequest(LOCAL);
+    expect(await serverBusyElsewhere(LOCAL, undefined, fetchFn)).toBe(false);
+    release();
+    // The server may still be cancelling it for a moment
+    expect(await serverBusyElsewhere(LOCAL, undefined, fetchFn)).toBe(false);
+    vi.advanceTimersByTime(1500);
+    expect(await serverBusyElsewhere(LOCAL, undefined, fetchFn)).toBe(true);
+  });
+
+  it("reuses one answer while typing fast", async () => {
+    const fetchFn = slotsServer(true);
+    await serverBusyElsewhere(LOCAL, undefined, fetchFn);
+    await serverBusyElsewhere(LOCAL, undefined, fetchFn);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops asking a server without /slots, and never asks a cloud API", async () => {
+    const noSlots = vi.fn(async () => json({ error: "not found" }, 404));
+    expect(await serverBusyElsewhere(LOCAL, undefined, noSlots)).toBe(false);
+    vi.useFakeTimers();
+    vi.advanceTimersByTime(1000);
+    expect(await serverBusyElsewhere(LOCAL, undefined, noSlots)).toBe(false);
+    expect(noSlots).toHaveBeenCalledTimes(1);
+
+    const cloud = slotsServer(true);
+    expect(
+      await serverBusyElsewhere("https://api.openai.com/v1/", undefined, cloud),
+    ).toBe(false);
+    expect(cloud).not.toHaveBeenCalled();
+  });
+
+  it("treats an unreachable server as not busy", async () => {
+    const down = vi.fn(async () => {
+      throw new Error("ECONNREFUSED");
+    });
+    expect(await serverBusyElsewhere(LOCAL, undefined, down)).toBe(false);
   });
 });

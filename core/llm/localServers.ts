@@ -546,3 +546,88 @@ export async function serverConcurrency(
   const slots = Number(props?.total_slots);
   return slots > 0 ? slots : undefined;
 }
+
+const slotsUnsupported = new Set<string>();
+const busyAnswers = new Map<string, { at: number; busy: Promise<boolean> }>();
+const ownRequests = new Map<string, number>();
+
+/** How long a finished or cancelled request still counts as this client's */
+const OWN_REQUEST_GRACE_MS = 1000;
+/** How long one `/slots` answer is reused, so fast typing asks once */
+const BUSY_ANSWER_MS = 300;
+
+/**
+ * Mark a request of this client's (Tab) as running on the server at
+ * `apiBase`, until the returned function is called and a short grace after
+ * it, while the server may still be cancelling it. `serverBusyElsewhere`
+ * does not count such a request as the server being busy.
+ */
+export function markOwnRequest(apiBase: string | undefined): () => void {
+  if (!apiBase) return () => {};
+  ownRequests.set(apiBase, (ownRequests.get(apiBase) ?? 0) + 1);
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    setTimeout(() => {
+      const left = (ownRequests.get(apiBase) ?? 1) - 1;
+      if (left > 0) ownRequests.set(apiBase, left);
+      else ownRequests.delete(apiBase);
+    }, OWN_REQUEST_GRACE_MS);
+  };
+}
+
+/**
+ * True when every slot of a local llama.cpp-style server (llama.cpp, Strata)
+ * is busy with something other than this client's own Tab requests: an
+ * agent turn from the chat, the CLI or another tool. A Tab request sent then
+ * waits for that work to finish (22.5 s behind a 25 s agent reply on
+ * Strata, which has one slot), long after Tab gives up, so it is better not
+ * sent. Asks `/slots` (`is_processing`), reusing one answer for a moment;
+ * false for cloud APIs and for servers without `/slots`.
+ */
+export async function serverBusyElsewhere(
+  apiBase: string | undefined,
+  apiKey?: string,
+  fetchFn: FetchFn = fetch,
+  timeoutMs = 500,
+): Promise<boolean> {
+  if (!apiBase || !isLocalApiBase(apiBase) || slotsUnsupported.has(apiBase)) {
+    return false;
+  }
+  if (ownRequests.has(apiBase)) return false;
+  const now = Date.now();
+  const cached = busyAnswers.get(apiBase);
+  if (cached && now - cached.at < BUSY_ANSWER_MS) return cached.busy;
+
+  const busy = (async () => {
+    try {
+      const response = await fetchFn(new URL("/slots", apiBase), {
+        headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      if (!response.ok) {
+        // llama.cpp started with --no-slots, Ollama, vLLM...: never ask again
+        if (response.status !== 503) slotsUnsupported.add(apiBase);
+        return false;
+      }
+      const slots = await response.json();
+      if (!Array.isArray(slots) || slots.length === 0) {
+        slotsUnsupported.add(apiBase);
+        return false;
+      }
+      return slots.every((slot) => slot?.is_processing === true);
+    } catch {
+      return false;
+    }
+  })();
+  busyAnswers.set(apiBase, { at: now, busy });
+  return busy;
+}
+
+/** Forget what was learned about servers' slots (tests). */
+export function resetServerBusy(): void {
+  slotsUnsupported.clear();
+  busyAnswers.clear();
+  ownRequests.clear();
+}
