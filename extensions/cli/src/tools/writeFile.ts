@@ -11,6 +11,11 @@ import {
 } from "../telemetry/utils.js";
 
 import { Tool, ToolCallPreview } from "./types.js";
+import {
+  checkWorkspaceWrite,
+  outsideWorkspacePreview,
+  resolveWorkspacePath,
+} from "./workspaceBoundary.js";
 
 export function generateDiff(
   oldContent: string,
@@ -31,14 +36,16 @@ export function generateDiff(
 export const writeFileTool: Tool = {
   name: "Write",
   displayName: "Write",
-  description: "Write content to a file at the specified path",
+  description:
+    "Write content to a file at the specified path. Use this tool for every file write; a shell command that writes a file (echo >, cat <<EOF, node -e) counts as a file edit and is refused.",
   parameters: {
     type: "object",
     required: ["filepath", "content"],
     properties: {
       filepath: {
         type: "string",
-        description: "The path to the file to write",
+        description:
+          "The path to the file to write, inside the working directory; a relative path is resolved against it",
       },
       content: {
         type: "string",
@@ -57,13 +64,20 @@ export const writeFileTool: Tool = {
     if (typeof content !== "string") {
       throw new Error("New file content must be a string");
     }
+    // The target against the working directory: a write outside it is
+    // refused headless and flagged in the preview otherwise.
+    const resolvedPath = resolveWorkspacePath(filepath);
+    const outside = checkWorkspaceWrite(writeFileTool.name, resolvedPath);
+    const outsideLines: ToolCallPreview[] = outside
+      ? [outsideWorkspacePreview(outside)]
+      : [];
     try {
-      if (fs.existsSync(filepath)) {
-        const oldContent = fs.readFileSync(filepath, "utf-8");
+      if (fs.existsSync(resolvedPath)) {
+        const oldContent = fs.readFileSync(resolvedPath, "utf-8");
 
         const diff = createTwoFilesPatch(
-          args.filepath,
-          args.filepath,
+          resolvedPath,
+          resolvedPath,
           oldContent,
           content,
           undefined,
@@ -72,8 +86,9 @@ export const writeFileTool: Tool = {
         );
 
         return {
-          args,
+          args: { filepath: resolvedPath, content },
           preview: [
+            ...outsideLines,
             {
               type: "text",
               content: "Preview of changes:",
@@ -92,6 +107,7 @@ export const writeFileTool: Tool = {
     const previewLines = lines.slice(0, 3);
 
     const preview: ToolCallPreview[] = [
+      ...outsideLines,
       {
         type: "text",
         content: "New file content:",
@@ -111,7 +127,7 @@ export const writeFileTool: Tool = {
 
     return {
       args: {
-        filepath,
+        filepath: resolvedPath,
         content,
       },
       preview,

@@ -103,7 +103,10 @@ WARNINGS:
     },
   },
   preprocess: async (args) => {
-    const { resolvedPath } = validateAndResolveFilePath(args);
+    const { resolvedPath, outsidePreview } = validateAndResolveFilePath(
+      args,
+      multiEditTool.name,
+    );
 
     const { edits } = validateMultiEdit(args);
 
@@ -121,6 +124,7 @@ WARNINGS:
         editCount: edits.length,
       },
       preview: [
+        ...outsidePreview,
         {
           type: "text",
           content: `Will apply ${edits.length} edit${edits.length === 1 ? "" : "s"} to ${resolvedPath}:`,
