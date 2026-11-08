@@ -102,6 +102,40 @@ export function PlanCard({ toolCallState, historyIndex }: PlanCardProps) {
           />
         </div>
       )}
+      {args.ok && args.decisions.length > 0 && (
+        <div data-testid="plan-card-decisions" className="mt-1 text-xs">
+          <div className="text-description">
+            Decisions for you (answer in the plan file, or in your message):
+          </div>
+          <ol className="m-0 mt-0.5 pl-4 text-description">
+            {args.decisions.map((decision, i) => (
+              <li key={i} className="py-0.5 break-words">
+                {decision.question}
+                {decision.type && (
+                  <span className="text-description-muted">
+                    {" "}
+                    ({decision.type})
+                  </span>
+                )}
+                {decision.options && decision.options.length > 0 && (
+                  <div className="text-description-muted">
+                    {decision.options
+                      .map((option) =>
+                        option === decision.pick ? `${option} (pick)` : option,
+                      )
+                      .join(" | ")}
+                  </div>
+                )}
+                {decision.todos && decision.todos.length > 0 && (
+                  <div className="text-description-muted">
+                    To-dos {decision.todos.join(", ")} wait on this.
+                  </div>
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
       {args.ok && (
         <ul
           data-testid="plan-card-todos"

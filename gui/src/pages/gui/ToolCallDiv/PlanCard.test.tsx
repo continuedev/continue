@@ -111,6 +111,41 @@ describe("PlanCard", () => {
     expect(openFile).toHaveBeenCalledWith(PLAN_URI);
   });
 
+  it("lists the decisions left to the person with the pick marked", async () => {
+    const ideMessenger = new MockIdeMessenger();
+    const store = setupStore({ ideMessenger });
+    await renderWithProviders(
+      <PlanCard
+        toolCallState={{
+          ...toolCallState,
+          parsedArgs: {
+            ...toolCallState.parsedArgs,
+            decisions: [
+              {
+                question: "Which format should formatDate return?",
+                options: ["ISO 8601", "November 8, 2026"],
+                pick: "ISO 8601",
+                type: "scope",
+                todos: [1],
+              },
+            ],
+          },
+        }}
+        historyIndex={1}
+      />,
+      { store, mockIdeMessenger: ideMessenger },
+    );
+    const decisions = screen.getByTestId("plan-card-decisions");
+    expect(decisions.textContent).toContain(
+      "Which format should formatDate return?",
+    );
+    expect(decisions.textContent).toContain(
+      "ISO 8601 (pick) | November 8, 2026",
+    );
+    expect(decisions.textContent).toContain("(scope)");
+    expect(decisions.textContent).toContain("To-dos 1 wait on this.");
+  });
+
   it("Keep planning stays in Plan mode and sends nothing", async () => {
     const { store } = await setup();
     await act(async () => {

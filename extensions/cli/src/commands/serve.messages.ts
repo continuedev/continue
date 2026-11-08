@@ -26,6 +26,12 @@ import {
 import { updateAgentMetadata } from "../util/exit.js";
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
+import {
+  answerPendingQuestion,
+  listPendingQuestions,
+  pendingAnswerMessage,
+  type PendingQuestion,
+} from "../util/pendingQuestions.js";
 import { formatReplyTally, getTruncatedReplies } from "../util/replyTally.js";
 
 import {
@@ -98,6 +104,8 @@ export interface RunTallySnapshot {
   promptCache: CacheTallySnapshot;
   /** Replies the output limit cut off (finish_reason "length"). */
   truncatedReplies: number;
+  /** Questions asked with nobody to answer, answered ones included. */
+  pendingQuestions: PendingQuestion[];
 }
 
 export function getServeStateSnapshot(
@@ -114,7 +122,38 @@ export function getServeStateSnapshot(
     ...getLoopSnapshot(),
     promptCache: cacheTallySnapshot(),
     truncatedReplies: getTruncatedReplies(),
+    // Questions the model asked with nobody to answer (plan turns): answer
+    // one with POST /message { answerQuestion: id, answer }
+    pendingQuestions: listPendingQuestions(),
   };
+}
+
+/**
+ * An answer to a held question: recorded, and delivered to the model as the
+ * next message. 404 when no open question has the id.
+ */
+export function handlePendingAnswer(body: {
+  answerQuestion?: unknown;
+  answer?: unknown;
+}): { status: number; json: Record<string, unknown> } | undefined {
+  if (body.answerQuestion === undefined) return undefined;
+  if (
+    typeof body.answerQuestion !== "string" ||
+    typeof body.answer !== "string"
+  ) {
+    return {
+      status: 400,
+      json: { error: "answerQuestion (id) and answer must be strings" },
+    };
+  }
+  const answered = answerPendingQuestion(body.answerQuestion, body.answer);
+  if (!answered) {
+    return {
+      status: 404,
+      json: { error: `No open question with id ${body.answerQuestion}` },
+    };
+  }
+  return { status: 200, json: { answered: answered.id } };
 }
 
 /** The end-of-turn lines for the serve log: the cache tally, cut-off replies. */
@@ -149,6 +188,22 @@ export function registerMessageRoutes(
       res.status(loopResponse.status).json(loopResponse.json);
       if (loopResponse.status === 200 && !state.isProcessing) {
         void processMessages(ctx);
+      }
+      return;
+    }
+
+    // An answer to a question held in the inbox: it reaches the model as a
+    // message of its own in the next turn
+    const answered = handlePendingAnswer(req.body ?? {});
+    if (answered) {
+      res.status(answered.status).json(answered.json);
+      if (answered.status === 200) {
+        const held = listPendingQuestions().find(
+          (q) => q.id === answered.json.answered,
+        );
+        if (held) await messageQueue.enqueueMessage(pendingAnswerMessage(held));
+        messageQueue.resume();
+        if (!state.isProcessing) void processMessages(ctx);
       }
       return;
     }

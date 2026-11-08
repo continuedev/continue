@@ -1,4 +1,9 @@
+import { services } from "../services/index.js";
 import { quizService } from "../services/QuizService.js";
+import {
+  heldQuestionResult,
+  holdPendingQuestion,
+} from "../util/pendingQuestions.js";
 
 import { Tool } from "./types.js";
 
@@ -58,6 +63,20 @@ export const askQuestionTool: Tool = {
     type?: string;
   }): Promise<string> => {
     const { question, options, defaultAnswer } = args;
+
+    // cn serve and headless runs: nobody is at a question box, so the
+    // question is held in the inbox (serve /state) and the model goes on with
+    // its default; the answer, if one comes, arrives as a later message.
+    if (services.toolPermissions.isHeadless()) {
+      return heldQuestionResult(
+        holdPendingQuestion({
+          question,
+          options,
+          defaultAnswer,
+          type: args.type,
+        }),
+      );
+    }
 
     const answer = await quizService.askQuestion({
       question,

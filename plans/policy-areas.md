@@ -113,6 +113,8 @@ For a question:
 
 A missing or unknown type counts as "you decide" at every level but IDGAF.
 
+**A plan turn has a third way out.** Its fallback rule ("if you cannot ask, take your pick and write it as an assumption") made Mistral Large 3 decide a choice the person had reserved in 3 of 3 runs and Haiku 4.5 in 1 of 3 (`research-plan-ask-models.md`). So a choice the person kept for themselves, or one on the consequence axis, is neither asked nor assumed: it goes to `present_plan` as a `decision`, with the options, the pick, its type and the to-dos that wait on it. A decision is not a to-do (no check, no status); it is written in the plan file under "Decisions", where the person answers it, and the CLI asks each one before the Build question. In `cn serve`, where nobody is at a question box, a plan turn keeps `ask_question`: the question is held in the inbox (`/state` `pendingQuestions`, answered with `POST /message { answerQuestion, answer }`) and the agent goes on with its pick, so a model that wants to ask still presents its plan (built 2026-11-08).
+
 The levels differ most on `design`, which is the single largest class of real agent stops (35% in Anthropic's data), so Cautious and Permissive are far apart in practice even though they differ on few types. The dropdown says that: "Cautious: you decide design and scope questions, the agent decides details."
 
 When the agent decides, the question never reaches you as something to answer. The record is structured, taken from the tool call (type, options, the option chosen, the assumption text), and shown in the inbox and the end-of-run report; it is never left to the agent's prose summary, which is where false claims of success live (`research-questions.md` S1, S2). The agent is told to go on.

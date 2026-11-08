@@ -105,10 +105,16 @@ export async function getAllAvailableTools(
     tools.splice(tools.indexOf(taskListTool), 1);
   }
 
-  // A question that waits for an answer would stall for good with nobody
-  // there to answer it: headless runs and `cn serve`, where there is no
-  // question box, and a loop, whose questions go through HoldQuestion
-  if (isHeadless || services.toolPermissions.isHeadless() || loopRunGoing()) {
+  // A loop's questions go through HoldQuestion. Headless runs and `cn serve`
+  // keep AskQuestion in plan mode only: there it does not wait (the question
+  // is held in the inbox, src/util/pendingQuestions.ts) and a model that
+  // asked in text would otherwise end its turn with no plan. While acting,
+  // a headless model decides for itself and reports what it assumed.
+  const headlessRun = isHeadless || services.toolPermissions.isHeadless();
+  if (
+    loopRunGoing() ||
+    (headlessRun && services.toolPermissions.getCurrentMode() !== "plan")
+  ) {
     tools.splice(tools.indexOf(askQuestionTool), 1);
   }
 

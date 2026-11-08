@@ -2,6 +2,7 @@ import { Tool } from "../..";
 import {
   PLAN_LIMITS,
   PLANS_DIR,
+  PRESENT_PLAN_DECISIONS_PARAMETER,
   PRESENT_PLAN_TODO_DETAILS_PARAMETER,
   PRESENT_PLAN_TOOL_DESCRIPTION,
 } from "../../util/planFile";
@@ -46,6 +47,7 @@ export const presentPlanTool: Tool = {
           items: { type: "string" },
         },
         todo_details: PRESENT_PLAN_TODO_DETAILS_PARAMETER,
+        decisions: PRESENT_PLAN_DECISIONS_PARAMETER,
       },
     },
   },

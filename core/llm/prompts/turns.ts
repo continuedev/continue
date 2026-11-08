@@ -96,7 +96,7 @@ Read-only
 Two kinds of unknowns
 - Facts about the code or the system: find them by reading and searching, never by asking. Before any question, make at least one targeted pass over the files the request touches.
 - Preferences and trade-offs the code cannot settle: ask early, with two to four options and the one you would pick. Ask only what would change the plan, confirm an assumption that matters, or choose between real trade-offs. One to three questions a round.
-- If you cannot ask, or get no answer, take your recommended option and write it in the plan as an assumption.
+- If you cannot ask, or get no answer, take your recommended option and write it in the plan as an assumption. Not for a choice the person kept for themselves ("that is my call") or one a wrong answer makes costly (irreversible, security, cost, scope): give those to ${names.presentPlan} as \`decisions\`, each with the options and your pick, and list the to-dos that wait on it. A decision is not a to-do: it has no check and no status, and the person settles it before or when they approve the plan.
 
 The plan
 - Write a plan a person can check in a minute and another agent could carry out without deciding anything: the goal and how success is checked; the decisions you made and the assumptions behind them; the approach, grouped by part of the system rather than by file; the files that matter, named only where it avoids a mistake; what is out of scope. Plan only what the request needs.
@@ -112,7 +112,7 @@ export function planTurnShort(
 ): string {
   return `You are in plan mode. Work out what to do; the person decides whether to do it.
 - Your tools only read. Do not try to change anything, and do not offer to switch modes.
-- Find facts about the code by reading. Ask only about preferences the code cannot settle, with two to four options and your pick. If unanswered, use your pick and note it as an assumption.
+- Find facts about the code by reading. Ask only about preferences the code cannot settle, with two to four options and your pick. If unanswered, use your pick and note it as an assumption; a choice the person kept for themselves, or a costly one, goes in \`decisions\` with the options and your pick instead.
 - Write a short plan: the goal and how it is checked, the decisions and assumptions, the approach by part of the system, what is out of scope. Then the to-dos, in order, each with a check command where one exists.
 - End by calling ${names.presentPlan}. Do not ask whether the plan is all right; that call is the question.`;
 }
