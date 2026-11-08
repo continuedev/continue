@@ -219,11 +219,11 @@ Why six `cn serve` runs on Nova 2 Lite (`us.amazon.nova-2-lite-v1:0`, 2026-11-08
 - `bedrockCacheTtl` already returned the default for a non-Claude model, so no `ttl` reaches Nova.
 - The CLI default turns caching on for the four Nova models too, with no lifetime (Nova takes 5 minutes only). `promptCaching: false` still wins.
 - `minCacheableTokens` knows Nova's 1,024-token minimum on Bedrock, so the CLI's cache line can say when a request was under it.
-- An opt-in live test, `Bedrock.novaCache.live.vitest.ts`, sends two requests with a 1,500-token system prompt and expects a write then a read. Not yet run: it costs well under a cent on Nova 2 Lite.
+- An opt-in live test, `Bedrock.novaCache.live.vitest.ts`, sends two requests with a 1,500-token system prompt and a tool, and expects a write then a read. Run on 2026-11-08 against `us.amazon.nova-2-lite-v1:0` in us-east-1: request 1 wrote 3,123 tokens and read none; request 2 read 3,022 and wrote 101 (the new user message). Cost under a cent.
 
 **For the Loop design (plans/policy-areas.md):** the stable-prefix argument holds on Nova 2 Lite once cache points are sent, with two limits that Claude does not have: only the first 20K tokens of the prompt are cached, and the lifetime is 5 minutes with no 1-hour option, so a loop that pauses longer than that between model calls rewrites its prefix. The Bedrock models with the fullest support stay the Claude rows of the AWS table (tools, system and messages; 512 to 4,096-token minimums; 5 minutes or 1 hour). GPT on Bedrock caches implicitly with no cache points through Converse; Grok reports reads only.
 
-**Not verified live.** The field table comes from the AWS guide and the 2026-11-04 refusal; the live test above is the check.
+**Verified live** (2026-11-08): Nova 2 Lite accepted a request with a tool list, a cache point after the system prompt and one on each of the last two user messages, and reported the write and the read in `metadata.usage`. The field table otherwise comes from the AWS guide and the 2026-11-04 refusal.
 
 ## Sources, read 2026-11-04
 
