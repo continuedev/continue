@@ -24,6 +24,7 @@ interface StaticChatContentProps {
   queuedMessages?: QueuedMessage[];
   queuePaused?: boolean;
   queueSteerRequested?: boolean;
+  queueSelectedId?: string | null;
   pendingMessage?: string | null;
   renderMessage: (
     item: ChatHistoryItem,
@@ -43,6 +44,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
   queuedMessages = [],
   queuePaused = false,
   queueSteerRequested = false,
+  queueSelectedId = null,
   pendingMessage = null,
   renderMessage,
   refreshTrigger,
@@ -174,6 +176,7 @@ export const StaticChatContent: React.FC<StaticChatContentProps> = ({
         items={queuedMessages}
         paused={queuePaused}
         steerRequested={queueSteerRequested}
+        selectedId={queueSelectedId}
         pendingMessage={pendingMessage}
       />
     </Box>

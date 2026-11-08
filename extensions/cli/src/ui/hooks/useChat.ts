@@ -959,6 +959,7 @@ export function useChat({
     queuedMessages: queueView.items,
     queuePaused: queueView.paused,
     queueSteerRequested: queueView.steerRequested,
+    queueSelectedId: queueView.selectedId,
     pendingMessage,
     handleUserMessage,
     handleInterrupt,

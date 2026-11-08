@@ -531,10 +531,16 @@ const UserInput: React.FC<UserInputProps> = ({
   // Up with messages queued takes them back into the input (as Claude Code
   // does): out of the queue, one per line, ahead of any draft. Enter then
   // queues the edited text again as one message, or sends it when idle.
-  const takeBackQueuedMessages = (): boolean => {
+  // With `onlyId`, just that message comes back (Enter on a selected line).
+  const takeBackQueuedMessages = (onlyId?: string): boolean => {
     if (isRemoteMode || messageQueue.getQueueLength() === 0) return false;
 
-    const items = messageQueue.takeAll();
+    const one = onlyId
+      ? messageQueue.list().find((m) => m.id === onlyId)
+      : undefined;
+    if (onlyId && !one) return false;
+    if (one) messageQueue.remove(one.id);
+    const items = one ? [one] : messageQueue.takeAll();
     const parts = items.map((item) => {
       if (!item.imageMap || item.imageMap.size === 0) return item.message;
       const renames = new Map<string, string>();
@@ -560,6 +566,71 @@ const UserInput: React.FC<UserInputProps> = ({
     updateBashModeState(newText);
     inputHistory.resetNavigation();
     return true;
+  };
+
+  /**
+   * Reordering the queue: Down on an empty prompt highlights the first
+   * queued message; Up and Down move the highlight (past either end, or Esc,
+   * returns to the prompt); + and - move the message up and down, Delete
+   * removes it and Enter takes it back into the prompt. Any other key leaves
+   * the queue and is handled as usual.
+   */
+  const handleQueueSelection = (input: string, key: any): boolean => {
+    if (isRemoteMode) return false;
+    const items = messageQueue.list();
+    const selectedId = messageQueue.getSelectedId();
+    if (!selectedId) {
+      if (
+        key.downArrow &&
+        !key.ctrl &&
+        !key.meta &&
+        items.length > 0 &&
+        !textBuffer.text &&
+        !showSlashCommands &&
+        !showFileSearch
+      ) {
+        messageQueue.select(items[0].id);
+        return true;
+      }
+      return false;
+    }
+
+    const index = items.findIndex((m) => m.id === selectedId);
+    if (key.escape) {
+      messageQueue.select(null);
+      return true;
+    }
+    if (key.upArrow) {
+      messageQueue.select(index > 0 ? items[index - 1].id : null);
+      return true;
+    }
+    if (key.downArrow) {
+      messageQueue.select(
+        index < items.length - 1 ? items[index + 1].id : null,
+      );
+      return true;
+    }
+    if (input === "+" || input === "=") {
+      messageQueue.move(selectedId, index - 1);
+      return true;
+    }
+    if (input === "-" || input === "_") {
+      messageQueue.move(selectedId, index + 1);
+      return true;
+    }
+    if (key.delete || key.backspace) {
+      // The highlight stays at this place in the queue
+      const next = items[index + 1] ?? items[index - 1];
+      messageQueue.remove(selectedId);
+      messageQueue.select(next?.id ?? null);
+      return true;
+    }
+    if (key.return) {
+      takeBackQueuedMessages(selectedId);
+      return true;
+    }
+    messageQueue.select(null);
+    return false;
   };
 
   const handleHistoryNavigation = (key: any): boolean => {
@@ -794,6 +865,12 @@ const UserInput: React.FC<UserInputProps> = ({
         onTextBufferUpdate: handleTextBufferUpdate,
       })
     ) {
+      return;
+    }
+
+    // A highlighted queued message takes the keys first (Esc included, so
+    // leaving the queue does not also stop the agent)
+    if (handleQueueSelection(input, key)) {
       return;
     }
 

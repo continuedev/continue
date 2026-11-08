@@ -167,6 +167,60 @@ describe("messageQueue", () => {
       expect(queue.isSteerRequested()).toBe(false);
     });
   });
+
+  describe("reordering", () => {
+    const texts = (queue: MessageQueue) => queue.list().map((m) => m.message);
+
+    it("moves a message to a position, clamped to the queue", async () => {
+      const queue = await queueWith("a", "b", "c");
+      const [a, , c] = queue.list();
+      expect(queue.move(c.id, 0)).toBe(true);
+      expect(texts(queue)).toEqual(["c", "a", "b"]);
+      expect(queue.move(a.id, 99)).toBe(true);
+      expect(texts(queue)).toEqual(["c", "b", "a"]);
+      expect(queue.move(a.id, 5)).toBe(false);
+      expect(queue.move("nope", 0)).toBe(false);
+    });
+
+    it("sends in the new order: commands still split the batches", async () => {
+      const queue = await queueWith("fix it", "/compact", "then this");
+      const command = queue.list()[1];
+      queue.move(command.id, 0);
+      expect(queue.takeNextBatch().map((m) => m.message)).toEqual(["/compact"]);
+      expect(queue.takeNextBatch().map((m) => m.message)).toEqual([
+        "fix it",
+        "then this",
+      ]);
+    });
+
+    it("keeps a selection only on a message still queued", async () => {
+      const queue = await queueWith("a", "b");
+      const [a, b] = queue.list();
+      queue.select("unknown");
+      expect(queue.getSelectedId()).toBeNull();
+
+      queue.select(a.id);
+      queue.move(a.id, 1);
+      expect(queue.getSelectedId()).toBe(a.id);
+
+      queue.remove(a.id);
+      expect(queue.getSelectedId()).toBeNull();
+
+      queue.select(b.id);
+      queue.takeAll();
+      expect(queue.getSelectedId()).toBeNull();
+    });
+
+    it("tells the view when the selection changes", async () => {
+      const queue = await queueWith("a");
+      const changed = vi.fn();
+      queue.on("changed", changed);
+      queue.select(queue.list()[0].id);
+      queue.select(queue.list()[0].id);
+      queue.select(null);
+      expect(changed).toHaveBeenCalledTimes(2);
+    });
+  });
 });
 
 describe("isQueuedCommand", () => {

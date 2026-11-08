@@ -17,6 +17,8 @@ export interface QueueView {
   items: QueuedMessage[];
   paused: boolean;
   steerRequested: boolean;
+  /** The queued message highlighted for + / - / Delete / Enter */
+  selectedId: string | null;
 }
 
 export function readQueueView(queue: MessageQueue): QueueView {
@@ -24,6 +26,7 @@ export function readQueueView(queue: MessageQueue): QueueView {
     items: queue.list(),
     paused: queue.isPaused(),
     steerRequested: queue.isSteerRequested(),
+    selectedId: queue.getSelectedId(),
   };
 }
 

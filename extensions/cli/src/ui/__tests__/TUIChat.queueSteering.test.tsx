@@ -18,6 +18,9 @@ import {
   waitUntil,
 } from "./TUIChat.flowHarness.js";
 
+const DOWN = "\u001b[B";
+const DELETE = "\u001b[3~";
+
 /**
  * Message queue and steering through the TUI: Enter while the agent works
  * queues, Enter again on the empty prompt steers the queue into the running
@@ -194,6 +197,108 @@ describe("TUIChat - message queue and steering", () => {
       expect(ui.allOutput()).not.toContain("a very long essay");
       await tick(300);
       expect(llm.requests).toHaveLength(2);
+    } finally {
+      ui.unmount();
+    }
+  });
+
+  it("Down selects a queued message; + and - reorder it, Delete removes it, Esc leaves without stopping", async () => {
+    const first = heldTurn(textTurn("first reply"));
+    const llm = new ScriptedLlm([first.turn, textTurn("second reply")]);
+    await registerFlowServices({ llm });
+    const ui = renderFlow();
+    const queued = () => messageQueue.list().map((m) => m.message);
+    try {
+      await type(ui.stdin, "start");
+      await type(ui.stdin, ENTER);
+      await first.started;
+      for (const text of ["alpha", "beta", "gamma", "delta"]) {
+        await type(ui.stdin, text);
+        await type(ui.stdin, ENTER);
+      }
+      expect(queued()).toEqual(["alpha", "beta", "gamma", "delta"]);
+
+      // Down on the empty prompt highlights the first message
+      await type(ui.stdin, DOWN);
+      await waitUntil(
+        () => (ui.lastFrame() ?? "").includes("+/- move"),
+        "the reorder hint",
+        ui.lastFrame,
+      );
+      expect(ui.lastFrame()).toContain("› 1. alpha");
+
+      // - moves it down twice; the highlight follows it
+      await type(ui.stdin, "-");
+      await type(ui.stdin, "-");
+      expect(queued()).toEqual(["beta", "gamma", "alpha", "delta"]);
+      await waitUntil(
+        () => (ui.lastFrame() ?? "").includes("› 3. alpha"),
+        "the highlight on the moved message",
+        ui.lastFrame,
+      );
+
+      // Down to delta, + moves it up one
+      await type(ui.stdin, DOWN);
+      await type(ui.stdin, "+");
+      expect(queued()).toEqual(["beta", "gamma", "delta", "alpha"]);
+
+      // Delete removes it; the highlight stays at that place
+      await type(ui.stdin, DELETE);
+      expect(queued()).toEqual(["beta", "gamma", "alpha"]);
+      await waitUntil(
+        () => (ui.lastFrame() ?? "").includes("› 3. alpha"),
+        "the highlight after deleting",
+        ui.lastFrame,
+      );
+
+      // Esc leaves the queue and does not stop the agent
+      await type(ui.stdin, ESC);
+      await waitUntil(
+        () => !(ui.lastFrame() ?? "").includes("+/- move"),
+        "the queue to be left",
+        ui.lastFrame,
+      );
+      expect(first.wasAborted()).toBe(false);
+      expect(messageQueue.isPaused()).toBe(false);
+
+      // Sent merged, in the new order, when the turn ends
+      first.release();
+      await waitUntil(
+        () => llm.requests.length === 2,
+        "the queued messages to be sent",
+        ui.lastFrame,
+      );
+      const sent = llm.requests[1].messages.filter((m) => m.role === "user");
+      expect(messageText(sent.at(-1)!)).toBe("beta\n\ngamma\n\nalpha");
+    } finally {
+      ui.unmount();
+    }
+  });
+
+  it("Enter on a selected message takes just that one back into the prompt", async () => {
+    const first = heldTurn(textTurn("first reply"));
+    const llm = new ScriptedLlm([first.turn, textTurn("second reply")]);
+    await registerFlowServices({ llm });
+    const ui = renderFlow();
+    try {
+      await type(ui.stdin, "start");
+      await type(ui.stdin, ENTER);
+      await first.started;
+      await type(ui.stdin, "keep me");
+      await type(ui.stdin, ENTER);
+      await type(ui.stdin, "edit me");
+      await type(ui.stdin, ENTER);
+
+      await type(ui.stdin, DOWN);
+      await type(ui.stdin, DOWN);
+      await type(ui.stdin, ENTER);
+      expect(messageQueue.list().map((m) => m.message)).toEqual(["keep me"]);
+      await waitUntil(
+        () => (ui.lastFrame() ?? "").includes("edit me"),
+        "the message back in the prompt",
+        ui.lastFrame,
+      );
+      first.release();
     } finally {
       ui.unmount();
     }

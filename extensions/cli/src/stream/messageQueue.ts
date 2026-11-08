@@ -20,6 +20,9 @@ import { logger } from "../util/logger.js";
  * - Stop (Esc) and errors pause the queue: the messages stay, nothing is sent
  *   until the person resumes (Enter on an empty prompt) or sends a new
  *   message, which carries the queue with it.
+ * - Reordering: Down on an empty prompt selects a queued message; + and -
+ *   move it, which changes the order it is merged and sent in. The selection
+ *   lives here so the highlighted line is always one still queued.
  */
 export interface QueuedMessage {
   id: string;
@@ -97,12 +100,17 @@ export class MessageQueue extends EventEmitter {
   private nextId = 1;
   private steerRequested = false;
   private paused = false;
+  private selectedId: string | null = null;
 
   constructor() {
     super();
   }
 
   private changed(): void {
+    // A selected message that left the queue is no longer selected
+    if (this.selectedId && !this.queue.some((m) => m.id === this.selectedId)) {
+      this.selectedId = null;
+    }
     this.emit("changed", this.list());
   }
 
@@ -146,6 +154,33 @@ export class MessageQueue extends EventEmitter {
     if (this.queue.length === 0) this.steerRequested = false;
     this.changed();
     return true;
+  }
+
+  /**
+   * Move a message to position `to` (0-based, clamped to the queue): the
+   * order the queue is merged and sent in. Returns false when nothing moved.
+   */
+  move(id: string, to: number): boolean {
+    const from = this.queue.findIndex((m) => m.id === id);
+    if (from < 0) return false;
+    const target = Math.max(0, Math.min(this.queue.length - 1, to));
+    if (target === from) return false;
+    const [item] = this.queue.splice(from, 1);
+    this.queue.splice(target, 0, item);
+    this.changed();
+    return true;
+  }
+
+  /** Highlight a queued message in the TUI, or clear it with null. */
+  select(id: string | null): void {
+    const next = id && this.queue.some((m) => m.id === id) ? id : null;
+    if (next === this.selectedId) return;
+    this.selectedId = next;
+    this.changed();
+  }
+
+  getSelectedId(): string | null {
+    return this.selectedId;
   }
 
   update(id: string, message: string): boolean {
