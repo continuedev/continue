@@ -6,7 +6,7 @@ Continuous is not affiliated with Continue Dev, Inc.
 
 **Requirements:** VS Code 1.105 or newer (or a VS Code-based editor built on it). Older versions cannot load the extension and will refuse to install it, so they keep the previously installed version.
 
-The current release is [Continuous 2.4.2](https://github.com/b1tninja/continuous/releases/tag/v2.4.2-vscode).
+The current release is [Continuous 2.4.3](https://github.com/b1tninja/continuous/releases/tag/v2.4.3-vscode).
 
 ## Option 1: install the latest release
 
@@ -23,7 +23,7 @@ Open the [latest release](https://github.com/b1tninja/continuous/releases/latest
 | Linux x64             | `continuous-linux-x64-<version>.vsix`    |
 | Linux Arm64           | `continuous-linux-arm64-<version>.vsix`  |
 
-For 2.4.2, the Windows x64 file is `continuous-win32-x64-2.4.2.vsix`. There are no 32-bit ARM or Alpine (musl) builds; the 2.2.0 release's `linux-armhf` and `alpine-x64` files did not work, because their native modules were built for other platforms.
+For 2.4.3, the Windows x64 file is `continuous-win32-x64-2.4.3.vsix`. There are no 32-bit ARM or Alpine (musl) builds; the 2.2.0 release's `linux-armhf` and `alpine-x64` files did not work, because their native modules were built for other platforms.
 
 With the [GitHub CLI](https://cli.github.com/), you can download the latest release's file and checksums in one command. Change `win32-x64` to your platform:
 
@@ -52,7 +52,7 @@ grep continuous-darwin-arm64 SHA256SUMS.txt | shasum -a 256 --check
 ### 3. Install it
 
 ```bash
-code --install-extension continuous-win32-x64-2.4.2.vsix --force
+code --install-extension continuous-win32-x64-2.4.3.vsix --force
 ```
 
 Or in VS Code: open the **Extensions** view, select **...** → **Install from VSIX...**, and choose the file.
@@ -67,7 +67,7 @@ To check which version is installed, run `code --list-extensions --show-versions
 
 **Coming from 2.4.1 or earlier?** Those releases used the ID `b1tninja.continued`, which is taken on the VS Code Marketplace by another extension, so from 2.4.2 the ID is `b1tninja.continuous`. VS Code treats it as a different extension: uninstall `b1tninja.continued` (`code --uninstall-extension b1tninja.continued`) after installing 2.4.2, so the two do not both run. Your settings and configuration carry over: the first start copies `~/.continue` to `~/.continuous` (the codebase index is rebuilt) and each `continue.*` setting to its `continuous.*` name, and a workspace's `.continue` folder is still read. Keyboard shortcuts bound to a `continue.*` command need the new `continuous.*` name. API keys kept in VS Code's secure storage do not carry over, as each extension has its own: enter them again, or keep them in `~/.continuous/.env`. The welcome screen also shows once; close it, your models are already set up.
 
-> Release files are named with the version only, for example `continuous-win32-x64-2.4.2.vsix`. GitHub Actions builds (Option 2) add the short commit SHA, for example `continuous-win32-x64-2.4.2-g62505d0.vsix`.
+> Release files are named with the version only, for example `continuous-win32-x64-2.4.3.vsix`. GitHub Actions builds (Option 2) add the short commit SHA, for example `continuous-win32-x64-2.4.3-g62505d0.vsix`.
 
 ## Option 2: download an unreleased build from GitHub Actions
 

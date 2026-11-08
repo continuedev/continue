@@ -2,7 +2,7 @@
   "name": "continuous",
   "icon": "media/icon.png",
   "author": "b1tninja",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/b1tninja/continuous"

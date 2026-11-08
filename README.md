@@ -14,11 +14,11 @@
 
 Continuous is not published to the VS Code Marketplace or Open VSX. Install it from a GitHub release. It needs VS Code 1.105 or newer.
 
-1. Download the `.vsix` for your platform from the [latest release](https://github.com/b1tninja/continuous/releases/latest) ([Continuous 2.4.2](https://github.com/b1tninja/continuous/releases/tag/v2.4.2-vscode)). There are builds for Windows (x64, Arm64), macOS (Apple Silicon, Intel), and Linux (x64, Arm64). Each release has a `SHA256SUMS.txt` to check the download against.
+1. Download the `.vsix` for your platform from the [latest release](https://github.com/b1tninja/continuous/releases/latest) ([Continuous 2.4.3](https://github.com/b1tninja/continuous/releases/tag/v2.4.3-vscode)). There are builds for Windows (x64, Arm64), macOS (Apple Silicon, Intel), and Linux (x64, Arm64). Each release has a `SHA256SUMS.txt` to check the download against.
 2. Install it, then reload VS Code (**Developer: Reload Window**):
 
    ```bash
-   code --install-extension continuous-win32-x64-2.4.2.vsix --force
+   code --install-extension continuous-win32-x64-2.4.3.vsix --force
    ```
 
 Or, with the GitHub CLI (change `win32-x64` to your platform):
