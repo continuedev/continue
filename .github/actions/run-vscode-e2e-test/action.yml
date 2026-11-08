@@ -35,6 +35,14 @@ runs:
         path: extensions/vscode/node_modules
         key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
+    # Restore only, from what setup-component saved after a clean install. Prepackage
+    # edits core/node_modules, so this job must not save it, and npm ci would delete it.
+    - uses: actions/cache/restore@v6
+      id: core-node-modules-cache
+      with:
+        path: core/node_modules
+        key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
     # We don't want to cache the Continue extension, so it is deleted at the end of the job
     - uses: actions/cache@v6
       id: test-extensions-cache
@@ -58,15 +66,13 @@ runs:
       shell: bash
       run: |
         node ./scripts/build-packages.js
+        if [ "${{ steps.core-node-modules-cache.outputs.cache-hit }}" != "true" ]; then
+          (cd core && npm ci)
+        fi
         if [ "${{ steps.storage-cache.outputs.cache-hit }}" != "true" ]; then
-          cd core
-          npm ci
-          cd ../extensions/vscode
+          cd extensions/vscode
           npm ci
           npm run e2e:ci:download
-        else
-          cd core
-          npm ci
         fi
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}

@@ -16,7 +16,10 @@ runs:
       with:
         node-version-file: ".nvmrc"
 
-    - uses: actions/cache@v6
+    # Restore only, from what setup-component saved after a clean install. Prepackage
+    # edits core/node_modules, so this job must not save it, and npm ci would delete it.
+    - uses: actions/cache/restore@v6
+      id: core-node-modules-cache
       with:
         path: core/node_modules
         key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
@@ -25,8 +28,10 @@ runs:
       shell: bash
       run: |
         node ./scripts/build-packages.js
-        cd core
-        npm ci
+        if [ "${{ steps.core-node-modules-cache.outputs.cache-hit }}" != "true" ]; then
+          cd core
+          npm ci
+        fi
 
     - name: Install gui node_modules and build
       shell: bash

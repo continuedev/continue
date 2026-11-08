@@ -7,6 +7,28 @@ const { rimrafSync } = require("rimraf");
 
 const { execCmdSync } = require("../../../scripts/util");
 
+const FETCH_ATTEMPTS = 4;
+
+/** fetch, trying again after a server error or a dropped connection. */
+async function fetchWithRetry(url, options) {
+  for (let attempt = 1; ; attempt++) {
+    let problem;
+    try {
+      const response = await fetch(url, options);
+      if (response.status < 500 || attempt === FETCH_ATTEMPTS) return response;
+      problem = `status code: ${response.status}`;
+    } catch (error) {
+      if (attempt === FETCH_ATTEMPTS) throw error;
+      problem = error.message;
+    }
+    const waitMs = 2000 * 2 ** (attempt - 1);
+    console.warn(
+      `[warn] Download failed (${problem}), trying again in ${waitMs / 1000}s`,
+    );
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+  }
+}
+
 /**
  * download a file using fetch API
  * @param {string} url
@@ -17,7 +39,7 @@ async function downloadFile(url, outputPath) {
   const proxy = process.env.https_proxy || process.env.HTTPS_PROXY;
   const agent = proxy ? new ProxyAgent(proxy) : undefined;
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     redirect: "follow", // Automatically follow redirects
     dispatcher: agent,
   });
