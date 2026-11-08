@@ -372,6 +372,184 @@ export interface Session {
    * Saved as soon as they change, so a reload or crash does not lose them.
    */
   queuedMessages?: SessionQueuedMessage[];
+  /**
+   * Optional: Loop mode's state, when the session builds a plan in a loop:
+   * each item's run status, the questions held for the person and their
+   * answers. See core/util/loopMode.ts.
+   */
+  loop?: LoopState;
+}
+
+/** Where one plan item is in Loop mode. The task list shows it too. */
+export type LoopItemStatus =
+  "pending" | "running" | "done" | "waiting" | "redo" | "failed";
+
+export interface LoopItemState {
+  /** The task list item's id */
+  id: string;
+  status: LoopItemStatus;
+  /** Runs started for this item, reset when an answer requeues it */
+  attempts: number;
+  /** What the run said it did (finish_item), or why it stopped */
+  summary?: string;
+  /**
+   * Unattended: questions that got no answer in time, so the item went on
+   * with its best default. The questions stay open in the inbox.
+   */
+  unanswered?: string[];
+}
+
+/**
+ * - blocking: the item cannot go on without the answer; it waits.
+ * - assumption: the item goes on with `assumption`; the person may overrule it.
+ * - approval: a tool call that would have asked; held instead of stalling the loop.
+ */
+export type LoopQuestionKind = "blocking" | "assumption" | "approval";
+
+export interface LoopQuestion {
+  id: string;
+  /** The item it is about; none for a question about the whole plan */
+  itemId?: string;
+  question: string;
+  kind: LoopQuestionKind;
+  /** The default the item continued with (kind assumption) */
+  assumption?: string;
+  /** The held tool call (kind approval) */
+  approval?: { toolName: string; summary: string; grantKey: string };
+  askedAt: string;
+  /** Set once answered */
+  answerId?: string;
+}
+
+/** How an answer was routed, from the item's state when it was given. */
+export type LoopAnswerRoute =
+  | "requeue" // the item was waiting: it runs again with the answer
+  | "next-run" // the item had not run yet: the answer goes with its run
+  | "steer" // the item was running: steered in at its next tool boundary
+  | "redo" // the item was done on an overruled assumption: it runs again
+  | "confirmed" // the assumption stands: nothing to do
+  | "replan" // about the plan as a whole: read at the next re-plan
+  | "standing"; // an instruction for every item from now on (a "sign")
+
+export interface LoopAnswer {
+  id: string;
+  questionId?: string;
+  itemId?: string;
+  text: string;
+  /** For a plan-wide answer: re-plan as soon as the running item ends */
+  replanNow?: boolean;
+  /** For an approval question: the person allowed the call */
+  approve?: boolean;
+  route: LoopAnswerRoute;
+  givenAt: string;
+  /** Sent to the model (in a run's prompt, by steering or in a re-plan) */
+  delivered?: boolean;
+}
+
+export type LoopStatus =
+  | "running"
+  /** A read-only Plan-mode turn is proposing the next round's plan */
+  | "replanning"
+  /** The re-plan's card is waiting for the person to accept it */
+  | "awaiting_plan"
+  /** Every open item waits on the person; an answer resumes the loop */
+  | "waiting"
+  | "stopped";
+
+export type LoopStopReason =
+  | "done"
+  | "rounds"
+  | "tokens"
+  | "time"
+  | "no_progress"
+  | "failures"
+  | "error"
+  | "stopped"
+  | "replan_failed";
+
+export interface LoopBudget {
+  /** Re-plans before the loop stops */
+  maxRounds: number;
+  /** Prompt plus completion tokens the loop may use (0: no limit) */
+  maxTokens: number;
+  /** Wall time in milliseconds (0: no limit) */
+  maxWallMs: number;
+  /** Runs of one item without finishing before it is marked failed */
+  maxAttempts: number;
+  /** Rounds in a row that finish no item before the loop stops */
+  maxNoProgressRounds: number;
+  /** Items in a row that fail before the loop stops */
+  maxConsecutiveFailures: number;
+  /** Model requests one run of an item may make before it must report */
+  maxItemTurns: number;
+}
+
+/**
+ * How much the loop does without the person. It follows the approval mode
+ * the person picked when the loop starts (Manual: supervised; Auto-approve
+ * and Auto: auto; YOLO: unattended) and can be changed while it runs. See
+ * LOOP_AUTONOMY in core/util/loopMode.ts.
+ */
+export type LoopAutonomy = "supervised" | "auto" | "unattended";
+
+export interface LoopState {
+  status: LoopStatus;
+  /** 1 for the plan the loop started with, +1 at each accepted re-plan */
+  round: number;
+  startedAt: string;
+  /** Session tokens when the loop started, so the budget counts only its own */
+  tokensAtStart: number;
+  budget: LoopBudget;
+  /** Missing on loops saved before autonomy levels: treated as "auto" */
+  autonomy?: LoopAutonomy;
+  items: LoopItemState[];
+  /** What is running: one item, or the re-plan turn */
+  current?: {
+    kind: "item" | "replan";
+    itemId?: string;
+    /** History length when it started; its messages come after */
+    historyIndex: number;
+    startedAt: string;
+    /** What finish_item reported during this run */
+    report?: {
+      outcome: "done" | "stuck" | "waiting";
+      summary?: string;
+      /** What a later item should know (finish_item notes) */
+      notes?: string;
+    };
+    /** A re-plan: the to-dos it started from, to tell whether it adds scope */
+    planTexts?: string[];
+  };
+  questions: LoopQuestion[];
+  answers: LoopAnswer[];
+  /** Items finished in this round, for the no-progress check */
+  doneThisRound: number;
+  noProgressRounds: number;
+  /** Items in a row that ended failed; reset by one that is done */
+  consecutiveFailures?: number;
+  /** When every open item started waiting on the person (status waiting) */
+  waitingSince?: string;
+  /** Why the last re-plan did or did not start the next round by itself */
+  replanReason?: string;
+  /** Tool calls the person allowed from an approval question (grantKey) */
+  grants: string[];
+  /** A plan-wide answer asked to re-plan now */
+  replanRequested?: boolean;
+  /**
+   * Each item and re-plan is sent without the turns before it: the plan
+   * file, the notes and the answers carry what it needs. On unless false.
+   */
+  freshContext?: boolean;
+  /**
+   * What runs learned that later items should know (finish_item notes),
+   * newest last, capped; sent with every item prompt.
+   */
+  notes?: string[];
+  /** The person asked to stop once the running item or re-plan ends */
+  stopRequested?: boolean;
+  stopReason?: LoopStopReason;
+  /** One line for the person: what stopped it */
+  stopDetail?: string;
 }
 
 /** A message queued in the chat input; `editorState` is the editor's JSON. */
@@ -2286,6 +2464,8 @@ export interface CompiledMessagesResult {
   compiledChatMessages: ChatMessage[];
   didPrune: boolean;
   contextPercentage: number;
+  /** Tokens the context has left for the reply, after the prompt. */
+  outputTokensAvailable?: number;
 }
 
 export interface AddToChatPayload {

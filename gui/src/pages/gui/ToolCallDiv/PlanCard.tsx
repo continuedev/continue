@@ -9,6 +9,7 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { setMode } from "../../../redux/slices/sessionSlice";
 import { buildPlan } from "../../../redux/thunks/buildPlan";
+import { acceptLoopPlan, startLoopFromPlan } from "../../../redux/thunks/loop";
 
 interface PlanCardProps {
   toolCallState: ToolCallState;
@@ -32,6 +33,18 @@ export function PlanCard({ toolCallState, historyIndex }: PlanCardProps) {
       .some((item) => item.message.role === "user"),
   );
 
+  // Loop mode: this card is the loop's re-plan, waiting to be accepted
+  const loopStatus = useAppSelector((s) => s.session.loop?.status);
+  const isLatestPlanCard = useAppSelector((s) => {
+    const later = s.session.history
+      .slice(historyIndex + 1)
+      .some((item) =>
+        item.toolCallStates?.some(
+          (tc) => tc.toolCall.function.name === "present_plan",
+        ),
+      );
+    return !later;
+  });
   const args = validatePlanArgs(toolCallState.parsedArgs ?? {});
   const output = toolCallState.output?.[0];
   const fileUri = output?.uri?.type === "file" ? output.uri.value : undefined;
@@ -54,7 +67,11 @@ export function PlanCard({ toolCallState, historyIndex }: PlanCardProps) {
     );
   }
 
-  const showActions = !answered && !isStreaming;
+  const awaitingLoop = loopStatus === "awaiting_plan" && isLatestPlanCard;
+  const loopActive = !!loopStatus && loopStatus !== "stopped";
+
+  const showActions =
+    (!answered && !isStreaming && !loopActive) || awaitingLoop;
 
   return (
     <div
@@ -98,7 +115,22 @@ export function PlanCard({ toolCallState, historyIndex }: PlanCardProps) {
           ))}
         </ul>
       )}
-      {showActions && (
+      {showActions && awaitingLoop && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <Button
+            data-testid="plan-card-loop-continue"
+            title="Accept this plan and start the loop's next round"
+            onClick={() => void dispatch(acceptLoopPlan())}
+          >
+            Continue the loop
+          </Button>
+          <span className="text-2xs text-description-muted">
+            The loop's re-plan. Edit the file first if you like; the loop reads
+            it again.
+          </span>
+        </div>
+      )}
+      {showActions && !awaitingLoop && (
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <Button
             data-testid="plan-card-build"
@@ -106,6 +138,16 @@ export function PlanCard({ toolCallState, historyIndex }: PlanCardProps) {
             onClick={() => void dispatch(buildPlan({ planFile: fileUri }))}
           >
             Build
+          </Button>
+          <Button
+            variant="outline"
+            data-testid="plan-card-build-loop"
+            title="Build the to-dos one at a time without driving each step: questions go to an inbox you can answer while it works"
+            onClick={() =>
+              void dispatch(startLoopFromPlan({ planFile: fileUri }))
+            }
+          >
+            Build in a loop
           </Button>
           <Button
             variant="outline"

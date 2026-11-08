@@ -16,7 +16,7 @@ export const createNewFileTool: Tool = {
   function: {
     name: BuiltInToolNames.CreateNewFile,
     description:
-      "Create a new file. Only use this when a file doesn't exist and should be created",
+      "Create a new file. Only use this when a file doesn't exist and should be created. For a long file (more than a few hundred lines), write it in parts: create it with the first part, then call this again with append set to true for each further part. A call cut off at the output limit writes nothing, so smaller parts lose less.",
     parameters: {
       type: "object",
       required: ["filepath", "contents"],
@@ -29,6 +29,11 @@ export const createNewFileTool: Tool = {
         contents: {
           type: "string",
           description: "The contents to write to the new file",
+        },
+        append: {
+          type: "boolean",
+          description:
+            "Add contents to the end of a file you already created, instead of creating it.",
         },
       },
     },

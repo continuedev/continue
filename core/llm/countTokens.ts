@@ -602,6 +602,10 @@ function compileChatMessages({
     compiledChatMessages: reassembled,
     didPrune,
     contextPercentage,
+    outputTokensAvailable: Math.max(
+      0,
+      contextLength - countingSafetyBuffer - inputTokens,
+    ),
   };
 }
 

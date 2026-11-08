@@ -78,6 +78,10 @@ export interface ChatRequest {
  *
  * `history` defaults to the whole session; a shorter one builds the request as
  * it would have been after that many items.
+ *
+ * Loop mode runs each item and re-plan in a fresh context (LoopState
+ * freshContext): the request carries only the turns since that run started,
+ * while the chat still shows everything.
  */
 export function buildChatRequest(
   state: RootState,
@@ -151,14 +155,26 @@ export function buildChatRequest(
       )
     : baseSystemMessage;
 
-  const withoutMessageIds = history.map((item) => {
+  const loop = state.session.loop;
+  const contextStart =
+    history === state.session.history &&
+    loop?.current &&
+    loop.freshContext !== false
+      ? Math.min(loop.current.historyIndex, history.length)
+      : 0;
+
+  const withoutMessageIds = history.slice(contextStart).map((item) => {
     const { id, ...messageWithoutId } = item.message as typeof item.message & {
       id?: string;
     };
     return { ...item, message: messageWithoutId };
   });
 
-  const { messages, appliedRules, appliedRuleIndex } = constructMessages(
+  const {
+    messages,
+    appliedRules,
+    appliedRuleIndex: runRuleIndex,
+  } = constructMessages(
     withoutMessageIds as any,
     systemMessage,
     // The per-mode global rules switch (rulesByMode): off for this mode means
@@ -169,6 +185,9 @@ export function buildChatRequest(
     state.ui.ruleSettings,
     systemToolsFramework,
   );
+
+  const appliedRuleIndex =
+    runRuleIndex >= 0 ? runRuleIndex + contextStart : runRuleIndex;
 
   const taskListMessage = activeTools.some(
     (t) => t.function.name === BuiltInToolNames.TaskList,

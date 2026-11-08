@@ -15,6 +15,8 @@ export const getBaseToolDefinitions = () => [
   toolDefinitions.fetchUrlContentTool,
   toolDefinitions.taskListTool,
   toolDefinitions.presentPlanTool,
+  toolDefinitions.holdQuestionTool,
+  toolDefinitions.finishItemTool,
 ];
 
 export const getConfigDependentToolDefinitions = async (

@@ -73,14 +73,14 @@ export const streamThunkWrapper = createAsyncThunk<
         const steeredIds = (getState().session.queuedMessages ?? [])
           .filter((m) => m.steer)
           .map((m) => m.id);
-        await dispatch(cancelStream());
+        await dispatch(cancelStream({ loop: "keep" }));
         const delayMs = OVERLOADED_DELAY_MS * 2 ** attempt;
         await new Promise((resolve) => setTimeout(resolve, delayMs));
-        await dispatch(cancelStream());
+        await dispatch(cancelStream({ loop: "keep" }));
         dispatch(setQueuePaused(wasQueuePaused));
         dispatch(setSteeredMessages(steeredIds));
       } else {
-        await dispatch(cancelStream());
+        await dispatch(cancelStream({ loop: "error", detail: message }));
         dispatch(setDialogMessage(<StreamErrorDialog error={e} />));
         dispatch(setShowDialog(true));
 

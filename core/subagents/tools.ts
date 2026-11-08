@@ -20,6 +20,9 @@ export const TASK_LIST_TOOL_NAMES = [
   "present_plan",
   "PresentPlan",
   "ExitPlanMode",
+  // Loop mode's tools hold questions for and report the parent's item
+  "hold_question",
+  "finish_item",
 ];
 
 /**

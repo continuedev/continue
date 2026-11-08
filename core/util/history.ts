@@ -142,6 +142,9 @@ export class HistoryManager {
     if (session.queuedMessages?.length) {
       orderedSession.queuedMessages = session.queuedMessages;
     }
+    if (session.loop) {
+      orderedSession.loop = session.loop;
+    }
 
     fs.writeFileSync(
       getSessionFilePath(session.sessionId),

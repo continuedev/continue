@@ -10,6 +10,10 @@ const { ProxyAgent, fetch: undiciFetch } = require("undici");
 
 const RIPGREP_BASE_URL = `https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}`;
 
+const DOWNLOAD_ATTEMPTS = 8;
+const DOWNLOAD_RETRY_BASE_MS = 5000;
+const DOWNLOAD_RETRY_MAX_MS = 60000;
+
 /**
  * Downloads a file from a URL to a specified path
  *
@@ -22,17 +26,39 @@ async function downloadFile(url, destPath) {
   const proxy = process.env.https_proxy || process.env.HTTPS_PROXY;
   const agent = proxy ? new ProxyAgent(proxy) : undefined;
 
-  const response = await undiciFetch(url, {
-    redirect: "follow", // Automatically follow redirects
-    dispatcher: agent,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to download file, status code: ${response.status}`);
+  // GitHub release downloads return 5xx in bursts, so a server error or a
+  // dropped connection is worth waiting out. A 4xx is not.
+  let buffer;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const response = await undiciFetch(url, {
+        redirect: "follow", // Automatically follow redirects
+        dispatcher: agent,
+      });
+      if (!response.ok) {
+        const error = new Error(
+          `Failed to download file, status code: ${response.status}`,
+        );
+        error.retryable = response.status >= 500 || response.status === 429;
+        throw error;
+      }
+      buffer = await response.arrayBuffer();
+      break;
+    } catch (error) {
+      // fetch rejects with a TypeError when the connection fails
+      const retryable = error.retryable ?? true;
+      if (!retryable || attempt >= DOWNLOAD_ATTEMPTS) throw error;
+      const delayMs = Math.min(
+        DOWNLOAD_RETRY_BASE_MS * 2 ** (attempt - 1),
+        DOWNLOAD_RETRY_MAX_MS,
+      );
+      console.log(
+        `[info] Download failed (${error.message}); retrying in ${delayMs / 1000}s (${attempt}/${DOWNLOAD_ATTEMPTS})`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
   }
 
-  // Get the response as an array buffer and write it to the file
-  const buffer = await response.arrayBuffer();
   fs.writeFileSync(destPath, Buffer.from(buffer));
 }
 

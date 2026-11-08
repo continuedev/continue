@@ -24,7 +24,9 @@ import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { CacheMissNotice } from "../../components/mainInput/CacheMissNotice";
 import { CachingOffNotice } from "../../components/mainInput/CachingOffNotice";
 import { ColdCacheNotice } from "../../components/mainInput/ColdCacheNotice";
+import { LoopInbox } from "../../components/mainInput/LoopInbox";
 import { TaskListPanel } from "../../components/mainInput/TaskListPanel";
+import { useLoopDriver } from "../../hooks/useLoopDriver";
 import { LargeMessageNotice } from "../../components/mainInput/LargeMessageNotice";
 import { QueuedMessages } from "../../components/mainInput/QueuedMessages";
 import { useMainEditor } from "../../components/mainInput/TipTapEditor";
@@ -119,6 +121,8 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
 }
 
 export function Chat() {
+  // Loop mode: take the next step whenever nothing is running
+  useLoopDriver();
   useApplyModeModel();
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
@@ -269,14 +273,17 @@ export function Chat() {
 
   const sendQueuedMessages = useCallback(
     async (ids?: string[]) => {
-      const { queuedMessages } = reduxStore.getState().session;
+      // Loop answers are steered into the item's run (or kept for its next
+      // one by the loop), never sent as a turn of their own
+      const all = reduxStore.getState().session.queuedMessages;
+      const queuedMessages = all.filter((m) => !m.loopAnswerId);
       const chosen = ids
         ? queuedMessages.filter((m) => ids.includes(m.id))
         : queuedMessages;
       const merged = mergeQueuedMessages(chosen);
       if (!merged) return;
 
-      if (chosen.length === queuedMessages.length) {
+      if (chosen.length === all.length) {
         dispatch(takeQueuedMessages());
       } else {
         chosen.forEach((m) => dispatch(removeQueuedMessage(m.id)));
@@ -539,6 +546,7 @@ export function Chat() {
         <CachingOffNotice />
         <LargeMessageNotice />
         <TaskListPanel />
+        <LoopInbox />
         <QueuedMessages
           onSendNow={sendNowOrSteer}
           onSteerNow={(ids) => void steerNow(ids)}

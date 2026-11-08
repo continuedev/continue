@@ -124,7 +124,7 @@ describe("streamResponseThunk", () => {
       {
         type: "chat/cancelStream/pending",
         meta: {
-          arg: undefined,
+          arg: { loop: "error", detail: expect.any(String) },
           requestId: expect.any(String),
           requestStatus: "pending",
         },
@@ -145,7 +145,7 @@ describe("streamResponseThunk", () => {
       {
         type: "chat/cancelStream/fulfilled",
         meta: {
-          arg: undefined,
+          arg: { loop: "error", detail: expect.any(String) },
           requestId: expect.any(String),
           requestStatus: "fulfilled",
         },
@@ -716,7 +716,7 @@ describe("streamResponseThunk", () => {
       {
         type: "chat/cancelStream/pending",
         meta: {
-          arg: undefined,
+          arg: { loop: "error", detail: expect.any(String) },
           requestId: expect.any(String),
           requestStatus: "pending",
         },
@@ -737,7 +737,7 @@ describe("streamResponseThunk", () => {
       {
         type: "chat/cancelStream/fulfilled",
         meta: {
-          arg: undefined,
+          arg: { loop: "error", detail: expect.any(String) },
           requestId: expect.any(String),
           requestStatus: "fulfilled",
         },

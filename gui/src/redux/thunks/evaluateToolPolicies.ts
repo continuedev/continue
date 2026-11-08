@@ -29,7 +29,7 @@ export interface AutoReviewContext {
   onceGrants?: string[];
 }
 
-interface EvaluatedPolicy {
+export interface EvaluatedPolicy {
   policy: ToolPolicy;
   displayValue?: string;
   /** Why core decided, when the user has toolPermissions rules. "auto" means the reviewer model. */
