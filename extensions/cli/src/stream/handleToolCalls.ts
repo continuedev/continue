@@ -21,6 +21,7 @@ import {
 } from "../tools/index.js";
 import { logger } from "../util/logger.js";
 
+import { recordRefusals } from "./refusalCap.js";
 import {
   executeStreamedToolCalls,
   preprocessStreamedToolCalls,
@@ -189,11 +190,20 @@ export async function handleToolCalls(
     }
   }
 
-  if (isHeadless && hasRejection) {
-    logger.debug(
-      "Tool call rejected in headless mode - returning current content",
-    );
-    return true; // Signal early return needed
+  // A refusal is a tool result the model reads and carries on from ("do what
+  // else the request needs, then say what you could not do"): the turn goes
+  // on. What ends it is the refusal cap, so that a model cannot spend the
+  // turn retrying around a rule. Headless used to end the turn on the first
+  // refusal, which made the refusal text unreachable
+  // (policy-areas-test-findings.md, agent-deny).
+  if (isHeadless) {
+    const refused = hasRejection
+      ? chatHistoryEntries.filter((e) => e.status === "canceled").length
+      : 0;
+    if (recordRefusals(refused, hasRejection)) {
+      logger.debug("Refusal cap reached in headless mode; ending the turn");
+      return true; // Signal early return needed
+    }
   }
 
   // Tool results are already added to toolCallStates in executeStreamedToolCalls

@@ -7,6 +7,7 @@ import {
   MessageModes,
 } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
+import { finishItemNudge, presentPlanNudge } from "core/util/turnEnd";
 import {
   acceptReplan,
   answerLoop,
@@ -397,6 +398,20 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
 
     // 1. Finish what ran.
     if (loop.current?.kind === "item") {
+      // A run that ended without its report is told once to call finish_item,
+      // in the same run; only a second such end counts as an attempt
+      // (core/util/turnEnd.ts)
+      if (!loop.current.report && !loop.current.nudged) {
+        commitLoop(dispatch, getState, {
+          ...loop,
+          current: { ...loop.current, nudged: true },
+        });
+        await sendLoopTurn(
+          dispatch,
+          finishItemNudge(BuiltInToolNames.FinishItem),
+        );
+        return;
+      }
       const queuedIds = new Set(
         state.session.queuedMessages
           .map((m) => m.loopAnswerId)
@@ -428,6 +443,20 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
         BuiltInToolNames.PresentPlan,
       ).some((tc) => tc.status === "done");
       if (!presented) {
+        // One nudge first, in the same run: a small model wrote the
+        // present_plan call as text once in six runs, and one text reply
+        // must not end the whole loop (core/util/turnEnd.ts)
+        if (!loop.current.nudged) {
+          commitLoop(dispatch, getState, {
+            ...loop,
+            current: { ...loop.current, nudged: true },
+          });
+          await sendLoopTurn(
+            dispatch,
+            presentPlanNudge(BuiltInToolNames.PresentPlan),
+          );
+          return;
+        }
         commitLoop(
           dispatch,
           getState,

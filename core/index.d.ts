@@ -643,6 +643,12 @@ export interface LoopState {
     checkIn?: string;
     /** A repair re-plan (fix forward): the failed item's text */
     itemText?: string;
+    /**
+     * The run ended once without its report (finish_item, or a re-plan's
+     * present_plan) and was told to call it; a second such end counts
+     * (core/util/turnEnd.ts)
+     */
+    nudged?: boolean;
   };
   /**
    * The re-plan whose plan waits to be accepted: what it was for, so

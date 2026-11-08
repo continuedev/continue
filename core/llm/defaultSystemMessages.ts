@@ -1,4 +1,4 @@
-import { actTurn, IDE_TURN_TOOL_NAMES, planTurn } from "./prompts/turns";
+import { actTurn, IDE_TURN_TOOL_NAMES, planTurn } from "./prompts/turns.js";
 
 export const DEFAULT_SYSTEM_MESSAGES_URL =
   "https://github.com/b1tninja/continuous/blob/main/core/llm/defaultSystemMessages.ts";

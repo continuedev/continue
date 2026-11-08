@@ -11,7 +11,18 @@ import type {
 
 import { pruneLastMessage } from "../compaction.js";
 import { getRequestBodyHints } from "../contextManagement.js";
-import { consumeLoopTurnEnd, loopRequestHistory } from "../loop/loopSession.js";
+import {
+  ACT_TURN_NUDGE,
+  announcesNextStep,
+  TURN_NUDGE_LIMIT,
+  TURN_NUDGE_TOTAL,
+} from "core/util/turnEnd.js";
+
+import {
+  consumeLoopTurnEnd,
+  loopRequestHistory,
+  loopRunGoing,
+} from "../loop/loopSession.js";
 import { services } from "../services/index.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 import { applyChatCompletionToolOverrides } from "../tools/applyToolOverrides.js";
@@ -25,6 +36,7 @@ import { logger } from "../util/logger.js";
 import { validateContextLength } from "../util/tokenizer.js";
 
 import { getRequestTools, handleToolCalls } from "./handleToolCalls.js";
+import { resetRefusalCount } from "./refusalCap.js";
 import { injectSteeringMessage } from "./steering.js";
 import {
   handleAutoContinuation,
@@ -452,6 +464,10 @@ export async function streamChatResponse(
   let finalResponse = "";
   let compactionOccurredThisTurn = false; // Track if compaction happened during this conversation turn
   let autoContinuedLastIteration = false; // Whether the previous iteration only sent our own "continue"
+  // End-of-turn nudges (core/util/turnEnd.ts): one between tool calls, a few per turn
+  let nudgesSinceToolUse = 0;
+  let nudgesThisTurn = 0;
+  if (!isCompacting) resetRefusalCount();
 
   while (true) {
     // If ChatHistoryService is available, refresh local chatHistory view
@@ -609,6 +625,41 @@ export async function streamChatResponse(
       compactionOccurredThisTurn = false;
     }
     autoContinuedLastIteration = shouldAutoContinue;
+
+    // A headless agent turn that ends by announcing its next step ("Let me
+    // check...") with no tool call gets a nudge to take it; nobody else is
+    // there to say "go on". A nudge that led to tool calls worked and the
+    // budget starts again; one that led to another announcement did not,
+    // and the turn ends. A few per turn at most. Loop runs have their own
+    // nudge in the driver, and a compaction's or subagent's run is left alone.
+    if (shouldContinue) nudgesSinceToolUse = 0;
+    if (
+      !shouldContinue &&
+      !shouldAutoContinue &&
+      isHeadless &&
+      !isCompacting &&
+      !loopRunGoing() &&
+      nudgesSinceToolUse < TURN_NUDGE_LIMIT &&
+      nudgesThisTurn < TURN_NUDGE_TOTAL &&
+      announcesNextStep(content)
+    ) {
+      nudgesSinceToolUse++;
+      nudgesThisTurn++;
+      logger.debug("Turn ended on an announced step; nudging", {
+        nudgesThisTurn,
+      });
+      const svc = services.chatHistory;
+      if (typeof svc?.isReady === "function" && svc.isReady()) {
+        svc.addUserMessage(ACT_TURN_NUDGE);
+        chatHistory = svc.getHistory();
+      } else {
+        chatHistory.push({
+          message: { role: "user", content: ACT_TURN_NUDGE },
+          contextItems: [],
+        });
+      }
+      continue;
+    }
 
     // Check if we should continue (skip break if auto-continuing after compaction)
     if (!shouldContinue && !shouldAutoContinue) {

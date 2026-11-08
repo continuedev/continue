@@ -20,7 +20,7 @@
  * that replaces most "when to ask" prose.
  */
 
-import { BuiltInToolNames } from "../../tools/builtIn";
+import { BuiltInToolNames } from "../../tools/builtIn.js";
 
 /** The names the model knows the tools by on a surface. */
 export interface TurnToolNames {
