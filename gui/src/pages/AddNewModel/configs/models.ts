@@ -45,6 +45,8 @@ export interface ModelPackage {
   server?: string;
   /** Provider reports this model as deprecated/legacy (live lists only). */
   deprecated?: boolean;
+  /** Bedrock: the account must fill out Anthropic's use-case form first. */
+  needsAnthropicUseCase?: boolean;
 }
 
 export const models: { [key: string]: ModelPackage } = {

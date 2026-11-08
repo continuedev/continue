@@ -87,4 +87,68 @@ describe("ProviderSetupFlow - Amazon Bedrock", () => {
     // No key is sent for profile auth.
     expect(saves[0].add[0]).not.toHaveProperty("apiKey");
   });
+
+  it("marks models that need the Anthropic use-case form, without checking them, and lets them be selected", async () => {
+    const messenger = new MockIdeMessenger();
+    messenger.responseHandlers["config/getProviderSetup"] = async () => ({
+      connections: [],
+      secureStorageAvailable: true,
+      preferredKeyStorage: "secure",
+      editable: true,
+    });
+    messenger.responseHandlers["bedrock/listModels"] = async () => ({
+      ok: true,
+      models: [
+        {
+          id: "anthropic.claude-sonnet-4-6",
+          name: "Claude Sonnet 4.6",
+          provider: "Anthropic",
+          kind: "on-demand",
+          needsAnthropicUseCase: true,
+        },
+        {
+          id: "amazon.nova-pro-v1:0",
+          name: "Nova Pro",
+          provider: "Amazon",
+          kind: "on-demand",
+        },
+      ],
+    });
+
+    const { user } = await renderWithProviders(
+      <ProviderSetupFlow initialProvider="bedrock" onDone={vi.fn()} />,
+      { mockIdeMessenger: messenger },
+    );
+
+    await user.selectOptions(
+      screen.getByLabelText("Authentication"),
+      "profile",
+    );
+    await user.type(screen.getByLabelText("AWS profile name"), "work");
+    const next = screen.getByRole("button", { name: "Next" });
+    await waitFor(() =>
+      expect((next as HTMLButtonElement).disabled).toBe(false),
+    );
+    await user.click(screen.getByRole("button", { name: "Test connection" }));
+    await screen.findByText(/need the Anthropic use-case form completed/);
+    await user.click(next);
+
+    const claude = (await screen.findByLabelText(
+      /Claude Sonnet 4.6/,
+    )) as HTMLInputElement;
+    const nova = screen.getByLabelText(/Nova Pro/) as HTMLInputElement;
+    await waitFor(() => expect(nova.checked).toBe(true));
+
+    expect(
+      screen.getByTestId("model-row-anthropic.claude-sonnet-4-6").textContent,
+    ).toContain("Needs use-case form");
+    expect(
+      screen.getByTestId("model-row-amazon.nova-pro-v1:0").textContent,
+    ).not.toContain("Needs use-case form");
+
+    // Not picked by default, but access may be granted later.
+    expect(claude.checked).toBe(false);
+    await user.click(claude);
+    expect(claude.checked).toBe(true);
+  });
 });

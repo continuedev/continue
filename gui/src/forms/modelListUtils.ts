@@ -114,6 +114,7 @@ export function bedrockOptionsToPackages(
       icon: o.provider === "Anthropic" ? "anthropic.png" : undefined,
       isOpenSource: false,
       deprecated: o.legacy ? true : undefined,
+      needsAnthropicUseCase: o.needsAnthropicUseCase ? true : undefined,
     }));
 }
 
@@ -156,6 +157,7 @@ export function mergeLiveModels(
           endpointProvider: l.endpointProvider ?? match.endpointProvider,
           createdAt: l.createdAt ?? match.createdAt,
           deprecated: l.deprecated,
+          needsAnthropicUseCase: l.needsAnthropicUseCase,
         }
       : l;
   });

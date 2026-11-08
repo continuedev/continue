@@ -167,6 +167,11 @@ export interface BedrockModelOption {
   /** Underlying foundation model ID when known. */
   baseModelId?: string;
   legacy?: boolean;
+  /**
+   * An Anthropic model on an account that has not filled out Anthropic's
+   * use-case form. Bedrock still lists it as ACTIVE, but chat is refused.
+   */
+  needsAnthropicUseCase?: boolean;
 }
 
 function baseModelIdFromArn(arn: string | undefined): string | undefined {
@@ -236,6 +241,32 @@ export function buildModelCatalog(
       a.provider.localeCompare(b.provider) ||
       Number(!!a.legacy) - Number(!!b.legacy) ||
       a.name.localeCompare(b.name),
+  );
+}
+
+/**
+ * Whether a GetUseCaseForModelAccess failure means the account has not filled
+ * out the form. Bedrock answers 404 with "You have not filled out the request
+ * form. Fill out the form before getting access." Any other failure says
+ * nothing about the form.
+ */
+export function isUseCaseFormMissingError(error: unknown): boolean {
+  const err = error as { name?: string; message?: string } | undefined;
+  return (
+    err?.name === "ResourceNotFoundException" &&
+    /not filled out the request form/i.test(err?.message ?? "")
+  );
+}
+
+/** Flag the catalog's Anthropic models as waiting on the use-case form. */
+export function markAnthropicUseCaseNeeded(
+  catalog: BedrockModelOption[],
+): BedrockModelOption[] {
+  return catalog.map((option) =>
+    option.provider === "Anthropic" ||
+    option.baseModelId?.startsWith("anthropic.")
+      ? { ...option, needsAnthropicUseCase: true }
+      : option,
   );
 }
 

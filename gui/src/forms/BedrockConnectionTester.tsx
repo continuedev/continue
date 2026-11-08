@@ -9,6 +9,9 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { BedrockAllModelsResult, listBedrockModelsFor } from "./bedrockModels";
 import type { BedrockEndpointModel } from "./modelListUtils";
 
+const ANTHROPIC_USE_CASE_NOTICE =
+  "Anthropic models on this account need the Anthropic use-case form completed in the Bedrock console before they will work.";
+
 interface Props {
   /** Connection settings built from the current form values. */
   connection: Record<string, string>;
@@ -129,6 +132,12 @@ export function BedrockConnectionTester({
             {mantleOnly > 0 ? ` (${mantleOnly} only on Mantle)` : ""}. The Model
             list above now shows them.
           </span>
+        </Alert>
+      )}
+
+      {models.some((m) => m.needsAnthropicUseCase) && (
+        <Alert type="warning" size="sm">
+          <span className="text-xs">{ANTHROPIC_USE_CASE_NOTICE}</span>
         </Alert>
       )}
 

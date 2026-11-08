@@ -114,6 +114,8 @@ export interface BedrockModelOptionInfo {
   kind: "on-demand" | "inference-profile" | "application-profile";
   baseModelId?: string;
   legacy?: boolean;
+  /** Anthropic model on an account that has not filled out the use-case form. */
+  needsAnthropicUseCase?: boolean;
 }
 
 export type BedrockListModelsResult =

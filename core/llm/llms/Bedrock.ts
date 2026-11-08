@@ -19,6 +19,7 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   BedrockClient,
+  GetUseCaseForModelAccessCommand,
   ListFoundationModelsCommand,
   ListInferenceProfilesCommand,
 } from "@aws-sdk/client-bedrock";
@@ -48,8 +49,13 @@ import {
   buildModelCatalog,
   getBedrockErrorHint,
   isStopSequencesUnsupportedError,
+  isUseCaseFormMissingError,
+  markAnthropicUseCaseNeeded,
   normalizeToolUseIds,
 } from "./bedrockHelpers.js";
+
+/** The use-case lookup is advisory, so listing never waits on it for long. */
+const USE_CASE_LOOKUP_TIMEOUT_MS = 2000;
 
 /**
  * Models that refused `stopSequences` in this process. They get requests
@@ -200,11 +206,13 @@ class Bedrock extends BaseLLM {
 
   /**
    * List the models this account can use in `region`: on-demand models by ID,
-   * and models that require it by inference profile ID.
+   * and models that require it by inference profile ID. Anthropic models are
+   * flagged when the account has not filled out Anthropic's use-case form.
    */
   async listAvailableModels(): Promise<BedrockModelOption[]> {
     try {
       const client = await this._getControlClient();
+      const useCaseMissing = this._isAnthropicUseCaseMissing(client);
 
       const models = await client.send(
         new ListFoundationModelsCommand({ byOutputModality: "TEXT" }),
@@ -220,9 +228,44 @@ class Bedrock extends BaseLLM {
         nextToken = page.nextToken;
       } while (nextToken);
 
-      return buildModelCatalog(models.modelSummaries ?? [], profiles);
+      const catalog = buildModelCatalog(models.modelSummaries ?? [], profiles);
+      return (await useCaseMissing)
+        ? markAnthropicUseCaseNeeded(catalog)
+        : catalog;
     } catch (e) {
       throw this._withHint(e);
+    }
+  }
+
+  /**
+   * True only when Bedrock says the use-case form has not been filled out.
+   * Bedrock lists Anthropic models as ACTIVE on such an account and then refuses
+   * chat. Never rejects: an error, a timeout or a permission refusal is `false`,
+   * so a failed lookup leaves the listing as it would otherwise be.
+   */
+  private async _isAnthropicUseCaseMissing(
+    client: BedrockClient,
+  ): Promise<boolean> {
+    const abort = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        client
+          .send(new GetUseCaseForModelAccessCommand({}), {
+            abortSignal: abort.signal,
+          })
+          .then(() => false, isUseCaseFormMissingError),
+        new Promise<boolean>((resolve) => {
+          timer = setTimeout(() => {
+            abort.abort();
+            resolve(false);
+          }, USE_CASE_LOOKUP_TIMEOUT_MS);
+        }),
+      ]);
+    } catch {
+      return false;
+    } finally {
+      clearTimeout(timer);
     }
   }
 

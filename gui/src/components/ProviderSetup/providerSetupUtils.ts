@@ -27,6 +27,8 @@ export interface ChecklistRow {
   /** Absent for a configured model the provider's list does not offer. */
   pkg?: ModelPackage;
   deprecated?: boolean;
+  /** Bedrock: won't work until the account fills out Anthropic's use-case form. */
+  needsAnthropicUseCase?: boolean;
 }
 
 export interface ChecklistGroups {
@@ -44,6 +46,7 @@ function rowOf(pkg: ModelPackage, configured: Set<string>): ChecklistRow {
     configured: configured.has(pkg.params.model),
     pkg,
     deprecated: pkg.deprecated,
+    needsAnthropicUseCase: pkg.needsAnthropicUseCase,
   };
 }
 
@@ -85,7 +88,7 @@ export function initialChecked(
   }
   return new Set(
     groups.top
-      .filter((r) => !r.deprecated)
+      .filter((r) => !r.deprecated && !r.needsAnthropicUseCase)
       .slice(0, count)
       .map((r) => r.model),
   );
