@@ -172,7 +172,7 @@ describe("applyModeModelsUpdate: single-model uses", () => {
       replan: { model: "Opus", reasoningEffort: "high" },
       subagent: { model: "Sonnet" },
     });
-    const parsed = YAML.parse(text);
+    const parsed = YAML.parse(text ?? "");
     expect(parsed.modeModels).toEqual({
       loop: { model: "Sonnet" },
       replan: { model: "Opus", reasoningEffort: "high" },
@@ -185,7 +185,9 @@ describe("applyModeModelsUpdate: single-model uses", () => {
       plan: { model: "Opus" },
       loop: { model: "Sonnet" },
     }).text;
-    const { text } = apply(start, { loop: null });
-    expect(YAML.parse(text).modeModels).toEqual({ plan: { model: "Opus" } });
+    const { text } = apply(start ?? "", { loop: null });
+    expect(YAML.parse(text ?? "").modeModels).toEqual({
+      plan: { model: "Opus" },
+    });
   });
 });

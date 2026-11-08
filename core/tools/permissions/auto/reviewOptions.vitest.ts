@@ -34,7 +34,7 @@ describe("reviewCompletionOptions", () => {
 });
 
 it("reviewToolCall sends the reasoning setting to the reviewer model", async () => {
-  const chat = vi.fn(async () => ({
+  const chat = vi.fn(async (..._args: unknown[]) => ({
     role: "assistant",
     content: JSON.stringify({ decision: "allow", reason: "Fine." }),
   }));
