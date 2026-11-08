@@ -1,7 +1,19 @@
+# Every text file is LF in the repository and on every checkout, whatever
+# core.autocrlf says (Git for Windows sets it to true system-wide). Without
+# this, Windows checkouts are CRLF, tools that write LF (prettier, scripts)
+# leave files that look modified with no change, and fixtures compared byte
+# for byte fail. Git decides what is text; binary files are left alone.
+* text=auto eol=lf
+
+# cmd.exe needs CRLF in batch files
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
 # Git hooks are run by sh, so keep LF on every checkout
 .husky/* text eol=lf
 
-# Test fixtures compared byte for byte: keep LF on every checkout, so the
-# tests pass on Windows (where core.autocrlf would turn them into CRLF)
+# Test fixtures compared byte for byte (covered by the first rule, kept
+# explicit because the tests depend on it)
 core/diff/test-examples/** text eol=lf
 core/config/testdata/** text eol=lf
+core/edit/lazy/test-examples/** text eol=lf
