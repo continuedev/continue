@@ -90,6 +90,10 @@ import {
 import { CodebaseRulesCache } from "./config/markdown/loadCodebaseRules";
 import { openSecretLocation } from "./config/openSecretLocation";
 import {
+  moveCredentialsToSecrets,
+  requestHasCredentials,
+} from "./config/providers/modelCredentials";
+import {
   defaultSecretName,
   readProviderConnections,
   ProviderSetupError,
@@ -813,7 +817,7 @@ export class Core {
     });
 
     on("config/saveProviderModels", async (msg) => {
-      const req = msg.data;
+      let req = msg.data;
       const invalid = validateSaveRequest(req);
       if (invalid) {
         return { saved: false, error: invalid };
@@ -837,6 +841,25 @@ export class Core {
           if (stored.envShadowed) envShadowedSecret = key.secretName;
         }
         this.globalContext.update("preferredKeyStorage", key.storage);
+      }
+
+      // Bedrock's access keys are on the models. Stored first, like the key.
+      if (requestHasCredentials(req)) {
+        const moved = await moveCredentialsToSecrets({
+          req,
+          ide: this.ide,
+          storage:
+            this.globalContext.get("preferredKeyStorage") !== "env" &&
+            (await isSecureStorageAvailable(this.ide))
+              ? "secure"
+              : "env",
+          continueDir: getContinueGlobalPath(),
+        });
+        if (moved.error) {
+          return { saved: false, error: moved.error };
+        }
+        req = moved.req as typeof req;
+        envShadowedSecret ??= moved.envShadowedSecret;
       }
 
       // The value goes no further than the secret store, unless the user

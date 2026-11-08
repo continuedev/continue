@@ -263,6 +263,38 @@ modeModels:
     });
   });
 
+  it("fills in secret references inside a catalog model's env", async () => {
+    secrets.BEDROCK_SECRET_ACCESS_KEY = "rendered-secret";
+    const yaml = `name: Env
+version: 1.0.0
+schema: v1
+models:
+  - from: Claude Keys
+`;
+    const result = await unrollAssistantFromContent(id, yaml, registry, {
+      renderSecrets: true,
+      currentUserSlug: "",
+      platformClient,
+      catalog: [
+        {
+          name: "Claude Keys",
+          provider: "bedrock",
+          model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+          env: {
+            region: "us-east-1",
+            secretAccessKey: "${{ secrets.BEDROCK_SECRET_ACCESS_KEY }}",
+          },
+        },
+      ],
+      providers: [],
+    });
+    expect(result.errors?.filter((e) => e.fatal)).toEqual([]);
+    expect(result.config?.models?.[0]?.env).toMatchObject({
+      region: "us-east-1",
+      secretAccessKey: "rendered-secret",
+    });
+  });
+
   it("keeps every from: entry, the model and its variants side by side", async () => {
     // Found in the Windows Sandbox check: entries with no name of their own
     // collided in the duplicate check, and only the first one was kept.
