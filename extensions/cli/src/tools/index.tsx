@@ -95,14 +95,14 @@ export async function getAllAvailableTools(
         finishItemTool,
       ]
     : [...BASE_BUILTIN_TOOLS];
-  // Only plan mode makes a list. Otherwise the model acts: it gets the tool
-  // only to keep a list a plan left.
-  if (
-    services.toolPermissions.getCurrentMode() !== "plan" &&
-    !loopItem &&
-    !getSessionTaskPlan()?.items.length
-  ) {
-    tools.splice(tools.indexOf(taskListTool), 1);
+  // Plan mode does not offer the task list: PresentPlan's to-dos become the
+  // list, and a model offered both resent the list instead of planning
+  // (research-bedrock-families.md item 3). Outside plan mode the model acts
+  // and gets the tool only to keep a list a plan left.
+  const mode = services.toolPermissions.getCurrentMode();
+  if (mode === "plan" || (!loopItem && !getSessionTaskPlan()?.items.length)) {
+    const at = tools.indexOf(taskListTool);
+    if (at !== -1) tools.splice(at, 1);
   }
 
   // A loop's questions go through HoldQuestion. Headless runs and `cn serve`

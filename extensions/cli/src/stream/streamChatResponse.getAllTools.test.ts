@@ -48,7 +48,9 @@ describe("getRequestTools - Tool Filtering", () => {
     expect(toolNames).toContain("Read");
     expect(toolNames).toContain("List");
     expect(toolNames).toContain("Fetch");
-    expect(toolNames).toContain("TaskList");
+    // Plan mode makes no task list: PresentPlan's to-dos become it
+    expect(toolNames).not.toContain("TaskList");
+    expect(toolNames).toContain("PresentPlan");
     expect(toolNames).not.toContain("Checklist");
 
     // Write tools should be excluded

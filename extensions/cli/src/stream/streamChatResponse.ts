@@ -43,6 +43,7 @@ import { validateContextLength } from "../util/tokenizer.js";
 
 import { getRequestTools, handleToolCalls } from "./handleToolCalls.js";
 import { resetRefusalCount } from "./refusalCap.js";
+import { resetRepeatGuard } from "./repeatGuard.js";
 import { injectSteeringMessage } from "./steering.js";
 import {
   handleAutoContinuation,
@@ -499,7 +500,10 @@ export async function streamChatResponse(
   // End-of-turn nudges (core/util/turnEnd.ts): one between tool calls, a few per turn
   let nudgesSinceToolUse = 0;
   let nudgesThisTurn = 0;
-  if (!isCompacting) resetRefusalCount();
+  if (!isCompacting) {
+    resetRefusalCount();
+    resetRepeatGuard();
+  }
 
   while (true) {
     // If ChatHistoryService is available, refresh local chatHistory view

@@ -23,6 +23,12 @@ import { logger } from "../util/logger.js";
 
 import { recordRefusals } from "./refusalCap.js";
 import {
+  checkRepeatedCall,
+  recordInvalidCalls,
+  recordRepeatOutcome,
+  startRepeatRound,
+} from "./repeatGuard.js";
+import {
   executeStreamedToolCalls,
   preprocessStreamedToolCalls,
 } from "./streamChatResponse.helpers.js";
@@ -142,9 +148,43 @@ export async function handleToolCalls(
     chatHistory.push(createHistoryItem(messageWithUsage, [], toolCallStates));
   }
 
+  // The repeat guard: a call identical to the ones before it is refused
+  // without running, and enough repeats end the turn (repeatGuard.ts).
+  startRepeatRound();
+  let repeatEndsTurn = false;
+  const toRun: ToolCall[] = [];
+  for (const tc of toolCalls) {
+    const verdict = checkRepeatedCall(tc);
+    repeatEndsTurn ||= verdict.endTurn;
+    if (!verdict.refusal) {
+      toRun.push(tc);
+      continue;
+    }
+    callbacks?.onToolStart?.(tc.name, tc.arguments);
+    callbacks?.onToolResult?.(verdict.refusal, tc.name, "canceled");
+    if (useService) {
+      chatHistorySvc.addToolResult(tc.id, verdict.refusal, "canceled");
+    } else {
+      setLocalToolResult(chatHistory, tc.id, verdict.refusal, "canceled");
+    }
+  }
+
   // First preprocess the tool calls
   const { preprocessedCalls, errorChatEntries } =
-    await preprocessStreamedToolCalls(isHeadless, toolCalls, callbacks);
+    await preprocessStreamedToolCalls(isHeadless, toRun, callbacks);
+
+  // A round of calls that fail validation (missing parameters, an unknown
+  // tool) counts like a repeat, whatever the arguments: a model whose tool
+  // input arrives truncated sends a different broken call every time.
+  const invalid = recordInvalidCalls(errorChatEntries.length > 0);
+  repeatEndsTurn ||= invalid.endTurn;
+  for (const errorEntry of errorChatEntries) {
+    const call = toRun.find((tc) => tc.id === errorEntry.tool_call_id);
+    if (call) recordRepeatOutcome(call, true);
+    if (invalid.refusal && typeof errorEntry.content === "string") {
+      errorEntry.content = `${errorEntry.content}\n\n${invalid.refusal}`;
+    }
+  }
 
   // Add any preprocessing errors to the toolCallStates on the assistant message
   // (NOT as separate history items, which would cause duplicate tool_result messages)
@@ -188,6 +228,17 @@ export async function handleToolCalls(
         entry.status,
       );
     }
+  }
+
+  // How each call went, so a refusal of the next repeat can say whether the
+  // earlier identical calls failed or succeeded.
+  for (const entry of chatHistoryEntries) {
+    const call = toRun.find((tc) => tc.id === entry.tool_call_id);
+    if (call) recordRepeatOutcome(call, entry.status !== "done");
+  }
+  if (repeatEndsTurn) {
+    logger.debug("Repeat guard reached; ending the turn");
+    return true;
   }
 
   // A refusal is a tool result the model reads and carries on from ("do what

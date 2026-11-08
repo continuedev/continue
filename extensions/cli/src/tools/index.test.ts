@@ -1,4 +1,8 @@
-import { extractToolCalls, getToolDisplayName } from "./index.js";
+import {
+  extractToolCalls,
+  getAllAvailableTools,
+  getToolDisplayName,
+} from "./index.js";
 
 describe("tools/index utilities", () => {
   describe("getToolDisplayName", () => {
@@ -183,5 +187,90 @@ Valid call:
         },
       ]);
     });
+  });
+});
+
+// Which tools the model is offered, by mode and task list. The services and
+// the model lookups are mocked, so only the selection logic runs.
+const toolState = vi.hoisted(() => ({
+  mode: "normal" as string,
+  plan: undefined as { items: unknown[] } | undefined,
+  loopItem: false,
+}));
+
+vi.mock("../services/index.js", () => ({
+  SERVICE_NAMES: { MODEL: "model", MCP: "mcp", TOOL_PERMISSIONS: "tp" },
+  serviceContainer: {
+    get: vi.fn(async (name: string) =>
+      name === "model"
+        ? { model: { provider: "bedrock", name: "m", model: "m" } }
+        : { tools: [] },
+    ),
+  },
+  services: {
+    toolPermissions: {
+      getCurrentMode: () => toolState.mode,
+      isHeadless: () => false,
+    },
+  },
+}));
+vi.mock("../session.js", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  getSessionTaskPlan: () => toolState.plan,
+}));
+vi.mock("../loop/loopSession.js", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  loopItemRunning: () => toolState.loopItem,
+  loopRunGoing: () => false,
+}));
+vi.mock("./searchCode.js", () => ({
+  checkIfRipgrepIsInstalled: async () => false,
+  searchCodeTool: { name: "Search" },
+}));
+vi.mock("./skills.js", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  skillsTool: async () => ({ name: "Skills" }),
+}));
+vi.mock("./toolsConfig.js", () => ({
+  isBetaSubagentToolEnabled: () => false,
+  isBetaUploadArtifactToolEnabled: () => false,
+}));
+vi.mock("src/utils/modelCapability.js", () => ({
+  isModelCapable: () => true,
+}));
+
+describe("getAllAvailableTools and the task list", () => {
+  const names = async () =>
+    (await getAllAvailableTools(false)).map((t) => t.name);
+
+  beforeEach(() => {
+    toolState.mode = "normal";
+    toolState.plan = undefined;
+    toolState.loopItem = false;
+  });
+
+  it("does not offer TaskList in plan mode: PresentPlan's to-dos become the list", async () => {
+    toolState.mode = "plan";
+    toolState.plan = { items: [{}] };
+    const offered = await names();
+    expect(offered).not.toContain("TaskList");
+    expect(offered).toContain("PresentPlan");
+  });
+
+  it("does not offer TaskList in agent mode without a list", async () => {
+    expect(await names()).not.toContain("TaskList");
+  });
+
+  it("offers TaskList in agent mode to keep a list a plan left", async () => {
+    toolState.plan = { items: [{}] };
+    expect(await names()).toContain("TaskList");
+  });
+
+  it("a loop item reports with FinishItem and does not get TaskList", async () => {
+    toolState.loopItem = true;
+    toolState.plan = { items: [{}] };
+    const offered = await names();
+    expect(offered).not.toContain("TaskList");
+    expect(offered).toContain("FinishItem");
   });
 });

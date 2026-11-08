@@ -549,7 +549,10 @@ export function formatTaskPlanBlock(plan: TaskPlan | undefined): string {
 
   const lines = [
     TASK_LIST_BLOCK_OPEN,
-    "Your current task list, kept outside the conversation. Update it with the task list tool by sending the whole list; completed items you leave out are kept. Markers: [ ] pending, [>] in progress, [x] completed, [-] cancelled, [!] blocked.",
+    // Leads with what the block is, not with "update it": read as an
+    // instruction, GPT-OSS and Nova Pro resent the list unchanged 24, 67 and
+    // 107 times in a turn (research-bedrock-families.md item 3).
+    "This is your saved task list; it is shown with every request. Call the task list tool only to change an item's status or wording, never to resend it unchanged. When you do, send the whole list; completed items you leave out are kept. Markers: [ ] pending, [>] in progress, [x] completed, [-] cancelled, [!] blocked.",
   ];
   if (plan?.updatedBy === "user") {
     lines.push(
