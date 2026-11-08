@@ -59,6 +59,23 @@ import {
   RerankCreateParams,
 } from "./base.js";
 
+/**
+ * The sampling fields Claude accepts: `temperature` and `top_p` together are
+ * refused ("temperature and top_p cannot both be specified"), so only
+ * `temperature` is kept when both are set; with thinking on, `temperature`
+ * other than 1 and `top_p` below 0.95 are refused, so neither is sent. The
+ * same rule as `bedrockSamplingParams` for Claude on Bedrock.
+ */
+export function anthropicSamplingParams(
+  temperature: number | undefined,
+  topP: number | undefined,
+  reasoning: boolean,
+): { temperature?: number; top_p?: number } {
+  if (reasoning) return {};
+  if (temperature !== undefined && topP !== undefined) return { temperature };
+  return { temperature, top_p: topP };
+}
+
 export class AnthropicApi implements BaseLlmApi {
   apiBase: string = "https://api.anthropic.com/v1/";
 
@@ -173,8 +190,12 @@ export class AnthropicApi implements BaseLlmApi {
               },
             ]
           : systemMessage,
-      top_p: oaiBody.top_p ?? undefined,
-      temperature: oaiBody.temperature ?? undefined,
+      // This adapter sends no thinking block, so only the both-set rule applies
+      ...anthropicSamplingParams(
+        oaiBody.temperature ?? undefined,
+        oaiBody.top_p ?? undefined,
+        false,
+      ),
       max_tokens: oaiBody.max_tokens ?? this.maxTokensForModel(oaiBody.model), // max_tokens is required
       model: oaiBody.model,
       stop_sequences: stop,
