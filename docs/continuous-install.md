@@ -89,6 +89,16 @@ code --install-extension (Get-ChildItem "$env:TEMP\continuous-vsix" -Filter *.vs
 
 Replace `win32-x64-vsix` with `darwin-arm64-vsix` on a Mac and use `bash`/`zsh` syntax with `gh run download ... --dir "$TMPDIR/continuous-vsix"`.
 
+## The terminal CLI
+
+Releases from 2.4.3 on also carry the command-line agent, `continuous-cli-<version>.tgz`. It needs Node.js 22 or newer and installs with npm straight from the release, with nothing else to download:
+
+```bash
+npm i -g https://github.com/b1tninja/continuous/releases/download/v2.4.3-vscode/continuous-cli-2.4.3.tgz
+```
+
+The command is `continuous` (upstream's is `cn`, so both can be installed). It uses the same `~/.continuous` folder as the extension, and `continuous --config <path to a .yaml>` runs with one config file. To update, install the next release's `.tgz` the same way; the CLI does not update itself.
+
 ## Updating
 
 VS Code does not update side-loaded `.vsix` files automatically. To hear about new releases, select **Watch** → **Custom** → **Releases** on the [repository](https://github.com/b1tninja/continuous).

@@ -55,7 +55,7 @@ export class HookService extends BaseService<HookServiceState> {
       const [it, are, has] =
         count === 1 ? ["it", "is", "it has"] : ["them", "are", "they have"];
       process.stderr.write(
-        `This project defines ${count} hook${count === 1 ? "" : "s"} that ${are} not running because ${has} not been trusted. Run \`cn hooks\` to review ${it}.\n`,
+        `This project defines ${count} hook${count === 1 ? "" : "s"} that ${are} not running because ${has} not been trusted. Run \`continuous hooks\` to review ${it}.\n`,
       );
     }
 

@@ -37,7 +37,7 @@ function writeJson(file: string, value: unknown) {
 
 const projectSettings = (name = ".continue/settings.json") =>
   path.join(project, ...name.split("/"));
-const userSettings = () => path.join(home, ".continue", "settings.json");
+const userSettings = () => path.join(home, ".continuous", "settings.json");
 
 const load = () => loadHooksConfig(project, home);
 const commandsOf = (cfg: HooksConfig) =>
@@ -160,7 +160,7 @@ describe("granting trust", () => {
   it("writes the trust record with owner-only permissions", () => {
     writeJson(projectSettings(), { hooks: hook("x") });
     trustCurrent();
-    const file = path.join(home, ".continue", "trusted-hooks.json");
+    const file = path.join(home, ".continuous", "trusted-hooks.json");
     expect(fs.existsSync(file)).toBe(true);
     if (process.platform !== "win32") {
       expect(fs.statSync(file).mode & 0o077).toBe(0);
@@ -259,7 +259,7 @@ describe("trust ends when the hooks change", () => {
 });
 
 describe("the trust record is not fooled", () => {
-  const recordFile = () => path.join(home, ".continue", "trusted-hooks.json");
+  const recordFile = () => path.join(home, ".continuous", "trusted-hooks.json");
   const trustedProject = () => {
     writeJson(projectSettings(), { hooks: hook("theirs") });
     trustCurrent();

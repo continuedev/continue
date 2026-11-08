@@ -95,9 +95,11 @@ function getProjectSettingsFilePaths(cwd: string): string[] {
   return [
     path.join(cwd, ".claude", "settings.json"),
     path.join(cwd, ".continue", "settings.json"),
+    path.join(cwd, ".continuous", "settings.json"),
     // Project-local (highest precedence)
     path.join(cwd, ".claude", "settings.local.json"),
     path.join(cwd, ".continue", "settings.local.json"),
+    path.join(cwd, ".continuous", "settings.local.json"),
   ];
 }
 

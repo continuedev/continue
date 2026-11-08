@@ -1,5 +1,4 @@
 import fs from "fs";
-import os from "os";
 import path from "path";
 
 import type {
@@ -14,6 +13,7 @@ import historyManager from "core/util/history.js";
 import { v4 as uuidv4 } from "uuid";
 
 import { DEFAULT_SESSION_TITLE } from "./constants/session.js";
+import { env } from "./env.js";
 import { logger } from "./util/logger.js";
 
 // Re-export BaseSessionMetadata for external consumers
@@ -46,10 +46,8 @@ function getSessionDir(): string {
     return sessionDir;
   }
 
-  // Use CONTINUE_GLOBAL_DIR if set (for testing)
-  const continueHome =
-    process.env.CONTINUE_GLOBAL_DIR || path.join(os.homedir(), ".continue");
-  const sessionDir = path.join(continueHome, "sessions");
+  // ~/.continuous, or CONTINUOUS_GLOBAL_DIR / CONTINUE_GLOBAL_DIR
+  const sessionDir = path.join(env.continueHome, "sessions");
 
   // Create directory if it doesn't exist
   if (!fs.existsSync(sessionDir)) {

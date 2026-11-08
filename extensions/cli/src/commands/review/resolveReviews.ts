@@ -57,7 +57,9 @@ async function resolveFromHub(): Promise<ResolvedReview[]> {
 function resolveFromLocal(): ResolvedReview[] {
   const cwd = process.cwd();
   const dirs = [
+    path.join(cwd, ".continuous", "agents"),
     path.join(cwd, ".continue", "agents"),
+    path.join(cwd, ".continuous", "checks"),
     path.join(cwd, ".continue", "checks"),
   ];
 

@@ -22,9 +22,11 @@
 
 import * as crypto from "crypto";
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 
+import { GLOBAL_DIR_NAME } from "core/util/paths.js";
+
+import { env } from "../env.js";
 import { logger } from "../util/logger.js";
 
 import type { HookHandler, HooksConfig } from "./types.js";
@@ -78,13 +80,18 @@ export function getGlobalDir(
   cwd: string,
   homeDir?: string,
 ): string | undefined {
-  const fromEnv = process.env.CONTINUE_GLOBAL_DIR;
-  if (!fromEnv) return path.join(homeDir ?? os.homedir(), ".continue");
+  const fromEnv =
+    process.env.CONTINUOUS_GLOBAL_DIR || process.env.CONTINUE_GLOBAL_DIR;
+  if (!fromEnv) {
+    return homeDir === undefined
+      ? env.continueHome
+      : path.join(homeDir, GLOBAL_DIR_NAME);
+  }
 
   const dir = path.resolve(cwd, fromEnv);
   if (isInside(realPath(dir), realPath(cwd))) {
     logger.warn(
-      `Ignoring CONTINUE_GLOBAL_DIR=${fromEnv} for hooks because it is inside the project (${cwd}). User-level hooks and project trust are unavailable.`,
+      `Ignoring the global folder ${fromEnv} for hooks because it is inside the project (${cwd}). User-level hooks and project trust are unavailable.`,
     );
     return undefined;
   }

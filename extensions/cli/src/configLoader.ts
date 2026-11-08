@@ -303,7 +303,7 @@ async function loadUserAssistantWithFallback(
 }
 
 /**
- * Loads default config.yaml from ~/.continue/config.yaml
+ * Loads default config.yaml from the global folder (~/.continuous/config.yaml)
  */
 async function loadLocalConfigYaml(
   accessToken: string | null,

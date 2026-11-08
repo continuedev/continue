@@ -86,7 +86,7 @@ runTest("Version command", () => {
 // Test 4: Help command works
 runTest("Help command", () => {
   const output = execCommand(getCLICommand("--help"));
-  if (!output.includes("Continue CLI") || !output.includes("--version")) {
+  if (!output.includes("Continuous CLI") || !output.includes("--version")) {
     throw new Error("Help output missing expected content");
   }
 });

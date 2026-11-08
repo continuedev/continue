@@ -124,6 +124,63 @@ jobs:
           name: ${{ matrix.platform }}-${{ matrix.arch }}-vsix-agents
           path: "extensions/vscode/agents/*.vsix"
 
+  # The CLI (`continuous`), as one more release asset: continuous-cli-<version>.tgz,
+  # at the extension's version. It is a self-contained bundle with no
+  # dependencies, installed with `npm i -g <asset URL>` on Node 22+. It is not
+  # published to npm.
+  cli:
+    needs: [check_release_name, check-version]
+    if: needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: extensions/cli/package-lock.json
+
+      - name: Setup packages
+        uses: ./.github/actions/setup-packages
+      - name: Setup core component
+        uses: ./.github/actions/setup-component
+        with:
+          component: core
+          include-root: true
+
+      - name: Build core
+        run: |
+          cd core
+          npm run build
+
+      - name: Build and pack the CLI
+        run: |
+          cd extensions/cli
+          npm ci --include=optional
+          npm run build
+          version=$(node -p "require('../vscode/package.json').version")
+          node scripts/pack-release.mjs "$version" "$GITHUB_WORKSPACE/cli-artifact"
+
+      # A clean install from the tarball, outside the repository, must run.
+      - name: Install the tarball and run it
+        run: |
+          version=$(node -p "require('./extensions/vscode/package.json').version")
+          prefix=$(mktemp -d)
+          home=$(mktemp -d)
+          npm i -g --prefix "$prefix" "$GITHUB_WORKSPACE/cli-artifact/continuous-cli-$version.tgz"
+          cd "$home"
+          out=$(HOME="$home" "$prefix/bin/continuous" --version)
+          echo "continuous --version: $out"
+          test "$out" = "$version"
+          test -d "$home/.continuous"
+
+      - name: Upload the CLI artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: cli-tgz
+          path: cli-artifact/*.tgz
+
   release:
     # Only a tag becomes a release. Run from a branch, the workflow builds
     # every package and stops here (a dry run), instead of tagging a release
@@ -134,6 +191,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build
+      - cli
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -157,10 +215,16 @@ jobs:
           path: vsix-artifacts
           merge-multiple: true
 
+      # The CLI tarball goes on the GitHub release only.
+      - uses: actions/download-artifact@v8
+        with:
+          name: cli-tgz
+          path: vsix-artifacts
+
       - name: Checksums
         working-directory: vsix-artifacts
         run: |
-          sha256sum *.vsix > SHA256SUMS.txt
+          sha256sum *.vsix *.tgz > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Release notes
@@ -192,6 +256,7 @@ jobs:
           body_path: ${{ steps.notes.outputs.path }}
           files: |
             vsix-artifacts/*.vsix
+            vsix-artifacts/*.tgz
             vsix-artifacts/SHA256SUMS.txt
           token: ${{ secrets.GITHUB_TOKEN }}
 

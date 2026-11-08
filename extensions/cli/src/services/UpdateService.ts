@@ -5,7 +5,12 @@ import { GlobalContext } from "core/util/GlobalContext.js";
 
 import { logger } from "src/util/logger.js";
 
-import { compareVersions, getLatestVersion, getVersion } from "../version.js";
+import {
+  compareVersions,
+  getLatestVersion,
+  getVersion,
+  RELEASES_URL,
+} from "../version.js";
 
 import { BaseService } from "./BaseService.js";
 import { serviceContainer } from "./ServiceContainer.js";
@@ -16,6 +21,9 @@ const execAsync = promisify(exec);
  * Service for checking and performing CLI updates
  */
 export class UpdateService extends BaseService<UpdateServiceState> {
+  /** Off for Continuous; tests turn it on to cover the update flow. */
+  selfUpdate = false;
+
   constructor() {
     super("update", {
       autoUpdate: true,
@@ -134,6 +142,17 @@ export class UpdateService extends BaseService<UpdateServiceState> {
 
   async performUpdate(isAutoUpdate?: boolean) {
     if (this.currentState.status === "updating") {
+      return;
+    }
+
+    // Continuous is not on npm: `npm i -g @continuedev/cli` would replace it
+    // with upstream's CLI. New versions come from the GitHub releases.
+    if (!this.selfUpdate) {
+      this.setState({
+        status: UpdateStatus.IDLE,
+        message: `Install a new version from ${RELEASES_URL}`,
+        isUpdateAvailable: false,
+      });
       return;
     }
 

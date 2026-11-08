@@ -22,13 +22,19 @@ function readYaml(file: string): unknown {
   }
 }
 
-/** ~/.continue first, then the working directory's .continue/, which wins. */
+/**
+ * ~/.continuous first, then the working directory's older .continue/, then
+ * its .continuous/, which wins.
+ */
 function candidateFiles(name: string, cwd: string): string[] {
   const global = path.join(env.continueHome, name);
-  const local = path.join(cwd, ".continue", name);
-  return path.resolve(global) === path.resolve(local)
-    ? [global]
-    : [global, local];
+  const locals = [".continue", ".continuous"].map((dir) =>
+    path.join(cwd, dir, name),
+  );
+  return [global, ...locals].filter(
+    (file, i, all) =>
+      all.findIndex((f) => path.resolve(f) === path.resolve(file)) === i,
+  );
 }
 
 /**

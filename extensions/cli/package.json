@@ -1,13 +1,19 @@
 {
-  "name": "@continuedev/cli",
+  "name": "@b1tninja/continuous-cli",
   "version": "0.0.0-dev",
-  "description": "Continue CLI",
+  "description": "Continuous CLI: the terminal agent of Continuous, a community fork of Continue",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "cn": "dist/cn.js"
+    "continuous": "dist/cn.js"
   },
+  "files": [
+    "dist/index.js",
+    "dist/cn.js",
+    "dist/xhr-sync-worker.js",
+    "README.md"
+  ],
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -29,19 +35,20 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "watch:logs": "touch ~/.continue/logs/cn.log && tail -f ~/.continue/logs/cn.log",
+    "watch:logs": "touch ~/.continuous/logs/cn.log && tail -f ~/.continuous/logs/cn.log",
     "prepare": "npm run build"
   },
   "author": "Continue Dev, Inc.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/continuedev/continue.git"
+    "url": "https://github.com/b1tninja/continuous.git",
+    "directory": "extensions/cli"
   },
   "bugs": {
-    "url": "https://github.com/continuedev/continue/issues"
+    "url": "https://github.com/b1tninja/continuous/issues"
   },
-  "homepage": "https://continue.dev",
+  "homepage": "https://github.com/b1tninja/continuous",
   "dependencies": {
     "fdir": "^6.4.2",
     "find-up": "^8.0.0",

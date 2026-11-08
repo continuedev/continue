@@ -61,7 +61,7 @@ const result = await runCLI(context, {
 
 // Verify output and exit code
 expect(result.exitCode).toBe(0);
-expect(result.stdout).toContain("Continue CLI");
+expect(result.stdout).toContain("Continuous CLI");
 ```
 
 ### Testing with Input

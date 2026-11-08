@@ -137,7 +137,9 @@ describe("TUIChat - message queue and steering", () => {
       const roles = messages.map((m) => m.role);
       expect(roles.slice(-3)).toEqual(["assistant", "tool", "user"]);
       expect(messages.at(-2)!.tool_call_id).toBe("call_Read");
-      expect(messageText(messages.at(-2)!)).toContain("@continuedev/cli");
+      expect(messageText(messages.at(-2)!)).toContain(
+        "@b1tninja/continuous-cli",
+      );
       expect(messageText(messages.at(-1)!)).toBe("use b.ts instead");
       expect(messageQueue.getQueueLength()).toBe(0);
 

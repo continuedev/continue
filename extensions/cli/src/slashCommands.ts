@@ -57,7 +57,7 @@ async function handleHelp(_args: string[], _assistant: AssistantConfig) {
 async function handleFork() {
   try {
     const currentSession = getCurrentSession();
-    const forkCommand = `cn --fork ${currentSession.sessionId}`;
+    const forkCommand = `continuous --fork ${currentSession.sessionId}`;
     // Try to copy to clipboard dynamically to avoid hard dependency in tests
     try {
       const clipboardy = await import("clipboardy");

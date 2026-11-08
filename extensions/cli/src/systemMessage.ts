@@ -89,6 +89,7 @@ function getRuleNameFromPath(filePath: string): string {
 export function loadMarkdownRulesWithMetadata(): RuleObject[] {
   const cwd = process.cwd();
   const rulesDirs = [
+    path.join(cwd, ".continuous", "rules"),
     path.join(cwd, ".continue", "rules"),
     path.join(env.continueHome, "rules"),
   ];

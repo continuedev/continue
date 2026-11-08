@@ -172,9 +172,9 @@ process.on("SIGINT", async () => {
 const program = new Command();
 
 program
-  .name("cn")
+  .name("continuous")
   .description(
-    "Continue CLI - AI-powered development assistant. Starts an interactive session by default, use -p/--print for non-interactive output.",
+    "Continuous CLI - AI-powered development assistant. Starts an interactive session by default, use -p/--print for non-interactive output.",
   )
   .version(getVersion(), "-v, --version", "Display version number");
 
@@ -199,7 +199,7 @@ addCommonOptions(program)
   )
   .option(
     "--trust-project-hooks",
-    "Run this project's hooks for this session without asking (see `cn hooks`)",
+    "Run this project's hooks for this session without asking (see `continuous hooks`)",
   )
   .action(async (prompt, options) => {
     // Handle piped input - detect it early and decide on mode

@@ -1,5 +1,5 @@
 /**
- * `cn hooks`: see which project hooks are waiting for trust, and grant or
+ * `continuous hooks`: see which project hooks are waiting for trust, and grant or
  * withdraw it. Trust is recorded against what the hooks say right now, so
  * editing them asks again.
  */
@@ -66,7 +66,7 @@ export async function hooksCommand(
       out(
         isProjectTrusted(cwd, fingerprint)
           ? "Trusted: these hooks run."
-          : "Not trusted: these hooks do not run. Review them, then run `cn hooks trust`.",
+          : "Not trusted: these hooks do not run. Review them, then run `continuous hooks trust`.",
       );
       return 0;
     }

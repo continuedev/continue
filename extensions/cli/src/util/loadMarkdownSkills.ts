@@ -93,6 +93,7 @@ export async function loadMarkdownSkills(): Promise<LoadSkillsResult> {
 
   try {
     const skillsDirs = [
+      path.join(cwd, ".continuous", SKILLS_DIR),
       path.join(cwd, ".continue", SKILLS_DIR),
       path.join(cwd, ".claude", SKILLS_DIR),
       path.join(env.continueHome, SKILLS_DIR),

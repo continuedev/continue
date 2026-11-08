@@ -165,11 +165,17 @@ export function getGlobalContinueIgnorePath(): string {
   return ignorePath;
 }
 
+/** The global folder's path, without creating it. */
+export function getGlobalDirPath(): string {
+  return CONTINUE_GLOBAL_DIR;
+}
+
 export function getContinueGlobalPath(): string {
   // ~/.continuous, or CONTINUOUS_GLOBAL_DIR
   const continuePath = CONTINUE_GLOBAL_DIR;
   if (!fs.existsSync(continuePath)) {
-    fs.mkdirSync(continuePath);
+    // recursive: no EEXIST when another process makes it first
+    fs.mkdirSync(continuePath, { recursive: true });
   }
   return continuePath;
 }

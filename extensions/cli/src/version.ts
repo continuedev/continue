@@ -2,10 +2,6 @@ import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
-import node_machine_id from "node-machine-id";
-
-import { logger } from "./util/logger.js";
-
 export function getVersion(): string {
   try {
     const __filename = fileURLToPath(import.meta.url);
@@ -19,60 +15,20 @@ export function getVersion(): string {
   }
 }
 
-function getEventUserId(): string {
-  return node_machine_id.machineIdSync();
-}
+/** Where releases of this fork are published, with the CLI as an asset. */
+export const RELEASES_URL = "https://github.com/b1tninja/continuous/releases";
 
-// Singleton to cache the latest version result
-let latestVersionCache: Promise<string | null> | null = null;
-
+/**
+ * The newest published version, for the update check. Continuous does not
+ * look this up: upstream's endpoint (api.continue.dev, with a machine id)
+ * reports upstream's CLI, and the fork's CLI is installed from its GitHub
+ * releases. Always null, so the update check stays idle.
+ */
 export async function getLatestVersion(
-  signal?: AbortSignal,
+  _signal?: AbortSignal,
 ): Promise<string | null> {
-  // Return cached promise if it exists
-  if (latestVersionCache) {
-    return latestVersionCache;
-  }
-
-  // Create and cache the promise
-  latestVersionCache = (async () => {
-    try {
-      const id = getEventUserId();
-      const response = await fetch(
-        `https://api.continue.dev/cn/info?id=${encodeURIComponent(id)}`,
-        { signal },
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      return data.version;
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        // Request was aborted, don't log
-        return null;
-      }
-      logger?.debug(
-        "Warning: Could not fetch latest version from api.continue.dev",
-      );
-      return null;
-    }
-  })();
-
-  return latestVersionCache;
+  return null;
 }
-
-getLatestVersion()
-  .then((version) => {
-    if (version) {
-      logger?.info(`Latest version: ${version}`);
-    }
-  })
-  .catch((error) => {
-    logger?.debug(
-      `Warning: Could not fetch latest version from api.continue.dev: ${error}`,
-    );
-  });
 
 export function compareVersions(
   current: string,
