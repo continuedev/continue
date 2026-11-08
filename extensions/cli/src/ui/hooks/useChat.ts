@@ -368,6 +368,7 @@ export function useChat({
         setActivePermissionRequest,
         llmApi: turnLlmApi,
         model: turnModel,
+        onShowStatusMessage,
       });
       // Steering: deliver queued messages at the next tool boundary when the
       // person asked for it (Enter on an empty prompt while the agent works),

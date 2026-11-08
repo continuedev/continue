@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import type { Express, Request, Response } from "express";
 
 import {
@@ -17,9 +18,15 @@ import {
   messageQueue,
 } from "../stream/messageQueue.js";
 import { reportFailureTool } from "../tools/reportFailure.js";
+import {
+  cacheTallySnapshot,
+  type CacheTallySnapshot,
+  describeCacheTally,
+} from "../util/cacheTally.js";
 import { updateAgentMetadata } from "../util/exit.js";
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
+import { formatReplyTally, getTruncatedReplies } from "../util/replyTally.js";
 
 import {
   checkAgentComplete,
@@ -81,9 +88,21 @@ export interface ServeMessageContext {
   loopWakeTimer?: ReturnType<typeof setTimeout>;
 }
 
+/** What this process's requests did, next to the session's cumulative usage. */
+export interface RunTallySnapshot {
+  /**
+   * The prompt cache, counted per request of this process: requests, input
+   * tokens processed, tokens read and written, and how many requests were
+   * under the model's minimum cacheable prompt (so could not be cached).
+   */
+  promptCache: CacheTallySnapshot;
+  /** Replies the output limit cut off (finish_reason "length"). */
+  truncatedReplies: number;
+}
+
 export function getServeStateSnapshot(
   state: ServerState,
-): StateSnapshot & QueueSnapshot & LoopSnapshot {
+): StateSnapshot & QueueSnapshot & LoopSnapshot & RunTallySnapshot {
   return {
     ...getCompleteStateSnapshot(
       state.session,
@@ -93,7 +112,17 @@ export function getServeStateSnapshot(
     ),
     ...getQueueSnapshot(),
     ...getLoopSnapshot(),
+    promptCache: cacheTallySnapshot(),
+    truncatedReplies: getTruncatedReplies(),
   };
+}
+
+/** The end-of-turn lines for the serve log: the cache tally, cut-off replies. */
+export function logTurnTally(): void {
+  const cacheLine = describeCacheTally();
+  if (cacheLine) logger.info(chalk.dim(cacheLine));
+  const cutOff = formatReplyTally();
+  if (cutOff) logger.info(chalk.yellow(cutOff));
 }
 
 /** GET /state, POST /message and POST /pause. */
@@ -249,6 +278,7 @@ async function runTurn(ctx: ServeMessageContext, prompt: string) {
     // No direct persistence here; ChatHistoryService handles persistence when appropriate
 
     state.lastActivity = Date.now();
+    logTurnTally();
 
     // Update metadata after successful agent turn
     try {

@@ -11,6 +11,7 @@ import type {
 
 import { pruneLastMessage } from "../compaction.js";
 import { getRequestBodyHints } from "../contextManagement.js";
+import { withEnvironmentBlock } from "../environmentContext.js";
 import {
   ACT_TURN_NUDGE,
   announcesNextStep,
@@ -33,6 +34,11 @@ import {
   withExponentialBackoff,
 } from "../util/exponentialBackoff.js";
 import { logger } from "../util/logger.js";
+import {
+  recordTruncatedReply,
+  TRUNCATED_REPLY_MESSAGE,
+} from "../util/replyTally.js";
+import { dumpRequest } from "../util/requestDump.js";
 import { validateContextLength } from "../util/tokenizer.js";
 
 import { getRequestTools, handleToolCalls } from "./handleToolCalls.js";
@@ -185,6 +191,8 @@ export async function processStreamingResponse(
   toolCalls: ToolCall[];
   shouldContinue: boolean;
   usage?: any;
+  /** The provider's finish_reason of the last chunk that carried one. */
+  finishReason?: string;
 }> {
   const {
     model,
@@ -247,11 +255,15 @@ export async function processStreamingResponse(
     throw new Error(`Context length validation failed: ${validation.error}`);
   }
 
-  // Create OpenAI format history with validated system message
-  const openaiChatHistory = convertFromUnifiedHistoryWithSystemMessage(
-    chatHistory,
-    systemMessage,
-  ) as ChatCompletionMessageParam[];
+  // Create OpenAI format history with validated system message. The date and
+  // git status go on the first user message, after the system checkpoint of
+  // the prompt cache, so the system text is the same across sessions.
+  const openaiChatHistory = withEnvironmentBlock(
+    convertFromUnifiedHistoryWithSystemMessage(
+      chatHistory,
+      systemMessage,
+    ) as ChatCompletionMessageParam[],
+  );
   // Last, after the history: a change to the list then changes only the tail
   // of the request, and Bedrock puts its cache point before it.
   if (taskListBlock) {
@@ -265,20 +277,20 @@ export async function processStreamingResponse(
       messageCount: chatHistory.length,
       toolCount: tools?.length || 0,
     });
+    const body = {
+      model: model.model,
+      messages: openaiChatHistory,
+      stream: true as const,
+      tools,
+      ...getDefaultCompletionOptions(model.defaultCompletionOptions),
+      // A compaction summary is never continued, so it is a one-shot request
+      ...getRequestBodyHints(model, isCompacting ? "oneShot" : "conversation"),
+    };
+    // CONTINUE_DUMP_REQUESTS: the body as handed to the adapter, for diffing
+    dumpRequest(body);
     return await chatCompletionStreamWithBackoff(
       llmApi,
-      {
-        model: model.model,
-        messages: openaiChatHistory,
-        stream: true,
-        tools,
-        ...getDefaultCompletionOptions(model.defaultCompletionOptions),
-        // A compaction summary is never continued, so it is a one-shot request
-        ...getRequestBodyHints(
-          model,
-          isCompacting ? "oneShot" : "conversation",
-        ),
-      },
+      body,
       retryAbortSignal,
     );
   };
@@ -294,6 +306,9 @@ export async function processStreamingResponse(
   // Bedrock's request ID (its invocation log and the bill use it) or the
   // provider's response ID; empty when the provider sends none.
   let requestId: string | undefined;
+  // Why the model stopped: "stop", "tool_calls", or "length" when the reply
+  // hit the output limit and is incomplete.
+  let finishReason: string | undefined;
 
   try {
     const streamWithBackoff = withExponentialBackoff(
@@ -308,6 +323,9 @@ export async function processStreamingResponse(
       logger.debug("Received chunk", { chunkCount, chunk });
 
       if (!requestId && chunk.id) requestId = chunk.id;
+      if (chunk.choices?.[0]?.finish_reason) {
+        finishReason = chunk.choices[0].finish_reason;
+      }
 
       // Track token usage if available
       if (chunk.usage) {
@@ -361,8 +379,20 @@ export async function processStreamingResponse(
       fullUsage.cost_cents = Math.round(cost * 100); // Convert dollars to cents
     }
 
+    // A reply the output limit cut off is not a finished answer: say so to
+    // the person and count it, instead of passing it off as complete.
+    if (finishReason === "length") {
+      recordTruncatedReply();
+      logger.warn("Reply cut off at the model's output limit", {
+        requestId,
+        outputTokens,
+      });
+      callbacks?.onStatusMessage?.(TRUNCATED_REPLY_MESSAGE);
+    }
+
     logger.debug("Stream complete", {
       requestId,
+      finishReason,
       chunkCount,
       responseLength: aiResponse.length,
       toolCallsCount: toolCallsMap.size,
@@ -429,6 +459,7 @@ export async function processStreamingResponse(
     toolCalls: validToolCalls,
     shouldContinue: validToolCalls.length > 0,
     usage: fullUsage,
+    finishReason,
   };
 }
 

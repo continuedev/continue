@@ -3,8 +3,11 @@ import { normalizeClaudeModelId } from "./calculateRequestCost";
 
 /**
  * Whether `usage.promptTokens` excludes tokens read from or written to the
- * cache. True for Claude models on Anthropic, Bedrock and Vertex (Anthropic's
- * `input_tokens`, Bedrock's `inputTokens`). OpenAI-style providers include
+ * cache. True for Claude models on Anthropic and Vertex (Anthropic's
+ * `input_tokens`) and for every model on Bedrock: the Converse API's
+ * `inputTokens` leaves out the cache for any model, and total input is
+ * `inputTokens + cacheReadInputTokens + cacheWriteInputTokens` (AWS Bedrock
+ * prompt caching guide, checked 2026-11-08). OpenAI-style providers include
  * cached tokens in `prompt_tokens`, so adding them again would double count.
  * Providers not listed here are treated the OpenAI way.
  */
@@ -13,8 +16,9 @@ export function promptTokensExcludeCache(
   model: string,
 ): boolean {
   switch (provider.toLowerCase()) {
-    case "anthropic":
     case "bedrock":
+      return true;
+    case "anthropic":
     case "vertexai":
       return normalizeClaudeModelId(model) !== undefined;
     default:

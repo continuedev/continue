@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 
+import chalk from "chalk";
 import type { ChatHistoryItem, Session, ToolStatus } from "core/index.js";
 import { createHistoryItem } from "core/util/messageConversion.js";
 import type { NextFunction, Request, Response } from "express";
@@ -223,6 +224,11 @@ export async function streamChatResponseWithInterruption(
     // delivered here, between the tool results and the next model request.
     // Loop mode's answers for the running item go in at the same boundary.
     onToolBoundary: withLoopSteering(() => buildServeSteeringMessage()),
+    // A notice for whoever watches the server (a reply cut off at the output
+    // limit, say): the TUI puts it on its status line, serve logs it.
+    onStatusMessage: (message: string) => {
+      logger.info(chalk.yellow(message));
+    },
   };
 
   try {

@@ -48,7 +48,25 @@ describe("constructSystemMessage", () => {
 
     expect(result).toContain("You are an agent in the Continuous CLI");
     expect(result).toContain("<env>");
-    expect(result).toContain('<context name="gitStatus">');
+    expect(result).toContain("Platform:");
+  });
+
+  it("keeps the facts that change between runs out of the cached prefix", async () => {
+    // The date and the git status go in the first user message instead
+    // (src/environmentContext.ts), so two sessions in the same folder share
+    // the system checkpoint of the prompt cache.
+    const result = await constructSystemMessage("normal");
+
+    expect(result).not.toContain("Today's date:");
+    expect(result).not.toContain('<context name="gitStatus">');
+    expect(result).not.toContain("git status at the start of the conversation");
+    expect(result).toContain('<context name="environment">');
+  });
+
+  it("is the same text for two calls in the same process", async () => {
+    expect(await constructSystemMessage("normal")).toBe(
+      await constructSystemMessage("normal"),
+    );
   });
 
   it("should handle whitespace-only rules message", async () => {
@@ -69,13 +87,6 @@ describe("constructSystemMessage", () => {
     const result = await constructSystemMessage("normal");
 
     expect(result).toContain("Platform:");
-  });
-
-  it("should include current date", async () => {
-    const result = await constructSystemMessage("normal");
-
-    expect(result).toContain("Today's date:");
-    expect(result).toContain(new Date().toISOString().split("T")[0]);
   });
 
   it("should format rules section correctly", async () => {

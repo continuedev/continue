@@ -240,7 +240,27 @@ function calculateAnthropicCost(
   if (!modelPricing) {
     return null; // Unknown model
   }
+  const regionalFactor = bedrockRegionalPriceFactor(model);
+  const note =
+    regionalFactor !== 1
+      ? `Prices: Anthropic list × ${regionalFactor} (Bedrock regional endpoint)`
+      : undefined;
+  return priceCachedUsage(model, usage, modelPricing, note);
+}
 
+/**
+ * Price a request whose `promptTokens` leaves out the cache (Anthropic's
+ * `input_tokens`, Bedrock's `inputTokens`): uncached input at the input rate,
+ * cache writes at the write rate (split by lifetime when reported), reads at
+ * the read rate. A request whose whole prompt was a cache write has
+ * `promptTokens` 0 and is still priced, at the write rate.
+ */
+function priceCachedUsage(
+  model: string,
+  usage: Usage,
+  modelPricing: ModelPricing,
+  note?: string,
+): CostBreakdown {
   // Calculate costs
   const inputCost = (usage.promptTokens / 1_000_000) * modelPricing.input;
   const outputCost = (usage.completionTokens / 1_000_000) * modelPricing.output;
@@ -309,9 +329,8 @@ function calculateAnthropicCost(
 
   // Build final breakdown string
   let breakdown = `Model: ${model}\n`;
-  const regionalFactor = bedrockRegionalPriceFactor(model);
-  if (regionalFactor !== 1) {
-    breakdown += `Prices: Anthropic list × ${regionalFactor} (Bedrock regional endpoint)\n`;
+  if (note) {
+    breakdown += `${note}\n`;
   }
   breakdown += breakdownParts.join("\n");
   if (breakdownParts.length > 1) {
@@ -322,6 +341,62 @@ function calculateAnthropicCost(
     cost: totalCost,
     breakdown,
   };
+}
+
+/**
+ * Amazon Nova on Bedrock, USD per million tokens, on-demand in-region rates
+ * for US East (N. Virginia). Read from the AWS Price List API on 2026-11-08
+ * (offer AmazonBedrock, region us-east-1, version 20261106184538, published
+ * 2026-11-06): the `USE1-Nova*-input-tokens`, `-output-tokens`,
+ * `-cache-read-input-token-count` and `-cache-write-input-token-count` rows.
+ * On every Nova row a cache read is 0.25x the input price and a cache write
+ * is $0.00. The same models reached through a cross-region profile (`us.`,
+ * `eu.`, `apac.`, `global.`) are priced at these list rates; the Price List
+ * shows no regional premium for Nova.
+ */
+function novaPricing(input: number, output: number): ModelPricing {
+  return {
+    input,
+    output,
+    cacheWrite: 0,
+    cacheWrite1h: 0,
+    cacheRead: input * 0.25,
+  };
+}
+
+const NOVA_PRICING: { match: RegExp; pricing: ModelPricing }[] = [
+  { match: /(^|\.)amazon\.nova-2-lite-v\d/i, pricing: novaPricing(0.33, 2.75) },
+  { match: /(^|\.)amazon\.nova-pro-v\d/i, pricing: novaPricing(0.8, 3.2) },
+  { match: /(^|\.)amazon\.nova-lite-v\d/i, pricing: novaPricing(0.06, 0.24) },
+  {
+    match: /(^|\.)amazon\.nova-micro-v\d/i,
+    pricing: novaPricing(0.035, 0.14),
+  },
+];
+
+/** The Nova price row for a Bedrock model ID, with or without a profile prefix. */
+export function findNovaPricing(model: string): ModelPricing | null {
+  return NOVA_PRICING.find((row) => row.match.test(model))?.pricing ?? null;
+}
+
+/**
+ * Bedrock: Nova by its own table, Claude by Anthropic's list prices with the
+ * regional premium. Any other Bedrock model is unpriced.
+ */
+function calculateBedrockCost(
+  model: string,
+  usage: Usage,
+): CostBreakdown | null {
+  const nova = findNovaPricing(model);
+  if (nova) {
+    return priceCachedUsage(
+      model,
+      usage,
+      nova,
+      "Prices: AWS Price List, us-east-1 on-demand (Amazon Nova)",
+    );
+  }
+  return calculateAnthropicCost(model, usage);
 }
 
 interface OpenAIPrice {
@@ -458,10 +533,11 @@ export function calculateRequestCost(
   usage: Usage,
 ): CostBreakdown | null {
   switch (provider.toLowerCase()) {
+    case "bedrock":
+      return calculateBedrockCost(model, usage);
     case "anthropic":
     // Claude models served by other providers use the same list prices as an
     // estimate. Regional pricing, data residency and reseller margins can differ.
-    case "bedrock":
     case "vertexai":
     case "openrouter":
       return calculateAnthropicCost(model, usage);

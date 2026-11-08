@@ -9,8 +9,8 @@ import {
   planTurn,
 } from "core/llm/prompts/turns.js";
 
-import { env } from "./env.js";
 import { processRule } from "./hubLoader.js";
+import { AGENT_FILES, rulesDirs } from "./instructionFiles.js";
 import { PermissionMode } from "./permissions/types.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
 import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
@@ -27,42 +27,23 @@ function isGitRepo(): boolean {
   }
 }
 
-/**
- * Get git status
- */
-function getGitStatus(): string {
-  try {
-    if (!isGitRepo()) {
-      return "Not a git repository";
-    }
-    const result = execSync("git status --porcelain", {
-      encoding: "utf-8",
-      cwd: process.cwd(),
-    });
-    return result.trim() || "Working tree clean";
-  } catch {
-    return "Git status not available";
-  }
-}
-
 // The CLI's preamble. The turn's own instructions (act or plan) are shared
 // with the IDE and appended by constructSystemMessage; see
 // core/llm/prompts/turns.ts and plans/policy-areas.md.
+//
+// Only facts that are the same for every run in this folder go here, so the
+// cached prefix matches across sessions. The date and the git status change
+// between runs and travel in the first user message of each request instead
+// (src/environmentContext.ts).
 const baseSystemMessage = `You are an agent in the Continuous CLI. Your replies are shown in a terminal: be concise and direct, and show file names and code only where they help.
 Here is useful information about the environment you are running in:
 <env>
 Working directory: ${process.cwd()}
 Is directory a git repo: ${isGitRepo()}
 Platform: ${process.platform}
-Today's date: ${new Date().toISOString().split("T")[0]}
 </env>
 
-As you answer the user's questions, you can use the following context:
-
-<context name="gitStatus">This is the git status at the start of the conversation. Note that this status is a snapshot in time, and will not update during the conversation.
-
-${getGitStatus()}
-</context>`;
+Today's date and the git status of the working tree are in a <context name="environment"> block in the first user message.`;
 
 async function getConfigYamlRules(): Promise<string[]> {
   const configState = await serviceContainer.get<ConfigServiceState>(
@@ -91,16 +72,9 @@ function getRuleNameFromPath(filePath: string): string {
  * Scan .continue/rules/ directories for markdown rule files and return the rules with metadata that should be always-applied
  */
 export function loadMarkdownRulesWithMetadata(): RuleObject[] {
-  const cwd = process.cwd();
-  const rulesDirs = [
-    path.join(cwd, ".continuous", "rules"),
-    path.join(cwd, ".continue", "rules"),
-    path.join(env.continueHome, "rules"),
-  ];
-
   const rules: RuleObject[] = [];
 
-  for (const dir of rulesDirs) {
+  for (const dir of rulesDirs()) {
     if (!fs.existsSync(dir)) continue;
 
     let files: string[];
@@ -169,12 +143,10 @@ export async function constructSystemMessage(
   format?: "json",
   headless?: boolean,
 ): Promise<string> {
-  const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md", "CODEX.md"];
-
   let agentContent = "";
 
   try {
-    for (const fileName of agentFiles) {
+    for (const fileName of AGENT_FILES) {
       const filePath = path.join(process.cwd(), fileName);
 
       if (fs.existsSync(filePath)) {

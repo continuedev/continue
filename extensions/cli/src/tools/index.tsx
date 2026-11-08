@@ -23,7 +23,6 @@ import { ALL_BUILT_IN_TOOLS } from "./allBuiltIns.js";
 import { askQuestionTool } from "./askQuestion.js";
 import { checkBackgroundJobTool } from "./checkBackgroundJob.js";
 import { editTool } from "./edit.js";
-import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
 import { finishItemTool, holdQuestionTool, remindMeTool } from "./loopTools.js";
@@ -156,9 +155,9 @@ export async function getAllAvailableTools(
     isCapable,
   });
 
-  if (isHeadless) {
-    tools.push(exitTool);
-  }
+  // Exit is not offered to the model. In headless runs and `cn serve` a model
+  // that could not ask a question called it and killed the process; the
+  // tool stays registered (allBuiltIns) for permission policies that name it.
 
   // Presenting a plan is how plan mode ends, so only plan mode offers it.
   if (services.toolPermissions.getCurrentMode() === "plan") {

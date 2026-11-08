@@ -1,7 +1,34 @@
 import {
+  describeShell,
   isRunningInWsl,
   runTerminalCommandTool,
 } from "./runTerminalCommand.js";
+
+describe("describeShell", () => {
+  it("names Windows PowerShell and its command separator on Windows", () => {
+    const text = describeShell("win32", undefined, false);
+    expect(text).toContain("Windows PowerShell");
+    expect(text).toContain("not &&");
+  });
+
+  it("names the login shell elsewhere", () => {
+    expect(describeShell("darwin", "/bin/zsh", false)).toBe(
+      "Runs in zsh as a login shell on macOS.",
+    );
+    expect(describeShell("linux", "/bin/bash", false)).toBe(
+      "Runs in bash as a login shell on linux.",
+    );
+    expect(describeShell("linux", "/usr/bin/fish", true)).toBe(
+      "Runs in fish as a login shell on WSL.",
+    );
+  });
+
+  it("is the second sentence of the tool description", () => {
+    expect(runTerminalCommandTool.description).toContain(
+      `returns the output. ${describeShell()}`,
+    );
+  });
+});
 
 describe("runTerminalCommandTool", () => {
   const isWindows = process.platform === "win32";
