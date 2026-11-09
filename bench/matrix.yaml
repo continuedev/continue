@@ -1,0 +1,175 @@
+# The model rows the runner can be pointed at: `--model <id>` takes the short
+# id or the model id. Prices are USD per million tokens as the repository's
+# own tables have them (core/llm/utils/calculateRequestCost.ts, read
+# 2026-11-08), `source` says where; a row without `price` is scored at the
+# CLI's fallback rate and flagged "estimated". `efforts` are the levels the
+# family accepts and `effort` says how the runner writes one into config.yaml:
+#   bedrock-reasoning   defaultCompletionOptions.reasoning + reasoningBudgetTokens
+#                       (budgetTokensToEffort: <=1024 low, <=4096 medium, else high;
+#                       none => reasoning: false)
+#   openai-effort       requestOptions.extraBodyProperties.reasoning_effort
+#   none                the family has no switch; --effort is recorded, not sent
+providers:
+  bedrock:
+    region: us-east-1
+    profile: torgate
+    contextLength: 128000
+    maxTokens: 4000
+  strata:
+    provider: openai
+    apiBase: http://127.0.0.1:8080/v1/
+    apiKey: strata
+    metricsUrl: http://127.0.0.1:8080/metrics
+    contextLength: 524288
+    maxTokens: 4000
+
+models:
+  - id: nova2lite
+    provider: bedrock
+    model: us.amazon.nova-2-lite-v1:0
+    family: nova2
+    price:
+      {
+        input: 0.33,
+        output: 2.75,
+        cacheRead: 0.0825,
+        source: calculateRequestCost.ts (Nova table),
+      }
+    efforts: [none, low, medium, high]
+    effort: bedrock-reasoning
+    notes: high omits maxTokens (bedrockReasoningFields); cache points only for Claude today
+
+  - id: haiku45
+    provider: bedrock
+    model: us.anthropic.claude-haiku-4-5-20251001-v1:0
+    family: claude
+    price:
+      {
+        input: 1.1,
+        output: 5.5,
+        cacheRead: 0.11,
+        cacheWrite: 1.375,
+        source: Anthropic list x1.1 regional (calculateRequestCost.ts),
+      }
+    efforts: [none, low, medium, high]
+    effort: bedrock-reasoning
+
+  - id: qwen3-32b
+    provider: bedrock
+    model: qwen.qwen3-32b-v1:0
+    family: qwen3
+    contextLength: 32768
+    price:
+      {
+        input: 0.15,
+        output: 0.6,
+        source: calculateRequestCost.ts (BEDROCK_PRICING),
+      }
+    efforts: [none, low, medium, high]
+    effort: bedrock-reasoning
+
+  - id: qwen3-coder-30b
+    provider: bedrock
+    model: qwen.qwen3-coder-30b-a3b-v1:0
+    family: qwen3
+    price:
+      {
+        input: 0.15,
+        output: 0.6,
+        source: calculateRequestCost.ts (BEDROCK_PRICING),
+      }
+    efforts: [none, low, medium, high]
+    effort: bedrock-reasoning
+    notes: legacy lifecycle, end of life 2027-03-30
+
+  - id: qwen3-coder-next
+    provider: bedrock
+    model: qwen.qwen3-coder-next
+    family: qwen3
+    price:
+      {
+        input: 0.5,
+        output: 1.2,
+        source: calculateRequestCost.ts (BEDROCK_PRICING),
+      }
+    efforts: [none, low, medium, high]
+    effort: bedrock-reasoning
+
+  - id: qwen3-next-80b
+    provider: bedrock
+    model: qwen.qwen3-next-80b-a3b
+    family: qwen3
+    efforts: [none, low, medium, high]
+    effort: bedrock-reasoning
+    notes: no price in the repository tables; totals are flagged estimated
+
+  - id: mistral-large-3
+    provider: bedrock
+    model: mistral.mistral-large-3-675b-instruct
+    family: mistral
+    price:
+      {
+        input: 0.5,
+        output: 1.5,
+        source: calculateRequestCost.ts (BEDROCK_PRICING),
+      }
+    efforts: [default]
+    effort: none
+    notes: ignores thinking fields (bedrockReasoningFields)
+
+  - id: deepseek-v32
+    provider: bedrock
+    model: deepseek.v3.2
+    family: deepseek
+    price:
+      {
+        input: 0.62,
+        output: 1.85,
+        source: calculateRequestCost.ts (BEDROCK_PRICING),
+      }
+    efforts: [none, low, medium, high]
+    effort: bedrock-reasoning
+
+  - id: gpt-oss-120b
+    provider: bedrock
+    model: openai.gpt-oss-120b-1:0
+    family: gpt-oss
+    price:
+      {
+        input: 0.15,
+        output: 0.6,
+        source: calculateRequestCost.ts (BEDROCK_PRICING),
+      }
+    efforts: [default]
+    effort: none
+
+  - id: kimi-k25
+    provider: bedrock
+    model: moonshotai.kimi-k2.5
+    family: kimi
+    price:
+      {
+        input: 0.6,
+        output: 3.0,
+        source: calculateRequestCost.ts (BEDROCK_PRICING),
+      }
+    efforts: [default]
+    effort: none
+
+  - id: gemma3-27b
+    provider: bedrock
+    model: google.gemma-3-27b-it
+    family: gemma
+    efforts: [default]
+    effort: none
+    notes: no price in the repository tables and not yet probed (Tier 1 first)
+
+  - id: strata
+    provider: strata
+    model: qwen3.8-flash-next-nvfp4-nvfp4
+    family: qwen3
+    contextLength: 524288
+    price: { input: 0, output: 0, source: local server }
+    efforts: [none, low, medium, high]
+    effort: openai-effort
+    notes: reasoning_effort lives in the system prompt on Strata, so switching it mid-session re-reads the whole prompt

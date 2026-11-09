@@ -1,0 +1,51 @@
+{
+  "name": "loop-basic",
+  "group": "guidance",
+  "kind": "loop",
+  "surface": "serve",
+  "what": "A loop to the end: all items done; the check-in re-plan ends the loop rather than inventing a to-do.",
+  "prompt": "Plan this work for the package in this folder, then present the plan with PresentPlan:\n\nAdd src/strings.js exporting two functions:\n- slugify(text): lowercase; runs of spaces and punctuation become a single hyphen; no leading or trailing hyphens.\n- truncate(text, max): returns text unchanged when it fits; otherwise cuts it to max characters including a trailing \"…\".\n\nEach function gets tests with node:test under test/. Add a short \"Usage\" section to README.md showing both.\n\nGive each to-do a check command that proves it is done (for example a focused `node --test test/<file>` run), and use todo_details for checks and for any to-do that must wait for another.",
+  "seed": {
+    "from": "seed/loopsbx",
+    "mkdirs": ["src", "test"],
+    "remove": [
+      "src/strings.js",
+      "test/slugify.test.js",
+      "test/truncate.test.js"
+    ]
+  },
+  "config": {},
+  "policy": {
+    "serve": ["--readonly"]
+  },
+  "loop": {
+    "autonomy": "supervised",
+    "answers": "approve"
+  },
+  "expectations": [
+    {
+      "check": "plan-presented"
+    },
+    {
+      "check": "loop-stop-reason",
+      "expected": "done"
+    },
+    {
+      "check": "loop-items-done"
+    },
+    {
+      "check": "command-exits-0",
+      "command": "npm test"
+    },
+    {
+      "check": "loop-no-filler-item",
+      "pattern": "no further action|nothing (left|further|more) to do|no action needed|no additional work",
+      "known": "round2-modes-policies.md: with nothing left the model presented todos: [] (rejected by planFile.ts) and then a do-nothing to-do that the loop ran."
+    }
+  ],
+  "budget": {
+    "maxRequests": 90,
+    "maxTokens": 900000,
+    "deadlineSeconds": 1200
+  }
+}

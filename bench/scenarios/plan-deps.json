@@ -1,0 +1,48 @@
+{
+  "name": "plan-deps",
+  "group": "guidance",
+  "kind": "plan",
+  "surface": "serve",
+  "what": "Plan structure: after on the to-dos that must wait, a check per to-do, checks that run code, presented without nudges, no TaskList.",
+  "prompt": "Plan this work for the package in this folder, then present the plan with PresentPlan. You cannot run commands or change files while planning.\n\nAdd src/strings.js exporting slugify(text). Add tests for it with node:test in test/slugify.test.js, which must wait for the code. Add a Usage section to README.md, which must wait for the tests.\n\nUse todo_details to give each to-do a check command and to say which to-dos each must wait for.",
+  "seed": {
+    "from": "seed/loopsbx",
+    "mkdirs": ["src", "test"]
+  },
+  "config": {},
+  "policy": {
+    "serve": ["--readonly"]
+  },
+  "expectations": [
+    {
+      "check": "plan-presented"
+    },
+    {
+      "check": "nudges-at-most",
+      "n": 0,
+      "kind": "all"
+    },
+    {
+      "check": "tool-not-called",
+      "tool": "TaskList"
+    },
+    {
+      "check": "plan-has-after",
+      "todos": [2, 3]
+    },
+    {
+      "check": "plan-each-todo-has-check"
+    },
+    {
+      "check": "plan-checks-run-code"
+    },
+    {
+      "check": "no-text-leaks"
+    }
+  ],
+  "budget": {
+    "maxRequests": 15,
+    "maxTokens": 200000,
+    "deadlineSeconds": 420
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@b1tninja/continuous-bench",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Model benchmark for the Continuous CLI: scenarios, runner, scorer and the Tier 0 unit layer (plans/model-benchmark.md).",
+  "type": "module",
+  "scripts": {
+    "help": "node runner.mjs --help && node score.mjs --help",
+    "tier0": "cd ../extensions/cli && npx vitest run --dir ../../bench/tier0"
+  }
+}

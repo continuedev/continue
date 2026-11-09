@@ -1,0 +1,9 @@
+{
+  "name": "loopsbx",
+  "version": "1.0.0",
+  "description": "Tiny string utilities: slugify and truncate.",
+  "type": "module",
+  "exports": "./src/strings.js",
+  "files": ["src"],
+  "scripts": { "test": "node --test" }
+}

@@ -1,0 +1,46 @@
+{
+  "name": "replan-empty",
+  "group": "compliance",
+  "area": "plan-edits",
+  "kind": "loop",
+  "surface": "serve",
+  "what": "A re-plan with nothing left: the check-in strategy re-plans after the item; an empty re-plan should end the loop as done, not be rejected or filled with a to-do.",
+  "prompt": "Plan this work for the package in this folder, then present the plan with PresentPlan. You cannot run commands or change files while planning.\n\nUse exactly these to-dos, word for word and in this order:\n1. Create src/a.js exporting const a = 1\n\nPass todo_details so that each to-do has its check command:\n- to-do 1: check `node --check src/a.js`\nPlan only this one to-do; there is nothing else to do in this package.",
+  "seed": {
+    "from": "seed/loopsbx",
+    "mkdirs": ["src", "test"]
+  },
+  "config": {},
+  "policy": {
+    "serve": ["--readonly"]
+  },
+  "loop": {
+    "autonomy": "auto",
+    "strategy": "check-in",
+    "answers": "approve"
+  },
+  "expectations": [
+    {
+      "check": "plan-presented"
+    },
+    {
+      "check": "file-exists",
+      "path": "src/a.js"
+    },
+    {
+      "check": "replan-empty",
+      "expected": "ends-loop",
+      "known": "core/util/planFile.ts rejects todos: [] ('todos must be a non-empty array'); loopDriver then nudges once and stops with replan_failed, or the model invents a to-do."
+    },
+    {
+      "check": "loop-no-filler-item",
+      "pattern": "no further action|nothing (left|further|more) to do|no action needed|no additional work",
+      "known": "same cause"
+    }
+  ],
+  "budget": {
+    "maxRequests": 90,
+    "maxTokens": 900000,
+    "deadlineSeconds": 1200
+  }
+}
