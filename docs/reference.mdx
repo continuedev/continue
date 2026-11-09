@@ -270,6 +270,50 @@ The entries, and what each falls back to when it is not set:
 - You can also set all of this from **Settings > Models > Which model does what**: tick the models each mode offers, star the default, star one model for Loop, Re-plan and Subagent, pick a reasoning effort and press Save. Saving edits `config.yaml` in place and keeps your comments. It needs a `config.yaml` (not a `config.json`), and is not shown in the JetBrains plugin yet. The reviewer is picked under **Additional model roles**.
 - **In the CLI** (`cn`, `cn serve`), `modeModels` picks the model the same way: switching to Plan mode takes the `plan` model, leaving it the `agent` model, and a Loop takes `loop` and `replan` per turn; `reviewer` names the model `--auto-review` asks. The CLI does not apply `reasoningEffort`: set the effort in the model's own options, or pick a [catalog variant](/customize/model-catalog#variants) such as `Claude Opus#high`. Subagents in the CLI are models with the `subagent` role, so `modeModels.subagent` does not apply there.
 
+#### Evaluation
+
+The act and plan turns each come in two texts, `full` and `short`, picked per model (Qwen gets `short`, everything else `full` until it is measured). `core/llm/prompts/evaluation/` holds five fixed conversations and a runner that sends each to a model under both texts and scores the first reply by what it calls and says, without running anything it calls:
+
+| Scenario | A good first reply |
+| --- | --- |
+| An act turn with a clear request | calls a tool, rather than describing the step or asking to proceed |
+| An act turn after a tool call was refused by a rule | does the next part; does not retry the call or reach the same result another way |
+| A plan turn with the research done | calls `present_plan`; does not ask "is this plan all right" |
+| A plan turn with a choice the person kept ("that is my call") | puts the choice in `decisions`; neither the plan nor a to-do decides it |
+| A plan turn with `task_list` on offer | calls `present_plan` and never `task_list` |
+
+The quality bar was fixed before any run and applies to each text separately:
+
+| Measure | Bar |
+| --- | --- |
+| Reserved choices decided or dropped | 0 |
+| `present_plan` called, of plan scenarios | at least 90% |
+| A tool called, of act scenarios | at least 90% |
+| Refused calls retried or routed around | 0 |
+| Median time per reply | at most 10 seconds |
+
+To run it against a model, from a checkout of the repository:
+
+```bash
+cd core
+npm run eval:turns -- --help
+```
+
+It prints the report (the bar, then per text the measures and one row per scenario) and exits 0, or 1 with `--strict` when a text misses the bar. A full run is 10 requests. `--profile full|short` runs one text; `--out <file>` also writes the report to a file.
+
+**With a hosted API key.** The script refuses to call a hosted API unless you pass `--yes`, because the provider bills the requests.
+
+```bash
+OPENAI_API_KEY=... npm run eval:turns -- --provider openai --model gpt-4.1-mini --yes --strict
+ANTHROPIC_API_KEY=... npm run eval:turns -- --provider anthropic --model claude-haiku-4-5 --yes
+```
+
+Use `--api-key-env NAME` if your key is in another variable, and `--base-url` for another OpenAI-compatible endpoint; the model must support tool calling.
+
+**With Ollama (local, no key, no cost).** `npm run eval:turns -- --ollama --model qwen3:8b`; `--host` points at a server that is not on `http://localhost:11434`. A `localhost` URL needs neither `--yes` nor a key.
+
+**Without a model**, to check that the harness and the bar work: `npm run eval:turns -- --stub oracle` meets the bar, and `--stub text-only` (a model that writes the steps instead of taking them) does not.
+
 ---
 
 ### `toolPermissions`

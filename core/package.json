@@ -6,6 +6,7 @@
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "vitest": "vitest run",
     "eval:reviewer": "node scripts/reviewer-eval.mjs",
+    "eval:turns": "node scripts/turns-eval.mjs",
     "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage && open ./coverage/lcov-report/index.html",
     "tsc:check": "tsc -p ./ --noEmit",
     "build": "tsc -p ./tsconfig.npm.json",
