@@ -40,6 +40,11 @@ vi.mock("./streamChatResponse.helpers.js", () => ({
 
 // Import the mocked modules
 import {
+  checkRepeatedCall,
+  resetRepeatGuard,
+  startRepeatRound,
+} from "./repeatGuard.js";
+import {
   executeStreamedToolCalls,
   preprocessStreamedToolCalls,
 } from "./streamChatResponse.helpers.js";
@@ -393,11 +398,6 @@ describe("handleToolCalls - duplicate tool_result prevention", () => {
 
 // The repeat guard (repeatGuard.ts) runs here, before preprocessing, for
 // headless and interactive runs alike.
-import {
-  checkRepeatedCall,
-  resetRepeatGuard,
-  startRepeatRound,
-} from "./repeatGuard.js";
 
 describe("handleToolCalls - the repeat guard", () => {
   const read = (id: string) => ({

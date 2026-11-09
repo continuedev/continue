@@ -16,7 +16,6 @@ vi.mock("../services/index.js", () => ({
   services: { chatHistory: { getHistory: () => [] } },
 }));
 
-// eslint-disable-next-line import/order
 import { checkToolPermissionApproval } from "./streamChatResponse.helpers.js";
 
 const bash = (command: string): any => ({

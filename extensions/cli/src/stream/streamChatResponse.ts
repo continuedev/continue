@@ -3,6 +3,12 @@ import { ModelConfig } from "@continuedev/config-yaml";
 import { BaseLlmApi } from "@continuedev/openai-adapters";
 import type { ChatHistoryItem } from "core/index.js";
 import { convertFromUnifiedHistoryWithSystemMessage } from "core/util/messageConversion.js";
+import {
+  ACT_TURN_NUDGE,
+  announcesNextStep,
+  TURN_NUDGE_LIMIT,
+  TURN_NUDGE_TOTAL,
+} from "core/util/turnEnd.js";
 import * as dotenv from "dotenv";
 import type {
   ChatCompletionMessageParam,
@@ -12,13 +18,6 @@ import type {
 import { pruneLastMessage } from "../compaction.js";
 import { getRequestBodyHints } from "../contextManagement.js";
 import { withEnvironmentBlock } from "../environmentContext.js";
-import {
-  ACT_TURN_NUDGE,
-  announcesNextStep,
-  TURN_NUDGE_LIMIT,
-  TURN_NUDGE_TOTAL,
-} from "core/util/turnEnd.js";
-
 import {
   consumeLoopTurnEnd,
   loopRequestHistory,
@@ -183,6 +182,118 @@ interface ProcessStreamingResponseOptions {
   isCompacting?: boolean; // also: compaction gets no Loop mode plan block
 }
 
+/** Bedrock's request ID or the provider's response ID, from the first chunk that has one. */
+function firstRequestId(
+  current: string | undefined,
+  chunk: { id?: string },
+): string | undefined {
+  return current ?? (chunk.id || undefined);
+}
+
+/** The provider's finish_reason of the last chunk that carried one. */
+function latestFinishReason(
+  current: string | undefined,
+  chunk: { choices?: { finish_reason?: string | null }[] },
+): string | undefined {
+  return chunk.choices?.[0]?.finish_reason ?? current;
+}
+
+/**
+ * A reply the output limit cut off is not a finished answer: say so to the
+ * person and count it, instead of passing it off as complete.
+ */
+function noteTruncation(
+  finishReason: string | undefined,
+  facts: { requestId: string | undefined; outputTokens: number },
+  callbacks: StreamCallbacks | undefined,
+): void {
+  if (finishReason !== "length") return;
+  recordTruncatedReply();
+  logger.warn("Reply cut off at the model's output limit", facts);
+  callbacks?.onStatusMessage?.(TRUNCATED_REPLY_MESSAGE);
+}
+
+/** Per-turn budget for the end-of-turn nudges (core/util/turnEnd.ts). */
+interface TurnNudges {
+  sinceToolUse: number;
+  thisTurn: number;
+}
+
+/**
+ * A headless agent turn that ends by announcing its next step ("Let me
+ * check...") with no tool call gets a nudge to take it; nobody else is there
+ * to say "go on". A nudge that led to tool calls worked and the budget starts
+ * again; one that led to another announcement did not, and the turn ends. A
+ * few per turn at most. Loop runs have their own nudge in the driver, and a
+ * compaction's or subagent's run is left alone. Returns the history with the
+ * nudge appended, or undefined when the turn is not nudged.
+ */
+function nudgeAnnouncedStep(args: {
+  content: string;
+  shouldContinue: boolean;
+  shouldAutoContinue: boolean;
+  isHeadless: boolean;
+  isCompacting: boolean;
+  chatHistory: ChatHistoryItem[];
+  nudges: TurnNudges;
+}): ChatHistoryItem[] | undefined {
+  const { nudges } = args;
+  if (args.shouldContinue) nudges.sinceToolUse = 0;
+  const eligible =
+    !args.shouldContinue &&
+    !args.shouldAutoContinue &&
+    args.isHeadless &&
+    !args.isCompacting &&
+    !loopRunGoing() &&
+    nudges.sinceToolUse < TURN_NUDGE_LIMIT &&
+    nudges.thisTurn < TURN_NUDGE_TOTAL;
+  if (!eligible || !announcesNextStep(args.content)) return undefined;
+  nudges.sinceToolUse++;
+  nudges.thisTurn++;
+  logger.debug("Turn ended on an announced step; nudging", {
+    nudgesThisTurn: nudges.thisTurn,
+  });
+  const svc = services.chatHistory;
+  if (typeof svc?.isReady === "function" && svc.isReady()) {
+    svc.addUserMessage(ACT_TURN_NUDGE);
+    return svc.getHistory();
+  }
+  return [
+    ...args.chatHistory,
+    { message: { role: "user", content: ACT_TURN_NUDGE }, contextItems: [] },
+  ];
+}
+
+/**
+ * After a round of tool calls: the context-limit check on their results
+ * (handlePostToolValidation), then the normal auto-compaction check at the
+ * model's threshold. `wasCompacted` says whether either compacted.
+ */
+async function compactAfterTools(
+  toolCalls: ToolCall[],
+  chatHistory: ChatHistoryItem[],
+  shouldContinue: boolean,
+  ctx: Parameters<typeof handlePostToolValidation>[2],
+): Promise<{ chatHistory: ChatHistoryItem[]; wasCompacted: boolean }> {
+  const post = await handlePostToolValidation(toolCalls, chatHistory, ctx);
+  const normal = await handleNormalAutoCompaction(
+    post.chatHistory,
+    shouldContinue,
+    ctx,
+  );
+  return {
+    chatHistory: normal.chatHistory,
+    wasCompacted: post.wasCompacted || normal.wasCompacted,
+  };
+}
+
+/** The per-turn guards start again with each turn, not with a compaction's run. */
+function resetTurnGuards(isCompacting: boolean): void {
+  if (isCompacting) return;
+  resetRefusalCount();
+  resetRepeatGuard();
+}
+
 // Process a single streaming response and return whether we need to continue
 // eslint-disable-next-line max-statements
 export async function processStreamingResponse(
@@ -324,10 +435,8 @@ export async function processStreamingResponse(
 
       logger.debug("Received chunk", { chunkCount, chunk });
 
-      if (!requestId && chunk.id) requestId = chunk.id;
-      if (chunk.choices?.[0]?.finish_reason) {
-        finishReason = chunk.choices[0].finish_reason;
-      }
+      requestId = firstRequestId(requestId, chunk);
+      finishReason = latestFinishReason(finishReason, chunk);
 
       // Track token usage if available
       if (chunk.usage) {
@@ -381,16 +490,7 @@ export async function processStreamingResponse(
       fullUsage.cost_cents = Math.round(cost * 100); // Convert dollars to cents
     }
 
-    // A reply the output limit cut off is not a finished answer: say so to
-    // the person and count it, instead of passing it off as complete.
-    if (finishReason === "length") {
-      recordTruncatedReply();
-      logger.warn("Reply cut off at the model's output limit", {
-        requestId,
-        outputTokens,
-      });
-      callbacks?.onStatusMessage?.(TRUNCATED_REPLY_MESSAGE);
-    }
+    noteTruncation(finishReason, { requestId, outputTokens }, callbacks);
 
     logger.debug("Stream complete", {
       requestId,
@@ -498,12 +598,8 @@ export async function streamChatResponse(
   let compactionOccurredThisTurn = false; // Track if compaction happened during this conversation turn
   let autoContinuedLastIteration = false; // Whether the previous iteration only sent our own "continue"
   // End-of-turn nudges (core/util/turnEnd.ts): one between tool calls, a few per turn
-  let nudgesSinceToolUse = 0;
-  let nudgesThisTurn = 0;
-  if (!isCompacting) {
-    resetRefusalCount();
-    resetRepeatGuard();
-  }
+  const nudges: TurnNudges = { sinceToolUse: 0, thisTurn: 0 };
+  resetTurnGuards(isCompacting);
 
   while (true) {
     // If ChatHistoryService is available, refresh local chatHistory view
@@ -534,9 +630,7 @@ export async function streamChatResponse(
       persistSession,
     });
     chatHistory = preCompactionResult.chatHistory;
-    if (preCompactionResult.wasCompacted) {
-      compactionOccurredThisTurn = true;
-    }
+    compactionOccurredThisTurn ||= preCompactionResult.wasCompacted;
 
     logger.debug("Tools prepared", {
       toolCount: tools.length,
@@ -597,28 +691,10 @@ export async function streamChatResponse(
       break;
     }
 
-    // After tool execution, validate that we haven't exceeded context limit
-    const postToolResult = await handlePostToolValidation(
+    // After the tools: the context-limit check on their results, then the
+    // normal auto-compaction check at the model's threshold
+    const afterTools = await compactAfterTools(
       toolCalls,
-      chatHistory,
-      {
-        model,
-        llmApi,
-        isCompacting,
-        isHeadless,
-        callbacks,
-        systemMessage,
-        tools,
-        persistSession,
-      },
-    );
-    chatHistory = postToolResult.chatHistory;
-    if (postToolResult.wasCompacted) {
-      compactionOccurredThisTurn = true;
-    }
-
-    // Normal auto-compaction check at the model's threshold
-    const compactionResult = await handleNormalAutoCompaction(
       chatHistory,
       shouldContinue,
       {
@@ -632,10 +708,8 @@ export async function streamChatResponse(
         persistSession,
       },
     );
-    chatHistory = compactionResult.chatHistory;
-    if (compactionResult.wasCompacted) {
-      compactionOccurredThisTurn = true;
-    }
+    chatHistory = afterTools.chatHistory;
+    compactionOccurredThisTurn ||= afterTools.wasCompacted;
 
     // Tool boundary: deliver a message the person steered with, so the next
     // request already sees it. This runs after the post-tool checks so that
@@ -656,44 +730,22 @@ export async function streamChatResponse(
     chatHistory = autoContinueResult.chatHistory;
     const shouldAutoContinue = autoContinueResult.shouldAutoContinue;
 
-    // Reset flag to avoid infinite continuation
-    if (shouldAutoContinue) {
-      compactionOccurredThisTurn = false;
-    }
+    // Reset the flag once a continuation went out, to avoid continuing forever
+    compactionOccurredThisTurn &&= !shouldAutoContinue;
     autoContinuedLastIteration = shouldAutoContinue;
 
-    // A headless agent turn that ends by announcing its next step ("Let me
-    // check...") with no tool call gets a nudge to take it; nobody else is
-    // there to say "go on". A nudge that led to tool calls worked and the
-    // budget starts again; one that led to another announcement did not,
-    // and the turn ends. A few per turn at most. Loop runs have their own
-    // nudge in the driver, and a compaction's or subagent's run is left alone.
-    if (shouldContinue) nudgesSinceToolUse = 0;
-    if (
-      !shouldContinue &&
-      !shouldAutoContinue &&
-      isHeadless &&
-      !isCompacting &&
-      !loopRunGoing() &&
-      nudgesSinceToolUse < TURN_NUDGE_LIMIT &&
-      nudgesThisTurn < TURN_NUDGE_TOTAL &&
-      announcesNextStep(content)
-    ) {
-      nudgesSinceToolUse++;
-      nudgesThisTurn++;
-      logger.debug("Turn ended on an announced step; nudging", {
-        nudgesThisTurn,
-      });
-      const svc = services.chatHistory;
-      if (typeof svc?.isReady === "function" && svc.isReady()) {
-        svc.addUserMessage(ACT_TURN_NUDGE);
-        chatHistory = svc.getHistory();
-      } else {
-        chatHistory.push({
-          message: { role: "user", content: ACT_TURN_NUDGE },
-          contextItems: [],
-        });
-      }
+    // An announced-but-not-taken step gets a nudge (nudgeAnnouncedStep)
+    const nudged = nudgeAnnouncedStep({
+      content,
+      shouldContinue,
+      shouldAutoContinue,
+      isHeadless,
+      isCompacting,
+      chatHistory,
+      nudges,
+    });
+    if (nudged) {
+      chatHistory = nudged;
       continue;
     }
 

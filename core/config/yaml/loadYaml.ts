@@ -21,6 +21,7 @@ import {
   IDE,
   IdeInfo,
   IdeSettings,
+  ILLM,
   ILLMLogger,
   InternalMcpOptions,
 } from "../..";
@@ -190,6 +191,23 @@ async function loadConfigYaml(options: {
     errors,
     configLoadInterrupted: false,
   };
+}
+
+/**
+ * A Bedrock model written as a bare ID that the account's catalog (as cached
+ * by the last listing; no call is made here) offers only through an
+ * inference profile fails at the first request; say so at config load.
+ */
+function bedrockInferenceProfileWarnings(
+  llms: ILLM[],
+): ConfigValidationError[] {
+  const warnings: ConfigValidationError[] = [];
+  for (const llm of llms) {
+    if (!(llm instanceof Bedrock)) continue;
+    const warning = llm.inferenceProfileWarning();
+    if (warning) warnings.push({ fatal: false, message: warning });
+  }
+  return warnings;
 }
 
 function nonNullifyConfigYaml(
@@ -409,15 +427,7 @@ export async function configYamlToContinueConfig(options: {
     new Set(Object.values(continueConfig.modelsByRole).flat()),
   );
 
-  // A Bedrock model written as a bare ID that the account's catalog (as
-  // cached by the last listing, no call is made here) offers only through an
-  // inference profile fails at the first request; say so now instead.
-  for (const llm of allLlms) {
-    if (llm instanceof Bedrock) {
-      const warning = llm.inferenceProfileWarning();
-      if (warning) localErrors.push({ fatal: false, message: warning });
-    }
-  }
+  localErrors.push(...bedrockInferenceProfileWarnings(allLlms));
   const modeModelsResult = resolveModeModels(
     config.modeModels,
     continueConfig.modelsByRole.chat,

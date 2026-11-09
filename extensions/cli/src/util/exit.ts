@@ -2,21 +2,20 @@ import type { ChatHistoryItem } from "core/index.js";
 
 import { backgroundJobService } from "../services/BackgroundJobService.js";
 import { getSessionUsage } from "../session.js";
-
-import { formatSessionCost } from "./sessionCost.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
 import { formatCacheTally, splitInputTokens } from "./cacheTally.js";
 import { hadUnhandledError } from "./errorState.js";
 import { getGitDiffSnapshot } from "./git.js";
 import { logger } from "./logger.js";
-import { formatReplyTally, getTruncatedReplies } from "./replyTally.js";
 import {
   calculateDiffStats,
   extractSummary,
   getAgentIdFromArgs,
   postAgentMetadata,
 } from "./metadata.js";
+import { formatReplyTally, getTruncatedReplies } from "./replyTally.js";
+import { formatSessionCost } from "./sessionCost.js";
 
 /**
  * Options for updating agent metadata

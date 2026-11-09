@@ -8,10 +8,10 @@ import {
   getSessionFilePath,
   getSessionUsage,
 } from "./session.js";
-import { formatSessionCost } from "./util/sessionCost.js";
 import { formatCacheTally, splitInputTokens } from "./util/cacheTally.js";
 import { logger } from "./util/logger.js";
 import { formatReplyTally } from "./util/replyTally.js";
+import { formatSessionCost } from "./util/sessionCost.js";
 import { getVersion } from "./version.js";
 
 function getVersionInfo(): string[] {

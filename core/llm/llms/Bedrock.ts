@@ -119,6 +119,137 @@ const modelsWithoutStreamingTools = new Set<string>();
 /** Nova 2 returns this in place of its reasoning text; the tokens are billed. */
 const NOVA_REDACTED_REASONING = "[REDACTED].";
 
+/**
+ * What the stream handler carries between chunks of one reply. DeepSeek V3.2
+ * leaks a fragment of its tool-call markup at the end of the text before a
+ * toolUse block, so text that could become it is held back until the block
+ * ends (holdBackDsmlMarker); Nova Pro, Lite and Micro write their reasoning
+ * as <thinking> tags in the text, which the splitter lifts into thinking
+ * messages (ThinkingTagSplitter).
+ */
+interface StreamTextState {
+  filterDsml: boolean;
+  dsmlHold: string;
+  thinkingTags?: ThinkingTagSplitter;
+  isNova2: boolean;
+}
+
+function streamTextState(model: string): StreamTextState {
+  return {
+    filterDsml: leaksDsmlMarker(model),
+    dsmlHold: "",
+    thinkingTags: writesThinkingTags(model)
+      ? new ThinkingTagSplitter()
+      : undefined,
+    isNova2: /nova-2-/i.test(model),
+  };
+}
+
+function thinkingSplitMessages(split: ThinkingSplit): ChatMessage[] {
+  const out: ChatMessage[] = [];
+  if (split.reasoning) {
+    out.push({ role: "thinking", content: split.reasoning });
+  }
+  if (split.content) {
+    out.push({ role: "assistant", content: split.content });
+  }
+  return out;
+}
+
+/** Text held back by the filters, released when a block or the message ends. */
+function* flushHeldText(state: StreamTextState): Generator<ChatMessage> {
+  if (state.dsmlHold) {
+    const text = flushDsmlHold(state.dsmlHold);
+    state.dsmlHold = "";
+    if (text) yield { role: "assistant", content: text };
+  }
+  if (state.thinkingTags) {
+    yield* thinkingSplitMessages(state.thinkingTags.flush());
+  }
+}
+
+/** The messages for one content block delta: text, reasoning or tool input. */
+function* deltaMessages(
+  delta: ContentBlockDelta,
+  state: StreamTextState,
+): Generator<ChatMessage> {
+  if (delta.text) {
+    let text = delta.text;
+    if (state.filterDsml) {
+      const split = holdBackDsmlMarker(state.dsmlHold + text);
+      state.dsmlHold = split.hold;
+      text = split.emit;
+    }
+    if (state.thinkingTags) {
+      yield* thinkingSplitMessages(state.thinkingTags.push(text));
+    } else if (text) {
+      yield { role: "assistant", content: text };
+    }
+    return;
+  }
+  const reasoning = delta.reasoningContent;
+  if (reasoning?.redactedContent) {
+    // Encrypted bytes; kept as base64, the form Anthropic's own API uses,
+    // and decoded again in _convertMessages.
+    yield {
+      role: "thinking",
+      content: "",
+      redactedThinking: Buffer.from(reasoning.redactedContent).toString(
+        "base64",
+      ),
+    };
+    return;
+  }
+  if (reasoning?.text) {
+    const redacted =
+      state.isNova2 && reasoning.text === NOVA_REDACTED_REASONING;
+    yield redacted
+      ? { role: "thinking", content: "", redactedThinking: reasoning.text }
+      : { role: "thinking", content: reasoning.text };
+    return;
+  }
+  if (reasoning?.signature) {
+    yield { role: "thinking", content: "", signature: reasoning.signature };
+    return;
+  }
+  // A tool-call input fragment; the id and name came with the block start
+  const toolUse = delta.toolUse as
+    (ToolUseBlockDelta & ToolUseBlock) | undefined;
+  if (toolUse) {
+    yield {
+      role: "assistant",
+      content: "",
+      toolCalls: [
+        {
+          id: toolUse.toolUseId,
+          type: "function",
+          function: { name: toolUse.name, arguments: toolUse.input },
+        },
+      ],
+    };
+  }
+}
+
+/** The tool call a content block start opens, with its id and name. */
+function toolCallStartMessage(
+  event: ContentBlockStartEvent | undefined,
+): ChatMessage | undefined {
+  const start = event?.start as ContentBlockStart | undefined;
+  const toolUse = start?.toolUse as ToolUseBlock | undefined;
+  if (!toolUse?.toolUseId || !toolUse?.name) return undefined;
+  return {
+    role: "assistant",
+    content: "",
+    toolCalls: [
+      {
+        id: toolUse.toolUseId,
+        type: "function",
+        function: { name: toolUse.name, arguments: "" },
+      },
+    ],
+  };
+}
+
 interface ModelConfig {
   formatPayload: (text: string) => any;
   extractEmbeddings: (responseBody: any) => number[][];
@@ -712,28 +843,7 @@ class Bedrock extends BaseLLM {
       let usage: Usage | undefined;
       let stopReason: string | undefined;
       let latencyMs: number | undefined;
-      // DeepSeek V3.2 leaks a fragment of its tool-call markup at the end of
-      // the text before a toolUse block; held-back text waits here until the
-      // block ends (see holdBackDsmlMarker).
-      const filterDsml = leaksDsmlMarker(options.model);
-      let dsmlHold = "";
-      // Nova Pro, Lite and Micro write their reasoning as <thinking> tags in
-      // the text; the splitter lifts it into thinking messages, holding back
-      // a fragment that could still become a tag (see ThinkingTagSplitter).
-      const thinkingTags = writesThinkingTags(options.model)
-        ? new ThinkingTagSplitter()
-        : undefined;
-      const splitMessages = (split: ThinkingSplit): ChatMessage[] => {
-        const out: ChatMessage[] = [];
-        if (split.reasoning) {
-          out.push({ role: "thinking", content: split.reasoning });
-        }
-        if (split.content) {
-          out.push({ role: "assistant", content: split.content });
-        }
-        return out;
-      };
-      const isNova2 = /nova-2-/i.test(options.model);
+      const state = streamTextState(options.model);
       for await (const chunk of response.stream) {
         if (chunk.metadata?.usage) {
           usage = bedrockUsageToUsage(chunk.metadata.usage);
@@ -744,125 +854,15 @@ class Bedrock extends BaseLLM {
         if (chunk.messageStop?.stopReason) {
           stopReason = chunk.messageStop.stopReason;
         }
-        if (dsmlHold && (chunk.contentBlockStop || chunk.messageStop)) {
-          const text = flushDsmlHold(dsmlHold);
-          dsmlHold = "";
-          if (text) yield { role: "assistant", content: text };
+        if (chunk.contentBlockStop || chunk.messageStop) {
+          yield* flushHeldText(state);
         }
-        if (thinkingTags && (chunk.contentBlockStop || chunk.messageStop)) {
-          yield* splitMessages(thinkingTags.flush());
-        }
-
-        const contentBlockDelta: ContentBlockDelta | undefined =
-          chunk.contentBlockDelta?.delta;
-        if (contentBlockDelta) {
-          // Handle text content
-          if (contentBlockDelta.text) {
-            let text = contentBlockDelta.text;
-            if (filterDsml) {
-              const split = holdBackDsmlMarker(dsmlHold + text);
-              dsmlHold = split.hold;
-              text = split.emit;
-            }
-            if (thinkingTags) {
-              yield* splitMessages(thinkingTags.push(text));
-              continue;
-            }
-            if (text) {
-              yield {
-                role: "assistant",
-                content: text,
-              };
-            }
-            continue;
-          }
-          const reasoning = contentBlockDelta.reasoningContent;
-          if (reasoning?.redactedContent) {
-            // Encrypted bytes; kept as base64, the form Anthropic's own API
-            // uses, and decoded again in _convertMessages.
-            yield {
-              role: "thinking",
-              content: "",
-              redactedThinking: Buffer.from(reasoning.redactedContent).toString(
-                "base64",
-              ),
-            };
-            continue;
-          }
-          if (reasoning?.text) {
-            if (isNova2 && reasoning.text === NOVA_REDACTED_REASONING) {
-              yield {
-                role: "thinking",
-                content: "",
-                redactedThinking: reasoning.text,
-              };
-              continue;
-            }
-            yield {
-              role: "thinking",
-              content: reasoning.text,
-            };
-            continue;
-          }
-          if (reasoning?.signature) {
-            yield {
-              role: "thinking",
-              content: "",
-              signature: reasoning.signature,
-            };
-            continue;
-          }
-        }
-
-        const toolUseBlockDelta: ToolUseBlockDelta | undefined = chunk
-          .contentBlockDelta?.delta?.toolUse as ToolUseBlockDelta;
-        const toolUseBlock: ToolUseBlock | undefined = chunk.contentBlockDelta
-          ?.delta?.toolUse as ToolUseBlock;
-        if (toolUseBlockDelta && toolUseBlock) {
-          yield {
-            role: "assistant",
-            content: "",
-            toolCalls: [
-              {
-                id: toolUseBlock.toolUseId,
-                type: "function",
-                function: {
-                  name: toolUseBlock.name,
-                  arguments: toolUseBlockDelta.input,
-                },
-              },
-            ],
-          };
+        if (chunk.contentBlockDelta?.delta) {
+          yield* deltaMessages(chunk.contentBlockDelta.delta, state);
           continue;
         }
-
-        const contentBlockStart: ContentBlockStartEvent | undefined =
-          chunk.contentBlockStart as ContentBlockStartEvent;
-        if (contentBlockStart) {
-          const start: ContentBlockStart | undefined = chunk.contentBlockStart
-            ?.start as ContentBlockStart;
-          if (start) {
-            const toolUseBlock: ToolUseBlock | undefined =
-              start.toolUse as ToolUseBlock;
-            if (toolUseBlock?.toolUseId && toolUseBlock?.name) {
-              yield {
-                role: "assistant",
-                content: "",
-                toolCalls: [
-                  {
-                    id: toolUseBlock.toolUseId,
-                    type: "function",
-                    function: {
-                      name: toolUseBlock.name,
-                      arguments: "",
-                    },
-                  },
-                ],
-              };
-              continue;
-            }
-          }
-        }
+        const started = toolCallStartMessage(chunk.contentBlockStart);
+        if (started) yield started;
       }
       if (usage) {
         // The metadata event arrives after the content; BaseLLM picks the
@@ -1338,10 +1338,16 @@ class Bedrock extends BaseLLM {
       if (message.role !== "user") continue;
       const content = message.content ?? [];
       if (afterTextOnly) {
-        const at = content.findLastIndex(
-          (block) =>
-            block.text !== undefined && !isTaskPlanBlockText(block.text),
-        );
+        // The last text block that is not the task list (no findLastIndex:
+        // the extension builds target an older lib)
+        let at = -1;
+        for (let j = content.length - 1; j >= 0; j--) {
+          const text = content[j].text;
+          if (text !== undefined && !isTaskPlanBlockText(text)) {
+            at = j;
+            break;
+          }
+        }
         if (at === -1) continue;
         content.splice(at + 1, 0, cachePoint());
       } else {

@@ -75,6 +75,20 @@ export function shouldQueueInitialPrompt(
   return !hasConversation;
 }
 
+/** The startup lines: which assistant, model and config file serve runs with. */
+function logServeConfiguration(
+  assistantName: string | undefined,
+  model: { provider: string; model: string },
+  configFile: string | undefined,
+): void {
+  console.log(chalk.blue(`\nConfiguration:`));
+  console.log(chalk.dim(`  Assistant: ${assistantName}`));
+  console.log(chalk.dim(`  Model: ${model.provider}/${model.model}`));
+  if (configFile) {
+    console.log(chalk.dim(`  Config file: ${configFile}`));
+  }
+}
+
 export async function serve(prompt?: string, options: ServeOptions = {}) {
   // Set agent ID for error reporting if provided
   setAgentId(options.id);
@@ -131,17 +145,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     model: modelState.model,
   };
 
-  // Log configuration information
-  const assistantName = config.name;
-  const modelProvider = model.provider;
-  const modelName = model.model;
-
-  console.log(chalk.blue(`\nConfiguration:`));
-  console.log(chalk.dim(`  Assistant: ${assistantName}`));
-  console.log(chalk.dim(`  Model: ${modelProvider}/${modelName}`));
-  if (options.config) {
-    console.log(chalk.dim(`  Config file: ${options.config}`));
-  }
+  logServeConfiguration(config.name, model, options.config);
 
   // Initialize session with system message
   const systemMessage = await constructSystemMessage(
