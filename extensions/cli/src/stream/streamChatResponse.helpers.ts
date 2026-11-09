@@ -509,9 +509,9 @@ export function recordStreamTelemetry(options: {
     const guessed = guessProviderFromName(model.model);
     const costBreakdown =
       calculateRequestCost(provider, model.model, usage) ??
-      (guessed !== provider
-        ? calculateRequestCost(guessed, model.model, usage)
-        : null);
+      (guessed === provider
+        ? null
+        : calculateRequestCost(guessed, model.model, usage));
 
     // Use fallback for unknown models
     if (costBreakdown) {

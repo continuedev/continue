@@ -10,12 +10,14 @@ import {
   createSession,
   getCurrentSession,
   getSessionTaskPlan,
+  getSessionUsage,
   hasSession,
   loadOrCreateSessionById,
   loadSession,
   onTaskPlanChange,
   saveSession,
   startNewSession,
+  trackSessionUsage,
   updateSessionHistory,
   updateSessionTaskPlan,
   updateSessionTitle,
@@ -640,8 +642,6 @@ describe("SessionManager", () => {
 
 // The estimate flag: a request priced at the fallback rate marks the
 // session's total as an estimate, and the flag persists with the usage.
-import { getSessionUsage, trackSessionUsage } from "./session.js";
-
 describe("session usage cost estimate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
